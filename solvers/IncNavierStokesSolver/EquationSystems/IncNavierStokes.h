@@ -141,9 +141,9 @@ namespace Nektar
 
     protected:
 		
-		// pointer to the extrapolation class for sub-stepping and HOPBS
-		
-		ExtrapolateSharedPtr m_extrapolation;
+        // pointer to the extrapolation class for sub-stepping and HOPBS
+        
+        ExtrapolateSharedPtr m_extrapolation;
 		
         /// modal energy file
         std::ofstream m_mdlFile;

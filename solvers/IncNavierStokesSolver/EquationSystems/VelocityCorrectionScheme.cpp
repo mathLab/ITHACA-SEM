@@ -39,7 +39,10 @@
 
 namespace Nektar
 {
-    string VelocityCorrectionScheme::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("VelocityCorrectionScheme", VelocityCorrectionScheme::create);
+    string VelocityCorrectionScheme::className = 
+        SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
+            "VelocityCorrectionScheme", 
+            VelocityCorrectionScheme::create);
     
      /**
      * Constructor. Creates ...
@@ -192,8 +195,8 @@ namespace Nektar
             }
             
             // set explicit time-intregration class operators
-                m_subStepIntegrationOps.DefineOdeRhs(&IncNavierStokes::SubStepAdvection, this);
-                m_subStepIntegrationOps.DefineProjection(&IncNavierStokes::SubStepProjection, this);
+            //m_subStepIntegrationOps.DefineOdeRhs(&IncNavierStokes::SubStepAdvection, this);
+            //m_subStepIntegrationOps.DefineProjection(&IncNavierStokes::SubStepProjection, this);
                 
         }
         else // Standard velocity correction scheme
@@ -207,15 +210,15 @@ namespace Nektar
     }
     
     /**
-	 * Distructor
-	 */
+     * Destructor
+     */
     VelocityCorrectionScheme::~VelocityCorrectionScheme(void)
     {        
     }
     
-	/**
-	 * 
-	 */
+    /**
+     * 
+     */
     void VelocityCorrectionScheme::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         UnsteadySystem::v_GenerateSummary(s);
@@ -342,20 +345,21 @@ namespace Nektar
         return m_session->GetVariables().size() - 1;
     }
 
-	/**
-	 * Explicit part of the method - Advection + HOPBCs
-	 */
-    void VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-                                                                    Array<OneD, Array<OneD, NekDouble> > &outarray, 
-                                                                    const NekDouble time)
+    /**
+     * Explicit part of the method - Advection + HOPBCs
+     */
+    void VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        Array<OneD, Array<OneD, NekDouble> > &outarray, 
+        const NekDouble time)
     {
         int nqtot        = m_fields[0]->GetTotPoints();
         
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
         
-		// smoothing advection
-        if(m_SmoothAdvection && m_pressureCalls > 1)
+        // smoothing advection
+        if(m_SmoothAdvection) // && m_pressureCalls > 1)
         {
             for(int i = 0; i < m_nConvectiveFields; ++i)
             {
@@ -383,16 +387,17 @@ namespace Nektar
         }
         
         // Calculate High-Order pressure boundary conditions
-		m_extrapolate->EvaluatePressureBCs(inarray,outarray); 
+        m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis); 
     }
     
-	/**
-	 * Implicit part of the method - Poisson + 3 Helmholtz
-	 */
-    void VelocityCorrectionScheme::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-                                                             Array<OneD, Array<OneD, NekDouble> > &outarray, 
-                                                             const NekDouble time, 
-                                                             const NekDouble aii_Dt)
+    /**
+     * Implicit part of the method - Poisson + 3 Helmholtz
+     */
+    void VelocityCorrectionScheme::SolveUnsteadyStokesSystem(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        Array<OneD, Array<OneD, NekDouble> > &outarray, 
+        const NekDouble time, 
+        const NekDouble aii_Dt)
     {
         int i,n;
         int phystot = m_fields[0]->GetTotPoints();
@@ -410,13 +415,13 @@ namespace Nektar
             
         SetBoundaryConditions(time);
         
-		m_extrapolate->SubStepSetPressureBCs(inarray,aii_Dt);
-		
-		ncalls++;
+        m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
+	
+        ncalls++;
         
-		SetUpPressureForcing(inarray, F, aii_Dt);
+        SetUpPressureForcing(inarray, F, aii_Dt);
  
-		// Solver Pressure Poisson Equation
+        // Solver Pressure Poisson Equation
         m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
 
         // Viscous Term forcing
@@ -443,9 +448,12 @@ namespace Nektar
     }
         
     /**
-	 * Forcing term for Poisson solver solver
-	 */ 
-    void   VelocityCorrectionScheme::SetUpPressureForcing(const Array<OneD, const Array<OneD, NekDouble> > &fields, Array<OneD, Array<OneD, NekDouble> > &Forcing, const NekDouble aii_Dt)
+     * Forcing term for Poisson solver solver
+     */ 
+    void   VelocityCorrectionScheme::SetUpPressureForcing(
+        const Array<OneD, const Array<OneD, NekDouble> > &fields, 
+        Array<OneD, Array<OneD, NekDouble> > &Forcing, 
+        const NekDouble aii_Dt)
     {                
         int   i;
         int   physTot = m_fields[0]->GetTotPoints();
@@ -462,10 +470,13 @@ namespace Nektar
         Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);        
     }
     
-	/**
-	 * Forcing term for Helmholtz solver
-	 */
-    void   VelocityCorrectionScheme::SetUpViscousForcing(const Array<OneD, const Array<OneD, NekDouble> > &inarray, Array<OneD, Array<OneD, NekDouble> > &Forcing, const NekDouble aii_Dt)
+    /**
+     * Forcing term for Helmholtz solver
+     */
+    void   VelocityCorrectionScheme::SetUpViscousForcing(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        Array<OneD, Array<OneD, NekDouble> > &Forcing, 
+        const NekDouble aii_Dt)
     {
         NekDouble aii_dtinv = 1.0/aii_Dt;
         int phystot = m_fields[0]->GetTotPoints();

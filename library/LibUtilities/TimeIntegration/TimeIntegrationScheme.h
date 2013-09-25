@@ -181,6 +181,13 @@ namespace Nektar
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
+                void DefineOdeRhs2(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_functors1[0] =  boost::bind(func, obj, _1, _2, _3, _4);
+            }
+
+
+            template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeExplicitRhs(FuncPointerT func, ObjectPointerT obj)
             {
                 m_functors1[1] =  boost::bind(func, obj, _1, _2, _3);

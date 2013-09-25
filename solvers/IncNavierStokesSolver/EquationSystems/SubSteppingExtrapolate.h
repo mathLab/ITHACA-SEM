@@ -63,9 +63,10 @@ namespace Nektar
         static ExtrapolateSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            Array<OneD, int> pVel)
+            Array<OneD, int> pVel,
+            AdvectionTermSharedPtr advObject)
         {
-            ExtrapolateSharedPtr p = MemoryManager<SubSteppingExtrapolate>::AllocateSharedPtr(pSession,pFields,pVel);
+            ExtrapolateSharedPtr p = MemoryManager<SubSteppingExtrapolate>::AllocateSharedPtr(pSession,pFields,pVel,advObject);
             return p;
         }
 
@@ -75,49 +76,97 @@ namespace Nektar
         SubSteppingExtrapolate(
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-            Array<OneD, int> pVel);
+            Array<OneD, int> pVel,
+            AdvectionTermSharedPtr advObject);
+
         virtual ~SubSteppingExtrapolate();
         
     protected:
 
-        virtual void v_SubSteppingTimeIntegration(int intMethod, Array<OneD, MultiRegions::ExpListSharedPtr> pFields);
-        virtual void v_SubStepSaveFields(const int nstep);
-        virtual void v_SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, const NekDouble Aii_DT);
-        virtual void v_SubStepAdvance(const int nstep, NekDouble m_time);
-		virtual void v_MountHOPBCs(int HBCdata, NekDouble kinvis, Array<OneD, NekDouble> &Q, Array<OneD, NekDouble> &Advection);
+        virtual void v_SubSteppingTimeIntegration(
+            int intMethod);
+ 
+        virtual void v_SubStepSaveFields(
+            const int nstep);
 
-        void AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt)
-		void AddDuDt2D(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
-        void AddDuDt3D(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
+        virtual void v_SubStepSetPressureBCs(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        const NekDouble Aii_Dt,
+        NekDouble kinvis);
 
-        void SubStepAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  Array<OneD, Array<OneD,NekDouble> > &outarray, const NekDouble time);
-        void SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  Array<OneD, Array<OneD, NekDouble> > &outarray, const NekDouble time);
-        void SubStepExtrapoloteField(NekDouble toff, Array< OneD, Array<OneD, NekDouble> > &ExtVel);
+        virtual void v_SubStepAdvance(
+            const int nstep, 
+            NekDouble time);
 
-        void AddAdvectionPenaltyFlux(const Array<OneD, const Array<OneD, NekDouble> > &velfield,const Array<OneD, const Array<OneD, NekDouble> > &physfield,Array<OneD, Array<OneD, NekDouble> > &outarray);
+        virtual void v_MountHOPBCs(
+            int HBCdata, 
+            NekDouble kinvis, Array<OneD, NekDouble> &Q, 
+            Array<OneD, NekDouble> &Advection);
+        
+        void AddDuDt(
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            NekDouble Aii_Dt);
+        void AddDuDt2D(
+            const Array<OneD, const Array<OneD, NekDouble> >  &N, 
+            NekDouble Aii_Dt);
+        void AddDuDt3D(
+            const Array<OneD, const Array<OneD, NekDouble> >  &N, 
+            NekDouble Aii_Dt);
+
+        void SubStepAdvection(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
+            Array<OneD, Array<OneD,NekDouble> > &outarray,
+            const NekDouble time);
+
+        void SubStepProjection(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
+            Array<OneD, Array<OneD, NekDouble> > &outarray, 
+            const NekDouble time);
+
+        void SubStepExtrapolateField(
+            NekDouble toff, 
+            Array< OneD, Array<OneD, NekDouble> > &ExtVel);
+
+        void AddAdvectionPenaltyFlux(
+            const Array<OneD, const Array<OneD, NekDouble> > &velfield,
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,Array<OneD, 
+            Array<OneD, NekDouble> > &outarray);
 
         NekDouble GetSubstepTimeStep();
 
-        Array<OneD,NekDouble> GetMaxStdVelocity(const Array<OneD, Array<OneD,NekDouble> > inarray);
+        Array<OneD,NekDouble> GetMaxStdVelocity(
+            const Array<OneD, Array<OneD,NekDouble> > inarray);
 
         LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
         LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
 
-        int m_intSteps;
+        Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
+
+        int nConvectiveFields;
+
+        /// Get the number of coefficients
+        int ncoeffs;
+
+        Array<OneD, int>  vel_loc;
+
+        NekDouble cflSafetyFactor;
+
+
+        //int m_intSteps;
 
         /// Number of time steps between outputting status information.
-        int m_infosteps;
+        //int m_infosteps;
 
         /// CFL safety factor (comprise between 0 to 1).
-        NekDouble m_cflSafetyFactor;
+        //NekDouble m_cflSafetyFactor;
 
         /// Time step size
-        NekDouble m_timestep;
+        //NekDouble m_timestep;
 
-        bool m_HalfMode;
+        //bool m_HalfMode;
 
-        bool m_SingleMode;
+        //bool m_SingleMode;
         
     };
 }

@@ -242,34 +242,36 @@ namespace Nektar
         m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
 		
-		// creation of the extrapolation object
-		if(m_equationType == eUnsteadyNavierStokes)
-		{
-			std::string vExtrapolation = "StandardExtrapolate";
-			if (m_session->DefinesTag("Extrapolation"))
+        // creation of the extrapolation object
+        if(m_equationType == eUnsteadyNavierStokes)
+        {
+            std::string vExtrapolation = "StandardExtrapolate";
+            if (m_session->DefinesTag("Extrapolation"))
             {
                 //vConvectiveType = m_session->GetTag("Linearised");
                 vExtrapolation = m_session->GetTag("Extrapolation");
             }
-			
-			m_extrapolation = GetExtrapolateFactory().CreateInstance(vExtrapolation, 
-																	 m_session,
-																	 m_fields,
-																	 m_velocity);
-		}
+                        
+            m_extrapolation = GetExtrapolateFactory().CreateInstance(
+                vExtrapolation, 
+                m_session,
+                m_fields,
+                m_velocity,
+                m_advObject);
+        }
 		
     }
 
-	/**
-	 * Distructor
-	 */
+    /**
+     * Destructor
+     */
     IncNavierStokes::~IncNavierStokes(void)
     {
     }
     
-	/**
-	 * Advance in time - time-stepping loop
-	 */
+    /**
+     * Advance in time - time-stepping loop
+     */
     void IncNavierStokes::AdvanceInTime(int nsteps)
     {
         int i,n;
@@ -313,8 +315,8 @@ namespace Nektar
 
             timer.Start();
 
-			m_extrapolation->SubStepSaveFields(n);
-			m_extrapolation->SubStepAdvance(n);
+            m_extrapolation->SubStepSaveFields(n);
+            m_extrapolation->SubStepAdvance(n,m_time);
             
             fields = m_integrationScheme->TimeIntegrate(n, m_timestep, m_integrationSoln, m_integrationOps);
             
@@ -663,7 +665,7 @@ namespace Nektar
                 velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
             }        
         }
-        stdVelocity = GetMaxStdVelocity(velfields);
+        //stdVelocity = m_extrapolation->GetMaxStdVelocity(velfields);
         
         for(int el = 0; el < n_element; ++el)
         {

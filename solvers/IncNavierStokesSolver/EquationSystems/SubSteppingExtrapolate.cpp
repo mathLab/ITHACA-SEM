@@ -49,25 +49,23 @@ namespace Nektar
     SubSteppingExtrapolate::SubSteppingExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-        Array<OneD, int> pVel)
-        : Extrapolate(pSession,pFields,pVel)
+        Array<OneD, int> pVel,
+        AdvectionTermSharedPtr advObject)
+        : Extrapolate(pSession,pFields,pVel,advObject)
     {
-        /*m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-        m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.5);
-        m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
-        m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);*/
     }
 
     SubSteppingExtrapolate::~SubSteppingExtrapolate()
     {
     }
-
-    void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(int intMethod, Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+    
+    void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
+        int intMethod)
     {
         //ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
-            
+        
         int i;
-
+        
         // Set to 1 for first step and it will then be increased in
         // time advance routines
         switch(intMethod)
@@ -78,10 +76,10 @@ namespace Nektar
                 m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("ForwardEuler");
                 
                 // Fields for linear interpolation
-                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*pFields.num_elements());                    
-                int ntotpts  = pFields[0]->GetTotPoints();
-                m_previousVelFields[0] = Array<OneD, NekDouble>(2*pFields.num_elements()*ntotpts);
-                for(i = 1; i < 2*pFields.num_elements(); ++i)
+                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*m_fields.num_elements());                    
+                int ntotpts  = m_fields[0]->GetTotPoints();
+                m_previousVelFields[0] = Array<OneD, NekDouble>(2*m_fields.num_elements()*ntotpts);
+                for(i = 1; i < 2*m_fields.num_elements(); ++i)
                 {
                     m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
                 }
@@ -97,7 +95,7 @@ namespace Nektar
                 // Fields for quadratic interpolation
                 m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(3*nvel);
                 
-                int ntotpts  = pFields[0]->GetTotPoints();
+                int ntotpts  = m_fields[0]->GetTotPoints();
                 m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
                 for(i = 1; i < 3*nvel; ++i)
                 {
@@ -111,33 +109,136 @@ namespace Nektar
                 break;
         }
             
-        // set explicit time-intregration class operators
+        // set explicit time-integration class operators
         m_subStepIntegrationOps.DefineOdeRhs(&SubSteppingExtrapolate::SubStepAdvection, this);
         m_subStepIntegrationOps.DefineProjection(&SubSteppingExtrapolate::SubStepProjection, this);
     }
+    
+    /** 
+     * Explicit Advection terms used by SubStepAdvance time integration
+     */
+    void SubSteppingExtrapolate::SubStepAdvection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
+        Array<OneD, Array<OneD,       NekDouble> > &outarray,
+        const NekDouble time)
+    {
+        int i;
+        int nVariables     = inarray.num_elements();
+        int nQuadraturePts = inarray[0].num_elements();
+        int m_nConvectiveFields = m_fields.num_elements()-1;
+        
+        /// Get the number of coefficients
+        int ncoeffs = m_fields[0]->GetNcoeffs(); 
+        
+        /// Define an auxiliary variable to compute the RHS 
+        Array<OneD, Array<OneD, NekDouble> > WeakAdv(nVariables);
+        WeakAdv[0] = Array<OneD, NekDouble> (ncoeffs*nVariables);
+        for(i = 1; i < nVariables; ++i)
+        {
+            WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
+        }
+        
+        Array<OneD, Array<OneD, NekDouble> > Velfields(m_velocity.num_elements());
+        Array<OneD, int> VelIds(m_velocity.num_elements());
+        
+        Velfields[0] = Array<OneD, NekDouble> (nQuadraturePts*m_velocity.num_elements());
+        
+        for(i = 1; i < m_velocity.num_elements(); ++i)
+        {
+            Velfields[i] = Velfields[i-1] + nQuadraturePts; 
+        }
+
+        SubStepExtrapolateField(fmod(time,m_timestep), Velfields);
+        
+        //m_advObject->DoAdvection(m_fields, Velfields, inarray, outarray, time);
+        
+        for(i = 0; i < nVariables; ++i)
+        {
+            m_fields[i]->IProductWRTBase(outarray[i],WeakAdv[i]); 
+            // negation requried due to sign of DoAdvection term to be consistent
+            Vmath::Neg(ncoeffs, WeakAdv[i], 1);
+        }
+        
+        AddAdvectionPenaltyFlux(Velfields, inarray, WeakAdv);
+        
+        /// Operations to compute the RHS
+        for(i = 0; i < nVariables; ++i)
+        {
+            // Negate the RHS
+            Vmath::Neg(ncoeffs, WeakAdv[i], 1);
+
+            /// Multiply the flux by the inverse of the mass matrix
+            m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i], WeakAdv[i]);
+            
+            /// Store in outarray the physical values of the RHS
+            m_fields[i]->BwdTrans(WeakAdv[i], outarray[i]);
+        }
+        
+        //add the force
+        /*if(m_session->DefinesFunction("BodyForce"))
+        {
+            if(m_SingleMode || m_HalfMode)
+            {
+                for(int i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    m_forces[i]->SetWaveSpace(true);    
+                    m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
+                                          m_forces[i]->UpdatePhys());
+                }
+            }
+            
+            int nqtot = m_fields[0]->GetTotPoints();
+            for(int i = 0; i < m_nConvectiveFields; ++i)
+            {
+                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
+            }
+            }*/
+    }
+        
+    /** 
+     * Projection used by SubStepAdvance time integration
+     */
+    void SubSteppingExtrapolate::SubStepProjection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
+        Array<OneD, Array<OneD, NekDouble> > &outarray, 
+        const NekDouble time)
+    {
+        ASSERTL1(inarray.num_elements() == outarray.num_elements(),"Inarray and outarray of different sizes ");
+
+        for(int i = 0; i < inarray.num_elements(); ++i)
+        {
+            Vmath::Vcopy(inarray[i].num_elements(),inarray[i],1,outarray[i],1);
+        }
+    }
+
 
     /** 
      * 
      */
-    void SubSteppingExtrapolate::v_SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-														 const NekDouble Aii_DT)
+    void SubSteppingExtrapolate::v_SubStepSetPressureBCs(
+        const MultiRegions::ExpListSharedPtr &pField,
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        const NekDouble Aii_Dt,
+        NekDouble kinvis)
     {
-        Array<OneD, Array<OneD, NekDouble> > velfields(m_velocity.num_elements());
+        int numfields =m_fields.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > velfields(numfields-1);
         
-        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        for(int i = 0; i < numfields; ++i)
         {
             velfields[i] = m_fields[m_velocity[i]]->GetPhys(); 
         }
 
         EvaluatePressureBCs(pField,velfields,inarray,kinvis);
 		
-		AddDuDt(inarray,Aii_Dt);
+        AddDuDt(inarray,Aii_Dt);
     }
 
     /** 
      * 
      */
-    void SubSteppingExtrapolate::v_SubStepSaveFields(const int nstep)
+    void SubSteppingExtrapolate::v_SubStepSaveFields(
+        const int nstep)
     {
         int i,n;
         int nvel = m_velocity.num_elements();
@@ -163,7 +264,7 @@ namespace Nektar
         for(i = 0; i < nvel; ++i)
         {
             m_fields[m_velocity[i]]->BwdTrans(m_fields[m_velocity[i]]->GetCoeffs(),
-                                              m_fields[m_velocity[i]]->UpdatePhys());
+                                             m_fields[m_velocity[i]]->UpdatePhys());
             Vmath::Vcopy(npts,m_fields[m_velocity[i]]->GetPhys(),1,
                          m_previousVelFields[i],1);   
         }
@@ -183,13 +284,14 @@ namespace Nektar
     }
 
 
-    void SubSteppingExtrapolate::v_SubStepAdvance(const int nstep, NekDouble m_time)
+    void SubSteppingExtrapolate::v_SubStepAdvance(
+        const int nstep, 
+        NekDouble time)
     {
         int n;
-        int nsubsteps, minsubsteps;
+        int nsubsteps, minsubsteps, infosteps;
         
         NekDouble dt; 
-        NekDouble time = m_time;
         
         Array<OneD, Array<OneD, NekDouble> > fields, velfields;
         
@@ -208,7 +310,9 @@ namespace Nektar
 
         dt = m_timestep/nsubsteps;
         
-        if (m_infosteps && !((nstep+1)%m_infosteps) && m_comm->GetRank() == 0)
+        m_session->LoadParameter("IO_InfoSteps", infosteps, 0);
+
+        if (infosteps && !((nstep+1)%infosteps) && m_comm->GetRank() == 0)
         {
             cout << "Sub-integrating using "<< nsubsteps 
                  << " steps over Dt = "     << m_timestep 
@@ -225,28 +329,27 @@ namespace Nektar
             // SolveUnsteadyStokesSystem
             LibUtilities::TimeIntegrationSolutionSharedPtr 
                 SubIntegrationSoln = m_subStepIntegrationScheme->
-                    InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+                InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
             
             for(n = 0; n < nsubsteps; ++n)
             {
                 fields = m_subStepIntegrationScheme->TimeIntegrate(
-                                            n, dt, SubIntegrationSoln,
-                                            m_subStepIntegrationOps);
+                    n, dt, SubIntegrationSoln,
+                    m_subStepIntegrationOps);
             }
             
             // Reset time integrated solution in m_integrationSoln 
             m_integrationSoln->SetSolVector(m,fields);
         }
     }
-
-
+        
+        
     /** 
      * 
      */
     NekDouble SubSteppingExtrapolate::GetSubstepTimeStep()
     { 
         int n_element      = m_fields[0]->GetExpSize(); 
-        
 
         const Array<OneD, int> ExpOrder=m_fields[0]->EvalBasisNumModesMaxPerExp();
         Array<OneD, int> ExpOrderList (n_element, ExpOrder);
@@ -265,9 +368,9 @@ namespace Nektar
         
         for(int el = 0; el < n_element; ++el)
         {
-            tstep[el] = m_cflSafetyFactor / 
-                       (stdVelocity[el] * cLambda * 
-                       (ExpOrder[el]-1) * (ExpOrder[el]-1));
+            tstep[el] = cflSafetyFactor / 
+                (stdVelocity[el] * cLambda * 
+                 (ExpOrder[el]-1) * (ExpOrder[el]-1));
         }
         
         NekDouble TimeStep = Vmath::Vmin(n_element, tstep, 1);
@@ -385,16 +488,16 @@ namespace Nektar
                     for (int i = 0; i < n_points; i++)
                     {
                         stdVelocity[0][i] = gmat[0][i]*inarray[0][i+cnt] 
-                                          + gmat[3][i]*inarray[1][i+cnt] 
-                                          + gmat[6][i]*inarray[2][i+cnt];
+                            + gmat[3][i]*inarray[1][i+cnt] 
+                            + gmat[6][i]*inarray[2][i+cnt];
                         
                         stdVelocity[1][i] = gmat[1][i]*inarray[0][i+cnt] 
-                                          + gmat[4][i]*inarray[1][i+cnt] 
-                                          + gmat[7][i]*inarray[2][i+cnt];
+                            + gmat[4][i]*inarray[1][i+cnt] 
+                            + gmat[7][i]*inarray[2][i+cnt];
                         
                         stdVelocity[2][i] = gmat[2][i]*inarray[0][i+cnt] 
-                                          + gmat[5][i]*inarray[1][i+cnt] 
-                                          + gmat[8][i]*inarray[2][i+cnt];
+                            + gmat[5][i]*inarray[1][i+cnt] 
+                            + gmat[8][i]*inarray[2][i+cnt];
                     }
                 }
                 else
@@ -402,16 +505,16 @@ namespace Nektar
                     for (int i = 0; i < n_points; i++)
                     {
                         stdVelocity[0][i] = gmat[0][0]*inarray[0][i+cnt] 
-                                          + gmat[3][0]*inarray[1][i+cnt] 
-                                          + gmat[6][0]*inarray[2][i+cnt];
+                            + gmat[3][0]*inarray[1][i+cnt] 
+                            + gmat[6][0]*inarray[2][i+cnt];
                         
                         stdVelocity[1][i] = gmat[1][0]*inarray[0][i+cnt] 
-                                          + gmat[4][0]*inarray[1][i+cnt] 
-                                          + gmat[7][0]*inarray[2][i+cnt];
+                            + gmat[4][0]*inarray[1][i+cnt] 
+                            + gmat[7][0]*inarray[2][i+cnt];
                         
                         stdVelocity[2][i] = gmat[2][0]*inarray[0][i+cnt] 
-                                          + gmat[5][0]*inarray[1][i+cnt] 
-                                          + gmat[8][0]*inarray[2][i+cnt];
+                            + gmat[5][0]*inarray[1][i+cnt] 
+                            + gmat[8][0]*inarray[2][i+cnt];
                     }
                 }
                 
@@ -438,90 +541,13 @@ namespace Nektar
     }
 
 
-    /** 
-     * Explicit Advection terms used by SubStepAdvance time integration
-     */
-    void SubSteppingExtrapolate::SubStepAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
-												  Array<OneD, Array<OneD,       NekDouble> > &outarray,
-												  const NekDouble time)
-    {
-        /*int i;
-        int nVariables     = inarray.num_elements();
-        int nQuadraturePts = inarray[0].num_elements();
-        int m_nConvectiveFields = m_fields.num_elements()-1;
-        
-        /// Get the number of coefficients
-        int ncoeffs = m_fields[0]->GetNcoeffs(); 
-        
-        /// Define an auxiliary variable to compute the RHS 
-        Array<OneD, Array<OneD, NekDouble> > WeakAdv(nVariables);
-        WeakAdv[0] = Array<OneD, NekDouble> (ncoeffs*nVariables);
-        for(i = 1; i < nVariables; ++i)
-        {
-            WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
-        }
-        
-        Array<OneD, Array<OneD, NekDouble> > Velfields(m_velocity.num_elements());
-        Array<OneD, int> VelIds(m_velocity.num_elements());
-        
-        Velfields[0] = Array<OneD, NekDouble> (nQuadraturePts*m_velocity.num_elements());
-        
-        for(i = 1; i < m_velocity.num_elements(); ++i)
-        {
-            Velfields[i] = Velfields[i-1] + nQuadraturePts; 
-        }
-        SubStepExtrapoloteField(fmod(time,m_timestep), Velfields);
-        
-        m_advObject->DoAdvection(m_fields, Velfields, inarray, outarray, time);
-        
-        for(i = 0; i < nVariables; ++i)
-        {
-            m_fields[i]->IProductWRTBase(outarray[i],WeakAdv[i]); 
-            // negation requried due to sign of DoAdvection term to be consistent
-            Vmath::Neg(ncoeffs, WeakAdv[i], 1);
-        }
-        
-        AddAdvectionPenaltyFlux(Velfields, inarray, WeakAdv);
-        
-        /// Operations to compute the RHS
-        for(i = 0; i < nVariables; ++i)
-        {
-            // Negate the RHS
-            Vmath::Neg(ncoeffs, WeakAdv[i], 1);
 
-            /// Multiply the flux by the inverse of the mass matrix
-            m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i], WeakAdv[i]);
-            
-            /// Store in outarray the physical values of the RHS
-            m_fields[i]->BwdTrans(WeakAdv[i], outarray[i]);
-        }
-        
-        //add the force
-        if(m_session->DefinesFunction("BodyForce"))
-        {
-            if(m_SingleMode || m_HalfMode)
-            {
-                for(int i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_forces[i]->SetWaveSpace(true);    
-                    m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
-                                          m_forces[i]->UpdatePhys());
-                }
-            }
-            
-            int nqtot = m_fields[0]->GetTotPoints();
-            for(int i = 0; i < m_nConvectiveFields; ++i)
-            {
-                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
-            }
-            }*/
-    }
-
-    void SubSteppingExtrapolate::AddAdvectionPenaltyFlux(const Array<OneD, const Array<OneD, NekDouble> > &velfield, 
-														 const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
-														 Array<OneD, Array<OneD, NekDouble> > &Outarray)
+    void SubSteppingExtrapolate::AddAdvectionPenaltyFlux(
+        const Array<OneD, const Array<OneD, NekDouble> > &velfield, 
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
+        Array<OneD, Array<OneD, NekDouble> > &Outarray)
     {
-        /*ASSERTL1(physfield.num_elements() == Outarray.num_elements(),"Physfield and outarray are of different dimensions");
+        //ASSERTL1(physfield.num_elements() == Outarray.num_elements(),"Physfield and outarray are of different dimensions");
         
         int i;
         
@@ -569,33 +595,18 @@ namespace Nektar
             Vmath::Vmul(nTracePts, Bwd, 1, Vn, 1, Bwd, 1);
 
             m_fields[0]->AddFwdBwdTraceIntegral(Fwd,Bwd,Outarray[i]);
-            }*/
-    }
-
-
-    /** 
-     * Projection used by SubStepAdvance time integration
-     */
-    void SubSteppingExtrapolate::SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
-												   Array<OneD, Array<OneD, NekDouble> > &outarray, 
-												   const NekDouble time)
-    {
-        /*ASSERTL1(inarray.num_elements() == outarray.num_elements(),"Inarray and outarray of different sizes ");
-
-        for(int i = 0; i < inarray.num_elements(); ++i)
-        {
-            Vmath::Vcopy(inarray[i].num_elements(),inarray[i],1,outarray[i],1);
-            }*/
+        }
     }
     
     /** 
      * Extrapolate field using equally time spaced field un,un-1,un-2, (at
      * dt intervals) to time n+t at order Ord 
-    */
-    void SubSteppingExtrapolate::SubStepExtrapoloteField(NekDouble toff, 
-														 Array< OneD, Array<OneD, NekDouble> > &ExtVel)
+     */
+    void SubSteppingExtrapolate::SubStepExtrapolateField(
+        NekDouble toff, 
+        Array< OneD, Array<OneD, NekDouble> > &ExtVel)
     {
-        /*int npts = m_fields[0]->GetTotPoints();
+        int npts = m_fields[0]->GetTotPoints();
         int nvel = m_velocity.num_elements();
         int i,j;
         Array<OneD, NekDouble> l(4);
@@ -626,54 +637,59 @@ namespace Nektar
                 Blas::Daxpy(npts,l[j],m_previousVelFields[j*nvel+i],1,
                             ExtVel[i],1);
             }
-            }*/
+        }
     }
-	
-	/** 
-     * 
-     */
-	void SubSteppingExtrapolate::v_MountHOPBCs(int HBCdata, 
-											   NekDouble kinvis, 
-											   Array<OneD, NekDouble> &Q, 
-											   Array<OneD, NekDouble> &Advection)
-	{
-		Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
-	}
 	
     /** 
      * 
      */
-    void SubSteppingExtrapolate::AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-										 NekDouble Aii_Dt)
+    void SubSteppingExtrapolate::v_MountHOPBCs(
+        int HBCdata, 
+        NekDouble kinvis, 
+        Array<OneD, NekDouble> &Q, 
+        Array<OneD, NekDouble> &Advection)
     {
-        /*switch(m_velocity.num_elements())
+        Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
+    }
+	
+    /** 
+     * 
+     */
+    void SubSteppingExtrapolate::AddDuDt(
+        const Array<OneD, const Array<OneD, NekDouble> >  &N, 
+        NekDouble Aii_Dt)
+    {
+        switch(m_velocity.num_elements())
         {
-        case 1:
-            ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
-            break;
-        case 2:
-            AddDuDt2D(N,Aii_Dt);
-            break;
-        case 3:
-            AddDuDt3D(N,Aii_Dt);
-            break;
-            }*/
+            case 1:
+                ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
+                break;
+            case 2:
+                AddDuDt2D(N,Aii_Dt);
+                break;
+            case 3:
+                AddDuDt3D(N,Aii_Dt);
+                break;
+        }
     }
         
     /** 
      * 
      */    
-    void SubSteppingExtrapolate::AddDuDt2D(const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-										   NekDouble Aii_Dt)
+    void SubSteppingExtrapolate::AddDuDt2D(
+        const Array<OneD, const Array<OneD, NekDouble> >  &N, 
+        NekDouble Aii_Dt)
     {
-        /*int i,n;
+        int i,n;
         ASSERTL0(m_velocity.num_elements() == 2," Routine currently only set up for 2D");
         
+        int pindex=2;
+
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp,UBndExp,VBndExp;
         
-        PBndConds = m_pressure->GetBndConditions();
-        PBndExp   = m_pressure->GetBndCondExpansions();
+        PBndConds = m_fields[pindex]->GetBndConditions();
+        PBndExp   = m_fields[pindex]->GetBndCondExpansions();
         
         UBndExp   = m_fields[m_velocity[0]]->GetBndCondExpansions();
         VBndExp   = m_fields[m_velocity[1]]->GetBndCondExpansions();
@@ -740,7 +756,9 @@ namespace Nektar
                     // subtrace off du/dt derivative 
                     Pbc->NormVectorIProductWRTBase(ubc,vbc,Pvals); 
                     
-                    Vmath::Vsub(ncoeffs,Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1, Pvals,1, Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1);
+                    Vmath::Vsub(ncoeffs,Ptmp = PBndExp[n]->UpdateCoeffs()
+                                +PBndExp[n]->GetCoeff_Offset(i),1, Pvals,1, 
+                                Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1);
                 }
             }
             // setting if just standard BC no High order
@@ -752,23 +770,24 @@ namespace Nektar
             {
                 ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
             }
-            }*/        
+        }        
     }
     
     /** 
      * 
      */   
     void SubSteppingExtrapolate::AddDuDt3D(const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-										   NekDouble Aii_Dt)
+                                           NekDouble Aii_Dt)
     {
-        /*int i,n;
+        int i,n;
         ASSERTL0(m_velocity.num_elements() == 3," Routine currently only set up for 3D");
-        
+        int pindex=3;                
+
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp,UBndExp,VBndExp,WBndExp;
-        
-        PBndConds = m_pressure->GetBndConditions();
-        PBndExp   = m_pressure->GetBndCondExpansions();
+
+        PBndConds = m_fields[pindex]->GetBndConditions();
+        PBndExp   = m_fields[pindex]->GetBndCondExpansions();
         
         UBndExp   = m_fields[m_velocity[0]]->GetBndCondExpansions();
         VBndExp   = m_fields[m_velocity[1]]->GetBndCondExpansions();
@@ -843,7 +862,12 @@ namespace Nektar
                     // subtrace off du/dt derivative 
                     Pbc->NormVectorIProductWRTBase(ubc,vbc,wbc,Pvals); 
                     
-                    Vmath::Vsub(ncoeffs,Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1, Pvals,1, Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1);
+                    Vmath::Vsub(
+                        ncoeffs,
+                        Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),
+                        1,Pvals,1, 
+                        Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),
+                        1);
                 }
             }
             // setting if just standard BC no High order
@@ -855,7 +879,7 @@ namespace Nektar
             {
                 ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
             }
-            }*/        
+        }        
     }    
 }
 

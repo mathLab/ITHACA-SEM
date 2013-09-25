@@ -89,7 +89,8 @@ namespace Nektar
     typedef LibUtilities::NekFactory< std::string, Extrapolate,
         const LibUtilities::SessionReaderSharedPtr& ,
         Array<OneD, MultiRegions::ExpListSharedPtr>& ,
-        Array<OneD, int> > ExtrapolateFactory;
+        Array<OneD, int> ,
+        AdvectionTermSharedPtr > ExtrapolateFactory; 
 
     ExtrapolateFactory& GetExtrapolateFactory();
 
@@ -100,63 +101,85 @@ namespace Nektar
         Extrapolate(        
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-            Array<OneD, int> pVel);
-
+            Array<OneD, int> pVel,
+            AdvectionTermSharedPtr advObject);
+        
         virtual ~Extrapolate();
 
-        inline void SubSteppingTimeIntegration(int intMethod,
-											   Array<OneD, MultiRegions::ExpListSharedPtr> pFields);
-        inline void SubStepSaveFields(const int nstep);
+        inline void SubSteppingTimeIntegration(
+            int intMethod);
+
+        inline void SubStepSaveFields(
+            const int nstep);
         
-		inline void SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-										  const NekDouble Aii_DT);
-        inline void SubStepAdvance(const int nstep, 
-								   NekDouble m_time);
+        inline void SubStepSetPressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+            const NekDouble Aii_DT,
+            NekDouble kinvis);
+
+        inline void SubStepAdvance(
+            const int nstep, 
+            NekDouble time);
 		
-		inline void MountHOPBCs(int HBCdata, 
-								NekDouble kinvis, 
-								Array<OneD, NekDouble> &Q, 
-								Array<OneD, NekDouble> &Advection);
+        inline void MountHOPBCs(
+            int HBCdata, 
+            NekDouble kinvis, 
+            Array<OneD, NekDouble> &Q, 
+            Array<OneD, NekDouble> &Advection);
+
+        void EvaluatePressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &fields,
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            const int kinvis);
         
     protected:
-        virtual void v_SubSteppingTimeIntegration(int intMethod,Array<OneD, MultiRegions::ExpListSharedPtr> pFields) = 0;
-        virtual void v_SubStepSaveFields(const int nstep)=0;
-        virtual void v_SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, const NekDouble Aii_DT)=0;
-        virtual void v_SubStepAdvance(const int nstep, NekDouble m_time)=0;
-		virtual void v_MountHOPBCs(int HBCdata, NekDouble kinvis, Array<OneD, NekDouble> &Q, Array<OneD, NekDouble> &Advection);
+        virtual void v_SubSteppingTimeIntegration(
+            int intMethod)=0;
+
+        virtual void v_SubStepSaveFields(
+            const int nstep)=0;
+
+        virtual void v_SubStepSetPressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+            const NekDouble Aii_DT,
+            NekDouble kinvis)=0;
+
+        virtual void v_SubStepAdvance(
+            const int nstep, 
+            NekDouble time)=0;
+
+        virtual void v_MountHOPBCs(
+            int HBCdata, 
+            NekDouble kinvis, 
+            Array<OneD, NekDouble> &Q, 
+            Array<OneD, NekDouble> &Advection);
+        
+        void CalcPressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &fields,
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            const int kinvis);
+        
+        void RollOver(
+            Array<OneD, Array<OneD, NekDouble> > &input);
 		
-		
-		void EvaluatePressureBCs(const MultiRegions::ExpListSharedPtr &pField,
-								 const Array<OneD, const Array<OneD, NekDouble> > &fields,
-								 const Array<OneD, const Array<OneD, NekDouble> >  &N,
-								 const int kinvis);
-		
-		void CalcPressureBCs(const MultiRegions::ExpListSharedPtr &pField,
-							 const Array<OneD, const Array<OneD, NekDouble> > &fields,
-							 const Array<OneD, const Array<OneD, NekDouble> >  &N,
-							 const int kinvis);
-		
-		void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
-		
-		void CurlCurl(const MultiRegions::ExpListSharedPtr &pField,
-					  const Array<OneD, Array<OneD, NekDouble> > &Vel,
-					  Array<OneD, Array<OneD, NekDouble> > &Q,
-					  const int j);
+        void CurlCurl(
+            const Array<OneD, Array<OneD, NekDouble> > &Vel,
+            Array<OneD, Array<OneD, NekDouble> > &Q,
+            const int j);
         
         LibUtilities::SessionReaderSharedPtr        m_session;
+
+        LibUtilities::CommSharedPtr m_comm;
 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
 
         Array<OneD, int> m_velocity;
 
-        LibUtilities::CommSharedPtr m_comm;
-
         AdvectionTermSharedPtr m_advObject;
-
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
 		
-		/// Curl-curl dimensionality
+        /// Curl-curl dimensionality
         int m_curl_dim;
         
         /// bounday dimensionality
@@ -176,6 +199,8 @@ namespace Nektar
 		
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
+
+        NekDouble m_timestep;
 		
         /// Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoElmtID;
@@ -192,7 +217,7 @@ namespace Nektar
         /// data structure to old all the information regarding High order pressure BCs
         Array<OneD, HBCInfo > m_HBCdata;
 		
-        /// general standard element used to deaal with HOPBC calculations
+        /// general standard element used to deal with HOPBC calculations
         StdRegions::StdExpansionSharedPtr m_elmt;
         
         /// wave number 2 pi k /Lz
@@ -203,23 +228,24 @@ namespace Nektar
 
     private:
         static std::string def;
-		
-		void GenerateHOPBCMap(const MultiRegions::ExpListSharedPtr &pField, const int HOPBCnumber);
+        
+        void GenerateHOPBCMap();
     };
 
     /**
      *
      */
-    inline void Extrapolate::SubSteppingTimeIntegration(int intMethod,
-														Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+    inline void Extrapolate::SubSteppingTimeIntegration(
+        int intMethod)
     {
-        v_SubSteppingTimeIntegration(intMethod,pFields);
+        v_SubSteppingTimeIntegration(intMethod);
     }
-
+    
     /**
      *
      */
-    inline void Extrapolate::SubStepSaveFields(const int nstep)
+    inline void Extrapolate::SubStepSaveFields(
+        const int nstep)
     {
         v_SubStepSaveFields(nstep);
     }
@@ -227,28 +253,32 @@ namespace Nektar
     /**
      *
      */
-    inline void Extrapolate::SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-												   const NekDouble Aii_DT)
+    inline void Extrapolate::SubStepSetPressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+            const NekDouble Aii_DT,
+            NekDouble kinvis)
     {
-        v_SubStepSetPressureBCs(inarray,Aii_DT);
+        v_SubStepSetPressureBCs(inarray,Aii_DT,kinvis);
     }
-
+    
     /**
      *
      */
-    inline void Extrapolate::SubStepAdvance(const int nstep, 
-											NekDouble m_time)
+    inline void Extrapolate::SubStepAdvance(
+        const int nstep, 
+        NekDouble time)
     {
-        v_SubStepAdvance(nstep, m_time);
+        v_SubStepAdvance(nstep, time);
     }
 	
-	/**
+    /**
      *
      */
-    inline void Extrapolate::MountHOPBCs(int HBCdata, 
-										 NekDouble kinvis, 
-										 Array<OneD, NekDouble> &Q, 
-										 Array<OneD, NekDouble> &Advection);
+    inline void Extrapolate::MountHOPBCs(
+        int HBCdata, 
+        NekDouble kinvis, 
+        Array<OneD, NekDouble> &Q, 
+        Array<OneD, NekDouble> &Advection)
     {
         v_MountHOPBCs(HBCdata,kinvis,Q,Advection);
     }

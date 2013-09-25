@@ -49,8 +49,9 @@ namespace Nektar
     StandardExtrapolate::StandardExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-        Array<OneD, int> pVel)
-        : Extrapolate(pSession,pFields,pVel)
+        Array<OneD, int> pVel,
+        AdvectionTermSharedPtr advObject)
+        : Extrapolate(pSession,pFields,pVel,advObject)
     {
     }
 
@@ -61,22 +62,18 @@ namespace Nektar
     /** 
      * 
      */
-    void StandardExtrapolate::v_SubSteppingTimeIntegration(int intMethod, Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+    void StandardExtrapolate::v_SubSteppingTimeIntegration(
+        int intMethod)
     {
     }
 
     /** 
      * 
      */
-    void StandardExtrapolate::v_SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, const NekDouble Aii_DT)
-    {
-    }
-
-
-    /** 
-     * 
-     */
-    void StandardExtrapolate::v_SubStepAdvance(const int nstep, NekDouble m_time)
+    void StandardExtrapolate::v_SubStepSetPressureBCs(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        const NekDouble Aii_DT,
+        NekDouble kinvis)
     {
     }
 
@@ -84,19 +81,31 @@ namespace Nektar
     /** 
      * 
      */
-    void StandardExtrapolate::v_SubStepSaveFields(const int nstep)
+    void StandardExtrapolate::v_SubStepAdvance(
+        const int nstep, 
+        NekDouble time)
+    {
+    }
+
+
+    /** 
+     * 
+     */
+    void StandardExtrapolate::v_SubStepSaveFields(
+        const int nstep)
     {
     }
 	
-	/** 
+    /** 
      * 
      */
-	void StandardExtrapolate::v_MountHOPBCs(int HBCdata, 
-											NekDouble kinvis, 
-											Array<OneD, NekDouble> &Q, 
-											Array<OneD, NekDouble> &Advection)
+    void StandardExtrapolate::v_MountHOPBCs(
+        int HBCdata, 
+        NekDouble kinvis, 
+        Array<OneD, NekDouble> &Q, 
+        Array<OneD, NekDouble> &Advection)
 	{
-		Vmath::Svtvp(HBCdata,-kinvis,Q,1,Advection,1,Q,1);
+            Vmath::Svtvp(HBCdata,-kinvis,Q,1,Advection,1,Q,1);
 	}
 }
 

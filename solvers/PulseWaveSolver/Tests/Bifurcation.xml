@@ -31,29 +31,28 @@
       <S ID="4">    4     5 </S>
       
       <S ID="5">    5     6 </S>
-      <S ID="6">    7     8 </S>
-      <S ID="7">    6     7 </S>
+      <S ID="6">    6     7 </S>
+      <S ID="7">    7     8 </S>
       <S ID="8">    8     9 </S>
       <S ID="9">    9     10 </S>
       <S ID="10">    10    11 </S>
       
-      <S ID="11">    5    12 </S>
+      <S ID="11">     5     12 </S>
       <S ID="12">    12    13 </S>
       <S ID="13">    13    14 </S>
       <S ID="14">    14    15 </S>
       <S ID="15">    15    16 </S>
-      <S ID="16">    16    17 </S>      
+      <S ID="16">    16    17 </S>
     </ELEMENT>
 
     <COMPOSITE>
       <C ID="0"> S[0-4] </C>
-      <C ID="1"> V[0] </C>  
-      <C ID="2"> V[5] </C>
+      <C ID="1"> V[0] </C>
+      
       <C ID="3"> S[5-10] </C>
-      <C ID="4"> V[11] </C> 
-      <C ID="5"> V[12] </C>     
+      <C ID="4"> V[11] </C>
+      
       <C ID="6"> S[11-16] </C>
-      <C ID="7"> V[16] </C>
       <C ID="8"> V[17] </C>
     </COMPOSITE>
 
@@ -103,7 +102,6 @@
       <B ID="0"> C[1] </B>
       <B ID="1"> C[4] </B>
       <B ID="2"> C[8] </B>
-      <B ID="3"> C[5] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
@@ -117,10 +115,6 @@
       </REGION>
       <REGION REF="2">
         <D VAR="A" VALUE="1.219" />
-        <D VAR="u" VALUE="0.0" />
-      </REGION>
-      <REGION REF="3">
-        <D VAR="A" VALUE="5.983" />
         <D VAR="u" VALUE="0.0" />
       </REGION>
     </BOUNDARYCONDITIONS>
@@ -154,4 +148,5 @@
     </CONDITIONS>
 
 </NEKTAR>
+
 

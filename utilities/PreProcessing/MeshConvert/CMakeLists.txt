@@ -13,7 +13,6 @@ SET(MeshConvertHeaders
     ProcessPerAlign.h
     ProcessSpherigon.h
     ProcessTetSplit.h
-    ProcessTriSplit.h
     MeshElements.h
 )
 
@@ -32,7 +31,6 @@ SET(MeshConvertSources
     ProcessPerAlign.cpp
     ProcessSpherigon.cpp
     ProcessTetSplit.cpp
-    ProcessTriSplit.cpp
     MeshConvert.cpp
     MeshElements.cpp)
 

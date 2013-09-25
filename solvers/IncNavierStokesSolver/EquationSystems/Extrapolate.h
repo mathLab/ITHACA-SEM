@@ -125,7 +125,7 @@ namespace Nektar
             int HBCdata, 
             NekDouble kinvis, 
             Array<OneD, NekDouble> &Q, 
-            Array<OneD, NekDouble> &Advection);
+            Array<OneD, const NekDouble> &Advection);
 
         void EvaluatePressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
@@ -152,7 +152,7 @@ namespace Nektar
             int HBCdata, 
             NekDouble kinvis, 
             Array<OneD, NekDouble> &Q, 
-            Array<OneD, NekDouble> &Advection);
+            Array<OneD, const NekDouble> &Advection)=0;
         
         void CalcPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
@@ -163,7 +163,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &input);
 		
         void CurlCurl(
-            const Array<OneD, Array<OneD, NekDouble> > &Vel,
+            Array<OneD, Array<OneD, const NekDouble> > &Vel,
             Array<OneD, Array<OneD, NekDouble> > &Q,
             const int j);
         
@@ -201,6 +201,21 @@ namespace Nektar
         int m_intSteps;
 
         NekDouble m_timestep;
+
+        /// Flag to determine if single homogeneous mode is used.
+        bool m_SingleMode;
+        /// Flag to determine if half homogeneous mode is used.
+        bool m_HalfMode;
+        /// Flag to determine if use multiple homogenenous modes are used.
+        bool m_MultipleModes;
+
+        NekDouble m_LhomZ;  ///< physical length in Z direction (if homogeneous)
+        
+        int m_npointsX;     ///< number of points in X direction (if homogeneous)
+        int m_npointsY;     ///< number of points in Y direction (if homogeneous)
+        int m_npointsZ;     ///< number of points in Z direction (if homogeneous)
+
+
 		
         /// Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoElmtID;
@@ -278,7 +293,7 @@ namespace Nektar
         int HBCdata, 
         NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
-        Array<OneD, NekDouble> &Advection)
+        Array<OneD, const NekDouble> &Advection)
     {
         v_MountHOPBCs(HBCdata,kinvis,Q,Advection);
     }

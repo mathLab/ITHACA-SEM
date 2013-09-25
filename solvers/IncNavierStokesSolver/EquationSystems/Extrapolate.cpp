@@ -179,11 +179,11 @@ namespace Nektar
 
         int pindex=N.num_elements();
 		
-        Array<OneD, <Array<OneD, const NekDouble> > Velocity(m_curl_dim);
-        Array<OneD, <Array<OneD, const NekDouble> > Advection(m_bnd_dim);
+        Array<OneD, Array<OneD, const NekDouble> > Velocity(m_curl_dim);
+        Array<OneD, Array<OneD, const NekDouble> > Advection(m_bnd_dim);
         
-        Array<OneD, <Array<OneD, NekDouble> > BndValues(m_bnd_dim);
-        Array<OneD, <Array<OneD, NekDouble> > Q(m_bnd_dim);
+        Array<OneD, Array<OneD, NekDouble> > BndValues(m_bnd_dim);
+        Array<OneD, Array<OneD, NekDouble> > Q(m_bnd_dim);
 		
         for(int i = 0; i < m_bnd_dim; i++)
         {
@@ -282,7 +282,7 @@ namespace Nektar
      * Curl Curl routine - dimension dependent
      */
     void Extrapolate::CurlCurl(
-        const Array<OneD, Array<OneD, NekDouble> > &Vel,
+        Array<OneD, Array<OneD, const NekDouble> > &Vel,
         Array<OneD, Array<OneD, NekDouble> > &Q,
         const int j)
     {
@@ -295,8 +295,10 @@ namespace Nektar
         {
             case MultiRegions::e2D:
             {
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[0],Vel[1],Vx);
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[1],Vel[2],Uy);  
+                Array<OneD,NekDouble> Dummy(m_pressureBCsMaxPts);
+
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vel[1],Vx);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vel[2],Uy);  
 		
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Vx,1,Uy,1,Dummy,1);
                 
@@ -309,26 +311,27 @@ namespace Nektar
             case MultiRegions::e3DH1D:
             {
                 Array<OneD,NekDouble> Wz(m_pressureBCsMaxPts);
+
                 Array<OneD,NekDouble> Dummy1(m_pressureBCsMaxPts);
-                Array<OneD,NekDouble> DUmmy2(m_pressureBCsMaxPts);
+                Array<OneD,NekDouble> Dummy2(m_pressureBCsMaxPts);
                 
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[0],Vel[1],Vx);
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[1],Vel[0],Uy);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vel[1],Vx);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vel[0],Uy);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber[j],Vel[2],1,Wz,1);
 				
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[1],Vx,Dummy1);
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[1],Uy,Dummy2);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vx,Dummy1);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Uy,Dummy2);
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Dummy1,1,Dummy2,1,Q[0],1);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],Vel[0],1,Dummy1,1);
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[0],Wz,Dummy2);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Wz,Dummy2);
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Q[0],1,Dummy1,1,Q[0],1);
                 Vmath::Vadd(m_HBCdata[j].m_ptsInElmt,Q[0],1,Dummy2,1,Q[0],1);
                             
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[1],Wz,Dummy1);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Wz,Dummy1);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],Vel[1],1,Dummy2,1);
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Dummy1,1,Dummy2,1,Q[1],1);
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[0],Vx,Dummy1);
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[0],Uy,Dummy2);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vx,Dummy1);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Uy,Dummy2);
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Q[1],1,Dummy1,1,Q[1],1);
                 Vmath::Vadd(m_HBCdata[j].m_ptsInElmt,Q[1],1,Dummy2,1,Q[1],1);			
             }
@@ -336,22 +339,28 @@ namespace Nektar
             
             case MultiRegions::e3DH2D:
             {
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[0],Vel[2],Wx);
-                m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[0],Vel[1],Vx);
+                Array<OneD,NekDouble> Wx(m_pressureBCsMaxPts);
+                Array<OneD,NekDouble> Wz(m_pressureBCsMaxPts);
+                Array<OneD,NekDouble> Uz(m_pressureBCsMaxPts);
+                Array<OneD,NekDouble> qz(m_pressureBCsMaxPts);
+                Array<OneD,NekDouble> qy(m_pressureBCsMaxPts);
+
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vel[2],Wx);
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vel[1],Vx);
                 
-                //m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[1],Vel[0],Uy);
+                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vel[0],Uy);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],Vel[0],1,Uy,1);
                 
-                //m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[2],Vel[0],Uz);
+                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],Vel[0],Uz);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber[j],Vel[0],1,Uz,1);
 				
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Wz,1,Wx,1,qy,1);
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Vx,1,Uy,1,qz,1);
                 
-                //m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[1],qz,Uy);
+                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],qz,Uy);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],qz,1,Uy,1);
 				
-                //m_elmt->PhysDeriv(MultiRegionss::DirCartesianMap[2],qy,Uz);
+                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],qy,Uz);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber[j],qy,1,Uz,1);
 		
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Uy,1,Uz,1,Q[0],1);
@@ -383,6 +392,9 @@ namespace Nektar
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Wx,1,Wy,1,Q[2],1);
             }
             break;
+            default:
+                ASSERTL0(0,"Dimension not supported");
+                break;
         }
     }
     
@@ -431,7 +443,7 @@ namespace Nektar
         {
             for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i)
             {
-                m_pressureBCsMaxPts = max(m_pressureBCsMaxPts, PressureField->GetExp(m_pressureBCtoElmtID[cnt++])->GetTotPoints());
+                m_pressureBCsMaxPts = max(m_pressureBCsMaxPts, m_fields[pindex]->GetExp(m_pressureBCtoElmtID[cnt++])->GetTotPoints());
             }
         }
 	
@@ -488,7 +500,7 @@ namespace Nektar
         }
 	
 		
-        m_HBCdata = Array<OneD, HBCInfo>(HOPBCnumber);
+        m_HBCdata = Array<OneD, HBCInfo>(HBCnumber);
 	
         switch(m_fields[pindex]->GetExpType())
         {
@@ -534,8 +546,8 @@ namespace Nektar
                 int num_planes = planes.num_elements();            
                 int num_elm_per_plane = (m_fields[pindex]->GetExpSize())/num_planes;
 				
-                m_wavenumber      = Array<OneD, NekDouble>(HOPBCnumber);
-                m_negWavenumberSq = Array<OneD, NekDouble>(HOPBCnumber);
+                m_wavenumber      = Array<OneD, NekDouble>(HBCnumber);
+                m_negWavenumberSq = Array<OneD, NekDouble>(HBCnumber);
 		
                 int coeff_count = 0;
                 int exp_size, exp_size_per_plane;
@@ -544,6 +556,39 @@ namespace Nektar
                 NekDouble sign = -1.0;
                 int cnt = 0;
                 
+                m_session->MatchSolverInfo("ModeType", "SingleMode", 
+                                           m_SingleMode, false);
+                m_session->MatchSolverInfo("ModeType", "HalfMode", 
+                                           m_HalfMode, false);
+                m_session->MatchSolverInfo("ModeType", "MultipleModes", 
+                                           m_MultipleModes, false);
+                m_session->LoadParameter("LZ", m_LhomZ);
+
+                // Stability Analysis flags
+                if(m_session->DefinesSolverInfo("ModeType"))
+                {
+                    if(m_SingleMode)
+                    {
+                        m_npointsZ = 2;
+                    }
+                    else if(m_HalfMode)
+                    {
+                        m_npointsZ = 1;
+                    }
+                    else if(m_MultipleModes)
+                    {
+                        m_npointsZ = m_session->GetParameter("HomModesZ");
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "SolverInfo ModeType not valid");
+                    }
+                }
+                else 
+                {
+                    m_npointsZ = m_session->GetParameter("HomModesZ");
+                }
+
                 for(int k = 0; k < num_planes; k++)
                 {
                     K = planes[k]/2;
@@ -645,8 +690,8 @@ namespace Nektar
                                     m_HBCdata[j].m_bndElmtOffset = i+(k1*m_npointsY+k2)*exp_size_per_line;
                                     m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];                
                                     m_HBCdata[j].m_bndryElmtID = n;
-                                    m_wavenumber[j] = 2*M_PI*sign*(NekDouble(k1))/m_LhomZ;
-                                    m_negWavenumberSq[j] = 2*M_PI*sign*(NekDouble(k2))/m_LhomY;
+                                    //m_wavenumber[j] = 2*M_PI*sign*(NekDouble(k1))/m_LhomZ;
+                                    //m_negWavenumberSq[j] = 2*M_PI*sign*(NekDouble(k2))/m_LhomY;
                                 }
                             }
                             else

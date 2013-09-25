@@ -100,7 +100,7 @@ namespace Nektar
         virtual void v_MountHOPBCs(
             int HBCdata, NekDouble kinvis, 
             Array<OneD, NekDouble> &Q, 
-            Array<OneD, NekDouble> &Advection);
+            Array<OneD, const NekDouble> &Advection);
         
     };
     

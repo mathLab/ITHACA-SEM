@@ -90,9 +90,9 @@ namespace Nektar
             const int nstep);
 
         virtual void v_SubStepSetPressureBCs(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-        const NekDouble Aii_Dt,
-        NekDouble kinvis);
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+            const NekDouble Aii_Dt,
+            NekDouble kinvis);
 
         virtual void v_SubStepAdvance(
             const int nstep, 
@@ -101,7 +101,7 @@ namespace Nektar
         virtual void v_MountHOPBCs(
             int HBCdata, 
             NekDouble kinvis, Array<OneD, NekDouble> &Q, 
-            Array<OneD, NekDouble> &Advection);
+            Array<OneD, const NekDouble> &Advection);
         
         void AddDuDt(
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
@@ -143,31 +143,9 @@ namespace Nektar
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
 
-        int nConvectiveFields;
-
-        /// Get the number of coefficients
-        int ncoeffs;
-
-        Array<OneD, int>  vel_loc;
-
-        NekDouble cflSafetyFactor;
-
-
-        //int m_intSteps;
-
-        /// Number of time steps between outputting status information.
-        //int m_infosteps;
-
-        /// CFL safety factor (comprise between 0 to 1).
-        //NekDouble m_cflSafetyFactor;
-
-        /// Time step size
-        //NekDouble m_timestep;
-
-        //bool m_HalfMode;
-
-        //bool m_SingleMode;
-        
+        NekDouble m_cflSafetyFactor;
+        int m_infosteps;
+        int minsubsteps;
     };
 }
 

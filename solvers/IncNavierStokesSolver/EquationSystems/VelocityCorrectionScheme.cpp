@@ -148,52 +148,7 @@ namespace Nektar
             
             ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
             
-            m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.5);
-            
-
-            // Set to 1 for first step and it will then be increased in
-            // time advance routines
-            switch(intMethod)
-            {
-            case LibUtilities::eBackwardEuler:
-            case LibUtilities::eBDFImplicitOrder1: 
-                {
-                    m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("ForwardEuler");
-                    
-                    // Fields for linear interpolation
-                    m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*m_fields.num_elements());                    
-                    int ntotpts  = m_fields[0]->GetTotPoints();
-                    m_previousVelFields[0] = Array<OneD, NekDouble>(2*m_fields.num_elements()*ntotpts);
-                    for(i = 1; i < 2*m_fields.num_elements(); ++i)
-                    {
-                        m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
-                    }
-                    
-                }
-                break;
-            case LibUtilities::eBDFImplicitOrder2:
-                {
-                    m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
-                    
-                    int nvel = m_velocity.num_elements();
-                    
-                    // Fields for quadratic interpolation
-                    m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(3*nvel);
-                    
-                    int ntotpts  = m_fields[0]->GetTotPoints();
-                    m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
-                    for(i = 1; i < 3*nvel; ++i)
-                    {
-                        m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
-                    }
-                 
-                }
-                break;
-            default:
-                ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
-                break;
-            }
-            
+            m_extrapolation->SubSteppingTimeIntegration(intMethod);
             // set explicit time-intregration class operators
             //m_subStepIntegrationOps.DefineOdeRhs(&IncNavierStokes::SubStepAdvection, this);
             //m_subStepIntegrationOps.DefineProjection(&IncNavierStokes::SubStepProjection, this);

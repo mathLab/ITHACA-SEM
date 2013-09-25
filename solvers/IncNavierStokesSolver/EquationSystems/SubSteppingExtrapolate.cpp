@@ -53,6 +53,9 @@ namespace Nektar
         AdvectionTermSharedPtr advObject)
         : Extrapolate(pSession,pFields,pVel,advObject)
     {
+        m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+        m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.5);
+        m_session->LoadParameter("MinSubSteps", minsubsteps,0);
     }
 
     SubSteppingExtrapolate::~SubSteppingExtrapolate()
@@ -62,8 +65,6 @@ namespace Nektar
     void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
         int intMethod)
     {
-        //ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
-        
         int i;
         
         // Set to 1 for first step and it will then be increased in
@@ -125,7 +126,6 @@ namespace Nektar
         int i;
         int nVariables     = inarray.num_elements();
         int nQuadraturePts = inarray[0].num_elements();
-        int m_nConvectiveFields = m_fields.num_elements()-1;
         
         /// Get the number of coefficients
         int ncoeffs = m_fields[0]->GetNcoeffs(); 
@@ -150,7 +150,7 @@ namespace Nektar
 
         SubStepExtrapolateField(fmod(time,m_timestep), Velfields);
         
-        //m_advObject->DoAdvection(m_fields, Velfields, inarray, outarray, time);
+        m_advObject->DoAdvection(m_fields, Velfields, inarray, outarray, time);
         
         for(i = 0; i < nVariables; ++i)
         {
@@ -216,7 +216,6 @@ namespace Nektar
      * 
      */
     void SubSteppingExtrapolate::v_SubStepSetPressureBCs(
-        const MultiRegions::ExpListSharedPtr &pField,
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         const NekDouble Aii_Dt,
         NekDouble kinvis)
@@ -229,7 +228,7 @@ namespace Nektar
             velfields[i] = m_fields[m_velocity[i]]->GetPhys(); 
         }
 
-        EvaluatePressureBCs(pField,velfields,inarray,kinvis);
+        EvaluatePressureBCs(velfields,inarray,kinvis);
 		
         AddDuDt(inarray,Aii_Dt);
     }
@@ -289,7 +288,7 @@ namespace Nektar
         NekDouble time)
     {
         int n;
-        int nsubsteps, minsubsteps, infosteps;
+        int nsubsteps;
         
         NekDouble dt; 
         
@@ -305,14 +304,11 @@ namespace Nektar
         dt = GetSubstepTimeStep();
 
         nsubsteps = (m_timestep > dt)? ((int)(m_timestep/dt)+1):1; 
-        m_session->LoadParameter("MinSubSteps", minsubsteps,0);
         nsubsteps = max(minsubsteps, nsubsteps);
 
         dt = m_timestep/nsubsteps;
         
-        m_session->LoadParameter("IO_InfoSteps", infosteps, 0);
-
-        if (infosteps && !((nstep+1)%infosteps) && m_comm->GetRank() == 0)
+        if (m_infosteps && !((nstep+1)%m_infosteps) && m_comm->GetRank() == 0)
         {
             cout << "Sub-integrating using "<< nsubsteps 
                  << " steps over Dt = "     << m_timestep 
@@ -368,7 +364,7 @@ namespace Nektar
         
         for(int el = 0; el < n_element; ++el)
         {
-            tstep[el] = cflSafetyFactor / 
+            tstep[el] = m_cflSafetyFactor / 
                 (stdVelocity[el] * cLambda * 
                  (ExpOrder[el]-1) * (ExpOrder[el]-1));
         }
@@ -383,7 +379,7 @@ namespace Nektar
         const Array<OneD, Array<OneD,NekDouble> > inarray)
     {
         // Checking if the problem is 2D
-        //ASSERTL0(m_expdim >= 2, "Method not implemented for 1D");
+        ASSERTL0(m_curl_dim >= 2, "Method not implemented for 1D");
         
         int n_points_0      = m_fields[0]->GetExp(0)->GetTotPoints();
         int n_element       = m_fields[0]->GetExpSize();       
@@ -547,15 +543,15 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
         Array<OneD, Array<OneD, NekDouble> > &Outarray)
     {
-        //ASSERTL1(physfield.num_elements() == Outarray.num_elements(),"Physfield and outarray are of different dimensions");
+        ASSERTL1(physfield.num_elements() == Outarray.num_elements(),"Physfield and outarray are of different dimensions");
         
         int i;
         
         /// Number of trace points
-        //int nTracePts   = GetTraceNpoints();
+        int nTracePts   = m_fields[0]->GetTrace()->GetNpoints();
         
         /// Number of spatial dimensions
-        //int nDimensions = m_spacedim;
+        int nDimensions = m_curl_dim;
 
         /// Forward state array
         Array<OneD, NekDouble> Fwd(3*nTracePts);
@@ -647,7 +643,7 @@ namespace Nektar
         int HBCdata, 
         NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
-        Array<OneD, NekDouble> &Advection)
+        Array<OneD, const NekDouble> &Advection)
     {
         Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
     }

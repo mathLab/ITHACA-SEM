@@ -64,18 +64,64 @@ namespace Nektar
 
                 const int nPts   = m_tmp.num_elements() / m_numPlanes;
                 const int offset = m_planeNumber * nPts;
-                Array<OneD, NekDouble> tmp(nPts, m_tmp + offset);
 
+                m_tmp2 = Array<OneD, NekDouble>(nPts, m_tmp + offset);
                 m_planeNumber = (m_planeNumber + 1) % m_numPlanes;
 
-                return tmp;
+                return m_tmp2;
             }
 
         private:
+            RSScalarFuncType             m_func;
             int                          m_planeNumber;
             int                          m_numPlanes;
-            RSScalarFuncType             m_func;
             Array<OneD, const NekDouble> m_tmp;
+            Array<OneD, const NekDouble> m_tmp2;
+        };
+
+        /**
+         * @brief Wrapper class for Riemann solver scalars.
+         */
+        class HomoRSVector
+        {
+        public:
+            HomoRSVector(RSVecFuncType func,
+                         int           nPlanes)
+                : m_func       (func),
+                  m_planeNumber(0),
+                  m_numPlanes  (nPlanes),
+                  m_tmp        ()
+            {
+            }
+
+            const Array<OneD, const Array<OneD, NekDouble> >& Exec()
+            {
+                if (m_planeNumber == 0)
+                {
+                    m_tmp = m_func();
+                }
+
+                const int nDim   = m_tmp.num_elements();
+                const int nPts   = m_tmp[0].num_elements() / m_numPlanes;
+                const int offset = m_planeNumber * nPts;
+                m_tmp2 = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                
+                for (int i = 0; i < m_tmp.num_elements(); ++i)
+                {
+                    m_tmp2[i] = Array<OneD, NekDouble>(nPts, m_tmp[i] + offset);
+                }
+
+                m_planeNumber = (m_planeNumber + 1) % m_numPlanes;
+
+                return m_tmp2;
+            }
+
+        private:
+            RSVecFuncType                        m_func;
+            int                                  m_planeNumber;
+            int                                  m_numPlanes;
+            Array<OneD, Array<OneD, NekDouble> > m_tmp;
+            Array<OneD, Array<OneD, NekDouble> > m_tmp2;
         };
     }
 }

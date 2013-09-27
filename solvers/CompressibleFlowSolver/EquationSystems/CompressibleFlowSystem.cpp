@@ -52,7 +52,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession)
     {
-
+        m_planeNumber = 0;
     }
 
     /**
@@ -179,7 +179,7 @@ namespace Nektar
                 // Setting up parameters for advection operator Riemann solver
                 m_riemannSolver->SetParam (
                     "gamma",  &CompressibleFlowSystem::GetGamma,   this);
-                m_riemannSolver->SetScalar(
+                m_riemannSolver->SetAuxiliary(
                     "velLoc", &CompressibleFlowSystem::GetVelLoc,  this);
                 m_riemannSolver->SetVector(
                     "N",      &CompressibleFlowSystem::GetNormals, this);
@@ -187,7 +187,7 @@ namespace Nektar
                 // Setting up parameters for diffusion operator Riemann solver
                 m_riemannSolverLDG->SetParam (
                     "gamma",  &CompressibleFlowSystem::GetGamma,   this);
-                m_riemannSolverLDG->SetScalar(
+                m_riemannSolverLDG->SetAuxiliary(
                     "velLoc", &CompressibleFlowSystem::GetVelLoc,  this);
                 m_riemannSolverLDG->SetVector(
                     "N",      &CompressibleFlowSystem::GetNormals, this);
@@ -1020,9 +1020,41 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields(nVariables);
 
         // Reorder storage to list time-integrated fields first
-        for (i = 0; i < nVariables; ++i)
+        // For 3DHomogenoeus1D
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            fields[i] = m_fields[i]->UpdatePhys();
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int nPlanes = nSolutionPts/nSolutionPtsPlane;
+
+            Array<OneD, Array<OneD, NekDouble> > fields_temp(nVariables);
+
+            for (i = 0; i < nVariables; ++i)
+            {
+                fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
+                fields_temp[i] = m_fields[i]->UpdatePhys();
+
+                Vmath::Vcopy(nPts,
+                            &fields_temp[i][m_planeNumber*nSolutionPtsPlane], 1,
+                            &fields[i][0], 1);
+            }
+
+            if(m_planeNumber == nPlanes - 1)
+            {
+                m_planeNumber = 0;
+            }
+            else
+            {
+                m_planeNumber = m_planeNumber + 1;
+            }
+
+        }
+        else // For general case
+        {
+            for (i = 0; i < nVariables; ++i)
+            {
+                fields[i] = m_fields[i]->UpdatePhys();
+            }
         }
 
         // Thermodynamic related quantities
@@ -1392,17 +1424,61 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields_interp(nVariables);
 
         // Reorder storage to list time-integrated fields first
-        for (i = 0; i < nVariables; ++i)
+        // For 3DHomogenoeus1D
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            fields[i] = m_fields[i]->UpdatePhys();
-            fields_interp[i] = Array<OneD, NekDouble> (nPts);
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int nPlanes = nSolutionPts/nSolutionPtsPlane;
+
+            Array<OneD, Array<OneD, NekDouble> > fields_temp(nVariables);
+
+
+            for (i = 0; i < nVariables; ++i)
+            {
+                fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
+                fields_temp[i] = m_fields[i]->UpdatePhys();
+
+                Vmath::Vcopy(nPts,
+                             &fields_temp[i][m_planeNumber*nSolutionPtsPlane], 1,
+                             &fields[i][0], 1);
+
+                fields_interp[i] = Array<OneD, NekDouble> (nPts);
+
+            }
+
+            if(m_planeNumber == nPlanes - 1)
+            {
+                m_planeNumber = 0;
+            }
+            else
+            {
+                m_planeNumber = m_planeNumber + 1;
+            }
+        }
+        else // For general case
+        {
+            for (i = 0; i < nVariables; ++i)
+            {
+                fields[i] = m_fields[i]->UpdatePhys();
+                fields_interp[i] = Array<OneD, NekDouble> (nPts);
+            }
         }
 
         for (i = 0; i < nVariables; ++i)
         {
             // Interpolation to higher space
-            m_fields[0]->PhysInterp1DScaled(OneDptscale,fields[i],
+            // For 3DHomogenoeus1D
+            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+            {
+                m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
+                                        OneDptscale,fields[i], fields_interp[i]);
+            }
+            else // For general case
+            {
+                m_fields[0]->PhysInterp1DScaled(OneDptscale,fields[i],
                                             fields_interp[i] );
+            }
         }
 
         for (i = 0; i < variables_phys; ++i)

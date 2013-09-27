@@ -112,9 +112,9 @@ namespace Nektar
 
             // Override Riemann solver scalar and vector callbacks.
             map<string, RSScalarFuncType>::iterator it1;
-            //map<string, RSScalarFuncType>::iterator it2;
+            map<string, RSVecFuncType>::iterator it2;
             map<string, RSScalarFuncType> scalars = m_riemann->GetScalars();
-            //m_vectors = m_riemann->GetVectors();
+            map<string, RSVecFuncType> vectors = m_riemann->GetVectors();
 
             for (it1 = scalars.begin(); it1 != scalars.end(); ++it1)
             {
@@ -123,14 +123,12 @@ namespace Nektar
                 m_riemann->SetScalar(it1->first, &HomoRSScalar::Exec, tmp);
             }
 
-            /*
             for (it2 = vectors.begin(); it2 != vectors.end(); ++it2)
             {
-                m_riemann->SetVector(it2->first,
-                    boost::bind(&Advection3DHomogeneous1D::ModifiedRSVector,
-                                this, it2->first));
+                boost::shared_ptr<HomoRSVector> tmp = MemoryManager<HomoRSVector>
+                    ::AllocateSharedPtr(it2->second, m_numPlanes);
+                m_riemann->SetVector(it2->first, &HomoRSVector::Exec, tmp);
             }
-            */
 
             m_fluxVecStore = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
                 nConvectiveFields);

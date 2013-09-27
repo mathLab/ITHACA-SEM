@@ -241,7 +241,11 @@ namespace Nektar
                         m_numPointsPlane, tmp2 = outarray[j] + m_planePos[i]);
                 }
 
-                m_planeDiff->SetHomoDerivs(m_homoDerivPlane[i]);
+                if (m_fluxVectorNS)
+                {
+                    m_planeDiff->SetHomoDerivs(m_homoDerivPlane[i]);
+                }
+
                 m_planeDiff->Diffuse(nConvectiveFields,
                                      m_fieldsPlane,
                                      m_inarrayPlane,

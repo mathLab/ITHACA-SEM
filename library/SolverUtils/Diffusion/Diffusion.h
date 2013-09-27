@@ -126,7 +126,8 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;
 
-            virtual void v_SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
+            virtual void v_SetHomoDerivs(
+                Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
 
             }

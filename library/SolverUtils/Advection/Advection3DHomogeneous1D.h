@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERUTILS_ADVECTION3DHOMOGENEOUS1D
 
 #include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/Advection/HomogeneousRSScalar.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -44,44 +45,6 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        /**
-         * @brief Wrapper class for Riemann solver scalars.
-         */
-        class HomoRSScalar
-        {
-        public:
-            HomoRSScalar(RSScalarFuncType func,
-                         int              nPlanes)
-                : m_planeNumber(0),
-                  m_numPlanes  (nPlanes),
-                  m_func       (func),
-                  m_tmp        ()
-            {
-            }
-
-            const Array<OneD, const NekDouble>& Exec()
-            {
-                if (m_planeNumber == 0)
-                {
-                    m_tmp = m_func();
-                }
-
-                const int nPts   = m_tmp.num_elements() / m_numPlanes;
-                const int offset = m_planeNumber * nPts;
-                Array<OneD, NekDouble> tmp(nPts, m_tmp + offset);
-
-                m_planeNumber = (m_planeNumber + 1) % m_numPlanes;
-
-                return tmp;
-            }
-
-        private:
-            int                          m_planeNumber;
-            int                          m_numPlanes;
-            RSScalarFuncType             m_func;
-            Array<OneD, const NekDouble> m_tmp;
-        };
-
         class Advection3DHomogeneous1D : public Advection
         {
         public:

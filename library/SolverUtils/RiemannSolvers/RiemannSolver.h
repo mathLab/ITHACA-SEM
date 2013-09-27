@@ -79,7 +79,7 @@ namespace Nektar
             {
                 m_scalars[name] = fp;
             }
-            
+
             template<typename FuncPointerT, typename ObjectPointerT>
             void SetVector(std::string    name,
                            FuncPointerT   func,
@@ -104,6 +104,14 @@ namespace Nektar
             void SetParam(std::string name, RSParamFuncType fp)
             {
                 m_params[name] = fp;
+            }
+            
+            template<typename FuncPointerT, typename ObjectPointerT>
+            void SetAuxiliary(std::string    name,
+                              FuncPointerT   func,
+                              ObjectPointerT obj)
+            {
+                m_auxiliary[name] = boost::bind(func, obj);
             }
 
             std::map<std::string, RSScalarFuncType> &GetScalars()
@@ -131,6 +139,8 @@ namespace Nektar
             std::map<std::string, RSVecFuncType>    m_vectors;
             /// Map of parameter function types.
             std::map<std::string, RSParamFuncType > m_params;
+            /// Map of scalar function types.
+            std::map<std::string, RSScalarFuncType> m_auxiliary;
             /// Rotation matrices for each trace quadrature point.
             Array<OneD, Array<OneD, NekDouble> >    m_rotMat;
             /// Rotation storage

@@ -150,7 +150,7 @@ namespace Nektar
         {
             const Array<OneD, const Array<OneD, NekDouble> > &normals =
                 m_vectors["N"]();
-            const Array<OneD, NekDouble> &velLoc = m_scalars["velLoc"]();
+            const Array<OneD, NekDouble> &velLoc = m_auxiliary["velLoc"]();
             
             switch(normals.num_elements())
             {
@@ -249,7 +249,7 @@ namespace Nektar
         {
             const Array<OneD, const Array<OneD, NekDouble> > &normals = 
                 m_vectors["N"]();
-            const Array<OneD, NekDouble> &velLoc = m_scalars["velLoc"]();
+            const Array<OneD, NekDouble> &velLoc = m_auxiliary["velLoc"]();
             
             switch(normals.num_elements())
             {

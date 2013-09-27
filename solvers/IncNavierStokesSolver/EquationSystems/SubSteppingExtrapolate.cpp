@@ -544,12 +544,19 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
         Array<OneD, Array<OneD, NekDouble> > &Outarray)
     {
-        ASSERTL1(physfield.num_elements() == Outarray.num_elements(),"Physfield and outarray are of different dimensions");
+        ASSERTL1(
+            physfield.num_elements() == Outarray.num_elements(),
+            "Physfield and outarray are of different dimensions");
         
         int i;
         
         /// Number of trace points
         int nTracePts   = m_fields[0]->GetTrace()->GetNpoints();
+
+        Array<OneD, Array<OneD, NekDouble> > traceNormals;
+
+        //trace normals
+        m_fields[0]->GetTrace()->GetNormals(traceNormals);
         
         /// Number of spatial dimensions
         int nDimensions = m_curl_dim;
@@ -570,7 +577,7 @@ namespace Nektar
         for(i = 0; i < nDimensions; ++i)
         {
             m_fields[0]->ExtractTracePhys(m_fields[m_velocity[i]]->GetPhys(), Fwd);
-            //Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
+            Vmath::Vvtvp(nTracePts, traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
         }
         
         for(i = 0; i < physfield.num_elements(); ++i)
@@ -659,7 +666,9 @@ namespace Nektar
         switch(m_velocity.num_elements())
         {
             case 1:
-                ASSERTL0(false,"Velocity correction scheme not designed to have just one velocity component");
+                ASSERTL0(
+                    false,
+                    "Velocity correction scheme not designed to have just one velocity component");
                 break;
             case 2:
                 AddDuDt2D(N,Aii_Dt);

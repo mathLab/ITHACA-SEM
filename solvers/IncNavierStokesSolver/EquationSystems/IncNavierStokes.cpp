@@ -245,11 +245,11 @@ namespace Nektar
         // creation of the extrapolation object
         if(m_equationType == eUnsteadyNavierStokes)
         {
-            std::string vExtrapolation = "StandardExtrapolate";
-            if (m_session->DefinesTag("Extrapolation"))
+            std::string vExtrapolation = "Standard";
+
+            if (m_session->DefinesSolverInfo("Extrapolation"))
             {
-                //vConvectiveType = m_session->GetTag("Linearised");
-                vExtrapolation = m_session->GetTag("Extrapolation");
+                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
             }
                         
             m_extrapolation = GetExtrapolateFactory().CreateInstance(
@@ -315,7 +315,7 @@ namespace Nektar
             timer.Start();
 
             m_extrapolation->SubStepSaveFields(n);
-            m_extrapolation->SubStepAdvance(n,m_time);
+            m_extrapolation->SubStepAdvance(m_integrationSoln,n,m_time);
             
             fields = m_integrationScheme->TimeIntegrate(n, m_timestep, m_integrationSoln, m_integrationOps);
             

@@ -42,9 +42,9 @@ namespace Nektar
      * Registers the class with the Factory.
      */
     std::string SubSteppingExtrapolate::className = GetExtrapolateFactory().RegisterCreatorFunction(
-        "SubSteppingExtrapolate",
+        "SubStepping",
         SubSteppingExtrapolate::create,
-        "SubSteppingExtrapolate");
+        "SubStepping");
 
     SubSteppingExtrapolate::SubSteppingExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
@@ -221,10 +221,10 @@ namespace Nektar
         const NekDouble Aii_Dt,
         NekDouble kinvis)
     {
-        int numfields =m_fields.num_elements();
-        Array<OneD, Array<OneD, NekDouble> > velfields(numfields-1);
+        int nConvectiveFields =m_fields.num_elements()-1;
+        Array<OneD, Array<OneD, NekDouble> > velfields(nConvectiveFields);
         
-        for(int i = 0; i < numfields; ++i)
+        for(int i = 0; i < nConvectiveFields; ++i)
         {
             velfields[i] = m_fields[m_velocity[i]]->GetPhys(); 
         }
@@ -285,6 +285,7 @@ namespace Nektar
 
 
     void SubSteppingExtrapolate::v_SubStepAdvance(
+        LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
         const int nstep, 
         NekDouble time)
     {
@@ -300,7 +301,9 @@ namespace Nektar
         
         Array<OneD, NekDouble> CFL(m_fields[0]->GetExpSize(), 
                                    m_cflSafetyFactor);
-        
+        //this needs to change
+        m_comm = m_fields[0]->GetComm()->GetRowComm();
+
         // Get the proper time step with CFL control
         dt = GetSubstepTimeStep();
 
@@ -319,7 +322,7 @@ namespace Nektar
         for (int m = 0; m < nint; ++m)
         {
             // We need to update the fields held by the m_integrationSoln
-            fields = m_integrationSoln->UpdateSolutionVector()[m];
+            fields = integrationSoln->UpdateSolutionVector()[m];
             
             // Initialise NS solver which is set up to use a GLM method
             // with calls to EvaluateAdvection_SetPressureBCs and
@@ -336,7 +339,7 @@ namespace Nektar
             }
             
             // Reset time integrated solution in m_integrationSoln 
-            m_integrationSoln->SetSolVector(m,fields);
+            integrationSoln->SetSolVector(m,fields);
         }
     }
         
@@ -553,13 +556,18 @@ namespace Nektar
         /// Number of trace points
         int nTracePts   = m_fields[0]->GetTrace()->GetNpoints();
 
-        Array<OneD, Array<OneD, NekDouble> > traceNormals;
+        /// Number of spatial dimensions
+        int nDimensions = m_curl_dim;
+
+        Array<OneD, Array<OneD, NekDouble> > traceNormals(m_curl_dim);
+
+        for(i = 0; i < nDimensions; ++i)
+        {
+            traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+        }
 
         //trace normals
         m_fields[0]->GetTrace()->GetNormals(traceNormals);
-        
-        /// Number of spatial dimensions
-        int nDimensions = m_curl_dim;
 
         /// Forward state array
         Array<OneD, NekDouble> Fwd(3*nTracePts);

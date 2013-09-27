@@ -120,6 +120,7 @@ namespace Nektar
             NekDouble kinvis);
 
         inline void SubStepAdvance(
+            LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
             const int nstep, 
             NekDouble time);
 		
@@ -147,6 +148,7 @@ namespace Nektar
             NekDouble kinvis)=0;
 
         virtual void v_SubStepAdvance(
+            LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
             const int nstep, 
             NekDouble time)=0;
 
@@ -169,7 +171,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &Q,
             const int j);
         
-        LibUtilities::SessionReaderSharedPtr        m_session;
+        LibUtilities::SessionReaderSharedPtr m_session;
 
         LibUtilities::CommSharedPtr m_comm;
 
@@ -280,10 +282,11 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubStepAdvance(
+        LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
         const int nstep, 
         NekDouble time)
     {
-        v_SubStepAdvance(nstep, time);
+        v_SubStepAdvance(integrationSoln,nstep, time);
     }
 	
     /**

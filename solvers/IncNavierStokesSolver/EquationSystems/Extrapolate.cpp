@@ -268,9 +268,9 @@ namespace Nektar
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[2],BndValues[2]);
                     Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Pvals);
                     
-                    m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[0],BndValues[0]);
-                    m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[1],BndValues[1]);
-                    m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[2],BndValues[2]);
+                    m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[0],BndValues[0]);
+                    m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[1],BndValues[1]);
+                    m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[2],BndValues[2]);
                     Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Uvals);
                 }
                 break;

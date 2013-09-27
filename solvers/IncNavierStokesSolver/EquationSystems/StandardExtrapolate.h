@@ -94,6 +94,7 @@ namespace Nektar
             NekDouble kinvis);
 
         virtual void v_SubStepAdvance(
+            LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
             const int nstep, 
             NekDouble time);
 

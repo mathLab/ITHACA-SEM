@@ -42,9 +42,9 @@ namespace Nektar
      * Registers the class with the Factory.
      */
     std::string StandardExtrapolate::className = GetExtrapolateFactory().RegisterCreatorFunction(
-        "StandardExtrapolate",
+        "Standard",
         StandardExtrapolate::create,
-        "StandardExtrapolate");
+        "Standard");
 
     StandardExtrapolate::StandardExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
@@ -100,6 +100,7 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_SubStepAdvance(
+        LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
         const int nstep, 
         NekDouble time)
     {

@@ -63,26 +63,27 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_SubSteppingTimeIntegration(
-        int intMethod)
+        int intMethod,
+        LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
     {
-		switch(intMethod)
+        switch(intMethod)
         {
-			case LibUtilities::eIMEXOrder1:
-			{
-				m_intSteps = 1; 
-			}
-			break;
-			case LibUtilities::eIMEXOrder2:
-			{
-				m_intSteps = 2;
-			}
-			break;
-			case LibUtilities::eIMEXOrder3:
-			{
-				m_intSteps = 3;
-			}
-			break;
-		}
+            case LibUtilities::eIMEXOrder1:
+            {
+                m_intSteps = 1; 
+            }
+            break;
+            case LibUtilities::eIMEXOrder2:
+            {
+                m_intSteps = 2;
+            }
+            break;
+            case LibUtilities::eIMEXOrder3:
+            {
+                m_intSteps = 3;
+            }
+            break;
+        }
     }
 
     /** 

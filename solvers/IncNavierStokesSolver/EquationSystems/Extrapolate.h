@@ -109,7 +109,8 @@ namespace Nektar
 		void GenerateHOPBCMap();
 
         inline void SubSteppingTimeIntegration(
-            int intMethod);
+            int intMethod,
+            LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
 
         inline void SubStepSaveFields(
             const int nstep);
@@ -137,7 +138,8 @@ namespace Nektar
         
     protected:
         virtual void v_SubSteppingTimeIntegration(
-            int intMethod)=0;
+            int intMethod,        
+            LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)=0;
 
         virtual void v_SubStepSaveFields(
             const int nstep)=0;
@@ -253,9 +255,10 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubSteppingTimeIntegration(
-        int intMethod)
+        int intMethod,
+        LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
     {
-        v_SubSteppingTimeIntegration(intMethod);
+        v_SubSteppingTimeIntegration(intMethod, IntegrationScheme);
     }
     
     /**

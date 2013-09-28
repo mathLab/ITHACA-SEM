@@ -84,7 +84,9 @@ namespace Nektar
     protected:
 
         virtual void v_SubSteppingTimeIntegration(
-            int intMethod);
+            int intMethod,
+            LibUtilities::TimeIntegrationWrapperSharedPtr 
+            &IntegrationScheme);
  
         virtual void v_SubStepSaveFields(
             const int nstep);

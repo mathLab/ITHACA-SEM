@@ -141,27 +141,23 @@ namespace Nektar
         m_session->MatchSolverInfo("SmoothAdvection", "True",m_SmoothAdvection, false);
 
         m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(TimeIntStr);
-        m_intSteps = m_integrationScheme->GetIntegrationSteps();
+        //m_intSteps = m_integrationScheme->GetIntegrationSteps();
 
         if(m_subSteppingScheme)
         {
-            
             ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
             
-            m_extrapolation->SubSteppingTimeIntegration(intMethod);
-            // set explicit time-intregration class operators
-            //m_subStepIntegrationOps.DefineOdeRhs(&IncNavierStokes::SubStepAdvection, this);
-            //m_subStepIntegrationOps.DefineProjection(&IncNavierStokes::SubStepProjection, this);
-                
+            m_extrapolation->SubSteppingTimeIntegration(intMethod, m_integrationScheme);
         }
         else // Standard velocity correction scheme
         {
-			m_extrapolation->SubSteppingTimeIntegration(intMethod);
+            m_extrapolation->SubSteppingTimeIntegration(intMethod, m_integrationScheme);
+            
             // set explicit time-intregration class operators
             m_integrationOps.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
         }
-		
-		m_extrapolation->GenerateHOPBCMap();
+	
+        m_extrapolation->GenerateHOPBCMap();
         
         // set implicit time-intregration class operators
         m_integrationOps.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);

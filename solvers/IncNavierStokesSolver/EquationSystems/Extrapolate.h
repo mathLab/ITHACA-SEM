@@ -133,7 +133,7 @@ namespace Nektar
         void EvaluatePressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
-            const int kinvis);
+            const NekDouble kinvis);
         
     protected:
         virtual void v_SubSteppingTimeIntegration(
@@ -161,7 +161,7 @@ namespace Nektar
         void CalcPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
-            const int kinvis);
+            const NekDouble kinvis);
         
         void RollOver(
             Array<OneD, Array<OneD, NekDouble> > &input);

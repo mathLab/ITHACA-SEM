@@ -82,7 +82,7 @@ namespace Nektar
     void Extrapolate::EvaluatePressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
-        const int kinvis)
+        const NekDouble kinvis)
     {		
         Array<OneD, NekDouble> tmp;
         Array<OneD, NekDouble> accelerationTerm;
@@ -172,7 +172,7 @@ namespace Nektar
     void Extrapolate::CalcPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
-        const int kinvis)
+        const NekDouble kinvis)
     {	
         Array<OneD, NekDouble> Pvals;
         Array<OneD, NekDouble> Uvals;
@@ -222,8 +222,9 @@ namespace Nektar
             {
                 MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
             }
-            
-            Pvals = m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
+
+            Pvals = m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
+                +m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
             Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
             
             // Getting values on the edge and filling the pressure boundary expansion

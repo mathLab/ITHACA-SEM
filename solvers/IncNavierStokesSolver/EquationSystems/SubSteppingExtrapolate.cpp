@@ -287,7 +287,7 @@ namespace Nektar
 
 
     void SubSteppingExtrapolate::v_SubStepAdvance(
-        LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
+        LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
         const int nstep, 
         NekDouble time)
     {

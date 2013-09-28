@@ -97,7 +97,7 @@ namespace Nektar
             NekDouble kinvis);
 
         virtual void v_SubStepAdvance(
-            LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
+            LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time);
 
@@ -142,7 +142,6 @@ namespace Nektar
 
         LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
-        LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
 

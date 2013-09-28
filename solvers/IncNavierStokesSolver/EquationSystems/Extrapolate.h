@@ -121,7 +121,7 @@ namespace Nektar
             NekDouble kinvis);
 
         inline void SubStepAdvance(
-            LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
+            LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time);
 		
@@ -150,7 +150,7 @@ namespace Nektar
             NekDouble kinvis)=0;
 
         virtual void v_SubStepAdvance(
-            LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
+            LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time)=0;
 
@@ -285,7 +285,7 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubStepAdvance(
-        LibUtilities::TimeIntegrationSolutionSharedPtr integrationSoln, 
+        LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
         const int nstep, 
         NekDouble time)
     {

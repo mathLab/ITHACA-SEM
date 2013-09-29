@@ -44,14 +44,14 @@ namespace Nektar
             "VelocityCorrectionScheme", 
             VelocityCorrectionScheme::create);
     
-     /**
+    /**
      * Constructor. Creates ...
      *
      * \param 
      * \param
      */
     VelocityCorrectionScheme::VelocityCorrectionScheme(
-            const LibUtilities::SessionReaderSharedPtr& pSession):
+        const LibUtilities::SessionReaderSharedPtr& pSession):
         IncNavierStokes(pSession),
         m_showTimings(false)
     {
@@ -60,7 +60,7 @@ namespace Nektar
 
     void VelocityCorrectionScheme::v_InitObject()
     {
-        int cnt,n;
+        int n;
 
         UnsteadySystem::v_InitObject();
         IncNavierStokes::v_InitObject();
@@ -209,9 +209,9 @@ namespace Nektar
         }
     }
 
-	/**
-	 * 
-	 */
+    /**
+     * 
+     */
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
 
@@ -231,30 +231,30 @@ namespace Nektar
         }
     }
     
-	/**
-	 * 
-	 */
+    /**
+     * 
+     */
     void VelocityCorrectionScheme::v_DoSolve(void)
     {
         switch(m_equationType)
         {
-        case eUnsteadyStokes: 
-        case eUnsteadyNavierStokes:
-        case eUnsteadyLinearisedNS:
+            case eUnsteadyStokes: 
+            case eUnsteadyNavierStokes:
+            case eUnsteadyLinearisedNS:
             {  
                 // Integrate from start time to end time
                 AdvanceInTime(m_steps);
                 break;
             }
-        case eNoEquationType:
-        default:
-            ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
+            case eNoEquationType:
+            default:
+                ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
         }
     }
 
     /**
-	 * 
-	 */
+     * 
+     */
     void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
     {
         int nfields = m_fields.num_elements() - 1;
@@ -266,9 +266,9 @@ namespace Nektar
         }
     }
     
-	/**
-	 * 
-	 */
+    /**
+     * 
+     */
     void VelocityCorrectionScheme:: v_TransPhysToCoeff(void)
     {
         
@@ -280,9 +280,9 @@ namespace Nektar
         }
     }
 	
-	/**
-	 * 
-	 */
+    /**
+     * 
+     */
     Array<OneD, bool> VelocityCorrectionScheme::v_GetSystemSingularChecks()
     {
         int vVar = m_session->GetVariables().size();
@@ -291,9 +291,9 @@ namespace Nektar
         return vChecks;
     }
     
-	/**
-	 * 
-	 */
+    /**
+     * 
+     */
     int VelocityCorrectionScheme::v_GetForceDimension()
     {
         return m_session->GetVariables().size() - 1;
@@ -359,7 +359,6 @@ namespace Nektar
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 0.0;
         Timer timer;
-        bool IsRoot = (m_comm->GetColumnComm()->GetRank())? false:true;
         static int ncalls = 0;
         
         for(n = 0; n < m_nConvectiveFields; ++n)

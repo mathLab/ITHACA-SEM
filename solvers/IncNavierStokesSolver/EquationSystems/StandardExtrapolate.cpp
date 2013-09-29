@@ -49,8 +49,8 @@ namespace Nektar
     StandardExtrapolate::StandardExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-        Array<OneD, int> pVel,
-        AdvectionTermSharedPtr advObject)
+        const Array<OneD, int> pVel,
+        const AdvectionTermSharedPtr advObject)
         : Extrapolate(pSession,pFields,pVel,advObject)
     {
     }
@@ -63,8 +63,8 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_SubSteppingTimeIntegration(
-        int intMethod,
-        LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+        const int intMethod,
+        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
     {
         switch(intMethod)
         {
@@ -92,7 +92,7 @@ namespace Nektar
     void StandardExtrapolate::v_SubStepSetPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         const NekDouble Aii_DT,
-        NekDouble kinvis)
+        const NekDouble kinvis)
     {
     }
 
@@ -101,7 +101,7 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_SubStepAdvance(
-        LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+        const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
         const int nstep, 
         NekDouble time)
     {
@@ -120,8 +120,8 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_MountHOPBCs(
-        int HBCdata, 
-        NekDouble kinvis, 
+        const int HBCdata, 
+        const NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
         Array<OneD, const NekDouble> &Advection)
 	{

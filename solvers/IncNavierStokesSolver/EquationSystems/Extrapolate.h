@@ -47,19 +47,19 @@
 namespace Nektar
 {
 	
-	// Velocity correction scheme coefficient required for extrapolation.
+    // Velocity correction scheme coefficient required for extrapolation.
 	
     static NekDouble StifflyStable_Betaq_Coeffs[][3] = {{ 1.0,  0.0, 0.0},
-		{ 2.0, -1.0, 0.0},
-		{ 3.0, -3.0, 1.0}};
+                                                        { 2.0, -1.0, 0.0},
+                                                        { 3.0, -3.0, 1.0}};
     
     static NekDouble StifflyStable_Alpha_Coeffs[][3] = {{ 1.0,  0.0, 0.0},
-		{ 2.0, -0.5, 0.0},
-		{ 3.0, -1.5, 1.0/3.0}};
+                                                        { 2.0, -0.5, 0.0},
+                                                        { 3.0, -1.5, 1.0/3.0}};
     
     static NekDouble StifflyStable_Gamma0_Coeffs[3]  = {1.0,  1.5, 11.0/6.0};
 	
-	struct HBCInfo
+    struct HBCInfo
     {
         int m_globalElmtID;  // elements ID in the global ordering
         
@@ -74,10 +74,10 @@ namespace Nektar
         int m_bndryElmtID;   // pressure boundary condition ID
         
         int m_assPhysOffset; // associated elments physical offset (k and k_c
-		// are the real and the complex plane)
+        // are the real and the complex plane)
         
         int m_coeffOffset;   // coefficients offset used to locate the
-		// acceleration term in the general m_pressureHBC
+        // acceleration term in the general m_pressureHBC
     };
 	
 	
@@ -89,8 +89,8 @@ namespace Nektar
     typedef LibUtilities::NekFactory< std::string, Extrapolate,
         const LibUtilities::SessionReaderSharedPtr& ,
         Array<OneD, MultiRegions::ExpListSharedPtr>& ,
-        Array<OneD, int> ,
-        AdvectionTermSharedPtr > ExtrapolateFactory; 
+        const Array<OneD, int>& ,
+        const AdvectionTermSharedPtr& > ExtrapolateFactory; 
 
     ExtrapolateFactory& GetExtrapolateFactory();
 
@@ -101,16 +101,16 @@ namespace Nektar
         Extrapolate(        
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-            Array<OneD, int> pVel,
-            AdvectionTermSharedPtr advObject);
+            const Array<OneD, int> pVel,
+            const AdvectionTermSharedPtr advObject);
         
         virtual ~Extrapolate();
 		
-		void GenerateHOPBCMap();
+        void GenerateHOPBCMap();
 
         inline void SubSteppingTimeIntegration(
-            int intMethod,
-            LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
+            const int intMethod,
+            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
 
         inline void SubStepSaveFields(
             const int nstep);
@@ -121,7 +121,7 @@ namespace Nektar
             NekDouble kinvis);
 
         inline void SubStepAdvance(
-            LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time);
 		
@@ -138,8 +138,8 @@ namespace Nektar
         
     protected:
         virtual void v_SubSteppingTimeIntegration(
-            int intMethod,        
-            LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)=0;
+            const int intMethod,        
+            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)=0;
 
         virtual void v_SubStepSaveFields(
             const int nstep)=0;
@@ -150,13 +150,13 @@ namespace Nektar
             NekDouble kinvis)=0;
 
         virtual void v_SubStepAdvance(
-            LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time)=0;
 
         virtual void v_MountHOPBCs(
-            int HBCdata, 
-            NekDouble kinvis, 
+            const int HBCdata, 
+            const NekDouble kinvis, 
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection)=0;
         
@@ -255,8 +255,8 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubSteppingTimeIntegration(
-        int intMethod,
-        LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+        const int intMethod,
+        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
     {
         v_SubSteppingTimeIntegration(intMethod, IntegrationScheme);
     }
@@ -274,9 +274,9 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubStepSetPressureBCs(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-            const NekDouble Aii_DT,
-            NekDouble kinvis)
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        const NekDouble Aii_DT,
+        NekDouble kinvis)
     {
         v_SubStepSetPressureBCs(inarray,Aii_DT,kinvis);
     }
@@ -285,7 +285,7 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubStepAdvance(
-        LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+        const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
         const int nstep, 
         NekDouble time)
     {
@@ -296,8 +296,8 @@ namespace Nektar
      *
      */
     inline void Extrapolate::MountHOPBCs(
-        int HBCdata, 
-        NekDouble kinvis, 
+        const int HBCdata, 
+        const NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
         Array<OneD, const NekDouble> &Advection)
     {

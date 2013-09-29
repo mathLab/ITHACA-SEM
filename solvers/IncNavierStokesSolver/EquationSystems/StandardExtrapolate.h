@@ -63,8 +63,8 @@ namespace Nektar
         static ExtrapolateSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            Array<OneD, int> pVel,
-            AdvectionTermSharedPtr advObject)
+            const Array<OneD, int> &pVel,
+            const AdvectionTermSharedPtr &advObject)
         {
             ExtrapolateSharedPtr p = MemoryManager<StandardExtrapolate>::AllocateSharedPtr(pSession,pFields,pVel,advObject);
             return p;
@@ -76,15 +76,15 @@ namespace Nektar
         StandardExtrapolate(
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-            Array<OneD, int> pVel,
-            AdvectionTermSharedPtr advObject);
+            const Array<OneD, int> pVel,
+            const AdvectionTermSharedPtr advObject);
 
         virtual ~StandardExtrapolate();
         
     protected:
         virtual void v_SubSteppingTimeIntegration(
-            int intMethod,
-            LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
+            const int intMethod,
+            const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
 
         virtual void v_SubStepSaveFields(
             const int nstep);
@@ -92,15 +92,16 @@ namespace Nektar
         virtual void v_SubStepSetPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
             const NekDouble Aii_DT,
-            NekDouble kinvis);
+            const NekDouble kinvis);
 
         virtual void v_SubStepAdvance(
-            LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+            const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time);
 
         virtual void v_MountHOPBCs(
-            int HBCdata, NekDouble kinvis, 
+            const int HBCdata, 
+            const NekDouble kinvis, 
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection);
         

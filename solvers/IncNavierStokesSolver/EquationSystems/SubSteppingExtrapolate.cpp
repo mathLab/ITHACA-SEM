@@ -49,8 +49,8 @@ namespace Nektar
     SubSteppingExtrapolate::SubSteppingExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-        Array<OneD, int> pVel,
-        AdvectionTermSharedPtr advObject)
+        const Array<OneD, int> pVel,
+        const AdvectionTermSharedPtr advObject)
         : Extrapolate(pSession,pFields,pVel,advObject)
     {
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -63,8 +63,8 @@ namespace Nektar
     }
     
     void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
-        int intMethod,
-        LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
+        const int intMethod,
+        const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
     {
         int i;
         
@@ -221,7 +221,7 @@ namespace Nektar
     void SubSteppingExtrapolate::v_SubStepSetPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         const NekDouble Aii_Dt,
-        NekDouble kinvis)
+        const NekDouble kinvis)
     {
         int nConvectiveFields =m_fields.num_elements()-1;
         Array<OneD, Array<OneD, NekDouble> > velfields(nConvectiveFields);
@@ -287,7 +287,7 @@ namespace Nektar
 
 
     void SubSteppingExtrapolate::v_SubStepAdvance(
-        LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
+        const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
         const int nstep, 
         NekDouble time)
     {
@@ -658,8 +658,8 @@ namespace Nektar
      * 
      */
     void SubSteppingExtrapolate::v_MountHOPBCs(
-        int HBCdata, 
-        NekDouble kinvis, 
+        const int HBCdata, 
+        const NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
         Array<OneD, const NekDouble> &Advection)
     {

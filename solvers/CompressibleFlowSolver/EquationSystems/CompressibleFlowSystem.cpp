@@ -1997,15 +1997,28 @@ namespace Nektar
         NekDouble entropyL2, entropy_sum = 0.0;
         const int npts = m_fields[0]->GetTotPoints();
         const NekDouble temp_inf = m_pInf/(m_rhoInf*m_gasConstant);;
-
+        
+        Array<OneD,       NekDouble> L2entropy(npts, 0.0);
+        
         for (int i = 0; i < npts; ++i)
         {
             entropy[i] = m_gamma/(m_gamma-1.0)*m_gasConstant*log(temperature[i]/temp_inf) -
-                m_gasConstant*log(pressure[i]/m_pInf);
+            m_gasConstant*log(pressure[i]/m_pInf);
             
         }
         
-        //cout << Vmath::Vmax(entropy.num_elements(),entropy,1) << endl;
+        Vmath::Vmul(npts,entropy,1,entropy,1,L2entropy,1);
+        
+        entropy_sum = Vmath::Vsum(npts, L2entropy, 1);
+        
+        entropy_sum = sqrt(entropy_sum);
+        
+        std::ofstream m_file( "L2entropy.txt", std::ios_base::app);
+        
+        m_file << setprecision(16) << scientific << entropy_sum << endl;
+        //m_file << Vmath::Vmax(entropy.num_elements(),entropy,1) << endl;
+        
+        m_file.close();
     
     }
 

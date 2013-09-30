@@ -37,9 +37,11 @@
 #include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LocalRegions/SegExp.h>
+#include <LocalRegions/QuadExp.h>
 #include <LocalRegions/Expansion2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {
@@ -342,7 +344,7 @@ namespace Nektar
             for(int k = 0; k < offset; ++k)
             {
                 ++expIt;
-            }	
+            }
 			
             // Process each expansion in the region.
             for(int j = 0; j < compIt->second->size(); ++j)
@@ -405,24 +407,26 @@ namespace Nektar
          *                      instead of just normal segment expansions.
          */
         ExpList1D::ExpList1D(
-                    const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
-                    const Array<OneD, const SpatialDomains
-                                           ::BoundaryConditionShPtr>  &bndCond,
-                    const LocalRegions::ExpansionVector &locexp,
-                    const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                    const PeriodicMap &periodicEdges,
-                    const bool DeclareCoeffPhysArrays,
-                    const std::string variable):
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
+            const LocalRegions::ExpansionVector &locexp,
+            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+            const PeriodicMap &periodicEdges,
+            const bool DeclareCoeffPhysArrays,
+            const std::string variable):
             ExpList()
         {
             int i, j, id, elmtid = 0;
             set<int> edgesDone;
 
             SpatialDomains::Geometry1DSharedPtr segGeom;
+            SpatialDomains::Geometry2DSharedPtr ElGeom;
             LocalRegions::SegExpSharedPtr       seg;
+            LocalRegions::SegExpSharedPtr       seg_tmp;
             LocalRegions::Expansion1DSharedPtr  exp1D;
             LocalRegions::Expansion2DSharedPtr  exp2D;
-
+            
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
             for(i = 0; i < bndCond.num_elements(); ++i)
@@ -450,15 +454,15 @@ namespace Nektar
                           LibUtilities::BasisKey> > edgeOrders;
             map<int, pair<SpatialDomains::Geometry1DSharedPtr,
                           LibUtilities::BasisKey> >::iterator it;
-
+            
             for(i = 0; i < locexp.size(); ++i)
             {
                 exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
+                
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
                     segGeom = exp2D->GetGeom2D()->GetEdge(j);
                     id      = segGeom->GetEid();
-
                     // Ignore Dirichlet edges
                     if (edgesDone.count(id) != 0)
                     {
@@ -501,7 +505,238 @@ namespace Nektar
                     }
                 }
             }
+            
+            LibUtilities::CommSharedPtr vComm = pSession->GetComm();
+            int nproc = vComm->GetSize(); // number of processors
+            int edgepr = vComm->GetRank(); // ID processor
+            
+            m_parallel = false;
+            
+            if (nproc > 1)
+            {
+                m_parallel = true;
+                
+                int numModes_ref,
+                numModes_com,
+                numMods_max,
+                pnts_com,
+                pnts_ref,
+                pnts_max;
+                
+                int eCnt = 0;
+                
+                //count the number of edges on each partition
+                
+                for(i = 0; i < locexp.size(); ++i)
+                {
+                    for(j = 0; j < locexp[i]->GetNedges(); ++j)
+                    {
+                        eCnt = eCnt + 1;
+                    }
+                }
+                
+                // set-up the offset and the array that will contain the list of
+                // edge ID's
+                
+                Array<OneD, int> edgesCnt(nproc,0);
+                edgesCnt[edgepr] = eCnt;
+                
+                vComm->AllReduce(edgesCnt, LibUtilities::ReduceSum);
+                
+                int totEdgeCnt = Vmath::Vsum(nproc, edgesCnt, 1);
+                
+                Array<OneD, int> eTotOffsets(nproc,0);
+                
+                for (i = 1; i < nproc; ++i)
+                {
+                    eTotOffsets[i] = eTotOffsets[i-1] + edgesCnt[i-1];
+                }
+                
+                // Local list of the edges per element
+                
+                Array<OneD, int> edgeID(eCnt,0);
+                Array<OneD, int> edgeNm(eCnt,0);
+                Array<OneD, int> edgePnts(eCnt,0);
+                
+                int cntr = 0;
+                
+                for(i = 0; i < locexp.size(); ++i)
+                {
+                    exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
+                    
+                    int nedges = locexp[i]->GetNedges();
+                    
+                    for(j = 0; j < nedges; ++j)
+                    {
+                        LibUtilities::BasisKey bkeyEdge =
+                                              locexp[i]->DetEdgeBasisKey(j);
+                        
+                        int nm_ref         = bkeyEdge.GetNumModes();
+                        int pnts_ref       = bkeyEdge.GetNumPoints();
+                        
+                        segGeom            = exp2D->GetGeom2D()->GetEdge(j);
+                        
+                        edgeID[cntr]      = segGeom->GetEid();
+                        edgeNm[cntr]      = nm_ref;
+                        edgePnts[cntr]    = pnts_ref;
+                        
+                        cntr = cntr + 1;
+                    }
+                }
+                
+                // Make a list of the edges per element. In this case double edge
+                // ID's can be identified which are the trace edges
+                
+                Array<OneD, int> EdgesTotID(totEdgeCnt, 0);
+                Array<OneD, int> EdgesTotNm(totEdgeCnt, 0);
+                Array<OneD, int> EdgesTotPnts(totEdgeCnt, 0);
+                
+                for (i = 0; i < eCnt; ++i)
+                {
+                    EdgesTotID[eTotOffsets[edgepr] + i]   = edgeID[i];
+                    EdgesTotNm[eTotOffsets[edgepr] + i]   = edgeNm[i];
+                    EdgesTotPnts[eTotOffsets[edgepr] + i] = edgePnts[i];
+                }
+                
+                vComm->AllReduce(EdgesTotID, LibUtilities::ReduceSum);
+                vComm->AllReduce(EdgesTotNm, LibUtilities::ReduceSum);
+                vComm->AllReduce(EdgesTotPnts, LibUtilities::ReduceSum);
 
+                Array<OneD, int> tmp_traceGlobalID(totEdgeCnt, 0);
+                Array<OneD, int> tmp_traceGlobalNm(totEdgeCnt, 0);
+                Array<OneD, int> tmp_traceGlobalPnts(totEdgeCnt, 0);
+                
+                int cnt = 0;
+                
+                for (int u = 0; u < totEdgeCnt; ++u)
+                {
+                    for (int k = 0; k < totEdgeCnt; ++k)
+                    {
+                        if (EdgesTotID[k] == EdgesTotID[u] && u != k)
+                        {
+                            numModes_ref = EdgesTotNm[u];
+                            numModes_com = EdgesTotNm[k];
+                        
+                            pnts_ref = EdgesTotPnts[u];
+                            pnts_com = EdgesTotPnts[k];
+                            
+                            // determine the maximum nummodes
+                            
+                            if (numModes_ref > numModes_com)
+                            {
+                                numMods_max = numModes_ref;
+                                pnts_max    = pnts_ref;
+                            }
+                            else
+                            {
+                                numMods_max = numModes_com;
+                                pnts_max    = pnts_com;
+                            }
+                            
+                            tmp_traceGlobalID[cnt]      = EdgesTotID[k];
+                            tmp_traceGlobalNm[cnt]      = numMods_max;
+                            tmp_traceGlobalPnts[cnt]    = pnts_max;
+                            
+                            cnt++;
+                        }
+                    }
+                }
+
+                int nTraceGlobal = cnt;
+               
+                for (int i = 0; i < nTraceGlobal; ++i)
+                {
+                    for (int j = i+1; j < nTraceGlobal;)
+                    {
+                        if (tmp_traceGlobalID[j] == tmp_traceGlobalID[i])
+                        {
+                            for (int k = j; k < nTraceGlobal; ++k)
+                            {
+                                tmp_traceGlobalID[k]    = tmp_traceGlobalID[k+1];
+                                tmp_traceGlobalNm[k]    = tmp_traceGlobalNm[k+1];
+                                tmp_traceGlobalPnts[k]  = tmp_traceGlobalPnts[k+1];
+                            }
+                            nTraceGlobal--;
+                        }
+                        else
+                        {
+                            j++;
+                        }
+                    }
+                }
+                
+                Array<OneD, int> traceGlobalPnts(nTraceGlobal, 0);
+                Array<OneD, int> traceGlobalID(nTraceGlobal, 0);
+                Array<OneD, int> traceGlobalNm(nTraceGlobal, 0);
+                
+                Vmath::Vcopy(nTraceGlobal,
+                             tmp_traceGlobalID, 1,
+                             traceGlobalID, 1);
+                
+                Vmath::Vcopy(nTraceGlobal,
+                             tmp_traceGlobalNm, 1,
+                             traceGlobalNm, 1);
+                
+                Vmath::Vcopy(nTraceGlobal,
+                             tmp_traceGlobalPnts, 1,
+                             traceGlobalPnts, 1);
+                
+                // Loop to set up the correct trace expansions
+                // locexp.size() gives the number of elements on this node
+                
+                for(i = 0; i < locexp.size(); ++i)
+                {
+                    exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
+                    
+                    int nedges = locexp[i]->GetNedges();
+                    
+                    for(j = 0; j < nedges; ++j)
+                    {
+                        segGeom = exp2D->GetGeom2D()->GetEdge(j);
+                        LibUtilities::BasisKey bkeyEdge = locexp[i]->DetEdgeBasisKey(j);
+                        
+                        int nm_ref = bkeyEdge.GetNumModes();
+                        
+                        seg_tmp = MemoryManager<LocalRegions::SegExp>
+                        ::AllocateSharedPtr(bkeyEdge, segGeom);
+                        
+                        id      = segGeom->GetEid();
+
+                        if (edgesDone.count(id) != 0)
+                        {
+                            continue;
+                        }
+                        
+                        it = edgeOrders.find(id);
+                        
+                        for (int u = 0; u < nTraceGlobal; ++u)
+                        {
+                            if(id == traceGlobalID[u] && nm_ref != traceGlobalNm[u])
+                            {
+                                // set-up the correct PointsKey for the newly defined
+                                // basiskey for the incorrect defined trace edges
+                                
+                                const LibUtilities::PointsKey newPkey(
+                                            traceGlobalPnts[u],
+                                            seg_tmp->GetBasis(0)->GetPointsType());
+                                
+                                // set-up the correct basiskey for the trace edges
+                                
+                                LibUtilities::BasisKey traceGlobalBkey(
+                                            seg_tmp->GetBasis(0)->GetBasisType(),
+                                            traceGlobalNm[u],
+                                            newPkey);
+                                
+                                edgeOrders.insert(std::make_pair(id,
+                                    std::make_pair(segGeom, traceGlobalBkey)));
+                                
+                                it->second.second = traceGlobalBkey;
+                            }
+                        }
+                    }
+                }
+            }
+            
             for (it = edgeOrders.begin(); it != edgeOrders.end(); ++it)
             {
                 seg = MemoryManager<LocalRegions::SegExp>
@@ -509,7 +744,7 @@ namespace Nektar
                 seg->SetElmtId(elmtid++);
                 (*m_exp).push_back(seg);
             }
-
+            
             // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
@@ -546,7 +781,7 @@ namespace Nektar
             m_offset_elmt_id = Array<OneD,int>(m_exp->size());
 
             m_ncoeffs = m_npoints = 0;
-
+            
             for(i = 0; i < m_exp->size(); ++i)
             {
                 m_coeff_offset[i]   = m_ncoeffs;
@@ -800,7 +1035,7 @@ namespace Nektar
 	    //setup map of all global ids along booundary
 	    for(cnt = i=0; i< (*m_exp).size(); ++i)
 	    {
-                exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
+            exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
 	        id = exp1D->GetGeom1D()->GetEid();
 	        EdgeGID[id] = cnt++;
 	    }
@@ -937,70 +1172,167 @@ namespace Nektar
         void ExpList1D::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
+            
             int i,j,k,e_npoints,offset;
+            SpatialDomains::Geometry1DSharedPtr segGeom;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
-
+            Array<OneD,Array<OneD,NekDouble> > locnormals2;
+            Array<OneD,Array<OneD,NekDouble> > Norms;
             // Assume whole array is of same coordinate dimension
             int coordim = GetCoordim(0);
 
+            int nproc = -1;
+            
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
 
-            // Process each expansion.
-            for(i = 0; i < m_exp->size(); ++i)
+            if(m_parallel == false)
             {
-                LocalRegions::Expansion1DSharedPtr loc_exp = 
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion1D>((*m_exp)[i]);
-                LocalRegions::Expansion2DSharedPtr loc_elmt = 
-                    loc_exp->GetLeftAdjacentElementExp();
-
-                // Get the number of points and normals for this expansion.
-                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                locnormals = loc_elmt->GetEdgeNormal(
-                    loc_exp->GetLeftAdjacentElementEdge());
-
-                if (e_npoints != locnormals[0].num_elements())
+                for(i = 0; i < m_exp->size(); ++i)
                 {
+                    LocalRegions::Expansion1DSharedPtr loc_exp =
+                    boost::dynamic_pointer_cast<
+                    LocalRegions::Expansion1D>((*m_exp)[i]);
+                
                     LocalRegions::Expansion2DSharedPtr loc_elmt =
-                        loc_exp->GetRightAdjacentElementExp();
-
+                    loc_exp->GetLeftAdjacentElementExp();
+            
+                    int GlobalID = loc_exp->GetGeom1D()->GetGlobalID();
+            
+                    // Get the number of points and normals for this expansion.
+                    e_npoints  = (*m_exp)[i]->GetNumPoints(0);
+                
                     locnormals = loc_elmt->GetEdgeNormal(
-                        loc_exp->GetRightAdjacentElementEdge());
-
-                    offset = m_phys_offset[i];
-
-                    // Process each point in the expansion.
-                    for (j = 0; j < e_npoints; ++j)
-                    {
-                        // Process each spatial dimension and copy the values
-                        // into the output array.
-                        for (k = 0; k < coordim; ++k)
+                                loc_exp->GetLeftAdjacentElementEdge());
+                    
+                    if (e_npoints != locnormals[0].num_elements())
+                    {   
+                        LocalRegions::Expansion2DSharedPtr loc_elmt =
+                            loc_exp->GetRightAdjacentElementExp();
+                
+                        locnormals = loc_elmt->GetEdgeNormal(
+                                loc_exp->GetRightAdjacentElementEdge());
+                        
+                        offset = m_phys_offset[i];
+                        
+                        // Process each point in the expansion.
+                        for (j = 0; j < e_npoints; ++j)
                         {
-                            normals[k][offset + j] = -locnormals[k][j];
+                            // Process each spatial dimension and copy the values
+                            // into the output array.
+                            for (k = 0; k < coordim; ++k)
+                            {
+                                normals[k][offset + j] = -locnormals[k][j];
+                            }
                         }
                     }
-                }
-                else
-                {
-                    // Get the physical data offset for this expansion.
-                    offset = m_phys_offset[i];
-
-                    // Process each point in the expansion.
-                    for (j = 0; j < e_npoints; ++j)
+                    else
                     {
-                        // Process each spatial dimension and copy the values
-                        // into the output array.
-                        for (k = 0; k < coordim; ++k)
+                        // Get the physical data offset for this expansion.
+                        offset = m_phys_offset[i];
+                        
+                        // Process each point in the expansion.
+                        for (j = 0; j < e_npoints; ++j)
                         {
-                            normals[k][offset + j] = locnormals[k][j];
+                            // Process each spatial dimension and copy the values
+                            // into the output array.
+                            for (k = 0; k < coordim; ++k)
+                            {
+                                normals[k][offset + j] = locnormals[k][j];
+                            }
+                        }
+                    }  
+                }
+            }
+            if(m_parallel == true)
+            {
+                for(i = 0; i < m_exp->size(); ++i)
+                {
+                    // set-up the expansion of the trace edge from the
+                    // element expansion
+                    LocalRegions::Expansion1DSharedPtr loc_exp =
+                    boost::dynamic_pointer_cast<
+                    LocalRegions::Expansion1D>((*m_exp)[i]);
+                    
+                    // set-up the expansion of the corresponding element
+                    LocalRegions::Expansion2DSharedPtr loc_elmt =
+                    loc_exp->GetLeftAdjacentElementExp();
+                    
+                    // set-up the expansion of the corresponding edge from the
+                    // element expansion
+                    LocalRegions::Expansion1DSharedPtr to_exp =
+                    boost::dynamic_pointer_cast<
+                    LocalRegions::Expansion1D>(loc_elmt->GetEdgeExp(
+                                    loc_exp->GetLeftAdjacentElementEdge()));
+                    
+                    // Determine the Global ID of the trace edge
+                    int GlobalID = loc_exp->GetGeom1D()->GetGlobalID();
+                    
+                    // Get the number of points and normals for this expansion.
+                    e_npoints  = (*m_exp)[i]->GetNumPoints(0);
+                    
+                    int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                    int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
+                    
+                    // determine the edge normals
+                    locnormals = loc_elmt->GetEdgeNormal(
+                                loc_exp->GetLeftAdjacentElementEdge());
+                    
+                    // Check if the expansion has a similar 
+                    if (e_nmodes != loc_nmodes)
+                    {
+                        Array<OneD, Array<OneD, NekDouble> > normal(coordim);
+                        
+                        for (int p = 0; p < coordim; ++p)
+                        {
+                            normal[p] = Array<OneD, NekDouble>(e_npoints,0.0);
+                            
+                            LibUtilities::PointsKey to_key =
+                                            loc_exp->GetBasis(0)->GetPointsKey();
+                            
+                            LibUtilities::PointsKey from_key =
+                                           loc_elmt->GetBasis(0)->GetPointsKey();
+                            
+                            LibUtilities::Interp1D(from_key,
+                                                   locnormals[p],
+                                                   to_key,
+                                                   normal[p]);
+                        }
+                        
+                        offset = m_phys_offset[i];
+                        
+                        // Process each point in the expansion.
+                        for (j = 0; j < e_npoints; ++j)
+                        {
+                            // Process each spatial dimension and copy the values
+                            // into the output array.
+                            for (k = 0; k < coordim; ++k)
+                            {
+                                normals[k][offset + j] = normal[k][j];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Get the physical data offset for this expansion.
+                        offset = m_phys_offset[i];
+                        
+                        // Process each point in the expansion.
+                        for (j = 0; j < e_npoints; ++j)
+                        {
+                            // Process each spatial dimension and copy the values
+                            // into the output array.
+                            for (k = 0; k < coordim; ++k)
+                            {
+                                normals[k][offset + j] = locnormals[k][j];
+                            }
                         }
                     }
                 }
             }
         }
-
+        
 /*        void ExpList1D::v_GetTangents(
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents)
         {

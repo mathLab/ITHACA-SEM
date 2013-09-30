@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <MultiRegions/ExpList.h>
+#include <LocalRegions/SegExp.h>
 #include <LibUtilities/Kernel/kernel.h>
 
 namespace Nektar
@@ -96,6 +97,7 @@ namespace Nektar
             
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
                       const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                       const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,
@@ -154,6 +156,8 @@ namespace Nektar
 
             /// Populate \a normals with the normals of all expansions.
             void v_GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
+            
+            //Gs::gs_data * m_traceGsh;
 
         private:
             /// Definition of the total number of degrees of freedom and
@@ -176,6 +180,8 @@ namespace Nektar
             int m_firstIntEl;
             
             Array<OneD, NekDouble> m_normSign;
+            
+            bool    m_parallel;
         };
 
         /// Empty ExpList1D object.

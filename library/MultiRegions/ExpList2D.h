@@ -94,6 +94,7 @@ namespace Nektar
 
 			//Specialized constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList2D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
                       const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                       const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
                       const LocalRegions::ExpansionVector &locexp,
@@ -140,6 +141,8 @@ namespace Nektar
             virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 
             virtual void v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+            
+            bool    m_parallel;
         };
 
         /// Empty ExpList2D object.

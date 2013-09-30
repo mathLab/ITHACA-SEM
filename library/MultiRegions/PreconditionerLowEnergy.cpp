@@ -74,6 +74,18 @@ namespace Nektar
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
             ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond,"Solver type not valid");
+
+            boost::shared_ptr<MultiRegions::ExpList> 
+                expList=((m_linsys.lock())->GetLocMat()).lock();
+            
+            StdRegions::StdExpansionSharedPtr locExpansion;
+
+            locExpansion = expList->GetExp(0);
+            
+            int nDim = locExpansion->GetShapeDimension();
+            
+            ASSERTL0(nDim==3,
+                     "Preconditioner type only valid in 3D");
             
             //Sets up reference element and builds transformation matrix
             SetUpReferenceElements();

@@ -92,7 +92,7 @@ namespace Nektar
     void StandardExtrapolate::v_SubStepSetPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         const NekDouble Aii_DT,
-        const NekDouble kinvis)
+        NekDouble kinvis)
     {
     }
 
@@ -120,8 +120,8 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_MountHOPBCs(
-        const int HBCdata, 
-        const NekDouble kinvis, 
+        int HBCdata, 
+        NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
         Array<OneD, const NekDouble> &Advection)
 	{

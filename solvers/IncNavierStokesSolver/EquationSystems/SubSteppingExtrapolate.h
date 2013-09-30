@@ -94,7 +94,7 @@ namespace Nektar
         virtual void v_SubStepSetPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
             const NekDouble Aii_Dt,
-            const NekDouble kinvis);
+            NekDouble kinvis);
 
         virtual void v_SubStepAdvance(
             const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
@@ -102,8 +102,8 @@ namespace Nektar
             NekDouble time);
 
         virtual void v_MountHOPBCs(
-            const int HBCdata, 
-            const NekDouble kinvis, 
+            int HBCdata, 
+            NekDouble kinvis, 
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection);
         

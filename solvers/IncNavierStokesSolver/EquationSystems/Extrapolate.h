@@ -134,7 +134,7 @@ namespace Nektar
         void EvaluatePressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
-            const NekDouble kinvis);
+            NekDouble kinvis);
         
     protected:
         virtual void v_SubSteppingTimeIntegration(
@@ -155,15 +155,15 @@ namespace Nektar
             NekDouble time)=0;
 
         virtual void v_MountHOPBCs(
-            const int HBCdata, 
-            const NekDouble kinvis, 
+            int HBCdata, 
+            NekDouble kinvis, 
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection)=0;
         
         void CalcPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
-            const NekDouble kinvis);
+            NekDouble kinvis);
         
         void RollOver(
             Array<OneD, Array<OneD, NekDouble> > &input);
@@ -296,8 +296,8 @@ namespace Nektar
      *
      */
     inline void Extrapolate::MountHOPBCs(
-        const int HBCdata, 
-        const NekDouble kinvis, 
+        int HBCdata, 
+        NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
         Array<OneD, const NekDouble> &Advection)
     {

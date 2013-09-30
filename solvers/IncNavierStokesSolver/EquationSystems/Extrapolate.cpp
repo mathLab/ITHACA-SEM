@@ -82,7 +82,7 @@ namespace Nektar
     void Extrapolate::EvaluatePressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
-        const NekDouble kinvis)
+        NekDouble kinvis)
     {		
         Array<OneD, NekDouble> tmp;
         Array<OneD, NekDouble> accelerationTerm;
@@ -104,7 +104,8 @@ namespace Nektar
 		
         // Calculate BCs at current level
         CalcPressureBCs(fields,N,kinvis);
-		        // Copy High order values into storage array 
+
+        // Copy High order values into storage array 
         for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
         {
             // High order boundary condition;
@@ -172,7 +173,7 @@ namespace Nektar
     void Extrapolate::CalcPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
-        const NekDouble kinvis)
+        NekDouble kinvis)
     {	
         Array<OneD, NekDouble> Pvals;
         Array<OneD, NekDouble> Uvals;

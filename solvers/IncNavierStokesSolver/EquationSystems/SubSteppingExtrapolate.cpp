@@ -221,7 +221,7 @@ namespace Nektar
     void SubSteppingExtrapolate::v_SubStepSetPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
         const NekDouble Aii_Dt,
-        const NekDouble kinvis)
+        NekDouble kinvis)
     {
         int nConvectiveFields =m_fields.num_elements()-1;
         Array<OneD, Array<OneD, NekDouble> > velfields(nConvectiveFields);
@@ -658,8 +658,8 @@ namespace Nektar
      * 
      */
     void SubSteppingExtrapolate::v_MountHOPBCs(
-        const int HBCdata, 
-        const NekDouble kinvis, 
+        int HBCdata, 
+        NekDouble kinvis, 
         Array<OneD, NekDouble> &Q, 
         Array<OneD, const NekDouble> &Advection)
     {

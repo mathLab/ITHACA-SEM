@@ -128,8 +128,8 @@ namespace Nektar
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
 
-            DNekMatSharedPtr    m_RS;
-            DNekMatSharedPtr    m_RSRT;
+            DNekMatSharedPtr    pRS;
+            DNekMatSharedPtr    pRSRT;
 
             //Transformation matrices
             DNekMat R;
@@ -137,9 +137,9 @@ namespace Nektar
             DNekMat RS;
             DNekMat RSRT;
             
-            DNekMatSharedPtr m_VertBlk;
-            DNekMatSharedPtr m_EdgeBlk;
-            DNekMatSharedPtr m_FaceBlk;
+            /*DNekMatSharedPtr VertBlk;
+            DNekMatSharedPtr EdgeBlk;
+            DNekMatSharedPtr FaceBlk;*/
 
             int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
@@ -149,21 +149,21 @@ namespace Nektar
                 AllocateSharedPtr(nNonDirVerts,nNonDirVerts,zero,vertstorage);
 
             Array<OneD, NekDouble> vertArray(nNonDirVerts,0.0);
-            Array<OneD, long> m_VertBlockToUniversalMap(nNonDirVerts,-1);
+            Array<OneD, long> VertBlockToUniversalMap(nNonDirVerts,-1);
 
             //maps for different element types
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
 
             //Transformation matrix
-            transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
-            transmatrixmap[LibUtilities::ePrism]=Rprism;
-            transmatrixmap[LibUtilities::eHexahedron]=Rhex;
+            transmatrixmap[LibUtilities::eTetrahedron]=m_Rtet;
+            transmatrixmap[LibUtilities::ePrism]=m_Rprism;
+            transmatrixmap[LibUtilities::eHexahedron]=m_Rhex;
 
             //Transposed transformation matrix
-            transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
-            transposedtransmatrixmap[LibUtilities::ePrism]=RTprism;
-            transposedtransmatrixmap[LibUtilities::eHexahedron]=RThex;
+            transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_RTtet;
+            transposedtransmatrixmap[LibUtilities::ePrism]=m_RTprism;
+            transposedtransmatrixmap[LibUtilities::eHexahedron]=m_RThex;
 
             int n_exp = expList->GetNumElmts();
             int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
@@ -179,11 +179,11 @@ namespace Nektar
             map<int,int> uniqueFaceMap;
 
             //this should be of size total number of local edges
-            Array<OneD, int> m_edgemodeoffset(nNonDirEdgeIDs,0);
-            Array<OneD, int> m_facemodeoffset(nNonDirFaceIDs,0);
+            Array<OneD, int> edgemodeoffset(nNonDirEdgeIDs,0);
+            Array<OneD, int> facemodeoffset(nNonDirFaceIDs,0);
 
-            Array<OneD, int> m_edgeglobaloffset(nNonDirEdgeIDs,0);
-            Array<OneD, int> m_faceglobaloffset(nNonDirFaceIDs,0);
+            Array<OneD, int> edgeglobaloffset(nNonDirEdgeIDs,0);
+            Array<OneD, int> faceglobaloffset(nNonDirFaceIDs,0);
 
             const Array<OneD, const ExpListSharedPtr>& bndCondExp = expList->GetBndCondExpansions();
             StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
@@ -256,9 +256,9 @@ namespace Nektar
                         {
                             uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
 
-                            m_edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
+                            edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
 
-                            m_edgemodeoffset[edgematrixlocation]=dof*dof;
+                            edgemodeoffset[edgematrixlocation]=dof*dof;
 
                             ntotaledgeentries+=dof*dof;
 
@@ -295,9 +295,9 @@ namespace Nektar
                         {
                             uniqueFaceMap[meshFaceId]=facematrixlocation;
 
-                            m_facemodeoffset[facematrixlocation]=dof*dof;
+                            facemodeoffset[facematrixlocation]=dof*dof;
                             
-                            m_faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
+                            faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
 
                             ntotalfaceentries+=dof*dof;
                             
@@ -315,15 +315,15 @@ namespace Nektar
             m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
 
             //Allocate arrays for block to universal map (number of expansions * p^2)
-            Array<OneD, long> m_EdgeBlockToUniversalMap(ntotaledgeentries,-1);
-            Array<OneD, long> m_FaceBlockToUniversalMap(ntotalfaceentries,-1);
+            Array<OneD, long> EdgeBlockToUniversalMap(ntotaledgeentries,-1);
+            Array<OneD, long> FaceBlockToUniversalMap(ntotalfaceentries,-1);
 
-            Array<OneD, int> m_localEdgeToGlobalMatrixMap(nlocalNonDirEdges,-1);
-            Array<OneD, int> m_localFaceToGlobalMatrixMap(nlocalNonDirFaces,-1);
+            Array<OneD, int> localEdgeToGlobalMatrixMap(nlocalNonDirEdges,-1);
+            Array<OneD, int> localFaceToGlobalMatrixMap(nlocalNonDirFaces,-1);
 
             //Allocate arrays to store matrices (number of expansions * p^2)
-            Array<OneD, NekDouble> m_EdgeBlockArray(nlocalNonDirEdges,-1);
-            Array<OneD, NekDouble> m_FaceBlockArray(nlocalNonDirFaces,-1);
+            Array<OneD, NekDouble> EdgeBlockArray(nlocalNonDirEdges,-1);
+            Array<OneD, NekDouble> FaceBlockArray(nlocalNonDirFaces,-1);
 
             int edgematrixoffset=0;
             int facematrixoffset=0;
@@ -347,12 +347,12 @@ namespace Nektar
                     {
                         for(k=0; k<nedgemodes*nedgemodes; ++k)
                         {
-                            vGlobal=m_edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
+                            vGlobal=edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
 
 
-                            m_localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
+                            localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
 
-                            m_EdgeBlockToUniversalMap[vGlobal]
+                            EdgeBlockToUniversalMap[vGlobal]
                                 = meshEdgeId * maxEdgeDof * maxEdgeDof + k + 1;
                         }
                         edgematrixoffset+=nedgemodes*nedgemodes;
@@ -372,12 +372,12 @@ namespace Nektar
                     {
                         for(k=0; k<nfacemodes*nfacemodes; ++k)
                         {
-                            vGlobal=m_faceglobaloffset[uniqueFaceMap[meshFaceId]]+k;
+                            vGlobal=faceglobaloffset[uniqueFaceMap[meshFaceId]]+k;
                             
-                            m_localFaceToGlobalMatrixMap[facematrixoffset+k]
+                            localFaceToGlobalMatrixMap[facematrixoffset+k]
                                 = vGlobal;
                             
-                            m_FaceBlockToUniversalMap[vGlobal]
+                            FaceBlockToUniversalMap[vGlobal]
                                 = meshFaceId * maxFaceDof * maxFaceDof + k + 1;
                         }
                         facematrixoffset+=nfacemodes*nfacemodes;
@@ -388,7 +388,7 @@ namespace Nektar
             edgematrixoffset=0;
             facematrixoffset=0;
 
-            BlkMat = MemoryManager<DNekBlkMat>
+            m_BlkMat = MemoryManager<DNekBlkMat>
                     ::AllocateSharedPtr(n_blks, n_blks, blkmatStorage);
 
             const Array<OneD,const unsigned int>& nbdry_size
@@ -398,8 +398,6 @@ namespace Nektar
             m_RBlk      = MemoryManager<DNekScalBlkMat>
                 ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
             m_RTBlk      = MemoryManager<DNekScalBlkMat>
-                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-            m_S1Blk      = MemoryManager<DNekScalBlkMat>
                 ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
 
             //Here we loop over the expansion and build the block low energy
@@ -417,12 +415,13 @@ namespace Nektar
                 R=(*(transmatrixmap[eType]));
                 RT=(*(transposedtransmatrixmap[eType]));
  
-                m_RS = MemoryManager<DNekMat>::AllocateSharedPtr
+                pRS = MemoryManager<DNekMat>::AllocateSharedPtr
                     (nCoeffs, nCoeffs, zero, storage);
-                RS = (*m_RS);
-                m_RSRT = MemoryManager<DNekMat>::AllocateSharedPtr
+                RS = (*pRS);
+
+                pRSRT = MemoryManager<DNekMat>::AllocateSharedPtr
                     (nCoeffs, nCoeffs, zero, storage);
-                RSRT = (*m_RSRT);
+                RSRT = (*pRSRT);
                 
                 nVerts=locExpansion->GetGeom()->GetNumVerts();
                 nEdges=locExpansion->GetGeom()->GetNumEdges();
@@ -480,7 +479,7 @@ namespace Nektar
                                 vertArray[globalrow]
                                     += sign1*sign2*RSRT(vMap1,vMap2);
 
-                                m_VertBlockToUniversalMap[globalrow]
+                                VertBlockToUniversalMap[globalrow]
                                 = meshVertId * maxEdgeDof * maxEdgeDof + 1;
                             }
                         }
@@ -517,7 +516,7 @@ namespace Nektar
 
                                 NekDouble globalEdgeValue = sign1*sign2*RSRT(eMap1,eMap2);
 
-                                m_EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=globalEdgeValue;
+                                EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=globalEdgeValue;
                             }
                         }
                         edgematrixoffset+=nedgemodes*nedgemodes;
@@ -558,7 +557,7 @@ namespace Nektar
                                 NekDouble globalFaceValue = sign1*sign2*RSRT(fMap1,fMap2);
 
                                 //local face value to global face value
-                                m_FaceBlockArray[facematrixoffset+v*nfacemodes+m]=globalFaceValue;
+                                FaceBlockArray[facematrixoffset+v*nfacemodes+m]=globalFaceValue;
                             }
                         }
                         facematrixoffset+=nfacemodes*nfacemodes;
@@ -574,35 +573,35 @@ namespace Nektar
             }
 
             //Assemble edge matrices of each process
-            Array<OneD, NekDouble> m_GlobalEdgeBlock(ntotaledgeentries);
-            Vmath::Zero(ntotaledgeentries, m_GlobalEdgeBlock.get(), 1);
-            Vmath::Assmb(m_EdgeBlockArray.num_elements(), 
-                         m_EdgeBlockArray.get(), 
-                         m_localEdgeToGlobalMatrixMap.get(), 
-                         m_GlobalEdgeBlock.get());
+            Array<OneD, NekDouble> GlobalEdgeBlock(ntotaledgeentries);
+            Vmath::Zero(ntotaledgeentries, GlobalEdgeBlock.get(), 1);
+            Vmath::Assmb(EdgeBlockArray.num_elements(), 
+                         EdgeBlockArray.get(), 
+                         localEdgeToGlobalMatrixMap.get(), 
+                         GlobalEdgeBlock.get());
 
             //Assemble face matrices of each process
-            Array<OneD, NekDouble> m_GlobalFaceBlock(ntotalfaceentries);
-            Vmath::Zero(ntotalfaceentries, m_GlobalFaceBlock.get(), 1);
-            Vmath::Assmb(m_FaceBlockArray.num_elements(), 
-                         m_FaceBlockArray.get(), 
-                         m_localFaceToGlobalMatrixMap.get(), 
-                         m_GlobalFaceBlock.get());
+            Array<OneD, NekDouble> GlobalFaceBlock(ntotalfaceentries);
+            Vmath::Zero(ntotalfaceentries, GlobalFaceBlock.get(), 1);
+            Vmath::Assmb(FaceBlockArray.num_elements(), 
+                         FaceBlockArray.get(), 
+                         localFaceToGlobalMatrixMap.get(), 
+                         GlobalFaceBlock.get());
 
             //Exchange vertex data over different processes
             if(nNonDirVerts!=0)
             {
-                Gs::gs_data *tmp = Gs::Init(m_VertBlockToUniversalMap, m_comm);
+                Gs::gs_data *tmp = Gs::Init(VertBlockToUniversalMap, m_comm);
                 Gs::Gather(vertArray, Gs::gs_add, tmp);
             }
 
             //Exchange edge data over different processes
-            Gs::gs_data *tmp1 = Gs::Init(m_EdgeBlockToUniversalMap, m_comm);
-            Gs::Gather(m_GlobalEdgeBlock, Gs::gs_add, tmp1);
+            Gs::gs_data *tmp1 = Gs::Init(EdgeBlockToUniversalMap, m_comm);
+            Gs::Gather(GlobalEdgeBlock, Gs::gs_add, tmp1);
 
             //Exchange face data over different processes
-            Gs::gs_data *tmp2 = Gs::Init(m_FaceBlockToUniversalMap, m_comm);
-            Gs::Gather(m_GlobalFaceBlock, Gs::gs_add, tmp2);
+            Gs::gs_data *tmp2 = Gs::Init(FaceBlockToUniversalMap, m_comm);
+            Gs::Gather(GlobalFaceBlock, Gs::gs_add, tmp2);
 
             // Populate vertex block
             for (int i = 0; i < nNonDirVerts; ++i)
@@ -611,7 +610,7 @@ namespace Nektar
             }
 
             //Set the first block to be the diagonal of the vertex space
-            BlkMat->SetBlock(0,0, VertBlk);
+            m_BlkMat->SetBlock(0,0, VertBlk);
 
             offset=0;
             //Build the edge matrices from the vector
@@ -625,14 +624,14 @@ namespace Nektar
                 {
                     for (m=0; m<nedgemodes; ++m)
                     {
-                        NekDouble EdgeValue = m_GlobalEdgeBlock[offset+v*nedgemodes+m];
+                        NekDouble EdgeValue = GlobalEdgeBlock[offset+v*nedgemodes+m];
                         m_gmat->SetValue(v,m,EdgeValue);
                     }
                 }
 
-                BlkMat->SetBlock(1+loc,1+loc, m_gmat);
+                m_BlkMat->SetBlock(1+loc,1+loc, m_gmat);
 
-                offset+=m_edgemodeoffset[loc];
+                offset+=edgemodeoffset[loc];
             }
 
             offset=0;
@@ -649,29 +648,29 @@ namespace Nektar
                 {
                     for (m=0; m<nfacemodes; ++m)
                     {
-                        NekDouble FaceValue = m_GlobalFaceBlock[offset+v*nfacemodes+m];
+                        NekDouble FaceValue = GlobalFaceBlock[offset+v*nfacemodes+m];
                         m_gmat->SetValue(v,m,FaceValue);
                     }
                 }
 
-                BlkMat->SetBlock(1+nNonDirEdgeIDs+loc,1+nNonDirEdgeIDs+loc, m_gmat);
+                m_BlkMat->SetBlock(1+nNonDirEdgeIDs+loc,1+nNonDirEdgeIDs+loc, m_gmat);
 
-                offset+=m_facemodeoffset[loc];
+                offset+=facemodeoffset[loc];
             }
 
             
-            int totblks=BlkMat->GetNumberOfBlockRows();
+            int totblks=m_BlkMat->GetNumberOfBlockRows();
             for (i=1; i< totblks; ++i)
             {
-                unsigned int nmodes=BlkMat->GetNumberOfRowsInBlockRow(i);
+                unsigned int nmodes=m_BlkMat->GetNumberOfRowsInBlockRow(i);
                 DNekMatSharedPtr tmp_mat = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
                     (nmodes,nmodes,zero,storage);
                 
-                tmp_mat=BlkMat->GetBlock(i,i);
+                tmp_mat=m_BlkMat->GetBlock(i,i);
                 tmp_mat->Invert();
 
-                BlkMat->SetBlock(i,i,tmp_mat);
+                m_BlkMat->SetBlock(i,i,tmp_mat);
             }
         }
   
@@ -687,7 +686,7 @@ namespace Nektar
             int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nNonDir = nGlobal-nDir;
-            DNekBlkMat &M = (*BlkMat);
+            DNekBlkMat &M = (*m_BlkMat);
                          
             NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
             NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
@@ -721,24 +720,24 @@ namespace Nektar
            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> invtransposedtransmatrixmap;
 
            //Transformation matrix map
-           transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
-           transmatrixmap[LibUtilities::ePrism]=Rprism;
-           transmatrixmap[LibUtilities::eHexahedron]=Rhex;
+           transmatrixmap[LibUtilities::eTetrahedron]=m_Rtet;
+           transmatrixmap[LibUtilities::ePrism]=m_Rprism;
+           transmatrixmap[LibUtilities::eHexahedron]=m_Rhex;
 
            //Transposed transformation matrix map
-           transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
-           transposedtransmatrixmap[LibUtilities::ePrism]=RTprism;
-           transposedtransmatrixmap[LibUtilities::eHexahedron]=RThex;
+           transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_RTtet;
+           transposedtransmatrixmap[LibUtilities::ePrism]=m_RTprism;
+           transposedtransmatrixmap[LibUtilities::eHexahedron]=m_RThex;
 
            //Inverse transfomation map
-           invtransmatrixmap[LibUtilities::eTetrahedron]=Rinvtet;
-           invtransmatrixmap[LibUtilities::ePrism]=Rinvprism;
-           invtransmatrixmap[LibUtilities::eHexahedron]=Rinvhex;
+           invtransmatrixmap[LibUtilities::eTetrahedron]=m_Rinvtet;
+           invtransmatrixmap[LibUtilities::ePrism]=m_Rinvprism;
+           invtransmatrixmap[LibUtilities::eHexahedron]=m_Rinvhex;
 
            //Inverse transposed transformation map
-           invtransposedtransmatrixmap[LibUtilities::eTetrahedron]=RTinvtet;
-           invtransposedtransmatrixmap[LibUtilities::ePrism]=RTinvprism;
-           invtransposedtransmatrixmap[LibUtilities::eHexahedron]=RTinvhex;
+           invtransposedtransmatrixmap[LibUtilities::eTetrahedron]=m_RTinvtet;
+           invtransposedtransmatrixmap[LibUtilities::ePrism]=m_RTinvprism;
+           invtransposedtransmatrixmap[LibUtilities::eHexahedron]=m_RTinvhex;
 
            MatrixStorage blkmatStorage = eDIAGONAL;
            
@@ -800,7 +799,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
-            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
 
             //Not actually needed but we should only work with the Global boundary dofs
             Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
@@ -847,7 +846,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
-            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
 
             // Allocated array of size number of global boundary dofs and copy
             // the input array to the tmp array offset by Dirichlet boundary
@@ -893,7 +892,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,pLocal,eWrapper);
-            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
             Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
 
             //Global boundary (less dirichlet) to local boundary
@@ -939,7 +938,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
-            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
 
             // Allocated array of size number of global boundary dofs and copy
             // the input array to the tmp array offset by Dirichlet boundary
@@ -984,7 +983,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
-            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            m_map = m_locToGloMap->GetLocalToGlobalBndMap();
 
             m_locToGloMap->GlobalToLocalBnd(pInput,pLocal, nDirBndDofs);
 
@@ -1005,7 +1004,9 @@ namespace Nektar
          * i.e. \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}\f$
          */     
         DNekScalBlkMatSharedPtr PreconditionerLowEnergy::
-        v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
+        v_TransformedSchurCompl(
+            int offset, 
+            const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
 	{
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
@@ -1017,28 +1018,24 @@ namespace Nektar
             unsigned int nint=ncoeffs-nbnd;
 
             //This is the SC elemental matrix in the orginal basis (S1)
-            //DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
-
-            DNekScalMatSharedPtr m_S1=loc_mat->GetBlock(0,0);
+            DNekScalMatSharedPtr pS1=loc_mat->GetBlock(0,0);
 
             //Transformation matrices 
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
-            transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
-            transmatrixmap[LibUtilities::ePrism]=Rprism;
-            transmatrixmap[LibUtilities::eHexahedron]=Rhex;
-            transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
-            transposedtransmatrixmap[LibUtilities::ePrism]=RTprism;
-            transposedtransmatrixmap[LibUtilities::eHexahedron]=RThex;
+            transmatrixmap[LibUtilities::eTetrahedron]=m_Rtet;
+            transmatrixmap[LibUtilities::ePrism]=m_Rprism;
+            transmatrixmap[LibUtilities::eHexahedron]=m_Rhex;
+            transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_RTtet;
+            transposedtransmatrixmap[LibUtilities::ePrism]=m_RTprism;
+            transposedtransmatrixmap[LibUtilities::eHexahedron]=m_RThex;
 
-            DNekScalMat &S1 = (*m_S1);
+            DNekScalMat &S1 = (*pS1);
             
-            NekDouble zero = 0.0;
-            NekDouble one  = 1.0;
             MatrixStorage storage = eFULL;
             
-            DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nbnd,nbnd,zero,storage);
-            DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nbnd,nbnd,zero,storage);
+            DNekMatSharedPtr pS2 = MemoryManager<DNekMat>::AllocateSharedPtr(nbnd,nbnd,0.0,storage);
+            DNekMatSharedPtr pRS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nbnd,nbnd,0.0,storage);
             
             LibUtilities::ShapeType eType=
                 (expList->GetExp(offset))->DetShapeType();
@@ -1048,8 +1045,8 @@ namespace Nektar
             DNekScalMat &RT = (*(transposedtransmatrixmap[eType]));
             
             //create low energy matrix
-            DNekMat &RS1 = (*m_RS1);
-            DNekMat &S2 = (*m_S2);
+            DNekMat &RS1 = (*pRS1);
+            DNekMat &S2 = (*pS2);
                 
             //setup S2
             RS1=R*S1;
@@ -1062,7 +1059,7 @@ namespace Nektar
             returnval = MemoryManager<DNekScalBlkMat>::
                 AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
 
-            returnval->SetBlock(0,0,tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_S2));
+            returnval->SetBlock(0,0,tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,pS2));
 
 	    return returnval;
 	}
@@ -1557,22 +1554,22 @@ namespace Nektar
              */
 
             //Get tetrahedral transformation matrix
-            Rtet = TetExp->GetLocMatrix(TetR);
+            m_Rtet = TetExp->GetLocMatrix(TetR);
 
             //Get tetrahedral transposed transformation matrix
-            RTtet = TetExp->GetLocMatrix(TetRT);
+            m_RTtet = TetExp->GetLocMatrix(TetRT);
 
             // Using the transformation matrix and the inverse transformation
             // matrix create the inverse matrices
-            Rtettmp=TetExp->BuildInverseTransformationMatrix(Rtet);
+            Rtettmp=TetExp->BuildInverseTransformationMatrix(m_Rtet);
 
             //Inverse transposed transformation matrix
-            RTtettmp=TetExp->BuildInverseTransformationMatrix(Rtet);
+            RTtettmp=TetExp->BuildInverseTransformationMatrix(m_Rtet);
             RTtettmp->Transpose();
 
-            Rinvtet = MemoryManager<DNekScalMat>
+            m_Rinvtet = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,Rtettmp);
-            RTinvtet = MemoryManager<DNekScalMat>
+            m_RTinvtet = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RTtettmp);
 
             /*
@@ -1580,20 +1577,20 @@ namespace Nektar
              */
 
             //Get hexahedral transformation matrix
-            Rhex = HexExp->GetLocMatrix(HexR);
+            m_Rhex = HexExp->GetLocMatrix(HexR);
             //Get hexahedral transposed transformation matrix
-            RThex = HexExp->GetLocMatrix(HexRT);
+            m_RThex = HexExp->GetLocMatrix(HexRT);
 
             // Using the transformation matrix and the inverse transformation
             // matrix create the inverse matrices
-            Rhextmp=HexExp->BuildInverseTransformationMatrix(Rhex);
+            Rhextmp=HexExp->BuildInverseTransformationMatrix(m_Rhex);
             //Inverse transposed transformation matrix
-            RThextmp=HexExp->BuildInverseTransformationMatrix(Rhex);
+            RThextmp=HexExp->BuildInverseTransformationMatrix(m_Rhex);
             RThextmp->Transpose();
 
-            Rinvhex = MemoryManager<DNekScalMat>
+            m_Rinvhex = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,Rhextmp);
-            RTinvhex = MemoryManager<DNekScalMat>
+            m_RTinvhex = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RThextmp);
 
             /*
@@ -1630,23 +1627,23 @@ namespace Nektar
             //transformation matrix.
             ModifyPrismTransformationMatrix(TetExp,PrismExp,Rtmpprism,RTtmpprism);
 
-            Rprism = MemoryManager<DNekScalMat>
+            m_Rprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,Rtmpprism);
             
-            RTprism = MemoryManager<DNekScalMat>
+            m_RTprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RTtmpprism);
 
             //Inverse transformation matrix
-            Rprismtmp=PrismExp->BuildInverseTransformationMatrix(Rprism);
+            Rprismtmp=PrismExp->BuildInverseTransformationMatrix(m_Rprism);
 
             //Inverse transposed transformation matrix
-            RTprismtmp=PrismExp->BuildInverseTransformationMatrix(Rprism);
+            RTprismtmp=PrismExp->BuildInverseTransformationMatrix(m_Rprism);
             RTprismtmp->Transpose();
 
-            Rinvprism = MemoryManager<DNekScalMat>
+            m_Rinvprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,Rprismtmp);
 
-            RTinvprism = MemoryManager<DNekScalMat>
+            m_RTinvprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RTprismtmp);
         }
 
@@ -1740,152 +1737,152 @@ namespace Nektar
             //vertex 0 edge 0 3 & 4
             for(i=0; i< PrismEdge0.num_elements(); ++i)
             {
-                Rvalue=(*Rtet)(TetVertex0,TetEdge0[i]);
+                Rvalue=(*m_Rtet)(TetVertex0,TetEdge0[i]);
                 Rmodprism->SetValue(PrismVertex0,PrismEdge0[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex0,TetEdge2[i]);
+                Rvalue=(*m_Rtet)(TetVertex0,TetEdge2[i]);
                 Rmodprism->SetValue(PrismVertex0,PrismEdge3[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex0,TetEdge3[i]);
+                Rvalue=(*m_Rtet)(TetVertex0,TetEdge3[i]);
                 Rmodprism->SetValue(PrismVertex0,PrismEdge4[i],Rvalue);
 
                 //transposed values
-                RTvalue=(*RTtet)(TetEdge0[i],TetVertex0);
+                RTvalue=(*m_RTtet)(TetEdge0[i],TetVertex0);
                 RTmodprism->SetValue(PrismEdge0[i],PrismVertex0,RTvalue);
-                RTvalue=(*RTtet)(TetEdge2[i],TetVertex0);
+                RTvalue=(*m_RTtet)(TetEdge2[i],TetVertex0);
                 RTmodprism->SetValue(PrismEdge3[i],PrismVertex0,RTvalue);
-                RTvalue=(*RTtet)(TetEdge3[i],TetVertex0);
+                RTvalue=(*m_RTtet)(TetEdge3[i],TetVertex0);
                 RTmodprism->SetValue(PrismEdge4[i],PrismVertex0,RTvalue);
             }
 
             //vertex 1 edge 0 1 & 5
             for(i=0; i< PrismEdge1.num_elements(); ++i)
             {
-                Rvalue=(*Rtet)(TetVertex1,TetEdge0[i]);
+                Rvalue=(*m_Rtet)(TetVertex1,TetEdge0[i]);
                 Rmodprism->SetValue(PrismVertex1,PrismEdge0[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex1,TetEdge1[i]);
+                Rvalue=(*m_Rtet)(TetVertex1,TetEdge1[i]);
                 Rmodprism->SetValue(PrismVertex1,PrismEdge1[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex1,TetEdge4[i]);
+                Rvalue=(*m_Rtet)(TetVertex1,TetEdge4[i]);
                 Rmodprism->SetValue(PrismVertex1,PrismEdge5[i],Rvalue);
 
                 //transposed values
-                RTvalue=(*RTtet)(TetEdge0[i],TetVertex1);
+                RTvalue=(*m_RTtet)(TetEdge0[i],TetVertex1);
                 RTmodprism->SetValue(PrismEdge0[i],PrismVertex1,RTvalue);
-                RTvalue=(*RTtet)(TetEdge1[i],TetVertex1);
+                RTvalue=(*m_RTtet)(TetEdge1[i],TetVertex1);
                 RTmodprism->SetValue(PrismEdge1[i],PrismVertex1,RTvalue);
-                RTvalue=(*RTtet)(TetEdge4[i],TetVertex1);
+                RTvalue=(*m_RTtet)(TetEdge4[i],TetVertex1);
                 RTmodprism->SetValue(PrismEdge5[i],PrismVertex1,RTvalue);
             }
 
             //vertex 2 edge 1 2 & 6
             for(i=0; i< PrismEdge2.num_elements(); ++i)
             {
-                Rvalue=(*Rtet)(TetVertex2,TetEdge1[i]);
+                Rvalue=(*m_Rtet)(TetVertex2,TetEdge1[i]);
                 Rmodprism->SetValue(PrismVertex2,PrismEdge1[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex1,TetEdge0[i]);
+                Rvalue=(*m_Rtet)(TetVertex1,TetEdge0[i]);
                 Rmodprism->SetValue(PrismVertex2,PrismEdge2[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex2,TetEdge5[i]);
+                Rvalue=(*m_Rtet)(TetVertex2,TetEdge5[i]);
                 Rmodprism->SetValue(PrismVertex2,PrismEdge6[i],Rvalue);
 
                 //transposed values
-                RTvalue=(*RTtet)(TetEdge1[i],TetVertex2);
+                RTvalue=(*m_RTtet)(TetEdge1[i],TetVertex2);
                 RTmodprism->SetValue(PrismEdge1[i],PrismVertex2,RTvalue);
-                RTvalue=(*RTtet)(TetEdge0[i],TetVertex1);
+                RTvalue=(*m_RTtet)(TetEdge0[i],TetVertex1);
                 RTmodprism->SetValue(PrismEdge2[i],PrismVertex2,RTvalue);
-                RTvalue=(*RTtet)(TetEdge5[i],TetVertex2);
+                RTvalue=(*m_RTtet)(TetEdge5[i],TetVertex2);
                 RTmodprism->SetValue(PrismEdge6[i],PrismVertex2,RTvalue);
             }
 
             //vertex 3 edge 3 2 & 7
             for(i=0; i< PrismEdge3.num_elements(); ++i)
             {
-                Rvalue=(*Rtet)(TetVertex2,TetEdge2[i]);
+                Rvalue=(*m_Rtet)(TetVertex2,TetEdge2[i]);
                 Rmodprism->SetValue(PrismVertex3,PrismEdge3[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex0,TetEdge0[i]);
+                Rvalue=(*m_Rtet)(TetVertex0,TetEdge0[i]);
                 Rmodprism->SetValue(PrismVertex3,PrismEdge2[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex2,TetEdge5[i]);
+                Rvalue=(*m_Rtet)(TetVertex2,TetEdge5[i]);
                 Rmodprism->SetValue(PrismVertex3,PrismEdge7[i],Rvalue);
 
                 //transposed values
-                RTvalue=(*RTtet)(TetEdge2[i],TetVertex2);
+                RTvalue=(*m_RTtet)(TetEdge2[i],TetVertex2);
                 RTmodprism->SetValue(PrismEdge3[i],PrismVertex3,RTvalue);
-                RTvalue=(*RTtet)(TetEdge0[i],TetVertex0);
+                RTvalue=(*m_RTtet)(TetEdge0[i],TetVertex0);
                 RTmodprism->SetValue(PrismEdge2[i],PrismVertex3,RTvalue);
-                RTvalue=(*RTtet)(TetEdge5[i],TetVertex2);
+                RTvalue=(*m_RTtet)(TetEdge5[i],TetVertex2);
                 RTmodprism->SetValue(PrismEdge7[i],PrismVertex3,RTvalue);
             }
 
             //vertex 4 edge 4 5 & 8
             for(i=0; i< PrismEdge4.num_elements(); ++i)
             {
-                Rvalue=(*Rtet)(TetVertex3,TetEdge3[i]);
+                Rvalue=(*m_Rtet)(TetVertex3,TetEdge3[i]);
                 Rmodprism->SetValue(PrismVertex4,PrismEdge4[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex3,TetEdge4[i]);
+                Rvalue=(*m_Rtet)(TetVertex3,TetEdge4[i]);
                 Rmodprism->SetValue(PrismVertex4,PrismEdge5[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex0,TetEdge2[i]);
+                Rvalue=(*m_Rtet)(TetVertex0,TetEdge2[i]);
                 Rmodprism->SetValue(PrismVertex4,PrismEdge8[i],Rvalue);
 
                 //transposed values
-                RTvalue=(*RTtet)(TetEdge3[i],TetVertex3);
+                RTvalue=(*m_RTtet)(TetEdge3[i],TetVertex3);
                 RTmodprism->SetValue(PrismEdge4[i],PrismVertex4,RTvalue);
-                RTvalue=(*RTtet)(TetEdge4[i],TetVertex3);
+                RTvalue=(*m_RTtet)(TetEdge4[i],TetVertex3);
                 RTmodprism->SetValue(PrismEdge5[i],PrismVertex4,RTvalue);
-                RTvalue=(*RTtet)(TetEdge2[i],TetVertex0);
+                RTvalue=(*m_RTtet)(TetEdge2[i],TetVertex0);
                 RTmodprism->SetValue(PrismEdge8[i],PrismVertex4,RTvalue);
             }
 
             //vertex 5 edge 6 7 & 8
             for(i=0; i< PrismEdge5.num_elements(); ++i)
             {
-                Rvalue=(*Rtet)(TetVertex3,TetEdge3[i]);
+                Rvalue=(*m_Rtet)(TetVertex3,TetEdge3[i]);
                 Rmodprism->SetValue(PrismVertex5,PrismEdge6[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex3,TetEdge4[i]);
+                Rvalue=(*m_Rtet)(TetVertex3,TetEdge4[i]);
                 Rmodprism->SetValue(PrismVertex5,PrismEdge7[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex2,TetEdge2[i]);
+                Rvalue=(*m_Rtet)(TetVertex2,TetEdge2[i]);
                 Rmodprism->SetValue(PrismVertex5,PrismEdge8[i],Rvalue);
 
                 //transposed values
-                RTvalue=(*RTtet)(TetEdge3[i],TetVertex3);
+                RTvalue=(*m_RTtet)(TetEdge3[i],TetVertex3);
                 RTmodprism->SetValue(PrismEdge6[i],PrismVertex5,RTvalue);
-                RTvalue=(*RTtet)(TetEdge4[i],TetVertex3);
+                RTvalue=(*m_RTtet)(TetEdge4[i],TetVertex3);
                 RTmodprism->SetValue(PrismEdge7[i],PrismVertex5,RTvalue);
-                RTvalue=(*RTtet)(TetEdge2[i],TetVertex2);
+                RTvalue=(*m_RTtet)(TetEdge2[i],TetVertex2);
                 RTmodprism->SetValue(PrismEdge8[i],PrismVertex5,RTvalue);
             }
 
             // face 1 vertices 0 1 4
             for(i=0; i< PrismFace1.num_elements(); ++i)
             {
-                Rvalue=(*Rtet)(TetVertex0,TetFace[i]);
+                Rvalue=(*m_Rtet)(TetVertex0,TetFace[i]);
                 Rmodprism->SetValue(PrismVertex0,PrismFace1[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex1,TetFace[i]);
+                Rvalue=(*m_Rtet)(TetVertex1,TetFace[i]);
                 Rmodprism->SetValue(PrismVertex1,PrismFace1[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex3,TetFace[i]);
+                Rvalue=(*m_Rtet)(TetVertex3,TetFace[i]);
                 Rmodprism->SetValue(PrismVertex4,PrismFace1[i],Rvalue);
                 
                 //transposed values
-                RTvalue=(*RTtet)(TetFace[i],TetVertex0);
+                RTvalue=(*m_RTtet)(TetFace[i],TetVertex0);
                 RTmodprism->SetValue(PrismFace1[i],PrismVertex0,RTvalue);
-                RTvalue=(*RTtet)(TetFace[i],TetVertex1);
+                RTvalue=(*m_RTtet)(TetFace[i],TetVertex1);
                 RTmodprism->SetValue(PrismFace1[i],PrismVertex1,RTvalue);
-                RTvalue=(*RTtet)(TetFace[i],TetVertex3);
+                RTvalue=(*m_RTtet)(TetFace[i],TetVertex3);
                 RTmodprism->SetValue(PrismFace1[i],PrismVertex4,RTvalue);
             }
 
             // face 3 vertices 2, 3 & 5
             for(i=0; i< PrismFace3.num_elements(); ++i)
             {
-                Rvalue=(*Rtet)(TetVertex1,TetFace[i]);
+                Rvalue=(*m_Rtet)(TetVertex1,TetFace[i]);
                 Rmodprism->SetValue(PrismVertex2,PrismFace3[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex0,TetFace[i]);
+                Rvalue=(*m_Rtet)(TetVertex0,TetFace[i]);
                 Rmodprism->SetValue(PrismVertex3,PrismFace3[i],Rvalue);
-                Rvalue=(*Rtet)(TetVertex3,TetFace[i]);
+                Rvalue=(*m_Rtet)(TetVertex3,TetFace[i]);
                 Rmodprism->SetValue(PrismVertex5,PrismFace3[i],Rvalue);
                 
                 //transposed values
-                RTvalue=(*RTtet)(TetFace[i],TetVertex1);
+                RTvalue=(*m_RTtet)(TetFace[i],TetVertex1);
                 RTmodprism->SetValue(PrismFace3[i],PrismVertex2,RTvalue);
-                RTvalue=(*RTtet)(TetFace[i],TetVertex0);
+                RTvalue=(*m_RTtet)(TetFace[i],TetVertex0);
                 RTmodprism->SetValue(PrismFace3[i],PrismVertex3,RTvalue);
-                RTvalue=(*RTtet)(TetFace[i],TetVertex3);
+                RTvalue=(*m_RTtet)(TetFace[i],TetVertex3);
                 RTmodprism->SetValue(PrismFace3[i],PrismVertex5,RTvalue);
             }
 
@@ -1894,19 +1891,19 @@ namespace Nektar
             {
                 for(j=0; j<PrismEdge0.num_elements(); ++j)
                 {
-                    Rvalue=(*Rtet)(TetEdge0[j],TetFace[i]);
+                    Rvalue=(*m_Rtet)(TetEdge0[j],TetFace[i]);
                     Rmodprism->SetValue(PrismEdge0[j],PrismFace1[i],Rvalue);
-                    Rvalue=(*Rtet)(TetEdge3[j],TetFace[i]);
+                    Rvalue=(*m_Rtet)(TetEdge3[j],TetFace[i]);
                     Rmodprism->SetValue(PrismEdge4[j],PrismFace1[i],Rvalue);
-                    Rvalue=(*Rtet)(TetEdge4[j],TetFace[i]);
+                    Rvalue=(*m_Rtet)(TetEdge4[j],TetFace[i]);
                     Rmodprism->SetValue(PrismEdge5[j],PrismFace1[i],Rvalue);
 
                     //transposed values
-                    RTvalue=(*RTtet)(TetFace[i],TetEdge0[j]);
+                    RTvalue=(*m_RTtet)(TetFace[i],TetEdge0[j]);
                     RTmodprism->SetValue(PrismFace1[i],PrismEdge0[j],RTvalue);
-                    RTvalue=(*RTtet)(TetFace[i],TetEdge3[j]);
+                    RTvalue=(*m_RTtet)(TetFace[i],TetEdge3[j]);
                     RTmodprism->SetValue(PrismFace1[i],PrismEdge4[j],RTvalue);
-                    RTvalue=(*RTtet)(TetFace[i],TetEdge4[j]);
+                    RTvalue=(*m_RTtet)(TetFace[i],TetEdge4[j]);
                     RTmodprism->SetValue(PrismFace1[i],PrismEdge5[j],RTvalue);
                 }
             }
@@ -1916,18 +1913,18 @@ namespace Nektar
             {
                 for(j=0; j<PrismEdge2.num_elements(); ++j)
                 {
-                    Rvalue=(*Rtet)(TetEdge0[j],TetFace[i]);
+                    Rvalue=(*m_Rtet)(TetEdge0[j],TetFace[i]);
                     Rmodprism->SetValue(PrismEdge2[j],PrismFace3[i],Rvalue);
-                    Rvalue=(*Rtet)(TetEdge4[j],TetFace[i]);
+                    Rvalue=(*m_Rtet)(TetEdge4[j],TetFace[i]);
                     Rmodprism->SetValue(PrismEdge6[j],PrismFace3[i],Rvalue);
-                    Rvalue=(*Rtet)(TetEdge3[j],TetFace[i]);
+                    Rvalue=(*m_Rtet)(TetEdge3[j],TetFace[i]);
                     Rmodprism->SetValue(PrismEdge7[j],PrismFace3[i],Rvalue);
 
-                    RTvalue=(*RTtet)(TetFace[i],TetEdge0[j]);
+                    RTvalue=(*m_RTtet)(TetFace[i],TetEdge0[j]);
                     RTmodprism->SetValue(PrismFace3[i],PrismEdge2[j],RTvalue);
-                    RTvalue=(*RTtet)(TetFace[i],TetEdge4[j]);
+                    RTvalue=(*m_RTtet)(TetFace[i],TetEdge4[j]);
                     RTmodprism->SetValue(PrismFace3[i],PrismEdge6[j],RTvalue);
-                    RTvalue=(*RTtet)(TetFace[i],TetEdge3[j]);
+                    RTvalue=(*m_RTtet)(TetFace[i],TetEdge3[j]);
                     RTmodprism->SetValue(PrismFace3[i],PrismEdge7[j],RTvalue);
                 }
             }

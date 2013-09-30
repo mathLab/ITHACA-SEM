@@ -68,7 +68,7 @@ namespace Nektar
             //----------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                     const Array<OneD, const NekDouble>& inarray);
-
+			
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
@@ -163,15 +163,6 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
-            LOCAL_REGIONS_EXPORT virtual const
-                    SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
-
-            LOCAL_REGIONS_EXPORT virtual const
-                    SpatialDomains::GeometrySharedPtr v_GetGeom() const;
-
-            LOCAL_REGIONS_EXPORT virtual const
-                    SpatialDomains::Geometry1DSharedPtr& v_GetGeom1D() const;
-
             LOCAL_REGIONS_EXPORT virtual void 
                 v_SetCoeffsToOrientation(StdRegions::Orientation dir);
 
@@ -204,9 +195,8 @@ namespace Nektar
                 const int mode_offset,
                       NekDouble *coeffs);
 
-
             LOCAL_REGIONS_EXPORT virtual void v_SetUpPhysTangents(
-                const StdRegions::StdExpansionSharedPtr &exp2D,
+                const boost::shared_ptr<Expansion> &exp2D,
                 const int edge);
 
             LOCAL_REGIONS_EXPORT virtual const
@@ -260,9 +250,6 @@ namespace Nektar
                         const MatrixKey &mkey);
 
         private:
-            SpatialDomains::Geometry1DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess>
                     m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess>

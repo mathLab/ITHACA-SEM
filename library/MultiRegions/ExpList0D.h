@@ -43,7 +43,7 @@
 #include <vector>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/PointExp.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 
 
 namespace Nektar
@@ -73,14 +73,14 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList0D(const ExpList0D &In, bool DeclareCoeffPhysArrays);
 
             // wrap around LocalRegion::PointExp
-            MULTI_REGIONS_EXPORT ExpList0D(const SpatialDomains::VertexComponentSharedPtr &m_geom);
+            MULTI_REGIONS_EXPORT ExpList0D(const SpatialDomains::PointGeomSharedPtr &m_geom);
 
 			/// Specialised constructor for trace expansions (croth)
             MULTI_REGIONS_EXPORT ExpList0D(
                 const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                 const Array<OneD,const SpatialDomains
                             ::BoundaryConditionShPtr>  &bndCond,
-                const StdRegions::StdExpansionVector &locexp,
+                const LocalRegions::ExpansionVector &locexp,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                 const map<int,int> &periodicVertices,
                 const bool DeclareCoeffPhysArrays = true);
@@ -89,8 +89,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~ExpList0D();
 			
             LocalRegions::PointExpSharedPtr m_point;
-            
-            
+
         protected:
             virtual void v_Upwind(
                 const Array<OneD, const NekDouble> &Vn,
@@ -109,9 +108,9 @@ namespace Nektar
             
             virtual void v_SetPhys(NekDouble val);
             
-            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetGeom(void) const;
+            virtual const SpatialDomains::PointGeomSharedPtr v_GetGeom(void) const;
             
-            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
+            virtual const SpatialDomains::PointGeomSharedPtr v_GetVertex(void) const;
             
         private:
             void SetCoeffPhysOffsets(void);

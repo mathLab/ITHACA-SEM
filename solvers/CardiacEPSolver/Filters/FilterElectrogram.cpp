@@ -122,8 +122,8 @@ namespace Nektar
                         + boost::lexical_cast<string>(gloCoord[1]) + ","
                         + boost::lexical_cast<string>(gloCoord[2]) + ")");
 
-                SpatialDomains::VertexComponentSharedPtr vert
-                    = MemoryManager<SpatialDomains::VertexComponent>
+                SpatialDomains::PointGeomSharedPtr vert
+                    = MemoryManager<SpatialDomains::PointGeom>
                     ::AllocateSharedPtr(dim, i, gloCoord[0],
                                         gloCoord[1], gloCoord[2]);
 

@@ -41,9 +41,11 @@
 #include <StdRegions/StdSegExp.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <boost/math/special_functions/gamma.hpp>
+#include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion2D.h>
+
 #include <iostream>
 #include <iomanip>
-
 
 namespace Nektar
 {
@@ -154,7 +156,9 @@ namespace Nektar
                     {
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
-                        jac = pFields[0]->GetExp(n)->GetGeom1D()->GetJac();
+                        jac = LocalRegions::Expansion1D::FromStdExp(
+                            pFields[0]->GetExp(n))->GetGeom1D()
+                                ->GetMetricInfo()->GetJac();
                         for (i = 0; i < nLocalSolutionPts; ++i)
                         {
                             m_jac[i+phys_offset] = jac[0];
@@ -199,10 +203,16 @@ namespace Nektar
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
                         
-                        jac  = pFields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                        gmat = pFields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                        jac  = LocalRegions::Expansion2D::FromStdExp(
+                            pFields[0]->GetExp(n))->GetGeom2D()->
+                                GetMetricInfo()->GetJac();
+                        gmat = LocalRegions::Expansion2D::FromStdExp(
+                            pFields[0]->GetExp(n))->GetGeom2D()->
+                                GetMetricInfo()->GetDerivFactors();
                         
-                        if (pFields[0]->GetExp(n)->GetGeom2D()->GetGtype()
+                        if (LocalRegions::Expansion2D::FromStdExp(
+                                pFields[0]->GetExp(n))->GetGeom2D()
+                                    ->GetMetricInfo()->GetGtype()
                             == SpatialDomains::eDeformed)
                         {
                             for (i = 0; i < nLocalSolutionPts; ++i)

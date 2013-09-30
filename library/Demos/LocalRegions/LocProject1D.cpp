@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
     const int zero=0;
     const int one=1;
     const double dZero=0.0;
-    SpatialDomains::VertexComponentSharedPtr  vert1 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[0],dZero,dZero);
-    SpatialDomains::VertexComponentSharedPtr  vert2 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[1],dZero,dZero);
+    SpatialDomains::PointGeomSharedPtr  vert1 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(one,zero,x[0],dZero,dZero);
+    SpatialDomains::PointGeomSharedPtr  vert2 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(one,zero,x[1],dZero,dZero);
     SpatialDomains::SegGeomSharedPtr geom = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,vert1,vert2);
     geom->SetOwnData();
 

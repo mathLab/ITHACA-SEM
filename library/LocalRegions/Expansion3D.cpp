@@ -42,8 +42,6 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion3D::Expansion3D() : m_requireNeg() {}
-        
         void Expansion3D::AddHDGHelmholtzTraceTerms(
             const NekDouble                                tau,
             const Array<OneD, const NekDouble>            &inarray, 
@@ -1769,6 +1767,15 @@ namespace Nektar
             }
 
             return facemaparray;
+        }
+
+        NekDouble Expansion3D::v_Integrate(
+                const Array<OneD, const NekDouble>& inarray)
+        {
+            NEKERROR(ErrorUtil::efatal, 
+                     "This function is not implemented here. It is shape "
+                     "specific");
+            return 0.0;
         }
     } //end of namespace
 } //end of namespace

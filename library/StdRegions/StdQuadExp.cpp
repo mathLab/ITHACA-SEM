@@ -181,7 +181,7 @@ namespace Nektar
         //    base1 == m_base[1]->GetBdata() --> set doCheckCollDir1 == true;
         //    base0 == m_base[0]->GetDbdata() --> set doCheckCollDir0 == false;
         //    base1 == m_base[1]->GetDbdata() --> set doCheckCollDir1 == false;
-        void StdQuadExp::BwdTrans_SumFacKernel(
+        void StdQuadExp::v_BwdTrans_SumFacKernel(
                             const Array<OneD, const NekDouble>& base0, 
                             const Array<OneD, const NekDouble>& base1,
                             const Array<OneD, const NekDouble>& inarray, 
@@ -493,7 +493,7 @@ namespace Nektar
         //    base1 == m_base[1]->GetBdata() --> set doCheckCollDir1 == true;
         //    base0 == m_base[0]->GetDbdata() --> set doCheckCollDir0 == false;
         //    base1 == m_base[1]->GetDbdata() --> set doCheckCollDir1 == false;
-        void StdQuadExp::IProductWRTBase_SumFacKernel(
+        void StdQuadExp::v_IProductWRTBase_SumFacKernel(
                              const Array<OneD, const NekDouble>& base0, 
                              const Array<OneD, const NekDouble>& base1,
                              const Array<OneD, const NekDouble>& inarray,
@@ -1368,67 +1368,6 @@ namespace Nektar
         
         
 
-        void StdQuadExp::v_LaplacianMatrixOp_MatFree(
-                             const Array<OneD, const NekDouble> &inarray,
-                             Array<OneD,NekDouble> &outarray,
-                             const StdMatrixKey &mkey)
-        {
-            if(mkey.GetNVarCoeff() == 0)
-            {
-                // This implementation is only valid when there are no coefficients
-                // associated to the Laplacian operator
-                int       nquad0  = m_base[0]->GetNumPoints();
-                int       nquad1  = m_base[1]->GetNumPoints();
-                int       nqtot   = nquad0*nquad1; 
-                int       nmodes0 = m_base[0]->GetNumModes();
-                int       nmodes1 = m_base[1]->GetNumModes();
-                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                
-                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-                
-                // Allocate temporary storage
-                Array<OneD,NekDouble> wsp0(3*wspsize);
-                Array<OneD,NekDouble> wsp1(wsp0+wspsize);
-                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-                
-                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-                {  
-                    // LAPLACIAN MATRIX OPERATION
-                    // wsp0 = u       = B   * u_hat 
-                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                    BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1,true,true);
-                    StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
-                }
-                else
-                {
-                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
-                }
-                
-                // wsp1 = k = wsp1 * w0 * w1
-                // wsp2 = l = wsp2 * w0 * w1
-                MultiplyByQuadratureMetric(wsp1,wsp1);
-                MultiplyByQuadratureMetric(wsp2,wsp2);
-                
-                // outarray = m = (D_xi1 * B)^T * k 
-                // wsp1     = n = (D_xi2 * B)^T * l 
-                IProductWRTBase_SumFacKernel(dbase0,base1,wsp1,outarray,wsp0,false,true);
-                IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,    wsp0,true,false);
-                
-                // outarray = outarray + wsp1
-                //          = L * u_hat
-                Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);     
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }
-        }
-
-
         void StdQuadExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                               const StdMatrixKey &mkey)
         {
@@ -1498,67 +1437,6 @@ namespace Nektar
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        
 
-        void StdQuadExp::v_HelmholtzMatrixOp_MatFree(
-                             const Array<OneD, const NekDouble> &inarray,
-                             Array<OneD,NekDouble> &outarray,
-                             const StdMatrixKey &mkey)
-        { 
-            int       nquad0  = m_base[0]->GetNumPoints();
-            int       nquad1  = m_base[1]->GetNumPoints();
-            int       nqtot   = nquad0*nquad1; 
-            int       nmodes0 = m_base[0]->GetNumModes();
-            int       nmodes1 = m_base[1]->GetNumModes();
-            int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-            NekDouble lambda  = mkey.GetConstFactor(eFactorLambda);
-                                
-            const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-            const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-            const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-            const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-
-            // Allocate temporary storage
-            Array<OneD,NekDouble> wsp0(4*wspsize);
-            Array<OneD,NekDouble> wsp1(wsp0+wspsize);
-            Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-            Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
-
-            if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-            {  
-                // MASS MATRIX OPERATION
-                // The following is being calculated:
-                // wsp0     = B   * u_hat = u
-                // wsp1     = W   * wsp0
-                // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat 
-                BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1,true,true);
-                MultiplyByQuadratureMetric(wsp0,wsp2);
-                IProductWRTBase_SumFacKernel(base0,base1,wsp2,outarray,wsp1,true,true);
-                
-                // LAPLACIAN MATRIX OPERATION
-                // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
-            }
-            else
-            {
-                // specialised implementation for the classical spectral element method
-                StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
-                MultiplyByQuadratureMetric(inarray,outarray);
-            }
-            
-            // wsp1 = k = wsp1 * w0 * w1
-            // wsp2 = l = wsp2 * w0 * w1
-            MultiplyByQuadratureMetric(wsp1,wsp1);
-            MultiplyByQuadratureMetric(wsp2,wsp2);
-            
-            // wsp1 = m = (D_xi1 * B)^T * k 
-            // wsp0 = n = (D_xi2 * B)^T * l 
-            IProductWRTBase_SumFacKernel(dbase0,base1,wsp1,wsp0,wsp3,false,true);
-            IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,wsp3,true,false);
-
-            // outarray = lambda * outarray + (wsp0 + wsp1)
-            //          = (lambda * M + L ) * u_hat
-            Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,&wsp0[0],1,&outarray[0],1);
-        }
         
         void StdQuadExp::v_MassMatrixOp(
                             const Array<OneD, const NekDouble> &inarray,
@@ -1600,7 +1478,7 @@ namespace Nektar
         }
         
         //up to here
-        void StdQuadExp::MultiplyByQuadratureMetric(
+        void StdQuadExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {         

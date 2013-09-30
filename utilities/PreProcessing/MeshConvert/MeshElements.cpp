@@ -434,7 +434,7 @@ namespace Nektar
         SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
         {
             // Create edge vertices.
-            SpatialDomains::VertexComponentSharedPtr p[2];
+            SpatialDomains::PointGeomSharedPtr p[2];
             p[0] = vertex[0]->GetGeom(coordDim);
             p[1] = vertex[1]->GetGeom(coordDim);
             
@@ -530,7 +530,7 @@ namespace Nektar
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
         {
             SpatialDomains::SegGeomSharedPtr         edges[3];
-            SpatialDomains::VertexComponentSharedPtr verts[3];
+            SpatialDomains::PointGeomSharedPtr verts[3];
             
             for (int i = 0; i < 3; ++i)
             {
@@ -772,7 +772,7 @@ namespace Nektar
         SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
         {
             SpatialDomains::SegGeomSharedPtr         edges[4];
-            SpatialDomains::VertexComponentSharedPtr verts[4];
+            SpatialDomains::PointGeomSharedPtr verts[4];
             
             for (int i = 0; i < 4; ++i)
             {

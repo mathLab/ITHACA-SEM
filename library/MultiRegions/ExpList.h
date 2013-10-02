@@ -731,11 +731,12 @@ namespace Nektar
                 return v_GetRobinBCInfo();
             }
 
-            void GetPeriodicEdges(
+            void GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
-                PeriodicMap &periodicEdges)
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces = NullPeriodicMap)
             {
-                v_GetPeriodicEdges(periodicVerts, periodicEdges);
+                v_GetPeriodicEntities(periodicVerts, periodicEdges, periodicFaces);
             }
 
             std::vector<LibUtilities::FieldDefinitionsSharedPtr>
@@ -1234,9 +1235,10 @@ namespace Nektar
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
             
             
-            virtual void v_GetPeriodicEdges(
+            virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
-                PeriodicMap &periodicEdges);
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces);
 
             // Homogeneous direction wrapper functions. 
             virtual LibUtilities::BasisSharedPtr  v_GetHomogeneousBasis(void)

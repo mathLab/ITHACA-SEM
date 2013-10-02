@@ -131,6 +131,12 @@ namespace Nektar
             int m, v, eMap1, eMap2, fMap1, fMap2;
             int offset, globalrow, globalcol, nCoeffs;
 
+            // Periodic information
+            PeriodicMap periodicVerts;
+            PeriodicMap periodicEdges;
+            PeriodicMap periodicFaces;
+            expList->GetPeriodicEntities(periodicVerts,periodicEdges,periodicFaces);
+            
             //matrix storage
             MatrixStorage storage = eFULL;
             MatrixStorage vertstorage = eDIAGONAL;
@@ -168,14 +174,14 @@ namespace Nektar
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
 
             //Transformation matrix
-            transmatrixmap[LibUtilities::eTetrahedron]=m_Rtet;
-            transmatrixmap[LibUtilities::ePrism]=m_Rprism;
-            transmatrixmap[LibUtilities::eHexahedron]=m_Rhex;
+            transmatrixmap[LibUtilities::eTetrahedron]= m_Rtet;
+            transmatrixmap[LibUtilities::ePrism]      = m_Rprism;
+            transmatrixmap[LibUtilities::eHexahedron] = m_Rhex;
 
             //Transposed transformation matrix
-            transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_RTtet;
-            transposedtransmatrixmap[LibUtilities::ePrism]=m_RTprism;
-            transposedtransmatrixmap[LibUtilities::eHexahedron]=m_RThex;
+            transposedtransmatrixmap[LibUtilities::eTetrahedron]= m_RTtet;
+            transposedtransmatrixmap[LibUtilities::ePrism]      = m_RTprism;
+            transposedtransmatrixmap[LibUtilities::eHexahedron] = m_RThex;
 
             int n_exp = expList->GetNumElmts();
             int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
@@ -266,18 +272,51 @@ namespace Nektar
                     {
                         if(uniqueEdgeMap.count(meshEdgeId)==0 && dof > 0)
                         {
-                            uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
+                            bool SetUpNewEdge = true;
 
-                            edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
-
-                            edgemodeoffset[edgematrixlocation]=dof*dof;
-
-                            ntotaledgeentries+=dof*dof;
-
-                            n_blks[1+edgematrixlocation++]=dof;
-
+                            // if edge is periodic need to set uniqueEdgeMap to other
+                            // entry
+                            if(periodicEdges.count(meshEdgeId) != 0)
+                            {
+                                int meshEdgeId2;
+                                PeriodicMap::const_iterator pIt;
+                                pIt = periodicEdges.find(meshEdgeId);
+                                for (i = 0; i < pIt->second.size(); ++i)
+                                {
+                                    meshEdgeId2 = pIt->second[i].id;
+                                    if(edgeDirMap.count(meshEdgeId2)==0)
+                                    {
+                                        if(uniqueEdgeMap.count(meshEdgeId2)!=0)
+                                        {
+                                            // set unique map to same location
+                                            uniqueEdgeMap[meshEdgeId] = 
+                                                uniqueEdgeMap[meshEdgeId2];
+                                            SetUpNewEdge = false;
+                                            break;
+                                        }
+                                    }
+                                    else // set edge to be a Dirichlet edge
+                                    {
+                                        edgeDirMap[meshEdgeId] = 1;
+                                        SetUpNewEdge = false;
+                                        break;
+                                    }
+                                }
+                            }
+                                
+                            if(SetUpNewEdge == true)
+                            {
+                                uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
+                                
+                                edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
+                                
+                                edgemodeoffset[edgematrixlocation]=dof*dof;
+                                
+                                ntotaledgeentries+=dof*dof;
+                                
+                                n_blks[1+edgematrixlocation++]=dof;                                
+                            }
                         }
-
                         nlocalNonDirEdges+=dof*dof;
                     }
                 }
@@ -305,16 +344,52 @@ namespace Nektar
                     {
                         if(uniqueFaceMap.count(meshFaceId)==0 && dof > 0)
                         {
-                            uniqueFaceMap[meshFaceId]=facematrixlocation;
+                            bool SetUpNewFace = true;
 
-                            facemodeoffset[facematrixlocation]=dof*dof;
+                            // if face is periodic need to set uniqueEdgeMap to other
+                            // entry
+                            if(periodicFaces.count(meshFaceId) != 0)
+                            {
+                                
+                                int meshFaceId2;
+                                PeriodicMap::const_iterator pIt;
+                                pIt = periodicFaces.find(meshFaceId);
+                                for (i = 0; i < pIt->second.size(); ++i)
+                                {
+                                    meshFaceId2 = pIt->second[i].id;
+                                    if(faceDirMap.count(meshFaceId2)==0)
+                                    {
+                                        if(uniqueFaceMap.count(meshFaceId2)!=0)
+                                        {
+                                            // set unique map to same location
+                                            uniqueFaceMap[meshFaceId] = 
+                                                uniqueFaceMap[meshFaceId2];
+                                            SetUpNewFace = false;
+                                            break;
+                                        }
+                                    }
+                                    else // set face to be a Dirichlet face
+                                    {
+                                        faceDirMap[meshFaceId] = 1;
+                                        SetUpNewFace = false;
+                                        break;
+                                    }
+                                }
+                            }
                             
-                            faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
-
-                            ntotalfaceentries+=dof*dof;
-                            
-                            n_blks[1+nNonDirEdgeIDs+facematrixlocation++]=dof;
-                            
+                            if(SetUpNewFace == true)
+                            {
+                                uniqueFaceMap[meshFaceId]=facematrixlocation;
+                                
+                                facemodeoffset[facematrixlocation]=dof*dof;
+                                
+                                faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
+                                
+                                ntotalfaceentries+=dof*dof;
+                                
+                                n_blks[1+nNonDirEdgeIDs+facematrixlocation++]=dof;
+                                
+                            }
                         }
                         nlocalNonDirFaces+=dof*dof;
                     }

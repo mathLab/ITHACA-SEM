@@ -580,6 +580,39 @@ namespace Nektar
 
             m_numLocalBndCoeffs    = 0;
 
+            map<int,int> EdgeSize;
+            map<int,int> FaceSize;
+
+            /// -  Count verts, edges, face and add up edges and face sizes
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)])))
+                {
+                    nTotalVerts += locExpansion->GetNverts();
+                    nTotalEdges += locExpansion->GetNedges();
+                    nTotalFaces += locExpansion->GetNfaces();
+
+                    nEdges = locExpansion->GetNedges();
+                    for(j = 0; j < nEdges; ++j)
+                    {
+                        nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j) - 2;
+                        meshEdgeId = locExpansion->GetGeom3D()->GetEid(j);
+                        EdgeSize[meshEdgeId] = nEdgeInteriorCoeffs;
+                    }
+
+                    nFaces = locExpansion->GetNfaces();
+                    faceCnt = 0;
+                    for(j = 0; j < nFaces; ++j)
+                    {
+                        nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
+                        meshFaceId = locExpansion->GetGeom3D()->GetFid(j);
+                        FaceSize[meshFaceId] = nFaceInteriorCoeffs;
+                    }
+                    
+                }
+            }
+
+
             /// - Periodic vertices
             for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
             {
@@ -656,12 +689,52 @@ namespace Nektar
                 if (i == pIt->second.size())
                 {
                     vertTempGraphVertId[meshVertId] = tempGraphVertId++;
+                    m_numNonDirVertexModes+=1;
                 }
                 else
                 {
                     vertTempGraphVertId[meshVertId] =
                         vertTempGraphVertId[pIt->second[i].id];
                 }
+            }
+
+            // Store the temporary graph vertex
+            // id's of all element edges and
+            // vertices in these 3 arrays below
+            localVerts = Array<OneD, int>(nTotalVerts,-1);
+            localEdges = Array<OneD, int>(nTotalEdges,-1);
+            localFaces = Array<OneD, int>(nTotalFaces,-1);
+
+
+            // Set up vertex numbering 
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
+                {
+                    vertCnt = 0;
+                    nVerts = locExpansion->GetNverts();
+                    for(j = 0; j < nVerts; ++j)
+                    {
+                        meshVertId = locExpansion->GetGeom3D()->GetVid(j);
+                        if(vertReorderedGraphVertId.count(meshVertId) == 0)
+                        {
+                            if(vertTempGraphVertId.count(meshVertId) == 0)
+                            {
+                                boost::add_vertex(boostGraphObj);
+                                vertTempGraphVertId[meshVertId] = tempGraphVertId++;
+                                m_numNonDirVertexModes+=1;
+                            }
+                            localVerts[localVertOffset+vertCnt++] = vertTempGraphVertId[meshVertId];
+                            vwgts_map[ vertTempGraphVertId[meshVertId] ] = 1;
+                        }
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 3D expansion failed");
+                }
+                localVertOffset+=nVerts;
             }
 
             /// - Periodic edges
@@ -740,6 +813,13 @@ namespace Nektar
                 if (i == pIt->second.size())
                 {
                     edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
+                    nEdgeInteriorCoeffs = EdgeSize[meshEdgeId];
+                    m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
+                    
+                    if(nEdgeInteriorCoeffs > 0)
+                    {
+                        m_numNonDirEdges++;
+                    }
                 }
                 else
                 {
@@ -747,79 +827,9 @@ namespace Nektar
                 }
             }
 
-            /// - Periodic faces
-            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
-            {
-                if (!pIt->second[0].isLocal)
-                {
-                    // The edge mapped to is on another process.
-                    meshFaceId = pIt->first;
-                    ASSERTL0(faceReorderedGraphVertId.count(meshFaceId) == 0,
-                             "This periodic boundary edge has been specified before");
-                    faceTempGraphVertId[meshFaceId]  = tempGraphVertId++;
-                }
-                else if (pIt->first < pIt->second[0].id)
-                {
-                    ASSERTL0(faceReorderedGraphVertId.count(pIt->first) == 0,
-                             "This periodic boundary edge has been specified before");
-                    ASSERTL0(faceReorderedGraphVertId.count(pIt->second[0].id) == 0,
-                             "This periodic boundary edge has been specified before");
 
-                    faceTempGraphVertId[pIt->first]        = tempGraphVertId;
-                    faceTempGraphVertId[pIt->second[0].id] = tempGraphVertId++;
-                }
-            }
-            
 
-            /// - All other vertices and edges
-            for(i = 0; i < locExpVector.size(); ++i)
-            {
-                if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
-                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
-                {
-                    nTotalVerts += locExpansion->GetNverts();
-                    nTotalEdges += locExpansion->GetNedges();
-                    nTotalFaces += locExpansion->GetNfaces();
-                }
-            }
-
-            // Store the temporary graph vertex
-            // id's of all element edges and
-            // vertices in these 3 arrays below
-            localVerts = Array<OneD, int>(nTotalVerts,-1);
-            localEdges = Array<OneD, int>(nTotalEdges,-1);
-            localFaces = Array<OneD, int>(nTotalFaces,-1);
-
-            for(i = 0; i < locExpVector.size(); ++i)
-            {
-                if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
-                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
-                {
-                    vertCnt = 0;
-                    nVerts = locExpansion->GetNverts();
-                    for(j = 0; j < nVerts; ++j)
-                    {
-                        meshVertId = locExpansion->GetGeom3D()->GetVid(j);
-                        if(vertReorderedGraphVertId.count(meshVertId) == 0)
-                        {
-                            if(vertTempGraphVertId.count(meshVertId) == 0)
-                            {
-                                boost::add_vertex(boostGraphObj);
-                                vertTempGraphVertId[meshVertId] = tempGraphVertId++;
-                                m_numNonDirVertexModes+=1;
-                            }
-                            localVerts[localVertOffset+vertCnt++] = vertTempGraphVertId[meshVertId];
-                            vwgts_map[ vertTempGraphVertId[meshVertId] ] = 1;
-                        }
-                    }
-                }
-                else
-                {
-                    ASSERTL0(false,"dynamic cast to a local 3D expansion failed");
-                }
-                localVertOffset+=nVerts;
-            }
-
+            // Set up edge numbering 
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
@@ -857,6 +867,44 @@ namespace Nektar
                 localEdgeOffset+=nEdges;
             }
 
+            /// - Periodic faces
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            {
+                if (!pIt->second[0].isLocal)
+                {
+                    // The edge mapped to is on another process.
+                    meshFaceId = pIt->first;
+                    ASSERTL0(faceReorderedGraphVertId.count(meshFaceId) == 0,
+                             "This periodic boundary edge has been specified before");
+                    faceTempGraphVertId[meshFaceId]  = tempGraphVertId++;
+                    nFaceInteriorCoeffs  = FaceSize[meshFaceId];
+                    m_numNonDirFaceModes+=nFaceInteriorCoeffs;
+                    
+                    if(nFaceInteriorCoeffs > 0)
+                    {
+                        m_numNonDirFaces++;
+                    }                
+                }
+                else if (pIt->first < pIt->second[0].id)
+                {
+                    ASSERTL0(faceReorderedGraphVertId.count(pIt->first) == 0,
+                             "This periodic boundary face has been specified before");
+                    ASSERTL0(faceReorderedGraphVertId.count(pIt->second[0].id) == 0,
+                             "This periodic boundary face has been specified before");
+
+                    faceTempGraphVertId[pIt->first]        = tempGraphVertId;
+                    faceTempGraphVertId[pIt->second[0].id] = tempGraphVertId++;
+                    nFaceInteriorCoeffs  = FaceSize[pIt->first]; 
+                    m_numNonDirFaceModes+=nFaceInteriorCoeffs;
+                    
+                    if(nFaceInteriorCoeffs > 0)
+                    {
+                        m_numNonDirFaces++;
+                    }
+                }
+            }
+
+            // setup face numbering 
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(

@@ -624,7 +624,7 @@
         <PARAMETERS>
 
             <P> TimeStep       = 1e-4               </P> 
-            <P> FinTime        = 1.0              </P>
+            <P> FinTime        = 0.05              </P>
             <P> NumSteps       = FinTime/TimeStep   </P>
             <P> IO_CheckSteps  = NumSteps/50        </P>
             <P> IO_InfoSteps   = 1000               </P>

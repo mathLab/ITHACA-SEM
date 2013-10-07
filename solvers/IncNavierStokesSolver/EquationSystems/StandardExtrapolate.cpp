@@ -63,7 +63,7 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_SubSteppingTimeIntegration(
-        const int intMethod,
+        int intMethod,
         const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
     {
         switch(intMethod)
@@ -91,7 +91,7 @@ namespace Nektar
      */
     void StandardExtrapolate::v_SubStepSetPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-        const NekDouble Aii_DT,
+        NekDouble Aii_DT,
         NekDouble kinvis)
     {
     }
@@ -102,7 +102,7 @@ namespace Nektar
      */
     void StandardExtrapolate::v_SubStepAdvance(
         const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-        const int nstep, 
+        int nstep, 
         NekDouble time)
     {
     }
@@ -112,7 +112,7 @@ namespace Nektar
      * 
      */
     void StandardExtrapolate::v_SubStepSaveFields(
-        const int nstep)
+        int nstep)
     {
     }
 	

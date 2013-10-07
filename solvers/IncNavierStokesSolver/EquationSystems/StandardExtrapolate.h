@@ -83,20 +83,20 @@ namespace Nektar
         
     protected:
         virtual void v_SubSteppingTimeIntegration(
-            const int intMethod,
+            int intMethod,
             const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);
 
         virtual void v_SubStepSaveFields(
-            const int nstep);
+            int nstep);
 
         virtual void v_SubStepSetPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-            const NekDouble Aii_DT,
+            NekDouble Aii_DT,
             NekDouble kinvis);
 
         virtual void v_SubStepAdvance(
             const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-            const int nstep, 
+            int nstep, 
             NekDouble time);
 
         virtual void v_MountHOPBCs(

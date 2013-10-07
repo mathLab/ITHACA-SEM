@@ -63,7 +63,7 @@ namespace Nektar
     }
     
     void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
-        const int intMethod,
+        int intMethod,
         const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
     {
         int i;
@@ -288,7 +288,7 @@ namespace Nektar
 
     void SubSteppingExtrapolate::v_SubStepAdvance(
         const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-        const int nstep, 
+        int nstep, 
         NekDouble time)
     {
         int n;
@@ -792,8 +792,9 @@ namespace Nektar
     /** 
      * 
      */   
-    void SubSteppingExtrapolate::AddDuDt3D(const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-                                           NekDouble Aii_Dt)
+    void SubSteppingExtrapolate::AddDuDt3D(
+        const Array<OneD, const Array<OneD, NekDouble> >  &N, 
+        NekDouble Aii_Dt)
     {
         int i,n;
         ASSERTL0(m_velocity.num_elements() == 3," Routine currently only set up for 3D");

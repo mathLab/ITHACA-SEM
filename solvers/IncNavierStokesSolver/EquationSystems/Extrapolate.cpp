@@ -87,7 +87,7 @@ namespace Nektar
         Array<OneD, NekDouble> tmp;
         Array<OneD, NekDouble> accelerationTerm;
         
-		m_pressureCalls++;
+        m_pressureCalls++;
         int  n,cnt;
         int  nint    = min(m_pressureCalls,m_intSteps);
         int  nlevels = m_pressureHBCs.num_elements();
@@ -249,11 +249,15 @@ namespace Nektar
                 {
                     if(m_HBCdata[j].m_elmtTraceID == 0)
                     {
-                        (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset))[0] = -1.0*Q[0][0];
+                        (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+
+                         m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(
+                             m_HBCdata[j].m_bndElmtOffset))[0] = -1.0*Q[0][0];
                     }
                     else if (m_HBCdata[j].m_elmtTraceID == 1)
                     {
-                        (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset))[0] = Q[0][m_HBCdata[j].m_ptsInElmt-1];
+                        (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+
+                         m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(
+                             m_HBCdata[j].m_bndElmtOffset))[0] = Q[0][m_HBCdata[j].m_ptsInElmt-1];
                     }
                     else 
                     {
@@ -276,6 +280,9 @@ namespace Nektar
                     Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Uvals);
                 }
                 break;
+                default:
+                    ASSERTL0(0,"Dimension not supported");
+                    break;
             }
         }
     }
@@ -500,6 +507,9 @@ namespace Nektar
                 m_bnd_dim  = 3;
             }
             break;
+            default:
+                ASSERTL0(0,"Dimension not supported");
+                break;
         }
 	
 		
@@ -706,6 +716,9 @@ namespace Nektar
                 }
             }
             break;
+            default:
+                ASSERTL0(0,"Dimension not supported");
+                break;
         }
     }
 }

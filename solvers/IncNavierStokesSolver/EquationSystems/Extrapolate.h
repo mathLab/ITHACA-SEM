@@ -138,20 +138,20 @@ namespace Nektar
         
     protected:
         virtual void v_SubSteppingTimeIntegration(
-            const int intMethod,        
+            int intMethod,        
             const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)=0;
 
         virtual void v_SubStepSaveFields(
-            const int nstep)=0;
+            int nstep)=0;
 
         virtual void v_SubStepSetPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-            const NekDouble Aii_DT,
+            NekDouble Aii_DT,
             NekDouble kinvis)=0;
 
         virtual void v_SubStepAdvance(
             const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-            const int nstep, 
+            int nstep, 
             NekDouble time)=0;
 
         virtual void v_MountHOPBCs(
@@ -255,7 +255,7 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubSteppingTimeIntegration(
-        const int intMethod,
+        int intMethod,
         const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)
     {
         v_SubSteppingTimeIntegration(intMethod, IntegrationScheme);
@@ -265,7 +265,7 @@ namespace Nektar
      *
      */
     inline void Extrapolate::SubStepSaveFields(
-        const int nstep)
+        int nstep)
     {
         v_SubStepSaveFields(nstep);
     }
@@ -275,7 +275,7 @@ namespace Nektar
      */
     inline void Extrapolate::SubStepSetPressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-        const NekDouble Aii_DT,
+        NekDouble Aii_DT,
         NekDouble kinvis)
     {
         v_SubStepSetPressureBCs(inarray,Aii_DT,kinvis);
@@ -286,7 +286,7 @@ namespace Nektar
      */
     inline void Extrapolate::SubStepAdvance(
         const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
-        const int nstep, 
+        int nstep, 
         NekDouble time)
     {
         v_SubStepAdvance(integrationSoln,nstep, time);

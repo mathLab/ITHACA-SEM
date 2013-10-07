@@ -139,6 +139,8 @@ namespace Nektar
             ePreconR,
             ePreconRT,
             ePreconLinearSpace,
+            eInterpGauss,
+            eGaussDG,
             SIZE_MatrixType
         };
 
@@ -182,7 +184,9 @@ namespace Nektar
             "FwdTrans",
             "PreconR",
             "PreconRT",
-            "PreconLinearSpace"
+            "PreconLinearSpace",
+            "InterpGauss",
+            "GaussDG"
         };
 
         enum VarCoeffType
@@ -222,7 +226,9 @@ namespace Nektar
             eFactorTau,
             eFactorTime,
             eFactorSVVCutoffRatio,
-            eFactorSVVDiffCoeff
+            eFactorSVVDiffCoeff,
+            eFactorGaussVertex,
+            eFactorGaussEdge
         };
 
         const char* const ConstFactorTypeMap[] = {
@@ -230,7 +236,9 @@ namespace Nektar
             "FactorTau",
             "FactorTime",
             "FactorSVVCutoffRatio",
-            "FactorSVVDiffCoeff"
+            "FactorSVVDiffCoeff",
+            "FactorGaussVertex",
+            "FactorGaussEdge"
         };
         typedef std::map<ConstFactorType, NekDouble> ConstFactorMap;
         static ConstFactorMap NullConstFactorMap;

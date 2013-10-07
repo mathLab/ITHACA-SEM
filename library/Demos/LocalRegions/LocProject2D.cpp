@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
     LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
     LibUtilities::ShapeType     regionshape;
-    StdRegions::StdExpansion2D *E;
+    StdRegions::StdExpansion2D *E = NULL;
     Array<OneD, NekDouble> sol;
     Array<OneD, NekDouble> coords(8);
     StdRegions::Orientation edgeDir = StdRegions::eForwards;
@@ -54,10 +54,11 @@ int main(int argc, char *argv[])
         fprintf(stderr,"\t Modified_B = 5\n");
         fprintf(stderr,"\t Fourier    = 7\n");
         fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Legendre   = 9\n");
-        fprintf(stderr,"\t Chebyshev  = 10\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 11\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 12\n");
+        fprintf(stderr,"\t Gauss Lagrange =  9\n");
+        fprintf(stderr,"\t Legendre   = 10\n");
+        fprintf(stderr,"\t Chebyshev  = 11\n");
+        fprintf(stderr,"\t Nodal tri (Electro) = 13\n");
+        fprintf(stderr,"\t Nodal tri (Fekete)  = 14\n");
         
         fprintf(stderr,"Note type = 3,6 are for three-dimensional basis\n");
         
@@ -76,17 +77,17 @@ int main(int argc, char *argv[])
     int btype1_val = atoi(argv[2]);
     int btype2_val = atoi(argv[3]);
     
-    if(( btype1_val <= 10)&&( btype2_val <= 10))
+    if(( btype1_val <= 11)&&( btype2_val <= 11))
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
     }
-    else if(( btype1_val >=11)&&(btype2_val <= 12))
+    else if(( btype1_val >=13)&&(btype2_val <= 14))
     {
         btype1 =   LibUtilities::eOrtho_A;
         btype2 =   LibUtilities::eOrtho_B;
         
-        if(btype1_val == 11)
+        if(btype1_val == 13)
         {
             NodalType = LibUtilities::eNodalTriElec;
         }
@@ -174,14 +175,14 @@ int main(int argc, char *argv[])
             coords[5]    =   atof(argv[13]);
             
             // Set up coordinates
-            SpatialDomains::VertexComponentSharedPtr verts[3];
+            SpatialDomains::PointGeomSharedPtr verts[3];
             const int zero = 0;
             const int one=1;
             const int two=2;
             const double dZero = 0.0;
-            verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
-            verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
-            verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
+            verts[0] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
+            verts[1] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
+            verts[2] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
             
             // Set up Edges
             SpatialDomains::SegGeomSharedPtr edges[3];
@@ -202,7 +203,7 @@ int main(int argc, char *argv[])
             const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
             const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
 
-            if(btype1_val >= 10)
+            if(btype1_val >= 11)
             {
                 E = new LocalRegions::NodalTriExp(Bkey1,Bkey2,NodalType,geom);
             }
@@ -243,11 +244,11 @@ int main(int argc, char *argv[])
             const int two=2;
             const int three=3;
             const double dZero=0.0;
-            SpatialDomains::VertexComponentSharedPtr verts[4];
-            verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
-            verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
-            verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
-            verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
+            SpatialDomains::PointGeomSharedPtr verts[4];
+            verts[0] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
+            verts[1] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
+            verts[2] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
+            verts[3] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
             
             // Set up Edges
             SpatialDomains::SegGeomSharedPtr edges[4];

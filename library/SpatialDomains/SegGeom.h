@@ -39,7 +39,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 #include <SpatialDomains/Geometry1D.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/Curve.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 
@@ -64,18 +64,18 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT SegGeom(
                         int id,
                         const int coordim,
-                        const VertexComponentSharedPtr vertex[]);
+                        const PointGeomSharedPtr vertex[]);
 
                 SPATIAL_DOMAINS_EXPORT SegGeom(
                         int id,
                         const int coordim,
-                        const VertexComponentSharedPtr vertex[],
+                        const PointGeomSharedPtr vertex[],
                         const CurveSharedPtr &curve);
 
                 SPATIAL_DOMAINS_EXPORT SegGeom(
                         const int id,
-                        const VertexComponentSharedPtr& vert1,
-                        const VertexComponentSharedPtr& vert2);
+                        const PointGeomSharedPtr& vert1,
+                        const PointGeomSharedPtr& vert2);
 
                 SPATIAL_DOMAINS_EXPORT SegGeom(const SegGeom &in);
 
@@ -100,13 +100,13 @@ namespace Nektar
                 int                                               m_eid;
                 std::list<CompToElmt>                             m_elmtMap;
                 Array<OneD, StdRegions::StdExpansion1DSharedPtr>  m_xmap;
-                SpatialDomains::VertexComponentSharedPtr          m_verts[kNverts];
+                SpatialDomains::PointGeomSharedPtr                m_verts[kNverts];
                 StdRegions::Orientation                           m_porient[kNverts];
 
 
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
 
-                SPATIAL_DOMAINS_EXPORT virtual VertexComponentSharedPtr
+                SPATIAL_DOMAINS_EXPORT virtual PointGeomSharedPtr
                         v_GetVertex(const int i) const;
 
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetEid() const;
@@ -161,6 +161,10 @@ namespace Nektar
                         const Array<OneD, const NekDouble>& gloCoord,
                         NekDouble tol = 0.0);
 
+                SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
+                                             const Array<OneD, const NekDouble> &gloCoord, 
+                                             Array<OneD, NekDouble> &locCoord,
+                                             NekDouble                     tol = 0.0);
             private:
                 /// Boolean indicating whether object owns the data
                 bool                            m_ownData;

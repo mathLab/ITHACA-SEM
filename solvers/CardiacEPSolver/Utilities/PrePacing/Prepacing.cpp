@@ -7,7 +7,7 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    SpatialDomains::VertexComponentSharedPtr    vPoint;
+    SpatialDomains::PointGeomSharedPtr          vPoint;
     MultiRegions::ExpListSharedPtr              vExp;
     LibUtilities::SessionReaderSharedPtr        vSession;
     std::string                                 vCellModel;
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     try
     {
         // Construct a field consisting of a single vertex
-        vPoint = MemoryManager<SpatialDomains::VertexComponent>
+        vPoint = MemoryManager<SpatialDomains::PointGeom>
                         ::AllocateSharedPtr(3, 0, 0.0, 0.0, 0.0);
         vExp = MemoryManager<MultiRegions::ExpList0D>
                         ::AllocateSharedPtr(vPoint);
@@ -48,7 +48,9 @@ int main(int argc, char *argv[])
         vTime   = 0.0;
         nSteps  = vSession->GetParameter("NumSteps");
 
-        vSol[0][0] = -81.0;
+        LibUtilities::EquationSharedPtr e =
+                            vSession->GetFunction("InitialConditions", "u");
+        vSol[0][0] = e->Evaluate(0.0, 0.0, 0.0, 0.0);
 
         // Time integrate cell model
         for (unsigned int i = 0; i < nSteps; ++i)
@@ -70,6 +72,12 @@ int main(int argc, char *argv[])
 
             // Output current solution to stdout
             cout << vTime << "   " << vSol[0][0] << endl;
+        }
+
+        for (unsigned int i = 0; i < vCell->GetNumCellVariables(); ++i)
+        {
+            cout << "# " << vCell->GetCellVarName(i) << "  "
+                 << vCell->GetCellSolution(i)[0] << endl;
         }
     }
     catch (...)

@@ -37,7 +37,7 @@
 
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/GeomFactors3D.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>     // for SegGeomSharedPtr
 
 namespace Nektar
@@ -70,6 +70,14 @@ namespace Nektar
       int Geometry3D::GetEid(int i) const
       {
           return v_GetEid(i);
+      }
+
+      /**
+       * @brief Return vertex i in this element.
+       */
+      const PointGeomSharedPtr Geometry3D::GetVertex(int i) const
+      {
+          return m_verts[i];
       }
 
       /**
@@ -112,7 +120,7 @@ namespace Nektar
           NekDouble xmap,ymap,zmap, F1,F2, F3;
           NekDouble der1_x, der2_x, der3_x, der1_y, der2_y, der3_y,
               der1_z, der2_z, der3_z; 
-          const Array<TwoD, const NekDouble> &gmat = GetGmat();
+          const Array<TwoD, const NekDouble> &gmat = m_geomFactors->GetGmat();
           
           // Unfortunately need the points in an Array to interpolate
           Array<OneD, NekDouble> D1Dx(ptsx.num_elements(),&gmat[0][0]);
@@ -258,7 +266,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis, true);
+                    Gtype, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }

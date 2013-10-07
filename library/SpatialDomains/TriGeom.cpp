@@ -83,7 +83,7 @@ namespace Nektar
          *
          */
         TriGeom::TriGeom(const int id,
-                const VertexComponentSharedPtr verts[],
+                const PointGeomSharedPtr verts[],
                 const SegGeomSharedPtr edges[],
                 const StdRegions::Orientation eorient[]):
                 Geometry2D(verts[0]->GetCoordim()),
@@ -386,8 +386,8 @@ namespace Nektar
         }
 
         StdRegions::Orientation TriGeom::GetFaceOrientation(
-            const VertexComponentVector &face1,
-            const VertexComponentVector &face2)
+            const PointGeomVector &face1,
+            const PointGeomVector &face2)
         {
             int i, j, vmap[3] = {-1,-1,-1};
             NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
@@ -584,7 +584,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis, true);
+                    Gtype, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -654,11 +654,11 @@ namespace Nektar
             TriGeom::v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             { 
                 NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
-                VertexComponent dv1, dv2, norm, orth1, orth2;
-                VertexComponent xin(m_coordim,0,coords[0],coords[1],coords2);
+                PointGeom dv1, dv2, norm, orth1, orth2;
+                PointGeom xin(m_coordim,0,coords[0],coords[1],coords2);
 
                 // Calculate edge vectors from 0-1 and 0-2 edges. 
                 dv1.Sub(*m_verts[1],*m_verts[0]);
@@ -844,7 +844,7 @@ namespace Nektar
         /**
          *
          */
-        const VertexComponentSharedPtr TriGeom::v_GetVertex(int i) const
+        const PointGeomSharedPtr TriGeom::v_GetVertex(int i) const
         {
             ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
             return m_verts[i];
@@ -937,14 +937,27 @@ namespace Nektar
 
 
         /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
+        bool TriGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
+
+        /**
          *
          */
-        bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+                                      Array<OneD, NekDouble> &stdCoord,
+                                      NekDouble tol)
         {
             ASSERTL1(gloCoord.num_elements() >= 2,
                     "Two dimensional geometry expects at least two coordinates.");
 
-            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
             GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -(1+tol) && stdCoord[1] >= -(1+tol)
                     && stdCoord[0] + stdCoord[1] <= tol)

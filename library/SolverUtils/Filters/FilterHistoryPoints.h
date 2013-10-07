@@ -71,7 +71,7 @@ namespace Nektar
             virtual bool v_IsTimeDependent();
 
         private:
-            SpatialDomains::VertexComponentVector   m_historyPoints;
+            SpatialDomains::PointGeomVector         m_historyPoints;
             unsigned int                            m_index;
             unsigned int                            m_outputFrequency;
             unsigned int                            m_outputPlane; // plane to take history point from if using a homogeneous1D expansion
@@ -79,9 +79,9 @@ namespace Nektar
             std::string                             m_outputFile;
             std::ofstream                           m_outputStream;
             std::stringstream                       m_historyPointStream;
-            std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
-            m_historyList;
-            std::map<int, int>                      m_historyLocalPointMap;
+            std::list<std::pair<SpatialDomains::PointGeomSharedPtr,
+                                Array<OneD, NekDouble> > > m_historyList;
+            std::map<int, int >                     m_historyLocalPointMap;
         };
     }
 }

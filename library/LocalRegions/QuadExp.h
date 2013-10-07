@@ -72,11 +72,13 @@ namespace Nektar
             //-------------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                     const Array<OneD, const NekDouble> &inarray);
-
-
+			
             //----------------------------
             // Differentiation Methods
             //----------------------------
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
+                    const Array<OneD, const NekDouble> &Lcoord,
+                    const Array<OneD, const NekDouble> &physvals);
             LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &out_d0,
@@ -158,6 +160,16 @@ namespace Nektar
                         const StdRegions::StdExpansionSharedPtr &EdgeExp,
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
+                        const int edge,
+                        const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                        const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,       NekDouble> &outarray,
+                        StdRegions::Orientation  orient);
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(
+                        const int edge,
+                        const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD, NekDouble>      &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
                         const int edge,
                         Array<OneD, NekDouble> &outarray);
@@ -175,10 +187,6 @@ namespace Nektar
                         std::string var = "v");
             LOCAL_REGIONS_EXPORT virtual const
                 SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
-            LOCAL_REGIONS_EXPORT virtual const
-                SpatialDomains::GeometrySharedPtr v_GetGeom() const;
-            LOCAL_REGIONS_EXPORT virtual const
-                SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const;
             LOCAL_REGIONS_EXPORT virtual  int v_GetCoordim();
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
                         const NekDouble *data,
@@ -255,34 +263,27 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray,
                         const StdRegions::StdMatrixKey &mkey);
-            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
+            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree_Kernel(
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray,
-                        const StdRegions::StdMatrixKey &mkey);
-            LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
-                        const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD,       NekDouble> &outarray,
-                        const StdRegions::StdMatrixKey &mkey);
+                              Array<OneD,       NekDouble> &wsp);
+
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
 
         private:
-            SpatialDomains::Geometry2DSharedPtr  m_geom;
-            SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
-
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             QuadExp();
 
-            void MultiplyByQuadratureMetric(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray);
         };
 
         // type defines for use of QuadExp in a boost vector
         typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
         typedef std::vector< QuadExpSharedPtr > QuadExpVector;
         typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
-
+        
+        
     }
 }
 

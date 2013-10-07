@@ -101,7 +101,7 @@ namespace Nektar
             // note that nzplanes can be larger than nzmodes 
             m_planes[0] = plane_zero = MemoryManager<DisContField2D>::AllocateSharedPtr(pSession,graph2D,variable,True,False);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
 
             for(i = 0; i < nel; ++i)
@@ -141,7 +141,7 @@ namespace Nektar
             const std::string                   variable)
         {
 
-            int i,j,n;
+            int j,n;
             // Setup an ExpList2DHomogeneous1D expansion for boundary
             // conditions and link to class declared in m_planes.
             const SpatialDomains::BoundaryRegionCollection  &bregions
@@ -177,7 +177,7 @@ namespace Nektar
                 if(boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     
-                    boost::shared_ptr<StdRegions::StdExpansionVector> exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
+                    boost::shared_ptr<LocalRegions::ExpansionVector> exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
                     
                     for(n = 0; n < nplanes; ++n)
                     {

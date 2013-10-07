@@ -74,7 +74,7 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr   &graph3D,
             const std::string                          &variable,
             const bool                                  SetUpJustDG)
-            : ExpList3D          (pSession,graph3D),
+            : ExpList3D          (pSession,graph3D,variable),
               m_bndCondExpansions(),
               m_bndConditions    (),
               m_trace(NullExpListSharedPtr)
@@ -146,7 +146,7 @@ namespace Nektar
                
                 if (SetUpJustDG)
                 {
-                    SetUpDG();
+                    SetUpDG(variable);
                 }
                 else
                 {
@@ -229,7 +229,7 @@ namespace Nektar
                         if (ProjectStr == "MixedCGDG"           ||
                             ProjectStr == "Mixed_CG_Discontinuous")
                         {
-                            SetUpDG();
+                            SetUpDG(variable);
                         }
                         else
                         {
@@ -293,7 +293,7 @@ namespace Nektar
         /**
          * @brief Set up all DG member variables and maps.
          */
-        void DisContField3D::SetUpDG()
+        void DisContField3D::SetUpDG(const std::string variable)
         {
             if (m_trace != NullExpListSharedPtr)
             {
@@ -319,7 +319,7 @@ namespace Nektar
             m_trace    = trace;
             m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
                 m_session,graph3D,trace,*this,m_bndCondExpansions,
-                m_bndConditions, m_periodicFaces);
+                m_bndConditions, m_periodicFaces,variable);
 
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
@@ -354,8 +354,20 @@ namespace Nektar
                     boost::dynamic_pointer_cast<
                         LocalRegions::Expansion2D>(m_trace->GetExp(i));
 
-                int offset = m_trace->GetPhys_Offset(i);
-                if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
+                int offset      = m_trace->GetPhys_Offset(i);
+                int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
+                PeriodicMap::iterator pIt = m_periodicFaces.find(
+                    traceGeomId);
+
+                if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
+                {
+                    if (traceGeomId != min(pIt->second[0].id, traceGeomId))
+                    {
+                        traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
+                            traceEl->GetLeftAdjacentElementFace());
+                    }
+                }
+                else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
                     traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
                         traceEl->GetLeftAdjacentElementFace());
@@ -383,13 +395,15 @@ namespace Nektar
             boost::unordered_map<int,pair<int,int> > perFaceToExpMap;
             boost::unordered_map<int,pair<int,int> >::iterator it2;
             cnt = 0;
+            LocalRegions::Expansion3DSharedPtr exp3d;
             for (int n = 0; n < m_exp->size(); ++n)
             {
-                for (int e = 0; e < (*m_exp)[n]->GetNfaces(); ++e, ++cnt)
+                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
+                for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                 {
                     PeriodicMap::iterator it = m_periodicFaces.find(
-                        (*m_exp)[n]->GetGeom3D()->GetFid(e));
-
+                        exp3d->GetGeom3D()->GetFid(e));
+                    
                     if (it != m_periodicFaces.end())
                     {
                         perFaceToExpMap[it->first] = make_pair(n, e);
@@ -412,9 +426,10 @@ namespace Nektar
             cnt = 0;
             for (int n = 0; n < m_exp->size(); ++n)
             {
-                for (int e = 0; e < (*m_exp)[n]->GetNfaces(); ++e, ++cnt)
+                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
+                for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                 {
-                    int faceGeomId = (*m_exp)[n]->GetGeom3D()->GetFid(e);
+                    int faceGeomId = exp3d->GetGeom3D()->GetFid(e);
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
 
@@ -630,7 +645,8 @@ namespace Nektar
         }
 
         /**
-         * @brief Determine the perioidc edges and vertices for the given graph.
+         * @brief Determine the periodic faces, edges and vertices for the given
+         * graph.
          * 
          * @param   bcs         Information about the boundary conditions.
          * @param   variable    Specifies the field.
@@ -661,7 +677,7 @@ namespace Nektar
             // composites (i.e. if composites 1 and 2 are periodic then this map
             // will contain either the pair (1,2) or (2,1) but not both).
             //
-            // The thre maps allVerts, allCoord, allEdges and allOrient map a
+            // The three maps allVerts, allCoord, allEdges and allOrient map a
             // periodic face to a vector containing the vertex ids of the face;
             // their coordinates; the edge ids of the face; and their
             // orientation within that face respectively.
@@ -671,7 +687,7 @@ namespace Nektar
             // lie on this process.
             map<int,int>                                   perComps;
             map<int,vector<int> >                          allVerts;
-            map<int,SpatialDomains::VertexComponentVector> allCoord;
+            map<int,SpatialDomains::PointGeomVector>       allCoord;
             map<int,vector<int> >                          allEdges;
             map<int,vector<StdRegions::Orientation> >      allOrient;
             set<int>                                       locVerts;
@@ -709,8 +725,8 @@ namespace Nektar
                 // From this identify composites by looking at the original
                 // boundary region ordering. Note that in serial the mesh
                 // partitioner is not run, so this map will be empty and
-                // therefore needs to be found from the corresponding boundary
-                // region.
+                // therefore needs to be populated by using the corresponding
+                // boundary region.
                 int cId1, cId2;
                 if (vComm->GetSize() == 1)
                 {
@@ -741,7 +757,7 @@ namespace Nektar
                     int faceId = (*c)[i]->GetGlobalID();
                     locFaces.insert(faceId);
 
-                    // In serial mesh partitioning will not have occurred so
+                    // In serial, mesh partitioning will not have occurred so
                     // need to fill composite ordering map manually.
                     if (vComm->GetSize() == 1)
                     {
@@ -751,7 +767,7 @@ namespace Nektar
                     // Loop over vertices and edges of the face to populate
                     // allVerts, allEdges and allCoord maps.
                     vector<int> vertList, edgeList;
-                    SpatialDomains::VertexComponentVector coordVec;
+                    SpatialDomains::PointGeomVector coordVec;
                     vector<StdRegions::Orientation> orientVec;
                     for (j = 0; j < faceGeom->GetNumVerts(); ++j)
                     {
@@ -922,20 +938,20 @@ namespace Nektar
             // routine, but now hold information for all periodic vertices.
             map<int, vector<int> >                          vertMap;
             map<int, vector<int> >                          edgeMap;
-            map<int, SpatialDomains::VertexComponentVector> coordMap;
+            map<int, SpatialDomains::PointGeomVector>       coordMap;
 
             // These final two maps are required for determining the relative
             // orientation of periodic edges. vCoMap associates vertex IDs with
             // their coordinates, and eIdMap maps an edge ID to the two vertices
             // which construct it.
-            map<int, SpatialDomains::VertexComponentSharedPtr> vCoMap;
-            map<int, pair<int, int> >                          eIdMap;
+            map<int, SpatialDomains::PointGeomSharedPtr>    vCoMap;
+            map<int, pair<int, int> >                       eIdMap;
 
             for (cnt = i = 0; i < totFaces; ++i)
             {
                 vector<int> edges(faceVerts[i]);
                 vector<int> verts(faceVerts[i]);
-                SpatialDomains::VertexComponentVector coord(faceVerts[i]);
+                SpatialDomains::PointGeomVector coord(faceVerts[i]);
 
                 // Keep track of cnt to enable correct edge vertices to be
                 // inserted into eIdMap.
@@ -944,7 +960,7 @@ namespace Nektar
                 {
                     edges[j] = edgeIds[cnt];
                     verts[j] = vertIds[cnt];
-                    coord[j]  = MemoryManager<SpatialDomains::VertexComponent>
+                    coord[j]  = MemoryManager<SpatialDomains::PointGeom>
                         ::AllocateSharedPtr(
                             3, verts[j], vertX[cnt], vertY[cnt], vertZ[cnt]);
                     vCoMap[vertIds[cnt]] = coord[j];
@@ -1127,7 +1143,7 @@ namespace Nektar
 
                     // Loop up coordinates of the faces, check they have the
                     // same number of vertices.
-                    SpatialDomains::VertexComponentVector tmpVec[2]
+                    SpatialDomains::PointGeomVector tmpVec[2]
                         = { coordMap[ids[0]], coordMap[ids[1]] };
 
                     ASSERTL0(tmpVec[0].size() == tmpVec[1].size(),
@@ -1400,7 +1416,7 @@ namespace Nektar
                 // Find edge coordinates
                 map<int, pair<int, int> >::iterator eIt
                     = eIdMap.find(perIt->first);
-                SpatialDomains::VertexComponent v[2] = {
+                SpatialDomains::PointGeom v[2] = {
                     *vCoMap[eIt->second.first],
                     *vCoMap[eIt->second.second]
                 };
@@ -1412,7 +1428,7 @@ namespace Nektar
                 {
                     eIt = eIdMap.find(perIt->second[i].id);
 
-                    SpatialDomains::VertexComponent w[2] = {
+                    SpatialDomains::PointGeom w[2] = {
                         *vCoMap[eIt->second.first],
                         *vCoMap[eIt->second.second]
                     };
@@ -1501,8 +1517,19 @@ namespace Nektar
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryFaces.end())
                 {
-                    fwd = m_traceMap->
-                        GetTraceToUniversalMapUnique(offset) >= 0;
+                    int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
+                    PeriodicMap::iterator pIt = m_periodicFaces.find(
+                        traceGeomId);
+
+                    if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
+                    {
+                        fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);
+                    }
+                    else
+                    {
+                        fwd = m_traceMap->
+                            GetTraceToUniversalMapUnique(offset) >= 0;
+                    }
                 }
             }
             else if (traceEl->GetLeftAdjacentElementFace () != -1 &&
@@ -1573,13 +1600,15 @@ namespace Nektar
             // Zero vectors.
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
-
+             
+            LocalRegions::Expansion3DSharedPtr exp3d;
             bool fwd;
 
             for(cnt = n = 0; n < nexp; ++n)
             {
+                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
                 phys_offset = GetPhys_Offset(n);
-                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e, ++cnt)
+                for(e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                 {
                     offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
@@ -1587,13 +1616,13 @@ namespace Nektar
                     fwd = m_leftAdjacentFaces[cnt];
                     if (fwd)
                     {
-                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
+                        exp3d->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Fwd + offset);
                     }
                     else
                     {
-                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
+                        exp3d->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Bwd + offset);
                     }
@@ -1816,9 +1845,11 @@ namespace Nektar
             
             // Populate global ID map (takes global geometry ID to local
             // expansion list ID).
+            LocalRegions::Expansion3DSharedPtr exp3d;
             for (i = 0; i < GetExpSize(); ++i)
             {
-                globalIdMap[(*m_exp)[i]->GetGeom3D()->GetGlobalID()] = i;
+                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[i]);
+                globalIdMap[exp3d->GetGeom3D()->GetGlobalID()] = i;
             }
 
             // Determine number of boundary condition expansions.
@@ -1838,14 +1869,15 @@ namespace Nektar
                 FaceID = Array<OneD, int>(nbcs);
             }
             
+            LocalRegions::Expansion2DSharedPtr exp2d;
             for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
                 {
+                    exp2d = LocalRegions::Expansion2D::FromStdExp(m_bndCondExpansions[n]->GetExp(i));
                     // Use face to element map from MeshGraph3D.
                     SpatialDomains::ElementFaceVectorSharedPtr tmp = 
-                        graph3D->GetElementsFromFace(
-                            m_bndCondExpansions[n]->GetExp(i)->GetGeom2D());
+                        graph3D->GetElementsFromFace(exp2d->GetGeom2D());
                     
                     ElmtID[cnt] = globalIdMap[(*tmp)[0]->
                                               m_Element->GetGlobalID()];

@@ -323,7 +323,14 @@ namespace Nektar
                 static const int operatorID     = 7;
 
                 AnalyticExpression(const boost_spirit::symbols<NekDouble>* constants, const std::vector<std::string>& variables) :
-                        boost_spirit::grammar<AnalyticExpression>(), constants_p(constants), variables_p(variables) {}
+                    boost_spirit::grammar<AnalyticExpression>(), constants_p(constants), variables_p(variables) {}
+
+                // Trivial constructor to avoid compiler warning with
+                // constants_p.
+                ~AnalyticExpression()
+                {
+                    constants_p = NULL;
+                }
 
                 template <typename ScannerT>
                 struct definition

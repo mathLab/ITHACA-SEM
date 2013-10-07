@@ -39,7 +39,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <SpatialDomains/Geometry2D.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>
 
 #include <SpatialDomains/GeomFactors2D.h>
@@ -71,7 +71,7 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT TriGeom(
                         const int id,
-                        const VertexComponentSharedPtr verts[],
+                        const PointGeomSharedPtr verts[],
                         const SegGeomSharedPtr edges[],
                         const StdRegions::Orientation eorient[]);
 
@@ -104,11 +104,11 @@ namespace Nektar
                         const TriGeom               &face2);
                 SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
                     GetFaceOrientation(
-                        const VertexComponentVector &face1,
-                        const VertexComponentVector &face2);
+                        const PointGeomVector &face1,
+                        const PointGeomVector &face2);
 
             protected:
-                VertexComponentVector           m_verts;
+                PointGeomVector                 m_verts;
                 SegGeomVector                   m_edges;
                 StdRegions::Orientation         m_eorient [kNedges];
                 int				                m_fid;
@@ -158,7 +158,7 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
 
-                SPATIAL_DOMAINS_EXPORT virtual const VertexComponentSharedPtr
+                SPATIAL_DOMAINS_EXPORT virtual const PointGeomSharedPtr
                             v_GetVertex(int i) const;
 
                 SPATIAL_DOMAINS_EXPORT virtual const Geometry1DSharedPtr
@@ -182,6 +182,10 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble tol = 0.0);
 
+                SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
+                                             const Array<OneD, const NekDouble> &gloCoord, 
+                                             Array<OneD, NekDouble> &locCoord,
+                                             NekDouble                     tol = 0.0);
             private:
                 bool                            m_ownData;
         };

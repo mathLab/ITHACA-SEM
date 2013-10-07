@@ -77,7 +77,7 @@ namespace Nektar
         /// Gradient of the radius from each electrogram point in z-direction
         Array<OneD, Array<OneD, NekDouble> >    m_grad_R_z;
         /// List of electrogram points
-        SpatialDomains::VertexComponentVector   m_electrogramPoints;
+        SpatialDomains::PointGeomVector         m_electrogramPoints;
         /// Counts number of calls to update (number of timesteps)
         unsigned int                            m_index;
         /// Number of timesteps between outputs

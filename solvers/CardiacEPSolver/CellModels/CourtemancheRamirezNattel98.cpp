@@ -49,7 +49,19 @@ namespace Nektar
                         CourtemancheRamirezNattel98::create,
                          "Ionic model of human atrial cell electrophysiology.");
     
+    // Register cell model variants
+    std::string CourtemancheRamirezNattel98::lookupIds[2] = {
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "Original", CourtemancheRamirezNattel98::eOriginal),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "AF", CourtemancheRamirezNattel98::eAF)
+    };
     
+    // Register default variant
+    std::string CourtemancheRamirezNattel98::def =
+            LibUtilities::SessionReader::RegisterDefaultSolverInfo(
+                    "CellModelVariant", "Original");
+
     /**
     *
     */
@@ -58,15 +70,16 @@ namespace Nektar
                 const MultiRegions::ExpListSharedPtr& pField)
             : CellModel(pSession, pField)
     {
+        model_variant = pSession->GetSolverInfoAsEnum<
+                CourtemancheRamirezNattel98::Variants>("CellModelVariant");
+
         C_m = 100;      // picoF
         g_Na = 7.8;     // nanoS_per_picoF
         g_K1 = 0.09;    // nanoS_per_picoF
-        g_to = 0.1652;  // nanoS_per_picoF
         g_Kr = 0.029411765;
         g_Ks = 0.12941176;
         g_b_Na = 0.0006744375;
         g_b_Ca = 0.001131;
-        g_Ca_L = 0.12375;
         R = 8.3143;
         T = 310.0;
         F = 96.4867;
@@ -99,6 +112,19 @@ namespace Nektar
         tau_tr = 180.0;
         K_Q10 = 3.0;
         V_i = 0.68*JSR_V_cell;
+
+        switch (model_variant) {
+            case eOriginal:
+                g_to = 0.1652;  // nanoS_per_picoF
+                g_Kur_scaling = 1.0;
+                g_Ca_L = 0.12375;
+                break;
+            case eAF:
+                g_to = 0.0826;  // nanoS_per_picoF
+                g_Kur_scaling = 0.5;
+                g_Ca_L = 0.037125;
+                break;
+        }
 
         m_nvar = 21;
 
@@ -241,7 +267,7 @@ namespace Nektar
         Vmath::Vmul(n, inarray[6], 1, tmp_I_kur, 1, tmp_I_kur, 1);
         Vmath::Vmul(n, inarray[6], 1, tmp_I_kur, 1, tmp_I_kur, 1);
         Vmath::Vmul(n, inarray[7], 1, tmp_I_kur, 1, tmp_I_kur, 1);
-        Vmath::Smul(n, C_m, tmp_I_kur, 1, tmp_I_kur, 1);
+        Vmath::Smul(n, C_m*g_Kur_scaling, tmp_I_kur, 1, tmp_I_kur, 1);
         Vmath::Vsub(n, outarray[0], 1, tmp_I_kur, 1, outarray[0], 1);
         Vmath::Vsub(n, outarray[18], 1, tmp_I_kur, 1, outarray[18], 1);
 
@@ -527,7 +553,7 @@ namespace Nektar
         for (i = 0, v = &tmp_Fn[0], x = &inarray[14][0], x_new = &outarray[14][0], x_tau = &m_gates_tau[13][0];
                 i < n; ++i, ++v, ++x, ++x_new, ++x_tau)
         {
-            *x_tau  = 1.91 + 2.09*(1.0+exp(-(*v - 3.4175e-13)/13.67e-16));
+            *x_tau  = 1.91 + 2.09/(1.0+exp(-(*v - 3.4175e-13)/13.67e-16));
             *x_new = 1.0 - 1.0/(1.0 + exp(-(*v - 6.835e-14)/13.67e-16));
         }
         // w
@@ -546,7 +572,8 @@ namespace Nektar
     */
     void CourtemancheRamirezNattel98::v_PrintSummary(std::ostream &out)
     {
-        out << "	Cell model      : CourtemancheRamirezNattel98" << std::endl;
+        out << "\tCell model      : CourtemancheRamirezNattel98" << std::endl;
+        out << "\tCell model var. : " << lookupIds[model_variant] << std::endl;
     }
 
 
@@ -600,6 +627,7 @@ namespace Nektar
             case 18: return "K_i";
             case 19: return "Ca_rel";
             case 20: return "Ca_up";
+            default: return "unknown";
         }
     }
 

@@ -34,6 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+
+
 #include <StdRegions/StdTetExp.h>
 
 namespace Nektar
@@ -104,7 +106,7 @@ namespace Nektar
             int nx = fx.num_elements();
             int ny = gy.num_elements();
             int nz = hz.num_elements();
-
+            
             // Multiply by integration constants...
             // Hadamard multiplication refers to elementwise multiplication of
             // two vectors.
@@ -180,7 +182,7 @@ namespace Nektar
             int Qx = wx.num_elements();
             int Qy = wy.num_elements();
             int Qz = wz.num_elements();
-
+            
             if( fxyz.num_elements() != Qx*Qy*Qz ) {
                 cerr << "TripleTetrahedralInnerProduct expected "
                      << fxyz.num_elements()
@@ -578,7 +580,7 @@ namespace Nektar
          * @todo    Account for some directions being collocated. See
          *          StdQuadExp as an example.
          */
-        void StdTetExp::BwdTrans_SumFacKernel(
+        void StdTetExp::v_BwdTrans_SumFacKernel(
             const Array<OneD, const NekDouble>& base0,
             const Array<OneD, const NekDouble>& base1,
             const Array<OneD, const NekDouble>& base2,
@@ -794,7 +796,7 @@ namespace Nektar
         }
 
 
-        void StdTetExp::IProductWRTBase_SumFacKernel(
+        void StdTetExp::v_IProductWRTBase_SumFacKernel(
                     const Array<OneD, const NekDouble>& base0,
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& base2,
@@ -1088,12 +1090,6 @@ namespace Nektar
             const Array<OneD, const NekDouble>& xi,
             const Array<OneD, const NekDouble>& physvals)
         {
-            // Validation checks
-            ASSERTL0(xi[0] + xi[1] + xi[2] <= -1 + NekConstants::kNekZeroTol,
-                     "Coordinate outside bounds of tetrahedron.");
-            ASSERTL0(xi[0] >= -1 && xi[1] >= -1 && xi[2] >= -1,
-                     "Coordinate outside bounds of tetrahedron.");
-
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
@@ -1122,15 +1118,6 @@ namespace Nektar
                 eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0;
                 eta[2] = xi[2];
             }
-
-            ASSERTL0((eta[0] + NekConstants::kNekZeroTol >= -1) ||
-                     (eta[1] + NekConstants::kNekZeroTol >= -1) ||
-                     (eta[2] + NekConstants::kNekZeroTol >= -1),
-                     "Eta Coordinate outside bounds of tetrahedron.");
-            ASSERTL0((eta[0] - NekConstants::kNekZeroTol <= 1) ||
-                     (eta[1] - NekConstants::kNekZeroTol <= 1) ||
-                     (eta[2] - NekConstants::kNekZeroTol <= 1),
-                     "Eta Coordinate outside bounds of tetrahedron.");
 
             return StdExpansion3D::v_PhysEvaluate(eta, physvals);
         }
@@ -1683,7 +1670,7 @@ namespace Nektar
                      (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_C),
                      "Mapping not defined for this type of basis");
 
-            int localDOF;
+            int localDOF = 0;
             switch(localVertexId)
             {
                 case 0:
@@ -2089,7 +2076,7 @@ namespace Nektar
             return cnt;
         }
 
-        void StdTetExp::MultiplyByQuadratureMetric(
+        void StdTetExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
@@ -2170,6 +2157,56 @@ namespace Nektar
                     ASSERTL0(false, "Unsupported quadrature points type.");
                     break;
             }
+        }
+
+        void StdTetExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                             const StdMatrixKey &mkey)
+        {
+            int qa = m_base[0]->GetNumPoints();
+            int qb = m_base[1]->GetNumPoints();
+            int qc = m_base[2]->GetNumPoints();
+            int nmodes_a = m_base[0]->GetNumModes();
+            int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes_c = m_base[2]->GetNumModes();
+
+            // Declare orthogonal basis. 
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+            LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
+            
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
+            LibUtilities::BasisKey Bc(LibUtilities::eOrtho_C,nmodes_c,pc);
+            StdTetExp OrthoExp(Ba,Bb,Bc);
+            
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            int i,j,k;
+            
+            int cnt;
+            int cuttoff = (int) (mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio)*nmodes_a);
+            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            
+            // project onto physical space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            
+            // apply SVV filter. 
+            for(cnt = i = 0; i < nmodes_a; ++i)
+            {
+                for(cnt = j = 0; j < nmodes_b-j; ++j)
+                {
+                    for(k = 0; k < nmodes_c-j-k; ++k)
+                    {
+                        if(i + j + k >= cuttoff)
+                        {
+                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+j+k-nmodes_a)*(i+j+k-nmodes_a)/((NekDouble)((i+j+k-cuttoff+1)*(i+j+k-cuttoff+1)))));
+                        }
+                        cnt++;
+                    }
+                }
+            }
+            
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
         }
     }//end namespace
 }//end namespace

@@ -41,6 +41,8 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <SolverUtils/Filters/Filter.h>
 #include <iomanip>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion3D.h>
 
 namespace Nektar
 {
@@ -133,22 +135,21 @@ namespace Nektar
                 // indeed implemented
                 
                 for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-                {	
+                {    
                     // Time Dependent Boundary Condition (if no user
                     // defined then this is empty)
-                    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eNoUserDefined)
-                    {
-                        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent)
-                        {
-                            if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eRadiation)
-                            {
-                                if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
-                                {
-                                    ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
-                                }
-                            }
-                        }
-                    }
+                    ASSERTL0 (
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eNoUserDefined ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eWall_Forces ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eTimeDependent ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eRadiation ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eI,
+                        "Unknown USERDEFINEDTYPE boundary condition");
                 }
             }
             break;
@@ -168,7 +169,7 @@ namespace Nektar
             }
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
-	
+    
         if (m_equationType == eUnsteadyLinearisedNS)// || m_equationType == eSteadyNavierStokes)
         {
             std::string vConvectiveType = "Linearised";
@@ -179,7 +180,7 @@ namespace Nektar
             }
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
-	
+    
         if(m_equationType == eUnsteadyStokes)
         {
             std::string vConvectiveType = "NoAdvection";
@@ -203,9 +204,12 @@ namespace Nektar
             BndConds = m_fields[i]->GetBndConditions();
             BndExp   = m_fields[i]->GetBndCondExpansions();
             for(int n = 0; n < BndConds.num_elements(); ++n)
-            {	
+            {    
                 if(BndConds[n]->GetUserDefined() == SpatialDomains::eRadiation)
                 {
+                    ASSERTL0(BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin,
+                             "Radiation boundary condition must be of type Robin <R>");
+                    
                     if(Set == false)
                     {
                         m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
@@ -220,7 +224,7 @@ namespace Nektar
             radpts = 0; // reset to use as a counter
 
             for(int n = 0; n < BndConds.num_elements(); ++n)
-            {	
+            {    
                 if(BndConds[n]->GetUserDefined() == SpatialDomains::eRadiation)
                 {
                     
@@ -246,8 +250,8 @@ namespace Nektar
         }
 
         // Set up Field Meta Data for output files
-        m_fieldMetaDataMap["Kinvis"] = m_kinvis;
-        m_fieldMetaDataMap["TimeStep"] = m_timestep;
+        m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
+        m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
     }
 
     IncNavierStokes::~IncNavierStokes(void)
@@ -260,7 +264,7 @@ namespace Nektar
         int i,n;
         int n_fields = m_fields.num_elements();
         static int nchk = 0;
-		
+        
         Timer timer;
 
         if(m_HomogeneousType == eHomogeneous1D)
@@ -272,20 +276,20 @@ namespace Nektar
                 m_fields[i]->SetPhysState(false);
             }
         }
-	
+    
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >  fields(m_nConvectiveFields);
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
             fields[i]  = m_fields[i]->UpdatePhys();
         }
-		
+        
         // Initialise NS solver which is set up to use a GLM method
         // with calls to EvaluateAdvection_SetPressureBCs and
         // SolveUnsteadyStokesSystem
-        m_integrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
+        m_integrationSoln = m_integrationScheme->InitializeScheme(
+                                m_timestep, fields, m_time, m_integrationOps);
 
-	               
         std::vector<SolverUtils::FilterSharedPtr>::iterator x;
         for (x = m_filters.begin(); x != m_filters.end(); ++x)
         {
@@ -304,8 +308,9 @@ namespace Nektar
                 SubStepAdvance(n);
             }
 
-            // Advance velocity fields
-            fields = m_integrationScheme[min(n,m_intSteps-1)]->TimeIntegrate(m_timestep, m_integrationSoln, m_integrationOps);
+
+            fields = m_integrationScheme->TimeIntegrate(
+                            n, m_timestep, m_integrationSoln, m_integrationOps);
             
             m_time += m_timestep;
             
@@ -324,16 +329,19 @@ namespace Nektar
                 WriteModalEnergy();
             }
             
-            
-            if(m_cflsteps && !((n+1)%m_cflsteps) && m_comm->GetRank() == 0)
+            if(m_cflsteps && !((n+1)%m_cflsteps))
             {
                 int elmtid;
                 NekDouble cfl = GetCFLEstimate(elmtid);
-                cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
+
+                if(m_comm->GetRank() == 0)
+                {
+                    cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
+                }
             }
             
             // dump data in m_fields->m_coeffs to file. 
-            if(m_checksteps && n&&(!((n+1)%m_checksteps)))
+            if(m_checksteps &&(!((n+1)%m_checksteps)))
             {
                 //WriteCheckpoint_Ouptput();
                 if(m_HomogeneousType == eHomogeneous1D)
@@ -355,11 +363,6 @@ namespace Nektar
                 }
                 else
                 {
-                    for(i = 0; i < m_nConvectiveFields; ++i)
-                    {
-                        m_fields[i]->SetPhys(fields[i]);
-                        m_fields[i]->SetPhysState(true);
-                    }
                     nchk++;
                     Checkpoint_Output(nchk);
                 }
@@ -380,9 +383,8 @@ namespace Nektar
             {
                 for (i = 0; i < m_nConvectiveFields; ++i)
                 {
-                    m_fields[i]->FwdTrans_IterPerExp(fields[i],
-                                                     m_fields[i]->UpdateCoeffs());
-                    m_fields[i]->SetPhysState(false);
+                    m_fields[i]->SetPhys(fields[i]);
+                    m_fields[i]->SetPhysState(true);
                 }
             }
             
@@ -393,7 +395,7 @@ namespace Nektar
             }
 
         }
-	
+    
         if(m_HomogeneousType == eHomogeneous1D)
         {
             for(i = 0 ; i< n_fields ; i++)
@@ -411,7 +413,7 @@ namespace Nektar
                 m_fields[i]->SetPhysState(true);
             }
         }
-	
+    
         
         if (m_energysteps)
         {
@@ -517,9 +519,9 @@ namespace Nektar
             
             for(n = 0; n < nsubsteps; ++n)
             {
-                fields = m_subStepIntegrationScheme->
-                    TimeIntegrate(
-                            dt, SubIntegrationSoln, m_subStepIntegrationOps);
+                fields = m_subStepIntegrationScheme->TimeIntegrate(
+                                            n, dt, SubIntegrationSoln,
+                                            m_subStepIntegrationOps);
             }
             
             // Reset time integrated solution in m_integrationSoln 
@@ -594,7 +596,7 @@ namespace Nektar
             {
                 for(int i = 0; i < m_nConvectiveFields; ++i)
                 {
-                    m_forces[i]->SetWaveSpace(true);	
+                    m_forces[i]->SetWaveSpace(true);    
                     m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
                                           m_forces[i]->UpdatePhys());
                 }
@@ -820,9 +822,9 @@ namespace Nektar
                 Array<OneD, NekDouble> energy    (locsize,0.0);
                 Array<OneD, NekDouble> energy_tmp(locsize,0.0);
                 Array<OneD, NekDouble> tmp;
-			
+            
                 // Calculate modal energies.
-			
+            
                 // calcuation of the perturbation energy using non-linear NS
                 // equations
                 if(m_session->DefinesSolverInfo("CalculatePerturbationEnergy")
@@ -914,7 +916,7 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
-            {	
+            {    
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
                    SpatialDomains::eTimeDependent)
                 {
@@ -940,12 +942,13 @@ namespace Nektar
         BndExp   = m_fields[fieldid]->GetBndCondExpansions();
         
         StdRegions::StdExpansionSharedPtr   elmt;
-        StdRegions::StdExpansion1DSharedPtr Bc;
+        StdRegions::StdExpansionSharedPtr Bc;
         
         int cnt;
         int elmtid,nq,offset, boundary;
         Array<OneD, NekDouble> Bvals, U;
         int cnt1 = 0;
+
 
         for(cnt = n = 0; n < BndConds.num_elements(); ++n)
         {            
@@ -960,17 +963,17 @@ namespace Nektar
                     offset = m_fields[fieldid]->GetPhys_Offset(elmtid);
                     
                     U = m_fields[fieldid]->UpdatePhys() + offset;
-                    
-                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (BndExp[n]->GetExp(i));
+                    Bc = BndExp[n]->GetExp(i);
                     
                     boundary = m_fieldsBCToTraceID[fieldid][cnt];
                     
                     // Get edge values and put into ubc
                     nq = Bc->GetTotPoints();
                     Array<OneD, NekDouble> ubc(nq);
-                    elmt->GetEdgePhysVals(boundary,Bc,U,ubc);
+                    elmt->GetTracePhysVals(boundary,Bc,U,ubc);
                     
-                    Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 + BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
+                    Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 + 
+                             BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
 
                     Bvals = BndExp[n]->UpdateCoeffs()+BndExp[n]->GetCoeff_Offset(i);
 
@@ -978,7 +981,7 @@ namespace Nektar
                 }
                 cnt1 += BndExp[n]->GetTotPoints();
             }
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
+            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eWall_Forces || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
             {
                 cnt += BndExp[n]->GetExpSize();
             }
@@ -1029,14 +1032,13 @@ namespace Nektar
         
         Array<OneD, NekDouble> tstep      (n_element, 0.0);
         Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
-        Array<OneD, Array<OneD, NekDouble> > velfields(
-                                                    m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > velfields(m_velocity.num_elements());
         
         for(int i = 0; i < m_velocity.num_elements(); ++i)
         {
             velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
         }        
-        stdVelocity = GetStdVelocity(velfields);
+        stdVelocity = GetMaxStdVelocity(velfields);
         
         for(int el = 0; el < n_element; ++el)
         {
@@ -1046,13 +1048,13 @@ namespace Nektar
         }
         
         NekDouble TimeStep = Vmath::Vmin(n_element, tstep, 1);
+        m_comm->AllReduce(TimeStep,LibUtilities::ReduceMin);        
+        
         return TimeStep;
     }
     
 
-
-
-    NekDouble IncNavierStokes::GetCFLEstimate(int &elmtid)
+    Array<OneD, NekDouble> IncNavierStokes::GetElmtCFLVals(void)
     { 
         int n_element = m_fields[0]->GetExpSize(); 
         
@@ -1083,7 +1085,7 @@ namespace Nektar
                 velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
             }        
         }
-        stdVelocity = GetStdVelocity(velfields);
+        stdVelocity = GetMaxStdVelocity(velfields);
         
         for(int el = 0; el < n_element; ++el)
         {
@@ -1091,8 +1093,30 @@ namespace Nektar
                                    (ExpOrder[el]-1) * (ExpOrder[el]-1));
         }
         
+        return cfl;
+    }
+    
+    
+    NekDouble IncNavierStokes::GetCFLEstimate(int &elmtid)
+    { 
+        int n_element = m_fields[0]->GetExpSize(); 
+
+        Array<OneD, NekDouble> cfl = GetElmtCFLVals();
+        
         elmtid = Vmath::Imax(n_element,cfl,1);
-        NekDouble CFL = cfl[elmtid];
+        NekDouble CFL,CFL_loc;
+
+        CFL = CFL_loc = cfl[elmtid];
+        m_comm->AllReduce(CFL,LibUtilities::ReduceMax);
+
+        // unshuffle elmt id if data is not stored in consecutive order. 
+        elmtid = m_fields[0]->GetExp(elmtid)->GetGeom()->GetGlobalID();
+        if(CFL != CFL_loc)
+        {
+            elmtid = -1;
+        }
+
+        m_comm->AllReduce(elmtid,LibUtilities::ReduceMax);
         
         if(m_HomogeneousType == eHomogeneous1D) // express element id with respect to plane
         {
@@ -1102,145 +1126,178 @@ namespace Nektar
     }
     
     
-    Array<OneD, NekDouble> IncNavierStokes::GetStdVelocity(
-        const Array<OneD, Array<OneD,NekDouble> > inarray)
-	{
+    Array<OneD, NekDouble> IncNavierStokes::GetMaxStdVelocity(
+                                                           const Array<OneD, Array<OneD,NekDouble> > inarray)
+    {
         // Checking if the problem is 2D
         ASSERTL0(m_expdim >= 2, "Method not implemented for 1D");
         
-        int nTotQuadPoints  = GetTotPoints();
+        int n_points_0      = m_fields[0]->GetExp(0)->GetTotPoints();
         int n_element       = m_fields[0]->GetExpSize();       
         int nvel            = inarray.num_elements();
-        
+        int cnt; 
+
         NekDouble pntVelocity;
         
         // Getting the standard velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(nvel);
-        Array<OneD, NekDouble> stdV(n_element, 0.0);
+        Array<OneD, NekDouble> maxV(n_element, 0.0);
         
         for (int i = 0; i < nvel; ++i)
         {
-            stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints);
+            stdVelocity[i] = Array<OneD, NekDouble>(n_points_0);
         }
-		
+        
         if (nvel == 2)
         {
+            cnt = 0.0;
             for (int el = 0; el < n_element; ++el)
             { 
+                LocalRegions::Expansion2DSharedPtr el2D =
+                        LocalRegions::Expansion2D::FromStdExp(
+                                m_fields[0]->GetExp(el));
                 
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                int n_points = el2D->GetTotPoints();
                 
                 Array<OneD, const NekDouble> jac  = 
-                    m_fields[0]->GetExp(el)->GetGeom2D()->GetJac();
-                Array<TwoD, const NekDouble> gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom2D()->GetGmat();
+                        el2D->GetGeom2D()->GetMetricInfo()->GetJac();
+                Array<TwoD, const NekDouble> df =
+                        el2D->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() 
+                // reset local space if necessary
+                if(n_points != n_points_0)
+                {
+                    for (int j = 0; j < nvel; ++j)
+                    {
+                        stdVelocity[j] = Array<OneD, NekDouble>(n_points);
+                    }
+                    n_points_0 = n_points;
+                }		
+                
+                if (el2D->GetGeom2D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i] 
-                                          + gmat[2][i]*inarray[1][i];
+                        stdVelocity[0][i] = df[0][i]*inarray[0][i+cnt]
+                                          + df[2][i]*inarray[1][i+cnt];
                         
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i] 
-                                          + gmat[3][i]*inarray[1][i];
+                        stdVelocity[1][i] = df[1][i]*inarray[0][i+cnt]
+                                          + df[3][i]*inarray[1][i+cnt];
                     }
                 }
                 else
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i] 
-                                          + gmat[2][0]*inarray[1][i];
+                        stdVelocity[0][i] = df[0][0]*inarray[0][i+cnt]
+                                          + df[2][0]*inarray[1][i+cnt];
                         
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i] 
-                                          + gmat[3][0]*inarray[1][i];
+                        stdVelocity[1][i] = df[1][0]*inarray[0][i+cnt]
+                                          + df[3][0]*inarray[1][i+cnt];
                     }
                 }
+
+                cnt += n_points;
                 
                 
                 for (int i = 0; i < n_points; i++)
                 {
-                    pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i] 
-                                     + stdVelocity[1][i]*stdVelocity[1][i]);
+                    pntVelocity = stdVelocity[0][i]*stdVelocity[0][i] 
+                        + stdVelocity[1][i]*stdVelocity[1][i];
                     
-                    if (pntVelocity>stdV[el])
+                    if (pntVelocity>maxV[el])
                     {
-                        stdV[el] = pntVelocity;
+                        maxV[el] = pntVelocity;
                     }
                 }
+                maxV[el] = sqrt(maxV[el]);
             }
         }
         else
         {
+            cnt = 0;
             for (int el = 0; el < n_element; ++el)
             { 
+                LocalRegions::Expansion3DSharedPtr el3D =
+                        LocalRegions::Expansion3D::FromStdExp(
+                                m_fields[0]->GetExp(el));
                 
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                int n_points = el3D->GetTotPoints();
                 
                 Array<OneD, const NekDouble> jac =
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
-                Array<TwoD, const NekDouble> gmat =
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                        el3D->GetGeom3D()->GetMetricInfo()->GetJac();
+                               
+                // reset local space if necessary
+                if(n_points != n_points_0)
+                {
+                    for (int j = 0; j < nvel; ++j)
+                    {
+                        stdVelocity[j] = Array<OneD, NekDouble>(n_points);
+                    }
+                    n_points_0 = n_points;
+                }		
                 
-                if (m_fields[0]->GetExp(el)->GetGeom3D()->GetGtype() 
+                Array<TwoD, const NekDouble> gmat =
+                        el3D->GetGeom3D()->GetMetricInfo()->GetDerivFactors();
+                
+                if (el3D->GetGeom3D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i] 
-                                          + gmat[3][i]*inarray[1][i] 
-                                          + gmat[6][i]*inarray[2][i];
+                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i+cnt] 
+                                          + gmat[3][i]*inarray[1][i+cnt] 
+                                          + gmat[6][i]*inarray[2][i+cnt];
                         
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i] 
-                                          + gmat[4][i]*inarray[1][i] 
-                                          + gmat[7][i]*inarray[2][i];
+                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i+cnt] 
+                                          + gmat[4][i]*inarray[1][i+cnt] 
+                                          + gmat[7][i]*inarray[2][i+cnt];
                         
-                        stdVelocity[2][i] = gmat[2][i]*inarray[0][i] 
-                                          + gmat[5][i]*inarray[1][i] 
-                                          + gmat[8][i]*inarray[2][i];
+                        stdVelocity[2][i] = gmat[2][i]*inarray[0][i+cnt] 
+                                          + gmat[5][i]*inarray[1][i+cnt] 
+                                          + gmat[8][i]*inarray[2][i+cnt];
                     }
                 }
                 else
                 {
-                    Array<OneD, const NekDouble> jac =
-                        m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
-                    Array<TwoD, const NekDouble> gmat = 
-                        m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
-                    
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i] 
-                                          + gmat[3][0]*inarray[1][i] 
-                                          + gmat[6][0]*inarray[2][i];
+                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i+cnt] 
+                                          + gmat[3][0]*inarray[1][i+cnt] 
+                                          + gmat[6][0]*inarray[2][i+cnt];
                         
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i] 
-                                          + gmat[4][0]*inarray[1][i] 
-                                          + gmat[7][0]*inarray[2][i];
+                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i+cnt] 
+                                          + gmat[4][0]*inarray[1][i+cnt] 
+                                          + gmat[7][0]*inarray[2][i+cnt];
                         
-                        stdVelocity[2][i] = gmat[2][0]*inarray[0][i] 
-                                          + gmat[5][0]*inarray[1][i] 
-                                          + gmat[8][0]*inarray[2][i];
+                        stdVelocity[2][i] = gmat[2][0]*inarray[0][i+cnt] 
+                                          + gmat[5][0]*inarray[1][i+cnt] 
+                                          + gmat[8][0]*inarray[2][i+cnt];
                     }
                 }
                 
+                cnt += n_points;
+                
                 for (int i = 0; i < n_points; i++)
                 {
-                    pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i] 
-                                     + stdVelocity[1][i]*stdVelocity[1][i] 
-                                     + stdVelocity[2][i]*stdVelocity[2][i]);
+                    pntVelocity = stdVelocity[0][i]*stdVelocity[0][i] 
+                        + stdVelocity[1][i]*stdVelocity[1][i] 
+                        + stdVelocity[2][i]*stdVelocity[2][i];
                     
-                    if (pntVelocity > stdV[el])
+                    if (pntVelocity > maxV[el])
                     {
-                        stdV[el] = pntVelocity;
+                        maxV[el] = pntVelocity;
                     }
                 }
+
+                maxV[el] = sqrt(maxV[el]);
+                //cout << maxV[el]*maxV[el] << endl;
             }
         }
 		
-        return stdV;
-	}
+        return maxV;
+    }
 
 
 

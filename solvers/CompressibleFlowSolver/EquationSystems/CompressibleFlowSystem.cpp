@@ -736,8 +736,20 @@ namespace Nektar
         for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
              GetExpSize(); ++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            if (m_spacedim == 2)
+            {
+                int npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);
+            }
+            if (m_spacedim == 3)
+            {
+                int npts0 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                GetExp(e)->GetNumPoints(0);
+                int npts1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                GetExp(e)->GetNumPoints(1);
+                
+                int npts = npts0*npts1;
+            }
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e) ;
             id2  = m_fields[0]->GetTrace()->
@@ -2458,6 +2470,15 @@ namespace Nektar
         int MaxOrder            = 12;
         int MinOrderShock       = 4;
         
+        std::ofstream m_file( "VariablePComposites.txt", std::ios_base::app);
+        for (int e = 0; e < nElements; e++)
+        {
+            m_file << "<C ID=\"" << e+1 << "\"> Q[" << e << "] </C>"<< endl;
+        }
+        m_file.close();
+        
+        std::ofstream m_file2( "VariablePExpansions.txt", std::ios_base::app);
+        
         for (e = 0; e < nElements; e++)
         {
             nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
@@ -2465,10 +2486,10 @@ namespace Nektar
             // Define thresholds
             // Ideally, these threshold values could be given in the Session File
             
-            s_0 =  -6.0;
-            s_ds = s_0*log10(PolyOrder[e]);
-            s_sm = -7.5;
-            s_fl = -9;
+            s_ds =  -5.0;
+            //s_ds = s_0*log10(PolyOrder[e]);
+            s_sm = -6;
+            s_fl = -7;
             
             
             for (int i = 0; i < nQuadPointsElement; i++)
@@ -2491,23 +2512,26 @@ namespace Nektar
                 {
                     if (PolyOrder[npCount + i] < MaxOrder)
                     {
-                        PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
+                        PolyOrder[npCount + i] = PolyOrder[npCount + i] + 2;
                     }
                 }
                 else if(se[npCount + i] > s_fl && se[npCount + i] < s_sm)
                 {
-                    
+                    PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
                 }
                 else if(se[npCount + i] < s_fl)
                 {
                     if (PolyOrder[npCount + i] > MinOrder)
                     {
-                            PolyOrder[npCount + i] = PolyOrder[npCount + i] - 1;
+                            PolyOrder[npCount + i] = PolyOrder[npCount + i];
                     }
                 }
             }
+            m_file2 << "<E COMPOSITE= \"C[" << e+1 << "]\" NUMMODES=\"" << PolyOrder[npCount + 1] << "\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,rhow,E\" />" << endl;
             npCount += nQuadPointsElement;
         }
+        
+        m_file2.close();
     }
 }
 

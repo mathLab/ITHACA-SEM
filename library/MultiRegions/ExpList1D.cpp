@@ -718,12 +718,12 @@ namespace Nektar
                                 
                                 const LibUtilities::PointsKey newPkey(
                                             traceGlobalPnts[u],
-                                            seg_tmp->GetBasis(0)->GetPointsType());
+                                            bkeyEdge.GetPointsType());
                                 
                                 // set-up the correct basiskey for the trace edges
                                 
                                 LibUtilities::BasisKey traceGlobalBkey(
-                                            seg_tmp->GetBasis(0)->GetBasisType(),
+                                            bkeyEdge.GetBasisType(),
                                             traceGlobalNm[u],
                                             newPkey);
                                 

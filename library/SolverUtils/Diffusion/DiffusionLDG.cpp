@@ -74,7 +74,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int i, j, k;
+            int nBndEdgePts, i, j, k;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
             int nCoeffs   = fields[0]->GetNcoeffs();
@@ -153,21 +153,36 @@ namespace Nektar
                 
                 fields[0]->GetFwdBwdTracePhys(muvar,FwdMuVar,BwdMuVar);
                 
-                int nBndRegions = fields[0]->GetBndCondExpansions().num_elements();
+                NekDouble DiffBwd = Vmath::Vmax(nTracePts, BwdMuVar, 1);
+                NekDouble DiffFwd = Vmath::Vmax(nTracePts, FwdMuVar, 1);
                 
+                int nBndRegions = fields[0]->GetBndCondExpansions().num_elements();
+                //cout << "nBndRegions = " << nBndRegions << endl;
                 int cnt = 0;
                 for (int i = 0; i < nBndRegions; ++i)
                 {
                     // Number of boundary expansion related to that region
                     int nBndEdges = fields[0]->
                     GetBndCondExpansions()[i]->GetExpSize();
-                    
+                    //cout << "nBndEdges = " << nBndEdges << endl;
                     // Weakly impose boundary conditions by modifying flux values
                     for (int e = 0; e < nBndEdges ; ++e)
                     {
                         // Number of points on the expansion
-                        int nBndEdgePts = fields[0]->
-                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                        if (nDim == 2)
+                        {
+                            nBndEdgePts = fields[0]->
+                            GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                        }
+                        if (nDim == 3)
+                        {
+                            int nBndEdgePts1 = fields[0]->
+                            GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                            int nBndEdgePts2 = fields[0]->
+                            GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(1);
+                            
+                            nBndEdgePts = nBndEdgePts1*nBndEdgePts2;
+                        }
                         
                         int id1 = fields[0]->
                         GetBndCondExpansions()[i]->GetPhys_Offset(e);
@@ -305,7 +320,7 @@ namespace Nektar
             int cnt         = 0;
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
-            
+            int nDim        = fields.num_elements()-2;
             Array<OneD, NekDouble > uplus(nTracePts);
             
             fields[var]->ExtractTracePhys(ufield, uplus);
@@ -319,8 +334,20 @@ namespace Nektar
                 for (e = 0; e < nBndEdges ; ++e)
                 {
                     // Number of points on the expansion
-                    nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    if (nDim == 2)
+                    {
+                        nBndEdgePts = fields[var]->
+                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    }
+                    if (nDim == 3)
+                    {
+                        int nBndEdgePts1 = fields[var]->
+                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                        int nBndEdgePts2 = fields[var]->
+                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(1);
+                        
+                        nBndEdgePts = nBndEdgePts1*nBndEdgePts2;
+                    }
                     
                     id1 = fields[var]->
                     GetBndCondExpansions()[i]->GetPhys_Offset(e);
@@ -483,6 +510,7 @@ namespace Nektar
             Array<OneD, NekDouble > qtemp(nTracePts);
             int cnt = 0;
             
+            int nDim       = qfield.num_elements();
             /*
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
@@ -503,8 +531,20 @@ namespace Nektar
                 // Weakly impose boundary conditions by modifying flux values
                 for (e = 0; e < nBndEdges ; ++e)
                 {
-                    nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    if (nDim == 2)
+                    {
+                        nBndEdgePts = fields[var]->
+                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    }
+                    if (nDim == 3)
+                    {
+                        int nBndEdgePts1 = fields[var]->
+                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                        int nBndEdgePts2 = fields[var]->
+                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(1);
+                        
+                        nBndEdgePts = nBndEdgePts1*nBndEdgePts2;
+                    }
                     
                     id1 = fields[var]->
                     GetBndCondExpansions()[i]->GetPhys_Offset(e);

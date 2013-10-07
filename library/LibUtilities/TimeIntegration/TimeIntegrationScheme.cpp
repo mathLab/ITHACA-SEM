@@ -36,6 +36,7 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <iostream>
+#include <fstream>
 #include <math.h>
 
 namespace Nektar
@@ -1353,6 +1354,9 @@ namespace Nektar
                               solvector_new->UpdateSolutionVector(),
                               solvector_new->UpdateTimeVector(),op);
                 
+                CheckSteadyStateConvergence(solvector->GetSolutionVector(),
+                                            solvector_new->UpdateSolutionVector());
+                
                 solvector = solvector_new;
             }
             return solvector->GetSolution();
@@ -1713,7 +1717,39 @@ namespace Nektar
 
             return true;
         }
+        
+        NekDouble TimeIntegrationScheme::CheckSteadyStateConvergence(ConstTripleArray   &y_old,
+                            TripleArray   &y_new)
+        {
             
+            NekDouble L2NormConvergenceSum;
+            NekDouble L2NormSteadyState;
+            Array<OneD, NekDouble> L2NormConvergence(m_npoints,0.0);
+            
+            Vmath::Vsub(m_npoints,
+                        y_new[m_numsteps-1][0],1,
+                        y_old[m_numsteps-1][0],1,
+                        L2NormConvergence,1);
+            
+            Vmath::Vmul(m_npoints,
+                        L2NormConvergence,1,
+                        L2NormConvergence,1,
+                        L2NormConvergence,1);
+            
+            L2NormConvergenceSum = Vmath::Vsum(m_npoints,
+                                               L2NormConvergence,1);
+            
+            L2NormSteadyState = sqrt(L2NormConvergenceSum);
+            std::ofstream myfile;
+            myfile.open ("ConvergenceCheck.txt", std::ios_base::app);
+            
+            myfile << L2NormSteadyState << endl;
+            
+            myfile.close();
+            
+            return L2NormSteadyState;
+        }
+        
         bool TimeIntegrationScheme::CheckIfLastStageEqualsNewSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
                                                                       const Array<OneD, const Array<TwoD, NekDouble> >& B,
                                                                       const Array<TwoD, const NekDouble>& U,

@@ -83,6 +83,12 @@ namespace Nektar
                               Array<OneD, Array<OneD, NekDouble> > &q1,
                               Array<OneD, Array<OneD, NekDouble> > &qBar1);
             
+            void ExactFilters(const int i,
+                         const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                         const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                         Array<OneD, Array<OneD, NekDouble> > &q1,
+                         Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
             
         protected:
             /// Constructor
@@ -111,6 +117,12 @@ namespace Nektar
             NekDouble m_cst3;
             NekDouble m_cst4;
             NekDouble m_cst5;
+            
+            //For implementation of the exact solution of the filters equation
+            NekDouble F11;
+            NekDouble F12;
+            NekDouble F21;
+            NekDouble F22;
             
             //For implementation BDF1
             NekDouble a11;

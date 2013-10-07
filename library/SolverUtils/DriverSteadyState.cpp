@@ -94,6 +94,10 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > qTilde(NumElmVelocity);
             Array<OneD, Array<OneD, NekDouble> > qBarTilde(NumElmVelocity);
             
+            //For averaging the flow
+            Array<OneD, Array<OneD, NekDouble> > qAvr(NumElmVelocity);
+            //Array<OneD, Array<OneD, NekDouble> > qBarAvr(NumElmVelocity);
+            
             NekDouble TOL(0);
             m_n=0;
             m_Check=0;			
@@ -106,21 +110,24 @@ namespace Nektar
             
             m_dt = m_equ[0]->GetTimeStep();
             
-            m_Delta = m_Delta0;
-            m_X = m_X0;            
-            //m_cst1=m_X*m_dt;
-            m_cst1=m_X;
-            m_cst2=1.0/(1.0 + m_cst1);
-            //m_cst3=m_dt/m_Delta;
-            m_cst3=1.0/m_Delta;
-            m_cst4=m_cst2*m_cst3;
-            m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+            //m_Delta = m_Delta0;
+            //m_X = m_X0;            
+            ////m_cst1=m_X*m_dt;
+            //m_cst1=m_X;
+            //m_cst2=1.0/(1.0 + m_cst1);
+            ////m_cst3=m_dt/m_Delta;
+            //m_cst3=1.0/m_Delta;
+            //m_cst4=m_cst2*m_cst3;
+            //m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
             
             
             
             //To run each integration of the linear filters problem on half a time-step we add:
-            m_X = 0.5*m_X0;
-            m_Delta = 2.0*m_Delta0;
+            //m_X = 0.5*m_X0;
+            //m_Delta = 2.0*m_Delta0;
+            
+            m_X = m_X0;
+            m_Delta = m_Delta0;
             
             //BDF1 Matrix
             c1 = 1.0 + m_X;
@@ -142,9 +149,23 @@ namespace Nektar
             b21 = 8.0/(m_Delta*c1*c2);
             b22 = 4.0/c2;
             b23 = - 2.0/(m_Delta*c1*c2);
-            b24 = - 1.0/c2;            
+            b24 = - 1.0/c2;    
             
+            //Exact solution of the Filters equation (ici on a X_tilde et Delta_tile!!!)
+            c1 = 1.0/(1.0 + m_X*m_Delta);
+
+            F11 = c1*(1.0 + m_X*m_Delta*exp(-(m_X + 1.0/m_Delta)/2.0));
+            F12 = c1*(m_X*m_Delta*(1.0 - exp(-(m_X + 1.0/m_Delta)/2.0)));
+            F21 = c1*(1.0 - exp(-(m_X + 1.0/m_Delta)/2.0));
+            F22 = c1*(m_X*m_Delta + exp(-(m_X + 1.0/m_Delta)/2.0));
             
+            //Veriables for averaging the flow
+            bool AveragingFlow;
+            AveragingFlow = false;
+            int StartAvrg(20000);
+            int EndAvrg(170000);
+            NekDouble CoeffAvrg(0.0);
+            CoeffAvrg = 1.0/(1.0*EndAvrg - 1.0*StartAvrg);            
             
             //----- Convergence History Parameters ------
             m_Growing=false;
@@ -177,17 +198,24 @@ namespace Nektar
                 //For Strang scheme
                 qTilde[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
                 qBarTilde[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);   
+                
+                //For averaging the flow
+                qAvr[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
+                //qBarAvr[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);   
             }
             
             MaxNormDiff_q_qBar = 1.0;
+            MaxNormDiff_q1_q0 = 1.0;
             Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
             
             m_LIM0 = 1.0e-08; //1.0e-03;
             m_LIM = m_LIM0;
             
             
-            while (MaxNormDiff_q_qBar > TOL)
+            while (max(MaxNormDiff_q_qBar, MaxNormDiff_q1_q0) > TOL)
+            //while (m_n < EndAvrg)
             {
+                /*
                 //Implementation of the second order sequential operator-splitting method (i.e. Strang splitting)
                 
                 //First intergration on half a step
@@ -227,20 +255,57 @@ namespace Nektar
                     qBar0[i] = qBar1[i];                    
                     m_equ[0]->CopyToPhysField(i, q1[i]);                    
                 }
+                */
                 
+                //*
+                //First order Splitting with exact resolution of the filters equation
+                m_equ[0]->DoSolve();
+                
+                for(int i = 0; i < NumElmVelocity; ++i)
+                {
+                    m_equ[0]->CopyFromPhysField(i, q0[i]);
+                    
+                    //EvaluateNextSFDVariables(i, q0, qBar0, q1, qBar1);
+                    ExactFilters(i, q0, qBar0, q1, qBar1);
+                    
+                    qBar0[i] = qBar1[i];
+                    m_equ[0]->CopyToPhysField(i, q1[i]);     
+                    
+                    //For averaging the flow
+                    if ((AveragingFlow == true) && (m_n > StartAvrg))
+                    {
+                        Vmath::Vadd(qAvr[i].num_elements(), q1[i], 1, qAvr[i], 1, qAvr[i], 1); 
+                    }
+                }
+                //*/
                 
                 /*
-                 *                m_equ[0]->DoSolve();
-                 *                for(int i = 0; i < NumElmVelocity; ++i)
-                 *                {
-                 *                    m_equ[0]->CopyFromPhysField(i, q0[i]);
-                 *                    
-                 *                    EvaluateNextSFDVariables(i, q0, qBar0, q1, qBar1);
-                 *                    
-                 *                    qBar0[i] = qBar1[i];
-                 *                    m_equ[0]->CopyToPhysField(i, q1[i]);                    
-                 }
-                 */
+                //Second Order Splitting with exact resolution of the filters equation
+                //First intergration on half a step
+                for(int i = 0; i < NumElmVelocity; ++i)
+                { 
+                    m_equ[0]->CopyFromPhysField(i, q0[i]);
+                    
+                    ExactFilters(i, q0, qBar0, q1, qBar1);
+                    
+                    qBar0[i] = qBar1[i];
+                    m_equ[0]->CopyToPhysField(i, q1[i]);                      
+                }
+                
+                //Run NS solver a one time step
+                m_equ[0]->DoSolve();
+                
+                //Second intergration on the other half step
+                for(int i = 0; i < NumElmVelocity; ++i)
+                {
+                    m_equ[0]->CopyFromPhysField(i, q0[i]);
+                    
+                    ExactFilters(i, q0, qBar0, q1, qBar1);
+                    
+                    qBar0[i] = qBar1[i];
+                    m_equ[0]->CopyToPhysField(i, q1[i]);                   
+                }
+                */
                 
                 
                 if(m_infosteps && !((m_n+1)%m_infosteps))
@@ -265,6 +330,17 @@ namespace Nektar
             m_file.close();
             // - End SFD Routine -
             
+            //Put the averaged flow into tho outputed solution
+            if (AveragingFlow == true)
+            {
+                for(int i = 0; i < NumElmVelocity; ++i)
+                {
+                    Vmath::Smul(qAvr[i].num_elements(), CoeffAvrg, qAvr[i], 1, qAvr[i], 1); 
+                    m_equ[0]->CopyToPhysField(i, qAvr[i]);   
+                    m_equ[0]->TransPhysToCoeff();
+                }
+            }
+            
             m_equ[0]->Output();
             
             // Evaluate and output computation time and solution accuracy.
@@ -281,6 +357,24 @@ namespace Nektar
                     out << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
                 }
             }
+        }
+        
+        
+        void DriverSteadyState::ExactFilters(const int i,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                                        Array<OneD, Array<OneD, NekDouble> > &q1,
+                                        Array<OneD, Array<OneD, NekDouble> > &qBar1)
+        {
+            q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+            qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+            
+            //Exact solution of the Filters equation            
+            Vmath::Svtvp(q1[i].num_elements(), F11, q0[i], 1, q1[i], 1, q1[i], 1 );    
+            Vmath::Svtvp(q1[i].num_elements(), F12, qBar0[i], 1, q1[i], 1, q1[i], 1 ); 
+            
+            Vmath::Svtvp(qBar1[i].num_elements(), F21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );    
+            Vmath::Svtvp(qBar1[i].num_elements(), F22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 );             
         }
         
         
@@ -394,14 +488,14 @@ namespace Nektar
             if (MPIrank==0)
             {
                 //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-                cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X_tilde = " << m_X <<" and Delta_tilde = " << m_Delta <<endl;
+                cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X_tilde = " << m_X0 <<" and Delta_tilde = " << m_Delta0 <<endl;
                 std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
-                m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
+                m_file << m_n+1 << "\t" << m_equ[0]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
                 m_file.close();
             }
             #else
             //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X_tilde = " << m_X <<" and Delta_tilde = " << m_Delta <<endl;
+            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X_tilde = " << m_X0 <<" and Delta_tilde = " << m_Delta0 <<endl;
             std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
             m_file << m_n+1 << "\t" << m_equ[0]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
             m_file.close();

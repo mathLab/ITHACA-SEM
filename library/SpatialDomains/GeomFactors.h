@@ -121,6 +121,9 @@ namespace Nektar
 
             inline const Array<TwoD, const NekDouble> &GetDerivFactors() const;
 
+            /// Determine if element is valid
+            inline bool IsValid() const;
+
             /// Return the number of dimensions of the coordinate system.
             inline int GetCoordim() const;
 
@@ -205,6 +208,8 @@ namespace Nektar
             int m_expDim;
             /// Dimension of coordinate system.
             int m_coordDim;
+            /// Validity of element (Jacobian positive)
+            bool m_valid;
             /// Stores information about the expansion.
             Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
             /// Principle tangent direction.
@@ -321,6 +326,12 @@ namespace Nektar
         inline int GeomFactors::GetCoordim() const
         {
             return m_coordDim;
+        }
+
+        /// Return true if the element is valid (Jacobian is positive)
+        inline bool GeomFactors::IsValid() const
+        {
+            return m_valid;
         }
 
         /// Flag indicating if Tangents are in use.

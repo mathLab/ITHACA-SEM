@@ -321,9 +321,15 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Check if the element is valid. This check only applies to elements
+         * in a 2D coordinate space.
+         */
         void GeomFactors2D::CheckIfValid()
         {
-            if (m_coordDim != 2)
+            // Jacobian test only makes sense in 2D coordinates
+            if (GetCoordim() != 2)
             {
                 return;
             }
@@ -334,18 +340,16 @@ namespace Nektar
                             ? 1 : nqtot;
 
             Array<OneD, NekDouble> jac(pts, 0.0);
-            Array<OneD, NekDouble> tmp(pts, 0.0);
-
-            // J2D - Spencers book page 158
             Vmath::Vvtvvtm(pts, &m_deriv[0][0][0], 1, &m_deriv[1][1][0], 1,
                                 &m_deriv[1][0][0], 1, &m_deriv[0][1][0], 1,
-                                &tmp[0],           1);
+                                &jac[0],           1);
 
-            if (Vmath::Vmin(pts, &jac[0], 1) < 0)
+            if(Vmath::Vmin(pts, &jac[0], 1) < 0)
             {
                 m_valid = false;
             }
         }
+
 
         /**
          * The principle direction may be chosen to ensure continuity of the
@@ -619,5 +623,6 @@ namespace Nektar
                 VectorNormalise(m_tangents[1]);
             }
         }
+
     }
 }

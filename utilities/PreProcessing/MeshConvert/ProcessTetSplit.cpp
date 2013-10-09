@@ -45,15 +45,13 @@ using namespace std;
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
-#include <boost/tuple/tuple.hpp>
 #include <boost/unordered_map.hpp>
 
 namespace Nektar
 {
     namespace Utilities
     {
-        typedef std  ::pair <int,int>     ipair;
-        typedef boost::tuple<int,int,int> itrip;
+        typedef std::pair<int,int> ipair;
 
         ModuleKey ProcessTetSplit::className =
             GetModuleFactory().RegisterCreatorFunction(

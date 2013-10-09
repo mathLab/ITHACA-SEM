@@ -56,10 +56,8 @@ namespace Nektar
                                Bc.GetNumModes()),
                            Ba, Bb, Bc),
             StdPyrExp     (Ba,Bb,Bc),
-            Expansion     (),
-            Expansion3D   (),
-            m_geom(geom),
-            m_metricinfo(m_geom->GetGeomFactors(m_base)),
+            Expansion     (geom),
+            Expansion3D   (geom),
             m_matrixManager(
                     boost::bind(&PyrExp::CreateMatrix, this, _1),
                     std::string("PyrExpMatrix")),
@@ -75,8 +73,6 @@ namespace Nektar
             StdPyrExp     (T),
             Expansion     (T),
             Expansion3D   (T),
-            m_geom(T.m_geom),
-            m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
             m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
@@ -430,21 +426,6 @@ namespace Nektar
         //---------------------------------------
         // Helper functions
         //---------------------------------------
-
-        const SpatialDomains::GeomFactorsSharedPtr& PyrExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-        const SpatialDomains::GeometrySharedPtr PyrExp::v_GetGeom() const
-        {
-            return m_geom;
-        }
-
-        const SpatialDomains::Geometry3DSharedPtr& PyrExp::v_GetGeom3D() const
-        {
-            return m_geom;
-        }
         
         int PyrExp::v_GetCoordim()
         {
@@ -680,10 +661,10 @@ namespace Nektar
             ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
             // set up block matrix system
-            int nbdry = NumBndryCoeffs();
-            int nint = m_ncoeffs - nbdry;
+            unsigned int nbdry = NumBndryCoeffs();
+            unsigned int nint = (unsigned int)(m_ncoeffs - nbdry);
             unsigned int exp_size[] = {nbdry, nint};
-            int nblks = 2;
+            unsigned int nblks = 2;
             returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
             NekDouble factor = 1.0;
 

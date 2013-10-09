@@ -37,6 +37,7 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdQuadExp.h>
+#include <LocalRegions/Expansion.h>
 
 namespace Nektar
 {
@@ -641,7 +642,7 @@ namespace Nektar
         }
         
         //Extract the data in fielddata into the m_coeff list
-        void ExpListHomogeneous2D::v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
+        void ExpListHomogeneous2D::v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {
             int i,k;
             int offset = 0;
@@ -677,7 +678,7 @@ namespace Nektar
                 
 				for(k = 0; k < (NumMod_y*NumMod_z); ++k)
 				{
-					Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid] + k*ncoeffs_per_line],1);
+					Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid] + k*ncoeffs_per_line],1);
 					offset += datalen;
 				}
             }

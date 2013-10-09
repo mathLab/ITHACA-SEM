@@ -49,8 +49,39 @@ namespace Nektar
     namespace SpatialDomains
     {
         PointGeom::PointGeom()
+                : NekPoint<NekDouble>(0.0, 0.0, 0.0)
         {
             m_shapeType = LibUtilities::ePoint;
+            m_coordim = 0;
+            m_vid = 0;
+        }
+
+        PointGeom::PointGeom(const int coordim, const int vid,
+            NekDouble x, NekDouble y, NekDouble z)
+                : NekPoint<NekDouble>(x,y,z)
+        {
+            m_shapeType = LibUtilities::ePoint;
+            m_coordim = coordim;
+            m_vid     = vid;
+
+            (*this)(0) = x;
+            (*this)(1) = y;
+            (*this)(2) = z;
+        }
+
+
+        // copy constructor
+        PointGeom::PointGeom(const PointGeom &T): NekPoint<NekDouble>(T)
+        {
+            m_shapeType = T.m_shapeType;
+            m_vid = T.m_vid;
+            m_coordim = T.m_coordim;
+
+            std::list<CompToElmt>::const_iterator def;
+            for(def = T.m_elmtMap.begin(); def != T.m_elmtMap.end(); def++)
+            {
+                m_elmtMap.push_back(*def);
+            }
         }
 
 
@@ -58,6 +89,155 @@ namespace Nektar
         {
         }
 
+
+        void PointGeom::AddElmtConnected(int gvo_id, int locid)
+        {
+            CompToElmt ee(gvo_id,locid);
+            m_elmtMap.push_back(ee);
+        }
+
+        int PointGeom::NumElmtConnected() const
+        {
+            return int(m_elmtMap.size());
+        }
+
+        bool PointGeom::IsElmtConnected(int gvo_id, int locid) const
+        {
+
+            std::list<CompToElmt>::const_iterator def;
+            CompToElmt ee(gvo_id,locid);
+
+            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
+
+            // Found the element connectivity object in the list
+            if(def != m_elmtMap.end())
+            {
+                return(true);
+            }
+            return(false);
+        }
+
+        void PointGeom::GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
+        {
+            switch(m_coordim)
+            {
+            case 3:
+                z = (*this)(2);
+            case 2:
+                y = (*this)(1);
+            case 1:
+                x = (*this)(0);
+                break;
+            }
+        }
+
+        void PointGeom::GetCoords(Array<OneD,NekDouble> &coords)
+        {
+            switch(m_coordim)
+            {
+            case 3:
+                coords[2] = (*this)(2);
+            case 2:
+                coords[1] = (*this)(1);
+            case 1:
+                coords[0] = (*this)(0);
+                break;
+            }
+        }
+
+
+        void PointGeom::UpdatePosition(NekDouble x, NekDouble y, NekDouble z)
+        {
+            (*this)(0) = x;
+            (*this)(1) = y;
+            (*this)(2) = z;
+        }
+
+        // _this = a + b
+        void PointGeom::Add(PointGeom& a,PointGeom& b)
+        {
+            (*this)(0) = a[0] + b[0];
+            (*this)(1) = a[1] + b[1];
+            (*this)(2) = a[2] + b[2];
+            m_coordim = std::max(a.GetCoordim(),b.GetCoordim());
+        }
+
+        // _this = a + b
+        void PointGeom::Sub(PointGeom& a,PointGeom& b)
+        {
+            (*this)(0) = a[0] - b[0];
+            (*this)(1) = a[1] - b[1];
+            (*this)(2) = a[2] - b[2];
+            m_coordim = std::max(a.GetCoordim(),b.GetCoordim());
+        }
+
+        // _this = a x b
+        void PointGeom::Mult(PointGeom& a,PointGeom& b)
+        {
+            (*this)(0) = a[1]*b[2] - a[2]*b[1];
+            (*this)(1) = a[2]*b[0] - a[0]*b[2];
+            (*this)(2) = a[0]*b[1] - a[1]*b[0];
+            m_coordim = 3;
+        }
+
+        // _output = this.a
+        NekDouble PointGeom::dist(PointGeom& a)
+        {
+            return sqrt((x()-a.x())*(x()-a.x()) + (y()-a.y())*(y()-a.y()) + (z()-a.z())*(z()-a.z()));
+        }
+
+        // _output = this.a
+        NekDouble PointGeom::dot(PointGeom& a)
+        {
+            return (x()*a.x() + y()*a.y() + z()*a.z());
+        }
+
+        /// Determine equivalence by the ids.  No matter what the position,
+        /// if the ids are the same, then they are equivalent, and vice versa.
+        bool operator  == (const PointGeom &x, const PointGeom &y)
+        {
+            return (x.m_vid == y.m_vid);
+        }
+
+        bool operator  == (const PointGeom &x, const PointGeom *y)
+        {
+            return (x.m_vid == y->m_vid);
+        }
+
+        bool operator  == (const PointGeom *x, const PointGeom &y)
+        {
+            return (x->m_vid == y.m_vid);
+        }
+
+        bool operator != (const PointGeom &x, const PointGeom &y)
+        {
+            return (x.m_vid != y.m_vid);
+        }
+
+        bool operator  != (const PointGeom &x, const PointGeom *y)
+        {
+            return (x.m_vid != y->m_vid);
+        }
+
+        bool operator  != (const PointGeom *x, const PointGeom &y)
+        {
+            return (x->m_vid != y.m_vid);
+        }
+
+        bool operator  == (const CompToElmt &x, const CompToElmt &y)
+        {
+            return (x.m_id == y.m_id) || (x.m_locId == y.m_locId);
+        }
+
+        bool operator  != (const CompToElmt &x, const CompToElmt &y)
+        {
+            return (x.m_id != y.m_id);
+        }
+
+        int PointGeom::v_GetVid(int id) const
+        {
+            return m_vid;
+        }
 
         /// \brief Get the orientation of point1; to be used later 
         /// for normal convention
@@ -100,25 +280,11 @@ namespace Nektar
             return returnval;
         }
 
-        VertexComponentSharedPtr PointGeom::v_GetVertex(const int i) const
+        void PointGeom::v_GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
         {
-            VertexComponentSharedPtr returnval;
 
-            if (i >= 0 && i < kNverts)
-            {
-                returnval = m_verts[i];
-            }
-
-            return returnval;
         }
-
-
-        int PointGeom::v_GetVid(int i) const
-        {
-            ASSERTL2((i ==0),"Verted id must be 0");
-            return m_verts[i]->GetVid();
-        }
-
 
         NekDouble PointGeom::v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
         {
@@ -129,13 +295,6 @@ namespace Nektar
         {
             GetLocCoords(coords,Lcoords);
         }
-
-        int PointGeom::v_GetNumVerts() const
-        {
-            return kNverts;
-        }
-
-
 
     }; //end of namespace
 }; //end of namespace

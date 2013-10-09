@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
     LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
     LibUtilities::ShapeType     regionshape;
-    StdRegions::StdExpansion          *E;
+    StdRegions::StdExpansion          *E = NULL;
     Array<OneD, NekDouble>  sol,dx,dy,x,y;
 
     if(argc != 8)

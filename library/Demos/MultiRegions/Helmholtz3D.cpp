@@ -48,7 +48,7 @@ using namespace Nektar;
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
- fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps); \
+ fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps);  \
  st = clock();
 #else
 #define Timing(s) \
@@ -68,8 +68,10 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
     FlagList flags;
-    NekDouble    cps = (double)CLOCKS_PER_SEC;
-    NekDouble    st;
+#ifdef TIMING
+    NekDouble st;
+    NekDouble cps = (double)CLOCKS_PER_SEC;
+#endif
 
     if(argc < 2)
     {

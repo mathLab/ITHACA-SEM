@@ -396,8 +396,6 @@ namespace Nektar
             Vmath::Zero(GetNcoeffs(), coeffs, 1);
             coeffs[map] = primCoeffs[0];
         }
-
-
     } //end of namespace
 } //end of namespace
 

@@ -117,7 +117,7 @@
             <I PROPERTY="EQType" VALUE="LinearSWE" />
             <I PROPERTY="Projection" VALUE="Continuous" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
-            <I PROPERTY="UpwindType" VALUE="Average" />
+            <I PROPERTY="UpwindType" VALUE="LinearAverage" />
         </SOLVERINFO>
 
         <PARAMETERS>

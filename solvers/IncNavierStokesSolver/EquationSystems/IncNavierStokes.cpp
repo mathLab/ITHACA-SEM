@@ -41,6 +41,8 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <SolverUtils/Filters/Filter.h>
 #include <iomanip>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion3D.h>
 
 namespace Nektar
 {
@@ -1151,7 +1153,16 @@ namespace Nektar
             cnt = 0.0;
             for (int el = 0; el < n_element; ++el)
             { 
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                LocalRegions::Expansion2DSharedPtr el2D =
+                        LocalRegions::Expansion2D::FromStdExp(
+                                m_fields[0]->GetExp(el));
+                
+                int n_points = el2D->GetTotPoints();
+                
+                Array<OneD, const NekDouble> jac  = 
+                        el2D->GetGeom2D()->GetMetricInfo()->GetJac();
+                Array<TwoD, const NekDouble> df =
+                        el2D->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                 
                 // reset local space if necessary
                 if(n_points != n_points_0)
@@ -1162,31 +1173,28 @@ namespace Nektar
                     }
                     n_points_0 = n_points;
                 }		
-
-                Array<TwoD, const NekDouble> gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom2D()->GetGmat();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() 
+                if (el2D->GetGeom2D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i+cnt] 
-                                          + gmat[2][i]*inarray[1][i+cnt];
+                        stdVelocity[0][i] = df[0][i]*inarray[0][i+cnt]
+                                          + df[2][i]*inarray[1][i+cnt];
                         
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i+cnt] 
-                                          + gmat[3][i]*inarray[1][i+cnt];
+                        stdVelocity[1][i] = df[1][i]*inarray[0][i+cnt]
+                                          + df[3][i]*inarray[1][i+cnt];
                     }
                 }
                 else
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i+cnt] 
-                                          + gmat[2][0]*inarray[1][i+cnt];
+                        stdVelocity[0][i] = df[0][0]*inarray[0][i+cnt]
+                                          + df[2][0]*inarray[1][i+cnt];
                         
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i+cnt] 
-                                          + gmat[3][0]*inarray[1][i+cnt];
+                        stdVelocity[1][i] = df[1][0]*inarray[0][i+cnt]
+                                          + df[3][0]*inarray[1][i+cnt];
                     }
                 }
 
@@ -1211,8 +1219,14 @@ namespace Nektar
             cnt = 0;
             for (int el = 0; el < n_element; ++el)
             { 
+                LocalRegions::Expansion3DSharedPtr el3D =
+                        LocalRegions::Expansion3D::FromStdExp(
+                                m_fields[0]->GetExp(el));
                 
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                int n_points = el3D->GetTotPoints();
+                
+                Array<OneD, const NekDouble> jac =
+                        el3D->GetGeom3D()->GetMetricInfo()->GetJac();
                                
                 // reset local space if necessary
                 if(n_points != n_points_0)
@@ -1225,9 +1239,9 @@ namespace Nektar
                 }		
                 
                 Array<TwoD, const NekDouble> gmat =
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                        el3D->GetGeom3D()->GetMetricInfo()->GetDerivFactors();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom3D()->GetGtype() 
+                if (el3D->GetGeom3D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)

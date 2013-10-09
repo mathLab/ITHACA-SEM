@@ -1,3 +1,38 @@
+//////////////////////////////////////////////////////////////////////////////
+//
+// File: XmlToVtk.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Output VTK file of XML mesh, optionally with Jacobian.
+//
+///////////////////////////////////////////////////////////////////////////////
+
 #include <cstdlib>
 
 #include <MultiRegions/ExpList.h>
@@ -9,7 +44,7 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    if(argc != 2)
+    if(argc < 2)
     {
         cerr << "Usage: XmlToVtk  meshfile" << endl;
         exit(1);
@@ -87,33 +122,55 @@ int main(int argc, char *argv[])
     outname += ".vtu";
     ofstream outfile(outname.c_str());
 
-    Array<OneD, NekDouble> tmp;
     Exp[0]->WriteVtkHeader(outfile);
 
     if (jac)
     {
+        // Find minimum Jacobian.
+        Array<OneD, NekDouble> tmp;
+        Array<OneD, NekDouble> x0 (Exp[0]->GetNpoints());
+        Array<OneD, NekDouble> x1 (Exp[0]->GetNpoints());
+        Array<OneD, NekDouble> x2 (Exp[0]->GetNpoints());
+        Exp[0]->GetCoords(x0, x1, x2);
+
         // Write out field containing Jacobian.
         for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
         {
-            Exp[0]->WriteVtkPieceHeader(outfile,i);
             LocalRegions::ExpansionSharedPtr e = Exp[0]->GetExp(i);
+            SpatialDomains::GeomFactorsSharedPtr g = e->GetMetricInfo();
             unsigned int npts = e->GetTotPoints();
-            NekDouble jac = Vmath::Vmin(
-                e->GetMetricInfo()->GetJac().num_elements(),
-                e->GetMetricInfo()->GetJac(), 1);
-            Vmath::Fill(npts, jac, tmp = Exp[0]->UpdatePhys() +
-                                         Exp[0]->GetPhys_Offset(i), 1);
-            Exp[0]->WriteVtkPieceData(outfile,i, "Jac");
-            Exp[0]->WriteVtkPieceFooter(outfile,i);
+
+            if (g->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vcopy(npts, g->GetJac(), 1, tmp = Exp[0]->UpdatePhys()
+                                 + Exp[0]->GetPhys_Offset(i), 1);
+            }
+            else
+            {
+                Vmath::Fill (npts, g->GetJac()[0], tmp = Exp[0]->UpdatePhys()
+                                 + Exp[0]->GetPhys_Offset(i), 1);
+            }
+            
+            Exp[0]->WriteVtkPieceHeader(outfile, i);
+            Exp[0]->WriteVtkPieceData  (outfile, i, "Jac");
+            Exp[0]->WriteVtkPieceFooter(outfile, i);
         }
+
+        unsigned int n
+            = Vmath::Imin(Exp[0]->GetNpoints(), Exp[0]->GetPhys(), 1);
+        cout << "- Minimum Jacobian: "
+             << Vmath::Vmin(Exp[0]->GetNpoints(), Exp[0]->GetPhys(), 1) 
+             << " at coords (" << x0[n] << ", " << x1[n] << ", " << x2[n] << ")"
+             << endl;
+        
     }
     else
     {
         // For each field write header and footer, since there is no field data.
         for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
         {
-            Exp[0]->WriteVtkPieceHeader(outfile,i);
-            Exp[0]->WriteVtkPieceFooter(outfile,i);
+            Exp[0]->WriteVtkPieceHeader(outfile, i);
+            Exp[0]->WriteVtkPieceFooter(outfile, i);
         }
     }
 

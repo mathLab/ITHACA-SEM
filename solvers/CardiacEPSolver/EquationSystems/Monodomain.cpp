@@ -103,17 +103,12 @@ namespace Nektar
                 StdRegions::eVarCoeffD12,
                 StdRegions::eVarCoeffD22
         };
-        std::string varName = "intensity";
-        std::string aniso_var[3] = {
-                "fx", "fy", "fz"
-        };
-        int nq = m_fields[0]->GetNpoints();
-        Array<OneD, NekDouble> vTemp;
-        Array<OneD, NekDouble> vTemp_i;
-        Array<OneD, NekDouble> vTemp_j;
+
+        const int nq            = m_fields[0]->GetNpoints();
+        const int nVarDiffCmpts = m_spacedim * (m_spacedim + 1) / 2;
 
         // Allocate storage for variable coeffs and initialize to 1.
-        for (int i = 0; i < m_spacedim*(m_spacedim+1)/2; ++i)
+        for (int i = 0; i < nVarDiffCmpts; ++i)
         {
             m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq, 1.0);
         }
@@ -127,13 +122,16 @@ namespace Nektar
                 cout << "Loading Anisotropic Fibre map." << endl;
             }
 
-            NekDouble o_min = m_session->GetParameter("o_min");
-            NekDouble o_max = m_session->GetParameter("o_max");
+            std::string aniso_var[3] = {"fx", "fy", "fz"};
+            NekDouble   o_min        = m_session->GetParameter("o_min");
+            NekDouble   o_max        = m_session->GetParameter("o_max");
+            int         k            = 0;
 
-            int k = 0;
+            Array<OneD, NekDouble> vTemp_i;
+            Array<OneD, NekDouble> vTemp_j;
 
             /*
-             * Diffusivity matrix is upper triangular and defined as
+             * Diffusivity matrix D is upper triangular and defined as
              *    d_00   d_01  d_02
              *           d_11  d_12
              *                 d_22
@@ -161,24 +159,25 @@ namespace Nektar
                 // Loop through rows of D
                 for (int i = 0; i < j + 1; ++i)
                 {
-                    ASSERTL0(m_session->DefinesFunction("AnisotropicConductivity",
-                                                        aniso_var[i]),
+                    ASSERTL0(m_session->DefinesFunction(
+                                        "AnisotropicConductivity",aniso_var[i]),
                              "Function 'AnisotropicConductivity' not correctly "
                              "defined.");
                     EvaluateFunction(aniso_var[i], vTemp_i,
                                      "AnisotropicConductivity");
 
                     Vmath::Vmul(nq, vTemp_i, 1, vTemp_j, 1,
-                                           m_vardiff[varCoeffEnum[k]], 1);
+                                    m_vardiff[varCoeffEnum[k]], 1);
 
                     Vmath::Smul(nq, o_max-o_min,
-                                           m_vardiff[varCoeffEnum[k]], 1,
-                                           m_vardiff[varCoeffEnum[k]], 1);
+                                    m_vardiff[varCoeffEnum[k]], 1,
+                                    m_vardiff[varCoeffEnum[k]], 1);
 
                     if (i == j)
                     {
-                        Vmath::Sadd(nq, o_min, m_vardiff[varCoeffEnum[k]], 1,
-                                               m_vardiff[varCoeffEnum[k]], 1);
+                        Vmath::Sadd(nq, o_min,
+                                        m_vardiff[varCoeffEnum[k]], 1,
+                                        m_vardiff[varCoeffEnum[k]], 1);
                     }
 
                     ++k;
@@ -195,9 +194,11 @@ namespace Nektar
                 cout << "Loading Isotropic Conductivity map." << endl;
             }
 
-            NekDouble f_min = m_session->GetParameter("d_min");
-            NekDouble f_max = m_session->GetParameter("d_max");
+            std::string varName = "intensity";
+            NekDouble   f_min   = m_session->GetParameter("d_min");
+            NekDouble   f_max   = m_session->GetParameter("d_max");
 
+            Array<OneD, NekDouble> vTemp;
             EvaluateFunction(varName, vTemp, "IsotropicConductivity");
 
             // Threshold based on d_min, d_max

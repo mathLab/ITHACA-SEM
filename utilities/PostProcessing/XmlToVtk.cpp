@@ -1,4 +1,3 @@
-//#include <cstdio>
 #include <cstdlib>
 
 #include <MultiRegions/ExpList.h>
@@ -15,18 +14,20 @@ int main(int argc, char *argv[])
         cerr << "Usage: XmlToVtk  meshfile" << endl;
         exit(1);
     }    
-    
+
+    LibUtilities::SessionReader::RegisterCmdLineFlag(
+        "jacobian", "j", "Output Jacobian as scalar field");
+
     LibUtilities::SessionReaderSharedPtr vSession
         = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    //----------------------------------------------
+    bool jac = vSession->DefinesCmdLineArgument("jacobian");
+
     // Read in mesh from input file
     string meshfile(argv[argc-1]);
     SpatialDomains::MeshGraphSharedPtr graphShPt = 
         SpatialDomains::MeshGraph::Read(vSession); //meshfile);
-    //----------------------------------------------
 
-    //----------------------------------------------
     // Set up Expansion information
     SpatialDomains::ExpansionMap emap = graphShPt->GetExpansions();
     SpatialDomains::ExpansionMapIter it;
@@ -43,9 +44,7 @@ int main(int argc, char *argv[])
                                         LibUtilities::ePolyEvenlySpaced));
         }
     }
-    //----------------------------------------------
     
-    //----------------------------------------------
     // Define Expansion
     int expdim  = graphShPt->GetMeshDimension();
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(1);
@@ -82,23 +81,43 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    //----------------------------------------------
     
-    //----------------------------------------------
     // Write out VTK file.
     string   outname(strtok(argv[argc-1],"."));
     outname += ".vtu";
     ofstream outfile(outname.c_str());
 
+    Array<OneD, NekDouble> tmp;
     Exp[0]->WriteVtkHeader(outfile);
-    // For each field write header and footer, since there is no field data.
-    for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
+
+    if (jac)
     {
-        Exp[0]->WriteVtkPieceHeader(outfile,i);
-        Exp[0]->WriteVtkPieceFooter(outfile,i);
+        // Write out field containing Jacobian.
+        for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
+        {
+            Exp[0]->WriteVtkPieceHeader(outfile,i);
+            LocalRegions::ExpansionSharedPtr e = Exp[0]->GetExp(i);
+            unsigned int npts = e->GetTotPoints();
+            NekDouble jac = Vmath::Vmin(
+                e->GetMetricInfo()->GetJac().num_elements(),
+                e->GetMetricInfo()->GetJac(), 1);
+            Vmath::Fill(npts, jac, tmp = Exp[0]->UpdatePhys() +
+                                         Exp[0]->GetPhys_Offset(i), 1);
+            Exp[0]->WriteVtkPieceData(outfile,i, "Jac");
+            Exp[0]->WriteVtkPieceFooter(outfile,i);
+        }
     }
+    else
+    {
+        // For each field write header and footer, since there is no field data.
+        for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
+        {
+            Exp[0]->WriteVtkPieceHeader(outfile,i);
+            Exp[0]->WriteVtkPieceFooter(outfile,i);
+        }
+    }
+
     Exp[0]->WriteVtkFooter(outfile);
-    //----------------------------------------------
     
     return 0;
 }

@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
   int order, nq;
   LibUtilities::PointsType Qtype;
   LibUtilities::BasisType  btype;
-  StdRegions::StdExpansion1D  *E;
+  StdRegions::StdExpansion1D  *E = NULL;
   Array<OneD, NekDouble> sol;
   
   if(argc != 4)

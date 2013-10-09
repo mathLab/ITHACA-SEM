@@ -36,6 +36,7 @@
 #include <IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/SegExp.h>
+#include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
@@ -77,7 +78,7 @@ namespace Nektar
         Array<OneD, int>                    edgeInteriorSign;
         int nvel = fields.num_elements();
         
-        const StdRegions::StdExpansionVector &locExpVector = *(fields[0]->GetExp());
+        const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
         int eid, id, diff;
         int nel = fields[0]->GetNumElmts();
 
@@ -126,8 +127,8 @@ namespace Nektar
             // collect unique list of vertex ids for this expansion
             for(k = 0; k < bndCondExp[j]->GetNumElmts(); ++k)
             {
-                BndExpVids[bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(0)] = bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(0);
-                BndExpVids[bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(1)] = bndCondExp[j]->GetExp(k)->GetGeom1D()->GetVid(1);
+                BndExpVids[LocalRegions::Expansion1D::FromStdExp(bndCondExp[j]->GetExp(k))->GetGeom1D()->GetVid(0)] = LocalRegions::Expansion1D::FromStdExp(bndCondExp[j]->GetExp(k))->GetGeom1D()->GetVid(0);
+                BndExpVids[LocalRegions::Expansion1D::FromStdExp(bndCondExp[j]->GetExp(k))->GetGeom1D()->GetVid(1)] = LocalRegions::Expansion1D::FromStdExp(bndCondExp[j]->GetExp(k))->GetGeom1D()->GetVid(1);
             }
             
             for(i = 0; i < nvel; ++i)
@@ -137,7 +138,7 @@ namespace Nektar
                     // set number of Dirichlet conditions along edge
                     for(k = 0; k < bndCondExp[j]->GetNumElmts(); ++k)
                     {
-                        IsDirEdgeDof[bndCondExp[j]->GetExp(k)->GetGeom1D()->GetEid()] += 1;
+                        IsDirEdgeDof[LocalRegions::Expansion1D::FromStdExp(bndCondExp[j]->GetExp(k))->GetGeom1D()->GetEid()] += 1;
                     }
                     
                             
@@ -201,7 +202,7 @@ namespace Nektar
             {
                 if(bndConditionsVec[nvel-1][i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    id = bndCondExp[i]->GetExp(0)->GetGeom1D()->GetEid(); 
+                    id = LocalRegions::Expansion1D::FromStdExp(bndCondExp[i]->GetExp(0))->GetGeom1D()->GetEid();
                     break;
                 }
             }
@@ -214,7 +215,7 @@ namespace Nektar
             {
                 for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
                 {
-                    edgeId = (locExpVector[i]->GetGeom2D())->GetEid(j);
+                    edgeId = (LocalRegions::Expansion2D::FromStdExp(locExpVector[i])->GetGeom2D())->GetEid(j);
                     
                     if(edgeId == id)
                     {
@@ -236,7 +237,7 @@ namespace Nektar
             eid = fields[0]->GetOffset_Elmt_Id(i);
             for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
             {
-                vertId = (locExpVector[eid]->GetGeom2D())->GetVid(j);
+                vertId = (LocalRegions::Expansion2D::FromStdExp(locExpVector[eid])->GetGeom2D())->GetVid(j);
                 if(Dofs[0].count(vertId) == 0)
                 {
                     Dofs[0][vertId] = nvel*nz_loc;
@@ -248,7 +249,7 @@ namespace Nektar
                     }
                 }
 
-                edgeId = (locExpVector[eid]->GetGeom2D())->GetEid(j);
+                edgeId = (LocalRegions::Expansion2D::FromStdExp(locExpVector[eid])->GetGeom2D())->GetEid(j);
                 if(Dofs[1].count(edgeId) == 0)
                 {
                     Dofs[1][edgeId] = nvel*(locExpVector[eid]->GetEdgeNcoeffs(j)-2)*nz_loc;
@@ -271,22 +272,6 @@ namespace Nektar
                               firstNonDirGraphVertId, nExtraDirichlet,
                               bottomUpGraph, extraDir,  false,  4);
         
-#if 0
-        bottomUpGraph->Dump();
-        cout << endl;
-
-        for(i = 0; i < ReorderedGraphVertId[0].size(); ++i)
-        {
-            cout << "Vertex " << i << " Reordered to "<< ReorderedGraphVertId[0][i] << endl;
-            
-        }
-
-        for(i = 0; i < ReorderedGraphVertId[1].size(); ++i)
-        {
-            cout << "Edge " << i << " Reordered to "<< ReorderedGraphVertId[1][i] << endl;
-            
-        }
-#endif
         /**
          * STEP 2a: Set the mean pressure modes to edges depending on
          * type of direct solver technique;
@@ -314,7 +299,7 @@ namespace Nektar
             eid = fields[0]->GetOffset_Elmt_Id(i);
             for(j = 0; j < locExpVector[eid]->GetNverts(); ++j)
             {
-                edgeId = (locExpVector[eid]->GetGeom2D())->GetEid(j);
+                edgeId = (LocalRegions::Expansion2D::FromStdExp(locExpVector[eid])->GetGeom2D())->GetEid(j);
 
                 if(IsDirEdgeDof.count(edgeId) == 0) // interior edge
                 {
@@ -386,8 +371,8 @@ namespace Nektar
             for(j = 0; j < locExpansion->GetNedges(); ++j)
             {
                 nEdgeCoeffs = locExpansion->GetEdgeNcoeffs(j);
-                meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
-                meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
+                meshEdgeId = (LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D())->GetEid(j);
+                meshVertId = (LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D())->GetVid(j);
 
                 for(k = 0; k < nvel*nz_loc; ++k)
                 {
@@ -409,9 +394,6 @@ namespace Nektar
         // Add mean pressure modes; 
         for(i = 0; i < nel; ++i)
         {
-#if 0
-            cout << "Element "<< i << " EdgeId  " << AddMeanPressureToEdgeId[i] << endl;
-#endif
             graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]]+1)*nvel*nz_loc-1] += nz_loc;
             //graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc] += nz_loc;
         }
@@ -446,7 +428,7 @@ namespace Nektar
                         for(k = 0; k < bndCondExp[i]->GetNumElmts(); ++k)
                         {
                             // vertices with mix condition;
-                            id = bndCondExp[i]->GetExp(k)->GetGeom1D()->GetVid(0);
+                            id = LocalRegions::Expansion1D::FromStdExp(bndCondExp[i]->GetExp(k))->GetGeom1D()->GetVid(0);
                             if(DirVertChk.count(id*nvel+j) == 0)
                             {
                                 DirVertChk[id*nvel+j] = 1;
@@ -456,7 +438,7 @@ namespace Nektar
                                 }
                             }
 
-                            id = bndCondExp[i]->GetExp(k)->GetGeom1D()->GetVid(1);
+                            id = LocalRegions::Expansion1D::FromStdExp(bndCondExp[i]->GetExp(k))->GetGeom1D()->GetVid(1);
                             if(DirVertChk.count(id*nvel+j) == 0)
                             {
                                 DirVertChk[id*nvel+j] = 1;
@@ -467,7 +449,7 @@ namespace Nektar
                             }
                             
                             // edges with mixed id; 
-                            id = bndCondExp[i]->GetExp(k)->GetGeom1D()->GetEid();
+                            id = LocalRegions::Expansion1D::FromStdExp(bndCondExp[i]->GetExp(k))->GetGeom1D()->GetEid();
                             for(n = 0; n < nz_loc; ++n)
                             {
                                 graphVertOffset[ReorderedGraphVertId[1][id]*nvel*nz_loc+j*nz_loc +n] *= -1; 
@@ -601,9 +583,9 @@ namespace Nektar
             for(j = 0; j < locExpansion->GetNedges(); ++j)
             {
                 nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
-                edgeOrient       = (locExpansion->GetGeom2D())->GetEorient(j);
-                meshEdgeId       = (locExpansion->GetGeom2D())->GetEid(j);
-                meshVertId       = (locExpansion->GetGeom2D())->GetVid(j);
+                edgeOrient       = (LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D())->GetEorient(j);
+                meshEdgeId       = (LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D())->GetEid(j);
+                meshVertId       = (LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D())->GetVid(j);
                 
                 locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
                 // Set the global DOF for vertex j of element i
@@ -727,8 +709,8 @@ namespace Nektar
                         StdRegions::StdExpansion2D>(locExpVector[eid]);
                     for(j = 0; j < locExpansion->GetNverts(); ++j)
                     {
-                        meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
-                        meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
+                        meshEdgeId = (LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D())->GetEid(j);
+                        meshVertId = (LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D())->GetVid(j);
                             
                         if(ReorderedGraphVertId[0][meshVertId] >= 
                            firstNonDirGraphVertId)
@@ -759,7 +741,7 @@ namespace Nektar
 
 
 void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(Array<OneD, map<int,int> > &ReorderedGraphVertId,
-										 int &nel, const StdRegions::StdExpansionVector &locExpVector,
+										 int &nel, const LocalRegions::ExpansionVector &locExpVector,
 										 int &edgeId, int &vertId, int &firstNonDirGraphVertId, map<int,int> &IsDirEdgeDof,
 										 MultiRegions::BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
 										 Array<OneD, int> &AddMeanPressureToEdgeId)
@@ -775,7 +757,7 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(Array<OneD, map<
 	{
 		for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
 		{
-			edgeId = (locExpVector[i]->GetGeom2D())->GetEid(j);
+			edgeId = (LocalRegions::Expansion2D::FromStdExp(locExpVector[i])->GetGeom2D())->GetEid(j);
 			
 			// note second condition stops us using mixed boundary condition 
 			if((ReorderedGraphVertId[1][edgeId] >= firstNonDirGraphVertId)

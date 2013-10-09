@@ -396,8 +396,8 @@ namespace Nektar
             int  scLevel           = m_locToGloMap->GetStaticCondLevel();
             DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
             DNekScalMatSharedPtr    localMat = sc->GetBlock(n,n);
-            int nbdry    = localMat->GetRows();
-            int nblks    = 1;
+            unsigned int nbdry    = localMat->GetRows();
+            unsigned int nblks    = 1;
             unsigned int esize[1] = {nbdry};
 
             schurComplBlock = MemoryManager<DNekScalBlkMat>
@@ -687,41 +687,6 @@ namespace Nektar
                     m_sparseSchurCompl = MemoryManager<DNekSmvBsrDiagBlkMat>::
                                             AllocateSharedPtr(sparseStorage);
 
-                    size_t matBytes, bsruBlockBytes;
-
-                    matBytes      = m_sparseSchurCompl->GetMemoryFootprint();
-                    bsruBlockBytes = m_sparseSchurCompl->GetMemoryFootprint(0);
-
-#if 0 // Is this just a debugging leftover?
-                    if (verbose)
-                    {
-                        cout << "Local matrix memory, bytes = " << matBytes;
-                        if (matBytes/(1024*1024) > 0)
-                        {
-                            std::cout << " ("<< matBytes/(1024*1024) << " MB)"
-                                      << std::endl;
-                        }
-                        else
-                        {
-                            std::cout << " ("<< matBytes/1024 << " KB)"
-                                      << std::endl;
-                        }
-
-                        std::cout << "First BSRU submatrix memory, bytes = "
-                                  << bsruBlockBytes;
-
-                        if (bsruBlockBytes/(1024*1024) > 0)
-                        {
-                            std::cout << " ("<< bsruBlockBytes/(1024*1024)
-                                      << " MB)" << std::endl;
-                        }
-                        else
-                        {
-                            std::cout << " ("<< bsruBlockBytes/1024
-                                      << " KB)" << std::endl;
-                        }
-                    }
-#endif
                     break;
                 }
                 default:

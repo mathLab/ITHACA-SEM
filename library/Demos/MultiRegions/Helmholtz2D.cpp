@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
     StdRegions::ConstFactorMap factors;
     StdRegions::VarCoeffMap varcoeffs;
     FlagList flags;
-    NekDouble st;
 
     if(argc < 2)
     {

@@ -42,7 +42,6 @@
 
 namespace Nektar
 {
-
     namespace SpatialDomains
     {
         // Forward declarations
@@ -59,9 +58,7 @@ namespace Nektar
                 const Array<OneD, const StdRegions
                     ::StdExpansion3DSharedPtr> &Coords,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis,
-                const bool QuadMetrics = false,
-                const bool LaplMetrics  = false);
+                    &tbasis);
             
         private:
             // Set up 3D Jacobian
@@ -69,12 +66,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > d1,
                 const Array<OneD, Array<OneD, NekDouble> > d2,
                 const Array<OneD, Array<OneD, NekDouble> > d3);
-
-            /// Set up quadrature metrics for 2D expansions.
-            virtual void v_SetUpQuadratureMetrics(
-                LibUtilities::ShapeType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
         };
 
         /// Shared pointer to GeomFactors3D object.
@@ -83,7 +74,6 @@ namespace Nektar
         typedef std::vector< GeomFactors3DSharedPtr > GeomFactors3DVector;
         /// Iterator for the vector of shared pointers.
         typedef GeomFactors3DVector::iterator GeomFactors3DVectorIter;
-
     }
 }
 

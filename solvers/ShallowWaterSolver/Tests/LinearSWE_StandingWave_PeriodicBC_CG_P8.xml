@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <GEOMETRY DIM="2" SPACE="2">
+
+        <VERTEX>
+            <V ID="0"> 0.0 0.0 0.0 </V>
+            <V ID="1"> 5.0 0.0 0.0 </V>
+            <V ID="2"> 10.0 0.0 0.0 </V>
+            <V ID="3"> 15.0 0.0 0.0 </V>
+            <V ID="4"> 20.0 0.0 0.0 </V>
+            <V ID="5"> 0.0 5.0 0.0 </V>
+            <V ID="6"> 5.0 5.0 0.0 </V>
+            <V ID="7"> 10.0 5.0 0.0 </V>
+            <V ID="8"> 15.0 5.0 0.0 </V>
+            <V ID="9"> 20.0 5.0 0.0 </V>
+            <V ID="10"> 0.0 10.0 0.0 </V>
+            <V ID="11"> 5.0 10.0 0.0 </V>
+            <V ID="12"> 10.0 10.0 0.0 </V>
+            <V ID="13"> 15.0 10.0 0.0 </V>
+            <V ID="14"> 20.0 10.0 0.0 </V>
+            <V ID="15"> 0.0 15.0 0.0 </V>
+            <V ID="16"> 5.0 15.0 0.0 </V>
+            <V ID="17"> 10.0 15.0 0.0 </V>
+            <V ID="18"> 15.0 15.0 0.0 </V>
+            <V ID="19"> 20.0 15.0 0.0 </V>
+            <V ID="20"> 0.0 20.0 0.0 </V>
+            <V ID="21"> 5.0 20.0 0.0 </V>
+            <V ID="22"> 10.0 20.0 0.0 </V>
+            <V ID="23"> 15.0 20.0 0.0 </V>
+            <V ID="24"> 20.0 20.0 0.0 </V>
+        </VERTEX>
+
+        <EDGE>
+            <E ID="0"> 0 1 </E>
+            <E ID="1"> 1 2 </E>
+            <E ID="2"> 2 3 </E>
+            <E ID="3"> 3 4 </E>
+            <E ID="4"> 5 6 </E>
+            <E ID="5"> 6 7 </E>
+            <E ID="6"> 7 8 </E>
+            <E ID="7"> 8 9 </E>
+            <E ID="8"> 10 11 </E>
+            <E ID="9"> 11 12 </E>
+            <E ID="10"> 12 13 </E>
+            <E ID="11"> 13 14 </E>
+            <E ID="12"> 15 16 </E>
+            <E ID="13"> 16 17 </E>
+            <E ID="14"> 17 18 </E>
+            <E ID="15"> 18 19 </E>
+            <E ID="16"> 20 21 </E>
+            <E ID="17"> 21 22 </E>
+            <E ID="18"> 22 23 </E>
+            <E ID="19"> 23 24 </E>
+            <E ID="20"> 0 5 </E>
+            <E ID="21"> 1 6 </E>
+            <E ID="22"> 2 7 </E>
+            <E ID="23"> 3 8 </E>
+            <E ID="24"> 4 9 </E>
+            <E ID="25"> 5 10 </E>
+            <E ID="26"> 6 11 </E>
+            <E ID="27"> 7 12 </E>
+            <E ID="28"> 8 13 </E>
+            <E ID="29"> 9 14 </E>
+            <E ID="30"> 10 15 </E>
+            <E ID="31"> 11 16 </E>
+            <E ID="32"> 12 17 </E>
+            <E ID="33"> 13 18 </E>
+            <E ID="34"> 14 19 </E>
+            <E ID="35"> 15 20 </E>
+            <E ID="36"> 16 21 </E>
+            <E ID="37"> 17 22 </E>
+            <E ID="38"> 18 23 </E>
+            <E ID="39"> 19 24 </E>
+        </EDGE>
+
+        <ELEMENT>
+            <Q ID="0"> 0 21 4 20 </Q>
+            <Q ID="1"> 1 22 5 21 </Q>
+            <Q ID="2"> 2 23 6 22 </Q>
+            <Q ID="3"> 3 24 7 23 </Q>
+            <Q ID="4"> 4 26 8 25 </Q>
+            <Q ID="5"> 5 27 9 26 </Q>
+            <Q ID="6"> 6 28 10 27 </Q>
+            <Q ID="7"> 7 29 11 28 </Q>
+            <Q ID="8"> 8 31 12 30 </Q>
+            <Q ID="9"> 9 32 13 31 </Q>
+            <Q ID="10"> 10 33 14 32 </Q>
+            <Q ID="11"> 11 34 15 33 </Q>
+            <Q ID="12"> 12 36 16 35 </Q>
+            <Q ID="13"> 13 37 17 36 </Q>
+            <Q ID="14"> 14 38 18 37 </Q>
+            <Q ID="15"> 15 39 19 38 </Q>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> Q[0-15] </C>
+            <C ID="1"> E[0,1,2,3] </C>
+            <C ID="2"> E[16,17,18,19] </C>
+            <C ID="3"> E[20,25,30,35] </C>
+            <C ID="4"> E[24,29,34,39] </C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="8" FIELDS="eta,u,v" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQType" VALUE="LinearSWE" />
+            <I PROPERTY="Projection" VALUE="Continuous" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+            <I PROPERTY="UpwindType" VALUE="LinearAverage" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> TimeStep = 9.030472819714618/100           </P>
+            <P> NumSteps = 100*1           </P>
+            <P> FinTime = TimeStep*NumSteps </P>
+            <P> IO_CheckSteps = 100000               </P>
+            <P> IO_InfoSteps = 100000               </P>
+            <P> Gravity = 9.81              </P>
+        </PARAMETERS>
+
+        <FUNCTION NAME="WaterDepth">
+            <E VAR="d" VALUE="0.5" />
+        </FUNCTION>
+
+        <FUNCTION NAME="Coriolis">
+            <E VAR="f" VALUE="0" />
+        </FUNCTION>
+
+        <VARIABLES>
+            <V ID="0"> eta  </V>
+            <V ID="1"> u    </V>
+            <V ID="2"> v    </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+        
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <P VAR="eta"  VALUE="B[1]" />
+                <P VAR="u"    VALUE="B[1]" />
+                <P VAR="v"    VALUE="B[1]" />
+            </REGION>
+            <REGION REF="1">
+                <P VAR="eta"  VALUE="B[0]" />
+                <P VAR="u"    VALUE="B[0]" />
+                <P VAR="v"    VALUE="B[0]" />
+            </REGION>
+            <REGION REF="2">
+                <P VAR="eta"  VALUE="B[3]" />
+                <P VAR="u"    VALUE="B[3]" />
+                <P VAR="v"    VALUE="B[3]" />
+            </REGION>
+            <REGION REF="3">
+                <P VAR="eta"  VALUE="B[2]" />
+                <P VAR="u"    VALUE="B[2]" />
+                <P VAR="v"    VALUE="B[2]" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="eta"
+                VALUE="0.01*cos((PI/10.0)*x-0.6957758948637364*t) +0.01*cos((PI/10.0)*y-0.6957758948637364*t)" />
+            <E VAR="u" VALUE="0.0" />
+            <E VAR="v" VALUE="0.0" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="eta"
+                VALUE="0.01*cos((PI/10.0)*x-0.6957758948637364*t) + 0.01*cos((PI/10.0)*y-0.6957758948637364*t)" />
+            <E VAR="u" VALUE="0.0" />
+            <E VAR="v" VALUE="0.0" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>
+

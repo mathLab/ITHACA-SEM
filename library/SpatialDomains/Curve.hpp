@@ -35,7 +35,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_CURVE_H
 #define NEKTAR_SPATIALDOMAINS_CURVE_H
 
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 
 namespace Nektar
 {
@@ -48,7 +48,7 @@ namespace Nektar
 
             int          m_curveID; // ID or edge or face which is curved
             LibUtilities::PointsType   m_ptype;
-            std::vector<VertexComponentSharedPtr> m_points;
+            std::vector<PointGeomSharedPtr> m_points;
         };
 
         typedef boost::shared_ptr<Curve> CurveSharedPtr;

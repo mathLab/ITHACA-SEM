@@ -119,7 +119,7 @@ namespace Nektar
             eDiagonal,
             eLinearWithDiagonal,
             eLinear,
-	    eLowEnergy,
+            eLowEnergy,
             eLinearWithLowEnergy,
             eBlock,
             eLinearWithBlock
@@ -131,23 +131,22 @@ namespace Nektar
             "Diagonal",
             "FullLinearSpaceWithDiagonal",
             "FullLinearSpace",
-	    "LowEnergyBlock",
+	        "LowEnergyBlock",
             "FullLinearSpaceWithLowEnergyBlock",
             "Block",
             "FullLinearSpaceWithBlock"
         };
 
+
+        // let's keep this for linking to external
+        // sparse libraries
         enum MatrixStorageType
         {
-            eNistCSR,
-            eNistBSR,
             eSmvBSR
         };
 
         const char* const MatrixStorageTypeMap[] =
         {
-            "NistCSR",
-            "NistBSR",
             "SmvBSR"
         };
 

@@ -138,8 +138,8 @@ namespace Nektar
                 
                 if (!m_historyPointStream.fail())
                 {
-                    SpatialDomains::VertexComponentSharedPtr vert
-                        = MemoryManager<SpatialDomains::VertexComponent>
+                    SpatialDomains::PointGeomSharedPtr vert
+                        = MemoryManager<SpatialDomains::PointGeom>
                         ::AllocateSharedPtr(dim, i, gloCoord[0],
                                             gloCoord[1], gloCoord[2]);
 
@@ -214,7 +214,7 @@ namespace Nektar
                 {
                     m_historyLocalPointMap[m_historyList.size()] = i;
                     m_historyList.push_back(
-                                     std::pair<SpatialDomains::VertexComponentSharedPtr,
+                                     std::pair<SpatialDomains::PointGeomSharedPtr,
                                      Array<OneD, NekDouble> >
                                      (m_historyPoints[i], LocCoords[i]));
                 }
@@ -298,7 +298,7 @@ namespace Nektar
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
             Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
             Array<OneD, NekDouble> gloCoord(3, 0.0);
-            std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, Array<OneD, NekDouble> > >::iterator x;
+            std::list<std::pair<SpatialDomains::PointGeomSharedPtr, Array<OneD, NekDouble> > >::iterator x;
             
             Array<OneD, NekDouble> physvals;
             Array<OneD, NekDouble> locCoord;

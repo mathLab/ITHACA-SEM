@@ -118,10 +118,12 @@ namespace Nektar
                 g_to = 0.1652;  // nanoS_per_picoF
                 g_Kur_scaling = 1.0;
                 g_Ca_L = 0.12375;
+                break;
             case eAF:
                 g_to = 0.0826;  // nanoS_per_picoF
                 g_Kur_scaling = 0.5;
                 g_Ca_L = 0.037125;
+                break;
         }
 
         m_nvar = 21;
@@ -625,6 +627,7 @@ namespace Nektar
             case 18: return "K_i";
             case 19: return "Ca_rel";
             case 20: return "Ca_up";
+            default: return "unknown";
         }
     }
 

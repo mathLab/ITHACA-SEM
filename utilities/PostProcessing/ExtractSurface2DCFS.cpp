@@ -110,7 +110,6 @@ int main(int argc, char *argv[])
             ::AllocateSharedPtr(*Exp2D);
     }
     
-    int nElements    = pFields[0]->GetExpSize();
     int nSolutionPts = pFields[0]->GetNpoints();
     int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
 

@@ -134,7 +134,7 @@ namespace Nektar
          */
         inline bool GlobalOptParam::DoGlobalMatOp(const StdRegions::MatrixType i) const
         {
-            OptimizationOperationType type;
+            OptimizationOperationType type = eBwdTrans;
             switch(i)
             {
             case StdRegions::eBwdTrans:
@@ -185,7 +185,7 @@ namespace Nektar
          */
         inline  const Array<OneD, const bool> &GlobalOptParam::DoBlockMatOp(const StdRegions::MatrixType i) const
         {
-            OptimizationOperationType type;
+            OptimizationOperationType type = eBwdTrans;
             switch(i)
             {
             case StdRegions::eBwdTrans:

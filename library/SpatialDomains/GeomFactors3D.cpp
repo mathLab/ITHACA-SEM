@@ -288,11 +288,9 @@ namespace Nektar
             Vmath::Vvtvp  (pts, &m_deriv[2][0][0], 1, &tmp[0],           1,
                                 &jac[0],           1, &jac[0],           1);
 
-            if(Vmath::Vmin(pts, &jac[0], 1) < 0)
+            if (Vmath::Vmin(pts, &jac[0], 1) < 0)
             {
                 m_valid = false;
-                NEKERROR(ErrorUtil::ewarning,
-                         "3D deformed Jacobian not positive.");
             }
         }
     }

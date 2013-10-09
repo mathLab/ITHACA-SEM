@@ -35,7 +35,7 @@
 
 #include <iomanip>
 
-#include <SolverUtils/Filters/FilterEnergy.h>
+#include <IncNavierStokesSolver/Filters/FilterEnergy.h>
 
 namespace Nektar
 {

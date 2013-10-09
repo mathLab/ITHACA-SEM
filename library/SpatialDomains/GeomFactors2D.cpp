@@ -323,6 +323,11 @@ namespace Nektar
 
         void GeomFactors2D::CheckIfValid()
         {
+            if (m_coordDim != 2)
+            {
+                return;
+            }
+
             int nqtot = m_pointsKey[0].GetNumPoints() *
                         m_pointsKey[1].GetNumPoints();
             int pts = (m_type == eRegular || m_type == eMovingRegular)

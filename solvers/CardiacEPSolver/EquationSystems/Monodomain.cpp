@@ -103,6 +103,7 @@ namespace Nektar
                 StdRegions::eVarCoeffD12,
                 StdRegions::eVarCoeffD22
         };
+        std::string aniso_var[3] = {"fx", "fy", "fz"};
 
         const int nq            = m_fields[0]->GetNpoints();
         const int nVarDiffCmpts = m_spacedim * (m_spacedim + 1) / 2;
@@ -122,7 +123,6 @@ namespace Nektar
                 cout << "Loading Anisotropic Fibre map." << endl;
             }
 
-            std::string aniso_var[3] = {"fx", "fy", "fz"};
             NekDouble   o_min        = m_session->GetParameter("o_min");
             NekDouble   o_max        = m_session->GetParameter("o_max");
             int         k            = 0;

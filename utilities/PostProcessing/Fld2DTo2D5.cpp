@@ -26,23 +26,23 @@ int main(int argc, char *argv[])
     string mesh2d(argv[1]);
     string mesh3d(argv[3]);
     
-    // create 2d session
+    //create 2d session
     LibUtilities::SessionReaderSharedPtr vSession2d
             = LibUtilities::SessionReader::CreateInstance(2, argv);
     std::vector<std::string> filenames;
     filenames.push_back(mesh3d);
-    // create 3D session
+    //create 3D session
     LibUtilities::SessionReaderSharedPtr vSession3d
             = LibUtilities::SessionReader::CreateInstance(2, argv, filenames, vSession2d->GetComm());
     
     SpatialDomains::MeshGraphSharedPtr graphShPt2d = SpatialDomains::MeshGraph::Read(vSession2d);
     SpatialDomains::MeshGraphSharedPtr graphShPt3d = SpatialDomains::MeshGraph::Read(vSession3d);
-    // 2D
+    //2D
     string field2dfile(argv[2]);
     vector<LibUtilities::FieldDefinitionsSharedPtr> field2ddef;
     vector<vector<NekDouble> > field2ddata;
     LibUtilities::Import(field2dfile,field2ddef,field2ddata);
-    // 3D
+    //3D
     string field3dfile(argv[4]);
     vector<LibUtilities::FieldDefinitionsSharedPtr> field3ddef;
     vector<vector<NekDouble> > field3ddata;
@@ -74,9 +74,11 @@ int main(int argc, char *argv[])
     bool useFFT = false;
     bool dealiasing = false;
     // Define Expansion
+    //int expdim2d  = graphShPt2d->GetMeshDimension();
     int nfields2d = field2ddef[0]->m_fields.size();
+    //int expdim3d  = graphShPt3d->GetMeshDimension();
     int nfields3d = field3ddef[0]->m_fields.size();
-    // Gen 2d
+    //Gen 2d
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp2d(nfields2d);
     MultiRegions::ExpList2DSharedPtr Exp2D;
     Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession2d,graphShPt2d);
@@ -85,12 +87,14 @@ int main(int argc, char *argv[])
     {
         Exp2d[i] = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*Exp2D);
     }
-    // Gen 3d
+    //Gen 3d
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp3d(nfields3d);
     MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
     // Define Homogeneous expansion
     int nplanes; 
-    vSession3d->LoadParameter("HomModesZ",nplanes,field3ddef[0]->m_numModes[2]);
+    //vSession3d->LoadParameter("HomModesZ",nplanes,field3ddef[0]->m_numModes[2]);
+    nplanes = field3ddef[0]->m_numModes[2];
+    cout<< nplanes << endl;
     // nplanes + 1 points
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
     const LibUtilities::BasisKey  Bkey(field3ddef[0]->m_basis[2],nplanes,Pkey);
@@ -103,15 +107,29 @@ int main(int argc, char *argv[])
     }
     
     k=0;
-    for(j = 0; j < nfields2d-1; ++j)
+    for(j = 0; j < nfields2d; ++j)
     {	
-       	for(int i = 0; i < field2ddata.size(); ++i)
-       	{
+        if (j< nfields2d-1)
+        {
+       		for(int i = 0; i < field2ddata.size(); ++i)
+       		{
                    Exp2d[j]->ExtractDataToCoeffs(
-                                        field2ddef[i],
+                                                field2ddef[i],
 		                                field2ddata[i],
 		                                field2ddef[i]->m_fields[j],
 		                                Exp3d[j]->GetPlane(k)->UpdateCoeffs());            
+        	}
+        }
+        if (j==nfields2d-1)
+        {
+		for(int i = 0; i < field2ddata.size(); ++i)
+                {
+                   Exp2d[j]->ExtractDataToCoeffs(
+                                                field2ddef[i],
+                                                field2ddata[i],
+                                                field2ddef[i]->m_fields[j],
+                                                Exp3d[j+1]->GetPlane(k)->UpdateCoeffs());
+                }
         }
     }
     Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(vSession3d->GetVariables().size());

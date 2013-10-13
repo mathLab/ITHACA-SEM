@@ -704,6 +704,17 @@ namespace Nektar
             int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
+            // Set up a set of all local verts and edges. 
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                for(j = 0; j < 2; ++j)
+                {
+                    int id = (*m_exp)[i]->GetGeom()->GetVid(j);
+                    locVerts.insert(id);
+                }
+            }
+                
+
             // Construct list of all periodic pairs local to this process.
             for (it = bregions.begin(); it != bregions.end(); ++it)
             {
@@ -776,8 +787,8 @@ namespace Nektar
                     vertList[0] = segGeom->GetVid(0);
                     vertList[1] = segGeom->GetVid(1);
                     allVerts[(*c)[i]->GetGlobalID()] = vertList;
-                    locVerts.insert(vertList[0]);
-                    locVerts.insert(vertList[1]);
+                    //locVerts.insert(vertList[0]);
+                    //locVerts.insert(vertList[1]);
                 }
 
                 if (vComm->GetSize() == 1)

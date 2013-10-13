@@ -288,6 +288,7 @@ namespace Nektar
             {
                 m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
             }
+            Gs::Unique(tmp2, vCommRow); // not sure why this was not called? 
             for (unsigned int i = 0; i < m_numGlobalBndCoeffs; ++i)
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp2[i] >= 0 ? 1 : 0);

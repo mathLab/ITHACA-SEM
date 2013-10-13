@@ -122,7 +122,7 @@ namespace Nektar
             LocalRegions::ExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
-            int i, j, k, nel;
+            int i, j, k;
             int nVerts, nEdges,nFaces; 
             int eid, fid, n, cnt, nedgemodes, nfacemodes;
             NekDouble zero = 0.0;
@@ -155,10 +155,6 @@ namespace Nektar
             DNekMat RS;
             DNekMat RSRT;
             
-            /*DNekMatSharedPtr VertBlk;
-            DNekMatSharedPtr EdgeBlk;
-            DNekMatSharedPtr FaceBlk;*/
-
             int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
 
@@ -254,68 +250,119 @@ namespace Nektar
             int edgematrixlocation=0;
             int ntotaledgeentries=0;
 
+            map<int,int> EdgeSize;
+            map<int,int> FaceSize;
+            
+            /// -  Count  edges, face and add up edges and face sizes
+            for(n = 0; n < n_exp; ++n)
+            {
+                eid = expList->GetOffset_Elmt_Id(n);
+                locExpansion = expList->GetExp(eid);
+
+                nEdges = locExpansion->GetNedges();
+                for(j = 0; j < nEdges; ++j)
+                {
+                    int nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j) - 2;
+                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
+                    EdgeSize[meshEdgeId] = nEdgeInteriorCoeffs;
+                }
+                
+                nFaces = locExpansion->GetNfaces();
+                for(j = 0; j < nFaces; ++j)
+                {
+                    int nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
+                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
+                    FaceSize[meshFaceId] = nFaceInteriorCoeffs;
+                }
+            }
+
             // Loop over all the elements in the domain and compute max edge
-            // DOF. Reduce across all processes to get universal maximum.
+            // DOF and set up unique ordering. 
+
+            // First do periodic edges 
+            PeriodicMap::const_iterator pIt;
+            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
+            {
+                meshEdgeId = pIt->first;
+
+                if(edgeDirMap.count(meshEdgeId)==0)
+                {
+                    dof = EdgeSize[meshEdgeId]; 
+                    if(uniqueEdgeMap.count(meshEdgeId)==0 && dof > 0)
+                    {
+                        bool SetUpNewEdge = true;
+                        
+                        
+                        for (i = 0; i < pIt->second.size(); ++i)
+                        {
+                            if (!pIt->second[i].isLocal)
+                            {
+                                continue;
+                            }
+                            
+                            int meshEdgeId2 = pIt->second[i].id;
+                            
+                            if(edgeDirMap.count(meshEdgeId2)==0)
+                            {
+                                if(uniqueEdgeMap.count(meshEdgeId2)!=0)
+                                {
+                                    // set unique map to same location
+                                    uniqueEdgeMap[meshEdgeId] = 
+                                        uniqueEdgeMap[meshEdgeId2];
+                                    SetUpNewEdge = false;
+                                }
+                            }
+                            else
+                            {
+                                edgeDirMap[meshEdgeId] = 1;
+                                SetUpNewEdge = false;
+                            }
+                        }
+
+                        if(SetUpNewEdge)
+                        {
+                            uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
+                            
+                            edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
+                            
+                            edgemodeoffset[edgematrixlocation]=dof*dof;
+                            
+                            ntotaledgeentries+=dof*dof;
+                            
+                            n_blks[1+edgematrixlocation++]=dof;                                
+                            
+                        }
+                        nlocalNonDirEdges+=dof*dof;
+                    }
+                }
+            }
+
             for(cnt=n=0; n < n_exp; ++n)
             {
-                nel = expList->GetOffset_Elmt_Id(n);
-                
-                locExpansion = expList->GetExp(nel);
+                eid = expList->GetOffset_Elmt_Id(n);
+                locExpansion = expList->GetExp(eid);
 
                 for (j = 0; j < locExpansion->GetNedges(); ++j)
                 {
-                    dof    = locExpansion->GetEdgeNcoeffs(j)-2;
-                    maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
                     meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
+                    dof    = EdgeSize[meshEdgeId];
+                    maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
                         if(uniqueEdgeMap.count(meshEdgeId)==0 && dof > 0)
+                            
                         {
-                            bool SetUpNewEdge = true;
-
-                            // if edge is periodic need to set uniqueEdgeMap to other
-                            // entry
-                            if(periodicEdges.count(meshEdgeId) != 0)
-                            {
-                                int meshEdgeId2;
-                                PeriodicMap::const_iterator pIt;
-                                pIt = periodicEdges.find(meshEdgeId);
-                                for (i = 0; i < pIt->second.size(); ++i)
-                                {
-                                    meshEdgeId2 = pIt->second[i].id;
-                                    if(edgeDirMap.count(meshEdgeId2)==0)
-                                    {
-                                        if(uniqueEdgeMap.count(meshEdgeId2)!=0)
-                                        {
-                                            // set unique map to same location
-                                            uniqueEdgeMap[meshEdgeId] = 
-                                                uniqueEdgeMap[meshEdgeId2];
-                                            SetUpNewEdge = false;
-                                            break;
-                                        }
-                                    }
-                                    else // set edge to be a Dirichlet edge
-                                    {
-                                        edgeDirMap[meshEdgeId] = 1;
-                                        SetUpNewEdge = false;
-                                        break;
-                                    }
-                                }
-                            }
-                                
-                            if(SetUpNewEdge == true)
-                            {
-                                uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
-                                
-                                edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
-                                
-                                edgemodeoffset[edgematrixlocation]=dof*dof;
-                                
-                                ntotaledgeentries+=dof*dof;
-                                
-                                n_blks[1+edgematrixlocation++]=dof;                                
-                            }
+                            uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
+                            
+                            edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
+                            
+                            edgemodeoffset[edgematrixlocation]=dof*dof;
+                            
+                            ntotaledgeentries+=dof*dof;
+                            
+                            n_blks[1+edgematrixlocation++]=dof;                                
+                            
                         }
                         nlocalNonDirEdges+=dof*dof;
                     }
@@ -327,73 +374,90 @@ namespace Nektar
 
             // Loop over all the elements in the domain and compute max face
             // DOF. Reduce across all processes to get universal maximum.
+            // - Periodic faces
+            
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
+            {
+                meshFaceId = pIt->first;
+                if(faceDirMap.count(meshEdgeId)==0)
+                {
+                    dof = FaceSize[meshFaceId];
+                    
+                    if(uniqueFaceMap.count(meshFaceId) == 0 && dof > 0)
+                    {
+                        bool SetUpNewFace = true;
+                        
+                        if(pIt->second[0].isLocal)
+                        {
+
+                            int meshFaceId2 = pIt->second[0].id;
+                            
+                            if(faceDirMap.count(meshFaceId2)==0)
+                            {
+                                if(uniqueFaceMap.count(meshFaceId2)!=0)
+                                {
+                                    // set unique map to same location
+                                    uniqueFaceMap[meshFaceId] = 
+                                        uniqueFaceMap[meshFaceId2];
+                                    SetUpNewFace = false;
+                                }
+                            }
+                            else // set face to be a Dirichlet face
+                            {
+                                faceDirMap[meshFaceId] = 1;
+                                SetUpNewFace = false;
+                            }
+                        }
+                    
+                        if(SetUpNewFace)
+                        {
+                            uniqueFaceMap[meshFaceId]=facematrixlocation;
+                            
+                            facemodeoffset[facematrixlocation]=dof*dof;
+                            
+                            faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
+                            
+                            ntotalfaceentries+=dof*dof;
+                            
+                            n_blks[1+nNonDirEdgeIDs+facematrixlocation++]=dof;
+                        }
+                    }
+                    nlocalNonDirFaces+=dof*dof;
+                }
+            }
+
+
             for(cnt=n=0; n < n_exp; ++n)
             {
-                nel = expList->GetOffset_Elmt_Id(n);
+                eid = expList->GetOffset_Elmt_Id(n);
                 
-                locExpansion = expList->GetExp(nel);
+                locExpansion = expList->GetExp(eid);
 
                 for (j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    dof    = locExpansion->GetFaceIntNcoeffs(j);
-                    maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
-
                     meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
 
+                    dof        = FaceSize[meshFaceId];
+                    maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
+
+                 
                     if(faceDirMap.count(meshFaceId)==0)
                     {
                         if(uniqueFaceMap.count(meshFaceId)==0 && dof > 0)
                         {
-                            bool SetUpNewFace = true;
-
-                            // if face is periodic need to set uniqueEdgeMap to other
-                            // entry
-                            if(periodicFaces.count(meshFaceId) != 0)
-                            {
-                                
-                                int meshFaceId2;
-                                PeriodicMap::const_iterator pIt;
-                                pIt = periodicFaces.find(meshFaceId);
-                                for (i = 0; i < pIt->second.size(); ++i)
-                                {
-                                    meshFaceId2 = pIt->second[i].id;
-                                    if(faceDirMap.count(meshFaceId2)==0)
-                                    {
-                                        if(uniqueFaceMap.count(meshFaceId2)!=0)
-                                        {
-                                            // set unique map to same location
-                                            uniqueFaceMap[meshFaceId] = 
-                                                uniqueFaceMap[meshFaceId2];
-                                            SetUpNewFace = false;
-                                            break;
-                                        }
-                                    }
-                                    else // set face to be a Dirichlet face
-                                    {
-                                        faceDirMap[meshFaceId] = 1;
-                                        SetUpNewFace = false;
-                                        break;
-                                    }
-                                }
-                            }
+                            uniqueFaceMap[meshFaceId]=facematrixlocation;
                             
-                            if(SetUpNewFace == true)
-                            {
-                                uniqueFaceMap[meshFaceId]=facematrixlocation;
-                                
-                                facemodeoffset[facematrixlocation]=dof*dof;
-                                
-                                faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
-                                
-                                ntotalfaceentries+=dof*dof;
-                                
-                                n_blks[1+nNonDirEdgeIDs+facematrixlocation++]=dof;
-                                
-                            }
+                            facemodeoffset[facematrixlocation]=dof*dof;
+                            
+                            faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
+                            
+                            ntotalfaceentries+=dof*dof;
+                            
+                            n_blks[1+nNonDirEdgeIDs+facematrixlocation++]=dof;
+                            
                         }
                         nlocalNonDirFaces+=dof*dof;
                     }
-
                 }
             }
 
@@ -418,10 +482,10 @@ namespace Nektar
 
             for(n=0; n < n_exp; ++n)
             {
-                nel = expList->GetOffset_Elmt_Id(n);
-
-                locExpansion = expList->GetExp(nel);
-
+                eid = expList->GetOffset_Elmt_Id(n);
+                
+                locExpansion = expList->GetExp(eid);
+                
                 //loop over the edges of the expansion
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
@@ -436,11 +500,20 @@ namespace Nektar
                         {
                             vGlobal=edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
 
-
                             localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
+
+                            pIt = periodicEdges.find(meshEdgeId);
+                            if (pIt != periodicEdges.end())
+                            {
+                                for (int l = 0; l < pIt->second.size(); ++l)
+                                {
+                                    meshEdgeId = min(meshEdgeId, pIt->second[l].id);
+                                }
+                            }
 
                             EdgeBlockToUniversalMap[vGlobal]
                                 = meshEdgeId * maxEdgeDof * maxEdgeDof + k + 1;
+                            
                         }
                         edgematrixoffset+=nedgemodes*nedgemodes;
                     }
@@ -464,6 +537,13 @@ namespace Nektar
                             localFaceToGlobalMatrixMap[facematrixoffset+k]
                                 = vGlobal;
                             
+                            // use minimum face edge when periodic 
+                            pIt = periodicFaces.find(meshFaceId);
+                            if (pIt != periodicFaces.end())
+                            {
+                                meshFaceId = min(meshFaceId, pIt->second[0].id);
+                            }
+                            
                             FaceBlockToUniversalMap[vGlobal]
                                 = meshFaceId * maxFaceDof * maxFaceDof + k + 1;
                         }
@@ -471,6 +551,7 @@ namespace Nektar
                     }
                 }
             }
+
 
             edgematrixoffset=0;
             facematrixoffset=0;
@@ -492,9 +573,9 @@ namespace Nektar
             //matrices.
             for(cnt=n=0; n < n_exp; ++n)
             {
-                nel = expList->GetOffset_Elmt_Id(n);
+                eid = expList->GetOffset_Elmt_Id(n);
                 
-                locExpansion = expList->GetExp(nel);
+                locExpansion = expList->GetExp(eid);
                 nCoeffs=locExpansion->NumBndryCoeffs();
                 LibUtilities::ShapeType eType=locExpansion->DetShapeType();
 
@@ -555,8 +636,6 @@ namespace Nektar
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
-                                meshVertId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetVid(v);
-
                                 //modal connectivity between elements
                                 sign1 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + vMap1);
@@ -566,8 +645,20 @@ namespace Nektar
                                 vertArray[globalrow]
                                     += sign1*sign2*RSRT(vMap1,vMap2);
 
+
+                                meshVertId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetVid(v);
+                            
+                                pIt = periodicVerts.find(meshVertId);
+                                if (pIt != periodicVerts.end())
+                                {
+                                    for (k = 0; k < pIt->second.size(); ++k)
+                                    {
+                                        meshVertId = min(meshVertId, pIt->second[k].id);
+                                    }
+                                }
+
                                 VertBlockToUniversalMap[globalrow]
-                                = meshVertId * maxEdgeDof * maxEdgeDof + 1;
+                                    = meshVertId * maxEdgeDof * maxEdgeDof + 1;
                             }
                         }
                     }
@@ -659,6 +750,7 @@ namespace Nektar
                 m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
             }
 
+
             //Assemble edge matrices of each process
             Array<OneD, NekDouble> GlobalEdgeBlock(ntotaledgeentries);
             Vmath::Zero(ntotaledgeentries, GlobalEdgeBlock.get(), 1);
@@ -675,6 +767,8 @@ namespace Nektar
                          localFaceToGlobalMatrixMap.get(), 
                          GlobalFaceBlock.get());
 
+
+
             //Exchange vertex data over different processes
             if(nNonDirVerts!=0)
             {
@@ -683,13 +777,19 @@ namespace Nektar
             }
 
             //Exchange edge data over different processes
-            Gs::gs_data *tmp1 = Gs::Init(EdgeBlockToUniversalMap, m_comm);
-            Gs::Gather(GlobalEdgeBlock, Gs::gs_add, tmp1);
+            if(ntotaledgeentries)
+            {
+                Gs::gs_data *tmp1 = Gs::Init(EdgeBlockToUniversalMap, m_comm);
+                Gs::Gather(GlobalEdgeBlock, Gs::gs_add, tmp1);
+            }
 
-            //Exchange face data over different processes
-            Gs::gs_data *tmp2 = Gs::Init(FaceBlockToUniversalMap, m_comm);
-            Gs::Gather(GlobalFaceBlock, Gs::gs_add, tmp2);
-
+            if(ntotalfaceentries)
+            {
+                //Exchange face data over different processes
+                Gs::gs_data *tmp2 = Gs::Init(FaceBlockToUniversalMap, m_comm);
+                Gs::Gather(GlobalFaceBlock, Gs::gs_add, tmp2);
+            }
+            
             // Populate vertex block
             for (int i = 0; i < nNonDirVerts; ++i)
             {
@@ -699,14 +799,27 @@ namespace Nektar
             //Set the first block to be the diagonal of the vertex space
             m_BlkMat->SetBlock(0,0, VertBlk);
 
+            cout << "ntotalfaceentries "<< ntotalfaceentries << endl;
+
+            if(ntotalfaceentries)
+                for(i =0; i < 4; ++i)
+                    cout << "Node " << m_comm->GetRank() << " Entry " << i << " is " << GlobalFaceBlock[i] << " FaceToUniMap " << FaceBlockToUniversalMap[i] << endl;
+
+            if(ntotaledgeentries)
+                for(i =0; i < 4; ++i)
+                    cout << "Node " << m_comm->GetRank() << " Entry " << i << " is " << GlobalEdgeBlock[i] << " EdgeToUniMap " << EdgeBlockToUniversalMap[i] << endl;
+
             offset=0;
             //Build the edge matrices from the vector
             for(int loc=0; loc<nNonDirEdgeIDs; ++loc)
             {
+                nedgemodes = n_blks[1+loc];
+                
                 DNekMatSharedPtr m_gmat = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
                     (nedgemodes,nedgemodes,zero,storage);
 
+#if 1
                 for (v=0; v<nedgemodes; ++v)
                 {
                     for (m=0; m<nedgemodes; ++m)
@@ -715,18 +828,22 @@ namespace Nektar
                         m_gmat->SetValue(v,m,EdgeValue);
                     }
                 }
-
                 m_BlkMat->SetBlock(1+loc,1+loc, m_gmat);
+ #endif               
 
                 offset+=edgemodeoffset[loc];
             }
 
             offset=0;
+            if(ntotalfaceentries)
+                for(i =0; i < 4; ++i)
+                    cout << "Tets - Node " << m_comm->GetRank() << " Entry " << i << " is " << GlobalFaceBlock[i] << " FaceToUniMap " << FaceBlockToUniversalMap[i] << endl;
+            //exit(1);
+
             //Build the face matrices from the vector
             for(int loc=0; loc<nNonDirFaceIDs; ++loc)
             {
                 nfacemodes=n_blks[1+nNonDirEdgeIDs+loc];
-
                 DNekMatSharedPtr m_gmat = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
                     (nfacemodes,nfacemodes,zero,storage);
@@ -745,7 +862,6 @@ namespace Nektar
                 offset+=facemodeoffset[loc];
             }
 
-            
             int totblks=m_BlkMat->GetNumberOfBlockRows();
             for (i=1; i< totblks; ++i)
             {

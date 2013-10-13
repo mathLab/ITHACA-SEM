@@ -1946,6 +1946,7 @@ namespace Nektar
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
                 err  = std::max(err,(*m_exp)[i]->Linf(soln + m_phys_offset[i]));
             }
+            cout << "Rank " << m_comm->GetRank() << " Linf" << err << endl;
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceMax);
 
             return err;
@@ -1977,6 +1978,7 @@ namespace Nektar
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
                 err  = std::max(err,(*m_exp)[i]->Linf());
             }
+            cout << "RANK " << m_comm->GetRank() << " Linf" << err << endl;
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceMax);
             return err;
         }

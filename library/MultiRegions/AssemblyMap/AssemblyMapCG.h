@@ -72,7 +72,7 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
-            MULTI_REGIONS_EXPORT map<int, vector<pair<int, int> > > 
+            MULTI_REGIONS_EXPORT map<int, vector< boost::tuple<int, int, NekDouble > > >
                 &GetExtraDirDofs()
             {
                 return m_extraDirDofs;
@@ -110,7 +110,7 @@ namespace Nektar
             int m_maxStaticCondLevel;
             /// Map indicating degrees of freedom which are Dirichlet but whose
             /// value is stored on another processor.
-            map<int, vector<pair<int, int> > > m_extraDirDofs;
+            map<int, vector<boost::tuple<int, int, NekDouble > > >m_extraDirDofs;
 
             void SetUpUniversalC0ContMap(
                 const ExpList     &locExp,

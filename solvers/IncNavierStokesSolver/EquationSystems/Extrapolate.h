@@ -46,19 +46,6 @@
 
 namespace Nektar
 {
-	
-    // Velocity correction scheme coefficient required for extrapolation.
-	
-    static NekDouble StifflyStable_Betaq_Coeffs[][3] = {{ 1.0,  0.0, 0.0},
-                                                        { 2.0, -1.0, 0.0},
-                                                        { 3.0, -3.0, 1.0}};
-    
-    static NekDouble StifflyStable_Alpha_Coeffs[][3] = {{ 1.0,  0.0, 0.0},
-                                                        { 2.0, -0.5, 0.0},
-                                                        { 3.0, -1.5, 1.0/3.0}};
-    
-    static NekDouble StifflyStable_Gamma0_Coeffs[3]  = {1.0,  1.5, 11.0/6.0};
-	
     struct HBCInfo
     {
         int m_globalElmtID;  // elements ID in the global ordering
@@ -249,6 +236,14 @@ namespace Nektar
 
     private:
         static std::string def;
+		
+		// Velocity correction scheme coefficient required for extrapolation.
+		
+		static NekDouble StifflyStable_Betaq_Coeffs[3][3];
+		
+		static NekDouble StifflyStable_Alpha_Coeffs[3][3];
+		
+		static NekDouble StifflyStable_Gamma0_Coeffs[3];
     };
 
     /**

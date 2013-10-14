@@ -38,6 +38,13 @@
 
 namespace Nektar
 {
+	
+	NekDouble Extrapolate::StifflyStable_Betaq_Coeffs[3][3] = {{ 1.0,  0.0, 0.0},{ 2.0, -1.0, 0.0},{ 3.0, -3.0, 1.0}};
+	
+	NekDouble Extrapolate::StifflyStable_Alpha_Coeffs[3][3] = {{ 1.0,  0.0, 0.0},{ 2.0, -0.5, 0.0},{ 3.0, -1.5, 1.0/3.0}};
+	
+	NekDouble Extrapolate::StifflyStable_Gamma0_Coeffs[3] = {1.0,  1.5, 11.0/6.0};
+	
     ExtrapolateFactory& GetExtrapolateFactory()
     {
         typedef Loki::SingletonHolder<ExtrapolateFactory,
@@ -57,9 +64,6 @@ namespace Nektar
           m_advObject(advObject)
     {      
         m_session->LoadParameter("TimeStep", m_timestep,   0.01);  
-        // generating the HOPBC map and setting dimensionality
-        // for following calculation (CurlCurl, tec.)
-        //GenerateHOPBCMap();
     }
     
     Extrapolate::~Extrapolate()

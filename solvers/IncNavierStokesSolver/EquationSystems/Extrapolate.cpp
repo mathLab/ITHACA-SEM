@@ -273,6 +273,13 @@ namespace Nektar
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[1],BndValues[1]);
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[2],BndValues[2]);
                     Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Pvals);
+					
+					//cout << "===========BC: " << m_HBCdata[j].m_bndryElmtID << " ======"<<endl;
+					//for(int k=0; k<m_pressureBCsMaxPts; k++)
+					//{
+					//	cout << Pvals[k] << endl;
+					//}
+					//cout << "===========" <<endl;
                     
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[0],BndValues[0]);
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[1],BndValues[1]);
@@ -480,6 +487,8 @@ namespace Nektar
             m_pressureHBCs[n]   = Array<OneD, NekDouble>(cnt, 0.0);
             m_acceleration[n+1] = Array<OneD, NekDouble>(cnt, 0.0);
         }
+		
+		m_pressureCalls = 0;
         
         switch(m_fields[pindex]->GetExpType())
         {

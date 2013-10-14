@@ -245,7 +245,7 @@ namespace Nektar
             ASSERTL0(false,"This method is not defined in this class");
         }
 
-        virtual int v_GetForceDimension();
+        virtual int v_GetForceDimension()=0;
 
     private:
 

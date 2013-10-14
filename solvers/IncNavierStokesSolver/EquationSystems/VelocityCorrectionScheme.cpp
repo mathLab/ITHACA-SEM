@@ -321,27 +321,15 @@ namespace Nektar
             }
         }
 
-        //add the force
-        if(m_session->DefinesFunction("BodyForce"))
+        // apply forcing
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            if(m_fields[0]->GetWaveSpace())
-            {
-                for(int i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_forces[i]->SetWaveSpace(true);					
-                    m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
-                                          m_forces[i]->UpdatePhys());
-                }
-            }
-            for(int i = 0; i < m_nConvectiveFields; ++i)
-            {
-                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,
-                            outarray[i],1);
-            }
+            (*x)->Apply(m_fields, inarray, outarray);
         }
-        
-        // Calculate High-Order pressure boundary conditions
-        m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis); 
+		
+		// Calculate High-Order pressure boundary conditions
+		m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
     }
     
     /**

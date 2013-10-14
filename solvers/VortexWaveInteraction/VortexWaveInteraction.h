@@ -38,6 +38,7 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <SolverUtils/EquationSystem.h>
+#include <SolverUtils/Forcing/ForcingProgrammatic.h>
 #include <MultiRegions/ExpList.h>
 #include <string>
 
@@ -257,6 +258,7 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr              m_wavePressure;
         
         Array<OneD, Array<OneD, NekDouble > >  m_vwiForcing; 
+        SolverUtils::ForcingProgrammaticSharedPtr m_vwiForcingObj;
 
         Array<OneD, Array<OneD, NekDouble > >  m_bcsForcing;
         

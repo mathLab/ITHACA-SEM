@@ -176,6 +176,10 @@ namespace Nektar
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
         
+        // Forcing terms
+        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
+                                               v_GetForceDimension());
+
         // check to see if any Robin boundary conditions and if so set
         // up m_field to boundary condition maps;
         m_fieldsBCToElmtID  = Array<OneD, Array<OneD, int> >(m_fields.num_elements());
@@ -422,7 +426,7 @@ namespace Nektar
     }
     
 	/**
-	 * Get Flux
+	 *
 	 */
     void IncNavierStokes::v_GetFluxVector(const int i, 
                                           Array<OneD, Array<OneD, NekDouble> > &physfield,

@@ -1329,14 +1329,11 @@ namespace Nektar
     {  	    
         // evaluate convectioln terms
         EvaluateAdvectionTerms(inarray,outarray);
-        int nqtot  =m_fields[0]->GetTotPoints(); 
-        //add the force
-        if(m_session->DefinesFunction("BodyForce"))
+
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            for(int i = 0; i < m_nConvectiveFields; ++i)
-            {
-                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
-            }        
+            (*x)->Apply(m_fields, outarray, outarray);
         }
     }
     
@@ -1385,8 +1382,8 @@ namespace Nektar
         for (int k=0 ; k < nfields; ++k)
         {
             //Backward Transformation in physical space for time evolution
-            m_forces[k]->BwdTrans_IterPerExp(m_forces[k]->GetCoeffs(),
-                                             m_forces[k]->UpdatePhys());			
+            m_fields[k]->BwdTrans_IterPerExp(m_fields[k]->GetCoeffs(),
+                                             m_fields[k]->UpdatePhys());
         }
         
     }
@@ -1397,8 +1394,8 @@ namespace Nektar
         for (int k=0 ; k < nfields; ++k)
         {
             //Forward Transformation in physical space for time evolution
-            m_forces[k]->FwdTrans_IterPerExp(m_forces[k]->GetPhys(),
-                                             m_forces[k]->UpdateCoeffs());
+            m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),
+                                             m_fields[k]->UpdateCoeffs());
             
         }
     }
@@ -1469,33 +1466,33 @@ namespace Nektar
     
     void CoupledLinearNS::Solve(void)
     {
-        Array <OneD, Array<OneD, NekDouble> > forcing(m_velocity.num_elements());
-        
-        if(m_session->DefinesFunction("BodyForce"))
+        const unsigned int ncmpt = m_velocity.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > forcing_phys(ncmpt);
+        Array<OneD, Array<OneD, NekDouble> > forcing     (ncmpt);
+
+        for(int i = 0; i < ncmpt; ++i)
         {
-            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            forcing_phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetNpoints(), 0.0);
+            forcing[i]      = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
+        }
+
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            (*x)->Apply(m_fields, forcing_phys, forcing_phys);
+        }
+        for (unsigned int i = 0; i < ncmpt; ++i)
+        {
+            m_fields[i]->IProductWRTBase(forcing_phys[i], forcing[i]);
+            if(m_HomogeneousType == eHomogeneous1D)
             {
-                m_forces[i]->IProductWRTBase(m_forces[i]->GetPhys(),
-                                             m_forces[i]->UpdateCoeffs());
-                if(m_HomogeneousType == eHomogeneous1D)
+                if(!m_singleMode) // Do not want to Fourier transoform in case of single mode stability an
                 {
-                    if(!m_singleMode) // Do not want to Fourier transoform in case of single mode stability analysis. 
-                    {
-                        m_forces[i]->HomogeneousFwdTrans(m_forces[i]->GetCoeffs(),m_forces[i]->UpdateCoeffs());
-                    }
+                    m_fields[i]->HomogeneousFwdTrans(forcing[i], forcing[i]);
                 }
-                forcing[i] = m_forces[i]->GetCoeffs();
             }
         }
-        else
-        {
-            // Should put in read forcing in here. 
-            for(int i = 0; i < m_velocity.num_elements(); ++i)
-            {
-                forcing[i] = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
-            }
-        }
-        
+
         SolveLinearNS(forcing);
     }
     

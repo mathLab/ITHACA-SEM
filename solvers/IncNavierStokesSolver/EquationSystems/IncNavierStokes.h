@@ -41,6 +41,7 @@
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
+#include <SolverUtils/Forcing/Forcing.h>
 
 namespace Nektar
 {     
@@ -163,6 +164,9 @@ namespace Nektar
         /// Advection term
         AdvectionTermSharedPtr m_advObject;
 
+        /// Forcing terms
+        std::vector<SolverUtils::ForcingSharedPtr>               m_forcing;
+
         /// Number of fields to be convected;
         int   m_nConvectiveFields;
 
@@ -172,7 +176,6 @@ namespace Nektar
 
         /// Pointer to field holding pressure field
         MultiRegions::ExpListSharedPtr m_pressure;
-
         /// Kinematic viscosity
         NekDouble   m_kinvis;
         /// dump energy to file at steps time
@@ -241,6 +244,8 @@ namespace Nektar
         {
             ASSERTL0(false,"This method is not defined in this class");
         }
+
+        virtual int v_GetForceDimension();
 
     private:
 

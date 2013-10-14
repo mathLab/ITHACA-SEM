@@ -558,7 +558,7 @@ namespace Nektar
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,
-                                m_locToGloMap,factors);
+                                m_locToGloMap,factors,varcoeff);
 
             if(flags.isSet(eUseGlobal))
             {

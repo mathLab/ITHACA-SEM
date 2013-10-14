@@ -1122,7 +1122,7 @@ namespace Nektar
                 struct TetOrient faceNodes(nodes, i);
                 faces.insert(faceNodes);
             }
-            
+
             // Order vertices with highest global vertex at top degenerate
             // point. Place second highest global vertex at base degenerate
             // point.

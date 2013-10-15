@@ -111,7 +111,7 @@ namespace Nektar
             NekDouble m_Delta0;
             NekDouble m_X;
             NekDouble m_X0;
-            NekDouble m_dt;
+            NekDouble m_dt; 
             NekDouble m_cst1;
             NekDouble m_cst2;
             NekDouble m_cst3;

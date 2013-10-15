@@ -161,7 +161,7 @@ namespace Nektar
             
             //Veriables for averaging the flow
             bool AveragingFlow;
-            AveragingFlow = false;
+            AveragingFlow = false; 
             int StartAvrg(20000);
             int EndAvrg(170000);
             NekDouble CoeffAvrg(0.0);

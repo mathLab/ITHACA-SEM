@@ -429,7 +429,7 @@ namespace Nektar
             }
 
             // New metadata format
-            /*metadata = master->FirstChildElement("Metadata");
+            metadata = master->FirstChildElement("Metadata");
             if(metadata)
             {
                 TiXmlElement *param = metadata->FirstChildElement();
@@ -447,7 +447,7 @@ namespace Nektar
                     }
                     param = param->NextSiblingElement();
                 }
-            }*/
+            }
 
         }
         

@@ -141,7 +141,6 @@ namespace Nektar
         m_session->MatchSolverInfo("SmoothAdvection", "True",m_SmoothAdvection, false);
 
         m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(TimeIntStr);
-        //m_intSteps = m_integrationScheme->GetIntegrationSteps();
 
         if(m_subSteppingScheme)
         {
@@ -313,7 +312,7 @@ namespace Nektar
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
         
         // smoothing advection
-        if(m_SmoothAdvection) // && m_pressureCalls > 1)
+        if(m_SmoothAdvection)
         {
             for(int i = 0; i < m_nConvectiveFields; ++i)
             {

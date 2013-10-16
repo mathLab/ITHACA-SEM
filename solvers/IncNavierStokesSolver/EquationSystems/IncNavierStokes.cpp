@@ -605,6 +605,13 @@ namespace Nektar
         }
     }
 
+
+    void IncNavierStokes::AddForcing(const SolverUtils::ForcingSharedPtr& pForce)
+    {
+        m_forcing.push_back(pForce);
+    }
+
+
     /** Decide if at a steady state if the discrerte L2 sum of the
 	 * coefficients is the same as the previous step to within the
 	 * tolerance m_steadyStateTol;

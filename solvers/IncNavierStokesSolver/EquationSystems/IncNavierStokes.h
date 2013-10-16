@@ -140,6 +140,8 @@ namespace Nektar
         
         NekDouble GetCFLEstimate(int &elmtid);
 
+        void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
+
     protected:
 		
         // pointer to the extrapolation class for sub-stepping and HOPBS

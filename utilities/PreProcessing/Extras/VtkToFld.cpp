@@ -11,9 +11,12 @@
 #include <vtkCellArray.h>
 #include <vtkCellDataToPointData.h>
 #include <vtkContourFilter.h>
-// Usage: VtkToFld session.xml input.vtk output.fld
+// Usage: VtkToFld session.xml input.vtk output.fld [options]
 
 #include <boost/unordered_set.hpp>
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
 
 struct Vertex
 {
@@ -52,18 +55,65 @@ bool operator==(const VertexSharedPtr& v1, const VertexSharedPtr& v2)
 
 int main(int argc, char* argv[])
 {
+    po::options_description desc("Available options");
+    desc.add_options()
+        ("help,h",         "Produce this help message.")
+        ("name,n", po::value<string>()->default_value("Intensity"),
+                "Name of field in VTK file to use for intensity.")
+        ("outname,m", po::value<string>()->default_value("intensity"),
+                "Name of field in output FLD file.")
+        ("precision,p",  po::value<double>()->default_value(0.1),
+             "Precision of vertex matching.");
+
+    po::options_description hidden("Hidden options");
+    hidden.add_options()
+        ("input-file",   po::value<vector<string> >(), "Input filename");
+
+    po::options_description cmdline_options;
+    cmdline_options.add(desc).add(hidden);
+
+    po::positional_options_description p;
+    p.add("input-file", -1);
+
+    po::variables_map vm;
+
+    try
+    {
+        po::store(po::command_line_parser(argc, argv).
+                  options(cmdline_options).positional(p).run(), vm);
+        po::notify(vm);
+    }
+    catch (const std::exception& e)
+    {
+        cerr << e.what() << endl;
+        cerr << desc;
+        return 1;
+    }
+
+    if (vm.count("help")) {
+        cerr << "Usage: VtkToFld session.xml intensity.vtk output.fld [options]"
+             << endl;
+        cerr << desc;
+        return 1;
+    }
+
+    std::vector<std::string> vFiles = vm["input-file"].as<vector<string> >();
+    const string infile  = vFiles[1];
+    const string outfile = vFiles[2];
+    const double factor  = vm["precision"].as<double>();
+    const string name    = vm["name"].as<string>();
+    const string outname = vm["outname"].as<string>();
+
     MultiRegions::ExpList2DSharedPtr Exp;
 
     std::vector<std::string> vFilenames;
-    vFilenames.push_back(std::string(argv[1]));
+    vFilenames.push_back(vFiles[0]);
 
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(2, argv, vFilenames);
 
     try
     {
-        const double factor = atof(argv[4]);
-
         //----------------------------------------------
         // Read in mesh from input file
         SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
@@ -99,7 +149,7 @@ int main(int argc, char* argv[])
         //----------------------------------------------
 
         vtkPolyDataReader *vtkMeshReader = vtkPolyDataReader::New();
-        vtkMeshReader->SetFileName(argv[2]);
+        vtkMeshReader->SetFileName(infile.c_str());
         vtkMeshReader->Update();
         vtkPolyData *vtkMesh = vtkMeshReader->GetOutput();
         vtkCellDataToPointData* c2p = vtkCellDataToPointData::New();
@@ -122,13 +172,28 @@ int main(int argc, char* argv[])
         int coeff_idx;
         int i,j;
 
+        if (!vtkDataAtPoints->GetPointData()->HasArray(name.c_str())) {
+            int n = vtkDataAtPoints->GetPointData()->GetNumberOfArrays();
+            cerr << "Input file '" << infile
+                 << "' does not have a field named '"
+                 << name << "'" << endl;
+            cerr << "There are " << n << " arrays in this file." << endl;
+            for (int i = 0; i < n; ++i)
+            {
+                cerr << "  "
+                     << vtkDataAtPoints->GetPointData()->GetArray(i)->GetName()
+                     << endl;
+            }
+            return 1;
+        }
+
         // Build up an unordered set of vertices from the VTK file. For each
         // vertex a hashed value of the coordinates is generated to within a
         // given tolerance.
         for (i = 0; i < vtkPoints->GetNumberOfPoints(); ++i)
         {
             vtkPoints->GetPoint(i,p);
-            val = vtkDataAtPoints->GetPointData()->GetScalars("Image_Intensity")->GetTuple1(i);
+            val = vtkDataAtPoints->GetPointData()->GetScalars(name.c_str())->GetTuple1(i);
             boost::shared_ptr<Vertex> v(new Vertex(p[0],p[1],p[2],val,factor));
             points.insert(v);
         }
@@ -169,10 +234,9 @@ int main(int argc, char* argv[])
 
         //-----------------------------------------------
         // Write solution to file
-        string   out(argv[3]);
         if (vSession->GetComm()->GetSize() > 1)
         {
-            out += "." + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
+            outfile += "." + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
         }
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                     = Exp->GetFieldDefinitions();
@@ -180,10 +244,10 @@ int main(int argc, char* argv[])
 
         for(i = 0; i < FieldDef.size(); ++i)
         {
-            FieldDef[i]->m_fields.push_back("intensity");
+            FieldDef[i]->m_fields.push_back(outname);
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        LibUtilities::Write(out, FieldDef, FieldData);
+        LibUtilities::Write(outfile, FieldDef, FieldData);
         //-----------------------------------------------
     }
     catch (...) {

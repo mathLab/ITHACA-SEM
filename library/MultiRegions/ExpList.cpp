@@ -95,6 +95,7 @@ namespace Nektar
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
+            SetExpType(eNoType);
         }
 
 
@@ -121,6 +122,7 @@ namespace Nektar
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
+            SetExpType(eNoType);
         }
 
 
@@ -148,6 +150,7 @@ namespace Nektar
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
             m_WaveSpace(false)
         {
+            SetExpType(eNoType);
         }
 
 
@@ -170,6 +173,8 @@ namespace Nektar
             m_blockMat(in.m_blockMat),
             m_WaveSpace(false)
         {
+            SetExpType(eNoType);
+            
             if(DeclareCoeffPhysArrays)
             {
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
@@ -214,6 +219,21 @@ namespace Nektar
                          &((*m_exp)[eid]->UpdateCoeffs())[0],1);
         }
 
+	/**
+         * 
+         */
+        ExpansionType ExpList::GetExpType(void)
+        {
+            return m_expType;
+        }
+		
+        /**
+         * 
+         */
+        void ExpList::SetExpType(ExpansionType Type)
+        {
+            m_expType = Type;
+        }
 
         /**
          * Coefficients from each local expansion are copied into the

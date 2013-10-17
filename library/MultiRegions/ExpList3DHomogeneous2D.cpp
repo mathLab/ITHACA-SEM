@@ -45,6 +45,7 @@ namespace Nektar
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D():
             ExpListHomogeneous2D()
         {
+            SetExpType(e3DH2D);
         }
 
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -56,6 +57,7 @@ namespace Nektar
 													   const bool dealiasing):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
+            SetExpType(e3DH2D);
         }
 
         // Constructor for ExpList3DHomogeneous2D to act as a Explist1D field
@@ -69,6 +71,8 @@ namespace Nektar
                                                        const SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
+            SetExpType(e3DH2D);
+
             int n,j,nel;
             bool False = false;
             ExpList1DSharedPtr line_zero;
@@ -112,6 +116,8 @@ namespace Nektar
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In, const bool DeclareLinesSetCoeffPhys):
             ExpListHomogeneous2D(In)
         {
+            SetExpType(e3DH2D);
+
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;

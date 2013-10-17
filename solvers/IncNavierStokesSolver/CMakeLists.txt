@@ -8,6 +8,9 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ./EquationSystems/IncNavierStokes.cpp
        ./EquationSystems/VelocityCorrectionScheme.cpp
+       ./EquationSystems/Extrapolate.cpp
+       ./EquationSystems/StandardExtrapolate.cpp
+       ./EquationSystems/SubSteppingExtrapolate.cpp
        ./AdvectionTerms/AdjointAdvection.cpp
        ./AdvectionTerms/AdvectionTerm.cpp
        ./AdvectionTerms/LinearisedAdvection.cpp
@@ -29,7 +32,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(2DFlow_lineforcing_bcfromfile)
     ADD_NEKTAR_TEST(ChanFlow2D_bcsfromfiles)
     ADD_NEKTAR_TEST(ChanFlow_3DH1D_MVM)
-    ADD_NEKTAR_TEST(ChanFlow_3DH2D_MVM)
+    #ADD_NEKTAR_TEST(ChanFlow_3DH2D_MVM)
     ADD_NEKTAR_TEST(ChanFlow_LinNS_m8)
     ADD_NEKTAR_TEST(ChanFlow_m3)
     ADD_NEKTAR_TEST(ChanFlow_m3_SKS)

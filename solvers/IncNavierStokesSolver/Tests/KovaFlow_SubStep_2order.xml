@@ -13,8 +13,8 @@
             <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes" />
             <I PROPERTY="AdvectionForm"         VALUE="Convective" />
             <I PROPERTY="Projection"            VALUE="Mixed_CG_Discontinuous" />  
-            <I PROPERTY="SubSteppingScheme"     VALUE="True" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="BDFImplicitOrder2" />
+            <I PROPERTY="Extrapolation"         VALUE="SubStepping" />
         </SOLVERINFO>
 
         <PARAMETERS>

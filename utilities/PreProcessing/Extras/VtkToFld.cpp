@@ -40,7 +40,7 @@ struct Vertex
     int z;
     double scalar;
 
-    bool operator=(const Vertex& v)
+    bool operator==(const Vertex& v)
     {
         return (x == v.x && y == v.y && z == v.z);
     }
@@ -50,7 +50,7 @@ typedef boost::shared_ptr<Vertex> VertexSharedPtr;
 /// Define comparison operator for the vertex struct
 bool operator==(const VertexSharedPtr& v1, const VertexSharedPtr& v2)
 {
-    return v1->operator=(*v2);
+    return v1->operator==(*v2);
 }
 
 
@@ -88,18 +88,18 @@ int main(int argc, char* argv[])
                 "Name of field in VTK file to use for intensity.")
         ("outname,m", po::value<string>()->default_value("intensity"),
                 "Name of field in output FLD file.")
-        ("precision,p",  po::value<double>()->default_value(0.1),
+        ("precision,p",  po::value<double>()->default_value(1),
              "Precision of vertex matching.");
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
-        ("input-file",   po::value<vector<string> >(), "Input filename");
+        ("file",   po::value<vector<string> >(), "Input filename");
 
     po::options_description cmdline_options;
     cmdline_options.add(desc).add(hidden);
 
     po::positional_options_description p;
-    p.add("input-file", -1);
+    p.add("file", -1);
 
     po::variables_map vm;
 
@@ -117,20 +117,21 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    // Extract command-line argument values
-    std::vector<std::string> vFiles = vm["input-file"].as<vector<string> >();
-    const string infile  = vFiles[1];
-    const string outfile = vFiles[2];
-    const double factor  = vm["precision"].as<double>();
-    const string name    = vm["name"].as<string>();
-    const string outname = vm["outname"].as<string>();
-
-    if (vm.count("help") || vFiles.size() != 3) {
+    if ( vm.count("help") || vm.count("file") == 0 ||
+                             vm["file"].as<vector<string> >().size() != 3) {
         cerr << "Usage: VtkToFld session.xml intensity.vtk output.fld [options]"
              << endl;
         cerr << desc;
         return 1;
     }
+
+    // Extract command-line argument values
+    std::vector<std::string> vFiles = vm["file"].as<vector<string> >();
+    const string infile  = vFiles[1];
+    const string outfile = vFiles[2];
+    const double factor  = vm["precision"].as<double>();
+    const string name    = vm["name"].as<string>();
+    const string outname = vm["outname"].as<string>();
 
     std::vector<std::string> vFilenames;
     LibUtilities::SessionReaderSharedPtr vSession;
@@ -256,9 +257,8 @@ int main(int argc, char* argv[])
                 // corresponding coefficient.
                 if (vIter == points.end())
                 {
-                    cerr << "Vertex " << i << " not found."
-                            << x << ", " << y << ", " << z << endl;
-                    cerr << v->x << ", " << v->y << ", " << v->z << endl;
+                    cerr << "Vertex " << i << " not found. Looking for ("
+                            << x << ", " << y << ", " << z << ")" << endl;
                 }
                 else
                 {

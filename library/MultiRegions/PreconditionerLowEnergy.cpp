@@ -187,8 +187,8 @@ namespace Nektar
             Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs+nNonDirFaceIDs);
             n_blks[0]=nNonDirVerts;
 
-            map<int,int> edgeDirMap;
-            map<int,int> faceDirMap;
+            set<int> edgeDirMap;  
+            set<int> faceDirMap;  
             map<int,int> uniqueEdgeMap;
             map<int,int> uniqueFaceMap;
 
@@ -212,7 +212,7 @@ namespace Nektar
             for(i=0; i<extradiredges.num_elements(); ++i)
             {
                 meshEdgeId=extradiredges[i];
-                edgeDirMap[meshEdgeId] = 1;
+                edgeDirMap.insert(meshEdgeId);
             }
             
             //Determine which boundary edges and faces have dirichlet values
@@ -231,11 +231,11 @@ namespace Nektar
                             meshEdgeId = (LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D())->GetEid(k);
                             if(edgeDirMap.count(meshEdgeId) == 0)
                             {
-                                edgeDirMap[meshEdgeId] = 1;
+                                edgeDirMap.insert(meshEdgeId);
                             }
                         }
                         meshFaceId = (LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D())->GetFid();
-                        faceDirMap[meshFaceId] = 1;
+                        faceDirMap.insert(meshFaceId);
                     }
                 }
             }
@@ -275,6 +275,8 @@ namespace Nektar
                 }
             }
 
+            m_comm = expList->GetComm();
+
             // Loop over all the elements in the domain and compute max edge
             // DOF and set up unique ordering. 
 
@@ -313,7 +315,7 @@ namespace Nektar
                             }
                             else
                             {
-                                edgeDirMap[meshEdgeId] = 1;
+                                edgeDirMap.insert(meshEdgeId);
                                 SetUpNewEdge = false;
                             }
                         }
@@ -325,7 +327,7 @@ namespace Nektar
                             edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
                             
                             edgemodeoffset[edgematrixlocation]=dof*dof;
-                            
+
                             ntotaledgeentries+=dof*dof;
                             
                             n_blks[1+edgematrixlocation++]=dof;                                
@@ -334,6 +336,7 @@ namespace Nektar
                     }
                 }
             }
+
             
             for(cnt=n=0; n < n_exp; ++n)
             {
@@ -356,7 +359,7 @@ namespace Nektar
                             edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
                             
                             edgemodeoffset[edgematrixlocation]=dof*dof;
-                            
+
                             ntotaledgeentries+=dof*dof;
                             
                             n_blks[1+edgematrixlocation++]=dof;                                
@@ -402,7 +405,7 @@ namespace Nektar
                             }
                             else // set face to be a Dirichlet face
                             {
-                                faceDirMap[meshFaceId] = 1;
+                                faceDirMap.insert(meshFaceId);
                                 SetUpNewFace = false;
                             }
                         }
@@ -458,7 +461,6 @@ namespace Nektar
                 }
             }
             
-            m_comm = expList->GetComm();
             m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
             m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
 
@@ -493,23 +495,26 @@ namespace Nektar
                     
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
+                        // Determine the Global edge offset
+                        int edgeOffset = edgeglobaloffset[uniqueEdgeMap[meshEdgeId]];
+                        
+                        // Determine a universal map offset 
+                        int uniOffset = meshEdgeId;                            
+                        pIt = periodicEdges.find(meshEdgeId);
+                        if (pIt != periodicEdges.end())
+                        {
+                            for (int l = 0; l < pIt->second.size(); ++l)
+                            {
+                                uniOffset = min(uniOffset, pIt->second[l].id);
+                            }
+                        }
+                        uniOffset = uniOffset *maxEdgeDof*maxEdgeDof; 
+                        
                         for(k=0; k<nedgemodes*nedgemodes; ++k)
                         {
-                            vGlobal=edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
+                            vGlobal=edgeOffset+k;
                             localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
-                            
-                            pIt = periodicEdges.find(meshEdgeId);
-                            if (pIt != periodicEdges.end())
-                            {
-                                for (int l = 0; l < pIt->second.size(); ++l)
-                                {
-                                    meshEdgeId = min(meshEdgeId, pIt->second[l].id);
-                                }
-                            }
-                            
-                            EdgeBlockToUniversalMap[vGlobal]
-                                = meshEdgeId * maxEdgeDof * maxEdgeDof + k + 1;
-                            
+                            EdgeBlockToUniversalMap[vGlobal] = uniOffset + k + 1;
                         }
                         edgematrixoffset+=nedgemodes*nedgemodes;
                     }
@@ -526,22 +531,27 @@ namespace Nektar
                     //Check if face is has dirichlet values
                     if(faceDirMap.count(meshFaceId)==0)
                     {
+                        // Determine the Global edge offset
+                        int faceOffset = faceglobaloffset[uniqueFaceMap[meshFaceId]];
+                        
+                        // Determine a universal map offset 
+                        int uniOffset = meshFaceId;                            
+                        // use minimum face edge when periodic 
+                        pIt = periodicFaces.find(meshFaceId);
+                        if (pIt != periodicFaces.end())
+                        {
+                            uniOffset = min(uniOffset, pIt->second[0].id);
+                        }
+                        uniOffset = uniOffset * maxFaceDof * maxFaceDof; 
+                        
                         for(k=0; k<nfacemodes*nfacemodes; ++k)
                         {
-                            vGlobal=faceglobaloffset[uniqueFaceMap[meshFaceId]]+k;
+                            vGlobal=faceOffset+k;
                             
                             localFaceToGlobalMatrixMap[facematrixoffset+k]
                                 = vGlobal;
                             
-                            // use minimum face edge when periodic 
-                            pIt = periodicFaces.find(meshFaceId);
-                            if (pIt != periodicFaces.end())
-                            {
-                                meshFaceId = min(meshFaceId, pIt->second[0].id);
-                            }
-                            
-                            FaceBlockToUniversalMap[vGlobal]
-                                = meshFaceId * maxFaceDof * maxFaceDof + k + 1;
+                            FaceBlockToUniversalMap[vGlobal] = uniOffset + k + 1;
                         }
                         facematrixoffset+=nfacemodes*nfacemodes;
                     }
@@ -744,26 +754,23 @@ namespace Nektar
                 m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
             }
             
+            
             //Assemble edge matrices of each process
             Array<OneD, NekDouble> GlobalEdgeBlock(ntotaledgeentries);
             Vmath::Zero(ntotaledgeentries, GlobalEdgeBlock.get(), 1);
-            Vmath::Assmb(EdgeBlockArray.num_elements(), 
-                         EdgeBlockArray.get(), 
-                         localEdgeToGlobalMatrixMap.get(), 
-                         GlobalEdgeBlock.get());
-            
-                    
-            //Assemble face matrices of each process
-            for(i = 0; i < localFaceToGlobalMatrixMap.num_elements(); ++i)
-                ASSERTL0(localFaceToGlobalMatrixMap[i] < ntotalfaceentries,"Trouble");
-            
+            Vmath::Assmb(EdgeBlockArray.num_elements(),  
+                         EdgeBlockArray, 
+                         localEdgeToGlobalMatrixMap, 
+                         GlobalEdgeBlock);
+
             Array<OneD, NekDouble> GlobalFaceBlock(ntotalfaceentries);
             Vmath::Zero(ntotalfaceentries, GlobalFaceBlock.get(), 1);
             Vmath::Assmb(FaceBlockArray.num_elements(),
-                         FaceBlockArray.get(), 
-                         localFaceToGlobalMatrixMap.get(), 
-                         GlobalFaceBlock.get());
+                         FaceBlockArray, 
+                         localFaceToGlobalMatrixMap, 
+                         GlobalFaceBlock);
             
+
             //Exchange vertex data over different processes
             if(nNonDirVerts!=0)
             {
@@ -811,6 +818,7 @@ namespace Nektar
                         gmat->SetValue(v,m,EdgeValue);
                     }
                 }
+
                 m_BlkMat->SetBlock(1+loc,1+loc, gmat);
                 offset+=edgemodeoffset[loc];
             }

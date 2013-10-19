@@ -1186,26 +1186,26 @@ namespace Nektar
             case eUnsteadyNavierStokes:
             {
                 
-                LibUtilities::TimeIntegrationMethod intMethod;
-                std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
-                int i;
-                for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
-                {
-                    if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
-                    {
-                        intMethod = (LibUtilities::TimeIntegrationMethod)i; 
-                        break;
-                    }
-                }
-                
-                ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
-                
-                m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
+//                LibUtilities::TimeIntegrationMethod intMethod;
+//                std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
+//                int i;
+//                for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
+//                {
+//                    if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
+//                    {
+//                        intMethod = (LibUtilities::TimeIntegrationMethod)i;
+//                        break;
+//                    }
+//                }
+//
+//                ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
+//
+//                m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
                 
                 // Could defind this from IncNavierStokes class? 
-                m_integrationOps.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);
+                m_ode.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);
                 
-                m_integrationOps.DefineImplicitSolve(&CoupledLinearNS::SolveUnsteadyStokesSystem,this);
+                m_ode.DefineImplicitSolve(&CoupledLinearNS::SolveUnsteadyStokesSystem,this);
                 
                 // Set initial condition using time t=0
                 
@@ -1406,7 +1406,8 @@ namespace Nektar
         {
             case eUnsteadyStokes:
             case eUnsteadyNavierStokes:
-                AdvanceInTime(m_steps);
+                //AdvanceInTime(m_steps);
+                UnsteadySystem::v_DoSolve();
                 break;
             case eSteadyStokes:
             case eSteadyOseen:

@@ -62,6 +62,7 @@ namespace Nektar
 
     void IncNavierStokes::v_InitObject()
     {
+        UnsteadySystem::v_InitObject();
         
         int i,j;
         int numfields = m_fields.num_elements();
@@ -275,155 +276,155 @@ namespace Nektar
     /**
      * Advance in time - time-stepping loop
      */
-    void IncNavierStokes::AdvanceInTime(int nsteps)
-    {
-        int i,n;
-        int n_fields = m_fields.num_elements();
-        static int nchk = 0;
-        
-        Timer timer;
-
-        if(m_HomogeneousType == eHomogeneous1D)
-        {
-            for(i = 0; i < n_fields; ++i)
-            {
-                m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
-                m_fields[i]->SetWaveSpace(true);
-                m_fields[i]->SetPhysState(false);
-            }
-        }
+//    void IncNavierStokes::AdvanceInTime(int nsteps)
+//    {
+//        int i,n;
+//        int n_fields = m_fields.num_elements();
+//        static int nchk = 0;
+//
+//        Timer timer;
+//
+//        if(m_HomogeneousType == eHomogeneous1D)
+//        {
+//            for(i = 0; i < n_fields; ++i)
+//            {
+//                m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
+//                m_fields[i]->SetWaveSpace(true);
+//                m_fields[i]->SetPhysState(false);
+//            }
+//        }
     
         // Set up wrapper to fields data storage. 
-        Array<OneD, Array<OneD, NekDouble> >  fields(m_nConvectiveFields);
-        for(i = 0; i < m_nConvectiveFields; ++i)
-        {
-            fields[i]  = m_fields[i]->UpdatePhys();
-        }
+//        Array<OneD, Array<OneD, NekDouble> >  fields(m_nConvectiveFields);
+//        for(i = 0; i < m_nConvectiveFields; ++i)
+//        {
+//            fields[i]  = m_fields[i]->UpdatePhys();
+//        }
         
         // Initialise NS solver which is set up to use a GLM method
         // with calls to EvaluateAdvection_SetPressureBCs and
         // SolveUnsteadyStokesSystem
-        m_integrationSoln = m_integrationScheme->InitializeScheme(
-                                m_timestep, fields, m_time, m_integrationOps);
+//        m_integrationSoln = m_integrationScheme->InitializeScheme(
+//                                m_timestep, fields, m_time, m_integrationOps);
 
-        std::vector<SolverUtils::FilterSharedPtr>::iterator x;
-        for (x = m_filters.begin(); x != m_filters.end(); ++x)
-        {
-            (*x)->Initialise(m_fields, m_time);
-        }
+//        std::vector<SolverUtils::FilterSharedPtr>::iterator x;
+//        for (x = m_filters.begin(); x != m_filters.end(); ++x)
+//        {
+//            (*x)->Initialise(m_fields, m_time);
+//        }
         
         //Time advance
-        for(n = 0; n < nsteps; ++n)
-        {
+//        for(n = 0; n < nsteps; ++n)
+//        {
 
-            timer.Start();
-
-            m_extrapolation->SubStepSaveFields(n);
-            m_extrapolation->SubStepAdvance(m_integrationSoln,n,m_time);
+//            timer.Start();
+//
+//            m_extrapolation->SubStepSaveFields(n);
+//            m_extrapolation->SubStepAdvance(m_integrationSoln,n,m_time);
+//
+//            fields = m_integrationScheme->TimeIntegrate(n, m_timestep, m_integrationSoln, m_integrationOps);
             
-            fields = m_integrationScheme->TimeIntegrate(n, m_timestep, m_integrationSoln, m_integrationOps);
-            
-            m_time += m_timestep;
-            
-            timer.Stop();
+//            m_time += m_timestep;
+//
+//            timer.Stop();
 
             // Write out current time step
-            if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
-            {
-                cout << "Step: " << n+1 << "  Time: " << 
-                    m_time << " CPU-Time: " << timer.TimePerTest(1) << " s" << endl;
-            }
+//            if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
+//            {
+//                cout << "Step: " << n+1 << "  Time: " <<
+//                    m_time << " CPU-Time: " << timer.TimePerTest(1) << " s" << endl;
+//            }
 
-            if(m_cflsteps && !((n+1)%m_cflsteps))
-            {
-                int elmtid;
-                NekDouble cfl = GetCFLEstimate(elmtid);
-
-                if(m_comm->GetRank() == 0)
-                {
-                    cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
-                }
-            }
+//            if(m_cflsteps && !((n+1)%m_cflsteps))
+//            {
+//                int elmtid;
+//                NekDouble cfl = GetCFLEstimate(elmtid);
+//
+//                if(m_comm->GetRank() == 0)
+//                {
+//                    cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
+//                }
+//            }
             
             // dump data in m_fields->m_coeffs to file. 
-            if(m_checksteps &&(!((n+1)%m_checksteps)))
-            {
-                //WriteCheckpoint_Ouptput();
-                if(m_HomogeneousType == eHomogeneous1D)
-                {
-                    for(i = 0; i< n_fields; i++)
-                    {
-                        m_fields[i]->SetWaveSpace(false);
-                        m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-                        m_fields[i]->SetPhysState(true);
-                    }
-                    nchk++;
-                    Checkpoint_Output(nchk);
-                    for(i = 0; i< n_fields; i++)
-                    {
-                        m_fields[i]->SetWaveSpace(true);
-                        m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
-                        m_fields[i]->SetPhysState(false);
-                    }
-                }
-                else
-                {
-                    nchk++;
-                    Checkpoint_Output(nchk);
-                }
-            }
+//            if(m_checksteps &&(!((n+1)%m_checksteps)))
+//            {
+//                //WriteCheckpoint_Ouptput();
+//                if(m_HomogeneousType == eHomogeneous1D)
+//                {
+//                    for(i = 0; i< n_fields; i++)
+//                    {
+//                        m_fields[i]->SetWaveSpace(false);
+//                        m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+//                        m_fields[i]->SetPhysState(true);
+//                    }
+//                    nchk++;
+//                    Checkpoint_Output(nchk);
+//                    for(i = 0; i< n_fields; i++)
+//                    {
+//                        m_fields[i]->SetWaveSpace(true);
+//                        m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
+//                        m_fields[i]->SetPhysState(false);
+//                    }
+//                }
+//                else
+//                {
+//                    nchk++;
+//                    Checkpoint_Output(nchk);
+//                }
+//            }
             
             
-            if(m_steadyStateSteps && n && (!((n+1)%m_steadyStateSteps)))
-            {
-                if(CalcSteadyState() == true)
-                {
-                    cout << "Reached Steady State to tolerance " << m_steadyStateTol << endl; 
-                    break;
-                }
-            }
+//            if(m_steadyStateSteps && n && (!((n+1)%m_steadyStateSteps)))
+//            {
+//                if(CalcSteadyState() == true)
+//                {
+//                    cout << "Reached Steady State to tolerance " << m_steadyStateTol << endl;
+//                    break;
+//                }
+//            }
 
             // Transform data into coefficient space
-            if (m_filters.size() > 0)
-            {
-                for (i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_fields[i]->SetPhys(fields[i]);
-                    m_fields[i]->SetPhysState(true);
-                }
-            }
-            
-            std::vector<SolverUtils::FilterSharedPtr>::iterator x;
-            for (x = m_filters.begin(); x != m_filters.end(); ++x)
-            {
-                (*x)->Update(m_fields, m_time);
-            }
+//            if (m_filters.size() > 0)
+//            {
+//                for (i = 0; i < m_nConvectiveFields; ++i)
+//                {
+//                    m_fields[i]->SetPhys(fields[i]);
+//                    m_fields[i]->SetPhysState(true);
+//                }
+//            }
+//
+//            std::vector<SolverUtils::FilterSharedPtr>::iterator x;
+//            for (x = m_filters.begin(); x != m_filters.end(); ++x)
+//            {
+//                (*x)->Update(m_fields, m_time);
+//            }
 
-        }
+//        }
     
-        if(m_HomogeneousType == eHomogeneous1D)
-        {
-            for(i = 0 ; i< n_fields ; i++)
-            {
-                m_fields[i]->SetWaveSpace(false);
-                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-                m_fields[i]->SetPhysState(true);
-            }
-        }
-        else 
-        {
-            for(i = 0; i < m_nConvectiveFields; ++i)
-            {
-                m_fields[i]->SetPhys(fields[i]);
-                m_fields[i]->SetPhysState(true);
-            }
-        }
-            
-        for (x = m_filters.begin(); x != m_filters.end(); ++x)
-        {
-            (*x)->Finalise(m_fields, m_time);
-        }
-    }
+//        if(m_HomogeneousType == eHomogeneous1D)
+//        {
+//            for(i = 0 ; i< n_fields ; i++)
+//            {
+//                m_fields[i]->SetWaveSpace(false);
+//                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+//                m_fields[i]->SetPhysState(true);
+//            }
+//        }
+//        else
+//        {
+//            for(i = 0; i < m_nConvectiveFields; ++i)
+//            {
+//                m_fields[i]->SetPhys(fields[i]);
+//                m_fields[i]->SetPhysState(true);
+//            }
+//        }
+//
+//        for (x = m_filters.begin(); x != m_filters.end(); ++x)
+//        {
+//            (*x)->Finalise(m_fields, m_time);
+//        }
+//    }
     
 	/**
 	 *
@@ -715,6 +716,38 @@ namespace Nektar
             elmtid = elmtid%m_fields[0]->GetPlane(0)->GetExpSize();
         }
         return CFL;
+    }
+
+    bool IncNavierStokes::v_PreIntegrate(int step)
+    {
+        m_extrapolation->SubStepSaveFields(step);
+        m_extrapolation->SubStepAdvance(m_intSoln,step,m_time);
+        return false;
+    }
+
+    bool IncNavierStokes::v_PostIntegrate(int step)
+    {
+        if(m_cflsteps && !((step+1)%m_cflsteps))
+        {
+            int elmtid;
+            NekDouble cfl = GetCFLEstimate(elmtid);
+
+            if(m_comm->GetRank() == 0)
+            {
+                cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
+            }
+        }
+
+        if(m_steadyStateSteps && step && (!((step+1)%m_steadyStateSteps)))
+        {
+            if(CalcSteadyState() == true)
+            {
+                cout << "Reached Steady State to tolerance " << m_steadyStateTol << endl;
+                return true;
+            }
+        }
+
+        return false;
     }
 } //end of namespace
 

@@ -62,7 +62,7 @@ namespace Nektar
     {
         int n;
 
-        UnsteadySystem::v_InitObject();
+        //UnsteadySystem::v_InitObject();
         IncNavierStokes::v_InitObject();
         // Set m_pressure to point to last field of m_fields; 
         if(NoCaseStringCompare(m_session->GetVariable(m_fields.num_elements()-1),"p") == 0)
@@ -75,19 +75,23 @@ namespace Nektar
             ASSERTL0(false,"Need to set up pressure field definition");
         }
         
-        LibUtilities::TimeIntegrationMethod intMethod;
-        std::string TimeIntStr = m_session->GetSolverInfo("TimeIntegrationMethod");
-        int i;
-        for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
+        for (n = 0; n < m_nConvectiveFields; ++n)
         {
-            if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
-            {
-                intMethod = (LibUtilities::TimeIntegrationMethod)i; 
-                break;
-            }
+            m_intVariables.push_back(n);
         }
+//        LibUtilities::TimeIntegrationMethod intMethod;
+//        std::string TimeIntStr = m_session->GetSolverInfo("TimeIntegrationMethod");
+//        int i;
+//        for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
+//        {
+//            if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
+//            {
+//                intMethod = (LibUtilities::TimeIntegrationMethod)i;
+//                break;
+//            }
+//        }
         
-        ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
+//        ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
         
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
@@ -130,7 +134,7 @@ namespace Nektar
                     }
                 }
 
-                for(i = 0; i < m_velocity.num_elements(); ++i)
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
                 {
                     m_fields[m_velocity[i]]->SetHomo1DSpecVanVisc(SVV);
                 }
@@ -140,26 +144,26 @@ namespace Nektar
 
         m_session->MatchSolverInfo("SmoothAdvection", "True",m_SmoothAdvection, false);
 
-        m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(TimeIntStr);
+        //m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(TimeIntStr);
 
         if(m_subSteppingScheme)
         {
             ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
             
-            m_extrapolation->SubSteppingTimeIntegration(intMethod, m_integrationScheme);
+            m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
         }
         else // Standard velocity correction scheme
         {
-            m_extrapolation->SubSteppingTimeIntegration(intMethod, m_integrationScheme);
+            m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
             
             // set explicit time-intregration class operators
-            m_integrationOps.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
+            m_ode.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
         }
 	
         m_extrapolation->GenerateHOPBCMap();
         
         // set implicit time-intregration class operators
-        m_integrationOps.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
+        m_ode.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
     }
     
     /**
@@ -233,23 +237,23 @@ namespace Nektar
     /**
      * 
      */
-    void VelocityCorrectionScheme::v_DoSolve(void)
-    {
-        switch(m_equationType)
-        {
-            case eUnsteadyStokes: 
-            case eUnsteadyNavierStokes:
-            case eUnsteadyLinearisedNS:
-            {  
-                // Integrate from start time to end time
-                AdvanceInTime(m_steps);
-                break;
-            }
-            case eNoEquationType:
-            default:
-                ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
-        }
-    }
+//    void VelocityCorrectionScheme::v_DoSolve(void)
+//    {
+//        switch(m_equationType)
+//        {
+//            case eUnsteadyStokes:
+//            case eUnsteadyNavierStokes:
+//            case eUnsteadyLinearisedNS:
+//            {
+//                // Integrate from start time to end time
+//                AdvanceInTime(m_steps);
+//                break;
+//            }
+//            case eNoEquationType:
+//            default:
+//                ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
+//        }
+//    }
 
     /**
      * 

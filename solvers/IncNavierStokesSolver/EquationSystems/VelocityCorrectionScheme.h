@@ -99,7 +99,7 @@ namespace Nektar
         // Virtual functions
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
-        virtual void v_DoSolve(void);
+//        virtual void v_DoSolve(void);
 
         virtual void v_TransCoeffToPhys(void);
 

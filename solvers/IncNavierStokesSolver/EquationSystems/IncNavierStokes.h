@@ -151,7 +151,7 @@ namespace Nektar
         /// modal energy file
         std::ofstream m_mdlFile;
 
-        LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
+//        LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
 
         /// bool to identify if using a substepping scheme
         bool m_subSteppingScheme;
@@ -200,8 +200,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > m_fieldsRadiationFactor;
 
         /// Time integration classes
-        LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
-        LibUtilities::TimeIntegrationWrapperSharedPtr m_integrationScheme;
+//        LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
+//        LibUtilities::TimeIntegrationWrapperSharedPtr m_integrationScheme;
 
         /// Number of time integration steps AND Order of extrapolation for
         /// pressure boundary conditions.
@@ -215,7 +215,7 @@ namespace Nektar
             return m_equationType;
         }
 
-        void AdvanceInTime(int nsteps);
+//        void AdvanceInTime(int nsteps);
 
         void EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
 									Array<OneD, Array<OneD, NekDouble> > &outarray,
@@ -248,6 +248,9 @@ namespace Nektar
         }
 
         virtual int v_GetForceDimension()=0;
+
+        virtual bool v_PreIntegrate(int step);
+        virtual bool v_PostIntegrate(int step);
 
     private:
 

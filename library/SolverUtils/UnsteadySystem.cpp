@@ -85,9 +85,6 @@ namespace Nektar
             m_session->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
                                        m_explicitReaction, true);
 
-            // Determine TimeIntegrationMethod to use
-//            ASSERTL0(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"),
-//                     "No TIMEINTEGRATIONMETHOD defined in session.");
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
@@ -202,11 +199,13 @@ namespace Nektar
                 nvariables = m_intVariables.size();
             }
 
+            // Integrate in wave-space if using homogeneous1D
             if(m_HomogeneousType == eHomogeneous1D)
             {
                 for(i = 0; i < nfields; ++i)
                 {
-                    m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
+                    m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),
+                                                     m_fields[i]->UpdatePhys());
                     m_fields[i]->SetWaveSpace(true);
                     m_fields[i]->SetPhysState(false);
                 }
@@ -223,8 +222,10 @@ namespace Nektar
                 m_fields[m_intVariables[i]]->SetPhysState(false);
             }
             
+            // Initialise time integration scheme
             m_intSoln = m_intScheme->InitializeScheme(m_timestep, fields, m_time, m_ode);
 
+            // Initialise filters
             std::vector<FilterSharedPtr>::iterator x;
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
@@ -257,6 +258,7 @@ namespace Nektar
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
             NekDouble cpuTime       = 0.0;
+            NekDouble elapsed       = 0.0;
 
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
@@ -280,6 +282,7 @@ namespace Nektar
                     }
                 }
                 
+                // Perform any solver-specific pre-integration steps
                 if (v_PreIntegrate(step))
                 {
                     break;
@@ -289,8 +292,8 @@ namespace Nektar
                 fields = m_intScheme->TimeIntegrate(step, m_timestep, m_intSoln, m_ode);
                 timer.Stop();
 
-                const NekDouble elapsed = timer.TimePerTest(1);
                 m_time  += m_timestep;
+                elapsed  = timer.TimePerTest(1);
                 intTime += elapsed;
                 cpuTime += elapsed;
 		
@@ -315,6 +318,7 @@ namespace Nektar
                     cpuTime = 0.0;
                 }
                 
+                // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))
                 {
                     break;
@@ -330,6 +334,7 @@ namespace Nektar
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
                 
+                // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
                 {
@@ -367,18 +372,7 @@ namespace Nektar
                 ++step;
             }
             
-            // Store final solution at the end of time integration
-//            for(i = 0; i < m_intVariables.size(); ++i)
-//            {
-//                if(m_fields[m_intVariables[i]]->GetPhysState() == false)
-//                {
-//                    m_fields[m_intVariables[i]]->BwdTrans(
-//                        m_fields[m_intVariables[i]]->GetCoeffs(),
-//                        m_fields[m_intVariables[i]]->UpdatePhys());
-//                }
-//                m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
-//            }
-            
+            // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)
             {
                 if (m_cflSafetyFactor > 0.0)
@@ -389,6 +383,7 @@ namespace Nektar
                 cout << "Time-integration  : " << intTime  << "s"   << endl;
             }
             
+            // If homogeneous, transform back into physical space
             if(m_HomogeneousType == eHomogeneous1D)
             {
                 for(i = 0 ; i< nfields; i++)
@@ -407,6 +402,7 @@ namespace Nektar
                 }
             }
 
+            // Finalise filters
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
                 (*x)->Finalise(m_fields, m_time);

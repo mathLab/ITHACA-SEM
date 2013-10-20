@@ -54,7 +54,6 @@ namespace Nektar
      * \param
      */
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
-        //EquationSystem(pSession),
         UnsteadySystem(pSession),
         m_subSteppingScheme(false),
         m_SmoothAdvection(false),
@@ -84,11 +83,7 @@ namespace Nektar
                     break;
                 }
                 
-                if(j == numfields)
-                {
-                    std::string error = "Failed to find field: " + var; 
-                    ASSERTL0(false,error.c_str());
-                }
+                ASSERTL0(j != numfields, "Failed to find field: " + var);
             }
         }
         
@@ -152,32 +147,30 @@ namespace Nektar
         
         m_session->LoadParameter("Kinvis", m_kinvis);
         
-        if (m_equationType == eUnsteadyNavierStokes || m_equationType == eSteadyNavierStokes)
+        // Default advection type per solver
+        std::string vConvectiveType;
+        switch(m_equationType)
         {
-            std::string vConvectiveType = "Convective";
-            if (m_session->DefinesTag("AdvectiveType"))
-            {
-                vConvectiveType = m_session->GetTag("AdvectiveType");
-            }
-            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
+            case eUnsteadyStokes:
+                vConvectiveType = "NoAdvection";
+                break;
+            case eUnsteadyNavierStokes:
+            case eSteadyNavierStokes:
+                vConvectiveType = "Convective";
+                break;
+            case eUnsteadyLinearisedNS:
+                vConvectiveType = "Linearised";
+                break;
         }
-    
-        if (m_equationType == eUnsteadyLinearisedNS)// || m_equationType == eSteadyNavierStokes)
+
+        // Check if advection type overridden
+        if (m_session->DefinesTag("AdvectiveType") && m_equationType != eUnsteadyStokes)
         {
-            std::string vConvectiveType = "Linearised";
-            if (m_session->DefinesTag("AdvectiveType"))
-            {
-                //vConvectiveType = m_session->GetTag("Linearised");
-                vConvectiveType = m_session->GetTag("AdvectiveType");
-            }
-            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
+            vConvectiveType = m_session->GetTag("AdvectiveType");
         }
-    
-        if(m_equationType == eUnsteadyStokes)
-        {
-            std::string vConvectiveType = "NoAdvection";
-            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
-        }
+
+        // Initialise advection
+        m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         
         // Forcing terms
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
@@ -185,9 +178,9 @@ namespace Nektar
 
         // check to see if any Robin boundary conditions and if so set
         // up m_field to boundary condition maps;
-        m_fieldsBCToElmtID  = Array<OneD, Array<OneD, int> >(m_fields.num_elements());
-        m_fieldsBCToTraceID = Array<OneD, Array<OneD, int> >(m_fields.num_elements());
-        m_fieldsRadiationFactor  = Array<OneD, Array<OneD, NekDouble> > (m_fields.num_elements());
+        m_fieldsBCToElmtID  = Array<OneD, Array<OneD, int> >(numfields);
+        m_fieldsBCToTraceID = Array<OneD, Array<OneD, int> >(numfields);
+        m_fieldsRadiationFactor  = Array<OneD, Array<OneD, NekDouble> > (numfields);
         
         for (i = 0; i < m_fields.num_elements(); ++i)
         {
@@ -274,159 +267,7 @@ namespace Nektar
     IncNavierStokes::~IncNavierStokes(void)
     {
     }
-    
-    /**
-     * Advance in time - time-stepping loop
-     */
-//    void IncNavierStokes::AdvanceInTime(int nsteps)
-//    {
-//        int i,n;
-//        int n_fields = m_fields.num_elements();
-//        static int nchk = 0;
-//
-//        Timer timer;
-//
-//        if(m_HomogeneousType == eHomogeneous1D)
-//        {
-//            for(i = 0; i < n_fields; ++i)
-//            {
-//                m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
-//                m_fields[i]->SetWaveSpace(true);
-//                m_fields[i]->SetPhysState(false);
-//            }
-//        }
-    
-        // Set up wrapper to fields data storage. 
-//        Array<OneD, Array<OneD, NekDouble> >  fields(m_nConvectiveFields);
-//        for(i = 0; i < m_nConvectiveFields; ++i)
-//        {
-//            fields[i]  = m_fields[i]->UpdatePhys();
-//        }
-        
-        // Initialise NS solver which is set up to use a GLM method
-        // with calls to EvaluateAdvection_SetPressureBCs and
-        // SolveUnsteadyStokesSystem
-//        m_integrationSoln = m_integrationScheme->InitializeScheme(
-//                                m_timestep, fields, m_time, m_integrationOps);
 
-//        std::vector<SolverUtils::FilterSharedPtr>::iterator x;
-//        for (x = m_filters.begin(); x != m_filters.end(); ++x)
-//        {
-//            (*x)->Initialise(m_fields, m_time);
-//        }
-        
-        //Time advance
-//        for(n = 0; n < nsteps; ++n)
-//        {
-
-//            timer.Start();
-//
-//            m_extrapolation->SubStepSaveFields(n);
-//            m_extrapolation->SubStepAdvance(m_integrationSoln,n,m_time);
-//
-//            fields = m_integrationScheme->TimeIntegrate(n, m_timestep, m_integrationSoln, m_integrationOps);
-            
-//            m_time += m_timestep;
-//
-//            timer.Stop();
-
-            // Write out current time step
-//            if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
-//            {
-//                cout << "Step: " << n+1 << "  Time: " <<
-//                    m_time << " CPU-Time: " << timer.TimePerTest(1) << " s" << endl;
-//            }
-
-//            if(m_cflsteps && !((n+1)%m_cflsteps))
-//            {
-//                int elmtid;
-//                NekDouble cfl = GetCFLEstimate(elmtid);
-//
-//                if(m_comm->GetRank() == 0)
-//                {
-//                    cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
-//                }
-//            }
-            
-            // dump data in m_fields->m_coeffs to file. 
-//            if(m_checksteps &&(!((n+1)%m_checksteps)))
-//            {
-//                //WriteCheckpoint_Ouptput();
-//                if(m_HomogeneousType == eHomogeneous1D)
-//                {
-//                    for(i = 0; i< n_fields; i++)
-//                    {
-//                        m_fields[i]->SetWaveSpace(false);
-//                        m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-//                        m_fields[i]->SetPhysState(true);
-//                    }
-//                    nchk++;
-//                    Checkpoint_Output(nchk);
-//                    for(i = 0; i< n_fields; i++)
-//                    {
-//                        m_fields[i]->SetWaveSpace(true);
-//                        m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
-//                        m_fields[i]->SetPhysState(false);
-//                    }
-//                }
-//                else
-//                {
-//                    nchk++;
-//                    Checkpoint_Output(nchk);
-//                }
-//            }
-            
-            
-//            if(m_steadyStateSteps && n && (!((n+1)%m_steadyStateSteps)))
-//            {
-//                if(CalcSteadyState() == true)
-//                {
-//                    cout << "Reached Steady State to tolerance " << m_steadyStateTol << endl;
-//                    break;
-//                }
-//            }
-
-            // Transform data into coefficient space
-//            if (m_filters.size() > 0)
-//            {
-//                for (i = 0; i < m_nConvectiveFields; ++i)
-//                {
-//                    m_fields[i]->SetPhys(fields[i]);
-//                    m_fields[i]->SetPhysState(true);
-//                }
-//            }
-//
-//            std::vector<SolverUtils::FilterSharedPtr>::iterator x;
-//            for (x = m_filters.begin(); x != m_filters.end(); ++x)
-//            {
-//                (*x)->Update(m_fields, m_time);
-//            }
-
-//        }
-    
-//        if(m_HomogeneousType == eHomogeneous1D)
-//        {
-//            for(i = 0 ; i< n_fields ; i++)
-//            {
-//                m_fields[i]->SetWaveSpace(false);
-//                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-//                m_fields[i]->SetPhysState(true);
-//            }
-//        }
-//        else
-//        {
-//            for(i = 0; i < m_nConvectiveFields; ++i)
-//            {
-//                m_fields[i]->SetPhys(fields[i]);
-//                m_fields[i]->SetPhysState(true);
-//            }
-//        }
-//
-//        for (x = m_filters.begin(); x != m_filters.end(); ++x)
-//        {
-//            (*x)->Finalise(m_fields, m_time);
-//        }
-//    }
     
 	/**
 	 *
@@ -508,7 +349,8 @@ namespace Nektar
         // Set up Derivative work space; 
         if(wk.num_elements())
         {
-            ASSERTL0(wk.num_elements() >= nqtot*VelDim,"Workspace is not sufficient");            
+            ASSERTL0(wk.num_elements() >= nqtot*VelDim,
+                     "Workspace is not sufficient");
             Deriv = wk;
         }
         else
@@ -525,11 +367,12 @@ namespace Nektar
 	 */
     void IncNavierStokes::SetBoundaryConditions(NekDouble time)
     {
+        int i, n;
         int  nvariables = m_fields.num_elements();
         
-        for (int i = 0; i < nvariables; ++i)
+        for (i = 0; i < nvariables; ++i)
         {
-            for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
+            for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             {    
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
                    SpatialDomains::eTimeDependent)
@@ -539,7 +382,8 @@ namespace Nektar
 
             }
 
-            SetRadiationBoundaryForcing(i); // Set Radiation conditions if required. 
+            // Set Radiation conditions if required.
+            SetRadiationBoundaryForcing(i);
         }
     }
     
@@ -609,13 +453,17 @@ namespace Nektar
     }
 
 
+    /**
+     * Add an additional forcing term programmatically.
+     */
     void IncNavierStokes::AddForcing(const SolverUtils::ForcingSharedPtr& pForce)
     {
         m_forcing.push_back(pForce);
     }
 
 
-    /** Decide if at a steady state if the discrerte L2 sum of the
+    /**
+     * Decide if at a steady state if the discrerte L2 sum of the
 	 * coefficients is the same as the previous step to within the
 	 * tolerance m_steadyStateTol;
 	 */
@@ -648,7 +496,8 @@ namespace Nektar
 	 *
 	 */
     Array<OneD, NekDouble> IncNavierStokes::GetElmtCFLVals(void)
-    { 
+    {
+        int n_vel     = m_velocity.num_elements();
         int n_element = m_fields[0]->GetExpSize(); 
         
         const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
@@ -671,9 +520,9 @@ namespace Nektar
         }
         else
         {
-            velfields = Array<OneD, Array<OneD, NekDouble> >(m_velocity.num_elements());
+            velfields = Array<OneD, Array<OneD, NekDouble> >(n_vel);
 
-            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            for(int i = 0; i < n_vel; ++i)
             {
                 velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
             }        
@@ -713,13 +562,18 @@ namespace Nektar
 
         m_comm->AllReduce(elmtid,LibUtilities::ReduceMax);
         
-        if(m_HomogeneousType == eHomogeneous1D) // express element id with respect to plane
+        // express element id with respect to plane
+        if(m_HomogeneousType == eHomogeneous1D)
         {
             elmtid = elmtid%m_fields[0]->GetPlane(0)->GetExpSize();
         }
         return CFL;
     }
 
+
+    /**
+     * Perform the extrapolation.
+     */
     bool IncNavierStokes::v_PreIntegrate(int step)
     {
         m_extrapolation->SubStepSaveFields(step);
@@ -727,6 +581,10 @@ namespace Nektar
         return false;
     }
 
+
+    /**
+     * Estimate CFL and perform steady-state check
+     */
     bool IncNavierStokes::v_PostIntegrate(int step)
     {
         if(m_cflsteps && !((step+1)%m_cflsteps))
@@ -736,7 +594,8 @@ namespace Nektar
 
             if(m_comm->GetRank() == 0)
             {
-                cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
+                cout << "CFL (zero plane): "<< cfl << " (in elmt "
+                     << elmtid << ")" << endl;
             }
         }
 
@@ -744,7 +603,8 @@ namespace Nektar
         {
             if(CalcSteadyState() == true)
             {
-                cout << "Reached Steady State to tolerance " << m_steadyStateTol << endl;
+                cout << "Reached Steady State to tolerance "
+                     << m_steadyStateTol << endl;
                 return true;
             }
         }

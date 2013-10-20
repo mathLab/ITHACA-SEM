@@ -421,9 +421,9 @@ namespace Nektar
                 }		
                 
                 Array<TwoD, const NekDouble> gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom2D()->GetGmat();
+                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGmat();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() 
+                if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
@@ -482,9 +482,9 @@ namespace Nektar
                 }		
                 
                 Array<TwoD, const NekDouble> gmat =
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGmat();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom3D()->GetGtype() 
+                if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)

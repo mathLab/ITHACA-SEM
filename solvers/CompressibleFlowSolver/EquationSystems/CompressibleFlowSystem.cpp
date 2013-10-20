@@ -549,7 +549,7 @@ namespace Nektar
         // Auxiliary variables
         int e, id1, id2, npts, pnt;
         NekDouble cPlus, rPlus, cMinus, rMinus;
-        NekDouble VelNorm, VelNormRef, VDelta;
+        NekDouble VelNorm, VDelta;
         NekDouble rhob, rhoub, rhovb, rhoeb;
         NekDouble ub, vb, cb, sb, pb;
         
@@ -717,7 +717,7 @@ namespace Nektar
         // Auxiliary variables 
         int e, id1, id2, npts, pnt;
         NekDouble cPlus, rPlus, cMinus, rMinus;
-        NekDouble VelNorm, VelNormRef, VDelta;
+        NekDouble VelNorm, VDelta;
         NekDouble rhob, rhoub, rhovb, rhoeb;
         NekDouble ub, vb, cb, sb, pb;
         
@@ -2066,11 +2066,11 @@ namespace Nektar
         { 
             // Possible bug: not multiply by jacobian??
             const Array<TwoD, const NekDouble> &gmat = 
-                m_fields[0]->GetExp(el)->GetGeom()->GetGmat();
+                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors();
             
             int nq = m_fields[0]->GetExp(el)->GetTotPoints();
             
-            if(m_fields[0]->GetExp(el)->GetGeom()->GetGtype() == 
+            if(m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype() ==
                    SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi
@@ -2134,7 +2134,7 @@ namespace Nektar
                                140.6400, 159.7300, 179.8500, 201.0100,
                                223.1800, 246.3600, 270.5300, 295.6900,
                                321.8300}; //CFLDG 1D [0-20]
-        NekDouble CFL;
+        NekDouble CFL = 0.0;
 		
         if (m_projectionType == MultiRegions::eDiscontinuous)
         {

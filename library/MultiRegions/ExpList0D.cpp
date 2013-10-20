@@ -59,7 +59,7 @@ namespace Nektar
             SetExpType(e0D);
         }
 		
-        ExpList0D::ExpList0D(const SpatialDomains::VertexComponentSharedPtr &m_geom):
+        ExpList0D::ExpList0D(const SpatialDomains::PointGeomSharedPtr &m_geom):
             ExpList()
         {
             SetExpType(e0D);
@@ -93,7 +93,7 @@ namespace Nektar
             const Array<OneD, const ExpListSharedPtr> &bndConstraint,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> 
                                                       &bndCond,
-            const StdRegions::StdExpansionVector      &locexp,
+            const LocalRegions::ExpansionVector      &locexp,
             const SpatialDomains::MeshGraphSharedPtr  &graph1D,
             const map<int,int>                        &periodicVertices,
             const bool                                 DeclareCoeffPhysArrays)
@@ -105,8 +105,9 @@ namespace Nektar
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
-            SpatialDomains::VertexComponentSharedPtr PointGeom;
+            SpatialDomains::PointGeomSharedPtr PointGeom;
             LocalRegions::PointExpSharedPtr Point;
+			LocalRegions::Expansion1DSharedPtr exp;
 			
             // First loop over boundary conditions to renumber Dirichlet boundaries
             for(i = 0; i < bndCond.num_elements(); ++i)
@@ -115,11 +116,11 @@ namespace Nektar
                 {
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
-						PointGeom = bndConstraint[i]->GetVertex();
+                        PointGeom = bndConstraint[i]->GetVertex();
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
-                        
-						EdgeDone[PointGeom->GetVid()] = elmtid;
-						
+
+                        EdgeDone[PointGeom->GetVid()] = elmtid;
+
                         Point->SetElmtId(elmtid++);
                         (*m_exp).push_back(Point);
                     }
@@ -131,14 +132,14 @@ namespace Nektar
             {
                 for(j = 0; j < 2; ++j)
                 {
-                    PointGeom = (locexp[i]->GetGeom1D())->GetVertex(j);
+                    exp = LocalRegions::Expansion1D::FromStdExp(locexp[i]);
+                    PointGeom = (exp->GetGeom1D())->GetVertex(j);
 					id = PointGeom->GetVid();
 					
                     if(EdgeDone.count(id)==0)
                     {						
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
                         EdgeDone[id] = elmtid;
-						
                         //if (periodicVertices.count(id) > 0)
                         //{
 						//   EdgeDone[periodicVertices.find(id)->second] = elmtid;
@@ -240,12 +241,12 @@ namespace Nektar
             m_phys[0] = val;
         }
 		
-        const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetGeom(void) const
+        const SpatialDomains::PointGeomSharedPtr ExpList0D::v_GetGeom(void) const
         {
             return m_point->GetGeom();
         }
 		
-        const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetVertex(void) const
+        const SpatialDomains::PointGeomSharedPtr ExpList0D::v_GetVertex(void) const
         {
             return m_point->GetVertex();
         }

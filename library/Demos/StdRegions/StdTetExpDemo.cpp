@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion *ste;
+    StdRegions::StdExpansion *ste = NULL;
     
     if( regionShape == LibUtilities::eTetrahedron ) 
     {

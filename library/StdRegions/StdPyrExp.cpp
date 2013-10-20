@@ -547,6 +547,33 @@ namespace Nektar
             */
         }
 
+        void StdPyrExp::v_BwdTrans_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2)
+        {
+            ASSERTL0(false, "BwdTrans_SumFacKernel not yet implemented.");
+        }
+
+        void StdPyrExp::v_IProductWRTBase_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& base2,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray,
+                      Array<OneD, NekDouble> &wsp,
+                bool doCheckCollDir0,
+                bool doCheckCollDir1,
+                bool doCheckCollDir2)
+        {
+            ASSERTL0(false, "IProductWRTBase_SumFacKernel not yet implemented.");
+        }
 
 	/** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and

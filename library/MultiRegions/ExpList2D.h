@@ -96,7 +96,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList2D(
                       const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                       const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
-                      const StdRegions::StdExpansionVector &locexp,
+                      const LocalRegions::ExpansionVector &locexp,
                       const SpatialDomains::MeshGraphSharedPtr &graph3D,
                       const PeriodicMap &periodicFaces,
                       const bool DeclareCoeffPhysArrays = true,

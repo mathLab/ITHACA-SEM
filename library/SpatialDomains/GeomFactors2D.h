@@ -49,16 +49,14 @@ namespace Nektar
         public:
             /// One dimensional geometric factors based on one-, two- or three-
             /// dimensional coordinate description.
-            SPATIAL_DOMAINS_EXPORT GeomFactors2D(const GeomType gtype,
-                                                 const int coordim,
-                                                 const Array<OneD, const StdRegions
-                                                 ::StdExpansion2DSharedPtr> &Coords,
-                                                 const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                 &tbasis,
-                                                 const bool QuadMetrics = false,
-                                                 const bool LaplMetrics  = false,
-                                                 const bool CheckJacPositive = true);
-
+            SPATIAL_DOMAINS_EXPORT GeomFactors2D(
+                    const GeomType gtype,
+                    const int coordim,
+                    const Array<OneD, const StdRegions
+                        ::StdExpansion2DSharedPtr> &Coords,
+                    const Array<OneD, const LibUtilities::BasisSharedPtr>
+                         &tbasis);
+            
             /// Copy constructor.
             SPATIAL_DOMAINS_EXPORT GeomFactors2D(const GeomFactors2D& S);
 
@@ -67,28 +65,19 @@ namespace Nektar
 
         private:
             /// Set up 1D Jacobian.
-            void SetUpJacGmat2D(bool CheckJacPositive = true);
+            void SetUpJacGmat2D();
 
             /// Compute vectors in a principle direction.
             void ComputePrincipleDirection(
                         Array<OneD,Array<OneD,NekDouble> > &output);
+
+            void CheckIfValid();
             
             /// Set up surface normals
             virtual void v_ComputeSurfaceNormals();
             
             /// Set up the tangent vectors
             virtual void v_ComputeTangents();
-
-            /// Set up quadrature metrics for 2D expansions.
-            virtual void v_SetUpQuadratureMetrics(LibUtilities::ShapeType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
-
-            /// Set up Laplacian metrics for 2D expansions.
-            virtual void v_SetUpLaplacianMetrics(
-                LibUtilities::ShapeType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
         };
 
         /// Shared pointer to GeomFactors2D object.

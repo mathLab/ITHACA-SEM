@@ -627,6 +627,7 @@ namespace Nektar
             case 18: return "K_i";
             case 19: return "Ca_rel";
             case 20: return "Ca_up";
+            default: return "unknown";
         }
     }
 

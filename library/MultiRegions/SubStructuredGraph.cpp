@@ -664,7 +664,7 @@ namespace Nektar
         int BottomUpSubStructuredGraph::GetNpatchesWithInterior(
             const int whichlevel) const
         {
-            int returnval;
+            int returnval = -1;
             static int level = 0;
             level++;
 
@@ -721,7 +721,7 @@ namespace Nektar
         int BottomUpSubStructuredGraph::GetInteriorOffset(
             const int whichlevel, const int patch) const
         {
-            int retval;
+            int retval = -1;
             static int level = 0;
             level++;
 
@@ -772,7 +772,7 @@ namespace Nektar
         int BottomUpSubStructuredGraph::GetNumGlobalDofs(
             const int whichlevel) const
         {
-            int returnval;
+            int returnval = -1;
             static int level = 0;
             level++;
 

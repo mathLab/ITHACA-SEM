@@ -55,9 +55,9 @@ namespace Nektar
         typedef std::vector<Geometry2DSharedPtr> Geometry2DVector;
         typedef std::vector<Geometry3DSharedPtr>::iterator Geometry3DVectorIter;
 
-        class VertexComponent;
-        typedef boost::shared_ptr<VertexComponent> VertexComponentSharedPtr;
-        typedef std::vector<VertexComponentSharedPtr> VertexComponentVector;
+        class PointGeom;
+        typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;
+        typedef std::vector<PointGeomSharedPtr> PointGeomVector;
 
         class SegGeom;
         typedef boost::shared_ptr<SegGeom>    SegGeomSharedPtr;
@@ -77,7 +77,7 @@ namespace Nektar
             // Helper functions
             //---------------------------------------
             SPATIAL_DOMAINS_EXPORT int GetEid(int i) const;
-            SPATIAL_DOMAINS_EXPORT const VertexComponentSharedPtr
+            SPATIAL_DOMAINS_EXPORT const PointGeomSharedPtr
                 GetVertex(int i) const;
             SPATIAL_DOMAINS_EXPORT Geometry2DSharedPtr 
                 GetFace(int i);
@@ -89,7 +89,7 @@ namespace Nektar
                 GetDir(const int faceidx, const int facedir) const;
 
         protected:
-            VertexComponentVector                            m_verts;
+            PointGeomVector                                  m_verts;
             SegGeomVector                                    m_edges;
             Geometry2DVector                                 m_faces;
             std::vector<StdRegions::Orientation>             m_eorient;

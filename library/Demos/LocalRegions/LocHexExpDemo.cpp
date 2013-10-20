@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 
     // ////////////////////////////////////////////////////////////////
     // Set up Hexahedron vertex coordinates
-    // VertexComponent (const int coordim, const int vid, double x,
+    // PointGeom (const int coordim, const int vid, double x,
     //    double y, double z)
 
     const int nVerts = 8;
@@ -149,9 +149,9 @@ int main(int argc, char *argv[])
     };
 
     // Populate the list of verts
-    VertexComponentSharedPtr verts[8];
+    PointGeomSharedPtr verts[8];
     for( int i = 0; i < nVerts; ++i ) {
-        verts[i] = MemoryManager<VertexComponent>
+        verts[i] = MemoryManager<PointGeom>
                             ::AllocateSharedPtr(three,  i,   point[i][0],
                                                 point[i][1], point[i][2]);
     }
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
     // Populate the list of edges
     SegGeomSharedPtr edges[nEdges];
     for( int i = 0; i < nEdges; ++i ) {
-        VertexComponentSharedPtr vertsArray[2];
+        PointGeomSharedPtr vertsArray[2];
         for( int j = 0; j < 2; ++j ) {
             vertsArray[j] = verts[vertexConnectivity[i][j]];
         }

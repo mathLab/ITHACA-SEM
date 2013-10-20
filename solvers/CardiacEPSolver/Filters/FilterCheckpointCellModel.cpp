@@ -118,7 +118,7 @@ namespace Nektar
 
         // Update time in field info if required
         LibUtilities::FieldMetaDataMap fieldMetaDataMap;
-        fieldMetaDataMap["Time"] =  time;
+        fieldMetaDataMap["Time"] =  boost::lexical_cast<std::string>(time);
 
         LibUtilities::Write(vOutputFilename.str(),FieldDef,FieldData,fieldMetaDataMap);
         m_outputIndex++;

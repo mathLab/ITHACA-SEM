@@ -7,7 +7,7 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    SpatialDomains::VertexComponentSharedPtr    vPoint;
+    SpatialDomains::PointGeomSharedPtr          vPoint;
     MultiRegions::ExpListSharedPtr              vExp;
     LibUtilities::SessionReaderSharedPtr        vSession;
     std::string                                 vCellModel;
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     try
     {
         // Construct a field consisting of a single vertex
-        vPoint = MemoryManager<SpatialDomains::VertexComponent>
+        vPoint = MemoryManager<SpatialDomains::PointGeom>
                         ::AllocateSharedPtr(3, 0, 0.0, 0.0, 0.0);
         vExp = MemoryManager<MultiRegions::ExpList0D>
                         ::AllocateSharedPtr(vPoint);

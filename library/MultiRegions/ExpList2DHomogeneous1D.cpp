@@ -53,7 +53,7 @@ namespace Nektar
                                                        const NekDouble lhom,
 													   const bool useFFT,
 													   const bool dealiasing,
-                                                       const boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
+                                                       const boost::shared_ptr<LocalRegions::ExpansionVector> &exp,
                                                        const Array<OneD, ExpListSharedPtr> &planes):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
@@ -92,7 +92,7 @@ namespace Nektar
             // note that nzplanes can be larger than nzmodes
             m_planes[0] = plane_zero = MemoryManager<ExpList1D>::AllocateSharedPtr(m_session,graph1D, False);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
 
             for(j = 0; j < nel; ++j)

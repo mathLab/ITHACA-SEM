@@ -34,13 +34,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
+#include <boost/algorithm/string.hpp>
+
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 #include <LibUtilities/BasicUtils/Timer.h>
-#include <cstdio>
-#include <cstdlib>
 #include <LibUtilities/Communication/Comm.h>
 #include <SolverUtils/Filters/Filter.h>
-#include <iomanip>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 
@@ -77,7 +77,7 @@ namespace Nektar
             for(j = 0; j < numfields; ++j)
             {
                 std::string var = m_boundaryConditions->GetVariable(j);
-                if(NoCaseStringCompare(velids[i],var) == 0)
+                if(boost::iequals(velids[i], var))
                 {
                     m_velocity[i] = j;
                     break;
@@ -160,6 +160,8 @@ namespace Nektar
                 break;
             case eUnsteadyLinearisedNS:
                 vConvectiveType = "Linearised";
+                break;
+            default:
                 break;
         }
 

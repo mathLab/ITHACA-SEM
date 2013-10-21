@@ -70,18 +70,18 @@ namespace Nektar
          * @class NekFactory
          * \brief Provides a generic Factory class.
          *
-             * Implements a generic object factory. Class-types which use a
-             * potentially arbitrary number of parameters may be used with
-             * specialised forms of the NekFactory. An upper
-             * limit on the number of parameters is imposed by the MAX_PARAM
-             * preprocessor definition in the NekFactory.hpp file. The
-             * specialisations are generated at compile type using Boost
-             * preprocessor by through repeated inclusion of the NekFactory.hpp
-             * file.
-             *
-             * To allow a class to be instantiated by the factory, the
-             * following are required in each class definition (in the case of
-             * a single parameter):
+         * Implements a generic object factory. Class-types which use a
+         * potentially arbitrary number of parameters may be used with
+         * specialised forms of the NekFactory. An upper
+         * limit on the number of parameters is imposed by the MAX_PARAM
+         * preprocessor definition in the NekFactory.hpp file. The
+         * specialisations are generated at compile type using Boost
+         * preprocessor by through repeated inclusion of the NekFactory.hpp
+         * file.
+         *
+         * To allow a class to be instantiated by the factory, the
+         * following are required in each class definition (in the case of
+         * a single parameter):
          * \code
          *   static [baseclass]* create([paramtype1] &P) {
          *      return new [derivedclass](P);

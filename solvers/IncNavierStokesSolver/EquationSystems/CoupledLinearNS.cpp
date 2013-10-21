@@ -33,6 +33,8 @@
 // Navier Stokes equations
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/algorithm/string.hpp>
+
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <IncNavierStokesSolver/EquationSystems/CoupledLinearNS.h>
 #include <LibUtilities/BasicUtils/Timer.h>
@@ -71,7 +73,7 @@ namespace Nektar
         const SpatialDomains::ExpansionMap &pressure_exp = GenPressureExp(m_graph->GetExpansions("u"));
         
         m_nConvectiveFields = m_fields.num_elements();
-        if(NoCaseStringCompare(m_boundaryConditions->GetVariable(m_nConvectiveFields-1),"p") == 0)
+        if(boost::iequals(m_boundaryConditions->GetVariable(m_nConvectiveFields-1), "p"))
         {
             ASSERTL0(false,"Last field is defined as pressure but this is not suitable for this solver, please remove this field as it is implicitly defined");
         }
@@ -1191,7 +1193,7 @@ namespace Nektar
 //                int i;
 //                for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
 //                {
-//                    if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
+//                    if(boost::iequals(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr))
 //                    {
 //                        intMethod = (LibUtilities::TimeIntegrationMethod)i;
 //                        break;

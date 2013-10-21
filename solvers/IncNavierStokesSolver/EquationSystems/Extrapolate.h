@@ -48,31 +48,29 @@ namespace Nektar
 {
     struct HBCInfo
     {
-        int m_globalElmtID;  // elements ID in the global ordering
-        
-        int m_ptsInElmt;     // number of physical points of the element
-        
-        int m_physOffset;    // elmenent physical offset in the global list
-        
-        int m_bndElmtOffset; // element offset in the boundary expansion
-        
-        int m_elmtTraceID;   // trace ID on the element
-        
-        int m_bndryElmtID;   // pressure boundary condition ID
-        
-        int m_assPhysOffset; // associated elments physical offset (k and k_c
-        // are the real and the complex plane)
-        
-        int m_coeffOffset;   // coefficients offset used to locate the
-        // acceleration term in the general m_pressureHBC
+        /// Global element ID.
+        int m_globalElmtID;
+        /// Number of physical points in the element.
+        int m_ptsInElmt;
+        /// Physical offset of the element in the global list.
+        int m_physOffset;
+        /// Physical offset of the element in the boundary expansion.
+        int m_bndElmtOffset;
+        /// Trace ID of the element
+        int m_elmtTraceID;
+        /// Pressure boundary condition ID.
+        int m_bndryElmtID;
+        /// Associated element physical offset (\f$ k\f$ and \f$ k_c\f$ are the
+        /// real and complex plane).
+        int m_assPhysOffset;
+        /// Coefficient offset used to locate the acceleration term in the
+        /// general m_pressureHBC.
+        int m_coeffOffset;
     };
-	
-	
+
     // Forward declaration
     class Extrapolate;
-
     typedef boost::shared_ptr<Extrapolate> ExtrapolateSharedPtr;
-    
     typedef LibUtilities::NekFactory< std::string, Extrapolate,
         const LibUtilities::SessionReaderSharedPtr& ,
         Array<OneD, MultiRegions::ExpListSharedPtr>& ,
@@ -81,15 +79,14 @@ namespace Nektar
 
     ExtrapolateFactory& GetExtrapolateFactory();
 
-
     class Extrapolate
     {
     public:
         Extrapolate(        
-            const LibUtilities::SessionReaderSharedPtr pSession,
+            const LibUtilities::SessionReaderSharedPtr  pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-            const Array<OneD, int> pVel,
-            const AdvectionTermSharedPtr advObject);
+            const Array<OneD, int>                      pVel,
+            const AdvectionTermSharedPtr                advObject);
         
         virtual ~Extrapolate();
 		
@@ -237,13 +234,10 @@ namespace Nektar
     private:
         static std::string def;
 		
-		// Velocity correction scheme coefficient required for extrapolation.
-		
-		static NekDouble StifflyStable_Betaq_Coeffs[3][3];
-		
-		static NekDouble StifflyStable_Alpha_Coeffs[3][3];
-		
-		static NekDouble StifflyStable_Gamma0_Coeffs[3];
+        // Velocity correction scheme coefficient required for extrapolation.
+        static NekDouble StifflyStable_Betaq_Coeffs[3][3];
+        static NekDouble StifflyStable_Alpha_Coeffs[3][3];
+        static NekDouble StifflyStable_Gamma0_Coeffs[3];
     };
 
     /**

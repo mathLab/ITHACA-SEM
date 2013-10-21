@@ -88,26 +88,9 @@ namespace Nektar
             // For steady problems, we do not initialise the time integration
             if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
-                int i;
-                LibUtilities::TimeIntegrationMethod timeIntMethod;
-                for (i = 0; i < (int)LibUtilities::SIZE_TimeIntegrationMethod; ++i)
-                {
-                    bool match;
-                    m_session->MatchSolverInfo(
-                        "TIMEINTEGRATIONMETHOD",
-                        LibUtilities::TimeIntegrationMethodMap[i], match, false);
-                    if (match)
-                    {
-                        timeIntMethod = (LibUtilities::TimeIntegrationMethod) i;
-                        break;
-                    }
-                }
-                ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod,
-                         "Invalid time integration type.");
-
                 m_intScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
-                    CreateInstance(LibUtilities::TimeIntegrationMethodMap[
-                                       timeIntMethod]);
+                    CreateInstance(m_session->GetSolverInfo(
+                                       "TIMEINTEGRATIONMETHOD"));
 
                 // Load generic input parameters
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -223,7 +206,8 @@ namespace Nektar
             }
             
             // Initialise time integration scheme
-            m_intSoln = m_intScheme->InitializeScheme(m_timestep, fields, m_time, m_ode);
+            m_intSoln = m_intScheme->InitializeScheme(
+                m_timestep, fields, m_time, m_ode);
 
             // Initialise filters
             std::vector<FilterSharedPtr>::iterator x;
@@ -289,7 +273,8 @@ namespace Nektar
                 }
 
                 timer.Start();
-                fields = m_intScheme->TimeIntegrate(step, m_timestep, m_intSoln, m_ode);
+                fields = m_intScheme->TimeIntegrate(
+                    step, m_timestep, m_intSoln, m_ode);
                 timer.Stop();
 
                 m_time  += m_timestep;
@@ -350,14 +335,17 @@ namespace Nektar
                         for(i = 0; i< nfields; i++)
                         {
                             m_fields[i]->SetWaveSpace(false);
-                            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+                            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                                  m_fields[i]->UpdatePhys());
                             m_fields[i]->SetPhysState(true);
                         }
                         Checkpoint_Output(nchk++);
                         for(i = 0; i< nfields; i++)
                         {
                             m_fields[i]->SetWaveSpace(true);
-                            m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdatePhys());
+                            m_fields[i]->HomogeneousFwdTrans(
+                                    m_fields[i]->GetPhys(),
+                                    m_fields[i]->UpdatePhys());
                             m_fields[i]->SetPhysState(false);
                         }
                     }
@@ -432,19 +420,24 @@ namespace Nektar
         void UnsteadySystem::v_GenerateSummary(SummaryList& s)
         {
             EquationSystem::v_GenerateSummary(s);
-            AddSummaryItem(s, "Advection", m_explicitAdvection ? "explicit" : "implicit");
-            AddSummaryItem(s, "Diffusion", m_explicitDiffusion ? "explicit" : "implicit");
-            
+            AddSummaryItem(s, "Advection",
+                           m_explicitAdvection ? "explicit" : "implicit");
+            AddSummaryItem(s, "Diffusion",
+                           m_explicitDiffusion ? "explicit" : "implicit");
+
             if (m_session->GetSolverInfo("EQTYPE") 
-                == "SteadyAdvectionDiffusionReaction")
+                    == "SteadyAdvectionDiffusionReaction")
             {
-                AddSummaryItem(s, "Reaction", m_explicitReaction  ? "explicit" : "implicit");
+                AddSummaryItem(s, "Reaction",
+                               m_explicitReaction  ? "explicit" : "implicit");
             }
-            
-            AddSummaryItem(s, "Integration Type", LibUtilities::TimeIntegrationMethodMap[m_intScheme->GetIntegrationMethod()]);
+
             AddSummaryItem(s, "Time Step", m_timestep);
             AddSummaryItem(s, "No. of Steps", m_steps);
             AddSummaryItem(s, "Checkpoints (steps)", m_checksteps);
+            AddSummaryItem(s, "Integration Type",
+                           LibUtilities::TimeIntegrationMethodMap[
+                               m_intScheme->GetIntegrationMethod()]);
         }
         
         /**

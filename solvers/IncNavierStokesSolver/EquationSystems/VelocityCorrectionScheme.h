@@ -85,8 +85,6 @@ namespace Nektar
     protected:
 
     private:
-        /// Show timings for each step
-        bool m_showTimings;
         /// bool to identify if spectral vanishing viscosity is active.
         bool m_useHomo1DSpecVanVisc;
         /// bool to identify if spectral vanishing viscosity is active.
@@ -98,8 +96,6 @@ namespace Nektar
 
         // Virtual functions
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-
-//        virtual void v_DoSolve(void);
 
         virtual void v_TransCoeffToPhys(void);
 

@@ -33,10 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <iomanip>
-#include <SolverUtils/Filters/FilterModalEnergy.h>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <SolverUtils/Filters/FilterModalEnergy.h>
 
 namespace Nektar
 {
@@ -81,20 +81,17 @@ namespace Nektar
 
             m_session->MatchSolverInfo("Homogeneous", "1D",
                                        m_isHomogeneous1D, false);
-			m_session->MatchSolverInfo("Homogeneous", "2D",
+            m_session->MatchSolverInfo("Homogeneous", "2D",
                                        m_isHomogeneous2D, false);
-			
-			m_session->MatchSolverInfo("CalculatePerturbationEnergy", "True",
+            m_session->MatchSolverInfo("CalculatePerturbationEnergy", "True",
                                        m_PertEnergy, false);
-			
-			m_session->LoadParameter("NumQuadPointsError",
-                                     m_NumQuadPointsError, 0);
-
+            m_session->LoadParameter  ("NumQuadPointsError",
+                                       m_NumQuadPointsError, 0);
 
             if(m_isHomogeneous1D || m_isHomogeneous2D)
             {
-				m_session->LoadParameter("LZ", m_LhomZ);
-				
+                m_session->LoadParameter("LZ", m_LhomZ);
+
                 if (pParams.find("OutputPlane") == pParams.end())
                 {
                     m_outputPlane = 0;
@@ -105,9 +102,7 @@ namespace Nektar
                         atoi(pParams.find("OutputPlane")->second.c_str());
                 }
             }
-
         }
-
 
         /**
          *
@@ -117,7 +112,6 @@ namespace Nektar
 
         }
 
-
         /**
          *
          */
@@ -125,27 +119,26 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
-			LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
+            LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
-			if (vComm->GetRank() == 0)
+            if (vComm->GetRank() == 0)
             {
                 // Open output stream
-				if(m_isHomogeneous1D)
-				{
-					m_outputStream.open(m_outputFile.c_str());
-					m_outputStream << "# Time,  Fourier Mode, Energy ";
-					m_outputStream << endl;
-				}
-				else 
-				{
-					m_outputStream.open(m_outputFile.c_str());
-					m_outputStream << "# Time, Energy ";
-					m_outputStream << endl;
-					
-				}
+                if(m_isHomogeneous1D)
+                {
+                    m_outputStream.open(m_outputFile.c_str());
+                    m_outputStream << "# Time,  Fourier Mode, Energy ";
+                    m_outputStream << endl;
+                }
+                else
+                {
+                    m_outputStream.open(m_outputFile.c_str());
+                    m_outputStream << "# Time, Energy ";
+                    m_outputStream << endl;
+                }
 
             }
-			
+
             v_Update(pFields, time);
         }
 
@@ -162,80 +155,76 @@ namespace Nektar
             {
                 return;
             }
-			
-			LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
-			
-			if(m_isHomogeneous1D)
-			{
-				int colrank = vComm->GetColumnComm()->GetRank();
+            LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
+
+
+            if(m_isHomogeneous1D)
+            {
+                int colrank = vComm->GetColumnComm()->GetRank();
                 int nproc   = vComm->GetColumnComm()->GetSize();
-				m_npointsZ = (m_session->GetParameter("HomModesZ"));
+                m_npointsZ = (m_session->GetParameter("HomModesZ"));
                 int locsize = m_npointsZ/nproc/2;
 
                 Array<OneD, NekDouble> energy    (locsize,0.0);
                 Array<OneD, NekDouble> energy_tmp(locsize,0.0);
                 Array<OneD, NekDouble> tmp;
-				
-				
-				//calculate the energy of the perturbation for stability analysis 
-				if(m_PertEnergy)
-				{
-					SpatialDomains::MeshGraphSharedPtr graphShrPtr = SpatialDomains::MeshGraph::Read(m_session);					
-					SetUpBaseFields(graphShrPtr);
+
+                // Calculate the energy of the perturbation for stability
+                // analysis
+                if(m_PertEnergy)
+                {
+                    SpatialDomains::MeshGraphSharedPtr graphShrPtr = SpatialDomains::MeshGraph::Read(m_session);
+                    SetUpBaseFields(graphShrPtr);
                     string file = m_session->GetFunctionFilename("BaseFlow", 0);
                     ImportFldBase(file,graphShrPtr);
-					
-					for(int i = 0; i < pFields.num_elements()-1; ++i)
+
+                    for(int i = 0; i < pFields.num_elements()-1; ++i)
                     {
                         Vmath::Vsub(pFields[i]->GetNcoeffs(),
                                     pFields[i]->GetCoeffs(),1,
-                                    m_base[i]->GetCoeffs(),1,
+                                    m_base [i]->GetCoeffs(),1,
                                     pFields[i]->UpdateCoeffs(),1);
-						
+
                         energy_tmp = pFields[i]->HomogeneousEnergy();
                         Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
-						
+
                         Vmath::Vadd(pFields[i]->GetNcoeffs(),
                                     pFields[i]->GetCoeffs(),1,
                                     m_base[i]->GetCoeffs(),1,
                                     pFields[i]->UpdateCoeffs(),1);
                     }
-					
-					
-				}
-				else 
-				{
-					for(int i = 0; i < pFields.num_elements()-1; ++i)
-					{
-						energy_tmp =pFields[i]->HomogeneousEnergy();
+                }
+                else
+                {
+                    for(int i = 0; i < pFields.num_elements()-1; ++i)
+                    {
+                        energy_tmp =pFields[i]->HomogeneousEnergy();
+                        Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
+                    }
+                }
 
-						Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
-					}
-				}
-				
-				// Send to root process.
+                // Send to root process.
                 if (colrank == 0)
                 {
                     int j, m = 0;
-                    
+
                     for (j = 0; j < energy.num_elements(); ++j, ++m)
                     {
-						
-                        m_outputStream << setw(10) << time 
-						<< setw(5)  << m
-						<< setw(18) << energy[j] << endl;
+                        m_outputStream << setw(10) << time
+                                       << setw(5)  << m
+                                       << setw(18) << energy[j] << endl;
                     }
-                    
+
                     for (int i = 1; i < nproc; ++i)
                     {
                         vComm->GetColumnComm()->Recv(i, energy);
-						
+
                         for (j = 0; j < energy.num_elements(); ++j, ++m)
                         {
-                            m_outputStream << setw(10) << time 
-							<< setw(5)  << m
-							<< setw(18) << energy[j] << endl;
+                            m_outputStream << setw(10) << time
+                                           << setw(5)  << m
+                                           << setw(18) << energy[j] << endl;
                         }
                     }
                 }
@@ -243,37 +232,32 @@ namespace Nektar
                 {
                     vComm->GetColumnComm()->Send(0, energy);
                 }
-				
-				
-			}
-			else if(m_isHomogeneous2D)
-			{
-				ASSERTL0(false,"3D Homogeneous 2D energy dumping not implemented yet");
-
-			}
-			else
-			{
-				NekDouble energy = 0.0;
-				for(int i = 0; i < pFields.num_elements()-1; ++i)
-				{
-					pFields[i]->SetPhysState(true);
-					NekDouble norm = L2Error(pFields,i, time);
-					energy += norm*norm;
-				}
-				m_outputStream << setprecision(6) << time;
-				m_outputStream.width(25);
+            }
+            else if(m_isHomogeneous2D)
+            {
+                ASSERTL0(false,"3D Homogeneous 2D energy dumping not implemented yet");
+            }
+            else
+            {
+                NekDouble energy = 0.0;
+                for(int i = 0; i < pFields.num_elements()-1; ++i)
+                {
+                    pFields[i]->SetPhysState(true);
+                    NekDouble norm = L2Error(pFields,i, time);
+                    energy += norm*norm;
+                }
+                m_outputStream << setprecision(6) << time;
+                m_outputStream.width(25);
                 m_outputStream << setprecision(8) << 0.5*energy;
-				m_outputStream << endl;
-			}
-
+                m_outputStream << endl;
+            }
         }
-
 
         /**
          *
          */
         void FilterModalEnergy::v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
             if (pFields[0]->GetComm()->GetRank() == 0)
@@ -281,43 +265,39 @@ namespace Nektar
                 m_outputStream.close();
             }
         }
-		
 
-        NekDouble FilterModalEnergy::L2Error(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-											unsigned int field,
-											const NekDouble &time)
+        NekDouble FilterModalEnergy::L2Error(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            unsigned int field,
+            const NekDouble &time)
         {
-			NekDouble L2error = -1.0;
-			LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
+            NekDouble L2error = -1.0;
+            LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
-			
             if(m_NumQuadPointsError == 0)
             {
                 if(pFields[field]->GetPhysState() == false)
                 {
                     pFields[field]->BwdTrans(pFields[field]->GetCoeffs(),
-											 pFields[field]->UpdatePhys());
+                                             pFields[field]->UpdatePhys());
                 }
-			}
-	
-				L2error = pFields[field]->L2();
-				return L2error;
-		}
+            }
 
-		
-				
-		void FilterModalEnergy::SetUpBaseFields(
-											 SpatialDomains::MeshGraphSharedPtr &graphShrPtr)
+            L2error = pFields[field]->L2();
+            return L2error;
+        }
+
+        void FilterModalEnergy::SetUpBaseFields(
+            SpatialDomains::MeshGraphSharedPtr &graphShrPtr)
         {
-			
-			int i;
-			int m_expdim  = graphShrPtr->GetMeshDimension();
+            int i;
+            int m_expdim  = graphShrPtr->GetMeshDimension();
 
-			//definition of the projection tipe:
-			if(m_session->DefinesSolverInfo("PROJECTION"))
+            //definition of the projection tipe:
+            if(m_session->DefinesSolverInfo("PROJECTION"))
             {
                 std::string ProjectStr = m_session->GetSolverInfo("PROJECTION");
-				
+
                 if((ProjectStr == "Continuous") || (ProjectStr == "Galerkin")
                    || (ProjectStr == "CONTINUOUS") || (ProjectStr == "GALERKIN"))
                 {
@@ -326,7 +306,7 @@ namespace Nektar
                 else if((ProjectStr == "MixedCGDG")||(ProjectStr == "Mixed_CG_Discontinuous"))
                 {
                     m_projectionType = MultiRegions::eMixed_CG_Discontinuous;
-                }                        
+                }
                 else if(ProjectStr == "DisContinuous")
                 {
                     m_projectionType = MultiRegions::eDiscontinuous;
@@ -339,55 +319,53 @@ namespace Nektar
             else
             {
                 cerr << "Projection type not specified in SOLVERINFO,"
-				"defaulting to continuous Galerkin" << endl;
+                                "defaulting to continuous Galerkin" << endl;
                 m_projectionType = MultiRegions::eGalerkin;
             }
-			
-			if(m_session->DefinesSolverInfo("ModeType"))
-			{
-				m_session->MatchSolverInfo("ModeType", "SingleMode", 
-										   m_SingleMode, false);
-				m_session->MatchSolverInfo("ModeType", "HalfMode", 
-										   m_HalfMode, false);
-				m_session->MatchSolverInfo("ModeType", "MultipleModes", 
-										   m_MultipleModes, false);
-			}
-			
-			
-			m_session->MatchSolverInfo("USEFFT","FFTW",m_useFFT,false);
-            
-			m_session->MatchSolverInfo("DEALIASING","True",m_homogen_dealiasing,false);
-			if(m_homogen_dealiasing == false)
-			{
-				m_session->MatchSolverInfo("DEALIASING","On",m_homogen_dealiasing,false);
-			}
-			
-			// Stability Analysis flags
-			if(m_session->DefinesSolverInfo("ModeType"))
-			{
-				if(m_SingleMode)
-				{
-					m_npointsZ = 2;
-				}
-				else if(m_HalfMode)
-				{
-					m_npointsZ = 1;
-				}
-				else if(m_MultipleModes)
-				{
-					m_npointsZ = m_session->GetParameter("HomModesZ");
-				}
-				else
-				{
-					ASSERTL0(false, "SolverInfo ModeType not valid");
-				}
-			}
-			else 
-			{
-				m_npointsZ = m_session->GetParameter("HomModesZ");
-			}
-			
-			if (m_projectionType == MultiRegions::eGalerkin ||
+
+            if(m_session->DefinesSolverInfo("ModeType"))
+            {
+                m_session->MatchSolverInfo("ModeType", "SingleMode",
+                                           m_SingleMode, false);
+                m_session->MatchSolverInfo("ModeType", "HalfMode",
+                                           m_HalfMode, false);
+                m_session->MatchSolverInfo("ModeType", "MultipleModes",
+                                           m_MultipleModes, false);
+            }
+
+            m_session->MatchSolverInfo("USEFFT","FFTW",m_useFFT,false);
+            m_session->MatchSolverInfo("DEALIASING","True",m_homogen_dealiasing,false);
+            if(m_homogen_dealiasing == false)
+            {
+                m_session->MatchSolverInfo("DEALIASING","On",m_homogen_dealiasing,false);
+            }
+
+            // Stability Analysis flags
+            if(m_session->DefinesSolverInfo("ModeType"))
+            {
+                if(m_SingleMode)
+                {
+                    m_npointsZ = 2;
+                }
+                else if(m_HalfMode)
+                {
+                    m_npointsZ = 1;
+                }
+                else if(m_MultipleModes)
+                {
+                    m_npointsZ = m_session->GetParameter("HomModesZ");
+                }
+                else
+                {
+                    ASSERTL0(false, "SolverInfo ModeType not valid");
+                }
+            }
+            else
+            {
+                m_npointsZ = m_session->GetParameter("HomModesZ");
+            }
+
+            if (m_projectionType == MultiRegions::eGalerkin ||
                 m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
             {
                 switch (m_expdim)
@@ -397,11 +375,11 @@ namespace Nektar
                         for(i = 0; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::ContField1D>
-							::AllocateSharedPtr(m_session, graphShrPtr, 
-												m_session->GetVariable(0));
+                                ::AllocateSharedPtr(m_session, graphShrPtr,
+                                                    m_session->GetVariable(0));
                         }
                     }
-                        break;
+                    break;
                     case 2:
                     {
                         if(m_isHomogeneous1D)
@@ -409,11 +387,11 @@ namespace Nektar
                             if(m_SingleMode)
                             {
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ,
-																	LibUtilities::eFourierSingleModeSpaced);
+                                                                    LibUtilities::eFourierSingleModeSpaced);
                                 const LibUtilities::BasisKey  BkeyZ(
-																	LibUtilities::eFourier,
-																	m_npointsZ,PkeyZ);
-								
+                                    LibUtilities::eFourier,
+                                    m_npointsZ,PkeyZ);
+
                                 for(i = 0 ; i < m_base.num_elements(); i++)
                                 {
                                     m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D> ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,graphShrPtr,m_session->GetVariable(i));
@@ -424,30 +402,30 @@ namespace Nektar
                             {
                                 //1 plane field (half mode expansion)
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ,
-																	LibUtilities::eFourierSingleModeSpaced);
+                                                                    LibUtilities::eFourierSingleModeSpaced);
                                 const LibUtilities::BasisKey  BkeyZ(
-																	LibUtilities::eFourierHalfModeRe,
-																	m_npointsZ,PkeyZ);
-								
+                                    LibUtilities::eFourierHalfModeRe,
+                                    m_npointsZ,PkeyZ);
+
                                 for(i = 0 ; i < m_base.num_elements(); i++)
                                 {
                                     m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,graphShrPtr,m_session->GetVariable(i));
+                                        ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,graphShrPtr,m_session->GetVariable(i));
                                     m_base[i]->SetWaveSpace(true);
                                 }
                             }
                             else
                             {
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ,
-																	LibUtilities::eFourierEvenlySpaced);
+                                                                    LibUtilities::eFourierEvenlySpaced);
                                 const LibUtilities::BasisKey  BkeyZ(
-																	LibUtilities::eFourier,m_npointsZ,
-																	PkeyZ);
-								
+                                    LibUtilities::eFourier,m_npointsZ,
+                                    PkeyZ);
+
                                 for(i = 0 ; i < m_base.num_elements(); i++)
                                 {
                                     m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,graphShrPtr,m_session->GetVariable(i));
+                                        ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,graphShrPtr,m_session->GetVariable(i));
                                     m_base[i]->SetWaveSpace(false);
                                 }
                             }
@@ -456,35 +434,35 @@ namespace Nektar
                         {
                             i = 0;
                             MultiRegions::ContField2DSharedPtr firstbase =
-							MemoryManager<MultiRegions::ContField2D>
-							::AllocateSharedPtr(m_session,graphShrPtr,
-                                                m_session->GetVariable(i));
+                                MemoryManager<MultiRegions::ContField2D>
+                                ::AllocateSharedPtr(m_session,graphShrPtr,
+                                                    m_session->GetVariable(i));
                             m_base[0]=firstbase;
-							
+
                             for(i = 1 ; i < m_base.num_elements(); i++)
                             {
                                 m_base[i] = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(*firstbase,graphShrPtr,
-                                                    m_session->GetVariable(i));
+                                    ::AllocateSharedPtr(*firstbase,graphShrPtr,
+                                                        m_session->GetVariable(i));
                             }
                         }
                     }
-						break;
+                    break;
                     case 3:
                     {
                         MultiRegions::ContField3DSharedPtr firstbase =
-						MemoryManager<MultiRegions::ContField3D>
-						::AllocateSharedPtr(m_session, graphShrPtr,
-											m_session->GetVariable(0));
+                            MemoryManager<MultiRegions::ContField3D>
+                            ::AllocateSharedPtr(m_session, graphShrPtr,
+                                                m_session->GetVariable(0));
                         m_base[0] = firstbase;
                         for(i = 1 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::ContField3D>
-							::AllocateSharedPtr(*firstbase, graphShrPtr,
-												m_session->GetVariable(0));
+                                ::AllocateSharedPtr(*firstbase, graphShrPtr,
+                                                    m_session->GetVariable(0));
                         }
                     }
-						break;
+                    break;
                     default:
                         ASSERTL0(false,"Expansion dimension not recognised");
                         break;
@@ -496,14 +474,14 @@ namespace Nektar
                 {
                     case 1:
                     {
-                        // need to use zero for variable as may be more base 
+                        // need to use zero for variable as may be more base
                         // flows than variables
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions
-							::DisContField1D>
-							::AllocateSharedPtr(m_session, graphShrPtr,
-												m_session->GetVariable(0));
+                                                      ::DisContField1D>
+                                ::AllocateSharedPtr(m_session, graphShrPtr,
+                                                    m_session->GetVariable(0));
                         }
                         break;
                     }
@@ -512,8 +490,8 @@ namespace Nektar
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions
-							::DisContField2D>::AllocateSharedPtr(m_session,graphShrPtr,
-																 m_session->GetVariable(0));
+                                                      ::DisContField2D>::AllocateSharedPtr(m_session,graphShrPtr,
+                                                                                           m_session->GetVariable(0));
                         }
                         break;
                     }
@@ -524,21 +502,18 @@ namespace Nektar
                         break;
                 }
             }
-			
-			
-		}
+        }
 
-		
-		void FilterModalEnergy::ImportFldBase(
-										   std::string pInfile, 
-										   SpatialDomains::MeshGraphSharedPtr pGraph)
+        void FilterModalEnergy::ImportFldBase(
+            std::string pInfile,
+            SpatialDomains::MeshGraphSharedPtr pGraph)
         {
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
-			
+
             //Get Homogeneous
             LibUtilities::Import(pInfile,FieldDef,FieldData);
-			
+
             int nvar = m_session->GetVariables().size();
             if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
             {
@@ -550,21 +525,17 @@ namespace Nektar
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     bool flag = FieldDef[i]->m_fields[j] ==
-					m_session->GetVariable(j);
+                        m_session->GetVariable(j);
                     ASSERTL1(flag, (std::string("Order of ") + pInfile
                                     + std::string(" data and that defined in "
-												  "m_boundaryconditions differs")).c_str());
-					
+                                                  "m_boundaryconditions differs")).c_str());
+
                     m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                    FieldDef[i]->m_fields[j],
                                                    m_base[j]->UpdateCoeffs());
                 }
             }
         }
-		
-
-		
-			
 
         /**
          *
@@ -573,7 +544,5 @@ namespace Nektar
         {
             return true;
         }
-		
-		
     }
 }

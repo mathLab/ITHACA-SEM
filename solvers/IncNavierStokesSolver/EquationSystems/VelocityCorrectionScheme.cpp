@@ -37,6 +37,8 @@
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <SolverUtils/Core/Misc.h>
 
+#include <boost/algorithm/string.hpp>
+
 namespace Nektar
 {
     string VelocityCorrectionScheme::className = 
@@ -52,8 +54,7 @@ namespace Nektar
      */
     VelocityCorrectionScheme::VelocityCorrectionScheme(
         const LibUtilities::SessionReaderSharedPtr& pSession):
-        IncNavierStokes(pSession),
-        m_showTimings(false)
+        IncNavierStokes(pSession)
     {
         
     }
@@ -64,8 +65,8 @@ namespace Nektar
 
         IncNavierStokes::v_InitObject();
 
-        // Set m_pressure to point to last field of m_fields; 
-        if(NoCaseStringCompare(m_session->GetVariable(m_fields.num_elements()-1),"p") == 0)
+        // Set m_pressure to point to last field of m_fields;
+        if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
         {
             m_nConvectiveFields = m_fields.num_elements()-1;
             m_pressure = m_fields[m_nConvectiveFields];

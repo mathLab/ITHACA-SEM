@@ -319,8 +319,8 @@ namespace Nektar
             m_comm->AllReduce(vertlist, LibUtilities::ReduceSum);
             m_comm->AllReduce(edgelist, LibUtilities::ReduceSum);
             
-            // Now we have a list of all Dirichelt vertices and edges
-            // on all processors
+            // Now we have a list of all Dirichlet vertices and edges on all
+            // processors.
 
             int nExtraDirichlet = 0;
             map<int, int> extraDirVertIds, extraDirEdgeIds;
@@ -329,12 +329,10 @@ namespace Nektar
             // processes (e.g. Dirichlet region meets Neumann region across a
             // partition boundary requires vertex on partition to be Dirichlet).
             //
-            // To do this we look over all elements and vertices in
-            // local partition and see if they match the values stored
-            // in the vertlist from othe processors and if so record
-            // the meshVertId/meshEdgeId and the processor it comes
-            // from
-            //
+            // To do this we look over all elements and vertices in local
+            // partition and see if they match the values stored in the vertlist
+            // from othe processors and if so record the meshVertId/meshEdgeId
+            // and the processor it comes from.
             for (i = 0; i < n; ++i)
             {
                 if (i == p)
@@ -385,7 +383,7 @@ namespace Nektar
             }
 
             // Low Energy preconditioner needs to know how many extra Dirichlet
-            // edges are on this process so store map in array
+            // edges are on this process so store map in array.
             int m_extradiredges = extraDirEdgeIds.size();
             m_extraDirEdges = Array<OneD, int>(m_extradiredges, -1);
             i = 0;
@@ -396,13 +394,12 @@ namespace Nektar
                 m_extraDirEdges[i++] = meshEdgeId;
             }
 
-
-            // Now we have a list of all vertices and edges that are
-            // Dirichlet and not defined on the lcoal partition as
-            // well as which processor they are stored on
+            // Now we have a list of all vertices and edges that are Dirichlet
+            // and not defined on the local partition as well as which processor
+            // they are stored on.
             // 
-            // Make a full list of all such entities on all processors
-            // and which processor they belong to.
+            // Make a full list of all such entities on all processors and which
+            // processor they belong to.
             for (i = 0; i < n; ++i)
             {
                 vertcounts [i] = 0;
@@ -501,22 +498,22 @@ namespace Nektar
                              "SingularElement Parameter is too large");
                     
                     meshVertId = LocalRegions::Expansion2D::FromStdExp(
-                                                                       locExpVector[s_eid])->GetGeom2D()->GetVid(0);
+                        locExpVector[s_eid])->GetGeom2D()->GetVid(0);
                 }
                 else if (bndCondExp.num_elements() == 0)
                 {
                     // All boundaries are periodic.
                     meshVertId = LocalRegions::Expansion2D::FromStdExp(
-                                                                       locExpVector[0])->GetGeom2D()->GetVid(0);
+                        locExpVector[0])->GetGeom2D()->GetVid(0);
                 }
                 else
                 {
-                    //last region i and j=0 edge
+                    // Last region i and j = 0 edge
                     bndCondFaceExp = boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion2D>(
-                                               bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
+                        LocalRegions::Expansion2D>(
+                            bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
                     
-                    //first vertex 0 of the edge
+                    // First vertex 0 of the edge
                     meshVertId = bndCondFaceExp->GetGeom2D()->GetVid(0);
                 }
 
@@ -607,7 +604,9 @@ namespace Nektar
             /// -  Count verts, edges, face and add up edges and face sizes
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)])))
+                if((locExpansion = boost::dynamic_pointer_cast<
+                    LocalRegions::Expansion3D>(
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     nTotalVerts += locExpansion->GetNverts();
                     nTotalEdges += locExpansion->GetNedges();
@@ -629,7 +628,6 @@ namespace Nektar
                         meshFaceId = locExpansion->GetGeom3D()->GetFid(j);
                         FaceSize[meshFaceId] = nFaceInteriorCoeffs;
                     }
-                    
                 }
             }
 
@@ -710,7 +708,7 @@ namespace Nektar
                 if (i == pIt->second.size())
                 {
                     vertTempGraphVertId[meshVertId] = tempGraphVertId++;
-                    m_numNonDirVertexModes+=1;
+                    m_numNonDirVertexModes += 1;
                 }
                 else
                 {
@@ -719,19 +717,18 @@ namespace Nektar
                 }
             }
 
-            // Store the temporary graph vertex
-            // id's of all element edges and
+            // Store the temporary graph vertex id's of all element edges and
             // vertices in these 3 arrays below
             localVerts = Array<OneD, int>(nTotalVerts,-1);
             localEdges = Array<OneD, int>(nTotalEdges,-1);
             localFaces = Array<OneD, int>(nTotalFaces,-1);
 
-
             // Set up vertex numbering 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
-                                                                                          locExpVector[locExp.GetOffset_Elmt_Id(i)])))
+                if((locExpansion = boost::dynamic_pointer_cast<
+                    LocalRegions::Expansion3D>(
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     vertCnt = 0;
                     nVerts = locExpansion->GetNverts();
@@ -852,7 +849,7 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
-                                                                                          locExpVector[locExp.GetOffset_Elmt_Id(i)])))
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     edgeCnt = 0;
                     nEdges = locExpansion->GetNedges();
@@ -927,7 +924,7 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
-                                                                                          locExpVector[locExp.GetOffset_Elmt_Id(i)])))
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     nFaces = locExpansion->GetNfaces();
                     faceCnt = 0;
@@ -967,15 +964,15 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
-                                                                                          locExpVector[locExp.GetOffset_Elmt_Id(i)])))
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     nVerts = locExpansion->GetNverts();
                     nEdges = locExpansion->GetNedges();
                     nFaces = locExpansion->GetNfaces();
-                    // Now loop over all local faces, edges and vertices
-                    // of this element and define that all other
-                    // faces, edges and verices of this element are
-                    // adjacent to them.
+
+                    // Now loop over all local faces, edges and vertices of this
+                    // element and define that all other faces, edges and
+                    // verices of this element are adjacent to them.
 
                     // Vertices
                     for(j = 0; j < nVerts; j++)
@@ -1532,7 +1529,7 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
                     bndCondFaceExp  = boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion2D>(bndCondExp[i]->GetExp(j));
+                        LocalRegions::Expansion2D>(bndCondExp[i]->GetExp(j));
                     cnt = offset + bndCondExp[i]->GetCoeff_Offset(j);
                     for(k = 0; k < bndCondFaceExp->GetNverts(); k++)
                     {
@@ -1553,7 +1550,7 @@ namespace Nektar
                                 bndCondFaceExp->GetVertexMap(k);
                             int gid = graphVertOffset[
                                                       vertReorderedGraphVertId[meshVertId]];
-                            boost::tuple<int,int,NekDouble> t(loc,gid,1.0);
+                            ExtraDirDof t(loc, gid, 1.0);
                             m_extraDirDofs[i].push_back(t);
                             foundExtraVerts.insert(meshVertId);
                         }
@@ -1593,7 +1590,7 @@ namespace Nektar
                         }
                         
                         bndCondFaceExp->GetEdgeInteriorMap(
-                                                           k,edgeOrient,edgeInteriorMap,edgeInteriorSign);
+                            k,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
                         for(l = 0; l < nEdgeInteriorCoeffs; ++l)
                         {
@@ -1627,7 +1624,7 @@ namespace Nektar
                                     edgeInteriorMap[l];
                                 int gid = graphVertOffset[
                                     edgeReorderedGraphVertId[meshEdgeId]]+l;
-                                boost::tuple<int,int,NekDouble> t(loc,gid,1.0);
+                                ExtraDirDof t(loc, gid, 1.0);
                                 m_extraDirDofs[i].push_back(t);
                             }
                             foundExtraEdges.insert(meshEdgeId);
@@ -1678,17 +1675,17 @@ namespace Nektar
 
             SetUpUniversalC0ContMap(locExp, periodicVerts, periodicEdges, periodicFaces);
 
-            // Since we can now have multiple entries to the
-            // m_extraDirDofs due to periodic boundary conditions we
-            // make a call to work out the multiplicity of all entries
-            // and invert (Need to be after SetupUniversalC0ContMap)
+            // Since we can now have multiple entries to m_extraDirDofs due to
+            // periodic boundary conditions we make a call to work out the
+            // multiplicity of all entries and invert (Need to be after
+            // SetupUniversalC0ContMap)
             Array<OneD, NekDouble> valence(m_numGlobalBndCoeffs,0.0);
             
             // Fill in Dirichlet coefficients that are to be sent to other
             // processors with a value of 1 
-            map<int, vector<boost::tuple<int, int, NekDouble> > >::iterator Tit;
-            boost::tuple<int,int,NekDouble> t;
-            // generate valence for extraDirDofs 
+            map<int, vector<ExtraDirDof> >::iterator Tit;
+
+            // Generate valence for extraDirDofs 
             for (Tit = m_extraDirDofs.begin(); Tit != m_extraDirDofs.end(); ++Tit)
             {
                 for (i = 0; i < Tit->second.size(); ++i)

@@ -199,7 +199,7 @@ namespace Nektar
             virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
                 PeriodicMap &periodicEdges,
-                PeriodicMap &periodicFaces)// default argument for dimension compatibility
+                PeriodicMap &periodicFaces)
             {
                 periodicVerts = m_periodicVerts;
                 periodicEdges = m_periodicEdges;

@@ -422,15 +422,14 @@ namespace Nektar
           Array<OneD, NekDouble> tmp(
               m_locToGloMap->GetNumGlobalBndCoeffs(), 0.0);
 
-          // Fill in Dirichlet coefficients that are to be sent to
-          // other processors.  This code block uses a
-          // tuple<int,int.NekDouble> which stores the local id of
-          // coefficent the global id of the data location and the
-          // inverse of the values of the data (arising from
+          // Fill in Dirichlet coefficients that are to be sent to other
+          // processors.  This code block uses a tuple<int,int.NekDouble> which
+          // stores the local id of coefficent the global id of the data
+          // location and the inverse of the values of the data (arising from
           // periodic boundary conditiosn)
-          map<int, vector<boost::tuple<int, int, NekDouble> > > &extraDirDofs = 
+          map<int, vector<ExtraDirDof> > &extraDirDofs =
               m_locToGloMap->GetExtraDirDofs();
-          map<int, vector<boost::tuple<int, int, NekDouble> > >::iterator it;
+          map<int, vector<ExtraDirDof> >::iterator it;
           for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
           {
               for (i = 0; i < it->second.size(); ++i)
@@ -438,7 +437,6 @@ namespace Nektar
                   tmp[it->second.at(i).get<1>()] = 
                       m_bndCondExpansions[it->first]->GetCoeffs()[
                            it->second.at(i).get<0>()]*it->second.at(i).get<2>();
-
               }
           }
 

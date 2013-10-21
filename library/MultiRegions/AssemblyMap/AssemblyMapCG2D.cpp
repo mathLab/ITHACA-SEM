@@ -409,7 +409,7 @@ namespace Nektar
                                 bndSegExp->GetVertexMap(k);
                             int gid = graphVertOffset[
                                 ReorderedGraphVertId[0][meshVertId]];
-                            boost::tuple<int,int,NekDouble> t(loc,gid,1.0);
+                            ExtraDirDof t(loc, gid, 1.0);
                             m_extraDirDofs[i].push_back(t);
                             foundExtraVerts.insert(meshVertId);
                         }
@@ -458,18 +458,16 @@ namespace Nektar
 
             SetUpUniversalC0ContMap(locExp, periodicVertsId, periodicEdgesId);
 
-            // Since we can now have multiple entries to the
-            // m_extraDirDofs due to periodic boundary conditions we
-            // make a call to work out the multiplicity of all entries
-            // and invert
-
+            // Since we can now have multiple entries to m_extraDirDofs due to
+            // periodic boundary conditions we make a call to work out the
+            // multiplicity of all entries and invert
             Array<OneD, NekDouble> valence(m_numGlobalBndCoeffs,0.0);
             
             // Fill in Dirichlet coefficients that are to be sent to other
             // processors with a value of 1 
-            map<int, vector<boost::tuple<int, int, NekDouble> > >::iterator Tit;
-            boost::tuple<int,int,NekDouble> t;
-            // generate valence for extraDirDofs 
+            map<int, vector<ExtraDirDof> >::iterator Tit;
+
+            // Generate valence for extraDirDofs 
             for (Tit = m_extraDirDofs.begin(); Tit != m_extraDirDofs.end(); ++Tit)
             {
                 for (i = 0; i < Tit->second.size(); ++i)
@@ -488,7 +486,6 @@ namespace Nektar
                     get<2>(Tit->second.at(i)) = 1.0/valence[Tit->second.at(i).get<1>()];
                 }
             }
-
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation

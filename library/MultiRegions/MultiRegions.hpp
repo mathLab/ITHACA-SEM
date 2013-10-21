@@ -38,7 +38,6 @@
 
 #include <vector>
 #include <SpatialDomains/Conditions.h>
-#include "boost/tuple/tuple.hpp"
 
 namespace Nektar
 {

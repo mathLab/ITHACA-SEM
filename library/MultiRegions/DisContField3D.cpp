@@ -697,7 +697,6 @@ namespace Nektar
             int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
-
             // Set up a set of all local verts and edges. 
             for(i = 0; i < (*m_exp).size(); ++i)
             {

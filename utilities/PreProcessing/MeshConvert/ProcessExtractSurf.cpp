@@ -90,6 +90,25 @@ namespace Nektar
             m->edgeSet.clear();
             m->faceSet.clear();
 
+            // Clear all edge -> element links.
+            for (i = 0; i < el.size(); ++i)
+            {
+                vector<EdgeSharedPtr> edges = el[i]->GetEdgeList();
+                for (j = 0; j < edges.size(); ++j)
+                {
+                    edges[j]->elLink.clear();
+                }
+
+                FaceSharedPtr f = el[i]->GetFaceLink();
+                if (f)
+                {
+                    for (j = 0; j < f->edgeList.size(); ++j)
+                    {
+                        f->edgeList[j]->elLink.clear();
+                    }
+                }
+            }
+
             // keptIds stores IDs of elements we processed earlier.
             boost::unordered_set<int> keptIds;
 
@@ -137,6 +156,8 @@ namespace Nektar
                     {
                         m->edgeSet.insert(f->edgeList[j]);
                         elmt->SetEdge(j, f->edgeList[j]);
+                        f->edgeList[j]->elLink.push_back(
+                            std::make_pair(elmt, j));
                     }
                     elmt->SetId(f->id);
                 }

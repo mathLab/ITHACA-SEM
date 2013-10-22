@@ -63,88 +63,114 @@ namespace Nektar
         
         void ProcessExtractSurf::Process()
         {
-            if (m->verbose)
-            {
-                cout << "ProcessExtractSurf: Calculating Jacobians..." << endl;
-            }
-
-            int i, j, k;
+            int i, j;
             string surf = config["surf"].as<string>();
 
+            // Obtain vector of surface IDs from string.
             vector<unsigned int> surfs;
             ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
             sort(surfs.begin(), surfs.end());
 
+            // If we're running in verbose mode print out a list of surfaces.
+            if (m->verbose)
+            {
+                cout << "ProcessExtractSurf: extracting surface"
+                     << (surfs.size() > 1 ? "s" : "") << " " << surf << endl;
+            }
+
+            // Make a copy of all existing elements of one dimension lower.
             vector<ElementSharedPtr> el = m->element[m->expDim-1];
 
-            // Clear list of 3D elements
+            // Clear all elements.
             m->element[m->expDim]  .clear();
             m->element[m->expDim-1].clear();
 
-            // Clear vertices, edges and faces.
+            // Clear existing vertices, edges and faces.
             m->vertexSet.clear();
             m->edgeSet.clear();
             m->faceSet.clear();
 
+            // keptIds stores IDs of elements we processed earlier.
             boost::unordered_set<int> keptIds;
 
-            // Iterate over list of elements of expansion dimension.
+            // Iterate over list of surface elements.
             for (i = 0; i < el.size(); ++i)
             {
-                vector<int> inter;
-                vector<int> tags = el[i]->GetTagList();
+                // Work out whether this lies on our surface of interest.
+                vector<int> inter, tags = el[i]->GetTagList();
 
                 sort(tags.begin(), tags.end());
                 set_intersection(surfs.begin(), surfs.end(),
                                  tags .begin(), tags .end(),
                                  back_inserter(inter));
                 
+                // It doesn't continue to next element.
                 if (inter.size() != 1)
                 {
                     continue;
                 }
 
+                // Get list of element vertices and edges.
                 ElementSharedPtr      elmt  = el[i];
                 vector<NodeSharedPtr> verts = elmt->GetVertexList();
                 vector<EdgeSharedPtr> edges = elmt->GetEdgeList();
 
+                // Insert surface vertices.
                 for (j = 0; j < verts.size(); ++j)
                 {
                     m->vertexSet.insert(verts[j]);
                 }
 
+                // Problem: edges and element IDs aren't enumerated with
+                // geometry IDs by some input modules/the Module ProcessEdges
+                // function. Get around this by replacing everything in the
+                // edge/face with information from edge/face link.
+                EdgeSharedPtr e = elmt->GetEdgeLink();
                 FaceSharedPtr f = elmt->GetFaceLink();
-                for (j = 0; j < edges.size(); ++j)
+                if (e)
                 {
-                    for (k = 0; k < edges.size(); ++k)
+                    elmt->SetId(e->id);
+                }
+                else if (f)
+                {
+                    for (j = 0; j < edges.size(); ++j)
                     {
-                        if (f->edgeList[k] == edges[j])
-                        {
-                            break;
-                        }
+                        m->edgeSet.insert(f->edgeList[j]);
+                        elmt->SetEdge(j, f->edgeList[j]);
                     }
-
-                    ASSERTL0(k < edges.size(), "Unable to identify face edges");
-                    edges[j]->id = f->edgeList[k]->id;
                     elmt->SetId(f->id);
-                    m->edgeSet.insert(edges[j]);
+                }
+                else
+                {
+                    for (j = 0; j < edges.size(); ++j)
+                    {
+                        m->edgeSet.insert(edges[j]);
+                    }
                 }
 
+                // Nullify edge/face links to get correct tag
                 elmt->SetFaceLink(FaceSharedPtr());
                 elmt->SetEdgeLink(EdgeSharedPtr());
                 keptIds.insert(elmt->GetId());
 
+                // Push element back into the list.
                 m->element[m->expDim-1].push_back(elmt);
             }
 
+            // Decrement the expansion dimension to get manifold embedding.
             m->expDim--;
 
+            // Now process composites. This is necessary because 2D surfaces may
+            // contain both quadrilaterals and triangles and so need to be split
+            // up.
             CompositeMap tmp = m->composite;
             CompositeMap::iterator it;
             
             m->composite.clear();
             int maxId = -1;
 
+            // Loop over composites for first time to determine any composites
+            // which don't have elements of the correct dimension.
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
                 if (it->second->items[0]->GetDim() != m->expDim)
@@ -169,33 +195,41 @@ namespace Nektar
                 }
 
                 m->composite.insert(*it);
-                maxId = std::max(maxId, (int)it->second->id);
+
+                // Figure out the maximum ID so if we need to create new
+                // composites we can give them a unique ID.
+                maxId = std::max(maxId, (int)it->second->id) + 1;
             }
 
             tmp = m->composite;
             m->composite.clear();
             map<string, CompositeSharedPtr>::iterator it2;
 
+            // Now do another loop over the composites to remove composites
+            // which don't contain any elements in the new mesh.
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
-                vector<ElementSharedPtr> el = it->second->items;
+                CompositeSharedPtr c = it->second;
+                vector<ElementSharedPtr> el = c->items;
 
+                // Remove all but the first element from this composite.
                 string initialTag = el[0]->GetTag();
-                it->second->items.resize(1);
-                it->second->tag = initialTag;
+                c->items.resize(1);
+                c->tag = initialTag;
 
+                // newComps stores the new composites. The key is the composite
+                // type (e.g. Q for quad) and value is the composite.
                 map<string, CompositeSharedPtr> newComps;
-                newComps[initialTag] = it->second;
+                newComps[initialTag] = c;
 
+                // Loop over remaining elements in composite and figure out
+                // whether it needs to be split up.
                 for (i = 1; i < el.size(); ++i)
                 {
+                    // See if tag exists. If it does, we append this to the
+                    // composite, otherwise we create a new composite and store
+                    // it in newComps.
                     string tag = el[i]->GetTag();
-                    if (tag == initialTag)
-                    {
-                        it->second->items.push_back(el[i]);
-                        continue;
-                    }
-
                     it2 = newComps.find(tag);
                     if (it2 == newComps.end())
                     {
@@ -203,6 +237,7 @@ namespace Nektar
                         newComp->id  = maxId++;
                         newComp->tag = tag;
                         newComp->items.push_back(el[i]);
+                        newComps[tag] = newComp;
                     }
                     else
                     {
@@ -210,9 +245,27 @@ namespace Nektar
                     }
                 }
 
-                for (it2 = newComps.begin(); it2 != newComps.end(); ++it2)
+                // Print out mapping information if we remapped composite IDs.
+                if (m->verbose && newComps.size() > 1)
                 {
+                    cout << "- Mapping composite " << it->first << " ->";
+                }
+
+                // Insert new composites.
+                for (i = 0, it2 = newComps.begin(); it2 != newComps.end();
+                     ++it2, ++i)
+                {
+                    if (m->verbose && newComps.size() > 1)
+                    {
+                        cout << (i > 0 ? ", " : " ") << it2->second->id << "("
+                             << it2->second->tag << ")";
+                    }
                     m->composite[it2->second->id] = it2->second;
+                }
+
+                if (m->verbose && newComps.size() > 1)
+                {
+                    cout << endl;
                 }
             }
         }

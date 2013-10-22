@@ -751,6 +751,9 @@ namespace Nektar
             void SetEdgeLink(EdgeSharedPtr pLink) {
                 m_edgeLink = pLink;
             }
+            EdgeSharedPtr GetEdgeLink() {
+                return m_edgeLink;
+            }
             FaceSharedPtr GetFaceLink() {
                 return m_faceLink;
             }

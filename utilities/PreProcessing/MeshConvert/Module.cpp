@@ -150,10 +150,10 @@ namespace Nektar
         {
             if (m->expDim < 2) return;
 
-            vector<ElementSharedPtr> &elmt = m->element[m->expDim];
-
             m->edgeSet.clear();
             
+            vector<ElementSharedPtr> &elmt = m->element[m->expDim];
+
             // Scan all elements and generate list of unique edges
             for (int i = 0, eid = 0; i < elmt.size(); ++i)
             {
@@ -191,7 +191,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // Create links for 1D elements
             for (int i = 0; i < m->element[1].size(); ++i)
             {
@@ -283,7 +283,7 @@ namespace Nektar
                     abort();
                 }
                 m->element[2][i]->SetFaceLink(*it);
-                
+
                 // Update 3D element boundary map.
                 ASSERTL0((*it)->elLink.size() != 0,
                          "Empty boundary map!");

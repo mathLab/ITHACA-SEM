@@ -66,6 +66,8 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > d1,
                 const Array<OneD, Array<OneD, NekDouble> > d2,
                 const Array<OneD, Array<OneD, NekDouble> > d3);
+
+            void CheckIfValid();
         };
 
         /// Shared pointer to GeomFactors3D object.

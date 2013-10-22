@@ -87,7 +87,7 @@ namespace Nektar
      const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-    virtual void v_PrintSummary(std::ostream &out);
+    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
     
     virtual void v_PrimitiveToConservative( );
     

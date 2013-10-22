@@ -68,6 +68,7 @@ namespace Nektar
         ExpList2D::ExpList2D():
             ExpList()
         {
+            SetExpType(e2D);
         }
 
 
@@ -85,6 +86,7 @@ namespace Nektar
         ExpList2D::ExpList2D(const ExpList2D &In, const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
+            SetExpType(e2D);
         }
 
 
@@ -106,6 +108,8 @@ namespace Nektar
                 const std::string &var):
             ExpList(pSession,graph2D)
         {
+            SetExpType(e2D);
+
             int elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -222,6 +226,8 @@ namespace Nektar
                              const bool DeclareCoeffPhysArrays):
             ExpList(pSession)
         {
+            SetExpType(e2D);
+
             int elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -349,6 +355,8 @@ namespace Nektar
                                const LibUtilities::PointsType TriNb):
               ExpList(pSession,graph2D)
           {
+              SetExpType(e2D);
+
               int elmtid=0;
               LocalRegions::TriExpSharedPtr tri;
               LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -440,6 +448,8 @@ namespace Nektar
             const std::string variable):
             ExpList()
         {
+            SetExpType(e2D);
+
             int i, j, id, elmtid=0;
             map<int,int> FaceDone;
             map<int,int> NormalSet;
@@ -624,6 +634,9 @@ namespace Nektar
                                  const std::string variable):
              ExpList(pSession,graph3D)
          {
+
+             SetExpType(e2D);
+
              ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D),
                      "Expected a MeshGraph3D object.");
 

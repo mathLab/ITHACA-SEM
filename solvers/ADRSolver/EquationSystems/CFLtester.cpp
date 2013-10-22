@@ -219,9 +219,9 @@ namespace Nektar
 
     
     
-    void CFLtester::v_PrintSummary(std::ostream &out)
+    void CFLtester::v_GenerateSummary(SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
     }
 	
     

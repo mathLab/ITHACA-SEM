@@ -68,7 +68,7 @@ namespace Nektar
                 const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
         virtual void v_DoInitialise();
         virtual void v_DoSolve();
     };

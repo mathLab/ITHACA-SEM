@@ -138,9 +138,6 @@ namespace Nektar
 
         NekDouble GetSubstepTimeStep();
 
-        Array<OneD,NekDouble> GetMaxStdVelocity(
-            const Array<OneD, Array<OneD,NekDouble> > inarray);
-
         LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 

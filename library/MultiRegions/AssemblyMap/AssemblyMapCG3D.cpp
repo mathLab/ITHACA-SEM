@@ -1701,7 +1701,7 @@ namespace Nektar
             {
                 for (i = 0; i < Tit->second.size(); ++i)
                 {
-                    get<2>(Tit->second.at(i)) = 1.0/valence[Tit->second.at(i).get<1>()];
+                    boost::get<2>(Tit->second.at(i)) = 1.0/valence[Tit->second.at(i).get<1>()];
                 }
             }
 

@@ -529,7 +529,8 @@ namespace Nektar
                 velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
             }        
         }
-        //stdVelocity = m_extrapolation->GetMaxStdVelocity(velfields);
+
+        stdVelocity = m_extrapolation->GetMaxStdVelocity(velfields);
         
         for(int el = 0; el < n_element; ++el)
         {

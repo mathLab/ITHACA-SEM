@@ -119,6 +119,9 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
+
+        Array<OneD,NekDouble> GetMaxStdVelocity(
+            const Array<OneD, Array<OneD,NekDouble> > inarray);
         
     protected:
         virtual void v_SubSteppingTimeIntegration(

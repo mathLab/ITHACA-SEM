@@ -8,6 +8,9 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ./EquationSystems/IncNavierStokes.cpp
        ./EquationSystems/VelocityCorrectionScheme.cpp
+       ./EquationSystems/Extrapolate.cpp
+       ./EquationSystems/StandardExtrapolate.cpp
+       ./EquationSystems/SubSteppingExtrapolate.cpp
        ./AdvectionTerms/AdjointAdvection.cpp
        ./AdvectionTerms/AdvectionTerm.cpp
        ./AdvectionTerms/LinearisedAdvection.cpp
@@ -30,7 +33,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(2DFlow_lineforcing_bcfromfile)
     ADD_NEKTAR_TEST(ChanFlow2D_bcsfromfiles)
     ADD_NEKTAR_TEST_LENGTHY(ChanFlow_3DH1D_MVM)
-    ADD_NEKTAR_TEST_LENGTHY(ChanFlow_3DH2D_MVM)
+    #ADD_NEKTAR_TEST_LENGTHY(ChanFlow_3DH2D_MVM)
     ADD_NEKTAR_TEST(ChanFlow_LinNS_m8)
     ADD_NEKTAR_TEST(ChanFlow_m3)
     ADD_NEKTAR_TEST(ChanFlow_m3_SKS)
@@ -65,6 +68,9 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST_LENGTHY(Tet_equitri)
     ADD_NEKTAR_TEST_LENGTHY(Prism_channel_m6)
     ADD_NEKTAR_TEST_LENGTHY(Prism_channel_m6_dealiasing)
+    ADD_NEKTAR_TEST(ChannelSpongeNSE)
+    ADD_NEKTAR_TEST(ChannelSpongeLNSE)
+    ADD_NEKTAR_TEST(ChanFlow_Standard_BodyForce)
 
     #IF (NEKTAR_USING_ARPACK)
         #ADD_NEKTAR_TEST(ChanStability_adj_Ar) ###

@@ -411,9 +411,9 @@ namespace Nektar
     /**
     *
     */
-    void Fox02::v_PrintSummary(std::ostream &out)
+    void Fox02::v_GenerateSummary(SummaryList& s)
     {
-        out << "	Cell model      : Fox02" << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model", "Fox02");
     }
 
 

@@ -49,6 +49,9 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
+#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/Diffusion/Diffusion.h>
+
 #include <string>
 
 
@@ -540,95 +543,6 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
-            if (m_session->DefinesFunction("BodyForce"))
-            {
-                m_forces    = Array<OneD, MultiRegions::ExpListSharedPtr>(v_GetForceDimension());
-                int nq      = m_fields[0]->GetNpoints();
-                
-                switch(m_expdim)
-                {
-                case 1:
-                    if(m_HomogeneousType == eHomogeneous2D
-                       || m_HomogeneousType == eHomogeneous3D)
-                    {
-                        bool DeclarePlaneSetCoeffsPhys = true;
-                        for(int i = 0; i < m_forces.num_elements(); i++)
-                        {
-                            m_forces[i] = MemoryManager<MultiRegions
-                                ::ExpList3DHomogeneous2D>
-                                ::AllocateSharedPtr(*boost
-                                                    ::static_pointer_cast<MultiRegions
-                                                    ::ExpList3DHomogeneous2D>(m_fields[i]),
-                                                    DeclarePlaneSetCoeffsPhys);
-                        }
-                    }
-                    else 
-                    {
-                        m_forces[0] = MemoryManager<MultiRegions
-                            ::DisContField1D>::AllocateSharedPtr
-                            (*boost::static_pointer_cast<MultiRegions
-                             ::DisContField1D>(m_fields[0]));
-                            
-                        Vmath::Zero(nq, (m_forces[0]->UpdatePhys()), 1);
-                    }
-                    break;
-                case 2:
-                    if(m_HomogeneousType == eHomogeneous1D)
-                    {
-                        bool DeclarePlaneSetCoeffsPhys = true;
-                        for(int i = 0; i < m_forces.num_elements(); i++)
-                        {
-                            m_forces[i]= MemoryManager<MultiRegions::
-                                ExpList3DHomogeneous1D>::AllocateSharedPtr(*boost
-                                                                           ::static_pointer_cast<MultiRegions
-                                                                           ::ExpList3DHomogeneous1D>(m_fields[i]),
-                                                                           DeclarePlaneSetCoeffsPhys);
-                        }
-                    }
-                    else
-                    {
-                        for(int i = 0; i < m_forces.num_elements(); i++)
-                        {
-                            m_forces[i] = MemoryManager<MultiRegions
-                                ::ExpList2D>::AllocateSharedPtr
-                                (*boost::static_pointer_cast<MultiRegions
-                                 ::ExpList2D>(m_fields[i]));
-                                
-                            Vmath::Zero(nq,(m_forces[i]->UpdatePhys()),1);
-                        }
-                    }
-                    break;
-                case 3:
-                    for (int i = 0; i < m_forces.num_elements(); i++)
-                    {
-                        m_forces[i] = MemoryManager<MultiRegions::ExpList3D>
-                            ::AllocateSharedPtr(*boost::static_pointer_cast<
-                                                MultiRegions::ExpList3D>(m_fields[i]));
-                        Vmath::Zero(nq, m_forces[i]->UpdatePhys(), 1);
-                    }
-                    break;
-                }
-               
-                // Check for file
-                std::vector<std::string> fieldStr;
-                for(int i = 0; i < v_GetForceDimension(); ++i)
-                {
-                    fieldStr.push_back(m_session->GetVariable(i));
-                }
-                EvaluateFunction(fieldStr, m_forces, "BodyForce");
-			
-                if(m_SingleMode || m_HalfMode)
-                {
-                    for(int i=0; i< v_GetForceDimension(); ++i)
-                    {					
-                        // Bring the forcing to be in SEM & Fourier coefficient 
-                        // space (full transformation)
-                        m_forces[i]->FwdTrans(m_forces[i]->GetPhys(),
-                                              m_forces[i]->UpdateCoeffs());
-                    }
-                }
-            }
-
             // If a tangent vector policy is defined then the local tangent
             // vectors on each element need to be generated
             if (m_session->DefinesGeometricInfo("TANGENTDIR"))
@@ -638,7 +552,6 @@ namespace Nektar
 
             // Zero all physical fields initially
             ZeroPhysFields();
-			
         }
 
         /**
@@ -1309,12 +1222,10 @@ namespace Nektar
         }
 
 
-        /**
-         * By default, there are no further parameters to display.
-         */
-        void EquationSystem::v_PrintSummary(std::ostream &out)
+        /// Virtual function for generating summary information.
+        void EquationSystem::v_GenerateSummary(SummaryList& l)
         {
-
+            SessionSummary(l);
         }
 
         /**
@@ -2070,245 +1981,73 @@ namespace Nektar
         }
 
         /**
-         * Write out a summary of the session and timestepping to the given 
-         * output stream.
-         * @param   out         Output stream to write data to.
-         */
-        void EquationSystem::Summary(std::ostream &out)
-        {
-            if (m_session->GetComm()->GetRank() == 0)
-            {
-                SessionSummary(out);
-                TimeParamSummary(out);
-            }
-        }
-
-        /**
          * Write out a summary of the session data.
          * @param   out         Output stream to write data to.
          */
-        void EquationSystem::SessionSummary(std::ostream &out)
+        void EquationSystem::SessionSummary(SummaryList& s)
         {
-
+            AddSummaryItem(s, "EquationType", m_session->GetSolverInfo("EQTYPE"));
+            AddSummaryItem(s, "Session Name", m_sessionName);
+            AddSummaryItem(s, "Spatial Dim.", m_spacedim);
+            AddSummaryItem(s, "Max SEM Exp. Order", m_fields[0]->EvalBasisNumModesMax());
             if(m_HomogeneousType == eHomogeneous1D)
             {
-                out << "\tQuasi-3D        : " << "Homogeneous in z-direction"       << endl;
-                out << "\tSession Name    : " << m_sessionName                      << endl;
-                out << "\tExpansion Dim.  : " << m_expdim+1                         << endl;
-                out << "\tSpatial   Dim.  : " << m_spacedim                         << endl;
-                out << "\t2D Exp. Order   : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
-                out << "\tN.Hom. Modes    : " << m_npointsZ                         << endl;
-                out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
-                if(m_useFFT)
-                {
-                    out << "\tFFT Type        : FFTW" << endl;   
-                }
-                else
-                {
-                    out << "\tFFT Type        : MVM" << endl;               
-                }
-			
-                if(m_MultipleModes==true)
-                {
-                    out << "\tSelected Mode    : " << m_NumMode << endl;
-
-                }
-
+                AddSummaryItem(s, "Quasi-3D", "Homogeneous in z-direction");
+                AddSummaryItem(s, "Expansion Dim.", m_expdim + 1);
+                AddSummaryItem(s, "Num. Hom. Modes (z)", m_npointsZ);
+                AddSummaryItem(s, "Hom. length (LZ)", "m_LhomZ");
+                AddSummaryItem(s, "FFT Type", m_useFFT ? "FFTW" : "MVM");
+                AddSummaryItem(s, "Selected Mode", m_MultipleModes
+                        ? boost::lexical_cast<string>(m_NumMode) : "ALL");
             }
             else if(m_HomogeneousType == eHomogeneous2D)
             {
-                out << "\tQuasi-3D        : " << "Homogeneous in yz-plane"          << endl;
-                out << "\tSession Name    : " << m_sessionName                      << endl;
-                out << "\tExpansion Dim.  : " << m_expdim+2                         << endl;
-                out << "\tSpatial   Dim.  : " << m_spacedim                         << endl;
-                out << "\t1D Exp. Order   : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
-                out << "\tN.Hom. Modes (y): " << m_npointsY                         << endl;
-                out << "\tN.Hom. Modes (z): " << m_npointsZ                         << endl;
-                out << "\tHom. length (LY): " << m_LhomY                            << endl;
-                out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
-
-                if(m_useFFT)
-                {
-                    out << "\tFFT Type        : FFTW" << endl;               
-                }
-                else
-                {
-                    out << "\tFFT Type        : MVM" << endl;               
-                }
+                AddSummaryItem(s, "Quasi-3D", "Homogeneous in yz-plane");
+                AddSummaryItem(s, "Expansion Dim.", m_expdim + 2);
+                AddSummaryItem(s, "Num. Hom. Modes (y)", m_npointsY);
+                AddSummaryItem(s, "Num. Hom. Modes (z)", m_npointsZ);
+                AddSummaryItem(s, "Hom. length (LY)", "m_LhomY");
+                AddSummaryItem(s, "Hom. length (LZ)", "m_LhomZ");
+                AddSummaryItem(s, "FFT Type", m_useFFT ? "FFTW" : "MVM");
             }
             else
             {
-                out << "\tSession Name    : " << m_sessionName                      << endl;
-                out << "\tExpansion Dim.  : " << m_expdim                           << endl;
-                out << "\tSpatial   Dim.  : " << m_spacedim                         << endl;
-                out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
+                AddSummaryItem(s, "Expansion Dim.", m_expdim);
             }
             
             if (m_session->DefinesSolverInfo("UpwindType"))
             {
-                std::string UpwindType;
-                UpwindType = m_session->GetSolverInfo("UpwindType");
-                if (UpwindType == "Average")
-                {
-                    out << "\tRiemann Solver  : Average" <<endl;
-                }
-                else if (UpwindType == "AUSM0")
-                {
-                    out << "\tRiemann Solver  : AUSM0"   <<endl;
-                }
-                else if (UpwindType == "AUSM1")
-                {
-                    out << "\tRiemann Solver  : AUSM1"   <<endl;
-                }
-                else if (UpwindType == "AUSM2")
-                {
-                    out << "\tRiemann Solver  : AUSM2"   <<endl;
-                }
-                else if (UpwindType == "AUSM3")
-                {
-                    out << "\tRiemann Solver  : AUSM3"   <<endl;
-                }
-                else if (UpwindType == "ExactToro")
-                {
-                    out << "\tRiemann Solver  : ExactToro"   <<endl;
-                }
-                else if (UpwindType == "HLL")
-                {
-                    out << "\tRiemann Solver  : HLL"   <<endl;
-                }
-                else if (UpwindType == "HLLC")
-                {
-                    out << "\tRiemann Solver  : HLLC"   <<endl;
-                }
-                else if (UpwindType == "LaxFriedrichs")
-                {
-                    out << "\tRiemann Solver  : Lax-Friedrichs"   <<endl;
-                }
+                AddSummaryItem(s, "Riemann Solver",
+                                  m_session->GetSolverInfo("UpwindType"));
             }
             
             if (m_session->DefinesSolverInfo("AdvectionType"))
             {
                 std::string AdvectionType;
                 AdvectionType = m_session->GetSolverInfo("AdvectionType");
-                switch (m_projectionType)
-                {
-                    case MultiRegions::eGalerkin:
-                    {
-                        out << "\tProjection Type : Continuous Galerkin" <<endl;
-                        break;
-                    }
-                        
-                    case MultiRegions::eDiscontinuous:
-                    {
-                        if (AdvectionType == "WeakDG")
-                        {
-                            out << "\tProjection Type : Weak Discontinuous Galerkin"        <<endl;
-                        }
-                        else if (AdvectionType == "FRDG")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction DG"             <<endl;
-                        }
-                        else if (AdvectionType == "FRSD")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction SD"             <<endl;
-                        }
-                        else if (AdvectionType == "FRHU")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction HU"             <<endl;
-                        }
-                        else if (AdvectionType == "FRcmin")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction c = c-min"      <<endl;
-                        }
-                        else if (AdvectionType == "FRcinf")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction c = c-infinity" <<endl;
-                        }
-                        break;
-                    }
-                    case MultiRegions::eMixed_CG_Discontinuous:
-                    {
-                        out << "\tProjection Type : Mixed CG/DG" << endl;
-                        break;
-                    }
-                    
-                    default:
-                        break;
-                }
+                AddSummaryItem(s, "Advection Type", GetAdvectionFactory().GetClassDescription(AdvectionType));
             }
-            else if (m_projectionType == MultiRegions::eGalerkin)
+
+            if (m_projectionType == MultiRegions::eGalerkin)
             {
-                out << "\tProjection Type : Continuous Galerkin" <<endl;
+                AddSummaryItem(s, "Projection Type", "Continuous Galerkin");
             }
             else if (m_projectionType == MultiRegions::eDiscontinuous)
             {
-                out << "\tProjection Type : Weak Discontinuous Galerkin" <<endl;
+                AddSummaryItem(s, "Projection Type", "Discontinuous Galerkin");
             }
             else if (m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
             {
-                out << "\tProjection Type : Mixed Continuous Galerkin and Discontinuous" <<endl;
+                AddSummaryItem(s, "Projection Type",
+                                  "Mixed Continuous Galerkin and Discontinuous");
             }
             
             if (m_session->DefinesSolverInfo("DiffusionType"))
             {
                 std::string DiffusionType;
                 DiffusionType = m_session->GetSolverInfo("DiffusionType");
-                switch (m_projectionType)
-                {
-                    case MultiRegions::eGalerkin:
-                    {
-                        break;
-                    }
-                        
-                    case MultiRegions::eDiscontinuous:
-                    {
-                        if (DiffusionType == "LDG" || DiffusionType == "LDGNS")
-                        {
-                            out << "\tDiffusion Type  : LDG"    <<endl;
-                        }
-                        else if (DiffusionType == "LFRDG" || DiffusionType == "LFRDGNS")
-                        {
-                            out << "\tDiffusion Type  : LFRDG"  <<endl;
-                        }
-                        else if (DiffusionType == "LFRSD" || DiffusionType == "LFRSDNS")
-                        {
-                            out << "\tDiffusion Type  : LFRSD"  <<endl;
-                        }
-                        else if (DiffusionType == "LFRHU" || DiffusionType == "LFRHUNS")
-                        {
-                            out << "\tDiffusion Type  : LFRHU"  <<endl;
-                        }
-                        else if (DiffusionType == "LFRcmin" || DiffusionType == "LFRcminNS")
-                        {
-                            out << "\tDiffusion Type  : LFR c = c-min"      <<endl;
-                        }
-                        else if (DiffusionType == "LFRcinf" || DiffusionType == "LFRcinfNS")
-                        {
-                            out << "\tDiffusion Type  : LFR c = c-infinity" <<endl;
-                        }
-                        break;
-                    }
-                    case MultiRegions::eMixed_CG_Discontinuous:
-                    {
-                        break;
-                    }
-                        
-                    default:
-                        break;
-                }
+                AddSummaryItem(s, "Diffusion Type", GetDiffusionFactory().GetClassDescription(DiffusionType));
             }
-        }
-
-        /**
-         * Write out a summary of the time parameters.
-         * @param   out     Output stream to write to.
-         */
-        void EquationSystem::TimeParamSummary(std::ostream &out)
-        {
-            out << "\tTime Step       : " << m_timestep                 << endl;
-            out << "\tNo. of Steps    : " << m_steps                    << endl;
-            out << "\tCheckpoints     : " << m_checksteps << " steps"   << endl;
-            //out << "\tInformation     : " << m_infosteps << " steps" << endl;
         }
 
         /**
@@ -2354,11 +2093,6 @@ namespace Nektar
         Array<OneD, bool> EquationSystem::v_GetSystemSingularChecks()
         {
             return Array<OneD, bool>(m_session->GetVariables().size(), false);
-        }
-
-        int EquationSystem::v_GetForceDimension()
-        {
-            return 0;
         }
 
         void EquationSystem::v_GetFluxVector(

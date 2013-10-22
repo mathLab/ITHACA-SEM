@@ -708,25 +708,25 @@ namespace Nektar
     }
 
 
- void LinearSWE::v_PrintSummary(std::ostream &out)
+    void LinearSWE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        ShallowWaterSystem::v_PrintSummary(out);
+        ShallowWaterSystem::v_GenerateSummary(s);
 	if (m_session->DefinesSolverInfo("UpwindType"))
 	  {
 	    std::string UpwindType;
 	    UpwindType = m_session->GetSolverInfo("UpwindType");
 	    if (UpwindType == "LinearAverage")
 	      {
-		out << "\tRiemann Solver  : Linear Average" <<endl;
+	        SolverUtils::AddSummaryItem(s, "Riemann Solver", "Linear Average");
 	      }
 	    if (UpwindType == "LinearHLL")
 	      {
-		out << "\tRiemann Solver  : Linear HLL" <<endl;
+	        SolverUtils::AddSummaryItem(s, "Riemann Solver", "Linear HLL");
 	      }
 	  }
-	out << "\tVariables       : eta  should be in field[0]" <<endl;
-	out << "\t                  u should be in field[1]" <<endl;
-	out << "\t                  v should be in field[2]" <<endl;
+	SolverUtils::AddSummaryItem(s, "Variables", "eta  should be in field[0]");
+	SolverUtils::AddSummaryItem(s, "",          "u    should be in field[1]");
+	SolverUtils::AddSummaryItem(s, "",          "v    should be in field[2]");
     }
 
 } //end of namespace

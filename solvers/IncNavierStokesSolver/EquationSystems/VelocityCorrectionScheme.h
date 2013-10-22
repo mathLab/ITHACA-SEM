@@ -40,35 +40,6 @@
 
 namespace Nektar
 {
-    static NekDouble StifflyStable_Betaq_Coeffs[][3] = {{ 1.0,  0.0, 0.0},
-                                                        { 2.0, -1.0, 0.0},
-                                                        { 3.0, -3.0, 1.0}};
-
-    static NekDouble StifflyStable_Alpha_Coeffs[][3] = {{ 1.0,  0.0, 0.0},
-                                                        { 2.0, -0.5, 0.0},
-                                                        { 3.0, -1.5, 1.0/3.0}};
-
-    static NekDouble StifflyStable_Gamma0_Coeffs[3]  = {1.0,  1.5, 11.0/6.0};
-
-    /**
-     * \brief This class is the base class for the Velocity Correction Scheme
-     *
-     */
-
-    struct HBCInfo
-    {
-        int m_globalElmtID;  // elements ID in the global ordering
-        int m_ptsInElmt;     // number of physical points of the element
-        int m_physOffset;    // elmenent physical offset in the global list
-        int m_bndElmtOffset; // element offset in the boundary expansion
-        int m_elmtTraceID;   // trace ID on the element
-        int m_bndryElmtID;   // pressure boundary condition ID
-        int m_assPhysOffset; // associated elments physical offset (k and k_c
-                             //   are the real and the complex plane)
-        int m_coeffOffset;   // coefficients offset used to locate the
-                             //   acceleration term in the general m_pressureHBC
-    };
-
     class VelocityCorrectionScheme: public IncNavierStokes
     {
     public:
@@ -88,62 +59,32 @@ namespace Nektar
 
 
         /// Constructor.
-        VelocityCorrectionScheme(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+        VelocityCorrectionScheme(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual ~VelocityCorrectionScheme();
 
         virtual void v_InitObject();
 
-        void SubStepSetPressureBCs(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                const NekDouble Aii_DT);
+        void SetUpPressureForcing(const Array<OneD, const Array<OneD, NekDouble> > &fields,
+								  Array<OneD, Array<OneD, NekDouble> > &Forcing,
+								  const NekDouble aii_Dt);
 
-        void EvaluatePressureBCs(
-                const Array<OneD, const Array< OneD,  NekDouble> > &fields,
-                const Array<OneD, const Array< OneD,  NekDouble> > &N,
-                const NekDouble Aii_Dt = NekConstants::kNekUnsetDouble);
+        void SetUpViscousForcing(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+								 Array<OneD, Array<OneD, NekDouble> > &Forcing,
+								 const NekDouble aii_Dt);
 
-        void SetUpPressureForcing(
-                const Array<OneD, const Array<OneD, NekDouble> > &fields,
-                      Array<OneD, Array<OneD, NekDouble> > &Forcing,
-                const NekDouble aii_Dt);
+        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+									   Array<OneD, Array<OneD, NekDouble> > &outarray,
+									   const NekDouble time,
+									   const NekDouble a_iixDt);
 
-        void SetUpViscousForcing(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &Forcing,
-                const NekDouble aii_Dt);
-
-        void SolveUnsteadyStokesSystem(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
-                const NekDouble time,
-                const NekDouble a_iixDt);
-
-        void EvaluateAdvection_SetPressureBCs(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
-                const NekDouble time);
-
-        void AddDuDt  (
-                const Array<OneD, const Array<OneD, NekDouble> >  &N,
-                NekDouble Aii_Dt);
-        void AddDuDt2D(
-                const Array<OneD, const Array<OneD, NekDouble> >  &N,
-                NekDouble Aii_Dt);
-        void AddDuDt3D(
-                const Array<OneD, const Array<OneD, NekDouble> >  &N,
-                NekDouble Aii_Dt);
+        void EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+											  Array<OneD, Array<OneD, NekDouble> > &outarray,
+											  const NekDouble time);
 
     protected:
 
     private:
-        int m_pressureCalls;
-
-        /// Maximum points used in pressure BC evaluation
-        int m_pressureBCsMaxPts;
-        /// Show timings for each step
-        bool m_showTimings;
         /// bool to identify if spectral vanishing viscosity is active.
         bool m_useHomo1DSpecVanVisc;
         /// bool to identify if spectral vanishing viscosity is active.
@@ -153,64 +94,8 @@ namespace Nektar
         /// Diffusion coefficient of SVV modes
         NekDouble m_sVVDiffCoeff;
 
-        /// Id of element to which pressure  boundary condition belongs
-        Array<OneD, int> m_pressureBCtoElmtID;
-        /// Id of edge (2D) or face (3D) to which pressure boundary condition
-        /// belongs
-        Array<OneD, int> m_pressureBCtoTraceID;
-
-        /// Storage for current and previous levels of high order pressure
-        /// boundary conditions.
-        Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs;
-        Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
-
-        /// data structure to old all the information regarding High order
-        /// pressure BCs
-        Array<OneD, HBCInfo > m_HBCdata;
-
-        /// general standard element used to deaal with HOPBC calculations
-        StdRegions::StdExpansionSharedPtr m_elmt;
-
-        /// wave number 2 pi k /Lz
-        Array<OneD, NekDouble>  m_wavenumber;
-        /// minus Square of wavenumber
-        Array<OneD, NekDouble>  m_negWavenumberSq;
-
-        /**  \brief This function evaluates the normal Neumann pressure
-         *  boundary condition for the velocity correction scheme at the
-         *  current time level which requires as input the non-linear
-         *  terms at the current time level
-         *
-         *   \f[ \frac{\partial p}{\partial n}^n =
-         *        \left [ {\bf N( u)}^n
-         *            - kinvis \nabla \times \nabla {\bf u}^n \right]
-         *        \cdot {\bf n} \f]
-         *
-         * where \f$ {\bf n}\f$ is the unit outward normal along the edge,
-         * \f$ {\bf u} \f$ is the velocity field, and \f$ {\bf N(u)}\f$
-         * are the non-linear terms in the momentum equation.
-         */
-
-        void CalcPressureBCs(
-                const Array<OneD, const Array<OneD, NekDouble> > &fields,
-                const Array<OneD, const Array<OneD, NekDouble> >  &N);
-
-        void CalcPressureBCs2D(
-                const Array<OneD, const Array<OneD, NekDouble> > &fields,
-                const Array<OneD, const Array<OneD, NekDouble> >  &N);
-
-        void CalcPressureBCs3D(
-                const Array<OneD, const Array<OneD, NekDouble> > &fields,
-                const Array<OneD, const Array<OneD, NekDouble> >  &N);
-
-        void FillHOPBCMap(const int HOPBCnumber);
-
-        void Rotate(Array<OneD, Array<OneD, NekDouble> > &input);
-
         // Virtual functions
-        virtual void v_PrintSummary(std::ostream &out);
-
-        virtual void v_DoSolve(void);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         virtual void v_TransCoeffToPhys(void);
 

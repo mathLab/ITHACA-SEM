@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_UNSTEADYSYSTEM_H
 #define NEKTAR_SOLVERUTILS_UNSTEADYSYSTEM_H
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/Filters/Filter.h>
 
@@ -61,10 +61,12 @@ namespace Nektar
         protected:
             /// Number of time steps between outputting status information.
             int                                             m_infosteps;
-            /// The time integration method to use.
-            LibUtilities::TimeIntegrationMethod             m_timeIntMethod;
+            /// Wrapper to the time integration scheme
+            LibUtilities::TimeIntegrationWrapperSharedPtr   m_intScheme;
             /// The time integration scheme operators to use.
             LibUtilities::TimeIntegrationSchemeOperators    m_ode;
+            ///
+            LibUtilities::TimeIntegrationSolutionSharedPtr  m_intSoln;
             ///
             NekDouble                                       m_epsilon;
             /// Indicates if explicit or implicit treatment of diffusion is used.
@@ -95,7 +97,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_DoInitialise();
 
             /// Print a summary of time stepping parameters.
-            SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
+            SOLVER_UTILS_EXPORT virtual void v_GenerateSummary(SummaryList& s);
             
             /// Print the solution at each solution point in a txt file
             SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(
@@ -125,6 +127,9 @@ namespace Nektar
 		            
             SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+
+            SOLVER_UTILS_EXPORT virtual bool v_PreIntegrate(int step);
+            SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
 
             SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time);
 

@@ -39,6 +39,7 @@
 #include <LocalRegions/Expansion.h>
 #include <StdRegions/StdExpansion3D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
+#include <SpatialDomains/Geometry3D.h>
 
 namespace Nektar
 {
@@ -49,11 +50,17 @@ namespace Nektar
         typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
         typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
 
+        class Expansion3D;
+        typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
+        typedef boost::weak_ptr<Expansion3D> Expansion3DWeakPtr;
+        typedef std::vector< Expansion3DSharedPtr > Expansion3DVector;
+        typedef std::vector< Expansion3DSharedPtr >::iterator Expansion3DVectorIter;
+
         class Expansion3D: virtual public Expansion, 
                            virtual public StdRegions::StdExpansion3D
         {
         public:
-            LOCAL_REGIONS_EXPORT Expansion3D();
+            LOCAL_REGIONS_EXPORT Expansion3D(SpatialDomains::Geometry3DSharedPtr pGeom): Expansion(pGeom), StdExpansion3D(), m_requireNeg() {}
             LOCAL_REGIONS_EXPORT virtual ~Expansion3D() {}
             
             LOCAL_REGIONS_EXPORT void SetFaceExp(const int face, Expansion2DSharedPtr &f);                
@@ -88,6 +95,13 @@ namespace Nektar
                 Array <OneD,NekDouble >           &outarray,
                 const StdRegions::VarCoeffMap     &varcoeffs = StdRegions::NullVarCoeffMap);
             
+            inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
+
+            static Expansion3DSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
+            {
+                return boost::dynamic_pointer_cast<Expansion3D>(pSrc);
+            }
+
         protected:
             virtual DNekMatSharedPtr v_GenMatrix(
                 const StdRegions::StdMatrixKey &mkey);
@@ -101,6 +115,29 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &primCoeffs, 
                 DNekMatSharedPtr                   &inoutmat);
 
+            virtual NekDouble v_Integrate(
+                const Array<OneD, const NekDouble>& inarray);
+
+            //-----------------------------
+            // Low Energy Basis functions
+            //-----------------------------
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
+                v_GetEdgeInverseBoundaryMap(int eid);
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int>
+                v_GetFaceInverseBoundaryMap(int fid);
+
+            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildTransformationMatrix(
+                const DNekScalMatSharedPtr &r_bnd, 
+                const StdRegions::MatrixType matrixType);
+
+            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(
+                const DNekScalMatSharedPtr & m_transformationmatrix);
+
+            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildVertexMatrix(
+                const DNekScalMatSharedPtr &r_bnd); 
+
         private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
@@ -109,11 +146,10 @@ namespace Nektar
             std::vector<bool> m_requireNeg;
         };
         
-        // type defines for use of PrismExp in a boost vector
-        typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
-        typedef boost::weak_ptr<Expansion3D> Expansion3DWeakPtr;
-        typedef std::vector< Expansion3DSharedPtr > Expansion3DVector;
-        typedef std::vector< Expansion3DSharedPtr >::iterator Expansion3DVectorIter;
+        inline SpatialDomains::Geometry3DSharedPtr Expansion3D::GetGeom3D() const
+        {
+            return boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(m_geom);
+        }
     } //end of namespace
 } //end of namespace
 

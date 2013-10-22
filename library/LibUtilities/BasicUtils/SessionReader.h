@@ -63,18 +63,22 @@ namespace Nektar
         typedef std::map<std::string, std::string>  TagMap;
         typedef std::map<std::string, std::string>  FilterParams;
         typedef std::vector<
-            std::pair<std::string, FilterParams> >  FilterMap;
+            std::pair<std::string, FilterParams> >   FilterMap;
 
         struct CmdLineArg
         {
             std::string shortName;
             std::string description;
+            bool        isFlag;
         };
 
-        typedef std::map<std::string, CmdLineArg>  CmdLineArgMap;
+        typedef std::map<std::string, CmdLineArg>    CmdLineArgMap;
 
-        typedef std::map<std::string, int>          EnumMap;
-        typedef std::map<std::string, EnumMap>      EnumMapList;
+        typedef std::map<std::string, int>           EnumMap;
+        typedef std::map<std::string, EnumMap>       EnumMapList;
+
+        typedef std::map<std::string, std::string>   GloSysInfoMap;
+        typedef std::map<std::string, GloSysInfoMap> GloSysSolnInfoList;
 
         enum FunctionType
         {
@@ -223,9 +227,13 @@ namespace Nektar
             /// Returns the value of the specified solver info property.
             LIB_UTILITIES_EXPORT const std::string& GetSolverInfo(
                 const std::string &pProperty) const;
-            /// Returns the value of the specified solver info property.
+            /// Returns the value of the specified solver info property as enum
             template<typename T>
             inline const T GetSolverInfoAsEnum(const std::string &pName) const;
+            /// Returns the value of the specified property and value as enum
+            template<typename T>
+            inline const T GetValueAsEnum(const std::string &pName,
+                                          const std::string &vValue) const;
             /// Check for and load a solver info property.
             LIB_UTILITIES_EXPORT void LoadSolverInfo(
                 const std::string &name, 
@@ -253,9 +261,19 @@ namespace Nektar
                 int         pEnumValue);
             /// Registers the default string value of a solver info property.
             LIB_UTILITIES_EXPORT inline static std::string 
-              RegisterDefaultSolverInfo(
+                RegisterDefaultSolverInfo(
                 const std::string &pName, 
                 const std::string &pValue);
+        
+            /* ----GlobalSysSolnInfo ----- */
+            LIB_UTILITIES_EXPORT bool DefinesGlobalSysSolnInfo(
+                const std::string &variable,
+                const std::string &property) const;
+
+            LIB_UTILITIES_EXPORT const std::string& GetGlobalSysSolnInfo(
+                const std::string &variable,
+                const std::string &property) const;
+
 
             /* ------ GEOMETRIC INFO ------ */
             /// Checks if a geometric info property is defined.
@@ -287,6 +305,10 @@ namespace Nektar
             /// Returns the name of the variable specified by the given index.
             LIB_UTILITIES_EXPORT const std::string& GetVariable(
                 const unsigned int &idx) const;
+            LIB_UTILITIES_EXPORT void SetVariable(
+                const unsigned int &idx,
+                      std::string newname);
+
             /// Returns the names of all variables.
             LIB_UTILITIES_EXPORT std::vector<std::string> GetVariables() const;
 
@@ -356,6 +378,12 @@ namespace Nektar
                 const std::string &pName, 
                 const std::string &pShortName, 
                 const std::string &pDescription);
+            /// Registers a command-line flag with the session reader.
+            LIB_UTILITIES_EXPORT inline static std::string
+              RegisterCmdLineFlag(
+                const std::string &pName,
+                const std::string &pShortName,
+                const std::string &pDescription);
 
             /// Substitutes expressions defined in the XML document.
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
@@ -399,12 +427,14 @@ namespace Nektar
             /// bcs.
             BndRegionOrdering                         m_bndRegOrder;
             /// String to enumeration map for Solver Info parameters.
-            LIB_UTILITIES_EXPORT static EnumMapList   m_enums;
+            LIB_UTILITIES_EXPORT static EnumMapList        m_enums;
             /// Default solver info options.
-            LIB_UTILITIES_EXPORT static SolverInfoMap m_solverInfoDefaults;
+            LIB_UTILITIES_EXPORT static SolverInfoMap      m_solverInfoDefaults;
             /// CmdLine argument map.
-            LIB_UTILITIES_EXPORT static CmdLineArgMap m_cmdLineArguments;
-
+            LIB_UTILITIES_EXPORT static CmdLineArgMap      m_cmdLineArguments;
+            /// GlobalSysSoln Info map.
+            LIB_UTILITIES_EXPORT static GloSysSolnInfoList m_gloSysSolnList;
+            
             /// Main constructor
             LIB_UTILITIES_EXPORT SessionReader(
                 int                             argc, 
@@ -447,6 +477,9 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void ReadParameters(TiXmlElement *conditions);
             /// Reads the SOLVERINFO section of the XML document.
             LIB_UTILITIES_EXPORT void ReadSolverInfo(TiXmlElement *conditions);
+            /// Reads the GLOBALSYSSOLNINFO section of the XML document.
+            LIB_UTILITIES_EXPORT void ReadGlobalSysSolnInfo(
+                    TiXmlElement *conditions);
             /// Reads the GEOMETRICINFO section of the XML document.
             LIB_UTILITIES_EXPORT void ReadGeometricInfo(TiXmlElement *geometry);
             /// Reads the EXPRESSIONS section of the XML document.
@@ -487,18 +520,42 @@ namespace Nektar
             const std::string &pName) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            ASSERTL0(DefinesSolverInfo(vName), 
+            ASSERTL0(DefinesSolverInfo(vName),
                      "Solver info '" + pName + "' not defined.");
 
             std::string vValue = GetSolverInfo(vName);
             EnumMapList::iterator x;
             ASSERTL0((x = m_enums.find(vName)) != m_enums.end(),
                      "Enum for SolverInfo property '" + pName + "' not found.");
+
             EnumMap::iterator y;
             ASSERTL0((y = x->second.find(vValue)) != x->second.end(),
-                    "Value of SolverInfo property '" + pName + "' is invalid.");
+                     "Value of SolverInfo property '" + pName +
+                     "' is invalid.");
+
             return T(y->second);
         }
+
+
+        /**
+         *
+         */
+        template<typename T>
+            inline const T SessionReader::GetValueAsEnum(const std::string &pName,
+                                                         const std::string &pValue) const
+        {
+            std::string vName  = boost::to_upper_copy(pName);
+
+            EnumMapList::iterator x;
+            ASSERTL0((x = m_enums.find(vName)) != m_enums.end(),
+                     "Enum for property '" + pName + "' not found.");
+
+            EnumMap::iterator y;
+            ASSERTL0((y = x->second.find(pValue)) != x->second.end(),
+                     "Value of property '" + pValue + "' is invalid.");
+            return T(y->second);
+        }
+
 
 
         /**
@@ -580,6 +637,25 @@ namespace Nektar
             CmdLineArg x;
             x.shortName = pShortName;
             x.description = pDescription;
+            x.isFlag = false;
+            m_cmdLineArguments[pName] = x;
+            return pName;
+        }
+
+
+        /**
+         *
+         */
+        inline std::string SessionReader::RegisterCmdLineFlag(
+            const std::string &pName,
+            const std::string &pShortName,
+            const std::string &pDescription)
+        {
+            ASSERTL0(!pName.empty(), "Empty name for cmdline argument.");
+            CmdLineArg x;
+            x.shortName = pShortName;
+            x.description = pDescription;
+            x.isFlag = true;
             m_cmdLineArguments[pName] = x;
             return pName;
         }

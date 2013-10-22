@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         ASSERTL0(datalen1*2 == datalen2,"Data per fields is note compatible");
         
         // Determine the number of coefficients per element
-        int ncoeffs;
+        int ncoeffs = 0;
         switch(fielddef2[i]->m_shapeType)
         {
         case LibUtilities::eTriangle:

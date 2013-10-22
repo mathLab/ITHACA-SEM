@@ -312,6 +312,11 @@ namespace Nektar
         return outarray;
     }
 
+    Array<OneD, NekDouble> CellModel::GetCellSolution(unsigned int idx)
+    {
+        return m_cellSol[idx];
+    }
+
     void CellModel::LoadCellModel()
     {
         const bool root = (m_session->GetComm()->GetRank() == 0);
@@ -360,7 +365,7 @@ namespace Nektar
                 iter = fieldMetaDataMap.find("Time");
                 if(iter != fieldMetaDataMap.end())
                 {
-                    m_lastTime = iter->second;
+                    m_lastTime = boost::lexical_cast<NekDouble>(iter->second);
                 }
 
                 // Extract the data into the modal coefficients

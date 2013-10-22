@@ -79,7 +79,7 @@ namespace Nektar
                                    const NekDouble lhom,
 								   const bool useFFT,
 								   const bool dealiasing,
-                                   const boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
+                                   const boost::shared_ptr<LocalRegions::ExpansionVector> &exp,
                                    const Array<OneD, ExpListSharedPtr> &planes);
 
             /// Copy constructor.

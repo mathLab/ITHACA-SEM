@@ -56,7 +56,8 @@ namespace Nektar
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG3D(
-                const LibUtilities::SessionReaderSharedPtr &pSession);
+                    const LibUtilities::SessionReaderSharedPtr &pSession, 
+                    const std::string variable = "DefaultVar");
 
             /// Constructor for the 3D expansion mappings with boundary
             /// conditions.
@@ -68,8 +69,9 @@ namespace Nektar
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                 const PeriodicMap &periodicVerts,
                 const PeriodicMap &periodicEdges,
-                const PeriodicMap &periodicFaces);
-            
+                const PeriodicMap &periodicFaces,
+                const bool checkIfSystemSingular,
+                const std::string variable = "DefaultVar");
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
@@ -91,7 +93,8 @@ namespace Nektar
                 SpatialDomains::NullBoundaryConditionShPtrArray,
                 const PeriodicMap &periodicVerts = NullPeriodicMap,
                 const PeriodicMap &periodicEdges = NullPeriodicMap,
-                const PeriodicMap &periodicFaces = NullPeriodicMap);
+                const PeriodicMap &periodicFaces = NullPeriodicMap,
+                const bool checkIfSystemSingular = false);
         }; // class
     } // end of namespace
 } // end of namespace

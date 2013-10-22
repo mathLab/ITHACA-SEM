@@ -37,10 +37,13 @@
 #define EXPANSION_H
 
 #include <StdRegions/StdExpansion.h>
+#include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #include <vector>
+#include <map>
 
 namespace Nektar
 {
@@ -50,16 +53,29 @@ namespace Nektar
         class Expansion;
         class MatrixKey;
 
+        enum MetricType
+        {
+            MetricLaplacian00,
+            MetricLaplacian01,
+            MetricLaplacian02,
+            MetricLaplacian11,
+            MetricLaplacian12,
+            MetricLaplacian22,
+            MetricQuadrature
+        };
+
         // type defines for use of PrismExp in a boost vector
         typedef boost::shared_ptr<Expansion> ExpansionSharedPtr;
         typedef boost::weak_ptr<Expansion> ExpansionWeakPtr;
         typedef std::vector< ExpansionSharedPtr > ExpansionVector;
         typedef std::vector< ExpansionSharedPtr >::iterator ExpansionVectorIter;
+        typedef std::map<MetricType, Array<OneD, NekDouble> > MetricMap;
 
         class Expansion : virtual public StdRegions::StdExpansion
         {
             public:
-                LOCAL_REGIONS_EXPORT Expansion(); // default constructor. 
+                LOCAL_REGIONS_EXPORT Expansion(SpatialDomains::GeometrySharedPtr pGeom); // default constructor.
+                LOCAL_REGIONS_EXPORT Expansion(const Expansion &pSrc); // copy constructor.
                 LOCAL_REGIONS_EXPORT virtual ~Expansion();
 
                 LOCAL_REGIONS_EXPORT DNekScalMatSharedPtr GetLocMatrix(const LocalRegions::MatrixKey &mkey);
@@ -68,14 +84,49 @@ namespace Nektar
                             const StdRegions::ConstFactorMap &factors = StdRegions::NullConstFactorMap,
                             const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
 
+                LOCAL_REGIONS_EXPORT SpatialDomains::GeometrySharedPtr GetGeom() const;
 
+                LOCAL_REGIONS_EXPORT virtual const
+                    SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
+
+                static ExpansionSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
+                {
+                    return boost::dynamic_pointer_cast<Expansion>(pSrc);
+                }
+
+                LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
+                    const DNekScalMatSharedPtr &r_bnd, 
+                    const StdRegions::MatrixType matrixType);
+
+                LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
+                    const DNekScalMatSharedPtr &r_bnd);
+			
             protected:
+                SpatialDomains::GeometrySharedPtr  m_geom;
+                SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
+                MetricMap m_metrics;
+
+                void ComputeLaplacianMetric();
+                void ComputeQuadratureMetric();
+
+                virtual void v_MultiplyByQuadratureMetric(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray);
+
+                virtual void v_ComputeLaplacianMetric() {};
+
                 virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
 
+                virtual DNekMatSharedPtr v_BuildTransformationMatrix(
+                    const DNekScalMatSharedPtr &r_bnd, 
+                    const StdRegions::MatrixType matrixType);
+
+                virtual DNekMatSharedPtr v_BuildVertexMatrix(
+                    const DNekScalMatSharedPtr &r_bnd); 
+			
             private:
 
         };
-
     } //end of namespace
 } //end of namespace
 

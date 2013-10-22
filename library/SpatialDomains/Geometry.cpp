@@ -110,196 +110,6 @@ namespace Nektar
             return lhs->GetGlobalID() == rhs->GetGlobalID();
         }
 
-
-        void Geometry::AddElmtConnected(int gvo_id, int locid)
-        {
-            return v_AddElmtConnected(gvo_id, locid);
-        }
-
-        int  Geometry::NumElmtConnected() const
-        {
-            return v_NumElmtConnected();
-        }
-
-        bool Geometry::IsElmtConnected(int gvo_id, int locid) const
-        {
-            return v_IsElmtConnected(gvo_id,locid);
-        }
-
-
-        GeomType Geometry::GetGtype()
-        {
-            return m_geomFactors->GetGtype();
-        }
-
-        const Array<OneD, const NekDouble>& Geometry::GetJac()
-        {
-            return m_geomFactors->GetJac();
-        }
-
-        const Array<TwoD, const NekDouble>& Geometry::GetGmat()
-        {
-            return m_geomFactors->GetGmat();
-        }
-
-        int Geometry::GetCoordim() const
-        {
-            return v_GetCoordim();
-        }
-
-        GeomFactorsSharedPtr Geometry::GetGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
-        {
-            GenGeomFactors(tbasis);
-            return ValidateRegGeomFactor(m_geomFactors);
-        }
-
-        GeomFactorsSharedPtr Geometry::GetMetricInfo()
-        {
-            return m_geomFactors;
-        }
-
-        LibUtilities::ShapeType Geometry::GetShapeType(void)
-        {
-            return m_shapeType;
-        }
-
-        int Geometry::GetGlobalID(void)
-        {
-            return m_globalID;
-        }
-
-        void Geometry::SetGlobalID(int globalid)
-        {
-            m_globalID = globalid;
-        }
-
-        int Geometry::GetVid(int i) const
-        {
-            return v_GetVid(i);
-        }
-
-        int Geometry::GetEid(int i) const
-        {
-            return v_GetEid(i);
-        }
-
-        int Geometry::GetFid(int i) const
-        {
-            return v_GetFid(i);
-        }
-
-        int Geometry::GetNumVerts() const
-        {
-            return v_GetNumVerts();
-        }
-
-        StdRegions::Orientation Geometry::GetEorient(const int i) const
-        {
-            return v_GetEorient(i);
-        }
-
-        StdRegions::Orientation Geometry::GetPorient(const int i) const
-        {
-            return v_GetPorient(i);
-        }
-
-        int Geometry::GetNumEdges() const
-        {
-            return v_GetNumEdges();
-        }
-
-        int Geometry::GetNumFaces() const
-        {
-            return v_GetNumFaces();
-        }
-
-        int Geometry::GetShapeDim() const
-        {
-            return v_GetShapeDim();
-        }
-
-        bool Geometry::ContainsPoint(
-                const Array<OneD, const NekDouble>& gloCoord,
-                      NekDouble tol)
-        {
-            return v_ContainsPoint(gloCoord,tol);
-        }
-
-        int Geometry::GetVertexEdgeMap(int i, int j) const
-	{
-	    return v_GetVertexEdgeMap(i,j);
-        }
-
-        int Geometry::GetVertexFaceMap(int i, int j) const
-        {
-            return v_GetVertexFaceMap(i,j);
-        }
-
-        int Geometry::GetEdgeFaceMap(int i, int j) const
-        {
-            return v_GetEdgeFaceMap(i,j);
-        }
-
-        void Geometry::GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
-        {
-            return v_GenGeomFactors(tbasis);
-        }
-
-
-       /** 
-        * @brief Put all quadrature information into face/edge structure and
-        * backward transform.
-        * 
-        * @see v_FillGeom()
-        */
-        void Geometry::FillGeom()
-        {
-            v_FillGeom();
-        }
-
-        void Geometry::GetLocCoords(
-            const Array<OneD, const NekDouble> &coords,
-                  Array<OneD,       NekDouble> &Lcoords)
-        {
-            v_GetLocCoords(coords, Lcoords);
-        }
-
-        /** 
-         * @brief Given local collapsed coordinate Lcoord return the value of
-         * physical coordinate in direction i.
-         */
-        NekDouble Geometry::GetCoord(
-            const int i, const Array<OneD, const NekDouble> &Lcoord)
-        {
-            return v_GetCoord(i, Lcoord);
-        }
-
-        void Geometry::SetOwnData()
-        {
-            v_SetOwnData();
-        }
-
-        /**
-        * @brief Return a reference to the physical space of co-ordinate
-        * dimension i.
-        */
-        Array<OneD,NekDouble>& Geometry::UpdatePhys(const int i)
-        {
-            return v_UpdatePhys(i);
-        }
-
-        /**
-         * @brief Return the j-th basis of the i-th co-ordinate dimension.
-         */
-        const LibUtilities::BasisSharedPtr Geometry::GetBasis(
-            const int i, const int j)
-        {
-            return v_GetBasis(i, j);
-        }
-
-
         void Geometry::v_AddElmtConnected(int gvo_id, int locid)
         {
             NEKERROR(ErrorUtil::efatal,
@@ -379,7 +189,7 @@ namespace Nektar
         int Geometry::v_GetNumFaces() const
         {
             NEKERROR(ErrorUtil::efatal,
-                "This function is only valid for shape type geometries");
+                     "This function is only valid for shape type geometries");
             return 0;
         }
 
@@ -393,6 +203,16 @@ namespace Nektar
         bool Geometry::v_ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
                       NekDouble tol)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return false;
+        }
+
+        bool Geometry::v_ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                Array<OneD, NekDouble>& locCoord,
+                NekDouble tol)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function has not been defined for this geometry");

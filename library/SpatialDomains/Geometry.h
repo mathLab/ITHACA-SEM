@@ -81,59 +81,61 @@ namespace Nektar
                 //---------------------------------------
                 // Element connection functions
                 //---------------------------------------
-                SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(
+                SPATIAL_DOMAINS_EXPORT inline bool IsElmtConnected(
                             int gvo_id,
                             int locid) const;
-                SPATIAL_DOMAINS_EXPORT void AddElmtConnected(
+                SPATIAL_DOMAINS_EXPORT inline void AddElmtConnected(
                             int gvo_id,
                             int locid);
-                SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
+                SPATIAL_DOMAINS_EXPORT inline int  NumElmtConnected() const;
 
                 //---------------------------------------
                 // Helper functions
                 //---------------------------------------
 
-                SPATIAL_DOMAINS_EXPORT void FillGeom();
-                SPATIAL_DOMAINS_EXPORT void GetLocCoords(
-                        const Array<OneD, const NekDouble> &coords,
-                              Array<OneD,       NekDouble> &Lcoords);
-                SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(
-                        const int i, const Array<OneD, const NekDouble> &Lcoord);
-
-                SPATIAL_DOMAINS_EXPORT void SetOwnData();
-                SPATIAL_DOMAINS_EXPORT Array<OneD,NekDouble>&
-                            UpdatePhys(const int i);
-                SPATIAL_DOMAINS_EXPORT const LibUtilities::BasisSharedPtr 
-                            GetBasis(const int i, const int j);
-
-                SPATIAL_DOMAINS_EXPORT GeomType GetGtype();
-                SPATIAL_DOMAINS_EXPORT const Array<OneD, const NekDouble>& GetJac();
-                SPATIAL_DOMAINS_EXPORT const Array<TwoD, const NekDouble>& GetGmat();
-                SPATIAL_DOMAINS_EXPORT int GetCoordim() const;
-                SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetGeomFactors(
+                SPATIAL_DOMAINS_EXPORT inline int GetCoordim() const;
+                SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
-                SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetMetricInfo();
+                SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetMetricInfo();
                 SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType GetShapeType(void);
-                SPATIAL_DOMAINS_EXPORT int GetGlobalID(void);
-                SPATIAL_DOMAINS_EXPORT void SetGlobalID(int globalid);
-                SPATIAL_DOMAINS_EXPORT int GetVid(int i) const;
-                SPATIAL_DOMAINS_EXPORT int GetEid(int i) const;
-                SPATIAL_DOMAINS_EXPORT int GetFid(int i) const;
-                SPATIAL_DOMAINS_EXPORT int GetNumVerts() const;
-                SPATIAL_DOMAINS_EXPORT StdRegions::Orientation
+                SPATIAL_DOMAINS_EXPORT inline int GetGlobalID(void);
+                SPATIAL_DOMAINS_EXPORT inline void SetGlobalID(int globalid);
+                SPATIAL_DOMAINS_EXPORT inline int GetVid(int i) const;
+                SPATIAL_DOMAINS_EXPORT inline int GetEid(int i) const;
+                SPATIAL_DOMAINS_EXPORT inline int GetFid(int i) const;
+                SPATIAL_DOMAINS_EXPORT inline int GetNumVerts() const;
+                SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
                             GetEorient(const int i) const;
-                SPATIAL_DOMAINS_EXPORT StdRegions::Orientation
+                SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
                             GetPorient(const int i) const;
-                SPATIAL_DOMAINS_EXPORT int GetNumEdges() const;
-                SPATIAL_DOMAINS_EXPORT int GetNumFaces() const;
-                SPATIAL_DOMAINS_EXPORT int GetShapeDim() const;
-                SPATIAL_DOMAINS_EXPORT bool ContainsPoint(
+                SPATIAL_DOMAINS_EXPORT inline int GetNumEdges() const;
+                SPATIAL_DOMAINS_EXPORT inline int GetNumFaces() const;
+                SPATIAL_DOMAINS_EXPORT inline int GetShapeDim() const;
+                SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                               NekDouble tol = 0.0);
-		SPATIAL_DOMAINS_EXPORT int GetVertexEdgeMap(int i, int j) const;
-		SPATIAL_DOMAINS_EXPORT int GetVertexFaceMap(int i, int j) const;
-		SPATIAL_DOMAINS_EXPORT int GetEdgeFaceMap(int i, int j) const;
+                SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
+                        const Array<OneD, const NekDouble>& gloCoord,
+                              Array<OneD, NekDouble> &locCoord,
+                              NekDouble tol = 0.0);
+                SPATIAL_DOMAINS_EXPORT inline int GetVertexEdgeMap(int i, int j) const;
+                SPATIAL_DOMAINS_EXPORT inline int GetVertexFaceMap(int i, int j) const;
+                SPATIAL_DOMAINS_EXPORT inline int GetEdgeFaceMap(int i, int j) const;
 
+                SPATIAL_DOMAINS_EXPORT inline void FillGeom();
+                SPATIAL_DOMAINS_EXPORT inline void GetLocCoords(
+                        const Array<OneD, const NekDouble> &coords,
+                              Array<OneD,       NekDouble> &Lcoords);
+                SPATIAL_DOMAINS_EXPORT inline NekDouble GetCoord(
+                        const int i, const Array<OneD, const NekDouble> &Lcoord);
+
+                SPATIAL_DOMAINS_EXPORT inline void SetOwnData();
+                SPATIAL_DOMAINS_EXPORT inline Array<OneD,NekDouble>&
+                            UpdatePhys(const int i);
+                SPATIAL_DOMAINS_EXPORT inline const LibUtilities::BasisSharedPtr
+                            GetBasis(const int i, const int j);
 
             protected:
 
@@ -187,9 +189,15 @@ namespace Nektar
                 virtual bool v_ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                               NekDouble tol = 0.0);
-		virtual int v_GetVertexEdgeMap(int i,int j) const;
-		virtual int v_GetVertexFaceMap(int i,int j) const;
-		virtual int v_GetEdgeFaceMap(int i,int j) const;
+                virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble>& gloCoord,
+                        Array<OneD, NekDouble>& locCoord,
+                        NekDouble tol = 0.0);
+
+                virtual int v_GetVertexEdgeMap(int i,int j) const;
+                virtual int v_GetVertexFaceMap(int i,int j) const;
+                virtual int v_GetEdgeFaceMap(int i,int j) const;
+
                 virtual void v_FillGeom();
                 virtual NekDouble v_GetCoord(
                             const int i,
@@ -225,6 +233,187 @@ namespace Nektar
                 return seed;
             }
         };
+
+
+        inline void Geometry::AddElmtConnected(int gvo_id, int locid)
+        {
+            return v_AddElmtConnected(gvo_id, locid);
+        }
+
+        inline int  Geometry::NumElmtConnected() const
+        {
+            return v_NumElmtConnected();
+        }
+
+        inline bool Geometry::IsElmtConnected(int gvo_id, int locid) const
+        {
+            return v_IsElmtConnected(gvo_id,locid);
+        }
+
+        inline int Geometry::GetCoordim() const
+        {
+            return v_GetCoordim();
+        }
+
+        inline GeomFactorsSharedPtr Geometry::GetGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        {
+            GenGeomFactors(tbasis);
+            return ValidateRegGeomFactor(m_geomFactors);
+        }
+
+        inline GeomFactorsSharedPtr Geometry::GetMetricInfo()
+        {
+            return m_geomFactors;
+        }
+
+        inline LibUtilities::ShapeType Geometry::GetShapeType()
+        {
+            return m_shapeType;
+        }
+
+        inline int Geometry::GetGlobalID(void)
+        {
+            return m_globalID;
+        }
+
+        inline void Geometry::SetGlobalID(int globalid)
+        {
+            m_globalID = globalid;
+        }
+
+        inline int Geometry::GetVid(int i) const
+        {
+            return v_GetVid(i);
+        }
+
+        inline int Geometry::GetEid(int i) const
+        {
+            return v_GetEid(i);
+        }
+
+        inline int Geometry::GetFid(int i) const
+        {
+            return v_GetFid(i);
+        }
+
+        inline int Geometry::GetNumVerts() const
+        {
+            return v_GetNumVerts();
+        }
+
+        inline StdRegions::Orientation Geometry::GetEorient(const int i) const
+        {
+            return v_GetEorient(i);
+        }
+
+        inline StdRegions::Orientation Geometry::GetPorient(const int i) const
+        {
+            return v_GetPorient(i);
+        }
+
+        inline int Geometry::GetNumEdges() const
+        {
+            return v_GetNumEdges();
+        }
+
+        inline int Geometry::GetNumFaces() const
+        {
+            return v_GetNumFaces();
+        }
+
+        inline int Geometry::GetShapeDim() const
+        {
+            return v_GetShapeDim();
+        }
+
+        inline bool Geometry::ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                NekDouble tol)
+        {
+            return v_ContainsPoint(gloCoord,tol);
+        }
+
+        inline bool Geometry::ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                      Array<OneD, NekDouble> &locCoord,
+                      NekDouble tol)
+        {
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+        }
+
+        inline int Geometry::GetVertexEdgeMap(int i, int j) const
+        {
+            return v_GetVertexEdgeMap(i,j);
+        }
+
+        inline int Geometry::GetVertexFaceMap(int i, int j) const
+        {
+            return v_GetVertexFaceMap(i,j);
+        }
+
+        inline int Geometry::GetEdgeFaceMap(int i, int j) const
+        {
+            return v_GetEdgeFaceMap(i,j);
+        }
+
+        inline void Geometry::GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        {
+            return v_GenGeomFactors(tbasis);
+        }
+
+
+       /**
+        * @brief Put all quadrature information into face/edge structure and
+        * backward transform.
+        *
+        * @see v_FillGeom()
+        */
+        inline void Geometry::FillGeom()
+        {
+            v_FillGeom();
+        }
+
+        inline void Geometry::GetLocCoords(
+            const Array<OneD, const NekDouble> &coords,
+                  Array<OneD,       NekDouble> &Lcoords)
+        {
+            v_GetLocCoords(coords, Lcoords);
+        }
+
+        /**
+         * @brief Given local collapsed coordinate Lcoord return the value of
+         * physical coordinate in direction i.
+         */
+        inline NekDouble Geometry::GetCoord(
+            const int i, const Array<OneD, const NekDouble> &Lcoord)
+        {
+            return v_GetCoord(i, Lcoord);
+        }
+
+        inline void Geometry::SetOwnData()
+        {
+            v_SetOwnData();
+        }
+
+        /**
+        * @brief Return a reference to the physical space of co-ordinate
+        * dimension i.
+        */
+        inline Array<OneD,NekDouble>& Geometry::UpdatePhys(const int i)
+        {
+            return v_UpdatePhys(i);
+        }
+
+        /**
+         * @brief Return the j-th basis of the i-th co-ordinate dimension.
+         */
+        inline const LibUtilities::BasisSharedPtr Geometry::GetBasis(
+            const int i, const int j)
+        {
+            return v_GetBasis(i, j);
+        }
 
     }; //end of namespace
 }; // end of namespace

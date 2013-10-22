@@ -35,6 +35,10 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/ExpList.h>
+#include <LocalRegions/Expansion.h>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion3D.h>
+
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -63,8 +67,9 @@ namespace Nektar
          *
          */
         AssemblyMapCG::AssemblyMapCG(
-                const LibUtilities::SessionReaderSharedPtr &pSession):
-            AssemblyMap(pSession)
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string variable):
+            AssemblyMap(pSession,variable)
         {
             pSession->LoadParameter("MaxStaticCondLevel",m_maxStaticCondLevel,100);
         }
@@ -103,7 +108,7 @@ namespace Nektar
             const PeriodicMap &perEdges,
             const PeriodicMap &perFaces)
         {
-            StdRegions::StdExpansionSharedPtr locExpansion;
+            LocalRegions::ExpansionSharedPtr locExpansion;
             int nDim = 0;
             int nVert = 0;
             int nEdge = 0;
@@ -129,7 +134,7 @@ namespace Nektar
             Array<OneD, unsigned int>   interiorMap;
             PeriodicMap::const_iterator pIt;
 
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
 
             m_globalToUniversalMap = Nektar::Array<OneD, int>(m_numGlobalCoeffs, -1);
@@ -140,7 +145,7 @@ namespace Nektar
             // Loop over all the elements in the domain to gather mesh data
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion>(locExpVector[i]);
+                locExpansion = locExpVector[i];
                 nVert += locExpansion->GetNverts();
                 nEdge += locExpansion->GetNedges();
                 nFace += locExpansion->GetNfaces();
@@ -171,7 +176,7 @@ namespace Nektar
             // Assemble global to universal mapping for this process
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion>(locExpVector[i]);
+                locExpansion = locExpVector[i];
                 nDim = locExpansion->GetShapeDimension();
                 cnt = locExp.GetCoeff_Offset(i);
 
@@ -198,15 +203,7 @@ namespace Nektar
                 // Loop over all edges of element i
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
-                    if (nDim == 2)
-                    {
-                        meshEdgeId = locExpansion->GetGeom2D()->GetEid(j);
-                    }
-                    else
-                    {
-                        meshEdgeId = locExpansion->GetGeom3D()->GetEid(j);
-                    }
-
+                    meshEdgeId = locExpansion->GetGeom()->GetEid(j);
                     pIt = perEdges.find(meshEdgeId);
                     if (pIt != perEdges.end())
                     {
@@ -234,11 +231,13 @@ namespace Nektar
                 // Loop over all faces of element i
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    faceOrient          = (locExpansion->GetGeom3D())->GetFaceOrient(j);
+                    faceOrient = boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion3D>(
+                            locExpansion)->GetGeom3D()->GetFaceOrient(j);
 
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
                     dof = locExpansion->GetFaceIntNcoeffs(j);
-                    meshFaceId = (locExpansion->GetGeom3D())->GetFid(j);
+                    meshFaceId = locExpansion->GetGeom()->GetFid(j);
 
                     pIt = perFaces.find(meshFaceId);
                     if (pIt != perFaces.end())
@@ -293,6 +292,139 @@ namespace Nektar
             {
                 m_globalToUniversalBndMapUnique[i] = (tmp2[i] >= 0 ? 1 : 0);
             }
+        }
+
+        /**
+         * @brief Construct an AssemblyMapCG object which corresponds to the
+         * linear space of the current object.
+         *
+         * This function is used in an XXT solve to apply a linear space
+         * preconditioner in the conjugate gradient solve.
+         */
+        AssemblyMapSharedPtr AssemblyMapCG::v_XxtLinearSpaceMap(
+            const ExpList &locexp)
+        {
+            AssemblyMapCGSharedPtr returnval;
+
+            int i, j;
+            int nverts = 0;
+            const boost::shared_ptr<LocalRegions::ExpansionVector> exp
+                = locexp.GetExp();
+            int nelmts = exp->size();
+
+            // Get Default Map and turn off any searched values.
+            returnval = MemoryManager<AssemblyMapCG>
+                ::AllocateSharedPtr(m_session);
+            returnval->m_solnType           = eXxtFullMatrix;
+            returnval->m_preconType         = eNull;
+            returnval->m_maxStaticCondLevel = 0;
+            returnval->m_signChange         = false;
+            returnval->m_comm               = m_comm;
+
+            // Count the number of vertices
+            for (i = 0; i < nelmts; ++i)
+            {
+                nverts += (*exp)[i]->GetNverts();
+            }
+
+            returnval->m_numLocalCoeffs   = nverts;
+            returnval->m_localToGlobalMap = Array<OneD, int>(nverts, -1);
+
+            // Store original global ids in this map
+            returnval->m_localToGlobalBndMap = Array<OneD, int>(nverts, -1);
+
+            int cnt  = 0;
+            int cnt1 = 0;
+            Array<OneD, int> GlobCoeffs(m_numGlobalCoeffs, -1);
+
+            // Set up local to global map;
+            for (i = 0; i < nelmts; ++i)
+            {
+                for (j = 0; j < (*exp)[i]->GetNverts(); ++j)
+                {
+                    returnval->m_localToGlobalMap[cnt] =
+                        returnval->m_localToGlobalBndMap[cnt] =
+                        m_localToGlobalMap[cnt1 + (*exp)[i]->GetVertexMap(j)];
+                    GlobCoeffs[returnval->m_localToGlobalMap[cnt]] = 1;
+
+                    // Set up numLocalDirBndCoeffs
+                    if (returnval->m_localToGlobalMap[cnt] <
+                            m_numGlobalDirBndCoeffs)
+                    {
+                        returnval->m_numLocalDirBndCoeffs++;
+                    }
+                    cnt++;
+                }
+                cnt1 += (*exp)[i]->GetNcoeffs();
+            }
+
+            cnt = 0;
+            // Reset global numbering and count number of dofs
+            for (i = 0; i < m_numGlobalCoeffs; ++i)
+            {
+                if (GlobCoeffs[i] != -1)
+                {
+                    GlobCoeffs[i] = cnt++;
+                }
+            }
+
+            // Set up number of globalCoeffs;
+            returnval->m_numGlobalCoeffs = cnt;
+
+            // Set up number of global Dirichlet boundary coefficients
+            for (i = 0; i < m_numGlobalDirBndCoeffs; ++i)
+            {
+                if (GlobCoeffs[i] != -1)
+                {
+                    returnval->m_numGlobalDirBndCoeffs++;
+                }
+            }
+
+            // Set up global to universal map
+            if (m_globalToUniversalMap.num_elements())
+            {
+                LibUtilities::CommSharedPtr vCommRow
+                    = m_session->GetComm()->GetRowComm();
+                int nglocoeffs = returnval->m_numGlobalCoeffs;
+                returnval->m_globalToUniversalMap
+                    = Array<OneD, int> (nglocoeffs);
+                returnval->m_globalToUniversalMapUnique
+                    = Array<OneD, int> (nglocoeffs);
+
+                // Reset local to global map and setup universal map
+                for (i = 0; i < nverts; ++i)
+                {
+                    cnt = returnval->m_localToGlobalMap[i];
+                    returnval->m_localToGlobalMap[i] = GlobCoeffs[cnt];
+
+                    returnval->m_globalToUniversalMap[GlobCoeffs[cnt]] =
+                        m_globalToUniversalMap[cnt];
+                }
+
+                Nektar::Array<OneD, long> tmp(nglocoeffs);
+                Vmath::Zero(nglocoeffs, tmp, 1);
+                for (unsigned int i = 0; i < nglocoeffs; ++i)
+                {
+                    tmp[i] = returnval->m_globalToUniversalMap[i];
+                }
+                returnval->m_gsh = Gs::Init(tmp, vCommRow);
+                Gs::Unique(tmp, vCommRow);
+                for (unsigned int i = 0; i < nglocoeffs; ++i)
+                {
+                    returnval->m_globalToUniversalMapUnique[i]
+                        = (tmp[i] >= 0 ? 1 : 0);
+                }
+            }
+            else // not sure this option is ever needed.
+            {
+                for (i = 0; i < nverts; ++i)
+                {
+                    cnt = returnval->m_localToGlobalMap[i];
+                    returnval->m_localToGlobalMap[i] = GlobCoeffs[cnt];
+                }
+            }
+
+            return returnval;
         }
 
         /**
@@ -419,6 +551,9 @@ namespace Nektar
             {
                 Vmath::Scatr(m_numLocalCoeffs, local.get(), m_localToGlobalMap.get(), global.get());
             }
+
+            // ensure all values are unique by calling a max 
+            Gs::Gather(global, Gs::gs_max, m_gsh);
         }
 
         void AssemblyMapCG::v_LocalToGlobal(
@@ -536,6 +671,32 @@ namespace Nektar
         {
             return m_numNonDirFaceModes;
         }
+
+        int AssemblyMapCG::v_GetNumDirEdges() const
+        {
+            return m_numDirEdges;
+        }
+
+        int AssemblyMapCG::v_GetNumDirFaces() const
+        {
+            return m_numDirFaces;
+        }
+
+        int AssemblyMapCG::v_GetNumNonDirEdges() const
+        {
+            return m_numNonDirEdges;
+        }
+
+        int AssemblyMapCG::v_GetNumNonDirFaces() const
+        {
+            return m_numNonDirFaces;
+        }
+
+        const Array<OneD, const int>& AssemblyMapCG::v_GetExtraDirEdges()
+        {
+            return m_extraDirEdges;
+        }
+
 
     } // namespace
 } // namespace

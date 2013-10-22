@@ -117,35 +117,36 @@ namespace Nektar
         {
             eNull,    ///< No Solution type specified
             eDiagonal,
-            eInverseLinear,
-	    eLowEnergy,
-            eLinearLowEnergy,
+            eLinearWithDiagonal,
+            eLinear,
+            eLowEnergy,
+            eLinearWithLowEnergy,
             eBlock,
-            eLocalLowEnergy
+            eLinearWithBlock
         };
 
         const char* const PreconditionerTypeMap[] =
         {
             "Null",
             "Diagonal",
-            "InverseLinear",
-	    "LowEnergy",
-	    "LinearLowEnergy",
+            "FullLinearSpaceWithDiagonal",
+            "FullLinearSpace",
+	        "LowEnergyBlock",
+            "FullLinearSpaceWithLowEnergyBlock",
             "Block",
-            "LocalLowEnergy"
+            "FullLinearSpaceWithBlock"
         };
 
+
+        // let's keep this for linking to external
+        // sparse libraries
         enum MatrixStorageType
         {
-            eNistCSR,
-            eNistBSR,
             eSmvBSR
         };
 
         const char* const MatrixStorageTypeMap[] =
         {
-            "NistCSR",
-            "NistBSR",
             "SmvBSR"
         };
 

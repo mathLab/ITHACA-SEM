@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     NekDouble x[2];
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;
-    StdRegions::StdExpansion1D  *E;
+    StdRegions::StdExpansion1D  *E = NULL;
 
     if(argc != 6)
     {
@@ -35,8 +35,11 @@ int main(int argc, char *argv[])
         fprintf(stderr,"\t Modified_A = 4\n");
         fprintf(stderr,"\t Fourier    = 7\n");
         fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Legendre   = 9\n"); 
-        fprintf(stderr,"\t Chebyshev  = 10\n");
+        fprintf(stderr,"\t Gauss Lagrange = 9\n");
+        fprintf(stderr,"\t Legendre       = 10\n");
+        fprintf(stderr,"\t Chebyshev      = 11\n");
+        fprintf(stderr,"\t Monomial       = 12\n");
+        fprintf(stderr,"\t FourierSingleMode   = 13\n");
 
         fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
 
@@ -59,20 +62,24 @@ int main(int argc, char *argv[])
     x[1]  =   atof(argv[5]);
 
     Array<OneD,NekDouble> sol(nq);
-
-    if(btype != LibUtilities::eFourier)
-    {
+    
+    if(btype== LibUtilities::eFourier)
+	{
+		Qtype = LibUtilities::eFourierEvenlySpaced;
+	}
+	else if(btype== LibUtilities::eFourierSingleMode)
+	{
+		Qtype = LibUtilities::eFourierSingleModeSpaced;
+	}
+	else
+	{
         Qtype = LibUtilities::eGaussLobattoLegendre;
-    }
-    else
-    {
-        Qtype = LibUtilities::eFourierEvenlySpaced;
-    }
+	}
 
     //-----------------------------------------------
     // Define a segment expansion based on basis definition
-    SpatialDomains::VertexComponentSharedPtr  vert1(new SpatialDomains::VertexComponent(1,0,x[0],0,0));
-    SpatialDomains::VertexComponentSharedPtr  vert2(new SpatialDomains::VertexComponent(1,0,x[1],0,0));
+    SpatialDomains::PointGeomSharedPtr  vert1(new SpatialDomains::PointGeom(1,0,x[0],0,0));
+    SpatialDomains::PointGeomSharedPtr  vert2(new SpatialDomains::PointGeom(1,0,x[1],0,0));
     SpatialDomains::SegGeomSharedPtr geom(new SpatialDomains::SegGeom(0,vert1,vert2));
     geom->SetOwnData();
 

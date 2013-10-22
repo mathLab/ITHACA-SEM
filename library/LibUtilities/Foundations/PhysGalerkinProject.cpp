@@ -112,7 +112,7 @@ namespace Nektar
             }
         }
 
-        // 2D Interpolation
+        // 2D Galerkin Projection
         void PhysGalerkinProject2D(const BasisKey &fbasis0, 
                       const BasisKey &fbasis1, 
                       const Array<OneD, const NekDouble>& from,  
@@ -171,6 +171,81 @@ namespace Nektar
                             GP0->GetPtr().get(),
                             tnp0, wsp.get(), fnp0, 0.0, to, tnp0);     
             }
+        }
+
+
+        // 3D Galerkin Projection
+        void PhysGalerkinProject3D(const BasisKey &fbasis0,
+                      const BasisKey &fbasis1,
+                      const BasisKey &fbasis2,
+                      const Array<OneD, const NekDouble>& from,
+                      const BasisKey &tbasis0,
+                      const BasisKey &tbasis1,
+                      const BasisKey &tbasis2,
+                      Array<OneD, NekDouble> &to)
+        {
+            PhysGalerkinProject3D(fbasis0.GetPointsKey(),
+                                  fbasis1.GetPointsKey(),
+                                  fbasis2.GetPointsKey(),
+                                  from.data(),
+                                  tbasis0.GetPointsKey(),
+                                  tbasis1.GetPointsKey(),
+                                  tbasis2.GetPointsKey(),
+                                  to.data());
+        }
+
+        void PhysGalerkinProject3D(const PointsKey &fpoints0,
+                      const PointsKey &fpoints1,
+                      const PointsKey &fpoints2,
+                      const Array<OneD, const NekDouble>& from,
+                      const PointsKey &tpoints0,
+                      const PointsKey &tpoints1,
+                      const PointsKey &tpoints2,
+                      Array<OneD, NekDouble> &to)
+        {
+            PhysGalerkinProject3D(fpoints0,fpoints1,fpoints2,from.data(),
+                                  tpoints0,tpoints1,tpoints2,to.data());
+        }
+
+        void PhysGalerkinProject3D(const PointsKey &fpoints0,
+                      const PointsKey &fpoints1,
+                      const PointsKey &fpoints2,
+                      const NekDouble *from,
+                      const PointsKey &tpoints0,
+                      const PointsKey &tpoints1,
+                      const PointsKey &tpoints2,
+                      NekDouble *to)
+        {
+            DNekMatSharedPtr GP0,GP1,GP2;
+
+            int fnp0 = fpoints0.GetNumPoints();
+            int fnp1 = fpoints1.GetNumPoints();
+            int fnp2 = fpoints2.GetNumPoints();
+            int tnp0 = tpoints0.GetNumPoints();
+            int tnp1 = tpoints1.GetNumPoints();
+            int tnp2 = tpoints2.GetNumPoints();
+
+            Array<OneD, NekDouble> wsp1(fnp0*tnp1*tnp2);
+            Array<OneD, NekDouble> wsp2(fnp0*fnp1*tnp2);
+
+            GP2 = PointsManager()[tpoints2]->GetGalerkinProjection(fpoints2);
+            Blas::Dgemm('N', 'T', fnp0*fnp1, tnp2, fnp2, 1.0, from, fnp0*fnp1,
+                        GP2->GetPtr().get(), tnp2, 0.0,  wsp2.get(), fnp0*fnp1);
+
+            GP1 = PointsManager()[tpoints1]->GetGalerkinProjection(fpoints1);
+            for(int i = 0; i < tnp2; i++)
+            {
+                Blas::Dgemm('N', 'T', fnp0,  tnp1,   fnp1, 1.0,
+                            wsp2.get()+i*fnp0*fnp1,
+                            fnp0, GP1->GetPtr().get(),tnp1, 0.0,
+                            wsp1.get()+i*fnp0*tnp1,
+                            fnp0);
+            }
+
+            GP0 = PointsManager()[tpoints0]->GetGalerkinProjection(fpoints0);
+            Blas::Dgemm('N', 'N', tnp0, tnp1*tnp2, fnp0, 1.0,
+                        GP0->GetPtr().get(), tnp0, wsp1.get(), fnp0, 0.0,
+                        to, tnp0);
         }
 
     } // end of namespace

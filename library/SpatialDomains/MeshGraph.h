@@ -104,8 +104,8 @@ namespace Nektar
 
         class InterfaceComponent;
         typedef boost::shared_ptr< InterfaceComponent > SharedInterfaceCompPtr;
-        typedef std::vector< VertexComponentSharedPtr > VertexVector;
-        typedef std::map<int, VertexComponentSharedPtr> VertexMap;
+        typedef std::vector< PointGeomSharedPtr >       PointGeomVector;
+        typedef std::map<int, PointGeomSharedPtr>       PointGeomMap;
         typedef std::list< SharedInterfaceCompPtr >     InterfaceCompList;
 
         typedef boost::shared_ptr< GeometryVector >     Composite;
@@ -299,9 +299,9 @@ namespace Nektar
                 /* ---- Manipulation of mesh ---- */
                 inline int GetNvertices() const;
 
-                inline VertexComponentSharedPtr GetVertex(int id);
+                inline PointGeomSharedPtr GetVertex(int id);
                 /// Adds a vertex to the with the next available ID.
-                SPATIAL_DOMAINS_EXPORT VertexComponentSharedPtr AddVertex(
+                SPATIAL_DOMAINS_EXPORT PointGeomSharedPtr AddVertex(
                         NekDouble x,
                         NekDouble y,
                         NekDouble z);
@@ -309,7 +309,7 @@ namespace Nektar
                 /// \brief Adds an edge between two points.  If curveDefinition is 
                 /// null, then the edge is straight, otherwise it is curved according 
                 /// to the curveDefinition.
-                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(VertexComponentSharedPtr v0, VertexComponentSharedPtr v1,
+                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(PointGeomSharedPtr v0, PointGeomSharedPtr v1,
                     CurveSharedPtr curveDefinition = CurveSharedPtr());
                 SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetEdge(unsigned int id) { return m_segGeoms[id]; }
 
@@ -336,7 +336,7 @@ namespace Nektar
 
             protected:
                 LibUtilities::SessionReaderSharedPtr    m_session;
-                VertexMap                               m_vertSet;
+                PointGeomMap                            m_vertSet;
                 InterfaceCompList                       m_iComps;
 
                 CurveVector                             m_curvedEdges;
@@ -491,10 +491,10 @@ namespace Nektar
         /**
          *
          */
-        inline VertexComponentSharedPtr MeshGraph::GetVertex(int id)
+        inline PointGeomSharedPtr MeshGraph::GetVertex(int id)
         {
-            VertexComponentSharedPtr returnval;
-            VertexMap::iterator x = m_vertSet.find(id);
+            PointGeomSharedPtr returnval;
+            PointGeomMap::iterator x = m_vertSet.find(id);
             ASSERTL0(x != m_vertSet.end(),
                      "Vertex " + boost::lexical_cast<string>(id)
                      + " not found.");

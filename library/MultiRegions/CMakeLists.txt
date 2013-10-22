@@ -1,4 +1,20 @@
 SET(MULTI_REGIONS_SOURCES
+./AssemblyMap/AssemblyMap.cpp
+./AssemblyMap/AssemblyMapCG.cpp
+./AssemblyMap/AssemblyMapDG.cpp
+./AssemblyMap/AssemblyMapCG1D.cpp
+./AssemblyMap/AssemblyMapCG2D.cpp
+./AssemblyMap/AssemblyMapCG3D.cpp
+ContField1D.cpp
+ContField2D.cpp
+ContField3D.cpp
+ContField3DHomogeneous1D.cpp
+ContField3DHomogeneous2D.cpp
+DisContField1D.cpp
+DisContField2D.cpp
+DisContField3D.cpp
+DisContField3DHomogeneous1D.cpp
+DisContField3DHomogeneous2D.cpp
 ExpList.cpp
 ExpList0D.cpp
 ExpList1D.cpp
@@ -10,16 +26,6 @@ ExpList2DHomogeneous1D.cpp
 ExpList1DHomogeneous2D.cpp
 ExpList3DHomogeneous1D.cpp
 ExpList3DHomogeneous2D.cpp
-DisContField1D.cpp
-DisContField2D.cpp
-DisContField3D.cpp
-DisContField3DHomogeneous1D.cpp
-DisContField3DHomogeneous2D.cpp
-ContField1D.cpp
-ContField2D.cpp
-ContField3D.cpp
-ContField3DHomogeneous1D.cpp
-ContField3DHomogeneous2D.cpp
 GlobalLinSys.cpp
 GlobalLinSysKey.cpp
 GlobalLinSysDirect.cpp
@@ -30,20 +36,12 @@ GlobalLinSysIterativeFull.cpp
 GlobalLinSysIterativeStaticCond.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
-
-./AssemblyMap/AssemblyMap.cpp
-./AssemblyMap/AssemblyMapCG.cpp
-./AssemblyMap/AssemblyMapDG.cpp
-./AssemblyMap/AssemblyMapCG1D.cpp
-./AssemblyMap/AssemblyMapCG2D.cpp
-./AssemblyMap/AssemblyMapCG3D.cpp
-
 GlobalOptimizationParameters.cpp
-SubStructuredGraph.cpp
-
 Preconditioner.cpp
 PreconditionerDiagonal.cpp
 PreconditionerLowEnergy.cpp
+PreconditionerBlock.cpp
+SubStructuredGraph.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -78,13 +76,14 @@ GlobalLinSysIterativeFull.h
 GlobalLinSysIterativeStaticCond.h
 GlobalMatrix.h
 GlobalMatrixKey.h
+GlobalOptimizationParameters.h
 MultiRegions.hpp
 MultiRegionsDeclspec.h
-GlobalOptimizationParameters.h
-SubStructuredGraph.h
 Preconditioner.h
 PreconditionerDiagonal.h
 PreconditionerLowEnergy.h
+PreconditionerBlock.h
+SubStructuredGraph.h
 )
 
 SET(ASSEMBLY_MAP_HEADERS
@@ -101,11 +100,19 @@ IF(NEKTAR_USE_MPI)
         GlobalLinSysXxt.h
         GlobalLinSysXxtFull.h
         GlobalLinSysXxtStaticCond.h
+        PreconditionerLinear.cpp
+        PreconditionerLinearWithLowEnergy.cpp
+        PreconditionerLinearWithDiag.cpp
+        PreconditionerLinearWithBlock.cpp
     )
     SET(MULTI_REGIONS_SOURCES ${MULTI_REGIONS_SOURCES}
         GlobalLinSysXxt.cpp
         GlobalLinSysXxtFull.cpp
         GlobalLinSysXxtStaticCond.cpp
+        PreconditionerLinear.h
+        PreconditionerLinearWithLowEnergy.h
+        PreconditionerLinearWithDiag.h
+        PreconditionerLinearWithBlock.h
     )
 ENDIF(NEKTAR_USE_MPI)
 

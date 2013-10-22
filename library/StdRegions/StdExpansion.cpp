@@ -34,7 +34,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #include <StdRegions/StdExpansion.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for BasisManager, etc
 
@@ -96,7 +95,8 @@ namespace Nektar
                 m_base[0] = LibUtilities::BasisManager()[Ba];
                 break;
             default:
-                ASSERTL0(false, "numbases incorrectly specified");
+                break;
+//                ASSERTL0(false, "numbases incorrectly specified");
             };
 
             //allocate memory for phys
@@ -301,8 +301,9 @@ namespace Nektar
             Array<OneD, NekDouble> wsp(ntot);
 
             Vmath::Vmul(ntot, m_phys, 1, m_phys, 1, wsp, 1);
-            val   = sqrt(v_Integral(wsp));
 
+            val   = sqrt(v_Integral(wsp));
+            
             return val;
         }
 
@@ -1018,17 +1019,23 @@ namespace Nektar
             outfile << std::endl;
         }
 
-
         // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
         void StdExpansion::SetUpPhysNormals(const int edge)
         {
             v_SetUpPhysNormals(edge);
         }
 
-        void StdExpansion::SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
+        void StdExpansion::SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge)
         {
             v_SetUpPhysTangents(exp2d, edge);
         }
+
+        NekDouble StdExpansion::StdPhysEvaluate(const Array<OneD, const NekDouble> &Lcoord,
+                                                const Array<OneD, const NekDouble> &physvals)
+        {
+            return v_StdPhysEvaluate(Lcoord,physvals);
+        }
+
         void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fx,
@@ -1071,7 +1078,7 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
-        void StdExpansion::v_SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
+        void StdExpansion::v_SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
@@ -1156,6 +1163,14 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
         
+
+        NekDouble StdExpansion::v_StdPhysEvaluate(const Array<OneD, const NekDouble> &Lcoord,
+                                                  const Array<OneD, const NekDouble> &physvals)
+            
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            return 0;
+        }
 
         void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
                                                     boost::shared_ptr<StdExpansion>    &EdgeExp,
@@ -1515,13 +1530,27 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-
             void StdExpansion::v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
             void StdExpansion::v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+        
+        void StdExpansion::v_GetTracePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+
+            void StdExpansion::v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+        
+            void StdExpansion::v_GetEdgeInterpVals(const int edge,const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
@@ -1544,6 +1573,20 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
+            void StdExpansion::v_MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray)
+            {
+                v_MultiplyByStdQuadratureMetric(inarray, outarray);
+            }
+
+            void StdExpansion::v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library");
+            }
+
             void StdExpansion::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
             {
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
@@ -1559,34 +1602,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return SpatialDomains::NullGeomFactorsSharedPtr;
 
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry> StdExpansion::v_GetGeom() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-
-                return SpatialDomains::NullGeometrySharedPtr;
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry1D>& StdExpansion::v_GetGeom1D() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-
-                return SpatialDomains::NullGeometry1DSharedPtr;
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry2D>& StdExpansion::v_GetGeom2D() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-
-                return SpatialDomains::NullGeometry2DSharedPtr;
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry3D>& StdExpansion::v_GetGeom3D() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-
-                return SpatialDomains::NullGeometry3DSharedPtr;
             }
 
             void StdExpansion::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
@@ -1657,13 +1672,13 @@ namespace Nektar
         void StdExpansion::v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                                           Array<OneD,NekDouble> &outarray,
                                                           const StdMatrixKey &mkey)
-            {
-                // If this function is not reimplemented on shape level, the function
-                // below will be called
-                WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
-
-            }
-
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
+            
+        }
+        
         void StdExpansion::v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,NekDouble> &outarray,
                                                         const StdMatrixKey &mkey)
@@ -1692,7 +1707,7 @@ namespace Nektar
             // below will be called
             HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
-        
+
         void StdExpansion::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                        Array<OneD,NekDouble> &outarray,
                                                        const StdMatrixKey &mkey)
@@ -1702,6 +1717,14 @@ namespace Nektar
             LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
         }
         
+        void StdExpansion::v_LaplacianMatrixOp_MatFree_Kernel(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,       NekDouble> &outarray,
+                                  Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+
         void StdExpansion::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                        Array<OneD,NekDouble> &outarray,
                                                        const StdMatrixKey &mkey)
@@ -1769,5 +1792,30 @@ namespace Nektar
             static NormalVector result;
             return result;
         }
+
+        Array<OneD, unsigned int>
+        StdExpansion::v_GetEdgeInverseBoundaryMap(int eid)
+        {
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, unsigned int> noinversemap(1);
+            return noinversemap;
+        }
+
+        Array<OneD, unsigned int>
+        StdExpansion::v_GetFaceInverseBoundaryMap(int fid)
+        {
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, unsigned int> noinversemap(1);
+            return noinversemap;
+        }
+
+        DNekMatSharedPtr 
+        StdExpansion::v_BuildInverseTransformationMatrix(
+            const DNekScalMatSharedPtr & m_transformationmatrix)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+            return NullDNekMatSharedPtr;
+        }
+
     }//end namespace
 }//end namespace

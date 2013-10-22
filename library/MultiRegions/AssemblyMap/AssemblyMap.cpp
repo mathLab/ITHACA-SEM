@@ -84,12 +84,15 @@ namespace Nektar
             m_numGlobalDirBndCoeffs(0),
             m_solnType(eNoSolnType),
             m_bndSystemBandWidth(0),
+            m_successiveRHS(0),
             m_gsh(0),
             m_bndGsh(0)
         {
         }
 
-        AssemblyMap::AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession):
+        AssemblyMap::AssemblyMap(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string variable):
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_hash(0),
@@ -97,15 +100,63 @@ namespace Nektar
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
             m_numGlobalDirBndCoeffs(0),
-            m_solnType(pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln")),
             m_bndSystemBandWidth(0),
-            m_preconType(pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner")),
+            m_successiveRHS(0),
             m_gsh(0),
             m_bndGsh(0)
         {
+            // Default value from Solver Info
+            m_solnType = pSession->GetSolverInfoAsEnum<GlobalSysSolnType>(
+                                                            "GlobalSysSoln");
+            m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>(
+                                                            "Preconditioner");
+
+            // Override values with data from GlobalSysSolnInfo section 
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "GlobalSysSoln"))
+            {
+                std::string sysSoln = pSession->GetGlobalSysSolnInfo(variable,
+                                                            "GlobalSysSoln");
+                m_solnType = pSession->GetValueAsEnum<GlobalSysSolnType>(
+                                                    "GlobalSysSoln", sysSoln);
+            }
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "Preconditioner"))
+            {
+                std::string precon = pSession->GetGlobalSysSolnInfo(variable,
+                                                            "Preconditioner");
+                m_preconType = pSession->GetValueAsEnum<PreconditionerType>(
+                                                    "Preconditioner", precon);
+            }
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                                  "IterativeSolverTolerance"))
+            {
+                m_iterativeTolerance = boost::lexical_cast<NekDouble>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "IterativeSolverTolerance").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("IterativeSolverTolerance",
+                                        m_iterativeTolerance,
+                                        NekConstants::kNekIterativeTol);
+            }
+
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
+            {
+                m_successiveRHS = boost::lexical_cast<int>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "SuccessiveRHS").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("SuccessiveRHS",
+                                        m_successiveRHS,0);
+            }
+
         }
-
-
+        
         /** 
          * Create a new level of mapping using the information in
          * multiLevelGraph and performing the following steps:
@@ -120,6 +171,8 @@ namespace Nektar
             m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
             m_solnType(oldLevelMap->m_solnType),
             m_preconType(oldLevelMap->m_preconType),
+            m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
+            m_successiveRHS(oldLevelMap->m_successiveRHS),
             m_gsh(oldLevelMap->m_gsh),
             m_bndGsh(oldLevelMap->m_bndGsh),
             m_lowestStaticCondLevel(oldLevelMap->m_lowestStaticCondLevel)
@@ -555,7 +608,43 @@ namespace Nektar
             return 0;
         }
 
+        int AssemblyMap::v_GetNumDirEdges() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
 
+        int AssemblyMap::v_GetNumDirFaces() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        int AssemblyMap::v_GetNumNonDirEdges() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        int AssemblyMap::v_GetNumNonDirFaces() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        const Array<OneD, const int>& AssemblyMap::v_GetExtraDirEdges()
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            static Array<OneD, const int> result;
+            return result;
+        }
+        
+        boost::shared_ptr<AssemblyMap> AssemblyMap::v_XxtLinearSpaceMap(const ExpList &locexp)
+        {
+            ASSERTL0(false, "Not defined for this sub class");
+            static boost::shared_ptr<AssemblyMap> result;
+            return result;
+        }
 
         LibUtilities::CommSharedPtr AssemblyMap::GetComm()
         {
@@ -688,11 +777,40 @@ namespace Nektar
             return v_GetNumNonDirFaceModes();
         }
 
+        int AssemblyMap::GetNumDirEdges() const
+        {
+            return v_GetNumDirEdges();
+        }
+
+        int AssemblyMap::GetNumDirFaces() const
+        {
+            return v_GetNumDirFaces();
+        }
+
+        int AssemblyMap::GetNumNonDirEdges() const
+        {
+            return v_GetNumNonDirEdges();
+        }
+
+        int AssemblyMap::GetNumNonDirFaces() const
+        {
+            return v_GetNumNonDirFaces();
+        }
+
+        const Array<OneD, const int>& AssemblyMap::GetExtraDirEdges()
+        {
+            return v_GetExtraDirEdges();
+        }
+
+        boost::shared_ptr<AssemblyMap> AssemblyMap::XxtLinearSpaceMap(const ExpList &locexp)
+        {
+            return v_XxtLinearSpaceMap(locexp);
+        }
+
         int AssemblyMap::GetLocalToGlobalBndMap(const int i) const
         {
             return m_localToGlobalBndMap[i];
         }
-
 
         const Array<OneD,const int>&
                     AssemblyMap::GetLocalToGlobalBndMap(void)
@@ -745,6 +863,8 @@ namespace Nektar
         int AssemblyMap::GetBndCondTraceToGlobalTraceMap(
                     const int i)
         {
+            ASSERTL1(i < m_bndCondTraceToGlobalTraceMap.num_elements(),
+                     "Index out of range.");
             return m_bndCondTraceToGlobalTraceMap[i];
         }
 
@@ -888,6 +1008,8 @@ namespace Nektar
             {
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
+
+            UniversalAssembleBnd(tmp);
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
         
@@ -1046,16 +1168,24 @@ namespace Nektar
         }
 
 
-        GlobalSysSolnType
-                    AssemblyMap::GetGlobalSysSolnType() const
+        GlobalSysSolnType AssemblyMap::GetGlobalSysSolnType() const
         {
             return m_solnType;
         }
 
-        PreconditionerType
-                    AssemblyMap::GetPreconType() const
+        PreconditionerType  AssemblyMap::GetPreconType() const
         {
             return m_preconType;
+        }
+
+        NekDouble AssemblyMap::GetIterativeTolerance() const
+        {
+            return m_iterativeTolerance;
+        }
+
+        int AssemblyMap::GetSuccessiveRHS() const
+        {
+            return m_successiveRHS;
         }
 
         void AssemblyMap::GlobalToLocalBndWithoutSign(

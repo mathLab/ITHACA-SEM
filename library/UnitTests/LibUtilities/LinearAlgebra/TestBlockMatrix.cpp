@@ -844,7 +844,7 @@ namespace Nektar
             std::vector< boost::shared_ptr<M2> > scaledMatrices;
             for(unsigned int i = 0; i < 36; ++i)
             {
-                double values[] = {i*4, i*4+1, i*4+2, i*4+3};
+                double values[] = {i*4.0, i*4.0+1.0, i*4.0+2.0, i*4.0+3.0};
                 boost::shared_ptr<M1> matrix(new M1(2,2, values));
                 boost::shared_ptr<M2> scaled(new M2(1.0, matrix));
                 scaledMatrices.push_back(scaled);

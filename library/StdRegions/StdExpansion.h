@@ -46,7 +46,7 @@
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
-namespace Nektar { namespace LocalRegions { class MatrixKey; } }
+namespace Nektar { namespace LocalRegions { class MatrixKey; class Expansion; } }
 
 
 namespace Nektar
@@ -74,7 +74,7 @@ namespace Nektar
 
             /** \brief Constructor */
             STD_REGIONS_EXPORT StdExpansion(const int numcoeffs, const int numbases,
-                         const LibUtilities::BasisKey &Ba,
+                         const LibUtilities::BasisKey &Ba = LibUtilities::NullBasisKey,
                          const LibUtilities::BasisKey &Bb = LibUtilities::NullBasisKey,
                          const LibUtilities::BasisKey &Bc = LibUtilities::NullBasisKey);
 
@@ -363,8 +363,9 @@ namespace Nektar
              */
             inline int GetNumPoints(const int dir) const
             {
-                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
-                return(m_base[dir]->GetNumPoints());
+                ASSERTL1(dir < m_numbases || dir == 0,
+                         "dir is larger than m_numbases");
+                return(m_base.num_elements() > 0 ? m_base[dir]->GetNumPoints() : 1);
             }
 
             /** \brief This function returns a pointer to the array containing
@@ -830,7 +831,7 @@ namespace Nektar
                 return m_stdStaticCondMatrixManager[mkey];
             }
 			
-			inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
+	    inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager[ikey];
             }
@@ -847,7 +848,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge);
+	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion>  &exp2d, const int edge);
 
 
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
@@ -918,6 +919,10 @@ namespace Nektar
             }
 
             // virtual functions related to LocalRegions
+            STD_REGIONS_EXPORT NekDouble StdPhysEvaluate(
+                                            const Array<OneD, const NekDouble> &Lcoord,
+                                            const Array<OneD, const NekDouble> &physvals);
+
 
             STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion>    &EdgeExp,
@@ -991,23 +996,46 @@ namespace Nektar
                                       nummodesA,nummodesB);
             }
 
+
             /**
              * @brief Extract the physical values along edge \a edge from \a
              * inarray into \a outarray following the local edge orientation
              * and point distribution defined by defined in \a EdgeExp.
              */
             
-            void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetEdgePhysVals(const int edge, const Array<OneD,
+                                 const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,inarray,outarray);
             }
 
-            void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetEdgePhysVals(const int edge,
+                                 const boost::shared_ptr<StdExpansion> &EdgeExp,
+                                 const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
+
+            void GetTracePhysVals(const int edge, const boost::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                v_GetTracePhysVals(edge,EdgeExp,inarray,outarray);
+            }
+                        
+            void GetVertexPhysVals(const int vertex,
+                                   const Array<OneD, const NekDouble> &inarray,
+                                         NekDouble &outarray)
+            {
+                v_GetVertexPhysVals(vertex, inarray, outarray);
+            }
             
-            
+            void GetEdgeInterpVals(const int edge,const Array<OneD,
+                                   const NekDouble> &inarray,
+                                         Array<OneD,NekDouble> &outarray)
+            {
+                v_GetEdgeInterpVals(edge, inarray, outarray);
+            }
             
             /**
              * @brief Extract the metric factors to compute the contravariant 
@@ -1032,6 +1060,20 @@ namespace Nektar
                 StdRegions::Orientation                  orient = eNoOrientation)
             {
                 v_GetFacePhysVals(face, FaceExp, inarray, outarray, orient);
+            }
+
+            void MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> &outarray)
+            {
+                v_MultiplyByQuadratureMetric(inarray, outarray);
+            }
+
+            void MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> & outarray)
+            {
+                v_MultiplyByStdQuadratureMetric(inarray, outarray);
             }
 
             // Matrix Routines
@@ -1256,33 +1298,13 @@ namespace Nektar
                 return v_GetMetricInfo();
             }
 
-            const boost::shared_ptr<SpatialDomains::Geometry> GetGeom(void) const
-            {
-                return v_GetGeom();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry1D>& GetGeom1D(void) const
-            {
-                return v_GetGeom1D();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry2D>& GetGeom2D(void) const
-            {
-                return v_GetGeom2D();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry3D>& GetGeom3D(void) const
-            {
-                return v_GetGeom3D();
-            }
-
             STD_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
 
             STD_REGIONS_EXPORT virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
 
             STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge);
+	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge);
 
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
             
@@ -1439,6 +1461,28 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
+
+            STD_REGIONS_EXPORT Array<OneD, unsigned int> 
+                GetEdgeInverseBoundaryMap(int eid)
+            {
+                return v_GetEdgeInverseBoundaryMap(eid);
+            }
+            
+            STD_REGIONS_EXPORT Array<OneD, unsigned int>
+                GetFaceInverseBoundaryMap(int fid)
+            {
+                return v_GetFaceInverseBoundaryMap(fid);
+            }
+
+            STD_REGIONS_EXPORT DNekMatSharedPtr BuildInverseTransformationMatrix(
+                const DNekScalMatSharedPtr & m_transformationmatrix)
+            {
+                return v_BuildInverseTransformationMatrix(
+                    m_transformationmatrix);
+            }
+
+
+
         protected:
 
 
@@ -1450,14 +1494,14 @@ namespace Nektar
             Array<OneD, NekDouble> m_phys;                    /**< Array containing expansion evaluated at the quad points */
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
-			LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
+	    LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
 			
             bool StdMatManagerAlreadyCreated(const StdMatrixKey &mkey)
             {
                 return m_stdMatrixManager.AlreadyCreated(mkey);
             }
 			
-			bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
+            bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager.AlreadyCreated(ikey);
             }
@@ -1541,6 +1585,14 @@ namespace Nektar
                 v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
+            STD_REGIONS_EXPORT void LaplacianMatrixOp_MatFree_Kernel(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp)
+            {
+                v_LaplacianMatrixOp_MatFree_Kernel(inarray, outarray, wsp);
+            }
+
             STD_REGIONS_EXPORT void LaplacianMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                              Array<OneD,NekDouble> &outarray,
                                                              const StdMatrixKey &mkey);
@@ -1585,6 +1637,10 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(StdRegions::Orientation dir);
 			
+            STD_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
+                                                   const Array<OneD, const NekDouble> &Lcoord,
+                                                   const Array<OneD, const NekDouble> &physvals);
+
             STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fx,
@@ -1766,6 +1822,13 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_GetTracePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient = eNoOrientation);
+            
+            STD_REGIONS_EXPORT virtual void v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray);
+            
+            STD_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(const int edge,
+                const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray);
             
             STD_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
                 const int edge,  
@@ -1778,19 +1841,19 @@ namespace Nektar
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
 
+            STD_REGIONS_EXPORT virtual void v_MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
             STD_REGIONS_EXPORT virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
             STD_REGIONS_EXPORT virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
 
             STD_REGIONS_EXPORT virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry> v_GetGeom() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry1D>& v_GetGeom1D() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry2D>& v_GetGeom2D() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry3D>& v_GetGeom3D() const;
 
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray);
@@ -1845,6 +1908,11 @@ namespace Nektar
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree_Kernel(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                      Array<OneD,       NekDouble> &wsp);
+
             STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey);
@@ -1868,6 +1936,16 @@ namespace Nektar
 			
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
+
+            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
+                v_GetEdgeInverseBoundaryMap(int eid);
+
+            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
+                v_GetFaceInverseBoundaryMap(int fid);
+
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(
+                    const DNekScalMatSharedPtr & m_transformationmatrix);
+
         };
 
 

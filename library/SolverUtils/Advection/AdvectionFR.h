@@ -91,10 +91,6 @@ namespace Nektar
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
             
-            virtual void v_SetupInterpolationMatrices(
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
-            
             virtual void v_Advect(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -116,6 +112,14 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &fluxX2, 
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux);
+            
+            virtual void v_DivCFlux_2D_Gauss(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, const NekDouble> &fluxX1,
+                const Array<OneD, const NekDouble> &fluxX2,
+                const Array<OneD, const NekDouble> &numericalFlux,
+                Array<OneD,       NekDouble> &divCFlux);
             
             virtual void v_DivCFlux_3D(
                 const int nConvectiveFields,

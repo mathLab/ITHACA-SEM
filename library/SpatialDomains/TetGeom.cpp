@@ -39,11 +39,17 @@
 #include <StdRegions/StdTetExp.h>
 #include <SpatialDomains/SegGeom.h>
 
-
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        const unsigned int TetGeom::VertexEdgeConnectivity[4][3] = {
+            {0,2,3},{0,1,4},{1,2,5},{3,4,5}};
+        const unsigned int TetGeom::VertexFaceConnectivity[4][3] = {
+            {0,1,3},{0,1,2},{0,2,3},{1,2,3}};
+        const unsigned int TetGeom::EdgeFaceConnectivity  [6][2] = {
+            {0,1},{0,2},{0,3},{1,3},{1,2},{2,3}};
+
         TetGeom::TetGeom()
         {
             m_shapeType = LibUtilities::eTetrahedron;
@@ -134,18 +140,56 @@ namespace Nektar
         bool TetGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
+
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry and return local caretsian coordinates
+         */
+        bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+                                      Array<OneD, NekDouble> &locCoord,
+                                      NekDouble tol)
+        {
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
+
+            // find min, max point and check if within twice this
+            // distance other false this is advisable since
+            // GetLocCoord is expensive for non regular elements.
+            if(GetMetricInfo()->GetGtype() !=  eRegular)
+            {
+                int i;
+                Array<OneD, NekDouble> pts; 
+                NekDouble mincoord, maxcoord,diff;
+                
+                v_FillGeom();
+                
+                for(i = 0; i < 3; ++i)
+                {
+                    pts = m_xmap[i]->GetPhys();
+                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
+                    
+                    diff = maxcoord - mincoord; 
+                    
+                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    {
+                        return false;
+                    }
+                }
+            }
             
             // Convert to the local (eta) coordinates.
-            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
             v_GetLocCoords(gloCoord, locCoord);
             
-            // Check local coordinate is within [-1,1]^3 bounds.
+            // Check local coordinate is within cartesian bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
                 locCoord[2] >= -(1+tol)                            &&
-                locCoord[0] + locCoord[1] + locCoord[2] <= -(1+tol))
+                locCoord[0] + locCoord[1] + locCoord[2] <= -1+tol)
             {
                 return true;
             }
@@ -153,19 +197,21 @@ namespace Nektar
             return false;
         }
 
+
+        /// Get Local cartesian points 
         void TetGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble>& coords,
                   Array<OneD,       NekDouble>& Lcoords)
         {
             
             // calculate local coordinates (eta) for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {   
                 // Point inside tetrahedron
-                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+                PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
 
                 // Edges
-                VertexComponent er0, e10, e20, e30;
+                PointGeom er0, e10, e20, e30;
                 er0.Sub(r,*m_verts[0]);
                 e10.Sub(*m_verts[1],*m_verts[0]);
                 e20.Sub(*m_verts[2],*m_verts[0]);
@@ -173,7 +219,7 @@ namespace Nektar
 
 
                 // Cross products (Normal times area)
-                VertexComponent cp1020, cp2030, cp3010;
+                PointGeom cp1020, cp2030, cp3010;
                 cp1020.Mult(e10,e20);
                 cp2030.Mult(e20,e30);
                 cp3010.Mult(e30,e10);
@@ -264,25 +310,16 @@ namespace Nektar
 
         int TetGeom::v_GetVertexEdgeMap(const int i, const int j) const
 	{
-	    const unsigned int VertexEdgeConnectivity[][3] = {
-	        {0,2,3},{0,1,4},{1,2,5},{3,4,5}};
-
 	    return VertexEdgeConnectivity[i][j];
 	}
 
         int TetGeom::v_GetVertexFaceMap(const int i, const int j) const
 	{
-	    const unsigned int VertexFaceConnectivity[][3] = {
-	        {0,1,3},{0,1,2},{0,2,3},{1,2,3}};
-
 	    return VertexFaceConnectivity[i][j];
 	}
 
         int TetGeom::v_GetEdgeFaceMap(const int i, const int j) const
 	{
-	    const unsigned int EdgeFaceConnectivity[][2] = {
-	      {0,1},{0,2},{0,3},{1,3},{1,2},{2,3}};
-
 	    return EdgeFaceConnectivity[i][j];
 	}
 
@@ -296,27 +333,35 @@ namespace Nektar
             SegGeomSharedPtr edge;
 
             // First set up the 3 bottom edges
+
+            if(m_faces[0]->GetEid(0) != m_faces[1]->GetEid(0))
+            {
+                std::ostringstream errstrm;
+                errstrm << "Local edge 0 (eid=" << m_faces[0]->GetEid(0);
+                errstrm  << ") on face " <<  m_faces[0]->GetFid(); 
+                errstrm << " must be the same as local edge 0 (eid="<<m_faces[1]->GetEid(0);
+                errstrm << ") on face " <<   m_faces[1]->GetFid(); 
+                ASSERTL0(false, errstrm.str());
+            }
+
             int faceConnected;
             for(faceConnected = 1; faceConnected < 4 ; faceConnected++)
             {
                 check = 0;
                 for(i = 0; i < 3; i++)
                 {
-                    for(j = 0; j < 3; j++)
+                    if( (m_faces[0])->GetEid(i) == (m_faces[faceConnected])->GetEid(0) )
                     {
-                        if( (m_faces[0])->GetEid(i) == (m_faces[faceConnected])->GetEid(j) )
-                        {
-                            edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
-                            m_edges.push_back(edge);
-                            check++;
-                        }
+                        edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
+                        m_edges.push_back(edge);
+                        check++;
                     }
                 }
 
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
-                    errstrm << "Connected faces do not share an edge. Faces ";
+                    errstrm << "Face 0 does not share an edge with first edge of adjacent face. Faces ";
                     errstrm << (m_faces[0])->GetFid() << ", " << (m_faces[faceConnected])->GetFid();
                     ASSERTL0(false, errstrm.str());
                 }
@@ -328,6 +373,7 @@ namespace Nektar
                     ASSERTL0(false, errstrm.str());
                 }
             }
+
 
             // Then, set up the 3 vertical edges
             check = 0;

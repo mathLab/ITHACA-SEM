@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     NekDouble x[2];
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;
-    StdRegions::StdExpansion1D  *E;
+    StdRegions::StdExpansion1D  *E = NULL;
 
     if(argc != 6)
     {
@@ -32,9 +32,12 @@ int main(int argc, char *argv[])
         fprintf(stderr,"\t Modified_A = 4\n");
         fprintf(stderr,"\t Fourier    = 7\n");
         fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Legendre   = 9\n"); 
-        fprintf(stderr,"\t Chebyshev  = 10\n");
-
+        fprintf(stderr,"\t Gauss Lagrange = 9\n");
+        fprintf(stderr,"\t Legendre       = 10\n");
+        fprintf(stderr,"\t Chebyshev      = 11\n");
+        fprintf(stderr,"\t Monomial       = 12\n");
+        fprintf(stderr,"\t FourierSingleMode   = 13\n");
+        
         fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
 
         exit(1);
@@ -57,22 +60,26 @@ int main(int argc, char *argv[])
 
     Array<OneD,NekDouble> sol(nq);
 
-    if(btype != LibUtilities::eFourier)
-    {
+    if(btype== LibUtilities::eFourier)
+	{
+		Qtype = LibUtilities::eFourierEvenlySpaced;
+	}
+	else if(btype== LibUtilities::eFourierSingleMode)
+	{
+		Qtype = LibUtilities::eFourierSingleModeSpaced;
+	}
+	else
+	{
         Qtype = LibUtilities::eGaussLobattoLegendre;
-    }
-    else
-    {
-        Qtype = LibUtilities::eFourierEvenlySpaced;
-    }
+	}
 
     //-----------------------------------------------
     // Define a segment expansion based on basis definition
     const int zero=0;
     const int one=1;
     const double dZero=0.0;
-    SpatialDomains::VertexComponentSharedPtr  vert1 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[0],dZero,dZero);
-    SpatialDomains::VertexComponentSharedPtr  vert2 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[1],dZero,dZero);
+    SpatialDomains::PointGeomSharedPtr  vert1 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(one,zero,x[0],dZero,dZero);
+    SpatialDomains::PointGeomSharedPtr  vert2 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(one,zero,x[1],dZero,dZero);
     SpatialDomains::SegGeomSharedPtr geom = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,vert1,vert2);
     geom->SetOwnData();
 

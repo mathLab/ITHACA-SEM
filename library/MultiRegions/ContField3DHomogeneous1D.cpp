@@ -94,7 +94,7 @@ namespace Nektar
                                         pSession, graph2D, variable, false,
                                         false);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>
                                         ::AllocateSharedPtr();
 
             for(n = 0; n < m_planes.num_elements(); ++n)

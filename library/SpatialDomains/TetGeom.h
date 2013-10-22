@@ -66,6 +66,10 @@ namespace Nektar
             virtual bool v_ContainsPoint(
                 const Array<OneD, const NekDouble> &gloCoord, 
                       NekDouble                     tol = 0.0);
+            virtual bool v_ContainsPoint(
+                const Array<OneD, const NekDouble> &gloCoord, 
+                Array<OneD, NekDouble> &locCoord,
+                NekDouble                     tol = 0.0);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
             virtual int v_GetNumFaces() const;
@@ -82,6 +86,10 @@ namespace Nektar
             void SetUpLocalVertices();
             void SetUpEdgeOrientation();
             void SetUpFaceOrientation();
+
+	    static const unsigned int VertexEdgeConnectivity[4][3];
+            static const unsigned int VertexFaceConnectivity[4][3];
+            static const unsigned int EdgeFaceConnectivity  [6][2];
         };
 
         typedef boost::shared_ptr<TetGeom> TetGeomSharedPtr;

@@ -103,11 +103,11 @@ namespace Nektar
         }
 		
         m_CoeffState = MultiRegions::eLocal;
-        m_dealiasing = false;
+        m_homogen_dealiasing = false;
         
         if(m_session->DefinesSolverInfo("DEALIASING"))
         {
-            m_dealiasing = true;
+            m_homogen_dealiasing = true;
         }
 
         m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);

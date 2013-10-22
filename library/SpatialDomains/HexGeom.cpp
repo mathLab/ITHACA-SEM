@@ -43,6 +43,16 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        const unsigned int HexGeom::VertexEdgeConnectivity[8][3] = {
+            {0,3,4},{0,1,5},{1,2,6},{2,3,7},
+            {4,8,11},{5,8,9},{6,9,10},{7,10,11}};
+        const unsigned int HexGeom::VertexFaceConnectivity[8][3] = {
+            {0,1,4},{0,1,2},{0,2,3},{0,3,4},
+            {1,4,5},{1,2,5},{2,3,5},{3,4,5}};
+        const unsigned int HexGeom::EdgeFaceConnectivity[12][2] = {
+            {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},
+            {1,5},{2,5},{3,5},{4,5}};
+
         HexGeom::HexGeom()
         {
             m_shapeType = LibUtilities::eHexahedron;
@@ -267,7 +277,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis, true);
+                    Gtype, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -282,7 +292,7 @@ namespace Nektar
             v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {   
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;
@@ -354,17 +364,58 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
         bool HexGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
+
+
+        bool HexGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord,
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol)
         {
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
 
-            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
-            v_GetLocCoords(gloCoord, stdCoord);
-            if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol
-                && stdCoord[1] >= -(1+tol) && stdCoord[1] <= 1+tol
-                && stdCoord[2] >= -(1+tol) && stdCoord[2] <= 1+tol)
+           // find min, max point and check if within twice this
+            // distance other false this is advisable since
+            // GetLocCoord is expensive for non regular elements.
+            if(GetMetricInfo()->GetGtype() !=  eRegular)
+            {
+                int i;
+                Array<OneD, NekDouble> pts; 
+                NekDouble mincoord, maxcoord,diff;
+                
+                v_FillGeom();
+                
+                for(i = 0; i < 3; ++i)
+                {
+                    pts = m_xmap[i]->GetPhys();
+                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
+                    
+                    diff = maxcoord - mincoord; 
+                    
+                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    {
+                        return false;
+                    }
+                }
+            }
+            
+            v_GetLocCoords(gloCoord, locCoord);
+
+            if (locCoord[0] >= -(1+tol) && locCoord[0] <= 1+tol
+                && locCoord[1] >= -(1+tol) && locCoord[1] <= 1+tol
+                && locCoord[2] >= -(1+tol) && locCoord[2] <= 1+tol)
             {
                 return true;
             }
@@ -388,28 +439,16 @@ namespace Nektar
 
         int HexGeom::v_GetVertexEdgeMap(const int i, const int j) const
 	{
-	    const unsigned int VertexEdgeConnectivity[][3] = {
-	        {0,3,4},{0,1,5},{1,2,6},{2,3,7},
-                {4,8,11},{5,8,9},{6,9,10},{7,10,11}};
-
 	    return VertexEdgeConnectivity[i][j];
 	}
 
         int HexGeom::v_GetVertexFaceMap(const int i, const int j) const
 	{
-	    const unsigned int VertexFaceConnectivity[][3] = {
-	        {0,1,4},{0,1,2},{0,2,3},{0,3,4},
-	        {1,4,5},{1,2,5},{2,3,5},{3,4,5}};
-
 	    return VertexFaceConnectivity[i][j];
 	}
 
         int HexGeom::v_GetEdgeFaceMap(const int i, const int j) const
 	{
-	    const unsigned int EdgeFaceConnectivity[][2] = {
-                {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},
-	        {1,5},{2,5},{3,5},{4,5}};
-
 	    return EdgeFaceConnectivity[i][j];
 	}
 

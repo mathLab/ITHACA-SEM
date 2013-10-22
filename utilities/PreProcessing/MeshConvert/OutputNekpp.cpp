@@ -227,7 +227,6 @@ namespace Nektar
         void OutputNekpp::WriteXmlCurves(TiXmlElement * pRoot)
         {
             int edgecnt = 0;
-            int facecnt = 0;
 
             bool curve = false;
             EdgeSet::iterator it;
@@ -258,7 +257,9 @@ namespace Nektar
                     curved->LinkEndChild(e);
                 }
             }
-#if 0 
+
+            int facecnt = 0;
+
             // 2D elements in 3-space, output face curvature information
             if (m->expDim == 2 && m->spaceDim == 3)
             {
@@ -301,7 +302,7 @@ namespace Nektar
                     }
                 }
             }
-#endif
+
             pRoot->LinkEndChild( curved );
         }
 
@@ -340,7 +341,8 @@ namespace Nektar
                             }
                         }
                     }
-                    
+
+                    doSort = doSort && it->second->reorder;
                     comp_tag->SetAttribute("ID", it->second->id);
                     comp_tag->LinkEndChild(
                         new TiXmlText(it->second->GetXmlString(doSort)));

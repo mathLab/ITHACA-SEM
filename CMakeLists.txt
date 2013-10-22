@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.4)
 SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build,
 options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
 RelWithDebInfo MinSizeRel.")
@@ -17,7 +17,6 @@ LIST(GET NEKVERLIST 1 NEKTAR_VERSION_MINOR)
 LIST(GET NEKVERLIST 2 NEKTAR_VERSION_PATCH)
 SET(NEKTAR_VERSION ${NEKTAR_VERSION_MAJOR}.${NEKTAR_VERSION_MINOR}.${NEKTAR_VERSION_PATCH})
 
-INCLUDE(CMakeExportBuildSettings)
 INCLUDE(CMakeDependentOption)
 ENABLE_TESTING()
 
@@ -31,6 +30,8 @@ SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 IF( NOT NEKTAR_PASSED_FIRST_CONFIGURE )
   SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
 ENDIF()
+
+INCLUDE(GetGitRevisionDescription)
 
 SET(LIB_DIR "lib")
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
@@ -64,6 +65,8 @@ OPTION(NEKTAR_BUILD_UTILITIES  "Build utilities."               ON)
 OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
 OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
 OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
+
+OPTION(NEKTAR_TEST_ALL  "Include full set of regression tests to this build."  OFF)
 
 # Build options
 OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)
@@ -158,7 +161,6 @@ ENDIF ()
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
-INCLUDE (ThirdPartySpblastk)
 INCLUDE (ThirdPartyBoost)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyFFTW)
@@ -286,7 +288,6 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindCHUDFramework.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindACML.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindArpack.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindNistSparseBlas.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindOpenBlas.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake

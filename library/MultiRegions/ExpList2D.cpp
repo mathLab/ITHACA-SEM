@@ -433,7 +433,7 @@ namespace Nektar
         ExpList2D::ExpList2D(
             const Array<OneD,const ExpListSharedPtr> &bndConstraint,
             const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
-            const StdRegions::StdExpansionVector &locexp,
+            const LocalRegions::ExpansionVector &locexp,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const PeriodicMap &periodicFaces,
             const bool DeclareCoeffPhysArrays, 
@@ -448,6 +448,8 @@ namespace Nektar
             SpatialDomains::TriGeomSharedPtr FaceTriGeom;
             LocalRegions::QuadExpSharedPtr FaceQuadExp;
             LocalRegions::TriExpSharedPtr FaceTriExp;
+            LocalRegions::Expansion2DSharedPtr exp2D;
+            LocalRegions::Expansion3DSharedPtr exp3D;
             
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
@@ -462,7 +464,8 @@ namespace Nektar
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         LibUtilities::BasisKey bkey1 = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(1)->GetBasisKey();
-                        FaceGeom = bndConstraint[i]->GetExp(j)->GetGeom2D();
+                        exp2D = LocalRegions::Expansion2D::FromStdExp(bndConstraint[i]->GetExp(j));
+                        FaceGeom = exp2D->GetGeom2D();
 
                         //if face is a quad
                         if((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
@@ -491,9 +494,10 @@ namespace Nektar
             // loop over all other faces and fill out other connectivities
             for(i = 0; i < locexp.size(); ++i)
             {
-                for(j = 0; j < locexp[i]->GetNfaces(); ++j)
+                exp3D = LocalRegions::Expansion3D::FromStdExp(locexp[i]);
+                for(j = 0; j < exp3D->GetNfaces(); ++j)
                 {
-                    FaceGeom = (locexp[i]->GetGeom3D())->GetFace(j);
+                    FaceGeom = (exp3D->GetGeom3D())->GetFace(j);
 
                     id = FaceGeom->GetFid();
 
@@ -629,7 +633,7 @@ namespace Nektar
              SpatialDomains::Composite comp;
              SpatialDomains::TriGeomSharedPtr TriangleGeom;
              SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
-
+             
              LocalRegions::TriExpSharedPtr tri;
              LocalRegions::NodalTriExpSharedPtr Ntri;
              LibUtilities::PointsType TriNb;
@@ -649,9 +653,9 @@ namespace Nektar
                              SpatialDomains::TriGeom>((*compIt->second)[j])))
                      {
                          LibUtilities::BasisKey TriBa
-                                     = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,0);
+                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,0,variable);
                          LibUtilities::BasisKey TriBb
-                                     = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,1);
+                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,1,variable);
 
                          if(graph3D->GetExpansions().begin()->second->m_basisKeyVector[0]
                                  .GetBasisType() == LibUtilities::eGLL_Lagrange)
@@ -684,9 +688,9 @@ namespace Nektar
                               SpatialDomains::QuadGeom>((*compIt->second)[j])))
                      {
                          LibUtilities::BasisKey QuadBa
-                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0);
+                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0,variable);
                          LibUtilities::BasisKey QuadBb
-                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,1);
+                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,1,variable);
 
                          quad = MemoryManager<LocalRegions::QuadExp>
                              ::AllocateSharedPtr(QuadBa,QuadBb,
@@ -774,7 +778,7 @@ namespace Nektar
             Array<OneD,Array<OneD,NekDouble> > locnormals;
             Array<OneD, NekDouble> tmp;
             // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom2D()->GetCoordim();
+            int coordim = GetCoordim(0);
             
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "

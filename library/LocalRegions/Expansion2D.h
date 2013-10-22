@@ -39,6 +39,7 @@
 #include <LocalRegions/Expansion.h>
 #include <StdRegions/StdExpansion2D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
+#include <SpatialDomains/Geometry2D.h>
 
 namespace Nektar
 {
@@ -48,10 +49,16 @@ namespace Nektar
       typedef boost::shared_ptr<Expansion3D> Expansion3DSharedPtr;
       typedef boost::weak_ptr<Expansion3D> Expansion3DWeakPtr;
 
+      class Expansion2D;
+      typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
+      typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
+      typedef std::vector< Expansion2DSharedPtr > Expansion2DVector;
+      typedef std::vector< Expansion2DSharedPtr >::iterator Expansion2DVectorIter;
+
         class Expansion2D: virtual public Expansion, virtual public StdRegions::StdExpansion2D
         {
         public:
-            LOCAL_REGIONS_EXPORT Expansion2D();
+            LOCAL_REGIONS_EXPORT Expansion2D(SpatialDomains::Geometry2DSharedPtr pGeom);
             LOCAL_REGIONS_EXPORT virtual ~Expansion2D() {}
             
             LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, StdRegions::StdExpansionSharedPtr> &EdgeExp,
@@ -100,6 +107,13 @@ namespace Nektar
                         int face,
                         Expansion3DSharedPtr &f);
 
+            inline SpatialDomains::Geometry2DSharedPtr GetGeom2D() const;
+
+            static Expansion2DSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
+            {
+                return boost::dynamic_pointer_cast<Expansion2D>(pSrc);
+            }
+			
         protected:
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
@@ -126,12 +140,17 @@ namespace Nektar
 
             virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
 
+            virtual DNekMatSharedPtr v_BuildVertexMatrix(
+                const DNekScalMatSharedPtr &r_bnd); 
+
             void GetPhysEdgeVarCoeffsFromElement(
                     const int edge,
                     StdRegions::StdExpansionSharedPtr &EdgeExp,
                     const Array<OneD, const NekDouble>  &varcoeff,
                     Array<OneD,NekDouble> &outarray);
 
+            Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
+			
         private:
             std::vector<ExpansionWeakPtr> m_edgeExp;
             std::vector<bool> m_requireNeg;
@@ -143,11 +162,6 @@ namespace Nektar
 
          };
 
-        // type defines for use of PrismExp in a boost vector
-        typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
-        typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
-        typedef std::vector< Expansion2DSharedPtr > Expansion2DVector;
-        typedef std::vector< Expansion2DSharedPtr >::iterator Expansion2DVectorIter;
 
         inline ExpansionSharedPtr Expansion2D::GetEdgeExp(int edge, bool SetUpNormal)
         {
@@ -202,7 +216,12 @@ namespace Nektar
                 m_elementLeft = f;
                 m_elementFaceLeft = face;
             }
-	}
+        }
+
+        inline SpatialDomains::Geometry2DSharedPtr Expansion2D::GetGeom2D() const
+        {
+            return boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(m_geom);
+        }
     } //end of namespace
 } //end of namespace
 

@@ -52,7 +52,6 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession)
     {
-        m_planeNumber = 0;
     }
 
     /**
@@ -1010,65 +1009,18 @@ namespace Nektar
         const NekDouble lambda = -2.0/3.0;
 
         // Auxiliary variables
-        Array<OneD, NekDouble > mu         (nPts, 0.0);
-        Array<OneD, NekDouble > mu2        (nPts, 0.0);
-        Array<OneD, NekDouble > divVel     (nPts, 0.0);
-        Array<OneD, NekDouble > pressure   (nPts, 0.0);
-        Array<OneD, NekDouble > temperature(nPts, 0.0);
-
-        // Set up wrapper to fields data storage
-        Array<OneD, Array<OneD, NekDouble> > fields(nVariables);
-
-        // Reorder storage to list time-integrated fields first
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-        {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int nPlanes = nSolutionPts/nSolutionPtsPlane;
-
-            Array<OneD, Array<OneD, NekDouble> > fields_temp(nVariables);
-
-            for (i = 0; i < nVariables; ++i)
-            {
-                fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
-                fields_temp[i] = m_fields[i]->UpdatePhys();
-
-                Vmath::Vcopy(nPts,
-                            &fields_temp[i][m_planeNumber*nSolutionPtsPlane], 1,
-                            &fields[i][0], 1);
-            }
-
-            if(m_planeNumber == nPlanes - 1)
-            {
-                m_planeNumber = 0;
-            }
-            else
-            {
-                m_planeNumber = m_planeNumber + 1;
-            }
-
-        }
-        else // For general case
-        {
-            for (i = 0; i < nVariables; ++i)
-            {
-                fields[i] = m_fields[i]->UpdatePhys();
-            }
-        }
-
-        // Thermodynamic related quantities
-        GetPressure(fields, pressure);
-        GetTemperature(fields, pressure, temperature);
+        Array<OneD, NekDouble > mu    (nPts, 0.0);
+        Array<OneD, NekDouble > mu2   (nPts, 0.0);
+        Array<OneD, NekDouble > divVel(nPts, 0.0);
 
         // Variable viscosity through the Sutherland's law
         if (m_ViscosityType == "Variable")
         {
-            GetDynamicViscosity(fields, mu);
+            GetDynamicViscosity(physfield[nVariables-2], mu);
         }
         else
         {
-            Vmath::Sadd(nPts, m_mu, &mu[0], 1, &mu[0], 1);
+            Vmath::Fill(nPts, m_mu, &mu[0], 1);
         }
 
         // Computing diagonal terms of viscous stress tensor
@@ -1379,6 +1331,7 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
+#if 0
         int i, j, k;
         int nVariables = m_fields.num_elements();
         int nPts       = physfield[0].num_elements();
@@ -1419,66 +1372,10 @@ namespace Nektar
         Array<OneD, NekDouble > pressure   (nPts, 0.0);
         Array<OneD, NekDouble > temperature(nPts, 0.0);
 
-        // Set up wrapper to fields data storage
-        Array<OneD, Array<OneD, NekDouble> > fields(nVariables);
-        Array<OneD, Array<OneD, NekDouble> > fields_interp(nVariables);
-
-        // Reorder storage to list time-integrated fields first
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-        {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int nPlanes = nSolutionPts/nSolutionPtsPlane;
-
-            Array<OneD, Array<OneD, NekDouble> > fields_temp(nVariables);
-
-
-            for (i = 0; i < nVariables; ++i)
-            {
-                fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
-                fields_temp[i] = m_fields[i]->UpdatePhys();
-
-                Vmath::Vcopy(nPts,
-                             &fields_temp[i][m_planeNumber*nSolutionPtsPlane], 1,
-                             &fields[i][0], 1);
-
-                fields_interp[i] = Array<OneD, NekDouble> (nPts);
-
-            }
-
-            if(m_planeNumber == nPlanes - 1)
-            {
-                m_planeNumber = 0;
-            }
-            else
-            {
-                m_planeNumber = m_planeNumber + 1;
-            }
-        }
-        else // For general case
-        {
-            for (i = 0; i < nVariables; ++i)
-            {
-                fields[i] = m_fields[i]->UpdatePhys();
-                fields_interp[i] = Array<OneD, NekDouble> (nPts);
-            }
-        }
-
         for (i = 0; i < nVariables; ++i)
         {
-            // Interpolation to higher space
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-            {
-                m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
-                                        OneDptscale,fields[i], fields_interp[i]);
-            }
-            else // For general case
-            {
-                m_fields[0]->PhysInterp1DScaled(OneDptscale,fields[i],
-                                            fields_interp[i] );
-            }
+            m_fields[0]->PhysInterp1DScaled(
+                OneDptscale, physfield[i], fields_interp[i]);
         }
 
         for (i = 0; i < variables_phys; ++i)
@@ -1843,7 +1740,8 @@ namespace Nektar
                     viscousTensor[i][j]);
             }
         }
-    }
+#endif
+}
 
     /**
      * @brief Calculate the pressure field \f$ p =
@@ -1870,7 +1768,7 @@ namespace Nektar
         // Divide by rho to get rho*||v||^2
         Vmath::Vdiv (nBCEdgePts, pressure, 1, physfield[0], 1, pressure, 1);
         // pressure <- E - 0.5*pressure
-        Vmath::Svtvp(nBCEdgePts,     alpha,
+        Vmath::Svtvp(nBCEdgePts, alpha,
                      pressure, 1, physfield[m_spacedim+1], 1, pressure, 1);
         // Multiply by (gamma-1)
         Vmath::Smul (nBCEdgePts, m_gamma-1, pressure, 1, pressure, 1);
@@ -2004,26 +1902,18 @@ namespace Nektar
      * @param mu           The resulting dynamic viscosity.
      */
     void CompressibleFlowSystem::GetDynamicViscosity(
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-              Array<OneD,                   NekDouble  > &mu)
+        const Array<OneD, const NekDouble> &temperature,
+              Array<OneD,       NekDouble> &mu)
     {
-        const int nBCEdgePts = physfield[0].num_elements();
-
+        const int nPts    = temperature.num_elements();
         NekDouble mu_star = m_mu;
         NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
-        Vmath::Zero(nBCEdgePts, mu, 1);
+        NekDouble ratio;
 
-        Array<OneD, NekDouble > pressure         (nBCEdgePts, 0.0);
-        Array<OneD, NekDouble > temperature      (nBCEdgePts, 0.0);
-        Array<OneD, NekDouble > temperature_ratio(nBCEdgePts, 0.0);
-
-        GetPressure   (physfield, pressure);
-        GetTemperature(physfield, pressure, temperature);
-
-        for (int i = 0; i < nBCEdgePts; ++i)
+        for (int i = 0; i < nPts; ++i)
         {
-            temperature_ratio[i] = temperature[i] / T_star;
-            mu[i] = mu_star * pow(temperature_ratio[i], 1.50) *
+            ratio = temperature[i] / T_star;
+            mu[i] = mu_star * pow(ratio, 1.50) *
                     (T_star + 110.0) / (temperature[i] + 110.0);
         }
     }

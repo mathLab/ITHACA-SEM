@@ -106,10 +106,6 @@ namespace Nektar
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
 
-        // Plane (used only for Discontinous projection
-        //        with 3DHomogenoeus1D expansion)
-        int                                 m_planeNumber;
-
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -174,12 +170,12 @@ namespace Nektar
             const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
             const Array<OneD, const Array<OneD,       NekDouble> >&velocity,
                   Array<OneD,                         NekDouble>  &pressure);
-        void GetDynamicViscosity(
-            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
-                  Array<OneD,                         NekDouble  >&mu);
         void GetStdVelocity(
             const Array<OneD, const Array<OneD,       NekDouble> >&inarray,
                   Array<OneD,                         NekDouble>  &stdV);
+        void GetDynamicViscosity(
+            const Array<OneD, const NekDouble>                    &temperature,
+                  Array<OneD,       NekDouble>                    &mu);
       
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
@@ -209,9 +205,6 @@ namespace Nektar
         {
             return m_traceNormals;
         }
-      
-    private:
-
     };
 }
 #endif

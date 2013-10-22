@@ -97,7 +97,7 @@ namespace Nektar
                 m_fluxVectorNS = boost::bind(func, obj, _1, _2, _3);
             }
             
-            void SetFluxVectorVecNS(DiffusionFluxVecCBNS fluxVector)
+            void SetFluxVectorNS(DiffusionFluxVecCBNS fluxVector)
             {
                 m_fluxVectorNS = fluxVector;
             }

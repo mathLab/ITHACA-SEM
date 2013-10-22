@@ -111,8 +111,8 @@ namespace Nektar
             m_homoLen        = pFields[0]->GetHomoLen();
             m_trans          = pFields[0]->GetTransposition();
             m_planeCounter = 0;
-            //m_planeDiff->SetFluxVector   (
-            //    &Diffusion3DHomogeneous1D::ModifiedFluxVector, this);
+            m_planeDiff->SetFluxVectorNS(m_fluxVectorNS);
+                //&Diffusion3DHomogeneous1D::ModifiedFluxVector, this);
 
             if (m_riemann)
             {
@@ -215,6 +215,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
+            cout << nConvectiveFields << endl;
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             const int nPointsTot = fields[0]->GetNpoints();
             int i, j;
@@ -232,11 +233,15 @@ namespace Nektar
             {
                 // Set up memory references for fields, inarray and outarray for
                 // this plane.
+                for (int j = 0; j < inarray.num_elements(); ++j)
+                {
+                    m_inarrayPlane [j] = Array<OneD, NekDouble>(
+                        m_numPointsPlane, tmp2 = inarray [j] + m_planePos[i]);
+                }
+
                 for (int j = 0; j < nConvectiveFields; ++j)
                 {
                     m_fieldsPlane  [j] = fields[j]->GetPlane(i);
-                    m_inarrayPlane [j] = Array<OneD, NekDouble>(
-                        m_numPointsPlane, tmp2 = inarray [j] + m_planePos[i]);
                     m_outarrayPlane[j] = Array<OneD, NekDouble>(
                         m_numPointsPlane, tmp2 = outarray[j] + m_planePos[i]);
                 }
@@ -279,7 +284,7 @@ namespace Nektar
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
         {
             // Return section of flux vector for this plane.
-            //outarray = m_fluxVecPlane[m_planeCounter];
+            //viscousTensor = m_fluxVecNSPlane[m_planeCounter];
 
             // Increment the plane counter.
             m_planeCounter = (m_planeCounter + 1) % m_numPlanes;

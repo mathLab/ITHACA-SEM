@@ -167,16 +167,16 @@ namespace Nektar
         Array<OneD, NekDouble > temperature(npoints, 0.0);
         GetPressure(inarray, pressure);
         GetTemperature(inarray, pressure, temperature);
-        
+
         // Extract velocities
         for (i = 1; i < nvariables-1; ++i)
         {
-            Vmath::Vdiv(npoints, 
-                        inarray[i], 1, 
-                        inarray[0], 1, 
+            Vmath::Vdiv(npoints,
+                        inarray[i], 1,
+                        inarray[0], 1,
                         inarrayTemp[i-1], 1);
         }
-        
+
         // Copy velocities into new inarrayDiff
         for (i = 0; i < nvariables-2; ++i)
         {

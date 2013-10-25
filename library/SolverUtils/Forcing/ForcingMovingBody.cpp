@@ -66,7 +66,7 @@ namespace SolverUtils
 		m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
 		
 		// Checking the XML file contains the required info to use this feature
-        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("MOVINGBODYFORCE");
+        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("DISPLACEMENTS");
         ASSERTL0(funcNameElmt, "Requires MOVINGBODYFORCE tag specifying function "
                                "name which prescribes moving body forcing terms.");
 
@@ -106,6 +106,12 @@ namespace SolverUtils
 				 
 	void ForcingMovingBody::LoadDisplacements()
 	{
+		
+		static std::string MappingStr[6];
+		
+		for (int i = 0; i < 6; ++i)
+        {
+		}
 		
 	}
 				 

@@ -63,7 +63,8 @@ namespace Nektar
           m_velocity(pVel),
           m_advObject(advObject)
     {      
-        m_session->LoadParameter("TimeStep", m_timestep,   0.01);  
+        m_session->LoadParameter("TimeStep", m_timestep,   0.01);
+		m_comm = m_session->GetComm();
     }
     
     Extrapolate::~Extrapolate()
@@ -278,13 +279,6 @@ namespace Nektar
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[2],BndValues[2]);
                     Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Pvals);
 					
-					//cout << "===========BC: " << m_HBCdata[j].m_bndryElmtID << " ======"<<endl;
-					//for(int k=0; k<m_pressureBCsMaxPts; k++)
-					//{
-					//	cout << Pvals[k] << endl;
-					//}
-					//cout << "===========" <<endl;
-                    
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[0],BndValues[0]);
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[1],BndValues[1]);
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[2],BndValues[2]);
@@ -369,19 +363,15 @@ namespace Nektar
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vel[2],Wx);
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vel[1],Vx);
                 
-                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vel[0],Uy);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],Vel[0],1,Uy,1);
                 
-                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],Vel[0],Uz);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber[j],Vel[0],1,Uz,1);
 				
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Wz,1,Wx,1,qy,1);
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Vx,1,Uy,1,qz,1);
                 
-                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],qz,Uy);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],qz,1,Uy,1);
 				
-                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],qy,Uz);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber[j],qy,1,Uz,1);
 		
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Uy,1,Uz,1,Q[0],1);
@@ -483,9 +473,11 @@ namespace Nektar
             }
         }
 	
-        ASSERTL0(HBCnumber > 0 ,"At least one high-order pressure boundary condition is required for scheme consistency");
+		int checkHBC = HBCnumber;
+		m_comm->AllReduce(checkHBC,LibUtilities::ReduceSum);
+        ASSERTL0(checkHBC > 0 ,"At least one high-order pressure boundary condition is required for scheme consistency");        
         
-        m_acceleration[0] = Array<OneD, NekDouble>(cnt, 0.0);
+		m_acceleration[0] = Array<OneD, NekDouble>(cnt, 0.0);
         for(n = 0; n < m_intSteps; ++n)
         {
             m_pressureHBCs[n]   = Array<OneD, NekDouble>(cnt, 0.0);

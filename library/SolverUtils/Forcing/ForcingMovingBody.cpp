@@ -58,54 +58,27 @@ namespace SolverUtils
             const unsigned int& pNumForcingFields,
             const TiXmlElement* pForce)
     {
+		// Just 3D homogenous 1D problems can use this techinque
+		ASSERTL0(pFields[0]->GetExpType()==MultiRegions::e3DH1D,"Moving body implemented just "
+																"3D Homogenous 1D expansions.")
+		// forcing size (it must be 3)
         m_NumVariable = pNumForcingFields;
-        int nq         = pFields[0]->GetTotPoints();
-
-        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("BODYFORCE");
-        ASSERTL0(funcNameElmt, "Requires BODYFORCE tag specifying function "
-                               "name which prescribes body force.");
+		m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+		
+		// Checking the XML file contains the required info to use this feature
+        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("MOVINGBODYFORCE");
+        ASSERTL0(funcNameElmt, "Requires MOVINGBODYFORCE tag specifying function "
+                               "name which prescribes moving body forcing terms.");
 
         string funcName = funcNameElmt->GetText();
         ASSERTL0(m_session->DefinesFunction(funcName),
                  "Function '" + funcName + "' not defined.");
 
-        bool singleMode, halfMode;
-        m_session->MatchSolverInfo("ModeType", "SingleMode", singleMode, false);
-        m_session->MatchSolverInfo("ModeType", "HalfMode", halfMode, false);
-
-        m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-        std::string s_FieldStr;
-        for (int i = 0; i < m_NumVariable; ++i)
-        {
-            m_Forcing[i] = Array<OneD, NekDouble> (nq, 0.0);
-            s_FieldStr   = m_session->GetVariable(i);
-            ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
-                     "Variable '" + s_FieldStr + "' not defined.");
-            EvaluateFunction(pFields, m_session, s_FieldStr,
-                             m_Forcing[i], funcName);
-        }
-
-        // If singleMode or halfMode, transform the forcing term to be in
-        // physical space in the plane, but Fourier space in the homogeneous
-        // direction
-        if (singleMode || halfMode)
-        {
-            // Temporary array
-            Array<OneD, NekDouble> forcingCoeff(pFields[0]->GetNcoeffs(), 0.0);
-
-            bool w = pFields[0]->GetWaveSpace();
-            for (int i = 0; i < m_NumVariable; ++i)
-            {
-                // FwdTrans in SEM and Fourier
-                pFields[0]->SetWaveSpace(false);
-                pFields[0]->FwdTrans_IterPerExp(m_Forcing[i], forcingCoeff);
-                // BwdTrans in SEM only
-                pFields[0]->SetWaveSpace(true);
-                pFields[0]->BwdTrans(forcingCoeff, m_Forcing[i]);
-            }
-            pFields[0]->SetWaveSpace(w);
-        }
-
+        // Loading the x-dispalcement (m_zeta) and the y-displacement (m_eta)
+		// Those two variables are bith functions of z and t and the may come
+		// from an equation (forced vibration) or from another solver which, given
+		// the aerodynamic forces at the previous step, calculates the displacements.
+		LoadDisplacements();
     }
 
     void ForcingMovingBody::v_Apply(
@@ -113,12 +86,38 @@ namespace SolverUtils
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
                   Array<OneD, Array<OneD, NekDouble> > &outarray)
     {
+		
+		// Update the displacement in case it is time dependent
+		if(m_timeDependent)
+		{
+			UpdateDisplacements();
+		}
+		
+		//calcualte the forcing components Ax,Ay,Az
+		CalculateForcing(fields);
+		
+		// Apply forcing terms
         for (int i = 0; i < m_NumVariable; i++)
         {
             Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
                         m_Forcing[i], 1, outarray[i], 1);
         }
     }
+				 
+	void ForcingMovingBody::LoadDisplacements()
+	{
+		
+	}
+				 
+	void ForcingMovingBody::UpdateDisplacements()
+	{
+					 
+	}
+	
+	void ForcingMovingBody::CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
+	{
+		
+	}
 
 }
 }

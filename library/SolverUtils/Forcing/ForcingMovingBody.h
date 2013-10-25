@@ -42,7 +42,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
-#include <SolverUtils/Forcing/ForcingSponge.h>
+#include <SolverUtils/Forcing/Forcing.h>
 
 namespace Nektar
 {
@@ -71,6 +71,12 @@ namespace SolverUtils
             static std::string className;
 
         protected:
+		
+			Array<OneD, Array<OneD, NekDouble> >    m_zeta;
+		    Array<OneD, Array<OneD, NekDouble> >    m_eta;
+		
+			bool m_timeDependent;
+		
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
@@ -83,7 +89,13 @@ namespace SolverUtils
 
         private:
             ForcingMovingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
-
+		
+		void LoadDisplacements();
+		
+		void UpdateDisplacements();
+		
+		void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+		
     };
 
 }

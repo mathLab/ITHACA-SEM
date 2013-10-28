@@ -142,7 +142,7 @@ namespace Nektar
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
-            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetDerivFactors();
             Array<OneD,NekDouble> diff0(nquad0*nquad1*nquad2);
             Array<OneD,NekDouble> diff1(nquad0*nquad1*nquad2);
             Array<OneD,NekDouble> diff2(nquad0*nquad1*nquad2);
@@ -597,33 +597,45 @@ namespace Nektar
                     }
                     else
                     {
-                        // TODO: make sure 3D Laplacian is set up for Hex in three-dimensional in Standard Region.
-                        // ASSERTL1(m_geom->GetCoordim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
-                        ASSERTL1(m_geom->GetCoordim() == 3,"Standard Region Laplacian is only set up for Hex in three-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
                                            mkey.GetShapeType(), *this);
                         MatrixKey lap01key(StdRegions::eLaplacian01,
                                            mkey.GetShapeType(), *this);
+                        MatrixKey lap02key(StdRegions::eLaplacian02,
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap11key(StdRegions::eLaplacian11,
                                            mkey.GetShapeType(), *this);
+                        MatrixKey lap12key(StdRegions::eLaplacian12,
+                                           mkey.GetShapeType(), *this);
+                        MatrixKey lap22key(StdRegions::eLaplacian22,
+                                           mkey.GetShapeType(), *this);
 
-                        DNekMatSharedPtr lap00 = GetStdMatrix(lap00key);
-                        DNekMatSharedPtr lap01 = GetStdMatrix(lap01key);
-                        DNekMatSharedPtr lap11 = GetStdMatrix(lap11key);
+                        DNekMat &lap00 = *GetStdMatrix(lap00key);
+                        DNekMat &lap01 = *GetStdMatrix(lap01key);
+                        DNekMat &lap02 = *GetStdMatrix(lap02key);
+                        DNekMat &lap11 = *GetStdMatrix(lap11key);
+                        DNekMat &lap12 = *GetStdMatrix(lap12key);
+                        DNekMat &lap22 = *GetStdMatrix(lap22key);
+
 
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
 
-                        int rows = lap00->GetRows();
-                        int cols = lap00->GetColumns();
+                        int rows = lap00.GetRows();
+                        int cols = lap00.GetColumns();
 
-                        DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
+                        DNekMatSharedPtr lap = MemoryManager<DNekMat>
+                                                ::AllocateSharedPtr(rows,cols);
 
-                        (*lap) = (gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0]) * (*lap00) +
-                            (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
-                            (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
+                        (*lap)  = gmat[0][0]*lap00
+                                + gmat[4][0]*lap11
+                                + gmat[8][0]*lap22
+                                + gmat[3][0]*(lap01 + Transpose(lap01))
+                                + gmat[6][0]*(lap02 + Transpose(lap02))
+                                + gmat[7][0]*(lap12 + Transpose(lap12));
 
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac, lap);
+                        returnval = MemoryManager<DNekScalMat>
+                                                ::AllocateSharedPtr(jac, lap);
                     }
                 }
                 break;

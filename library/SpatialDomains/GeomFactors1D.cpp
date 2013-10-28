@@ -183,16 +183,15 @@ namespace Nektar
                ( m_type == eMovingRegular))
             {
                 // Allocate storage.
-                m_jac     = Array<OneD, NekDouble>(1,0.0);
-                m_gmat    = Array<TwoD, NekDouble>(m_coordDim,1,0.0);
+                m_jac          = Array<OneD, NekDouble>(1,0.0);
+                m_derivFactors = Array<TwoD, NekDouble>(m_coordDim,1,0.0);
 
                 // Loop over each dimension in the coordinate system.
                 for(i = 0; i < m_coordDim; ++i)
                 {
                     // i-th component of normal = 1/derivative_i.
-                    m_gmat[i][0] = (fabs(m_deriv[0][i][0])
-                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][0]: 0.0;                                          
-                    
+                    m_derivFactors[i][0] = (fabs(m_deriv[0][i][0])
+                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][0]: 0.0;
                     // i-th component contribution to Jacobian.
                     m_jac[0]    += m_deriv[0][i][0]*m_deriv[0][i][0];
                 }
@@ -202,16 +201,16 @@ namespace Nektar
             // If deformed geometry
             else
             {
-                m_jac     = Array<OneD, NekDouble>(nquad,0.0);
-                m_gmat    = Array<TwoD, NekDouble>(m_coordDim,nquad);
+                m_jac          = Array<OneD, NekDouble>(nquad,0.0);
+                m_derivFactors = Array<TwoD, NekDouble>(m_coordDim,nquad);
 
-                // invert local derivative for gmat;
+                // invert local derivative for derivative factors;
                 for(i = 0; i < m_coordDim; ++i)
                 {
                     for(int j = 0; j < nquad; ++j)
                     {
-                        m_gmat[i][j] = (fabs(m_deriv[0][i][j])
-                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][j] : 0.0;                   
+                        m_derivFactors[i][j] = (fabs(m_deriv[0][i][j])
+                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][j] : 0.0;
                     }
                     // compute jacobian for this dimension.
                     Vmath::Vvtvp(nquad,m_deriv[0][i],1,m_deriv[0][i],1,m_jac,1,m_jac,1);

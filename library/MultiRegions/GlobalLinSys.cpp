@@ -383,12 +383,6 @@ namespace Nektar
             vExp->DropLocStaticCondMatrix(matkey);
         }
 
-        const DNekMatSharedPtr& GlobalLinSys::v_GetGmat(void) const
-        {
-            NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
-            return NullDNekMatSharedPtr;
-        }
-
         void GlobalLinSys::v_InitObject()
         {
             NEKERROR(ErrorUtil::efatal, "Method does not exist" );

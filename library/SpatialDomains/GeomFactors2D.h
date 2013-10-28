@@ -55,8 +55,7 @@ namespace Nektar
                     const Array<OneD, const StdRegions
                         ::StdExpansion2DSharedPtr> &Coords,
                     const Array<OneD, const LibUtilities::BasisSharedPtr>
-                         &tbasis,
-                    const bool CheckJacPositive = true);
+                         &tbasis);
             
             /// Copy constructor.
             SPATIAL_DOMAINS_EXPORT GeomFactors2D(const GeomFactors2D& S);
@@ -66,11 +65,13 @@ namespace Nektar
 
         private:
             /// Set up 1D Jacobian.
-            void SetUpJacGmat2D(bool CheckJacPositive = true);
+            void SetUpJacGmat2D();
 
             /// Compute vectors in a principle direction.
             void ComputePrincipleDirection(
                         Array<OneD,Array<OneD,NekDouble> > &output);
+
+            void CheckIfValid();
             
             /// Set up surface normals
             virtual void v_ComputeSurfaceNormals();

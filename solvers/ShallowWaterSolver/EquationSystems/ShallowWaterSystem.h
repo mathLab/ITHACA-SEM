@@ -88,8 +88,8 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-	/// Print a summary of time stepping parameters.
-        virtual void v_PrintSummary(std::ostream &out);
+        /// Print a summary of time stepping parameters.
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
    	void PrimitiveToConservative()
 	{

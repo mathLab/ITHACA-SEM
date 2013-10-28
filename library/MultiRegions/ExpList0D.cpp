@@ -40,25 +40,29 @@ namespace Nektar
     namespace MultiRegions
     {
 
-		/**
+
+	/**
          * Default constructor ExpList0D object.
          */
         ExpList0D::ExpList0D():
-		ExpList()
+            ExpList()
         {
+            SetExpType(e0D);
         }
 
         /**
          * Creates an identical copy of another ExpList0D object.
          */
         ExpList0D::ExpList0D(const ExpList0D &In, bool DeclareCoeffPhysArrays):
-		ExpList(In,DeclareCoeffPhysArrays)
+            ExpList(In,DeclareCoeffPhysArrays)
         {
+            SetExpType(e0D);
         }
 		
         ExpList0D::ExpList0D(const SpatialDomains::PointGeomSharedPtr &m_geom):
             ExpList()
         {
+            SetExpType(e0D);
             m_point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(m_geom);
             
             m_ncoeffs = 1;
@@ -95,6 +99,8 @@ namespace Nektar
             const bool                                 DeclareCoeffPhysArrays)
             : ExpList()
         {
+            SetExpType(e0D);            
+
             int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;

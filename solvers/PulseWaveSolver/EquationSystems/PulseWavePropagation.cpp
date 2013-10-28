@@ -663,9 +663,9 @@ namespace Nektar
 	/**
 	 *  Print summary routine, calls virtual routine reimplemented in UnsteadySystem
 	 */
-    void PulseWavePropagation::v_PrintSummary(std::ostream &out)
+    void PulseWavePropagation::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        PulseWaveSystem::v_PrintSummary(out);
+        PulseWaveSystem::v_GenerateSummary(s);
     }
 
 }

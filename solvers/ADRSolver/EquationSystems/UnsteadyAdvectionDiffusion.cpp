@@ -370,8 +370,8 @@ namespace Nektar
         Vmath::Vcopy(GetNpoints(), physfield[i], 1, flux[j], 1);
     }
     
-    void UnsteadyAdvectionDiffusion::v_PrintSummary(std::ostream &out)
+    void UnsteadyAdvectionDiffusion::v_GenerateSummary(SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
     }
 }

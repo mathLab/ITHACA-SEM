@@ -100,7 +100,7 @@ namespace Nektar
 								   NekDouble &A_u,NekDouble &u_u);
 		NekDouble pc;
         /// Print Summary
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
     };
 }
 

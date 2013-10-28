@@ -76,7 +76,7 @@ namespace Nektar
             {
                 return boost::dynamic_pointer_cast<Expansion0D>(pSrc);
             }
-
+			
         protected:
             
         private:
@@ -127,8 +127,8 @@ namespace Nektar
         inline SpatialDomains::Geometry0DSharedPtr Expansion0D::GetGeom0D() const
         {
             return boost::dynamic_pointer_cast<SpatialDomains::Geometry0D>(m_geom);
+			
         }
-
     } //end of namespace
 } //end of namespace
 

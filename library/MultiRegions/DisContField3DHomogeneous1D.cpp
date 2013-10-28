@@ -518,14 +518,36 @@ namespace Nektar
         */
         void DisContField3DHomogeneous1D::SetUpDG()
         {
-            const int nPlanes   = m_planes.num_elements();
-            const int nPtsPlane = m_planes[0]->GetNpoints();
+            const int nPlanes     = m_planes.num_elements();
+            const int nTracePlane = m_planes[0]->GetTrace()->GetExpSize();
 
             // Get trace map from first plane.
             AssemblyMapDGSharedPtr traceMap = m_planes[0]->GetTraceMap();
-            
+            const Array<OneD, const int> &traceBndMap
+                = traceMap->GetBndCondTraceToGlobalTraceMap();
+            int mapSize = traceBndMap.num_elements();
+
             // Set up trace boundary map
-            
+            m_traceBndMap = Array<OneD, int>(nPlanes * mapSize);
+
+            int i, n, e, cnt = 0, cnt1 = 0;
+
+            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                int nExp      = m_bndCondExpansions[i]->GetExpSize();
+                int nPlaneExp = nExp / nPlanes;
+
+                for (n = 0; n < nPlanes; ++n)
+                {
+                    const int offset = n * nTracePlane;
+                    for (e = 0; e < nPlaneExp; ++e)
+                    {
+                        m_traceBndMap[cnt++] = offset + traceBndMap[cnt1+e];
+                    }
+                }
+
+                cnt1 += nPlaneExp;
+            }
         }
     } // end of namespace
 } //end of namespace

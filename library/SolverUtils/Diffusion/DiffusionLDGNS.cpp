@@ -221,7 +221,7 @@ namespace Nektar
         {
             int i, j;
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
-            int nScalars   = inarray.num_elements()-1;
+            int nScalars   = inarray.num_elements();
             int nDim       = fields[0]->GetCoordim(0);
             
             Array<OneD, NekDouble > Vn      (nTracePts, 0.0);
@@ -282,7 +282,7 @@ namespace Nektar
             int nBndEdgePts, nBndEdges, nBndRegions;
             
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
-            int nScalars  = inarray.num_elements()-1;
+            int nScalars  = inarray.num_elements();
             
             Array<OneD, NekDouble> tmp1(nTracePts, 0.0);
             Array<OneD, NekDouble> tmp2(nTracePts, 0.0);
@@ -476,7 +476,7 @@ namespace Nektar
         {
             int i, j;
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
-            int nVariables   = fields.num_elements()-1;
+            int nVariables   = fields.num_elements();
             int nDim         = fields[0]->GetCoordim(0);
             
             Array<OneD, NekDouble > Fwd(nTracePts);

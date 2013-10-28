@@ -151,7 +151,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &normals =
                 m_vectors["N"]();
             const Array<OneD, NekDouble> &velLoc = m_auxiliary["velLoc"]();
-            
+
             switch(normals.num_elements())
             {
                 case 1:
@@ -163,7 +163,7 @@ namespace Nektar
                     const int vx = (int)velLoc[0];
                     const int vy = (int)velLoc[1];
                     const int nq = inarray[0].num_elements();
-                    
+
                     Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
                                      outarray[vx], 1);
                     Vmath::Vvtvp(nq, inarray [vy], 1, normals [1],  1,

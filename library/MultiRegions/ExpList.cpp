@@ -41,6 +41,7 @@
 #include <LocalRegions/Expansion.h>     // for Expansion
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>  // for AssemblyMapCG, etc
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>  // for AssemblyMapCG, etc
 #include <MultiRegions/GlobalLinSysKey.h>  // for GlobalLinSysKey
 #include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
 #include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
@@ -2482,12 +2483,9 @@ namespace Nektar
             return result;
         }
 
-        Array<OneD, unsigned int> &ExpList::v_GetTraceBndMap()
+        const Array<OneD, const int> &ExpList::v_GetTraceBndMap()
         {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static Array<OneD, unsigned int> result;
-            return result;
+            return GetTraceMap()->GetBndCondTraceToGlobalTraceMap();
         }
 
         void ExpList::v_GetNormals(

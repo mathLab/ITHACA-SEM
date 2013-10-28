@@ -449,7 +449,7 @@ namespace Nektar
             // Copy remaining planes.
             for (int i = 0; i < nDim; ++i)
             {
-                for (int n = 0; n < nPlanes; ++n)
+                for (int n = 1; n < nPlanes; ++n)
                 {
                     Vmath::Vcopy(nPtsPlane, &normals[i][0], 1,
                                  &normals[i][n*nPtsPlane], 1);

@@ -705,7 +705,7 @@ namespace Nektar
             
             inline boost::shared_ptr<AssemblyMapDG> &GetTraceMap(void);
             
-            inline Array<OneD, unsigned int> &GetTraceBndMap(void);
+            inline const Array<OneD, const int> &GetTraceBndMap(void);
 
             inline void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
@@ -1079,7 +1079,7 @@ namespace Nektar
 
             virtual boost::shared_ptr<AssemblyMapDG> &v_GetTraceMap();
 
-            virtual Array<OneD, unsigned int> &v_GetTraceBndMap();
+            virtual const Array<OneD, const int> &v_GetTraceBndMap();
 
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
@@ -2041,7 +2041,7 @@ namespace Nektar
             return v_GetTraceMap();
         }
 
-        inline Array<OneD, unsigned int> &ExpList::GetTraceBndMap()
+        inline const Array<OneD, const int> &ExpList::GetTraceBndMap()
         {
             return v_GetTraceBndMap();
         }

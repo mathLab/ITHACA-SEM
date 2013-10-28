@@ -174,6 +174,10 @@ namespace Nektar
     {
         static NekDouble gamma = m_params["gamma"]();
 
+        //        std::cout << rhouL << " " << rhouR << " "
+        //          << rhovL << " " << rhovR << " "
+        //          << rhowL << " " << rhowR << std::endl;
+        
         // Left and right variables.
         NekDouble uL = rhouL / rhoL;
         NekDouble vL = rhovL / rhoL;

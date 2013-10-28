@@ -57,6 +57,7 @@ namespace Nektar
 
             const Array<OneD, const NekDouble>& Exec()
             {
+                cout << "SCALAR YO" << endl;
                 if (m_planeNumber == 0)
                 {
                     m_tmp = m_func();
@@ -86,16 +87,19 @@ namespace Nektar
         {
         public:
             HomoRSVector(RSVecFuncType func,
-                         int           nPlanes)
+                         int           nPlanes,
+                         string        desc = "")
                 : m_func       (func),
                   m_planeNumber(0),
                   m_numPlanes  (nPlanes),
-                  m_tmp        ()
+                  m_tmp        (),
+                  m_desc       (desc)
             {
             }
 
             const Array<OneD, const Array<OneD, NekDouble> >& Exec()
             {
+                cout << "VECTOR " << m_desc << " " << m_planeNumber << endl;
                 if (m_planeNumber == 0)
                 {
                     m_tmp = m_func();
@@ -122,6 +126,7 @@ namespace Nektar
             int                                  m_numPlanes;
             Array<OneD, Array<OneD, NekDouble> > m_tmp;
             Array<OneD, Array<OneD, NekDouble> > m_tmp2;
+            string m_desc;
         };
     }
 }

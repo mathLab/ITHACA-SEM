@@ -185,7 +185,7 @@ namespace Nektar
 
             ExpListSharedPtr m_trace;
 
-            Array<OneD, unsigned int> m_traceBndMap;
+            Array<OneD, int> m_traceBndMap;
 
             /**
              * \brief An array which contains the information about
@@ -279,7 +279,7 @@ namespace Nektar
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions();
 
-            virtual Array<OneD, unsigned int> &v_GetTraceBndMap()
+            virtual const Array<OneD, const int> &v_GetTraceBndMap()
             {
                 return m_traceBndMap;
             }

@@ -89,7 +89,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
     {
-		if(m_pressureHBCs.num_elements()>0)
+		if(m_HBCdata.num_elements()>0)
 		{
 			Array<OneD, NekDouble> tmp;
 			Array<OneD, NekDouble> accelerationTerm;

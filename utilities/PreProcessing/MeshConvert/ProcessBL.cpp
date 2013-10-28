@@ -86,20 +86,19 @@ namespace Nektar
             int nq      = config["nq"].    as<int>();
 
             // determine if geometric ratio is string or a constant. 
-            NekDouble r;
             LibUtilities::AnalyticExpressionEvaluator rEval;
-            int  rExprId = -1;
-            bool ratioIsString = false;
-            if(config["r"].isType<NekDouble>())
+            NekDouble r;
+            int       rExprId       = -1;
+            bool      ratioIsString = false;
+
+            if (config["r"].isType<NekDouble>())
             {
                 r = config["r"].as<NekDouble>();
             }
             else
             {
                 std::string rstr = config["r"].as<string>();
-                
-                rExprId = rEval.DefineFunction("x y z",rstr);
-                
+                rExprId = rEval.DefineFunction("x y z", rstr);
                 ratioIsString = true;
             }
 
@@ -335,7 +334,6 @@ namespace Nektar
                         edgeNodes[j][0]  = el[i]->GetVertex(edgeVertMap[j][0]);
                         edgeNodes[j][nl] = el[i]->GetVertex(edgeVertMap[j][1]);
 
-                        
                         // Variable geometric ratio
                         if(ratioIsString) 
                         {
@@ -362,9 +360,11 @@ namespace Nektar
 
                             // Get basis with new r; 
                             LibUtilities::PointsKey Pkey(nl+1, t, rnew);
-                            LibUtilities::PointsSharedPtr NewPts = (LibUtilities::PointsManager())[Pkey];
+                            LibUtilities::PointsSharedPtr newP
+                                = LibUtilities::PointsManager()[Pkey];
                             
-                            const Array<OneD, const NekDouble> z = NewPts->GetZ();
+                            const Array<OneD, const NekDouble> z = newP->GetZ();
+
                             // Create new interior nodes based on this new blend
                             for (int k = 1; k < nl; ++k)
                             {
@@ -382,10 +382,10 @@ namespace Nektar
                             {
                                 int pos = edgeOffset[j] + k*nq;
                                 edgeNodes[j][k] = NodeSharedPtr(
-                                new Node(nodeId++, x[pos], y[pos], z[pos]));
+                                    new Node(nodeId++, x[pos], y[pos], z[pos]));
                             }
                         }
-                            
+
                         // Store these edges in edgeMap.
                         edgeMap[edgeId] = edgeNodes[j];
                     }

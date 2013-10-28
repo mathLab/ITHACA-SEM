@@ -1997,6 +1997,7 @@ namespace Nektar
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
                 err  = std::max(err,(*m_exp)[i]->Linf());
             }
+
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceMax);
             return err;
         }
@@ -2889,9 +2890,10 @@ namespace Nektar
 
 		/**
          */
-        void ExpList::v_GetPeriodicEdges(
+        void ExpList::v_GetPeriodicEntities(
             PeriodicMap &periodicVerts,
-            PeriodicMap &periodicEdges)
+            PeriodicMap &periodicEdges,
+            PeriodicMap &periodicFaces)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

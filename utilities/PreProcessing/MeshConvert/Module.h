@@ -64,6 +64,8 @@ namespace Nektar
             "Output"
         };
 
+        typedef map<int, pair<FaceSharedPtr, vector<int> > > PerMap;
+
         /**
          * @brief Represents a command-line configuration option.
          */
@@ -145,6 +147,12 @@ namespace Nektar
             virtual void ProcessElements();
             /// Generate composites
             virtual void ProcessComposites();
+
+            void ReorderPrisms(PerMap                   &perFaces);
+            void PrismLines   (int                       prism,
+                               PerMap                   &perFaces,
+                               set<int>                 &prismsDone,
+                               vector<ElementSharedPtr> &line);
         };
         
         /**

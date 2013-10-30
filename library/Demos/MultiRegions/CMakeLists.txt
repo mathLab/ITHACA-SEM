@@ -50,6 +50,11 @@ ADD_NEKTAR_EXECUTABLE(HDGHelmholtz2D demos HDGHelmholtz2DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz2D)
 
+SET(PostProcHDG2DSource  PostProcHDG2D.cpp)
+ADD_NEKTAR_EXECUTABLE(PostProcHDG2D demos PostProcHDG2DSource)
+TARGET_LINK_LIBRARIES(PostProcHDG2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(PostProcHDG2D)
+
 SET(HDGHelmholtz3DSource  HDGHelmholtz3D.cpp)
 ADD_NEKTAR_EXECUTABLE(HDGHelmholtz3D demos HDGHelmholtz3DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz3D ${LinkLibraries})

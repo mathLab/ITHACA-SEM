@@ -38,6 +38,7 @@
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion.h>     // for Expansion
+#include <LocalRegions/QuadExp.h>     // for Expansion
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
@@ -1864,7 +1865,7 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             int    i,cnt,e,ncoeff_edge;
-            Array<OneD, NekDouble> force, out_tmp,qrhs;
+            Array<OneD, NekDouble> force, out_tmp,qrhs,qrhs1;
             Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
@@ -1886,6 +1887,7 @@ namespace Nektar
                 nq_elmt = (*m_exp)[eid]->GetTotPoints();
                 nm_elmt = (*m_exp)[eid]->GetNcoeffs();
                 qrhs  = Array<OneD, NekDouble>(nq_elmt);
+                qrhs1  = Array<OneD, NekDouble>(nq_elmt);
                 force = Array<OneD, NekDouble>(2*nm_elmt);
                 out_tmp = force + nm_elmt;
 
@@ -1903,20 +1905,45 @@ namespace Nektar
                                  elmtToTrace[eid][e]->UpdateCoeffs(),1);
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
+				//creating orthogonal expansion (implemented for quads for now)
+				int num_points = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
+				int num_modes = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
+				const LibUtilities::PointsKey PkeyQ1(num_points,LibUtilities::eGaussLobattoLegendre);
+				const LibUtilities::PointsKey PkeyQ2(num_points,LibUtilities::eGaussLobattoLegendre);
 
-                // (d/dx w, d/dx q_0)
+				LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes, PkeyQ1);
+				LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes, PkeyQ2);
+
+				LocalRegions::QuadExpSharedPtr ppExp = 
+					MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom()));
+				//Orthogonal expansion created
+
+				//In case lamdas are causing the trouble, try PhysDeriv instead of DGDeriv
+				//===============================================================================================
+                //(*m_exp)[eid]->BwdTrans(tmp_coeffs = m_coeffs + m_coeff_offset[eid],(*m_exp)[eid]->UpdatePhys());
+                //(*m_exp)[eid]->PhysDeriv((*m_exp)[eid]->GetPhys(), qrhs, qrhs1);
+                //ppExp->IProductWRTDerivBase(0,qrhs,force);
+                //ppExp->IProductWRTDerivBase(1,qrhs1,out_tmp);
+				//===============================================================================================
+               
+			   	//DGDeriv	
+				// (d/dx w, d/dx q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
                     elmtToTrace[eid], out_tmp);
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
-                (*m_exp)[eid]->IProductWRTDerivBase(0,qrhs,force);
+                //(*m_exp)[eid]->IProductWRTDerivBase(0,qrhs,force);
+                ppExp->IProductWRTDerivBase(0,qrhs,force);
+
 
                 // + (d/dy w, d/dy q_1)
                 (*m_exp)[eid]->DGDeriv(
                     1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
                     elmtToTrace[eid], out_tmp);
+
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
-                (*m_exp)[eid]->IProductWRTDerivBase(1,qrhs,out_tmp);
+                //(*m_exp)[eid]->IProductWRTDerivBase(1,qrhs,out_tmp);
+                ppExp->IProductWRTDerivBase(1,qrhs,out_tmp);
 
                 Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
 
@@ -1929,16 +1956,18 @@ namespace Nektar
                 // get matrix inverse
                 LocalRegions::MatrixKey  lapkey(
                     StdRegions::eInvLaplacianWithUnityMean,  
-                    (*m_exp)[eid]->DetShapeType(), *(*m_exp)[eid]);
-                DNekScalMatSharedPtr lapsys = 
-                    boost::dynamic_pointer_cast<LocalRegions::Expansion>(
-                        (*m_exp)[eid])->GetLocMatrix(lapkey);
+                    (*m_exp)[eid]->DetShapeType(), *ppExp);
+                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
                 
                 NekVector<NekDouble> in (nm_elmt,force,eWrapper);
-                NekVector<NekDouble> out(nm_elmt,
-                    tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
+                //NekVector<NekDouble> out(nm_elmt, tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
+                NekVector<NekDouble> out(nm_elmt, ppExp->UpdateCoeffs(), eWrapper);
 
                 out = (*lapsys)*in;
+				
+				//transforming back to modified basis
+				ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
+				(*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
             }
         }
 

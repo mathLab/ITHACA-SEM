@@ -72,36 +72,32 @@ namespace SolverUtils
 
         protected:
 		
-			Array<OneD, Array<OneD, NekDouble> >    m_zeta;
-		    Array<OneD, Array<OneD, NekDouble> >    m_eta;
-		
-			bool m_timeDependent;
-		
-            SOLVER_UTILS_EXPORT virtual void v_InitObject(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                    const unsigned int& pNumForcingFields,
-                    const TiXmlElement* pForce);
+            SOLVER_UTILS_EXPORT virtual void v_InitObject(const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                                                          const unsigned int& pNumForcingFields,
+                                                          const TiXmlElement* pForce);
 
-            SOLVER_UTILS_EXPORT virtual void v_Apply(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                    const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                          Array<OneD, Array<OneD, NekDouble> > &outarray);
+            SOLVER_UTILS_EXPORT virtual void v_Apply(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                                                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
+                                                     Array<OneD, Array<OneD, NekDouble> > &outarray);
 
         private:
+        
             ForcingMovingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
 		
-		void SetUpMotion();
+            void CheckIsFromFile();
+		
+            void UpdateMotion(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                              NekDouble time);
+		
+            void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                                  const Array<OneD, Array<OneD, NekDouble> > &inarray);
         
-        void CheckIsFromFile();
-		
-		void UpdateMotion();
-		
-		void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+            Array<OneD, Array<OneD, NekDouble> >    m_zeta;
+            Array<OneD, Array<OneD, NekDouble> >    m_eta;
         
-        std::string funcName[3]; // [0] is displacements -- [1] is velocities -- [2] is accelerations
-        std::string motion[2];   // motion direction: [0] is 'x' and [1] is 'y'
-        bool IsFromFile[3];      // do determine if the the body motion come from an extern file
-		
+            Array<OneD, std::string> m_funcName;     // [0] is displacements -- [1] is velocities -- [2] is accelerations
+            Array<OneD, std::string> m_motion;       // motion direction: [0] is 'x' and [1] is 'y'
+            Array<OneD, bool>        m_IsFromFile;   // do determine if the the body motion come from an extern file
     };
 
 }

@@ -90,11 +90,17 @@ namespace SolverUtils
         private:
             ForcingMovingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
 		
-		void LoadDisplacements();
+		void SetUpMotion();
+        
+        void CheckIsFromFile();
 		
-		void UpdateDisplacements();
+		void UpdateMotion();
 		
 		void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+        
+        std::string funcName[3]; // [0] is displacements -- [1] is velocities -- [2] is accelerations
+        std::string motion[2];   // motion direction: [0] is 'x' and [1] is 'y'
+        bool IsFromFile[3];      // do determine if the the body motion come from an extern file
 		
     };
 

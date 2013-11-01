@@ -78,7 +78,8 @@ namespace SolverUtils
 
             SOLVER_UTILS_EXPORT virtual void v_Apply(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                                      const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                                                     Array<OneD, Array<OneD, NekDouble> > &outarray);
+                                                     Array<OneD, Array<OneD, NekDouble> > &outarray,
+                                                     NekDouble time);
 
         private:
         
@@ -98,6 +99,8 @@ namespace SolverUtils
             Array<OneD, std::string> m_funcName;     // [0] is displacements -- [1] is velocities -- [2] is accelerations
             Array<OneD, std::string> m_motion;       // motion direction: [0] is 'x' and [1] is 'y'
             Array<OneD, bool>        m_IsFromFile;   // do determine if the the body motion come from an extern file
+            
+            NekDouble m_kinvis;
     };
 
 }

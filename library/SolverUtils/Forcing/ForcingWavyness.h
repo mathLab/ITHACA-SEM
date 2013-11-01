@@ -78,17 +78,18 @@ namespace SolverUtils
 
             SOLVER_UTILS_EXPORT virtual void v_Apply(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                                      const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                                                     Array<OneD, Array<OneD, NekDouble> > &outarray);
+                                                     Array<OneD, Array<OneD, NekDouble> > &outarray,
+                                                     NekDouble time);
 
         private:
         
             ForcingWavyness(const LibUtilities::SessionReaderSharedPtr& pSession);
 		
-            		
-            void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                  const Array<OneD, Array<OneD, NekDouble> > &inarray);
+            void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
         
-            Array<OneD, Array<OneD, NekDouble> >    m_xi;
+            Array<OneD, Array<OneD, NekDouble> >    m_wavyGeometricInfo;
+         
+            NekDouble m_kinvis;
     };
 
 }

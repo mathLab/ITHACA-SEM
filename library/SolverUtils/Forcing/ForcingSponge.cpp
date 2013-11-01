@@ -106,7 +106,8 @@ namespace SolverUtils
     void ForcingSponge::v_Apply(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &outarray)
+            Array<OneD, Array<OneD, NekDouble> > &outarray,
+            NekDouble time)
     {
         int nq = m_Forcing[0].num_elements();
         if (m_hasRefFlow)

@@ -70,9 +70,10 @@ namespace Nektar
         void Forcing::Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
                 const Array<OneD, Array<OneD, NekDouble> >&        inarray,
-                      Array<OneD, Array<OneD, NekDouble> >&        outarray)
+                      Array<OneD, Array<OneD, NekDouble> >&        outarray,
+                      NekDouble time)
         {
-            v_Apply(fields, inarray, outarray);
+            v_Apply(fields, inarray, outarray,time);
         }
 
 

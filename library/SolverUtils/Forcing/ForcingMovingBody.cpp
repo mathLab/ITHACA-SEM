@@ -69,6 +69,7 @@ namespace SolverUtils
         m_motion[0]    = "x";
         m_motion[1]    = "y";
         m_IsFromFile   = Array<OneD, bool> (6);
+        m_session->LoadParameter("Kinvis",m_kinvis);
         // Loading the x-dispalcement (m_zeta) and the y-displacement (m_eta)
 		// Those two variables are bith functions of z and t and the may come
 		// from an equation (forced vibration) or from another solver which, given
@@ -144,7 +145,7 @@ namespace SolverUtils
         UpdateMotion(fields,time);
 		
 		//calcualte the forcing components Ax,Ay,Az and put them in m_Forcing
-		CalculateForcing(fields,inarray);
+		CalculateForcing(fields);
 		
 		// Apply forcing terms
         for (int i = 0; i < m_NumVariable; i++)
@@ -163,15 +164,15 @@ namespace SolverUtils
         int cnt = 0;
         for(int j = 0; j < m_funcName.num_elements();j++)
         {
-            if(!m_IsFromFile[cnt] && !m_IsFromFile[cnt+1])
+            if(m_IsFromFile[cnt] && m_IsFromFile[cnt+1])
+            {
+               ASSERTL0(false,"Motion loading from file needs specific implementation: Work in Progress!"); 
+            }
+            else 
             {
                 EvaluateFunction(pFields, m_session, m_motion[0],m_zeta[j],m_funcName[j],time);
                 EvaluateFunction(pFields, m_session, m_motion[1],m_eta[j],m_funcName[j],time);
                 cnt = cnt + 2;
-            }
-            else 
-            {
-                ASSERTL0(false,"Motion loading from file needs specific implementation: Work in Progress!");
             }
         }
         
@@ -196,7 +197,7 @@ namespace SolverUtils
         int NumPoints = pFields[0]->GetTotPoints();
         
         Vmath::Vmul(NumPoints,m_zeta[3],1,m_eta[3],1,m_zeta[8],1); //(d(zeta)/dz)(d(eta)/dz)
-        Vmath::Vmul(NumPoints,m_eta[3],1,m_zeta[3],1,m_eta[8],1); //(d(zeta)/dz)(d(eta)/dz) // not really needed
+        Vmath::Vmul(NumPoints,m_eta[3],1,m_zeta[3],1,m_eta[8],1); //(d(eta)/dz)(d(zeta)/dz) // not really needed
         
         Vmath::Vmul(NumPoints,m_zeta[3],1,m_zeta[3],1,m_zeta[9],1); //(d(zeta)/dz)^2
         Vmath::Vmul(NumPoints,m_eta[3],1,m_eta[3],1,m_eta[9],1); //(d(eta)/dz)^2
@@ -213,7 +214,6 @@ namespace SolverUtils
         
     void ForcingMovingBody::CheckIsFromFile()
     {
-        // Note: we just check the first component - 'x' (m_zeta) - of each time derivative
         LibUtilities::FunctionType vType;
         
         // Check Displacement x

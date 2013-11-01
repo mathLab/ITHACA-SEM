@@ -208,8 +208,184 @@ namespace SolverUtils
 	void ForcingMovingBody::CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                              const Array<OneD, Array<OneD, NekDouble> > &inarray)
 	{
-        //////////////// Work in progress
-		
+        int nPointsTot = fields[0]->GetNpoints();
+        Array<OneD, NekDouble> U,V,W;
+        Array<OneD, NekDouble> Px,Py,Pz;
+        Array<OneD, NekDouble> tmp1,tmp2,tmp3;
+        Array<OneD, NekDouble> Fx,Fy,Fz;
+        U = Array<OneD, NekDouble> (nPointsTot);
+        V = Array<OneD, NekDouble> (nPointsTot);
+        W = Array<OneD, NekDouble> (nPointsTot);
+        Px = Array<OneD, NekDouble> (nPointsTot);
+        Py = Array<OneD, NekDouble> (nPointsTot);
+        Pz = Array<OneD, NekDouble> (nPointsTot);
+        Fx = Array<OneD, NekDouble> (nPointsTot,0.0);
+        Fy = Array<OneD, NekDouble> (nPointsTot,0.0);
+        Fz = Array<OneD, NekDouble> (nPointsTot,0.0);
+        tmp1 = Array<OneD, NekDouble> (nPointsTot);
+        tmp2 = Array<OneD, NekDouble> (nPointsTot);
+        tmp3 = Array<OneD, NekDouble> (nPointsTot);
+        fields[0]->HomogeneousBwdTrans(fields[0]->GetPhys(),U);
+        fields[0]->HomogeneousBwdTrans(fields[1]->GetPhys(),V);
+        fields[0]->HomogeneousBwdTrans(fields[2]->GetPhys(),W);
+        fields[0]->HomogeneousBwdTrans(fields[3]->GetPhys(),tmp1); // pressure
+        //-------------------------------------------------------------------------------------------------
+        // Setting the pressure derivatives
+        //-------------------------------------------------------------------------------------------------
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],tmp1,Px); // Px
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp1,Py); // Px
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],fields[3]->GetPhys(),tmp2); // Pz in wave space
+        fields[0]->HomogeneousBwdTrans(tmp2,Pz); // Pz
+        //-------------------------------------------------------------------------------------------------
+        // x-component of the forcing - pressure component
+        //-------------------------------------------------------------------------------------------------
+        Vmath::Vmul(nPointsTot,m_zeta[9],1,Px,1,tmp1,1);
+        Vmath::Vmul(nPointsTot,m_zeta[8],1,Py,1,tmp2,1);
+        Vmath::Vmul(nPointsTot,m_zeta[3],1,Pz,1,tmp3,1);
+        Vmath::Vsub(nPointsTot,Fx,1,tmp1,1,Fx,1);
+        Vmath::Vsub(nPointsTot,Fx,1,tmp2,1,Fx,1);
+        Vmath::Vadd(nPointsTot,Fx,1,tmp3,1,Fx,1);
+        Vmath::Vsub(nPointsTot,Fx,1,m_zeta[2],1,Fx,1);
+        Vmath::Vmul(nPointsTot,m_zeta[6],1,W,1,tmp1,1);
+        Vmath::Smul(nPointsTot,2.0,tmp1,1,tmp1,1);
+        Vmath::Vsub(nPointsTot,Fx,1,tmp1,1,Fx,1);
+        Vmath::Vmul(nPointsTot,W,1,W,1,tmp3,1); //W^2 - we reuse it later
+        Vmath::Vmul(nPointsTot,m_zeta[4],1,tmp3,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Fx,1,tmp2,1,Fx,1);
+        //-------------------------------------------------------------------------------------------------
+        // y-component of the forcing - pressure component
+        //-------------------------------------------------------------------------------------------------
+        Vmath::Vmul(nPointsTot,m_eta[4],1,tmp3,1,tmp2,1); // reusing W^2
+        Vmath::Vsub(nPointsTot,Fy,1,tmp2,1,Fy,1);
+        Vmath::Vmul(nPointsTot,m_eta[8],1,Px,1,tmp1,1);
+        Vmath::Vmul(nPointsTot,m_eta[9],1,Py,1,tmp2,1);
+        Vmath::Vmul(nPointsTot,m_eta[3],1,Pz,1,tmp3,1);
+        Vmath::Vsub(nPointsTot,Fy,1,tmp1,1,Fy,1);
+        Vmath::Vsub(nPointsTot,Fy,1,tmp2,1,Fy,1);
+        Vmath::Vadd(nPointsTot,Fy,1,tmp3,1,Fy,1);
+        Vmath::Vsub(nPointsTot,Fy,1,m_eta[2],1,Fy,1);
+        Vmath::Vmul(nPointsTot,m_eta[6],1,W,1,tmp1,1);
+        Vmath::Smul(nPointsTot,2.0,tmp1,1,tmp1,1);
+        Vmath::Vsub(nPointsTot,Fy,1,tmp1,1,Fy,1);
+        //-------------------------------------------------------------------------------------------------
+        // z-component of the forcing - pressure component
+        //-------------------------------------------------------------------------------------------------
+        Vmath::Vmul(nPointsTot,m_zeta[3],1,Px,1,tmp1,1);
+        Vmath::Vmul(nPointsTot,m_eta[3],1,Py,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Fz,1,tmp1,1,Fz,1);
+        Vmath::Vsub(nPointsTot,Fz,1,tmp2,1,Fz,1);
+        //-------------------------------------------------------------------------------------------------
+        // Note: Now we use Px,Py,Pz to store the viscous component of the forcing before we multiply
+        // them by m_kinvis = 1/Re. Since we build up on them we need to set the entries to zero.
+        //-------------------------------------------------------------------------------------------------
+        Vmath::Zero(nPointsTot,Px,1);
+        Vmath::Zero(nPointsTot,Py,1);
+        Vmath::Zero(nPointsTot,Pz,1);
+        //-------------------------------------------------------------------------------------------------
+        // x-component of the forcing - viscous component
+        //-------------------------------------------------------------------------------------------------
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],fields[0]->GetPhys(),tmp1); // Uz
+        fields[0]->HomogeneousBwdTrans(tmp1,tmp3); // Uz in physical space
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],tmp3,tmp1); // Uzx
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp3,tmp2); // Uzy
+        Vmath::Vmul(nPointsTot,m_zeta[3],1,tmp1,1,tmp1,1);
+        Vmath::Smul(nPointsTot,2.0,tmp1,1,tmp1,1);
+        Vmath::Vmul(nPointsTot,m_eta[3],1,tmp2,1,tmp2,1);
+        Vmath::Smul(nPointsTot,2.0,tmp2,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Px,1,tmp1,1,Px,1);
+        Vmath::Vsub(nPointsTot,Px,1,tmp2,1,Px,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],U,tmp1); // Ux
+        Vmath::Vmul(nPointsTot,m_zeta[4],1,tmp1,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Px,1,tmp2,1,Px,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],tmp1,tmp2); // Uxx
+        Vmath::Vmul(nPointsTot,m_zeta[9],1,tmp2,1,tmp3,1);
+        Vmath::Vadd(nPointsTot,Px,1,tmp3,1,Px,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp1,tmp2); // Uxy
+        Vmath::Vmul(nPointsTot,m_zeta[8],1,tmp3,1,tmp3,1);
+        Vmath::Smul(nPointsTot,2.0,tmp3,1,tmp3,1);
+        Vmath::Vadd(nPointsTot,Px,1,tmp3,1,Px,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],U,tmp1); // Uy
+        Vmath::Vmul(nPointsTot,m_eta[4],1,tmp1,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Px,1,tmp2,1,Px,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp1,tmp2); // Uyy
+        Vmath::Vmul(nPointsTot,m_eta[9],1,tmp2,1,tmp3,1);
+        Vmath::Vadd(nPointsTot,Px,1,tmp3,1,Px,1);
+        Vmath::Vadd(nPointsTot,Px,1,m_zeta[7],1,Px,1);
+        Vmath::Vmul(nPointsTot,m_zeta[5],1,W,1,tmp1,1);
+        Vmath::Vadd(nPointsTot,Px,1,tmp1,1,Px,1);
+        Vmath::Smul(nPointsTot,m_kinvis,Px,1,Px,1); //* 1/Re
+        //-------------------------------------------------------------------------------------------------
+        // y-component of the forcing - viscous component
+        //-------------------------------------------------------------------------------------------------
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],fields[1]->GetPhys(),tmp1); // Vz
+        fields[0]->HomogeneousBwdTrans(tmp1,tmp3); // Vz in physical space
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],tmp3,tmp1); // Vzx
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp3,tmp2); // Vzy
+        Vmath::Vmul(nPointsTot,m_zeta[3],1,tmp1,1,tmp1,1);
+        Vmath::Smul(nPointsTot,2.0,tmp1,1,tmp1,1);
+        Vmath::Vmul(nPointsTot,m_eta[3],1,tmp2,1,tmp2,1);
+        Vmath::Smul(nPointsTot,2.0,tmp2,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Py,1,tmp1,1,Py,1);
+        Vmath::Vsub(nPointsTot,Py,1,tmp2,1,Py,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],V,tmp1); // Vx
+        Vmath::Vmul(nPointsTot,m_zeta[4],1,tmp1,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Py,1,tmp2,1,Py,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],tmp1,tmp2); // Vxx
+        Vmath::Vmul(nPointsTot,m_zeta[9],1,tmp2,1,tmp3,1);
+        Vmath::Vadd(nPointsTot,Py,1,tmp3,1,Py,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp1,tmp2); // Vxy
+        Vmath::Vmul(nPointsTot,m_zeta[8],1,tmp3,1,tmp3,1);
+        Vmath::Smul(nPointsTot,2.0,tmp3,1,tmp3,1);
+        Vmath::Vadd(nPointsTot,Py,1,tmp3,1,Py,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],V,tmp1); // Vy
+        Vmath::Vmul(nPointsTot,m_eta[4],1,tmp1,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Py,1,tmp2,1,Py,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp1,tmp2); // Vyy
+        Vmath::Vmul(nPointsTot,m_eta[9],1,tmp2,1,tmp3,1);
+        Vmath::Vadd(nPointsTot,Py,1,tmp3,1,Py,1);
+        Vmath::Vadd(nPointsTot,Py,1,m_eta[7],1,Py,1);
+        Vmath::Vmul(nPointsTot,m_eta[5],1,W,1,tmp1,1);
+        Vmath::Vadd(nPointsTot,Py,1,tmp1,1,Py,1);
+        Vmath::Smul(nPointsTot,m_kinvis,Py,1,Py,1); //* 1/Re
+        //-------------------------------------------------------------------------------------------------
+        // z-component of the forcing - viscous component
+        //-------------------------------------------------------------------------------------------------
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],fields[2]->GetPhys(),tmp1); // Wz
+        fields[0]->HomogeneousBwdTrans(tmp1,tmp3); // Wz in physical space
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],tmp3,tmp1); // Wzx
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp3,tmp2); // Wzy
+        Vmath::Vmul(nPointsTot,m_zeta[3],1,tmp1,1,tmp1,1);
+        Vmath::Smul(nPointsTot,2.0,tmp1,1,tmp1,1);
+        Vmath::Vmul(nPointsTot,m_eta[3],1,tmp2,1,tmp2,1);
+        Vmath::Smul(nPointsTot,2.0,tmp2,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Pz,1,tmp1,1,Pz,1);
+        Vmath::Vsub(nPointsTot,Pz,1,tmp2,1,Pz,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],W,tmp1); // Wx
+        Vmath::Vmul(nPointsTot,m_zeta[4],1,tmp1,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Pz,1,tmp2,1,Pz,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],tmp1,tmp2); // Wxx
+        Vmath::Vmul(nPointsTot,m_zeta[9],1,tmp2,1,tmp3,1);
+        Vmath::Vadd(nPointsTot,Pz,1,tmp3,1,Pz,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp1,tmp2); // Wxy
+        Vmath::Vmul(nPointsTot,m_zeta[8],1,tmp3,1,tmp3,1);
+        Vmath::Smul(nPointsTot,2.0,tmp3,1,tmp3,1);
+        Vmath::Vadd(nPointsTot,Pz,1,tmp3,1,Pz,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],W,tmp1); // Wy
+        Vmath::Vmul(nPointsTot,m_eta[4],1,tmp1,1,tmp2,1);
+        Vmath::Vsub(nPointsTot,Pz,1,tmp2,1,Pz,1);
+        fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],tmp1,tmp2); // Wyy
+        Vmath::Vmul(nPointsTot,m_eta[9],1,tmp2,1,tmp3,1);
+        Vmath::Vadd(nPointsTot,Pz,1,tmp3,1,Pz,1);
+        Vmath::Smul(nPointsTot,m_kinvis,Pz,1,Pz,1); //* 1/Re
+        //-------------------------------------------------------------------------------------------------
+        // adding viscous and pressure components and transfroming back to wave space
+        //-------------------------------------------------------------------------------------------------
+        Vmath::Vadd(nPointsTot,Fx,1,Px,1,Fx,1);
+        Vmath::Vadd(nPointsTot,Fy,1,Py,1,Fy,1);
+        Vmath::Vadd(nPointsTot,Fz,1,Pz,1,Fz,1);
+        fields[0]->HomogeneousFwdTrans(Fx,m_Forcing[0]);
+        fields[0]->HomogeneousFwdTrans(Fy,m_Forcing[1]);
+        fields[0]->HomogeneousFwdTrans(Fz,m_Forcing[2]);
 	}
         
     void ForcingMovingBody::CheckIsFromFile()

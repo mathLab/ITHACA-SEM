@@ -859,6 +859,7 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT Nektar::NekDouble Vmin( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT int Vmin( int n, const int *x, const int incx);
 
     /// \brief  vvtvp (vector times vector times vector): z = w*x*y
     template<class T> T Dot(     int n,

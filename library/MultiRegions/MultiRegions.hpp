@@ -39,7 +39,6 @@
 #include <vector>
 #include <SpatialDomains/Conditions.h>
 
-
 namespace Nektar
 {
     namespace MultiRegions

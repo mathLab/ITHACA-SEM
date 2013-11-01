@@ -96,6 +96,8 @@ namespace Nektar
 		
 		Array<OneD, NekDouble>							m_beta;
 
+		LibUtilities::TimeIntegrationMethod             m_timeIntMethod;
+
         /// Initialises PulseWaveSystem class members.
         PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session);
 		

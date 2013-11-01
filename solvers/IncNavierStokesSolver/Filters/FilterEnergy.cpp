@@ -47,7 +47,7 @@ namespace Nektar
         FilterEnergy::FilterEnergy(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::map<std::string, std::string> &pParams) :
-            Filter(pSession), m_planes(), m_index(0), m_homogeneous(false)
+            Filter(pSession), m_index(0), m_homogeneous(false), m_planes()
         {
             std::string outName;
             if (pParams.find("OutputFile") == pParams.end())
@@ -71,23 +71,8 @@ namespace Nektar
             
             ASSERTL0(pParams.find("OutputFrequency") != pParams.end(),
                      "Missing parameter 'OutputFrequency'.");
-            m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
-
-            if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
-            {
-                std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
-                if (HomoStr == "HOMOGENEOUS1D" || HomoStr == "Homogeneous1D" ||
-                    HomoStr == "1D"            || HomoStr == "Homo1D")
-                {
-                    m_homogeneous = true;
-                    pSession->LoadParameter("LZ", m_homogeneousLength);
-                }
-                else
-                {
-                    ASSERTL0(false, "The energy filter only supports 1D "
-                                    "homogeneous expansions.");
-                }
-            }
+            m_outputFrequency = atoi(
+                pParams.find("OutputFrequency")->second.c_str());
         }
 
         FilterEnergy::~FilterEnergy()
@@ -101,6 +86,15 @@ namespace Nektar
         {
             m_index = 0;
             MultiRegions::ExpListSharedPtr areaField;
+
+            ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e3DH2D,
+                     "Homogeneous 2D expansion not supported"
+                     "for energy filter");
+
+            if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
+            {
+                m_homogeneous = true;
+            }
 
             // Calculate area/volume of domain.
             if (m_homogeneous)
@@ -129,7 +123,7 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
-            int i, n, nPoints = pFields[0]->GetNpoints(), nPlanePts = 0;
+            int i, nPoints = pFields[0]->GetNpoints(), nPlanePts = 0;
 
             if (m_homogeneous)
             {

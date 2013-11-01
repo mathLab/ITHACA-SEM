@@ -225,9 +225,9 @@ namespace Nektar
     /**
      * @brief Print out a summary with some relevant information.
      */
-    void CompressibleFlowSystem::v_PrintSummary(std::ostream &out)
+    void CompressibleFlowSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
     }
     
     /**

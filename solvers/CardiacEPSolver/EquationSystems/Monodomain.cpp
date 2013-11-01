@@ -353,33 +353,30 @@ namespace Nektar
     /**
      *
      */
-    void Monodomain::v_PrintSummary(std::ostream &out)
+    void Monodomain::v_GenerateSummary(SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
         if (m_session->DefinesFunction("d00") &&
             m_session->GetFunctionType("d00", "intensity") 
                     == LibUtilities::eFunctionTypeExpression)
         {
-            out << "\tDiffusivity-x   : "
-                << m_session->GetFunction("d00", "intensity")->GetExpression()
-                << endl;
+            AddSummaryItem(s, "Diffusivity-x",
+                m_session->GetFunction("d00", "intensity")->GetExpression());
         }
         if (m_session->DefinesFunction("d11") &&
             m_session->GetFunctionType("d11", "intensity") 
                     == LibUtilities::eFunctionTypeExpression)
         {
-            out << "\tDiffusivity-x   : "
-                << m_session->GetFunction("d11", "intensity")->GetExpression()
-                << endl;
+            AddSummaryItem(s, "Diffusivity-y",
+                m_session->GetFunction("d11", "intensity")->GetExpression());
         }
         if (m_session->DefinesFunction("d22") &&
             m_session->GetFunctionType("d22", "intensity") 
                     == LibUtilities::eFunctionTypeExpression)
         {
-            out << "\tDiffusivity-x   : "
-                << m_session->GetFunction("d22", "intensity")->GetExpression()
-                << endl;
+            AddSummaryItem(s, "Diffusivity-z",
+                m_session->GetFunction("d22", "intensity")->GetExpression());
         }
-        m_cell->PrintSummary(out);
+        m_cell->GenerateSummary(s);
     }
 }

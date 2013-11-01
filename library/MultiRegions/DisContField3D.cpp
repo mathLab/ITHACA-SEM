@@ -697,6 +697,22 @@ namespace Nektar
             int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
+            // Set up a set of all local verts and edges. 
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                for(j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
+                {
+                    int id = (*m_exp)[i]->GetGeom()->GetVid(j);
+                    locVerts.insert(id);
+                }
+
+                for(j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
+                {
+                    int id = (*m_exp)[i]->GetGeom()->GetEid(j);
+                    locEdges.insert(id);
+                }
+            }    
+
             // Begin by populating the perComps map. We loop over all periodic
             // boundary conditions and determine the composite associated with
             // it, then fill out the all* maps.
@@ -1103,29 +1119,6 @@ namespace Nektar
                         ASSERTL0(compPairs[eId2] == eId1, "Pairing incorrect");
                     }
                     compPairs[eId1] = eId2;
-                }
-
-                // Construct set of all periodic edges and vertices that we have
-                // locally on this processor.
-                for (i = 0; i < 2; ++i)
-                {
-                    if (!c[i])
-                    {
-                        continue;
-                    }
-
-                    if (c[i]->size() > 0)
-                    {
-                        for (j = 0; j < c[i]->size(); ++j)
-                        {
-                            int faceId = c[i]->at(j)->GetGlobalID();
-                            for (k = 0; k < vertMap[faceId].size(); ++k)
-                            {
-                                locVerts.insert(vertMap[faceId][k]);
-                                locEdges.insert(edgeMap[faceId][k]);
-                            }
-                        }
-                    }
                 }
 
                 // Now that we have all pairs of periodic faces, loop over the

@@ -156,6 +156,7 @@
             <I PROPERTY="Projection" VALUE="Mixed_CG_Discontinuous" />  
             <I PROPERTY="SubSteppingScheme"     VALUE="True" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="BackwardEuler" />
+            <I PROPERTY="Extrapolation" VALUE="SubStepping" />
         </SOLVERINFO>
 
         <PARAMETERS>

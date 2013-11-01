@@ -1644,6 +1644,8 @@ namespace Nektar
 
             ASSERTL1(wsp.num_elements() >= 6*nqtot,
                      "Insufficient workspace size.");
+            ASSERTL1(m_ncoeffs <= nqtot,
+                     "Workspace not set up for ncoeffs > nqtot");
 
             const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
             const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -1659,12 +1661,12 @@ namespace Nektar
             const Array<OneD, const NekDouble>& metric22 = m_metrics[MetricLaplacian22];
 
             // Allocate temporary storage
-            Array<OneD,NekDouble> wsp0 (wsp);
-            Array<OneD,NekDouble> wsp1 (wsp+1*nqtot   );// TensorDeriv 1
-            Array<OneD,NekDouble> wsp2 (wsp+2*nqtot);// TensorDeriv 2
-            Array<OneD,NekDouble> wsp3 (wsp+3*nqtot);// TensorDeriv 3
-            Array<OneD,NekDouble> wsp4 (wsp+4*nqtot);// wsp4 == g1
-            Array<OneD,NekDouble> wsp5 (wsp+5*nqtot);// wsp5 == g2
+            Array<OneD,NekDouble> wsp0 (2*nqtot, wsp);
+            Array<OneD,NekDouble> wsp1 (  nqtot, wsp+1*nqtot);
+            Array<OneD,NekDouble> wsp2 (  nqtot, wsp+2*nqtot);
+            Array<OneD,NekDouble> wsp3 (  nqtot, wsp+3*nqtot);
+            Array<OneD,NekDouble> wsp4 (  nqtot, wsp+4*nqtot);
+            Array<OneD,NekDouble> wsp5 (  nqtot, wsp+5*nqtot);
             
             // LAPLACIAN MATRIX OPERATION
             // wsp1 = du_dxi1 = D_xi1 * inarray = D_xi1 * u
@@ -1686,12 +1688,9 @@ namespace Nektar
             // outarray = m = (D_xi1 * B)^T * k
             // wsp1     = n = (D_xi2 * B)^T * l
             IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp3,outarray,wsp0,false,true,true);
-            IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp4,wsp1,    wsp0,true,false,true);
+            IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp4,wsp2,    wsp0,true,false,true);
+            Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
             IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp5,wsp2,    wsp0,true,true,false);
-
-            // outarray = outarray + wsp1
-            //          = L * u_hat
-            Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
 
@@ -1718,29 +1717,28 @@ namespace Nektar
                     m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
                 }
             }
+            
+            // Define shorthand synonyms for m_metrics storage
+            Array<OneD,NekDouble> g0   (m_metrics[m[0][0]]);
+            Array<OneD,NekDouble> g1   (m_metrics[m[1][1]]);
+            Array<OneD,NekDouble> g2   (m_metrics[m[2][2]]);
+            Array<OneD,NekDouble> g3   (m_metrics[m[0][1]]);
+            Array<OneD,NekDouble> g4   (m_metrics[m[0][2]]);
+            Array<OneD,NekDouble> g5   (m_metrics[m[1][2]]);
 
             // Allocate temporary storage
-            Array<OneD,NekDouble> alloc(13*nqtot,0.0);
-            Array<OneD,NekDouble> wsp1 (alloc         );// TensorDeriv 1
-            Array<OneD,NekDouble> wsp2 (alloc+ 1*nqtot);// TensorDeriv 2
-            Array<OneD,NekDouble> wsp3 (alloc+ 2*nqtot);// TensorDeriv 3
-            Array<OneD,NekDouble> g0   (alloc+ 3*nqtot);// g0
-            Array<OneD,NekDouble> g1   (alloc+ 4*nqtot);// g1
-            Array<OneD,NekDouble> g2   (alloc+ 5*nqtot);// g2
-            Array<OneD,NekDouble> g3   (alloc+ 6*nqtot);// g3
-            Array<OneD,NekDouble> g4   (alloc+ 7*nqtot);// g4
-            Array<OneD,NekDouble> g5   (alloc+ 8*nqtot);// g5
-            Array<OneD,NekDouble> h0   (alloc+ 9*nqtot);// h0
-            Array<OneD,NekDouble> h1   (alloc+10*nqtot);// h1
-            Array<OneD,NekDouble> h2   (alloc+11*nqtot);// h2
-            Array<OneD,NekDouble> h3   (alloc+12*nqtot);// h3
+            Array<OneD,NekDouble> alloc(7*nqtot,0.0);
+            Array<OneD,NekDouble> h0   (alloc);         // h0
+            Array<OneD,NekDouble> h1   (alloc+ 1*nqtot);// h1
+            Array<OneD,NekDouble> h2   (alloc+ 2*nqtot);// h2
+            Array<OneD,NekDouble> h3   (alloc+ 3*nqtot);// h3
+            Array<OneD,NekDouble> wsp4 (alloc+ 4*nqtot);// wsp4
+            Array<OneD,NekDouble> wsp5 (alloc+ 5*nqtot);// wsp5
+            Array<OneD,NekDouble> wsp6 (alloc+ 6*nqtot);// wsp6
             // Reuse some of the storage as workspace
-            Array<OneD,NekDouble> wsp4 (alloc+ 4*nqtot);// wsp4 == g1
-            Array<OneD,NekDouble> wsp5 (alloc+ 5*nqtot);// wsp5 == g2
-            Array<OneD,NekDouble> wsp6 (alloc+ 8*nqtot);// wsp6 == g5
-            Array<OneD,NekDouble> wsp7 (alloc+ 9*nqtot);// wsp7 == h0
-            Array<OneD,NekDouble> wsp8 (alloc+10*nqtot);// wsp8 == h1
-            Array<OneD,NekDouble> wsp9 (alloc+11*nqtot);// wsp9 == h2
+            Array<OneD,NekDouble> wsp7 (alloc);         // wsp7
+            Array<OneD,NekDouble> wsp8 (alloc+ 1*nqtot);// wsp8
+            Array<OneD,NekDouble> wsp9 (alloc+ 2*nqtot);// wsp9
 
             const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
             const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();

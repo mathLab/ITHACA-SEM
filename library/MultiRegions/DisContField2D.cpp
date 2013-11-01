@@ -39,6 +39,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion.h>     // for Expansion
 #include <LocalRegions/QuadExp.h>     // for Expansion
+#include <LocalRegions/SegExp.h>     // for Expansion
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
@@ -1914,11 +1915,16 @@ namespace Nektar
 				LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes, PkeyQ1);
 				LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes, PkeyQ2);
 
+
+				SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
+				//SpatialDomains::SegGeomSharedPtr sGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(qGeom->GetEdge(0));
+				//LocalRegions::SegExpSharedPtr segExp = 
+				//	MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(BkeyQ1, sGeom);
 				LocalRegions::QuadExpSharedPtr ppExp = 
-					MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom()));
+					MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
 				//Orthogonal expansion created
 
-				//In case lamdas are causing the trouble, try PhysDeriv instead of DGDeriv
+				//In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
 				//===============================================================================================
                 //(*m_exp)[eid]->BwdTrans(tmp_coeffs = m_coeffs + m_coeff_offset[eid],(*m_exp)[eid]->UpdatePhys());
                 //(*m_exp)[eid]->PhysDeriv((*m_exp)[eid]->GetPhys(), qrhs, qrhs1);
@@ -1954,9 +1960,7 @@ namespace Nektar
 
                 // multiply by inverse Laplacian matrix
                 // get matrix inverse
-                LocalRegions::MatrixKey  lapkey(
-                    StdRegions::eInvLaplacianWithUnityMean,  
-                    (*m_exp)[eid]->DetShapeType(), *ppExp);
+                LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, (*m_exp)[eid]->DetShapeType(), *ppExp);
                 DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
                 
                 NekVector<NekDouble> in (nm_elmt,force,eWrapper);
@@ -1968,6 +1972,10 @@ namespace Nektar
 				//transforming back to modified basis
 				ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
 				(*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
+
+				//check if laplacian submatrix is singular for the 1D case (SegExp)
+                //LocalRegions::MatrixKey segkey(StdRegions::eLaplacian, segExp->DetShapeType(), *segExp);
+                //DNekScalMatSharedPtr seglap = segExp->GetLocMatrix(segkey); 
             }
         }
 

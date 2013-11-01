@@ -43,7 +43,7 @@ namespace SolverUtils
 
     std::string ForcingWavyness::className = GetForcingFactory().
                                 RegisterCreatorFunction("Wavyness",
-                                                        ForcingBody::create,
+                                                        ForcingWavyness::create,
                                                         "Wavyness Forcing");
 
     ForcingWavyness::ForcingWavyness(
@@ -151,7 +151,7 @@ namespace SolverUtils
         Vmath::Vmul(nPointsTot,W,1,W,1,tmp2,1); // W^2
         Vmath::Vmul(nPointsTot,tmp2,1,m_wavyGeometricInfo[2],1,tmp2,1); // Xzz * W^2
         Vmath::Vsub(nPointsTot,tmp3,1,tmp1,1,m_Forcing[0],1); // Pz * Xz - Px * Xz^2
-        Vmath::Vsub(nPointsTot,m_wavyForcing[0],1,tmp2,1,m_Forcing[0],1); // A0 = Pz * Xz - Px * Xz^2 - Xzz * W^2
+        Vmath::Vsub(nPointsTot,m_Forcing[0],1,tmp2,1,m_Forcing[0],1); // A0 = Pz * Xz - Px * Xz^2 - Xzz * W^2
         // here part to be multiplied by 1/Re we use P to store it, since we dont't need it anymore
         Vmath::Vmul(nPointsTot,W,1,m_wavyGeometricInfo[3],1,P,1); // W * Xzzz
         Vmath::Vadd(nPointsTot,P,1,m_wavyGeometricInfo[5],1,P,1); // P = W * Xzzz + Xz * Xzz

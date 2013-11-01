@@ -44,7 +44,7 @@ namespace SolverUtils
 
     std::string ForcingMovingBody::className = GetForcingFactory().
                                 RegisterCreatorFunction("MovingBody",
-                                                        ForcingBody::create,
+                                                        ForcingMovingBody::create,
                                                         "Moving Body Forcing");
 
     ForcingMovingBody::ForcingMovingBody(
@@ -111,7 +111,7 @@ namespace SolverUtils
         CheckIsFromFile();
         
         // create the storage space for the body motion description
-        int NumPoints = pFields[0]->GetTotPoints();
+        int phystot = pFields[0]->GetTotPoints();
         
         m_zeta = Array<OneD, Array< OneD, NekDouble> >(10);
         m_eta  = Array<OneD, Array< OneD, NekDouble> >(10);
@@ -205,8 +205,7 @@ namespace SolverUtils
         pFields[0]->SetWaveSpace(OriginalWaveSpace);
 	}
 	
-	void ForcingMovingBody::CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                             const Array<OneD, Array<OneD, NekDouble> > &inarray)
+	void ForcingMovingBody::CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
 	{
         int nPointsTot = fields[0]->GetNpoints();
         Array<OneD, NekDouble> U,V,W;

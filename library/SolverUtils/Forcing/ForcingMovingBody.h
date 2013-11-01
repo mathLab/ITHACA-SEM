@@ -90,8 +90,7 @@ namespace SolverUtils
             void UpdateMotion(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                               NekDouble time);
 		
-            void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                  const Array<OneD, Array<OneD, NekDouble> > &inarray);
+            void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
         
             Array<OneD, Array<OneD, NekDouble> >    m_zeta;
             Array<OneD, Array<OneD, NekDouble> >    m_eta;

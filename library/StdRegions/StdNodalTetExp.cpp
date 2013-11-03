@@ -89,11 +89,6 @@ namespace Nektar
         // Nodal basis specific routines
         //-------------------------------
         
-        void StdNodalTetExp::NodalToModal()
-        {
-            NodalToModal(m_coeffs,m_coeffs); 
-        }
-
         void StdNodalTetExp::NodalToModal(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
@@ -106,11 +101,6 @@ namespace Nektar
             NekVector<NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
             NekVector<NekDouble> modal(m_ncoeffs,outarray,eWrapper);
             modal = (*inv_vdm) * nodal;
-        }
-
-        void StdNodalTetExp::NodalToModalTranspose()
-        {
-            NodalToModalTranspose(m_coeffs,m_coeffs); 
         }
 
         // Operate with transpose of NodalToModal transformation
@@ -126,11 +116,6 @@ namespace Nektar
             NekVector<NekDouble> nodal(m_ncoeffs,inarray,eCopy);
             NekVector<NekDouble> modal(m_ncoeffs,outarray,eWrapper);
             modal = Transpose(*inv_vdm) * nodal;
-        }
-
-        void StdNodalTetExp::ModalToNodal()
-        {
-            ModalToNodal(m_coeffs,m_coeffs);
         }
 
         void StdNodalTetExp::ModalToNodal(

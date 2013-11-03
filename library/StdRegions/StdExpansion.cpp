@@ -66,7 +66,6 @@ namespace Nektar
             m_numbases(numbases),
             m_base(m_numbases),
             m_ncoeffs(numcoeffs),
-            m_coeffs(m_ncoeffs,0.0),
             m_stdMatrixManager(
                     boost::bind(&StdExpansion::CreateStdMatrix, this, _1),
                     std::string("StdExpansionStdMatrix")),
@@ -99,9 +98,6 @@ namespace Nektar
 //                ASSERTL0(false, "numbases incorrectly specified");
             };
 
-            //allocate memory for phys
-            m_phys = Array<OneD, NekDouble>(GetTotPoints());
-
         } //end constructor
 
 
@@ -110,33 +106,102 @@ namespace Nektar
             m_numbases(T.m_numbases),
             m_base(T.m_base),
             m_ncoeffs(T.m_ncoeffs),
-            m_coeffs(m_ncoeffs),
-            m_phys((T.m_phys).num_elements()),
             m_stdMatrixManager(T.m_stdMatrixManager),
             m_stdStaticCondMatrixManager(T.m_stdStaticCondMatrixManager),
 		    m_IndexMapManager(T.m_IndexMapManager)
         {
-            //CopyArray(T.m_base, m_base);
-            CopyArray(T.m_coeffs, m_coeffs);
-            CopyArray(T.m_phys, m_phys);
         }
 
         StdExpansion::~StdExpansion()
         {
         }
 
-        NekDouble StdExpansion::Linf(const Array<OneD, const NekDouble>& sol)
+        NekDouble StdExpansion::Linf(const Array<OneD, const NekDouble>& phys,
+                                     const Array<OneD, const NekDouble>& sol)
         {
             NekDouble  val;
             int     ntot = GetTotPoints();
             Array<OneD, NekDouble>  wsp(ntot);
 
-            Vmath::Vsub(ntot, sol, 1, m_phys, 1, wsp, 1);
-            Vmath::Vabs(ntot, wsp, 1, wsp, 1);
+            if(sol ==  NullNekDouble1DArray)
+            {
+                Vmath::Vabs(ntot, phys, 1, wsp, 1);
+            }
+            else
+            {
+                Vmath::Vsub(ntot, sol, 1, phys, 1, wsp, 1);
+                Vmath::Vabs(ntot, wsp, 1, wsp, 1);
+            }
+            
             val = Vmath::Vamax(ntot, wsp, 1);
 
             return  val;
         }
+
+        NekDouble StdExpansion::L2(const Array<OneD, const NekDouble>& phys,
+                                   const Array<OneD, const NekDouble>& sol)
+        {
+            NekDouble  val;
+            int     ntot = GetTotPoints();
+            Array<OneD, NekDouble> wsp(ntot);
+
+            if(sol ==  NullNekDouble1DArray)
+            {
+                Vmath::Vmul(ntot, phys, 1, phys, 1, wsp, 1);
+            }
+            else
+            {
+                Vmath::Vsub(ntot, sol, 1, phys, 1, wsp, 1);
+                Vmath::Vmul(ntot, wsp, 1, wsp, 1, wsp, 1);
+            }
+
+            val = v_Integral(wsp);
+
+            // if val too small, sqrt returns nan.
+            if (fabs(val) < NekConstants::kNekSqrtTol*NekConstants::kNekSqrtTol)
+            {
+                return 0.0;
+            }
+            else
+            {
+                return sqrt(val);
+            }
+        }
+
+        NekDouble StdExpansion::H1(const Array<OneD, const NekDouble>& phys,
+                                   const Array<OneD, const NekDouble>& sol)
+        {
+            int         i;
+            NekDouble  val;
+            int     ntot = GetTotPoints();
+            int     coordim = v_GetCoordim();
+            Array<OneD, NekDouble> wsp(3*ntot);
+            Array<OneD, NekDouble> wsp_deriv = wsp + ntot;
+            Array<OneD, NekDouble> sum = wsp_deriv + ntot;
+
+            if(sol ==  NullNekDouble1DArray)
+            {
+                Vmath::Vcopy(ntot,phys, 1, wsp, 1);
+                Vmath::Vmul(ntot, phys, 1, phys, 1, sum, 1);
+            }
+            else
+            {
+                Vmath::Vsub(ntot, sol, 1, phys, 1, wsp, 1);
+                Vmath::Vmul(ntot, wsp, 1, wsp, 1, sum, 1);
+            }
+
+
+            for(i = 0; i < coordim; ++i)
+            {
+                v_PhysDeriv(i,wsp,wsp_deriv);
+                Vmath::Vvtvp(ntot,wsp_deriv,1,wsp_deriv,1,sum,1,sum,1);
+            }
+
+            val = sqrt(v_Integral(sum));
+
+            return val;
+        }
+
 
         DNekBlkMatSharedPtr StdExpansion::CreateStdStaticCondMatrix(const StdMatrixKey &mkey)
         {
@@ -266,92 +331,6 @@ namespace Nektar
 			
             return returnval;
         }
-
-        NekDouble StdExpansion::Linf()
-        {
-            return Vmath::Vamax(GetTotPoints(), m_phys, 1);
-        }
-
-        NekDouble StdExpansion::L2(const Array<OneD, const NekDouble>& sol)
-        {
-            NekDouble  val;
-            int     ntot = GetTotPoints();
-            Array<OneD, NekDouble> wsp(ntot);
-
-            Vmath::Vsub(ntot, sol, 1, m_phys, 1, wsp, 1);
-            Vmath::Vmul(ntot, wsp, 1, wsp, 1, wsp, 1);
-
-            val = v_Integral(wsp);
-
-            // if val too small, sqrt returns nan.
-            if (fabs(val) < NekConstants::kNekSqrtTol*NekConstants::kNekSqrtTol)
-            {
-                return 0.0;
-            }
-            else
-            {
-                return sqrt(val);
-            }
-        }
-
-        NekDouble StdExpansion::L2()
-        {       	
-            NekDouble  val;
-            int     ntot = GetTotPoints();
-            Array<OneD, NekDouble> wsp(ntot);
-
-            Vmath::Vmul(ntot, m_phys, 1, m_phys, 1, wsp, 1);
-
-            val   = sqrt(v_Integral(wsp));
-            
-            return val;
-        }
-
-        NekDouble StdExpansion::H1(const Array<OneD, const NekDouble>& sol)
-        {
-            int         i;
-            NekDouble  val;
-            int     ntot = GetTotPoints();
-            int     coordim = v_GetCoordim();
-            Array<OneD, NekDouble> wsp(3*ntot);
-            Array<OneD, NekDouble> wsp_deriv = wsp + ntot;
-            Array<OneD, NekDouble> sum = wsp_deriv + ntot;
-
-            Vmath::Vsub(ntot, sol, 1, m_phys, 1, wsp, 1);
-            Vmath::Vmul(ntot, wsp, 1, wsp, 1, sum, 1);
-            for(i = 0; i < coordim; ++i)
-            {
-                v_PhysDeriv(i,wsp,wsp_deriv);
-                Vmath::Vvtvp(ntot,wsp_deriv,1,wsp_deriv,1,sum,1,sum,1);
-            }
-
-            val = sqrt(v_Integral(sum));
-
-            return val;
-        }
-
-        NekDouble StdExpansion::H1()
-        {
-            int i;
-            NekDouble  val;
-            int     ntot = GetTotPoints();
-            int     coordim = v_GetCoordim();
-            Array<OneD, NekDouble> wsp_deriv(2*ntot);
-            Array<OneD, NekDouble> sum = wsp_deriv + ntot;
-
-            Vmath::Vmul(ntot, m_phys, 1, m_phys, 1, sum, 1);
-
-            for(i = 0; i < coordim; ++i)
-            {
-                v_PhysDeriv(i,m_phys,wsp_deriv);
-                Vmath::Vvtvp(ntot,wsp_deriv,1,wsp_deriv,1,sum,1,sum,1);
-            }
-
-            val = sqrt(v_Integral(sum));
-
-            return val;
-        }
-
 
         DNekMatSharedPtr StdExpansion::CreateGeneralMatrix(const StdMatrixKey &mkey)
         {
@@ -949,15 +928,6 @@ namespace Nektar
                         nq, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
 
-        //   I/O routine
-        void StdExpansion::WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int i;
-            for(i=0; i<m_ncoeffs; ++i)
-            {
-                outfile << m_coeffs[i] << std::endl;
-            }
-        }
 
         void StdExpansion::WriteTecplotZone(std::ofstream &outfile)
         {
@@ -1003,20 +973,6 @@ namespace Nektar
                 outfile << std::endl;
             }
 
-        }
-
-        void StdExpansion::WriteTecplotField(std::ofstream &outfile)
-        {
-            int i;
-
-            int totpoints = GetTotPoints();
-
-            // printing the fields of that zone
-            for(i = 0; i < totpoints; ++i)
-            {
-                outfile << m_phys[i] << " ";
-            }
-            outfile << std::endl;
         }
 
         // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
@@ -1430,12 +1386,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
         }
 
-        NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
-        {
-            NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
-            return 0;
-        }
-
 
         NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble>& physvals)
         {
@@ -1585,16 +1535,6 @@ namespace Nektar
                     Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library");
-            }
-
-            void StdExpansion::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
-            {
-                NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
-            }
-
-            void StdExpansion::v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar)
-            {
-                NEKERROR(ErrorUtil::efatal, "ReadFromFile: Write method");
             }
 
             const  boost::shared_ptr<SpatialDomains::GeomFactors>& StdExpansion::v_GetMetricInfo() const

@@ -18,9 +18,10 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
 // This routine projects a polynomial or trigonmetric functions which
 // has energy in all mdoes of the expansions and reports and error
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
     int           i;
-
+    
     int           order1,order2, nq1,nq2;
     LibUtilities::PointsType    Qtype1,Qtype2;
     LibUtilities::BasisType     btype1 =   LibUtilities::eOrtho_A;
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]){
     {
         fprintf(stderr,"Usage: StdProject2D RegionShape Type1 Type2 order1 "
                 "order2  nq1 nq2  \n");
-
+        
         fprintf(stderr,"Where RegionShape is an integer value which "
                 "dictates the region shape:\n");
         fprintf(stderr,"\t Triangle      = 3\n");
@@ -134,6 +135,7 @@ int main(int argc, char *argv[]){
     
     sol = Array<OneD, NekDouble>(nq1*nq2);
     
+    
     if(btype1== LibUtilities::eFourier)
     {
         Qtype1 = LibUtilities::eFourierEvenlySpaced;
@@ -232,22 +234,26 @@ int main(int argc, char *argv[]){
             break;
     }
 
+    Array<OneD, NekDouble> phys (nq1*nq2);
+    Array<OneD, NekDouble> coeffs(order1*order2);
+
+    
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    E->FwdTrans(sol,coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs,phys);
     //-------------------------------------------
-
+    
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys,sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys,sol) << endl;
     //--------------------------------------------
-
+    
     //-------------------------------------------
 	
     // Evaulate solution at x = y =0  and print error
@@ -264,10 +270,10 @@ int main(int argc, char *argv[]){
         sol[0] = Quad_sol(x[0],x[1],order1,order2,btype1,btype2);
     }
 
-    NekDouble nsol = E->PhysEvaluate(x);
+    NekDouble nsol = E->PhysEvaluate(x,phys);
     cout << "error at x = (" <<x[0] <<","<<x[1] <<"): " << nsol - sol[0] << endl;
     //-------------------------------------------
-
+    
     return 0;
 }
 

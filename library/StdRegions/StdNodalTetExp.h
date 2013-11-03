@@ -58,15 +58,12 @@ namespace Nektar
             //-------------------------------
             // Nodal basis specific routines
             //-------------------------------
-            STD_REGIONS_EXPORT void NodalToModal();
             STD_REGIONS_EXPORT void NodalToModal(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT void NodalToModalTranspose();
             STD_REGIONS_EXPORT void NodalToModalTranspose(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT void ModalToNodal();
             STD_REGIONS_EXPORT void ModalToNodal(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);

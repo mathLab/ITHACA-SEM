@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
 		PostProc->ExtractDataToCoeffs(FieldDef[i],FieldData[i],fieldstr,PostProc->UpdateCoeffs());
 	}
 
-	// Interpolotation trace 
+	// Interpolation of trace 
 	std::vector<LibUtilities::FieldDefinitionsSharedPtr> TraceDef 
 		= Exp->GetTrace()->GetFieldDefinitions();
 	std::vector<std::vector<NekDouble> > TraceData(FieldDef.size());

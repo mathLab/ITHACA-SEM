@@ -39,6 +39,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion.h>     // for Expansion
 #include <LocalRegions/QuadExp.h>     // for Expansion
+#include <LocalRegions/TriExp.h>     // for Expansion
 #include <LocalRegions/SegExp.h>     // for Expansion
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
@@ -1891,7 +1892,11 @@ namespace Nektar
                 qrhs1  = Array<OneD, NekDouble>(nq_elmt);
                 force = Array<OneD, NekDouble>(2*nm_elmt);
                 out_tmp = force + nm_elmt;
+				LocalRegions::ExpansionSharedPtr ppExp;
 
+				int num_points1 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
+				int num_points2 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
+				int num_modes = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
                 // Probably a better way of setting up lambda than this.  Note
                 // cannot use PutCoeffsInToElmts since lambda space is mapped
                 // during the solve.
@@ -1906,22 +1911,39 @@ namespace Nektar
                                  elmtToTrace[eid][e]->UpdateCoeffs(),1);
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
-				//creating orthogonal expansion (implemented for quads for now)
-				int num_points = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
-				int num_modes = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
-				const LibUtilities::PointsKey PkeyQ1(num_points,LibUtilities::eGaussLobattoLegendre);
-				const LibUtilities::PointsKey PkeyQ2(num_points,LibUtilities::eGaussLobattoLegendre);
 
-				LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes, PkeyQ1);
-				LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes, PkeyQ2);
+				//creating orthogonal expansion (checking if we have quads or triangles)
+				LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
+				switch(shape)
+				{
+					case LibUtilities::eQuadrilateral:
+						{
+							const LibUtilities::PointsKey PkeyQ1(num_points1,LibUtilities::eGaussLobattoLegendre);
+							const LibUtilities::PointsKey PkeyQ2(num_points2,LibUtilities::eGaussLobattoLegendre);
+							LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes, PkeyQ1);
+							LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes, PkeyQ2);
+							SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
+							ppExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+						}
+						break;
+					case LibUtilities::eTriangle:
+						{
+							const LibUtilities::PointsKey PkeyT1(num_points1,LibUtilities::eGaussLobattoLegendre);
+							const LibUtilities::PointsKey PkeyT2(num_points2,LibUtilities::eGaussRadauMAlpha1Beta0);
+							LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes, PkeyT1);
+							LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes, PkeyT2);
+							SpatialDomains::TriGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[eid]->GetGeom());
+							ppExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(BkeyT1, BkeyT2, tGeom);
+						}
+						break;
+					default:
+                    ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
+				};
 
 
-				SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
-				//SpatialDomains::SegGeomSharedPtr sGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(qGeom->GetEdge(0));
-				//LocalRegions::SegExpSharedPtr segExp = 
-				//	MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(BkeyQ1, sGeom);
-				LocalRegions::QuadExpSharedPtr ppExp = 
-					MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+				//SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
+				//LocalRegions::QuadExpSharedPtr ppExp = 
+				//	MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
 				//Orthogonal expansion created
 
 				//In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
@@ -1960,7 +1982,7 @@ namespace Nektar
 
                 // multiply by inverse Laplacian matrix
                 // get matrix inverse
-                LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, (*m_exp)[eid]->DetShapeType(), *ppExp);
+                LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, ppExp->DetShapeType(), *ppExp);
                 DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
                 
                 NekVector<NekDouble> in (nm_elmt,force,eWrapper);
@@ -1972,10 +1994,6 @@ namespace Nektar
 				//transforming back to modified basis
 				ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
 				(*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
-
-				//check if laplacian submatrix is singular for the 1D case (SegExp)
-                //LocalRegions::MatrixKey segkey(StdRegions::eLaplacian, segExp->DetShapeType(), *segExp);
-                //DNekScalMatSharedPtr seglap = segExp->GetLocMatrix(segkey); 
             }
         }
 

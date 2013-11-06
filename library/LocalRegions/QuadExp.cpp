@@ -2010,29 +2010,15 @@ namespace Nektar
                 case StdRegions::eInvLaplacianWithUnityMean:
                 {
                     NekDouble one = 1.0;
-                    MatrixKey lapkey(
-                        StdRegions::eLaplacian, mkey.GetShapeType(), *this);
-                    DNekMatSharedPtr lmat = GenMatrix(lapkey);
-					//alternative approach: copy submatrix into temporary matrix, invert, copy back
-					//int i;
-					//const unsigned int* sz = lmat->GetSize();
-					//DNekMatSharedPtr smat = MemoryManager<DNekMat>::AllocateSharedPtr(sz[0]-1,sz[1]-1);
-					////copy lower right submatrix into smat
-					//for(i=1; i < sz[0]; ++i)
-					//{
-					//	Vmath::Vcopy(sz[1]-1, &(lmat->GetPtr())[0] + i*sz[1] + 1, 1, &(smat->GetPtr())[0] + (i-1)*(sz[1]-1), 1);
-					//}
-					//smat->Invert();
-					//cout << endl << *smat << endl;
-					////copy inverted smat back into lower right submatrix of lmat
-					//for(i=1; i < sz[0]; ++i)
-					//{
-					//	Vmath::Vcopy(sz[1]-1, &(smat->GetPtr())[0] + (i-1)*(sz[1]-1), 1, &(lmat->GetPtr())[0] + i*sz[1] + 1, 1);
-					//}
-					//cout << endl << *lmat << endl;
 
                     // replace first row with inner product wrt 1                    
 					// should be first row...
+
+                    MatrixKey lapkey(mkey, StdRegions::eLaplacian);
+                    DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
+					DNekMatSharedPtr lmat = MemoryManager<DNekMat>::AllocateSharedPtr(LapMat.GetRows(),LapMat.GetColumns());
+					(*lmat) = LapMat;
+
                     int nq = GetTotPoints();
                     Array<OneD, NekDouble> tmp(nq);
                     Array<OneD, NekDouble> outarray(m_ncoeffs);
@@ -2041,6 +2027,8 @@ namespace Nektar
 
                     Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
                                  &(lmat->GetPtr())[0],1);
+					
+					//cout << endl << *lmat << endl;
                     
                     lmat->Invert();
                     //Populate  matrix.

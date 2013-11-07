@@ -37,10 +37,9 @@
 #include <MultiRegions/DisContField2D.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion2D.h>
-#include <LocalRegions/Expansion.h>     // for Expansion
-#include <LocalRegions/QuadExp.h>     // for Expansion
-#include <LocalRegions/TriExp.h>     // for Expansion
-#include <LocalRegions/SegExp.h>     // for Expansion
+#include <LocalRegions/Expansion.h> 
+#include <LocalRegions/QuadExp.h>   
+#include <LocalRegions/TriExp.h>    
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
@@ -1894,9 +1893,10 @@ namespace Nektar
                 out_tmp = force + nm_elmt;
 				LocalRegions::ExpansionSharedPtr ppExp;
 
-				int num_points1 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
-				int num_points2 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
-				int num_modes = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
+				int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
+				int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
+				int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
+				int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
                 // Probably a better way of setting up lambda than this.  Note
                 // cannot use PutCoeffsInToElmts since lambda space is mapped
                 // during the solve.
@@ -1918,20 +1918,20 @@ namespace Nektar
 				{
 					case LibUtilities::eQuadrilateral:
 						{
-							const LibUtilities::PointsKey PkeyQ1(num_points1,LibUtilities::eGaussLobattoLegendre);
-							const LibUtilities::PointsKey PkeyQ2(num_points2,LibUtilities::eGaussLobattoLegendre);
-							LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes, PkeyQ1);
-							LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes, PkeyQ2);
+							const LibUtilities::PointsKey PkeyQ1(num_points0,LibUtilities::eGaussLobattoLegendre);
+							const LibUtilities::PointsKey PkeyQ2(num_points1,LibUtilities::eGaussLobattoLegendre);
+							LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes0, PkeyQ1);
+							LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes1, PkeyQ2);
 							SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
 							ppExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
 						}
 						break;
 					case LibUtilities::eTriangle:
 						{
-							const LibUtilities::PointsKey PkeyT1(num_points1,LibUtilities::eGaussLobattoLegendre);
-							const LibUtilities::PointsKey PkeyT2(num_points2,LibUtilities::eGaussRadauMAlpha1Beta0);
-							LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes, PkeyT1);
-							LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes, PkeyT2);
+							const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
+							const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
+							LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
+							LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
 							SpatialDomains::TriGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[eid]->GetGeom());
 							ppExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(BkeyT1, BkeyT2, tGeom);
 						}

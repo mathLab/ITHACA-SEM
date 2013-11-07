@@ -1687,6 +1687,7 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
+            case StdRegions::eInvLaplacianWithUnityMean:
                 returnval = Expansion3D::v_GenMatrix(mkey);
                 break;
             default:
@@ -1921,7 +1922,9 @@ namespace Nektar
             case StdRegions::eHybridDGLamToU:
             case StdRegions::eHybridDGLamToQ0:
             case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
+            case StdRegions::eInvLaplacianWithUnityMean:
                 {
                     NekDouble one    = 1.0;
 

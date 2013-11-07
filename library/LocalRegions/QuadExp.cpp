@@ -2015,9 +2015,11 @@ namespace Nektar
 					// should be first row...
 
                     MatrixKey lapkey(mkey, StdRegions::eLaplacian);
-                    DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
+                    DNekScalMat &LapMat = *GetLocMatrix(lapkey);//(this->m_matrixManager[lapkey]);
 					DNekMatSharedPtr lmat = MemoryManager<DNekMat>::AllocateSharedPtr(LapMat.GetRows(),LapMat.GetColumns());
 					(*lmat) = LapMat;
+                    //MatrixKey lapkey(StdRegions::eLaplacian,mkey.GetShapeType(), *this);
+					//DNekMatSharedPtr lmat = GenMatrix(lapkey);
 
                     int nq = GetTotPoints();
                     Array<OneD, NekDouble> tmp(nq);

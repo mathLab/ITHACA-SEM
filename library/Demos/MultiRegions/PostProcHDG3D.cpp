@@ -4,8 +4,8 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/DisContField2D.h>
-#include <SpatialDomains/MeshGraph2D.h>
+#include <MultiRegions/DisContField3D.h>
+#include <SpatialDomains/MeshGraph3D.h>
 
 //#define TIMING
 #ifdef TIMING
@@ -28,8 +28,7 @@ int main(int argc, char *argv[])
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
     string meshfile(vSession->GetFilename());
 
-    MultiRegions::DisContField2DSharedPtr Exp,Fce;
-    MultiRegions::ExpListSharedPtr DerExp1,DerExp2;
+    MultiRegions::DisContField3DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
@@ -43,18 +42,18 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // Print summary of solution details
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     factors[StdRegions::eFactorTau] = 1.0;
-    const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
+    const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
 
-	//WILL NEED ADJUSTMENT FOR TRIANGLE, PROBABLY
+	//MAY NEED ADJUSTMENT FOR VARIOUS ELEMENT TYPES
 	int num_modes = bkey0.GetNumModes();
 	int num_points = bkey0.GetNumPoints();
 
@@ -69,8 +68,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     //----------------------------------------------
-    Exp = MemoryManager<MultiRegions::DisContField2D>::
-        AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
+    Exp = MemoryManager<MultiRegions::DisContField3D>::
+        AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
     //----------------------------------------------
     Timing("Read files and define exp ..");
 
@@ -110,7 +109,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Setup expansion containing the  forcing function
-    Fce = MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*Exp);
+    Fce = MemoryManager<MultiRegions::DisContField3D>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //----------------------------------------------
     Timing("Define forcing ..");
@@ -159,24 +158,27 @@ int main(int argc, char *argv[])
 
 	//----------------------------------------------
 
-	//Triangles
+	//Tetrahedron
 	const LibUtilities::PointsKey PkeyT1(num_points+1,LibUtilities::eGaussLobattoLegendre);
 	const LibUtilities::PointsKey PkeyT2(num_points,LibUtilities::eGaussRadauMAlpha1Beta0);//need to doublecheck this one
+	const LibUtilities::PointsKey PkeyT3(num_points,LibUtilities::eGaussRadauMAlpha2Beta0);//need to doublecheck this one
 	LibUtilities::BasisKeyVector  BkeyT;
 	BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyT1));
 	BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_B, num_modes+1, PkeyT2));
-	//Quadrilaterals
-	const LibUtilities::PointsKey PkeyQ(num_points+1,LibUtilities::eGaussLobattoLegendre);
-	LibUtilities::BasisKeyVector  BkeyQ;
-	BkeyQ.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyQ));
-	BkeyQ.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyQ));
+	BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_C, num_modes+1, PkeyT3));
+	//Hexahedron
+	const LibUtilities::PointsKey PkeyH(num_points+1,LibUtilities::eGaussLobattoLegendre);
+	LibUtilities::BasisKeyVector  BkeyH;
+	BkeyH.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyH));
+	BkeyH.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyH));
+	BkeyH.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyH));
 
 
-	graph2D->SetBasisKey(LibUtilities::eTriangle, BkeyT);
-	graph2D->SetBasisKey(LibUtilities::eQuadrilateral, BkeyQ);
+	graph3D->SetBasisKey(LibUtilities::eTetrahedron, BkeyT);
+	graph3D->SetBasisKey(LibUtilities::eHexahedron, BkeyH);
 
-	MultiRegions::DisContField2DSharedPtr PostProc = 
-		MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
+	MultiRegions::DisContField3DSharedPtr PostProc = 
+		MemoryManager<MultiRegions::DisContField3D>::AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
 
 	int ErrorCoordim = PostProc->GetCoordim(0);
 	int ErrorNq      = PostProc->GetTotPoints();

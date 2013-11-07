@@ -1384,7 +1384,7 @@ namespace Nektar
                     v_IProductWRTBase(tmp, outarray);
 
                     Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
-                                 &(lmat->GetPtr())[0],m_ncoeffs);
+                                 &(lmat->GetPtr())[0],1);
 
                     lmat->Invert();
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,lmat); //Populate  matrix.

@@ -61,7 +61,8 @@ namespace Nektar
 
                 stringstream err;
                 err << nDim << "D " << type << " Jacobian not positive "
-                    << "(element ID = " << m_geom->GetGlobalID() << ")";
+                    << "(element ID = " << m_geom->GetGlobalID() << ") "
+                    << "(first vertex ID = " << m_geom->GetVid(0) << ")";
                 NEKERROR(ErrorUtil::ewarning, err.str());
             }
         }

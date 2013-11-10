@@ -45,10 +45,19 @@ namespace Nektar
          * This class stores the various geometric factors associated with a
          * specific element, necessary for fundamental integration and
          * differentiation operations as well as edge and surface normals.
+         * Dimension-specific versions of this class (GeomFactors1D,
+         * GeomFactors2D and GeomFactors3D) provide the majority of
+         * implementation.
          */
 
         /**
-         * @brief Constructs a GeomFactors base object.
+         * This constructor is protected since only dimension-specific
+         * GeomFactors classes should be instantiated externally.
+         * @param   gtype       Specified whether the geometry is regular or
+         *                      deformed.
+         * @param   expdim      Specifies the dimension of the expansion.
+         * @param   coordim     Specifies the dimension of the coordinate
+         *                      system
          */
         GeomFactors::GeomFactors(const GeomType gtype,
                                  const int expdim,
@@ -62,8 +71,10 @@ namespace Nektar
         {
         }
 
+
         /**
-         * @brief Copies an existing GeomFactors object.
+         * @param   S           An instance of a GeomFactors class from which
+         *                      to construct a new instance.
          */
         GeomFactors::GeomFactors(const GeomFactors &S) :
             m_type(S.m_type),
@@ -77,7 +88,7 @@ namespace Nektar
 
 
         /**
-         * @brief Destructor.
+         *
          */
         GeomFactors::~GeomFactors()
         {
@@ -85,9 +96,6 @@ namespace Nektar
 
 
         /**
-         * @brief Given a set of vectors, supplied as an array of components,
-         * normalise each vector individually.
-         * 
          * @param   array       Array of vector components, \a array[i][j] with
          *                      @f$1\leq i\leq m_coordDim@f$ and
          *                      @f$0 \leq j \leq n@f$ with @f$n@f$ the number
@@ -136,9 +144,6 @@ namespace Nektar
 
 
         /**
-         * @brief Computes the vector cross-product in 3D of \a v1 and \a v2,
-         * storing the result in \a v3.
-         * 
          * @param   v1          First input vector.
          * @param   v2          Second input vector.
          * @param   v3          Output vector computed to be orthogonal to
@@ -197,7 +202,9 @@ namespace Nektar
         }
 
         /**
-         * @brief Establishes if two GeomFactors objects are equal.
+         * Member data equivalence is tested in the following order: shape type,
+         * expansion dimension, coordinate dimension, points-keys, determinant
+         * of Jacobian matrix, Laplacian coefficients.
          */
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs)
         {

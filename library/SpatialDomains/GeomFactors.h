@@ -92,36 +92,37 @@ namespace Nektar
             "LOCAL",
         };
 
-        /// Calculation and storage of geometric factors.
+        /// Calculation and storage of geometric factors associated with the
+        /// mapping from StdRegions reference elements to a given LocalRegions
+        /// physical element in the mesh.
         class GeomFactors
         {
         public:
+            /// Tests if two GeomFactors classes are equal.
             SPATIAL_DOMAINS_EXPORT friend bool operator==( 
-                const GeomFactors &lhs,
-                const GeomFactors &rhs);
-            SPATIAL_DOMAINS_EXPORT friend bool operator<(
                 const GeomFactors &lhs,
                 const GeomFactors &rhs);
 
             SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors();
 
-            /// Return the type of geometry.
+            /// Returns whether the geometry is regular or deformed.
             inline GeomType GetGtype();
 
-            /// Return the Jacobian
+            /// Return the Jacobian of the mapping.
             inline const Array<OneD, const NekDouble> &GetJac() const;
 
-            /// Return the G matrix.
+            /// Return the Laplacian coefficients \f$g_{ij}\f$.
             inline const Array<TwoD, const NekDouble> &GetGmat() const;
 
-            /// Return the G matrix.
+            /// Return the derivative of the mapping with respect to the reference coordinates, \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
             inline const Array<
                 OneD, const Array<OneD, Array<OneD, NekDouble> > > 
                     &GetDeriv() const;
 
+            /// Return the derivative of the reference coordinates with respect to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
             inline const Array<TwoD, const NekDouble> &GetDerivFactors() const;
 
-            /// Determine if element is valid
+            /// Determine if element is valid and not self-intersecting.
             inline bool IsValid() const;
 
             /// Return the number of dimensions of the coordinate system.
@@ -255,10 +256,7 @@ namespace Nektar
             /// of the tangent vectors.
             Array<OneD, Array<OneD,NekDouble> > m_tangent;
             
-            /// Instance for a specific expansion/coordinate dimension without
-            /// the generation of any factors. This constructor is protected
-            /// since only dimension-specific GeomFactors classes should be
-            /// instantiated externally.
+            /// Constructor for GeomFactors class.
             GeomFactors(const GeomType gtype,
                         const int expdim,
                         const int coordim);

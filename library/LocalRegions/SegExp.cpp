@@ -235,17 +235,6 @@ namespace Nektar
             switch(coordim)
             {
                 case 2:
-
-                    Array<OneD, Array<OneD, NekDouble> > tangents;
-                    tangents = Array<OneD, Array<OneD, NekDouble> >(coordim);
-                    for(int k=0; k<coordim; ++k)
-                    {
-                        tangents[k]= Array<OneD, NekDouble>(nquad0); 
-                    }
-                    tangents = GetMetricInfo()->GetEdgeTangent();
-                    ASSERTL0(tangents!=NullNekDoubleArrayofArray, 
-                        "tangent vectors do not exist:" 
-                        "check if a boundary region is defined as I ");
                     //diff= dU/de
                     Array<OneD,NekDouble> diff(nquad0);
 
@@ -1059,15 +1048,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         int SegExp::v_NumDGBndryCoeffs() const
         {
             return 2;
-        }
-
-
-        void SegExp::v_SetUpPhysTangents(
-                const ExpansionSharedPtr &exp2D,
-                const int edge)
-        {
-             GetMetricInfo()->ComputeEdgeTangents(exp2D->GetGeom(),
-                                edge, GetBasis(0)->GetPointsKey());
         }
 
 

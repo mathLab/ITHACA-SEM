@@ -71,27 +71,6 @@ namespace Nektar
         /// Iterator for the GeomFactorsSet
         typedef boost::unordered_set< GeomFactorsSharedPtr >::iterator GeomFactorsSetIter;
         
-        /// Describes the principle direction for tangents on the domain.
-        enum GeomTangents
-        {
-            eTangentX,          ///< X coordinate direction.
-            eTangentY,          ///< Y coordinate direction.
-            eTangentZ,          ///< Z coordinate direction.
-            eTangentCircular,   ///< Circular around the centre of domain.
-            eLOCAL,             ///< No Principal direction.
-            SIZE_GeomTangents
-        };
-
-        /// Session file names associated with tangent principle directions.
-        const char* const GeomTangentsMap[] =
-        {
-            "TangentX",
-            "TangentY",
-            "TangentZ",
-            "TangentCircular",
-            "LOCAL",
-        };
-
         /// Calculation and storage of geometric factors associated with the
         /// mapping from StdRegions reference elements to a given LocalRegions
         /// physical element in the mesh.
@@ -128,34 +107,17 @@ namespace Nektar
             /// Return the number of dimensions of the coordinate system.
             inline int GetCoordim() const;
 
-            /// Flag indicating if Tangents have been computed.
-            inline bool IsUsingTangents() const;
-
-            /// Set up Tangents
-            inline void SetUpTangents();
-
             /// Computes the edge tangents from 1D element
             inline void ComputeEdgeTangents(
                 const GeometrySharedPtr       &geom2D,
                 const int                      edge,
                 const LibUtilities::PointsKey &to_key);
             
-            /// Set tangent orientation
-            inline void SetTangentOrientation(std::string conn);
-
-            /// Set tangent circular orientation centre.
-            inline void SetTangentCircularCentre(
-                            Array<OneD,NekDouble> &centre);
-            
             /// Returns the tangent vectors evaluated at each quadrature point
             /// for 1D elements.  The tangent vectors are set using the
             /// function ComputeEdgeTangents.
             inline const Array<OneD, const Array<OneD, NekDouble> >
                 &GetEdgeTangent() const;
-
-            /// Returns a single tangent vector.
-            inline const Array<OneD, const Array<OneD, NekDouble> >
-                                                            &GetTangent(int i);
 
             /// Set the G-matrix data.
             inline void ResetGmat(const Array<OneD, const NekDouble> &ndata,
@@ -213,10 +175,6 @@ namespace Nektar
             bool m_valid;
             /// Stores information about the expansion.
             Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
-            /// Principle tangent direction.
-            enum GeomTangents m_tangentDir;
-            /// Principle tangent circular dir coords
-            Array<OneD,NekDouble> m_tangentDirCentre;
 
             /// Jacobian. If geometry is regular, or moving regular, this is
             /// just an array of one element - the value of the Jacobian across
@@ -238,9 +196,6 @@ namespace Nektar
             Array<OneD,Array<OneD,Array<OneD,NekDouble> > > m_deriv;
 
             Array<TwoD,NekDouble> m_derivFactors;
-
-            /// Array of size (m_coordDim-1)x(m_coordDim x nq).
-            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tangents;
 
             /// Array of size (coordim)x(nquad) which holds the components of
             /// the normal vector at each quadrature point. The array is
@@ -273,9 +228,6 @@ namespace Nektar
             
             /// Set up surface normals
             virtual void v_ComputeSurfaceNormals();
-
-            /// Set up the tangent vectors
-            virtual void v_ComputeTangents();
         };
 
         /// A hash functor for geometric factors. Utilises
@@ -332,19 +284,6 @@ namespace Nektar
             return m_valid;
         }
 
-        /// Flag indicating if Tangents are in use.
-        inline bool GeomFactors::IsUsingTangents() const
-        {
-            return (m_tangents.num_elements() != 0);
-        }
-
-        /// Set up Tangents
-        inline void GeomFactors::SetUpTangents()
-        {
-            cout << "GeomFactors: Setting up tangents" << endl;
-            v_ComputeTangents();
-        }
-
         /// Computes the edge tangents from a 1D element
         inline void GeomFactors::ComputeEdgeTangents(
             const GeometrySharedPtr &geom2D,
@@ -352,26 +291,6 @@ namespace Nektar
             const LibUtilities::PointsKey &to_key)
         {
             v_ComputeEdgeTangents(geom2D, edge, to_key);
-        }
-
-        /// Set tangent orientation
-        inline void GeomFactors::SetTangentOrientation(std::string conn)
-        {
-            if (conn == "TangentX")         m_tangentDir = eTangentX;
-            if (conn == "TangentY")         m_tangentDir = eTangentY;
-            if (conn == "TangentZ")         m_tangentDir = eTangentZ;
-            if (conn == "TangentCircular")  m_tangentDir = eTangentCircular;
-            if (conn == "LOCAL")            m_tangentDir = eLOCAL;
-        }
-
-        /**
-         * Sets the centre point for circular tangent vectors.
-         * @param   centre      Array holding coordinates of centre point.
-         */
-        inline void GeomFactors::SetTangentCircularCentre(
-                    Array<OneD,NekDouble> &centre)
-        {
-            m_tangentDirCentre = centre;
         }
 
         /// Returns the tangent vectors evaluated at each quadrature point for
@@ -384,18 +303,6 @@ namespace Nektar
             return m_tangent;
         }
 	
-        /// Returns a single tangent vector.
-        inline const Array<OneD, const Array<OneD, NekDouble> >
-                                                &GeomFactors::GetTangent(int i)
-        {
-            ASSERTL0(i < m_expDim,
-                     "Index must be less than expansion dimension.");
-            if (m_tangents.num_elements() == 0) {
-                v_ComputeTangents();
-            }
-            return m_tangents[i];
-        }
-
         /// Set the G-matrix data.
         inline void GeomFactors::ResetGmat(
                         const Array<OneD, const NekDouble> &ndata,

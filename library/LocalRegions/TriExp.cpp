@@ -108,62 +108,55 @@ namespace Nektar
                                Array<OneD,NekDouble> &out_d1,
                                Array<OneD,NekDouble> &out_d2)
         {
-            if (m_metricinfo->IsUsingTangents())
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int     nqtot = nquad0*nquad1;
+            const Array<TwoD, const NekDouble>& df
+                                        = m_metricinfo->GetDerivFactors();
+
+            Array<OneD,NekDouble> diff0(2*nqtot);
+            Array<OneD,NekDouble> diff1(diff0+nqtot);
+
+            StdTriExp::v_PhysDeriv(inarray, diff0, diff1);
+
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                ASSERTL0(false,
-                        "Computing using tangent vectors no longer supported.");
-            }
-            else
-            {
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int     nqtot = nquad0*nquad1;
-                const Array<TwoD, const NekDouble>& df   = m_metricinfo->GetDerivFactors();
-
-                Array<OneD,NekDouble> diff0(2*nqtot);
-                Array<OneD,NekDouble> diff1(diff0+nqtot);
-
-                StdTriExp::v_PhysDeriv(inarray, diff0, diff1);
-
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                if(out_d0.num_elements())
                 {
-                    if(out_d0.num_elements())
-                    {
-                        Vmath::Vmul  (nqtot,df[0],1,diff0,1, out_d0, 1);
-                        Vmath::Vvtvp (nqtot,df[1],1,diff1,1, out_d0, 1, out_d0,1);
-                    }
-
-                    if(out_d1.num_elements())
-                    {
-                        Vmath::Vmul  (nqtot,df[2],1,diff0,1, out_d1, 1);
-                        Vmath::Vvtvp (nqtot,df[3],1,diff1,1, out_d1, 1, out_d1,1);
-                    }
-
-                    if(out_d2.num_elements())
-                    {
-                        Vmath::Vmul  (nqtot,df[4],1,diff0,1, out_d2, 1);
-                        Vmath::Vvtvp (nqtot,df[5],1,diff1,1, out_d2, 1, out_d2,1);
-                    }
+                    Vmath::Vmul  (nqtot,df[0],1,diff0,1, out_d0, 1);
+                    Vmath::Vvtvp (nqtot,df[1],1,diff1,1, out_d0, 1, out_d0,1);
                 }
-                else // regular geometry
+
+                if(out_d1.num_elements())
                 {
-                    if(out_d0.num_elements())
-                    {
-                        Vmath::Smul (nqtot, df[0][0], diff0, 1, out_d0, 1);
-                        Blas::Daxpy (nqtot, df[1][0], diff1, 1, out_d0, 1);
-                    }
+                    Vmath::Vmul  (nqtot,df[2],1,diff0,1, out_d1, 1);
+                    Vmath::Vvtvp (nqtot,df[3],1,diff1,1, out_d1, 1, out_d1,1);
+                }
 
-                    if(out_d1.num_elements())
-                    {
-                        Vmath::Smul (nqtot, df[2][0], diff0, 1, out_d1, 1);
-                        Blas::Daxpy (nqtot, df[3][0], diff1, 1, out_d1, 1);
-                    }
+                if(out_d2.num_elements())
+                {
+                    Vmath::Vmul  (nqtot,df[4],1,diff0,1, out_d2, 1);
+                    Vmath::Vvtvp (nqtot,df[5],1,diff1,1, out_d2, 1, out_d2,1);
+                }
+            }
+            else // regular geometry
+            {
+                if(out_d0.num_elements())
+                {
+                    Vmath::Smul (nqtot, df[0][0], diff0, 1, out_d0, 1);
+                    Blas::Daxpy (nqtot, df[1][0], diff1, 1, out_d0, 1);
+                }
 
-                    if(out_d2.num_elements())
-                    {
-                        Vmath::Smul (nqtot, df[4][0], diff0, 1, out_d2, 1);
-                        Blas::Daxpy (nqtot, df[5][0], diff1, 1, out_d2, 1);
-                    }
+                if(out_d1.num_elements())
+                {
+                    Vmath::Smul (nqtot, df[2][0], diff0, 1, out_d1, 1);
+                    Blas::Daxpy (nqtot, df[3][0], diff1, 1, out_d1, 1);
+                }
+
+                if(out_d2.num_elements())
+                {
+                    Vmath::Smul (nqtot, df[4][0], diff0, 1, out_d2, 1);
+                    Blas::Daxpy (nqtot, df[5][0], diff1, 1, out_d2, 1);
                 }
             }
         }

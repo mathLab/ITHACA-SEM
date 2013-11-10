@@ -220,55 +220,6 @@ namespace Nektar
         }
 
 
-        /**
-         * It is assumed that this 1D segment forms the single edge \a edge of
-         * a 2D geometry described by \a geom. It retrieves the edge normals
-         * from the associated 2D expansion and orientates it correctly.
-         * @param   geom        Geometry (2D) to which this segment forms an
-         *                      edge.
-         * @param   edge        Edge number of this segment on \a geom.
-         * @param   to_key      PointsKey describing the quadrature points at
-         *                      which to evaluate the normals (typically the
-         *                      PointsKey of the associated segment).
-         */
-//        void GeomFactors1D::v_ComputeNormals(
-//                            const GeometrySharedPtr &geom,
-//                            const int edge,
-//                            const LibUtilities::PointsKey &to_key)
-//        {
-//            int k;
-//            int nq      = to_key.GetNumPoints();
-//            // Ensure we have a 2D geometry.
-//            Geometry2DSharedPtr g;
-//            if (!(g = boost::dynamic_pointer_cast<Geometry2D>(geom)))
-//            {
-//                ASSERTL0(false, "FAIL");
-//            }
-//            GeomFactorsSharedPtr gf = geom->GetMetricInfo();
-//
-//            // Retrieve the GeomFactors object describing the shape geometry
-//            // and generate the normals to the edge.
-//            m_normal = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
-//            for (k = 0; k < m_coordDim; ++k)
-//            {
-//                m_normal[k] = Array<OneD, NekDouble>(nq);
-//            }
-//            gf->ComputeEdgeNormals(edge, to_key, m_normal);
-//
-//            if(g->GetEorient(edge) == StdRegions::eBackwards)
-//            {
-//                for(k = 0; k < m_coordDim; ++k)
-//                {
-//                    if(gf->GetGtype() == SpatialDomains::eDeformed)
-//                    {
-//                        Vmath::Reverse(nq, m_normal[k], 1, m_normal[k],1);
-//                    }
-//                    Vmath::Neg(nq,m_normal[k],1);
-//                }
-//            }
-//        }
- 
-
         void GeomFactors1D::v_ComputeEdgeTangents(
         			const GeometrySharedPtr &geom,
         			const int edge,
@@ -277,10 +228,9 @@ namespace Nektar
             int k;
             int nquad= to_key.GetNumPoints();             
             Geometry2DSharedPtr g;
-            if (!(g= boost::dynamic_pointer_cast<Geometry2D>(geom)))
-            {
-            	ASSERTL0(false, "FAIL");
-            }
+            ASSERTL0(g= boost::dynamic_pointer_cast<Geometry2D>(geom),
+                     "FAIL");
+
             GeomFactorsSharedPtr gf = geom->GetMetricInfo();
             //cannot use m_type here 
             //GeomType gtype = gf->GetGtype();

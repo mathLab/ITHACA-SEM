@@ -1025,11 +1025,6 @@ namespace Nektar
             v_SetUpPhysNormals(edge);
         }
 
-        void StdExpansion::SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge)
-        {
-            v_SetUpPhysTangents(exp2d, edge);
-        }
-
         NekDouble StdExpansion::StdPhysEvaluate(const Array<OneD, const NekDouble> &Lcoord,
                                                 const Array<OneD, const NekDouble> &physvals)
         {
@@ -1074,11 +1069,6 @@ namespace Nektar
         }
 
         void StdExpansion::v_SetUpPhysNormals(const int edge)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-        }
-
-        void StdExpansion::v_SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }

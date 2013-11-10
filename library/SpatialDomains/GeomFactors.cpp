@@ -194,14 +194,6 @@ namespace Nektar
         }
 
         /**
-         * Placeholder function.
-         */
-        void GeomFactors::v_ComputeTangents()
-        {
-            ASSERTL0(false, "Cannot compute tangents for this geometry.");
-        }
-
-        /**
          * Member data equivalence is tested in the following order: shape type,
          * expansion dimension, coordinate dimension, points-keys, determinant
          * of Jacobian matrix, Laplacian coefficients.

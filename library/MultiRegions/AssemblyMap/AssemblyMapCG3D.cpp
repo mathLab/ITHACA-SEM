@@ -207,16 +207,16 @@ namespace Nektar
 
             m_signChange = false;
             //m_systemSingular = false;
-
+            
             map<int,int> vertReorderedGraphVertId;
             map<int,int> edgeReorderedGraphVertId;
             map<int,int> faceReorderedGraphVertId;
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
             map<int,pair<int, StdRegions::Orientation> >::const_iterator mapFaceIt;
-
+            
             bool systemSingular = (checkIfSystemSingular)? true: false;
-
+            
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
              */
@@ -834,7 +834,7 @@ namespace Nektar
                     nEdgeInteriorCoeffs = EdgeSize[meshEdgeId];
                     m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
                     
-                    if(nEdgeInteriorCoeffs > 0)
+                    //if(nEdgeInteriorCoeffs > 0)
                     {
                         m_numNonDirEdges++;
                     }
@@ -866,7 +866,7 @@ namespace Nektar
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                                 m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
 
-                                if(nEdgeInteriorCoeffs > 0)
+                                //if(nEdgeInteriorCoeffs > 0)
                                 {
                                     m_numNonDirEdges++;
                                 }
@@ -896,7 +896,7 @@ namespace Nektar
                     nFaceInteriorCoeffs  = FaceSize[meshFaceId];
                     m_numNonDirFaceModes+=nFaceInteriorCoeffs;
                     
-                    if(nFaceInteriorCoeffs > 0)
+                    //if(nFaceInteriorCoeffs > 0)
                     {
                         m_numNonDirFaces++;
                     }                
@@ -913,7 +913,7 @@ namespace Nektar
                     nFaceInteriorCoeffs  = FaceSize[pIt->first]; 
                     m_numNonDirFaceModes+=nFaceInteriorCoeffs;
                     
-                    if(nFaceInteriorCoeffs > 0)
+                    //if(nFaceInteriorCoeffs > 0)
                     {
                         m_numNonDirFaces++;
                     }
@@ -940,7 +940,7 @@ namespace Nektar
                                 faceTempGraphVertId[meshFaceId] = tempGraphVertId++;
                                 m_numNonDirFaceModes+=nFaceInteriorCoeffs;
 
-                                if(nFaceInteriorCoeffs > 0)
+                                //if(nFaceInteriorCoeffs > 0)
                                 {
                                     m_numNonDirFaces++;
                                 }

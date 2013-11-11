@@ -184,7 +184,12 @@ namespace Nektar
             int nNonDirFaceIDs=m_locToGloMap->GetNumNonDirFaces();
             
             //set the number of blocks in the matrix
-            Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs+nNonDirFaceIDs);
+            int numBlks = 1+nNonDirEdgeIDs+nNonDirFaceIDs;
+            Array<OneD,unsigned int> n_blks(numBlks);
+            for(i = 0; i < numBlks; ++i)
+            {
+                n_blks[i] = 0;
+            }
             n_blks[0]=nNonDirVerts;
 
             set<int> edgeDirMap;  
@@ -330,7 +335,7 @@ namespace Nektar
 
                             ntotaledgeentries+=dof*dof;
                             
-                            n_blks[1+edgematrixlocation++]=dof;                                
+                            n_blks[1+edgematrixlocation++]=dof;   
                             
                         }
                     }
@@ -376,11 +381,11 @@ namespace Nektar
             // Loop over all the elements in the domain and compute max face
             // DOF. Reduce across all processes to get universal maximum.
             // - Periodic faces
-            
             for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
             {
                 meshFaceId = pIt->first;
-                if(faceDirMap.count(meshEdgeId)==0)
+                
+                if(faceDirMap.count(meshFaceId)==0)
                 {
                     dof = FaceSize[meshFaceId];
                     
@@ -390,7 +395,6 @@ namespace Nektar
                         
                         if(pIt->second[0].isLocal)
                         {
-
                             int meshFaceId2 = pIt->second[0].id;
                             
                             if(faceDirMap.count(meshFaceId2)==0)
@@ -754,43 +758,41 @@ namespace Nektar
                 m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
             }
             
-            
-            //Assemble edge matrices of each process
-            Array<OneD, NekDouble> GlobalEdgeBlock(ntotaledgeentries);
-            Vmath::Zero(ntotaledgeentries, GlobalEdgeBlock.get(), 1);
-            Vmath::Assmb(EdgeBlockArray.num_elements(),  
-                         EdgeBlockArray, 
-                         localEdgeToGlobalMatrixMap, 
-                         GlobalEdgeBlock);
-
-            Array<OneD, NekDouble> GlobalFaceBlock(ntotalfaceentries);
-            Vmath::Zero(ntotalfaceentries, GlobalFaceBlock.get(), 1);
-            Vmath::Assmb(FaceBlockArray.num_elements(),
-                         FaceBlockArray, 
-                         localFaceToGlobalMatrixMap, 
-                         GlobalFaceBlock);
-            
-
-            //Exchange vertex data over different processes
             if(nNonDirVerts!=0)
             {
+                //Exchange vertex data over different processes
                 Gs::gs_data *tmp = Gs::Init(VertBlockToUniversalMap, m_comm);
                 Gs::Gather(vertArray, Gs::gs_add, tmp);
+                
             }
             
-            //Exchange edge data over different processes
+            Array<OneD, NekDouble> GlobalEdgeBlock(ntotaledgeentries,0.0);
             if(ntotaledgeentries)
             {
-                Gs::gs_data *tmp1 = Gs::Init(EdgeBlockToUniversalMap, m_comm);
-                Gs::Gather(GlobalEdgeBlock, Gs::gs_add, tmp1);
+                //Assemble edge matrices of each process
+                Vmath::Assmb(EdgeBlockArray.num_elements(),  
+                             EdgeBlockArray, 
+                             localEdgeToGlobalMatrixMap, 
+                             GlobalEdgeBlock);
             }
 
+            //Exchange edge data over different processes
+            Gs::gs_data *tmp1 = Gs::Init(EdgeBlockToUniversalMap, m_comm);
+            Gs::Gather(GlobalEdgeBlock, Gs::gs_add, tmp1);
+
+            Array<OneD, NekDouble> GlobalFaceBlock(ntotalfaceentries,0.0);
             if(ntotalfaceentries)
             {
-                //Exchange face data over different processes
-                Gs::gs_data *tmp2 = Gs::Init(FaceBlockToUniversalMap, m_comm);
-                Gs::Gather(GlobalFaceBlock, Gs::gs_add, tmp2);
+                //Assemble face matrices of each process
+                Vmath::Assmb(FaceBlockArray.num_elements(),
+                             FaceBlockArray, 
+                             localFaceToGlobalMatrixMap, 
+                             GlobalFaceBlock);
             }
+
+            //Exchange face data over different processes
+            Gs::gs_data *tmp2 = Gs::Init(FaceBlockToUniversalMap, m_comm);
+            Gs::Gather(GlobalFaceBlock, Gs::gs_add, tmp2);
             
             // Populate vertex block
             for (int i = 0; i < nNonDirVerts; ++i)
@@ -816,6 +818,7 @@ namespace Nektar
                     {
                         NekDouble EdgeValue = GlobalEdgeBlock[offset+v*nedgemodes+m];
                         gmat->SetValue(v,m,EdgeValue);
+
                     }
                 }
 
@@ -823,10 +826,9 @@ namespace Nektar
                 offset+=edgemodeoffset[loc];
             }
             
-            
-            
             offset=0;
             
+            Array<OneD, int> globalToUniversalMap = m_locToGloMap->GetGlobalToUniversalBndMap();
             //Build the face matrices from the vector
             for(int loc=0; loc<nNonDirFaceIDs; ++loc)
             {
@@ -840,9 +842,9 @@ namespace Nektar
                     {
                         NekDouble FaceValue = GlobalFaceBlock[offset+v*nfacemodes+m];
                         gmat->SetValue(v,m,FaceValue);
+                        
                     }
                 }
-                
                 m_BlkMat->SetBlock(1+nNonDirEdgeIDs+loc,1+nNonDirEdgeIDs+loc, gmat);
                 offset+=facemodeoffset[loc];
             }
@@ -851,14 +853,17 @@ namespace Nektar
             for (i=1; i< totblks; ++i)
             {
                 unsigned int nmodes=m_BlkMat->GetNumberOfRowsInBlockRow(i);
-                DNekMatSharedPtr tmp_mat = 
+                if(nmodes)
+                {
+                    DNekMatSharedPtr tmp_mat = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
                     (nmodes,nmodes,zero,storage);
                 
-                tmp_mat=m_BlkMat->GetBlock(i,i);
-                tmp_mat->Invert();
+                    tmp_mat=m_BlkMat->GetBlock(i,i);
+                    tmp_mat->Invert();
                 
-                m_BlkMat->SetBlock(i,i,tmp_mat);
+                    m_BlkMat->SetBlock(i,i,tmp_mat);
+                }
             }
         }
             
@@ -867,7 +872,7 @@ namespace Nektar
          * Apply the low energy preconditioner during the conjugate gradient
          * routine
          */
-            void PreconditionerLowEnergy::v_DoPreconditioner(
+        void PreconditionerLowEnergy::v_DoPreconditioner(
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {

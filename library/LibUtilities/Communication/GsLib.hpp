@@ -154,7 +154,7 @@ namespace Gs
         MPI_Comm_dup(vCommMpi->GetComm(), &vComm.c);
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
-        return nektar_gs_setup(&pId[0], pId.num_elements(), &vComm);
+        return nektar_gs_setup(pId.get(),pId.num_elements(), &vComm);
 #else
         return 0;
 #endif
@@ -184,7 +184,7 @@ namespace Gs
         vComm.c  = vCommMpi->GetComm();
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
-        nektar_gs_unique(&pId[0], pId.num_elements(), &vComm);
+        nektar_gs_unique(pId.get(), pId.num_elements(), &vComm);
 #endif
     }
 
@@ -219,14 +219,14 @@ namespace Gs
         }
         if (pBuffer.num_elements() == 0)
         {
-            nektar_gs(&pU[0], gs_double, pOp, false, pGsh, 0);
+            nektar_gs(pU.get(), gs_double, pOp, false, pGsh, 0);
         }
         else
         {
             array buf;
             buf.ptr = &pBuffer[0];
             buf.n = pBuffer.num_elements();
-            nektar_gs(&pU[0], gs_double, pOp, false, pGsh, &buf);
+            nektar_gs(pU.get(), gs_double, pOp, false, pGsh, &buf);
         }
 #endif
     }

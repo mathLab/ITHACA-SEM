@@ -346,12 +346,12 @@ namespace Nektar
             }
         }
 
-        void SegGeom::v_GetLocCoords(
+        NekDouble SegGeom::v_GetLocCoords(
                 const Array<OneD, const NekDouble>& coords,
                       Array<OneD,NekDouble>& Lcoords)
         {
             int i;
-
+            NekDouble resid = 0.0;
             SegGeom::v_FillGeom();
 
             // calculate local coordinate for coord
@@ -382,6 +382,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                          "inverse mapping must be set up to use this call");
             }
+            return resid;
         }
 
         void SegGeom::v_WriteToFile(std::ofstream &outfile, const int dumpVar)
@@ -440,7 +441,17 @@ namespace Nektar
                 Array<OneD, NekDouble> &stdCoord,
                 NekDouble tol)
         {
-            GetLocCoords(gloCoord, stdCoord);
+            NekDouble resid; 
+            return v_ContainsPoint(gloCoord,stdCoord,tol,resid);
+        }
+        
+        bool SegGeom::v_ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                Array<OneD, NekDouble> &stdCoord,
+                NekDouble tol,
+                NekDouble &resid)
+        {
+            resid = GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol)
             {
                 return true;

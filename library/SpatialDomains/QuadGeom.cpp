@@ -653,9 +653,10 @@ namespace Nektar
         /**
          *
          */
-        void QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords, 
+        NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords, 
                                       Array<OneD,NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
             if(GetMetricInfo()->GetGtype() == eRegular)
             { 
                 NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
@@ -710,7 +711,7 @@ namespace Nektar
                 Lcoords[1] = zb[min_i/za.num_elements()];
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords,Lcoords);
+                NewtonIterationForLocCoord(coords,Lcoords,resid);
 #else
                 
                 Array<OneD, NekDouble> ptsx;
@@ -763,6 +764,7 @@ namespace Nektar
                 }
 #endif
             }
+            return resid;
         }
             
             
@@ -895,10 +897,19 @@ namespace Nektar
                                        Array<OneD, NekDouble> &stdCoord,
                                        NekDouble tol)
         {
-            ASSERTL1(gloCoord.num_elements() >= 2,
-                 "Two dimensional geometry expects at least two coordinates.");
+            NekDouble resid;
+            return v_ContainsPoint(gloCoord,stdCoord,tol,resid);
+        }
 
-            GetLocCoords(gloCoord, stdCoord);
+        bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                                       Array<OneD, NekDouble> &stdCoord,
+                                       NekDouble tol,
+                                       NekDouble &resid)
+        {
+            ASSERTL1(gloCoord.num_elements() >= 2,
+                     "Two dimensional geometry expects at least two coordinates.");
+            
+            resid = GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -(1+tol) && stdCoord[1] >= -(1+tol)
                 && stdCoord[0] <= (1+tol) && stdCoord[1] <= (1+tol))
             {

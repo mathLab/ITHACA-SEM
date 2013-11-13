@@ -407,8 +407,7 @@ void InterpolateField(Array<OneD, MultiRegions::ExpListSharedPtr> &field0,
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-2);
-        ASSERTL0(elmtid>=0, "elmtid not found"); 
+        elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-4);
         
         // Interpolate fields
         offset = field0[0]->GetPhys_Offset(field0[0]->GetOffset_Elmt_Id(elmtid));

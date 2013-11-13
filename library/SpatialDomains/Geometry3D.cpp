@@ -111,7 +111,7 @@ namespace Nektar
       //---------------------------------------
       void Geometry3D::NewtonIterationForLocCoord
       (const Array<OneD, const NekDouble> &coords, 
-                          Array<OneD,NekDouble> &Lcoords)
+       Array<OneD,NekDouble> &Lcoords, NekDouble &resid)
       {
           
           Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
@@ -154,6 +154,7 @@ namespace Nektar
               // stopping criterion
               if(F1*F1 + F2*F2 + F3*F3 < Tol)
               {
+                  resid = sqrt(F1*F1 + F2*F2 + F3*F3);
                   break;
               }
               
@@ -176,9 +177,11 @@ namespace Nektar
                   der3_y*(coords[1]-ymap) +  der3_z*(coords[2]-zmap);
           }
           
-          if(cnt >= 40)
+          if(cnt >= MaxIterations)
           {
-              Lcoords[0] = Lcoords[1] = Lcoords[2] = 2.0;    
+              resid = sqrt(F1*F1 + F2*F2 + F3*F3);
+              //cerr << "Geometry3D Warning: Newton iteration failed to converge in 40 iteration to within "<< sqrt(Tol) << " resid is " << resid <<  endl;
+              //Lcoords[0] = Lcoords[1] = Lcoords[2] = 2.0;    
           }                        
       }
       

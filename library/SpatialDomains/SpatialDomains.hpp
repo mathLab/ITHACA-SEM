@@ -63,6 +63,7 @@ namespace Nektar
             // Don't change below here
             SIZE_MeshParams
         };
+
     }; // end of namespace
 }; // end of namespace
 

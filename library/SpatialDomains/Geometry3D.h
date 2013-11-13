@@ -106,7 +106,7 @@ namespace Nektar
 
             void NewtonIterationForLocCoord
                 (const Array<OneD, const NekDouble> &coords, 
-                 Array<OneD,NekDouble> &Lcoords);
+                 Array<OneD,NekDouble> &Lcoords, NekDouble &resid);
 
             virtual void      v_FillGeom();
             virtual NekDouble v_GetCoord(const int i, 

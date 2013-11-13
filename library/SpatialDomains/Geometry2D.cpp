@@ -125,7 +125,8 @@ namespace Nektar
 
         void Geometry2D::NewtonIterationForLocCoord
                          (const Array<OneD, const NekDouble> &coords, 
-                          Array<OneD,NekDouble> &Lcoords)
+                          Array<OneD,NekDouble> &Lcoords,
+                          NekDouble &resid)
         {
             
             Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
@@ -159,6 +160,7 @@ namespace Nektar
                 // stopping criterion
                 if(F1*F1 + F2*F2 < Tol)
                 {
+                    resid = sqrt(F1*F1 + F2*F2);
                     break;
                 }
                 
@@ -176,6 +178,7 @@ namespace Nektar
             
             if(cnt >= 40)
             {
+                resid = sqrt(F1*F1 + F2*F2);
                 Lcoords[0] = Lcoords[1] = 2.0;    
             }                        
         }

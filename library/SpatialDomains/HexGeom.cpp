@@ -283,10 +283,11 @@ namespace Nektar
             }
         }
 
-        void HexGeom::v_GetLocCoords(
+        NekDouble HexGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
             int i;
 
             v_FillGeom();
@@ -360,8 +361,9 @@ namespace Nektar
                 Lcoords[0] = za[min_i%qa];
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords,Lcoords);
+                NewtonIterationForLocCoord(coords,Lcoords,resid);
             }
+            return resid;
         }
 
         /**
@@ -381,6 +383,16 @@ namespace Nektar
             const Array<OneD, const NekDouble> &gloCoord,
             Array<OneD, NekDouble> &locCoord,
             NekDouble tol)
+        {
+            NekDouble resid;
+            return v_ContainsPoint(gloCoord,locCoord,tol,resid);
+        }
+
+        bool HexGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord,
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol,
+            NekDouble &resid)
         {
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");

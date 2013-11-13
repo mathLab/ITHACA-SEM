@@ -218,6 +218,15 @@ namespace Nektar
             return v_ContainsPoint(gloCoord,locCoord,tol);            
         }
 
+        bool PrismGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, 
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol)
+        {
+            NekDouble resid;
+            return v_ContainsPoint(gloCoord,locCoord,tol,resid);
+        }
+
         /**
          * @brief Determines if a point specified in global coordinates is
          * located within this tetrahedral geometry.
@@ -225,7 +234,8 @@ namespace Nektar
         bool PrismGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, 
             Array<OneD, NekDouble> &locCoord,
-            NekDouble tol)
+            NekDouble tol,
+            NekDouble &resid)
         {
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
@@ -258,7 +268,7 @@ namespace Nektar
             }
  
             // Convert to the local (eta) coordinates.
-            v_GetLocCoords(gloCoord, locCoord);
+            resid = v_GetLocCoords(gloCoord, locCoord);
             
             // Check local coordinate is within [-1,1]^3 bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
@@ -332,10 +342,12 @@ namespace Nektar
         }
 
 
-        void PrismGeom::v_GetLocCoords(
+        NekDouble PrismGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
+
             // calculate local coordinate for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
             {
@@ -404,8 +416,9 @@ namespace Nektar
                 Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 - 1.0;
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords,Lcoords);
+                NewtonIterationForLocCoord(coords,Lcoords,resid);
             }
+            return resid; 
         }
         
         int PrismGeom::v_GetVertexEdgeMap(const int i, const int j) const

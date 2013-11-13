@@ -120,9 +120,9 @@ namespace Nektar
                 virtual NekDouble v_GetCoord(
                             const int i,
                             const Array<OneD,const NekDouble>& Lcoord);
-                virtual void v_GetLocCoords(
+                virtual NekDouble v_GetLocCoords(
                             const Array<OneD,const NekDouble>& coords,
-                                  Array<OneD,NekDouble>& Lcoords);
+                            Array<OneD,NekDouble>& Lcoords);
         };
 
 

@@ -2170,7 +2170,6 @@ namespace Nektar
             //           cost.
             //        4) add SVVDiffCoef to both models!!
             
-            //std::cout<< " called stdTetExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
             int qc = m_base[2]->GetNumPoints();

@@ -2635,7 +2635,6 @@ namespace Nektar
         void StdHexExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                               const StdMatrixKey &mkey)
         {
-            std::cout<< " called stdHexExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
             // Generate an orthonogal expansion
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
@@ -2683,7 +2682,6 @@ namespace Nektar
                         if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
                         {
                             orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]+fac[j]+fac[k]));
-                            //changed * to + in exp.
                         }
                     }
                 }
@@ -2692,7 +2690,6 @@ namespace Nektar
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        
-
     }
 }
 

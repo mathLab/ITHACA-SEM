@@ -68,7 +68,7 @@ namespace Nektar
         SolverUtils::DiffusionSharedPtr         m_diffusion;        
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
         
-        virtual void v_PrintSummary(std::ostream &out); //newline JEL
+        virtual void v_GenerateSummary(SummaryList &s);
         
         UnsteadyDiffusion(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -99,7 +99,6 @@ namespace Nektar
         NekDouble m_waveFreq;
         NekDouble m_epsilon;
         StdRegions::VarCoeffMap m_varcoeff;
-        
     };
 }
 

@@ -57,7 +57,9 @@ namespace Nektar
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
 
-        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
+        m_session->MatchSolverInfo(
+            "SpectralVanishingViscosity", "True", m_useSpecVanVisc, false);
+
         if(m_useSpecVanVisc)
         {
             m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
@@ -129,13 +131,15 @@ namespace Nektar
     {
     }
 
-    void UnsteadyDiffusion::v_PrintSummary(std::ostream &out) //
+    void UnsteadyDiffusion::v_GenerateSummary(SummaryList& s)
     {
+        UnsteadySystem::v_GenerateSummary(s);
         if(m_useSpecVanVisc)
         {
-            out << "\tSmoothing       : Spectral vanishing viscosity " << endl;
-            out << "\t                  (cut off ratio = " << m_sVVCutoffRatio
-            << ", diff coeff = " << m_sVVDiffCoeff << ")"<< endl;
+            stringstream ss;
+            ss << "SVV (cut off = " << m_sVVCutoffRatio
+               << ", coeff = "      << m_sVVDiffCoeff << ")";
+            AddSummaryItem(s, "Smoothing", ss.str());
         }
     }
     
@@ -226,16 +230,11 @@ namespace Nektar
         factors[StdRegions::eFactorLambda] = 1.0 / lambda / m_epsilon;
         factors[StdRegions::eFactorTau]    = 1.0;
         
-        
-        //Newlines JEL START
         if(m_useSpecVanVisc)
         {
             factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
-            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_epsilon;//here you define factors
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_epsilon;
         }
-        //Newlines JEL END
-        
-        
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}

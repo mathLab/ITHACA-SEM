@@ -1330,44 +1330,6 @@ namespace Nektar
                 }
             }
 
-#if 0
-            // Search for periodic vertices and edges which are not in a
-            // periodic composite but lie in this process. Start by assembling a
-            // list of all vertices and edges.
-            boost::unordered_set<int> processVerts, processEdges;
-            for (i = 0; i < m_exp->size(); ++i)
-            {
-                for (j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
-                {
-                    processEdges.insert((*m_exp)[i]->GetGeom()->GetEid(j));
-                }
-
-                for (j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
-                {
-                    processEdges.insert((*m_exp)[i]->GetGeom()->GetEid(j));
-                }
-            }
-
-            // Loop over all information we have from other processors.
-            for (cnt = i = 0; i < totFaces; ++i)
-            {
-                for (j = 0; j < faceVerts[i]; ++j, ++cnt)
-                {
-                    int vId = vertIds[cnt];
-
-                    perId = periodicVerts.find(vId);
-
-                    if (perId != periodicVerts.end())
-                    {
-                        continue;
-                    }
-
-                    // Figure out which vertex this one is supposed to be
-                    // periodic with.
-                }
-            }
-#endif
-
             // Finally, we must loop over the periodicVerts and periodicEdges
             // map to complete connectivity information.
             PeriodicMap::iterator perIt, perIt2;

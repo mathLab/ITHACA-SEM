@@ -179,7 +179,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                 Array<OneD, NekDouble> &coords_0,
                 Array<OneD, NekDouble> &coords_1,
-                Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray);            
+                Array<OneD, NekDouble> &coords_2);
 
             //--------------------------
             // Mappings

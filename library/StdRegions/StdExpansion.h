@@ -96,7 +96,7 @@ namespace Nektar
              */
             inline int GetNumBases() const
             {
-                return m_numbases;
+                return m_base.num_elements();
             }
 
             /** \brief This function gets the shared point to basis
@@ -116,7 +116,8 @@ namespace Nektar
              */
             inline const LibUtilities::BasisSharedPtr& GetBasis(int dir) const
             {
-                ASSERTL1(dir < m_numbases, "dir is larger than number of bases");
+                ASSERTL1(dir < m_base.num_elements(),
+                         "dir is larger than number of bases");
                 return(m_base[dir]);
             }
 
@@ -141,7 +142,7 @@ namespace Nektar
                 int i;
                 int nqtot = 1;
 
-                for(i=0; i<m_numbases; ++i)
+                for(i=0; i < m_base.num_elements(); ++i)
                 {
                     nqtot *= m_base[i]->GetNumPoints();
                 }
@@ -162,7 +163,7 @@ namespace Nektar
              */
             inline  LibUtilities::BasisType GetBasisType(const int dir) const
             {
-                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
                 return(m_base[dir]->GetBasisType());
             }
 
@@ -175,7 +176,7 @@ namespace Nektar
              */
             inline int GetBasisNumModes(const int dir) const
             {
-                ASSERTL1(dir < m_numbases,"dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.num_elements(),"dir is larger than m_numbases");
                 return(m_base[dir]->GetNumModes());
             }
 
@@ -191,7 +192,7 @@ namespace Nektar
                 int i;
                 int returnval = 0;
 
-                for(i = 0; i < m_numbases; ++i)
+                for(i = 0; i < m_base.num_elements(); ++i)
                 {
                     returnval = max(returnval, m_base[i]->GetNumModes());
                 }
@@ -213,7 +214,7 @@ namespace Nektar
              */
             inline LibUtilities::PointsType GetPointsType(const int dir)  const
             {
-                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
+                ASSERTL1(dir < m_base.num_elements(), "dir is larger than m_numbases");
                 return(m_base[dir]->GetPointsType());
             }
 
@@ -226,7 +227,7 @@ namespace Nektar
              */
             inline int GetNumPoints(const int dir) const
             {
-                ASSERTL1(dir < m_numbases || dir == 0,
+                ASSERTL1(dir < m_base.num_elements() || dir == 0,
                          "dir is larger than m_numbases");
                 return(m_base.num_elements() > 0 ? m_base[dir]->GetNumPoints() : 1);
             }
@@ -641,20 +642,52 @@ namespace Nektar
                 v_GetCoord(Lcoord, coord);
             }
 
-
             inline DNekMatSharedPtr GetStdMatrix(const StdMatrixKey &mkey)
             {
                 return m_stdMatrixManager[mkey];
+                /*
+                map<StdMatrixKey, DNekMatSharedPtr>::iterator it = m_stdMatrixManager.find(mkey);
+                if (it == m_stdMatrixManager.end())
+                {
+                    return (m_stdMatrixManager[mkey] = CreateStdMatrix(mkey));
+                }
+                else
+                {
+                    return it->second;
+                }
+                */
             }
 
             inline DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdMatrixKey &mkey)
             {
                 return m_stdStaticCondMatrixManager[mkey];
+                /*
+                map<StdMatrixKey, DNekBlkMatSharedPtr>::iterator it = m_stdStaticCondMatrixManager.find(mkey);
+                if (it == m_stdStaticCondMatrixManager.end())
+                {
+                    return (m_stdStaticCondMatrixManager[mkey] = CreateStdStaticCondMatrix(mkey));
+                }
+                else
+                {
+                    return it->second;
+                }
+                */
             }
 			
 	    inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager[ikey];
+                /*
+                map<IndexMapKey, IndexMapValuesSharedPtr>::iterator it = m_IndexMapManager.find(ikey);
+                if (it == m_IndexMapManager.end())
+                {
+                    return (m_IndexMapManager[ikey] = CreateIndexMap(ikey));
+                }
+                else
+                {
+                    return it->second;
+                }
+                */
             }
 
             const Array<OneD, const NekDouble>& GetPhysNormals(void)
@@ -713,9 +746,10 @@ namespace Nektar
             }
 
             void SetCoeffsToOrientation(
+                Array<OneD, NekDouble> &coeffs,
                 StdRegions::Orientation dir)
             {
-                v_SetCoeffsToOrientation(dir);
+                v_SetCoeffsToOrientation(coeffs, dir);
             }
 
             void SetCoeffsToOrientation(
@@ -1241,35 +1275,18 @@ namespace Nektar
                     m_transformationmatrix);
             }
 
-
-
         protected:
-
-
-            int   m_elmt_id;  ///< id of element when used in a list.
-            int   m_numbases;                                 /**< Number of 1D basis defined in expansion */
             Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
-            int  m_ncoeffs;                                   /**< Total number of coefficients used in the expansion */
+            int m_elmt_id;
+            int m_ncoeffs;                                   /**< Total number of coefficients used in the expansion */
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
-	    LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
-			
-            bool StdMatManagerAlreadyCreated(const StdMatrixKey &mkey)
-            {
-                return m_stdMatrixManager.AlreadyCreated(mkey);
-            }
-			
-            bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
-            {
-                return m_IndexMapManager.AlreadyCreated(ikey);
-            }
+	    LibUtilities::NekManager<IndexMapKey, IndexMapValues, IndexMapKey::opLess> m_IndexMapManager;
 
-            bool StdStaticCondMatManagerAlreadyCreated(const StdMatrixKey &mkey)
-            {
-                return m_stdStaticCondMatrixManager.AlreadyCreated(mkey);
-            }
+            //static std::map<StdMatrixKey, DNekMatSharedPtr>    m_stdMatrixManager;
+            //static std::map<StdMatrixKey, DNekBlkMatSharedPtr> m_stdStaticCondMatrixManager;
+            //static std::map<IndexMapKey, IndexMapValuesSharedPtr> m_IndexMapManager;
 
-			
             DNekMatSharedPtr CreateStdMatrix(const StdMatrixKey &mkey)
             {
                 return v_CreateStdMatrix(mkey);
@@ -1290,14 +1307,13 @@ namespace Nektar
             **/
             STD_REGIONS_EXPORT DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdMatrixKey &mkey);
 			
-			/** \brief Create an IndexMap which contains mapping information linking any specific
-			 element shape with either its boundaries, edges, faces, verteces, etc. 
-			 
-			 The index member of the IndexMapValue struct gives back an integer associated with an entity index
-			 The sign member of the same struct gives back a sign to algebrically apply entities orientation
-			 **/
-			STD_REGIONS_EXPORT IndexMapValuesSharedPtr CreateIndexMap(const IndexMapKey &ikey);
-            
+            /** \brief Create an IndexMap which contains mapping information linking any specific
+                element shape with either its boundaries, edges, faces, verteces, etc. 
+                
+                The index member of the IndexMapValue struct gives back an integer associated with an entity index
+                The sign member of the same struct gives back a sign to algebrically apply entities orientation
+            **/
+            STD_REGIONS_EXPORT IndexMapValuesSharedPtr CreateIndexMap(const IndexMapKey &ikey);
 
             STD_REGIONS_EXPORT void BwdTrans_MatOp(const Array<OneD, const NekDouble>& inarray,
                                 Array<OneD, NekDouble> &outarray);
@@ -1397,7 +1413,9 @@ namespace Nektar
                                                   Array<OneD, const NekDouble> &inarray,
                                                   Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(StdRegions::Orientation dir);
+            STD_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
+                Array<OneD, NekDouble> &coeffs,
+                StdRegions::Orientation dir);
 			
             STD_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
                                                    const Array<OneD, const NekDouble> &Lcoord,

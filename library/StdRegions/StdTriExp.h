@@ -176,7 +176,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                 Array<OneD, NekDouble> &coords_x,
                 Array<OneD, NekDouble> &coords_y,
-                Array<OneD, NekDouble> &coords_z = NullNekDouble1DArray);
+                Array<OneD, NekDouble> &coords_z);
             STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
             STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey

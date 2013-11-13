@@ -1590,6 +1590,7 @@ namespace Nektar
             const int                           dir,
             const Array<OneD, const NekDouble> &soln)
         {
+#if 0
             int    i,e,ncoeff_edge;
             Array<OneD, const NekDouble> tmp_coeffs;
             Array<OneD, NekDouble> out_d(m_ncoeffs), out_tmp;
@@ -1634,8 +1635,9 @@ namespace Nektar
             
             BwdTrans(out_d,m_phys);
             Vmath::Vsub(m_npoints,m_phys,1,soln,1,m_phys,1);
-
             return L2();
+#endif
+            return -1.0;
         }
 
         void DisContField2D::v_HelmSolve(
@@ -1871,6 +1873,7 @@ namespace Nektar
         void  DisContField2D::EvaluateHDGPostProcessing(
             Array<OneD, NekDouble> &outarray)
         {
+#if 0
             int    i,cnt,e,ncoeff_edge;
             Array<OneD, NekDouble> force, out_tmp,qrhs;
             Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
@@ -1948,6 +1951,7 @@ namespace Nektar
 
                 out = (*lapsys)*in;
             }
+#endif
         }
 
         /**

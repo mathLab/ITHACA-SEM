@@ -56,10 +56,9 @@ namespace Nektar
         {
         }
 
-
-        StdRegions::StdExpansion2DSharedPtr Geometry2D::GetXmap(const int i)
+        StdRegions::StdExpansionSharedPtr Geometry2D::v_GetXmap() const
         {
-            return m_xmap[i];
+            return m_xmap;
         }
 
         int Geometry2D::GetFid() const
@@ -67,13 +66,10 @@ namespace Nektar
             return v_GetFid();
         }
 
-
-
-        const LibUtilities::BasisSharedPtr Geometry2D::GetEdgeBasis(const int i, const int j)
+        const LibUtilities::BasisSharedPtr Geometry2D::GetEdgeBasis(const int i)
         {
-            return v_GetEdgeBasis(i,j);
+            return v_GetEdgeBasis(i);
         }
-
 
         const Geometry2DSharedPtr Geometry2D::GetFace(int i) const
         {
@@ -110,24 +106,11 @@ namespace Nektar
             return v_WhichFace(face);
         }
 
-        StdRegions::StdExpansion2DSharedPtr Geometry2D::operator[](const int i) const
-        {
-            if((i>=0)&& (i<m_coordim))
-            {
-                return m_xmap[i];
-            }
-
-            NEKERROR(ErrorUtil::efatal,
-                     "Invalid Index used in [] operator");
-            return m_xmap[0]; //should never be reached
-        }
-
-
         void Geometry2D::NewtonIterationForLocCoord
                          (const Array<OneD, const NekDouble> &coords, 
                           Array<OneD,NekDouble> &Lcoords)
         {
-            
+#if 0
             Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
             Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
             NekDouble xmap,ymap, F1,F2;
@@ -176,8 +159,9 @@ namespace Nektar
             
             if(cnt >= 40)
             {
-                Lcoords[0] = Lcoords[1] = 2.0;    
-            }                        
+                Lcoords[0] = Lcoords[1] = 2.0;
+            }
+#endif
         }
 
         int Geometry2D::v_GetFid() const 
@@ -187,7 +171,7 @@ namespace Nektar
             return 0;
         }
 
-        const LibUtilities::BasisSharedPtr Geometry2D::v_GetEdgeBasis(const int i, const int j)
+        const LibUtilities::BasisSharedPtr Geometry2D::v_GetEdgeBasis(const int i)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for shape type geometries");

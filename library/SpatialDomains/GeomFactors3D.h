@@ -53,21 +53,19 @@ namespace Nektar
             /// One dimensional geometric factors based on one-, two- or three-
             /// dimensional coordinate description.
             SPATIAL_DOMAINS_EXPORT GeomFactors3D(
-                const GeomType gtype,
-                const int coordim,
-                const Array<OneD, const StdRegions
-                    ::StdExpansion3DSharedPtr> &Coords,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
+                const GeomType                                          gtype,
+                const int                                               coordim,
+                const StdRegions::StdExpansion3DSharedPtr               xmap,
+                const Array<OneD, const Array<OneD, NekDouble> >       &coeffs,
+                const Array<OneD, const LibUtilities::BasisSharedPtr>  &tbasis);
             
         private:
             // Set up 3D Jacobian
             void SetUpJacGmat3D(
-                const Array<OneD, Array<OneD, NekDouble> > d1,
-                const Array<OneD, Array<OneD, NekDouble> > d2,
-                const Array<OneD, Array<OneD, NekDouble> > d3);
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &deriv);
 
-            void CheckIfValid();
+            void CheckIfValid(
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &deriv);
         };
 
         /// Shared pointer to GeomFactors3D object.

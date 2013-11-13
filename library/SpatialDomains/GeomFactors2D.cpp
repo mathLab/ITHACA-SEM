@@ -119,13 +119,12 @@ namespace Nektar
          * @param   tbasis      Tangent basis.
          */
         GeomFactors2D::GeomFactors2D(
-                        const GeomType gtype,
-                        const int coordim,
-                        const Array<OneD, const StdRegions
-                                            ::StdExpansion2DSharedPtr> &Coords,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                             &tbasis) :
-            GeomFactors(gtype, 2, coordim)
+            const GeomType                                          gtype,
+            const int                                               coordim,
+            const StdRegions::StdExpansion2DSharedPtr               xmap,
+            const Array<OneD, const Array<OneD, NekDouble> >       &coeffs,
+            const Array<OneD, const LibUtilities::BasisSharedPtr>  &tbasis)
+            : GeomFactors(gtype, 2, coordim)
         {
             // Sanity checks.
             ASSERTL1(coordim == 2 || coordim == 3,
@@ -135,17 +134,12 @@ namespace Nektar
                      "tbasis should be an array of size two");
 
             // Copy shared pointers.
-            for (int i = 0; i < m_coordDim; ++i)
-            {
-                m_coords[i] = Coords[i];
-            }
+            m_xmap = xmap;
 
             // The quadrature points of the mapping
             // (as specified in Coords)
-            LibUtilities::PointsKey pkey0_map(
-                                        Coords[0]->GetBasis(0)->GetPointsKey());
-            LibUtilities::PointsKey pkey1_map(
-                                        Coords[0]->GetBasis(1)->GetPointsKey());
+            LibUtilities::PointsKey pkey0_map(xmap->GetBasis(0)->GetPointsKey());
+            LibUtilities::PointsKey pkey1_map(xmap->GetBasis(1)->GetPointsKey());
             int nquad0_map = pkey0_map.GetNumPoints();
             int nquad1_map = pkey1_map.GetNumPoints();
             int nqtot_map  = nquad0_map*nquad1_map;
@@ -166,6 +160,7 @@ namespace Nektar
             // setup temp storage
             Array<OneD, Array<OneD,NekDouble> > d1_map   (coordim);
             Array<OneD, Array<OneD,NekDouble> > d2_map   (coordim);
+            Array<OneD, NekDouble> tmp(nqtot_map);
 
             m_deriv = Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(m_expDim);
             m_deriv[0] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
@@ -180,13 +175,10 @@ namespace Nektar
                 m_deriv[1][i] = Array<OneD,NekDouble>(nqtot_tbasis);
 
                 // Transform from coefficient space to physical space
-                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),
-                                    Coords[i]->UpdatePhys());
+                xmap->BwdTrans(coeffs[i], tmp);
                 // Take the derivative (calculated at the points as specified
                 // in 'Coords')
-                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),
-                                        d1_map[i],
-                                        d2_map[i]);
+                xmap->StdPhysDeriv(tmp, d1_map[i], d2_map[i]);
 
                 // Interpolate the derivatives:
                 // - from the points as defined in the mapping ('Coords')
@@ -399,6 +391,7 @@ namespace Nektar
                     Array<OneD,NekDouble> x1(nq);
                     Array<OneD,NekDouble> x2(nq);
 
+#if 0
                     // m_coords are StdExpansions which store the mapping
                     // between the std element and the local element. Bwd
                     // transforming the std element minimum basis gives a
@@ -436,6 +429,7 @@ namespace Nektar
                         output[0][i] = ydis/radius;
                         output[1][i] = -1.0*xdis/radius;
                     }
+#endif
                 }
                 default:
                 {

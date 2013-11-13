@@ -84,7 +84,7 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT StdRegions::Orientation 
                 GetFaceOrient(const int i) const;
             SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion3DSharedPtr
-                GetXmap(const int i);
+                GetXmap();
             SPATIAL_DOMAINS_EXPORT int
                 GetDir(const int faceidx, const int facedir) const;
 
@@ -94,7 +94,7 @@ namespace Nektar
             Geometry2DVector                                 m_faces;
             std::vector<StdRegions::Orientation>             m_eorient;
             std::vector<StdRegions::Orientation>             m_forient;
-            Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
+            StdRegions::StdExpansion3DSharedPtr              m_xmap;
             std::list<CompToElmt>                            m_elmtmap;
             bool                                             m_owndata;
             int                                              m_eid;
@@ -117,8 +117,8 @@ namespace Nektar
             //---------------------------------------
             // Helper functions
             //---------------------------------------
-            virtual StdRegions::StdExpansion3DSharedPtr
-                                                v_GetXmap(const int i);
+            virtual StdRegions::StdExpansionSharedPtr
+                                                v_GetXmap() const;
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetVid(int i) const;
             virtual const SegGeomSharedPtr      v_GetEdge(int i) const;
@@ -128,12 +128,10 @@ namespace Nektar
             virtual StdRegions::Orientation v_GetFaceOrient(const int i) const;
             virtual int                         v_GetFid(int i) const;
             virtual int                         v_GetEid() const;
-            virtual Array<OneD,NekDouble>      &v_UpdatePhys(const int i);
             virtual int                         v_WhichEdge(SegGeomSharedPtr edge);
             virtual int                         v_WhichFace(Geometry2DSharedPtr face);
             virtual const LibUtilities::BasisSharedPtr
-                                                v_GetBasis(const int i, 
-                                                           const int j);
+                                                v_GetBasis(const int i);
             virtual int                         v_GetDir(const int faceidx,
                                                     const int facedir) const = 0;
 

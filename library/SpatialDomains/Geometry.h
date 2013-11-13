@@ -49,15 +49,12 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-
         class Geometry; // Forward declaration for typedef.
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
         typedef std::vector< GeometrySharedPtr > GeometryVector;
         typedef boost::unordered_set< GeometrySharedPtr > GeometrySet;
         typedef boost::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
-
-
 
         /// \brief Less than operator to sort Geometry objects by global id when sorting 
         /// STL containers.
@@ -66,8 +63,6 @@ namespace Nektar
 
         SPATIAL_DOMAINS_EXPORT  bool GlobalIdEquality(const boost::shared_ptr<Geometry>& lhs, 
             const boost::shared_ptr<Geometry>& rhs);
-
-
 
         /// Base class for shape geometry information
         class Geometry
@@ -113,6 +108,10 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline int GetNumEdges() const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumFaces() const;
                 SPATIAL_DOMAINS_EXPORT inline int GetShapeDim() const;
+                SPATIAL_DOMAINS_EXPORT inline StdRegions::StdExpansionSharedPtr
+                            GetXmap() const;
+                SPATIAL_DOMAINS_EXPORT inline const Array<OneD, const NekDouble> &
+                            GetCoeffs(const int i) const;
                 SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                               NekDouble tol = 0.0);
@@ -132,10 +131,8 @@ namespace Nektar
                         const int i, const Array<OneD, const NekDouble> &Lcoord);
 
                 SPATIAL_DOMAINS_EXPORT inline void SetOwnData();
-                SPATIAL_DOMAINS_EXPORT inline Array<OneD,NekDouble>&
-                            UpdatePhys(const int i);
                 SPATIAL_DOMAINS_EXPORT inline const LibUtilities::BasisSharedPtr
-                            GetBasis(const int i, const int j);
+                            GetBasis(const int i);
 
             protected:
 
@@ -154,6 +151,8 @@ namespace Nektar
                 LibUtilities::ShapeType   m_shapeType;
                 int                  m_globalID;
 
+                Array<OneD, Array<OneD, NekDouble> > m_coeffs;
+            
                 void GenGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
 
@@ -185,6 +184,8 @@ namespace Nektar
                 virtual int  v_GetNumEdges() const;
                 virtual int  v_GetNumFaces() const;
                 virtual int  v_GetShapeDim() const;
+                virtual StdRegions::StdExpansionSharedPtr
+                             v_GetXmap() const;
                 virtual int  v_GetCoordim() const;
                 virtual bool v_ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
@@ -207,10 +208,10 @@ namespace Nektar
                                   Array<OneD,NekDouble>& Lcoords);
 
                 virtual void v_SetOwnData();
-                virtual Array<OneD,NekDouble>& v_UpdatePhys(const int i);
                 virtual const LibUtilities::BasisSharedPtr
-                             v_GetBasis(const int i, const int j);
+                             v_GetBasis(const int i);
 
+                inline void SetUpCoeffs(const int nCoeffs);
         }; // class Geometry
 
 
@@ -327,6 +328,16 @@ namespace Nektar
             return v_GetShapeDim();
         }
 
+        inline StdRegions::StdExpansionSharedPtr Geometry::GetXmap() const
+        {
+            return v_GetXmap();
+        }
+
+        inline const Array<OneD, const NekDouble> &Geometry::GetCoeffs(const int i) const
+        {
+            return m_coeffs[i];
+        }
+
         inline bool Geometry::ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
                 NekDouble tol)
@@ -398,23 +409,23 @@ namespace Nektar
         }
 
         /**
-        * @brief Return a reference to the physical space of co-ordinate
-        * dimension i.
-        */
-        inline Array<OneD,NekDouble>& Geometry::UpdatePhys(const int i)
-        {
-            return v_UpdatePhys(i);
-        }
-
-        /**
          * @brief Return the j-th basis of the i-th co-ordinate dimension.
          */
         inline const LibUtilities::BasisSharedPtr Geometry::GetBasis(
-            const int i, const int j)
+            const int i)
         {
-            return v_GetBasis(i, j);
+            return v_GetBasis(i);
         }
 
+        inline void Geometry::SetUpCoeffs(const int nCoeffs)
+        {
+            m_coeffs = Array<OneD, Array<OneD, NekDouble> >(m_coordim);
+
+            for (int i = 0; i < m_coordim; ++i)
+            {
+                m_coeffs[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
+            }
+        }
     }; //end of namespace
 }; // end of namespace
 

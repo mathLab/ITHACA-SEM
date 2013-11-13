@@ -53,12 +53,6 @@ namespace Nektar
         {
         }
 
-
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::GetXmap(const int i)
-        {
-            return v_GetXmap(i);
-        }
-
         PointGeomSharedPtr Geometry1D::GetVertex(const int i) const
         {
             return v_GetVertex(i);
@@ -93,15 +87,6 @@ namespace Nektar
             return 0;
         }
 
-
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::v_GetXmap(const int i)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            static StdRegions::StdExpansion1DSharedPtr returnval;
-            return returnval; 
-        }
-
         PointGeomSharedPtr Geometry1D::v_GetVertex(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
@@ -129,8 +114,5 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
         }
-
-
-
     }; //end of namespace
 }; //end of namespace

@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraphSharedPtr graphShPt = 
         SpatialDomains::MeshGraph::Read(vSession); //meshfile);
     //----------------------------------------------
-
+                                                                           
     //----------------------------------------------
     // Set up Expansion information
     SpatialDomains::ExpansionMap emap = graphShPt->GetExpansions();

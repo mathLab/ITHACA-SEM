@@ -84,13 +84,8 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT int WhichEdge(SegGeomSharedPtr edge);
             SPATIAL_DOMAINS_EXPORT int WhichFace(Geometry2DSharedPtr face);
 
-            SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion2DSharedPtr
-                        GetXmap(const int i);
-            SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion2DSharedPtr
-                        operator[](const int i) const;
-
             SPATIAL_DOMAINS_EXPORT const LibUtilities::BasisSharedPtr
-                    GetEdgeBasis(const int i, const int j);
+                    GetEdgeBasis(const int i);
 
             //---------------------------------------
             // Orientation functions
@@ -104,7 +99,7 @@ namespace Nektar
 
         protected:
 
-            Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
+            StdRegions::StdExpansion2DSharedPtr m_xmap;
 
             void NewtonIterationForLocCoord(const Array<OneD, const NekDouble> &coords, 
                                        Array<OneD,NekDouble> &Lcoords);
@@ -122,6 +117,7 @@ namespace Nektar
             virtual const PointGeomSharedPtr    v_GetVertex(int i) const;
             virtual const Geometry1DSharedPtr   v_GetEdge(int i) const;
             virtual const Geometry2DSharedPtr   v_GetFace(int i) const;
+            virtual StdRegions::StdExpansionSharedPtr v_GetXmap() const;
             virtual StdRegions::Orientation v_GetFaceOrient(const int i) const;
             virtual StdRegions::Orientation v_GetEorient(const int i) const;
             virtual StdRegions::Orientation v_GetCartesianEorient(const int i) const;
@@ -129,7 +125,7 @@ namespace Nektar
             virtual int                         v_WhichFace(Geometry2DSharedPtr face);
 
             virtual const LibUtilities::BasisSharedPtr
-                            v_GetEdgeBasis(const int i, const int j);
+                            v_GetEdgeBasis(const int i);
             virtual bool    v_ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                         NekDouble tol = 0.0);

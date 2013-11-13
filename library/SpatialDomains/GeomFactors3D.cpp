@@ -53,13 +53,13 @@ namespace Nektar
          * @param   Coords      ?
          * @param   tbasis      Basis for tangential vectors.
          */
-        GeomFactors3D::GeomFactors3D(const GeomType gtype,
-                          const int coordim,
-                          const Array<OneD, const StdRegions
-                                            ::StdExpansion3DSharedPtr> &Coords,
-                          const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                            &tbasis) :
-            GeomFactors(gtype, 3, coordim)
+        GeomFactors3D::GeomFactors3D(
+            const GeomType                                          gtype,
+            const int                                               coordim,
+            const StdRegions::StdExpansion3DSharedPtr               xmap,
+            const Array<OneD, const Array<OneD, NekDouble> >       &coeffs,
+            const Array<OneD, const LibUtilities::BasisSharedPtr>  &tbasis)
+            : GeomFactors(gtype, 3, coordim)
         {
             ASSERTL1(coordim == 3,
                      "The coordinate dimension should be to three"
@@ -67,16 +67,13 @@ namespace Nektar
             ASSERTL1(tbasis.num_elements() == 3,
                      "tbasis should be an array of size three");
 
-            for (int i = 0; i < m_coordDim; ++i)
-            {
-                m_coords[i] = Coords[i];
-            }
+            m_xmap = xmap;
 
             // The quadrature points of the mapping
             // (as specified in Coords)
-            LibUtilities::PointsKey pkey0_map(Coords[0]->GetBasis(0)->GetPointsKey());
-            LibUtilities::PointsKey pkey1_map(Coords[0]->GetBasis(1)->GetPointsKey());
-            LibUtilities::PointsKey pkey2_map(Coords[0]->GetBasis(2)->GetPointsKey());
+            LibUtilities::PointsKey pkey0_map(xmap->GetBasis(0)->GetPointsKey());
+            LibUtilities::PointsKey pkey1_map(xmap->GetBasis(1)->GetPointsKey());
+            LibUtilities::PointsKey pkey2_map(xmap->GetBasis(2)->GetPointsKey());
             int nquad0_map = pkey0_map.GetNumPoints();
             int nquad1_map = pkey1_map.GetNumPoints();
             int nquad2_map = pkey2_map.GetNumPoints();
@@ -102,11 +99,12 @@ namespace Nektar
             Array<OneD, Array<OneD,NekDouble> > d1_map   (coordim);
             Array<OneD, Array<OneD,NekDouble> > d2_map   (coordim);
             Array<OneD, Array<OneD,NekDouble> > d3_map   (coordim);
+            Array<OneD, NekDouble> tmp(nqtot_map);
 
-            m_deriv = Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(m_expDim);
-            m_deriv[0] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
-            m_deriv[1] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
-            m_deriv[2] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > deriv(m_expDim);
+            deriv[0] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
+            deriv[1] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
+            deriv[2] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
 
             // Calculate local derivatives
             for(int i = 0; i < coordim; ++i)
@@ -114,14 +112,15 @@ namespace Nektar
                 d1_map[i]    = Array<OneD,NekDouble>(nqtot_map);
                 d2_map[i]    = Array<OneD,NekDouble>(nqtot_map);
                 d3_map[i]    = Array<OneD,NekDouble>(nqtot_map);
-                m_deriv[0][i] = Array<OneD,NekDouble>(nqtot_tbasis);
-                m_deriv[1][i] = Array<OneD,NekDouble>(nqtot_tbasis);
-                m_deriv[2][i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                deriv[0][i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                deriv[1][i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                deriv[2][i] = Array<OneD,NekDouble>(nqtot_tbasis);
 
                 // Transform from coefficient space to physical space
-                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),Coords[i]->UpdatePhys());
-                // Take the derivative (calculated at the points as specified   in 'Coords')
-                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1_map[i],d2_map[i],d3_map[i]);
+                xmap->BwdTrans(coeffs[i], tmp);
+                // Take the derivative (calculated at the points as specified in
+                // 'Coords')
+                xmap->StdPhysDeriv(tmp, d1_map[i], d2_map[i], d3_map[i]);
               
                 // Interpolate the derivatives:
                 // - from the points as defined in the mapping ('Coords')
@@ -130,50 +129,48 @@ namespace Nektar
                     (pkey1_map == pkey1_tbasis) &&
                     (pkey2_map == pkey2_tbasis) )
                 {
-                    m_deriv[0][i] = d1_map[i];
-                    m_deriv[1][i] = d2_map[i];
-                    m_deriv[2][i] = d3_map[i];
+                    deriv[0][i] = d1_map[i];
+                    deriv[1][i] = d2_map[i];
+                    deriv[2][i] = d3_map[i];
                 }
                 else
                 {
                     LibUtilities::Interp3D(pkey0_map,    pkey1_map,             pkey2_map,    d1_map[i],
-                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, m_deriv[0][i]);
+                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, deriv[0][i]);
                     LibUtilities::Interp3D(pkey0_map,    pkey1_map,             pkey2_map,    d2_map[i],
-                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, m_deriv[1][i]);
+                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, deriv[1][i]);
                     LibUtilities::Interp3D(pkey0_map,    pkey1_map,             pkey2_map,    d3_map[i],
-                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, m_deriv[2][i]);
+                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, deriv[2][i]);
                 }
             }
 
             // Based upon these derivatives, calculate:
             // 1. The (determinant of the) jacobian and the differentation      metrics
-            SetUpJacGmat3D(m_deriv[0],m_deriv[1],m_deriv[2]);
+            SetUpJacGmat3D(deriv);
 
-            CheckIfValid();
+            CheckIfValid(deriv);
         }
 
         /**
          *
          */
         void GeomFactors3D::SetUpJacGmat3D(
-                        const Array<OneD, Array<OneD, NekDouble> > d1,
-                        const Array<OneD, Array<OneD, NekDouble> > d2,
-                        const Array<OneD, Array<OneD, NekDouble> > d3)
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &deriv)
         {
-            ASSERTL1(d1.num_elements()==m_coordDim,"The dimension of array d1 does not"
+            ASSERTL1(deriv[0].num_elements()==m_coordDim,"The dimension of array d1 does not"
                      "match the coordinate dimension");
-            ASSERTL1(d2.num_elements()==m_coordDim,"The dimension of array d2 does not"
+            ASSERTL1(deriv[1].num_elements()==m_coordDim,"The dimension of array d2 does not"
                      "match the coordinate dimension");
-            ASSERTL1(d3.num_elements()==m_coordDim,"The dimension of array d3 does not"
+            ASSERTL1(deriv[2].num_elements()==m_coordDim,"The dimension of array d3 does not"
                      "match the coordinate dimension");
 
             int nqtot = m_pointsKey[0].GetNumPoints() *
                         m_pointsKey[1].GetNumPoints() *
                         m_pointsKey[2].GetNumPoints();
 
-            ASSERTL1(d1[0].num_elements() == nqtot,"Number of quadrature points do not match");
-            ASSERTL1(d2[0].num_elements() == nqtot,"Number of quadrature points do not match");
-            ASSERTL1(d3[0].num_elements() == nqtot,"Number of quadrature points do not match");
+            ASSERTL1(deriv[0][0].num_elements() == nqtot,"Number of quadrature points do not match");
+            ASSERTL1(deriv[1][0].num_elements() == nqtot,"Number of quadrature points do not match");
+            ASSERTL1(deriv[2][0].num_elements() == nqtot,"Number of quadrature points do not match");
 
             unsigned int pts = 1;
             unsigned int i, j, k;
@@ -184,7 +181,7 @@ namespace Nektar
             {
                 for (j = 0; j < m_coordDim; ++j)
                 {
-                    ASSERTL1(m_deriv[i][j].num_elements() == nqtot,
+                    ASSERTL1(deriv[i][j].num_elements() == nqtot,
                              "Number of quadrature points do not match");
                 }
             }
@@ -210,7 +207,7 @@ namespace Nektar
                 {
                     for (k = 0; k < m_coordDim; ++k)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_deriv[j][k][0], 1, &tmp[m_expDim*i+j][0], 1, &tmp[m_expDim*i+j][0], 1);
+                        Vmath::Vvtvp(pts, &deriv[i][k][0], 1, &deriv[j][k][0], 1, &tmp[m_expDim*i+j][0], 1, &tmp[m_expDim*i+j][0], 1);
                     }
                 }
             }
@@ -247,7 +244,7 @@ namespace Nektar
                 {
                     for (k = 0; k < m_coordDim; ++k)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_gmat[m_expDim*i+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1);
+                        Vmath::Vvtvp(pts, &deriv[i][k][0], 1, &m_gmat[m_expDim*i+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1);
                     }
                 }
             }
@@ -258,7 +255,8 @@ namespace Nektar
          * Computes the Jacobian of the 3D map directly from the derivatives of
          * the map to determine if it is negative and thus element is invalid.
          */
-        void GeomFactors3D::CheckIfValid()
+        void GeomFactors3D::CheckIfValid(
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &deriv)
         {
             int nqtot = m_pointsKey[0].GetNumPoints() *
                         m_pointsKey[1].GetNumPoints() *
@@ -270,22 +268,22 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(pts, 0.0);
 
             // J3D - Spencers book page 158
-            Vmath::Vvtvvtm(pts, &m_deriv[1][1][0], 1, &m_deriv[2][2][0], 1,
-                                &m_deriv[2][1][0], 1, &m_deriv[1][2][0], 1,
+            Vmath::Vvtvvtm(pts, &deriv[1][1][0], 1, &deriv[2][2][0], 1,
+                                &deriv[2][1][0], 1, &deriv[1][2][0], 1,
                                 &tmp[0],           1);
-            Vmath::Vvtvp  (pts, &m_deriv[0][0][0], 1, &tmp[0],           1,
+            Vmath::Vvtvp  (pts, &deriv[0][0][0], 1, &tmp[0],           1,
                                 &jac[0],           1, &jac[0],           1);
 
-            Vmath::Vvtvvtm(pts, &m_deriv[2][1][0], 1, &m_deriv[0][2][0], 1,
-                                &m_deriv[0][1][0], 1, &m_deriv[2][2][0], 1,
+            Vmath::Vvtvvtm(pts, &deriv[2][1][0], 1, &deriv[0][2][0], 1,
+                                &deriv[0][1][0], 1, &deriv[2][2][0], 1,
                                 &tmp[0],           1);
-            Vmath::Vvtvp  (pts, &m_deriv[1][0][0], 1, &tmp[0],           1,
+            Vmath::Vvtvp  (pts, &deriv[1][0][0], 1, &tmp[0],           1,
                                 &jac[0],           1, &jac[0],           1);
 
-            Vmath::Vvtvvtm(pts, &m_deriv[0][1][0], 1, &m_deriv[1][2][0], 1,
-                                &m_deriv[1][1][0], 1, &m_deriv[0][2][0], 1,
+            Vmath::Vvtvvtm(pts, &deriv[0][1][0], 1, &deriv[1][2][0], 1,
+                                &deriv[1][1][0], 1, &deriv[0][2][0], 1,
                                 &tmp[0],           1);
-            Vmath::Vvtvp  (pts, &m_deriv[2][0][0], 1, &tmp[0],           1,
+            Vmath::Vvtvp  (pts, &deriv[2][0][0], 1, &tmp[0],           1,
                                 &jac[0],           1, &jac[0],           1);
 
             if (Vmath::Vmin(pts, &jac[0], 1) < 0)

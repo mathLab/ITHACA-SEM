@@ -81,32 +81,32 @@ namespace Nektar
 
             if (m_forient[0] < 9)
             {
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(2));
             }
             else
             {
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(3));
             }
             
             if (m_forient[5] < 9)
             {
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(2));
             }
             else
             {
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(3));
             }
             
             int order0  = *max_element(tmp1.begin(), tmp1.end());
@@ -117,32 +117,32 @@ namespace Nektar
             
             if (m_forient[0] < 9)
             {
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(3));
             }
             else
             {
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(2));
             }
 
             if (m_forient[5] < 9)
             {
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(3));
             }
             else
             {
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[5]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[5]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[5]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[5]->GetXmap()->GetEdgeNumPoints(2));
             }
             
             int order1  = *max_element(tmp1.begin(), tmp1.end());
@@ -153,32 +153,32 @@ namespace Nektar
 
             if (m_forient[1] < 9)
             {
-                tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(3));
             }
             else
             {
-                tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(2));
             }
             
             if (m_forient[3] < 9)
             {
-                tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (1));
-                tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (3));
-                tmp2.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp2.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (1));
+                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (3));
+                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(1));
+                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(3));
             }
             else
             {
-                tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (0));
-                tmp1.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs  (2));
-                tmp2.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp2.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (0));
+                tmp1.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs  (2));
+                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(0));
+                tmp2.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(2));
             }
 
             int order2  = *max_element(tmp1.begin(), tmp1.end());
@@ -194,27 +194,10 @@ namespace Nektar
                 LibUtilities::eModified_A, order2,
                 LibUtilities::PointsKey(points2,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
+            m_xmap = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(A,B,C);
 
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(A,B,C);
-            }
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
-
-        /*
-        HexGeom::HexGeom(const QuadGeomSharedPtr faces[], 
-                         const Array<OneD, StdRegions::StdExpansion3DSharedPtr> &xMap) :
-            Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
-        {
-            HexGeom::HexGeom(faces);
-            
-            for(int i = 0; i < xMap.num_elements(); ++i)
-            {
-                m_xmap[i] = xMap[i];
-            }
-        }
-        */
 
         HexGeom::~HexGeom()
         {
@@ -234,9 +217,9 @@ namespace Nektar
                 // check to see if expansions are linear
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                        m_xmap[i]->GetBasisNumModes(2) != 2 )
+                    if (m_xmap->GetBasisNumModes(0) != 2 ||
+                        m_xmap->GetBasisNumModes(1) != 2 ||
+                        m_xmap->GetBasisNumModes(2) != 2 )
                     {
                         Gtype = eDeformed;
                     }
@@ -277,7 +260,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis);
+                    Gtype, m_coordim, m_xmap, m_coeffs, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -291,6 +274,7 @@ namespace Nektar
 
             v_FillGeom();
 
+#if 0
             // calculate local coordinate for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
             {   
@@ -307,9 +291,9 @@ namespace Nektar
                 //find end points
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    nq0 = m_xmap[i]->GetNumPoints(0);
-                    nq1 = m_xmap[i]->GetNumPoints(1);
-                    nq2 = m_xmap[i]->GetNumPoints(2);
+                    nq0 = m_xmap->GetNumPoints(0);
+                    nq1 = m_xmap->GetNumPoints(1);
+                    nq2 = m_xmap->GetNumPoints(2);
 
                     pts = m_xmap[i]->GetPhys();
 
@@ -362,6 +346,7 @@ namespace Nektar
                 // Perform newton iteration to find local coordinates 
                 NewtonIterationForLocCoord(coords,Lcoords);
             }
+#endif
         }
 
         /**
@@ -373,7 +358,6 @@ namespace Nektar
         {
             Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
             return v_ContainsPoint(gloCoord,locCoord,tol);
-
         }
 
 
@@ -385,6 +369,7 @@ namespace Nektar
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
 
+#if 0
            // find min, max point and check if within twice this
             // distance other false this is advisable since
             // GetLocCoord is expensive for non regular elements.
@@ -410,7 +395,8 @@ namespace Nektar
                     }
                 }
             }
-            
+#endif
+
             v_GetLocCoords(gloCoord, locCoord);
 
             if (locCoord[0] >= -(1+tol) && locCoord[0] <= 1+tol

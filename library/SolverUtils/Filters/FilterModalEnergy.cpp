@@ -283,7 +283,7 @@ namespace Nektar
                 }
             }
 
-            L2error = pFields[field]->L2();
+            L2error = pFields[field]->L2(pFields[field]->GetPhys());
             return L2error;
         }
 

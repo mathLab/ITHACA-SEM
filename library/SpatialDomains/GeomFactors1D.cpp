@@ -64,12 +64,12 @@ namespace Nektar
          * @param   Coords      ?
          * @param   tbasis      Basis for derivatives
          */
-        GeomFactors1D::GeomFactors1D(const GeomType gtype,
-                        const int coordim,
-                        const Array<OneD, const StdRegions
-                                            ::StdExpansion1DSharedPtr> &Coords,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                            &tbasis) :
+        GeomFactors1D::GeomFactors1D(
+            const GeomType                                          gtype,
+            const int                                               coordim,
+            const StdRegions::StdExpansion1DSharedPtr               xmap,
+            const Array<OneD, const Array<OneD, NekDouble> >       &coeffs,
+            const Array<OneD, const LibUtilities::BasisSharedPtr>  &tbasis) :
             GeomFactors(gtype, 1, coordim)
         {
             // Perform sanity checks
@@ -79,15 +79,10 @@ namespace Nektar
             ASSERTL1(tbasis.num_elements() == 1,
                      "tbasis should be an array of size one");
 
-            for (int i = 0; i < m_coordDim; ++i)
-            {
-                m_coords[i] = Coords[i];
-            }
+            m_xmap = xmap;
 
-            // The quadrature points of the mapping
-            // (as specified in Coords)
-            LibUtilities::PointsKey pkey_map(
-                                        Coords[0]->GetBasis(0)->GetPointsKey());
+            // The quadrature points of the mapping (as specified in xmap)
+            LibUtilities::PointsKey pkey_map(xmap->GetBasis(0)->GetPointsKey());
             int nquad_map = pkey_map.GetNumPoints();
 
             // The quadrature points at the points at which we
@@ -101,6 +96,7 @@ namespace Nektar
 
             // setup temp storage
             Array<OneD, Array<OneD,NekDouble> > der_map   (coordim);
+            Array<OneD, NekDouble> tmp(nquad_map);
 
             m_deriv = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(1);
             m_deriv[0] = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
@@ -112,11 +108,10 @@ namespace Nektar
                 m_deriv[0][i]  = Array<OneD,NekDouble>(nquad_tbasis);
 
                 // Transform from coefficient space to physical space
-                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),
-                                    Coords[i]->UpdatePhys());
+                xmap->BwdTrans(coeffs[i], tmp);
                 // Take the derivative (calculated at the points as specified
                 // in 'Coords')
-                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), der_map[i]);
+                xmap->StdPhysDeriv(tmp, der_map[i]);
 
                 // Interpolate the derivatives:
                 // - from the points as defined in the mapping ('Coords')

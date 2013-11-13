@@ -51,9 +51,12 @@ namespace Nektar
         /** define list of number of faces corresponding to each ShapeType */
         const int g_shapenfaces[LibUtilities::SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
+        //std::map<StdMatrixKey, DNekMatSharedPtr> StdExpansion::m_stdMatrixManager;
+        //std::map<StdMatrixKey, DNekBlkMatSharedPtr> StdExpansion::m_stdStaticCondMatrixManager;
+        //std::map<IndexMapKey, IndexMapValuesSharedPtr> StdExpansion::m_IndexMapManager;
+
         StdExpansion::StdExpansion(void):
             m_elmt_id(0),
-            m_numbases(0),
             m_ncoeffs(0)
         {
         }
@@ -63,20 +66,19 @@ namespace Nektar
             const LibUtilities::BasisKey &Bb,
             const LibUtilities::BasisKey &Bc):
             m_elmt_id(0),
-            m_numbases(numbases),
-            m_base(m_numbases),
+            m_base(numbases),
             m_ncoeffs(numcoeffs),
             m_stdMatrixManager(
-                    boost::bind(&StdExpansion::CreateStdMatrix, this, _1),
-                    std::string("StdExpansionStdMatrix")),
+                boost::bind(&StdExpansion::CreateStdMatrix, this, _1),
+                std::string("StdExpansionStdMatrix")),
             m_stdStaticCondMatrixManager(
-                    boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1),
-                    std::string("StdExpansionStdStaticCondMatrix")),
-		    m_IndexMapManager(
-					boost::bind(&StdExpansion::CreateIndexMap,this, _1),
-					std::string("StdExpansionIndexMap"))
+                boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1),
+                std::string("StdExpansionStdStaticCondMatrix")),
+            m_IndexMapManager(
+                boost::bind(&StdExpansion::CreateIndexMap,this, _1),
+                std::string("StdExpansionIndexMap"))
         {
-            switch(m_numbases)
+            switch(m_base.num_elements())
             {
             case 3:
                 ASSERTL2(Bc!=LibUtilities::NullBasisKey,
@@ -103,12 +105,11 @@ namespace Nektar
 
         StdExpansion::StdExpansion(const StdExpansion &T):
             m_elmt_id(T.m_elmt_id),
-            m_numbases(T.m_numbases),
             m_base(T.m_base),
             m_ncoeffs(T.m_ncoeffs),
             m_stdMatrixManager(T.m_stdMatrixManager),
             m_stdStaticCondMatrixManager(T.m_stdStaticCondMatrixManager),
-		    m_IndexMapManager(T.m_IndexMapManager)
+            m_IndexMapManager(T.m_IndexMapManager)
         {
         }
 
@@ -1114,7 +1115,9 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
 
-        void StdExpansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir)
+        void StdExpansion::v_SetCoeffsToOrientation(
+            Array<OneD, NekDouble> &coeffs,
+            StdRegions::Orientation dir)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }

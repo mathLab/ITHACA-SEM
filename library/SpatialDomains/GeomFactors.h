@@ -210,8 +210,8 @@ namespace Nektar
             int m_coordDim;
             /// Validity of element (Jacobian positive)
             bool m_valid;
-            /// Stores information about the expansion.
-            Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
+            /// Stores xi mapping.
+            StdRegions::StdExpansionSharedPtr m_xmap;
             /// Principle tangent direction.
             enum GeomTangents m_tangentDir;
             /// Principle tangent circular dir coords

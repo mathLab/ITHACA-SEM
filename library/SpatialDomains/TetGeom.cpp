@@ -75,39 +75,39 @@ namespace Nektar
             /// Determine necessary order for standard region.
             vector<int> tmp;
 
-            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(0));
+            tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(0));
             int order0 = *max_element(tmp.begin(), tmp.end());
 
             tmp.clear();
-            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
+            tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
             int points0 = *max_element(tmp.begin(), tmp.end());
 
             tmp.clear();
             tmp.push_back(order0);
-            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(1));
-            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(2));
+            tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(1));
+            tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(2));
             int order1 = *max_element(tmp.begin(), tmp.end());
 
             tmp.clear();
             tmp.push_back(points0);
-            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
-            tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
+            tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
+            tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(2));
             int points1 = *max_element(tmp.begin(), tmp.end());
 
             tmp.clear();
             tmp.push_back(order0);
             tmp.push_back(order1);
-            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs(1));
-            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs(2));
-            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs(1));
+            tmp.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs(1));
+            tmp.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs(2));
+            tmp.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs(1));
             int order2 = *max_element(tmp.begin(), tmp.end());
 
             tmp.clear();
             tmp.push_back(points0);
             tmp.push_back(points1);
-            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(1));
-            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(2));
-            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(1));
+            tmp.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(1));
+            tmp.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(2));
+            tmp.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(1));
             int points2 = *max_element(tmp.begin(), tmp.end());
 
             const LibUtilities::BasisKey A(
@@ -120,12 +120,8 @@ namespace Nektar
                 LibUtilities::eModified_C, order2,
                 LibUtilities::PointsKey(points2,LibUtilities::eGaussRadauMAlpha2Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(A,B,C);
-            }
+            m_xmap = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(A,B,C);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
         
         TetGeom::~TetGeom()
@@ -142,7 +138,6 @@ namespace Nektar
         {
             Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
             return v_ContainsPoint(gloCoord,locCoord,tol);
-
         }
 
         /**
@@ -156,7 +151,7 @@ namespace Nektar
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
-
+#if 0
             // find min, max point and check if within twice this
             // distance other false this is advisable since
             // GetLocCoord is expensive for non regular elements.
@@ -193,7 +188,7 @@ namespace Nektar
             {
                 return true;
             }
-            
+#endif            
             return false;
         }
 
@@ -203,7 +198,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>& coords,
                   Array<OneD,       NekDouble>& Lcoords)
         {
-            
+#if 0     
             // calculate local coordinates (eta) for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
             {   
@@ -275,6 +270,7 @@ namespace Nektar
                 // Perform newton iteration to find local coordinates 
                 NewtonIterationForLocCoord(coords,Lcoords);
             }
+#endif
         }
         
         int TetGeom::v_GetNumVerts() const

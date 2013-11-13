@@ -66,17 +66,11 @@ namespace Nektar
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
             LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
-
             m_fid = id;
 
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);
-            }
-
+            m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
-
 
         /**
          *
@@ -106,26 +100,22 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                      "Cannot call function with dim == 1");
 
-            int order0  = max(edges[0]->GetBasis(0,0)->GetNumModes(),
-                              edges[2]->GetBasis(0,0)->GetNumModes());
-            int points0 = max(edges[0]->GetBasis(0,0)->GetNumPoints(),
-                              edges[2]->GetBasis(0,0)->GetNumPoints());
-            int order1  = max(edges[1]->GetBasis(0,0)->GetNumModes(),
-                              edges[3]->GetBasis(0,0)->GetNumModes());
-            int points1 = max(edges[1]->GetBasis(0,0)->GetNumPoints(),
-                              edges[3]->GetBasis(0,0)->GetNumPoints());
+            int order0  = max(edges[0]->GetBasis(0)->GetNumModes(),
+                              edges[2]->GetBasis(0)->GetNumModes());
+            int points0 = max(edges[0]->GetBasis(0)->GetNumPoints(),
+                              edges[2]->GetBasis(0)->GetNumPoints());
+            int order1  = max(edges[1]->GetBasis(0)->GetNumModes(),
+                              edges[3]->GetBasis(0)->GetNumModes());
+            int points1 = max(edges[1]->GetBasis(0)->GetNumPoints(),
+                              edges[3]->GetBasis(0)->GetNumPoints());
 
             const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
                   LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
                   LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
-            }
+            m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
 
@@ -167,21 +157,22 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
 
-            int order0  = max(edges[0]->GetBasis(0,0)->GetNumModes(),
-                              edges[2]->GetBasis(0,0)->GetNumModes());
-            int points0 = max(edges[0]->GetBasis(0,0)->GetNumPoints(),
-                              edges[2]->GetBasis(0,0)->GetNumPoints());
-            int order1  = max(edges[1]->GetBasis(0,0)->GetNumModes(),
-                              edges[3]->GetBasis(0,0)->GetNumModes());
-            int points1 = max(edges[1]->GetBasis(0,0)->GetNumPoints(),
-                              edges[3]->GetBasis(0,0)->GetNumPoints());
+            int order0  = max(edges[0]->GetBasis(0)->GetNumModes(),
+                              edges[2]->GetBasis(0)->GetNumModes());
+            int points0 = max(edges[0]->GetBasis(0)->GetNumPoints(),
+                              edges[2]->GetBasis(0)->GetNumPoints());
+            int order1  = max(edges[1]->GetBasis(0)->GetNumModes(),
+                              edges[3]->GetBasis(0)->GetNumModes());
+            int points1 = max(edges[1]->GetBasis(0)->GetNumPoints(),
+                              edges[3]->GetBasis(0)->GetNumPoints());
 
             const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
                   LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
                   LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -198,25 +189,24 @@ namespace Nektar
                 
                 for (j = 0; j < kNedges; ++j)
                 {
-                    ASSERTL0(edges[j]->GetXmap(i)->GetNcoeffs() == nEdgePts,
+                    ASSERTL0(edges[j]->GetXmap()->GetNcoeffs() == nEdgePts,
                              "Number of edge points does not correspond "
                              "to number of face points.");
                 }
                 
-                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
-
                 for (j = 0; j < npts; ++j)
                 {
                     tmp[j] = (curve->m_points[j]->GetPtr())[i];
                 }
                 
                 // Interpolate curve points to GLL points
+                Array<OneD, NekDouble> tmp2(points0*points1);
                 LibUtilities::Interp2D(curveKey,curveKey,tmp,
                                        B0.GetPointsKey(),B1.GetPointsKey(),
-                                       m_xmap[i]->UpdatePhys());
+                                       tmp2);
                 
                 // Forwards transform to get coefficient space.
-                m_xmap[i]->FwdTrans(m_xmap[i]->GetPhys(),m_xmap[i]->UpdateCoeffs());
+                m_xmap->FwdTrans(tmp2, m_coeffs[i]);
             }
         }
 
@@ -258,26 +248,22 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
 
-            int order0  = max(edges[0]->GetBasis(0,0)->GetNumModes(),
-                             edges[2]->GetBasis(0,0)->GetNumModes());
-            int points0 = max(edges[0]->GetBasis(0,0)->GetNumPoints(),
-                             edges[2]->GetBasis(0,0)->GetNumPoints());
-            int order1 = max(edges[1]->GetBasis(0,0)->GetNumModes(),
-                             edges[3]->GetBasis(0,0)->GetNumModes());
-            int points1 = max(edges[1]->GetBasis(0,0)->GetNumPoints(),
-                             edges[3]->GetBasis(0,0)->GetNumPoints());
+            int order0  = max(edges[0]->GetBasis(0)->GetNumModes(),
+                              edges[2]->GetBasis(0)->GetNumModes());
+            int points0 = max(edges[0]->GetBasis(0)->GetNumPoints(),
+                              edges[2]->GetBasis(0)->GetNumPoints());
+            int order1  = max(edges[1]->GetBasis(0)->GetNumModes(),
+                              edges[3]->GetBasis(0)->GetNumModes());
+            int points1 = max(edges[1]->GetBasis(0)->GetNumPoints(),
+                              edges[3]->GetBasis(0)->GetNumPoints());
 
             const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
                   LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
                   LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
-            }
+            m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
 
@@ -326,7 +312,8 @@ namespace Nektar
             ASSERTL1(m_state == ePtsFilled,
                 "Geometry is not in physical space");
 
-            return m_xmap[i]->PhysEvaluate(Lcoord);
+            return 0.0; //FIXME
+            //return m_xmap->PhysEvaluate(Lcoord);
         }
 
         StdRegions::Orientation QuadGeom::GetFaceOrientation(
@@ -482,37 +469,28 @@ namespace Nektar
         /**
          *
          */
-        const LibUtilities::BasisSharedPtr QuadGeom::v_GetBasis(const int i, const int j)
+        const LibUtilities::BasisSharedPtr QuadGeom::v_GetBasis(const int i)
         {
-            return m_xmap[i]->GetBasis(j);
+            return m_xmap->GetBasis(i);
         }
 
 
         /**
          *
          */
-        const LibUtilities::BasisSharedPtr QuadGeom::v_GetEdgeBasis(const int i, const int j)
+        const LibUtilities::BasisSharedPtr QuadGeom::v_GetEdgeBasis(const int i)
         {
-            ASSERTL1(j <= 3,"edge is out of range");
-            if((j == 0)||(j == 2))
+            ASSERTL1(i <= 3,"edge is out of range");
+
+            if (i == 0 || i == 2)
             {
-                return m_xmap[i]->GetBasis(0);
+                return m_xmap->GetBasis(0);
             }
             else
             {
-                return m_xmap[i]->GetBasis(1);
+                return m_xmap->GetBasis(1);
             }
         }
-
-
-        /**
-         *
-         */
-        Array<OneD,NekDouble> & QuadGeom::v_UpdatePhys(const int i)
-        {
-            return m_xmap[i]->UpdatePhys();
-        }
-
 
         /**
          *
@@ -545,8 +523,8 @@ namespace Nektar
                 // If not linear => deformed geometry
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    if((m_xmap[i]->GetBasisNumModes(0) != 2)||
-                       (m_xmap[i]->GetBasisNumModes(1) != 2))
+                    if((m_xmap->GetBasisNumModes(0) != 2)||
+                       (m_xmap->GetBasisNumModes(1) != 2))
                     {
                         Gtype = eDeformed;
                     }
@@ -589,7 +567,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis);
+                    Gtype, m_coordim, m_xmap, m_coeffs, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -624,31 +602,24 @@ namespace Nektar
                 for(i = 0; i < kNedges; i++)
                 {
                     m_edges[i]->FillGeom();
-                    m_xmap[0]->GetEdgeToElementMap(i,m_eorient[i],
-                                                   mapArray,signArray);
+                    m_xmap->GetEdgeToElementMap(i,m_eorient[i],
+                                                mapArray,signArray);
 
-                    nEdgeCoeffs = (*m_edges[i])[0]->GetNcoeffs();
+                    nEdgeCoeffs = m_edges[i]->GetXmap()->GetNcoeffs();
 
-                    for(j = 0 ; j < m_coordim; j++)
+                    for(j = 0; j < m_coordim; j++)
                     {
                         for(k = 0; k < nEdgeCoeffs; k++)
                         {
-                            (m_xmap[j]->UpdateCoeffs())[mapArray[k]]
-                                = signArray[k]*((*m_edges[i])[j]->GetCoeffs())[k];
+                            m_coeffs[j][mapArray[k]]
+                                = signArray[k]*(m_edges[i]->GetCoeffs(j))[k];
                         }
                     }
-                }
-
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
-                                        m_xmap[i]->UpdatePhys());
                 }
 
                 m_state = ePtsFilled;
             }
         }
-
         
         /**
          *
@@ -687,7 +658,7 @@ namespace Nektar
             {
                 QuadGeom::v_FillGeom();                       
                 
-#if 1                
+#if 0                
                 
                 // Determine nearest point of coords  to values in m_xmap
                 Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
@@ -711,7 +682,7 @@ namespace Nektar
 
                 // Perform newton iteration to find local coordinates 
                 NewtonIterationForLocCoord(coords,Lcoords);
-#else
+//#else
                 
                 Array<OneD, NekDouble> ptsx;
                 Array<OneD, NekDouble> ptsy;  

@@ -391,10 +391,12 @@ namespace Nektar
         }
 
 
-        NekDouble ExpList3DHomogeneous1D::v_L2(const Array<OneD, const NekDouble> &soln)
+        NekDouble ExpList3DHomogeneous1D::v_L2(
+            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &soln)
         {
             int cnt = 0;
-            NekDouble errL2,err = 0.0;
+            NekDouble errL2, err = 0.0;
             Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
             Array<OneD, NekDouble> local_w(m_planes.num_elements());
             
@@ -405,7 +407,7 @@ namespace Nektar
             
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                errL2 = m_planes[n]->L2(soln + cnt);
+                errL2 = m_planes[n]->L2(inarray + cnt, soln + cnt);
                 cnt  += m_planes[n]->GetTotPoints();
                 err  += errL2*errL2*local_w[n]*m_lhom*0.5;
             }
@@ -415,28 +417,6 @@ namespace Nektar
             return sqrt(err);
         }
 	
-        NekDouble ExpList3DHomogeneous1D::v_L2(void)
-        {
-            NekDouble errL2,err = 0;
-            Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
-            Array<OneD, NekDouble> local_w(m_planes.num_elements());
-            
-            for(int n = 0; n < m_planes.num_elements(); n++)
-            {
-                local_w[n] = w[m_transposition->GetPlaneID(n)];
-            }
-
-            for(int n = 0; n < m_planes.num_elements(); ++n)
-            {
-                errL2 = m_planes[n]->L2();
-                err += errL2*errL2*local_w[n]*m_lhom*0.5;
-            }
-            
-            m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
-                        
-            return sqrt(err);
-        }
-		
         Array<OneD, const NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
         {
             Array<OneD, NekDouble> energy(m_planes.num_elements()/2);
@@ -461,15 +441,16 @@ namespace Nektar
                 for(int i = 0; i < m_planes[n]->GetExpSize(); ++i)
                 {
                     StdRegions::StdExpansionSharedPtr exp = m_planes[n]->GetExp(i);
+                    Array<OneD, NekDouble> phys(exp->GetTotPoints());
                     exp->BwdTrans(m_planes[n]->GetCoeffs()+m_planes[n]->GetCoeff_Offset(i),
-                                  exp->UpdatePhys());
-                    err = exp->L2();
+                                  phys);
+                    err = exp->L2(phys);
                     energy[n/2] += err*err;
                     
                     exp = m_planes[n+1]->GetExp(i);
                     exp->BwdTrans(m_planes[n+1]->GetCoeffs()+m_planes[n+1]->GetCoeff_Offset(i),
-                                  exp->UpdatePhys());
-                    err = exp->L2();
+                                  phys);
+                    err = exp->L2(phys);
                     energy[n/2] += err*err;
                 }
                 

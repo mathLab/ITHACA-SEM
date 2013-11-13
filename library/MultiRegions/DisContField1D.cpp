@@ -1236,16 +1236,15 @@ namespace Nektar
         {
             int i;
 
-            NekDouble x0;
-            NekDouble x1;
-            NekDouble x2;
+            Array<OneD, NekDouble> x(1), y(1), z(1);
 			
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->GetUserDefined() ==
                     SpatialDomains::eTimeDependent)
                 {
-                    m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
+                    m_bndCondExpansions[i]->GetCoords(x, y, z);
+                    NekDouble x0 = x[0], x1 = y[0], x2 = z[0];
                     
                     if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
                         NekConstants::kNekUnsetDouble)

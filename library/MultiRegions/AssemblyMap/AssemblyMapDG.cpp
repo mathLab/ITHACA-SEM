@@ -1087,7 +1087,7 @@ namespace Nektar
                         LocalRegions::PointExpSharedPtr locPointExp = 
                             boost::dynamic_pointer_cast<
                                 LocalRegions::PointExp>(m_elmtToTrace[eid][j]);
-                        id = locPointExp->GetGeom()->GetVid();
+                        id = locPointExp->GetGeom()->GetGlobalID();
                         vGlobalId = m_localToGlobalBndMap[cnt+j];
                         m_globalToUniversalBndMap[vGlobalId]
                             = id * maxDof + j + 1;

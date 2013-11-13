@@ -263,7 +263,7 @@ namespace Nektar
         {
             if ((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
             {
-                Vmath::Vcopy(m_ncoeffs, inarray, 1, m_coeffs, 1);
+                Vmath::Vcopy(m_ncoeffs, inarray, 1, outarray, 1);
             }
             else
             {
@@ -593,101 +593,11 @@ namespace Nektar
 
 
         void QuadExp::v_GetCoords(
-            Array<OneD,NekDouble> &coords_0,
-            Array<OneD,NekDouble> &coords_1,
-            Array<OneD,NekDouble> &coords_2)
+            Array<OneD, NekDouble> &coords_0,
+            Array<OneD, NekDouble> &coords_1,
+            Array<OneD, NekDouble> &coords_2)
         {
-            LibUtilities::BasisSharedPtr CBasis0;
-            LibUtilities::BasisSharedPtr CBasis1;
-            Array<OneD,NekDouble>  x;
-
-            ASSERTL0(m_geom, "m_geom not defined");
-
-            // get physical points defined in Geom
-            m_geom->FillGeom();
-
-            switch (m_geom->GetCoordim())
-            {
-                case 3:
-                    ASSERTL0(coords_2.num_elements() != 0,
-                             "output coords_2 is not defined");
-
-                    CBasis0 = m_geom->GetBasis(2,0);
-                    CBasis1 = m_geom->GetBasis(2,1);
-
-                    if ((m_base[0]->GetBasisKey().
-                         SamePoints(CBasis0->GetBasisKey()))&&
-                        (m_base[1]->GetBasisKey().
-                         SamePoints(CBasis1->GetBasisKey())))
-                    {
-                        x = m_geom->UpdatePhys(2);
-                        Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                    m_base[1]->GetNumPoints(),
-                                    x,1,coords_2,1);
-                    }
-                    else // Interpolate to Expansion point distribution
-                    {
-                        LibUtilities::Interp2D(
-                            CBasis0->GetPointsKey(), CBasis1->GetPointsKey(),
-                            &(m_geom->UpdatePhys(2))[0],
-                            m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(),
-                            &coords_2[0]);
-                    }
-                case 2:
-                    ASSERTL0(coords_1.num_elements(),
-                             "output coords_1 is not defined");
-
-                    CBasis0 = m_geom->GetBasis(1,0);
-                    CBasis1 = m_geom->GetBasis(1,1);
-
-                    if ((m_base[0]->GetBasisKey().
-                         SamePoints(CBasis0->GetBasisKey()))&&
-                        (m_base[1]->GetBasisKey().
-                         SamePoints(CBasis1->GetBasisKey())))
-                    {
-                        x = m_geom->UpdatePhys(1);
-                        Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                    m_base[1]->GetNumPoints(),
-                                    x,1,coords_1,1);
-                    }
-                    else // Interpolate to Expansion point distribution
-                    {
-                        LibUtilities::Interp2D(
-                            CBasis0->GetPointsKey(), CBasis1->GetPointsKey(),
-                            &(m_geom->UpdatePhys(1))[0],
-                            m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(),
-                            &coords_1[0]);
-                    }
-                case 1:
-                    ASSERTL0(coords_0.num_elements(),
-                             "output coords_0 is not defined");
-
-                    CBasis0 = m_geom->GetBasis(0,0);
-                    CBasis1 = m_geom->GetBasis(0,1);
-
-                    if ((m_base[0]->GetBasisKey().
-                         SamePoints(CBasis0->GetBasisKey()))&&
-                        (m_base[1]->GetBasisKey().
-                         SamePoints(CBasis1->GetBasisKey())))
-                    {
-                        x = m_geom->UpdatePhys(0);
-                        Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                    m_base[1]->GetNumPoints(),
-                                    x,1,coords_0,1);
-                    }
-                    else // Interpolate to Expansion point distribution
-                    {
-                        LibUtilities::Interp2D(
-                            CBasis0->GetPointsKey(), CBasis1->GetPointsKey(),
-                            &(m_geom->UpdatePhys(0))[0],
-                            m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(),
-                            &coords_0[0]);
-                    }
-                    break;
-                default:
-                    ASSERTL0(false,"Number of dimensions are greater than 2");
-                    break;
-            }
+            Expansion::v_GetCoords(coords_0, coords_1, coords_2);
         }
 
 
@@ -723,20 +633,10 @@ namespace Nektar
         }
 
         NekDouble QuadExp::v_PhysEvaluate(
-            const Array<OneD,
-            const NekDouble> &coord)
+            const Array<OneD, const NekDouble> &coord,
+            const Array<OneD, const NekDouble> &physvals)
         {
-            return PhysEvaluate(coord,m_phys);
-        }
-
-
-        NekDouble QuadExp::v_PhysEvaluate(
-                const Array<OneD,
-                const NekDouble> &coord,
-                const Array<OneD,
-                const NekDouble> & physvals)
-        {
-            Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
+            Array<OneD,NekDouble> Lcoord = Array<OneD, NekDouble>(2);
 
             ASSERTL0(m_geom,"m_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
@@ -1493,234 +1393,6 @@ namespace Nektar
             }
         }
 
-
-        void QuadExp::v_WriteToFile(
-            std::ofstream &outfile,
-            OutputFormat format,
-            const bool dumpVar,
-            std::string var)
-        {
-            ASSERTL0(m_geom,"m_geom not defined");
-
-            SpatialDomains::Geometry2DSharedPtr geom =
-                    boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(m_geom);
-
-            if(format==eTecplot)
-            {
-                int i,j;
-                int nquad0 = m_base[0]->GetNumPoints();
-                int nquad1 = m_base[1]->GetNumPoints();
-                Array<OneD,NekDouble> coords[3];
-
-                int     coordim  = geom->GetCoordim();
-
-                coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-                coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-                coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-
-                GetCoords(coords[0],coords[1],coords[2]);
-
-                if (dumpVar)
-                {
-                    outfile << "Variables = x";
-
-                    if (coordim == 2)
-                    {
-                        outfile << ", y";
-                    }
-                    else if (coordim == 3)
-                    {
-                        outfile << ", y, z";
-                    }
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-
-                outfile << "Zone, I=" << nquad0 << ", J=" <<
-                    nquad1 <<", F=Point" << std::endl;
-
-                for (i = 0; i < nquad0*nquad1; ++i)
-                {
-                    for (j = 0; j < coordim; ++j)
-                    {
-                        outfile << coords[j][i] << " ";
-                    }
-                    outfile << m_phys[i] << std::endl;
-                }
-            }
-            else if (format==eGmsh)
-            {
-                if (dumpVar)
-                {
-                    outfile<<"View.MaxRecursionLevel = 4;"<<endl;
-                    outfile<<"View.TargetError = 0.00;"<<endl;
-                    outfile<<"View.AdaptVisualizationGrid = 1;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
-
-                outfile<<"SQ("<<endl;
-                // write the coordinates of the vertices of the quadrilateral
-                unsigned int vCoordDim = geom->GetCoordim();
-                unsigned int nVertices = GetNverts();
-                Array<OneD, NekDouble> coordVert(vCoordDim);
-                for (unsigned int i = 0; i < nVertices; ++i)
-                {
-                    geom->GetVertex(i)->GetCoords(coordVert);
-                    for (unsigned int j = 0; j < vCoordDim; ++j)
-                    {
-                        outfile << coordVert[j];
-                        outfile << (j < 2 ? ", " : "");
-                    }
-                    for (unsigned int j = vCoordDim; j < 3; ++j)
-                    {
-                        outfile << " 0";
-                        outfile << (j < 2 ? ", " : "");
-                    }
-                    outfile << (i < nVertices - 1 ? "," : "") << endl;
-                }
-                outfile<<")"<<endl;
-
-                // calculate the coefficients (monomial format)
-                int i,j;
-
-                int nModes0 = m_base[0]->GetNumModes();
-                int nModes1 = m_base[1]->GetNumModes();
-
-                const LibUtilities::PointsKey Pkey1Gmsh(nModes0,
-                                           LibUtilities::eGaussLobattoLegendre);
-                const LibUtilities::PointsKey Pkey2Gmsh(nModes1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),
-                                                        nModes0,Pkey1Gmsh);
-                const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),
-                                                        nModes1,Pkey2Gmsh);
-
-                StdRegions::StdQuadExpSharedPtr EGmsh;
-                EGmsh = MemoryManager<StdRegions::StdQuadExp>::
-                                         AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh);
-
-                int nMonomialPolynomials = EGmsh->GetNcoeffs();
-
-                Array<OneD,NekDouble> xi1(nMonomialPolynomials);
-                Array<OneD,NekDouble> xi2(nMonomialPolynomials);
-
-                Array<OneD,NekDouble> x(nMonomialPolynomials);
-                Array<OneD,NekDouble> y(nMonomialPolynomials);
-
-                EGmsh->GetCoords(xi1,xi2);
-
-                for (i=0;i<nMonomialPolynomials;i++)
-                {
-                    x[i] = xi1[i];//0.5*(1.0+xi1[i]);
-                    y[i] = xi2[i];//0.5*(1.0+xi2[i]);
-                }
-
-                int cnt  = 0;
-                Array<TwoD, int> exponentMap(nMonomialPolynomials, 3, 0);
-                for (i = 0; i < nModes1; i++)
-                {
-                    for (j = 0; j < nModes0; j++)
-                    {
-                        exponentMap[cnt][0] = j;
-                        exponentMap[cnt++][1] = i;
-                    }
-                }
-
-                NekMatrix<NekDouble> vdm(nMonomialPolynomials,
-                                                          nMonomialPolynomials);
-                for (i = 0 ; i < nMonomialPolynomials; i++)
-                {
-                    for (j = 0 ; j < nMonomialPolynomials; j++)
-                    {
-                        vdm(i,j) = pow(x[i],exponentMap[j][0])*
-                                                    pow(y[i],exponentMap[j][1]);
-                    }
-                }
-
-                vdm.Invert();
-
-                Array<OneD,NekDouble> rhs(nMonomialPolynomials);
-                EGmsh->BwdTrans(m_coeffs,rhs);
-
-                NekVector<NekDouble> in(nMonomialPolynomials,rhs,eWrapper);
-                NekVector<NekDouble> out(nMonomialPolynomials);
-                out = vdm*in;
-
-                //write the coefficients
-                outfile<<"{";
-                for (i = 0; i < nMonomialPolynomials; i++)
-                {
-                    outfile<<out[i];
-                    if(i < nMonomialPolynomials - 1)
-                    {
-                        outfile<<", ";
-                    }
-                }
-                outfile<<"};"<<endl;
-
-                if (dumpVar)
-                {
-                    outfile<<"INTERPOLATION_SCHEME"<<endl;
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nMonomialPolynomials; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < nMonomialPolynomials; j++)
-                        {
-                            if(i==j)
-                            {
-                                outfile<<"1.00";
-                            }
-                            else
-                            {
-                                outfile<<"0.00";
-                            }
-                            if(j < nMonomialPolynomials - 1)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nMonomialPolynomials - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"}"<<endl;
-                        }
-                    }
-
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nMonomialPolynomials; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < 3; j++)
-                        {
-                            outfile<<exponentMap[i][j];
-                            if(j < 2)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nMonomialPolynomials - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"};"<<endl;
-                        }
-                    }
-                    outfile<<"};"<<endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false,
-                    "Output routine not implemented for requested type of output");
-            }
-        }
-
-
         const SpatialDomains::GeomFactorsSharedPtr& QuadExp::v_GetMetricInfo() const
         {
             return m_metricinfo;
@@ -1823,7 +1495,6 @@ namespace Nektar
         {
             return GetNumPoints(dir);
         }
-
 
         DNekMatSharedPtr QuadExp::v_GenMatrix(
             const StdRegions::StdMatrixKey &mkey)

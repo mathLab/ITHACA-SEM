@@ -76,6 +76,7 @@ MAX_INITIALIZER_LINES  = 30
 SHOW_USED_FILES        = NO
 SHOW_DIRECTORIES       = YES
 FILE_VERSION_FILTER    = 
+CITE_BIB_FILES         = doxygen.bib
 #---------------------------------------------------------------------------
 # configuration options related to warning and progress messages
 #---------------------------------------------------------------------------
@@ -146,7 +147,7 @@ FILTER_SOURCE_FILES    = NO
 # configuration options related to source browsing
 #---------------------------------------------------------------------------
 SOURCE_BROWSER         = YES
-INLINE_SOURCES         = NO
+INLINE_SOURCES         = YES
 STRIP_CODE_COMMENTS    = NO
 REFERENCED_BY_RELATION = YES
 REFERENCES_RELATION    = YES

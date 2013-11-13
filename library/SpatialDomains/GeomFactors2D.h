@@ -38,17 +38,19 @@
 
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <StdRegions/StdExpansion2D.h>  // for StdExpansion2DSharedPtr
+#include <StdRegions/StdExpansion2D.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        /// Geometric factors relating to the coordinate mapping
+        /// \f$\chi:\Omega_{st}\rightarrow \Omega_e \f$ for two-dimensional
+        /// elements
         class GeomFactors2D : public GeomFactors
         {
         public:
-            /// One dimensional geometric factors based on one-, two- or three-
-            /// dimensional coordinate description.
+            /// Constructor.
             SPATIAL_DOMAINS_EXPORT GeomFactors2D(
                     const GeomType gtype,
                     const int coordim,
@@ -64,9 +66,10 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors2D();
 
         private:
-            /// Set up 1D Jacobian.
+            /// Set up 2D geometric factors
             void SetUpJacGmat2D();
 
+            /// Tests if the element is valid and not self-intersecting.
             void CheckIfValid();
             
             /// Set up surface normals

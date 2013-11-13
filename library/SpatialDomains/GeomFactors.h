@@ -93,12 +93,15 @@ namespace Nektar
             /// Return the Laplacian coefficients \f$g_{ij}\f$.
             inline const Array<TwoD, const NekDouble> &GetGmat() const;
 
-            /// Return the derivative of the mapping with respect to the reference coordinates, \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
+            /// Return the derivative of the mapping with respect to the
+            /// reference coordinates,
+            /// \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
             inline const Array<
                 OneD, const Array<OneD, Array<OneD, NekDouble> > > 
                     &GetDeriv() const;
 
-            /// Return the derivative of the reference coordinates with respect to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
+            /// Return the derivative of the reference coordinates with respect
+            /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
             inline const Array<TwoD, const NekDouble> &GetDerivFactors() const;
 
             /// Determine if element is valid and not self-intersecting.
@@ -107,7 +110,7 @@ namespace Nektar
             /// Return the number of dimensions of the coordinate system.
             inline int GetCoordim() const;
 
-            /// Computes the edge tangents from 1D element
+            /// Computes the edge tangents with respect to a 2D element
             inline void ComputeEdgeTangents(
                 const GeometrySharedPtr       &geom2D,
                 const int                      edge,
@@ -128,41 +131,16 @@ namespace Nektar
             inline void ResetJac(int nq,
                         const Array<OneD, const NekDouble> &ndata);
 
-            /// Normalises a set of vectors.
-            SPATIAL_DOMAINS_EXPORT static void VectorNormalise(
-                        Array<OneD, Array<OneD, NekDouble> > &array);
-
-            /// Computes the cross-product between sets of vectors.
-            SPATIAL_DOMAINS_EXPORT static void VectorCrossProd(
-                        const Array<OneD, const Array<OneD, NekDouble> > &in1,
-                        const Array<OneD, const Array<OneD, NekDouble> > &in2,
-                              Array<OneD, Array<OneD, NekDouble> > &out);
-
             /// Returns the LibUtilities::PointsKey object associated with a
             /// co-ordinate direction.
-            SPATIAL_DOMAINS_EXPORT const LibUtilities::PointsKey 
-                &GetPointsKey(unsigned int i) const
-            {
-                ASSERTL1(i < m_pointsKey.num_elements(), "PointsKey out of range.");
-                return m_pointsKey[i];
-            }
+            inline const LibUtilities::PointsKey
+                &GetPointsKey(unsigned int i) const;
 
             /// Computes a hash of this GeomFactors element, based on the
             /// type, expansion/co-ordinate dimensions, metric, Jacobian and
             /// the geometric factors themselves.
-            size_t GetHash() const
-            {
-                size_t hash = 0;
-                boost::hash_combine(hash, (int)m_type);
-                boost::hash_combine(hash, m_expDim);
-                boost::hash_combine(hash, m_coordDim);
-                boost::hash_range(hash, m_jac.begin(), m_jac.end());
-                for (int i = 0; i < m_gmat.GetRows(); ++i)
-                {
-                    boost::hash_range(hash, m_gmat[i].begin(), m_gmat[i].end());
-                }
-                return hash;
-            }
+            inline size_t GetHash() const;
+
 
         protected:
             /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
@@ -229,6 +207,7 @@ namespace Nektar
             /// Set up surface normals
             virtual void v_ComputeSurfaceNormals();
         };
+
 
         /// A hash functor for geometric factors. Utilises
         /// GeomFactors::GetHash.
@@ -299,11 +278,12 @@ namespace Nektar
         inline const Array<OneD, const Array<OneD, NekDouble> >
             &GeomFactors::GetEdgeTangent() const
         {
-            ASSERTL0(m_tangent.num_elements()>0," tangent vectors are not computed for this line");	
+            ASSERTL0(m_tangent.num_elements()>0,
+                     "Tangent vectors are not computed for this line");
             return m_tangent;
         }
 	
-        /// Set the G-matrix data.
+        /// Set the Laplacian coefficients for this element.
         inline void GeomFactors::ResetGmat(
                         const Array<OneD, const NekDouble> &ndata,
                         const int nq, const int expdim,
@@ -313,12 +293,39 @@ namespace Nektar
                                            ndata.data());
         }
 
-        /// Set the Jacobian data.
+        /// Set the Jacobian values for this element.
         inline void GeomFactors::ResetJac(int nq,
                         const Array<OneD, const NekDouble> &ndata)
         {
             m_jac = Array<OneD, NekDouble>(nq, ndata.data());
         }
+
+        /// Returns the LibUtilities::PointsKey object associated with a
+        /// co-ordinate direction.
+        inline const LibUtilities::PointsKey
+            &GeomFactors::GetPointsKey(unsigned int i) const
+        {
+            ASSERTL1(i < m_pointsKey.num_elements(), "PointsKey out of range.");
+            return m_pointsKey[i];
+        }
+
+        /// Computes a hash of this GeomFactors element, based on the
+        /// type, expansion/co-ordinate dimensions, metric, Jacobian and
+        /// the geometric factors themselves.
+        inline size_t GeomFactors::GetHash() const
+        {
+            size_t hash = 0;
+            boost::hash_combine(hash, (int)m_type);
+            boost::hash_combine(hash, m_expDim);
+            boost::hash_combine(hash, m_coordDim);
+            boost::hash_range(hash, m_jac.begin(), m_jac.end());
+            for (int i = 0; i < m_gmat.GetRows(); ++i)
+            {
+                boost::hash_range(hash, m_gmat[i].begin(), m_gmat[i].end());
+            }
+            return hash;
+        }
+
     } //end of namespace
 } //end of namespace
 

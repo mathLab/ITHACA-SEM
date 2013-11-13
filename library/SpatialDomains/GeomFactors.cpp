@@ -48,6 +48,36 @@ namespace Nektar
          * Dimension-specific versions of this class (GeomFactors1D,
          * GeomFactors2D and GeomFactors3D) provide the majority of
          * implementation.
+         *
+         * Initially, these algorithms are provided with a mapping from the
+         * reference region element to the physical element. Practically, this
+         * is represented using a corresponding reference region element for
+         * each coordinate component. Note that for straight-sided elements,
+         * these elements will be of linear order. Curved elements are
+         * represented using higher-order coordinate mappings. This geometric
+         * order is in contrast to the order of the spectral/hp expansion order
+         * on the element.
+         *
+         * For application of the chain rule during differentiation we require
+         * the partial derivatives \f[\frac{\partial \xi_i}{\partial \chi_j}\f]
+         * evaluated at the physical points of the expansion basis. We also
+         * construct the inverse metric tensor \f$g^{ij}\f$ which, in the case
+         * of a domain embedded in a higher-dimensional space, supports the
+         * conversion of covariant quantities to contravariant quantities.
+         * When the expansion dimension is equal to the coordinate dimension the
+         * Jacobian of the mapping \f$\chi_j\f$ is a square matrix and
+         * consequently the required terms are the entries of the inverse of the
+         * Jacobian. However, in general this is not the case, so we therefore
+         * implement the construction of these terms following the derivation
+         * in Cantwell, et. al. \cite CaYaKiPeSh13. Given the coordinate maps
+         * \f$\chi_i\f$, this comprises of five steps
+         * -# Compute the terms of the Jacobian \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
+         * -# Compute the metric tensor \f$g_{ij}=\mathbf{t}_{(i)}\cdot\mathbf{t}_{(j)}\f$.
+         * -# Compute the square of the Jacobian determinant \f$g=|\mathbf{g}|\f$.
+         * -# Compute the inverse metric tensor \f$g^{ij}\f$.
+         * -# Compute the terms \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
+         *
+         * @see GeomFactors1D, GeomFactors2D, GeomFactors3D
          */
 
         /**
@@ -94,85 +124,6 @@ namespace Nektar
         {
         }
 
-
-        /**
-         * @param   array       Array of vector components, \a array[i][j] with
-         *                      @f$1\leq i\leq m_coordDim@f$ and
-         *                      @f$0 \leq j \leq n@f$ with @f$n@f$ the number
-         *                      of vectors.
-         */
-        void GeomFactors::VectorNormalise(
-            Array<OneD, Array<OneD, NekDouble> > &array)
-        {
-            int ndim = array.num_elements();
-            ASSERTL0(ndim > 0, "Number of components must be > 0.");
-            for (int i = 1; i < ndim; ++i)
-            {
-                ASSERTL0(array[i].num_elements() == array[0].num_elements(),
-                         "Array size mismatch in coordinates.");
-            }
-
-            int nq = array[0].num_elements();
-            NekDouble Tol = 0.0000000001;
-            Array<OneD, NekDouble> norm (nq, 0.0);
-
-            // Compute the norm of each vector.
-            for (int i = 0; i < ndim; ++i)
-            {
-                Vmath::Vvtvp(nq, array[i],  1,
-                                 array[i],  1,
-                                 norm,      1,
-                                 norm,      1);
-            }
-            Vmath::Vsqrt(nq, norm, 1, norm, 1);
-
-            // Set all norms < tol to 1.0
-            for (int i = 0; i < nq; ++i)
-            {
-                if(abs(norm[i]) < Tol)
-                {
-                    norm[i] = 1.0;
-                }
-            }
-
-            // Normalise the vectors by the norm
-            for (int i = 0; i < ndim; ++i)
-            {
-                Vmath::Vdiv(nq, array[i], 1, norm, 1, array[i], 1);
-            }
-        }
-
-
-        /**
-         * @param   v1          First input vector.
-         * @param   v2          Second input vector.
-         * @param   v3          Output vector computed to be orthogonal to
-         *                      both \a v1 and \a v2.
-         */
-        void GeomFactors::VectorCrossProd(
-            const Array<OneD, const Array<OneD, NekDouble> > &v1,
-            const Array<OneD, const Array<OneD, NekDouble> > &v2,
-                  Array<OneD,       Array<OneD, NekDouble> > &v3)
-        {
-            ASSERTL0(v1.num_elements() == 3,
-                     "Input 1 has dimension not equal to 3.");
-            ASSERTL0(v2.num_elements() == 3,
-                     "Input 2 has dimension not equal to 3.");
-            ASSERTL0(v3.num_elements() == 3,
-                     "Output vector has dimension not equal to 3.");
-
-            int nq = v1[0].num_elements();
-            Array<OneD, NekDouble> temp(nq);
-
-            Vmath::Vmul (nq, v1[2], 1, v2[1], 1, temp, 1);
-            Vmath::Vvtvm(nq, v1[1], 1, v2[2], 1, temp, 1, v3[0], 1);
-
-            Vmath::Vmul (nq, v1[0], 1, v2[2], 1, temp, 1);
-            Vmath::Vvtvm(nq, v1[2], 1, v2[0], 1, temp, 1, v3[1], 1);
-
-            Vmath::Vmul (nq, v1[1], 1, v2[0], 1, temp, 1);
-            Vmath::Vvtvm(nq, v1[0], 1, v2[1], 1, temp, 1, v3[2], 1);
-        }
 
         /**
          * Placeholder function.

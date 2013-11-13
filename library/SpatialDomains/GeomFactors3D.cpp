@@ -145,12 +145,13 @@ namespace Nektar
                 }
             }
 
-            // Based upon these derivatives, calculate:
-            // 1. The (determinant of the) jacobian and the differentation      metrics
+            // Calculate the Jacobian and metric terms
             SetUpJacGmat3D(m_deriv[0],m_deriv[1],m_deriv[2]);
 
+            // Test if the element is valid.
             CheckIfValid();
         }
+
 
         /**
          *
@@ -160,23 +161,30 @@ namespace Nektar
                         const Array<OneD, Array<OneD, NekDouble> > d2,
                         const Array<OneD, Array<OneD, NekDouble> > d3)
         {
-            ASSERTL1(d1.num_elements()==m_coordDim,"The dimension of array d1 does not"
-                     "match the coordinate dimension");
-            ASSERTL1(d2.num_elements()==m_coordDim,"The dimension of array d2 does not"
-                     "match the coordinate dimension");
-            ASSERTL1(d3.num_elements()==m_coordDim,"The dimension of array d3 does not"
-                     "match the coordinate dimension");
+            ASSERTL1(d1.num_elements()==m_coordDim,
+                     "The dimension of array d1 does not match the coordinate "
+                     "dimension");
+            ASSERTL1(d2.num_elements()==m_coordDim,
+                     "The dimension of array d2 does not match the coordinate "
+                     "dimension");
+            ASSERTL1(d3.num_elements()==m_coordDim,
+                     "The dimension of array d3 does not match the coordinate "
+                     "dimension");
 
+            // Compute total number of points in target basis
             int nqtot = m_pointsKey[0].GetNumPoints() *
                         m_pointsKey[1].GetNumPoints() *
                         m_pointsKey[2].GetNumPoints();
 
-            ASSERTL1(d1[0].num_elements() == nqtot,"Number of quadrature points do not match");
-            ASSERTL1(d2[0].num_elements() == nqtot,"Number of quadrature points do not match");
-            ASSERTL1(d3[0].num_elements() == nqtot,"Number of quadrature points do not match");
+            ASSERTL1(d1[0].num_elements() == nqtot,
+                     "Number of quadrature points do not match");
+            ASSERTL1(d2[0].num_elements() == nqtot,
+                     "Number of quadrature points do not match");
+            ASSERTL1(d3[0].num_elements() == nqtot,
+                     "Number of quadrature points do not match");
 
-            unsigned int pts = 1;
-            unsigned int i, j, k;
+            int pts = 1;
+            int i, j, k, l;
 
             // Check each derivative combination has the correct sized storage
             // for all quadrature points.
@@ -189,33 +197,35 @@ namespace Nektar
                 }
             }
 
+            // Only compute single values if the element is regular.
             pts = (m_type == eRegular || m_type == eMovingRegular) ? 1 : nqtot;
 
-            // Jacobian is constant across the element.
-            m_jac     = Array<OneD, NekDouble>(pts,0.0);
+            // Allocate storage for Jacobian, metric terms and derivative
+            // factors.
+            m_jac  = Array<OneD, NekDouble>(pts,                      0.0);
+            m_gmat = Array<TwoD, NekDouble>(m_expDim*m_expDim,   pts, 0.0);
+            m_derivFactors =
+                     Array<TwoD, NekDouble>(m_expDim*m_coordDim, pts, 0.0);
 
-            // Number of entries corresponds to twice the coordinate
-            // dimension. Entries are constant across element so second
-            // dimension is 1.
-            m_gmat    = Array<TwoD, NekDouble>(m_expDim*m_expDim, pts, 0.0);
-
-            m_derivFactors = Array<TwoD, NekDouble>(m_expDim*m_coordDim, pts, 0.0);
-
+            // Allocate temporary array for storing the g_{ij} terms
             Array<TwoD, NekDouble> tmp(m_expDim*m_expDim, pts, 0.0);
 
-            // Compute g_{ij} as t_i \cdot t_j
-            for (i = 0; i < m_expDim; ++i)
+            // Compute g_{ij} as t_i \cdot t_j and store in tmp
+            for (i = 0, l = 0; i < m_expDim; ++i)
             {
-                for (j = 0; j < m_expDim; ++j)
+                for (j = 0; j < m_expDim; ++j, ++l)
                 {
                     for (k = 0; k < m_coordDim; ++k)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_deriv[j][k][0], 1, &tmp[m_expDim*i+j][0], 1, &tmp[m_expDim*i+j][0], 1);
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1,
+                                          &m_deriv[j][k][0], 1,
+                                          &tmp[l][0],        1,
+                                          &tmp[l][0],        1);
                     }
                 }
             }
 
-            // Compute g^{ij} by computing Cofactors(A)^T
+            // Compute g^{ij} by computing Cofactors(g_ij)^T
             for (i = 0; i < m_expDim; ++i)
             {
                 for (j = 0; j < m_expDim; ++j)
@@ -225,29 +235,39 @@ namespace Nektar
                     int c = ((i+2)%m_expDim)*m_expDim + ((j+1)%m_expDim);
                     int d = ((i+2)%m_expDim)*m_expDim + ((j+2)%m_expDim);
                     int e = j*m_expDim + i;
-                    Vmath::Vvtvvtm(pts, &tmp[a][0], 1, &tmp[d][0], 1, &tmp[b][0], 1, &tmp[c][0], 1, &m_gmat[e][0], 1);
+                    Vmath::Vvtvvtm(pts, &tmp[a][0], 1, &tmp[d][0], 1,
+                                        &tmp[b][0], 1, &tmp[c][0], 1,
+                                        &m_gmat[e][0], 1);
                 }
             }
 
-            // Compute g (Jacobian squared)
-            Vmath::Vvtvvtp(pts, &tmp[0][0], 1, &m_gmat[0][0], 1, &tmp[1][0], 1, &m_gmat[m_expDim][0], 1, &m_jac[0], 1);
-            Vmath::Vvtvp  (pts, &tmp[2][0], 1, &m_gmat[2*m_expDim][0], 1, &m_jac[0], 1, &m_jac[0], 1);
+            // Compute g = det(g_{ij}) (= Jacobian squared) and store
+            // temporarily in m_jac.
+            Vmath::Vvtvvtp(pts, &tmp[0][0], 1, &m_gmat[0][0],          1,
+                                &tmp[1][0], 1, &m_gmat[m_expDim][0],   1,
+                                &m_jac[0],  1);
+            Vmath::Vvtvp  (pts, &tmp[2][0], 1, &m_gmat[2*m_expDim][0], 1,
+                                &m_jac[0],  1, &m_jac[0],              1);
 
             for (i = 0; i < m_expDim*m_expDim; ++i)
             {
                 Vmath::Vdiv(pts, &m_gmat[i][0], 1, &m_jac[0], 1, &m_gmat[i][0], 1);
             }
 
-            // Sqrt jacobian
+            // Compute the Jacobian = sqrt(g)
             Vmath::Vsqrt(pts, &m_jac[0], 1, &m_jac[0], 1);
 
-            for (i = 0; i < m_expDim; ++i)
+            // Compute the derivative factors
+            for (k = 0, l = 0; k < m_coordDim; ++k)
             {
-                for (j = 0; j < m_expDim; ++j)
+                for (j = 0; j < m_expDim; ++j, ++l)
                 {
-                    for (k = 0; k < m_coordDim; ++k)
+                    for (i = 0; i < m_expDim; ++i)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_gmat[m_expDim*i+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1);
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0],        1,
+                                          &m_gmat[m_expDim*i+j][0], 1,
+                                          &m_derivFactors[l][0],    1,
+                                          &m_derivFactors[l][0],    1);
                     }
                 }
             }

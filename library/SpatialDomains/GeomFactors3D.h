@@ -44,14 +44,13 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        // Forward declarations
-
-        /// Geometric factors for a 3D expansions.
+        /// Geometric factors relating to the coordinate mapping
+        /// \f$\chi:\Omega_{st}\rightarrow \Omega_e \f$ for three-dimensional
+        /// elements
         class GeomFactors3D : public GeomFactors
         {
         public:
-            /// One dimensional geometric factors based on one-, two- or three-
-            /// dimensional coordinate description.
+            /// Constructor.
             SPATIAL_DOMAINS_EXPORT GeomFactors3D(
                 const GeomType gtype,
                 const int coordim,
@@ -61,12 +60,13 @@ namespace Nektar
                     &tbasis);
             
         private:
-            // Set up 3D Jacobian
+            // Set up 3D geometric factors
             void SetUpJacGmat3D(
                 const Array<OneD, Array<OneD, NekDouble> > d1,
                 const Array<OneD, Array<OneD, NekDouble> > d2,
                 const Array<OneD, Array<OneD, NekDouble> > d3);
 
+            /// Tests if the element is valid and not self-intersecting.
             void CheckIfValid();
         };
 

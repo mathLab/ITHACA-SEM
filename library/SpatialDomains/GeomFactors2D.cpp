@@ -45,78 +45,25 @@ namespace Nektar
          *
          * Computes and stores geometric factors and pointwise geometry
          * information for 2D expansions.
+         *
+         * In the case that a three-dimensional coordinate system is
+         * indicated, the Jacobian is not square so cannot be directly inverted.
+         *
+         *
+         * @see GeomFactors
          */
 
         /**
-         * The argument 'tbasis' contains the information about the quadrature
-         * points on which the weighted metric terms should be specified.
-         * The geometric factors are evaluated by considering the mapping to a
-         * coordinate system based on the local tangent vectors (which are the
-         * local derivatives of the global coordinates) and the normal
-         * \f$ \bf g \f$ to these two tangent vectors. We therefore use the
-         * 3 x 3 relationships but assume that
-         * \f$ \partial x_1/\partial \xi_3 = { g_1},\,
-         * \partial x_2/\partial \xi_3 = { g_2},\, \partial x_3/\partial
-         * \xi_3 = { g_3} \f$ i.e.
+         * Initialises the class and populates the geometric factors. The
+         * physical coordinates of the mapping are computed, along with the
+         * derivative of the mapping. This is interpolated onto the target
+         * expansion basis and passed to SetUpJacGmat2D for the remaining terms
+         * to be computed.
          *
-         * \f$ {\bf g }= \left [ \begin{array}{c} g_1 \\ g_2 \\ g_3 \end{array}
-         * \right ] = \frac{\partial {\bf x}}{\partial \xi_1} \times
-         * \frac{\partial {\bf x}}{\partial \xi_2} =   \left [ \begin{array}{c}
-         * \frac{\partial x_2}{\partial\xi_1}\frac{\partial x_3}{\partial\xi_2}-
-         * \frac{\partial x_3}{\partial\xi_1}\frac{\partial x_2}{\partial\xi_2}
-         * \\
-         * \frac{\partial x_3}{\partial\xi_1}\frac{\partial x_1}{\partial\xi_2}-
-         * \frac{\partial x_1}{\partial\xi_1}\frac{\partial x_3}{\partial\xi_2}
-         * \\
-         * \frac{\partial x_1}{\partial\xi_1}\frac{\partial x_2}{\partial\xi_2}-
-         * \frac{\partial x_2}{\partial\xi_1}\frac{\partial x_1}{\partial\xi_2}
-         * \end{array} \right ] \f$
-         *
-         * The geometric factors are then given by:
-         *
-         * \f$ \begin{array}{cc}
-         * \frac{\partial \xi_1}{\partial x_1} = \frac{1}{J_{3D}} \left (
-         *      \frac{\partial x_2}{\partial \xi_2} {g_3}
-         *      - \frac{\partial x_3}{\partial \xi_2} {g_2} \right ) &
-         * \frac{\partial \xi_1}{\partial x_2} = -\frac{1}{J_{3D}} \left (
-         *      \frac{\partial x_1}{\partial \xi_2} {g_3}
-         *      - \frac{\partial x_3}{\partial \xi_2} {g_1} \right )\\
-         * \frac{\partial \xi_1}{\partial x_3} = \frac{1}{J_{3D}} \left (
-         *      \frac{\partial x_1}{\partial \xi_2} {g_2}
-         *      - \frac{\partial x_2}{\partial \xi_2} {g_1} \right )&
-         * \frac{\partial \xi_2}{\partial x_1} = -\frac{1}{J_{3D}} \left (
-         *      \frac{\partial x_2}{\partial \xi_1} {g_3}
-         *      - \frac{\partial x_3}{\partial \xi_1} {g_2} \right ) \\
-         * \frac{\partial \xi_2}{\partial x_2} = \frac{1}{J_{3D}} \left (
-         *      \frac{\partial x_1}{\partial \xi_1} {g_3}
-         *      - \frac{\partial x_3}{\partial \xi_1} {g_1} \right ) &
-         * \frac{\partial \xi_2}{\partial x_3} = -\frac{1}{J_{3D}} \left (
-         *      \frac{\partial x_1}{\partial \xi_1} {g_2}
-         *      - \frac{\partial x_2}{\partial \xi_1} {g_1} \right )
-         * \end{array} \f$
-         *
-         * where
-         *
-         * \f$ J_{3D} =
-         * {g_3} \left (
-         * \frac{\partial x_1}{\partial\xi_1}\frac{\partial x_2}{\partial\xi_2}-
-         * \frac{\partial x_1}{\partial\xi_2}\frac{\partial x_2}{\partial\xi_1}
-         * \right ) + {g_2}\left (
-         * \frac{\partial x_1}{\partial\xi_2}\frac{\partial x_3}{\partial\xi_1}-
-         * \frac{\partial x_1}{\partial\xi_1}\frac{\partial x_3}{\partial\xi_2}
-         * \right ) + {g_1} \left (
-         * \frac{\partial x_2}{\partial\xi_1}\frac{\partial x_3}{\partial\xi_2}-
-         * \frac{\partial x_2}{\partial\xi_2}\frac{\partial x_3}{\partial\xi_1}
-         * \right ) \f$
-         *
-         * and the two-dimensional surface Jacobian  is given by
-         * \f$ J = \left | \frac{\partial {\bf x}}{\partial \xi_1} \times
-         * \frac{\partial {\bf x}}{\partial \xi_2} \right | = \sqrt{J_{3D}} \f$
-         *
-         * @param   gtype       Type of geometry.
+         * @param   gtype       Type of geometry (e.g. regular or deformed).
          * @param   coordim     Dimension of coordinate system.
          * @param   Coords      Coordinate information.
-         * @param   tbasis      Tangent basis.
+         * @param   tbasis      Target basis for geometric information.
          */
         GeomFactors2D::GeomFactors2D(
                         const GeomType gtype,
@@ -134,14 +81,13 @@ namespace Nektar
             ASSERTL1(tbasis.num_elements() == 2,
                      "tbasis should be an array of size two");
 
-            // Copy shared pointers.
+            // Copy shared pointers to coordinates.
             for (int i = 0; i < m_coordDim; ++i)
             {
                 m_coords[i] = Coords[i];
             }
 
-            // The quadrature points of the mapping
-            // (as specified in Coords)
+            // The quadrature points of the mapping and the number of points.
             LibUtilities::PointsKey pkey0_map(
                                         Coords[0]->GetBasis(0)->GetPointsKey());
             LibUtilities::PointsKey pkey1_map(
@@ -207,17 +153,10 @@ namespace Nektar
                 }
             }
 
-            // Setting up Surface Normal Vectors
-            /*if(coordim == 3)
-            {
-                v_ComputeSurfaceNormals();
-            }*/
-
-            // Based upon these derivatives, calculate:
-            // 1. The (determinant of the) jacobian and the differentation
-            // metrics
+            // Calculate the Jacobian and metric terms.
             SetUpJacGmat2D();
 
+            // Test if the element is valid.
             CheckIfValid();
         }
 
@@ -253,10 +192,11 @@ namespace Nektar
                      "The dimension of array d2 does not match the coordinate "
                      "dimension");
 
-            unsigned int nqtot = m_pointsKey[0].GetNumPoints() *
+            // Compute total number of points in target basis
+            int nqtot = m_pointsKey[0].GetNumPoints() *
                         m_pointsKey[1].GetNumPoints();
-            unsigned int pts = 1;
-            unsigned int i, j, k;
+            int pts = 1;
+            int i, j, k, l;
 
             // Check each derivative combination has the correct sized storage
             // for all quadrature points.
@@ -269,53 +209,62 @@ namespace Nektar
                 }
             }
 
+            // Only compute single values if the element is regular.
             pts = (m_type == eRegular || m_type == eMovingRegular) ? 1 : nqtot;
 
-            // Jacobian is constant across the element.
-            m_jac     = Array<OneD, NekDouble>(pts,0.0);
+            // Allocate storage for Jacobian, metric terms and derivative
+            // factors.
+            m_jac  = Array<OneD, NekDouble>(pts,                      0.0);
+            m_gmat = Array<TwoD, NekDouble>(m_expDim*m_expDim,   pts, 0.0);
+            m_derivFactors =
+                     Array<TwoD, NekDouble>(m_expDim*m_coordDim, pts, 0.0);
 
-            // Number of entries corresponds to twice the coordinate
-            // dimension. Entries are constant across element so second
-            // dimension is 1.
-            m_gmat    = Array<TwoD, NekDouble>(m_expDim*m_expDim, pts, 0.0);
-
-            m_derivFactors = Array<TwoD, NekDouble>(m_expDim*m_coordDim, pts, 0.0);
-
+            // Allocate temporary array for storing the g_{ij} terms
             Array<TwoD, NekDouble> tmp(m_expDim*m_expDim, pts, 0.0);
 
-            // Compute g_{ij} as t_i \cdot t_j
-            for (i = 0; i < m_expDim; ++i)
+            // Compute g_{ij} as t_i \cdot t_j and store in tmp.
+            for (i = 0, l = 0; i < m_expDim; ++i)
             {
-                for (j = 0; j < m_expDim; ++j)
+                for (j = 0; j < m_expDim; ++j, ++l)
                 {
                     for (k = 0; k < m_coordDim; ++k)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_deriv[j][k][0], 1, &tmp[m_expDim*i+j][0], 1, &tmp[m_expDim*i+j][0], 1);
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1,
+                                          &m_deriv[j][k][0], 1,
+                                          &tmp[l][0],        1,
+                                          &tmp[l][0],        1);
                     }
                 }
             }
 
-            // Compute g (Jacobian squared)
-            Vmath::Vvtvvtm(pts, &tmp[0][0], 1, &tmp[3][0], 1, &tmp[1][0], 1, &tmp[2][0], 1, &m_jac[0], 1);
+            // Compute g = det(g_{ij}) (= Jacobian squared) and store
+            // temporarily in m_jac.
+            Vmath::Vvtvvtm(pts, &tmp[0][0], 1, &tmp[3][0], 1,
+                                &tmp[1][0], 1, &tmp[2][0], 1, &m_jac[0], 1);
 
-            // Compute g^{ij}
-            Vmath::Vdiv(pts, &tmp[3][0], 1, &m_jac[0], 1, &m_gmat[0][0], 1);
-            Vmath::Vdiv(pts, &tmp[1][0], 1, &m_jac[0], 1, &m_gmat[1][0], 1);
-            Vmath::Vdiv(pts, &tmp[2][0], 1, &m_jac[0], 1, &m_gmat[2][0], 1);
-            Vmath::Vdiv(pts, &tmp[0][0], 1, &m_jac[0], 1, &m_gmat[3][0], 1);
-            Vmath::Smul (pts, -1.0, &m_gmat[1][0], 1, &m_gmat[1][0], 1);
-            Vmath::Smul (pts, -1.0, &m_gmat[2][0], 1, &m_gmat[2][0], 1);
+            // Compute inverse metric terms g^{ij}, which is easily calculated
+            // for the 2x2 matrix g_ij.
+            Vmath::Vdiv(pts, &tmp[3][0], 1, &m_jac[0],     1, &m_gmat[0][0], 1);
+            Vmath::Vdiv(pts, &tmp[1][0], 1, &m_jac[0],     1, &m_gmat[1][0], 1);
+            Vmath::Vdiv(pts, &tmp[2][0], 1, &m_jac[0],     1, &m_gmat[2][0], 1);
+            Vmath::Vdiv(pts, &tmp[0][0], 1, &m_jac[0],     1, &m_gmat[3][0], 1);
+            Vmath::Smul(pts, -1.0,          &m_gmat[1][0], 1, &m_gmat[1][0], 1);
+            Vmath::Smul(pts, -1.0,          &m_gmat[2][0], 1, &m_gmat[2][0], 1);
 
-            // Sqrt jacobian
+            // Compute the Jacobian = sqrt(g)
             Vmath::Vsqrt(pts, &m_jac[0], 1, &m_jac[0], 1);
 
-            for (i = 0; i < m_expDim; ++i)
+            // Compute the derivative factors
+            for (k = 0, l = 0; k < m_coordDim; ++k)
             {
-                for (j = 0; j < m_expDim; ++j)
+                for (j = 0; j < m_expDim; ++j, ++l)
                 {
-                    for (k = 0; k < m_coordDim; ++k)
+                    for (i = 0; i < m_expDim; ++i)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_gmat[m_expDim*i+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1);
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0],        1,
+                                          &m_gmat[m_expDim*i+j][0], 1,
+                                          &m_derivFactors[l][0],    1,
+                                          &m_derivFactors[l][0],    1);
                     }
                 }
             }
@@ -324,7 +273,9 @@ namespace Nektar
 
         /**
          * Check if the element is valid. This check only applies to elements
-         * in a 2D coordinate space.
+         * in a 2D coordinate space. The Jacobian determinant is computed
+         * directly, rather than the square-root of the metric tensor
+         * determinant.
          */
         void GeomFactors2D::CheckIfValid()
         {
@@ -380,27 +331,27 @@ namespace Nektar
             // tangential basis vectors.
             Vmath::Vmul (nqtot, m_deriv[0][2],     1,
                                 m_deriv[1][1],     1,
-                                temp,             1);
+                                temp,              1);
             Vmath::Vvtvm(nqtot, m_deriv[0][1],     1,
                                 m_deriv[1][2],     1,
-                                temp,             1,
-                                m_normal[0],          1);
+                                temp,              1,
+                                m_normal[0],       1);
 
             Vmath::Vmul (nqtot, m_deriv[0][0],     1,
                                 m_deriv[1][2],     1,
-                                temp,           1);
+                                temp,              1);
             Vmath::Vvtvm(nqtot, m_deriv[0][2],     1,
                                 m_deriv[1][0],     1,
-                                temp,           1,
-                                m_normal[1],    1);
+                                temp,              1,
+                                m_normal[1],       1);
 
             Vmath::Vmul (nqtot, m_deriv[0][1],     1,
                                 m_deriv[1][0],     1,
-                                temp,           1);
+                                temp,              1);
             Vmath::Vvtvm(nqtot, m_deriv[0][0],     1,
                                 m_deriv[1][1],     1,
-                                temp,           1,
-                                m_normal[2],  1);
+                                temp,              1,
+                                m_normal[2],       1);
 
             // Reset temp array
             temp = Array<OneD, NekDouble>(nqtot,0.0);
@@ -408,18 +359,18 @@ namespace Nektar
             // Normalization of Surface Normal
             for (int i = 0; i < coordim; ++i)
             {
-                Vmath::Vvtvp(nqtot, m_normal[i],  1,
-                                    m_normal[i],  1,
-                                    temp,           1,
-                                    temp,           1);
+                Vmath::Vvtvp(nqtot, m_normal[i],   1,
+                                    m_normal[i],   1,
+                                    temp,          1,
+                                    temp,          1);
             }
             Vmath::Vsqrt(nqtot, temp, 1, temp, 1);
 
             for (int i = 0; i < coordim; ++i)
             {
-                Vmath::Vdiv(nqtot,  m_normal[i],  1,
-                                    temp,           1,
-                                    m_normal[i],  1);
+                Vmath::Vdiv(nqtot,  m_normal[i],   1,
+                                    temp,          1,
+                                    m_normal[i],   1);
             }
         }
 

@@ -1064,6 +1064,8 @@ namespace Nektar
             emap[3] = triEdgeMap;
             emap[4] = quadEdgeMap;
 
+            map<int,int> allCompPairs;
+            
             // Finally we have enough information to populate the periodic
             // vertex, edge and face maps. Begin by looping over all pairs of
             // periodic composites to determine pairs of periodic faces.
@@ -1133,6 +1135,9 @@ namespace Nektar
                     ASSERTL0(coordMap.count(ids[0]) > 0 &&
                              coordMap.count(ids[1]) > 0,
                              "Unable to find face in coordinate map");
+
+                    allCompPairs[pIt->first ] = pIt->second;
+                    allCompPairs[pIt->second] = pIt->first;
 
                     // Loop up coordinates of the faces, check they have the
                     // same number of vertices.
@@ -1330,6 +1335,55 @@ namespace Nektar
                 }
             }
 
+#if 0
+            // Search for periodic vertices and edges which are not in a
+            // periodic composite but lie in this process. First, loop over all
+            // information we have from other processors.
+            for (cnt = i = 0; i < totFaces; ++i)
+            {
+                int faceId = faceIds[i];
+
+                for (j = 0; j < faceVerts[i]; ++j, ++cnt)
+                {
+                    int vId = vertIds[cnt];
+
+                    perId = periodicVerts.find(vId);
+
+                    if (perId != periodicVerts.end())
+                    {
+                        continue;
+                    }
+
+                    // This vertex is not included in the map. Figure out which
+                    // vertex it is supposed to be periodic with. perFaceId is
+                    // the face ID which is periodic with faceId. The logic is
+                    // much the same as the loop above.
+                    int perFaceId = allCompPairs[faceId];
+                    SpatialDomains::PointGeomVector tmpVec[2]
+                        = { coordMap[faceId], coordMap[perFaceId] };
+
+                    int nFaceVerts = tmpVec[0].size();
+                    StdRegions::Orientation o = nFaceVerts == 3 ? 
+                        SpatialDomains::TriGeom::GetFaceOrientation(
+                            tmpVec[0], tmpVec[1]) :
+                        SpatialDomains::QuadGeom::GetFaceOrientation(
+                            tmpVec[0], tmpVec[1]);
+
+                    PeriodicEntity ent;
+
+                    // Use vmap to determine which vertex of the other face
+                    // should be periodic with this one.
+                    int perVertexId = vertIds[perFaceId][vmap[nFaceVerts][o][j]];
+
+                    PeriodicEntity ent(perVertexId,
+                                       StdRegions::eNoOrientation,
+                                       locVerts.count(perVertexId) > 0);
+
+                    periodicVerts[vId] = ent;
+                }
+            }
+#endif
+            
             // Finally, we must loop over the periodicVerts and periodicEdges
             // map to complete connectivity information.
             PeriodicMap::iterator perIt, perIt2;

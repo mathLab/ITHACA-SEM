@@ -224,10 +224,10 @@ namespace Nektar
             m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
             SetUpCoeffs(m_xmap->GetNcoeffs());
 
-#if 0
             for(int i = 0; i < m_coordim; ++i)
             {
-                int pdim = LibUtilities::PointsManager()[LibUtilities::PointsKey(2, curve->m_ptype)]->GetPointsDim();
+                int pdim = LibUtilities::PointsManager()[
+                    LibUtilities::PointsKey(2, curve->m_ptype)]->GetPointsDim();
 
                 // Deal with 2D points type separately (e.g. electrostatic or
                 // Fekete points).
@@ -260,21 +260,22 @@ namespace Nektar
                         MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
                             T0, T1, curve->m_ptype);
 
+                    Array<OneD, NekDouble> phys(t->GetTotPoints());
                     for (int j = 0; j < N; ++j)
                     {
-                        t->UpdatePhys()[j] = (curve->m_points[j]->GetPtr())[i];
+                        phys[j] = (curve->m_points[j]->GetPtr())[i];
                     }
 
                     Array<OneD, NekDouble> tmp(nEdgePts*nEdgePts);
-                    t->BwdTrans(t->GetPhys(), tmp);
+                    t->BwdTrans(phys, tmp);
 
                     // Interpolate points to standard region.
                     LibUtilities::Interp2D(P0, P1, tmp,
                                            B0.GetPointsKey(),B1.GetPointsKey(),
-                                           m_xmap[i]->UpdatePhys());
+                                           phys);
 
                     // Forwards transform to get coefficient space.
-                    m_xmap[i]->FwdTrans(m_xmap[i]->GetPhys(), m_xmap[i]->UpdateCoeffs());
+                    m_xmap->FwdTrans(phys, m_coeffs[i]);
                 }
                 else if (pdim == 1)
                 {
@@ -291,7 +292,7 @@ namespace Nektar
                 
                     for (int j = 0; j < kNedges; ++j)
                     {
-                        ASSERTL0(edges[j]->GetXmap(i)->GetNcoeffs() == nEdgePts,
+                        ASSERTL0(edges[j]->GetXmap()->GetNcoeffs() == nEdgePts,
                                  "Number of edge points does not correspond "
                                  "to number of face points.");
                     }
@@ -302,19 +303,19 @@ namespace Nektar
                     }
                     
                     // Interpolate curve points to standard triangle points.
+                    Array<OneD, NekDouble> phys(m_xmap->GetTotPoints());
                     LibUtilities::Interp2D(curveKey,curveKey,tmp,
                                            B0.GetPointsKey(),B1.GetPointsKey(),
-                                           m_xmap[i]->UpdatePhys());
+                                           phys);
                     
                     // Forwards transform to get coefficient space.
-                    m_xmap[i]->FwdTrans(m_xmap[i]->GetPhys(),m_xmap[i]->UpdateCoeffs());
+                    m_xmap->FwdTrans(phys, m_coeffs[i]);
                 }
                 else
                 {
                     ASSERTL0(false, "Only 1D/2D points distributions supported.");
                 }
             }
-#endif
         }
 
 

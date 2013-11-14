@@ -214,11 +214,13 @@ namespace Nektar
                 const int i,
                 const Array<OneD, const NekDouble>& Lcoord)
         {
+            ASSERTL1(m_state == ePtsFilled,
+                "Geometry is not in physical space");
 
-            ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
+            Array<OneD, NekDouble> tmp(m_xmap->GetTotPoints());
+            m_xmap->BwdTrans(m_coeffs[i], tmp);
 
-            return 0.0; //fixme
-            //return m_xmap->PhysEvaluate(Lcoord);
+            return m_xmap->PhysEvaluate(Lcoord, tmp);
         }
 
         void SegGeom::v_AddElmtConnected(int gvo_id, int locid)

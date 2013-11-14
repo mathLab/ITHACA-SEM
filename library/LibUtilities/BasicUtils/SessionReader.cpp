@@ -1400,6 +1400,14 @@ namespace Nektar
                          ". Check XML standards compliance. Error on line: " +
                          boost::lexical_cast<std::string>(m_xmlDoc->Row()));
             }
+            else
+            {
+                if (m_xmlDoc)
+                {
+                    delete m_xmlDoc;
+                }
+                m_xmlDoc = MergeDoc(m_filenames);
+            }
         }
 
 

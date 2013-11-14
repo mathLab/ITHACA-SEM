@@ -689,9 +689,9 @@ namespace Nektar
             {
                 // Determine normalisation of pressure so that |P|/A = 1
                 NekDouble l2;
-                l2    = m_wavePressure->GetPlane(0)->L2();
+                l2    = m_wavePressure->GetPlane(0)->L2(m_wavePressure->GetPlane(0)->GetPhys());
                 invnorm  = l2*l2;
-                l2    = m_wavePressure->GetPlane(1)->L2();
+                l2    = m_wavePressure->GetPlane(1)->L2(m_wavePressure->GetPlane(1)->GetPhys());
                 invnorm += l2*l2;
                 Vmath::Fill(2*npts,1.0,der1,1);
                 NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
@@ -984,9 +984,9 @@ namespace Nektar
         cout << "Linf: " << Linf << endl;
 
         NekDouble l2,norm;
-        l2    = m_wavePressure->GetPlane(0)->L2();
+        l2    = m_wavePressure->GetPlane(0)->L2(m_wavePressure->GetPlane(0)->GetPhys());
         norm  = l2*l2;
-        l2    = m_wavePressure->GetPlane(1)->L2();
+        l2    = m_wavePressure->GetPlane(1)->L2(m_wavePressure->GetPlane(1)->GetPhys());
         norm += l2*l2;
 
 

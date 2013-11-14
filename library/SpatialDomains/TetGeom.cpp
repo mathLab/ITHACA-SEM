@@ -151,21 +151,24 @@ namespace Nektar
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
-#if 0
+
             // find min, max point and check if within twice this
             // distance other false this is advisable since
             // GetLocCoord is expensive for non regular elements.
             if(GetMetricInfo()->GetGtype() !=  eRegular)
             {
                 int i;
-                Array<OneD, NekDouble> pts; 
                 NekDouble mincoord, maxcoord,diff;
                 
                 v_FillGeom();
+
+                const int npts = m_xmap->GetTotPoints();
+                Array<OneD, NekDouble> pts(npts);
                 
                 for(i = 0; i < 3; ++i)
                 {
-                    pts = m_xmap[i]->GetPhys();
+                    m_xmap->BwdTrans(m_coeffs[i], pts);
+
                     mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
                     maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
                     
@@ -188,7 +191,7 @@ namespace Nektar
             {
                 return true;
             }
-#endif            
+
             return false;
         }
 
@@ -198,7 +201,6 @@ namespace Nektar
             const Array<OneD, const NekDouble>& coords,
                   Array<OneD,       NekDouble>& Lcoords)
         {
-#if 0     
             // calculate local coordinates (eta) for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
             {   
@@ -236,14 +238,17 @@ namespace Nektar
                 v_FillGeom();
 
                 // Determine nearest point of coords  to values in m_xmap
-                Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
-                Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
-                Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
-                int npts = ptsx.num_elements();
+                int npts = m_xmap->GetTotPoints();
+                Array<OneD, NekDouble> ptsx(npts), ptsy(npts), ptsz(npts);
                 Array<OneD, NekDouble> tmp1(npts), tmp2(npts);
-                const Array<OneD, const NekDouble> za = m_xmap[0]->GetPoints(0);
-                const Array<OneD, const NekDouble> zb = m_xmap[0]->GetPoints(1);
-                const Array<OneD, const NekDouble> zc = m_xmap[0]->GetPoints(2);
+
+                m_xmap->BwdTrans(m_coeffs[0], ptsx);
+                m_xmap->BwdTrans(m_coeffs[1], ptsy);
+                m_xmap->BwdTrans(m_coeffs[2], ptsz);
+
+                const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
+                const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
+                const Array<OneD, const NekDouble> zc = m_xmap->GetPoints(2);
                 
                 //guess the first local coords based on nearest point
                 Vmath::Sadd(npts, -coords[0], ptsx,1,tmp1,1);
@@ -266,11 +271,9 @@ namespace Nektar
                 Lcoords[1] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 -1.0;
                 Lcoords[0] = (1.0+Lcoords[0])*(-Lcoords[1]-Lcoords[2])/2 -1.0;
 
-
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords,Lcoords);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords);
             }
-#endif
         }
         
         int TetGeom::v_GetNumVerts() const

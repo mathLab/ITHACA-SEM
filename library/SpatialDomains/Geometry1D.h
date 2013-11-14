@@ -64,9 +64,6 @@ namespace Nektar
                         GetVertex(const int i) const;
             SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType
                         DetShapeType() const;
-            SPATIAL_DOMAINS_EXPORT void WriteToFile(
-                              std::ofstream& outfile,
-                        const int dumpVar);
             SPATIAL_DOMAINS_EXPORT int GetEid() const;
 
         protected:
@@ -80,12 +77,7 @@ namespace Nektar
                          v_GetVertex(const int i) const;
             virtual LibUtilities::ShapeType
                          v_DetShapeType() const;
-            virtual void v_WriteToFile(
-                              std::ofstream& outfile,
-                        const int dumpVar);
-
         };
-
     }; //end of namespace
 }; //end of namespace
 

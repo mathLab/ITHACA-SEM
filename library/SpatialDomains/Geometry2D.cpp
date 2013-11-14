@@ -106,13 +106,12 @@ namespace Nektar
             return v_WhichFace(face);
         }
 
-        void Geometry2D::NewtonIterationForLocCoord
-                         (const Array<OneD, const NekDouble> &coords, 
-                          Array<OneD,NekDouble> &Lcoords)
+        void Geometry2D::NewtonIterationForLocCoord(
+            const Array<OneD, const NekDouble> &coords,
+            const Array<OneD, const NekDouble> &ptsx,
+            const Array<OneD, const NekDouble> &ptsy,
+                  Array<OneD,       NekDouble> &Lcoords)
         {
-#if 0
-            Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
-            Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
             NekDouble xmap,ymap, F1,F2;
             NekDouble der1_x, der2_x, der1_y, der2_y ;
             const Array<TwoD, const NekDouble> &gmat
@@ -133,8 +132,8 @@ namespace Nektar
             while(cnt++ < MaxIterations)
             {
                 //calculate the global point `corresponding to Lcoords
-                xmap = m_xmap[0]->PhysEvaluate(Lcoords, ptsx);
-                ymap = m_xmap[1]->PhysEvaluate(Lcoords, ptsy);
+                xmap = m_xmap->PhysEvaluate(Lcoords, ptsx);
+                ymap = m_xmap->PhysEvaluate(Lcoords, ptsy);
                 
                 F1 = coords[0] - xmap;
                 F2 = coords[1] - ymap;
@@ -146,10 +145,10 @@ namespace Nektar
                 }
                 
                 //Interpolate derivative metric at Lcoords
-                der1_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dx);
-                der2_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dy);
-                der1_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dx);
-                der2_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dy);                  
+                der1_x = m_xmap->PhysEvaluate(Lcoords, D1Dx);
+                der2_x = m_xmap->PhysEvaluate(Lcoords, D1Dy);
+                der1_y = m_xmap->PhysEvaluate(Lcoords, D2Dx);
+                der2_y = m_xmap->PhysEvaluate(Lcoords, D2Dy);                  
                 
                 Lcoords[0] = Lcoords[0] + der1_x*(coords[0]-xmap) + 
                     der1_y*(coords[1]-ymap);
@@ -161,7 +160,6 @@ namespace Nektar
             {
                 Lcoords[0] = Lcoords[1] = 2.0;
             }
-#endif
         }
 
         int Geometry2D::v_GetFid() const 

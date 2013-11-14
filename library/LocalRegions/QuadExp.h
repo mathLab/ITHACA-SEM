@@ -84,12 +84,10 @@ namespace Nektar
                           Array<OneD,       NekDouble> &out_d0,
                           Array<OneD,       NekDouble> &out_d1,
                           Array<OneD,       NekDouble> &out_d2 = NullNekDouble1DArray);
-
             LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(
                         const int dir,
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);
-
             LOCAL_REGIONS_EXPORT virtual void v_PhysDirectionalDeriv(
                         const Array<OneD, const NekDouble> &inarray,
                         const Array<OneD, const NekDouble> &direction,

@@ -65,8 +65,8 @@ namespace Nektar
             const LibUtilities::BasisKey &Ba,
             const LibUtilities::BasisKey &Bb,
             const LibUtilities::BasisKey &Bc):
-            m_elmt_id(0),
             m_base(numbases),
+            m_elmt_id(0),
             m_ncoeffs(numcoeffs),
             m_stdMatrixManager(
                 boost::bind(&StdExpansion::CreateStdMatrix, this, _1),
@@ -104,8 +104,8 @@ namespace Nektar
 
 
         StdExpansion::StdExpansion(const StdExpansion &T):
-            m_elmt_id(T.m_elmt_id),
             m_base(T.m_base),
+            m_elmt_id(T.m_elmt_id),
             m_ncoeffs(T.m_ncoeffs),
             m_stdMatrixManager(T.m_stdMatrixManager),
             m_stdStaticCondMatrixManager(T.m_stdStaticCondMatrixManager),
@@ -927,53 +927,6 @@ namespace Nektar
 
             Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
                         nq, inarray.get(), 1, 0.0, outarray.get(), 1);
-        }
-
-
-        void StdExpansion::WriteTecplotZone(std::ofstream &outfile)
-        {
-            int i,j;
-
-            int coordim   = GetCoordim();
-            int totpoints = GetTotPoints();
-
-            Array<OneD,NekDouble> coords[3];
-
-            coords[0] = Array<OneD,NekDouble>(totpoints);
-            coords[1] = Array<OneD,NekDouble>(totpoints);
-            coords[2] = Array<OneD,NekDouble>(totpoints);
-
-            GetCoords(coords[0],coords[1],coords[2]);
-
-            switch(DetShapeType())
-            {
-            case LibUtilities::eSegment:
-                outfile << "Zone, I=" << GetNumPoints(0) << ", F=Block" << std::endl;
-                break;
-            case LibUtilities::eTriangle: 
-            case LibUtilities::eQuadrilateral:
-                outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) <<", F=Block" << std::endl;
-                break;
-            case LibUtilities::eTetrahedron: 
-            case LibUtilities::ePrism: 
-            case LibUtilities::ePyramid: 
-            case LibUtilities::eHexahedron:
-                outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) << ", K="<< GetNumPoints(2) << ", F=Block" << std::endl;
-                break;
-            default:
-                ASSERTL0(false, "Unsupported expansion type.");
-                break;
-            }
-
-            for(j = 0; j < coordim; ++j)
-            {
-                for(i = 0; i < totpoints; ++i)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << std::endl;
-            }
-
         }
 
         // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE

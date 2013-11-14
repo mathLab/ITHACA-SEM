@@ -339,75 +339,31 @@ namespace Nektar
 
             SegGeom::v_FillGeom();
 
-#if 0
             // calculate local coordinate for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
             {
-                Array<OneD, const NekDouble> pts;
                 NekDouble len = 0.0;
                 NekDouble xi  = 0.0;
-                int nq;
 
-                // get points;
-                //find end points
+                const int npts = m_xmap->GetTotPoints();
+                Array<OneD, NekDouble> pts(npts);
+
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    nq   = m_xmap->GetNumPoints(0);
-                    pts  = m_xmap->GetPhys();
-                    len  += (pts[nq-1]-pts[0])*(pts[nq-1]-pts[0]);
+                    m_xmap->BwdTrans(m_coeffs[i], pts);
+                    len  += (pts[npts-1]-pts[0])*(pts[npts-1]-pts[0]);
                     xi   += (coords[i]-pts[0])*(coords[i]-pts[0]);
                 }
 
                 len = sqrt(len);
                 xi  = sqrt(xi);
 
-                Lcoords[0] =  2*xi/len-1.0;
+                Lcoords[0] = 2*xi/len-1.0;
             }
             else
             {
                 NEKERROR(ErrorUtil::efatal,
                          "inverse mapping must be set up to use this call");
-            }
-#endif
-        }
-
-        void SegGeom::v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-
-            int i,j;
-            int  nquad = m_xmap->GetNumPoints(0);
-            NekDouble *coords[3];
-
-            SegGeom::v_FillGeom();
-
-#if 0
-            for(i = 0; i < m_coordim; ++i)
-            {
-                coords[i] = &(m_xmap->UpdatePhys())[0];
-            }
-#endif
-            if(dumpVar)
-            {
-                outfile << "Variables = x";
-                if(m_coordim == 2)
-                {
-                    outfile << ", y";
-                }
-                else if (m_coordim == 3)
-                {
-                    outfile << ", y, z";
-                }
-                outfile << std::endl;
-            }
-
-            outfile << "Zone, I=" << nquad << ", F=Point\n";
-            for(i = 0; i < nquad; ++i)
-            {
-                for(j = 0; j < m_coordim; ++j)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << std::endl;
             }
         }
 

@@ -146,10 +146,6 @@ namespace Nektar
                         const int i,
                         const Array<OneD,const NekDouble> &Lcoord);
 
-                SPATIAL_DOMAINS_EXPORT virtual void v_WriteToFile(
-                              std::ofstream &outfile,
-                        const int dumpVar);
-
                 SPATIAL_DOMAINS_EXPORT virtual int  v_GetNumVerts() const;
 
                 SPATIAL_DOMAINS_EXPORT virtual int  v_GetNumEdges() const;

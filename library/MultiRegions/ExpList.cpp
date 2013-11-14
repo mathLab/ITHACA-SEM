@@ -1318,6 +1318,215 @@ namespace Nektar
             }
         }
 
+        /**
+         * Write Tecplot Files Header
+         * @param   outfile Output file name.
+         * @param   var                 variables names
+         */
+        void ExpList::v_WriteTecplotHeader(std::ofstream &outfile,
+                                           std::string var)
+        {
+            int coordim  = GetExp(0)->GetCoordim();
+            char vars[3] = { 'x', 'y', 'z' };
+
+            outfile << "Variables = x";
+            for (int i = 1; i < coordim; ++i)
+            {
+                outfile << ", " << vars[i];
+            }
+
+            outfile << ", " << var << std::endl << std::endl;
+        }
+
+        /**
+         * Write Tecplot Files Zone
+         * @param   outfile    Output file name.
+         * @param   expansion  Expansion that is considered
+         */
+        void ExpList::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
+        {
+            int i, j;
+            int coordim = GetCoordim(0);
+            int nPoints = GetTotPoints();
+
+            Array<OneD, Array<OneD, NekDouble> > coords(3);
+
+            if (expansion == -1)
+            {
+                nPoints = GetTotPoints();
+
+                coords[0] = Array<OneD, NekDouble>(nPoints);
+                coords[1] = Array<OneD, NekDouble>(nPoints);
+                coords[2] = Array<OneD, NekDouble>(nPoints);
+
+                GetCoords(coords[0], coords[1], coords[2]);
+
+                int numBlocks = 0;
+
+                for (i = 0; i < m_exp->size(); ++i)
+                {
+                    const int nBases = (*m_exp)[i]->GetNumBases();
+                    int       numInt = 1;
+
+                    for (j = 0; j < nBases; ++j)
+                    {
+                        numInt *= (*m_exp)[i]->GetNumPoints(j)-1;
+                    }
+
+                    numBlocks += numInt;
+                }
+
+                outfile << "Zone, N=" << nPoints << ", E="
+                        << numBlocks << ", F=FEBlock" ;
+                
+                switch((*m_exp)[0]->GetNumBases())
+                {
+                    case 2:
+                        outfile << ", ET=QUADRILATERAL" << std::endl;
+                        break;
+                    case 3:
+                        outfile << ", ET=BRICK" << std::endl;
+                        break;
+                    default:
+                        ASSERTL0(false,"Not set up for this type of output");
+                        break;
+                }
+            }
+            else
+            {
+                nPoints = (*m_exp)[expansion]->GetTotPoints();
+
+                coords[0] = Array<OneD,NekDouble>(nPoints);
+                coords[1] = Array<OneD,NekDouble>(nPoints);
+                coords[2] = Array<OneD,NekDouble>(nPoints);
+
+                int  nBases  = (*m_exp)[expansion]->GetNumBases();
+                char dims[3] = { 'I', 'J', 'K' };
+
+                outfile << "Zone";
+
+                for (i = 0; i < nBases; ++i)
+                {
+                    outfile << ", " << dims[i] << "="
+                            << (*m_exp)[expansion]->GetNumPoints(i);
+                }
+
+                outfile << ", F=Block" << std::endl;
+            }
+
+            // Write out coordinates
+            for (j = 0; j < coordim; ++j)
+            {
+                for (i = 0; i < nPoints; ++i)
+                {
+                    outfile << coords[j][i] << " ";
+                    if (i % 1000 == 0 && i)
+                    {
+                        outfile << std::endl;
+                    }
+                }
+                outfile << std::endl;
+            }
+        }
+
+        void ExpList::v_WriteTecplotConnectivity(std::ofstream &outfile)
+        {
+            int i,j,k,l;
+            int nbase = (*m_exp)[0]->GetNumBases();
+            int cnt = 0;
+            
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                if(nbase == 2)
+                {
+                    int np0 = (*m_exp)[i]->GetNumPoints(0);
+                    int np1 = (*m_exp)[i]->GetNumPoints(1);
+                    
+                    for(j = 1; j < np1; ++j)
+                    {
+                        for(k = 1; k < np0; ++k)
+                        {
+                            outfile << cnt + (j-1)*np0 + k  << " ";
+                            outfile << cnt + (j-1)*np0 + k +1 << " ";
+                            outfile << cnt + j*np0 + k +1 << " ";
+                            outfile << cnt + j*np0 + k    << endl;
+                        }
+                    }
+                    
+                    cnt += np0*np1;
+                }
+                else if(nbase == 3)
+                {
+                    int np0 = (*m_exp)[i]->GetNumPoints(0);
+                    int np1 = (*m_exp)[i]->GetNumPoints(1);
+                    int np2 = (*m_exp)[i]->GetNumPoints(2);
+                    
+                    for(j = 1; j < np2; ++j)
+                    {
+                        for(k = 1; k < np1; ++k)
+                        {
+                            for(l = 1; l < np0; ++l)
+                            {
+                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l  << " ";
+                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l +1 << " ";
+                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l +1 << " ";
+                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l  << " ";
+
+                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l  << " ";
+                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l +1 << " ";
+                                outfile << cnt + j*np0*np1 +  k*np0 + l +1 << " ";
+                                outfile << cnt + j*np0*np1 +  k*np0 + l  << endl;
+                            }
+                        }
+                    }
+                    cnt += np0*np1*np2;
+                }
+                else
+                {
+                    ASSERTL0(false,"Not set up for this dimension");
+                }
+            }
+        }
+
+        /**
+         * Write Tecplot Files Field
+         * @param   outfile    Output file name.
+         * @param   expansion  Expansion that is considered
+         */
+        void ExpList::v_WriteTecplotField(std::ofstream &outfile, int expansion)
+        {
+            if (expansion == -1)
+            {
+                int totpoints = GetTotPoints();
+                if(m_physState == false)
+                {
+                    BwdTrans(m_coeffs,m_phys);
+                }
+                
+                for(int i = 0; i < totpoints; ++i)
+                {
+                    outfile << m_phys[i] << " ";
+                    if(i % 1000 == 0 && i)
+                    {
+                        outfile << std::endl;
+                    }
+                }
+                outfile << std::endl;
+                
+            }
+            else
+            {
+                int nPoints = (*m_exp)[expansion]->GetTotPoints();
+
+                for (int i = 0; i < nPoints; ++i)
+                {
+                    outfile << m_phys[i + m_phys_offset[expansion]] << " ";
+                }
+
+                outfile << std::endl;
+            }
+        }
+
         void ExpList::WriteVtkHeader(std::ofstream &outfile)
         {
             outfile << "<?xml version=\"1.0\"?>" << endl;

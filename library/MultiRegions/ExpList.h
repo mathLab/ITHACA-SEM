@@ -336,6 +336,27 @@ namespace Nektar
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
+            void WriteTecplotHeader(std::ofstream &outfile,
+                                    std::string var = "v")
+            {
+                v_WriteTecplotHeader(outfile, var);
+            }
+
+            void WriteTecplotZone(std::ofstream &outfile, int expansion = -1)
+            {
+                v_WriteTecplotZone(outfile, expansion);
+            }
+
+            void WriteTecplotField(std::ofstream &outfile, int expansion = -1)
+            {
+                v_WriteTecplotField(outfile, expansion);
+            }
+
+            void WriteTecplotConnectivity(std::ofstream &outfile)
+            {
+                v_WriteTecplotConnectivity(outfile);
+            }
+
             MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ofstream &outfile);
             MULTI_REGIONS_EXPORT void WriteVtkFooter(std::ofstream &outfile);
 
@@ -1131,7 +1152,14 @@ namespace Nektar
                                                Array<OneD, NekDouble> &coeffs);
 
             virtual void v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
-			
+
+            virtual void v_WriteTecplotHeader(std::ofstream &outfile,
+                                              std::string var = "v");
+            virtual void v_WriteTecplotZone(std::ofstream &outfile,
+                                            int expansion);
+            virtual void v_WriteTecplotField(std::ofstream &outfile,
+                                             int expansion);
+            virtual void v_WriteTecplotConnectivity(std::ofstream &outfile);
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                              std::string var);

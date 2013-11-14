@@ -104,9 +104,12 @@ namespace Nektar
             // 3D Geometry Methods
             //---------------------------------------
 
-            void NewtonIterationForLocCoord
-                (const Array<OneD, const NekDouble> &coords, 
-                 Array<OneD,NekDouble> &Lcoords);
+            void NewtonIterationForLocCoord(
+                const Array<OneD, const NekDouble> &coords,
+                const Array<OneD, const NekDouble> &ptsx,
+                const Array<OneD, const NekDouble> &ptsy,
+                const Array<OneD, const NekDouble> &ptsz,
+                      Array<OneD,       NekDouble> &Lcoords);
 
             virtual void      v_FillGeom();
             virtual NekDouble v_GetCoord(const int i, 

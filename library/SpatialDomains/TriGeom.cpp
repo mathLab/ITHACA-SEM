@@ -362,9 +362,12 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
-                     "Goemetry is not in physical space");
-            return 0.0; //fixme
-            //return m_xmap[i]->PhysEvaluate(Lcoord);
+                "Geometry is not in physical space");
+
+            Array<OneD, NekDouble> tmp(m_xmap->GetTotPoints());
+            m_xmap->BwdTrans(m_coeffs[i], tmp);
+
+            return m_xmap->PhysEvaluate(Lcoord, tmp);
         }
 
         StdRegions::Orientation TriGeom::GetFaceOrientation(
@@ -623,7 +626,6 @@ namespace Nektar
         {
             TriGeom::v_FillGeom();
 
-#if 0
             // calculate local coordinate for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
             { 
@@ -655,14 +657,16 @@ namespace Nektar
             else
             {
                 // Determine nearest point of coords  to values in m_xmap
-                Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
-                Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
-                int npts = ptsx.num_elements();
+                int npts = m_xmap->GetTotPoints();
+                Array<OneD, NekDouble> ptsx(npts), ptsy(npts);
                 Array<OneD, NekDouble> tmpx(npts), tmpy(npts);
-                const Array<OneD, const NekDouble> za = m_xmap[0]->GetPoints(0);
-                const Array<OneD, const NekDouble> zb = m_xmap[0]->GetPoints(1);
-                
-                
+
+                m_xmap->BwdTrans(m_coeffs[0], ptsx);
+                m_xmap->BwdTrans(m_coeffs[1], ptsy);
+
+                const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
+                const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
+
                 //guess the first local coords based on nearest point
                 Vmath::Sadd(npts, -coords[0], ptsx,1,tmpx,1);
                 Vmath::Sadd(npts, -coords[1], ptsy,1,tmpy,1);
@@ -678,9 +682,8 @@ namespace Nektar
                 Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[1])/2 -1.0;
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords,Lcoords);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords);
             }
-#endif
         }
 
 

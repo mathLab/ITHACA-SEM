@@ -101,8 +101,11 @@ namespace Nektar
 
             StdRegions::StdExpansion2DSharedPtr m_xmap;
 
-            void NewtonIterationForLocCoord(const Array<OneD, const NekDouble> &coords, 
-                                       Array<OneD,NekDouble> &Lcoords);
+            void NewtonIterationForLocCoord(
+                const Array<OneD, const NekDouble> &coords,
+                const Array<OneD, const NekDouble> &ptsx,
+                const Array<OneD, const NekDouble> &ptsy,
+                      Array<OneD,       NekDouble> &Lcoords);
 
         private:
             //---------------------------------------

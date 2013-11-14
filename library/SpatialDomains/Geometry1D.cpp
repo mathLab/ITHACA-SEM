@@ -63,11 +63,6 @@ namespace Nektar
             return v_DetShapeType();
         }
 
-        void Geometry1D::WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            v_WriteToFile(outfile,dumpVar);
-        }
-
         int Geometry1D::GetEid() const
         {
             return v_GetEid();
@@ -107,12 +102,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
             return LibUtilities::eNoShapeType;
-        }
-
-        void Geometry1D::v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
         }
     }; //end of namespace
 }; //end of namespace

@@ -1337,10 +1337,6 @@ namespace Nektar
                 v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }
 
-
-
-            void WriteTecplotZone(std::ofstream &outfile);
-
             // The term _MatFree denotes that the action of the MatrixOperation
             // is done withouth actually using the matrix (which then needs to be stored/calculated).
             // Although this does not strictly mean that no matrix operations are involved in the

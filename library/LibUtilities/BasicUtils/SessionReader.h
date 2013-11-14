@@ -395,6 +395,8 @@ namespace Nektar
 
             /// Communication object.
             CommSharedPtr                             m_comm;
+            /// Filenames
+            std::vector<std::string>                  m_filenames;
             /// Filename of the loaded XML document.
             std::string                               m_filename;
             /// Session name of the loaded XML document (filename minus ext).
@@ -466,8 +468,7 @@ namespace Nektar
             /// communication object.
             LIB_UTILITIES_EXPORT void CreateComm(
                 int               &argc, 
-                char*              argv[], 
-                const std::string &pFilename);
+                char*              argv[]);
             /// Partitions the mesh when running in parallel.
             LIB_UTILITIES_EXPORT void PartitionMesh();
             /// Partitions the comm object based on session parameters.

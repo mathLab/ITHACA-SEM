@@ -219,7 +219,7 @@ namespace Nektar
          */
         SessionReader::~SessionReader()
         {
-
+            delete m_xmlDoc;
         }
 
 

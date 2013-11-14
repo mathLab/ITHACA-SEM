@@ -174,6 +174,7 @@ namespace Nektar
                 m_sessionName =
                     m_sessionName.substr(0, m_sessionName.find_last_of('.'));
             }
+
             m_xmlDoc      = MergeDoc(vFilenames);
 
             // Create communicator
@@ -203,6 +204,7 @@ namespace Nektar
                 m_sessionName =
                     m_sessionName.substr(0, m_sessionName.find_last_of('.'));
             }
+
             m_xmlDoc      = MergeDoc(pFilenames);
 
             // Create communicator
@@ -265,6 +267,7 @@ namespace Nektar
                                  "override a SOLVERINFO property")
                 ("parameter,P",  po::value<vector<std::string> >(),
                                  "override a parameter")
+                ("shared-filesystem,s", "Using shared filesystem.")
             ;
             
             CmdLineArgMap::const_iterator cmdIt;
@@ -1339,25 +1342,55 @@ namespace Nektar
             // Partition mesh into length of row comms
             if (vCommMesh->GetSize() > 1)
             {
-                // Partitioner now operates in parallel
-                // Each process receives partitioning over interconnect
-                // and writes its own session file to the working directory.
-                SessionReaderSharedPtr vSession     = GetSharedThisPtr();
-                MeshPartitionSharedPtr vPartitioner = MemoryManager<
-                    MeshPartition>::AllocateSharedPtr(vSession);
-                vPartitioner->PartitionMesh();
-                vPartitioner->WriteLocalPartition(vSession);
-                vPartitioner->GetCompositeOrdering(m_compOrder);
-                vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+                if (DefinesCmdLineArgument("shared-filesystem"))
+                {
+                    if (GetComm()->GetRank() == 0)
+                    {
+                        if (m_verbose)
+                        {
+                            cout << "Partitioning on root process." << endl;
+                        }
+                        SessionReaderSharedPtr vSession     = GetSharedThisPtr();
+                        MeshPartitionSharedPtr vPartitioner = MemoryManager<
+                            MeshPartition>::AllocateSharedPtr(vSession);
+                        vPartitioner->PartitionMesh(true);
+                        vPartitioner->WriteAllPartitions(vSession);
+                        vPartitioner->GetCompositeOrdering(m_compOrder);
+                        vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+                    }
+                }
+                else
+                {
+                    if (m_verbose)
+                    {
+                        cout << "Rank " << GetComm()->GetRank()
+                             << " participating in partitioning." << endl;
+                    }
+                    // Partitioner now operates in parallel
+                    // Each process receives partitioning over interconnect
+                    // and writes its own session file to the working directory.
+                    SessionReaderSharedPtr vSession     = GetSharedThisPtr();
+                    MeshPartitionSharedPtr vPartitioner = MemoryManager<
+                        MeshPartition>::AllocateSharedPtr(vSession);
+                    vPartitioner->PartitionMesh(false);
+                    vPartitioner->WriteLocalPartition(vSession);
+                    vPartitioner->GetCompositeOrdering(m_compOrder);
+                    vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+                }
                 m_comm->Block();
+                if (m_verbose && GetComm()->GetRank() == 0)
+                {
+                    cout << "Partitioning done" << endl;
+                }
 
                 m_filename = GetSessionNameRank() + ".xml";
 
                 delete m_xmlDoc;
                 m_xmlDoc = new TiXmlDocument(m_filename);
+
                 ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
 
-                bool loadOkay = m_xmlDoc->LoadFile();
+                bool loadOkay = m_xmlDoc->LoadFile(m_filename);
                 ASSERTL0(loadOkay, "Unable to load file: " + m_filename      + 
                          ". Check XML standards compliance. Error on line: " +
                          boost::lexical_cast<std::string>(m_xmlDoc->Row()));
@@ -1374,6 +1407,9 @@ namespace Nektar
          */
         void SessionReader::PartitionComm()
         {
+            if (DefinesCmdLineArgument("Px")) {
+
+            }
             // Session not yet loaded, so load parameters section
             TiXmlHandle docHandle(m_xmlDoc);
             TiXmlElement* e;

@@ -70,6 +70,17 @@ namespace Nektar
             SIZE_ElementType
         };
 
+        const char* const ElementTypeMap[] = {
+            "Point",
+            "Line",
+            "Triangle",
+            "Quadrilateral",
+            "Tetrahedron",
+            "Pyramid",
+            "Prism",
+            "Hexahedron"
+        };
+
         // Forwards declaration for Element class.
         class Element;
         /// Shared pointer to an element.

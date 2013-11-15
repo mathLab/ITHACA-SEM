@@ -370,7 +370,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT bool DefinesCmdLineArgument(
                 const std::string& pName) const;
             /// Retrieves a command-line argument value.
-            LIB_UTILITIES_EXPORT std::string GetCmdLineArgument(
+            template <typename T>
+            LIB_UTILITIES_EXPORT T GetCmdLineArgument(
                 const std::string& pName) const;
             /// Registers a command-line argument with the session reader.
             LIB_UTILITIES_EXPORT inline static std::string 

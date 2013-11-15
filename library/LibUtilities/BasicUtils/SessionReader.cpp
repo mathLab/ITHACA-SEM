@@ -1137,10 +1137,11 @@ namespace Nektar
         /**
          *
          */
-        std::string SessionReader::GetCmdLineArgument(
+        template <typename T>
+        T SessionReader::GetCmdLineArgument(
             const std::string& pName) const
         {
-            return m_cmdLineOptions.find(pName)->second.as<std::string>();
+            return m_cmdLineOptions.find(pName)->second.as<T>();
         }
 
 
@@ -1426,13 +1427,13 @@ namespace Nektar
                 int nProcY = 1;
                 int nProcX = 1;
                 if (DefinesCmdLineArgument("npx")) {
-                    nProcX = boost::lexical_cast<double>(GetCmdLineArgument("npx"));
+                    nProcX = GetCmdLineArgument<int>("npx");
                 }
                 if (DefinesCmdLineArgument("npy")) {
-                    nProcY = boost::lexical_cast<double>(GetCmdLineArgument("npy"));
+                    nProcY = GetCmdLineArgument<int>("npy");
                 }
                 if (DefinesCmdLineArgument("npz")) {
-                    nProcZ = boost::lexical_cast<double>(GetCmdLineArgument("npz"));
+                    nProcZ = GetCmdLineArgument<int>("npz");
                 }
 
                 ASSERTL0(m_comm->GetSize() % (nProcZ*nProcY*nProcX) == 0,

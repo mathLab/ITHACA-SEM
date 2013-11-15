@@ -337,24 +337,28 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
             void WriteTecplotHeader(std::ofstream &outfile,
-                                    std::string var = "v")
+                                    std::string var = "")
             {
                 v_WriteTecplotHeader(outfile, var);
             }
 
-            void WriteTecplotZone(std::ofstream &outfile, int expansion = -1)
+            void WriteTecplotZone(
+                std::ofstream &outfile,
+                int expansion = -1)
             {
                 v_WriteTecplotZone(outfile, expansion);
             }
 
-            void WriteTecplotField(std::ofstream &outfile, int expansion = -1)
+            void WriteTecplotField(std::ofstream &outfile,
+                                   int expansion = -1)
             {
                 v_WriteTecplotField(outfile, expansion);
             }
 
-            void WriteTecplotConnectivity(std::ofstream &outfile)
+            void WriteTecplotConnectivity(std::ofstream &outfile,
+                                          int expansion = -1)
             {
-                v_WriteTecplotConnectivity(outfile);
+                v_WriteTecplotConnectivity(outfile, expansion);
             }
 
             MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ofstream &outfile);
@@ -1154,12 +1158,13 @@ namespace Nektar
             virtual void v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
-                                              std::string var = "v");
+                                              std::string var = "");
             virtual void v_WriteTecplotZone(std::ofstream &outfile,
                                             int expansion);
             virtual void v_WriteTecplotField(std::ofstream &outfile,
                                              int expansion);
-            virtual void v_WriteTecplotConnectivity(std::ofstream &outfile);
+            virtual void v_WriteTecplotConnectivity(std::ofstream &outfile,
+                                                    int expansion);
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                              std::string var);

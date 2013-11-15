@@ -1,3 +1,38 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+//  File: XmlToTecplot.cpp
+//
+//  For more information, please see: http://www.nektar.info/
+//
+//  The MIT License
+//
+//  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
+//  Computing and Imaging Institute, University of Utah (USA).
+//
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//
+//  Description: Output Tecplot description of mesh.
+//
+////////////////////////////////////////////////////////////////////////////////
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -10,14 +45,17 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    Array<OneD,NekDouble>  fce; 
-    Array<OneD,NekDouble>  xc0,xc1,xc2; 
+    Array<OneD,NekDouble>  fce;
+    Array<OneD,NekDouble>  xc0,xc1,xc2;
 
-    if(argc != 2)
+    if(argc < 2)
     {
-        fprintf(stderr,"Usage: XmlToTecplot  meshfile\n");
+        fprintf(stderr,"Usage: XmlToTecplot meshfile\n");
         exit(1);
     }
+
+    LibUtilities::SessionReader::RegisterCmdLineFlag(
+        "multi-zone", "m", "Output multi-zone format (one element per zone).");
 
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
@@ -25,14 +63,15 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[argc-1]);
-    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);//meshfile);
+    SpatialDomains::MeshGraphSharedPtr graphShPt
+        = SpatialDomains::MeshGraph::Read(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
     // Set up Expansion information
     SpatialDomains::ExpansionMap emap = graphShPt->GetExpansions();
     SpatialDomains::ExpansionMapIter it;
-    
+
     for (it = emap.begin(); it != emap.end(); ++it)
     {
         for (int i = 0; i < it->second->m_basisKeyVector.size(); ++i)
@@ -47,8 +86,8 @@ int main(int argc, char *argv[])
     }
     //----------------------------------------------
 
-    //----------------------------------------------        
-    // Define Expansion 
+    //----------------------------------------------
+    // Define Expansion
     int expdim  = graphShPt->GetMeshDimension();
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(1);
 
@@ -79,22 +118,34 @@ int main(int argc, char *argv[])
             ASSERTL0(false,"Expansion dimension not recognised");
             break;
     }
-    
+
     //-----------------------------------------------
-    
+
     //----------------------------------------------
     // Write solution  depending on #define
     string   outfile(strtok(argv[argc-1],"."));
     outfile +=  ".dat";
     ofstream outstrm(outfile.c_str());
 
-    Exp[0]->WriteTecplotHeader      (outstrm);
-    Exp[0]->WriteTecplotZone        (outstrm);
-    Exp[0]->WriteTecplotField       (outstrm);
-    Exp[0]->WriteTecplotConnectivity(outstrm);
-    
+    Exp[0]->WriteTecplotHeader(outstrm);
+
+    if (vSession->DefinesCmdLineArgument("multi-zone"))
+    {
+        int nExp = Exp[0]->GetExpSize();
+
+        for (int i = 0; i < nExp; ++i)
+        {
+            Exp[0]->WriteTecplotZone        (outstrm, i);
+            Exp[0]->WriteTecplotConnectivity(outstrm, i);
+        }
+    }
+    else
+    {
+        Exp[0]->WriteTecplotZone        (outstrm);
+        Exp[0]->WriteTecplotConnectivity(outstrm);
+    }
+
     outstrm.close();
     //----------------------------------------------
     return 0;
 }
-

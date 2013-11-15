@@ -287,6 +287,8 @@ namespace Nektar
          */
         void ExpList3DHomogeneous1D::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
         {
+            ExpList::v_WriteTecplotZone(outfile, expansion);
+            /*
             int i,j;
 
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
@@ -312,6 +314,7 @@ namespace Nektar
                 }
                 outfile << std::endl;
             }
+            */
         }
 
 

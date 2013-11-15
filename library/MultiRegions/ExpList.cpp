@@ -1324,7 +1324,7 @@ namespace Nektar
          * @param   var                 variables names
          */
         void ExpList::v_WriteTecplotHeader(std::ofstream &outfile,
-                                           std::string var)
+                                           std::string    var)
         {
             int coordim  = GetExp(0)->GetCoordim();
             char vars[3] = { 'x', 'y', 'z' };
@@ -1335,7 +1335,12 @@ namespace Nektar
                 outfile << ", " << vars[i];
             }
 
-            outfile << ", " << var << std::endl << std::endl;
+            if (var.size() > 0)
+            {
+                outfile << ", " << var;
+            }
+
+            outfile << std::endl << std::endl;
         }
 
         /**
@@ -1348,6 +1353,8 @@ namespace Nektar
             int i, j;
             int coordim = GetCoordim(0);
             int nPoints = GetTotPoints();
+            int nBases  = (*m_exp)[0]->GetNumBases();
+            int numBlocks = 0;
 
             Array<OneD, Array<OneD, NekDouble> > coords(3);
 
@@ -1361,12 +1368,9 @@ namespace Nektar
 
                 GetCoords(coords[0], coords[1], coords[2]);
 
-                int numBlocks = 0;
-
                 for (i = 0; i < m_exp->size(); ++i)
                 {
-                    const int nBases = (*m_exp)[i]->GetNumBases();
-                    int       numInt = 1;
+                    int numInt = 1;
 
                     for (j = 0; j < nBases; ++j)
                     {
@@ -1375,43 +1379,38 @@ namespace Nektar
 
                     numBlocks += numInt;
                 }
-
-                outfile << "Zone, N=" << nPoints << ", E="
-                        << numBlocks << ", F=FEBlock" ;
-                
-                switch((*m_exp)[0]->GetNumBases())
-                {
-                    case 2:
-                        outfile << ", ET=QUADRILATERAL" << std::endl;
-                        break;
-                    case 3:
-                        outfile << ", ET=BRICK" << std::endl;
-                        break;
-                    default:
-                        ASSERTL0(false,"Not set up for this type of output");
-                        break;
-                }
             }
             else
             {
                 nPoints = (*m_exp)[expansion]->GetTotPoints();
 
-                coords[0] = Array<OneD,NekDouble>(nPoints);
-                coords[1] = Array<OneD,NekDouble>(nPoints);
-                coords[2] = Array<OneD,NekDouble>(nPoints);
+                coords[0] = Array<OneD, NekDouble>(nPoints);
+                coords[1] = Array<OneD, NekDouble>(nPoints);
+                coords[2] = Array<OneD, NekDouble>(nPoints);
 
-                int  nBases  = (*m_exp)[expansion]->GetNumBases();
-                char dims[3] = { 'I', 'J', 'K' };
+                (*m_exp)[expansion]->GetCoords(coords[0], coords[1], coords[2]);
 
-                outfile << "Zone";
-
-                for (i = 0; i < nBases; ++i)
+                numBlocks = 1;
+                for (j = 0; j < nBases; ++j)
                 {
-                    outfile << ", " << dims[i] << "="
-                            << (*m_exp)[expansion]->GetNumPoints(i);
+                    numBlocks *= (*m_exp)[expansion]->GetNumPoints(j)-1;
                 }
+            }
 
-                outfile << ", F=Block" << std::endl;
+            outfile << "Zone, N=" << nPoints << ", E="
+                    << numBlocks << ", F=FEBlock" ;
+
+            switch((*m_exp)[0]->GetNumBases())
+            {
+                case 2:
+                    outfile << ", ET=QUADRILATERAL" << std::endl;
+                    break;
+                case 3:
+                    outfile << ", ET=BRICK" << std::endl;
+                    break;
+                default:
+                    ASSERTL0(false,"Not set up for this type of output");
+                    break;
             }
 
             // Write out coordinates
@@ -1429,62 +1428,75 @@ namespace Nektar
             }
         }
 
-        void ExpList::v_WriteTecplotConnectivity(std::ofstream &outfile)
+        void ExpList::v_WriteTecplotConnectivity(std::ofstream &outfile,
+                                                 int expansion)
         {
             int i,j,k,l;
             int nbase = (*m_exp)[0]->GetNumBases();
             int cnt = 0;
-            
-            for(i = 0; i < (*m_exp).size(); ++i)
+
+            boost::shared_ptr<LocalRegions::ExpansionVector> exp = m_exp;
+
+            if (expansion != -1)
             {
-                if(nbase == 2)
+                exp = boost::shared_ptr<LocalRegions::ExpansionVector>(
+                    new LocalRegions::ExpansionVector(1));
+                (*exp)[0] = (*m_exp)[expansion];
+            }
+
+            if (nbase == 2)
+            {
+                for(i = 0; i < (*exp).size(); ++i)
                 {
-                    int np0 = (*m_exp)[i]->GetNumPoints(0);
-                    int np1 = (*m_exp)[i]->GetNumPoints(1);
+                    const int np0 = (*exp)[i]->GetNumPoints(0);
+                    const int np1 = (*exp)[i]->GetNumPoints(1);
                     
                     for(j = 1; j < np1; ++j)
                     {
                         for(k = 1; k < np0; ++k)
                         {
-                            outfile << cnt + (j-1)*np0 + k  << " ";
-                            outfile << cnt + (j-1)*np0 + k +1 << " ";
-                            outfile << cnt + j*np0 + k +1 << " ";
-                            outfile << cnt + j*np0 + k    << endl;
+                            outfile << cnt + (j-1)*np0 + k   << " ";
+                            outfile << cnt + (j-1)*np0 + k+1 << " ";
+                            outfile << cnt +  j   *np0 + k+1 << " ";
+                            outfile << cnt +  j   *np0 + k   << endl;
                         }
                     }
                     
                     cnt += np0*np1;
                 }
-                else if(nbase == 3)
+            }
+            else if (nbase == 3)
+            {
+                for(i = 0; i < (*exp).size(); ++i)
                 {
-                    int np0 = (*m_exp)[i]->GetNumPoints(0);
-                    int np1 = (*m_exp)[i]->GetNumPoints(1);
-                    int np2 = (*m_exp)[i]->GetNumPoints(2);
-                    
+                    const int np0 = (*exp)[i]->GetNumPoints(0);
+                    const int np1 = (*exp)[i]->GetNumPoints(1);
+                    const int np2 = (*exp)[i]->GetNumPoints(2);
+                    const int np01 = np0*np1;
+
                     for(j = 1; j < np2; ++j)
                     {
                         for(k = 1; k < np1; ++k)
                         {
                             for(l = 1; l < np0; ++l)
                             {
-                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l  << " ";
-                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l +1 << " ";
-                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l +1 << " ";
-                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l  << " ";
-
-                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l  << " ";
-                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l +1 << " ";
-                                outfile << cnt + j*np0*np1 +  k*np0 + l +1 << " ";
-                                outfile << cnt + j*np0*np1 +  k*np0 + l  << endl;
+                                outfile << cnt + (j-1)*np01 + (k-1)*np0 + l   << " ";
+                                outfile << cnt + (j-1)*np01 + (k-1)*np0 + l+1 << " ";
+                                outfile << cnt + (j-1)*np01 +  k   *np0 + l+1 << " ";
+                                outfile << cnt + (j-1)*np01 +  k   *np0 + l   << " ";
+                                outfile << cnt +  j   *np01 + (k-1)*np0 + l   << " ";
+                                outfile << cnt +  j   *np01 + (k-1)*np0 + l+1 << " ";
+                                outfile << cnt +  j   *np01 +  k   *np0 + l+1 << " ";
+                                outfile << cnt +  j   *np01 +  k   *np0 + l   << endl;
                             }
                         }
                     }
                     cnt += np0*np1*np2;
                 }
-                else
-                {
-                    ASSERTL0(false,"Not set up for this dimension");
-                }
+            }
+            else
+            {
+                ASSERTL0(false,"Not set up for this dimension");
             }
         }
 

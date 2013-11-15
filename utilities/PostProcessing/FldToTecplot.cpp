@@ -1,3 +1,38 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+//  File: FldToTecplot.cpp
+//
+//  For more information, please see: http://www.nektar.info/
+//
+//  The MIT License
+//
+//  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
+//  Computing and Imaging Institute, University of Utah (USA).
+//
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//
+//  Description: Output Tecplot file containing field.
+//
+////////////////////////////////////////////////////////////////////////////////
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -10,6 +45,7 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList1DHomogeneous2D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
+
 using namespace Nektar;
 
 #include <sys/stat.h>
@@ -22,26 +58,26 @@ int fexist( const char *filename ) {
 
 int main(int argc, char *argv[])
 {
-    unsigned int     i, j;
-    Array<OneD,NekDouble>  fce;
-    Array<OneD,NekDouble>  xc0,xc1,xc2;
-
-    if(argc < 3)
+    if(argc < 2)
     {
         fprintf(stderr,"Usage: %s meshfile fieldfile\n",argv[0]);
         exit(1);
     }
+
+    unsigned int     i, j;
+    Array<OneD,NekDouble>  fce;
+    Array<OneD,NekDouble>  xc0,xc1,xc2;
 
     bool Extrude2DWithHomogeneous = false;
     
     bool SingleModePlot=false;
     bool HalfModePlot=false;
 
-	
     int nExtraPoints, nExtraPlanes;
+    LibUtilities::SessionReader::RegisterCmdLineFlag(
+        "multi-zone", "m", "Output multi-zone format (one element per zone).");
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
-
 
     vSession->LoadParameter("OutputExtraPoints",nExtraPoints,0);
     vSession->LoadParameter("OutputExtraPlanes",nExtraPlanes,0);
@@ -490,6 +526,7 @@ int main(int argc, char *argv[])
                 {
                     Exp1[j]->WriteTecplotField(outfile,i);
                 }
+                Exp1[0]->WriteTecplotConnectivity(outfile,i);
             }
         }
         else{
@@ -502,20 +539,10 @@ int main(int argc, char *argv[])
             }
 
             ofstream outfile(fname.c_str());
+            Exp[0]->WriteTecplotHeader(outfile,var);
 
-            if(expdim == 3)
+            if (vSession->DefinesCmdLineArgument("multi-zone"))
             {
-                Exp[0]->WriteTecplotHeader(outfile,var);
-                Exp[0]->WriteTecplotZone(outfile);
-                for(int j = 0; j < Exp.num_elements(); ++j)
-                {
-                    Exp[j]->WriteTecplotField(outfile);
-                }
-                Exp[0]->WriteTecplotConnectivity(outfile);
-            }
-            else
-            {
-                Exp[0]->WriteTecplotHeader(outfile,var);
                 for(int i = 0; i < Exp[0]->GetNumElmts(); ++i)
                 {
                     Exp[0]->WriteTecplotZone(outfile,i);
@@ -523,9 +550,18 @@ int main(int argc, char *argv[])
                     {
                         Exp[j]->WriteTecplotField(outfile,i);
                     }
+                    Exp[0]->WriteTecplotConnectivity(outfile,i);
                 }
             }
-
+            else
+            {
+                Exp[0]->WriteTecplotZone(outfile);
+                for(int j = 0; j < Exp.num_elements(); ++j)
+                {
+                    Exp[j]->WriteTecplotField(outfile);
+                }
+                Exp[0]->WriteTecplotConnectivity(outfile);
+            }
         }
         //----------------------------------------------
     }

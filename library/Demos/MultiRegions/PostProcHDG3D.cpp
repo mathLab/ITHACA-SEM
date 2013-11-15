@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     string meshfile(vSession->GetFilename());
 
     MultiRegions::DisContField3DSharedPtr Exp,Fce;
-    int     i, nq,  coordim;
+    int     i,j,k, nq,  coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
         cout << "Solving 2D Helmholtz:"  << endl;
         cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
         cout << "         No. modes  : " << num_modes << endl;
+        cout << "         No. points : " << num_points << endl;
         cout << endl;
     }
 
@@ -232,6 +233,10 @@ int main(int argc, char *argv[])
         
 	PostProc->BwdTrans_IterPerExp(PostProc->GetCoeffs(),PostProc->UpdatePhys());
 
+	//debug: outputting coefficients
+	NekVector<NekDouble> orig_coeffs(Exp->GetNcoeffs(), Exp->GetCoeffs(), eWrapper);
+	NekVector<NekDouble> pp_coeffs(PostProc->GetNcoeffs(), PostProc->GetCoeffs(), eWrapper);
+	
 	PostProc->EvaluateHDGPostProcessing(PostProc->UpdateCoeffs());
 	PostProc->BwdTrans_IterPerExp(PostProc->GetCoeffs(),PostProc->UpdatePhys());
 	

@@ -743,12 +743,12 @@ namespace Nektar
                         }
 
                         // count out data for j iteration
-                        for(i = fillorder1-j; i < data_order1; ++i)
+                        for(i = fillorder1-j; i < data_order1-j; ++i)
                         {
                             cnt += data_order2-j-i;
                         }
 
-                        for(i = fillorder1-j; i < order1; ++i)
+                        for(i = fillorder1-j; i < order1-j; ++i)
                         {
                             cnt1 += order2-j-i;
                         }

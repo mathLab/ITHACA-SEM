@@ -1329,6 +1329,15 @@ namespace Nektar
             int coordim  = GetExp(0)->GetCoordim();
             char vars[3] = { 'x', 'y', 'z' };
 
+            if (m_expType == e3DH1D)
+            {
+                coordim += 1;
+            }
+            else if (m_expType == e3DH2D)
+            {
+                coordim += 2;
+            }
+
             outfile << "Variables = x";
             for (int i = 1; i < coordim; ++i)
             {
@@ -1397,10 +1406,24 @@ namespace Nektar
                 }
             }
 
+            if (m_expType == e3DH1D)
+            {
+                nBases += 1;
+                coordim += 1;
+                int nPlanes = GetZIDs().num_elements();
+                NekDouble tmp = numBlocks * (nPlanes-1.0) / nPlanes;
+                numBlocks = (int)tmp;
+            }
+            else if (m_expType == e3DH2D)
+            {
+                nBases    += 2;
+                coordim += 1;
+            }
+
             outfile << "Zone, N=" << nPoints << ", E="
                     << numBlocks << ", F=FEBlock" ;
 
-            switch((*m_exp)[0]->GetNumBases())
+            switch(nBases)
             {
                 case 2:
                     outfile << ", ET=QUADRILATERAL" << std::endl;

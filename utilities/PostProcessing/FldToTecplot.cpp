@@ -74,8 +74,7 @@ int main(int argc, char *argv[])
     bool HalfModePlot=false;
 
     int nExtraPoints, nExtraPlanes;
-    LibUtilities::SessionReader::RegisterCmdLineFlag(
-        "multi-zone", "m", "Output multi-zone format (one element per zone).");
+
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
@@ -529,8 +528,8 @@ int main(int argc, char *argv[])
                 Exp1[0]->WriteTecplotConnectivity(outfile,i);
             }
         }
-        else{
-
+        else
+        {
             std::string var = "";
 
             for(int j = 0; j < Exp.num_elements(); ++j)
@@ -539,29 +538,13 @@ int main(int argc, char *argv[])
             }
 
             ofstream outfile(fname.c_str());
-            Exp[0]->WriteTecplotHeader(outfile,var);
-
-            if (vSession->DefinesCmdLineArgument("multi-zone"))
+            Exp[0]->WriteTecplotHeader(outfile, var);
+            Exp[0]->WriteTecplotZone(outfile);
+            for(int j = 0; j < Exp.num_elements(); ++j)
             {
-                for(int i = 0; i < Exp[0]->GetNumElmts(); ++i)
-                {
-                    Exp[0]->WriteTecplotZone(outfile,i);
-                    for(int j = 0; j < Exp.num_elements(); ++j)
-                    {
-                        Exp[j]->WriteTecplotField(outfile,i);
-                    }
-                    Exp[0]->WriteTecplotConnectivity(outfile,i);
-                }
+                Exp[j]->WriteTecplotField(outfile);
             }
-            else
-            {
-                Exp[0]->WriteTecplotZone(outfile);
-                for(int j = 0; j < Exp.num_elements(); ++j)
-                {
-                    Exp[j]->WriteTecplotField(outfile);
-                }
-                Exp[0]->WriteTecplotConnectivity(outfile);
-            }
+            Exp[0]->WriteTecplotConnectivity(outfile);
         }
         //----------------------------------------------
     }

@@ -279,44 +279,45 @@ namespace Nektar
             }
         }
 
-
-        /**
-         * Write Tecplot Files Zone
-         * @param   outfile    Output file name.
-         * @param   expansion  Expansion that is considered
-         */
-        void ExpList3DHomogeneous1D::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous1D::v_WriteTecplotConnectivity(std::ofstream &outfile, int expansion)
         {
-            ExpList::v_WriteTecplotZone(outfile, expansion);
-            /*
-            int i,j;
+            ASSERTL0(expansion == -1, "Multi-zone output not supported for homogeneous expansions.");
 
-            int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-            int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
-            int nquad2 = m_planes.num_elements();
+            const int nPtsPlane = m_planes[0]->GetNpoints();
+            const int nElmt     = m_planes[0]->GetExpSize();
+            const int nPlanes   = m_planes.num_elements();
 
-            Array<OneD,NekDouble> coords[3];
-
-            coords[0] = Array<OneD,NekDouble>(3*nquad0*nquad1*nquad2);
-            coords[1] = coords[0] + nquad0*nquad1*nquad2;
-            coords[2] = coords[1] + nquad0*nquad1*nquad2;
-
-            GetCoords(expansion,coords[0],coords[1],coords[2]);
-
-            outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 <<",K="
-                    << nquad2 << ", F=Block" << std::endl;
-
-            for(j = 0; j < 3; ++j)
+            int cnt = 0;
+            int cnt2 = 0;
+            for (int i = 0; i < nElmt; ++i)
             {
-                for(i = 0; i < nquad0*nquad1*nquad2; ++i)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << std::endl;
-            }
-            */
-        }
+                const int np0 = (*m_exp)[i]->GetNumPoints(0);
+                const int np1 = (*m_exp)[i]->GetNumPoints(1);
 
+                for (int n = 1; n < nPlanes; ++n)
+                {
+                    const int o1 = (n-1) * nPtsPlane;
+                    const int o2 =  n    * nPtsPlane;
+                    for (int j = 1; j < np1; ++j)
+                    {
+                        for(int k = 1; k < np0; ++k)
+                        {
+                            outfile << cnt + (j-1)*np0 + (k-1) + o1 + 1 << " ";
+                            outfile << cnt + (j-1)*np0 + (k-1) + o2 + 1 << " ";
+                            outfile << cnt + (j-1)*np0 +  k    + o2 + 1 << " ";
+                            outfile << cnt + (j-1)*np0 +  k    + o1 + 1 << " ";
+                            outfile << cnt +  j   *np0 + (k-1) + o1 + 1 << " ";
+                            outfile << cnt +  j   *np0 + (k-1) + o2 + 1 << " ";
+                            outfile << cnt +  j   *np0 +  k    + o2 + 1 << " ";
+                            outfile << cnt +  j   *np0 +  k    + o1 + 1 << endl;
+                            cnt2++;
+                        }
+                    }
+                }
+
+                cnt += np0*np1;
+            }
+        }
 
         void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {

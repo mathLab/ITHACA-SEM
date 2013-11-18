@@ -786,6 +786,29 @@ namespace Nektar
             }
         }
 
+        void ExpListHomogeneous1D::v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+                                        std::string var)
+        {
+            int i;
+            int nq = (*m_exp)[expansion]->GetTotPoints();
+            int npoints_per_plane = m_planes[0]->GetTotPoints();
+
+            // printing the fields of that zone
+            outfile << "        <DataArray type=\"Float32\" Name=\""
+                    << var << "\">" << endl;
+            outfile << "          ";
+            for (int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                const Array<OneD, NekDouble> phys = m_phys + m_phys_offset[expansion] + n*npoints_per_plane;
+                for(i = 0; i < nq; ++i)
+                {
+                    outfile << (fabs(phys[i]) < NekConstants::kNekZeroTol ? 0 : phys[i]) << " ";
+                }
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+        }
+        
         void ExpListHomogeneous1D::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt,cnt1;

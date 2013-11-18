@@ -263,9 +263,9 @@ namespace Nektar
     /**
     *
     */
-    void LuoRudy91::v_PrintSummary(std::ostream &out)
+    void LuoRudy91::v_GenerateSummary(SummaryList& s)
     {
-        out << "	Cell model      : Luo-Rudy 1991" << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model", "Luo-Rudy 1991");
     }
 
 

@@ -83,13 +83,19 @@
       <E VAR="w" VALUE="Wvel" />
     </FUNCTION>
 
-    <FUNCTION NAME="BODYFORCE">
+    <FUNCTION NAME="BodyForce">
       <E VAR="u" VALUE="Kinvis*PI*PI*cos(PI*z) - Wvel*PI*sin(PI*z) + sin(PI*z)*PI*y" />
       <E VAR="v" VALUE="Kinvis*PI*PI*sin(PI*z)*PI*y + (Vvel+x)*PI*sin(PI*z) + Wvel*PI*PI*cos(PI*z)*y + cos(PI*z)" />
       <E VAR="w" VALUE="Kinvis*(PI*PI*cos(PI*z) + PI*PI*sin(PI*x)) + (Uvel+y)*PI*cos(PI*x) - Wvel*PI*sin(PI*z)" /> 
     </FUNCTION>
 
   </CONDITIONS>
+
+  <FORCING>
+      <FORCE TYPE="Body">
+          <BODYFORCE> BodyForce </BODYFORCE>
+      </FORCE>
+  </FORCING>
 
   <GEOMETRY DIM="2" SPACE="2">
     

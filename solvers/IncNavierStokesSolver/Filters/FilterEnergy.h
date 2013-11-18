@@ -71,14 +71,14 @@ namespace Nektar
             virtual bool v_IsTimeDependent();
 
         private:
-            unsigned int m_index;
-            unsigned int m_outputFrequency;
-            std::ofstream m_outFile;
-            bool m_homogeneous;
-            NekDouble m_homogeneousLength;
-            NekDouble m_area;
+            unsigned int                m_index;
+            unsigned int                m_outputFrequency;
+            std::ofstream               m_outFile;
+            bool                        m_homogeneous;
+            NekDouble                   m_homogeneousLength;
+            NekDouble                   m_area;
             LibUtilities::CommSharedPtr m_comm;
-            Array<OneD, unsigned int> m_planes;
+            Array<OneD, unsigned int>   m_planes;
         };
     }
 }

@@ -405,7 +405,7 @@ namespace Nektar
             cx /= 3;
             cy /= 3;
             cz /= 3;
-           
+
             // Now construct a mapping which takes us from the vertices of one
             // face to the other. That is, vertex j of face2 corresponds to
             // vertex vmap[j] of face1.
@@ -419,16 +419,14 @@ namespace Nektar
                     x1 = (*face2[j])(0)-cx;
                     y1 = (*face2[j])(1)-cy;
                     z1 = (*face2[j])(2)-cz;
-                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-5)
+                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-8)
                     {
                         vmap[j] = i;
                         break;
                     }
                 }
             }
-            
-            // Use the mapping to determine the eight alignment options between
-            // faces.
+
             if (vmap[1] == (vmap[0]+1) % 3)
             {
                 switch (vmap[0])

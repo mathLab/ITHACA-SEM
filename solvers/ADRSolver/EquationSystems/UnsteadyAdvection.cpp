@@ -375,8 +375,8 @@ namespace Nektar
         }
     }
 
-    void UnsteadyAdvection::v_PrintSummary(std::ostream &out)
+    void UnsteadyAdvection::v_GenerateSummary(SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
     }
 }

@@ -196,9 +196,10 @@ namespace Nektar
              * @brief Obtain a copy of the periodic edges and vertices for this
              * field.
              */
-            virtual void v_GetPeriodicEdges(
+            virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
-                PeriodicMap &periodicEdges)
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces)
             {
                 periodicVerts = m_periodicVerts;
                 periodicEdges = m_periodicEdges;

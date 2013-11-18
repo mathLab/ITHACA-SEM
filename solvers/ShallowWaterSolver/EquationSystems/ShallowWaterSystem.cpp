@@ -124,7 +124,7 @@ namespace Nektar
 	  }
 
 	EvaluateCoriolis();
-	
+
     }
 
 
@@ -136,16 +136,16 @@ namespace Nektar
     }
 
 
-  void ShallowWaterSystem::v_PrintSummary(std::ostream &out)
+    void ShallowWaterSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
 	if (m_constantDepth == true)
 	  {
-	    out << "\tDepth           : constant" <<endl;
+	    SolverUtils::AddSummaryItem(s, "Depth", "constant");
 	  }
 	else
 	  {
-	    out << "\tDepth           : variable" <<endl;
+	    SolverUtils::AddSummaryItem(s, "Depth", "variable");
 	  }
 
 	

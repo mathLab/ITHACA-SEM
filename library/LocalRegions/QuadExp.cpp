@@ -1837,6 +1837,7 @@ namespace Nektar
                 case StdRegions::eHybridDGLamToQ1:
                 case StdRegions::eHybridDGLamToQ2:
                 case StdRegions::eHybridDGHelmBndLam:
+				case StdRegions::eInvLaplacianWithUnityMean:
                     returnval = Expansion2D::v_GenMatrix(mkey);
                     break;
                 default:
@@ -2009,33 +2010,10 @@ namespace Nektar
                     break;
                 case StdRegions::eInvLaplacianWithUnityMean:
                 {
-                    NekDouble one = 1.0;
+                    NekDouble one    = 1.0;
 
-                    // replace first row with inner product wrt 1                    
-					// should be first row...
-
-                    MatrixKey lapkey(mkey, StdRegions::eLaplacian);
-                    DNekScalMat &LapMat = *GetLocMatrix(lapkey);//(this->m_matrixManager[lapkey]);
-					DNekMatSharedPtr lmat = MemoryManager<DNekMat>::AllocateSharedPtr(LapMat.GetRows(),LapMat.GetColumns());
-					(*lmat) = LapMat;
-                    //MatrixKey lapkey(StdRegions::eLaplacian,mkey.GetShapeType(), *this);
-					//DNekMatSharedPtr lmat = GenMatrix(lapkey);
-
-                    int nq = GetTotPoints();
-                    Array<OneD, NekDouble> tmp(nq);
-                    Array<OneD, NekDouble> outarray(m_ncoeffs);
-                    Vmath::Fill(nq,one,tmp,1);
-                    v_IProductWRTBase(tmp, outarray);
-
-                    Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
-                                 &(lmat->GetPtr())[0],1);
-					
-					//cout << endl << *lmat << endl;
-                    
-                    lmat->Invert();
-                    //Populate  matrix.
-                    returnval =
-                        MemoryManager<DNekScalMat>::AllocateSharedPtr(one,lmat); 
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                     break;
                 case StdRegions::eHelmholtz:

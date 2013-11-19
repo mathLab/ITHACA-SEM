@@ -233,10 +233,6 @@ int main(int argc, char *argv[])
         
 	PostProc->BwdTrans_IterPerExp(PostProc->GetCoeffs(),PostProc->UpdatePhys());
 
-	//debug: outputting coefficients
-	NekVector<NekDouble> orig_coeffs(Exp->GetNcoeffs(), Exp->GetCoeffs(), eWrapper);
-	NekVector<NekDouble> pp_coeffs(PostProc->GetNcoeffs(), PostProc->GetCoeffs(), eWrapper);
-	
 	PostProc->EvaluateHDGPostProcessing(PostProc->UpdateCoeffs());
 	PostProc->BwdTrans_IterPerExp(PostProc->GetCoeffs(),PostProc->UpdatePhys());
 	

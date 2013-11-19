@@ -1335,23 +1335,37 @@ namespace Nektar
                 }
             }
 
-#if 1
-            int totAllCompPairs = allCompPairs.size();
-            vComm->AllReduce(totAllCompPairs, LibUtilities::ReduceMax);
-            
-            Array<OneD, int> first (totAllCompPairs);
-            Array<OneD, int> second(totAllCompPairs);
+            Array<OneD, int> pairSizes(n, 0);
+            pairSizes[p] = allCompPairs.size();
+            vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
 
-            for(cnt = 0,pIt = allCompPairs.begin(); pIt !=  allCompPairs.end(); ++pIt, ++cnt)
+            int totPairSizes = Vmath::Vsum(n, pairSizes, 1);
+
+            Array<OneD, int> pairOffsets(n, 0);
+            pairOffsets[0] = 0;
+
+            for (i = 1; i < n; ++i)
             {
-                first [cnt] = pIt->first;
-                second[cnt] = pIt->second;
+                pairOffsets[i] = pairOffsets[i-1] + pairSizes[i-1];
             }
 
-            vComm->AllReduce(first, LibUtilities::ReduceMax);
-            vComm->AllReduce(second,LibUtilities::ReduceMax);
+            Array<OneD, int> first (totPairSizes, 0);
+            Array<OneD, int> second(totPairSizes, 0);
 
-            for(cnt = 0; cnt < totAllCompPairs; ++cnt)
+            cnt = pairOffsets[p];
+
+            for (pIt = allCompPairs.begin(); pIt != allCompPairs.end(); ++pIt)
+            {
+                first [cnt  ] = pIt->first;
+                second[cnt++] = pIt->second;
+            }
+
+            vComm->AllReduce(first,  LibUtilities::ReduceSum);
+            vComm->AllReduce(second, LibUtilities::ReduceSum);
+
+            allCompPairs.clear();
+
+            for(cnt = 0; cnt < totPairSizes; ++cnt)
             {
                 allCompPairs[first[cnt]] = second[cnt];
             }
@@ -1363,6 +1377,10 @@ namespace Nektar
             for (cnt = i = 0; i < totFaces; ++i)
             {
                 int faceId    = faceIds[i];
+
+                ASSERTL0(allCompPairs.count(faceId) > 0,
+                         "Unable to find matching periodic face.");
+
                 int perFaceId = allCompPairs[faceId];
 
                 for (j = 0; j < faceVerts[i]; ++j, ++cnt)
@@ -1434,8 +1452,7 @@ namespace Nektar
                     }
                 }
             }
-#endif
-            
+
             // Finally, we must loop over the periodicVerts and periodicEdges
             // map to complete connectivity information.
             PeriodicMap::iterator perIt, perIt2;

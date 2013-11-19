@@ -89,6 +89,13 @@ namespace Nektar
                          Array<OneD, Array<OneD, NekDouble> > &q1,
                          Array<OneD, Array<OneD, NekDouble> > &qBar1);
             
+            void SecondOrderFilter(const int i,
+                         const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
+                         const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                         const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                         Array<OneD, Array<OneD, NekDouble> > &q1,
+                         Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
             
         protected:
             /// Constructor
@@ -141,6 +148,21 @@ namespace Nektar
             NekDouble b22;
             NekDouble b23;
             NekDouble b24;
+            
+            //For implementation of Second order Filter
+            NekDouble M11;
+            NekDouble M12;
+            NekDouble M13;
+            NekDouble M21;
+            NekDouble M22;
+            NekDouble M23;
+            NekDouble c31;
+            NekDouble c32;
+            NekDouble c33;
+            NekDouble c4;
+            NekDouble c5;
+            NekDouble omega;
+            NekDouble zeta;
             
             int m_n;
             int m_Check;

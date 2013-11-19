@@ -89,14 +89,17 @@ namespace Nektar
             //For BDF2 implementation
             Array<OneD, Array<OneD, NekDouble> > qMinusHalf(NumElmVelocity);
             Array<OneD, Array<OneD, NekDouble> > qBarMinusHalf(NumElmVelocity);
-            
-            //For Strang scheme
+//             
+//             //For Strang scheme
             Array<OneD, Array<OneD, NekDouble> > qTilde(NumElmVelocity);
             Array<OneD, Array<OneD, NekDouble> > qBarTilde(NumElmVelocity);
             
             //For averaging the flow
             Array<OneD, Array<OneD, NekDouble> > qAvr(NumElmVelocity);
             //Array<OneD, Array<OneD, NekDouble> > qBarAvr(NumElmVelocity);
+            
+            //For the second order filter!!!
+            Array<OneD, Array<OneD, NekDouble> > qBarMinus1(NumElmVelocity);
             
             NekDouble TOL(0);
             m_n=0;
@@ -126,11 +129,11 @@ namespace Nektar
             //m_X = 0.5*m_X0;
             //m_Delta = 2.0*m_Delta0;
             
-            m_X = m_X0;
-            m_Delta = m_Delta0;
+            m_X = m_X0*m_dt;
+            m_Delta = m_Delta0/m_dt;
             
             //BDF1 Matrix
-            c1 = 1.0 + m_X;
+/*            c1 = 1.0 + m_X;
             c2 = 1.0 + 1.0/m_Delta - m_X/(m_Delta*c1);
             
             a11 = 1.0/c1 + m_X/(m_Delta*c1*c1*c2);
@@ -149,15 +152,34 @@ namespace Nektar
             b21 = 8.0/(m_Delta*c1*c2);
             b22 = 4.0/c2;
             b23 = - 2.0/(m_Delta*c1*c2);
-            b24 = - 1.0/c2;    
+            b24 = - 1.0/c2; */   
             
             //Exact solution of the Filters equation (ici on a X_tilde et Delta_tile!!!)
             c1 = 1.0/(1.0 + m_X*m_Delta);
 
-            F11 = c1*(1.0 + m_X*m_Delta*exp(-(m_X + 1.0/m_Delta)/2.0));
-            F12 = c1*(m_X*m_Delta*(1.0 - exp(-(m_X + 1.0/m_Delta)/2.0)));
-            F21 = c1*(1.0 - exp(-(m_X + 1.0/m_Delta)/2.0));
-            F22 = c1*(m_X*m_Delta + exp(-(m_X + 1.0/m_Delta)/2.0));
+            F11 = c1*(1.0 + m_X*m_Delta*exp(-(m_X + 1.0/m_Delta)));
+            F12 = c1*(m_X*m_Delta*(1.0 - exp(-(m_X + 1.0/m_Delta))));
+            F21 = c1*(1.0 - exp(-(m_X + 1.0/m_Delta)));
+            F22 = c1*(m_X*m_Delta + exp(-(m_X + 1.0/m_Delta)));
+            
+            
+            //For implementation of Second order Filter
+//             zeta = 10.0;
+//             omega = 1.0/m_Delta;
+//             c31 = 1.0 + m_X;
+//             
+//             c4 = 2.0*(1.0 + zeta*omega);
+//             c5 = omega*omega;
+//             
+//             c33 = 1.0 + 2.0*zeta*omega + omega*omega - c5*m_X/c31;
+//             
+//             M11 = 1.0/c31 + m_X*c5/(c31*c31*c33);
+//             M12 = c4*m_X/(c31*c33);
+//             M13 = - m_X/(c31*c33);
+//             M21 = c5/(c31*c33);
+//             M22 = c4/c33;
+//             M23 = - 1.0/c33;
+            
             
             //Veriables for averaging the flow
             bool AveragingFlow;
@@ -178,8 +200,8 @@ namespace Nektar
             //-------------------------------------------
             
             cout << "------------------ SFD Parameters ------------------" << endl;
-            cout << "\tDelta = " << m_Delta << endl;
-            cout << "\tX = " << m_X << endl;
+            cout << "\tX = " << m_X0 << endl;
+            cout << "\tDelta = " << m_Delta0 << endl;
             cout << "----------------------------------------------------" << endl;
             
             m_equ[0]->SetStepsToOne(); //m_steps is set to 1. Then "m_equ[0]->DoSolve()" will run for only one time step			
@@ -202,6 +224,9 @@ namespace Nektar
                 //For averaging the flow
                 qAvr[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
                 //qBarAvr[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);   
+                
+                //For the second order filter!!!
+                qBarMinus1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);   
             }
             
             MaxNormDiff_q_qBar = 1.0;
@@ -268,14 +293,26 @@ namespace Nektar
                     //EvaluateNextSFDVariables(i, q0, qBar0, q1, qBar1);
                     ExactFilters(i, q0, qBar0, q1, qBar1);
                     
+                    //For Second Order Filter:
+//                     if (m_n == 0)
+//                     {
+//                         ExactFilters(i, q0, qBar0, q1, qBar1);
+//                     }
+//                     else
+//                     {
+//                         SecondOrderFilter(i, qBarMinus1, q0, qBar0, q1, qBar1);
+//                     }
+//                     
+//                     qBarMinus1[i] = qBar0[i];
+                    
                     qBar0[i] = qBar1[i];
                     m_equ[0]->CopyToPhysField(i, q1[i]);     
                     
                     //For averaging the flow
-                    if ((AveragingFlow == true) && (m_n > StartAvrg))
-                    {
-                        Vmath::Vadd(qAvr[i].num_elements(), q1[i], 1, qAvr[i], 1, qAvr[i], 1); 
-                    }
+//                     if ((AveragingFlow == true) && (m_n > StartAvrg))
+//                     {
+//                         Vmath::Vadd(qAvr[i].num_elements(), q1[i], 1, qAvr[i], 1, qAvr[i], 1); 
+//                     }
                 }
                 //*/
                 
@@ -357,6 +394,27 @@ namespace Nektar
                     out << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
                 }
             }
+        }
+        
+        
+        void DriverSteadyState::SecondOrderFilter(const int i,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                                        Array<OneD, Array<OneD, NekDouble> > &q1,
+                                        Array<OneD, Array<OneD, NekDouble> > &qBar1)
+        {
+            q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+            qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+            
+            //Exact solution of the Filters equation            
+            Vmath::Svtvp(q1[i].num_elements(), M11, q0[i], 1, q1[i], 1, q1[i], 1 );    
+            Vmath::Svtvp(q1[i].num_elements(), M12, qBar0[i], 1, q1[i], 1, q1[i], 1 ); 
+            Vmath::Svtvp(q1[i].num_elements(), M13, qBarMinus1[i], 1, q1[i], 1, q1[i], 1 ); 
+            
+            Vmath::Svtvp(qBar1[i].num_elements(), M21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );    
+            Vmath::Svtvp(qBar1[i].num_elements(), M22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 );  
+            Vmath::Svtvp(qBar1[i].num_elements(), M23, qBarMinus1[i], 1, qBar1[i], 1, qBar1[i], 1 );  
         }
         
         

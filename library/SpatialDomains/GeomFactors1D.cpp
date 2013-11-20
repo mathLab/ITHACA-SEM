@@ -178,6 +178,9 @@ namespace Nektar
             ASSERTL1(m_deriv[0][0].num_elements() == nquad,
                      "Number of quadrature points do not match");
 
+            DerivStorage deriv;
+            FillDeriv(deriv, m_pointsKey);
+
             // If regular or moving geometry.
             if(( m_type == eRegular)||
                ( m_type == eMovingRegular))
@@ -190,10 +193,10 @@ namespace Nektar
                 for(i = 0; i < m_coordDim; ++i)
                 {
                     // i-th component of normal = 1/derivative_i.
-                    m_derivFactors[i][0] = (fabs(m_deriv[0][i][0])
-                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][0]: 0.0;
+                    m_derivFactors[i][0] = (fabs(deriv[0][i][0])
+                            > NekConstants::kNekZeroTol) ? 1.0/deriv[0][i][0]: 0.0;
                     // i-th component contribution to Jacobian.
-                    m_jac[0]    += m_deriv[0][i][0]*m_deriv[0][i][0];
+                    m_jac[0]    += deriv[0][i][0]*deriv[0][i][0];
                 }
                 // take square root
                 m_jac[0] = sqrt(m_jac[0]);
@@ -209,11 +212,11 @@ namespace Nektar
                 {
                     for(int j = 0; j < nquad; ++j)
                     {
-                        m_derivFactors[i][j] = (fabs(m_deriv[0][i][j])
-                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][j] : 0.0;
+                        m_derivFactors[i][j] = (fabs(deriv[0][i][j])
+                            > NekConstants::kNekZeroTol) ? 1.0/deriv[0][i][j] : 0.0;
                     }
                     // compute jacobian for this dimension.
-                    Vmath::Vvtvp(nquad,m_deriv[0][i],1,m_deriv[0][i],1,m_jac,1,m_jac,1);
+                    Vmath::Vvtvp(nquad,deriv[0][i],1,deriv[0][i],1,m_jac,1,m_jac,1);
                 }
                 Vmath::Vsqrt(nquad,m_jac,1,m_jac,1);
             }
@@ -243,6 +246,9 @@ namespace Nektar
 	
             int i;
 
+            DerivStorage deriv;
+            FillDeriv(deriv, m_pointsKey);
+
             NekDouble fac;
             // Regular geometry case
             if((gtype == eRegular)||(gtype == eMovingRegular))
@@ -250,7 +256,7 @@ namespace Nektar
 
                 for(i = 0; i < m_coordDim; ++i)
                 {
-                        Vmath::Fill(nquad, m_deriv[0][i][0],m_tangent[i],1);
+                        Vmath::Fill(nquad, deriv[0][i][0],m_tangent[i],1);
                 }
 
                 // normalise
@@ -275,7 +281,7 @@ namespace Nektar
                 {
                 	for(int j=0; j<nquad; j++)
                         {
-                	m_tangent[i][j] = m_deriv[0][i][j];
+                	m_tangent[i][j] = deriv[0][i][j];
                 	}
                 }
                 //normalise normal vectors
@@ -295,6 +301,30 @@ namespace Nektar
             }           
         }
                 
+        void GeomFactors1D::v_Interp(
+                    const Array<OneD, const LibUtilities::PointsKey> &map_points,
+                    const DerivStorage &src,
+                    const Array<OneD, const LibUtilities::PointsKey> &tpoints,
+                    DerivStorage &tgt) const
+        {
+            for (int i = 0; i < m_coordDim; ++i)
+            {
+                // Interpolate the derivatives:
+                // - from the points as defined in the mapping ('Coords')
+                // - to the points we at which we want to know the metrics
+                //   ('tbasis')
+                if( map_points[0] == tpoints[0])
+                {
+                    tgt[0][i] = src[0][i];
+                }
+                else
+                {
+                    LibUtilities::Interp1D(map_points[0], src[0][i], tpoints[0],
+                                           tgt[0][i]);
+
+                }
+            }
+        }
 
     }
 }

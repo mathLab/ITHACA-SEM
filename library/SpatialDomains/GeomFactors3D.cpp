@@ -197,6 +197,9 @@ namespace Nektar
                 }
             }
 
+            DerivStorage deriv;
+            FillDeriv(deriv, m_pointsKey);
+
             // Only compute single values if the element is regular.
             pts = (m_type == eRegular || m_type == eMovingRegular) ? 1 : nqtot;
 
@@ -217,8 +220,8 @@ namespace Nektar
                 {
                     for (k = 0; k < m_coordDim; ++k)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1,
-                                          &m_deriv[j][k][0], 1,
+                        Vmath::Vvtvp(pts, &deriv[i][k][0], 1,
+                                          &deriv[j][k][0], 1,
                                           &tmp[l][0],        1,
                                           &tmp[l][0],        1);
                     }
@@ -264,7 +267,7 @@ namespace Nektar
                 {
                     for (i = 0; i < m_expDim; ++i)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0],        1,
+                        Vmath::Vvtvp(pts, &deriv[i][k][0],        1,
                                           &m_gmat[m_expDim*i+j][0], 1,
                                           &m_derivFactors[l][0],    1,
                                           &m_derivFactors[l][0],    1);
@@ -289,28 +292,63 @@ namespace Nektar
             Array<OneD, NekDouble> jac(pts, 0.0);
             Array<OneD, NekDouble> tmp(pts, 0.0);
 
+            DerivStorage deriv;
+            FillDeriv(deriv, m_pointsKey);
+
             // J3D - Spencers book page 158
-            Vmath::Vvtvvtm(pts, &m_deriv[1][1][0], 1, &m_deriv[2][2][0], 1,
-                                &m_deriv[2][1][0], 1, &m_deriv[1][2][0], 1,
+            Vmath::Vvtvvtm(pts, &deriv[1][1][0], 1, &deriv[2][2][0], 1,
+                                &deriv[2][1][0], 1, &deriv[1][2][0], 1,
                                 &tmp[0],           1);
-            Vmath::Vvtvp  (pts, &m_deriv[0][0][0], 1, &tmp[0],           1,
+            Vmath::Vvtvp  (pts, &deriv[0][0][0], 1, &tmp[0],           1,
                                 &jac[0],           1, &jac[0],           1);
 
-            Vmath::Vvtvvtm(pts, &m_deriv[2][1][0], 1, &m_deriv[0][2][0], 1,
-                                &m_deriv[0][1][0], 1, &m_deriv[2][2][0], 1,
+            Vmath::Vvtvvtm(pts, &deriv[2][1][0], 1, &deriv[0][2][0], 1,
+                                &deriv[0][1][0], 1, &deriv[2][2][0], 1,
                                 &tmp[0],           1);
-            Vmath::Vvtvp  (pts, &m_deriv[1][0][0], 1, &tmp[0],           1,
+            Vmath::Vvtvp  (pts, &deriv[1][0][0], 1, &tmp[0],           1,
                                 &jac[0],           1, &jac[0],           1);
 
-            Vmath::Vvtvvtm(pts, &m_deriv[0][1][0], 1, &m_deriv[1][2][0], 1,
-                                &m_deriv[1][1][0], 1, &m_deriv[0][2][0], 1,
+            Vmath::Vvtvvtm(pts, &deriv[0][1][0], 1, &deriv[1][2][0], 1,
+                                &deriv[1][1][0], 1, &deriv[0][2][0], 1,
                                 &tmp[0],           1);
-            Vmath::Vvtvp  (pts, &m_deriv[2][0][0], 1, &tmp[0],           1,
+            Vmath::Vvtvp  (pts, &deriv[2][0][0], 1, &tmp[0],           1,
                                 &jac[0],           1, &jac[0],           1);
 
             if (Vmath::Vmin(pts, &jac[0], 1) < 0)
             {
                 m_valid = false;
+            }
+        }
+
+        void GeomFactors3D::v_Interp(
+                    const Array<OneD, const LibUtilities::PointsKey> &map_points,
+                    const DerivStorage &src,
+                    const Array<OneD, const LibUtilities::PointsKey> &tpoints,
+                    DerivStorage &tgt) const
+        {
+            for (int i = 0; i < m_coordDim; ++i)
+            {
+                // Interpolate the derivatives:
+                // - from the points as defined in the mapping ('Coords')
+                // - to the points we at which we want to know the metrics
+                //   ('tbasis')
+                if( (map_points[0] == tpoints[0]) &&
+                    (map_points[1] == tpoints[1]) &&
+                    (map_points[2] == tpoints[2]))
+                {
+                    tgt[0][i] = src[0][i];
+                    tgt[1][i] = src[1][i];
+                    tgt[2][i] = src[2][i];
+                }
+                else
+                {
+                    LibUtilities::Interp3D(map_points[0],    map_points[1],             map_points[2],    src[0][i],
+                                           tpoints[0], tpoints[1],          tpoints[2], tgt[0][i]);
+                    LibUtilities::Interp3D(map_points[0],    map_points[1],             map_points[2],    src[1][i],
+                                           tpoints[0], tpoints[1],          tpoints[2], tgt[1][i]);
+                    LibUtilities::Interp3D(map_points[0],    map_points[1],             map_points[2],    src[2][i],
+                            tpoints[0], tpoints[1],          tpoints[2], tgt[2][i]);
+                }
             }
         }
     }

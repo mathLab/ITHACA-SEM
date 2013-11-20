@@ -68,6 +68,15 @@ namespace Nektar
 
             /// Tests if the element is valid and not self-intersecting.
             void CheckIfValid();
+
+            /// Performs 3D interpolation between two sets of point
+            /// distributions.
+            virtual void v_Interp(
+                        const Array<OneD, const LibUtilities::PointsKey> &map_points,
+                        const DerivStorage &src,
+                        const Array<OneD, const LibUtilities::PointsKey> &tpoints,
+                        DerivStorage &tgt) const;
+
         };
 
         /// Shared pointer to GeomFactors3D object.

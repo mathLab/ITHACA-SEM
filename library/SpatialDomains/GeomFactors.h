@@ -56,21 +56,28 @@ namespace Nektar
         // Forward declarations and useful typedefs
         class GeomFactors;
         class Geometry;
+
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
 
-        SPATIAL_DOMAINS_EXPORT bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
+        SPATIAL_DOMAINS_EXPORT bool operator==(const GeomFactors &lhs,
+                                               const GeomFactors &rhs);
 
         /// Pointer to a GeomFactors object.
         typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
         /// A vector of GeomFactor pointers.
         typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
         /// Iterator for the GeomFactorsVector.
-        typedef GeomFactorsVector::iterator GeomFactorsVectorIter;
+        typedef GeomFactorsVector::iterator         GeomFactorsVectorIter;
         /// An unordered set of GeomFactor pointers.
-        typedef boost::unordered_set< GeomFactorsSharedPtr > GeomFactorsSet;
+        typedef boost::unordered_set< GeomFactorsSharedPtr >
+                                                    GeomFactorsSet;
         /// Iterator for the GeomFactorsSet
-        typedef boost::unordered_set< GeomFactorsSharedPtr >::iterator GeomFactorsSetIter;
-        
+        typedef boost::unordered_set< GeomFactorsSharedPtr >::iterator
+                                                    GeomFactorsSetIter;
+        /// Storage type for derivative of mapping.
+        typedef Array<OneD, Array<OneD, Array<OneD,NekDouble> > >
+                                                    DerivStorage;
+
         /// Calculation and storage of geometric factors associated with the
         /// mapping from StdRegions reference elements to a given LocalRegions
         /// physical element in the mesh.
@@ -82,6 +89,7 @@ namespace Nektar
                 const GeomFactors &lhs,
                 const GeomFactors &rhs);
 
+            /// Destructor.
             SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors();
 
             /// Returns whether the geometry is regular or deformed.
@@ -98,7 +106,7 @@ namespace Nektar
             /// \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
             inline const Array<
                 OneD, const Array<OneD, Array<OneD, NekDouble> > > 
-                    &GetDeriv() const;
+                    GetDeriv() const;
 
             /// Return the derivative of the reference coordinates with respect
             /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
@@ -141,6 +149,8 @@ namespace Nektar
             /// the geometric factors themselves.
             inline size_t GetHash() const;
 
+            void FillDeriv(DerivStorage &deriv,
+                    const Array<OneD, const LibUtilities::PointsKey>& tpoints) const;
 
         protected:
             /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
@@ -170,9 +180,6 @@ namespace Nektar
             /// location of the quadrature points in each dimension.
             Array<OneD,LibUtilities::PointsKey> m_pointsKey;
 
-            /// Array of derivatives of size (m_expDim)x(mCoordim)x(nq)
-            Array<OneD,Array<OneD,Array<OneD,NekDouble> > > m_deriv;
-
             Array<TwoD,NekDouble> m_derivFactors;
 
             /// Array of size (coordim)x(nquad) which holds the components of
@@ -188,6 +195,7 @@ namespace Nektar
             /// the number of quadrature points. Each block holds a component
             /// of the tangent vectors.
             Array<OneD, Array<OneD,NekDouble> > m_tangent;
+            DerivStorage m_deriv;
             
             /// Constructor for GeomFactors class.
             GeomFactors(const GeomType gtype,
@@ -196,6 +204,12 @@ namespace Nektar
 
             /// Copy constructor.
             GeomFactors(const GeomFactors &S);
+
+            virtual void v_Interp(
+                        const Array<OneD, const LibUtilities::PointsKey> &map_points,
+                        const DerivStorage &src,
+                        const Array<OneD, const LibUtilities::PointsKey> &tpoints,
+                        DerivStorage &tgt) const = 0;
 
         private:
             /// (2D only) Compute tangents based on a 1D element.
@@ -211,7 +225,8 @@ namespace Nektar
 
         /// A hash functor for geometric factors. Utilises
         /// GeomFactors::GetHash.
-        struct GeomFactorsHash : std::unary_function<GeomFactorsSharedPtr, std::size_t>
+        struct GeomFactorsHash : std::unary_function<GeomFactorsSharedPtr,
+                                                     std::size_t>
         {
             std::size_t operator()(GeomFactorsSharedPtr const& p) const
             {
@@ -219,29 +234,56 @@ namespace Nektar
             }
         };
 
-        /// Return the type of geometry.
+        /**
+         * @returns             The type of geometry.
+         * @see GeomType
+         */
         inline GeomType GeomFactors::GetGtype()
         {
             return m_type;
         }
 
-        /// Return the Jacobian
+        /**
+         * This routine returns an array of values specifying the Jacobian
+         * of the mapping at quadrature points in the element. The array
+         * is either of size 1 in the case of elements having #GeomType
+         * #eRegular, or of size equal to the number of quadrature points for
+         * #eDeformed elements.
+         *
+         * @returns             Array containing the Jacobian of the coordinate
+         *                      mapping at the quadrature points of the element.
+         * @see                 GeomType
+         */
         inline const Array<OneD, const NekDouble> &GeomFactors::GetJac() const
         {
             return m_jac;
         }
 
-        /// Return the G matrix.
+        /**
+         * This routine returns a two-dimensional array of values specifying
+         * the inverse metric terms associated with the coordinate mapping of
+         * the corresponding reference region to the physical element. These
+         * terms correspond to the \f$g^{ij}\f$ terms in \cite CaYaKiPeSh13 and,
+         * in the case of an embedded manifold, map covariant quantities to
+         * contravariant quantities. The leading index of the array is the index
+         * of the term in the tensor numbered as
+         * \f[\left(\begin{array}{ccc}
+         *    0 & 1 & 2 \\
+         *    1 & 3 & 4 \\
+         *    2 & 4 & 5
+         * \end{array}\right)\f].
+         * The second dimension is either of size 1 in the case of elements
+         * having #GeomType #eRegular, or of size equal to the number of
+         * quadrature points for #eDeformed elements.
+         *
+         * @see [Wikipedia "Covariance and Contravariance of Vectors"]
+         *      (http://en.wikipedia.org/wiki/Covariance_and_contravariance_of_vectors)
+         * @returns             Two-dimensional array containing the inverse
+         *                      metric tensor of the coordinate mapping.
+         */
         inline const Array<TwoD, const NekDouble> &GeomFactors::GetGmat() const
         {
             return m_gmat;
-        }
-
-        /// Return the G matrix.
-        inline const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > >
-            &GeomFactors::GetDeriv() const
-        {
-            return m_deriv;
         }
 
         /// Return the derivative factors matrix.
@@ -249,6 +291,15 @@ namespace Nektar
             &GeomFactors::GetDerivFactors() const
         {
             return m_derivFactors;
+        }
+
+        inline const Array<
+            OneD, const Array<OneD, Array<OneD, NekDouble> > >
+                GeomFactors::GetDeriv() const
+        {
+            DerivStorage d;
+            FillDeriv(d, m_pointsKey);
+            return d;
         }
 
         /// Return the number of dimensions of the coordinate system.

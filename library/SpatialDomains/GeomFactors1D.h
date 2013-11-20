@@ -81,7 +81,14 @@ namespace Nektar
             virtual void v_ComputeEdgeTangents(
             	    	const GeometrySharedPtr &geom,
             	    	const int edge,
-            	    	const LibUtilities::PointsKey &to_key);            
+            	    	const LibUtilities::PointsKey &to_key);
+
+            virtual void v_Interp(
+                        const Array<OneD, const LibUtilities::PointsKey> &map_points,
+                        const DerivStorage &src,
+                        const Array<OneD, const LibUtilities::PointsKey> &tpoints,
+                        DerivStorage &tgt) const;
+
         };
     }
 }

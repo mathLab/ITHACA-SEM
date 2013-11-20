@@ -87,71 +87,10 @@ namespace Nektar
                 m_coords[i] = Coords[i];
             }
 
-            // The quadrature points of the mapping and the number of points.
-            LibUtilities::PointsKey pkey0_map(
-                                        Coords[0]->GetBasis(0)->GetPointsKey());
-            LibUtilities::PointsKey pkey1_map(
-                                        Coords[0]->GetBasis(1)->GetPointsKey());
-            int nquad0_map = pkey0_map.GetNumPoints();
-            int nquad1_map = pkey1_map.GetNumPoints();
-            int nqtot_map  = nquad0_map*nquad1_map;
-
-            // The quadrature points at the points at which we
-            // want to know the metrics (as specified in tbasis)
-            LibUtilities::PointsKey pkey0_tbasis(tbasis[0]->GetPointsKey());
-            LibUtilities::PointsKey pkey1_tbasis(tbasis[1]->GetPointsKey());
-            int nquad0_tbasis = pkey0_tbasis.GetNumPoints();
-            int nquad1_tbasis = pkey1_tbasis.GetNumPoints();
-            int nqtot_tbasis  = nquad0_tbasis*nquad1_tbasis;
-
             // Set the pointskey equal to the pointskey as defined
             // in 'tbasis'
-            m_pointsKey[0] = pkey0_tbasis;
-            m_pointsKey[1] = pkey1_tbasis;
-
-            // setup temp storage
-            Array<OneD, Array<OneD,NekDouble> > d1_map   (coordim);
-            Array<OneD, Array<OneD,NekDouble> > d2_map   (coordim);
-
-            m_deriv = Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(m_expDim);
-            m_deriv[0] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
-            m_deriv[1] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
-
-            // Calculate local derivatives
-            for(int i = 0; i < coordim; ++i)
-            {
-                d1_map[i]    = Array<OneD,NekDouble>(nqtot_map);
-                d2_map[i]    = Array<OneD,NekDouble>(nqtot_map);
-                m_deriv[0][i] = Array<OneD,NekDouble>(nqtot_tbasis);
-                m_deriv[1][i] = Array<OneD,NekDouble>(nqtot_tbasis);
-
-                // Transform from coefficient space to physical space
-                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),
-                                    Coords[i]->UpdatePhys());
-                // Take the derivative (calculated at the points as specified
-                // in 'Coords')
-                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),
-                                        d1_map[i],
-                                        d2_map[i]);
-
-                // Interpolate the derivatives:
-                // - from the points as defined in the mapping ('Coords')
-                // - to the points we at which we want to know the metrics
-                //   ('tbasis')
-                if( (pkey0_map == pkey0_tbasis) &&
-                    (pkey1_map == pkey1_tbasis) )
-                {
-                    m_deriv[0][i] = d1_map[i];
-                    m_deriv[1][i] = d2_map[i];
-                }
-                else
-                {
-                    LibUtilities::Interp2D(pkey0_map, pkey1_map, d1_map[i],
-                                    pkey0_tbasis, pkey1_tbasis, m_deriv[0][i]);
-                    LibUtilities::Interp2D(pkey0_map, pkey1_map, d2_map[i],
-                                    pkey0_tbasis, pkey1_tbasis, m_deriv[1][i]);
-                }
-            }
+            m_pointsKey[0] = tbasis[0]->GetPointsKey();
+            m_pointsKey[1] = tbasis[1]->GetPointsKey();
 
             // Calculate the Jacobian and metric terms.
             SetUpJacGmat2D();
@@ -183,12 +122,15 @@ namespace Nektar
          */
         void GeomFactors2D::SetUpJacGmat2D()
         {
+            DerivStorage deriv;
+            FillDeriv(deriv, m_pointsKey);
+
             // Check the number of derivative dimensions matches the coordinate
             // space.
-            ASSERTL1(m_deriv[0].num_elements()==m_coordDim,
+            ASSERTL1(deriv[0].num_elements()==m_coordDim,
                      "The dimension of array d1 does not match the coordinate "
                      "dimension");
-            ASSERTL1(m_deriv[1].num_elements()==m_coordDim,
+            ASSERTL1(deriv[1].num_elements()==m_coordDim,
                      "The dimension of array d2 does not match the coordinate "
                      "dimension");
 
@@ -204,7 +146,7 @@ namespace Nektar
             {
                 for (j = 0; j < m_coordDim; ++j)
                 {
-                    ASSERTL1(m_deriv[i][j].num_elements() == nqtot,
+                    ASSERTL1(deriv[i][j].num_elements() == nqtot,
                              "Number of quadrature points do not match");
                 }
             }
@@ -229,8 +171,8 @@ namespace Nektar
                 {
                     for (k = 0; k < m_coordDim; ++k)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1,
-                                          &m_deriv[j][k][0], 1,
+                        Vmath::Vvtvp(pts, &deriv[i][k][0], 1,
+                                          &deriv[j][k][0], 1,
                                           &tmp[l][0],        1,
                                           &tmp[l][0],        1);
                     }
@@ -261,7 +203,7 @@ namespace Nektar
                 {
                     for (i = 0; i < m_expDim; ++i)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0],        1,
+                        Vmath::Vvtvp(pts, &deriv[i][k][0],        1,
                                           &m_gmat[m_expDim*i+j][0], 1,
                                           &m_derivFactors[l][0],    1,
                                           &m_derivFactors[l][0],    1);
@@ -290,9 +232,12 @@ namespace Nektar
             int pts = (m_type == eRegular || m_type == eMovingRegular)
                             ? 1 : nqtot;
 
+            DerivStorage deriv;
+            FillDeriv(deriv, m_pointsKey);
+
             Array<OneD, NekDouble> jac(pts, 0.0);
-            Vmath::Vvtvvtm(pts, &m_deriv[0][0][0], 1, &m_deriv[1][1][0], 1,
-                                &m_deriv[1][0][0], 1, &m_deriv[0][1][0], 1,
+            Vmath::Vvtvvtm(pts, &deriv[0][0][0], 1, &deriv[1][1][0], 1,
+                                &deriv[1][0][0], 1, &deriv[0][1][0], 1,
                                 &jac[0],           1);
 
             if(Vmath::Vmin(pts, &jac[0], 1) < 0)
@@ -312,10 +257,13 @@ namespace Nektar
          */
         void GeomFactors2D::v_ComputeSurfaceNormals()
         {
+            DerivStorage deriv;
+            FillDeriv(deriv, m_pointsKey);
+
             // Number of dimensions.
-            int coordim = m_deriv[0].num_elements();
+            int coordim = deriv[0].num_elements();
             // Total number of points in the element.
-            int nqtot = m_deriv[0][0].num_elements();
+            int nqtot = deriv[0][0].num_elements();
 
             // Allocate temporary storage.
             Array<OneD, NekDouble> temp(nqtot,0.0);
@@ -329,27 +277,27 @@ namespace Nektar
 
             // Derive Geometric Normal vectors by cross product of two
             // tangential basis vectors.
-            Vmath::Vmul (nqtot, m_deriv[0][2],     1,
-                                m_deriv[1][1],     1,
+            Vmath::Vmul (nqtot, deriv[0][2],     1,
+                                deriv[1][1],     1,
                                 temp,              1);
-            Vmath::Vvtvm(nqtot, m_deriv[0][1],     1,
-                                m_deriv[1][2],     1,
+            Vmath::Vvtvm(nqtot, deriv[0][1],     1,
+                                deriv[1][2],     1,
                                 temp,              1,
                                 m_normal[0],       1);
 
-            Vmath::Vmul (nqtot, m_deriv[0][0],     1,
-                                m_deriv[1][2],     1,
+            Vmath::Vmul (nqtot, deriv[0][0],     1,
+                                deriv[1][2],     1,
                                 temp,              1);
-            Vmath::Vvtvm(nqtot, m_deriv[0][2],     1,
-                                m_deriv[1][0],     1,
+            Vmath::Vvtvm(nqtot, deriv[0][2],     1,
+                                deriv[1][0],     1,
                                 temp,              1,
                                 m_normal[1],       1);
 
-            Vmath::Vmul (nqtot, m_deriv[0][1],     1,
-                                m_deriv[1][0],     1,
+            Vmath::Vmul (nqtot, deriv[0][1],     1,
+                                deriv[1][0],     1,
                                 temp,              1);
-            Vmath::Vvtvm(nqtot, m_deriv[0][0],     1,
-                                m_deriv[1][1],     1,
+            Vmath::Vvtvm(nqtot, deriv[0][0],     1,
+                                deriv[1][1],     1,
                                 temp,              1,
                                 m_normal[2],       1);
 
@@ -371,6 +319,35 @@ namespace Nektar
                 Vmath::Vdiv(nqtot,  m_normal[i],   1,
                                     temp,          1,
                                     m_normal[i],   1);
+            }
+        }
+
+
+        void GeomFactors2D::v_Interp(
+                    const Array<OneD, const LibUtilities::PointsKey> &map_points,
+                    const DerivStorage &src,
+                    const Array<OneD, const LibUtilities::PointsKey> &tpoints,
+                    DerivStorage &tgt) const
+        {
+            for (int i = 0; i < m_coordDim; ++i)
+            {
+                // Interpolate the derivatives:
+                // - from the points as defined in the mapping ('Coords')
+                // - to the points we at which we want to know the metrics
+                //   ('tbasis')
+                if( (map_points[0] == tpoints[0]) &&
+                    (map_points[1] == tpoints[1]) )
+                {
+                    tgt[0][i] = src[0][i];
+                    tgt[1][i] = src[1][i];
+                }
+                else
+                {
+                    LibUtilities::Interp2D(map_points[0], map_points[1], src[0][i],
+                                    tpoints[0], tpoints[1], tgt[0][i]);
+                    LibUtilities::Interp2D(map_points[0], map_points[1], src[1][i],
+                                    tpoints[0], tpoints[1], tgt[1][i]);
+                }
             }
         }
 

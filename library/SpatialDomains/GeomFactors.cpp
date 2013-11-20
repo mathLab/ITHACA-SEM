@@ -186,5 +186,66 @@ namespace Nektar
 
             return true;
         }
+
+        void GeomFactors::FillDeriv(
+                DerivStorage &deriv,
+                const Array<OneD, const LibUtilities::PointsKey>
+                                         &tpoints) const
+        {
+            ASSERTL1(tpoints.num_elements() == m_expDim,
+                     "Dimension of target basis does not match expansion basis.");
+
+            int i = 0;
+            int nqtot_map = 1;
+            int nqtot_tbasis = 1;
+            deriv = DerivStorage(m_expDim);
+            DerivStorage d_map = DerivStorage(m_expDim);
+            Array<OneD, LibUtilities::PointsKey> map_points(m_expDim);
+            for (i = 0; i < m_expDim; ++i)
+            {
+                map_points[i] =m_coords[0]->GetBasis(i)->GetPointsKey();
+                nqtot_map *= map_points[i].GetNumPoints();
+                nqtot_tbasis *= tpoints[i].GetNumPoints();
+                deriv[i] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
+                d_map[i] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
+            }
+
+            // Calculate local derivatives
+            for(int i = 0; i < m_coordDim; ++i)
+            {
+                for (int j = 0; j < m_expDim; ++j)
+                {
+                    d_map[j][i] = Array<OneD,NekDouble>(nqtot_map);
+                    deriv[j][i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                }
+
+                // Transform from coefficient space to physical space
+                m_coords[i]->BwdTrans(m_coords[i]->GetCoeffs(),
+                                    m_coords[i]->UpdatePhys());
+                // Take the derivative (calculated at the points as specified
+                // in 'Coords')
+                switch (m_expDim)
+                {
+                    case 1:
+                        m_coords[i]->StdPhysDeriv(m_coords[i]->GetPhys(),
+                                                d_map[0][i]);
+break;
+                    case 2:
+                        m_coords[i]->StdPhysDeriv(m_coords[i]->GetPhys(),
+                                                d_map[0][i],
+                                                d_map[1][i]);
+break;
+                    case 3:
+                        m_coords[i]->StdPhysDeriv(m_coords[i]->GetPhys(),
+                                                d_map[0][i],
+                                                d_map[1][i],
+                                                d_map[2][i]);
+break;
+                }
+            }
+
+            v_Interp(map_points, d_map, tpoints, deriv);
+        }
+
     }; //end of namespace
 }; //end of namespace

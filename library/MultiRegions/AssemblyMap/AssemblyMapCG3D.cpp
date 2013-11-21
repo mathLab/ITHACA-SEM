@@ -833,11 +833,7 @@ namespace Nektar
                     edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                     nEdgeInteriorCoeffs = EdgeSize[meshEdgeId];
                     m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
-                    
-                    //if(nEdgeInteriorCoeffs > 0)
-                    {
-                        m_numNonDirEdges++;
-                    }
+                    m_numNonDirEdges++;
                 }
                 else
                 {
@@ -866,10 +862,7 @@ namespace Nektar
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                                 m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
 
-                                //if(nEdgeInteriorCoeffs > 0)
-                                {
-                                    m_numNonDirEdges++;
-                                }
+                                m_numNonDirEdges++;
                             }
                             localEdges[localEdgeOffset+edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
                             vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = nEdgeInteriorCoeffs;
@@ -895,11 +888,7 @@ namespace Nektar
                     faceTempGraphVertId[meshFaceId]  = tempGraphVertId++;
                     nFaceInteriorCoeffs  = FaceSize[meshFaceId];
                     m_numNonDirFaceModes+=nFaceInteriorCoeffs;
-                    
-                    //if(nFaceInteriorCoeffs > 0)
-                    {
-                        m_numNonDirFaces++;
-                    }                
+                    m_numNonDirFaces++;
                 }
                 else if (pIt->first < pIt->second[0].id)
                 {
@@ -912,11 +901,7 @@ namespace Nektar
                     faceTempGraphVertId[pIt->second[0].id] = tempGraphVertId++;
                     nFaceInteriorCoeffs  = FaceSize[pIt->first]; 
                     m_numNonDirFaceModes+=nFaceInteriorCoeffs;
-                    
-                    //if(nFaceInteriorCoeffs > 0)
-                    {
-                        m_numNonDirFaces++;
-                    }
+                    m_numNonDirFaces++;
                 }
             }
 
@@ -940,10 +925,7 @@ namespace Nektar
                                 faceTempGraphVertId[meshFaceId] = tempGraphVertId++;
                                 m_numNonDirFaceModes+=nFaceInteriorCoeffs;
 
-                                //if(nFaceInteriorCoeffs > 0)
-                                {
-                                    m_numNonDirFaces++;
-                                }
+                                m_numNonDirFaces++;
                             }
                             localFaces[localFaceOffset+faceCnt++] = faceTempGraphVertId[meshFaceId];
                             vwgts_map[ faceTempGraphVertId[meshFaceId] ] = nFaceInteriorCoeffs;

@@ -2502,7 +2502,7 @@ namespace Nektar
                 for (unsigned int j = i; j < dim; ++j)
                 {
                     m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
-                    if (type != SpatialDomains::eRegular)
+                    if (type == SpatialDomains::eDeformed)
                     {
                         Vmath::Vcopy(nqtot, &m_metricinfo->GetGmat()[i*dim+j][0], 1,
                                      &m_metrics[m[i][j]][0], 1);

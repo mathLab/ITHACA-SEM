@@ -366,13 +366,11 @@ namespace Nektar
                 Lcoords[0] = 2.0*beta  - 1.0;
                 Lcoords[1] = 2.0*gamma - 1.0;
                 Lcoords[2] = 2.0*delta - 1.0;
-
             }
             else
             {
                 v_FillGeom();
             
-#if 0
                 // Determine nearest point of coords  to values in m_xmap
                 int npts = m_xmap->GetTotPoints();
                 Array<OneD, NekDouble> ptsx(npts), ptsy(npts), ptsz(npts);
@@ -407,8 +405,7 @@ namespace Nektar
                 Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 - 1.0;
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords,Lcoords);
-#endif
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords);
             }
         }
         

@@ -1575,7 +1575,6 @@ namespace Nektar
             }
         }
 
-
         /** 
          * @brief Calculate the \f$ L^2 \f$ error of the \f$ Q_{\rm dir} \f$
          * derivative using the consistent DG evaluation of \f$ Q_{\rm dir} \f$.

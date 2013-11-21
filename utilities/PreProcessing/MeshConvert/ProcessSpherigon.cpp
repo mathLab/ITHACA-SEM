@@ -43,6 +43,7 @@ using namespace std;
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/NodalTriExp.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #define TOL_BLEND 1.0e-8
@@ -89,7 +90,7 @@ namespace Nektar
         {
             config["N"] = ConfigOption(false, "5",
                 "Number of points to add to face edges.");
-            config["surf"] = ConfigOption(false, "-1",
+            config["surf"] = ConfigOption(false, "",
                 "Tag identifying surface to process.");
             config["BothTriFacesOnPrism"] = ConfigOption(true, "-1",
                 "Curve both triangular faces of prism on boundary.");
@@ -314,10 +315,15 @@ namespace Nektar
                 t.push_back(0);
                 
                 // Construct list of spherigon edges/faces from a tag.
-                int surfTag = config["surf"].as<int>();
+                string surfTag = config["surf"].as<string>();
                 bool prismTag = config["BothTriFacesOnPrism"].beenSet;
-                if (surfTag != -1)
+
+                if (surfTag != "")
                 {
+                    vector<unsigned int> surfs;
+                    ParseUtils::GenerateSeqVector(surfTag.c_str(), surfs);
+                    sort(surfs.begin(), surfs.end());
+
                     m->spherigonSurfs.clear();
                     for (int i = 0; i < m->element[m->expDim].size(); ++i)
                     {
@@ -335,9 +341,14 @@ namespace Nektar
 
                             ElementSharedPtr bEl  = m->element[m->expDim-1][bl];
                             vector<int>      tags = bEl->GetTagList();
+                            vector<int>      inter;
 
-                            if (find(tags.begin(), tags.end(), surfTag) !=
-                                tags.end())
+                            sort(tags.begin(), tags.end());
+                            set_intersection(surfs.begin(), surfs.end(),
+                                             tags .begin(), tags .end(),
+                                             back_inserter(inter));
+
+                            if (inter.size() == 1)
                             {
                                 m->spherigonSurfs.insert(make_pair(i, j));
                                 

@@ -483,7 +483,6 @@ namespace Nektar
                         
                         if (reverseEdge)
                         {
-                            cout << n << " " << edgeList[i]->edgeNodes.size() << endl;
                             for (int j = n-2; j > 0; --j)
                             {
                                 tmp[skips[i][0] + j*skips[i][1]] = 
@@ -492,7 +491,6 @@ namespace Nektar
                         }
                         else
                         {
-                            cout << edgeList[i]->edgeNodes.size() << endl;
                             for (int j = 1; j < n-1; ++j)
                             {
                                 tmp[skips[i][0] + j*skips[i][1]] = 
@@ -502,7 +500,6 @@ namespace Nektar
                     }
 
                     // Write interior
-                    cout << faceNodes.size() << endl;
                     for (int i = 1; i < n-1; ++i)
                     {
                         for (int j = 1; j < n-1; ++j)

@@ -341,18 +341,17 @@ namespace Nektar
                             {
                                 m->spherigonSurfs.insert(make_pair(i, j));
                                 
-                                // Curve other tri face on Prism. Note
-                                // could be problem on pyramid when
-                                // implemented
-                                if((nSurf == 5)&&prismTag)
+                                // Curve other tri face on Prism. Note could be
+                                // problem on pyramid when implemented.
+                                if(nSurf == 5 && prismTag)
                                 {
-                                    // add other end of prism on boundary for smoothing
-                                    int triFace = (j == 1)? 3:1;
-                                    
-                                    m->spherigonSurfs.insert(make_pair(i, triFace));
+                                    // add other end of prism on boundary for
+                                    // smoothing
+                                    int triFace = j == 1 ? 3 : 1;
+                                    m->spherigonSurfs.insert(
+                                        make_pair(i, triFace));
                                 }
                             }
-
                         }
                     }
                 }
@@ -630,9 +629,9 @@ namespace Nektar
                         // Perform steps denoted in equations 2, 3, 8 for C1
                         // smoothing.
                         double tmp1;
-                        K[k]  = P+N*((v[k]-P).dot(N));
+                        K [k] = P+N*((v[k]-P).dot(N));
                         tmp1  = (v[k]-K[k]).dot(vN[k]) / (1.0 + N.dot(vN[k]));
-                        Q[k]  = K[k] + N*tmp1;
+                        Q [k] = K[k] + N*tmp1;
                         Qp[k] = v[k] - N*((v[k]-P).dot(N));
                     }
                     
@@ -736,7 +735,9 @@ namespace Nektar
                     FaceSharedPtr f = m->element[m->expDim][it->first]->
                         GetFace(it->second);
                     f->faceNodes = el[elmt]->GetVolumeNodes();
-                    f->curveType = LibUtilities::eNodalTriElec;
+                    f->curveType = f->faceNodes.size() == 3 ?
+                        LibUtilities::eNodalTriElec :
+                        LibUtilities::eGaussLobattoLegendre;
                 }
             }
 

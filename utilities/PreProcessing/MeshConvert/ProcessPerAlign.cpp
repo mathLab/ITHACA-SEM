@@ -83,9 +83,6 @@ namespace Nektar
 
         void ProcessPerAlign::Process()
         {
-            static int tetFaceNodes[4][3] = {
-                {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
-
             int    surf1  = config["surf1"]. as<int>   ();
             int    surf2  = config["surf2"]. as<int>   ();
             string dir    = config["dir"].   as<string>();

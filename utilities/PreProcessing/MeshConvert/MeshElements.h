@@ -483,28 +483,31 @@ namespace Nektar
                         
                         if (reverseEdge)
                         {
+                            cout << n << " " << edgeList[i]->edgeNodes.size() << endl;
                             for (int j = n-2; j > 0; --j)
                             {
                                 tmp[skips[i][0] + j*skips[i][1]] = 
-                                    edgeList[i]->edgeNodes[j];
+                                    edgeList[i]->edgeNodes[j-1];
                             }
                         }
                         else
                         {
+                            cout << edgeList[i]->edgeNodes.size() << endl;
                             for (int j = 1; j < n-1; ++j)
                             {
                                 tmp[skips[i][0] + j*skips[i][1]] = 
-                                    edgeList[i]->edgeNodes[j];
+                                    edgeList[i]->edgeNodes[j-1];
                             }
                         }
                     }
-                    
+
                     // Write interior
+                    cout << faceNodes.size() << endl;
                     for (int i = 1; i < n-1; ++i)
                     {
                         for (int j = 1; j < n-1; ++j)
                         {
-                            tmp[i*n+j] = faceNodes[(i-2)*(n-2)+(j-2)];
+                            tmp[i*n+j] = faceNodes[(i-1)*(n-2)+(j-1)];
                         }
                     }
 

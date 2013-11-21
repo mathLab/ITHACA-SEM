@@ -194,14 +194,11 @@ namespace Nektar
             /// Generate a %SpatialDomains::PointGeom for this node.
             SpatialDomains::PointGeomSharedPtr GetGeom(int coordDim)
             {
-                if (m_geom)
-                {
-                    return m_geom;
-                }
-                
-                m_geom = MemoryManager<SpatialDomains::PointGeom>::
-                    AllocateSharedPtr(coordDim,id,x,y,z);
-                return m_geom;
+                SpatialDomains::PointGeomSharedPtr ret =
+                    MemoryManager<SpatialDomains::PointGeom>
+                        ::AllocateSharedPtr(coordDim,id,x,y,z);
+
+                return ret;
             }
             
             /// ID of node.
@@ -292,6 +289,8 @@ namespace Nektar
             {
                 // Create edge vertices.
                 SpatialDomains::PointGeomSharedPtr p[2];
+                SpatialDomains::SegGeomSharedPtr ret;
+
                 p[0] = n1->GetGeom(coordDim);
                 p[1] = n2->GetGeom(coordDim);
                 
@@ -309,16 +308,16 @@ namespace Nektar
                     }
                     c->m_points.push_back(p[1]);
                     
-                    m_geom = MemoryManager<SpatialDomains::SegGeom>::
+                    ret = MemoryManager<SpatialDomains::SegGeom>::
                         AllocateSharedPtr(id, coordDim, p, c);
                 }
                 else
                 {
-                    m_geom = MemoryManager<SpatialDomains::SegGeom>::
+                    ret = MemoryManager<SpatialDomains::SegGeom>::
                         AllocateSharedPtr(id, coordDim, p);
                 }
-                
-                return m_geom;
+
+                return ret;
             }
 
             /// ID of edge.
@@ -525,8 +524,9 @@ namespace Nektar
             {
                 int nEdge = edgeList.size();
                 
-                SpatialDomains::SegGeomSharedPtr edges[4];
-                StdRegions::Orientation      edgeo[4];
+                SpatialDomains::SegGeomSharedPtr    edges[4];
+                SpatialDomains::Geometry2DSharedPtr ret;
+                StdRegions::Orientation             edgeo[4];
                 
                 for (int i = 0; i < nEdge; ++i)
                 {
@@ -541,16 +541,16 @@ namespace Nektar
                 
                 if (nEdge == 3)
                 {
-                    m_geom = MemoryManager<SpatialDomains::TriGeom>::
+                    ret = MemoryManager<SpatialDomains::TriGeom>::
                         AllocateSharedPtr(id, edges, edgeo);
                 }
                 else
                 {
-                    m_geom = MemoryManager<SpatialDomains::QuadGeom>::
+                    ret = MemoryManager<SpatialDomains::QuadGeom>::
                         AllocateSharedPtr(id, edges, edgeo);
                 }
 
-                return m_geom;
+                return ret;
             }
             
             /// ID of the face.

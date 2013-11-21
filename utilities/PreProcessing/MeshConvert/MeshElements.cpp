@@ -435,6 +435,8 @@ namespace Nektar
         {
             // Create edge vertices.
             SpatialDomains::PointGeomSharedPtr p[2];
+            SpatialDomains::SegGeomSharedPtr   ret;
+
             p[0] = vertex[0]->GetGeom(coordDim);
             p[1] = vertex[1]->GetGeom(coordDim);
             
@@ -451,16 +453,16 @@ namespace Nektar
                 }
                 c->m_points.push_back(p[1]);
                 
-                m_geom = MemoryManager<SpatialDomains::SegGeom>::
+                ret = MemoryManager<SpatialDomains::SegGeom>::
                     AllocateSharedPtr(m_id, 2, p, c);
             }
             else
             {
-                m_geom = MemoryManager<SpatialDomains::SegGeom>::
+                ret = MemoryManager<SpatialDomains::SegGeom>::
                     AllocateSharedPtr(m_id, 2, p);
             }
-            
-            return m_geom;
+
+            return ret;
         }
 
         /**
@@ -529,8 +531,9 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
         {
-            SpatialDomains::SegGeomSharedPtr         edges[3];
+            SpatialDomains::SegGeomSharedPtr   edges[3];
             SpatialDomains::PointGeomSharedPtr verts[3];
+            SpatialDomains::TriGeomSharedPtr   ret;
             
             for (int i = 0; i < 3; ++i)
             {
@@ -544,10 +547,10 @@ namespace Nektar
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
             };
             
-            m_geom = MemoryManager<SpatialDomains::TriGeom>::
+            ret = MemoryManager<SpatialDomains::TriGeom>::
                 AllocateSharedPtr(m_id, verts, edges, edgeorient);
-            
-            return m_geom;
+
+            return ret;
         }
         
         /**
@@ -771,8 +774,9 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
         {
-            SpatialDomains::SegGeomSharedPtr         edges[4];
+            SpatialDomains::SegGeomSharedPtr   edges[4];
             SpatialDomains::PointGeomSharedPtr verts[4];
+            SpatialDomains::QuadGeomSharedPtr  ret;
             
             for (int i = 0; i < 4; ++i)
             {
@@ -786,11 +790,11 @@ namespace Nektar
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
                 SpatialDomains::SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
             };
-            
-            m_geom = MemoryManager<SpatialDomains::QuadGeom>::
+
+            ret = MemoryManager<SpatialDomains::QuadGeom>::
                 AllocateSharedPtr(m_id, verts, edges, edgeorient);
-            
-            return m_geom;
+
+            return ret;
         }
 
         /**
@@ -914,6 +918,7 @@ namespace Nektar
         SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
         {
             SpatialDomains::TriGeomSharedPtr tfaces[4];
+            SpatialDomains::TetGeomSharedPtr ret;
             
             for (int i = 0; i < 4; ++i)
             {
@@ -921,10 +926,10 @@ namespace Nektar
                     <SpatialDomains::TriGeom>(face[i]->GetGeom(coordDim));
             }
 
-            m_geom = MemoryManager<SpatialDomains::TetGeom>::
+            ret = MemoryManager<SpatialDomains::TetGeom>::
                 AllocateSharedPtr(tfaces);
-            
-            return m_geom;
+
+            return ret;
         }
         
         /**
@@ -1310,16 +1315,17 @@ namespace Nektar
         SpatialDomains::GeometrySharedPtr Prism::GetGeom(int coordDim)
         {
             SpatialDomains::Geometry2DSharedPtr faces[5];
+            SpatialDomains::PrismGeomSharedPtr  ret;
             
             for (int i = 0; i < 5; ++i)
             {
                 faces[i] = face[i]->GetGeom(coordDim);
             }
 
-            m_geom = MemoryManager<SpatialDomains::PrismGeom>::
+            ret = MemoryManager<SpatialDomains::PrismGeom>::
                 AllocateSharedPtr(faces);
-            
-            return m_geom;
+
+            return ret;
         }
 
         /**
@@ -1609,6 +1615,7 @@ namespace Nektar
         SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)
         {
             SpatialDomains::QuadGeomSharedPtr faces[6];
+            SpatialDomains::HexGeomSharedPtr  ret;
             
             for (int i = 0; i < 6; ++i)
             {
@@ -1616,10 +1623,10 @@ namespace Nektar
                     <SpatialDomains::QuadGeom>(face[i]->GetGeom(coordDim));
             }
 
-            m_geom = MemoryManager<SpatialDomains::HexGeom>::
+            ret = MemoryManager<SpatialDomains::HexGeom>::
                 AllocateSharedPtr(faces);
-            
-            return m_geom;
+
+            return ret;
         }
 
         /**

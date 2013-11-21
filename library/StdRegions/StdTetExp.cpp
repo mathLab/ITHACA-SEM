@@ -1663,7 +1663,7 @@ namespace Nektar
             }
         }
         
-        int StdTetExp::v_GetVertexMap(const int localVertexId)
+        int StdTetExp::v_GetVertexMap(const int localVertexId, bool useCoeffPacking)
         {
             ASSERTL0((GetEdgeBasisType(localVertexId)==LibUtilities::eModified_A)||
                      (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_B)||
@@ -1671,34 +1671,70 @@ namespace Nektar
                      "Mapping not defined for this type of basis");
 
             int localDOF = 0;
-            switch(localVertexId)
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
+                switch(localVertexId)
+                {
                 case 0:
-                {
-                    localDOF = GetMode(0,0,0);
-                    break;
-                }
+                    {
+                        localDOF = GetMode(0,0,0);
+                        break;
+                    }
                 case 1:
-                {
-                    localDOF = GetMode(1,0,0);
-                    break;
-                }
+                    {
+                        localDOF = GetMode(0,0,1);
+                        break;
+                    }
                 case 2:
-                {
-                    localDOF = GetMode(0,1,0);
-                    break;
-                }
+                    {
+                        localDOF = GetMode(0,1,0);
+                        break;
+                    }
                 case 3:
-                {
-                    localDOF = GetMode(0,0,1);
-                    break;
-                }
+                    {
+                        localDOF = GetMode(1,0,0);
+                        break;
+                    }
                 default:
-                {
-                    ASSERTL0(false,"Vertex ID must be between 0 and 3");
-                    break;
+                    {
+                        ASSERTL0(false,"Vertex ID must be between 0 and 3");
+                        break;
+                    }
                 }
             }
+            else
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    {
+                        localDOF = GetMode(0,0,0);
+                        break;
+                    }
+                case 1:
+                    {
+                        localDOF = GetMode(1,0,0);
+                        break;
+                    }
+                case 2:
+                    {
+                        localDOF = GetMode(0,1,0);
+                        break;
+                    }
+                case 3:
+                    {
+                    localDOF = GetMode(0,0,1);
+                    break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"Vertex ID must be between 0 and 3");
+                        break;
+                    }
+                }
+
+            }
+
             return localDOF;
         }
 

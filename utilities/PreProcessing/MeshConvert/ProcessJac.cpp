@@ -135,6 +135,7 @@ namespace Nektar
 
             if (extract)
             {
+                m->element[m->expDim-1].clear();
                 ProcessVertices();
                 ProcessEdges();
                 ProcessFaces();

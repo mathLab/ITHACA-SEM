@@ -161,6 +161,7 @@ namespace Nektar
          */
         SessionReader::SessionReader(int argc, char *argv[])
         {
+            m_xmlDoc    = 0;
             m_filenames = ParseCommandLineArguments(argc, argv);
 
             ASSERTL0(m_filenames.size() > 0, "No session file(s) given.");
@@ -191,6 +192,7 @@ namespace Nektar
             ASSERTL0(pFilenames.size() > 0, "No filenames specified.");
 
             ParseCommandLineArguments(argc, argv);
+            m_xmlDoc      = 0;
             m_filenames   = pFilenames;
 
             m_filename    = pFilenames[0];

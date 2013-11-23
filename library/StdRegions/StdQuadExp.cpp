@@ -890,57 +890,111 @@ namespace Nektar
             }
         }
 
-        int StdQuadExp::v_GetVertexMap(int localVertexId)
+        int StdQuadExp::v_GetVertexMap(int localVertexId, bool useCoeffPacking)
         {
             int localDOF = 0;
-            switch(localVertexId)
-            {
-            case 0:
-                { 
-                    localDOF = 0;    
-                }
-                break;
-            case 1:
-                {              
-                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                    {
-                        localDOF = m_base[0]->GetNumModes()-1;
-                    }
-                    else
-                    {
-                        localDOF = 1;
-                    }
-                }
-                break;
-            case 2:
-                {   
-                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                    {
-                        localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
-                    }
-                    else
-                    {
-                        localDOF = m_base[0]->GetNumModes()+1;
-                    }                    
-                }
-                break;
-            case 3:
-                { 
-                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                    {
-                        localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
-                    }
-                    else
-                    {
-                        localDOF = m_base[0]->GetNumModes();
-                    }
-                }
-                break;
-            default:
-                ASSERTL0(false,"eid must be between 0 and 3");
-                break;
-            }
 
+            if(useCoeffPacking == true)
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                    }
+                    break;
+                case 1:
+                    {              
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    { 
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes();
+                        }
+                    }
+                    break;
+                case 3:
+                    {   
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes()+1;
+                        }                    
+                    }
+                break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                }
+                
+            }
+            else
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                    }
+                    break;
+                case 1:
+                    {              
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    {   
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes()+1;
+                        }                    
+                    }
+                break;
+                case 3:
+                    { 
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes();
+                        }
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                }
+            }                
             return localDOF;
         }
  

@@ -344,15 +344,17 @@ namespace Nektar
                 {
                     returnval->m_localToGlobalMap[cnt] =
                         returnval->m_localToGlobalBndMap[cnt] =
-                        m_localToGlobalMap[cnt1 + (*exp)[i]->GetVertexMap(j)];
+                        m_localToGlobalMap[cnt1 + (*exp)[i]->GetVertexMap(j,true)];
                     GlobCoeffs[returnval->m_localToGlobalMap[cnt]] = 1;
 
+#if 1
                     // Set up numLocalDirBndCoeffs
-                    if (returnval->m_localToGlobalMap[cnt] <
+                    if ((returnval->m_localToGlobalMap[cnt]) <
                             m_numGlobalDirBndCoeffs)
                     {
-                        returnval->m_numLocalDirBndCoeffs++;
+                            returnval->m_numLocalDirBndCoeffs++;
                     }
+#endif
                     cnt++;
                 }
                 cnt1 += (*exp)[i]->GetNcoeffs();
@@ -423,7 +425,7 @@ namespace Nektar
                     returnval->m_localToGlobalMap[i] = GlobCoeffs[cnt];
                 }
             }
-
+            
             return returnval;
         }
 

@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        cout << "Interpolating [" ;
+        cout << "Interpolating [" << flush;
                                 
         if (expdim == 2)
         {
@@ -409,7 +409,7 @@ void InterpolateField(Array<OneD, MultiRegions::ExpListSharedPtr> &field0,
         // Obtain Element and LocalCoordinate to interpolate
         elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-4);
         
-        // Interpolate fields
+
         offset = field0[0]->GetPhys_Offset(field0[0]->GetOffset_Elmt_Id(elmtid));
 
         for(f = 0; f < field1.num_elements(); ++f)
@@ -429,7 +429,7 @@ void InterpolateField(Array<OneD, MultiRegions::ExpListSharedPtr> &field0,
         
         if(intpts%1000 == 0)
         {
-            cout <<".";
+	  cout <<"." << flush;
         }
         intpts ++;
     }    

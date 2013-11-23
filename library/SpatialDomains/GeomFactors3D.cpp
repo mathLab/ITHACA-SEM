@@ -136,12 +136,12 @@ namespace Nektar
                 }
                 else
                 {
-                    LibUtilities::Interp3D(pkey0_map,    pkey1_map,             pkey2_map,    d1_map[i],
-                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, m_deriv[0][i]);
-                    LibUtilities::Interp3D(pkey0_map,    pkey1_map,             pkey2_map,    d2_map[i],
-                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, m_deriv[1][i]);
-                    LibUtilities::Interp3D(pkey0_map,    pkey1_map,             pkey2_map,    d3_map[i],
-                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, m_deriv[2][i]);
+                    LibUtilities::Interp3D(pkey0_map,    pkey1_map,      pkey2_map,    d1_map[i],
+                                           pkey0_tbasis, pkey1_tbasis,   pkey2_tbasis, m_deriv[0][i]);
+                    LibUtilities::Interp3D(pkey0_map,    pkey1_map,      pkey2_map,    d2_map[i],
+                                           pkey0_tbasis, pkey1_tbasis,   pkey2_tbasis, m_deriv[1][i]);
+                    LibUtilities::Interp3D(pkey0_map,    pkey1_map,      pkey2_map,    d3_map[i],
+                                           pkey0_tbasis, pkey1_tbasis,   pkey2_tbasis, m_deriv[2][i]);
                 }
             }
 

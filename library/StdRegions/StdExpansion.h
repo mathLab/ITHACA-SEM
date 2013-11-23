@@ -1293,6 +1293,33 @@ namespace Nektar
                 return v_PhysEvaluate(coords,physvals);
             }
 
+
+            /** \brief This function evaluates the expansion at a single
+             *  (arbitrary) point of the domain
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_PhysEvaluate()
+             *
+             *  Based on the value of the expansion at the quadrature
+             *  points provided in \a physvals, this function
+             *  calculates the value of the expansion at an arbitrary
+             *  single points associated with the interpolation
+             *  matrices provided in \f$ I \f$.
+             *
+             *  \param I an Array of lagrange interpolantes evaluated
+             *  at the coordinate and going through the local physical
+             *  quadrature
+             *  \param physvals the interpolated field at the quadrature points
+             *
+             *  \return returns the value of the expansion at the
+             *  single point
+             */
+            NekDouble PhysEvaluate(const Array<OneD, DNekMatSharedPtr>& I, 
+                                   const Array<OneD, const NekDouble >& physvals)
+            {
+                return v_PhysEvaluate(I,physvals);
+            }
+
             const boost::shared_ptr<SpatialDomains::GeomFactors>& GetMetricInfo(void) const
             {
                 return v_GetMetricInfo();
@@ -1775,6 +1802,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
+
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, DNekMatSharedPtr >& I, const Array<OneD, const NekDouble> & physvals);
 
             STD_REGIONS_EXPORT virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 

@@ -1405,7 +1405,7 @@ namespace Nektar
             {
                 if (m_xmlDoc)
                 {
-                    delete m_xmlDoc;
+                    //delete m_xmlDoc;
                 }
                 m_xmlDoc = MergeDoc(m_filenames);
             }

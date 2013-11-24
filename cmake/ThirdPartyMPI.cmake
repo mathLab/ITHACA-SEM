@@ -29,10 +29,10 @@ IF( NEKTAR_USE_MPI )
 
     IF (THIRDPARTY_BUILD_GSMPI)
         EXTERNALPROJECT_ADD(
-            gsmpi-1.1.1
+            gsmpi-1.2
             PREFIX ${TPSRC}
-            URL ${TPURL}/gsmpi-1.1.1.tar.bz2
-            URL_MD5 48a6006437e094f6cccce65dcf79f967
+            URL ${TPURL}/gsmpi-1.2.tar.bz2
+            URL_MD5 35901be16791bfdeafa9c4d0e06d189b
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND 
                 ${CMAKE_COMMAND}
@@ -40,7 +40,7 @@ IF( NEKTAR_USE_MPI )
                 -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
                 -DCMAKE_BUILD_TYPE:STRING=Debug
                 -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist
-                ${TPSRC}/src/gsmpi-1.1.1
+                ${TPSRC}/src/gsmpi-1.2
         )
         SET(GSMPI_LIBRARY gsmpi CACHE FILEPATH
             "GSMPI path" FORCE)

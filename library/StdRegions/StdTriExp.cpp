@@ -1279,7 +1279,7 @@ namespace Nektar
             }  
         }
         
-        int StdTriExp::v_GetVertexMap(const int localVertexId)
+        int StdTriExp::v_GetVertexMap(const int localVertexId,bool useCoeffPacking)
         {
             ASSERTL0(
                 GetEdgeBasisType(localVertexId) == LibUtilities::eModified_A ||
@@ -1287,27 +1287,56 @@ namespace Nektar
                 "Mapping not defined for this type of basis");
             
             int localDOF = 0;
-            switch(localVertexId)
+            if(useCoeffPacking == true)
             {
-                case 0:
-                { 
-                    localDOF = 0;    
-                    break;
-                }
-                case 1:
-                {   
-                    localDOF = m_base[1]->GetNumModes();                 
-                    break;
-                }
-                case 2:
-                { 
-                    localDOF = 1;    
-                    break;
-                }
-                default:
+                switch(localVertexId)
                 {
-                    ASSERTL0(false,"eid must be between 0 and 2");
-                    break;
+                case 0:
+                    { 
+                        localDOF = 0;    
+                        break;
+                    }
+                case 1:
+                    { 
+                        localDOF = 1;    
+                        break;
+                    }
+                case 2:
+                    {   
+                        localDOF = m_base[1]->GetNumModes();                 
+                        break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"eid must be between 0 and 2");
+                        break;
+                    }
+                }
+            }
+            else // follow book format for vertex indexing. 
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                        break;
+                    }
+                case 1:
+                    {   
+                        localDOF = m_base[1]->GetNumModes();                 
+                        break;
+                    }
+                case 2:
+                    { 
+                        localDOF = 1;    
+                        break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"eid must be between 0 and 2");
+                        break;
+                    }
                 }
             }
             
@@ -1434,7 +1463,7 @@ namespace Nektar
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A &&
                      GetBasisType(1) == LibUtilities::eModified_B,
-                     "Expansion not of a proper type");
+                     "Expansion not of expected type");
             int i;
             int cnt;
             int nummodes0, nummodes1;

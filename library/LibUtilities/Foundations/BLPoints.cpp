@@ -33,12 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #include <LibUtilities/Foundations/BLPoints.h>
 #include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
+#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-//#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar
 {
@@ -54,14 +52,27 @@ namespace Nektar
             NekDouble r = m_pointsKey.GetFactor();
             ASSERTL0(r != NekConstants::kNekUnsetDouble,
                      "Must set factor in BLPoints key");
-            NekDouble a = 2.0 * (1.0-r) / (1.0 - pow(r,(double)npts));
-            m_points[0][0] = -1.0;
-            
-	    for (unsigned int i = 1; i < npts; ++i)
+
+            if (fabs(r-1.0) < 1e-6)
             {
-                m_points[0][i] = m_points[0][i-1] + a*pow(r,(double)i);
+                NekDouble a = 2.0 * (1.0-r) / (1.0 - pow(r,(double)npts));
+                m_points[0][0] = -1.0;
+                
+                for (unsigned int i = 1; i < npts; ++i)
+                {
+                    m_points[0][i] = m_points[0][i-1] + a*pow(r,(double)i);
+                }
+
+                m_points[0][npts-1] = 1.0;
             }
-            m_points[0][npts-1] = 1.0;
+            else
+            {
+                NekDouble tmp = 2.0/(npts-1.0);
+                for (unsigned int i = 0; i < npts; ++i)
+                {
+                    m_points[0][i] = -1.0 + i * tmp;
+                }
+            }
             
             if (m_pointsKey.GetPointsType() == eBoundaryLayerPointsRev)
             {

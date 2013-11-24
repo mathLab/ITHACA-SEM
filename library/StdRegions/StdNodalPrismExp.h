@@ -124,8 +124,8 @@ namespace Nektar
             //---------------------------------------
             // Mapping functions
             //---------------------------------------
-            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(
-                const int localVertexId);
+            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(const int localVertexId,
+                                                           bool useCoeffPacking = false);
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
                 Array<OneD, unsigned int>& outarray);
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(

@@ -1064,6 +1064,8 @@ namespace Nektar
             emap[3] = triEdgeMap;
             emap[4] = quadEdgeMap;
 
+            map<int,int> allCompPairs;
+            
             // Finally we have enough information to populate the periodic
             // vertex, edge and face maps. Begin by looping over all pairs of
             // periodic composites to determine pairs of periodic faces.
@@ -1133,6 +1135,9 @@ namespace Nektar
                     ASSERTL0(coordMap.count(ids[0]) > 0 &&
                              coordMap.count(ids[1]) > 0,
                              "Unable to find face in coordinate map");
+
+                    allCompPairs[pIt->first ] = pIt->second;
+                    allCompPairs[pIt->second] = pIt->first;
 
                     // Loop up coordinates of the faces, check they have the
                     // same number of vertices.
@@ -1326,6 +1331,124 @@ namespace Nektar
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            Array<OneD, int> pairSizes(n, 0);
+            pairSizes[p] = allCompPairs.size();
+            vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
+
+            int totPairSizes = Vmath::Vsum(n, pairSizes, 1);
+
+            Array<OneD, int> pairOffsets(n, 0);
+            pairOffsets[0] = 0;
+
+            for (i = 1; i < n; ++i)
+            {
+                pairOffsets[i] = pairOffsets[i-1] + pairSizes[i-1];
+            }
+
+            Array<OneD, int> first (totPairSizes, 0);
+            Array<OneD, int> second(totPairSizes, 0);
+
+            cnt = pairOffsets[p];
+
+            for (pIt = allCompPairs.begin(); pIt != allCompPairs.end(); ++pIt)
+            {
+                first [cnt  ] = pIt->first;
+                second[cnt++] = pIt->second;
+            }
+
+            vComm->AllReduce(first,  LibUtilities::ReduceSum);
+            vComm->AllReduce(second, LibUtilities::ReduceSum);
+
+            allCompPairs.clear();
+
+            for(cnt = 0; cnt < totPairSizes; ++cnt)
+            {
+                allCompPairs[first[cnt]] = second[cnt];
+            }
+
+            // Search for periodic vertices and edges which are not in
+            // a periodic composite but lie in this process. First,
+            // loop over all information we have from other
+            // processors.
+            for (cnt = i = 0; i < totFaces; ++i)
+            {
+                int faceId    = faceIds[i];
+
+                ASSERTL0(allCompPairs.count(faceId) > 0,
+                         "Unable to find matching periodic face.");
+
+                int perFaceId = allCompPairs[faceId];
+
+                for (j = 0; j < faceVerts[i]; ++j, ++cnt)
+                {
+                    int vId = vertIds[cnt];
+
+                    PeriodicMap::iterator perId = periodicVerts.find(vId);
+
+                    if (perId == periodicVerts.end())
+                    {
+
+                        // This vertex is not included in the map. Figure out which
+                        // vertex it is supposed to be periodic with. perFaceId is
+                        // the face ID which is periodic with faceId. The logic is
+                        // much the same as the loop above.
+                        SpatialDomains::PointGeomVector tmpVec[2]
+                            = { coordMap[faceId], coordMap[perFaceId] };
+                        
+                        int nFaceVerts = tmpVec[0].size();
+                        StdRegions::Orientation o = nFaceVerts == 3 ? 
+                            SpatialDomains::TriGeom::GetFaceOrientation(
+                                                                        tmpVec[0], tmpVec[1]) :
+                            SpatialDomains::QuadGeom::GetFaceOrientation(
+                                                                         tmpVec[0], tmpVec[1]);
+                        
+                        // Use vmap to determine which vertex of the other face
+                        // should be periodic with this one.
+                        int perVertexId = vertMap[perFaceId][vmap[nFaceVerts][o][j]];
+                        
+                        
+                        PeriodicEntity ent(perVertexId,
+                                           StdRegions::eNoOrientation,
+                                           locVerts.count(perVertexId) > 0);
+                        
+                        periodicVerts[vId].push_back(ent);
+                    }
+
+                    int eId = edgeIds[cnt];
+
+                    perId = periodicEdges.find(eId);
+                    
+                    if (perId == periodicEdges.end())
+                    {
+                        // This edge is not included in the map. Figure
+                        // out which edge it is supposed to be periodic
+                        // with. perFaceId is the face ID which is
+                        // periodic with faceId. The logic is much the
+                        // same as the loop above.
+                        SpatialDomains::PointGeomVector tmpVec[2]
+                            = { coordMap[faceId], coordMap[perFaceId] };
+                        
+                        int nFaceEdges = tmpVec[0].size();
+                        StdRegions::Orientation o = nFaceEdges == 3 ? 
+                            SpatialDomains::TriGeom::GetFaceOrientation(
+                            tmpVec[0], tmpVec[1]) :
+                        SpatialDomains::QuadGeom::GetFaceOrientation(
+                            tmpVec[0], tmpVec[1]);
+                        
+                        // Use emap to determine which edge of the other
+                        // face should be periodic with this one.
+                        int perEdgeId = edgeMap[perFaceId][emap[nFaceEdges][o][j]];
+                        
+                        
+                        PeriodicEntity ent(perEdgeId,
+                                           StdRegions::eForwards,
+                                           locEdges.count(perEdgeId) > 0);
+                        
+                        periodicEdges[eId].push_back(ent);
                     }
                 }
             }

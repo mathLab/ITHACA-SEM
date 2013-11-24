@@ -229,10 +229,6 @@ namespace Nektar
 
           F1 = F2 = F3 = 2000; // Starting value of Function
           
-	  Array<OneD, NekDouble> SaveCoord(3);
-	  SaveCoord[0] = Lcoords[0];
-	  SaveCoord[1] = Lcoords[1];
-	  SaveCoord[2] = Lcoords[2];
           while(cnt++ < MaxIterations)
           {
 	      //  evaluate lagrange interpolant at Lcoords
@@ -283,12 +279,13 @@ namespace Nektar
 #endif
 
 	  resid = sqrt(F1*F1 + F2*F2 + F3*F3);
-
+	  
 	  if(cnt >= MaxIterations)
 	  {
-	      cout << "MaxIterations in Newton iteration" << endl;
+	    std::string Warning = "MaxIterations in Newton Iteration (Lcoord = " + boost::lexical_cast<string>(Lcoords[0]) + "," boost::lexical_cast<string>(Lcoords[1]) + "," boost::lexical_cast<string>(Lcoords[2]) + ")"; 
+	    
+	    WARNINGL2(cnt < MaxIterations,warning.c_str());
 	  }
-
       }
       
       

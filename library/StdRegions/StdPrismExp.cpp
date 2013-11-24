@@ -900,11 +900,10 @@ namespace Nektar
             return StdPrismExp::v_PhysEvaluate(xi,m_phys);
         }
 
-        NekDouble StdPrismExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
+        void StdPrismExp::v_LocCoordToLocCollapsed(
+                                              const Array<OneD, const NekDouble>& xi,
+                                              Array<OneD, NekDouble>& eta)
         {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
@@ -921,7 +920,17 @@ namespace Nektar
                 eta[1] = xi[1]; //eta_y = xi_y
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
             } 
+        }
+                                          
+                                                                        
 
+        NekDouble StdPrismExp::v_PhysEvaluate(
+            const Array<OneD, const NekDouble>& xi,
+            const Array<OneD, const NekDouble>& physvals)
+        {
+            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
+
+            v_LocCoordToLocCollapsed(xi,eta);
             return StdExpansion3D::v_PhysEvaluate(eta,physvals);
         }
         

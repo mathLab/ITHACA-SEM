@@ -74,6 +74,7 @@ namespace Nektar
 
 
             /** \brief Single Point Evaluation */
+
             STD_REGIONS_EXPORT NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords);
 
             STD_REGIONS_EXPORT NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords,  const Array<OneD, const NekDouble> & physvals);
@@ -184,6 +185,9 @@ namespace Nektar
             //---------------------------------------
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coords);
+            STD_REGIONS_EXPORT virtual void v_LocCoordToLocCollapsed(
+                                   const Array<OneD, const NekDouble>& xi,
+                                   Array<OneD, NekDouble>& eta);
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coords,
                 const Array<OneD, const NekDouble>& physvals);

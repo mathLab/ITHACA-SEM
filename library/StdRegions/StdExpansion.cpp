@@ -1172,6 +1172,11 @@ namespace Nektar
             return 0;
         }
 
+        void StdExpansion::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,Array<OneD, NekDouble>& eta)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+        }
+        
         void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
                                                     boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                     const Array<OneD, const NekDouble> &Fx,

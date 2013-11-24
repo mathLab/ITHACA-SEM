@@ -125,8 +125,6 @@ namespace Nektar
           Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
           NekDouble xmap,ymap,zmap, F1,F2, F3;
 
-#if 1
-
           NekDouble derx_1, derx_2, derx_3, dery_1, dery_2, dery_3,
               derz_1, derz_2, derz_3,jac; 
 
@@ -146,16 +144,24 @@ namespace Nektar
           m_xmap[0]->PhysDeriv(ptsz,DzD1,DzD2,DzD3);
           
           int cnt=0; 
+          Array<OneD, DNekMatSharedPtr > I(3);
+          Array<OneD, NekDouble>       eta(3);
 
           F1 = F2 = F3 = 2000; // Starting value of Function
           
           while(cnt++ < MaxIterations)
 	  {
+	      //  evaluate lagrange interpolant at Lcoords
+              m_xmap[0]->LocCoordToLocCollapsed(Lcoords,eta);
+	      I[0] = m_xmap[0]->GetBasis(0)->GetI(eta);
+	      I[1] = m_xmap[0]->GetBasis(1)->GetI(eta+1);
+	      I[2] = m_xmap[0]->GetBasis(2)->GetI(eta+2);
+
               //calculate the global point `corresponding to Lcoords
-              xmap = m_xmap[0]->PhysEvaluate(Lcoords, ptsx);
-              ymap = m_xmap[1]->PhysEvaluate(Lcoords, ptsy);
-              zmap = m_xmap[2]->PhysEvaluate(Lcoords, ptsz);
-              
+              xmap = m_xmap[0]->PhysEvaluate(I, ptsx);
+              ymap = m_xmap[1]->PhysEvaluate(I, ptsy);
+              zmap = m_xmap[2]->PhysEvaluate(I, ptsz);
+                         
               F1 = coords[0] - xmap;
               F2 = coords[1] - ymap;
               F3 = coords[2] - zmap;
@@ -167,15 +173,15 @@ namespace Nektar
               }
               
               //Interpolate derivative metric at Lcoords
-              derx_1 = m_xmap[0]->PhysEvaluate(Lcoords, DxD1);
-              derx_2 = m_xmap[0]->PhysEvaluate(Lcoords, DxD2);
-              derx_3 = m_xmap[0]->PhysEvaluate(Lcoords, DxD3);
-              dery_1 = m_xmap[0]->PhysEvaluate(Lcoords, DyD1);
-              dery_2 = m_xmap[0]->PhysEvaluate(Lcoords, DyD2);                  
-              dery_3 = m_xmap[0]->PhysEvaluate(Lcoords, DyD3);          
-              derz_1 = m_xmap[0]->PhysEvaluate(Lcoords, DzD1);
-              derz_2 = m_xmap[0]->PhysEvaluate(Lcoords, DzD2);                  
-              derz_3 = m_xmap[0]->PhysEvaluate(Lcoords, DzD3);          
+              derx_1 = m_xmap[0]->PhysEvaluate(I, DxD1);
+              derx_2 = m_xmap[0]->PhysEvaluate(I, DxD2);
+              derx_3 = m_xmap[0]->PhysEvaluate(I, DxD3);
+              dery_1 = m_xmap[0]->PhysEvaluate(I, DyD1);
+              dery_2 = m_xmap[0]->PhysEvaluate(I, DyD2);                  
+              dery_3 = m_xmap[0]->PhysEvaluate(I, DyD3);          
+              derz_1 = m_xmap[0]->PhysEvaluate(I, DzD1);
+              derz_2 = m_xmap[0]->PhysEvaluate(I, DzD2);                  
+              derz_3 = m_xmap[0]->PhysEvaluate(I, DzD3);          
               
               jac = derx_1*(dery_2*derz_3 - dery_3*derz_2) 
                   - derx_2*(dery_1*derz_3 - dery_3*derz_1)
@@ -204,87 +210,14 @@ namespace Nektar
 		   break; // lcoords have diverged so stop iteration
 	      }
           }
-#else
-          int MaxIterations = 40;
-          NekDouble Tol = 1e-12; // This is error*error; 
-          
-          NekDouble der1_x, der2_x, der3_x, der1_y, der2_y, der3_y,
-              der1_z, der2_z, der3_z; 
-	  
-	  // these are wrong dimension !!
-          const Array<TwoD, const NekDouble> &gmat = m_geomFactors->GetDerivFactors();
-          
-          Array<OneD, NekDouble> D1Dx(ptsx.num_elements()); 
-          Array<OneD, NekDouble> D1Dy(ptsx.num_elements());
-          Array<OneD, NekDouble> D1Dz(ptsx.num_elements());
-          Array<OneD, NekDouble> D2Dx(ptsx.num_elements());
-          Array<OneD, NekDouble> D2Dy(ptsx.num_elements());
-          Array<OneD, NekDouble> D2Dz(ptsx.num_elements());
-          Array<OneD, NekDouble> D3Dx(ptsx.num_elements());
-          Array<OneD, NekDouble> D3Dy(ptsx.num_elements());
-          Array<OneD, NekDouble> D3Dz(ptsx.num_elements());
-          
-          int cnt=0; 
-          Array<OneD, DNekMatSharedPtr > I(3);
-
-          F1 = F2 = F3 = 2000; // Starting value of Function
-          
-          while(cnt++ < MaxIterations)
-          {
-	      //  evaluate lagrange interpolant at Lcoords
-	      I[0] = m_xmap[0]->GetBasis(0)->GetI(Lcoords);
-	      I[1] = m_xmap[0]->GetBasis(1)->GetI(Lcoords+1);
-	      I[2] = m_xmap[0]->GetBasis(2)->GetI(Lcoords+2);
-
-              //calculate the global point `corresponding to Lcoords
-              xmap = m_xmap[0]->PhysEvaluate(I, ptsx);
-              ymap = m_xmap[0]->PhysEvaluate(I, ptsy);
-              zmap = m_xmap[0]->PhysEvaluate(I, ptsz);
-              
-              F1 = coords[0] - xmap;
-              F2 = coords[1] - ymap;
-              F3 = coords[2] - zmap;
-              
-              // stopping criterion
-              if(F1*F1 + F2*F2 + F3*F3 < Tol)
-              {
-		   break;
-              }
-	      
-              //Interpolate derivative metric at Lcoords
-              der1_x = m_xmap[0]->PhysEvaluate(I, D1Dx);
-              der2_x = m_xmap[0]->PhysEvaluate(I, D1Dy);
-              der3_x = m_xmap[0]->PhysEvaluate(I, D1Dz);
-              der1_y = m_xmap[0]->PhysEvaluate(I, D2Dx);
-              der2_y = m_xmap[0]->PhysEvaluate(I, D2Dy);                  
-              der3_y = m_xmap[0]->PhysEvaluate(I, D2Dz);          
-              der1_z = m_xmap[0]->PhysEvaluate(I, D3Dx);
-              der2_z = m_xmap[0]->PhysEvaluate(I, D3Dy);                  
-              der3_z = m_xmap[0]->PhysEvaluate(I, D3Dz);          
-              
-              Lcoords[0] = Lcoords[0] + der1_x*(coords[0]-xmap) + 
-                  der1_y*(coords[1]-ymap) +  der1_z*(coords[2]-zmap);
-              Lcoords[1] = Lcoords[1] + der2_x*(coords[0]-xmap) + 
-                  der2_y*(coords[1]-ymap) +  der2_z*(coords[2]-zmap);
-              Lcoords[2] = Lcoords[2] + der3_x*(coords[0]-xmap) + 
-                  der3_y*(coords[1]-ymap) +  der3_z*(coords[2]-zmap);
-	      
-	      if(fabs(Lcoords[0]) > LcoordDiv || fabs(Lcoords[1]) > LcoordDiv ||
-		 fabs(Lcoords[0]) > LcoordDiv)
-	      {
-		   break; // lcoords have diverged so stop iteration
-	      }
-          }
-          
-#endif
 
 	  resid = sqrt(F1*F1 + F2*F2 + F3*F3);
 	  
 	  if(cnt >= MaxIterations)
 	  {
-	    std::string Warning = "MaxIterations in Newton Iteration (Lcoord = " + boost::lexical_cast<string>(Lcoords[0]) + "," boost::lexical_cast<string>(Lcoords[1]) + "," boost::lexical_cast<string>(Lcoords[2]) + ")"; 
+              std::string msg = "MaxIterations in Newton Iteration (Lcoord = " + boost::lexical_cast<string>(Lcoords[0]) + "," + boost::lexical_cast<string>(Lcoords[1]) + "," + boost::lexical_cast<string>(Lcoords[2]) + ")"; 
 	    
-	    WARNINGL2(cnt < MaxIterations,warning.c_str());
+              WARNINGL1(cnt < MaxIterations,msg.c_str());
 	  }
       }
       

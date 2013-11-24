@@ -173,19 +173,24 @@ namespace Nektar
             {
                 int i;
                 Array<OneD, NekDouble> pts; 
-                NekDouble mincoord, maxcoord,diff;
-                
+                Array<OneD, NekDouble> mincoord(3), maxcoord(3);
+                NekDouble diff = 0.0;
+
                 v_FillGeom();
                 
                 for(i = 0; i < 3; ++i)
                 {
                     pts = m_xmap[i]->GetPhys();
-                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
-                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
+                    mincoord[i] = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord[i] = Vmath::Vmax(pts.num_elements(),pts,1);
                     
-                    diff = maxcoord - mincoord; 
-                    
-                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    diff = max(maxcoord[i] - mincoord[i],diff); 
+                }
+
+                for(i = 0; i < 3; ++i)
+                {
+                    if((gloCoord[i] < mincoord[i] - 0.2*diff)||
+                       (gloCoord[i] > maxcoord[i] + 0.2*diff))
                     {
                         return false;
                     }

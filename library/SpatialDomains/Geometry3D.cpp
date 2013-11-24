@@ -117,9 +117,15 @@ namespace Nektar
       {
 	
 	  static int MaxIterations   = 101;     // maximum iterations for convergence  
-	  static NekDouble Tol       = 1.e-16;  // |x-xp|^2 < EPSILON  error tolerance 
+	  static NekDouble Tol       = 1.e-12;  // |x-xp|^2 < EPSILON  error tolerance 
 	  static NekDouble LcoordDiv = 15.0;    // |r,s|    > LcoordDIV stop the search  
 	  
+          Array<OneD, const NekDouble > Jac = m_geomFactors->GetJac();
+          
+          NekDouble ScaledTol = Vmath::Vsum(Jac.num_elements(),Jac,1)/
+              ((NekDouble)Jac.num_elements());
+          ScaledTol *= Tol; 
+
           Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
           Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
           Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
@@ -166,7 +172,7 @@ namespace Nektar
               F2 = coords[1] - ymap;
               F3 = coords[2] - zmap;
 
-              if(F1*F1 + F2*F2 + F3*F3 < Tol)
+              if(F1*F1 + F2*F2 + F3*F3 < ScaledTol)
               {
                   resid = sqrt(F1*F1 + F2*F2 + F3*F3);
                   break;

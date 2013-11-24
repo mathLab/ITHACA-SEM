@@ -671,26 +671,31 @@ namespace Nektar
             return PhysEvaluate(coords,m_phys);
         }
 
+        void StdTriExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                                 Array<OneD, NekDouble>& eta)
+        {
+            
+            // set up local coordinate system 
+            if (fabs(xi[1]-1.0) < NekConstants::kNekZeroTol)
+            {
+                eta[0] = -1.0;
+                eta[1] =  1.0;
+            }
+            else
+            {
+                eta[0] = 2*(1+xi[0])/(1-xi[1])-1.0; 
+                eta[1] = xi[1]; 
+            }
+        }
+
         NekDouble StdTriExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& coords,
             const Array<OneD, const NekDouble>& physvals)
         {
             Array<OneD, NekDouble> coll(2);
-
-            // set up local coordinate system 
-            if (
-            	//fabs(coords[0]+1.0) < NekConstants::kNekZeroTol &&
-                fabs(coords[1]-1.0) < NekConstants::kNekZeroTol)
-            {
-                coll[0] = -1.0;
-                coll[1] =  1.0;
-            }
-            else
-            {
-                coll[0] = 2*(1+coords[0])/(1-coords[1])-1.0; 
-                coll[1] = coords[1]; 
-            }
-
+            
+            v_LocCoordToLocCollapsed(coords,coll);
+            
             return StdExpansion2D::v_PhysEvaluate(coll,physvals);
         }
 

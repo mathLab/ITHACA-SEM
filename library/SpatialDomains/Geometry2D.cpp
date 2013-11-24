@@ -129,9 +129,83 @@ namespace Nektar
                           NekDouble &resid)
         {
             
+            static int MaxIterations   = 101;     // maximum iterations for convergence  
+            static NekDouble Tol       = 1.e-16;  // |x-xp|^2 < EPSILON  error tolerance 
+            static NekDouble LcoordDiv = 15.0;    // |r,s|    > LcoordDIV stop the search              
             Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
             Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
             NekDouble xmap,ymap, F1,F2;
+
+#if 1 
+            NekDouble derx_1, derx_2, dery_1, dery_2,jac; 
+
+            Array<OneD, NekDouble> DxD1(ptsx.num_elements());
+            Array<OneD, NekDouble> DxD2(ptsx.num_elements());
+            Array<OneD, NekDouble> DyD1(ptsx.num_elements());
+            Array<OneD, NekDouble> DyD2(ptsx.num_elements());
+          
+            // Ideally this will be stored in m_geomfactors 
+            m_xmap[0]->PhysDeriv(ptsx,DxD1,DxD2);
+            m_xmap[0]->PhysDeriv(ptsy,DyD1,DyD2);
+
+            int cnt=0; 
+            Array<OneD, DNekMatSharedPtr > I(2);
+            Array<OneD, NekDouble>       eta(2);
+            
+            F1 = F2 = 2000; // Starting value of Function
+          
+            while(cnt++ < MaxIterations)
+            {
+                //  evaluate lagrange interpolant at Lcoords
+                m_xmap[0]->LocCoordToLocCollapsed(Lcoords,eta);
+                I[0] = m_xmap[0]->GetBasis(0)->GetI(eta);
+                I[1] = m_xmap[0]->GetBasis(1)->GetI(eta+1);
+
+                //calculate the global point `corresponding to Lcoords
+                xmap = m_xmap[0]->PhysEvaluate(I, ptsx);
+                ymap = m_xmap[1]->PhysEvaluate(I, ptsy);
+
+                F1 = coords[0] - xmap;
+                F2 = coords[1] - ymap;
+
+                if(F1*F1 + F2*F2 < Tol)
+                {
+                    resid = sqrt(F1*F1 + F2*F2);
+                    break;
+                }
+
+                //Interpolate derivative metric at Lcoords
+                derx_1 = m_xmap[0]->PhysEvaluate(I, DxD1);
+                derx_2 = m_xmap[0]->PhysEvaluate(I, DxD2);
+                dery_1 = m_xmap[0]->PhysEvaluate(I, DyD1);
+                dery_2 = m_xmap[0]->PhysEvaluate(I, DyD2);                  
+              
+                jac = dery_2*derx_1 - dery_1*derx_2;
+                
+                // use analytical inverse of derivitives which are
+                // also similar to those of metric factors.
+                Lcoords[0] = Lcoords[0] + (dery_2*(coords[0]-xmap) - 
+                                           derx_2*(coords[1]-ymap))/jac;
+                
+                Lcoords[1] = Lcoords[1] + ( - dery_1*(coords[0]-xmap)
+                                            + derx_1*(coords[1]-ymap))/jac;
+                    
+                if(fabs(Lcoords[0]) > LcoordDiv || fabs(Lcoords[1]) > LcoordDiv)
+                {
+                    break; // lcoords have diverged so stop iteration
+                }
+            }
+            
+            resid = sqrt(F1*F1 + F2*F2);
+	  
+            if(cnt >= MaxIterations)
+            {
+                std::string msg = "MaxIterations in Newton Iteration (Lcoord = " + boost::lexical_cast<string>(Lcoords[0]) + "," + boost::lexical_cast<string>(Lcoords[1]) + ")"; 
+                
+                WARNINGL1(cnt < MaxIterations,msg.c_str());
+            }
+
+#else
             NekDouble der1_x, der2_x, der1_y, der2_y ;
             const Array<TwoD, const NekDouble> &gmat
                                         = m_geomFactors->GetDerivFactors();
@@ -181,6 +255,7 @@ namespace Nektar
                 resid = sqrt(F1*F1 + F2*F2);
                 Lcoords[0] = Lcoords[1] = 2.0;    
             }                        
+#endif
         }
 
         int Geometry2D::v_GetFid() const 

@@ -1446,13 +1446,8 @@ namespace Nektar
             int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
 
             //SVV parameters loaded from the .xml case file
-            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             
-            //Defining the cutoff modes for each of the two axes
-            int cutoff_a = (int) (SVVCutOff*nmodes_a);
-            int cutoff_b = (int) (SVVCutOff*nmodes_b);
-
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             

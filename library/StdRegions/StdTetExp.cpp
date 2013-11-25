@@ -2239,10 +2239,6 @@ namespace Nektar
             int cutoff_a = (int) (SVVCutOff*nmodes_a);
             int cutoff_b = (int) (SVVCutOff*nmodes_b);
             int cutoff_c = (int) (SVVCutOff*nmodes_c);
-            //Paramater used in the SVV transfer function (Sagaut : Inc. LES, p. 22)
-            // essentially a knob that controls the bandwidth of the transfer function
-            NekDouble gamma = 6.0;
-            NekDouble gamma2 = 2.0;//for the Model 2 Tranfer Function
             int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
             NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
             NekDouble epsilon = 1;

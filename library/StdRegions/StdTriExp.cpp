@@ -1591,22 +1591,17 @@ namespace Nektar
             
             int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
-            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
             
-            int cutoff_a = (int) (SVVCutOff*nmodes_a);
-            int cutoff_b = (int) (SVVCutOff*nmodes_b);
             NekDouble epsilon = 1.0;
             int nmodes = min(nmodes_a,nmodes_b);
             
             //To avoid the fac[j] from blowing up
-//            NekDouble epsilon = 0.001;
-            
-            
+            //NekDouble epsilon = 0.001;
+
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
-            
-            
-//            cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
+
+            //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
             // apply SVV filter (JEL)
             for(j = 0; j < nmodes_a; ++j)
             {

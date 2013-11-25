@@ -14,7 +14,6 @@
             <I PROPERTY="AdvectionForm" VALUE="Convective" />
             <I PROPERTY="Projection" VALUE="Galerkin" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
-            <I PROPERTY="SpectralVanishingViscosity" VALUE="True" />
         </SOLVERINFO>
 
         <PARAMETERS>
@@ -22,9 +21,7 @@
             <P> NumSteps      = 100       </P>
             <P> IO_CheckSteps = 100       </P>
             <P> IO_InfoSteps  = 100       </P>
-            <P> Kinvis        = 0.025        </P><!-- ie Re =40-->
-            <P> SVVCutoffRatio  = 0.45                      </P><!-- 2*sqrt(P+1)-1 -->
-            <P> SVVDiffCoeff    = 0.06                       </P><!-- 1/(P+1) -->
+            <P> Kinvis        = 0.025        </P>
         </PARAMETERS>
 
         <VARIABLES>

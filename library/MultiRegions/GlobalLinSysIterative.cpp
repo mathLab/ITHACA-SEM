@@ -452,7 +452,6 @@ namespace Nektar
             }
 
             m_totalIterations = 1;
-
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
 
             v_DoMatrixMultiply(w_A, s_A);
@@ -470,7 +469,6 @@ namespace Nektar
                                        m_map + nDir);
 
             vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
-            
 
             rho       = vExchange[0];
             mu        = vExchange[1];

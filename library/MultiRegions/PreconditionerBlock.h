@@ -80,10 +80,7 @@ namespace Nektar
 
             PreconditionerType                          m_preconType;
 
-	    DNekBlkMatSharedPtr                         BlkMat;
-
-            DNekScalMatSharedPtr                        bnd_mat;
-            DNekScalBlkMatSharedPtr                     m_S1Blk;
+	    DNekBlkMatSharedPtr                         m_blkMat;
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 

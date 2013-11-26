@@ -85,7 +85,7 @@ namespace Nektar
     virtual void v_InitObject();
 
     /// Print a summary of time stepping parameters.
-    virtual void v_PrintSummary(std::ostream &out);
+    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
     void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
 		  Array<OneD,  Array<OneD, NekDouble> > &outarray,

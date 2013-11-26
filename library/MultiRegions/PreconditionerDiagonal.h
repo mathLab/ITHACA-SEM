@@ -63,7 +63,7 @@ namespace Nektar
 
             /// Name of class
             static std::string className;
-            static std::string className1;
+            //static std::string className1;
 
             MULTI_REGIONS_EXPORT PreconditionerDiagonal(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
@@ -77,7 +77,6 @@ namespace Nektar
             Array<OneD, NekDouble>                      m_diagonals;
 
             PreconditionerType                          m_preconType;
-            StdRegions::StdExpansionSharedPtr           vExp;
 
 	private:
 
@@ -96,6 +95,52 @@ namespace Nektar
             static std::string lookupIds[];
             static std::string def;
 	};
+
+        class PreconditionerNull;
+        typedef boost::shared_ptr<PreconditionerNull>  PreconditionerNullSharedPtr;
+
+        class PreconditionerNull: public Preconditioner
+	{
+        public:
+            /// Creates an instance of this class
+            static PreconditionerSharedPtr create(
+                const boost::shared_ptr<GlobalLinSys> &plinsys,
+                const boost::shared_ptr<AssemblyMap>
+                &pLocToGloMap)
+            {
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerNull>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        p->InitObject();
+	        return p;
+            }
+
+            /// Name of class
+            static std::string className;
+
+            MULTI_REGIONS_EXPORT PreconditionerNull(
+                const boost::shared_ptr<GlobalLinSys> &plinsys,
+                const AssemblyMapSharedPtr &pLocToGloMap);
+            
+            MULTI_REGIONS_EXPORT
+            virtual ~PreconditionerNull() {}
+
+	protected:
+
+            PreconditionerType m_preconType;
+
+	private:
+
+            virtual void v_InitObject();
+
+            virtual void v_DoPreconditioner(                
+                      const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_BuildPreconditioner();
+
+            static std::string lookupIds[];
+            static std::string def;
+	};
+
     }
 }
 

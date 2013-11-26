@@ -56,6 +56,7 @@ namespace Nektar
             m_type(gtype),
             m_expDim(expdim),
             m_coordDim(coordim),
+            m_valid(true),
             m_coords(Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordDim)),
             m_pointsKey(expdim)
         {
@@ -68,6 +69,7 @@ namespace Nektar
             m_type(S.m_type),
             m_expDim(S.m_expDim),
             m_coordDim(S.m_coordDim),
+            m_valid(S.m_valid),
             m_coords(S.m_coords),
             m_pointsKey(S.m_pointsKey)
         {

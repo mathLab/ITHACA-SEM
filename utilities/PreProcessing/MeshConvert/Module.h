@@ -64,6 +64,8 @@ namespace Nektar
             "Output"
         };
 
+        typedef map<int, pair<FaceSharedPtr, vector<int> > > PerMap;
+
         /**
          * @brief Represents a command-line configuration option.
          */
@@ -100,6 +102,27 @@ namespace Nektar
                 }
             }
             
+            /**
+             * @brief Interpret the value stored in #value as some type using
+             * boost::lexical_cast and return true of false depending on cast
+             */
+            template<typename T>
+            bool isType()
+            {
+                bool returnval = true;
+                try
+                {
+                    boost::lexical_cast<T>(value);
+                }
+                catch(const std::exception &e)
+                {
+                    returnval = false;
+                }
+
+                return returnval;
+            }
+            
+
             /// True if the configuration option is a boolean (thus does not
             /// need additional arguments).
             bool   isBool;
@@ -145,6 +168,12 @@ namespace Nektar
             virtual void ProcessElements();
             /// Generate composites
             virtual void ProcessComposites();
+
+            void ReorderPrisms(PerMap                   &perFaces);
+            void PrismLines   (int                       prism,
+                               PerMap                   &perFaces,
+                               set<int>                 &prismsDone,
+                               vector<ElementSharedPtr> &line);
         };
         
         /**

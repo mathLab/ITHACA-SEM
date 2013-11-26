@@ -43,6 +43,7 @@
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/Core/Misc.h>
 
 namespace Nektar
 {
@@ -59,7 +60,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr&
         > EquationSystemFactory;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
-        
+
         /// A base class for describing how to solve specific equations.
         class EquationSystem
         {
@@ -282,20 +283,11 @@ namespace Nektar
             /// Probe each history point and write to file.
             SOLVER_UTILS_EXPORT void WriteHistoryData (std::ostream &out);
             
-            /// Write out a full summary.
-            SOLVER_UTILS_EXPORT void Summary          (std::ostream &out);
-            
             /// Write out a session summary.
-            SOLVER_UTILS_EXPORT void SessionSummary   (std::ostream &out);
-            
-            /// Write out a summary of the time parameters.
-            SOLVER_UTILS_EXPORT void TimeParamSummary (std::ostream &out);
+            SOLVER_UTILS_EXPORT void SessionSummary   (SummaryList& vSummary);
             
             SOLVER_UTILS_EXPORT inline Array<
             OneD, MultiRegions::ExpListSharedPtr> &UpdateFields();
-            
-            SOLVER_UTILS_EXPORT inline Array<
-            OneD, MultiRegions::ExpListSharedPtr> &UpdateForces();
             
 
             /// Get hold of FieldInfoMap so it can be updated
@@ -404,8 +396,6 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
-            /// Array holding force values.
-            Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
             /// Pointer to boundary conditions object.
@@ -462,7 +452,7 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
             /// Flag to indicate if the fields should be checked for singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
-            
+       
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap            m_fieldMetaDataMap;
 
@@ -532,9 +522,9 @@ namespace Nektar
             /// Virtual function for transformation to coefficient space.
             SOLVER_UTILS_EXPORT virtual void v_TransPhysToCoeff();
             
-            /// Virtual function for printing summary information.
-            SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
-            
+            /// Virtual function for generating summary information.
+            SOLVER_UTILS_EXPORT virtual void v_GenerateSummary(SummaryList& l);
+
             SOLVER_UTILS_EXPORT virtual void v_SetInitialConditions(
                 NekDouble initialtime = 0.0,
                 bool dumpInitialConditions = true);
@@ -561,7 +551,6 @@ namespace Nektar
         private:
             
             SOLVER_UTILS_EXPORT virtual Array<OneD, bool> v_GetSystemSingularChecks();
-            SOLVER_UTILS_EXPORT virtual int v_GetForceDimension();
             SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
                 const int i, Array<OneD,
                 Array<OneD, NekDouble> >&physfield,
@@ -698,16 +687,20 @@ namespace Nektar
         {
             if (m_session->GetComm()->GetRank() == 0)
             {
+                std::vector<std::pair<std::string, std::string> > vSummary;
+                v_GenerateSummary(vSummary);
+
                 out << "=======================================================================" << endl;
-                out << "\tEquation Type   : " << m_session->GetSolverInfo("EQTYPE") << endl;
-                SessionSummary(out);
-                
-                v_PrintSummary(out);
-                
+                SummaryList::const_iterator x;
+                for (x = vSummary.begin(); x != vSummary.end(); ++x)
+                {
+                    out << "\t";
+                    out.width(20);
+                    out << x->first << ": " << x->second << endl;
+                }
                 out << "=======================================================================" << endl;
             }
         }
-        
         
         inline void EquationSystem::SetLambda(NekDouble lambda)
         {
@@ -731,11 +724,6 @@ namespace Nektar
         inline Array<OneD, MultiRegions::ExpListSharedPtr> &EquationSystem::UpdateFields(void)
         {
             return m_fields;
-        }
-        
-        inline Array<OneD, MultiRegions::ExpListSharedPtr> &EquationSystem::UpdateForces(void)
-        {
-            return m_forces;
         }
         
         /// Return final time

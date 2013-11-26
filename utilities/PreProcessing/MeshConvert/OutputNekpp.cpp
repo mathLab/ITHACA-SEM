@@ -257,7 +257,7 @@ namespace Nektar
                     curved->LinkEndChild(e);
                 }
             }
-#if 0 
+
             int facecnt = 0;
 
             // 2D elements in 3-space, output face curvature information
@@ -302,7 +302,7 @@ namespace Nektar
                     }
                 }
             }
-#endif
+
             pRoot->LinkEndChild( curved );
         }
 

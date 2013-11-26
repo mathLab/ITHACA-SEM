@@ -1165,7 +1165,7 @@ namespace Nektar
 
         }
 
-        int StdPyrExp::v_GetVertexMap(int vId)
+        int StdPyrExp::v_GetVertexMap(int vId, bool useCoeffPacking)
         {
             ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
@@ -1174,8 +1174,33 @@ namespace Nektar
             
             int l = 0;
             
-            switch (vId)
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(0,0,1);
+                    break;
+                case 2:
+                    l = GetMode(0,1,0);
+                    break;
+                case 3:
+                    l = GetMode(1,0,0);
+                    break;
+                case 4:
+                    l = GetMode(1,1,0);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 4");
+                }
+            }
+            else
+            {
+                switch (vId)
+                {
                 case 0:
                     l = GetMode(0,0,0);
                     break;
@@ -1193,8 +1218,9 @@ namespace Nektar
                     break;
                 default:
                     ASSERTL0(false, "local vertex id must be between 0 and 4");
+                }
             }
-            
+                
             return l;
         }
         

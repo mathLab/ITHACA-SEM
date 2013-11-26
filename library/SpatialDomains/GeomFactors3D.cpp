@@ -148,6 +148,8 @@ namespace Nektar
             // Based upon these derivatives, calculate:
             // 1. The (determinant of the) jacobian and the differentation      metrics
             SetUpJacGmat3D(m_deriv[0],m_deriv[1],m_deriv[2]);
+
+            CheckIfValid();
         }
 
         /**
@@ -248,6 +250,47 @@ namespace Nektar
                         Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_gmat[m_expDim*i+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1);
                     }
                 }
+            }
+        }
+
+
+        /**
+         * Computes the Jacobian of the 3D map directly from the derivatives of
+         * the map to determine if it is negative and thus element is invalid.
+         */
+        void GeomFactors3D::CheckIfValid()
+        {
+            int nqtot = m_pointsKey[0].GetNumPoints() *
+                        m_pointsKey[1].GetNumPoints() *
+                        m_pointsKey[2].GetNumPoints();
+            int pts = (m_type == eRegular || m_type == eMovingRegular)
+                            ? 1 : nqtot;
+
+            Array<OneD, NekDouble> jac(pts, 0.0);
+            Array<OneD, NekDouble> tmp(pts, 0.0);
+
+            // J3D - Spencers book page 158
+            Vmath::Vvtvvtm(pts, &m_deriv[1][1][0], 1, &m_deriv[2][2][0], 1,
+                                &m_deriv[2][1][0], 1, &m_deriv[1][2][0], 1,
+                                &tmp[0],           1);
+            Vmath::Vvtvp  (pts, &m_deriv[0][0][0], 1, &tmp[0],           1,
+                                &jac[0],           1, &jac[0],           1);
+
+            Vmath::Vvtvvtm(pts, &m_deriv[2][1][0], 1, &m_deriv[0][2][0], 1,
+                                &m_deriv[0][1][0], 1, &m_deriv[2][2][0], 1,
+                                &tmp[0],           1);
+            Vmath::Vvtvp  (pts, &m_deriv[1][0][0], 1, &tmp[0],           1,
+                                &jac[0],           1, &jac[0],           1);
+
+            Vmath::Vvtvvtm(pts, &m_deriv[0][1][0], 1, &m_deriv[1][2][0], 1,
+                                &m_deriv[1][1][0], 1, &m_deriv[0][2][0], 1,
+                                &tmp[0],           1);
+            Vmath::Vvtvp  (pts, &m_deriv[2][0][0], 1, &tmp[0],           1,
+                                &jac[0],           1, &jac[0],           1);
+
+            if (Vmath::Vmin(pts, &jac[0], 1) < 0)
+            {
+                m_valid = false;
             }
         }
     }

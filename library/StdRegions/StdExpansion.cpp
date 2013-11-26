@@ -1495,7 +1495,8 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-            int StdExpansion::v_GetVertexMap(const int localVertexId)
+        int StdExpansion::v_GetVertexMap(const int localVertexId,      
+                                         bool useCoeffPacking)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
                 return 0;

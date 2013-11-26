@@ -58,13 +58,15 @@ namespace Nektar
 
     }
 
-    void Poisson::v_PrintSummary(std::ostream &out)
+    void Poisson::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        Laplace::v_PrintSummary(out);
+        Laplace::v_GenerateSummary(s);
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
-            out << "\tForcing func [" << i << "]: "
-                << m_session->GetFunction("Forcing", i)->GetExpression() << endl;
+            stringstream name;
+            name << "Forcing func [" << i << "]";
+            SolverUtils::AddSummaryItem(s, name.str(),
+                    m_session->GetFunction("Forcing", i)->GetExpression());
         }
     }
 

@@ -4,15 +4,22 @@
 
 #include <tinyxml/tinyxml.h>
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]) 
 {
+    bool DeleteFiles = false;
     if (argc < 3)
     {
-        std::cout << "Usage: CombinePartitions [nproc] [outfile]"
+        std::cout << "Usage: CombinePartitions [DeleteFile] nproc outfile"
                   << std::endl;
-        std::cout << "  [nproc]            = Number of partitions" << std::endl;
-        std::cout << "  [outfile]          = Target output filename" << std::endl;
+        std::cout << "  [DeleteFiles]    = Delete partiion files (optional)" << std::endl;
+        std::cout << "  nproc            = Number of partitions" << std::endl;
+        std::cout << "  outfile          = Target output filename" << std::endl;
         exit(1);
+    }
+
+    if(argc == 4)
+    {
+        DeleteFiles = true;
     }
 
     TiXmlDocument docOutput;
@@ -20,10 +27,10 @@ int main(int argc, char *argv[])
     docOutput.LinkEndChild(decl);
 
     TiXmlElement *master = new TiXmlElement("NEKTAR");
-    for (int n = 0; n < atoi(argv[1]); ++n)
+    for (int n = 0; n < atoi(argv[argc-2]); ++n)
     {
-        std::string basename = argv[2];
-        std::string extension = argv[2];
+        std::string basename = argv[argc-1];
+        std::string extension = argv[argc-1];
         basename = basename.substr(0, basename.find_last_of("."));
         extension = extension.substr(extension.find_last_of(".") + 1);
         std::stringstream filename;
@@ -56,9 +63,28 @@ int main(int argc, char *argv[])
     }
     
     docOutput.LinkEndChild(master);
-    if (!docOutput.SaveFile(argv[2]))
+    if (!docOutput.SaveFile(argv[argc-1]))
     {
-        std::cerr << "Unable to write file '" << argv[1] << "'." << std::endl;
+        std::cerr << "Unable to write file '" << argv[argc-2] << "'." << std::endl;
+    }
+    else
+    {
+        if(DeleteFiles)
+        {
+
+            for (int n = 0; n < atoi(argv[argc-2]); ++n)
+            {
+                std::string basename = argv[argc-1];
+                std::string extension = argv[argc-1];
+                basename = basename.substr(0, basename.find_last_of("."));
+                extension = extension.substr(extension.find_last_of(".") + 1);
+                std::stringstream filename;
+                filename << basename << "_P" << n << "." << extension;
+                std::string deloutput = "rm -rf ";
+                deloutput = deloutput + filename.str();
+                system(deloutput.c_str());
+            }
+        }
     }
 
     exit(0);

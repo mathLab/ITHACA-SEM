@@ -85,7 +85,7 @@ namespace Nektar
         class Node {
         public:
             /// Create a new node at a specified coordinate.
-            Node(unsigned int pId, double pX, double pY, double pZ)
+            Node(int pId, double pX, double pY, double pZ)
                 : id(pId), x(pX), y(pY), z(pZ), m_geom() {}
             /// Copy an existing node.
             Node(const Node& pSrc)
@@ -101,7 +101,7 @@ namespace Nektar
             }
 
             /// Get the local id;
-            unsigned int GetID(void)
+            int GetID(void)
             {
                 return id;
             }
@@ -194,7 +194,7 @@ namespace Nektar
             }
             
             /// ID of node.
-            unsigned int id;
+            int id;
             /// X-coordinate.
             double x;
             /// Y-coordinate.
@@ -751,10 +751,18 @@ namespace Nektar
             void SetEdgeLink(EdgeSharedPtr pLink) {
                 m_edgeLink = pLink;
             }
+            /// Get correspondence between this element and an edge.
+            EdgeSharedPtr GetEdgeLink() {
+                return m_edgeLink;
+            }
             /// Set a correspondence between this element and a face
             /// (3D boundary element).
             void SetFaceLink(FaceSharedPtr pLink) {
                 m_faceLink = pLink;
+            }
+            /// Get correspondence between this element and a face.
+            FaceSharedPtr GetFaceLink() {
+                return m_faceLink;
             }
             /// Set a correspondence between edge or face i and its
             /// representative boundary element m->element[expDim-1][j].

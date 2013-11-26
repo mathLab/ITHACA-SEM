@@ -144,8 +144,6 @@ namespace Nektar
         {
             ASSERTL0(false,"This function is not defined in parent class");
         };
-	
-        int NoCaseStringCompare(const string & s1, const string& s2);
     };
     
     inline void AdvectionTerm::InitObject()

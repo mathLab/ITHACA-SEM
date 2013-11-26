@@ -71,7 +71,18 @@ namespace Nektar
 	    eZ,
 	    eS,
 	    eN
-	};	   
+	};
+
+        enum ExpansionType
+        {
+            e0D,
+            e1D,
+            e2D,
+            e3DH1D,
+            e3DH2D,
+            e3D,
+            eNoType
+        };	   
         
         MultiRegions::Direction const DirCartesianMap[] =
             {
@@ -145,8 +156,13 @@ namespace Nektar
             /// Returns the total number of local degrees of freedom
             /// for element eid
             MULTI_REGIONS_EXPORT int GetNcoeffs(const int eid) const;
-			
 
+            /// Returns the type of the expansion
+            MULTI_REGIONS_EXPORT ExpansionType GetExpType(void);
+            
+            /// Returns the type of the expansion
+            MULTI_REGIONS_EXPORT void SetExpType(ExpansionType Type);
+	
             /// Evaulates the maximum number of modes in the elemental basis
             /// order over all elements
             inline int EvalBasisNumModesMax(void) const;
@@ -731,11 +747,12 @@ namespace Nektar
                 return v_GetRobinBCInfo();
             }
 
-            void GetPeriodicEdges(
+            void GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
-                PeriodicMap &periodicEdges)
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces = NullPeriodicMap)
             {
-                v_GetPeriodicEdges(periodicVerts, periodicEdges);
+                v_GetPeriodicEntities(periodicVerts, periodicEdges, periodicFaces);
             }
 
             std::vector<LibUtilities::FieldDefinitionsSharedPtr>
@@ -832,6 +849,9 @@ namespace Nektar
                 return v_GetPlane(n);
             }
             
+            //expansion type
+            ExpansionType m_expType;
+
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                                                            const GlobalLinSysKey &mkey,
@@ -1234,9 +1254,10 @@ namespace Nektar
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
             
             
-            virtual void v_GetPeriodicEdges(
+            virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
-                PeriodicMap &periodicEdges);
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces);
 
             // Homogeneous direction wrapper functions. 
             virtual LibUtilities::BasisSharedPtr  v_GetHomogeneousBasis(void)

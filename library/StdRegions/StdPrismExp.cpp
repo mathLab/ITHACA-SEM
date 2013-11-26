@@ -1511,7 +1511,7 @@ namespace Nektar
             }
         }
         
-        int StdPrismExp::v_GetVertexMap(const int vId)
+        int StdPrismExp::v_GetVertexMap(const int vId, bool useCoeffPacking)
         {
             ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
@@ -1520,8 +1520,36 @@ namespace Nektar
             
             int l = 0;
             
-            switch (vId)
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(0,0,1);
+                    break;
+                case 2:
+                    l = GetMode(0,1,0);
+                    break;
+                case 3:
+                    l = GetMode(0,1,1);
+                    break;
+                case 4:
+                    l = GetMode(1,0,0);
+                    break;
+                case 5:
+                    l = GetMode(1,1,0);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 5");
+                }
+            }
+            else
+            {
+                switch (vId)
+                {
                 case 0:
                     l = GetMode(0,0,0);
                     break;
@@ -1542,6 +1570,7 @@ namespace Nektar
                     break;
                 default:
                     ASSERTL0(false, "local vertex id must be between 0 and 5");
+                }
             }
             
             return l;
@@ -2062,34 +2091,38 @@ namespace Nektar
             StdPrismExp OrthoExp(Ba,Bb,Bc);
             
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
-            int i,j,k;
+            int i,j,k,cnt = 0;
             
-            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
-            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            //SVV filter paramaters (how much added diffusion relative to physical one
+            // and fraction of modes from which you start applying this added diffusion)
+            //
+            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+            
+            //Defining the cut of mode
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            int cutoff_c = (int) (SVVCutOff*nmodes_c);
+            //To avoid the fac[j] from blowing up
+            NekDouble epsilon = 1;
             
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
+            int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
+            NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
             
-            //  Filter just trilinear space
-            int nmodes = max(nmodes_a,nmodes_b);
-            nmodes = max(nmodes,nmodes_c);
-            
-            Array<OneD, NekDouble> fac(nmodes,1.0);
-            for(j = cutoff; j < nmodes; ++j)
+            //------"New" Version August 22nd '13--------------------
+            for(i = 0; i < nmodes_a; ++i)//P
             {
-                fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
-            }
-            
-            for(i = 0; i < nmodes_a; ++i)
-            {
-                for(j = 0; j < nmodes_b; ++j)
+                for(j = 0; j < nmodes_b; ++j) //Q
                 {
-                    for(k =  0; k +j < nmodes_c; ++k)
+                    for(k = 0; k < nmodes_c-i; ++k) //R
                     {
-                        if((i >= cutoff)||(j +k >= cutoff))
+                        if(j >= cutoff ||  i + k >= cutoff)
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j+k]*fac[j+k]));
+                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
                         }
+                        cnt++;
                     }
                 }
             }

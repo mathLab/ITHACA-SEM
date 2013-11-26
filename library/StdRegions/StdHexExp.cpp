@@ -2730,6 +2730,7 @@ namespace Nektar
             for(j = cutoff; j < nmodes; ++j)
             {
                 fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
+                fac[j] *= fac[j]; //added this line to conform with equation
             }
 
             for(i = 0; i < nmodes_a; ++i)
@@ -2740,7 +2741,7 @@ namespace Nektar
                     {
                         if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j]*fac[k]));
+                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]+fac[j]+fac[k]));
                         }
                     }
                 }
@@ -2749,7 +2750,6 @@ namespace Nektar
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        
-
     }
 }
 

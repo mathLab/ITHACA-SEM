@@ -1587,23 +1587,29 @@ namespace Nektar
             StdTriExp OrthoExp(Ba,Bb);
             
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int j,k;
+            int j, k , cnt = 0;
             
-            int cnt;
-            int cuttoff = (int) (mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio)*nmodes_a);
-            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             
+            NekDouble epsilon = 1.0;
+            int nmodes = min(nmodes_a,nmodes_b);
+            
+            //To avoid the fac[j] from blowing up
+            //NekDouble epsilon = 0.001;
+
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
-            
-            // apply SVV filter. 
-            for(cnt = j = 0; j < nmodes_a; ++j)
+
+            //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
+            // apply SVV filter (JEL)
+            for(j = 0; j < nmodes_a; ++j)
             {
                 for(k = 0; k < nmodes_b-j; ++k)
                 {
-                    if(j + k >= cuttoff)
+                    if(j + k >= cutoff)
                     {
-                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes_a)*(j+k-nmodes_a)/((NekDouble)((j+k-cuttoff+1)*(j+k-cuttoff+1)))));
+                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
                     }
                     cnt++;
                 }

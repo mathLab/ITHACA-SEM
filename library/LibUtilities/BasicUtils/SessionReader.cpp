@@ -161,6 +161,7 @@ namespace Nektar
          */
         SessionReader::SessionReader(int argc, char *argv[])
         {
+            m_xmlDoc    = 0;
             m_filenames = ParseCommandLineArguments(argc, argv);
 
             ASSERTL0(m_filenames.size() > 0, "No session file(s) given.");
@@ -191,6 +192,7 @@ namespace Nektar
             ASSERTL0(pFilenames.size() > 0, "No filenames specified.");
 
             ParseCommandLineArguments(argc, argv);
+            m_xmlDoc      = 0;
             m_filenames   = pFilenames;
 
             m_filename    = pFilenames[0];
@@ -1337,16 +1339,8 @@ namespace Nektar
                 {
                     if (GetComm()->GetRank() == 0)
                     {
-                        if (m_verbose)
-                        {
-                            cout << "Loading document" << endl;
-                        }
                         m_xmlDoc = MergeDoc(m_filenames);
 
-                        if (m_verbose)
-                        {
-                            cout << "Partitioning on root process." << endl;
-                        }
                         SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                         MeshPartitionSharedPtr vPartitioner = MemoryManager<
                             MeshPartition>::AllocateSharedPtr(vSession);
@@ -1358,17 +1352,8 @@ namespace Nektar
                 }
                 else
                 {
-                    if (m_verbose)
-                    {
-                        cout << "Loading document" << endl;
-                    }
                     m_xmlDoc = MergeDoc(m_filenames);
 
-                    if (m_verbose)
-                    {
-                        cout << "Rank " << GetComm()->GetRank()
-                             << " participating in partitioning." << endl;
-                    }
                     // Partitioner now operates in parallel
                     // Each process receives partitioning over interconnect
                     // and writes its own session file to the working directory.
@@ -1381,10 +1366,6 @@ namespace Nektar
                     vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
                 }
                 m_comm->Block();
-                if (m_verbose && GetComm()->GetRank() == 0)
-                {
-                    cout << "Partitioning done" << endl;
-                }
 
                 m_filename = GetSessionNameRank() + ".xml";
 

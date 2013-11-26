@@ -755,9 +755,6 @@ namespace Nektar
             EdgeSharedPtr GetEdgeLink() {
                 return m_edgeLink;
             }
-            FaceSharedPtr GetFaceLink() {
-                return m_faceLink;
-            }
             /// Set a correspondence between this element and a face
             /// (3D boundary element).
             void SetFaceLink(FaceSharedPtr pLink) {

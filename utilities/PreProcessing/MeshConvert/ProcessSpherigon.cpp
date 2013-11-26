@@ -672,6 +672,9 @@ namespace Nektar
                         bool reverseEdge = !(v[vertMap[offset][edge][0]] ==
                                              *(e->GetEdge(edge)->n1));
                         
+                        // Clear existing curvature.
+                        e->GetEdge(edge)->edgeNodes.clear();
+
                         if (e->GetConf().e == eQuadrilateral)
                         {
                             for (int j = 1; j < nq-1; ++j)

@@ -409,7 +409,8 @@ namespace Nektar
                                 bndSegExp->GetVertexMap(k);
                             int gid = graphVertOffset[
                                 ReorderedGraphVertId[0][meshVertId]];
-                            m_extraDirDofs[i].push_back(make_pair(loc,gid));
+                            ExtraDirDof t(loc, gid, 1.0);
+                            m_extraDirDofs[i].push_back(t);
                             foundExtraVerts.insert(meshVertId);
                         }
                     }
@@ -431,6 +432,7 @@ namespace Nektar
 
             globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
             m_numGlobalBndCoeffs = globalId;
+
 
             /**
              * STEP 5: The boundary condition mapping is generated from the
@@ -455,6 +457,35 @@ namespace Nektar
             m_numGlobalCoeffs = globalId;
 
             SetUpUniversalC0ContMap(locExp, periodicVertsId, periodicEdgesId);
+
+            // Since we can now have multiple entries to m_extraDirDofs due to
+            // periodic boundary conditions we make a call to work out the
+            // multiplicity of all entries and invert
+            Array<OneD, NekDouble> valence(m_numGlobalBndCoeffs,0.0);
+            
+            // Fill in Dirichlet coefficients that are to be sent to other
+            // processors with a value of 1 
+            map<int, vector<ExtraDirDof> >::iterator Tit;
+
+            // Generate valence for extraDirDofs 
+            for (Tit = m_extraDirDofs.begin(); Tit != m_extraDirDofs.end(); ++Tit)
+            {
+                for (i = 0; i < Tit->second.size(); ++i)
+                {
+                    valence[Tit->second[i].get<1>()] = 1.0;
+                }
+            }
+          
+            UniversalAssembleBnd(valence);
+
+            // Set third argument of tuple to inverse of valence. 
+            for (Tit = m_extraDirDofs.begin(); Tit != m_extraDirDofs.end(); ++Tit)
+            {
+                for (i = 0; i < Tit->second.size(); ++i)
+                {
+                    boost::get<2>(Tit->second.at(i)) = 1.0/valence[Tit->second.at(i).get<1>()];
+                }
+            }
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
@@ -923,7 +954,8 @@ namespace Nektar
                 }
             }
             
-            /// - Local periodic edges.
+            /// - Local periodic edges. !! SJS: This will need pushing
+            /// - further down for block precodnitioner
             for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
             {
                 if (!pIt->second[0].isLocal)

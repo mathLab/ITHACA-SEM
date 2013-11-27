@@ -116,8 +116,6 @@ namespace Nektar
                     boost::bind(&BLPoints::CreateMatrix, this, _1));
             }
 
-            LIB_UTILITIES_EXPORT static NekDouble delta_star;
-            
         private:
             /// Default constructor should not be called except by Create
             /// method.

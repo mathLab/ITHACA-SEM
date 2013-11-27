@@ -737,7 +737,7 @@ namespace Nektar
             }
         }
 
-        int StdSegExp::v_GetVertexMap(int localVertexId)
+        int StdSegExp::v_GetVertexMap(int localVertexId,bool useCoeffPacking)
         {
             ASSERTL0((localVertexId==0)||(localVertexId==1),"local vertex id"
                      "must be between 0 or 1");

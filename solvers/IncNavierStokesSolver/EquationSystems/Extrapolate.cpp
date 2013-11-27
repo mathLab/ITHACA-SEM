@@ -63,7 +63,8 @@ namespace Nektar
           m_velocity(pVel),
           m_advObject(advObject)
     {      
-        m_session->LoadParameter("TimeStep", m_timestep,   0.01);  
+        m_session->LoadParameter("TimeStep", m_timestep,   0.01);
+        m_comm = m_session->GetComm();
     }
     
     Extrapolate::~Extrapolate()
@@ -87,85 +88,92 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
         const Array<OneD, const Array<OneD, NekDouble> >  &N,
         NekDouble kinvis)
-    {		
-        Array<OneD, NekDouble> tmp;
-        Array<OneD, NekDouble> accelerationTerm;
-        
-        m_pressureCalls++;
-        int  n,cnt;
-        int  nint    = min(m_pressureCalls,m_intSteps);
-        int  nlevels = m_pressureHBCs.num_elements();
-	
-        int acc_order = 0;
-        
-        accelerationTerm = Array<OneD, NekDouble>(m_acceleration[0].num_elements(), 0.0);
-		
-        // Rotate HOPBCs storage
-        RollOver(m_pressureHBCs);
-		
-        // Rotate acceleration term
-        RollOver(m_acceleration);
-		
-        // Calculate BCs at current level
-        CalcPressureBCs(fields,N,kinvis);
+    {
+        if(m_HBCdata.num_elements()>0)
+        {
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> accelerationTerm;
 
-        // Copy High order values into storage array 
-        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-        {
-            // High order boundary condition;
-            if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+            m_pressureCalls++;
+            int  n,cnt;
+            int  nint    = min(m_pressureCalls,m_intSteps);
+            int  nlevels = m_pressureHBCs.num_elements();
+
+            int acc_order = 0;
+
+            accelerationTerm =
+                Array<OneD, NekDouble>(m_acceleration[0].num_elements(), 0.0);
+
+            // Rotate HOPBCs storage
+            RollOver(m_pressureHBCs);
+
+            // Rotate acceleration term
+            RollOver(m_acceleration);
+
+            // Calculate BCs at current level
+            CalcPressureBCs(fields,N,kinvis);
+
+            // Copy High order values into storage array 
+            for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
             {
-                int nq = m_PBndExp[n]->GetNcoeffs();
-                Vmath::Vcopy(nq,&(m_PBndExp[n]->GetCoeffs()[0]),1,&(m_pressureHBCs[0])[cnt],1);
-                cnt += nq;
+                // High order boundary condition;
+                if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                {
+                    int nq = m_PBndExp[n]->GetNcoeffs();
+                    Vmath::Vcopy(nq, &(m_PBndExp[n]->GetCoeffs()[0]), 1,
+                                     &(m_pressureHBCs[0])[cnt], 1);
+                    cnt += nq;
+                }
             }
-        }
-		
-        //Calculate acceleration term at level n based on previous steps
-        if (m_pressureCalls > 2)
-        {
-            acc_order = min(m_pressureCalls-2,m_intSteps);
-            Vmath::Smul(cnt, StifflyStable_Gamma0_Coeffs[acc_order-1],
-                        m_acceleration[0], 1,
-                        accelerationTerm,  1);
-			
-            for(int i = 0; i < acc_order; i++)
+
+            //Calculate acceleration term at level n based on previous steps
+            if (m_pressureCalls > 2)
             {
-                Vmath::Svtvp(cnt, -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
-                             m_acceleration[i+1], 1,
-                             accelerationTerm,    1,
-                             accelerationTerm,    1);
+                acc_order = min(m_pressureCalls-2,m_intSteps);
+                Vmath::Smul(cnt, StifflyStable_Gamma0_Coeffs[acc_order-1],
+                                 m_acceleration[0], 1,
+                                 accelerationTerm,  1);
+
+                for(int i = 0; i < acc_order; i++)
+                {
+                    Vmath::Svtvp(cnt, 
+                                -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
+                                 m_acceleration[i+1], 1,
+                                 accelerationTerm,    1,
+                                 accelerationTerm,    1);
+                }
             }
-        }
-		
-        // Adding acceleration term to HOPBCs
-        Vmath::Svtvp(cnt, -1.0/m_timestep,
-                     accelerationTerm,  1,
-                     m_pressureHBCs[0], 1,
-                     m_pressureHBCs[0], 1);
-        
-        // Extrapolate to n+1
-        Vmath::Smul(cnt, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
-                    m_pressureHBCs[nint-1],    1,
-                    m_pressureHBCs[nlevels-1], 1);
-        
-        for(n = 0; n < nint-1; ++n)
-        {
-            Vmath::Svtvp(cnt,StifflyStable_Betaq_Coeffs[nint-1][n],
-                         m_pressureHBCs[n],1,m_pressureHBCs[nlevels-1],1,
-                         m_pressureHBCs[nlevels-1],1);
-        }
-	
-        // Copy values of [dP/dn]^{n+1} in the pressure bcs storage.
-        // m_pressureHBCS[nlevels-1] will be cancelled at next time step
-        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
-        {
-            // High order boundary condition;
-            if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+
+            // Adding acceleration term to HOPBCs
+            Vmath::Svtvp(cnt, -1.0/m_timestep,
+                         accelerationTerm,  1,
+                         m_pressureHBCs[0], 1,
+                         m_pressureHBCs[0], 1);
+
+            // Extrapolate to n+1
+            Vmath::Smul(cnt, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
+                             m_pressureHBCs[nint-1],    1,
+                             m_pressureHBCs[nlevels-1], 1);
+
+            for(n = 0; n < nint-1; ++n)
             {
-                int nq = m_PBndExp[n]->GetNcoeffs();
-                Vmath::Vcopy(nq,&(m_pressureHBCs[nlevels-1])[cnt],1,&(m_PBndExp[n]->UpdateCoeffs()[0]),1);
-                cnt += nq;
+                Vmath::Svtvp(cnt, StifflyStable_Betaq_Coeffs[nint-1][n],
+                             m_pressureHBCs[n],1,m_pressureHBCs[nlevels-1],1,
+                             m_pressureHBCs[nlevels-1],1);
+            }
+
+            // Copy values of [dP/dn]^{n+1} in the pressure bcs storage.
+            // m_pressureHBCS[nlevels-1] will be cancelled at next time step
+            for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+            {
+                // High order boundary condition;
+                if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                {
+                    int nq = m_PBndExp[n]->GetNcoeffs();
+                    Vmath::Vcopy(nq, &(m_pressureHBCs[nlevels-1])[cnt],  1,
+                                     &(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
+                    cnt += nq;
+                }
             }
         }
     }
@@ -278,13 +286,6 @@ namespace Nektar
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[2],BndValues[2]);
                     Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Pvals);
 					
-					//cout << "===========BC: " << m_HBCdata[j].m_bndryElmtID << " ======"<<endl;
-					//for(int k=0; k<m_pressureBCsMaxPts; k++)
-					//{
-					//	cout << Pvals[k] << endl;
-					//}
-					//cout << "===========" <<endl;
-                    
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[0],BndValues[0]);
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[1],BndValues[1]);
                     m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[2],BndValues[2]);
@@ -369,19 +370,15 @@ namespace Nektar
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vel[2],Wx);
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vel[1],Vx);
                 
-                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vel[0],Uy);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],Vel[0],1,Uy,1);
                 
-                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],Vel[0],Uz);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber[j],Vel[0],1,Uz,1);
 				
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Wz,1,Wx,1,qy,1);
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Vx,1,Uy,1,qz,1);
                 
-                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],qz,Uy);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],qz,1,Uy,1);
 				
-                //m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[2],qy,Uz);
                 Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber[j],qy,1,Uz,1);
 		
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Uy,1,Uz,1,Q[0],1);
@@ -483,8 +480,12 @@ namespace Nektar
             }
         }
 	
-        ASSERTL0(HBCnumber > 0 ,"At least one high-order pressure boundary condition is required for scheme consistency");
-        
+        int checkHBC = HBCnumber;
+        m_comm->AllReduce(checkHBC,LibUtilities::ReduceSum);
+        ASSERTL0(checkHBC > 0 ,"At least one high-order pressure boundary "
+                               "condition is required for scheme "
+                               "consistency");
+
         m_acceleration[0] = Array<OneD, NekDouble>(cnt, 0.0);
         for(n = 0; n < m_intSteps; ++n)
         {

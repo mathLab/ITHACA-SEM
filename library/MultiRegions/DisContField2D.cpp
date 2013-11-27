@@ -703,6 +703,16 @@ namespace Nektar
             int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
+            // Set up a set of all local verts and edges. 
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                for(j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
+                {
+                    int id = (*m_exp)[i]->GetGeom()->GetVid(j);
+                    locVerts.insert(id);
+                }
+            }
+
             // Construct list of all periodic pairs local to this process.
             for (it = bregions.begin(); it != bregions.end(); ++it)
             {
@@ -775,8 +785,6 @@ namespace Nektar
                     vertList[0] = segGeom->GetVid(0);
                     vertList[1] = segGeom->GetVid(1);
                     allVerts[(*c)[i]->GetGlobalID()] = vertList;
-                    locVerts.insert(vertList[0]);
-                    locVerts.insert(vertList[1]);
                 }
 
                 if (vComm->GetSize() == 1)
@@ -916,6 +924,8 @@ namespace Nektar
             map<int,int>::iterator cIt, pIt;
             map<int,int>::const_iterator oIt;
 
+            map<int,int> allCompPairs;
+
             // Store temporary map of periodic vertices which will hold all
             // periodic vertices on the entire mesh so that doubly periodic
             // vertices can be counted properly across partitions. Local
@@ -1006,6 +1016,9 @@ namespace Nektar
                              orientMap.count(ids[1]) > 0,
                              "Unable to find edge in orientation map.");
 
+                    allCompPairs[pIt->first ] = pIt->second;
+                    allCompPairs[pIt->second] = pIt->first;
+
                     for (i = 0; i < 2; ++i)
                     {
                         if (!local[i])
@@ -1087,6 +1100,78 @@ namespace Nektar
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            Array<OneD, int> pairSizes(n, 0);
+            pairSizes[p] = allCompPairs.size();
+            vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
+
+            int totPairSizes = Vmath::Vsum(n, pairSizes, 1);
+
+            Array<OneD, int> pairOffsets(n, 0);
+            pairOffsets[0] = 0;
+
+            for (i = 1; i < n; ++i)
+            {
+                pairOffsets[i] = pairOffsets[i-1] + pairSizes[i-1];
+            }
+
+            Array<OneD, int> first (totPairSizes, 0);
+            Array<OneD, int> second(totPairSizes, 0);
+
+            cnt = pairOffsets[p];
+
+            for (pIt = allCompPairs.begin(); pIt != allCompPairs.end(); ++pIt)
+            {
+                first [cnt  ] = pIt->first;
+                second[cnt++] = pIt->second;
+            }
+
+            vComm->AllReduce(first,  LibUtilities::ReduceSum);
+            vComm->AllReduce(second, LibUtilities::ReduceSum);
+
+            allCompPairs.clear();
+
+            for(cnt = 0; cnt < totPairSizes; ++cnt)
+            {
+                allCompPairs[first[cnt]] = second[cnt];
+            }
+
+            // Search for periodic vertices and edges which are not in a
+            // periodic composite but lie in this process. First, loop over all
+            // information we have from other processors.
+            for (cnt = i = 0; i < totEdges; ++i)
+            {
+                int edgeId    = edgeIds[i];
+
+                ASSERTL0(allCompPairs.count(edgeId) > 0,
+                         "Unable to find matching periodic edge.");
+
+                int perEdgeId = allCompPairs[edgeId];
+
+                for (j = 0; j < edgeVerts[i]; ++j, ++cnt)
+                {
+                    int vId = vertIds[cnt];
+
+                    PeriodicMap::iterator perId = periodicVerts.find(vId);
+
+                    if (perId == periodicVerts.end())
+                    {
+                        // This vertex is not included in the map. Figure out
+                        // which vertex it is supposed to be periodic
+                        // with. perEdgeId is the edge ID which is periodic with
+                        // edgeId. The logic is much the same as the loop above.
+                        int perVertexId =
+                            orientMap[edgeId] == orientMap[perEdgeId] ?
+                            vertMap[perEdgeId][(j+1)%2] : vertMap[perEdgeId][j];
+
+                        PeriodicEntity ent(perVertexId,
+                                           StdRegions::eNoOrientation,
+                                           locVerts.count(perVertexId) > 0);
+
+                        periodicVerts[vId].push_back(ent);
                     }
                 }
             }

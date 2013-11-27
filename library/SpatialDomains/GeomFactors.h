@@ -77,6 +77,8 @@ namespace Nektar
         /// Storage type for derivative of mapping.
         typedef Array<OneD, Array<OneD, Array<OneD,NekDouble> > >
                                                     DerivStorage;
+        typedef Array<OneD, LibUtilities::PointsKey>
+                                                    PointsKeyArray;
 
         /// Calculation and storage of geometric factors associated with the
         /// mapping from StdRegions reference elements to a given LocalRegions
@@ -96,21 +98,38 @@ namespace Nektar
             inline GeomType GetGtype();
 
             /// Return the Jacobian of the mapping.
-            inline const Array<OneD, const NekDouble> &GetJac() const;
+            const Array<OneD, const NekDouble> GetJac() const
+            {
+                return GetJac(m_pointsKey);
+            }
+            const Array<OneD, const NekDouble> GetJac(
+                    const PointsKeyArray &keyTgt) const;
 
             /// Return the Laplacian coefficients \f$g_{ij}\f$.
-            inline const Array<TwoD, const NekDouble> &GetGmat() const;
+            const Array<TwoD, const NekDouble> GetGmat() const
+            {
+                return GetGmat(m_pointsKey);
+            }
+            const Array<TwoD, const NekDouble> GetGmat(
+                    const PointsKeyArray &keyTgt) const;
 
             /// Return the derivative of the mapping with respect to the
             /// reference coordinates,
             /// \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
-            inline const Array<
-                OneD, const Array<OneD, Array<OneD, NekDouble> > > 
-                    GetDeriv() const;
+            DerivStorage GetDeriv() const
+            {
+                return GetDeriv(m_pointsKey);
+            }
+            DerivStorage GetDeriv(const PointsKeyArray &tpoints) const;
 
             /// Return the derivative of the reference coordinates with respect
             /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
-            inline const Array<TwoD, const NekDouble> &GetDerivFactors() const;
+            const Array<TwoD, const NekDouble> GetDerivFactors() const
+            {
+                return GetDerivFactors(m_pointsKey);
+            }
+            const Array<TwoD, const NekDouble> GetDerivFactors(
+                    const PointsKeyArray &keyTgt) const;
 
             /// Determine if element is valid and not self-intersecting.
             inline bool IsValid() const;
@@ -148,9 +167,6 @@ namespace Nektar
             /// type, expansion/co-ordinate dimensions, metric, Jacobian and
             /// the geometric factors themselves.
             inline size_t GetHash() const;
-
-            void FillDeriv(DerivStorage &deriv,
-                    const Array<OneD, const LibUtilities::PointsKey>& tpoints) const;
 
         protected:
             /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
@@ -206,10 +222,14 @@ namespace Nektar
             GeomFactors(const GeomFactors &S);
 
             virtual void v_Interp(
-                        const Array<OneD, const LibUtilities::PointsKey> &map_points,
-                        const DerivStorage &src,
-                        const Array<OneD, const LibUtilities::PointsKey> &tpoints,
-                        DerivStorage &tgt) const = 0;
+                        const PointsKeyArray &map_points,
+                        const Array<OneD, const NekDouble> &src,
+                        const PointsKeyArray &tpoints,
+                        Array<OneD, NekDouble> &tgt) const = 0;
+
+            virtual void v_Adjoint(
+                        const Array<TwoD, const NekDouble>& src,
+                        Array<TwoD, NekDouble>& tgt) const = 0;
 
         private:
             /// (2D only) Compute tangents based on a 1D element.
@@ -243,64 +263,6 @@ namespace Nektar
             return m_type;
         }
 
-        /**
-         * This routine returns an array of values specifying the Jacobian
-         * of the mapping at quadrature points in the element. The array
-         * is either of size 1 in the case of elements having #GeomType
-         * #eRegular, or of size equal to the number of quadrature points for
-         * #eDeformed elements.
-         *
-         * @returns             Array containing the Jacobian of the coordinate
-         *                      mapping at the quadrature points of the element.
-         * @see                 GeomType
-         */
-        inline const Array<OneD, const NekDouble> &GeomFactors::GetJac() const
-        {
-            return m_jac;
-        }
-
-        /**
-         * This routine returns a two-dimensional array of values specifying
-         * the inverse metric terms associated with the coordinate mapping of
-         * the corresponding reference region to the physical element. These
-         * terms correspond to the \f$g^{ij}\f$ terms in \cite CaYaKiPeSh13 and,
-         * in the case of an embedded manifold, map covariant quantities to
-         * contravariant quantities. The leading index of the array is the index
-         * of the term in the tensor numbered as
-         * \f[\left(\begin{array}{ccc}
-         *    0 & 1 & 2 \\
-         *    1 & 3 & 4 \\
-         *    2 & 4 & 5
-         * \end{array}\right)\f].
-         * The second dimension is either of size 1 in the case of elements
-         * having #GeomType #eRegular, or of size equal to the number of
-         * quadrature points for #eDeformed elements.
-         *
-         * @see [Wikipedia "Covariance and Contravariance of Vectors"]
-         *      (http://en.wikipedia.org/wiki/Covariance_and_contravariance_of_vectors)
-         * @returns             Two-dimensional array containing the inverse
-         *                      metric tensor of the coordinate mapping.
-         */
-        inline const Array<TwoD, const NekDouble> &GeomFactors::GetGmat() const
-        {
-            return m_gmat;
-        }
-
-        /// Return the derivative factors matrix.
-        inline const Array<TwoD, const NekDouble>
-            &GeomFactors::GetDerivFactors() const
-        {
-            return m_derivFactors;
-        }
-
-        inline const Array<
-            OneD, const Array<OneD, Array<OneD, NekDouble> > >
-                GeomFactors::GetDeriv() const
-        {
-            DerivStorage d;
-            FillDeriv(d, m_pointsKey);
-            return d;
-        }
 
         /// Return the number of dimensions of the coordinate system.
         inline int GeomFactors::GetCoordim() const

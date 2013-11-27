@@ -187,64 +187,283 @@ namespace Nektar
             return true;
         }
 
-        void GeomFactors::FillDeriv(
-                DerivStorage &deriv,
-                const Array<OneD, const LibUtilities::PointsKey>
-                                         &tpoints) const
+        DerivStorage GeomFactors::GetDeriv(const PointsKeyArray &tpoints) const
         {
             ASSERTL1(tpoints.num_elements() == m_expDim,
                      "Dimension of target basis does not match expansion basis.");
 
-            int i = 0;
-            int nqtot_map = 1;
-            int nqtot_tbasis = 1;
-            deriv = DerivStorage(m_expDim);
+            int i = 0, j = 0;
+            int nqtot_map      = 1;
+            int nqtot_tbasis   = 1;
+            DerivStorage deriv = DerivStorage(m_expDim);
             DerivStorage d_map = DerivStorage(m_expDim);
-            Array<OneD, LibUtilities::PointsKey> map_points(m_expDim);
+            PointsKeyArray map_points(m_expDim);
+
+            // Allocate storage and compute number of points
             for (i = 0; i < m_expDim; ++i)
             {
-                map_points[i] =m_coords[0]->GetBasis(i)->GetPointsKey();
-                nqtot_map *= map_points[i].GetNumPoints();
-                nqtot_tbasis *= tpoints[i].GetNumPoints();
+                map_points[i]  = m_coords[0]->GetBasis(i)->GetPointsKey();
+                nqtot_map     *= map_points[i].GetNumPoints();
+                nqtot_tbasis  *= tpoints[i].GetNumPoints();
                 deriv[i] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
                 d_map[i] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
             }
 
             // Calculate local derivatives
-            for(int i = 0; i < m_coordDim; ++i)
+            for(i = 0; i < m_coordDim; ++i)
             {
-                for (int j = 0; j < m_expDim; ++j)
+                // Transform from coefficient space to physical space
+                m_coords[i]->BwdTrans(m_coords[i]->GetCoeffs(),
+                                      m_coords[i]->UpdatePhys());
+
+                // Allocate storage and take the derivative (calculated at the
+                // points as specified in 'Coords')
+                for (j = 0; j < m_expDim; ++j)
                 {
                     d_map[j][i] = Array<OneD,NekDouble>(nqtot_map);
                     deriv[j][i] = Array<OneD,NekDouble>(nqtot_tbasis);
-                }
-
-                // Transform from coefficient space to physical space
-                m_coords[i]->BwdTrans(m_coords[i]->GetCoeffs(),
-                                    m_coords[i]->UpdatePhys());
-                // Take the derivative (calculated at the points as specified
-                // in 'Coords')
-                switch (m_expDim)
-                {
-                    case 1:
-                        m_coords[i]->StdPhysDeriv(m_coords[i]->GetPhys(),
-                                                d_map[0][i]);
-break;
-                    case 2:
-                        m_coords[i]->StdPhysDeriv(m_coords[i]->GetPhys(),
-                                                d_map[0][i],
-                                                d_map[1][i]);
-break;
-                    case 3:
-                        m_coords[i]->StdPhysDeriv(m_coords[i]->GetPhys(),
-                                                d_map[0][i],
-                                                d_map[1][i],
-                                                d_map[2][i]);
-break;
+                    m_coords[i]->StdPhysDeriv(j, m_coords[i]->GetPhys(),
+                                                 d_map[j][i]);
                 }
             }
 
-            v_Interp(map_points, d_map, tpoints, deriv);
+            for (i = 0; i < m_coordDim; ++i)
+            {
+                // Interpolate the derivatives:
+                // - from the points as defined in the mapping ('Coords')
+                // - to the points we at which we want to know the metrics
+                //   ('tbasis')
+                bool same = true;
+                for (j = 0; j < m_expDim; ++j)
+                {
+                    same = same && (map_points[j] == tpoints[j]);
+                }
+                if( same )
+                {
+                    for (j = 0; j < m_expDim; ++j)
+                    {
+                        deriv[j][i] = d_map[j][i];
+                    }
+                }
+                else
+                {
+                    for (j = 0; j < m_expDim; ++j)
+                    {
+                        v_Interp(map_points, d_map[j][i], tpoints, deriv[j][i]);
+                    }
+                }
+            }
+
+            return deriv;
+        }
+
+
+        /**
+         * This routine returns an array of values specifying the Jacobian
+         * of the mapping at quadrature points in the element. The array
+         * is either of size 1 in the case of elements having #GeomType
+         * #eRegular, or of size equal to the number of quadrature points for
+         * #eDeformed elements.
+         *
+         * @returns             Array containing the Jacobian of the coordinate
+         *                      mapping at the quadrature points of the element.
+         * @see                 GeomType
+         */
+        const Array<OneD, const NekDouble> GeomFactors::GetJac(
+                const PointsKeyArray &keyTgt) const
+        {
+            int i = 0, j = 0, k = 0, l = 0;
+            int ptsTgt   = 1;
+
+            // Allocate storage and compute number of points
+            for (i = 0; i < m_expDim; ++i)
+            {
+                ptsTgt   *= keyTgt[i].GetNumPoints();
+            }
+
+            // Get derivative at geometry points
+            DerivStorage deriv = GetDeriv(keyTgt);
+
+            Array<TwoD, NekDouble> tmp (m_expDim*m_expDim, ptsTgt, 0.0);
+            Array<TwoD, NekDouble> gmat(m_expDim*m_expDim, ptsTgt, 0.0);
+            Array<OneD, NekDouble> jac (ptsTgt, 0.0);
+
+            // Compute g_{ij} as t_i \cdot t_j and store in tmp
+            for (i = 0, l = 0; i < m_expDim; ++i)
+            {
+                for (j = 0; j < m_expDim; ++j, ++l)
+                {
+                    for (k = 0; k < m_coordDim; ++k)
+                    {
+                        Vmath::Vvtvp(ptsTgt, &deriv[i][k][0], 1,
+                                             &deriv[j][k][0], 1,
+                                             &tmp[l][0],      1,
+                                             &tmp[l][0],      1);
+                    }
+                }
+            }
+
+            v_Adjoint(tmp, gmat);
+
+            // Compute g = det(g_{ij}) (= Jacobian squared) and store
+            // temporarily in m_jac.
+            for (i = 0; i < m_expDim; ++i)
+            {
+                Vmath::Vvtvp(ptsTgt, &tmp[i][0], 1, &gmat[i*m_expDim][0], 1,
+                                     &jac[0], 1, &jac[0], 1);
+            }
+
+            // Compute the Jacobian = sqrt(g)
+            Vmath::Vsqrt(ptsTgt, &jac[0], 1, &jac[0], 1);
+
+            return jac;
+        }
+
+
+        /**
+         * This routine returns a two-dimensional array of values specifying
+         * the inverse metric terms associated with the coordinate mapping of
+         * the corresponding reference region to the physical element. These
+         * terms correspond to the \f$g^{ij}\f$ terms in \cite CaYaKiPeSh13 and,
+         * in the case of an embedded manifold, map covariant quantities to
+         * contravariant quantities. The leading index of the array is the index
+         * of the term in the tensor numbered as
+         * \f[\left(\begin{array}{ccc}
+         *    0 & 1 & 2 \\
+         *    1 & 3 & 4 \\
+         *    2 & 4 & 5
+         * \end{array}\right)\f].
+         * The second dimension is either of size 1 in the case of elements
+         * having #GeomType #eRegular, or of size equal to the number of
+         * quadrature points for #eDeformed elements.
+         *
+         * @see [Wikipedia "Covariance and Contravariance of Vectors"]
+         *      (http://en.wikipedia.org/wiki/Covariance_and_contravariance_of_vectors)
+         * @returns             Two-dimensional array containing the inverse
+         *                      metric tensor of the coordinate mapping.
+         */
+        const Array<TwoD, const NekDouble> GeomFactors::GetGmat(
+                const PointsKeyArray &keyTgt) const
+        {
+            int i = 0, j = 0, k = 0, l = 0;
+            int ptsTgt   = 1;
+
+            // Allocate storage and compute number of points
+            for (i = 0; i < m_expDim; ++i)
+            {
+                ptsTgt   *= keyTgt[i].GetNumPoints();
+            }
+
+            // Get derivative at geometry points
+            DerivStorage deriv = GetDeriv(keyTgt);
+
+            Array<TwoD, NekDouble> tmp (m_expDim*m_expDim, ptsTgt, 0.0);
+            Array<TwoD, NekDouble> gmat(m_expDim*m_expDim, ptsTgt, 0.0);
+            Array<OneD, NekDouble> jac (ptsTgt, 0.0);
+
+            // Compute g_{ij} as t_i \cdot t_j and store in tmp
+            for (i = 0, l = 0; i < m_expDim; ++i)
+            {
+                for (j = 0; j < m_expDim; ++j, ++l)
+                {
+                    for (k = 0; k < m_coordDim; ++k)
+                    {
+                        Vmath::Vvtvp(ptsTgt, &deriv[i][k][0], 1,
+                                             &deriv[j][k][0], 1,
+                                             &tmp[l][0],      1,
+                                             &tmp[l][0],      1);
+                    }
+                }
+            }
+
+            v_Adjoint(tmp, gmat);
+
+            // Compute g = det(g_{ij}) (= Jacobian squared) and store
+            // temporarily in m_jac.
+            for (i = 0; i < m_expDim; ++i)
+            {
+                Vmath::Vvtvp(ptsTgt, &tmp[i][0], 1, &gmat[i*m_expDim][0], 1,
+                                     &jac[0], 1, &jac[0], 1);
+            }
+
+            for (i = 0; i < m_expDim*m_expDim; ++i)
+            {
+                Vmath::Vdiv(ptsTgt, &gmat[i][0], 1, &jac[0], 1, &gmat[i][0], 1);
+            }
+
+            return gmat;
+        }
+
+        /// Return the derivative factors matrix.
+        const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(
+                const PointsKeyArray& keyTgt) const
+        {
+            int i = 0, j = 0, k = 0, l = 0;
+            int ptsTgt   = 1;
+
+            // Allocate storage and compute number of points
+            for (i = 0; i < m_expDim; ++i)
+            {
+                ptsTgt   *= keyTgt[i].GetNumPoints();
+            }
+
+            // Get derivative at geometry points
+            DerivStorage deriv = GetDeriv(keyTgt);
+
+            Array<TwoD, NekDouble> tmp (m_expDim*m_expDim, ptsTgt, 0.0);
+            Array<TwoD, NekDouble> gmat(m_expDim*m_expDim, ptsTgt, 0.0);
+            Array<OneD, NekDouble> jac (ptsTgt, 0.0);
+            Array<TwoD, NekDouble> factors(m_expDim*m_coordDim, ptsTgt, 0.0);
+
+            // Compute g_{ij} as t_i \cdot t_j and store in tmp
+            for (i = 0, l = 0; i < m_expDim; ++i)
+            {
+                for (j = 0; j < m_expDim; ++j, ++l)
+                {
+                    for (k = 0; k < m_coordDim; ++k)
+                    {
+                        Vmath::Vvtvp(ptsTgt, &deriv[i][k][0], 1,
+                                             &deriv[j][k][0], 1,
+                                             &tmp[l][0],      1,
+                                             &tmp[l][0],      1);
+                    }
+                }
+            }
+
+            v_Adjoint(tmp, gmat);
+
+            // Compute g = det(g_{ij}) (= Jacobian squared) and store
+            // temporarily in m_jac.
+            for (i = 0; i < m_expDim; ++i)
+            {
+                Vmath::Vvtvp(ptsTgt, &tmp[i][0], 1, &gmat[i*m_expDim][0], 1,
+                                     &jac[0], 1, &jac[0], 1);
+            }
+
+            for (i = 0; i < m_expDim*m_expDim; ++i)
+            {
+                Vmath::Vdiv(ptsTgt, &gmat[i][0], 1, &jac[0], 1, &gmat[i][0], 1);
+            }
+
+            // Compute the Jacobian = sqrt(g)
+            Vmath::Vsqrt(ptsTgt, &jac[0], 1, &jac[0], 1);
+
+            // Compute the derivative factors
+            for (k = 0, l = 0; k < m_coordDim; ++k)
+            {
+                for (j = 0; j < m_expDim; ++j, ++l)
+                {
+                    for (i = 0; i < m_expDim; ++i)
+                    {
+                        Vmath::Vvtvp(ptsTgt, &deriv[i][k][0],        1,
+                                          &gmat[m_expDim*i+j][0], 1,
+                                          &factors[l][0],    1,
+                                          &factors[l][0],    1);
+                    }
+                }
+            }
+
+            return factors;
         }
 
     }; //end of namespace

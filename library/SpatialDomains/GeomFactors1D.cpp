@@ -178,8 +178,7 @@ namespace Nektar
             ASSERTL1(m_deriv[0][0].num_elements() == nquad,
                      "Number of quadrature points do not match");
 
-            DerivStorage deriv;
-            FillDeriv(deriv, m_pointsKey);
+            DerivStorage deriv = GetDeriv(m_pointsKey);
 
             // If regular or moving geometry.
             if(( m_type == eRegular)||
@@ -246,8 +245,8 @@ namespace Nektar
 	
             int i;
 
-            DerivStorage deriv;
-            FillDeriv(deriv, m_pointsKey);
+            DerivStorage deriv = GetDeriv(m_pointsKey);
+            //FillDeriv(deriv, m_pointsKey);
 
             NekDouble fac;
             // Regular geometry case
@@ -302,28 +301,22 @@ namespace Nektar
         }
                 
         void GeomFactors1D::v_Interp(
-                    const Array<OneD, const LibUtilities::PointsKey> &map_points,
-                    const DerivStorage &src,
-                    const Array<OneD, const LibUtilities::PointsKey> &tpoints,
-                    DerivStorage &tgt) const
+                    const PointsKeyArray &map_points,
+                    const Array<OneD, const NekDouble> &src,
+                    const PointsKeyArray &tpoints,
+                    Array<OneD, NekDouble> &tgt) const
         {
-            for (int i = 0; i < m_coordDim; ++i)
-            {
-                // Interpolate the derivatives:
-                // - from the points as defined in the mapping ('Coords')
-                // - to the points we at which we want to know the metrics
-                //   ('tbasis')
-                if( map_points[0] == tpoints[0])
-                {
-                    tgt[0][i] = src[0][i];
-                }
-                else
-                {
-                    LibUtilities::Interp1D(map_points[0], src[0][i], tpoints[0],
-                                           tgt[0][i]);
+            LibUtilities::Interp1D(map_points[0], src, tpoints[0], tgt);
+        }
 
-                }
-            }
+        void GeomFactors1D::v_Adjoint(
+                    const Array<TwoD, const NekDouble>& src,
+                    Array<TwoD, NekDouble>& tgt) const
+        {
+            int n = src[0].num_elements();
+            //Vmath::Sdiv(n, 1.0, &src[0][0], 1, &tgt[0][0], 1);
+            //Vmath::Vcopy(n, &src[0][0], 1, &tgt[0][0], 1);
+            Vmath::Fill(n, 1.0, &tgt[0][0], 1);
         }
 
     }

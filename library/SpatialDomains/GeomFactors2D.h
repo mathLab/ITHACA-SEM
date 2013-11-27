@@ -78,10 +78,14 @@ namespace Nektar
             /// Performs 2D interpolation between two sets of point
             /// distributions.
             virtual void v_Interp(
-                        const Array<OneD, const LibUtilities::PointsKey> &map_points,
-                        const DerivStorage &src,
-                        const Array<OneD, const LibUtilities::PointsKey> &tpoints,
-                        DerivStorage &tgt) const;
+                        const PointsKeyArray &map_points,
+                        const Array<OneD, const NekDouble> &src,
+                        const PointsKeyArray &tpoints,
+                        Array<OneD, NekDouble> &tgt) const;
+
+            virtual void v_Adjoint(
+                        const Array<TwoD, const NekDouble>& src,
+                        Array<TwoD, NekDouble>& tgt) const;
 
         };
 

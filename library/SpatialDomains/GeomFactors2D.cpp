@@ -122,8 +122,7 @@ namespace Nektar
          */
         void GeomFactors2D::SetUpJacGmat2D()
         {
-            DerivStorage deriv;
-            FillDeriv(deriv, m_pointsKey);
+            DerivStorage deriv = GetDeriv(m_pointsKey);
 
             // Check the number of derivative dimensions matches the coordinate
             // space.
@@ -232,8 +231,7 @@ namespace Nektar
             int pts = (m_type == eRegular || m_type == eMovingRegular)
                             ? 1 : nqtot;
 
-            DerivStorage deriv;
-            FillDeriv(deriv, m_pointsKey);
+            DerivStorage deriv = GetDeriv(m_pointsKey);
 
             Array<OneD, NekDouble> jac(pts, 0.0);
             Vmath::Vvtvvtm(pts, &deriv[0][0][0], 1, &deriv[1][1][0], 1,
@@ -257,8 +255,7 @@ namespace Nektar
          */
         void GeomFactors2D::v_ComputeSurfaceNormals()
         {
-            DerivStorage deriv;
-            FillDeriv(deriv, m_pointsKey);
+            DerivStorage deriv = GetDeriv(m_pointsKey);
 
             // Number of dimensions.
             int coordim = deriv[0].num_elements();
@@ -324,31 +321,25 @@ namespace Nektar
 
 
         void GeomFactors2D::v_Interp(
-                    const Array<OneD, const LibUtilities::PointsKey> &map_points,
-                    const DerivStorage &src,
-                    const Array<OneD, const LibUtilities::PointsKey> &tpoints,
-                    DerivStorage &tgt) const
+                    const PointsKeyArray &map_points,
+                    const Array<OneD, const NekDouble> &src,
+                    const PointsKeyArray &tpoints,
+                    Array<OneD, NekDouble> &tgt) const
         {
-            for (int i = 0; i < m_coordDim; ++i)
-            {
-                // Interpolate the derivatives:
-                // - from the points as defined in the mapping ('Coords')
-                // - to the points we at which we want to know the metrics
-                //   ('tbasis')
-                if( (map_points[0] == tpoints[0]) &&
-                    (map_points[1] == tpoints[1]) )
-                {
-                    tgt[0][i] = src[0][i];
-                    tgt[1][i] = src[1][i];
-                }
-                else
-                {
-                    LibUtilities::Interp2D(map_points[0], map_points[1], src[0][i],
-                                    tpoints[0], tpoints[1], tgt[0][i]);
-                    LibUtilities::Interp2D(map_points[0], map_points[1], src[1][i],
-                                    tpoints[0], tpoints[1], tgt[1][i]);
-                }
-            }
+            LibUtilities::Interp2D(map_points[0], map_points[1], src,
+                                   tpoints[0], tpoints[1], tgt);
+        }
+
+        void GeomFactors2D::v_Adjoint(
+                    const Array<TwoD, const NekDouble>& src,
+                    Array<TwoD, NekDouble>& tgt) const
+        {
+            int n = src[0].num_elements();
+
+            Vmath::Vcopy(n, &src[3][0], 1, &tgt[0][0], 1);
+            Vmath::Smul (n, -1.0, &src[1][0], 1, &tgt[1][0], 1);
+            Vmath::Smul (n, -1.0, &src[2][0], 1, &tgt[2][0], 1);
+            Vmath::Vcopy(n, &src[0][0], 1, &tgt[3][0], 1);
         }
 
 

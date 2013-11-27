@@ -84,59 +84,9 @@ namespace Nektar
                 m_coords[i] = Coords[i];
             }
 
-            // The quadrature points of the mapping
-            // (as specified in Coords)
-            LibUtilities::PointsKey pkey_map(
-                                        Coords[0]->GetBasis(0)->GetPointsKey());
-            int nquad_map = pkey_map.GetNumPoints();
-
-            // The quadrature points at the points at which we
-            // want to know the metrics (as specified in tbasis)
-            LibUtilities::PointsKey pkey_tbasis(tbasis[0]->GetPointsKey());
-            int nquad_tbasis = pkey_tbasis.GetNumPoints();
-
             // Set the pointskey equal to the pointskey as defined
             // in 'tbasis'
-            m_pointsKey[0] = pkey_tbasis;
-
-            // setup temp storage
-            Array<OneD, Array<OneD,NekDouble> > der_map   (coordim);
-
-            m_deriv = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(1);
-            m_deriv[0] = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
-
-            // Calculate local derivatives
-            for(int i = 0; i < coordim; ++i)
-            {
-                der_map[i]    = Array<OneD,NekDouble>(nquad_map);
-                m_deriv[0][i]  = Array<OneD,NekDouble>(nquad_tbasis);
-
-                // Transform from coefficient space to physical space
-                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),
-                                    Coords[i]->UpdatePhys());
-                // Take the derivative (calculated at the points as specified
-                // in 'Coords')
-                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), der_map[i]);
-
-                // Interpolate the derivatives:
-                // - from the points as defined in the mapping ('Coords')
-                // - to the points we at which we want to know the metrics
-                //   ('tbasis')
-                if( pkey_map == pkey_tbasis )
-                {
-                    m_deriv[0][i] = der_map[i];
-                }
-                else
-                {
-                    LibUtilities::Interp1D(pkey_map, der_map[i], pkey_tbasis,
-                                           m_deriv[0][i]);
-                }
-            }
-
-            // Based upon these derivatives, calculate:
-            // 1. The (determinant of the) jacobian and the differentation
-            // metrics
-            SetUpJacGmat1D();
+            m_pointsKey[0] = tbasis[0]->GetPointsKey();
         }
 
 
@@ -154,71 +104,6 @@ namespace Nektar
          */
         GeomFactors1D::~GeomFactors1D()
         {
-        }
-
-
-        /**
-         * Constructs the one-dimensional Jacobian matrix
-         * \f[J_{1D} = J = \sqrt{\frac{d x_1}{d _\xi}.
-         *   \frac{d x_1}{d _\xi} + \frac{d x_2}{d _\xi}.\frac{d x_2}{d _\xi}
-         *   + \frac{d x_3}{d _\xi}\frac{d x_3}{d _\xi}} \f]
-         * and local factors (\f$ g \f$ matrix)
-         * \f[g_i = \frac{d_\xi}{x_i}\f]
-         *
-         * @param   der         Local derivative matrix of size Coordim x Nquad.
-         *                      Derivatives at each quadrature point.
-         */
-        void GeomFactors1D::SetUpJacGmat1D()
-        {
-            ASSERTL1(m_deriv[0].num_elements()==m_coordDim,
-                     "The dimension of array m_deriv does not match the "
-                     "coordinate dimension");
-            int i;
-            int nquad = m_pointsKey[0].GetNumPoints();
-            ASSERTL1(m_deriv[0][0].num_elements() == nquad,
-                     "Number of quadrature points do not match");
-
-            DerivStorage deriv = GetDeriv(m_pointsKey);
-
-            // If regular or moving geometry.
-            if(( m_type == eRegular)||
-               ( m_type == eMovingRegular))
-            {
-                // Allocate storage.
-                m_jac          = Array<OneD, NekDouble>(1,0.0);
-                m_derivFactors = Array<TwoD, NekDouble>(m_coordDim,1,0.0);
-
-                // Loop over each dimension in the coordinate system.
-                for(i = 0; i < m_coordDim; ++i)
-                {
-                    // i-th component of normal = 1/derivative_i.
-                    m_derivFactors[i][0] = (fabs(deriv[0][i][0])
-                            > NekConstants::kNekZeroTol) ? 1.0/deriv[0][i][0]: 0.0;
-                    // i-th component contribution to Jacobian.
-                    m_jac[0]    += deriv[0][i][0]*deriv[0][i][0];
-                }
-                // take square root
-                m_jac[0] = sqrt(m_jac[0]);
-            }
-            // If deformed geometry
-            else
-            {
-                m_jac          = Array<OneD, NekDouble>(nquad,0.0);
-                m_derivFactors = Array<TwoD, NekDouble>(m_coordDim,nquad);
-
-                // invert local derivative for derivative factors;
-                for(i = 0; i < m_coordDim; ++i)
-                {
-                    for(int j = 0; j < nquad; ++j)
-                    {
-                        m_derivFactors[i][j] = (fabs(deriv[0][i][j])
-                            > NekConstants::kNekZeroTol) ? 1.0/deriv[0][i][j] : 0.0;
-                    }
-                    // compute jacobian for this dimension.
-                    Vmath::Vvtvp(nquad,deriv[0][i],1,deriv[0][i],1,m_jac,1,m_jac,1);
-                }
-                Vmath::Vsqrt(nquad,m_jac,1,m_jac,1);
-            }
         }
 
 

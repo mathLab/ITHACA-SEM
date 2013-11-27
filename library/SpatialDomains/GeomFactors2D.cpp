@@ -92,9 +92,6 @@ namespace Nektar
             m_pointsKey[0] = tbasis[0]->GetPointsKey();
             m_pointsKey[1] = tbasis[1]->GetPointsKey();
 
-            // Calculate the Jacobian and metric terms.
-            SetUpJacGmat2D();
-
             // Test if the element is valid.
             CheckIfValid();
         }
@@ -118,101 +115,6 @@ namespace Nektar
 
 
         /**
-         *
-         */
-        void GeomFactors2D::SetUpJacGmat2D()
-        {
-            DerivStorage deriv = GetDeriv(m_pointsKey);
-
-            // Check the number of derivative dimensions matches the coordinate
-            // space.
-            ASSERTL1(deriv[0].num_elements()==m_coordDim,
-                     "The dimension of array d1 does not match the coordinate "
-                     "dimension");
-            ASSERTL1(deriv[1].num_elements()==m_coordDim,
-                     "The dimension of array d2 does not match the coordinate "
-                     "dimension");
-
-            // Compute total number of points in target basis
-            int nqtot = m_pointsKey[0].GetNumPoints() *
-                        m_pointsKey[1].GetNumPoints();
-            int pts = 1;
-            int i, j, k, l;
-
-            // Check each derivative combination has the correct sized storage
-            // for all quadrature points.
-            for (i = 0; i < m_expDim; ++i)
-            {
-                for (j = 0; j < m_coordDim; ++j)
-                {
-                    ASSERTL1(deriv[i][j].num_elements() == nqtot,
-                             "Number of quadrature points do not match");
-                }
-            }
-
-            // Only compute single values if the element is regular.
-            pts = (m_type == eRegular || m_type == eMovingRegular) ? 1 : nqtot;
-
-            // Allocate storage for Jacobian, metric terms and derivative
-            // factors.
-            m_jac  = Array<OneD, NekDouble>(pts,                      0.0);
-            m_gmat = Array<TwoD, NekDouble>(m_expDim*m_expDim,   pts, 0.0);
-            m_derivFactors =
-                     Array<TwoD, NekDouble>(m_expDim*m_coordDim, pts, 0.0);
-
-            // Allocate temporary array for storing the g_{ij} terms
-            Array<TwoD, NekDouble> tmp(m_expDim*m_expDim, pts, 0.0);
-
-            // Compute g_{ij} as t_i \cdot t_j and store in tmp.
-            for (i = 0, l = 0; i < m_expDim; ++i)
-            {
-                for (j = 0; j < m_expDim; ++j, ++l)
-                {
-                    for (k = 0; k < m_coordDim; ++k)
-                    {
-                        Vmath::Vvtvp(pts, &deriv[i][k][0], 1,
-                                          &deriv[j][k][0], 1,
-                                          &tmp[l][0],        1,
-                                          &tmp[l][0],        1);
-                    }
-                }
-            }
-
-            // Compute g = det(g_{ij}) (= Jacobian squared) and store
-            // temporarily in m_jac.
-            Vmath::Vvtvvtm(pts, &tmp[0][0], 1, &tmp[3][0], 1,
-                                &tmp[1][0], 1, &tmp[2][0], 1, &m_jac[0], 1);
-
-            // Compute inverse metric terms g^{ij}, which is easily calculated
-            // for the 2x2 matrix g_ij.
-            Vmath::Vdiv(pts, &tmp[3][0], 1, &m_jac[0],     1, &m_gmat[0][0], 1);
-            Vmath::Vdiv(pts, &tmp[1][0], 1, &m_jac[0],     1, &m_gmat[1][0], 1);
-            Vmath::Vdiv(pts, &tmp[2][0], 1, &m_jac[0],     1, &m_gmat[2][0], 1);
-            Vmath::Vdiv(pts, &tmp[0][0], 1, &m_jac[0],     1, &m_gmat[3][0], 1);
-            Vmath::Smul(pts, -1.0,          &m_gmat[1][0], 1, &m_gmat[1][0], 1);
-            Vmath::Smul(pts, -1.0,          &m_gmat[2][0], 1, &m_gmat[2][0], 1);
-
-            // Compute the Jacobian = sqrt(g)
-            Vmath::Vsqrt(pts, &m_jac[0], 1, &m_jac[0], 1);
-
-            // Compute the derivative factors
-            for (k = 0, l = 0; k < m_coordDim; ++k)
-            {
-                for (j = 0; j < m_expDim; ++j, ++l)
-                {
-                    for (i = 0; i < m_expDim; ++i)
-                    {
-                        Vmath::Vvtvp(pts, &deriv[i][k][0],        1,
-                                          &m_gmat[m_expDim*i+j][0], 1,
-                                          &m_derivFactors[l][0],    1,
-                                          &m_derivFactors[l][0],    1);
-                    }
-                }
-            }
-        }
-
-
-        /**
          * Check if the element is valid. This check only applies to elements
          * in a 2D coordinate space. The Jacobian determinant is computed
          * directly, rather than the square-root of the metric tensor
@@ -226,12 +128,15 @@ namespace Nektar
                 return;
             }
 
-            int nqtot = m_pointsKey[0].GetNumPoints() *
-                        m_pointsKey[1].GetNumPoints();
+            PointsKeyArray p(m_expDim);
+            p[0] = m_coords[0]->GetBasis(0)->GetPointsKey();
+            p[1] = m_coords[0]->GetBasis(1)->GetPointsKey();
+            int nqtot = p[0].GetNumPoints() *
+                        p[1].GetNumPoints();
             int pts = (m_type == eRegular || m_type == eMovingRegular)
                             ? 1 : nqtot;
 
-            DerivStorage deriv = GetDeriv(m_pointsKey);
+            DerivStorage deriv = GetDeriv(p);
 
             Array<OneD, NekDouble> jac(pts, 0.0);
             Vmath::Vvtvvtm(pts, &deriv[0][0][0], 1, &deriv[1][1][0], 1,

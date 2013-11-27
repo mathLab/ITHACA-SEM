@@ -60,12 +60,6 @@ namespace Nektar
                     &tbasis);
             
         private:
-            // Set up 3D geometric factors
-            void SetUpJacGmat3D(
-                const Array<OneD, Array<OneD, NekDouble> > d1,
-                const Array<OneD, Array<OneD, NekDouble> > d2,
-                const Array<OneD, Array<OneD, NekDouble> > d3);
-
             /// Tests if the element is valid and not self-intersecting.
             void CheckIfValid();
 

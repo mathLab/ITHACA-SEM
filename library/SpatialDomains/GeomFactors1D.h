@@ -74,9 +74,6 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors1D();
 
         private:
-            /// Set up 1D Jacobian
-            void SetUpJacGmat1D();
-
             /// Set up edge tangents (given 1D element)
             virtual void v_ComputeEdgeTangents(
             	    	const GeometrySharedPtr &geom,

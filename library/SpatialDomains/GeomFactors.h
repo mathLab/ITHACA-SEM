@@ -180,23 +180,9 @@ namespace Nektar
             /// Stores information about the expansion.
             Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
 
-            /// Jacobian. If geometry is regular, or moving regular, this is
-            /// just an array of one element - the value of the Jacobian across
-            /// the whole element. If deformed, the array has the size of the
-            /// number of quadrature points and contains the Jacobian evaluated
-            /// at each of those points.
-            Array<OneD,NekDouble> m_jac;
-
-            /// Array of size coordim x nquad which holds the inverse of the
-            /// derivative of the local map in each direction at each
-            /// quadrature point.
-            Array<TwoD,NekDouble> m_gmat;
-
             /// Array of size coordim which stores a key describing the
             /// location of the quadrature points in each dimension.
             Array<OneD,LibUtilities::PointsKey> m_pointsKey;
-
-            Array<TwoD,NekDouble> m_derivFactors;
 
             /// Array of size (coordim)x(nquad) which holds the components of
             /// the normal vector at each quadrature point. The array is
@@ -211,7 +197,6 @@ namespace Nektar
             /// the number of quadrature points. Each block holds a component
             /// of the tangent vectors.
             Array<OneD, Array<OneD,NekDouble> > m_tangent;
-            DerivStorage m_deriv;
             
             /// Constructor for GeomFactors class.
             GeomFactors(const GeomType gtype,
@@ -296,23 +281,6 @@ namespace Nektar
             return m_tangent;
         }
 	
-        /// Set the Laplacian coefficients for this element.
-        inline void GeomFactors::ResetGmat(
-                        const Array<OneD, const NekDouble> &ndata,
-                        const int nq, const int expdim,
-                        const int coordim)
-        {
-            m_gmat = Array<TwoD,NekDouble>(m_expDim * m_coordDim, nq,
-                                           ndata.data());
-        }
-
-        /// Set the Jacobian values for this element.
-        inline void GeomFactors::ResetJac(int nq,
-                        const Array<OneD, const NekDouble> &ndata)
-        {
-            m_jac = Array<OneD, NekDouble>(nq, ndata.data());
-        }
-
         /// Returns the LibUtilities::PointsKey object associated with a
         /// co-ordinate direction.
         inline const LibUtilities::PointsKey
@@ -331,11 +299,6 @@ namespace Nektar
             boost::hash_combine(hash, (int)m_type);
             boost::hash_combine(hash, m_expDim);
             boost::hash_combine(hash, m_coordDim);
-            boost::hash_range(hash, m_jac.begin(), m_jac.end());
-            for (int i = 0; i < m_gmat.GetRows(); ++i)
-            {
-                boost::hash_range(hash, m_gmat[i].begin(), m_gmat[i].end());
-            }
             return hash;
         }
 

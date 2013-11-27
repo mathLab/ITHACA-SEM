@@ -174,16 +174,6 @@ namespace Nektar
                 }
             }
 
-            if (!(lhs.m_jac == rhs.m_jac))
-            {
-                return false;
-            }
-
-            if (!(lhs.m_gmat == rhs.m_gmat))
-            {
-                return false;
-            }
-
             return true;
         }
 
@@ -393,6 +383,7 @@ namespace Nektar
 
             return gmat;
         }
+
 
         /// Return the derivative factors matrix.
         const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(

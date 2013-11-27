@@ -66,9 +66,6 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors2D();
 
         private:
-            /// Set up 2D geometric factors
-            void SetUpJacGmat2D();
-
             /// Tests if the element is valid and not self-intersecting.
             void CheckIfValid();
             

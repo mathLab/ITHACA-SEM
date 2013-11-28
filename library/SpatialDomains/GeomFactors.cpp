@@ -136,13 +136,6 @@ namespace Nektar
             ASSERTL0(false, "Cannot compute tangents for this geometry.");
         }
 
-        /**
-         * Placeholder function.
-         */
-        void GeomFactors::v_ComputeSurfaceNormals()
-        {
-            ASSERTL0(false, "Cannot compute surface normal for this geometry.");
-        }
 
         /**
          * Member data equivalence is tested in the following order: shape type,

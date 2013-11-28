@@ -69,9 +69,6 @@ namespace Nektar
             /// Tests if the element is valid and not self-intersecting.
             void CheckIfValid();
             
-            /// Set up surface normals
-            virtual void v_ComputeSurfaceNormals();
-
             /// Performs 2D interpolation between two sets of point
             /// distributions.
             virtual void v_Interp(

@@ -149,15 +149,6 @@ namespace Nektar
             inline const Array<OneD, const Array<OneD, NekDouble> >
                 &GetEdgeTangent() const;
 
-            /// Set the G-matrix data.
-            inline void ResetGmat(const Array<OneD, const NekDouble> &ndata,
-                                  const int nq, const int expdim,
-                                  const int coordim);
-
-            /// Set the Jacobian data.
-            inline void ResetJac(int nq,
-                        const Array<OneD, const NekDouble> &ndata);
-
             /// Returns the LibUtilities::PointsKey object associated with a
             /// co-ordinate direction.
             inline const LibUtilities::PointsKey
@@ -222,9 +213,6 @@ namespace Nektar
             	    	const GeometrySharedPtr &geom2D,
             	    	const int edge,
             	    	const LibUtilities::PointsKey &to_key);
-            
-            /// Set up surface normals
-            virtual void v_ComputeSurfaceNormals();
         };
 
 

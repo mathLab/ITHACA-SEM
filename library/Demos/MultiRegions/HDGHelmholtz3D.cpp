@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
-    string meshfile(argv[1]);
 
     MultiRegions::DisContField3DSharedPtr Exp, Fce;
     int     i, nq,  coordim;
@@ -34,9 +33,9 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     StdRegions::ConstFactorMap factors;
 
-    if(argc != 2)
+    if(argc < 2)
     {
-        fprintf(stderr,"Usage: Helmholtz3D  meshfile\n");
+        fprintf(stderr,"Usage: HDGHelmholtz3D  meshfile [solntype]\n");
         exit(1);
     }
 

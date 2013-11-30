@@ -52,6 +52,9 @@
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
+#include <iostream>
+#include <boost/filesystem.hpp>
+
 #include <string>
 
 
@@ -1234,7 +1237,7 @@ namespace Nektar
          */
         void EquationSystem::v_Output(void)
         {
-            std::string outname = SetUpOutput(m_sessionName,".fld");
+            std::string outname = SetUpOutput(m_sessionName,"fld");
 
             WriteFld(outname);
         }
@@ -1242,7 +1245,7 @@ namespace Nektar
         
 
         std::string EquationSystem::SetUpOutput(const std::string sessionname,
-                                                 const std::string ending)
+                                                const std::string ending)
         {
             static bool setup = true;
             static std::vector<Array<OneD, int> >ElementIDs;
@@ -1251,7 +1254,7 @@ namespace Nektar
             // serial processing just add ending. 
             if(nprocs == 1)
             {
-                std::string outname = sessionname + ending; 
+                std::string outname = sessionname + "." + ending; 
                 return outname ; 
             }
 
@@ -1261,7 +1264,7 @@ namespace Nektar
                 int i,offset; 
                 Array<OneD, int> elmtnums(nprocs,0);
                 elmtnums[rank] = m_fields[0]->GetExpSize();
-
+                
                 m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
 
                 int totelmts = Vmath::Vsum(nprocs,elmtnums,1);
@@ -1293,6 +1296,10 @@ namespace Nektar
                 setup = false;
             }
 
+            string dirname = sessionname + "_" + ending + "/";
+            //boost::filesystem::create_directory(dirname.c_str());
+            string syscall = "mkdir " + dirname;
+            system(syscall.c_str());
 
             if(rank == 0)
             {
@@ -1301,17 +1308,17 @@ namespace Nektar
                 // Set up output names
                 for(int i = 0; i < nprocs; ++i)
                 {
-                    outname = sessionname + "_P"+boost::lexical_cast<std::string>(i) + ending;
+                    outname = dirname + sessionname + "_P"+boost::lexical_cast<std::string>(i) + "." + ending;
                     filenames.push_back(outname);
                 }
 
                 cout << filenames.size() << " " << ElementIDs.size() << endl;
-                outname = sessionname + ending; 
+                outname = sessionname + "." + ending; 
                 LibUtilities::WriteMultiFldFileIDs(outname, filenames,
                                                    ElementIDs,m_fieldMetaDataMap);
             }
             
-            string outname = sessionname + "_P"+ boost::lexical_cast<std::string>(m_comm->GetRank()) + ending;
+            string outname = dirname + sessionname + "_P"+ boost::lexical_cast<std::string>(m_comm->GetRank()) + "." + ending;
 
             return outname;
         }
@@ -1775,7 +1782,7 @@ namespace Nektar
                 boost::lexical_cast<std::string>(n);
 
             // check for parallel output and add ending 
-            outname = SetUpOutput(outname,".chk");
+            outname = SetUpOutput(outname,"chk");
 
             WriteFld(outname);
         }

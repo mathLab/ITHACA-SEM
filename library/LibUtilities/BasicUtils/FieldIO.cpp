@@ -148,12 +148,8 @@ namespace Nektar
                         setdash = true;
                     }
                     
-                    if(i < elmtids.num_elements()-1)
-                    {
-                        idStringStream << ",";
-                    }
                     
-                    idStringStream << elmtids[i];
+                    idStringStream << "," << elmtids[i];
                 }
             }
             idString = idStringStream.str();

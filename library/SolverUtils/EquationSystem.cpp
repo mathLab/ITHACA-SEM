@@ -1234,13 +1234,86 @@ namespace Nektar
          */
         void EquationSystem::v_Output(void)
         {
-            std::string outname = m_sessionName;
-            if (m_comm->GetSize() > 1)
+            std::string outname = SetUpOutput(m_sessionName,".fld");
+
+            WriteFld(outname);
+        }
+
+        
+
+        std::string EquationSystem::SetUpOutput(const std::string sessionname,
+                                                 const std::string ending)
+        {
+            static bool setup = true;
+            static std::vector<Array<OneD, int> >ElementIDs;
+            int nprocs = m_comm->GetSize();
+            
+            // serial processing just add ending. 
+            if(nprocs == 1)
             {
-                outname += "_P"+boost::lexical_cast<std::string>(m_comm->GetRank());
+                std::string outname = sessionname + ending; 
+                return outname ; 
             }
-            outname += ".fld";
-            WriteFld(outname); 
+
+            int rank = m_comm->GetRank();
+            if(setup)
+            {
+                int i,offset; 
+                Array<OneD, int> elmtnums(nprocs,0);
+                elmtnums[rank] = m_fields[0]->GetExpSize();
+
+                m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
+
+                int totelmts = Vmath::Vsum(nprocs,elmtnums,1);
+                Array<OneD, int> AllElmtIDs(totelmts, 0);
+                
+                offset = 0; 
+                offset = Vmath::Vsum(rank,elmtnums,1);
+
+                // put lcoal ids into global list
+                for(i = 0; i < m_fields[0]->GetExpSize(); ++i)
+                {
+                    AllElmtIDs[offset + i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
+                }
+                
+                // assembly global list
+                m_comm->AllReduce(AllElmtIDs,LibUtilities::ReduceMax);
+
+                // set up static list on root processor
+                if(rank == 0)
+                {
+                    int cnt = 0; 
+                    for(i = 0; i < nprocs; ++i)
+                    {
+                        Array<OneD, int> tmpArray(elmtnums[i],&AllElmtIDs[cnt]);
+                        cnt += elmtnums[i];
+                        ElementIDs.push_back(tmpArray);
+                    }
+                }
+                setup = false;
+            }
+
+
+            if(rank == 0)
+            {
+                std::vector<std::string> filenames;
+                std::string outname; 
+                // Set up output names
+                for(int i = 0; i < nprocs; ++i)
+                {
+                    outname = sessionname + "_P"+boost::lexical_cast<std::string>(i) + ending;
+                    filenames.push_back(outname);
+                }
+
+                cout << filenames.size() << " " << ElementIDs.size() << endl;
+                outname = sessionname + ending; 
+                LibUtilities::WriteMultiFldFileIDs(outname, filenames,
+                                                   ElementIDs,m_fieldMetaDataMap);
+            }
+            
+            string outname = sessionname + "_P"+ boost::lexical_cast<std::string>(m_comm->GetRank()) + ending;
+
+            return outname;
         }
 
         /**
@@ -1698,16 +1771,13 @@ namespace Nektar
          */
         void EquationSystem::Checkpoint_Output(const int n)
         {
-            std::stringstream outname;
-            outname << m_sessionName << "_" << n;
+            std::string outname =  m_sessionName +  "_" + 
+                boost::lexical_cast<std::string>(n);
 
-            if (m_comm->GetSize() > 1)
-            {
-                outname << "_P" << m_comm->GetRank();
-            }
-            outname << ".chk";
+            // check for parallel output and add ending 
+            outname = SetUpOutput(outname,".chk");
 
-            WriteFld(outname.str());
+            WriteFld(outname);
         }
 
         /**

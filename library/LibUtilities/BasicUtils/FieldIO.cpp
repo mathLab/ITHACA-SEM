@@ -54,6 +54,157 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        /** 
+         * \brief add information about provenance and fieldmetadata
+         */        
+        void AddInfoTag(TiXmlElement * root, 
+                             FieldMetaDataMap &fieldmetadatamap)
+        {
+            FieldMetaDataMap ProvenanceMap;
+            
+            // Nektar++ release version from VERSION file
+            ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
+            
+            // Date/time stamp
+            ptime::time_facet *facet = new ptime::time_facet("%d-%b-%Y %H:%M:%S");
+            std::stringstream wss;
+            wss.imbue(locale(wss.getloc(), facet));
+            wss << ptime::second_clock::local_time();
+            ProvenanceMap["Timestamp"] = wss.str();
+            
+            // Hostname
+            boost::system::error_code ec;
+            ProvenanceMap["Hostname"] = ip::host_name(ec);
+            
+            // Git information
+            // If built from a distributed package, do not include this
+#ifdef GIT_SHA1
+            ProvenanceMap["GitSHA1"] = string(GIT_SHA1);
+#endif
+#ifdef GIT_BRANCH
+            ProvenanceMap["GitBranch"] = string(GIT_BRANCH);
+#endif
+            
+            TiXmlElement * infoTag = new TiXmlElement("Metadata");
+            root->LinkEndChild(infoTag);
+            
+            TiXmlElement * v;
+            FieldMetaDataMap::iterator infoit;
+            
+            TiXmlElement * provTag = new TiXmlElement("Provenance");
+            infoTag->LinkEndChild(provTag);
+            for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end(); ++infoit)
+            {
+                v = new TiXmlElement( (infoit->first).c_str() );
+                v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
+                provTag->LinkEndChild(v);
+            }
+            
+            //---------------------------------------------
+            // write field info section
+            if(fieldmetadatamap != NullFieldMetaDataMap)
+            {
+                for(infoit = fieldmetadatamap.begin(); infoit != fieldmetadatamap.end(); ++infoit)
+                {
+                    v = new TiXmlElement( (infoit->first).c_str() );
+                    v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
+                    infoTag->LinkEndChild(v);
+                }
+            }
+        }
+        
+        void GenerateSeqString(const Array<OneD, int> &elmtids, 
+                                      std::string &idString)
+        {
+            std::stringstream idStringStream;
+            bool setdash = true;
+            unsigned int endval;
+
+            idStringStream << elmtids[0];            
+            for (int i = 1; i < elmtids.num_elements(); ++i)
+            {
+                if(elmtids[i] == elmtids[i-1]+1)
+                {
+                    if(setdash)
+                    {
+                        idStringStream << "-";
+                        setdash = false; 
+                    }
+
+                    if(i == elmtids.num_elements()-1) // last element
+                    {
+                        idStringStream << elmtids[i];
+                    }
+                    else
+                    {
+                        endval = elmtids[i];
+                    }
+                }
+                else
+                {
+                    if(setdash == false) // finish off previous dash sequence
+                    {
+                        idStringStream << endval;
+                        setdash = true;
+                    }
+                    
+                    if(i < elmtids.num_elements()-1)
+                    {
+                        idStringStream << ",";
+                    }
+                    
+                    idStringStream << elmtids[i];
+                }
+            }
+            idString = idStringStream.str();
+        }
+
+        /** 
+         *
+         */
+        void WriteMultiFldFileIDs(const std::string &outFile, 
+                                  const std::vector<std::string> fileNames,
+                                  std::vector<Array<OneD, int > > &elementList, 
+                                  FieldMetaDataMap &fieldmetadatamap)
+        {
+            TiXmlDocument doc;
+            TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
+            doc.LinkEndChild(decl);
+            
+            ASSERTL0(fileNames.size() == elementList.size(),"Outfile names and list of elements ids does not match");
+
+            cout << "Writing MultiFile data in : " << outFile << endl;
+            
+            TiXmlElement * root = new TiXmlElement("NEKTAR");
+            doc.LinkEndChild(root);
+
+            AddInfoTag(root,fieldmetadatamap);
+            
+            for (int t = 0; t < fileNames.size(); ++t)
+            {
+
+                ASSERTL1(elementList[0].num_elements() > 0,
+                         "Element list must contain at least one value.");
+                
+                //---------------------------------------------
+                // Write ELEMENTS
+                TiXmlElement * elemIDs = new TiXmlElement("MultipleFldFiles");
+                root->LinkEndChild(elemIDs);
+
+                
+                elemIDs->SetAttribute("FileName",fileNames[t]);
+
+                string IDstring;
+
+                GenerateSeqString(elementList[t],IDstring);
+                
+                elemIDs->LinkEndChild(new TiXmlText(IDstring));
+            }
+
+            doc.SaveFile(outFile);
+        }
+
+
         /**
          *
          */
@@ -74,57 +225,7 @@ namespace Nektar
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
 
-            FieldMetaDataMap ProvenanceMap;
-
-            // Nektar++ release version from VERSION file
-            ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
-
-            // Date/time stamp
-            ptime::time_facet *facet = new ptime::time_facet("%d-%b-%Y %H:%M:%S");
-            std::stringstream wss;
-            wss.imbue(locale(wss.getloc(), facet));
-            wss << ptime::second_clock::local_time();
-            ProvenanceMap["Timestamp"] = wss.str();
-
-            // Hostname
-            boost::system::error_code ec;
-            ProvenanceMap["Hostname"] = ip::host_name(ec);
-
-            // Git information
-            // If built from a distributed package, do not include this
-#ifdef GIT_SHA1
-            ProvenanceMap["GitSHA1"] = string(GIT_SHA1);
-#endif
-#ifdef GIT_BRANCH
-            ProvenanceMap["GitBranch"] = string(GIT_BRANCH);
-#endif
-
-            TiXmlElement * infoTag = new TiXmlElement("Metadata");
-            root->LinkEndChild(infoTag);
-
-            TiXmlElement * v;
-            FieldMetaDataMap::iterator infoit;
-
-            TiXmlElement * provTag = new TiXmlElement("Provenance");
-            infoTag->LinkEndChild(provTag);
-            for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end(); ++infoit)
-            {
-                v = new TiXmlElement( (infoit->first).c_str() );
-                v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
-                provTag->LinkEndChild(v);
-            }
-
-            //---------------------------------------------
-            // write field info section
-            if(fieldmetadatamap != NullFieldMetaDataMap)
-            {
-                for(infoit = fieldmetadatamap.begin(); infoit != fieldmetadatamap.end(); ++infoit)
-                {
-                    v = new TiXmlElement( (infoit->first).c_str() );
-                    v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
-                    infoTag->LinkEndChild(v);
-                }
-            }
+            AddInfoTag(root,fieldmetadatamap);
 
             for (int f = 0; f < fielddefs.size(); ++f)
             {
@@ -365,6 +466,77 @@ namespace Nektar
             ImportFieldData(doc, fielddefs, fielddata);
         }
 
+
+        /** 
+         *
+         */
+        void ImportMultiFldFileIDs(const std::string &inFile, 
+                                   std::vector<std::string> fileNames,
+                                   std::vector<std::vector<unsigned int > > &elementList)
+        {        
+            TiXmlDocument doc(inFile);
+            bool loadOkay = doc.LoadFile();
+            
+            
+            std::stringstream errstr;
+            errstr << "Unable to load file: " << inFile<< std::endl;
+            errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+            errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+            ASSERTL0(loadOkay, errstr.str());
+            
+            TiXmlHandle docHandle(&doc);
+            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
+
+            master = doc.FirstChildElement("NEKTAR");
+            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+            std::string strLoop = "NEKTAR";
+            TiXmlElement* loopXml = master;
+
+            // Loop through all nektar tags, finding all of the MultiFile tags.
+            while (loopXml)
+            {
+                TiXmlElement* fldfileIDs = loopXml->FirstChildElement("MultipleFldFiles");
+                ASSERTL0(fldfileIDs, "Unable to find ELEMENTS tag within nektar tag.");
+
+                while (fldfileIDs)
+                {
+                    // read file names
+                    TiXmlAttribute *attr = fldfileIDs->FirstAttribute();
+                    std::string attrName(attr->Name());
+                        
+                    if(attrName == "FileName")
+                    {
+                        fileNames.push_back(attrName);
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"FileName not provided as an attribute of MultipleFldFiles section");
+                    }
+                    
+                    TiXmlNode* elementIDs = fldfileIDs->FirstChild();
+                    ASSERTL0(elementIDs, "Unable to extract the data from the MultipleFldFiles section.");
+
+                    std::string elementIDsStr;
+                    while(elementIDs)
+                    {
+                        if (elementIDs->Type() == TiXmlNode::TEXT)
+                        {
+                            elementIDsStr += elementIDs->ToText()->ValueStr();
+                        }
+                        elementIDs = elementIDs->NextSibling();
+                    }
+                    
+                    std::vector<unsigned int > idvec;
+                    ParseUtils::GenerateSeqVector(elementIDsStr.c_str(),idvec);
+
+                    elementList.push_back(idvec);
+                    
+                    
+                    fldfileIDs = fldfileIDs->NextSiblingElement("MultipleFldFiles");
+                }
+                loopXml = loopXml->NextSiblingElement(strLoop);
+            }
+        }
 
         void ImportFieldMetaData(std::string filename,
                                  FieldMetaDataMap &fieldmetadatamap)

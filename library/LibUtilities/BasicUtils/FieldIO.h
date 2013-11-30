@@ -86,7 +86,7 @@ namespace Nektar
                          const std::vector<unsigned int> &numPoints =
                          NullUnsignedIntVector,
                          bool numPointsDef = false):
-            m_shapeType(shapeType),
+                m_shapeType(shapeType),
                 m_elementIDs(elementIDs),
                 m_basis(basis),
                 m_numHomogeneousDir(NumHomoDir),
@@ -129,6 +129,12 @@ namespace Nektar
 
 
             /* --- FLD handling routines ---- */
+        LIB_UTILITIES_EXPORT void WriteMultiFldFileIDs(const std::string &outfile,
+                   const std::vector<std::string> fileNames,
+                   std::vector<Array<OneD, int > > &elementList, 
+                   FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
+
+
         LIB_UTILITIES_EXPORT void Write(
                         const std::string &outFile,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
@@ -141,6 +147,10 @@ namespace Nektar
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         std::vector<std::vector<NekDouble> > &fielddata,
                         FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
+
+        LIB_UTILITIES_EXPORT void ImportMultiFldFileIDs(const std::string &inFile, 
+                                                        std::vector<std::string> fileNames,
+                                                        std::vector<std::vector<unsigned int > > &elementList);
 
         /// Imports the definition of the meta data 
         LIB_UTILITIES_EXPORT void ImportFieldMetaData(std::string filename,

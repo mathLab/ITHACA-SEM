@@ -566,7 +566,8 @@ namespace Nektar
             while (loopXml)
             {
                 TiXmlElement* fldfileIDs = loopXml->FirstChildElement("MultipleFldFiles");
-                ASSERTL0(fldfileIDs, "Unable to find ELEMENTS tag within nektar tag.");
+                // Cannot do assert since may not be mullti field file
+                //ASSERTL0(fldfileIDs, "Unable to find MultipleFldFiles tag within nektar tag.");
 
                 while (fldfileIDs)
                 {

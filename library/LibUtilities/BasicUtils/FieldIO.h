@@ -146,10 +146,11 @@ namespace Nektar
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         std::vector<std::vector<NekDouble> > &fielddata,
-                        FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
+                        FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap,
+                        const Array<OneD, int> ElementiDs = NullInt1DArray);
 
-        LIB_UTILITIES_EXPORT void ImportMultiFldFileIDs(const std::string &inFile, 
-                                                        std::vector<std::string> fileNames,
+        LIB_UTILITIES_EXPORT bool ImportMultiFldFileIDs(const std::string &inFile, 
+                                                        std::vector<std::string> &fileNames,
                                                         std::vector<std::vector<unsigned int > > &elementList);
 
         /// Imports the definition of the meta data 

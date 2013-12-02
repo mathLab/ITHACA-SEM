@@ -39,6 +39,7 @@
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include "zlib.h"
+#include <set>
 
 // Buffer size for zlib compression/decompression
 #define CHUNK 16384
@@ -443,7 +444,8 @@ namespace Nektar
         void Import(const std::string& infilename,
                     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                     std::vector<std::vector<NekDouble> > &fielddata,
-                    FieldMetaDataMap &fieldmetadatamap)
+                    FieldMetaDataMap &fieldmetadatamap,
+                    const Array<OneD, int> ElementIDs)
         {
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();
@@ -454,22 +456,91 @@ namespace Nektar
             errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
             ASSERTL0(loadOkay, errstr.str());
 
+            std::vector<std::string> filenames; 
+            std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
 
-            //---------------------------------------------
-            // read field meta data  section 
+
             ImportFieldMetaData(doc,fieldmetadatamap);
-            ImportFieldDefs(doc, fielddefs, false);
-            ImportFieldData(doc, fielddefs, fielddata);
-        }
 
+            if(ImportMultiFldFileIDs(infilename,filenames,
+                                      elementIDs_OnPartitions))
+            {
+
+                if(ElementIDs == NullInt1DArray) //load all fields
+                {
+                    for(int i = 0; i < filenames.size(); ++i)
+                    {
+                        TiXmlDocument doc1(filenames[i]);
+                        bool loadOkay1 = doc1.LoadFile();
+                        
+                        std::stringstream errstr;
+                        errstr << "Unable to load file: " << filenames[i] << std::endl;
+                        errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
+                        errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+                        ASSERTL0(loadOkay1, errstr.str());
+                        
+                        ImportFieldDefs(doc1, fielddefs, false);
+                        ImportFieldData(doc1, fielddefs, fielddata);
+                    }
+
+                }
+                else // only load relevant partitions
+                {
+                    int i,j;
+                    map<int,int> FileIDs; 
+                    set<int> LoadFile;
+                    
+                    for(i = 0; i < elementIDs_OnPartitions.size(); ++i)
+                    {
+                        for(j = 0; j < elementIDs_OnPartitions[i].size(); ++j)
+                        {
+                            FileIDs[elementIDs_OnPartitions[i][j]] = i;
+                        }
+                    }
+                    
+                    for(i = 0; i < ElementIDs.num_elements(); ++i)
+                    {
+                        ASSERTL1(FileIDs.count(ElementIDs[i]) != 0,
+                                 "ElementIDs  not found in partitions");
+                        
+                        LoadFile.insert(FileIDs[ElementIDs[i]]);
+                    }
+                    
+                    set<int>::iterator iter; 
+                    for(iter = LoadFile.begin(); iter != LoadFile.end(); ++iter)
+                    {
+                        TiXmlDocument doc1(filenames[*iter]);
+                        bool loadOkay1 = doc1.LoadFile();
+                        
+                        std::stringstream errstr;
+                        errstr << "Unable to load file: " << filenames[*iter] << std::endl;
+                        errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
+                        errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+                        ASSERTL0(loadOkay1, errstr.str());
+                        
+                        ImportFieldDefs(doc1, fielddefs, false);
+                        ImportFieldData(doc1, fielddefs, fielddata);
+                    }
+                }
+            }
+            else
+            {
+                //---------------------------------------------
+                // read field meta data  section 
+                ImportFieldDefs(doc, fielddefs, false);
+                ImportFieldData(doc, fielddefs, fielddata);
+            }
+        }
 
         /** 
          *
          */
-        void ImportMultiFldFileIDs(const std::string &inFile, 
-                                   std::vector<std::string> fileNames,
+         bool ImportMultiFldFileIDs(const std::string &inFile, 
+                                   std::vector<std::string> &fileNames,
                                    std::vector<std::vector<unsigned int > > &elementList)
-        {        
+         {        
+             bool foundMultiFldFiles = false;
+
             TiXmlDocument doc(inFile);
             bool loadOkay = doc.LoadFile();
             
@@ -502,7 +573,7 @@ namespace Nektar
                         
                     if(attrName == "FileName")
                     {
-                        fileNames.push_back(attrName);
+                        fileNames.push_back(attr->Value());
                     }
                     else
                     {
@@ -529,9 +600,12 @@ namespace Nektar
                     
                     
                     fldfileIDs = fldfileIDs->NextSiblingElement("MultipleFldFiles");
+                    foundMultiFldFiles = true;
                 }
                 loopXml = loopXml->NextSiblingElement(strLoop);
             }
+
+            return foundMultiFldFiles;
         }
 
         void ImportFieldMetaData(std::string filename,
@@ -626,8 +700,6 @@ namespace Nektar
         void ImportFieldDefs(TiXmlDocument &doc, std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
                              bool expChild)
         {
-            ASSERTL1(fielddefs.size() == 0, "Expected an empty fielddefs vector.");
-
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master = NULL;    // Master tag within which all data is contained.
 
@@ -878,7 +950,6 @@ namespace Nektar
         void ImportFieldData(TiXmlDocument &doc, const std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<NekDouble> > &fielddata)
         {
             int cntdumps = 0;
-            ASSERTL1(fielddata.size() == 0, "Expected an empty fielddata vector.");
 
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master = NULL;    // Master tag within which all data is contained.

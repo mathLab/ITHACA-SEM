@@ -674,7 +674,19 @@ namespace Nektar
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
                 
-                LibUtilities::Import(filename,FieldDef,FieldData);
+
+                int numexp = m_fields[0]->GetExpSize(); 
+                Array<OneD,int> ElementGIDs(numexp);
+                // Define list of global element ids 
+                for(int i = 0; i < numexp; ++i)
+                {
+                    ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
+                }
+
+
+                LibUtilities::Import(filename,FieldDef,FieldData,
+                                     LibUtilities::NullFieldMetaDataMap,
+                                     ElementGIDs);
                 
                 int idx = -1;
                 
@@ -1312,11 +1324,11 @@ namespace Nektar
                     filenames.push_back(outname);
                 }
 
-                cout << filenames.size() << " " << ElementIDs.size() << endl;
                 outname = sessionname + "." + ending; 
                 LibUtilities::WriteMultiFldFileIDs(outname, filenames,
                                                    ElementIDs,m_fieldMetaDataMap);
             }
+
             
             string outname = dirname + sessionname + "_P"+ boost::lexical_cast<std::string>(m_comm->GetRank()) + "." + ending;
 

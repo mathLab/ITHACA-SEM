@@ -1308,7 +1308,7 @@ namespace Nektar
                 setup = false;
             }
 
-            string dirname = sessionname + "_" + ending + "/";
+            string dirname = sessionname + "." + ending + ".dir/";
             //boost::filesystem::create_directory(dirname.c_str());
             string syscall = "mkdir " + dirname;
             system(syscall.c_str());
@@ -1320,7 +1320,7 @@ namespace Nektar
                 // Set up output names
                 for(int i = 0; i < nprocs; ++i)
                 {
-                    outname = dirname + sessionname + "_P"+boost::lexical_cast<std::string>(i) + "." + ending;
+                    outname = sessionname + "_P"+boost::lexical_cast<std::string>(i) + "." + ending;
                     filenames.push_back(outname);
                 }
 

@@ -466,15 +466,17 @@ namespace Nektar
                                       elementIDs_OnPartitions))
             {
 
+                string dirname = infilename + ".dir/";
                 if(ElementIDs == NullInt1DArray) //load all fields
                 {
                     for(int i = 0; i < filenames.size(); ++i)
                     {
-                        TiXmlDocument doc1(filenames[i]);
+                        string fname = dirname + filenames[i]; 
+                        TiXmlDocument doc1(fname);
                         bool loadOkay1 = doc1.LoadFile();
                         
                         std::stringstream errstr;
-                        errstr << "Unable to load file: " << filenames[i] << std::endl;
+                        errstr << "Unable to load file: " << fname << std::endl;
                         errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
                         errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
                         ASSERTL0(loadOkay1, errstr.str());
@@ -509,11 +511,12 @@ namespace Nektar
                     set<int>::iterator iter; 
                     for(iter = LoadFile.begin(); iter != LoadFile.end(); ++iter)
                     {
-                        TiXmlDocument doc1(filenames[*iter]);
+                        string fname = dirname + filenames[*iter];
+                        TiXmlDocument doc1(fname);
                         bool loadOkay1 = doc1.LoadFile();
                         
                         std::stringstream errstr;
-                        errstr << "Unable to load file: " << filenames[*iter] << std::endl;
+                        errstr << "Unable to load file: " << fname << std::endl;
                         errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
                         errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
                         ASSERTL0(loadOkay1, errstr.str());

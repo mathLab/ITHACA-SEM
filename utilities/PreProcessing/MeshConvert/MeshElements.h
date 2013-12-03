@@ -798,7 +798,13 @@ namespace Nektar
                     }
                     break;
                 case 2:
+                {
+                    for(int j=0; j< edge.size(); ++j)
                     {
+                        s << std::setw(5) << edge[j]->id << " ";
+                    }
+                    break;
+                    /*
                         NekDouble cross = 0.0;
                         
                         // caclulate sign based on cross product of vertices
@@ -832,7 +838,7 @@ namespace Nektar
                                 (edge[1]->n1->x - edge[1]->n2->x); 
                         }
                         
-                        // provide edges in anticlockwise sense
+                        // provide edges in anticlockise sense
                         if(cross  < 0.0)
                         {
                             for(int j=0; j< edge.size(); ++j)
@@ -849,6 +855,8 @@ namespace Nektar
                         }
                     }
                     break;
+                    */
+                    }
                 case 3:
                     for(int j=0; j< face.size(); ++j)
                     {

@@ -499,8 +499,12 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(3,1)] = 4 + 2*n;
 
             // Add vertices
+            NekDouble sum = 0.0;
             for (int i = 0; i < 3; ++i) {
+                int o = (i+1) % 2;
                 vertex.push_back(pNodeList[i]);
+                sum += (vertex[o]->x - vertex[i]->x) *
+                       (vertex[o]->y + vertex[i]->y);
             }
 
             // Create edges (with corresponding set of edge points)
@@ -518,13 +522,20 @@ namespace Nektar
                                                       m_conf.edgeCurveType)));
             }
 
+            if (pConf.reorient)
+            {
+                if (sum > 0.0)
+                {
+                    reverse(edge.begin(), edge.end());
+                }
+            }
+
             if (m_conf.faceNodes)
             {
                 volumeNodes.insert(volumeNodes.begin(),
                                    pNodeList.begin()+3*m_conf.order,
                                    pNodeList.end());
             }
-
         }
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)

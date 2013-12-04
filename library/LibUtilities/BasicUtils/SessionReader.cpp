@@ -54,6 +54,7 @@ using namespace std;
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
 #include <boost/program_options.hpp>
 
@@ -464,10 +465,16 @@ namespace Nektar
          */
         const std::string SessionReader::GetSessionNameRank() const
         {
-            return m_sessionName + "_P" + boost::lexical_cast<std::string>(
-                m_comm->GetRowComm()->GetRank());
-        }
+            std::string  dirname = m_sessionName + "_xml_dir"; 
+            fs::path     pdirname(dirname);
+            
+            std::string vFilename = m_sessionName + "_P" + boost::lexical_cast<std::string>(m_comm->GetRowComm()->GetRank());
+            fs::path    pFilename(vFilename);            
 
+            fs::path fullpath = pdirname / pFilename;
+
+            return PortablePath(fullpath);
+        }
 
         /**
          *

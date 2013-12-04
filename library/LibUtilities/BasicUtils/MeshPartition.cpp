@@ -51,6 +51,7 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -97,6 +98,7 @@ namespace Nektar
             TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
             vNew.LinkEndChild(decl);
 
+
             TiXmlElement* vElmtNektar;
             vElmtNektar = new TiXmlElement("NEKTAR");
 
@@ -105,8 +107,30 @@ namespace Nektar
 
             vNew.LinkEndChild(vElmtNektar);
 
+
+#if 1
+            std::string  dirname = pSession->GetSessionName() + "_xml_dir"; 
+            fs::path    pdirname(dirname);
+            
+            std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(rank) + ".xml";
+            fs::path    pFilename(vFilename);            
+            
+            if(rank == 0)
+            {
+                if(!fs::is_directory(dirname))
+                {
+                    fs::create_directory(dirname);
+                }
+            }
+            m_comm->Block();
+            
+            fs::path fullpath = pdirname / pFilename; 
+            vNew.SaveFile(PortablePath(fullpath));
+#else
+            
             std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(rank) + ".xml";
             vNew.SaveFile(vFilename.c_str());
+#endif
         }
 
         void MeshPartition::WriteAllPartitions(LibUtilities::SessionReaderSharedPtr& pSession)
@@ -124,8 +148,25 @@ namespace Nektar
 
                 vNew.LinkEndChild(vElmtNektar);
 
+#if 1
+                std::string  dirname = pSession->GetSessionName() + "_dir"; 
+                fs::path    pdirname(dirname);
+                
+                std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(i) + ".xml";
+                fs::path    pFilename(vFilename);            
+                
+                fs::path fullpath = pdirname / pFilename; 
+                
+                if(!fs::is_directory(dirname))
+                {
+                    fs::create_directory(dirname);
+                }
+
+                vNew.SaveFile(PortablePath(fullpath));
+#else          
                 std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(i) + ".xml";
                 vNew.SaveFile(vFilename.c_str());
+#endif
             }
         }
 

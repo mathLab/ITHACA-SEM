@@ -1155,11 +1155,14 @@ namespace Nektar
             Array<OneD, NekDouble> x0(1);
             Array<OneD, NekDouble> x1(1);
             Array<OneD, NekDouble> x2(1);
-			
+
+	       	
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eTimeDependent)
+                    SpatialDomains::eTimeDependent || 
+                    m_bndConditions[i]->GetUserDefined() ==
+                    SpatialDomains::eQinflow )
                 {
                     m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
                     

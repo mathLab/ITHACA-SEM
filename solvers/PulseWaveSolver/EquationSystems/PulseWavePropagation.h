@@ -102,10 +102,11 @@ namespace Nektar
         /// CR Riemann solver
         void CR_RiemannSolver(NekDouble C, NekDouble R, NekDouble A_l, NekDouble u_l, NekDouble A_0, NekDouble beta, NekDouble pout,
                               NekDouble &A_u,NekDouble &u_u);
-        NekDouble pc;
+
         /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
 	PulseWaveFlowSharedPtr m_OutFlow;
+        NekDouble pc;
     };
 }
 

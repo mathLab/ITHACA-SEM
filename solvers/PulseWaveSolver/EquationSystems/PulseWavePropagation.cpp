@@ -155,7 +155,10 @@ namespace Nektar
      *	Does the projection between ... space and the ... space. Also checks for Q-inflow boundary 
      *  conditions at the inflow of the current arterial segment and applies the Q-inflow if specified
      */
-    void PulseWavePropagation::SetPulseWaveBoundaryConditions(const Array<OneD,const Array<OneD, NekDouble> >&inarray, Array<OneD, Array<OneD, NekDouble> >&outarray, const NekDouble time)
+    void PulseWavePropagation::SetPulseWaveBoundaryConditions(
+        const Array<OneD,const Array<OneD, NekDouble> >&inarray, 
+        Array<OneD, Array<OneD, NekDouble> >&outarray, 
+        const NekDouble time)
         
     {
         int omega;
@@ -167,7 +170,6 @@ namespace Nektar
         {
             pc = 0.0;
         }
-	
         //-> This shoudl be set up as a factory 
         
         Array<OneD, MultiRegions::ExpListSharedPtr>     vessel(2);
@@ -184,17 +186,18 @@ namespace Nektar
             {			
 	      //SpatialDomains::BndUserDefinedType type = vessel[0]->GetBndConditions()[n]->GetUserDefined()
 	      // m_OutFlow=GetFlowFactory().CreateInstance("Resistance",m_vessels,m_session);
-           
                 switch(vessel[0]->GetBndConditions()[n]->GetUserDefined())
                 {
                 case SpatialDomains::eQinflow: 
                     {
                         // Note: The Q value is contained in A in the
                         // inputfile, the value in u has to be 1.0
-                        ASSERTL0((vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] == 1.0, "For the Q-inflow BC the value in u must be 1.0");
+                        ASSERTL0((vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] == 1.0, "For the Q-inflow BC the value in u must be 1.0");
                     
                         // Get the values of all variables needed for the Riemann problem
-                        Q = (vessel[0]->UpdateBndCondExpansion(0))->GetCoeffs()[0];
+                        Q = (vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
+
+                        //Q=5.983*sin(2*3.14*time/10.0)*1./(1+exp(-2.0*100.0*(10.0/2-time)));
                         A_r = vessel[0]->GetCoeffs()[0];
                         u_r = vessel[1]->GetCoeffs()[0];
                         
@@ -309,18 +312,26 @@ namespace Nektar
                         /* Find the terminal RCR boundary condition and calculates
                            the updated velocity and area as well as the updated
                            boundary conditions */
-                        NekDouble C = m_C;
-                        NekDouble RT = m_RT;
+
+                        //m_session->LoadParameter("C", m_C);
+                        //NekDouble C = m_C;
+                       
+                        NekDouble RT=((vessel[0]->GetBndCondExpansions())[n])->GetCoeffs()[0];
+                        NekDouble C=((vessel[1]->GetBndCondExpansions())[n])->GetCoeffs()[0];
+
+                        m_session->LoadParameter("pout", m_pout);
+
                         NekDouble R1;
                         NekDouble R2;
                         NekDouble pout = m_pout;
+
                         NekDouble rho = m_rho;
                         int nq = vessel[0]->GetTotPoints(); 
                         
                         // Get the values of all variables needed for the Riemann problem
                         A_l = vessel[0]->GetCoeffs()[1];
                         u_l = vessel[1]->GetCoeffs()[1];
-                        
+
                         // Goes through the first resistance Calculate c_0
                         c_0 = sqrt(m_beta[omega][nq-1]/(2*m_rho))*sqrt(sqrt(m_A_0[omega][nq-1]));			
                         
@@ -328,17 +339,16 @@ namespace Nektar
                         // to eliminate reflections in the vessel
                         R1 = rho*c_0/m_A_0[omega][nq-1];
                         R2 = RT-R1;
-                        
+
                         // Call the R RiemannSolver
                         R_RiemannSolver(R1,A_l,u_l,m_A_0[omega][nq-1],m_beta[omega][nq-1],pc,A_u,u_u);
                         A_r = A_l;
                         u_r = 2*u_u-u_l;
-                        
+
                         // Goes through the CR system, it consists in
                         // updating the pressure pc
-                        
                         pc = pc + m_timestep/C*(A_u*u_u-(pc-pout)/R2);
-                        
+
                         // Store the updated values in the boundary condition
                         
                         (vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = A_r;
@@ -630,7 +640,7 @@ namespace Nektar
         c_l = sqrt(beta/(2*rho))*sqrt(sqrt(A_l));
 	
         // Riemann invariant \f$W_1(Al,ul)\f$
-        W1 = u_l + 4*c_l;	 
+        W1 = u_l + 4*c_l;
         
         // Newton Iteration (Area only)
         A_calc = A_l;

@@ -53,7 +53,6 @@
 #include <SolverUtils/Diffusion/Diffusion.h>
 
 #include <iostream>
-#include <boost/filesystem.hpp>
 
 #include <string>
 
@@ -1254,23 +1253,30 @@ namespace Nektar
             WriteFld(outname);
         }
 
-        
-
+                
         std::string EquationSystem::SetUpOutput(const std::string sessionname,
                                                 const std::string ending)
         {
             static bool setup = true;
             static std::vector<Array<OneD, int> >ElementIDs;
             int nprocs = m_comm->GetSize();
+            int rank   = m_comm->GetRank();
+            
+            std::string outname = sessionname + "." + ending; 
+
+            fs::path specPath (outname);
             
             // serial processing just add ending. 
             if(nprocs == 1)
             {
-                std::string outname = sessionname + "." + ending; 
-                return outname ; 
+                // remove if a directory is defined in this path from previous run
+                if(fs::is_directory(specPath)) 
+                {
+                    fs::remove_all(specPath);
+                }
+                return outname; 
             }
 
-            int rank = m_comm->GetRank();
             if(setup)
             {
                 int i,offset; 
@@ -1308,11 +1314,6 @@ namespace Nektar
                 setup = false;
             }
 
-            string dirname = sessionname + "." + ending + ".dir/";
-            //boost::filesystem::create_directory(dirname.c_str());
-            string syscall = "mkdir " + dirname;
-            system(syscall.c_str());
-
             if(rank == 0)
             {
                 std::vector<std::string> filenames;
@@ -1320,19 +1321,38 @@ namespace Nektar
                 // Set up output names
                 for(int i = 0; i < nprocs; ++i)
                 {
-                    outname = sessionname + "_P"+boost::lexical_cast<std::string>(i) + "." + ending;
+                    outname = "PartitionData_P"+boost::lexical_cast<std::string>(i) + ".fld";
                     filenames.push_back(outname);
                 }
+                
 
-                outname = sessionname + "." + ending; 
-                LibUtilities::WriteMultiFldFileIDs(outname, filenames,
+                if(!fs::is_directory(specPath))
+                {
+                    // remove regular file if in way of path
+                    if(fs::is_regular_file(specPath)) 
+                    {
+                        fs::remove_all(specPath);
+                    }
+                    fs::create_directory(specPath);
+                }
+
+                fs::path poutfile("PartitionInfo.xml");
+                fs::path fulloutname = specPath / poutfile; 
+                
+                LibUtilities::WriteMultiFldFileIDs(LibUtilities::PortablePath(fulloutname), 
+                                                   filenames,
                                                    ElementIDs,m_fieldMetaDataMap);
             }
 
+            // ensure all processors are aligned for this write
+            m_comm->Block();
             
-            string outname = dirname + sessionname + "_P"+ boost::lexical_cast<std::string>(m_comm->GetRank()) + "." + ending;
+            outname = "PartitionData_P"+ boost::lexical_cast<std::string>(m_comm->GetRank()) + ".fld";
+            // generate full path name 
+            fs::path poutfile(outname);            
+            fs::path fulloutname = specPath / poutfile; 
 
-            return outname;
+            return LibUtilities::PortablePath(fulloutname);
         }
 
         /**

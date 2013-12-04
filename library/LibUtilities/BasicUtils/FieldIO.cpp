@@ -38,6 +38,7 @@
 #include <boost/asio/ip/host_name.hpp>
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 #include "zlib.h"
 #include <set>
 
@@ -55,6 +56,7 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+
         /** 
          * \brief add information about provenance and fieldmetadata
          */        
@@ -447,44 +449,45 @@ namespace Nektar
                     FieldMetaDataMap &fieldmetadatamap,
                     const Array<OneD, int> ElementIDs)
         {
-            TiXmlDocument doc(infilename);
-            bool loadOkay = doc.LoadFile();
 
-            std::stringstream errstr;
-            errstr << "Unable to load file: " << infilename << std::endl;
-            errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-            errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
-            ASSERTL0(loadOkay, errstr.str());
+            std::string infile = infilename;
 
-            std::vector<std::string> filenames; 
-            std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
-
-
-            ImportFieldMetaData(doc,fieldmetadatamap);
-
-            if(ImportMultiFldFileIDs(infilename,filenames,
-                                      elementIDs_OnPartitions))
+            fs::path pinfilename(infilename);            
+            
+            if(fs::is_directory(pinfilename)) // check to see that infile is a directory
             {
+                fs::path infofile("PartitionInfo.xml");
+                fs::path fullpath = pinfilename / infofile; 
+                infile = PortablePath(fullpath);
 
-                string dirname = infilename + ".dir/";
+                std::vector<std::string> filenames; 
+                std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
+                
+            
+                ImportMultiFldFileIDs(infile,filenames, fieldmetadatamap,
+                                      elementIDs_OnPartitions);
+                
                 if(ElementIDs == NullInt1DArray) //load all fields
                 {
                     for(int i = 0; i < filenames.size(); ++i)
                     {
-                        string fname = dirname + filenames[i]; 
+                        fs::path pfilename(filenames[i]);
+                        fullpath = pinfilename / pfilename; 
+                        string fname = PortablePath(fullpath); 
+
                         TiXmlDocument doc1(fname);
                         bool loadOkay1 = doc1.LoadFile();
                         
                         std::stringstream errstr;
                         errstr << "Unable to load file: " << fname << std::endl;
                         errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
-                        errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+                        errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc1.ErrorCol() << std::endl;
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
                         ImportFieldData(doc1, fielddefs, fielddata);
                     }
-
+                    
                 }
                 else // only load relevant partitions
                 {
@@ -511,14 +514,16 @@ namespace Nektar
                     set<int>::iterator iter; 
                     for(iter = LoadFile.begin(); iter != LoadFile.end(); ++iter)
                     {
-                        string fname = dirname + filenames[*iter];
+                        fs::path pfilename(filenames[*iter]);
+                        fullpath = pinfilename / pfilename; 
+                        string fname = PortablePath(fullpath); 
                         TiXmlDocument doc1(fname);
                         bool loadOkay1 = doc1.LoadFile();
                         
                         std::stringstream errstr;
                         errstr << "Unable to load file: " << fname << std::endl;
                         errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
-                        errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+                        errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc1.ErrorCol() << std::endl;
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
@@ -526,10 +531,20 @@ namespace Nektar
                     }
                 }
             }
-            else
+            else // serial format case 
             {
-                //---------------------------------------------
-                // read field meta data  section 
+                
+                TiXmlDocument doc(infile);
+                bool loadOkay = doc.LoadFile();
+                
+                std::stringstream errstr;
+                errstr << "Unable to load file: " << infile << std::endl;
+                errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+                errstr << "Position: Line " << doc.ErrorRow() << ", Column " << 
+                    doc.ErrorCol() << std::endl;
+                ASSERTL0(loadOkay, errstr.str());
+                
+                ImportFieldMetaData(doc,fieldmetadatamap);
                 ImportFieldDefs(doc, fielddefs, false);
                 ImportFieldData(doc, fielddefs, fielddata);
             }
@@ -539,42 +554,43 @@ namespace Nektar
          *
          */
          bool ImportMultiFldFileIDs(const std::string &inFile, 
-                                   std::vector<std::string> &fileNames,
-                                   std::vector<std::vector<unsigned int > > &elementList)
+                                    std::vector<std::string> &fileNames,
+                                    FieldMetaDataMap &fieldmetadatamap,
+                                    std::vector<std::vector<unsigned int > > &elementList)
          {        
              bool foundMultiFldFiles = false;
 
-            TiXmlDocument doc(inFile);
-            bool loadOkay = doc.LoadFile();
-            
-            
-            std::stringstream errstr;
-            errstr << "Unable to load file: " << inFile<< std::endl;
-            errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-            errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
-            ASSERTL0(loadOkay, errstr.str());
-            
-            TiXmlHandle docHandle(&doc);
-            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
-
-            master = doc.FirstChildElement("NEKTAR");
-            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
-            std::string strLoop = "NEKTAR";
-            TiXmlElement* loopXml = master;
-
-            // Loop through all nektar tags, finding all of the MultiFile tags.
-            while (loopXml)
-            {
-                TiXmlElement* fldfileIDs = loopXml->FirstChildElement("MultipleFldFiles");
-                // Cannot do assert since may not be mullti field file
-                //ASSERTL0(fldfileIDs, "Unable to find MultipleFldFiles tag within nektar tag.");
-
-                while (fldfileIDs)
-                {
-                    // read file names
+             TiXmlDocument doc(inFile);
+             bool loadOkay = doc.LoadFile();
+             
+             
+             std::stringstream errstr;
+             errstr << "Unable to load file: " << inFile<< std::endl;
+             errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+             errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+             ASSERTL0(loadOkay, errstr.str());
+             
+             TiXmlHandle docHandle(&doc);
+             TiXmlElement* master = NULL;    // Master tag within which all data is contained.
+             
+             master = doc.FirstChildElement("NEKTAR");
+             ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+             std::string strLoop = "NEKTAR";
+             TiXmlElement* loopXml = master;
+             
+             // Loop through all nektar tags, finding all of the MultiFile tags.
+             while (loopXml)
+             {
+                 TiXmlElement* fldfileIDs = loopXml->FirstChildElement("MultipleFldFiles");
+                 // Cannot do assert since may not be mullti field file
+                 //ASSERTL0(fldfileIDs, "Unable to find MultipleFldFiles tag within nektar tag.");
+                 
+                 while (fldfileIDs)
+                 {
+                     // read file names
                     TiXmlAttribute *attr = fldfileIDs->FirstAttribute();
                     std::string attrName(attr->Name());
-                        
+                    
                     if(attrName == "FileName")
                     {
                         fileNames.push_back(attr->Value());
@@ -586,7 +602,7 @@ namespace Nektar
                     
                     TiXmlNode* elementIDs = fldfileIDs->FirstChild();
                     ASSERTL0(elementIDs, "Unable to extract the data from the MultipleFldFiles section.");
-
+                    
                     std::string elementIDsStr;
                     while(elementIDs)
                     {
@@ -599,18 +615,18 @@ namespace Nektar
                     
                     std::vector<unsigned int > idvec;
                     ParseUtils::GenerateSeqVector(elementIDsStr.c_str(),idvec);
-
+                    
                     elementList.push_back(idvec);
                     
                     
                     fldfileIDs = fldfileIDs->NextSiblingElement("MultipleFldFiles");
                     foundMultiFldFiles = true;
-                }
-                loopXml = loopXml->NextSiblingElement(strLoop);
-            }
-
-            return foundMultiFldFiles;
-        }
+                 }
+                 loopXml = loopXml->NextSiblingElement(strLoop);
+             }
+             
+             return foundMultiFldFiles;
+         }
 
         void ImportFieldMetaData(std::string filename,
                                  FieldMetaDataMap &fieldmetadatamap)

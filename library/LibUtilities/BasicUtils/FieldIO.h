@@ -128,7 +128,7 @@ namespace Nektar
         typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
 
 
-            /* --- FLD handling routines ---- */
+        /* --- FLD handling routines ---- */
         LIB_UTILITIES_EXPORT void WriteMultiFldFileIDs(const std::string &outfile,
                    const std::vector<std::string> fileNames,
                    std::vector<Array<OneD, int > > &elementList, 
@@ -151,6 +151,7 @@ namespace Nektar
 
         LIB_UTILITIES_EXPORT bool ImportMultiFldFileIDs(const std::string &inFile, 
                                                         std::vector<std::string> &fileNames,
+                                                        FieldMetaDataMap &fieldmetadatamap,
                                                         std::vector<std::vector<unsigned int > > &elementList);
 
         /// Imports the definition of the meta data 

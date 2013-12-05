@@ -250,7 +250,7 @@ namespace Nektar
                            calculates the updated velocity and area as
                            well as the updated boundary conditions */
                         
-                        NekDouble RT = m_RT;
+                        NekDouble RT=((vessel[0]->GetBndCondExpansions())[n])->GetCoeffs()[0];
                         NekDouble pout = m_pout;
                         int nq = vessel[0]->GetTotPoints(); 
                         
@@ -280,8 +280,9 @@ namespace Nektar
                            calculates the updated velocity and area as
                            well as the updated boundary conditions */
                         
-                        NekDouble C = m_C;
-                        NekDouble R = m_RT;
+                        NekDouble R=((vessel[0]->GetBndCondExpansions())[n])->GetCoeffs()[0];
+                        NekDouble C=((vessel[1]->GetBndCondExpansions())[n])->GetCoeffs()[0];
+
                         NekDouble pout = m_pout;
                         int nq = vessel[0]->GetTotPoints(); 
                         

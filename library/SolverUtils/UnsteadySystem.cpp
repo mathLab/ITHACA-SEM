@@ -662,7 +662,7 @@ namespace Nektar
                         // redefine path for parallel file which is in directory
                         if(fs::is_directory(pfilename))
                         {
-                            fs::path metafile("PartitionInfo.xml");
+                            fs::path metafile("Info.xml");
                             fs::path fullpath = pfilename / metafile;
                             filename = LibUtilities::PortablePath(fullpath);
                         }

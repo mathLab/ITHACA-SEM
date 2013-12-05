@@ -1321,7 +1321,7 @@ namespace Nektar
                 // Set up output names
                 for(int i = 0; i < nprocs; ++i)
                 {
-                    outname = "PartitionData_P"+boost::lexical_cast<std::string>(i) + ".fld";
+                    outname = "P"+boost::lexical_cast<std::string>(i) + ".fld";
                     filenames.push_back(outname);
                 }
                 
@@ -1336,7 +1336,7 @@ namespace Nektar
                     fs::create_directory(specPath);
                 }
 
-                fs::path poutfile("PartitionInfo.xml");
+                fs::path poutfile("Info.xml");
                 fs::path fulloutname = specPath / poutfile; 
                 
                 LibUtilities::WriteMultiFldFileIDs(LibUtilities::PortablePath(fulloutname), 
@@ -1347,7 +1347,7 @@ namespace Nektar
             // ensure all processors are aligned for this write
             m_comm->Block();
             
-            outname = "PartitionData_P"+ boost::lexical_cast<std::string>(m_comm->GetRank()) + ".fld";
+            outname = "P"+ boost::lexical_cast<std::string>(m_comm->GetRank()) + ".fld";
             // generate full path name 
             fs::path poutfile(outname);            
             fs::path fulloutname = specPath / poutfile; 

@@ -456,7 +456,7 @@ namespace Nektar
             
             if(fs::is_directory(pinfilename)) // check to see that infile is a directory
             {
-                fs::path infofile("PartitionInfo.xml");
+                fs::path infofile("Info.xml");
                 fs::path fullpath = pinfilename / infofile; 
                 infile = PortablePath(fullpath);
 

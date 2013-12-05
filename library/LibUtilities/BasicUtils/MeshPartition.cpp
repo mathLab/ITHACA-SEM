@@ -108,7 +108,6 @@ namespace Nektar
             vNew.LinkEndChild(vElmtNektar);
 
 
-#if 1
             std::string  dirname = pSession->GetSessionName() + "_xml_dir"; 
             fs::path    pdirname(dirname);
             
@@ -126,11 +125,6 @@ namespace Nektar
             
             fs::path fullpath = pdirname / pFilename; 
             vNew.SaveFile(PortablePath(fullpath));
-#else
-            
-            std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(rank) + ".xml";
-            vNew.SaveFile(vFilename.c_str());
-#endif
         }
 
         void MeshPartition::WriteAllPartitions(LibUtilities::SessionReaderSharedPtr& pSession)
@@ -148,7 +142,6 @@ namespace Nektar
 
                 vNew.LinkEndChild(vElmtNektar);
 
-#if 1
                 std::string  dirname = pSession->GetSessionName() + "_dir"; 
                 fs::path    pdirname(dirname);
                 
@@ -163,10 +156,6 @@ namespace Nektar
                 }
 
                 vNew.SaveFile(PortablePath(fullpath));
-#else          
-                std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(i) + ".xml";
-                vNew.SaveFile(vFilename.c_str());
-#endif
             }
         }
 

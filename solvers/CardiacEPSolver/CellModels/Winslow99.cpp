@@ -648,9 +648,9 @@ namespace Nektar
     /**
     *
     */
-    void Winslow99::v_PrintSummary(std::ostream &out)
+    void Winslow99::v_GenerateSummary(SummaryList& s)
     {
-        out << "	Cell model      : Winslow99" << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model", "Winslow99");
     }
 
 

@@ -106,6 +106,7 @@ ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_curved_tri)
 ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes)
 ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes_AllBCs)
 
+
 ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_CG_Hex)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml)
@@ -132,6 +133,7 @@ IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml_par3)
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml_par3)
     ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_CG_Hex_AllBCs_xxt_sc_par3)
+    ADD_NEKTAR_TEST(Helmholtz2D_CG_P14_xxt_per)
 #
 # TODO: This test fails due to a bug with Dirichlet bnd conditions.
 #       To be resolved in a separate branch.

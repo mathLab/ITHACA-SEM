@@ -45,6 +45,26 @@ namespace Nektar
                     m_geom(pGeom),
                     m_metricinfo(m_geom->GetGeomFactors(m_base))
         {
+            if (!m_metricinfo)
+            {
+                return;
+            }
+
+            if (!m_metricinfo->IsValid())
+            {
+                int nDim = m_base.num_elements();
+                string type = "regular";
+                if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    type = "deformed";
+                }
+
+                stringstream err;
+                err << nDim << "D " << type << " Jacobian not positive "
+                    << "(element ID = " << m_geom->GetGlobalID() << ") "
+                    << "(first vertex ID = " << m_geom->GetVid(0) << ")";
+                NEKERROR(ErrorUtil::ewarning, err.str());
+            }
         }
         
         Expansion::Expansion(const Expansion &pSrc) :

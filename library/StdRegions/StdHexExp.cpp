@@ -1526,7 +1526,7 @@ namespace Nektar
          * @param   localVertexId   ID of vertex (0..7)
          * @returns Position of vertex in local numbering scheme.
          */
-        int StdHexExp::v_GetVertexMap(const int localVertexId)
+        int StdHexExp::v_GetVertexMap(const int localVertexId, bool useCoeffPacking)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -1550,45 +1550,105 @@ namespace Nektar
                                 m_base[1]->GetNumModes(),
                                 m_base[2]->GetNumModes()};
 
-            // Right face (vertices 1,2,5,6)
-            if( (localVertexId % 4) % 3 > 0 )
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
-                if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
+                if(localVertexId > 3)
                 {
-                    p = nummodes[0]-1;
+                    if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
+                    {
+                        r = nummodes[2]-1;
+                    }
+                    else
+                    {
+                        r = 1;
+                    }
                 }
-                else
+                
+                switch(localVertexId % 4)
                 {
-                    p = 1;
+                case 0:
+                    break;
+                case 1:
+                    {
+                        if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
+                        {
+                            p = nummodes[0]-1;
+                        }
+                        else
+                        {
+                            p = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    {
+                        if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                        {
+                            q = nummodes[1]-1;
+                        }
+                        else
+                        {
+                            q = 1;
+                        }
+                    }
+                    break;
+                case 3:
+                    {
+                        if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                        {
+                            p = nummodes[0]-1;
+                            q = nummodes[1]-1;
+                        }
+                        else
+                        {
+                            p = 1;
+                            q = 1;
+                        }
+                    }
+                    break;
                 }
             }
-
-            // Back face (vertices 2,3,6,7)
-            if( localVertexId % 4 > 1 )
+            else
             {
-                if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                // Right face (vertices 1,2,5,6)
+                if( (localVertexId % 4) % 3 > 0 )
                 {
-                    q = nummodes[1]-1;
+                    if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
+                    {
+                        p = nummodes[0]-1;
+                    }
+                    else
+                    {
+                        p = 1;
+                    }
                 }
-                else
+                
+                // Back face (vertices 2,3,6,7)
+                if( localVertexId % 4 > 1 )
                 {
-                    q = 1;
+                    if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                    {
+                        q = nummodes[1]-1;
+                    }
+                    else
+                    {
+                        q = 1;
+                    }
+                }
+                
+                // Top face (vertices 4,5,6,7)
+                if( localVertexId > 3)
+                {
+                    if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
+                    {
+                        r = nummodes[2]-1;
+                    }
+                    else
+                    {
+                        r = 1;
+                    }
                 }
             }
-
-            // Top face (vertices 4,5,6,7)
-            if( localVertexId > 3)
-            {
-                if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
-                {
-                    r = nummodes[2]-1;
-                }
-                else
-                {
-                    r = 1;
-                }
-            }
-
             // Compute the local number.
             return r*nummodes[0]*nummodes[1] + q*nummodes[0] + p;
         }
@@ -2670,6 +2730,7 @@ namespace Nektar
             for(j = cutoff; j < nmodes; ++j)
             {
                 fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
+                fac[j] *= fac[j]; //added this line to conform with equation
             }
 
             for(i = 0; i < nmodes_a; ++i)
@@ -2680,7 +2741,7 @@ namespace Nektar
                     {
                         if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j]*fac[k]));
+                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]+fac[j]+fac[k]));
                         }
                     }
                 }
@@ -2689,7 +2750,6 @@ namespace Nektar
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        
-
     }
 }
 

@@ -132,7 +132,8 @@ namespace Nektar
             Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
             NekDouble xmap,ymap, F1,F2;
             NekDouble der1_x, der2_x, der1_y, der2_y ;
-            const Array<TwoD, const NekDouble> &gmat = m_geomFactors->GetGmat();
+            const Array<TwoD, const NekDouble> &gmat
+                                        = m_geomFactors->GetDerivFactors();
             
             // Unfortunately need the points in an Array to interpolate
             Array<OneD, NekDouble> D1Dx(ptsx.num_elements(),&gmat[0][0]);

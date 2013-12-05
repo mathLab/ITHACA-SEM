@@ -124,8 +124,7 @@ namespace Nektar
                         const Array<OneD, const StdRegions
                                             ::StdExpansion2DSharedPtr> &Coords,
                         const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                            &tbasis,
-                        const bool CheckJacPositive ) :
+                                             &tbasis) :
             GeomFactors(gtype, 2, coordim)
         {
             // Sanity checks.
@@ -217,8 +216,9 @@ namespace Nektar
             // Based upon these derivatives, calculate:
             // 1. The (determinant of the) jacobian and the differentation
             // metrics
-            SetUpJacGmat2D(CheckJacPositive);
+            SetUpJacGmat2D();
 
+            CheckIfValid();
         }
 
 
@@ -242,7 +242,7 @@ namespace Nektar
         /**
          *
          */
-        void GeomFactors2D::SetUpJacGmat2D(bool CheckJacPositive)
+        void GeomFactors2D::SetUpJacGmat2D()
         {
             // Check the number of derivative dimensions matches the coordinate
             // space.
@@ -318,6 +318,35 @@ namespace Nektar
                         Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_gmat[m_expDim*i+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1);
                     }
                 }
+            }
+        }
+
+
+        /**
+         * Check if the element is valid. This check only applies to elements
+         * in a 2D coordinate space.
+         */
+        void GeomFactors2D::CheckIfValid()
+        {
+            // Jacobian test only makes sense in 2D coordinates
+            if (GetCoordim() != 2)
+            {
+                return;
+            }
+
+            int nqtot = m_pointsKey[0].GetNumPoints() *
+                        m_pointsKey[1].GetNumPoints();
+            int pts = (m_type == eRegular || m_type == eMovingRegular)
+                            ? 1 : nqtot;
+
+            Array<OneD, NekDouble> jac(pts, 0.0);
+            Vmath::Vvtvvtm(pts, &m_deriv[0][0][0], 1, &m_deriv[1][1][0], 1,
+                                &m_deriv[1][0][0], 1, &m_deriv[0][1][0], 1,
+                                &jac[0],           1);
+
+            if(Vmath::Vmin(pts, &jac[0], 1) < 0)
+            {
+                m_valid = false;
             }
         }
 
@@ -594,5 +623,6 @@ namespace Nektar
                 VectorNormalise(m_tangents[1]);
             }
         }
+
     }
 }

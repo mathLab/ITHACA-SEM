@@ -119,50 +119,13 @@ namespace Nektar
             NekDouble m_X;
             NekDouble m_X0;
             NekDouble m_dt; 
-            NekDouble m_cst1;
-            NekDouble m_cst2;
-            NekDouble m_cst3;
-            NekDouble m_cst4;
-            NekDouble m_cst5;
             
             //For implementation of the exact solution of the filters equation
+            NekDouble c1;
             NekDouble F11;
             NekDouble F12;
             NekDouble F21;
             NekDouble F22;
-            
-            //For implementation BDF1
-            NekDouble a11;
-            NekDouble a12;
-            NekDouble a21;
-            NekDouble a22;
-            NekDouble c1;
-            NekDouble c2;
-			
-			//For implementation BDF2
-            NekDouble b11;
-            NekDouble b12;
-            NekDouble b13;
-            NekDouble b14;
-            NekDouble b21;
-            NekDouble b22;
-            NekDouble b23;
-            NekDouble b24;
-            
-            //For implementation of Second order Filter
-            NekDouble M11;
-            NekDouble M12;
-            NekDouble M13;
-            NekDouble M21;
-            NekDouble M22;
-            NekDouble M23;
-            NekDouble c31;
-            NekDouble c32;
-            NekDouble c33;
-            NekDouble c4;
-            NekDouble c5;
-            NekDouble omega;
-            NekDouble zeta;
             
             int m_n;
             int m_Check;
@@ -170,13 +133,9 @@ namespace Nektar
             int m_infosteps;
             int m_checksteps;
             
-            bool m_Growing;
-            bool m_Shrinking;
-            
             NekDouble m_MinNormDiff_q_qBar;
             NekDouble m_MaxNormDiff_q_qBar;
             NekDouble m_First_MinNormDiff_q_qBar;
-            int m_Oscillation;
             
             int NumElmVelocity;
             
@@ -186,12 +145,6 @@ namespace Nektar
             NekDouble MaxNormDiff_q1_q0;
             
             NekDouble Min_MaxNormDiff_q_qBar;
-            
-            NekDouble m_LIM;
-            NekDouble m_LIM0;
-            
-            NekDouble mult;
-            NekDouble coeff;
 
             std::ofstream m_file;
         };

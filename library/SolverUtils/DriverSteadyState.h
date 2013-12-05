@@ -70,31 +70,31 @@ namespace Nektar
                                           Array<OneD, Array<OneD, NekDouble> > &qBar1);
             
             void RunBDF2(const int i,
-                              const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
-                              const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
-                              const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                              const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                              Array<OneD, Array<OneD, NekDouble> > &q1,
-                              Array<OneD, Array<OneD, NekDouble> > &qBar1);
-			
-            void RunBDF1(const int i,
-                              const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                              const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                              Array<OneD, Array<OneD, NekDouble> > &q1,
-                              Array<OneD, Array<OneD, NekDouble> > &qBar1);
-            
-            void ExactFilters(const int i,
-                         const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                         const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                         Array<OneD, Array<OneD, NekDouble> > &q1,
-                         Array<OneD, Array<OneD, NekDouble> > &qBar1);
-            
-            void SecondOrderFilter(const int i,
+                         const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
                          const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
                          const Array<OneD, const Array<OneD, NekDouble> > &q0,
                          const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
                          Array<OneD, Array<OneD, NekDouble> > &q1,
                          Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
+            void RunBDF1(const int i,
+                         const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                         const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                         Array<OneD, Array<OneD, NekDouble> > &q1,
+                         Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
+            void ExactFilters(const int i,
+                              const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                              const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                              Array<OneD, Array<OneD, NekDouble> > &q1,
+                              Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
+            void SecondOrderFilter(const int i,
+                                   const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
+                                   const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                   const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                                   Array<OneD, Array<OneD, NekDouble> > &q1,
+                                   Array<OneD, Array<OneD, NekDouble> > &qBar1);
             
             
         protected:
@@ -145,7 +145,7 @@ namespace Nektar
             NekDouble MaxNormDiff_q1_q0;
             
             NekDouble Min_MaxNormDiff_q_qBar;
-
+            
             std::ofstream m_file;
         };
     }	

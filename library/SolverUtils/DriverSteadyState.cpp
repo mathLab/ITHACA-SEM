@@ -158,104 +158,103 @@ namespace Nektar
                 }
                 
                 m_n++;
-                 }
-                 
-                 cout << "\nFINAL Filter Width: Delta = " << m_Delta << "; FINAL Control Coeff: X = " << m_X << "\n" << endl;
-                 m_Check++;
-                 m_equ[0]->Checkpoint_Output(m_Check);
-                 
-                 m_file.close();
-                 // - End SFD Routine -
-                 
-                 m_equ[0]->Output();
-                 
-                 // Evaluate and output computation time and solution accuracy.
-                 // The specific format of the error output is essential for the
-                 // regression tests to work.
-                 // Evaluate L2 Error
-                 for(int i = 0; i < m_equ[0]->GetNvariables(); ++i)
-                 {
-                     NekDouble vL2Error = m_equ[0]->L2Error(i,false);
-                     NekDouble vLinfError = m_equ[0]->LinfError(i);
-                     if (m_comm->GetRank() == 0)
-                     {
-                         out << "L 2 error (variable " << m_equ[0]->GetVariable(i) << ") : " << vL2Error << endl;
-                         out << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
-                     }
-                 }
             }
             
+            cout << "\nFINAL Filter Width: Delta = " << m_Delta << "; FINAL Control Coeff: X = " << m_X << "\n" << endl;
+            m_Check++;
+            m_equ[0]->Checkpoint_Output(m_Check);
             
-            void DriverSteadyState::ExactFilters(const int i,
-                                                 const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                                                 const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                                                 Array<OneD, Array<OneD, NekDouble> > &q1,
-                                                 Array<OneD, Array<OneD, NekDouble> > &qBar1)
+            m_file.close();
+            // - End SFD Routine -
+            
+            m_equ[0]->Output();
+            
+            // Evaluate and output computation time and solution accuracy.
+            // The specific format of the error output is essential for the
+            // regression tests to work.
+            // Evaluate L2 Error
+            for(int i = 0; i < m_equ[0]->GetNvariables(); ++i)
             {
-                q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
-                qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+                NekDouble vL2Error = m_equ[0]->L2Error(i,false);
+                NekDouble vLinfError = m_equ[0]->LinfError(i);
+                if (m_comm->GetRank() == 0)
+                {
+                    out << "L 2 error (variable " << m_equ[0]->GetVariable(i) << ") : " << vL2Error << endl;
+                    out << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
+                }
+            }
+        }
+        
+        
+        void DriverSteadyState::ExactFilters(const int i,
+                                             const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                             const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                                             Array<OneD, Array<OneD, NekDouble> > &q1,
+                                             Array<OneD, Array<OneD, NekDouble> > &qBar1)
+        {
+            q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+            qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+            
+            //Exact solution of the Filters equation            
+            Vmath::Svtvp(q1[i].num_elements(), F11, q0[i], 1, q1[i], 1, q1[i], 1 );    
+            Vmath::Svtvp(q1[i].num_elements(), F12, qBar0[i], 1, q1[i], 1, q1[i], 1 ); 
+            
+            Vmath::Svtvp(qBar1[i].num_elements(), F21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );    
+            Vmath::Svtvp(qBar1[i].num_elements(), F22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 );             
+        }
+        
+        
+        void DriverSteadyState::ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
+                                                   const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                                   NekDouble &MaxNormDiff_q_qBar,
+                                                   NekDouble &MaxNormDiff_q1_q0)
+        {
+            //This routine evaluates |q-qBar|_L2 and save the value in "ConvergenceHistory.txt"
+            
+            Array<OneD, NekDouble > NormDiff_q_qBar(NumElmVelocity, 1.0);
+            Array<OneD, NekDouble > NormDiff_q1_q0(NumElmVelocity, 1.0);
+            
+            MaxNormDiff_q_qBar=0.0;
+            MaxNormDiff_q1_q0=0.0;
+            
+            //Norm Calculation
+            for(int i = 0; i < NumElmVelocity; ++i)
+            {
+                //To check convergence of SFD
+                //NormDiff_q_qBar[i] = m_equ[0]->L2Error(i, qBar1[i], false);
+                NormDiff_q_qBar[i] = m_equ[0]->LinfError(i, qBar1[i]);
                 
-                //Exact solution of the Filters equation            
-                Vmath::Svtvp(q1[i].num_elements(), F11, q0[i], 1, q1[i], 1, q1[i], 1 );    
-                Vmath::Svtvp(q1[i].num_elements(), F12, qBar0[i], 1, q1[i], 1, q1[i], 1 ); 
+                //To check convergence of Navier-Stokes
+                NormDiff_q1_q0[i] = m_equ[0]->LinfError(i, q0[i]);
                 
-                Vmath::Svtvp(qBar1[i].num_elements(), F21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );    
-                Vmath::Svtvp(qBar1[i].num_elements(), F22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 );             
+                if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
+                {
+                    MaxNormDiff_q_qBar = NormDiff_q_qBar[i];
+                }
+                
+                if (MaxNormDiff_q1_q0 < NormDiff_q1_q0[i])
+                {
+                    MaxNormDiff_q1_q0 = NormDiff_q1_q0[i];
+                }
             }
             
-            
-            void DriverSteadyState::ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
-                                                       const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                                                       NekDouble &MaxNormDiff_q_qBar,
-                                                       NekDouble &MaxNormDiff_q1_q0)
+            #if NEKTAR_USE_MPI   
+            MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
+            if (MPIrank==0)
             {
-                //This routine evaluates |q-qBar|_L2 and save the value in "ConvergenceHistory.txt"
-                
-                Array<OneD, NekDouble > NormDiff_q_qBar(NumElmVelocity, 1.0);
-                Array<OneD, NekDouble > NormDiff_q1_q0(NumElmVelocity, 1.0);
-                
-                MaxNormDiff_q_qBar=0.0;
-                MaxNormDiff_q1_q0=0.0;
-                
-                //Norm Calculation
-                for(int i = 0; i < NumElmVelocity; ++i)
-                {
-                    //To check convergence of SFD
-                    //NormDiff_q_qBar[i] = m_equ[0]->L2Error(i, qBar1[i], false);
-                    NormDiff_q_qBar[i] = m_equ[0]->LinfError(i, qBar1[i]);
-                    
-                    //To check convergence of Navier-Stokes
-                    NormDiff_q1_q0[i] = m_equ[0]->LinfError(i, q0[i]);
-                    
-                    if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
-                    {
-                        MaxNormDiff_q_qBar = NormDiff_q_qBar[i];
-                    }
-                    
-                    if (MaxNormDiff_q1_q0 < NormDiff_q1_q0[i])
-                    {
-                        MaxNormDiff_q1_q0 = NormDiff_q1_q0[i];
-                    }
-                }
-                
-                #if NEKTAR_USE_MPI   
-                MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
-                if (MPIrank==0)
-                {
-                    cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X0 <<" and Delta = " << m_Delta0 <<endl;
-                    std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
-                    m_file << m_n+1 << "\t" << m_equ[0]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
-                    m_file.close();
-                }
-                #else
-                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X0 <<" and Delta = " << m_Delta0 <<endl;
+                cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X0 <<" and Delta = " << m_Delta0 <<endl;
                 std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
                 m_file << m_n+1 << "\t" << m_equ[0]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
                 m_file.close();
-                #endif              
-                
             }
+            #else
+            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X0 <<" and Delta = " << m_Delta0 <<endl;
+            std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
+            m_file << m_n+1 << "\t" << m_equ[0]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
+            m_file.close();
+            #endif              
+            
         }
     }
-    
-    
+}
+

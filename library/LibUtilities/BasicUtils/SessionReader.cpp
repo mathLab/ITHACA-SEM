@@ -19,7 +19,7 @@
 // Software is furnished to do so, subject to the following conditions:
 //
 // The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
+// in all copies or substantial portions ofa the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 // OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -465,10 +465,10 @@ namespace Nektar
          */
         const std::string SessionReader::GetSessionNameRank() const
         {
-            std::string  dirname = m_sessionName + "_xml_dir"; 
+            std::string  dirname = m_sessionName + "_xml"; 
             fs::path     pdirname(dirname);
             
-            std::string vFilename = m_sessionName + "_P" + boost::lexical_cast<std::string>(m_comm->GetRowComm()->GetRank());
+            std::string vFilename = "P" + boost::lexical_cast<std::string>(m_comm->GetRowComm()->GetRank());
             fs::path    pFilename(vFilename);            
 
             fs::path fullpath = pdirname / pFilename;

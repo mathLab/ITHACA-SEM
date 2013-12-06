@@ -108,10 +108,10 @@ namespace Nektar
             vNew.LinkEndChild(vElmtNektar);
 
 
-            std::string  dirname = pSession->GetSessionName() + "_xml_dir"; 
+            std::string  dirname = pSession->GetSessionName() + "_xml"; 
             fs::path    pdirname(dirname);
             
-            std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(rank) + ".xml";
+            std::string vFilename = "P" + boost::lexical_cast<std::string>(rank) + ".xml";
             fs::path    pFilename(vFilename);            
             
             if(rank == 0)
@@ -142,7 +142,7 @@ namespace Nektar
 
                 vNew.LinkEndChild(vElmtNektar);
 
-                std::string  dirname = pSession->GetSessionName() + "_dir"; 
+                std::string  dirname = pSession->GetSessionName() + "_xml"; 
                 fs::path    pdirname(dirname);
                 
                 std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(i) + ".xml";

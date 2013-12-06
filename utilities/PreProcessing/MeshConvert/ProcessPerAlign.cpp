@@ -167,7 +167,7 @@ namespace Nektar
             boost::unordered_set<int> elmtDone;
             map<int, int> elmtPairs;
             map<int, int> vertCheck;
-
+            
             for (int i = 0; i < c1->items.size(); ++i)
             {
                 Node centroid;
@@ -186,7 +186,7 @@ namespace Nektar
 
                     Node dx = it->second - centroid;
                     if (fabs(fabs(dx.x*vec[0] + dx.y*vec[1] + dx.z*vec[2])/
-                             sqrt(dx.abs2()) - 1.0) < 1e-6)
+                             sqrt(dx.abs2()) - 1.0) < 1e-8)
                     {
                         // Found match
                         int id1 = c1->items[i]        ->GetFaceLink()->id;
@@ -214,7 +214,7 @@ namespace Nektar
                                     Node dn = *n2 - *n1;
                                     if (fabs(fabs(dn.x*vec[0] + dn.y*vec[1] +
                                                   dn.z*vec[2])/
-                                             sqrt(dn.abs2()) - 1.0) < 1e-6)
+                                             sqrt(dn.abs2()) - 1.0) < 1e-8)
                                     {
                                         perVerts   [k] = l;
                                         perVertsInv[l] = k;

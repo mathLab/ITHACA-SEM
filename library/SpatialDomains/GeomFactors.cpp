@@ -377,8 +377,14 @@ namespace Nektar
 
         /// Return the derivative factors matrix.
         const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(
-                const PointsKeyArray& keyTgt) const
+                const PointsKeyArray& keyTgt)
         {
+            std::map<PointsKeyArray, Array<TwoD, NekDouble> >::const_iterator x;
+            if ((x=m_derivFactorCache.find(keyTgt)) != m_derivFactorCache.end())
+            {
+                return x->second;
+            }
+
             int i = 0, j = 0, k = 0, l = 0;
             int ptsTgt   = 1;
 
@@ -443,6 +449,8 @@ namespace Nektar
                     }
                 }
             }
+
+            m_derivFactorCache[keyTgt] = factors;
 
             return factors;
         }

@@ -80,6 +80,27 @@ namespace Nektar
         typedef Array<OneD, LibUtilities::PointsKey>
                                                     PointsKeyArray;
 
+        class ComparePointsKeyArrays
+        {
+            public:
+                bool operator()(const PointsKeyArray& lhs, const PointsKeyArray& rhs)
+                {
+                    for (int i = 0; i < lhs.num_elements(); ++i)
+                    {
+                        if (lhs[i] < rhs[i])
+                        {
+                            return true;
+                        }
+                        if (rhs[i] < lhs[i])
+                        {
+                            return false;
+                        }
+                    }
+                    return false;
+                }
+
+        };
+
         /// Calculation and storage of geometric factors associated with the
         /// mapping from StdRegions reference elements to a given LocalRegions
         /// physical element in the mesh.
@@ -135,12 +156,12 @@ namespace Nektar
 
                 /// Return the derivative of the reference coordinates with respect
                 /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
-                const Array<TwoD, const NekDouble> GetDerivFactors() const
+                const Array<TwoD, const NekDouble> GetDerivFactors()
                 {
                     return GetDerivFactors(m_pointsKey);
                 }
                 const Array<TwoD, const NekDouble> GetDerivFactors(
-                        const PointsKeyArray &keyTgt) const;
+                        const PointsKeyArray &keyTgt);
 
                 /// Determine if element is valid and not self-intersecting.
                 inline bool IsValid() const;
@@ -169,10 +190,13 @@ namespace Nektar
                 bool m_valid;
                 /// Stores information about the expansion.
                 Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
+                /// DerivFactors cache
+                std::map<PointsKeyArray, Array<TwoD, NekDouble>, ComparePointsKeyArrays >
+                                                    m_derivFactorCache;
 
                 /// Array of size coordim which stores a key describing the
                 /// location of the quadrature points in each dimension.
-                Array<OneD,LibUtilities::PointsKey> m_pointsKey;
+                PointsKeyArray m_pointsKey;
 
             private:
                 /// Tests if the element is valid and not self-intersecting.
@@ -187,7 +211,6 @@ namespace Nektar
                 void Adjoint(
                             const Array<TwoD, const NekDouble>& src,
                             Array<TwoD, NekDouble>& tgt) const;
-
         };
 
 

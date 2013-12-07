@@ -1234,31 +1234,34 @@ namespace Nektar
             // version already present in the loaded XML data.
             for (int i = 1; i < pFilenames.size(); ++i)
             {
-                TiXmlDocument* vTempDoc = new TiXmlDocument;
-                LoadDoc(pFilenames[i], vTempDoc);
-
-                TiXmlHandle docHandle(vTempDoc);
-                TiXmlElement* vTempNektar;
-                vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
-                ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
-                TiXmlElement* p = vTempNektar->FirstChildElement();
-
-                while (p)
+                if((pFilenames[i].compare(pFilenames[i].size()-3,3,"xml") == 0)
+                   ||(pFilenames[i].compare(pFilenames[i].size()-6,6,"xml.gz") == 0))
                 {
-                    TiXmlElement *vMainEntry = 
-                        vMainNektar->FirstChildElement(p->Value());
-                    TiXmlElement *q = new TiXmlElement(*p);
-                    if (vMainEntry)
+                    TiXmlDocument* vTempDoc = new TiXmlDocument;
+                    LoadDoc(pFilenames[i], vTempDoc);
+                    
+                    TiXmlHandle docHandle(vTempDoc);
+                    TiXmlElement* vTempNektar;
+                    vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
+                    ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
+                    TiXmlElement* p = vTempNektar->FirstChildElement();
+                    
+                    while (p)
                     {
-                        vMainNektar->RemoveChild(vMainEntry);
+                        TiXmlElement *vMainEntry = 
+                            vMainNektar->FirstChildElement(p->Value());
+                        TiXmlElement *q = new TiXmlElement(*p);
+                        if (vMainEntry)
+                        {
+                            vMainNektar->RemoveChild(vMainEntry);
+                        }
+                        vMainNektar->LinkEndChild(q);
+                        p = p->NextSiblingElement();
                     }
-                    vMainNektar->LinkEndChild(q);
-                    p = p->NextSiblingElement();
+                    
+                    delete vTempDoc;
                 }
-
-                delete vTempDoc;
             }
-
             return vMainDoc;
         }
 

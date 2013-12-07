@@ -2,9 +2,9 @@ SET(SPATIAL_DOMAINS_SOURCES
 Conditions.cpp
 #EdgeComponent.cpp
 GeomFactors.cpp
-GeomFactors1D.cpp
-GeomFactors2D.cpp
-GeomFactors3D.cpp
+#GeomFactors1D.cpp
+#GeomFactors2D.cpp
+#GeomFactors3D.cpp
 Geometry0D.cpp
 Geometry1D.cpp
 Geometry2D.cpp
@@ -34,9 +34,9 @@ Conditions.h
 Curve.hpp
 #EdgeComponent.h
 GeomFactors.h
-GeomFactors1D.h
-GeomFactors2D.h
-GeomFactors3D.h
+#GeomFactors1D.h
+#GeomFactors2D.h
+#GeomFactors3D.h
 Geometry0D.h
 Geometry1D.h
 Geometry2D.h

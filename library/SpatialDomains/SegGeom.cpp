@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/GeomFactors1D.h>
+#include <SpatialDomains/GeomFactors.h>
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdSegExp.h>
@@ -51,8 +51,7 @@ namespace Nektar
         }
 
         SegGeom::SegGeom(int id, const int coordim):
-            Geometry1D(coordim),
-            m_xmap(coordim)
+            Geometry1D(coordim)
         {
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
                                            LibUtilities::PointsKey(3,
@@ -61,6 +60,8 @@ namespace Nektar
                                           );
             m_shapeType = LibUtilities::eSegment;
             m_eid = id;
+
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -86,7 +87,7 @@ namespace Nektar
                                                )
                                               );
 
-                m_xmap = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(m_coordim);
+                m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
                 for(int i = 0; i < m_coordim; ++i)
                 {
@@ -115,7 +116,7 @@ namespace Nektar
                 LibUtilities::PointsKey pkey(npts+1,LibUtilities::eGaussLobattoLegendre);
                 const LibUtilities::BasisKey B(LibUtilities::eModified_A, npts, pkey);
 
-                m_xmap = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(m_coordim);
+                m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
                 Array<OneD,NekDouble> tmp(npts);
 
@@ -174,7 +175,7 @@ namespace Nektar
                 const int id,
                 const PointGeomSharedPtr& vert1,
                 const PointGeomSharedPtr& vert2):
-            Geometry1D(vert1->GetCoordim()), m_xmap(vert1->GetCoordim())
+            Geometry1D(vert1->GetCoordim())
         {
             m_shapeType = LibUtilities::eSegment;
 
@@ -189,6 +190,8 @@ namespace Nektar
                                            )
                                           );
             m_eid = id;
+
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(vert1->GetCoordim());
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -208,7 +211,6 @@ namespace Nektar
             {
                 m_elmtMap.push_back(*def);
             }
-            m_xmap = in.m_xmap;
 
             // info from SegGeom class
             m_coordim  = in.m_coordim;
@@ -321,7 +323,7 @@ namespace Nektar
                     gType = eDeformed;
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
                     gType, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
@@ -482,16 +484,16 @@ namespace Nektar
         {
             if((i>=0)&& (i<m_coordim))
             {
-                return m_xmap[i];
+                return boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(m_xmap[i]);
             }
 
             NEKERROR(ErrorUtil::efatal, "Invalid Index used in [] operator");
-            return m_xmap[0]; //should never be reached
+            return boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(m_xmap[0]); //should never be reached
         }
 
-        const StdRegions::StdExpansion1DSharedPtr& SegGeom::v_GetXmap(const int i)
+        const StdRegions::StdExpansion1DSharedPtr SegGeom::v_GetXmap(const int i)
         {
-            return m_xmap[i];
+            return boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(m_xmap[i]);
         }
 
         void SegGeom::v_SetOwnData()

@@ -36,7 +36,7 @@
 #include <SpatialDomains/Geometry3D.h>
 
 #include <SpatialDomains/Geometry2D.h>
-#include <SpatialDomains/GeomFactors3D.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>     // for SegGeomSharedPtr
 
@@ -266,7 +266,7 @@ namespace Nektar
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
                     Gtype, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
@@ -298,7 +298,7 @@ namespace Nektar
       }
       StdRegions::StdExpansion3DSharedPtr Geometry3D::v_GetXmap(const int i)
       {
-          return m_xmap[i];
+          return boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(m_xmap[i]);
       }
 
       /**

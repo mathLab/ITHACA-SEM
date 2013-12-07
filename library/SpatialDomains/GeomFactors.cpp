@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <SpatialDomains/GeomFactors.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {
@@ -90,15 +91,23 @@ namespace Nektar
          *                      system
          */
         GeomFactors::GeomFactors(const GeomType gtype,
-                                 const int expdim,
-                                 const int coordim) :
+                const int coordim,
+                const Array<OneD, const StdRegions
+                    ::StdExpansionSharedPtr> &Coords,
+                const Array<OneD, const LibUtilities::BasisSharedPtr>
+                    &tbasis) :
             m_type(gtype),
-            m_expDim(expdim),
+            m_expDim(Coords[0]->GetShapeDimension()),
             m_coordDim(coordim),
             m_valid(true),
-            m_coords(Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordDim)),
-            m_pointsKey(expdim)
+            m_coords(Coords),
+            m_pointsKey(m_expDim)
         {
+            for (int i = 0; i < m_expDim; ++i)
+            {
+                m_pointsKey[i] = tbasis[i]->GetPointsKey();
+            }
+            CheckIfValid();
         }
 
 
@@ -122,18 +131,6 @@ namespace Nektar
          */
         GeomFactors::~GeomFactors()
         {
-        }
-
-
-        /**
-         * Placeholder function.
-         */
-        void GeomFactors::v_ComputeEdgeTangents(
-            const GeometrySharedPtr       &geom2D,
-            const int                      edge,
-            const LibUtilities::PointsKey &to_key)
-        {
-            ASSERTL0(false, "Cannot compute tangents for this geometry.");
         }
 
 
@@ -232,7 +229,7 @@ namespace Nektar
                 {
                     for (j = 0; j < m_expDim; ++j)
                     {
-                        v_Interp(map_points, d_map[j][i], tpoints, deriv[j][i]);
+                        Interp(map_points, d_map[j][i], tpoints, deriv[j][i]);
                     }
                 }
             }
@@ -286,7 +283,7 @@ namespace Nektar
                 }
             }
 
-            v_Adjoint(tmp, gmat);
+            Adjoint(tmp, gmat);
 
             // Compute g = det(g_{ij}) (= Jacobian squared) and store
             // temporarily in m_jac.
@@ -359,7 +356,7 @@ namespace Nektar
                 }
             }
 
-            v_Adjoint(tmp, gmat);
+            Adjoint(tmp, gmat);
 
             // Compute g = det(g_{ij}) (= Jacobian squared) and store
             // temporarily in m_jac.
@@ -414,7 +411,7 @@ namespace Nektar
                 }
             }
 
-            v_Adjoint(tmp, gmat);
+            Adjoint(tmp, gmat);
 
             // Compute g = det(g_{ij}) (= Jacobian squared) and store
             // temporarily in m_jac.
@@ -448,6 +445,151 @@ namespace Nektar
             }
 
             return factors;
+        }
+
+        void GeomFactors::CheckIfValid()
+        {
+            switch (m_expDim)
+            {
+                case 1:
+                {
+                    m_valid = true;
+                    break;
+                }
+                case 2:
+                {
+                    // Jacobian test only makes sense in 2D coordinates
+                    if (GetCoordim() != 2)
+                    {
+                        return;
+                    }
+
+                    PointsKeyArray p(m_expDim);
+                    p[0] = m_coords[0]->GetBasis(0)->GetPointsKey();
+                    p[1] = m_coords[0]->GetBasis(1)->GetPointsKey();
+                    int nqtot = p[0].GetNumPoints() *
+                                p[1].GetNumPoints();
+                    int pts = (m_type == eRegular || m_type == eMovingRegular)
+                                    ? 1 : nqtot;
+
+                    DerivStorage deriv = GetDeriv(p);
+
+                    Array<OneD, NekDouble> jac(pts, 0.0);
+                    Vmath::Vvtvvtm(pts, &deriv[0][0][0], 1, &deriv[1][1][0], 1,
+                                        &deriv[1][0][0], 1, &deriv[0][1][0], 1,
+                                        &jac[0],           1);
+
+                    if(Vmath::Vmin(pts, &jac[0], 1) < 0)
+                    {
+                        m_valid = false;
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    PointsKeyArray p(m_expDim);
+                    p[0] = m_coords[0]->GetBasis(0)->GetPointsKey();
+                    p[1] = m_coords[0]->GetBasis(1)->GetPointsKey();
+                    p[2] = m_coords[0]->GetBasis(2)->GetPointsKey();
+                    int nqtot = p[0].GetNumPoints() *
+                                p[1].GetNumPoints() *
+                                p[2].GetNumPoints();
+                    int pts = (m_type == eRegular || m_type == eMovingRegular)
+                                    ? 1 : nqtot;
+
+                    Array<OneD, NekDouble> jac(pts, 0.0);
+                    Array<OneD, NekDouble> tmp(pts, 0.0);
+                    DerivStorage deriv = GetDeriv(p);
+
+                    // J3D - Spencers book page 158
+                    Vmath::Vvtvvtm(pts, &deriv[1][1][0], 1, &deriv[2][2][0], 1,
+                                        &deriv[2][1][0], 1, &deriv[1][2][0], 1,
+                                        &tmp[0],           1);
+                    Vmath::Vvtvp  (pts, &deriv[0][0][0], 1, &tmp[0],           1,
+                                        &jac[0],           1, &jac[0],           1);
+
+                    Vmath::Vvtvvtm(pts, &deriv[2][1][0], 1, &deriv[0][2][0], 1,
+                                        &deriv[0][1][0], 1, &deriv[2][2][0], 1,
+                                        &tmp[0],           1);
+                    Vmath::Vvtvp  (pts, &deriv[1][0][0], 1, &tmp[0],           1,
+                                        &jac[0],           1, &jac[0],           1);
+
+                    Vmath::Vvtvvtm(pts, &deriv[0][1][0], 1, &deriv[1][2][0], 1,
+                                        &deriv[1][1][0], 1, &deriv[0][2][0], 1,
+                                        &tmp[0],           1);
+                    Vmath::Vvtvp  (pts, &deriv[2][0][0], 1, &tmp[0],           1,
+                                        &jac[0],           1, &jac[0],           1);
+
+                    if (Vmath::Vmin(pts, &jac[0], 1) < 0)
+                    {
+                        m_valid = false;
+                    }
+                    break;
+                }
+            }
+        }
+
+        void GeomFactors::Interp(
+                    const PointsKeyArray &map_points,
+                    const Array<OneD, const NekDouble> &src,
+                    const PointsKeyArray &tpoints,
+                    Array<OneD, NekDouble> &tgt) const
+        {
+            switch (m_expDim)
+            {
+                case 1:
+                    LibUtilities::Interp1D(map_points[0], src, tpoints[0], tgt);
+                    break;
+                case 2:
+                    LibUtilities::Interp2D(map_points[0], map_points[1], src,
+                                           tpoints[0], tpoints[1], tgt);
+                    break;
+                case 3:
+                    LibUtilities::Interp3D(map_points[0], map_points[1], map_points[2],
+                                           src,
+                                           tpoints[0], tpoints[1], tpoints[2], tgt);
+                    break;
+            }
+        }
+
+        void GeomFactors::Adjoint(
+                    const Array<TwoD, const NekDouble>& src,
+                    Array<TwoD, NekDouble>& tgt) const
+        {
+            int n = src[0].num_elements();
+            switch (m_expDim)
+            {
+                case 1:
+                    Vmath::Fill(n, 1.0, &tgt[0][0], 1);
+                    break;
+                case 2:
+                    Vmath::Vcopy(n, &src[3][0], 1, &tgt[0][0], 1);
+                    Vmath::Smul (n, -1.0, &src[1][0], 1, &tgt[1][0], 1);
+                    Vmath::Smul (n, -1.0, &src[2][0], 1, &tgt[2][0], 1);
+                    Vmath::Vcopy(n, &src[0][0], 1, &tgt[3][0], 1);
+                    break;
+                case 3:
+                {
+                    int a, b, c, d, e, i, j;
+
+                    // Compute g^{ij} by computing Cofactors(g_ij)^T
+                    for (i = 0; i < m_expDim; ++i)
+                    {
+                        for (j = 0; j < m_expDim; ++j)
+                        {
+                            a = ((i+1)%m_expDim)*m_expDim + ((j+1)%m_expDim);
+                            b = ((i+1)%m_expDim)*m_expDim + ((j+2)%m_expDim);
+                            c = ((i+2)%m_expDim)*m_expDim + ((j+1)%m_expDim);
+                            d = ((i+2)%m_expDim)*m_expDim + ((j+2)%m_expDim);
+                            e = j*m_expDim + i;
+                            Vmath::Vvtvvtm(n, &src[a][0], 1, &src[d][0], 1,
+                                                &src[b][0], 1, &src[c][0], 1,
+                                                &tgt[e][0], 1);
+                        }
+                    }
+                    break;
+                }
+            }
         }
 
     }; //end of namespace

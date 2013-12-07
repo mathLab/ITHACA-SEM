@@ -147,6 +147,7 @@ namespace Nektar
                 int                  m_coordim;
                 GeomFactorsSharedPtr m_geomFactors;
                 GeomState            m_geomFactorsState;
+                Array<OneD, StdRegions::StdExpansionSharedPtr> m_xmap;
 
                 /// enum identifier to determine if quad points are filled
                 GeomState            m_state;

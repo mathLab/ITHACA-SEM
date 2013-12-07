@@ -40,7 +40,7 @@
 #include <LibUtilities/Foundations/Interp.h>
 
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/GeomFactors2D.h>
+#include <SpatialDomains/GeomFactors.h>
 
 
 namespace Nektar
@@ -67,7 +67,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
                     LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(coordim);
 
             m_fid = id;
 
@@ -121,7 +121,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
                     LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -177,7 +177,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
                     LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -235,7 +235,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
                     LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -581,7 +581,7 @@ namespace Nektar
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
                     Gtype, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;

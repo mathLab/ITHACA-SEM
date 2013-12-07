@@ -94,7 +94,6 @@ namespace Nektar
             Geometry2DVector                                 m_faces;
             std::vector<StdRegions::Orientation>             m_eorient;
             std::vector<StdRegions::Orientation>             m_forient;
-            Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
             std::list<CompToElmt>                            m_elmtmap;
             bool                                             m_owndata;
             int                                              m_eid;

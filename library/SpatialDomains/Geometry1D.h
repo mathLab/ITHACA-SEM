@@ -60,7 +60,7 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT Geometry1D(const int coordim);
             SPATIAL_DOMAINS_EXPORT virtual ~Geometry1D();
 
-            SPATIAL_DOMAINS_EXPORT const StdRegions::StdExpansion1DSharedPtr&
+            SPATIAL_DOMAINS_EXPORT const StdRegions::StdExpansion1DSharedPtr
                         GetXmap(const int i);
             SPATIAL_DOMAINS_EXPORT PointGeomSharedPtr
                         GetVertex(const int i) const;
@@ -78,7 +78,7 @@ namespace Nektar
             virtual int v_GetEid() const;
             virtual int v_GetVid(int i) const;
 
-            virtual const StdRegions::StdExpansion1DSharedPtr&
+            virtual const StdRegions::StdExpansion1DSharedPtr
                          v_GetXmap(const int i);
             virtual PointGeomSharedPtr
                          v_GetVertex(const int i) const;

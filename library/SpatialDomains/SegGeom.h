@@ -99,7 +99,6 @@ namespace Nektar
             protected:
                 int                                               m_eid;
                 std::list<CompToElmt>                             m_elmtMap;
-                Array<OneD, StdRegions::StdExpansion1DSharedPtr>  m_xmap;
                 SpatialDomains::PointGeomSharedPtr                m_verts[kNverts];
                 StdRegions::Orientation                           m_porient[kNverts];
 
@@ -115,7 +114,7 @@ namespace Nektar
                         v_GetBasis(const int i, const int j);
 
                 SPATIAL_DOMAINS_EXPORT virtual const
-                        StdRegions::StdExpansion1DSharedPtr& v_GetXmap(const int i);
+                        StdRegions::StdExpansion1DSharedPtr v_GetXmap(const int i);
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
 

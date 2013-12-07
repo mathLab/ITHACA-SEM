@@ -85,134 +85,109 @@ namespace Nektar
         /// physical element in the mesh.
         class GeomFactors
         {
-        public:
-            /// Tests if two GeomFactors classes are equal.
-            SPATIAL_DOMAINS_EXPORT friend bool operator==( 
-                const GeomFactors &lhs,
-                const GeomFactors &rhs);
+            public:
+                /// Constructor for GeomFactors class.
+                GeomFactors(const GeomType gtype,
+                        const int coordim,
+                        const Array<OneD, const StdRegions
+                            ::StdExpansionSharedPtr> &Coords,
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>
+                            &tbasis);
 
-            /// Destructor.
-            SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors();
+                /// Copy constructor.
+                GeomFactors(const GeomFactors &S);
 
-            /// Returns whether the geometry is regular or deformed.
-            inline GeomType GetGtype();
+                /// Tests if two GeomFactors classes are equal.
+                SPATIAL_DOMAINS_EXPORT friend bool operator==(
+                    const GeomFactors &lhs,
+                    const GeomFactors &rhs);
 
-            /// Return the Jacobian of the mapping.
-            const Array<OneD, const NekDouble> GetJac() const
-            {
-                return GetJac(m_pointsKey);
-            }
-            const Array<OneD, const NekDouble> GetJac(
-                    const PointsKeyArray &keyTgt) const;
+                /// Destructor.
+                SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors();
 
-            /// Return the Laplacian coefficients \f$g_{ij}\f$.
-            const Array<TwoD, const NekDouble> GetGmat() const
-            {
-                return GetGmat(m_pointsKey);
-            }
-            const Array<TwoD, const NekDouble> GetGmat(
-                    const PointsKeyArray &keyTgt) const;
+                /// Returns whether the geometry is regular or deformed.
+                inline GeomType GetGtype();
 
-            /// Return the derivative of the mapping with respect to the
-            /// reference coordinates,
-            /// \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
-            DerivStorage GetDeriv() const
-            {
-                return GetDeriv(m_pointsKey);
-            }
-            DerivStorage GetDeriv(const PointsKeyArray &tpoints) const;
+                /// Return the Jacobian of the mapping.
+                const Array<OneD, const NekDouble> GetJac() const
+                {
+                    return GetJac(m_pointsKey);
+                }
+                const Array<OneD, const NekDouble> GetJac(
+                        const PointsKeyArray &keyTgt) const;
 
-            /// Return the derivative of the reference coordinates with respect
-            /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
-            const Array<TwoD, const NekDouble> GetDerivFactors() const
-            {
-                return GetDerivFactors(m_pointsKey);
-            }
-            const Array<TwoD, const NekDouble> GetDerivFactors(
-                    const PointsKeyArray &keyTgt) const;
+                /// Return the Laplacian coefficients \f$g_{ij}\f$.
+                const Array<TwoD, const NekDouble> GetGmat() const
+                {
+                    return GetGmat(m_pointsKey);
+                }
+                const Array<TwoD, const NekDouble> GetGmat(
+                        const PointsKeyArray &keyTgt) const;
 
-            /// Determine if element is valid and not self-intersecting.
-            inline bool IsValid() const;
+                /// Return the derivative of the mapping with respect to the
+                /// reference coordinates,
+                /// \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
+                DerivStorage GetDeriv() const
+                {
+                    return GetDeriv(m_pointsKey);
+                }
+                DerivStorage GetDeriv(const PointsKeyArray &tpoints) const;
 
-            /// Return the number of dimensions of the coordinate system.
-            inline int GetCoordim() const;
+                /// Return the derivative of the reference coordinates with respect
+                /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
+                const Array<TwoD, const NekDouble> GetDerivFactors() const
+                {
+                    return GetDerivFactors(m_pointsKey);
+                }
+                const Array<TwoD, const NekDouble> GetDerivFactors(
+                        const PointsKeyArray &keyTgt) const;
 
-            /// Computes the edge tangents with respect to a 2D element
-            inline void ComputeEdgeTangents(
-                const GeometrySharedPtr       &geom2D,
-                const int                      edge,
-                const LibUtilities::PointsKey &to_key);
-            
-            /// Returns the tangent vectors evaluated at each quadrature point
-            /// for 1D elements.  The tangent vectors are set using the
-            /// function ComputeEdgeTangents.
-            inline const Array<OneD, const Array<OneD, NekDouble> >
-                &GetEdgeTangent() const;
+                /// Determine if element is valid and not self-intersecting.
+                inline bool IsValid() const;
 
-            /// Returns the LibUtilities::PointsKey object associated with a
-            /// co-ordinate direction.
-            inline const LibUtilities::PointsKey
-                &GetPointsKey(unsigned int i) const;
+                /// Return the number of dimensions of the coordinate system.
+                inline int GetCoordim() const;
 
-            /// Computes a hash of this GeomFactors element, based on the
-            /// type, expansion/co-ordinate dimensions, metric, Jacobian and
-            /// the geometric factors themselves.
-            inline size_t GetHash() const;
+                /// Returns the LibUtilities::PointsKey object associated with a
+                /// co-ordinate direction.
+                inline const LibUtilities::PointsKey
+                    &GetPointsKey(unsigned int i) const;
 
-        protected:
-            /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
-            GeomType m_type;
-            /// Dimension of expansion.
-            int m_expDim;
-            /// Dimension of coordinate system.
-            int m_coordDim;
-            /// Validity of element (Jacobian positive)
-            bool m_valid;
-            /// Stores information about the expansion.
-            Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
+                /// Computes a hash of this GeomFactors element, based on the
+                /// type, expansion/co-ordinate dimensions, metric, Jacobian and
+                /// the geometric factors themselves.
+                inline size_t GetHash() const;
 
-            /// Array of size coordim which stores a key describing the
-            /// location of the quadrature points in each dimension.
-            Array<OneD,LibUtilities::PointsKey> m_pointsKey;
+            protected:
+                /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
+                GeomType m_type;
+                /// Dimension of expansion.
+                int m_expDim;
+                /// Dimension of coordinate system.
+                int m_coordDim;
+                /// Validity of element (Jacobian positive)
+                bool m_valid;
+                /// Stores information about the expansion.
+                Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
 
-            /// Array of size (coordim)x(nquad) which holds the components of
-            /// the normal vector at each quadrature point. The array is
-            /// populated as \a m_coordDim consecutive blocks of size equal to
-            /// the number of quadrature points. Each block holds a component
-            /// of the normal vectors.
-            Array<OneD, Array<OneD,NekDouble> > m_normal;
+                /// Array of size coordim which stores a key describing the
+                /// location of the quadrature points in each dimension.
+                Array<OneD,LibUtilities::PointsKey> m_pointsKey;
 
-            /// Array of size (coordim)x(nquad) which holds the components of
-            /// the tangent vector at each quadrature point. The array is
-            /// populated as \a m_coordDim consecutive blocks of size equal to
-            /// the number of quadrature points. Each block holds a component
-            /// of the tangent vectors.
-            Array<OneD, Array<OneD,NekDouble> > m_tangent;
-            
-            /// Constructor for GeomFactors class.
-            GeomFactors(const GeomType gtype,
-                        const int expdim,
-                        const int coordim);
+            private:
+                /// Tests if the element is valid and not self-intersecting.
+                void CheckIfValid();
 
-            /// Copy constructor.
-            GeomFactors(const GeomFactors &S);
+                void Interp(
+                            const PointsKeyArray &map_points,
+                            const Array<OneD, const NekDouble> &src,
+                            const PointsKeyArray &tpoints,
+                            Array<OneD, NekDouble> &tgt) const;
 
-            virtual void v_Interp(
-                        const PointsKeyArray &map_points,
-                        const Array<OneD, const NekDouble> &src,
-                        const PointsKeyArray &tpoints,
-                        Array<OneD, NekDouble> &tgt) const = 0;
+                void Adjoint(
+                            const Array<TwoD, const NekDouble>& src,
+                            Array<TwoD, NekDouble>& tgt) const;
 
-            virtual void v_Adjoint(
-                        const Array<TwoD, const NekDouble>& src,
-                        Array<TwoD, NekDouble>& tgt) const = 0;
-
-        private:
-            /// (2D only) Compute tangents based on a 1D element.
-            virtual void v_ComputeEdgeTangents(
-            	    	const GeometrySharedPtr &geom2D,
-            	    	const int edge,
-            	    	const LibUtilities::PointsKey &to_key);
         };
 
 
@@ -249,26 +224,6 @@ namespace Nektar
             return m_valid;
         }
 
-        /// Computes the edge tangents from a 1D element
-        inline void GeomFactors::ComputeEdgeTangents(
-            const GeometrySharedPtr &geom2D,
-            const int edge,
-            const LibUtilities::PointsKey &to_key)
-        {
-            v_ComputeEdgeTangents(geom2D, edge, to_key);
-        }
-
-        /// Returns the tangent vectors evaluated at each quadrature point for
-        /// 1D elements.  The tangent vectors are set using the function
-        /// ComputeEdgeTangents.
-        inline const Array<OneD, const Array<OneD, NekDouble> >
-            &GeomFactors::GetEdgeTangent() const
-        {
-            ASSERTL0(m_tangent.num_elements()>0,
-                     "Tangent vectors are not computed for this line");
-            return m_tangent;
-        }
-	
         /// Returns the LibUtilities::PointsKey object associated with a
         /// co-ordinate direction.
         inline const LibUtilities::PointsKey

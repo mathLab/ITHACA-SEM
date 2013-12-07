@@ -42,7 +42,7 @@
 #include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>
 
-#include <SpatialDomains/GeomFactors2D.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <StdRegions/StdTriExp.h>
 
 namespace Nektar

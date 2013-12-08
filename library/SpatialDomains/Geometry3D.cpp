@@ -121,7 +121,7 @@ namespace Nektar
           NekDouble der1_x, der2_x, der3_x, der1_y, der2_y, der3_y,
               der1_z, der2_z, der3_z; 
           const Array<TwoD, const NekDouble> &gmat
-                                      = m_geomFactors->GetDerivFactors();
+                                      = m_geomFactors->GetDerivFactors(GetPointsKeys());
           
           // Unfortunately need the points in an Array to interpolate
           Array<OneD, NekDouble> D1Dx(ptsx.num_elements(),&gmat[0][0]);
@@ -246,8 +246,7 @@ namespace Nektar
         /**
          * Generate the geometry factors for this element.
          */
-        void Geometry3D::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void Geometry3D::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -267,7 +266,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis);
+                    Gtype, m_coordim, m_xmap);
 
                 m_geomFactorsState = ePtsFilled;
             }

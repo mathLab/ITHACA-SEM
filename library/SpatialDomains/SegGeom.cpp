@@ -309,8 +309,7 @@ namespace Nektar
         }
 
         ///  Set up GeoFac for this geometry using Coord quadrature distribution
-        void SegGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        void SegGeom::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -324,7 +323,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
-                    gType, m_coordim, m_xmap, tbasis);
+                    gType, m_coordim, m_xmap);
 
                 m_geomFactorsState = ePtsFilled;
             }

@@ -88,9 +88,7 @@ namespace Nektar
                 GeomFactors(const GeomType gtype,
                         const int coordim,
                         const Array<OneD, const StdRegions
-                            ::StdExpansionSharedPtr> &Coords,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                            &tbasis);
+                            ::StdExpansionSharedPtr> &Coords);
 
                 /// Copy constructor.
                 GeomFactors(const GeomFactors &S);
@@ -111,28 +109,16 @@ namespace Nektar
                         const LibUtilities::PointsKeyVector &keyTgt);
 
                 /// Return the Laplacian coefficients \f$g_{ij}\f$.
-                const Array<TwoD, const NekDouble> GetGmat() const
-                {
-                    return GetGmat(m_pointsKey);
-                }
                 SPATIAL_DOMAINS_EXPORT const Array<TwoD, const NekDouble> GetGmat(
                         const LibUtilities::PointsKeyVector &keyTgt) const;
 
                 /// Return the derivative of the mapping with respect to the
                 /// reference coordinates,
                 /// \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
-                DerivStorage GetDeriv() const
-                {
-                    return GetDeriv(m_pointsKey);
-                }
                 SPATIAL_DOMAINS_EXPORT DerivStorage GetDeriv(const LibUtilities::PointsKeyVector &tpoints) const;
 
                 /// Return the derivative of the reference coordinates with respect
                 /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
-                const Array<TwoD, const NekDouble> GetDerivFactors()
-                {
-                    return GetDerivFactors(m_pointsKey);
-                }
                 SPATIAL_DOMAINS_EXPORT const Array<TwoD, const NekDouble> GetDerivFactors(
                         const LibUtilities::PointsKeyVector &keyTgt);
 
@@ -141,11 +127,6 @@ namespace Nektar
 
                 /// Return the number of dimensions of the coordinate system.
                 inline int GetCoordim() const;
-
-                /// Returns the LibUtilities::PointsKey object associated with a
-                /// co-ordinate direction.
-                inline const LibUtilities::PointsKey
-                    &GetPointsKey(unsigned int i) const;
 
                 /// Computes a hash of this GeomFactors element, based on the
                 /// type, expansion/co-ordinate dimensions, metric, Jacobian and
@@ -170,10 +151,6 @@ namespace Nektar
                 /// DerivFactors cache
                 std::map<LibUtilities::PointsKeyVector, Array<TwoD, NekDouble> >
                                                     m_derivFactorCache;
-
-                /// Array of size coordim which stores a key describing the
-                /// location of the quadrature points in each dimension.
-                LibUtilities::PointsKeyVector m_pointsKey;
 
             private:
                 /// Tests if the element is valid and not self-intersecting.
@@ -222,15 +199,6 @@ namespace Nektar
         inline bool GeomFactors::IsValid() const
         {
             return m_valid;
-        }
-
-        /// Returns the LibUtilities::PointsKey object associated with a
-        /// co-ordinate direction.
-        inline const LibUtilities::PointsKey
-            &GeomFactors::GetPointsKey(unsigned int i) const
-        {
-            ASSERTL1(i < m_pointsKey.size(), "PointsKey out of range.");
-            return m_pointsKey[i];
         }
 
         /// Computes a hash of this GeomFactors element, based on the

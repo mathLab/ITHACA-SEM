@@ -93,20 +93,13 @@ namespace Nektar
         GeomFactors::GeomFactors(const GeomType gtype,
                 const int coordim,
                 const Array<OneD, const StdRegions
-                    ::StdExpansionSharedPtr> &Coords,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis) :
+                    ::StdExpansionSharedPtr> &Coords) :
             m_type(gtype),
             m_expDim(Coords[0]->GetShapeDimension()),
             m_coordDim(coordim),
             m_valid(true),
-            m_coords(Coords),
-            m_pointsKey(m_expDim)
+            m_coords(Coords)
         {
-            for (int i = 0; i < m_expDim; ++i)
-            {
-                m_pointsKey[i] = tbasis[i]->GetPointsKey();
-            }
             CheckIfValid();
         }
 
@@ -120,8 +113,7 @@ namespace Nektar
             m_expDim(S.m_expDim),
             m_coordDim(S.m_coordDim),
             m_valid(S.m_valid),
-            m_coords(S.m_coords),
-            m_pointsKey(S.m_pointsKey)
+            m_coords(S.m_coords)
         {
         }
 
@@ -154,14 +146,6 @@ namespace Nektar
             if(!(lhs.m_coordDim == rhs.m_coordDim))
             {
                 return false;
-            }
-
-            for(int i = 0; i < lhs.m_expDim; i++)
-            {
-                if(!(lhs.m_pointsKey[i] == rhs.m_pointsKey[i]))
-                {
-                    return false;
-                }
             }
 
             return true;

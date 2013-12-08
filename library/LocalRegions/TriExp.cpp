@@ -112,7 +112,7 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int     nqtot = nquad0*nquad1;
             const Array<TwoD, const NekDouble>& df
-                                        = m_metricinfo->GetDerivFactors();
+                            = m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD,NekDouble> diff0(2*nqtot);
             Array<OneD,NekDouble> diff1(diff0+nqtot);
@@ -205,7 +205,8 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1;
 
-            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
+            const Array<TwoD, const NekDouble>& df =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD,NekDouble> diff0(2*nqtot);
             Array<OneD,NekDouble> diff1(diff0+nqtot);
@@ -417,7 +418,8 @@ namespace Nektar
             int    nmodes0 = m_base[0]->GetNumModes();
             int    wspsize = max(max(nqtot,m_ncoeffs),nquad1*nmodes0);
 
-            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
+            const Array<TwoD, const NekDouble>& df =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD, NekDouble> tmp0 (6*wspsize);
             Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
@@ -743,9 +745,10 @@ namespace Nektar
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
             const SpatialDomains::GeomType type = geomFactors->GetGtype();
-            const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors();
-            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(GetPointsKeys());
+            const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors(ptsKeys);
+            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(ptsKeys);
             int nqe = m_base[0]->GetNumPoints();
             int dim = GetCoordim();
 
@@ -801,8 +804,8 @@ namespace Nektar
             {
                 int j;
 
-                int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
-                int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
+                int nquad0 = ptsKeys[0].GetNumPoints();
+                int nquad1 = ptsKeys[1].GetNumPoints();
 
                 LibUtilities::PointsKey from_key;
 
@@ -823,7 +826,7 @@ namespace Nektar
                             normals[i*nquad0+j] = -df[2*i+1][j]*edgejac[j];
                         }
                     }
-                    from_key = geomFactors->GetPointsKey(0);
+                    from_key = ptsKeys[0];
                     break;
                 case 1:
                     for(j = 0; j < nquad1; ++j)
@@ -834,7 +837,7 @@ namespace Nektar
                             normals[i*nquad1+j] = (df[2*i][nquad0*j + nquad0-1] +  df[2*i+1][nquad0*j + nquad0-1])*edgejac[j];
                         }
                     }
-                    from_key = geomFactors->GetPointsKey(1);
+                    from_key = ptsKeys[1];
                     break;
                 case 2:
                     for(j = 0; j < nquad1; ++j)
@@ -845,7 +848,7 @@ namespace Nektar
                             normals[i*nquad1+j] = -df[2*i][nquad0*j]*edgejac[j];
                         }
                     }
-                    from_key = geomFactors->GetPointsKey(1);
+                    from_key = ptsKeys[1];
                     break;
                 default:
                     ASSERTL0(false,"edge is out of range (edge < 3)");
@@ -1290,7 +1293,7 @@ namespace Nektar
                     else
                     {
                         NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
-                        Array<TwoD, const NekDouble> df = m_metricinfo->GetDerivFactors();
+                        Array<TwoD, const NekDouble> df = m_metricinfo->GetDerivFactors(ptsKeys);
                         int dir = 0;
                         switch(mkey.GetMatrixType())
                         {
@@ -1349,7 +1352,8 @@ namespace Nektar
                         DNekMat &lap11 = *GetStdMatrix(lap11key);
 
                         NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
-                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+                        Array<TwoD, const NekDouble> gmat =
+                                                m_metricinfo->GetGmat(ptsKeys);
 
                         int rows = lap00.GetRows();
                         int cols = lap00.GetColumns();
@@ -1435,7 +1439,7 @@ namespace Nektar
                     {
                         NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
 
-                        const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
+                        const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors(ptsKeys);
                         int dir = 0;
 
                         switch(mkey.GetMatrixType())
@@ -1806,7 +1810,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
             const unsigned int nquad0 = m_base[0]->GetNumPoints();
             const unsigned int nquad1 = m_base[1]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& df   = m_metricinfo->GetDerivFactors();
+            const Array<TwoD, const NekDouble>& df   =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             for(i = 0; i < nquad1; i++)
             {

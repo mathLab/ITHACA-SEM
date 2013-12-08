@@ -168,7 +168,8 @@ namespace Nektar
                       Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetDerivFactors();
+            Array<TwoD, const NekDouble> gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             Array<OneD,NekDouble> diff(nquad0);
 
             //StdExpansion1D::PhysTensorDeriv(inarray,diff);
@@ -268,7 +269,8 @@ namespace Nektar
                       Array<OneD, NekDouble>& out_dn)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetDerivFactors();
+            Array<TwoD, const NekDouble> gmat =
+                            m_metricinfo->GetDerivFactors(GetPointsKeys());
             int     coordim  = m_geom->GetCoordim();
             Array<OneD, NekDouble> out_dn_tmp(nquad0,0.0);
             switch(coordim)
@@ -562,7 +564,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat =
-                                            m_metricinfo->GetDerivFactors();
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD, NekDouble> tmp1(nquad);
 
@@ -1104,7 +1106,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &gmat =
-                                            geomFactors->GetDerivFactors();
+                                geomFactors->GetDerivFactors(GetPointsKeys());
             int nqe = m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
 
@@ -1168,7 +1170,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat =
-                                                m_metricinfo->GetDerivFactors();
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD,NekDouble> physValues(nquad);
             Array<OneD,NekDouble> dPhysValuesdx(nquad);
@@ -1274,7 +1276,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat =
-                                                m_metricinfo->GetDerivFactors();
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             const NekDouble lambda =
                 mkey.GetConstFactor(StdRegions::eFactorLambda);
 
@@ -1498,7 +1500,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                                             mkey.GetShapeType(), *this);  
 
                         DNekMatSharedPtr WeakDerivStd = GetStdMatrix(deriv0key);
-                        fac = m_metricinfo->GetDerivFactors()[dir][0]*
+                        fac = m_metricinfo->GetDerivFactors(ptsKeys)[dir][0]*
                             m_metricinfo->GetJac(ptsKeys)[0];
 
                         returnval = MemoryManager<DNekScalMat>::
@@ -1519,8 +1521,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         fac = 0.0;
                         for (int i = 0; i < coordim; ++i)
                         {
-                            fac += m_metricinfo->GetDerivFactors()[i][0]*
-                                   m_metricinfo->GetDerivFactors()[i][0];
+                            fac += m_metricinfo->GetDerivFactors(ptsKeys)[i][0]*
+                                   m_metricinfo->GetDerivFactors(ptsKeys)[i][0];
                         }
                         fac *= m_metricinfo->GetJac(ptsKeys)[0];
                         goto UseStdRegionsMatrix;

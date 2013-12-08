@@ -110,8 +110,7 @@ namespace Nektar
             virtual void      v_FillGeom();
             virtual NekDouble v_GetCoord(const int i, 
                                          const Array<OneD, const NekDouble> &Lcoord);
-            virtual void      v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+            virtual void      v_GenGeomFactors();
 
             //---------------------------------------
             // Helper functions

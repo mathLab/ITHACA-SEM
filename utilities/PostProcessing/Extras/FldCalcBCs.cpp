@@ -890,7 +890,8 @@ cout<<"layer region="<<Ireg<<endl;
                      	           ((*elementreg)[0]->m_Element))->GetEorient((*elementreg)[0]
                      	           	   ->m_EdgeIndx);
 
-                     gmat = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetGmat();
+                     gmat = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetGmat(
+                             pressure->GetPlane(0)->GetExp(elmtidreg)->GetPointsKeys());
                      int nq2D = nqedge*nqedge;                     	           
                      
 		     //	setup map between global and local ids
@@ -1021,7 +1022,8 @@ cout<<"layer region="<<Ireg<<endl;
 
 		     //extract metrics factors...
                      //int nq2D= nqedge*nqedge;
-                     deriv = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetDeriv();
+                     LibUtilities::PointsKeyVector ptsKeys = pressure->GetPlane(0)->GetExp(elmtidreg)->GetPointsKeys();
+                     deriv = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetDeriv(ptsKeys);
 
                      Array<OneD, NekDouble> derivelmt(nq2D);
                      int offsetregphys = Ilayer->GetPlane(0)->GetPhys_Offset(k);   

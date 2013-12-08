@@ -43,7 +43,7 @@ namespace Nektar
     {
         Expansion::Expansion(SpatialDomains::GeometrySharedPtr pGeom) :
                     m_geom(pGeom),
-                    m_metricinfo(m_geom->GetGeomFactors(m_base))
+                    m_metricinfo(m_geom->GetGeomFactors())
         {
             if (!m_metricinfo)
             {

@@ -259,7 +259,7 @@ namespace Nektar
                                 ->GetMetricInfo()->GetJac(ptsKeys);
                         gmat = LocalRegions::Expansion2D::FromStdExp(
                             pFields[0]->GetExp(n))->GetGeom2D()
-                                ->GetMetricInfo()->GetDerivFactors();
+                                ->GetMetricInfo()->GetDerivFactors(ptsKeys);
                         
                         if (LocalRegions::Expansion2D::FromStdExp(
                                 pFields[0]->GetExp(n))->GetGeom2D()

@@ -142,8 +142,7 @@ namespace Nektar
                         const int i,
                         const Array<OneD,const NekDouble> &Lcoord);
 
-                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors();
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
 

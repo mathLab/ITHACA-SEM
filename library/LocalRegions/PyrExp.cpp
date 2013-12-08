@@ -142,7 +142,8 @@ namespace Nektar
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
-            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetDerivFactors();
+            Array<TwoD, const NekDouble> gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             Array<OneD,NekDouble> diff0(nquad0*nquad1*nquad2);
             Array<OneD,NekDouble> diff1(nquad0*nquad1*nquad2);
             Array<OneD,NekDouble> diff2(nquad0*nquad1*nquad2);
@@ -620,7 +621,8 @@ namespace Nektar
 
 
                         NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
-                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+                        Array<TwoD, const NekDouble> gmat =
+                                            m_metricinfo->GetGmat(ptsKeys);
 
                         int rows = lap00.GetRows();
                         int cols = lap00.GetColumns();

@@ -94,7 +94,7 @@ namespace Nektar
                 
                 // Generate geometric factors.
                 SpatialDomains::GeomFactorsSharedPtr gfac = 
-                    geom->GetGeomFactors(basis);
+                    geom->GetGeomFactors();
                 
                 // Get the Jacobian and, if it is negative, print a warning
                 // message.

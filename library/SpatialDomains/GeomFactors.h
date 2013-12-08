@@ -107,7 +107,7 @@ namespace Nektar
                 inline GeomType GetGtype();
 
                 /// Return the Jacobian of the mapping.
-                const Array<OneD, const NekDouble> GetJac(
+                SPATIAL_DOMAINS_EXPORT const Array<OneD, const NekDouble> GetJac(
                         const LibUtilities::PointsKeyVector &keyTgt);
 
                 /// Return the Laplacian coefficients \f$g_{ij}\f$.
@@ -115,7 +115,7 @@ namespace Nektar
                 {
                     return GetGmat(m_pointsKey);
                 }
-                const Array<TwoD, const NekDouble> GetGmat(
+                SPATIAL_DOMAINS_EXPORT const Array<TwoD, const NekDouble> GetGmat(
                         const LibUtilities::PointsKeyVector &keyTgt) const;
 
                 /// Return the derivative of the mapping with respect to the
@@ -125,7 +125,7 @@ namespace Nektar
                 {
                     return GetDeriv(m_pointsKey);
                 }
-                DerivStorage GetDeriv(const LibUtilities::PointsKeyVector &tpoints) const;
+                SPATIAL_DOMAINS_EXPORT DerivStorage GetDeriv(const LibUtilities::PointsKeyVector &tpoints) const;
 
                 /// Return the derivative of the reference coordinates with respect
                 /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
@@ -133,7 +133,7 @@ namespace Nektar
                 {
                     return GetDerivFactors(m_pointsKey);
                 }
-                const Array<TwoD, const NekDouble> GetDerivFactors(
+                SPATIAL_DOMAINS_EXPORT const Array<TwoD, const NekDouble> GetDerivFactors(
                         const LibUtilities::PointsKeyVector &keyTgt);
 
                 /// Determine if element is valid and not self-intersecting.

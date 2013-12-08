@@ -107,10 +107,6 @@ namespace Nektar
                 inline GeomType GetGtype();
 
                 /// Return the Jacobian of the mapping.
-                const Array<OneD, const NekDouble> GetJac()
-                {
-                    return GetJac(m_pointsKey);
-                }
                 const Array<OneD, const NekDouble> GetJac(
                         const LibUtilities::PointsKeyVector &keyTgt);
 

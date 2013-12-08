@@ -965,7 +965,7 @@ cout<<"layer region="<<Ireg<<endl;
                      Array<OneD, NekDouble> jacedge (nqedge);
                      Array<OneD, NekDouble> Pre_edge (nqedge);                     
                      Array<OneD, NekDouble> dPre_edge (nqedge);
-                     jacedge = Ilayer->GetPlane(0)->GetExp(k)->GetMetricInfo()->GetJac();
+                     jacedge = Ilayer->GetPlane(0)->GetExp(k)->GetMetricInfo()->GetJac(Ilayer->GetPlane(0)->GetExp(k)->GetPointsKeys());
 
 
                      //check if the metrix is the same for streak and Ilayer obj

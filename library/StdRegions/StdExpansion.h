@@ -1457,6 +1457,15 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
+            const LibUtilities::PointsKeyVector GetPointsKeys() const
+            {
+                LibUtilities::PointsKeyVector p;
+                for (int i = 0; i < m_base.num_elements(); ++i)
+                {
+                    p.push_back(m_base[i]->GetPointsKey());
+                }
+                return p;
+            }
 
             STD_REGIONS_EXPORT Array<OneD, unsigned int> 
                 GetEdgeInverseBoundaryMap(int eid)

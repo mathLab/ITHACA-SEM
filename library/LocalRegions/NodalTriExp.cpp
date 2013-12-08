@@ -99,7 +99,7 @@ namespace Nektar
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             NekDouble ival;
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
             
@@ -702,6 +702,7 @@ namespace Nektar
         DNekScalMatSharedPtr NodalTriExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
 
             ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
@@ -719,7 +720,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
@@ -739,7 +740,7 @@ namespace Nektar
                     }
                     else
                     {                       
-                        NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
+                        NekDouble fac = 1.0/(m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
                     }
@@ -768,7 +769,7 @@ namespace Nektar
                         DNekMat &lap01 = *GetStdMatrix(lap01key);
                         DNekMat &lap11 = *GetStdMatrix(lap11key);
 
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
 
                         int rows = lap00.GetRows();
@@ -954,7 +955,7 @@ namespace Nektar
             const SpatialDomains::GeomType type = geomFactors->GetGtype();
 
             const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors();
-            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
+            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(GetPointsKeys());
             int nqe = m_base[0]->GetNumPoints();
             int dim = GetCoordim();
 

@@ -117,7 +117,7 @@ namespace Nektar
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             NekDouble retrunVal;
             Array<OneD,NekDouble> tmp(nquad0*nquad1*nquad2);
 
@@ -879,7 +879,7 @@ namespace Nektar
                 GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType            type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors();
-            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
+            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(GetPointsKeys());
 
             int nq = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
@@ -1192,6 +1192,7 @@ namespace Nektar
         DNekScalMatSharedPtr TetExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
 
             ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
@@ -1208,7 +1209,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
@@ -1227,7 +1228,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
+                        NekDouble fac = 1.0/(m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
                     }
@@ -1248,7 +1249,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         Array<TwoD, const NekDouble> df
                                                 = m_metricinfo->GetDerivFactors();
                         int dir = 0;
@@ -1326,7 +1327,7 @@ namespace Nektar
                         DNekMat &lap12 = *GetStdMatrix(lap12key);
                         DNekMat &lap22 = *GetStdMatrix(lap22key);
 
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         Array<TwoD, const NekDouble> gmat
                                                     = m_metricinfo->GetGmat();
 
@@ -1377,7 +1378,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }

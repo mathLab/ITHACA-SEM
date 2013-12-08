@@ -117,7 +117,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>&  inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             NekDouble  ival;
             Array<OneD,NekDouble> tmp(nquad0);
 
@@ -241,7 +241,7 @@ namespace Nektar
                     PhysTensorDeriv(inarray,diff);
 
                     //get dS/de= (Jac)^-1
-                    Array<OneD, NekDouble> Jac = m_metricinfo->GetJac();
+                    Array<OneD, NekDouble> Jac = m_metricinfo->GetJac(GetPointsKeys());
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                          //calculate the derivative as (dU/de)*(Jac)^-1
@@ -538,7 +538,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                       int coll_check)
         {
             int   nquad0 = m_base[0]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             Array<OneD,NekDouble> tmp(nquad0);
 
 
@@ -1414,6 +1414,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             DNekScalMatSharedPtr returnval;
             NekDouble fac;
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
 
             ASSERTL2(m_metricinfo->GetGtype() != 
                      SpatialDomains::eNoGeomType,
@@ -1431,7 +1432,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     }
                     else
                     {
-                        fac = (m_metricinfo->GetJac())[0];
+                        fac = (m_metricinfo->GetJac(ptsKeys))[0];
                         goto UseStdRegionsMatrix;
                     }
                 }
@@ -1452,7 +1453,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     }
                     else
                     {
-                        fac = 1.0/(m_metricinfo->GetJac())[0];
+                        fac = 1.0/(m_metricinfo->GetJac(ptsKeys))[0];
                         goto UseStdRegionsMatrix;
                     }
                 }
@@ -1498,7 +1499,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
                         DNekMatSharedPtr WeakDerivStd = GetStdMatrix(deriv0key);
                         fac = m_metricinfo->GetDerivFactors()[dir][0]*
-                            m_metricinfo->GetJac()[0];
+                            m_metricinfo->GetJac(ptsKeys)[0];
 
                         returnval = MemoryManager<DNekScalMat>::
                                             AllocateSharedPtr(fac,WeakDerivStd);
@@ -1521,7 +1522,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                             fac += m_metricinfo->GetDerivFactors()[i][0]*
                                    m_metricinfo->GetDerivFactors()[i][0];
                         }
-                        fac *= m_metricinfo->GetJac()[0];
+                        fac *= m_metricinfo->GetJac(ptsKeys)[0];
                         goto UseStdRegionsMatrix;
                     }
                 }

@@ -82,13 +82,11 @@ namespace Nektar
          */
 
         /**
-         * This constructor is protected since only dimension-specific
-         * GeomFactors classes should be instantiated externally.
          * @param   gtype       Specified whether the geometry is regular or
          *                      deformed.
-         * @param   expdim      Specifies the dimension of the expansion.
          * @param   coordim     Specifies the dimension of the coordinate
-         *                      system
+         *                      system.
+         * @param   Coords      Coordinate maps of the element.
          */
         GeomFactors::GeomFactors(const GeomType gtype,
                 const int coordim,
@@ -128,8 +126,7 @@ namespace Nektar
 
         /**
          * Member data equivalence is tested in the following order: shape type,
-         * expansion dimension, coordinate dimension, points-keys, determinant
-         * of Jacobian matrix, Laplacian coefficients.
+         * expansion dimension, coordinate dimension and coordinates.
          */
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs)
         {
@@ -148,10 +145,19 @@ namespace Nektar
                 return false;
             }
 
+            const Array<OneD, const NekDouble> jac_lhs =
+                            lhs.ComputeJac(lhs.m_coords[0]->GetPointsKeys());
+            const Array<OneD, const NekDouble> jac_rhs =
+                            rhs.ComputeJac(rhs.m_coords[0]->GetPointsKeys());
+            if(!(jac_lhs == jac_rhs))
+            {
+                return false;
+            }
+
             return true;
         }
 
-        DerivStorage GeomFactors::GetDeriv(const LibUtilities::PointsKeyVector &tpoints) const
+        DerivStorage GeomFactors::ComputeDeriv(const LibUtilities::PointsKeyVector &tpoints) const
         {
             ASSERTL1(tpoints.size() == m_expDim,
                      "Dimension of target basis does not match expansion basis.");
@@ -233,8 +239,8 @@ namespace Nektar
          *                      mapping at the quadrature points of the element.
          * @see                 GeomType
          */
-        const Array<OneD, const NekDouble> GeomFactors::GetJac(
-                const LibUtilities::PointsKeyVector &keyTgt)
+        Array<OneD, NekDouble> GeomFactors::ComputeJac(
+                const LibUtilities::PointsKeyVector &keyTgt) const
         {
             std::map<LibUtilities::PointsKeyVector, Array<OneD, NekDouble> >::const_iterator x;
             if ((x=m_jacCache.find(keyTgt)) != m_jacCache.end())
@@ -252,7 +258,7 @@ namespace Nektar
             }
 
             // Get derivative at geometry points
-            DerivStorage deriv = GetDeriv(keyTgt);
+            DerivStorage deriv = ComputeDeriv(keyTgt);
 
             Array<TwoD, NekDouble> tmp (m_expDim*m_expDim, ptsTgt, 0.0);
             Array<TwoD, NekDouble> gmat(m_expDim*m_expDim, ptsTgt, 0.0);
@@ -286,8 +292,6 @@ namespace Nektar
             // Compute the Jacobian = sqrt(g)
             Vmath::Vsqrt(ptsTgt, &jac[0], 1, &jac[0], 1);
 
-            m_jacCache[keyTgt] = jac;
-
             return jac;
         }
 
@@ -314,7 +318,7 @@ namespace Nektar
          * @returns             Two-dimensional array containing the inverse
          *                      metric tensor of the coordinate mapping.
          */
-        const Array<TwoD, const NekDouble> GeomFactors::GetGmat(
+        Array<TwoD, NekDouble> GeomFactors::ComputeGmat(
                 const LibUtilities::PointsKeyVector &keyTgt) const
         {
             int i = 0, j = 0, k = 0, l = 0;
@@ -327,7 +331,7 @@ namespace Nektar
             }
 
             // Get derivative at geometry points
-            DerivStorage deriv = GetDeriv(keyTgt);
+            DerivStorage deriv = ComputeDeriv(keyTgt);
 
             Array<TwoD, NekDouble> tmp (m_expDim*m_expDim, ptsTgt, 0.0);
             Array<TwoD, NekDouble> gmat(m_expDim*m_expDim, ptsTgt, 0.0);
@@ -368,8 +372,8 @@ namespace Nektar
 
 
         /// Return the derivative factors matrix.
-        const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(
-                const LibUtilities::PointsKeyVector& keyTgt)
+        Array<TwoD, NekDouble> GeomFactors::ComputeDerivFactors(
+                const LibUtilities::PointsKeyVector& keyTgt) const
         {
             std::map<LibUtilities::PointsKeyVector, Array<TwoD, NekDouble> >::const_iterator x;
             if ((x=m_derivFactorCache.find(keyTgt)) != m_derivFactorCache.end())
@@ -387,7 +391,7 @@ namespace Nektar
             }
 
             // Get derivative at geometry points
-            DerivStorage deriv = GetDeriv(keyTgt);
+            DerivStorage deriv = ComputeDeriv(keyTgt);
 
             Array<TwoD, NekDouble> tmp (m_expDim*m_expDim, ptsTgt, 0.0);
             Array<TwoD, NekDouble> gmat(m_expDim*m_expDim, ptsTgt, 0.0);
@@ -441,8 +445,6 @@ namespace Nektar
                     }
                 }
             }
-
-            m_derivFactorCache[keyTgt] = factors;
 
             return factors;
         }

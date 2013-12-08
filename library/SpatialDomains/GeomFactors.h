@@ -59,6 +59,7 @@ namespace Nektar
 
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
 
+        /// Equivalence test for GeomFactors objects
         SPATIAL_DOMAINS_EXPORT bool operator==(const GeomFactors &lhs,
                                                const GeomFactors &rhs);
 
@@ -101,26 +102,27 @@ namespace Nektar
                 /// Destructor.
                 SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors();
 
-                /// Returns whether the geometry is regular or deformed.
-                inline GeomType GetGtype();
-
-                /// Return the Jacobian of the mapping.
-                SPATIAL_DOMAINS_EXPORT const Array<OneD, const NekDouble> GetJac(
-                        const LibUtilities::PointsKeyVector &keyTgt);
-
-                /// Return the Laplacian coefficients \f$g_{ij}\f$.
-                SPATIAL_DOMAINS_EXPORT const Array<TwoD, const NekDouble> GetGmat(
-                        const LibUtilities::PointsKeyVector &keyTgt) const;
-
                 /// Return the derivative of the mapping with respect to the
                 /// reference coordinates,
                 /// \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
-                SPATIAL_DOMAINS_EXPORT DerivStorage GetDeriv(const LibUtilities::PointsKeyVector &tpoints) const;
+                inline DerivStorage GetDeriv(
+                        const LibUtilities::PointsKeyVector &tpoints);
+
+                /// Return the Jacobian of the mapping and cache the result.
+                inline const Array<OneD, const NekDouble> GetJac(
+                        const LibUtilities::PointsKeyVector &keyTgt);
+
+                /// Return the Laplacian coefficients \f$g_{ij}\f$.
+                inline const Array<TwoD, const NekDouble> GetGmat(
+                        const LibUtilities::PointsKeyVector &keyTgt);
 
                 /// Return the derivative of the reference coordinates with respect
                 /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
-                SPATIAL_DOMAINS_EXPORT const Array<TwoD, const NekDouble> GetDerivFactors(
+                inline const Array<TwoD, const NekDouble> GetDerivFactors(
                         const LibUtilities::PointsKeyVector &keyTgt);
+
+                /// Returns whether the geometry is regular or deformed.
+                inline GeomType GetGtype();
 
                 /// Determine if element is valid and not self-intersecting.
                 inline bool IsValid() const;
@@ -128,10 +130,8 @@ namespace Nektar
                 /// Return the number of dimensions of the coordinate system.
                 inline int GetCoordim() const;
 
-                /// Computes a hash of this GeomFactors element, based on the
-                /// type, expansion/co-ordinate dimensions, metric, Jacobian and
-                /// the geometric factors themselves.
-                inline size_t GetHash() const;
+                /// Computes a hash of this GeomFactors element.
+                inline size_t GetHash();
 
             protected:
                 /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
@@ -156,15 +156,33 @@ namespace Nektar
                 /// Tests if the element is valid and not self-intersecting.
                 void CheckIfValid();
 
-                void Interp(
-                            const LibUtilities::PointsKeyVector &map_points,
-                            const Array<OneD, const NekDouble> &src,
-                            const LibUtilities::PointsKeyVector &tpoints,
-                            Array<OneD, NekDouble> &tgt) const;
+                DerivStorage ComputeDeriv(
+                        const LibUtilities::PointsKeyVector &tpoints) const;
 
+                /// Return the Jacobian of the mapping and cache the result.
+                Array<OneD, NekDouble> ComputeJac(
+                        const LibUtilities::PointsKeyVector &keyTgt) const;
+
+                Array<TwoD, NekDouble> ComputeGmat(
+                        const LibUtilities::PointsKeyVector &keyTgt) const;
+
+                /// Return the derivative of the reference coordinates with respect
+                /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
+                Array<TwoD, NekDouble> ComputeDerivFactors(
+                        const LibUtilities::PointsKeyVector &keyTgt) const;
+
+                /// Perform interpolation of data between two point
+                /// distributions.
+                void Interp(
+                        const LibUtilities::PointsKeyVector &map_points,
+                        const Array<OneD, const NekDouble> &src,
+                        const LibUtilities::PointsKeyVector &tpoints,
+                        Array<OneD, NekDouble> &tgt) const;
+
+                /// Compute the transpose of the cofactors matrix
                 void Adjoint(
-                            const Array<TwoD, const NekDouble>& src,
-                            Array<TwoD, NekDouble>& tgt) const;
+                        const Array<TwoD, const NekDouble>& src,
+                        Array<TwoD, NekDouble>& tgt) const;
         };
 
 
@@ -179,7 +197,57 @@ namespace Nektar
             }
         };
 
+
         /**
+         *
+         */
+        inline DerivStorage GeomFactors::GetDeriv(
+                const LibUtilities::PointsKeyVector &tpoints)
+        {
+            return ComputeDeriv(tpoints);
+        }
+
+
+        /**
+         *
+         */
+        inline const Array<OneD, const NekDouble> GeomFactors::GetJac(
+                const LibUtilities::PointsKeyVector &keyTgt)
+        {
+            m_jacCache[keyTgt] = ComputeJac(keyTgt);
+
+            return m_jacCache[keyTgt];
+
+        }
+
+
+        /**
+         *
+         */
+        inline const Array<TwoD, const NekDouble> GeomFactors::GetGmat(
+                const LibUtilities::PointsKeyVector &keyTgt)
+        {
+            return ComputeGmat(keyTgt);
+        }
+
+
+        /**
+         *
+         */
+        inline const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(
+                const LibUtilities::PointsKeyVector &keyTgt)
+        {
+            m_derivFactorCache[keyTgt] = ComputeDerivFactors(keyTgt);
+
+            return m_derivFactorCache[keyTgt];
+
+        }
+
+
+        /**
+         * A geometric shape is considered regular if it has constant geometric
+         * information, and deformed if this information changes throughout the
+         * shape.
          * @returns             The type of geometry.
          * @see GeomType
          */
@@ -189,27 +257,47 @@ namespace Nektar
         }
 
 
-        /// Return the number of dimensions of the coordinate system.
+        /**
+         * This is greater than or equal to the expansion dimension.
+         * @returns             The dimension of the coordinate system.
+         */
         inline int GeomFactors::GetCoordim() const
         {
             return m_coordDim;
         }
 
-        /// Return true if the element is valid (Jacobian is positive)
+        /**
+         * The validity test is performed by testing if the Jacobian is
+         * negative at any point in the shape.
+         * @returns             True if the element is not self-intersecting.
+         */
         inline bool GeomFactors::IsValid() const
         {
             return m_valid;
         }
 
-        /// Computes a hash of this GeomFactors element, based on the
-        /// type, expansion/co-ordinate dimensions, metric, Jacobian and
-        /// the geometric factors themselves.
-        inline size_t GeomFactors::GetHash() const
+        /**
+         * The hash is computed from the geometry type, expansion dimension,
+         * coordinate dimension and Jacobian.
+         * @returns             Hash of this GeomFactors object.
+         */
+        inline size_t GeomFactors::GetHash()
         {
+            LibUtilities::PointsKeyVector ptsKeys = m_coords[0]->GetPointsKeys();
+            const Array<OneD, const NekDouble> jac = GetJac(ptsKeys);
+
             size_t hash = 0;
             boost::hash_combine(hash, (int)m_type);
             boost::hash_combine(hash, m_expDim);
             boost::hash_combine(hash, m_coordDim);
+            if (m_type == eDeformed)
+            {
+                boost::hash_range(hash, jac.begin(), jac.end());
+            }
+            else
+            {
+                boost::hash_combine(hash, jac[0]);
+            }
             return hash;
         }
 

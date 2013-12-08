@@ -217,6 +217,8 @@ namespace Nektar
         LIB_UTILITIES_EXPORT bool operator<(const PointsKey &lhs, const PointsKey &rhs);
         LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const PointsKey& rhs);
 
+        typedef std::vector<PointsKey> PointsKeyVector;
+
         /// Stores a set of points of datatype DataT, defined by a PointKey.
         template<typename DataT>
         class Points

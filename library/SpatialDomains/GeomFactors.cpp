@@ -167,9 +167,9 @@ namespace Nektar
             return true;
         }
 
-        DerivStorage GeomFactors::GetDeriv(const PointsKeyArray &tpoints) const
+        DerivStorage GeomFactors::GetDeriv(const LibUtilities::PointsKeyVector &tpoints) const
         {
-            ASSERTL1(tpoints.num_elements() == m_expDim,
+            ASSERTL1(tpoints.size() == m_expDim,
                      "Dimension of target basis does not match expansion basis.");
 
             int i = 0, j = 0;
@@ -177,7 +177,7 @@ namespace Nektar
             int nqtot_tbasis   = 1;
             DerivStorage deriv = DerivStorage(m_expDim);
             DerivStorage d_map = DerivStorage(m_expDim);
-            PointsKeyArray map_points(m_expDim);
+            LibUtilities::PointsKeyVector map_points(m_expDim);
 
             // Allocate storage and compute number of points
             for (i = 0; i < m_expDim; ++i)
@@ -250,8 +250,14 @@ namespace Nektar
          * @see                 GeomType
          */
         const Array<OneD, const NekDouble> GeomFactors::GetJac(
-                const PointsKeyArray &keyTgt) const
+                const LibUtilities::PointsKeyVector &keyTgt)
         {
+            std::map<LibUtilities::PointsKeyVector, Array<OneD, NekDouble> >::const_iterator x;
+            if ((x=m_jacCache.find(keyTgt)) != m_jacCache.end())
+            {
+                return x->second;
+            }
+
             int i = 0, j = 0, k = 0, l = 0;
             int ptsTgt   = 1;
 
@@ -296,6 +302,8 @@ namespace Nektar
             // Compute the Jacobian = sqrt(g)
             Vmath::Vsqrt(ptsTgt, &jac[0], 1, &jac[0], 1);
 
+            m_jacCache[keyTgt] = jac;
+
             return jac;
         }
 
@@ -323,7 +331,7 @@ namespace Nektar
          *                      metric tensor of the coordinate mapping.
          */
         const Array<TwoD, const NekDouble> GeomFactors::GetGmat(
-                const PointsKeyArray &keyTgt) const
+                const LibUtilities::PointsKeyVector &keyTgt) const
         {
             int i = 0, j = 0, k = 0, l = 0;
             int ptsTgt   = 1;
@@ -377,9 +385,9 @@ namespace Nektar
 
         /// Return the derivative factors matrix.
         const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(
-                const PointsKeyArray& keyTgt)
+                const LibUtilities::PointsKeyVector& keyTgt)
         {
-            std::map<PointsKeyArray, Array<TwoD, NekDouble> >::const_iterator x;
+            std::map<LibUtilities::PointsKeyVector, Array<TwoD, NekDouble> >::const_iterator x;
             if ((x=m_derivFactorCache.find(keyTgt)) != m_derivFactorCache.end())
             {
                 return x->second;
@@ -472,7 +480,7 @@ namespace Nektar
                         return;
                     }
 
-                    PointsKeyArray p(m_expDim);
+                    LibUtilities::PointsKeyVector p(m_expDim);
                     p[0] = m_coords[0]->GetBasis(0)->GetPointsKey();
                     p[1] = m_coords[0]->GetBasis(1)->GetPointsKey();
                     int nqtot = p[0].GetNumPoints() *
@@ -495,7 +503,7 @@ namespace Nektar
                 }
                 case 3:
                 {
-                    PointsKeyArray p(m_expDim);
+                    LibUtilities::PointsKeyVector p(m_expDim);
                     p[0] = m_coords[0]->GetBasis(0)->GetPointsKey();
                     p[1] = m_coords[0]->GetBasis(1)->GetPointsKey();
                     p[2] = m_coords[0]->GetBasis(2)->GetPointsKey();
@@ -538,9 +546,9 @@ namespace Nektar
         }
 
         void GeomFactors::Interp(
-                    const PointsKeyArray &map_points,
+                    const LibUtilities::PointsKeyVector &map_points,
                     const Array<OneD, const NekDouble> &src,
-                    const PointsKeyArray &tpoints,
+                    const LibUtilities::PointsKeyVector &tpoints,
                     Array<OneD, NekDouble> &tgt) const
         {
             switch (m_expDim)

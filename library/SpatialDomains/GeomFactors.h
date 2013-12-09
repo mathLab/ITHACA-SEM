@@ -199,7 +199,10 @@ namespace Nektar
 
 
         /**
-         *
+         * @param   tpoints     Target point distributions.
+         * @returns             Derivative evaluated at target point
+         *                      distributions.
+         * @see                 GeomFactors::ComputeDeriv
          */
         inline DerivStorage GeomFactors::GetDeriv(
                 const LibUtilities::PointsKeyVector &tpoints)
@@ -209,7 +212,10 @@ namespace Nektar
 
 
         /**
-         *
+         * @param   keyTgt      Target point distributions.
+         * @returns             Jacobian evaluated at target point
+         *                      distributions.
+         * @see                 GeomFactors::ComputeJac
          */
         inline const Array<OneD, const NekDouble> GeomFactors::GetJac(
                 const LibUtilities::PointsKeyVector &keyTgt)
@@ -222,7 +228,10 @@ namespace Nektar
 
 
         /**
-         *
+         * @param   keyTgt      Target point distributions.
+         * @returns             Inverse metric tensor evaluated at target point
+         *                      distributions.
+         * @see                 GeomFactors::ComputeGmat
          */
         inline const Array<TwoD, const NekDouble> GeomFactors::GetGmat(
                 const LibUtilities::PointsKeyVector &keyTgt)
@@ -232,7 +241,10 @@ namespace Nektar
 
 
         /**
-         *
+         * @param   keyTgt      Target point distributions.
+         * @returns             Derivative factors evaluated at target point
+         *                      distributions.
+         * @see                 GeomFactors::ComputeDerivFactors
          */
         inline const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(
                 const LibUtilities::PointsKeyVector &keyTgt)

@@ -77,8 +77,6 @@ namespace Nektar
          * -# Compute the square of the Jacobian determinant \f$g=|\mathbf{g}|\f$.
          * -# Compute the inverse metric tensor \f$g^{ij}\f$.
          * -# Compute the terms \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
-         *
-         * @see GeomFactors1D, GeomFactors2D, GeomFactors3D
          */
 
         /**
@@ -157,10 +155,21 @@ namespace Nektar
             return true;
         }
 
-        DerivStorage GeomFactors::ComputeDeriv(const LibUtilities::PointsKeyVector &tpoints) const
+
+        /**
+         * Derivatives are computed at the geometry point distributions and
+         * interpolated to the target point distributions.
+         *
+         * @param       tpoints     Target point distributions.
+         * @returns                 Derivative of coordinate map evaluated at
+         *                          target point distributions.
+         */
+        DerivStorage GeomFactors::ComputeDeriv(
+                const LibUtilities::PointsKeyVector &tpoints) const
         {
             ASSERTL1(tpoints.size() == m_expDim,
-                     "Dimension of target basis does not match expansion basis.");
+                     "Dimension of target basis does not match expansion "
+                     "basis.");
 
             int i = 0, j = 0;
             int nqtot_map      = 1;
@@ -371,7 +380,11 @@ namespace Nektar
         }
 
 
-        /// Return the derivative factors matrix.
+        /**
+         * @param   keyTgt      Target point distributions.
+         * @returns             Derivative factors evaluated at the target
+         *                      point distributions.
+         */
         Array<TwoD, NekDouble> GeomFactors::ComputeDerivFactors(
                 const LibUtilities::PointsKeyVector& keyTgt) const
         {
@@ -449,6 +462,10 @@ namespace Nektar
             return factors;
         }
 
+
+        /**
+         *
+         */
         void GeomFactors::CheckIfValid()
         {
             switch (m_expDim)
@@ -531,6 +548,13 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * @param   map_points  Source data point distribution.
+         * @param   src         Source data to be interpolated.
+         * @param   tpoints     Target data point distribution.
+         * @param   tgt         Target data storage.
+         */
         void GeomFactors::Interp(
                     const LibUtilities::PointsKeyVector &map_points,
                     const Array<OneD, const NekDouble> &src,
@@ -547,13 +571,22 @@ namespace Nektar
                                            tpoints[0], tpoints[1], tgt);
                     break;
                 case 3:
-                    LibUtilities::Interp3D(map_points[0], map_points[1], map_points[2],
-                                           src,
-                                           tpoints[0], tpoints[1], tpoints[2], tgt);
+                    LibUtilities::Interp3D(map_points[0], map_points[1],
+                                           map_points[2], src,
+                                           tpoints[0],    tpoints[1],
+                                           tpoints[2],    tgt);
                     break;
             }
         }
 
+
+        /**
+         * Input and output arrays are of dimension
+         * (m_expDim*m_expDim) x num_points. The first index of the input and
+         * output arrays are ordered row-by-row.
+         * @param   src         Input data array.
+         * @param   tgt         Storage for adjoint matrix data.
+         */
         void GeomFactors::Adjoint(
                     const Array<TwoD, const NekDouble>& src,
                     Array<TwoD, NekDouble>& tgt) const

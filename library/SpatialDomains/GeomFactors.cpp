@@ -251,19 +251,16 @@ namespace Nektar
         Array<OneD, NekDouble> GeomFactors::ComputeJac(
                 const LibUtilities::PointsKeyVector &keyTgt) const
         {
-            std::map<LibUtilities::PointsKeyVector, Array<OneD, NekDouble> >::const_iterator x;
-            if ((x=m_jacCache.find(keyTgt)) != m_jacCache.end())
-            {
-                return x->second;
-            }
-
             int i = 0, j = 0, k = 0, l = 0;
             int ptsTgt   = 1;
 
-            // Allocate storage and compute number of points
-            for (i = 0; i < m_expDim; ++i)
+            if (m_type == eDeformed)
             {
-                ptsTgt   *= keyTgt[i].GetNumPoints();
+                // Allocate storage and compute number of points
+                for (i = 0; i < m_expDim; ++i)
+                {
+                    ptsTgt   *= keyTgt[i].GetNumPoints();
+                }
             }
 
             // Get derivative at geometry points
@@ -333,10 +330,13 @@ namespace Nektar
             int i = 0, j = 0, k = 0, l = 0;
             int ptsTgt   = 1;
 
-            // Allocate storage and compute number of points
-            for (i = 0; i < m_expDim; ++i)
+            if (m_type == eDeformed)
             {
-                ptsTgt   *= keyTgt[i].GetNumPoints();
+                // Allocate storage and compute number of points
+                for (i = 0; i < m_expDim; ++i)
+                {
+                    ptsTgt   *= keyTgt[i].GetNumPoints();
+                }
             }
 
             // Get derivative at geometry points
@@ -388,19 +388,16 @@ namespace Nektar
         Array<TwoD, NekDouble> GeomFactors::ComputeDerivFactors(
                 const LibUtilities::PointsKeyVector& keyTgt) const
         {
-            std::map<LibUtilities::PointsKeyVector, Array<TwoD, NekDouble> >::const_iterator x;
-            if ((x=m_derivFactorCache.find(keyTgt)) != m_derivFactorCache.end())
-            {
-                return x->second;
-            }
-
             int i = 0, j = 0, k = 0, l = 0;
             int ptsTgt   = 1;
 
-            // Allocate storage and compute number of points
-            for (i = 0; i < m_expDim; ++i)
+            if (m_type == eDeformed)
             {
-                ptsTgt   *= keyTgt[i].GetNumPoints();
+                // Allocate storage and compute number of points
+                for (i = 0; i < m_expDim; ++i)
+                {
+                    ptsTgt   *= keyTgt[i].GetNumPoints();
+                }
             }
 
             // Get derivative at geometry points
@@ -464,87 +461,70 @@ namespace Nektar
 
 
         /**
-         *
+         * Constructs the Jacobian as per Spencer's book p158 and tests if
+         * negative.
          */
         void GeomFactors::CheckIfValid()
         {
+            // Jacobian test only makes sense when expdim = coorddim
+            // If one-dimensional then element is valid.
+            if (m_coordDim != m_expDim || m_expDim == 1)
+            {
+                m_valid = true;
+                return;
+            }
+
+            LibUtilities::PointsKeyVector p(m_expDim);
+            int nqtot = 1;
+            for (int i = 0; i < m_expDim; ++i)
+            {
+                p[i] = m_coords[0]->GetBasis(i)->GetPointsKey();
+                nqtot *= p[i].GetNumPoints();
+            }
+            int pts = (m_type == eRegular || m_type == eMovingRegular)
+                            ? 1 : nqtot;
+            Array<OneD, NekDouble> jac(pts, 0.0);
+
+            DerivStorage deriv = GetDeriv(p);
+
             switch (m_expDim)
             {
-                case 1:
-                {
-                    m_valid = true;
-                    break;
-                }
                 case 2:
                 {
-                    // Jacobian test only makes sense in 2D coordinates
-                    if (GetCoordim() != 2)
-                    {
-                        return;
-                    }
-
-                    LibUtilities::PointsKeyVector p(m_expDim);
-                    p[0] = m_coords[0]->GetBasis(0)->GetPointsKey();
-                    p[1] = m_coords[0]->GetBasis(1)->GetPointsKey();
-                    int nqtot = p[0].GetNumPoints() *
-                                p[1].GetNumPoints();
-                    int pts = (m_type == eRegular || m_type == eMovingRegular)
-                                    ? 1 : nqtot;
-
-                    DerivStorage deriv = GetDeriv(p);
-
-                    Array<OneD, NekDouble> jac(pts, 0.0);
                     Vmath::Vvtvvtm(pts, &deriv[0][0][0], 1, &deriv[1][1][0], 1,
                                         &deriv[1][0][0], 1, &deriv[0][1][0], 1,
                                         &jac[0],           1);
-
-                    if(Vmath::Vmin(pts, &jac[0], 1) < 0)
-                    {
-                        m_valid = false;
-                    }
                     break;
                 }
                 case 3:
                 {
-                    LibUtilities::PointsKeyVector p(m_expDim);
-                    p[0] = m_coords[0]->GetBasis(0)->GetPointsKey();
-                    p[1] = m_coords[0]->GetBasis(1)->GetPointsKey();
-                    p[2] = m_coords[0]->GetBasis(2)->GetPointsKey();
-                    int nqtot = p[0].GetNumPoints() *
-                                p[1].GetNumPoints() *
-                                p[2].GetNumPoints();
-                    int pts = (m_type == eRegular || m_type == eMovingRegular)
-                                    ? 1 : nqtot;
-
-                    Array<OneD, NekDouble> jac(pts, 0.0);
                     Array<OneD, NekDouble> tmp(pts, 0.0);
-                    DerivStorage deriv = GetDeriv(p);
 
-                    // J3D - Spencers book page 158
                     Vmath::Vvtvvtm(pts, &deriv[1][1][0], 1, &deriv[2][2][0], 1,
                                         &deriv[2][1][0], 1, &deriv[1][2][0], 1,
-                                        &tmp[0],           1);
-                    Vmath::Vvtvp  (pts, &deriv[0][0][0], 1, &tmp[0],           1,
-                                        &jac[0],           1, &jac[0],           1);
+                                        &tmp[0],         1);
+                    Vmath::Vvtvp  (pts, &deriv[0][0][0], 1, &tmp[0],         1,
+                                        &jac[0],         1, &jac[0],         1);
 
                     Vmath::Vvtvvtm(pts, &deriv[2][1][0], 1, &deriv[0][2][0], 1,
                                         &deriv[0][1][0], 1, &deriv[2][2][0], 1,
-                                        &tmp[0],           1);
-                    Vmath::Vvtvp  (pts, &deriv[1][0][0], 1, &tmp[0],           1,
-                                        &jac[0],           1, &jac[0],           1);
+                                        &tmp[0],         1);
+                    Vmath::Vvtvp  (pts, &deriv[1][0][0], 1, &tmp[0],         1,
+                                        &jac[0],         1, &jac[0],         1);
 
                     Vmath::Vvtvvtm(pts, &deriv[0][1][0], 1, &deriv[1][2][0], 1,
                                         &deriv[1][1][0], 1, &deriv[0][2][0], 1,
-                                        &tmp[0],           1);
-                    Vmath::Vvtvp  (pts, &deriv[2][0][0], 1, &tmp[0],           1,
-                                        &jac[0],           1, &jac[0],           1);
+                                        &tmp[0],         1);
+                    Vmath::Vvtvp  (pts, &deriv[2][0][0], 1, &tmp[0],         1,
+                                        &jac[0],         1, &jac[0],         1);
 
-                    if (Vmath::Vmin(pts, &jac[0], 1) < 0)
-                    {
-                        m_valid = false;
-                    }
                     break;
                 }
+            }
+
+            if (Vmath::Vmin(pts, &jac[0], 1) < 0)
+            {
+                m_valid = false;
             }
         }
 
@@ -567,8 +547,8 @@ namespace Nektar
                     LibUtilities::Interp1D(map_points[0], src, tpoints[0], tgt);
                     break;
                 case 2:
-                    LibUtilities::Interp2D(map_points[0], map_points[1], src,
-                                           tpoints[0], tpoints[1], tgt);
+                    LibUtilities::Interp2D(map_points[0], map_points[1],   src,
+                                           tpoints[0],    tpoints[1],      tgt);
                     break;
                 case 3:
                     LibUtilities::Interp3D(map_points[0], map_points[1],

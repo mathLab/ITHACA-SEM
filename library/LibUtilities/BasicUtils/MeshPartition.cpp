@@ -145,7 +145,7 @@ namespace Nektar
                 std::string  dirname = pSession->GetSessionName() + "_xml"; 
                 fs::path    pdirname(dirname);
                 
-                std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(i) + ".xml";
+                std::string vFilename = "P" + boost::lexical_cast<std::string>(i) + ".xml";
                 fs::path    pFilename(vFilename);            
                 
                 fs::path fullpath = pdirname / pFilename; 

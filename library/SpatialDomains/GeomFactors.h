@@ -151,20 +151,20 @@ namespace SpatialDomains
             /// Tests if the element is valid and not self-intersecting.
             void CheckIfValid();
 
-            DerivStorage ComputeDeriv(
+            SPATIAL_DOMAINS_EXPORT DerivStorage ComputeDeriv(
                     const LibUtilities::PointsKeyVector &tpoints) const;
 
             /// Return the Jacobian of the mapping and cache the result.
-            Array<OneD, NekDouble> ComputeJac(
+            SPATIAL_DOMAINS_EXPORT Array<OneD, NekDouble> ComputeJac(
                     const LibUtilities::PointsKeyVector &keyTgt) const;
 
             /// Computes the Laplacian coefficients \f$g_{ij}\f$.
-            Array<TwoD, NekDouble> ComputeGmat(
+            SPATIAL_DOMAINS_EXPORT Array<TwoD, NekDouble> ComputeGmat(
                     const LibUtilities::PointsKeyVector &keyTgt) const;
 
             /// Return the derivative of the reference coordinates with respect
             /// to the mapping, \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
-            Array<TwoD, NekDouble> ComputeDerivFactors(
+            SPATIAL_DOMAINS_EXPORT Array<TwoD, NekDouble> ComputeDerivFactors(
                     const LibUtilities::PointsKeyVector &keyTgt) const;
 
             /// Perform interpolation of data between two point

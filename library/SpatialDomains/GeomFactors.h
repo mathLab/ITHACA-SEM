@@ -219,7 +219,9 @@ namespace SpatialDomains
     inline const Array<OneD, const NekDouble> GeomFactors::GetJac(
             const LibUtilities::PointsKeyVector &keyTgt)
     {
-        std::map<LibUtilities::PointsKeyVector, Array<OneD, NekDouble> >::const_iterator x;
+        std::map<LibUtilities::PointsKeyVector,
+                 Array<OneD, NekDouble> >::const_iterator x;
+
         if ((x = m_jacCache.find(keyTgt)) != m_jacCache.end())
         {
             return x->second;
@@ -257,7 +259,9 @@ namespace SpatialDomains
     inline const Array<TwoD, const NekDouble> GeomFactors::GetDerivFactors(
             const LibUtilities::PointsKeyVector &keyTgt)
     {
-        std::map<LibUtilities::PointsKeyVector, Array<TwoD, NekDouble> >::const_iterator x;
+        std::map<LibUtilities::PointsKeyVector,
+                 Array<TwoD, NekDouble> >::const_iterator x;
+
         if ((x = m_derivFactorCache.find(keyTgt)) != m_derivFactorCache.end())
         {
             return x->second;

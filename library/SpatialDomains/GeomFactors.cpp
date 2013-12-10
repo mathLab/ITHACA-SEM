@@ -72,9 +72,12 @@ namespace Nektar
          * implement the construction of these terms following the derivation
          * in Cantwell, et. al. \cite CaYaKiPeSh13. Given the coordinate maps
          * \f$\chi_i\f$, this comprises of five steps
-         * -# Compute the terms of the Jacobian \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
-         * -# Compute the metric tensor \f$g_{ij}=\mathbf{t}_{(i)}\cdot\mathbf{t}_{(j)}\f$.
-         * -# Compute the square of the Jacobian determinant \f$g=|\mathbf{g}|\f$.
+         * -# Compute the terms of the Jacobian
+         *    \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
+         * -# Compute the metric tensor
+         *    \f$g_{ij}=\mathbf{t}_{(i)}\cdot\mathbf{t}_{(j)}\f$.
+         * -# Compute the square of the Jacobian determinant
+         *    \f$g=|\mathbf{g}|\f$.
          * -# Compute the inverse metric tensor \f$g^{ij}\f$.
          * -# Compute the terms \f$\frac{\partial \xi_i}{\partial \chi_j}\f$.
          */
@@ -430,7 +433,7 @@ namespace Nektar
             for (i = 0; i < m_expDim; ++i)
             {
                 Vmath::Vvtvp(ptsTgt, &tmp[i][0], 1, &gmat[i*m_expDim][0], 1,
-                                     &jac[0], 1, &jac[0], 1);
+                                     &jac[0],    1, &jac[0],              1);
             }
 
             for (i = 0; i < m_expDim*m_expDim; ++i)
@@ -449,9 +452,9 @@ namespace Nektar
                     for (i = 0; i < m_expDim; ++i)
                     {
                         Vmath::Vvtvp(ptsTgt, &deriv[i][k][0],        1,
-                                          &gmat[m_expDim*i+j][0], 1,
-                                          &factors[l][0],    1,
-                                          &factors[l][0],    1);
+                                             &gmat[m_expDim*i+j][0], 1,
+                                             &factors[l][0],         1,
+                                             &factors[l][0],         1);
                     }
                 }
             }
@@ -493,7 +496,7 @@ namespace Nektar
                 {
                     Vmath::Vvtvvtm(pts, &deriv[0][0][0], 1, &deriv[1][1][0], 1,
                                         &deriv[1][0][0], 1, &deriv[0][1][0], 1,
-                                        &jac[0],           1);
+                                        &jac[0],         1);
                     break;
                 }
                 case 3:
@@ -578,10 +581,10 @@ namespace Nektar
                     Vmath::Fill(n, 1.0, &tgt[0][0], 1);
                     break;
                 case 2:
-                    Vmath::Vcopy(n, &src[3][0], 1, &tgt[0][0], 1);
+                    Vmath::Vcopy(n,       &src[3][0], 1, &tgt[0][0], 1);
                     Vmath::Smul (n, -1.0, &src[1][0], 1, &tgt[1][0], 1);
                     Vmath::Smul (n, -1.0, &src[2][0], 1, &tgt[2][0], 1);
-                    Vmath::Vcopy(n, &src[0][0], 1, &tgt[3][0], 1);
+                    Vmath::Vcopy(n,       &src[0][0], 1, &tgt[3][0], 1);
                     break;
                 case 3:
                 {
@@ -592,14 +595,14 @@ namespace Nektar
                     {
                         for (j = 0; j < m_expDim; ++j)
                         {
-                            a = ((i+1)%m_expDim)*m_expDim + ((j+1)%m_expDim);
-                            b = ((i+1)%m_expDim)*m_expDim + ((j+2)%m_expDim);
-                            c = ((i+2)%m_expDim)*m_expDim + ((j+1)%m_expDim);
-                            d = ((i+2)%m_expDim)*m_expDim + ((j+2)%m_expDim);
+                            a = ((i+1)%m_expDim) * m_expDim + ((j+1)%m_expDim);
+                            b = ((i+1)%m_expDim) * m_expDim + ((j+2)%m_expDim);
+                            c = ((i+2)%m_expDim) * m_expDim + ((j+1)%m_expDim);
+                            d = ((i+2)%m_expDim) * m_expDim + ((j+2)%m_expDim);
                             e = j*m_expDim + i;
                             Vmath::Vvtvvtm(n, &src[a][0], 1, &src[d][0], 1,
-                                                &src[b][0], 1, &src[c][0], 1,
-                                                &tgt[e][0], 1);
+                                              &src[b][0], 1, &src[c][0], 1,
+                                              &tgt[e][0], 1);
                         }
                     }
                     break;

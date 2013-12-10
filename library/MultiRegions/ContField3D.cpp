@@ -83,6 +83,27 @@ namespace Nektar
                         boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
                         std::string("GlobalLinSys"))
         {
+            LibUtilities::CommSharedPtr vComm = pSession->GetComm();
+
+            int n = vComm->GetSize();
+            int p = vComm->GetRank();
+
+            Array<OneD, unsigned int> sizes(n,0);
+
+            sizes[p] = m_ncoeffs;
+
+            vComm->AllReduce(sizes, LibUtilities::ReduceSum);
+
+            if (vComm->GetRank() == 0)
+            {
+                ofstream outfile("partitions.txt");
+                for (p = 0; p < n; ++p)
+                {
+                    outfile << p << " " << sizes[p] << endl;
+                }
+                outfile.close();
+            }
+            
             SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
             
             m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(

@@ -83,12 +83,12 @@ namespace Nektar
                 Array<OneD,NekDouble>                         &outarray);
             
             inline void AddNormTraceInt(
-                const int dir,
+                const int                                      dir,
                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
                 Array<OneD,NekDouble>                         &outarray);
 
             inline void AddNormTraceInt(
-                const int dir,
+                const int                                      dir,
                 Array<OneD, const NekDouble>                  &inarray,
                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
                 Array<OneD,NekDouble>                         &outarray,
@@ -108,10 +108,11 @@ namespace Nektar
             }
 
         protected:
-            virtual void v_DGDeriv(const int dir,
-                         const Array<OneD, const NekDouble>&incoeffs,
-                         Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                         Array<OneD, NekDouble> &out_d);
+            virtual void v_DGDeriv(
+                const int                                       dir,
+                const Array<OneD, const NekDouble>             &incoeffs,
+                Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+                Array<OneD, NekDouble>                         &out_d);
             virtual DNekMatSharedPtr v_GenMatrix(
                 const StdRegions::StdMatrixKey &mkey);
             virtual void v_AddFaceNormBoundaryInt(

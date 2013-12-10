@@ -2139,14 +2139,14 @@ namespace Nektar
                 qrhs1  = Array<OneD, NekDouble>(nq_elmt);
                 force = Array<OneD, NekDouble>(2*nm_elmt);
                 out_tmp = force + nm_elmt;
-				LocalRegions::ExpansionSharedPtr ppExp;
+                LocalRegions::ExpansionSharedPtr ppExp;
 
-				int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
-				int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
-				int num_points2 = (*m_exp)[eid]->GetBasis(2)->GetNumPoints();
-				int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
-				int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
-				int num_modes2 = (*m_exp)[eid]->GetBasis(2)->GetNumModes();
+                int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
+                int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
+                int num_points2 = (*m_exp)[eid]->GetBasis(2)->GetNumPoints();
+                int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
+                int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
+                int num_modes2 = (*m_exp)[eid]->GetBasis(2)->GetNumModes();
                 // Probably a better way of setting up lambda than this.  Note
                 // cannot use PutCoeffsInToElmts since lambda space is mapped
                 // during the solve.
@@ -2155,48 +2155,48 @@ namespace Nektar
                     //facedir = (*m_exp)[eid]->GetFaceOrient(f);
 
                     ncoeff_face = elmtToTrace[eid][f]->GetNcoeffs();
-					boost::dynamic_pointer_cast<LocalRegions::Expansion3D>((*m_exp)[eid])->SetFaceToGeomOrientation(f,face_lambda);
-					//elmtToTrace[eid][f]->SetCoeffsToOrientation(facedir,face_lambda,face_lambda);
+                    boost::dynamic_pointer_cast<LocalRegions::Expansion3D>((*m_exp)[eid])->SetFaceToGeomOrientation(f,face_lambda);
+                    //elmtToTrace[eid][f]->SetCoeffsToOrientation(facedir,face_lambda,face_lambda);
                     Vmath::Vcopy(ncoeff_face,face_lambda,1,
                                  elmtToTrace[eid][f]->UpdateCoeffs(),1);
                     face_lambda = face_lambda + ncoeff_face;
                 }
 
-				//creating orthogonal expansion (checking if we have quads or triangles)
-				LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
-				switch(shape)
-				{
-					case LibUtilities::eHexahedron:
-						{
-							const LibUtilities::PointsKey PkeyH1(num_points0,LibUtilities::eGaussLobattoLegendre);
-							const LibUtilities::PointsKey PkeyH2(num_points1,LibUtilities::eGaussLobattoLegendre);
-							const LibUtilities::PointsKey PkeyH3(num_points2,LibUtilities::eGaussLobattoLegendre);
-							LibUtilities::BasisKey  BkeyH1(LibUtilities::eOrtho_A, num_modes0, PkeyH1);
-							LibUtilities::BasisKey  BkeyH2(LibUtilities::eOrtho_A, num_modes1, PkeyH2);
-							LibUtilities::BasisKey  BkeyH3(LibUtilities::eOrtho_A, num_modes2, PkeyH3);
-							SpatialDomains::HexGeomSharedPtr hGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>((*m_exp)[eid]->GetGeom());
-							ppExp = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(BkeyH1, BkeyH2, BkeyH3, hGeom);
-						}
-						break;
-					case LibUtilities::eTetrahedron:
-						{
-							const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
-							const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
-							const LibUtilities::PointsKey PkeyT3(num_points2,LibUtilities::eGaussRadauMAlpha2Beta0);
-							LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
-							LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
-							LibUtilities::BasisKey  BkeyT3(LibUtilities::eOrtho_C, num_modes2, PkeyT3);
-							SpatialDomains::TetGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>((*m_exp)[eid]->GetGeom());
-							ppExp = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(BkeyT1, BkeyT2, BkeyT3, tGeom);
-						}
-						break;
-					default:
-                    ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
-				};
+                //creating orthogonal expansion (checking if we have quads or triangles)
+                LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
+                switch(shape)
+                {
+                    case LibUtilities::eHexahedron:
+                    {
+                        const LibUtilities::PointsKey PkeyH1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyH2(num_points1,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyH3(num_points2,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey  BkeyH1(LibUtilities::eOrtho_A, num_modes0, PkeyH1);
+                        LibUtilities::BasisKey  BkeyH2(LibUtilities::eOrtho_A, num_modes1, PkeyH2);
+                        LibUtilities::BasisKey  BkeyH3(LibUtilities::eOrtho_A, num_modes2, PkeyH3);
+                        SpatialDomains::HexGeomSharedPtr hGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(BkeyH1, BkeyH2, BkeyH3, hGeom);
+                    }
+                    break;
+                    case LibUtilities::eTetrahedron:
+                    {
+                        const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        const LibUtilities::PointsKey PkeyT3(num_points2,LibUtilities::eGaussRadauMAlpha2Beta0);
+                        LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
+                        LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
+                        LibUtilities::BasisKey  BkeyT3(LibUtilities::eOrtho_C, num_modes2, PkeyT3);
+                        SpatialDomains::TetGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(BkeyT1, BkeyT2, BkeyT3, tGeom);
+                    }
+                    break;
+                    default:
+                        ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
+                };
 
 
-			   	//DGDeriv	
-				// (d/dx w, q_0)
+                //DGDeriv	
+                // (d/dx w, q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
                     elmtToTrace[eid], out_tmp);
@@ -2237,9 +2237,9 @@ namespace Nektar
 
                 out = (*lapsys)*in;
 				
-				//transforming back to modified basis
-				ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
-				(*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
+                //transforming back to modified basis
+                ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
+                (*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
             }
         }
 

@@ -1866,7 +1866,7 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             int    i,cnt,e,ncoeff_edge;
-            Array<OneD, NekDouble> force, out_tmp,qrhs,qrhs1;
+            Array<OneD, NekDouble> force, out_tmp, qrhs, qrhs1;
             Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
@@ -1891,12 +1891,12 @@ namespace Nektar
                 qrhs1  = Array<OneD, NekDouble>(nq_elmt);
                 force = Array<OneD, NekDouble>(2*nm_elmt);
                 out_tmp = force + nm_elmt;
-				LocalRegions::ExpansionSharedPtr ppExp;
+                LocalRegions::ExpansionSharedPtr ppExp;
 
-				int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
-				int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
-				int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
-				int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
+                int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
+                int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
+                int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
+                int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
                 // Probably a better way of setting up lambda than this.  Note
                 // cannot use PutCoeffsInToElmts since lambda space is mapped
                 // during the solve.
@@ -1912,50 +1912,50 @@ namespace Nektar
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
 
-				//creating orthogonal expansion (checking if we have quads or triangles)
-				LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
-				switch(shape)
-				{
-					case LibUtilities::eQuadrilateral:
-						{
-							const LibUtilities::PointsKey PkeyQ1(num_points0,LibUtilities::eGaussLobattoLegendre);
-							const LibUtilities::PointsKey PkeyQ2(num_points1,LibUtilities::eGaussLobattoLegendre);
-							LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes0, PkeyQ1);
-							LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes1, PkeyQ2);
-							SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
-							ppExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
-						}
-						break;
-					case LibUtilities::eTriangle:
-						{
-							const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
-							const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
-							LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
-							LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
-							SpatialDomains::TriGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[eid]->GetGeom());
-							ppExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(BkeyT1, BkeyT2, tGeom);
-						}
-						break;
-					default:
-                    ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
-				};
+                //creating orthogonal expansion (checking if we have quads or triangles)
+                LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
+                switch(shape)
+                {
+                    case LibUtilities::eQuadrilateral:
+                    {
+                        const LibUtilities::PointsKey PkeyQ1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyQ2(num_points1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes0, PkeyQ1);
+                        LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes1, PkeyQ2);
+                        SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+                    }
+                    break;
+                    case LibUtilities::eTriangle:
+                    {
+                        const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
+                        LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
+                        SpatialDomains::TriGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(BkeyT1, BkeyT2, tGeom);
+                    }
+                    break;
+                    default:
+                        ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
+                };
 
 
-				//SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
-				//LocalRegions::QuadExpSharedPtr ppExp = 
-				//	MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
-				//Orthogonal expansion created
+                //SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
+                //LocalRegions::QuadExpSharedPtr ppExp = 
+                //	MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+                //Orthogonal expansion created
 
-				//In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
-				//===============================================================================================
+                //In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
+                //===============================================================================================
                 //(*m_exp)[eid]->BwdTrans(tmp_coeffs = m_coeffs + m_coeff_offset[eid],(*m_exp)[eid]->UpdatePhys());
                 //(*m_exp)[eid]->PhysDeriv((*m_exp)[eid]->GetPhys(), qrhs, qrhs1);
                 //ppExp->IProductWRTDerivBase(0,qrhs,force);
                 //ppExp->IProductWRTDerivBase(1,qrhs1,out_tmp);
-				//===============================================================================================
+                //===============================================================================================
                
-			   	//DGDeriv	
-				// (d/dx w, d/dx q_0)
+                //DGDeriv	
+                // (d/dx w, d/dx q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
                     elmtToTrace[eid], out_tmp);
@@ -1991,9 +1991,9 @@ namespace Nektar
 
                 out = (*lapsys)*in;
 				
-				//transforming back to modified basis
-				ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
-				(*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
+                //transforming back to modified basis
+                ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
+                (*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
             }
         }
 

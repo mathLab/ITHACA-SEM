@@ -1373,10 +1373,8 @@ namespace Nektar
                 break;
             case StdRegions::eInvLaplacianWithUnityMean:
                 {
-                    NekDouble one    = 1.0;
-
                     DNekMatSharedPtr mat = GenMatrix(mkey);
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
                 }
                 break;
             case StdRegions::eHelmholtz:

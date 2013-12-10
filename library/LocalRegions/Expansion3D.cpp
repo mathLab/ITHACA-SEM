@@ -907,32 +907,31 @@ namespace Nektar
                     }
                 }
                 break;
-			//HDG postprocessing
+            //HDG postprocessing
             case StdRegions::eInvLaplacianWithUnityMean:
-				{
-					MatrixKey lapkey(StdRegions::eLaplacian, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                {
+                    MatrixKey lapkey(StdRegions::eLaplacian, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat  &LapMat = *GetLocMatrix(lapkey);
                     
-					returnval = MemoryManager<DNekMat>::AllocateSharedPtr(LapMat.GetRows(),LapMat.GetColumns());
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(LapMat.GetRows(),LapMat.GetColumns());
                     DNekMatSharedPtr lmat = returnval;
                     
-					(*lmat) = LapMat;
-					NekDouble one = 1.0;
+                    (*lmat) = LapMat;
 
                     // replace first column with inner product wrt 1
                     int nq = GetTotPoints();
                     Array<OneD, NekDouble> tmp(nq);
                     Array<OneD, NekDouble> outarray(m_ncoeffs);
-                    Vmath::Fill(nq,one,tmp,1);
+                    Vmath::Fill(nq,1.0,tmp,1);
                     IProductWRTBase(tmp, outarray);
 
                     Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
                                  &(lmat->GetPtr())[0],1);
 
-					//cout << endl << *lmat << endl;
+                    //cout << endl << *lmat << endl;
                     lmat->Invert();
-				}
-				break;
+                }
+                break;
             default:
                 ASSERTL0(false,"This matrix type cannot be generated from this class");
                 break;
@@ -1035,37 +1034,39 @@ namespace Nektar
             }
         }
 
-      //Evaluate Coefficients of weak deriviative in the direction dir
-      //given the input coefficicents incoeffs and the imposed
-      //boundary values in EdgeExp (which will have its phys space updated);
-      void Expansion3D::v_DGDeriv(int dir,
-                                const Array<OneD, const NekDouble>&incoeffs,
-                                Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                                Array<OneD, NekDouble> &out_d)
-      {
-        StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
-                                               StdRegions::eWeakDeriv1,
-                                               StdRegions::eWeakDeriv2};
-        
-          int ncoeffs = GetNcoeffs();
+        /**
+         * @brief Evaluate coefficients of weak deriviative in the direction dir
+         * given the input coefficicents incoeffs and the imposed boundary
+         * values in EdgeExp (which will have its phys space updated).
+         */
+        void Expansion3D::v_DGDeriv(
+            int dir,
+            const Array<OneD, const NekDouble>&incoeffs,
+            Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+            Array<OneD, NekDouble> &out_d)
+        {
+            int ncoeffs = GetNcoeffs();
+            StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
+                                                   StdRegions::eWeakDeriv1,
+                                                   StdRegions::eWeakDeriv2};
 
-          DNekScalMat &InvMass = *GetLocMatrix(StdRegions::eInvMass);
-          DNekScalMat &Dmat    = *GetLocMatrix(DerivType[dir]);
+            DNekScalMat &InvMass = *GetLocMatrix(StdRegions::eInvMass);
+            DNekScalMat &Dmat    = *GetLocMatrix(DerivType[dir]);
+
+            Array<OneD, NekDouble> coeffs = incoeffs;
+            DNekVec     Coeffs  (ncoeffs,coeffs, eWrapper);
           
-          Array<OneD, NekDouble> coeffs = incoeffs;
-          DNekVec     Coeffs  (ncoeffs,coeffs, eWrapper);
-          
-          Coeffs = Transpose(Dmat)*Coeffs;
-          Vmath::Neg(ncoeffs, coeffs,1);
+            Coeffs = Transpose(Dmat)*Coeffs;
+            Vmath::Neg(ncoeffs, coeffs,1);
 
-          // Add the boundary integral including the relevant part of
-          // the normal
-          AddNormTraceInt(dir,FaceExp,coeffs);
+            // Add the boundary integral including the relevant part of
+            // the normal
+            AddNormTraceInt(dir,FaceExp,coeffs);
         
-          DNekVec Out_d (ncoeffs,out_d,eWrapper);
+            DNekVec Out_d (ncoeffs,out_d,eWrapper);
 
-          Out_d  = InvMass*Coeffs;
-      }
+            Out_d  = InvMass*Coeffs;
+        }
 
         void Expansion3D::v_AddRobinMassMatrix(
             const int face, 

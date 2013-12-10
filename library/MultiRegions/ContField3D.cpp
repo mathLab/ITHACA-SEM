@@ -88,7 +88,7 @@ namespace Nektar
             int n = vComm->GetSize();
             int p = vComm->GetRank();
 
-            Array<OneD, unsigned int> sizes(n,0);
+            Array<OneD,  int> sizes(n,0);
 
             sizes[p] = m_ncoeffs;
 

@@ -168,11 +168,11 @@ namespace Nektar
          *                          target point distributions.
          */
         DerivStorage GeomFactors::ComputeDeriv(
-                const LibUtilities::PointsKeyVector &tpoints) const
+                const LibUtilities::PointsKeyVector &keyTgt) const
         {
-            ASSERTL1(tpoints.size() == m_expDim,
-                     "Dimension of target basis does not match expansion "
-                     "basis.");
+            ASSERTL1(keyTgt.size() == m_expDim,
+                     "Dimension of target point distribution does not match "
+                     "expansion dimension.");
 
             int i = 0, j = 0;
             int nqtot_map      = 1;
@@ -186,7 +186,7 @@ namespace Nektar
             {
                 map_points[i]  = m_coords[0]->GetBasis(i)->GetPointsKey();
                 nqtot_map     *= map_points[i].GetNumPoints();
-                nqtot_tbasis  *= tpoints[i].GetNumPoints();
+                nqtot_tbasis  *= keyTgt[i].GetNumPoints();
                 deriv[i] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
                 d_map[i] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
             }
@@ -218,7 +218,7 @@ namespace Nektar
                 bool same = true;
                 for (j = 0; j < m_expDim; ++j)
                 {
-                    same = same && (map_points[j] == tpoints[j]);
+                    same = same && (map_points[j] == keyTgt[j]);
                 }
                 if( same )
                 {
@@ -231,7 +231,7 @@ namespace Nektar
                 {
                     for (j = 0; j < m_expDim; ++j)
                     {
-                        Interp(map_points, d_map[j][i], tpoints, deriv[j][i]);
+                        Interp(map_points, d_map[j][i], keyTgt, deriv[j][i]);
                     }
                 }
             }
@@ -254,6 +254,10 @@ namespace Nektar
         Array<OneD, NekDouble> GeomFactors::ComputeJac(
                 const LibUtilities::PointsKeyVector &keyTgt) const
         {
+            ASSERTL1(keyTgt.size() == m_expDim,
+                     "Dimension of target point distribution does not match "
+                     "expansion dimension.");
+
             int i = 0, j = 0, k = 0, l = 0;
             int ptsTgt   = 1;
 
@@ -330,6 +334,10 @@ namespace Nektar
         Array<TwoD, NekDouble> GeomFactors::ComputeGmat(
                 const LibUtilities::PointsKeyVector &keyTgt) const
         {
+            ASSERTL1(keyTgt.size() == m_expDim,
+                     "Dimension of target point distribution does not match "
+                     "expansion dimension.");
+
             int i = 0, j = 0, k = 0, l = 0;
             int ptsTgt   = 1;
 
@@ -391,6 +399,10 @@ namespace Nektar
         Array<TwoD, NekDouble> GeomFactors::ComputeDerivFactors(
                 const LibUtilities::PointsKeyVector& keyTgt) const
         {
+            ASSERTL1(keyTgt.size() == m_expDim,
+                     "Dimension of target point distribution does not match "
+                     "expansion dimension.");
+
             int i = 0, j = 0, k = 0, l = 0;
             int ptsTgt   = 1;
 
@@ -539,25 +551,30 @@ namespace Nektar
          * @param   tgt         Target data storage.
          */
         void GeomFactors::Interp(
-                    const LibUtilities::PointsKeyVector &map_points,
+                    const LibUtilities::PointsKeyVector &src_points,
                     const Array<OneD, const NekDouble> &src,
-                    const LibUtilities::PointsKeyVector &tpoints,
+                    const LibUtilities::PointsKeyVector &tgt_points,
                     Array<OneD, NekDouble> &tgt) const
         {
+            ASSERTL1(src_points.size() == tgt_points.size(),
+                     "Dimension of target point distribution does not match "
+                     "expansion dimension.");
+
             switch (m_expDim)
             {
                 case 1:
-                    LibUtilities::Interp1D(map_points[0], src, tpoints[0], tgt);
+                    LibUtilities::Interp1D(src_points[0], src,
+                                           tgt_points[0], tgt);
                     break;
                 case 2:
-                    LibUtilities::Interp2D(map_points[0], map_points[1],   src,
-                                           tpoints[0],    tpoints[1],      tgt);
+                    LibUtilities::Interp2D(src_points[0], src_points[1], src,
+                                           tgt_points[0], tgt_points[1], tgt);
                     break;
                 case 3:
-                    LibUtilities::Interp3D(map_points[0], map_points[1],
-                                           map_points[2], src,
-                                           tpoints[0],    tpoints[1],
-                                           tpoints[2],    tgt);
+                    LibUtilities::Interp3D(src_points[0], src_points[1],
+                                           src_points[2], src,
+                                           tgt_points[0], tgt_points[1],
+                                           tgt_points[2], tgt);
                     break;
             }
         }
@@ -574,11 +591,15 @@ namespace Nektar
                     const Array<TwoD, const NekDouble>& src,
                     Array<TwoD, NekDouble>& tgt) const
         {
+            ASSERTL1(src.num_elements() == tgt.num_elements(),
+                     "Source matrix is of different size to destination"
+                     "matrix for computing adjoint.");
+
             int n = src[0].num_elements();
             switch (m_expDim)
             {
                 case 1:
-                    Vmath::Fill(n, 1.0, &tgt[0][0], 1);
+                    Vmath::Fill (n,  1.0, &tgt[0][0], 1);
                     break;
                 case 2:
                     Vmath::Vcopy(n,       &src[3][0], 1, &tgt[0][0], 1);

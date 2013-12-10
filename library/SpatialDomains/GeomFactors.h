@@ -101,7 +101,7 @@ namespace SpatialDomains
             /// reference coordinates,
             /// \f$\frac{\partial \chi_i}{\partial \xi_j}\f$.
             inline DerivStorage GetDeriv(
-                    const LibUtilities::PointsKeyVector &tpoints);
+                    const LibUtilities::PointsKeyVector &keyTgt);
 
             /// Return the Jacobian of the mapping and cache the result.
             inline const Array<OneD, const NekDouble> GetJac(
@@ -152,7 +152,7 @@ namespace SpatialDomains
             void CheckIfValid();
 
             SPATIAL_DOMAINS_EXPORT DerivStorage ComputeDeriv(
-                    const LibUtilities::PointsKeyVector &tpoints) const;
+                    const LibUtilities::PointsKeyVector &keyTgt) const;
 
             /// Return the Jacobian of the mapping and cache the result.
             SPATIAL_DOMAINS_EXPORT Array<OneD, NekDouble> ComputeJac(
@@ -170,9 +170,9 @@ namespace SpatialDomains
             /// Perform interpolation of data between two point
             /// distributions.
             void Interp(
-                    const LibUtilities::PointsKeyVector &map_points,
+                    const LibUtilities::PointsKeyVector &src_points,
                     const Array<OneD, const NekDouble> &src,
-                    const LibUtilities::PointsKeyVector &tpoints,
+                    const LibUtilities::PointsKeyVector &tgt_points,
                     Array<OneD, NekDouble> &tgt) const;
 
             /// Compute the transpose of the cofactors matrix

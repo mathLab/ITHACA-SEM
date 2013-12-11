@@ -442,6 +442,98 @@ namespace Nektar
             ParseUtils::GenerateSeqVector(vSeqStr.c_str(), m_domain);
         }
 
+        void MeshPartition::PrintPartInfo(std::ostream &out)
+        {
+            int nElmt = boost::num_vertices(m_mesh);
+            int nPart = m_comm->GetRowComm()->GetSize();
+
+            out << "# Partition information:" << std::endl;
+            out << "# No. elements  : " << nElmt << std::endl;
+            out << "# No. partitions: " << nPart << std::endl;
+
+            BoostVertexIterator vertit, vertit_end;
+            std::vector<int> partElmtCount(nPart, 0);
+            std::vector<int> partLocCount (nPart, 0);
+            std::vector<int> partBndCount (nPart, 0);
+
+            std::map<int, int> elmtSizes;
+            std::map<int, int> elmtBndSizes;
+            
+            for (unsigned int i = 0; i < m_domain.size(); ++i)
+            {
+                int cId = m_domain[i];
+                NummodesPerField npf = m_expansions[cId];
+
+                for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
+                {
+                    ASSERTL0(it->second.size() == m_dim,
+                        " Number of directional" \
+                        " modes in expansion spec for composite id = " + 
+                        boost::lexical_cast<std::string>(cId) +
+                        " and field " +
+                        boost::lexical_cast<std::string>(it->first) +
+                        " does not correspond to mesh dimension");
+
+                    int na = it->second[0];
+                    int nb = it->second[1];
+                    int nc = 0;
+                    if (m_dim == 3)
+                    {
+                        nc = it->second[2];
+                    }
+
+                    int weight = 0;
+                    int bndWeight = 0;
+                    switch (m_meshComposites[cId].type)
+                    {
+                        case 'A':
+                            weight = StdTetData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = 2 * (na-2) * (na-1) + 6 * (na-1) + 4;
+                            break;
+                        case 'R': 
+                            weight = StdPrismData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = (na-2)*(na-1) + 3*(na-1)*(na-1) + 9*(na-1) + 6;
+                            break;
+                        case 'H': 
+                            weight = StdHexData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = 6*(na-1)*(na-1) + 12*(na-1) + 8;
+                            break;
+                        case 'P': 
+                            weight = StdPyrData::getNumberOfCoefficients(na, nb, nc);
+                            break;
+                        case 'Q': 
+                            weight = StdQuadData::getNumberOfCoefficients(na, nb);
+                            break;
+                        case 'T': 
+                            weight = StdTriData::getNumberOfCoefficients(na, nb);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
+                    {
+                        int elid = m_meshComposites[cId].list[j]; 
+                        elmtSizes[elid] = weight;
+                        elmtBndSizes[elid] = bndWeight;
+                    }
+                }
+            }
+
+            for (boost::tie(vertit, vertit_end) = boost::vertices(m_mesh);
+                 vertit != vertit_end; ++vertit)
+            {
+                int partId = m_mesh[*vertit].partition;
+                partElmtCount[partId]++;
+                partLocCount [partId] += elmtSizes[m_mesh[*vertit].id];
+                partBndCount [partId] += elmtBndSizes[m_mesh[*vertit].id];
+            }
+
+            for (int i = 0; i < nPart; ++i)
+            {
+                out << i << " " << partElmtCount[i] << " " << partLocCount[i] << " " << partBndCount[i] << std::endl;
+            }
+        }
 
         void MeshPartition::ReadConditions(const SessionReaderSharedPtr& pSession)
         {
@@ -514,7 +606,7 @@ namespace Nektar
          */
         void MeshPartition::WeightElements()
         {
-            std::vector<unsigned int> weight(2*m_numFields, 1);
+            std::vector<unsigned int> weight(m_numFields, 1);
             for (int i = 0; i < m_meshElements.size(); ++i)
             {
                 m_vertWeights.push_back( weight );
@@ -571,8 +663,8 @@ namespace Nektar
                     for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
                     {
                         int elmtId = m_meshComposites[cId].list[j];
-                        m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] * 2 + 0 ] = weight;
-                        m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] * 2 + 1 ] = weight*weight;
+                        m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] ] = weight;
+                        //m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] * 2 + 1 ] = weight*weight;
                     }
                 }
             } // for i
@@ -676,7 +768,7 @@ namespace Nektar
                     if(m_comm->GetColumnComm()->GetRank() == 0)
                     {
                         // Attempt partitioning using METIS.
-                        int ncon = m_weightingRequired ? 2*m_numFields : 1;
+                        int ncon = m_weightingRequired ? m_numFields : 1;
                         Metis::PartGraphVKway(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(part);

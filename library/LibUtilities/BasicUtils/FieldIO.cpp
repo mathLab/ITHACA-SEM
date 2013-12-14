@@ -317,15 +317,7 @@ namespace Nektar
                 {
                     std::stringstream idStringStream;
                     bool first = true;
-                    for (std::vector<unsigned int>::size_type i = 0; 
-                         i < fielddefs[f]->m_elementIDs.size(); i++)
-                    {
-                        if (!first)
-                            idStringStream << ",";
-                        idStringStream << fielddefs[f]->m_elementIDs[i];
-                        first = false;
-                    }
-                    idString = idStringStream.str();
+                    GenerateSeqString(fielddefs[f]->m_elementIDs,idString);
                 }
                 elemTag->SetAttribute("ID", idString);
 

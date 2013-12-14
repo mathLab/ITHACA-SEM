@@ -328,6 +328,13 @@ SET(LibUtilitySources
     ${MemorySources}
 )
 
+# Define the git branch and SHA1 hash if we are in a git repository
+# Only apply to FieldIO.cpp to minimise rebuilding on git commit/update.
+IF (NOT ${GIT_REFSPEC} STREQUAL "GITDIR-NOTFOUND")
+    SET_PROPERTY(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/BasicUtils/FieldIO.cpp
+                 APPEND PROPERTY COMPILE_DEFINITIONS
+                 GIT_SHA1=\"${GIT_SHA1}\" GIT_BRANCH=\"${GIT_REFSPEC}\")
+ENDIF ()
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})

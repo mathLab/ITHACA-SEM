@@ -2091,7 +2091,8 @@ namespace Nektar
 
                              std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
-                             Import(filebcs,FieldDef, FieldData);
+                             LibUtilities::FieldIO f(m_session->GetComm());
+                             f.Import(filebcs,FieldDef, FieldData);
 
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
@@ -2138,7 +2139,8 @@ namespace Nektar
 
                              std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
-                             LibUtilities::Import(filebcs,FieldDef, FieldData);
+                             LibUtilities::FieldIO f(m_session->GetComm());
+                             f.Import(filebcs,FieldDef, FieldData);
 
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
@@ -2191,8 +2193,8 @@ namespace Nektar
 
                             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                             std::vector<std::vector<NekDouble> >   FieldData;
-
-                            Import(filebcs,FieldDef, FieldData);
+                            LibUtilities::FieldIO f(m_session->GetComm());
+                            f.Import(filebcs,FieldDef, FieldData);
 
                             // copy FieldData into locExpList
                             locExpList->ExtractDataToCoeffs(

@@ -393,6 +393,8 @@ namespace Nektar
             LibUtilities::CommSharedPtr                 m_comm;
             /// The session reader
             LibUtilities::SessionReaderSharedPtr        m_session;
+            /// Field input/output
+            LibUtilities::FieldIOSharedPtr              m_fld;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
@@ -550,8 +552,6 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual MultiRegions::ExpListSharedPtr v_GetPressure(void); 
             
         private:
-            
-            SOLVER_UTILS_EXPORT  std::string SetUpOutput(const std::string sessionname, const std::string ending);
             
             SOLVER_UTILS_EXPORT virtual Array<OneD, bool> v_GetSystemSingularChecks();
             SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(

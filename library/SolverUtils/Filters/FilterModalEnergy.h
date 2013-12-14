@@ -93,6 +93,7 @@ namespace Nektar
         private:
             enum MultiRegions::ProjectionType           m_projectionType;
             Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
+            LibUtilities::FieldIOSharedPtr              m_fld;
 	
             /// ID's of boundary regions where we want the forces
             vector<unsigned int>         m_boundaryRegionsIdList;

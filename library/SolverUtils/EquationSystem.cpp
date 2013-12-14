@@ -109,6 +109,10 @@ namespace Nektar
             // Save the basename of input file name for output details
             m_sessionName = m_session->GetSessionName();
 
+            // Instantiate a field reader/writer
+            m_fld = MemoryManager<LibUtilities::FieldIO>
+                ::AllocateSharedPtr(m_session->GetComm());
+
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
 
@@ -683,7 +687,7 @@ namespace Nektar
                 }
 
 
-                LibUtilities::Import(filename,FieldDef,FieldData,
+                m_fld->Import(filename,FieldDef,FieldData,
                                      LibUtilities::NullFieldMetaDataMap,
                                      ElementGIDs);
                 
@@ -1186,7 +1190,7 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
 
             //Get Homogeneous
-            LibUtilities::Import(pInfile,FieldDef,FieldData);
+            m_fld->Import(pInfile,FieldDef,FieldData);
 
             int nvar = m_session->GetVariables().size();
             if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -1248,113 +1252,10 @@ namespace Nektar
          */
         void EquationSystem::v_Output(void)
         {
-            std::string outname = SetUpOutput(m_sessionName,"fld");
-
-            WriteFld(outname);
+             WriteFld(m_sessionName + ".fld");
         }
 
                 
-        std::string EquationSystem::SetUpOutput(const std::string sessionname,
-                                                const std::string ending)
-        {
-            static bool setup = true;
-            static std::vector<Array<OneD, int> >ElementIDs;
-            int nprocs = m_comm->GetSize();
-            int rank   = m_comm->GetRank();
-            
-            std::string outname = sessionname + "." + ending; 
-
-            fs::path specPath (outname);
-            
-            // serial processing just add ending. 
-            if(nprocs == 1)
-            {
-                // remove if a directory is defined in this path from previous run
-                if(fs::is_directory(specPath)) 
-                {
-                    fs::remove_all(specPath);
-                }
-                return outname; 
-            }
-
-            if(setup)
-            {
-                int i,offset; 
-                Array<OneD, int> elmtnums(nprocs,0);
-                elmtnums[rank] = m_fields[0]->GetExpSize();
-                
-                m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
-
-                int totelmts = Vmath::Vsum(nprocs,elmtnums,1);
-                Array<OneD, int> AllElmtIDs(totelmts, 0);
-                
-                offset = 0; 
-                offset = Vmath::Vsum(rank,elmtnums,1);
-
-                // put lcoal ids into global list
-                for(i = 0; i < m_fields[0]->GetExpSize(); ++i)
-                {
-                    AllElmtIDs[offset + i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
-                }
-                
-                // assembly global list
-                m_comm->AllReduce(AllElmtIDs,LibUtilities::ReduceMax);
-
-                // set up static list on root processor
-                if(rank == 0)
-                {
-                    int cnt = 0; 
-                    for(i = 0; i < nprocs; ++i)
-                    {
-                        Array<OneD, int> tmpArray(elmtnums[i],&AllElmtIDs[cnt]);
-                        cnt += elmtnums[i];
-                        ElementIDs.push_back(tmpArray);
-                    }
-                }
-                setup = false;
-            }
-
-            if(rank == 0)
-            {
-                std::vector<std::string> filenames;
-                std::string outname; 
-                // Set up output names
-                for(int i = 0; i < nprocs; ++i)
-                {
-                    outname = "P"+boost::lexical_cast<std::string>(i) + ".fld";
-                    filenames.push_back(outname);
-                }
-                
-
-                if(!fs::is_directory(specPath))
-                {
-                    // remove regular file if in way of path
-                    if(fs::is_regular_file(specPath)) 
-                    {
-                        fs::remove_all(specPath);
-                    }
-                    fs::create_directory(specPath);
-                }
-
-                fs::path poutfile("Info.xml");
-                fs::path fulloutname = specPath / poutfile; 
-                
-                LibUtilities::WriteMultiFldFileIDs(LibUtilities::PortablePath(fulloutname), 
-                                                   filenames,
-                                                   ElementIDs,m_fieldMetaDataMap);
-            }
-
-            // ensure all processors are aligned for this write
-            m_comm->Block();
-            
-            outname = "P"+ boost::lexical_cast<std::string>(m_comm->GetRank()) + ".fld";
-            // generate full path name 
-            fs::path poutfile(outname);            
-            fs::path fulloutname = specPath / poutfile; 
-
-            return LibUtilities::PortablePath(fulloutname);
-        }
-
         /**
          * Zero the physical fields.
          */
@@ -1813,10 +1714,7 @@ namespace Nektar
             std::string outname =  m_sessionName +  "_" + 
                 boost::lexical_cast<std::string>(n);
 
-            // check for parallel output and add ending 
-            outname = SetUpOutput(outname,"chk");
-
-            WriteFld(outname);
+            WriteFld(outname + ".chk");
         }
 
         /**
@@ -1898,7 +1796,7 @@ namespace Nektar
                 m_fieldMetaDataMap["Time"] = boost::lexical_cast<std::string>(m_time);
             }
 
-            LibUtilities::Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
+            m_fld->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
         }
 
         /**
@@ -1914,7 +1812,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            LibUtilities::Import(infile,FieldDef,FieldData);
+            m_fld->Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
@@ -1950,7 +1848,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            LibUtilities::Import(infile,FieldDef,FieldData);
+            m_fld->Import(infile,FieldDef,FieldData);
             int idx = -1;
 
             Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
@@ -1993,7 +1891,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
         
-            LibUtilities::Import(infile,FieldDef,FieldData);
+            m_fld->Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)

@@ -57,7 +57,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adjacency_iterator.hpp>
 #include <boost/graph/detail/edge.hpp>
-
+#include <boost/format.hpp>
 
 namespace Nektar
 {
@@ -111,8 +111,9 @@ namespace Nektar
             std::string  dirname = pSession->GetSessionName() + "_xml"; 
             fs::path    pdirname(dirname);
             
-            std::string vFilename = "P" + boost::lexical_cast<std::string>(rank) + ".xml";
-            fs::path    pFilename(vFilename);            
+            boost::format pad("P%1$07d.xml");
+            pad % rank;
+            fs::path    pFilename(pad.str());
             
             if(rank == 0)
             {

@@ -666,7 +666,7 @@ namespace Nektar
                             fs::path fullpath = pfilename / metafile;
                             filename = LibUtilities::PortablePath(fullpath);
                         }
-                        LibUtilities::ImportFieldMetaData(filename, m_fieldMetaDataMap);
+                        m_fld->ImportFieldMetaData(filename, m_fieldMetaDataMap);
 
                         // check to see if time defined
                         if (m_fieldMetaDataMap !=

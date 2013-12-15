@@ -848,9 +848,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion>  &exp2d, const int edge);
-
-
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
             {
                 v_NormVectorIProductWRTBase(Fx,Fy,outarray);
@@ -1305,8 +1302,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge);
-
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
             
             /**
@@ -1462,6 +1457,15 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
+            const LibUtilities::PointsKeyVector GetPointsKeys() const
+            {
+                LibUtilities::PointsKeyVector p;
+                for (int i = 0; i < m_base.num_elements(); ++i)
+                {
+                    p.push_back(m_base[i]->GetPointsKey());
+                }
+                return p;
+            }
 
             STD_REGIONS_EXPORT Array<OneD, unsigned int> 
                 GetEdgeInverseBoundaryMap(int eid)

@@ -195,10 +195,6 @@ namespace Nektar
                 const int mode_offset,
                       NekDouble *coeffs);
 
-            LOCAL_REGIONS_EXPORT virtual void v_SetUpPhysTangents(
-                const boost::shared_ptr<Expansion> &exp2D,
-                const int edge);
-
             LOCAL_REGIONS_EXPORT virtual const
                     Array<OneD, const NekDouble>&  v_GetPhysNormals(void);
 

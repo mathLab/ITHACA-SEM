@@ -195,6 +195,7 @@ namespace Nektar
             
             Array<OneD, NekDouble> auxArray1;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
+            LibUtilities::PointsKeyVector ptsKeys;
             
             switch (nDimensions)
             {
@@ -202,11 +203,12 @@ namespace Nektar
                 {
                     for (n = 0; n < nElements; ++n) 
                     {
+                        ptsKeys = pFields[0]->GetExp(n)->GetPointsKeys();
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
                         jac = LocalRegions::Expansion1D::FromStdExp(
                             pFields[0]->GetExp(n))->GetGeom1D()
-                                ->GetMetricInfo()->GetJac();
+                                ->GetMetricInfo()->GetJac(ptsKeys);
                         for (i = 0; i < nLocalSolutionPts; ++i)
                         {
                             m_jac[i+phys_offset] = jac[0];
@@ -248,15 +250,16 @@ namespace Nektar
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
                             3, auxArray1 = m_Q2D_e3[n]);
                         
+                        ptsKeys = pFields[0]->GetExp(n)->GetPointsKeys();
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
                         
                         jac  = LocalRegions::Expansion2D::FromStdExp(
                             pFields[0]->GetExp(n))->GetGeom2D()
-                                ->GetMetricInfo()->GetJac();
+                                ->GetMetricInfo()->GetJac(ptsKeys);
                         gmat = LocalRegions::Expansion2D::FromStdExp(
                             pFields[0]->GetExp(n))->GetGeom2D()
-                                ->GetMetricInfo()->GetDerivFactors();
+                                ->GetMetricInfo()->GetDerivFactors(ptsKeys);
                         
                         if (LocalRegions::Expansion2D::FromStdExp(
                                 pFields[0]->GetExp(n))->GetGeom2D()
@@ -1465,6 +1468,7 @@ namespace Nektar
             Array<TwoD, const NekDouble> gmat;
             Array<OneD, const NekDouble> jac;
             
+            LibUtilities::PointsKeyVector ptsKeys;
             LibUtilities::BasisSharedPtr Basis;
             Basis = fields[0]->GetExp(0)->GetBasis(0);
             
@@ -1501,11 +1505,12 @@ namespace Nektar
             
             for (n = 0; n < nElements; ++n)
             {
+                ptsKeys = fields[0]->GetExp(n)->GetPointsKeys();
                 nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                 phys_offset       = fields[0]->GetPhys_Offset(n);
                 jac               = LocalRegions::Expansion1D
                     ::FromStdExp(fields[0]->GetExp(n))->GetGeom1D()
-                        ->GetMetricInfo()->GetJac();
+                        ->GetMetricInfo()->GetJac(ptsKeys);
                 
                 JumpL[n] = JumpL[n] * jac[0];
                 JumpR[n] = JumpR[n] * jac[0];
@@ -1559,6 +1564,7 @@ namespace Nektar
             int nquad0, nquad1;
             int nEdgePts;  
             
+            LibUtilities::PointsKeyVector ptsKeys;
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
@@ -1570,10 +1576,11 @@ namespace Nektar
                 // Offset of the element on the global vector
                 phys_offset = fields[0]->GetPhys_Offset(n);
                 nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
+                ptsKeys = fields[0]->GetExp(n)->GetPointsKeys();
                 
                 jac  = LocalRegions::Expansion2D::FromStdExp(
                     fields[0]->GetExp(n))->GetGeom2D()
-                        ->GetMetricInfo()->GetJac();
+                        ->GetMetricInfo()->GetJac(ptsKeys);
                 
                 base = fields[0]->GetExp(n)->GetBase();
                 nquad0 = base[0]->GetNumPoints();

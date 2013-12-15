@@ -564,8 +564,6 @@ namespace Nektar
              */
             typedef boost::adjacency_list<
                 boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-            typedef boost::graph_traits<
-                BoostGraph>::vertex_descriptor BoostVertex;
             BoostGraph boostGraphObj;
 
             map<int, int>    vertTempGraphVertId;

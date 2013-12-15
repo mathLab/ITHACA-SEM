@@ -543,13 +543,6 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
-            // If a tangent vector policy is defined then the local tangent
-            // vectors on each element need to be generated
-            if (m_session->DefinesGeometricInfo("TANGENTDIR"))
-            {
-                m_fields[0]->SetUpTangents();
-            }
-
             // Zero all physical fields initially
             ZeroPhysFields();
         }

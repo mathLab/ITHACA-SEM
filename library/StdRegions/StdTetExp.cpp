@@ -491,6 +491,13 @@ namespace Nektar
             StdTetExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
+        void StdTetExp::v_StdPhysDeriv(
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            StdTetExp::v_PhysDeriv(dir, inarray, outarray);
+        }
 
         //---------------------------------------
         // Transforms

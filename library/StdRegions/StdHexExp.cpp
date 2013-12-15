@@ -383,6 +383,13 @@ namespace Nektar
         }
 
 
+        void StdHexExp::v_StdPhysDeriv(const int dir,
+                               const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD,       NekDouble>& outarray)
+        {
+            StdHexExp::v_PhysDeriv(dir, inarray, outarray);
+        }
+
         /**
          * Backward transformation is three dimensional tensorial expansion
          * \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k})

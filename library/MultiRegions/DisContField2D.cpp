@@ -653,7 +653,6 @@ namespace Nektar
                     if (type == SpatialDomains::eI    || 
                         type == SpatialDomains::eCalcBC)
                     {
-                        locExpList->SetUpPhysTangents(*m_exp);
                         SetUpPhysNormals();
                     }
                 }

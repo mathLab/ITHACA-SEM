@@ -1759,7 +1759,6 @@ namespace Nektar
                     }
                     else
                     {
-                        cout << ptsKeys.size() << endl;
                         NekDouble fac = 1.0/(m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat
                                         = GetStdMatrix(mkey);

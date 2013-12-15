@@ -46,9 +46,6 @@ namespace Nektar
          * This class stores the various geometric factors associated with a
          * specific element, necessary for fundamental integration and
          * differentiation operations as well as edge and surface normals.
-         * Dimension-specific versions of this class (GeomFactors1D,
-         * GeomFactors2D and GeomFactors3D) provide the majority of
-         * implementation.
          *
          * Initially, these algorithms are provided with a mapping from the
          * reference region element to the physical element. Practically, this

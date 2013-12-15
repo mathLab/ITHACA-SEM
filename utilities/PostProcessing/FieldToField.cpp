@@ -29,7 +29,9 @@ int main(int argc, char *argv[])
                           Array<OneD, MultiRegions::ExpListSharedPtr> &field1,
                           Array<OneD, NekDouble> x1,
                           Array<OneD, NekDouble> y1,
-                          Array<OneD, NekDouble> z1 = NullNekDouble1DArray);
+                          Array<OneD, NekDouble> z1 = NullNekDouble1DArray,
+                          NekDouble clamp_low  = -10000,
+                          NekDouble clamp_up   =  10000);
 
     void InterpolateFieldHomo(MultiRegions::ExpListSharedPtr field0,
                            Array<OneD, NekDouble> x1,
@@ -252,7 +254,10 @@ int main(int argc, char *argv[])
         }
         else if(expdim ==3)
         {
-            InterpolateField(fields, outfield, x1, y1, z1);
+            NekDouble clamp_up, clamp_low;
+            vSession->LoadParameter("ClampToUpperValue",clamp_up,10000);
+            vSession->LoadParameter("ClampToLowerValue",clamp_low,-10000);
+            InterpolateField(fields, outfield, x1, y1, z1, clamp_low, clamp_up);
         }
         cout << "]" << endl;
     }
@@ -385,7 +390,9 @@ void InterpolateField(Array<OneD, MultiRegions::ExpListSharedPtr> &field0,
                       Array<OneD, MultiRegions::ExpListSharedPtr> &field1,
                       Array<OneD, NekDouble> x,
                       Array<OneD, NekDouble> y,
-                      Array<OneD, NekDouble> z)
+                      Array<OneD, NekDouble> z,
+                      NekDouble clamp_low,
+                      NekDouble clamp_up)
 {
     int expdim = (z == NullNekDouble1DArray)? 2: 3;
     
@@ -407,7 +414,7 @@ void InterpolateField(Array<OneD, MultiRegions::ExpListSharedPtr> &field0,
         }
 
         // Obtain Element and LocalCoordinate to interpolate
-        elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-4);
+        elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-3);
         
 
         offset = field0[0]->GetPhys_Offset(field0[0]->GetOffset_Elmt_Id(elmtid));
@@ -423,6 +430,7 @@ void InterpolateField(Array<OneD, MultiRegions::ExpListSharedPtr> &field0,
             }
             else
             {
+                value = x < clamp_up ? clamp_up : (x > clamp_low ? clamp_low : x);
                 field1[f]->UpdatePhys()[r] = value;
             }
         }
@@ -450,7 +458,7 @@ void InterpolateFieldHomo(MultiRegions::ExpListSharedPtr field0,
         coords[0] = x1[r];
         coords[1] = y1[r];
         
-        elmtid = field0->GetPlane(0)->GetExpIndex(coords, 0.001);
+        elmtid = field0->GetPlane(0)->GetExpIndex(coords, 1e-3);
         offset = field0->GetPlane(0)->GetPhys_Offset(elmtid);
         field1->GetPlane(0)->UpdatePhys()[r] = field0->GetPlane(0)->GetExp(elmtid)->
             PhysEvaluate(coords, field0->GetPlane(0)->GetPhys() +offset);    
@@ -468,7 +476,7 @@ void InterpolateFieldHomo(MultiRegions::ExpListSharedPtr field0,
         coords[0] = x1[r];
         coords[1] = y1[r];
         
-        elmtid = field0->GetPlane(1)->GetExpIndex(coords, 0.001);
+        elmtid = field0->GetPlane(1)->GetExpIndex(coords, 1e-3);
         offset = field0->GetPlane(1)->GetPhys_Offset(elmtid);
         field1->GetPlane(1)->UpdatePhys()[r] = field0->GetPlane(1)->GetExp(elmtid)->
             PhysEvaluate(coords, field0->GetPlane(1)->GetPhys() +offset);    

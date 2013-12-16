@@ -1474,11 +1474,11 @@ namespace Nektar
             }
             
             STD_REGIONS_EXPORT Array<OneD, unsigned int>
-                GetFaceInverseBoundaryMap(int fid)
+                GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = eNoOrientation)
             {
-                return v_GetFaceInverseBoundaryMap(fid);
+                return v_GetFaceInverseBoundaryMap(fid,faceOrient);
             }
-
+ 
             STD_REGIONS_EXPORT DNekMatSharedPtr BuildInverseTransformationMatrix(
                 const DNekScalMatSharedPtr & m_transformationmatrix)
             {
@@ -1947,8 +1947,8 @@ namespace Nektar
                 v_GetEdgeInverseBoundaryMap(int eid);
 
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
-                v_GetFaceInverseBoundaryMap(int fid);
-
+                v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = eNoOrientation);
+            
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(
                     const DNekScalMatSharedPtr & m_transformationmatrix);
 

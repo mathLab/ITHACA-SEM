@@ -336,6 +336,10 @@ namespace Nektar
             return GetFaceOrientation(face1.m_verts, face2.m_verts);
         }
 
+        /** 
+         * Calculate the orientation of face2 to face1 (note this is
+         * not face1 to face2!). 
+         */ 
         StdRegions::Orientation QuadGeom::GetFaceOrientation(
             const PointGeomVector &face1,
             const PointGeomVector &face2)

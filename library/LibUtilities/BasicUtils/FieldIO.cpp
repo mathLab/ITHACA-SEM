@@ -316,7 +316,6 @@ namespace Nektar
                 std::string idString;
                 {
                     std::stringstream idStringStream;
-                    bool first = true;
                     GenerateSeqString(fielddefs[f]->m_elementIDs,idString);
                 }
                 elemTag->SetAttribute("ID", idString);
@@ -1084,10 +1083,40 @@ namespace Nektar
             fs::path specPath (outname);
 
             // Remove any existing file which is in the way
-            if (fs::exists(specPath))
+            int existCheck = fs::exists(specPath) ? 1 : 0;
+            m_comm->AllReduce(existCheck, ReduceMax);
+
+            if (existCheck)
             {
-                // Recursively remove directories
-                fs::remove_all(specPath);
+                // First remove all files on the root process.
+                if (m_comm->GetRank() == 0)
+                {
+                    fs::remove_all(specPath);
+                }
+
+                m_comm->Block();
+
+                // Check to see if the files still exist on non-root processes.
+                int existCheck = rank > 0 && fs::exists(specPath) ? 1 : 0;
+                m_comm->AllReduce(existCheck, ReduceMax);
+
+                // If they do (i.e. a non-shared filesystem) then go through all
+                // other processors and try to perform removal there. Note this
+                // could be made quicker by the use of a per-node MPI
+                // communicator.
+                if (existCheck > 0)
+                {
+                    for (int i = 1; i < nprocs; ++i)
+                    {
+                        m_comm->Block();
+
+                        if (rank == i && fs::exists(specPath))
+                        {
+                            // Recursively remove directories
+                            fs::remove_all(specPath);
+                        }
+                    }
+                }
             }
 
             // serial processing just add ending.

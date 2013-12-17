@@ -71,7 +71,18 @@ namespace Nektar
 	    eZ,
 	    eS,
 	    eN
-	};	   
+	};
+
+        enum ExpansionType
+        {
+            e0D,
+            e1D,
+            e2D,
+            e3DH1D,
+            e3DH2D,
+            e3D,
+            eNoType
+        };	   
         
         MultiRegions::Direction const DirCartesianMap[] =
             {
@@ -150,8 +161,13 @@ namespace Nektar
             /// Returns the total number of local degrees of freedom
             /// for element eid
             MULTI_REGIONS_EXPORT int GetNcoeffs(const int eid) const;
-			
 
+            /// Returns the type of the expansion
+            MULTI_REGIONS_EXPORT ExpansionType GetExpType(void);
+            
+            /// Returns the type of the expansion
+            MULTI_REGIONS_EXPORT void SetExpType(ExpansionType Type);
+	
             /// Evaulates the maximum number of modes in the elemental basis
             /// order over all elements
             inline int EvalBasisNumModesMax(void) const;
@@ -374,10 +390,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void GetSurfaceNormal(
                 Array<OneD,NekDouble> &SurfaceNormal,
                 const int k);
-
-            /// Populate tangents vector with tangents from each element.
-            MULTI_REGIONS_EXPORT void GetTangents(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents);
 
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
@@ -767,6 +779,7 @@ namespace Nektar
 
             inline void SetUpPhysNormals();
 
+<<<<<<< HEAD
             inline void SetUpPhysTangents(
                 const LocalRegions::ExpansionVector &locexp);
 
@@ -775,6 +788,18 @@ namespace Nektar
             inline void GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD,int> &EdgeID);
+||||||| merged common ancestors
+            inline void SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
+ 	                
+
+            inline void SetUpTangents();
+
+            inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+                                             Array<OneD,int> &EdgeID);
+=======
+            inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+                                             Array<OneD,int> &EdgeID);
+>>>>>>> master
 
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
@@ -798,11 +823,12 @@ namespace Nektar
                 return v_GetRobinBCInfo();
             }
 
-            void GetPeriodicEdges(
+            void GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
-                PeriodicMap &periodicEdges)
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces = NullPeriodicMap)
             {
-                v_GetPeriodicEdges(periodicVerts, periodicEdges);
+                v_GetPeriodicEntities(periodicVerts, periodicEdges, periodicFaces);
             }
 
             std::vector<LibUtilities::FieldDefinitionsSharedPtr>
@@ -904,6 +930,9 @@ namespace Nektar
                 return v_GetPlane(n);
             }
             
+            //expansion type
+            ExpansionType m_expType;
+
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                 const GlobalLinSysKey &mkey,
@@ -1181,9 +1210,15 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,      NekDouble> &outarray);
 			
+<<<<<<< HEAD
             virtual void v_SetUpPhysTangents(
                 const LocalRegions::ExpansionVector &locexp);
             
+||||||| merged common ancestors
+            virtual void v_SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
+            
+=======
+>>>>>>> master
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
@@ -1258,11 +1293,21 @@ namespace Nektar
             
             virtual void v_SetUpPhysNormals();
             
+<<<<<<< HEAD
             virtual void v_SetUpTangents();
             
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &EdgeID);
+||||||| merged common ancestors
+            virtual void v_SetUpTangents();
+            
+            virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+                                                Array<OneD,int> &EdgeID);
+=======
+            virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+                                                Array<OneD,int> &EdgeID);
+>>>>>>> master
 
             virtual void v_ReadGlobalOptimizationParameters();
 
@@ -1360,9 +1405,10 @@ namespace Nektar
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
             
             
-            virtual void v_GetPeriodicEdges(
+            virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
-                PeriodicMap &periodicEdges);
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces);
 
             // Homogeneous direction wrapper functions. 
             virtual LibUtilities::BasisSharedPtr  v_GetHomogeneousBasis(void)
@@ -2165,17 +2211,6 @@ namespace Nektar
         inline void ExpList::SetUpPhysNormals()
         {
             v_SetUpPhysNormals();
-        }
-
-        inline void ExpList::SetUpPhysTangents(
-                                const LocalRegions::ExpansionVector &locexp)
-        {
-            v_SetUpPhysTangents(locexp);
-        }
-        
-        inline void ExpList::SetUpTangents()
-        {
-            v_SetUpTangents();
         }
 
         inline void ExpList::GetBoundaryToElmtMap( Array<OneD, int> &ElmtID,

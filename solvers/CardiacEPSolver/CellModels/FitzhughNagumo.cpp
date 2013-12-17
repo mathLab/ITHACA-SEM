@@ -94,10 +94,10 @@ namespace Nektar
     /**
      *
      */
-    void CellModelFitzHughNagumo::v_PrintSummary(std::ostream &out)
+    void CellModelFitzHughNagumo::v_GenerateSummary(SummaryList& s)
     {
-        out << "\tCell model      : FitzHugh-Nagumo" << std::endl;
-        out << "\tBeta            : " << m_beta << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model","FitzHugh-Nagumo");
+        SolverUtils::AddSummaryItem(s, "Cell model beta", m_beta);
     }
 
 

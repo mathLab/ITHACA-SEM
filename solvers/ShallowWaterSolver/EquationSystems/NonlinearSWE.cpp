@@ -758,12 +758,12 @@ namespace Nektar
     }
 
 
- void NonlinearSWE::v_PrintSummary(std::ostream &out)
+    void NonlinearSWE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        ShallowWaterSystem::v_PrintSummary(out);
-	out << "\tVariables       : h  should be in field[0]" <<endl;
-	out << "\t                  hu should be in field[1]" <<endl;
-	out << "\t                  hv should be in field[2]" <<endl;
+        ShallowWaterSystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Variables", "h  should be in field[0]");
+        SolverUtils::AddSummaryItem(s, "",          "hu should be in field[1]");
+        SolverUtils::AddSummaryItem(s, "",          "hv should be in field[2]");
     }
 
 } //end of namespace

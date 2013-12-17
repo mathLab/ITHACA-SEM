@@ -40,7 +40,7 @@
 #include <LibUtilities/Foundations/Interp.h>
 
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/GeomFactors2D.h>
+#include <SpatialDomains/GeomFactors.h>
 
 
 namespace Nektar
@@ -67,7 +67,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
                     LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(coordim);
 
             m_fid = id;
 
@@ -121,7 +121,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
                     LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -177,7 +177,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
                     LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -235,7 +235,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
                     LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -405,7 +405,7 @@ namespace Nektar
             cx /= 3;
             cy /= 3;
             cz /= 3;
-           
+
             // Now construct a mapping which takes us from the vertices of one
             // face to the other. That is, vertex j of face2 corresponds to
             // vertex vmap[j] of face1.
@@ -419,16 +419,14 @@ namespace Nektar
                     x1 = (*face2[j])(0)-cx;
                     y1 = (*face2[j])(1)-cy;
                     z1 = (*face2[j])(2)-cz;
-                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-5)
+                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-8)
                     {
                         vmap[j] = i;
                         break;
                     }
                 }
             }
-            
-            // Use the mapping to determine the eight alignment options between
-            // faces.
+
             if (vmap[1] == (vmap[0]+1) % 3)
             {
                 switch (vmap[0])
@@ -564,8 +562,7 @@ namespace Nektar
         /**
          * Set up GeoFac for this geometry using Coord quadrature distribution
          */
-        void TriGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void TriGeom::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -583,8 +580,8 @@ namespace Nektar
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis);
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap);
 
                 m_geomFactorsState = ePtsFilled;
             }

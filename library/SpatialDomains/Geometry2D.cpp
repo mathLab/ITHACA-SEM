@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/SegGeom.h>
-
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
@@ -59,7 +59,7 @@ namespace Nektar
 
         StdRegions::StdExpansion2DSharedPtr Geometry2D::GetXmap(const int i)
         {
-            return m_xmap[i];
+            return boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(m_xmap[i]);
         }
 
         int Geometry2D::GetFid() const
@@ -114,12 +114,12 @@ namespace Nektar
         {
             if((i>=0)&& (i<m_coordim))
             {
-                return m_xmap[i];
+                return boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(m_xmap[i]);
             }
 
             NEKERROR(ErrorUtil::efatal,
                      "Invalid Index used in [] operator");
-            return m_xmap[0]; //should never be reached
+            return boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(m_xmap[0]); //should never be reached
         }
 
 
@@ -132,7 +132,8 @@ namespace Nektar
             Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
             NekDouble xmap,ymap, F1,F2;
             NekDouble der1_x, der2_x, der1_y, der2_y ;
-            const Array<TwoD, const NekDouble> &gmat = m_geomFactors->GetGmat();
+            const Array<TwoD, const NekDouble> &gmat
+                                        = m_geomFactors->GetDerivFactors(GetPointsKeys());
             
             // Unfortunately need the points in an Array to interpolate
             Array<OneD, NekDouble> D1Dx(ptsx.num_elements(),&gmat[0][0]);

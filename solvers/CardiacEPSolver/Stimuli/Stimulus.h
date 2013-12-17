@@ -42,6 +42,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 #include <CardiacEPSolver/Stimuli/Protocol.h>
+#include <SolverUtils/Core/Misc.h>
 
 namespace Nektar
 {
@@ -82,9 +83,9 @@ namespace Nektar
         }
         
         /// Print a summary of the outarray
-        void PrintSummary(std::ostream &out)
+        void GenerateSummary(SolverUtils::SummaryList& s)
         {
-            v_PrintSummary(out);
+            v_GenerateSummary(s);
         }
         
         static std::vector<StimulusSharedPtr> LoadStimuli(
@@ -103,7 +104,7 @@ namespace Nektar
         virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time) = 0;
         
-        virtual void v_PrintSummary(std::ostream &out) = 0;
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s) = 0;
         
     };
 }

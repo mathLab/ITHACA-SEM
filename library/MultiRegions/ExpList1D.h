@@ -131,14 +131,6 @@ namespace Nektar
             //MULTI_REGIONS_EXPORT void SetUpPhysNormals();
             //const StdRegions::StdExpansionVector &locexp);
 
-	    /// Set up the tangents on each expansion
-	    MULTI_REGIONS_EXPORT void SetUpPhysTangents(
-                const LocalRegions::ExpansionVector &locexp);
-	    
-            // direction =  1: Upwind
-            // direction = -1: Downwind
-
-
         MULTI_REGIONS_EXPORT void ParNormalSign(Array<OneD, NekDouble> &normsign);
 
         protected:
@@ -173,10 +165,6 @@ namespace Nektar
             virtual void v_SetUpPhysNormals();
             /// const StdRegions::StdExpansionVector &locexp);
 
-            /// Set up the tangents on each expansion.
-            virtual void v_SetUpPhysTangents(
-            	    		const LocalRegions::ExpansionVector &locexp);
-            
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 
             int m_firstIntEl;

@@ -45,39 +45,48 @@ namespace Nektar
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D():
             ExpListHomogeneous1D()
         {
+            SetExpType(e3DH1D);
         }
 
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                       const LibUtilities::BasisKey &HomoBasis,
-                                                       const NekDouble lhom,
-                                                       const bool useFFT,
-													   const bool dealiasing):
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::BasisKey &HomoBasis,
+            const NekDouble lhom,
+            const bool useFFT,
+            const bool dealiasing):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e3DH1D);
         }
 
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                       const LibUtilities::BasisKey &HomoBasis,
-                                                       const NekDouble lhom,
-                                                       const bool useFFT,
-													   const bool dealiasing,
-                                                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                                                       const std::string &var):
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::BasisKey &HomoBasis,
+            const NekDouble lhom,
+            const bool useFFT,
+            const bool dealiasing,
+            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+            const std::string &var):
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e3DH1D);
+
             GenExpList3DHomogeneous1D(graph2D->GetExpansions(var));
         }
         
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
-        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                                       const LibUtilities::BasisKey &HomoBasis,
-                                                       const NekDouble lhom,
-                                                       const bool useFFT,
-													   const bool dealiasing,
-                                                       const SpatialDomains::ExpansionMap  &expansions):                                                      
+        ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::BasisKey &HomoBasis,
+            const NekDouble lhom,
+            const bool useFFT,
+            const bool dealiasing,
+            const SpatialDomains::ExpansionMap  &expansions):                                                      
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
+            SetExpType(e3DH1D);
+            
             GenExpList3DHomogeneous1D(expansions);
         }
 
@@ -122,6 +131,8 @@ namespace Nektar
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In, bool DeclarePlanesSetCoeffPhys):
             ExpListHomogeneous1D(In)
         {
+            SetExpType(e3DH1D);
+
             if(DeclarePlanesSetCoeffPhys)
             {
                 bool False = false;

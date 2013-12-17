@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+echo usage: $0 number_of_loops
+exit
+fi
+
+NumLoops=$1
+
+do_TimingCGHelmSolve3D $NumLoops
+do_TimingHDGHelmSolve3D $NumLoops

@@ -31,7 +31,7 @@ do
                 # Loop over the number of Loops you want to run it
 	        for ((a=0; a<NumLoops; a++))
 	        do
-	            ./TimingCGHelmSolve2D $Type $MeshSize $NumModes $OptimisationLevel
+	            TimingCGHelmSolve2D $Type $MeshSize $NumModes $OptimisationLevel
                     echo Nektar++ TimingCGHelmSolve2D $Type $MeshSize $NumModes $OptimisationLevel
 
                     read TypeOut NumElementsOut NumModesOut NumCallsOut ElapsedTimeOut TimepCallOut L2Out L2OutBis LinfOut LinfOutBis nLocCoefOut  nGlobCoefOut nLocBCoefOut  nGlobBCoefOut  nLocDCoefOut nGlobDCoefOut nnzOut optLevelOut< $ExecutableDumpFile

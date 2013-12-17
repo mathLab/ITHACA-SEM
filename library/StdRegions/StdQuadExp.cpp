@@ -86,11 +86,12 @@ namespace Nektar
         // Differentiation Methods //
         /////////////////////////////
 
-        /** \brief Calculate the derivative of the physical points 
+        /** \brief Calculate the derivative of the physical points
          *
          *  For quadrilateral region can use the Tensor_Deriv function
          *  defined under StdExpansion.
          */
+
         void StdQuadExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                             Array<OneD, NekDouble> &out_d0,
                             Array<OneD, NekDouble> &out_d1,
@@ -138,6 +139,7 @@ namespace Nektar
         {
             //PhysTensorDeriv(inarray, outarray);            
             StdQuadExp::v_PhysDeriv(dir,inarray,outarray);
+
         }
 
 
@@ -890,57 +892,111 @@ namespace Nektar
             }
         }
 
-        int StdQuadExp::v_GetVertexMap(int localVertexId)
+        int StdQuadExp::v_GetVertexMap(int localVertexId, bool useCoeffPacking)
         {
             int localDOF = 0;
-            switch(localVertexId)
-            {
-            case 0:
-                { 
-                    localDOF = 0;    
-                }
-                break;
-            case 1:
-                {              
-                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                    {
-                        localDOF = m_base[0]->GetNumModes()-1;
-                    }
-                    else
-                    {
-                        localDOF = 1;
-                    }
-                }
-                break;
-            case 2:
-                {   
-                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                    {
-                        localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
-                    }
-                    else
-                    {
-                        localDOF = m_base[0]->GetNumModes()+1;
-                    }                    
-                }
-                break;
-            case 3:
-                { 
-                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                    {
-                        localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
-                    }
-                    else
-                    {
-                        localDOF = m_base[0]->GetNumModes();
-                    }
-                }
-                break;
-            default:
-                ASSERTL0(false,"eid must be between 0 and 3");
-                break;
-            }
 
+            if(useCoeffPacking == true)
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                    }
+                    break;
+                case 1:
+                    {              
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    { 
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes();
+                        }
+                    }
+                    break;
+                case 3:
+                    {   
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes()+1;
+                        }                    
+                    }
+                break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                }
+                
+            }
+            else
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                    }
+                    break;
+                case 1:
+                    {              
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    {   
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes()+1;
+                        }                    
+                    }
+                break;
+                case 3:
+                    { 
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes();
+                        }
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                }
+            }                
             return localDOF;
         }
  
@@ -1349,6 +1405,7 @@ namespace Nektar
                              Array<OneD,NekDouble> &outarray,
                              const StdMatrixKey &mkey)
         {
+            
             DNekMatSharedPtr mat = m_stdMatrixManager[mkey];
             
             if(inarray.get() == outarray.get())
@@ -1367,7 +1424,6 @@ namespace Nektar
         }
         
         
-
         void StdQuadExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                               const StdMatrixKey &mkey)
         {
@@ -1384,55 +1440,37 @@ namespace Nektar
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
             StdQuadExp OrthoExp(Ba,Bb);
             
-            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
-            int j,k;
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
             
+            //for the "old" implementation
             int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+
+            //SVV parameters loaded from the .xml case file
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
+            //To avoid the exponential from blowing up
+            NekDouble epsilon = 1;
 
-#if 0      //  Filter just linear space
+            //counters for scanning through orthocoeffs array
+            int j, k, cnt = 0;
             int nmodes = min(nmodes_a,nmodes_b);
-            // apply SVV filter. 
-            for(j = 0; j < nmodes_a; ++j)
-            {
-                for(k = 0; k < nmodes_b; ++k)
-                {
-                    if(j + k >= cutoff)
-                    {
-                        orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+1)*(j+k-cutoff+1)))));
-                    }
-                }
-            }
-#else   //  Filter just bilinear space
-            int nmodes = max(nmodes_a,nmodes_b);
-
-            Array<OneD, NekDouble> fac(nmodes,0.0);
-            for(j = cutoff; j < nmodes; ++j)
-            {
-                fac[j] = exp(-(j-nmodes)*(j-nmodes)/((NekDouble) (j-cutoff+1.0)*(j-cutoff+1.0)));
-            }
-
-
-            for(j = 0; j < nmodes_a; ++j)
-            {
-                for(k = 0; k < nmodes_b; ++k)
-                {
-                    if(j >= cutoff)
-                    {
-                        if((j >= cutoff)||(k >= cutoff))
-                        {
-                            orthocoeffs[j*nmodes_b + k] *= (1.0+SvvDiffCoeff*exp(-fac[j]*fac[k]));
-                            
-                        }
-                    }
-                }
-            }
-#endif
             
+            //------"New" Version August 22nd '13--------------------            
+            for(j = 0; j < nmodes_a; ++j)
+            {
+                for(k = 0; k < nmodes_b; ++k)
+                {
+                   if(j + k >= cutoff) //to filter out only the "high-modes"
+                   {
+                       orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon))))*exp(-(k-nmodes)*(k-nmodes)/((NekDouble)((k-cutoff+epsilon)*(k-cutoff+epsilon)))));
+                   }
+                    cnt++; 
+                }
+            }
+
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        

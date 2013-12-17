@@ -39,9 +39,11 @@ using namespace std;
 #include "MeshElements.h"
 #include "ProcessBL.h"
 
+#include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/BLPoints.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LocalRegions/PrismExp.h>
 
 namespace Nektar
@@ -83,7 +85,22 @@ namespace Nektar
             int nl      = config["layers"].as<int>();
             int nq      = config["nq"].    as<int>();
 
-            LibUtilities::BLPoints::delta_star = config["r"].as<NekDouble>();
+            // determine if geometric ratio is string or a constant. 
+            LibUtilities::AnalyticExpressionEvaluator rEval;
+            NekDouble r;
+            int       rExprId       = -1;
+            bool      ratioIsString = false;
+
+            if (config["r"].isType<NekDouble>())
+            {
+                r = config["r"].as<NekDouble>();
+            }
+            else
+            {
+                std::string rstr = config["r"].as<string>();
+                rExprId = rEval.DefineFunction("x y z", rstr);
+                ratioIsString = true;
+            }
 
             // Prismatic node -> face map.
             int prismFaceNodes[5][4] = {
@@ -253,13 +270,33 @@ namespace Nektar
                     LibUtilities::eBoundaryLayerPoints :
                     LibUtilities::eBoundaryLayerPointsRev;
 
+                if(ratioIsString) // determien value of r base on geom
+                {
+                    NekDouble x,y,z;
+                    NekDouble x1,y1,z1;
+                    int nverts = geom->GetNumVerts();
+
+                    x = y = z = 0.0;
+                    
+                    for(int i = 0; i < nverts; ++i)
+                    {
+                        geom->GetVertex(i)->GetCoords(x1,y1,z1);
+                        x += x1; y += y1; z += z1;
+                    }
+                    x /= (NekDouble) nverts;
+                    y /= (NekDouble) nverts;
+                    z /= (NekDouble) nverts;
+                    r = rEval.Evaluate(rExprId,x,y,z,0.0);
+                }
+
+
                 // Create basis.
                 LibUtilities::BasisKey B0(
                     LibUtilities::eModified_A, nq,
                     LibUtilities::PointsKey(nq,pt));
                 LibUtilities::BasisKey B1(
                     LibUtilities::eModified_A, 2,
-                    LibUtilities::PointsKey(nl+1, t));
+                    LibUtilities::PointsKey(nl+1, t, r));
                 LibUtilities::BasisKey B2(
                     LibUtilities::eModified_B, nq,
                     LibUtilities::PointsKey(nq,pt));
@@ -297,12 +334,56 @@ namespace Nektar
                         edgeNodes[j][0]  = el[i]->GetVertex(edgeVertMap[j][0]);
                         edgeNodes[j][nl] = el[i]->GetVertex(edgeVertMap[j][1]);
 
-                        // Create new interior nodes.
-                        for (int k = 1; k < nl; ++k)
+                        // Variable geometric ratio
+                        if(ratioIsString) 
                         {
-                            int pos = edgeOffset[j] + k*nq;
-                            edgeNodes[j][k] = NodeSharedPtr(
-                                new Node(nodeId++, x[pos], y[pos], z[pos]));
+                            NekDouble x0,y0,z0;
+                            NekDouble x1,y1,z1;
+                            NekDouble xm,ym,zm;
+                            
+                            // -> Find edge end and mid points
+                            x0 = x[edgeOffset[j]];
+                            y0 = y[edgeOffset[j]];
+                            z0 = z[edgeOffset[j]];
+
+                            x1 = x[edgeOffset[j]+nl*nq];
+                            y1 = y[edgeOffset[j]+nl*nq];
+                            z1 = z[edgeOffset[j]+nl*nq];
+
+                            xm = 0.5*(x0+x1);
+                            ym = 0.5*(y0+y1);
+                            zm = 0.5*(z0+z1);
+
+                            // evaluate r factor based on mid point value
+                            NekDouble rnew;
+                            rnew = rEval.Evaluate(rExprId,xm,ym,zm,0.0);
+
+                            // Get basis with new r; 
+                            LibUtilities::PointsKey Pkey(nl+1, t, rnew);
+                            LibUtilities::PointsSharedPtr newP
+                                = LibUtilities::PointsManager()[Pkey];
+                            
+                            const Array<OneD, const NekDouble> z = newP->GetZ();
+
+                            // Create new interior nodes based on this new blend
+                            for (int k = 1; k < nl; ++k)
+                            {
+                                xm = 0.5*(1+z[k])*(x1-x0) + x0;
+                                ym = 0.5*(1+z[k])*(y1-y0) + y0;
+                                zm = 0.5*(1+z[k])*(z1-z0) + z0;
+                                edgeNodes[j][k] = NodeSharedPtr(
+                                        new Node(nodeId++, xm,ym,zm));
+                            }
+                        }
+                        else
+                        {
+                            // Create new interior nodes.
+                            for (int k = 1; k < nl; ++k)
+                            {
+                                int pos = edgeOffset[j] + k*nq;
+                                edgeNodes[j][k] = NodeSharedPtr(
+                                    new Node(nodeId++, x[pos], y[pos], z[pos]));
+                            }
                         }
 
                         // Store these edges in edgeMap.

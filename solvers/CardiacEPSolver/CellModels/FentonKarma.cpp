@@ -389,10 +389,10 @@ namespace Nektar
         }
     }
     
-    void FentonKarma::v_PrintSummary(std::ostream &out)
+    void FentonKarma::v_GenerateSummary(SummaryList& s)
     {
-        out << "\tCell model      : FentonKarma" << std::endl;
-        out << "\tCell model var. : " << lookupIds[model_variant] << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model", "Fenton Karma");
+        SolverUtils::AddSummaryItem(s, "Cell model var.", lookupIds[model_variant]);
     }
     
     

@@ -67,7 +67,9 @@ namespace Nektar
         NekDouble m_sVVDiffCoeff;     // Diffusion coefficient of SVV modes
         SolverUtils::DiffusionSharedPtr         m_diffusion;        
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
-
+        
+        virtual void v_GenerateSummary(SummaryList &s);
+        
         UnsteadyDiffusion(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
         

@@ -119,6 +119,10 @@ namespace Nektar
                       Array<OneD,       NekDouble>& out_d0,
                       Array<OneD,       NekDouble>& out_d1,
                       Array<OneD,       NekDouble>& out_d2);
+            STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
+                const int dir,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
 
             //---------------------------------------
             // Transforms
@@ -241,8 +245,8 @@ namespace Nektar
                     Array<OneD,          int> &signarray,
                     int                        nummodesA = -1,
                     int                        nummodesB = -1);
-            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId);
-            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid,
+            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
+                                                          bool useCoeffPacking = false);            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid,
                     const Orientation edgeOrient,
                     Array<OneD, unsigned int> &maparray,
                     Array<OneD, int> &signarray);

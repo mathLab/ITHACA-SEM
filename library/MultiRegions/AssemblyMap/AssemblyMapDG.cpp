@@ -355,7 +355,6 @@ namespace Nektar
             // which can be reordered depending on the type of solver we would
             // like to use.
             typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-            typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
 
             BoostGraph boostGraphObj;
             int trace_id,trace_id1;
@@ -764,7 +763,6 @@ namespace Nektar
             // which can be reordered depending on the type of solver we would
             // like to use.
             typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-            typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
 
             BoostGraph boostGraphObj;
             int face_id, face_id1;

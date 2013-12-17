@@ -1128,11 +1128,11 @@ namespace Nektar
 
             for (vid1 = 0; vid1 < nVerts; ++vid1)
             {
-                vMap1 = GetVertexMap(vid1);
+                vMap1 = GetVertexMap(vid1,true);
 
                 for (vid2 = 0; vid2 < nVerts; ++vid2)
                 {
-                    vMap2 = GetVertexMap(vid2);
+                    vMap2 = GetVertexMap(vid2,true);
                     VertexValue = (*r_bnd)(vMap1, vMap2);
                     VertexMat.SetValue(vid1, vid2, VertexValue);
                 }
@@ -1767,6 +1767,15 @@ namespace Nektar
             }
 
             return facemaparray;
+        }
+
+        NekDouble Expansion3D::v_Integrate(
+                const Array<OneD, const NekDouble>& inarray)
+        {
+            NEKERROR(ErrorUtil::efatal, 
+                     "This function is not implemented here. It is shape "
+                     "specific");
+            return 0.0;
         }
     } //end of namespace
 } //end of namespace

@@ -106,8 +106,8 @@ namespace Nektar
         virtual void v_InitObject();
         
         /// Print Summary
-        virtual void v_PrintSummary(std::ostream &out);
-        
+        virtual void v_GenerateSummary(SummaryList& s);
+
     private:
         NekDouble m_waveFreq;
     };

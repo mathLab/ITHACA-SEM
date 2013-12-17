@@ -196,15 +196,6 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             int nVel = advVel.num_elements();
 
-            cout << "MAX IN: ";
-            for (int i = 0; i < nConvectiveFields; ++i)
-            {
-                double ma = abs(Vmath::Vmax(inarray[i].num_elements(), inarray[i], 1));
-                double mi = abs(Vmath::Vmin(inarray[i].num_elements(), inarray[i], 1));
-                cout << max(ma,mi) << " ";
-            }
-            cout << endl;
-
             // Call solver's flux vector function to compute the flux vector on
             // the entire domain.
             m_fluxVector(inarray, m_fluxVecStore);
@@ -246,15 +237,6 @@ namespace Nektar
                 Vmath::Vadd(m_numPoints, outarray[i], 1, tmp, 1,
                                          outarray[i], 1);
             }
-            cout << "MAX OUT: ";
-            for (int i = 0; i < nConvectiveFields; ++i)
-            {
-                double ma = abs(Vmath::Vmax(inarray[i].num_elements(), outarray[i], 1));
-                double mi = abs(Vmath::Vmin(inarray[i].num_elements(), outarray[i], 1));
-                cout << max(ma,mi) << " ";
-            }
-            cout << endl;
-
         }
 
         void Advection3DHomogeneous1D::ModifiedFluxVector(

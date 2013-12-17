@@ -782,25 +782,11 @@ namespace Nektar
                         }
                     }
                     
-                    if (idx >= 0 )
+                    if (idx >= 0)
                     {
-<<<<<<< HEAD
                         m_fields[0]->ExtractDataToCoeffs(
-                                        FieldDef[i],
-                                        FieldData[i],
-                                        FieldDef[i]->m_fields[idx],
-                                        vCoeffs);
-||||||| merged common ancestors
-                        m_fields[idx]->ExtractDataToCoeffs(FieldDef[i], 
-                                                         FieldData[i],
-                                                         FieldDef[i]->m_fields[idx],
-                                                         vCoeffs);
-=======
-                        m_fields[0]->ExtractDataToCoeffs(FieldDef[i], 
-                                                         FieldData[i],
-                                                         FieldDef[i]->m_fields[idx],
-                                                         vCoeffs);
->>>>>>> master
+                            FieldDef[i], FieldData[i],
+                            FieldDef[i]->m_fields[idx], vCoeffs);
                     }
                     else
                     {
@@ -2172,193 +2158,16 @@ namespace Nektar
             
             if (m_session->DefinesSolverInfo("UpwindType"))
             {
-<<<<<<< HEAD
-                std::string UpwindType;
-                UpwindType = m_session->GetSolverInfo("UpwindType");
-                if (UpwindType == "Average")
-                {
-                    out << "\tRiemann Solver  : Average" <<endl;
-                }
-                else if (UpwindType == "AUSM0")
-                {
-                    out << "\tRiemann Solver  : AUSM0"   <<endl;
-                }
-                else if (UpwindType == "AUSM1")
-                {
-                    out << "\tRiemann Solver  : AUSM1"   <<endl;
-                }
-                else if (UpwindType == "AUSM2")
-                {
-                    out << "\tRiemann Solver  : AUSM2"   <<endl;
-                }
-                else if (UpwindType == "AUSM3")
-                {
-                    out << "\tRiemann Solver  : AUSM3"   <<endl;
-                }
-                else if (UpwindType == "ExactToro")
-                {
-                    out << "\tRiemann Solver  : ExactToro"   <<endl;
-                }
-                else if (UpwindType == "HLL")
-                {
-                    out << "\tRiemann Solver  : HLL"   <<endl;
-                }
-                else if (UpwindType == "HLLC")
-                {
-                    out << "\tRiemann Solver  : HLLC"   <<endl;
-                }
-                else if (UpwindType == "LaxFriedrichs")
-                {
-                    out << "\tRiemann Solver  : Lax-Friedrichs"   <<endl;
-                }
-                else if (UpwindType == "Roe")
-                {
-                    out << "\tRiemann Solver  : Roe"   <<endl;
-                }
-||||||| merged common ancestors
-                std::string UpwindType;
-                UpwindType = m_session->GetSolverInfo("UpwindType");
-                if (UpwindType == "Average")
-                {
-                    out << "\tRiemann Solver  : Average" <<endl;
-                }
-                else if (UpwindType == "AUSM0")
-                {
-                    out << "\tRiemann Solver  : AUSM0"   <<endl;
-                }
-                else if (UpwindType == "AUSM1")
-                {
-                    out << "\tRiemann Solver  : AUSM1"   <<endl;
-                }
-                else if (UpwindType == "AUSM2")
-                {
-                    out << "\tRiemann Solver  : AUSM2"   <<endl;
-                }
-                else if (UpwindType == "AUSM3")
-                {
-                    out << "\tRiemann Solver  : AUSM3"   <<endl;
-                }
-                else if (UpwindType == "ExactToro")
-                {
-                    out << "\tRiemann Solver  : ExactToro"   <<endl;
-                }
-                else if (UpwindType == "HLL")
-                {
-                    out << "\tRiemann Solver  : HLL"   <<endl;
-                }
-                else if (UpwindType == "HLLC")
-                {
-                    out << "\tRiemann Solver  : HLLC"   <<endl;
-                }
-                else if (UpwindType == "LaxFriedrichs")
-                {
-                    out << "\tRiemann Solver  : Lax-Friedrichs"   <<endl;
-                }
-=======
                 AddSummaryItem(s, "Riemann Solver",
                                   m_session->GetSolverInfo("UpwindType"));
->>>>>>> master
             }
             
             if (m_session->DefinesSolverInfo("AdvectionType"))
             {
                 std::string AdvectionType;
                 AdvectionType = m_session->GetSolverInfo("AdvectionType");
-<<<<<<< HEAD
-                switch (m_projectionType)
-                {
-                    case MultiRegions::eGalerkin:
-                    {
-                        out << "\tProjection Type : Continuous Galerkin" <<endl;
-                        break;
-                    }
-                        
-                    case MultiRegions::eDiscontinuous:
-                    {
-                        if (AdvectionType == "WeakDG" || AdvectionType == "WeakDG3DHomogeneous1D")
-                        {
-                            out << "\tProjection Type : Weak Discontinuous Galerkin"        <<endl;
-                        }
-                        else if (AdvectionType == "FRDG" || AdvectionType == "FRDG3DHomogeneous1D")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction DG"             <<endl;
-                        }
-                        else if (AdvectionType == "FRSD" || AdvectionType == "FRSD3DHomogeneous1D")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction SD"             <<endl;
-                        }
-                        else if (AdvectionType == "FRHU" || AdvectionType == "FRHU3DHomogeneous1D")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction HU"             <<endl;
-                        }
-                        else if (AdvectionType == "FRcmin" || AdvectionType == "FRcmin3DHomogeneous1D")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction c = c-min"      <<endl;
-                        }
-                        else if (AdvectionType == "FRcinf" || AdvectionType == "FRcinf3DHomogeneous1D")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction c = c-infinity" <<endl;
-                        }
-                        break;
-                    }
-                    case MultiRegions::eMixed_CG_Discontinuous:
-                    {
-                        out << "\tProjection Type : Mixed CG/DG" << endl;
-                        break;
-                    }
-                    
-                    default:
-                        break;
-                }
-||||||| merged common ancestors
-                switch (m_projectionType)
-                {
-                    case MultiRegions::eGalerkin:
-                    {
-                        out << "\tProjection Type : Continuous Galerkin" <<endl;
-                        break;
-                    }
-                        
-                    case MultiRegions::eDiscontinuous:
-                    {
-                        if (AdvectionType == "WeakDG")
-                        {
-                            out << "\tProjection Type : Weak Discontinuous Galerkin"        <<endl;
-                        }
-                        else if (AdvectionType == "FRDG")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction DG"             <<endl;
-                        }
-                        else if (AdvectionType == "FRSD")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction SD"             <<endl;
-                        }
-                        else if (AdvectionType == "FRHU")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction HU"             <<endl;
-                        }
-                        else if (AdvectionType == "FRcmin")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction c = c-min"      <<endl;
-                        }
-                        else if (AdvectionType == "FRcinf")
-                        {
-                            out << "\tProjection Type : Flux Reconstruction c = c-infinity" <<endl;
-                        }
-                        break;
-                    }
-                    case MultiRegions::eMixed_CG_Discontinuous:
-                    {
-                        out << "\tProjection Type : Mixed CG/DG" << endl;
-                        break;
-                    }
-                    
-                    default:
-                        break;
-                }
-=======
-                AddSummaryItem(s, "Advection Type", GetAdvectionFactory().GetClassDescription(AdvectionType));
->>>>>>> master
+                AddSummaryItem(s, "Advection Type", GetAdvectionFactory().
+                               GetClassDescription(AdvectionType));
             }
 
             if (m_projectionType == MultiRegions::eGalerkin)
@@ -2379,103 +2188,8 @@ namespace Nektar
             {
                 std::string DiffusionType;
                 DiffusionType = m_session->GetSolverInfo("DiffusionType");
-<<<<<<< HEAD
-                switch (m_projectionType)
-                {
-                    case MultiRegions::eGalerkin:
-                    {
-                        break;
-                    }
-                        
-                    case MultiRegions::eDiscontinuous:
-                    {
-                        if (DiffusionType == "LDG" || DiffusionType == "LDGNS" ||
-                            DiffusionType == "LDG3DHomogeneous1D" || DiffusionType == "LDGNS3DHomogeneous1D")
-                        {
-                            out << "\tDiffusion Type  : LDG"    <<endl;
-                        }
-                        else if (DiffusionType == "LFRDG" || DiffusionType == "LFRDGNS" ||
-                                 DiffusionType == "LFRDG3DHomogeneous1D" || DiffusionType == "LFRDGNS3DHomogeneous1D")
-                        {
-                            out << "\tDiffusion Type  : LFRDG"  <<endl;
-                        }
-                        else if (DiffusionType == "LFRSD" || DiffusionType == "LFRSDNS" ||
-                                 DiffusionType == "LFRSD3DHomogeneous1D" || DiffusionType == "LFRSDNS3DHomogeneous1D")
-                        {
-                            out << "\tDiffusion Type  : LFRSD"  <<endl;
-                        }
-                        else if (DiffusionType == "LFRHU" || DiffusionType == "LFRHUNS" ||
-                                 DiffusionType == "LFRHU3DHomogeneous1D" || DiffusionType == "LFRHUNS3DHomogeneous1D")
-                        {
-                            out << "\tDiffusion Type  : LFRHU"  <<endl;
-                        }
-                        else if (DiffusionType == "LFRcmin" || DiffusionType == "LFRcminNS" ||
-                                 DiffusionType == "LFRcmin3DHomogeneous1D" || DiffusionType == "LFRcminNS3DHomogeneous1D")
-                        {
-                            out << "\tDiffusion Type  : LFR c = c-min"      <<endl;
-                        }
-                        else if (DiffusionType == "LFRcinf" || DiffusionType == "LFRcinfNS" ||
-                                 DiffusionType == "LFRcinf3DHomogeneous1D" || DiffusionType == "LFRcinfNS3DHomogeneous1D")
-                        {
-                            out << "\tDiffusion Type  : LFR c = c-infinity" <<endl;
-                        }
-                        break;
-                    }
-                    case MultiRegions::eMixed_CG_Discontinuous:
-                    {
-                        break;
-                    }
-                        
-                    default:
-                        break;
-                }
-||||||| merged common ancestors
-                switch (m_projectionType)
-                {
-                    case MultiRegions::eGalerkin:
-                    {
-                        break;
-                    }
-                        
-                    case MultiRegions::eDiscontinuous:
-                    {
-                        if (DiffusionType == "LDG" || DiffusionType == "LDGNS")
-                        {
-                            out << "\tDiffusion Type  : LDG"    <<endl;
-                        }
-                        else if (DiffusionType == "LFRDG" || DiffusionType == "LFRDGNS")
-                        {
-                            out << "\tDiffusion Type  : LFRDG"  <<endl;
-                        }
-                        else if (DiffusionType == "LFRSD" || DiffusionType == "LFRSDNS")
-                        {
-                            out << "\tDiffusion Type  : LFRSD"  <<endl;
-                        }
-                        else if (DiffusionType == "LFRHU" || DiffusionType == "LFRHUNS")
-                        {
-                            out << "\tDiffusion Type  : LFRHU"  <<endl;
-                        }
-                        else if (DiffusionType == "LFRcmin" || DiffusionType == "LFRcminNS")
-                        {
-                            out << "\tDiffusion Type  : LFR c = c-min"      <<endl;
-                        }
-                        else if (DiffusionType == "LFRcinf" || DiffusionType == "LFRcinfNS")
-                        {
-                            out << "\tDiffusion Type  : LFR c = c-infinity" <<endl;
-                        }
-                        break;
-                    }
-                    case MultiRegions::eMixed_CG_Discontinuous:
-                    {
-                        break;
-                    }
-                        
-                    default:
-                        break;
-                }
-=======
-                AddSummaryItem(s, "Diffusion Type", GetDiffusionFactory().GetClassDescription(DiffusionType));
->>>>>>> master
+                AddSummaryItem(s, "Diffusion Type", GetDiffusionFactory().
+                               GetClassDescription(DiffusionType));
             }
         }
 

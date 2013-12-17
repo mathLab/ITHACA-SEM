@@ -70,9 +70,12 @@ namespace Nektar
               m_periodicBwdCopy    (In.m_periodicBwdCopy),
               m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
         {
-            m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
-                *boost::dynamic_pointer_cast<ExpList1D>(In.m_trace),
-                DeclareCoeffPhysArrays);
+            if (In.m_trace)
+            {
+                m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
+                    *boost::dynamic_pointer_cast<ExpList1D>(In.m_trace),
+                    DeclareCoeffPhysArrays);
+            }
         }
 
         DisContField2D::DisContField2D(

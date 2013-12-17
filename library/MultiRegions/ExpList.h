@@ -779,27 +779,8 @@ namespace Nektar
 
             inline void SetUpPhysNormals();
 
-<<<<<<< HEAD
-            inline void SetUpPhysTangents(
-                const LocalRegions::ExpansionVector &locexp);
-
-            inline void SetUpTangents();
-
-            inline void GetBoundaryToElmtMap(
-                Array<OneD, int> &ElmtID,
-                Array<OneD,int> &EdgeID);
-||||||| merged common ancestors
-            inline void SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
- 	                
-
-            inline void SetUpTangents();
-
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                              Array<OneD,int> &EdgeID);
-=======
-            inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
-                                             Array<OneD,int> &EdgeID);
->>>>>>> master
 
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
@@ -1210,15 +1191,6 @@ namespace Nektar
                 const Array<OneD,const NekDouble> &inarray,
                       Array<OneD,      NekDouble> &outarray);
 			
-<<<<<<< HEAD
-            virtual void v_SetUpPhysTangents(
-                const LocalRegions::ExpansionVector &locexp);
-            
-||||||| merged common ancestors
-            virtual void v_SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
-            
-=======
->>>>>>> master
             virtual void v_GeneralMatrixOp(
                 const GlobalMatrixKey             &gkey,
                 const Array<OneD,const NekDouble> &inarray,
@@ -1293,21 +1265,8 @@ namespace Nektar
             
             virtual void v_SetUpPhysNormals();
             
-<<<<<<< HEAD
-            virtual void v_SetUpTangents();
-            
-            virtual void v_GetBoundaryToElmtMap(
-                Array<OneD, int> &ElmtID,
-                Array<OneD, int> &EdgeID);
-||||||| merged common ancestors
-            virtual void v_SetUpTangents();
-            
             virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                                 Array<OneD,int> &EdgeID);
-=======
-            virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
-                                                Array<OneD,int> &EdgeID);
->>>>>>> master
 
             virtual void v_ReadGlobalOptimizationParameters();
 

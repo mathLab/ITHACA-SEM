@@ -57,7 +57,6 @@ namespace Nektar
 
             const Array<OneD, const NekDouble>& Exec()
             {
-                cout << "SCALAR YO" << endl;
                 if (m_planeNumber == 0)
                 {
                     m_tmp = m_func();
@@ -99,7 +98,6 @@ namespace Nektar
 
             const Array<OneD, const Array<OneD, NekDouble> >& Exec()
             {
-                cout << "VECTOR " << m_desc << " " << m_planeNumber << endl;
                 if (m_planeNumber == 0)
                 {
                     m_tmp = m_func();

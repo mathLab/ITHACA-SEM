@@ -258,9 +258,9 @@ namespace Nektar
                 break;
             }
 
-        // Continuous projection
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
+            // Continuous projection
+            case MultiRegions::eGalerkin:
+            case MultiRegions::eMixed_CG_Discontinuous:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs(),0.0);
                 for(i = 0; i < nVariables; ++i)

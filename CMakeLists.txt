@@ -31,7 +31,9 @@ IF( NOT NEKTAR_PASSED_FIRST_CONFIGURE )
   SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
 ENDIF()
 
+# Attempt to retrieve git branch and SHA1 hash
 INCLUDE(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 SET(LIB_DIR "lib")
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )

@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
@@ -392,6 +393,8 @@ namespace Nektar
             LibUtilities::CommSharedPtr                 m_comm;
             /// The session reader
             LibUtilities::SessionReaderSharedPtr        m_session;
+            /// Field input/output
+            LibUtilities::FieldIOSharedPtr              m_fld;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.

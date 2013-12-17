@@ -61,6 +61,8 @@ namespace Nektar
             m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
             m_outputIndex = 0;
             m_index = 0;
+            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
+
         }
 
         FilterCheckpoint::~FilterCheckpoint()
@@ -105,7 +107,7 @@ namespace Nektar
                     pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], pFields[j]->UpdateCoeffs());
                 }
             }
-            LibUtilities::Write(vOutputFilename.str(),FieldDef,FieldData);
+            m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
             m_outputIndex++;
         }
 

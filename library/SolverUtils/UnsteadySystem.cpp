@@ -183,6 +183,7 @@ namespace Nektar
             }
 
             // Integrate in wave-space if using homogeneous1D
+            /*
             if(m_HomogeneousType == eHomogeneous1D)
             {
                 for(i = 0; i < nfields; ++i)
@@ -193,6 +194,7 @@ namespace Nektar
                     m_fields[i]->SetPhysState(false);
                 }
             }
+            */
 
             // Set up wrapper to fields data storage.
             Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
@@ -330,6 +332,7 @@ namespace Nektar
                 if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
                     doCheckTime)
                 {
+                    /*
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
                         for(i = 0; i< nfields; i++)
@@ -351,8 +354,11 @@ namespace Nektar
                     }
                     else
                     {
-                        Checkpoint_Output(nchk++);
+                    */
+                    Checkpoint_Output(nchk++);
+                    /*
                     }
+                    */
                     doCheckTime = false;
                 }
                 

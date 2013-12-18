@@ -755,6 +755,7 @@ namespace Nektar
         // Getting the standard velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(nvel);
         Array<OneD, NekDouble> maxV(n_element, 0.0);
+        LibUtilities::PointsKeyVector ptsKeys;
         
         for (int i = 0; i < nvel; ++i)
         {
@@ -767,6 +768,7 @@ namespace Nektar
             for (int el = 0; el < n_element; ++el)
             { 
                 int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
                 
                 // reset local space if necessary
                 if(n_points != n_points_0)
@@ -779,7 +781,7 @@ namespace Nektar
                 }		
                 
                 Array<TwoD, const NekDouble> gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors();
+                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors(ptsKeys);
                 
                 if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
@@ -828,6 +830,7 @@ namespace Nektar
             { 
                 
                 int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
                 
                 // reset local space if necessary
                 if(n_points != n_points_0)
@@ -840,7 +843,7 @@ namespace Nektar
                 }		
                 
                 Array<TwoD, const NekDouble> gmat =
-                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors();
+                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors(ptsKeys);
                 
                 if (m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)

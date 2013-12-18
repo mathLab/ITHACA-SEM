@@ -57,7 +57,9 @@ namespace Nektar
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
 
-        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
+        m_session->MatchSolverInfo(
+            "SpectralVanishingViscosity", "True", m_useSpecVanVisc, false);
+
         if(m_useSpecVanVisc)
         {
             m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
@@ -129,6 +131,19 @@ namespace Nektar
     {
     }
 
+    void UnsteadyDiffusion::v_GenerateSummary(SummaryList& s)
+    {
+        UnsteadySystem::v_GenerateSummary(s);
+        if(m_useSpecVanVisc)
+        {
+            stringstream ss;
+            ss << "SVV (cut off = " << m_sVVCutoffRatio
+               << ", coeff = "      << m_sVVDiffCoeff << ")";
+            AddSummaryItem(s, "Smoothing", ss.str());
+        }
+    }
+    
+    
     /* @brief Compute the right-hand side for the unsteady diffusion problem.
      * 
      * @param inarray    Given fields.
@@ -214,6 +229,12 @@ namespace Nektar
         int npoints    = m_fields[0]->GetNpoints();
         factors[StdRegions::eFactorLambda] = 1.0 / lambda / m_epsilon;
         factors[StdRegions::eFactorTau]    = 1.0;
+        
+        if(m_useSpecVanVisc)
+        {
+            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_epsilon;
+        }
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}

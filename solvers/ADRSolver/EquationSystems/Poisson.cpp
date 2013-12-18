@@ -64,7 +64,7 @@ namespace Nektar
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
             stringstream name;
-            name << "Forcing func [" << i << "]" << endl;
+            name << "Forcing func [" << i << "]";
             SolverUtils::AddSummaryItem(s, name.str(),
                     m_session->GetFunction("Forcing", i)->GetExpression());
         }

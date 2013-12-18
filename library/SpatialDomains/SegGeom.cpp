@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/GeomFactors1D.h>
+#include <SpatialDomains/GeomFactors.h>
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdSegExp.h>
@@ -293,8 +293,7 @@ namespace Nektar
         }
 
         ///  Set up GeoFac for this geometry using Coord quadrature distribution
-        void SegGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        void SegGeom::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -307,9 +306,8 @@ namespace Nektar
                     gType = eDeformed;
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(
-                    gType, m_coordim, m_xmap, m_coeffs, tbasis);
-
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    gType, m_coordim, m_xmap);
                 m_geomFactorsState = ePtsFilled;
             }
         }

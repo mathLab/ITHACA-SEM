@@ -40,7 +40,7 @@
 #include <LibUtilities/Foundations/Interp.h>
 
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/GeomFactors2D.h>
+#include <SpatialDomains/GeomFactors.h>
 
 
 namespace Nektar
@@ -547,8 +547,7 @@ namespace Nektar
         /**
          * Set up GeoFac for this geometry using Coord quadrature distribution
          */
-        void TriGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void TriGeom::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -566,8 +565,8 @@ namespace Nektar
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, m_coeffs, tbasis);
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap);
 
                 m_geomFactorsState = ePtsFilled;
             }

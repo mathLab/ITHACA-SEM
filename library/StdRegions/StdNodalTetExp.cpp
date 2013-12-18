@@ -342,7 +342,8 @@ namespace Nektar
         }
         */
 
-        int StdNodalTetExp::v_GetVertexMap(const int localVertexId)
+        int StdNodalTetExp::v_GetVertexMap(const int localVertexId,
+                                           bool useCoeffPacking)
         {
             ASSERTL0(localVertexId >= 0 && localVertexId <= 3,
                      "Local Vertex ID must be between 0 and 3");                

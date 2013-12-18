@@ -59,7 +59,6 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT Geometry1D();
             SPATIAL_DOMAINS_EXPORT Geometry1D(const int coordim);
             SPATIAL_DOMAINS_EXPORT virtual ~Geometry1D();
-
             SPATIAL_DOMAINS_EXPORT PointGeomSharedPtr
                         GetVertex(const int i) const;
             SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType

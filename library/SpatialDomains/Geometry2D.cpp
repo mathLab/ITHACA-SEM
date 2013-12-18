@@ -35,7 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/SegGeom.h>
-
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
@@ -54,11 +54,6 @@ namespace Nektar
 
         Geometry2D::~Geometry2D()
         {
-        }
-
-        StdRegions::StdExpansionSharedPtr Geometry2D::v_GetXmap() const
-        {
-            return m_xmap;
         }
 
         int Geometry2D::GetFid() const
@@ -115,7 +110,7 @@ namespace Nektar
             NekDouble xmap,ymap, F1,F2;
             NekDouble der1_x, der2_x, der1_y, der2_y ;
             const Array<TwoD, const NekDouble> &gmat
-                                        = m_geomFactors->GetDerivFactors();
+                = m_geomFactors->GetDerivFactors(GetPointsKeys());
             
             // Unfortunately need the points in an Array to interpolate
             Array<OneD, NekDouble> D1Dx(ptsx.num_elements(),&gmat[0][0]);

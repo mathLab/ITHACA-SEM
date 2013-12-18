@@ -94,7 +94,6 @@ namespace Nektar
             Geometry2DVector                                 m_faces;
             std::vector<StdRegions::Orientation>             m_eorient;
             std::vector<StdRegions::Orientation>             m_forient;
-            StdRegions::StdExpansion3DSharedPtr              m_xmap;
             std::list<CompToElmt>                            m_elmtmap;
             bool                                             m_owndata;
             int                                              m_eid;
@@ -114,8 +113,7 @@ namespace Nektar
             virtual void      v_FillGeom();
             virtual NekDouble v_GetCoord(const int i, 
                                          const Array<OneD, const NekDouble> &Lcoord);
-            virtual void      v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+            virtual void      v_GenGeomFactors();
 
             //---------------------------------------
             // Helper functions

@@ -88,10 +88,10 @@ namespace Gs
       unsigned int size_sk, size_s, size_total;
       unsigned int p1, p2;
       unsigned int nrecvn;
-    } cr_stage_data;
+    } cr_stage;
 
     typedef struct {
-      cr_stage_data *stage[2];
+      cr_stage *stage[2];
       unsigned int nstages;
       unsigned int buffer_size, stage_buffer_size;
     } cr_data;
@@ -104,24 +104,31 @@ namespace Gs
     typedef void exec_fun(
       void *data, gs_mode mode, unsigned vn, gs_dom dom, gs_op op,
       unsigned transpose, const void *execdata, const struct comm *comm, char *buf);
+    typedef void fin_fun(void *data);
+
+    typedef struct {
+        unsigned int buffer_size, mem_size;
+        void *data;
+        exec_fun *exec;
+        fin_fun *fin;
+    } gs_remote;
 
     typedef struct {
       struct comm comm;
       const unsigned int *map_local[2]; /* 0=unflagged, 1=all */
       const unsigned int *flagged_primaries;
-      pw_data *pwd;
-      cr_data *crd;
-      allreduce_data *ard;
-      unsigned int buffer_size;
-      void *execdata;
-      exec_fun *exec;
+      gs_remote r;
+      unsigned int handle_size;
     } gs_data;
+
+    typedef enum {gs_auto, gs_pairwise, gs_crystal_router, gs_all_reduce} gs_method;
 
     extern "C"
     {
         void nektar_gs(void *u, gs_dom dom, gs_op op, unsigned transpose,
                 gs_data *gsh, buffer *buf);
-        gs_data *nektar_gs_setup(const long *id, unsigned int n, const struct comm *comm);
+        gs_data *nektar_gs_setup(const long *id, unsigned int n, const struct comm *comm,
+                                int unique, gs_method method, int verbose);
         void nektar_gs_free(gs_data *gsh);
         void nektar_gs_unique(const long *id, unsigned int n, const struct comm *comm);
     }
@@ -154,7 +161,7 @@ namespace Gs
         MPI_Comm_dup(vCommMpi->GetComm(), &vComm.c);
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
-        return nektar_gs_setup(&pId[0], pId.num_elements(), &vComm);
+        return nektar_gs_setup(pId.get(),pId.num_elements(), &vComm, 0, gs_auto, 1);
 #else
         return 0;
 #endif
@@ -184,7 +191,7 @@ namespace Gs
         vComm.c  = vCommMpi->GetComm();
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
-        nektar_gs_unique(&pId[0], pId.num_elements(), &vComm);
+        nektar_gs_unique(pId.get(), pId.num_elements(), &vComm);
 #endif
     }
 
@@ -219,14 +226,14 @@ namespace Gs
         }
         if (pBuffer.num_elements() == 0)
         {
-            nektar_gs(&pU[0], gs_double, pOp, false, pGsh, 0);
+            nektar_gs(pU.get(), gs_double, pOp, false, pGsh, 0);
         }
         else
         {
             array buf;
             buf.ptr = &pBuffer[0];
             buf.n = pBuffer.num_elements();
-            nektar_gs(&pU[0], gs_double, pOp, false, pGsh, &buf);
+            nektar_gs(pU.get(), gs_double, pOp, false, pGsh, &buf);
         }
 #endif
     }

@@ -37,7 +37,7 @@
 #include <SpatialDomains/Geometry1D.h>
 #include <StdRegions/StdHexExp.h>
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/GeomFactors3D.h>
+#include <SpatialDomains/GeomFactors.h>
 
 namespace Nektar
 {
@@ -195,7 +195,6 @@ namespace Nektar
                 LibUtilities::PointsKey(points2,LibUtilities::eGaussLobattoLegendre));
 
             m_xmap = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(A,B,C);
-
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -204,8 +203,7 @@ namespace Nektar
             
         }
 
-        void HexGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void HexGeom::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -259,9 +257,8 @@ namespace Nektar
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, m_coeffs, tbasis);
-
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap);
                 m_geomFactorsState = ePtsFilled;
             }
         }

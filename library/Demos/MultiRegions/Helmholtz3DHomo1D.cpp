@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    LibUtilities::FieldIOSharedPtr fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+
     //----------------------------------------------
     // Read in mesh from input file
     SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
@@ -144,7 +146,7 @@ int main(int argc, char *argv[])
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
 
-    LibUtilities::Write(out, FieldDef, FieldData);
+    fld->Write(out, FieldDef, FieldData);
     //-----------------------------------------------
 
     vSession->Finalise();

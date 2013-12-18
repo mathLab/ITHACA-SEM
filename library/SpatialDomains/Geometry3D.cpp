@@ -36,7 +36,7 @@
 #include <SpatialDomains/Geometry3D.h>
 
 #include <SpatialDomains/Geometry2D.h>
-#include <SpatialDomains/GeomFactors3D.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>
 
@@ -121,7 +121,7 @@ namespace Nektar
           NekDouble der1_x, der2_x, der3_x, der1_y, der2_y, der3_y,
               der1_z, der2_z, der3_z; 
           const Array<TwoD, const NekDouble> &gmat
-                                      = m_geomFactors->GetDerivFactors();
+              = m_geomFactors->GetDerivFactors(GetPointsKeys());
 
           // Unfortunately need the points in an Array to interpolate
           int npts = ptsx.num_elements();
@@ -242,8 +242,7 @@ namespace Nektar
         /**
          * Generate the geometry factors for this element.
          */
-        void Geometry3D::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void Geometry3D::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -262,9 +261,8 @@ namespace Nektar
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, m_coeffs, tbasis);
-
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap);
                 m_geomFactorsState = ePtsFilled;
             }
         }
@@ -289,14 +287,6 @@ namespace Nektar
       //---------------------------------------
       // Helper functions
       //---------------------------------------
-
-      /**
-       * @brief Return the co-ordinate mapping for dimension i.
-       */
-      StdRegions::StdExpansionSharedPtr Geometry3D::v_GetXmap() const
-      {
-          return m_xmap;
-      }
 
       /**
        * @brief Return the dimension of this element.

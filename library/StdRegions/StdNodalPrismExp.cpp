@@ -337,10 +337,10 @@ namespace Nektar
         }
         */
 
-        int StdNodalPrismExp::v_GetVertexMap(const int localVertexId)
+        int StdNodalPrismExp::v_GetVertexMap(const int localVertexId,
+                                             bool useCoeffPacking)
         {
-            ASSERTL0(localVertexId >= 0 && localVertexId <= 3,
-                     "Local Vertex ID must be between 0 and 3");                
+            ASSERTL0(false,"Needs setting up");
             return localVertexId;
         }
 

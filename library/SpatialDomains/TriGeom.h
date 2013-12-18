@@ -42,7 +42,7 @@
 #include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>
 
-#include <SpatialDomains/GeomFactors2D.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <StdRegions/StdTriExp.h>
 
 namespace Nektar
@@ -139,8 +139,7 @@ namespace Nektar
                         const int i,
                         const Array<OneD,const NekDouble> &Lcoord);
 
-                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors();
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
 

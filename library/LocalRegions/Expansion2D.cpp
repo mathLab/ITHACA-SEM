@@ -1027,6 +1027,30 @@ namespace Nektar
                     }
                 }
                 break;
+            //HDG postprocessing
+            case StdRegions::eInvLaplacianWithUnityMean:
+                {
+                    MatrixKey lapkey(StdRegions::eLaplacian, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalMat  &LapMat = *GetLocMatrix(lapkey);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(LapMat.GetRows(),LapMat.GetColumns());
+                    DNekMatSharedPtr lmat = returnval;
+
+                    (*lmat) = LapMat;
+
+                    // replace first column with inner product wrt 1
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmp(nq);
+                    Array<OneD, NekDouble> outarray(m_ncoeffs);
+                    Vmath::Fill(nq,1.0,tmp,1);
+                    IProductWRTBase(tmp, outarray);
+
+                    Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
+                                 &(lmat->GetPtr())[0],1);
+
+                    lmat->Invert();
+                }
+                break;
             default:
                 ASSERTL0(false,"This matrix type cannot be generated from this class");
                 break;

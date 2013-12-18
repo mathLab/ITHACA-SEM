@@ -2049,6 +2049,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
         Array<OneD, NekDouble>               pressure   (nTotQuadPoints);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
+        LibUtilities::PointsKeyVector        ptsKeys;
         
         // Zero output array
         Vmath::Zero(stdV.num_elements(), stdV, 1);
@@ -2064,9 +2065,11 @@ namespace Nektar
         
         for(int el = 0; el < n_element; ++el)
         { 
+            ptsKeys = m_fields[0]->GetExp(el)->GetPointsKeys();
+
             // Possible bug: not multiply by jacobian??
             const Array<TwoD, const NekDouble> &gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors();
+                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors(ptsKeys);
             
             int nq = m_fields[0]->GetExp(el)->GetTotPoints();
             

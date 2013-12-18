@@ -40,7 +40,7 @@
 #include <StdRegions/StdQuadExp.h>
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/Curve.hpp>
-#include <SpatialDomains/GeomFactors2D.h>
+#include <SpatialDomains/GeomFactors.h>
 
 
 namespace Nektar
@@ -325,6 +325,10 @@ namespace Nektar
             return GetFaceOrientation(face1.m_verts, face2.m_verts);
         }
 
+        /** 
+         * Calculate the orientation of face2 to face1 (note this is
+         * not face1 to face2!). 
+         */ 
         StdRegions::Orientation QuadGeom::GetFaceOrientation(
             const PointGeomVector &face1,
             const PointGeomVector &face2)
@@ -506,8 +510,7 @@ namespace Nektar
         /**
          * Set up GeoFac for this geometry using Coord quadrature distribution
          */
-        void QuadGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void QuadGeom::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -570,7 +573,6 @@ namespace Nektar
 
                 m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
                     Gtype, m_coordim, m_xmap, m_coeffs, tbasis);
-
                 m_geomFactorsState = ePtsFilled;
             }
         }

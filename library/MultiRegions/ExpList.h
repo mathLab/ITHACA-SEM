@@ -329,10 +329,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
                                   const int k);
 
-            /// Populate tangents vector with tangents from each element.
-            MULTI_REGIONS_EXPORT void GetTangents(
-                             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents);
-
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
@@ -674,11 +670,6 @@ namespace Nektar
                                                                  Array<OneD,      NekDouble> &outarray);
 
             inline void SetUpPhysNormals();
-
-            inline void SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
- 	                
-
-            inline void SetUpTangents();
 
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                              Array<OneD,int> &EdgeID);
@@ -1071,8 +1062,6 @@ namespace Nektar
 			
             virtual void v_IProductWRTBase_IterPerExp(const Array<OneD,const NekDouble> &inarray,  Array<OneD,      NekDouble> &outarray);
 			
-            virtual void v_SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
-            
             virtual void v_GeneralMatrixOp(
                                            const GlobalMatrixKey             &gkey,
                                            const Array<OneD,const NekDouble> &inarray,
@@ -1135,8 +1124,6 @@ namespace Nektar
                                                      int BndID);
             
             virtual void v_SetUpPhysNormals();
-            
-            virtual void v_SetUpTangents();
             
             virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                                 Array<OneD,int> &EdgeID);
@@ -1970,17 +1957,6 @@ namespace Nektar
         inline void ExpList::SetUpPhysNormals()
         {
             v_SetUpPhysNormals();
-        }
-
-        inline void ExpList::SetUpPhysTangents(
-                                const LocalRegions::ExpansionVector &locexp)
-        {
-            v_SetUpPhysTangents(locexp);
-        }
-        
-        inline void ExpList::SetUpTangents()
-        {
-            v_SetUpTangents();
         }
 
         inline void ExpList::GetBoundaryToElmtMap( Array<OneD, int> &ElmtID,

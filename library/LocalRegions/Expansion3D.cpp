@@ -566,7 +566,7 @@ namespace Nektar
 
                             SetFaceToGeomOrientation(i, face_lambda);
 
-                            Array<OneD, NekDouble> tmp(FaceExp->GetNcoeffs());
+                            Array<OneD, NekDouble> tmp(FaceExp->GetTotPoints());
                             FaceExp->BwdTrans(face_lambda, tmp);
                             AddHDGHelmholtzFaceTerms(tau, i, tmp, mkey.GetVarCoeffs(), f);
 							

@@ -38,6 +38,8 @@
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <SpatialDomains/MeshGraph3D.h>
+#include <LocalRegions/HexExp.h>
+#include <LocalRegions/TetExp.h>
 
 #include <boost/assign/std/vector.hpp>
 
@@ -2202,6 +2204,159 @@ namespace Nektar
             }
 
             return returnval;
+        }
+        
+		/**
+         * @brief Evaluate HDG post-processing to increase polynomial order of
+         * solution.
+         * 
+         * This function takes the solution (assumed to be one order lower) in
+         * physical space, and postprocesses at the current polynomial order by
+         * solving the system:
+         * 
+         * \f[
+         * \begin{aligned}
+         *   (\nabla w, \nabla u^*) &= (\nabla w, u), \\
+         *   \langle \nabla u^*, 1 \rangle &= \langle \nabla u, 1 \rangle
+         * \end{aligned}
+         * \f]
+         * 
+         * where \f$ u \f$ corresponds with the current solution as stored
+         * inside #m_coeffs.
+         * 
+         * @param outarray  The resulting field \f$ u^* \f$.
+         */
+        void  DisContField3D::EvaluateHDGPostProcessing(
+            Array<OneD, NekDouble> &outarray)
+        {
+            int    i,cnt,f,ncoeff_face;
+            Array<OneD, NekDouble> force, out_tmp,qrhs,qrhs1;
+            Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            //StdRegions::Orientation facedir;
+
+            int     eid,nq_elmt, nm_elmt;
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), face_lambda;
+            Array<OneD, NekDouble> tmp_coeffs;
+            m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
+
+            face_lambda = loc_lambda;
+
+            // Calculate Q using standard DG formulation.
+            for(i = cnt = 0; i < GetExpSize(); ++i)
+            {
+                eid = m_offset_elmt_id[i];
+
+                nq_elmt = (*m_exp)[eid]->GetTotPoints();
+                nm_elmt = (*m_exp)[eid]->GetNcoeffs();
+                qrhs  = Array<OneD, NekDouble>(nq_elmt);
+                qrhs1  = Array<OneD, NekDouble>(nq_elmt);
+                force = Array<OneD, NekDouble>(2*nm_elmt);
+                out_tmp = force + nm_elmt;
+                LocalRegions::ExpansionSharedPtr ppExp;
+
+                int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
+                int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
+                int num_points2 = (*m_exp)[eid]->GetBasis(2)->GetNumPoints();
+                int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
+                int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
+                int num_modes2 = (*m_exp)[eid]->GetBasis(2)->GetNumModes();
+                // Probably a better way of setting up lambda than this.  Note
+                // cannot use PutCoeffsInToElmts since lambda space is mapped
+                // during the solve.
+                for(f = 0; f < (*m_exp)[eid]->GetNfaces(); ++f)
+                {
+                    //facedir = (*m_exp)[eid]->GetFaceOrient(f);
+
+                    ncoeff_face = elmtToTrace[eid][f]->GetNcoeffs();
+                    boost::dynamic_pointer_cast<LocalRegions::Expansion3D>((*m_exp)[eid])->SetFaceToGeomOrientation(f,face_lambda);
+                    //elmtToTrace[eid][f]->SetCoeffsToOrientation(facedir,face_lambda,face_lambda);
+                    Vmath::Vcopy(ncoeff_face,face_lambda,1,
+                                 elmtToTrace[eid][f]->UpdateCoeffs(),1);
+                    face_lambda = face_lambda + ncoeff_face;
+                }
+
+                //creating orthogonal expansion (checking if we have quads or triangles)
+                LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
+                switch(shape)
+                {
+                    case LibUtilities::eHexahedron:
+                    {
+                        const LibUtilities::PointsKey PkeyH1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyH2(num_points1,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyH3(num_points2,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey  BkeyH1(LibUtilities::eOrtho_A, num_modes0, PkeyH1);
+                        LibUtilities::BasisKey  BkeyH2(LibUtilities::eOrtho_A, num_modes1, PkeyH2);
+                        LibUtilities::BasisKey  BkeyH3(LibUtilities::eOrtho_A, num_modes2, PkeyH3);
+                        SpatialDomains::HexGeomSharedPtr hGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(BkeyH1, BkeyH2, BkeyH3, hGeom);
+                    }
+                    break;
+                    case LibUtilities::eTetrahedron:
+                    {
+                        const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        const LibUtilities::PointsKey PkeyT3(num_points2,LibUtilities::eGaussRadauMAlpha2Beta0);
+                        LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
+                        LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
+                        LibUtilities::BasisKey  BkeyT3(LibUtilities::eOrtho_C, num_modes2, PkeyT3);
+                        SpatialDomains::TetGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(BkeyT1, BkeyT2, BkeyT3, tGeom);
+                    }
+                    break;
+                    default:
+                        ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
+                };
+
+
+                //DGDeriv	
+                // (d/dx w, q_0)
+                (*m_exp)[eid]->DGDeriv(
+                    0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                    elmtToTrace[eid], out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                ppExp->IProductWRTDerivBase(0,qrhs,force);
+
+
+                // + (d/dy w, q_1)
+                (*m_exp)[eid]->DGDeriv(
+                    1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                    elmtToTrace[eid], out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                ppExp->IProductWRTDerivBase(1,qrhs,out_tmp);
+
+                Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
+
+                // + (d/dz w, q_2)
+                (*m_exp)[eid]->DGDeriv(
+                    2,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                    elmtToTrace[eid], out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                ppExp->IProductWRTDerivBase(2,qrhs,out_tmp);
+
+                Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
+                // determine force[0] = (1,u)
+                (*m_exp)[eid]->BwdTrans(
+                    tmp_coeffs = m_coeffs + m_coeff_offset[eid],qrhs);
+                force[0] = (*m_exp)[eid]->Integral(qrhs);
+
+                // multiply by inverse Laplacian matrix
+                // get matrix inverse
+                LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, ppExp->DetShapeType(), *ppExp);
+                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
+                
+                NekVector<NekDouble> in (nm_elmt,force,eWrapper);
+                //NekVector<NekDouble> out(nm_elmt, tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
+                NekVector<NekDouble> out(nm_elmt, ppExp->UpdateCoeffs(), eWrapper);
+
+                out = (*lapsys)*in;
+				
+                //transforming back to modified basis
+                ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
+                (*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
+            }
         }
 
         /**

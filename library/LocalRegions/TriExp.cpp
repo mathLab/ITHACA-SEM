@@ -1210,6 +1210,7 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
+            case StdRegions::eInvLaplacianWithUnityMean:
                 returnval = Expansion2D::v_GenMatrix(mkey);
                 break;
             default:
@@ -1370,22 +1371,8 @@ namespace Nektar
                 break;
             case StdRegions::eInvLaplacianWithUnityMean:
                 {
-                    NekDouble one = 1.0;
-                    MatrixKey lapkey(StdRegions::eLaplacian,mkey.GetShapeType(), *this);
-                    DNekMatSharedPtr lmat = GenMatrix(lapkey);
-
-                    // replace first column with inner product wrt 1
-                    int nq = GetTotPoints();
-                    Array<OneD, NekDouble> tmp(nq);
-                    Array<OneD, NekDouble> outarray(m_ncoeffs);
-                    Vmath::Fill(nq,one,tmp,1);
-                    v_IProductWRTBase(tmp, outarray);
-
-                    Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
-                                 &(lmat->GetPtr())[0],m_ncoeffs);
-
-                    lmat->Invert();
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,lmat); //Populate  matrix.
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
                 }
                 break;
             case StdRegions::eHelmholtz:

@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
 	int MeshSize    = atoi(argv[2]);
 	int NumModes    = atoi(argv[3]);
 	int optLevel    = atoi(argv[4]);
+	std::string optLevelStr;
 
 	//----------------------------------------------
 	// Retrieve the necessary input files
@@ -99,16 +100,19 @@ int main(int argc, char *argv[])
 		case 0:
 			{
 				GlobOptFileName << "NoGlobalMat.xml";
+				optLevelStr = "SumFac";
 			}
 			break;
 		case 2:
 			{
 				GlobOptFileName << "DoBlockMat.xml";
+				optLevelStr = "BlkMat";
 			}
 			break;
 		case 3:
 			{
 				GlobOptFileName << "DoGlobalMat.xml";
+				optLevelStr = "GlbMat";
 			}
 			break;
 		case 4:
@@ -366,12 +370,14 @@ int main(int argc, char *argv[])
 	int nGlobBndCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalBndCoeffs();
 	int nLocDirCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalDirBndCoeffs();
 	int nGlobDirCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalDirBndCoeffs();
+	int nGlobBandwidth = Exp->GetLocalToGlobalMap()->GetBndSystemBandWidth();
+	int nGlobBndRank = nGlobBndCoeffs - nGlobDirCoeffs;
 	MultiRegions::GlobalMatrixKey key(StdRegions::eHelmholtz,Exp->GetLocalToGlobalMap(),factors);
 	int nnz            = Exp->GetGlobalMatrixNnz(key);
 
 	ofstream outfile("TimingCGHelmSolve3D.dat");
 	outfile.precision(0);
-	outfile << setw(10) << optLevel << " ";
+	outfile << setw(10) << optLevelStr << " ";
 	outfile << setw(10) << TypeStr << " ";
 	outfile << setw(10) << NumElements << " ";
 	outfile << setw(10) << NumModes << " ";
@@ -391,6 +397,8 @@ int main(int argc, char *argv[])
 	outfile << setw(10) << nGlobBndCoeffs << " ";
 	outfile << setw(10) << nLocDirCoeffs  << " ";
 	outfile << setw(10) << nGlobDirCoeffs << " ";
+	outfile << setw(10) << nGlobBndRank << " ";
+	outfile << setw(10) << nGlobBandwidth << " ";
 	outfile << setw(10) << nnz << " ";
 	outfile << endl;
 

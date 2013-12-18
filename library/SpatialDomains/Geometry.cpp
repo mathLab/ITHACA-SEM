@@ -195,10 +195,7 @@ namespace Nektar
 
         StdRegions::StdExpansionSharedPtr Geometry::v_GetXmap() const
         {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for shape type geometries");
-            static StdRegions::StdExpansionSharedPtr returnval;
-            return returnval; 
+            return m_xmap;
         }
 
         bool Geometry::v_ContainsPoint(

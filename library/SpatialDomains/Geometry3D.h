@@ -83,8 +83,6 @@ namespace Nektar
                 GetFace(int i);
             SPATIAL_DOMAINS_EXPORT StdRegions::Orientation 
                 GetFaceOrient(const int i) const;
-            SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion3DSharedPtr
-                GetXmap();
             SPATIAL_DOMAINS_EXPORT int
                 GetDir(const int faceidx, const int facedir) const;
 
@@ -118,8 +116,6 @@ namespace Nektar
             //---------------------------------------
             // Helper functions
             //---------------------------------------
-            virtual StdRegions::StdExpansionSharedPtr
-                                                v_GetXmap() const;
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetVid(int i) const;
             virtual const SegGeomSharedPtr      v_GetEdge(int i) const;

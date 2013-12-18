@@ -117,7 +117,6 @@ namespace Nektar
             virtual const PointGeomSharedPtr    v_GetVertex(int i) const;
             virtual const Geometry1DSharedPtr   v_GetEdge(int i) const;
             virtual const Geometry2DSharedPtr   v_GetFace(int i) const;
-            virtual StdRegions::StdExpansionSharedPtr v_GetXmap() const;
             virtual StdRegions::Orientation v_GetFaceOrient(const int i) const;
             virtual StdRegions::Orientation v_GetEorient(const int i) const;
             virtual StdRegions::Orientation v_GetCartesianEorient(const int i) const;

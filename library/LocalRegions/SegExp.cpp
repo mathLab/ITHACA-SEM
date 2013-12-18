@@ -117,7 +117,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>&  inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             NekDouble  ival;
             Array<OneD,NekDouble> tmp(nquad0);
 
@@ -168,7 +168,8 @@ namespace Nektar
                       Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             Array<OneD,NekDouble> diff(nquad0);
 
             //StdExpansion1D::PhysTensorDeriv(inarray,diff);
@@ -235,24 +236,13 @@ namespace Nektar
             switch(coordim)
             {
                 case 2:
-
-                    Array<OneD, Array<OneD, NekDouble> > tangents;
-                    tangents = Array<OneD, Array<OneD, NekDouble> >(coordim);
-                    for(int k=0; k<coordim; ++k)
-                    {
-                        tangents[k]= Array<OneD, NekDouble>(nquad0); 
-                    }
-                    tangents = GetMetricInfo()->GetEdgeTangent();
-                    ASSERTL0(tangents!=NullNekDoubleArrayofArray, 
-                        "tangent vectors do not exist:" 
-                        "check if a boundary region is defined as I ");
                     //diff= dU/de
                     Array<OneD,NekDouble> diff(nquad0);
 
                     PhysTensorDeriv(inarray,diff);
 
                     //get dS/de= (Jac)^-1
-                    Array<OneD, NekDouble> Jac = m_metricinfo->GetJac();
+                    Array<OneD, NekDouble> Jac = m_metricinfo->GetJac(GetPointsKeys());
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                          //calculate the derivative as (dU/de)*(Jac)^-1
@@ -279,7 +269,8 @@ namespace Nektar
                       Array<OneD, NekDouble>& out_dn)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat =
+                            m_metricinfo->GetDerivFactors(GetPointsKeys());
             int     coordim  = m_geom->GetCoordim();
             Array<OneD, NekDouble> out_dn_tmp(nquad0,0.0);
             switch(coordim)
@@ -549,7 +540,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                       int coll_check)
         {
             int   nquad0 = m_base[0]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             Array<OneD,NekDouble> tmp(nquad0);
 
 
@@ -572,7 +563,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                       Array<OneD, NekDouble> & outarray)
         {
             int    nquad = m_base[0]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD, NekDouble> tmp1(nquad);
 
@@ -1061,15 +1053,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         }
 
 
-        void SegExp::v_SetUpPhysTangents(
-                const ExpansionSharedPtr &exp2D,
-                const int edge)
-        {
-             GetMetricInfo()->ComputeEdgeTangents(exp2D->GetGeom(),
-                                edge, GetBasis(0)->GetPointsKey());
-        }
-
-
         /// Unpack data from input file assuming it comes from
         // the same expansion type
         void SegExp::v_ExtractDataToCoeffs(
@@ -1122,7 +1105,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type = geomFactors->GetGtype();
-            const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
+            const Array<TwoD, const NekDouble> &gmat =
+                                geomFactors->GetDerivFactors(GetPointsKeys());
             int nqe = m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
 
@@ -1185,7 +1169,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD,NekDouble> physValues(nquad);
             Array<OneD,NekDouble> dPhysValuesdx(nquad);
@@ -1290,7 +1275,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             const NekDouble lambda =
                 mkey.GetConstFactor(StdRegions::eFactorLambda);
 
@@ -1430,6 +1416,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             DNekScalMatSharedPtr returnval;
             NekDouble fac;
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
 
             ASSERTL2(m_metricinfo->GetGtype() != 
                      SpatialDomains::eNoGeomType,
@@ -1447,7 +1434,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     }
                     else
                     {
-                        fac = (m_metricinfo->GetJac())[0];
+                        fac = (m_metricinfo->GetJac(ptsKeys))[0];
                         goto UseStdRegionsMatrix;
                     }
                 }
@@ -1468,7 +1455,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     }
                     else
                     {
-                        fac = 1.0/(m_metricinfo->GetJac())[0];
+                        fac = 1.0/(m_metricinfo->GetJac(ptsKeys))[0];
                         goto UseStdRegionsMatrix;
                     }
                 }
@@ -1513,8 +1500,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                                             mkey.GetShapeType(), *this);  
 
                         DNekMatSharedPtr WeakDerivStd = GetStdMatrix(deriv0key);
-                        fac = m_metricinfo->GetGmat()[dir][0]*
-                            m_metricinfo->GetJac()[0];
+                        fac = m_metricinfo->GetDerivFactors(ptsKeys)[dir][0]*
+                            m_metricinfo->GetJac(ptsKeys)[0];
 
                         returnval = MemoryManager<DNekScalMat>::
                                             AllocateSharedPtr(fac,WeakDerivStd);
@@ -1534,10 +1521,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         fac = 0.0;
                         for (int i = 0; i < coordim; ++i)
                         {
-                            fac += m_metricinfo->GetGmat()[i][0]*
-                                   m_metricinfo->GetGmat()[i][0];
+                            fac += m_metricinfo->GetDerivFactors(ptsKeys)[i][0]*
+                                   m_metricinfo->GetDerivFactors(ptsKeys)[i][0];
                         }
-                        fac *= m_metricinfo->GetJac()[0];
+                        fac *= m_metricinfo->GetJac(ptsKeys)[0];
                         goto UseStdRegionsMatrix;
                     }
                 }

@@ -79,7 +79,7 @@ namespace Nektar
                 LibUtilities::eModified_C, 2,
                 LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha2Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {

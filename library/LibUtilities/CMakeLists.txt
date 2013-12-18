@@ -11,6 +11,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/Equation.h
     ./BasicUtils/FieldIO.h
+    ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
@@ -33,6 +34,7 @@ SET(BasicUtilsSources
     ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/Equation.cpp
     ./BasicUtils/FieldIO.cpp
+    ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
     ./BasicUtils/Timer.cpp
@@ -326,6 +328,13 @@ SET(LibUtilitySources
     ${MemorySources}
 )
 
+# Define the git branch and SHA1 hash if we are in a git repository
+# Only apply to FieldIO.cpp to minimise rebuilding on git commit/update.
+IF (NOT ${GIT_REFSPEC} STREQUAL "GITDIR-NOTFOUND")
+    SET_PROPERTY(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/BasicUtils/FieldIO.cpp
+                 APPEND PROPERTY COMPILE_DEFINITIONS
+                 GIT_SHA1=\"${GIT_SHA1}\" GIT_BRANCH=\"${GIT_REFSPEC}\")
+ENDIF ()
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
@@ -335,6 +344,7 @@ TARGET_LINK_LIBRARIES(LibUtilities
     ${Boost_IOSTREAMS_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
+    ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
     ${ZLIB_LIBRARY}
     ${TINYXML_LIB}

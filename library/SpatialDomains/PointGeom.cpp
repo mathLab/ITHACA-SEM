@@ -280,8 +280,7 @@ namespace Nektar
             return returnval;
         }
 
-        void PointGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        void PointGeom::v_GenGeomFactors()
         {
 
         }

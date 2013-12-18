@@ -52,6 +52,8 @@
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
+#include <iostream>
+
 #include <string>
 
 
@@ -106,6 +108,10 @@ namespace Nektar
 
             // Save the basename of input file name for output details
             m_sessionName = m_session->GetSessionName();
+
+            // Instantiate a field reader/writer
+            m_fld = MemoryManager<LibUtilities::FieldIO>
+                ::AllocateSharedPtr(m_session->GetComm());
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
@@ -543,13 +549,6 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
-            // If a tangent vector policy is defined then the local tangent
-            // vectors on each element need to be generated
-            if (m_session->DefinesGeometricInfo("TANGENTDIR"))
-            {
-                m_fields[0]->SetUpTangents();
-            }
-
             // Zero all physical fields initially
             ZeroPhysFields();
         }
@@ -671,7 +670,19 @@ namespace Nektar
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
                 
-                LibUtilities::Import(filename,FieldDef,FieldData);
+
+                int numexp = m_fields[0]->GetExpSize(); 
+                Array<OneD,int> ElementGIDs(numexp);
+                // Define list of global element ids 
+                for(int i = 0; i < numexp; ++i)
+                {
+                    ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
+                }
+
+
+                m_fld->Import(filename,FieldDef,FieldData,
+                                     LibUtilities::NullFieldMetaDataMap,
+                                     ElementGIDs);
                 
                 int idx = -1;
                 
@@ -690,7 +701,7 @@ namespace Nektar
                     
                     if(idx >= 0 )
                     {
-                        m_fields[idx]->ExtractDataToCoeffs(FieldDef[i], 
+                        m_fields[0]->ExtractDataToCoeffs(FieldDef[i], 
                                                          FieldData[i],
                                                          FieldDef[i]->m_fields[idx],
                                                          vCoeffs);
@@ -1172,7 +1183,7 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
 
             //Get Homogeneous
-            LibUtilities::Import(pInfile,FieldDef,FieldData);
+            m_fld->Import(pInfile,FieldDef,FieldData);
 
             int nvar = m_session->GetVariables().size();
             if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -1234,15 +1245,10 @@ namespace Nektar
          */
         void EquationSystem::v_Output(void)
         {
-            std::string outname = m_sessionName;
-            if (m_comm->GetSize() > 1)
-            {
-                outname += "_P"+boost::lexical_cast<std::string>(m_comm->GetRank());
-            }
-            outname += ".fld";
-            WriteFld(outname); 
+             WriteFld(m_sessionName + ".fld");
         }
 
+                
         /**
          * Zero the physical fields.
          */
@@ -1698,16 +1704,10 @@ namespace Nektar
          */
         void EquationSystem::Checkpoint_Output(const int n)
         {
-            std::stringstream outname;
-            outname << m_sessionName << "_" << n;
+            std::string outname =  m_sessionName +  "_" + 
+                boost::lexical_cast<std::string>(n);
 
-            if (m_comm->GetSize() > 1)
-            {
-                outname << "_P" << m_comm->GetRank();
-            }
-            outname << ".chk";
-
-            WriteFld(outname.str());
+            WriteFld(outname + ".chk");
         }
 
         /**
@@ -1789,7 +1789,7 @@ namespace Nektar
                 m_fieldMetaDataMap["Time"] = boost::lexical_cast<std::string>(m_time);
             }
 
-            LibUtilities::Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
+            m_fld->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
         }
 
         /**
@@ -1805,7 +1805,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            LibUtilities::Import(infile,FieldDef,FieldData);
+            m_fld->Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
@@ -1841,7 +1841,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            LibUtilities::Import(infile,FieldDef,FieldData);
+            m_fld->Import(infile,FieldDef,FieldData);
             int idx = -1;
 
             Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
@@ -1884,7 +1884,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
         
-            LibUtilities::Import(infile,FieldDef,FieldData);
+            m_fld->Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)

@@ -97,6 +97,53 @@ namespace Nektar
         }
 
 
+        
+        /**
+         * Given faceOrient of a local element to its local face and
+         * perFaceOrient which states the alignment of one periodic
+         * face to the other global face determine a new faceOrient
+         * that takes this local element face to the global/unique
+         * face
+         */ 
+        StdRegions::Orientation  DeterminePeriodicFaceOrient(
+                       StdRegions::Orientation   faceOrient,
+                       StdRegions::Orientation   perFaceOrient)
+        {
+            
+            StdRegions::Orientation  returnval = faceOrient;
+            
+            if(perFaceOrient != StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+            {
+                int tmp1 = (int)faceOrient    - 5;
+                int tmp2 = (int)perFaceOrient - 5;
+                        
+                int flipDir1Map [8] = {2,3,0,1,6,7,4,5};
+                int flipDir2Map [8] = {1,0,3,2,5,4,7,6};
+                int transposeMap[8] = {4,5,6,7,0,2,1,3};
+
+                // Transpose orientation
+                if (tmp2 > 3)
+                {
+                    tmp1 = transposeMap[tmp1];
+                }
+                
+                // Reverse orientation in direction 1.
+                if (tmp2 == 2 || tmp2 == 3 || tmp2 == 6 || tmp2 == 7)
+                {
+                    tmp1 = flipDir1Map[tmp1];
+                }
+                
+                // Reverse orientation in direction 2
+                if (tmp2 % 2 == 1)
+                {
+                    tmp1 = flipDir2Map[tmp1];
+                }
+                
+                returnval = (StdRegions::Orientation)(tmp1+5);
+            }
+            return returnval;
+        }
+
 
         /**
          * Sets up the global to universal mapping of degrees of freedom across
@@ -235,15 +282,22 @@ namespace Nektar
                         LocalRegions::Expansion3D>(
                             locExpansion)->GetGeom3D()->GetFaceOrient(j);
 
-                    locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
-                    dof = locExpansion->GetFaceIntNcoeffs(j);
                     meshFaceId = locExpansion->GetGeom()->GetFid(j);
-
+                    
                     pIt = perFaces.find(meshFaceId);
                     if (pIt != perFaces.end())
                     {
+                        if(meshFaceId == min(meshFaceId, pIt->second[0].id))
+                        {
+                            faceOrient = DeterminePeriodicFaceOrient(faceOrient,pIt->second[0].orient);
+                        }
                         meshFaceId = min(meshFaceId, pIt->second[0].id);
                     }
+                    
+                    
+                    locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
+                    dof = locExpansion->GetFaceIntNcoeffs(j);
+
 
                     for(k = 0; k < dof; ++k)
                     {

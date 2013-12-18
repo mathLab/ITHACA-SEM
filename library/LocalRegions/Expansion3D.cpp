@@ -1729,7 +1729,7 @@ namespace Nektar
         }
 
         Array<OneD, unsigned int>
-        Expansion3D::v_GetFaceInverseBoundaryMap(int fid)
+        Expansion3D::v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient)
         {
             int n, j;
             int nFaceCoeffs;
@@ -1751,13 +1751,21 @@ namespace Nektar
             nFaceCoeffs = GetFaceIntNcoeffs(fid);
 
             Array<OneD, unsigned int> facemaparray(nFaceCoeffs);
-            StdRegions::Orientation   fOrient   =
-                GetFaceOrient(fid);
+            StdRegions::Orientation   fOrient; 
             Array<OneD, unsigned int> maparray  =
                 Array<OneD, unsigned int>(nFaceCoeffs);
             Array<OneD, int>          signarray =
                 Array<OneD, int>(nFaceCoeffs, 1);
 
+            if(faceOrient == StdRegions::eNoOrientation)
+            {
+                fOrient = GetFaceOrient(fid);
+            }
+            else
+            {
+                fOrient = faceOrient; 
+            }
+            
             // maparray is the location of the face within the matrix
             GetFaceInteriorMap(fid, fOrient, maparray, signarray);
 

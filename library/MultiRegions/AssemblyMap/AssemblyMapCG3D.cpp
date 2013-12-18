@@ -1412,13 +1412,16 @@ namespace Nektar
                             }
                         }
 
-                        if (pIt->second[minIdK].orient == StdRegions::eBackwards &&
-                            meshEdgeId != min(minId, meshEdgeId))
+                        if( meshEdgeId != min(minId, meshEdgeId))
                         {
-                            edgeOrient = edgeOrient == StdRegions::eForwards ?
-                                StdRegions::eBackwards :
-                                StdRegions::eForwards;
+                            if (pIt->second[minIdK].orient == StdRegions::eBackwards)
+                            {
+                                // Swap edge orientation 
+                                edgeOrient = (edgeOrient == StdRegions::eForwards) ? 
+                                    StdRegions::eBackwards : StdRegions::eForwards;
+                            }
                         }
+                        
                     }
 
                     locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
@@ -1448,37 +1451,10 @@ namespace Nektar
                     
                     pIt = periodicFaces.find(meshFaceId);
                     
-                    // See if this face is periodic.
                     if (pIt != periodicFaces.end() &&
-                        pIt->second[0].orient != StdRegions::eDir1FwdDir1_Dir2FwdDir2 &&
                         meshFaceId == min(meshFaceId, pIt->second[0].id))
                     {
-                        int tmp1 = (int)faceOrient            - 5;
-                        int tmp2 = (int)pIt->second[0].orient - 5;
-                        
-                        int flipDir1Map[8]  = {2,3,0,1,6,7,4,5};
-                        int flipDir2Map[8]  = {1,0,3,2,5,4,7,6};
-                        int transposeMap[8] = {4,5,6,7,0,1,2,3};
-                        
-                        // Reverse orientation in direction 1.
-                        if (tmp2 == 2 || tmp2 == 3 || tmp2 == 6 || tmp2 == 7)
-                        {
-                            tmp1 = flipDir1Map[tmp1];
-                        }
-
-                        // Reverse orientation in direction 2
-                        if (tmp2 % 2 == 1)
-                        {
-                            tmp1 = flipDir2Map[tmp1];
-                        }
-
-                        // Transpose orientation
-                        if (tmp2 > 3)
-                        {
-                            tmp1 = transposeMap[tmp1];
-                        }
-
-                        faceOrient = (StdRegions::Orientation)(tmp1+5);
+                        faceOrient = DeterminePeriodicFaceOrient(faceOrient,pIt->second[0].orient);
                     }
 
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
@@ -1563,9 +1539,7 @@ namespace Nektar
                             if (pIt->second[minIdL].orient == StdRegions::eBackwards &&
                                 meshEdgeId != min(minId, meshEdgeId))
                             {
-                                edgeOrient = edgeOrient == StdRegions::eForwards ?
-                                    StdRegions::eBackwards :
-                                    StdRegions::eForwards;
+                                edgeOrient = (edgeOrient == StdRegions::eForwards) ?  StdRegions::eBackwards : StdRegions::eForwards;
                             }
                         }
                         

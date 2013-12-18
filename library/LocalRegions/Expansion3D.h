@@ -45,6 +45,7 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
+
         class Expansion2D;
         typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
         typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
@@ -68,23 +69,25 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void SetFaceToGeomOrientation(const int face, Array<OneD, NekDouble> &inout);
             
             inline void AddHDGHelmholtzFaceTerms(
-                const Array<OneD, const NekDouble> &inarray,
-                const NekDouble                     tau,
-                const int                           edge,
-                StdRegions::StdExpansionSharedPtr   FaceExp,
-                const StdRegions::VarCoeffMap      &dirForcing,
-                Array <OneD, NekDouble>            &outarray);
+                const NekDouble                    tau,
+                const int                          edge,
+                Array<OneD, NekDouble>            &facePhys,
+                const StdRegions::VarCoeffMap     &dirForcing,
+                Array<OneD, NekDouble>            &outarray);
 
+#if 0
             inline void AddHDGHelmholtzTraceTerms(
                 const NekDouble                                tau,
                 const Array<OneD, const NekDouble>            &inarray,
                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
                 const StdRegions::VarCoeffMap                 &dirForcing,
                 Array<OneD,NekDouble>                         &outarray);
+#endif
             
             inline void AddNormTraceInt(
                 const int                                      dir,
                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> >          &faceCoeffs,
                 Array<OneD,NekDouble>                         &outarray);
 
             inline void AddNormTraceInt(
@@ -95,11 +98,11 @@ namespace Nektar
                 const StdRegions::VarCoeffMap                 &varcoeffs);
 
             inline void AddFaceBoundaryInt(
-                const Array<OneD, const NekDouble> &inarray,
-                const int                           face,
-                StdRegions::StdExpansionSharedPtr  &FaceExp,
-                Array <OneD,NekDouble >            &outarray,
-                const StdRegions::VarCoeffMap      &varcoeffs = StdRegions::NullVarCoeffMap);
+                const int                          face,
+                StdRegions::StdExpansionSharedPtr &FaceExp,
+                Array<OneD, NekDouble>            &facePhys,
+                Array<OneD, NekDouble>            &outarray,
+                const StdRegions::VarCoeffMap     &varcoeffs = StdRegions::NullVarCoeffMap);
             
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
 

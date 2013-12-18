@@ -42,6 +42,7 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
+#if 0
         void Expansion3D::AddHDGHelmholtzTraceTerms(
             const NekDouble                                tau,
             const Array<OneD, const NekDouble>            &inarray, 
@@ -49,38 +50,38 @@ namespace Nektar
             const StdRegions::VarCoeffMap                 &dirForcing,
             Array<OneD,NekDouble>                         &outarray)
         {
+            
             ASSERTL0(&inarray[0] != &outarray[0],
                      "Input and output arrays use the same memory");
-
-            int f, cnt, order_f, nfaces = GetNfaces();
+            
+            int f,cnt;
+            int order_f;
+            int nfaces = GetNfaces();
             Array<OneD, const NekDouble> tmp;
             
             cnt = 0;
             for(f = 0; f < nfaces; ++f)
             {
-                order_f = FaceExp[f]->GetNcoeffs();
-                Array<OneD, NekDouble> coeffs(order_f, inarray + cnt);
-                Array<OneD, NekDouble> phys  (FaceExp[f]->GetTotPoints());
-
-                FaceExp[f]->BwdTrans(coeffs, phys);
-                AddHDGHelmholtzFaceTerms(phys, tau, f, FaceExp[f], dirForcing, outarray);
-
+                order_f = FaceExp[f]->GetNcoeffs();                    
+                Vmath::Vcopy(order_f,tmp = inarray + cnt, 1, FaceExp[f]->UpdateCoeffs(), 1);
+                FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(), FaceExp[f]->UpdatePhys());
+                AddHDGHelmholtzFaceTerms(tau, f, FaceExp[f], dirForcing, outarray);
                 cnt += order_f;
             }
         }
-        
-        // evaluate additional terms in HDG face. Note that this assumes that
-        // edges are unpacked into local cartesian order.
+#endif        
+        //  evaluate additional terms in HDG face. Note that this assumes that
+        // edges are unpacked into local cartesian order. 
         void Expansion3D::AddHDGHelmholtzFaceTerms(
-            const Array<OneD, const NekDouble> &inarray, 
-            const NekDouble                     tau,
-            const int                           face,
-            StdRegions::StdExpansionSharedPtr   FaceExp,
-            const StdRegions::VarCoeffMap      &varcoeffs,
-            Array<OneD,NekDouble>              &outarray)
+            const NekDouble                    tau,
+            const int                          face,
+            Array<OneD, NekDouble>            &facePhys,
+            const StdRegions::VarCoeffMap     &varcoeffs,
+            Array<OneD, NekDouble>            &outarray)
         {
+            ExpansionSharedPtr FaceExp = GetFaceExp(face);
             int i,j,n;
-            int nquad_f = FaceExp->GetTotPoints(); 
+            int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1); 
             int order_f = FaceExp->GetNcoeffs();
             int coordim = GetCoordim();
             int ncoeffs = GetNcoeffs();
@@ -94,7 +95,7 @@ namespace Nektar
 
             DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
             
-            DNekVec Coeffs  (ncoeffs,outarray,eWrapper);
+            DNekVec Coeffs(ncoeffs,outarray,eWrapper);
             DNekVec Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
 
             StdRegions::IndexMapKey ikey(
@@ -126,12 +127,11 @@ namespace Nektar
             //================================================================
             // Add F = \tau <phi_i,in_phys>
             // Fill face and take inner product
-            Array<OneD, NekDouble> coeffs(FaceExp->GetNcoeffs());
-            FaceExp->IProductWRTBase(inarray, coeffs);
+            FaceExp->IProductWRTBase(facePhys, outcoeff);
 
             for(i = 0; i < order_f; ++i)
             {
-                outarray[(*map)[i].index] += (*map)[i].sign * tau * coeffs[i];
+                outarray[(*map)[i].index] += (*map)[i].sign*tau*outcoeff[i];
             }
             //================================================================
 
@@ -145,8 +145,8 @@ namespace Nektar
             // Three independent direction
             for(n = 0; n < coordim; ++n)
             {
-                Vmath::Vmul(nquad_f,normals[n],1,inarray,1,inval,1);
-                
+                Vmath::Vmul(nquad_f, normals[n], 1, facePhys, 1, inval, 1);
+
                 if (m_negatedNormals[face])
                 {
                     Vmath::Neg(nquad_f, inval, 1);
@@ -163,8 +163,8 @@ namespace Nektar
                 }
                 */
                 
-                FaceExp->IProductWRTBase(inval,outcoeff);
-                
+                FaceExp->IProductWRTBase(inval, outcoeff);
+
                 // M^{-1} G
                 for(i = 0; i < ncoeffs; ++i)
                 {
@@ -174,10 +174,10 @@ namespace Nektar
                         tmpcoeff[i] += scale*data[i+(*map)[j].index*ncoeffs]*(*map)[j].sign*outcoeff[j];
                     }
                 }
-                
+
                 DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
-                Coeffs = Coeffs  + Dmat*Tmpcoeff;
-                
+                Coeffs = Coeffs  + Dmat*Tmpcoeff;       
+
                 /*
                 if(varcoeffs.find(VarCoeff[n]) != varcoeffs.end())
                 {
@@ -214,47 +214,54 @@ namespace Nektar
             for(f = 0; f < nfaces; ++f)
             {
                 order_f = FaceExp[f]->GetNcoeffs();
-                nquad_f = FaceExp[f]->GetTotPoints();
+                nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);
 
                 const Array<OneD, const Array<OneD, NekDouble> > &normals = GetFaceNormal(f);
-                Array<OneD, NekDouble> coeffs(FaceExp[f]->GetNcoeffs(), inarray + cnt);
-                Array<OneD, NekDouble> phys  (nquad_f);
+                Array<OneD, NekDouble> faceCoeffs(order_f);
+                Array<OneD, NekDouble> facePhys  (nquad_f);
 
+                for(i = 0; i < order_f; ++i)
+                {
+                    faceCoeffs[i] = inarray[i+cnt];
+                }
                 cnt += order_f;
 
-                FaceExp[f]->BwdTrans(coeffs, phys);
-                
+                FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
+
                 // Multiply by variable coefficient
                 /// @TODO: Document this
-                // StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
-                //                                         StdRegions::eVarCoeffD11,
-                //                                         StdRegions::eVarCoeffD22};
-                // StdRegions::VarCoeffMap::const_iterator x;
-                // Array<OneD, NekDouble> varcoeff_work(nquad_e);
+//                StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
+//                                                        StdRegions::eVarCoeffD11,
+//                                                        StdRegions::eVarCoeffD22};
+//                StdRegions::VarCoeffMap::const_iterator x;
+//                Array<OneD, NekDouble> varcoeff_work(nquad_e);
 
-                // if ((x = varcoeffs.find(VarCoeff[dir])) != varcoeffs.end())
-                // {
-                //     GetPhysEdgeVarCoeffsFromElement(e,EdgeExp[e],x->second,varcoeff_work);
-                //     Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
-                // }
+//                if ((x = varcoeffs.find(VarCoeff[dir])) != varcoeffs.end())
+//                {
+//                    GetPhysEdgeVarCoeffsFromElement(e,EdgeExp[e],x->second,varcoeff_work);
+//                    Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
+//                }
 
-                Vmath::Vmul(nquad_f, normals[dir], 1, phys, 1, phys, 1);
+                Vmath::Vmul(nquad_f, normals[dir], 1, facePhys, 1, facePhys, 1);
                 
                 if (m_negatedNormals[f])
                 {
-                    Vmath::Neg(nquad_f, phys, 1);
+                    Vmath::Neg(nquad_f, facePhys, 1);
                 }
 
-                AddFaceBoundaryInt(phys, f, FaceExp[f], outarray, varcoeffs);
+                AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray, varcoeffs);
             }
         }
-		//shorter version of the above (coefficients are already set for faces)
-        void Expansion3D::AddNormTraceInt(const int dir,
-                                          Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                                          Array<OneD,NekDouble> &outarray)
+
+        //shorter version of the above (coefficients are already set for faces)
+        void Expansion3D::AddNormTraceInt(
+            const int                                       dir,
+            Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+            Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
+            Array<OneD, NekDouble>                         &outarray)
         {
-            int i,f,cnt;
-            int order_f,nquad_f;
+            int f, cnt;
+            int order_f, nquad_f;
             int nfaces = GetNfaces();
 
             cnt = 0;
@@ -263,23 +270,21 @@ namespace Nektar
                 order_f = FaceExp[f]->GetNcoeffs();
                 nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);
 
-                const Array<OneD, const Array<OneD, NekDouble> > normals = GetFaceNormal(f);
+                const Array<OneD, const Array<OneD, NekDouble> > &normals = GetFaceNormal(f);
+                Array<OneD, NekDouble> facePhys(nquad_f);
                 
                 cnt += order_f;
                 
-                FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
-                                     FaceExp[f]->UpdatePhys());
+                FaceExp[f]->BwdTrans(faceCoeffs[f], facePhys);
                 
-                Vmath::Vmul(nquad_f,normals[dir],1,
-                            FaceExp[f]->GetPhys(),1,
-                            FaceExp[f]->UpdatePhys(),1);
+                Vmath::Vmul(nquad_f, normals[dir], 1, facePhys, 1, facePhys, 1);
                 
                 if (m_negatedNormals[f])
                 {
-                    Vmath::Neg(nquad_f, FaceExp[f]->UpdatePhys(), 1);
+                    Vmath::Neg(nquad_f, facePhys, 1);
                 }
 
-                AddFaceBoundaryInt(f,FaceExp[f],outarray);
+                AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray);
             }
         }
 
@@ -287,11 +292,11 @@ namespace Nektar
          * For a given face add the \tilde{F}_1j contributions
          */
         void Expansion3D::AddFaceBoundaryInt(
-            const Array<OneD, const NekDouble> &inarray,
-            const int                           face,
-            StdRegions::StdExpansionSharedPtr  &FaceExp,
-            Array<OneD, NekDouble>             &outarray,
-            const StdRegions::VarCoeffMap      &varcoeffs)
+            const int                          face,
+            StdRegions::StdExpansionSharedPtr &FaceExp,
+            Array<OneD, NekDouble>            &facePhys,
+            Array<OneD, NekDouble>            &outarray,
+            const StdRegions::VarCoeffMap     &varcoeffs)
         {
             int i;
             int order_f = FaceExp->GetNcoeffs();
@@ -304,20 +309,20 @@ namespace Nektar
             StdRegions::IndexMapValuesSharedPtr map = 
                 StdExpansion::GetIndexMap(ikey);
 
-            // StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
-            //                                         StdRegions::eVarCoeffD11,
-            //                                         StdRegions::eVarCoeffD22};
-            // StdRegions::VarCoeffMap::const_iterator x;
-            // Array<OneD, NekDouble> varcoeff_work(nquad_e);
-            //
-            // @TODO Variable coeffs
-            // if ((x = varcoeffs.find(VarCoeff[0])) != varcoeffs.end())
-            // {
-            //     GetPhysEdgeVarCoeffsFromElement(edge,EdgeExp,x->second,varcoeff_work);
-            //     Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp->GetPhys(),1,EdgeExp->UpdatePhys(),1);
-            // }
+//            StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
+//                                                    StdRegions::eVarCoeffD11,
+//                                                    StdRegions::eVarCoeffD22};
+//            StdRegions::VarCoeffMap::const_iterator x;
+//            Array<OneD, NekDouble> varcoeff_work(nquad_e);
+//
+///// @TODO Variable coeffs
+//            if ((x = varcoeffs.find(VarCoeff[0])) != varcoeffs.end())
+//            {
+//                GetPhysEdgeVarCoeffsFromElement(edge,EdgeExp,x->second,varcoeff_work);
+//                Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp->GetPhys(),1,EdgeExp->UpdatePhys(),1);
+//            }
 
-            FaceExp->IProductWRTBase(inarray, coeff);
+            FaceExp->IProductWRTBase(facePhys, coeff);
 
             // add data to out array
             for(i = 0; i < order_f; ++i)
@@ -389,7 +394,6 @@ namespace Nektar
                 cnt += GetFaceNcoeffs(i);
             }
         }
-
 
         /**
          * Computes matrices needed for the HDG formulation. References to
@@ -550,12 +554,11 @@ namespace Nektar
                         FaceExp = GetFaceExp(i);//temporary, need to rewrite AddHDGHelmholtzFaceTerms
                         int nface = GetFaceNcoeffs(i);
                         Array<OneD, NekDouble> face_lambda(nface);
-                        Array<OneD, NekDouble> coeff(nface), phys(FaceExp->GetTotPoints());
 			
-                        const Array<OneD, const Array<OneD, NekDouble> > &normals
+                        const Array<OneD, const Array<OneD, NekDouble> > normals
                             = GetFaceNormal(i);
 
-                        for (j = 0; j < nface; ++j)
+                        for(j = 0; j < nface; ++j)
                         {
                             Vmath::Zero(nface,&face_lambda[0],1);
                             Vmath::Zero(ncoeffs,&f[0],1);
@@ -563,11 +566,9 @@ namespace Nektar
 
                             SetFaceToGeomOrientation(i, face_lambda);
 
-                            Vmath::Vcopy(nface, face_lambda, 1, coeff, 1);
-
-                            FaceExp->BwdTrans(coeff, phys);
-
-                            AddHDGHelmholtzFaceTerms(phys, tau, i, FaceExp, mkey.GetVarCoeffs(), f);
+                            Array<OneD, NekDouble> tmp(FaceExp->GetNcoeffs());
+                            FaceExp->BwdTrans(face_lambda, tmp);
+                            AddHDGHelmholtzFaceTerms(tau, i, tmp, mkey.GetVarCoeffs(), f);
 							
                             Ulam = invHmat*F; // generate Ulam from lambda
 
@@ -788,14 +789,14 @@ namespace Nektar
                             */
 
                             // Q0 * n0 (BQ_0 terms)
-                            Array<OneD, NekDouble> coeff(order_f);
-                            Array<OneD, NekDouble> phys (nquad_f);
+                            Array<OneD, NekDouble> faceCoeffs(order_f);
+                            Array<OneD, NekDouble> facePhys  (nquad_f);
                             for(j = 0; j < order_f; ++j)
                             {
-                                coeff[j] = (*map)[j].sign*(*LamToQ[0])((*map)[j].index,i);
+                                faceCoeffs[j] = (*map)[j].sign*(*LamToQ[0])((*map)[j].index,i);
                             }
                             
-                            FaceExp[f]->BwdTrans(coeff, phys);
+                            FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
 
                             // @TODO Variable coefficients
                             // Multiply by variable coefficient
@@ -807,15 +808,15 @@ namespace Nektar
                             }
                             */
           
-                            Vmath::Vmul(nquad_f,normals[0],1,phys,1,work,1);
+                            Vmath::Vmul(nquad_f, normals[0], 1, facePhys, 1, work, 1);
                             
                             // Q1 * n1 (BQ_1 terms)
                             for(j = 0; j < order_f; ++j)
                             {
-                                coeff[j] = (*map)[j].sign*(*LamToQ[1])((*map)[j].index,i);
+                                faceCoeffs[j] = (*map)[j].sign*(*LamToQ[1])((*map)[j].index,i);
                             }
                             
-                            FaceExp[f]->BwdTrans(coeff, phys);
+                            FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
 
                             // @TODO Variable coefficients
                             // Multiply by variable coefficients
@@ -827,16 +828,15 @@ namespace Nektar
                             }
                             */
 
-                            Vmath::Vvtvp(nquad_f,normals[1],1,
-                                         phys,1,work,1,work,1);
+                            Vmath::Vvtvp(nquad_f, normals[1], 1, facePhys, 1, work, 1, work, 1);
                             
                             // Q2 * n2 (BQ_2 terms)
                             for(j = 0; j < order_f; ++j)
                             {
-                                coeff[j] = (*map)[j].sign*(*LamToQ[2])((*map)[j].index,i);
+                                faceCoeffs[j] = (*map)[j].sign*(*LamToQ[2])((*map)[j].index,i);
                             }
                             
-                            FaceExp[f]->BwdTrans(coeff, phys);
+                            FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
 
                             // @TODO Variable coefficients
                             // Multiply by variable coefficients
@@ -848,9 +848,9 @@ namespace Nektar
                             }
                             */
 
-                            Vmath::Vvtvp(nquad_f,normals[2],1,
-                                         phys,1,work,1,work,1);
-                            
+                            Vmath::Vvtvp(nquad_f, normals[2], 1, facePhys, 1,
+                                                  work,       1, work,     1);
+
                             if (m_negatedNormals[f])
                             {
                                 Vmath::Neg(nquad_f, work, 1);
@@ -860,10 +860,10 @@ namespace Nektar
                             // Corresponds to the G and BU terms.
                             for(j = 0; j < order_f; ++j)
                             {
-                                coeff[j] = (*map)[j].sign*LamToU((*map)[j].index,i) - lam[cnt+j];
+                                faceCoeffs[j] = (*map)[j].sign*LamToU((*map)[j].index,i) - lam[cnt+j];
                             }
                             
-                            FaceExp[f]->BwdTrans(coeff, phys);
+                            FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
 
                             // @TODO Variable coefficients
                             // Multiply by variable coefficients
@@ -875,19 +875,19 @@ namespace Nektar
                             }
                             */
 
-                            Vmath::Svtvp(nquad_f,-tau,phys,1,
-                                         work,1,work,1);
+                            Vmath::Svtvp(nquad_f, -tau, facePhys, 1,
+                                         work, 1, work, 1);
 
                             // @TODO Add variable coefficients
-                            FaceExp[f]->IProductWRTBase(work,coeff);
+                            FaceExp[f]->IProductWRTBase(work, faceCoeffs);
                             
-                            SetFaceToGeomOrientation(f, coeff);
+                            SetFaceToGeomOrientation(f, faceCoeffs);
 
                             for(j = 0; j < order_f; ++j)
                             {
-                                BndMat(cnt+j,i) = coeff[j];
+                                BndMat(cnt+j,i) = faceCoeffs[j];
                             }
-                            
+
                             cnt += order_f;
                         }
                     }
@@ -992,10 +992,10 @@ namespace Nektar
                 }
             }
 
-            int order_e = (*map).num_elements(); // Order of the element
-            int n_coeffs = FaceExp->GetNcoeffs(); // Order of the trace
+            int order_e  = (*map).num_elements(); // Order of the element
+            int n_coeffs = FaceExp->GetNcoeffs();
 
-            Array<OneD, NekDouble> coeffs(n_coeffs);
+            Array<OneD, NekDouble> faceCoeffs(n_coeffs);
 
             if(n_coeffs != order_e) // Going to orthogonal space
             {
@@ -1003,21 +1003,21 @@ namespace Nektar
             }
             else
             {
-                FaceExp->IProductWRTBase(Fn, coeffs);
+                FaceExp->IProductWRTBase(Fn, faceCoeffs);
             }
             
             if (m_requireNeg[face])
             {
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[(*map)[i].index] -= (*map)[i].sign * coeffs[i];
+                    outarray[(*map)[i].index] -= (*map)[i].sign * faceCoeffs[i];
                 }
             }
             else
             {
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[(*map)[i].index] += (*map)[i].sign * coeffs[i];
+                    outarray[(*map)[i].index] += (*map)[i].sign * faceCoeffs[i];
                 }
             }
         }
@@ -1028,10 +1028,10 @@ namespace Nektar
          * values in EdgeExp (which will have its phys space updated).
          */
         void Expansion3D::v_DGDeriv(
-            int dir,
-            const Array<OneD, const NekDouble>&incoeffs,
-            Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-            Array<OneD, NekDouble> &out_d)
+            int                                             dir,
+            const Array<OneD, const NekDouble>             &incoeffs,
+            Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+            Array<OneD, NekDouble>                         &out_d)
         {
             int ncoeffs = GetNcoeffs();
             StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
@@ -1043,14 +1043,17 @@ namespace Nektar
 
             Array<OneD, NekDouble> coeffs = incoeffs;
             DNekVec     Coeffs  (ncoeffs,coeffs, eWrapper);
-          
+
             Coeffs = Transpose(Dmat)*Coeffs;
             Vmath::Neg(ncoeffs, coeffs,1);
 
             // Add the boundary integral including the relevant part of
             // the normal
-            AddNormTraceInt(dir,FaceExp,coeffs);
-        
+
+            // DM TODO: FIXME
+#if 0
+            AddNormTraceInt(dir, FaceExp, coeffs);
+#endif  
             DNekVec Out_d (ncoeffs,out_d,eWrapper);
 
             Out_d  = InvMass*Coeffs;

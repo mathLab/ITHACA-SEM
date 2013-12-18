@@ -81,10 +81,10 @@ namespace SpatialDomains
     {
         public:
             /// Constructor for GeomFactors class.
-            GeomFactors(const GeomType gtype,
-                    const int coordim,
-                    const Array<OneD, const StdRegions
-                        ::StdExpansionSharedPtr> &Coords);
+            GeomFactors(const GeomType                              gtype,
+                        const int                                   coordim,
+                        const StdRegions::StdExpansionSharedPtr    &xmap,
+                        const Array<OneD, Array<OneD, NekDouble> > &coords);
 
             /// Copy constructor.
             GeomFactors(const GeomFactors &S);
@@ -138,7 +138,9 @@ namespace SpatialDomains
             /// Validity of element (Jacobian positive)
             bool m_valid;
             /// Stores information about the expansion.
-            Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
+            StdRegions::StdExpansionSharedPtr m_xmap;
+            /// Stores coordinates of the geometry.
+            Array<OneD, Array<OneD, NekDouble> > m_coords;
             /// Jacobian vector cache
             std::map<LibUtilities::PointsKeyVector, Array<OneD, NekDouble> >
                                                 m_jacCache;
@@ -312,7 +314,7 @@ namespace SpatialDomains
      */
     inline size_t GeomFactors::GetHash()
     {
-        LibUtilities::PointsKeyVector ptsKeys = m_coords[0]->GetPointsKeys();
+        LibUtilities::PointsKeyVector ptsKeys = m_xmap->GetPointsKeys();
         const Array<OneD, const NekDouble> jac = GetJac(ptsKeys);
 
         size_t hash = 0;

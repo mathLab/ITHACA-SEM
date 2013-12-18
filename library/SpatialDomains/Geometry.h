@@ -427,7 +427,7 @@ namespace Nektar
 
         inline const LibUtilities::PointsKeyVector Geometry::GetPointsKeys()
         {
-            return m_xmap[0]->GetPointsKeys();
+            return m_xmap->GetPointsKeys();
         }
     }; //end of namespace
 }; // end of namespace

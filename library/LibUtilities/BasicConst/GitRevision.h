@@ -37,13 +37,14 @@
 #define  GITREVISION_H
 
 #include <string>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
     namespace NekConstants
     {
-        extern const std::string kGitSha1;
-        extern const std::string kGitBranch;
+        LIB_UTILITIES_EXPORT extern const std::string kGitSha1;
+        LIB_UTILITIES_EXPORT extern const std::string kGitBranch;
     }
 }
 

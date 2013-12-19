@@ -987,7 +987,6 @@ namespace Nektar
 
             // Git information
             // If built from a distributed package, do not include this
-            cout << "git revision: " << NekConstants::kGitSha1 << endl;
             if (NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
             {
                 ProvenanceMap["GitSHA1"]   = NekConstants::kGitSha1;

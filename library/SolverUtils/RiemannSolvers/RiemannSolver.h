@@ -153,16 +153,19 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux) = 0;
 
-            void GenerateRotationMatrices();
+            void GenerateRotationMatrices(
+                const Array<OneD, const Array<OneD, NekDouble> > &normals);
             void FromToRotation(
                 Array<OneD, const NekDouble> &from,
                 Array<OneD, const NekDouble> &to,
                 NekDouble                    *mat);
             void rotateToNormal  (
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                const Array<OneD, const Array<OneD, NekDouble> > &normals,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);
             void rotateFromNormal(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                const Array<OneD, const Array<OneD, NekDouble> > &normals,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);
             bool CheckScalars(std::string name);
             bool CheckVectors(std::string name);

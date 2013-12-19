@@ -314,6 +314,9 @@ SET(LibUtilityHeaders
     ${BaseHeaders}
 )
 
+# Define the git branch and SHA1 hash if we are in a git repository. This is
+# stored in an automatically generated file so that the source tree is not built
+# on commit/update.
 SET(GitRevisionFile "${CMAKE_CURRENT_BINARY_DIR}/GitRevision.cpp")
 CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/BasicConst/GitRevision.cpp.in
                ${GitRevisionFile})
@@ -331,11 +334,6 @@ SET(LibUtilitySources
     ${MemorySources}
     ${GitRevisionFile}
 )
-
-# Define the git branch and SHA1 hash if we are in a git repository
-# Only apply to FieldIO.cpp to minimise rebuilding on git commit/update.
-#IF (NOT ${GIT_REFSPEC} STREQUAL "GITDIR-NOTFOUND")
-#ENDIF ()
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})

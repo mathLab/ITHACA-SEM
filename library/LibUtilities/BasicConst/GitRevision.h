@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NektarUnivConsts.hpp
+// File GitRevision.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Universal constants in the Nektar Library
+// Description: Constants for git SHA1 hash and branch name
 //
 ///////////////////////////////////////////////////////////////////////////////
 

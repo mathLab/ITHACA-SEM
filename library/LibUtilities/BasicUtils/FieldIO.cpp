@@ -40,6 +40,8 @@
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicConst/GitRevision.h>
+
 #include "zlib.h"
 #include <set>
 
@@ -985,12 +987,15 @@ namespace Nektar
 
             // Git information
             // If built from a distributed package, do not include this
-#ifdef GIT_SHA1
-            ProvenanceMap["GitSHA1"] = string(GIT_SHA1);
-#endif
-#ifdef GIT_BRANCH
-            ProvenanceMap["GitBranch"] = string(GIT_BRANCH);
-#endif
+            if (kGitSha1.size() > 0)
+            {
+                ProvenanceMap["GitSHA1"] = string(kGitSha1);
+            }
+
+            if (kGitBranch.size() > 0)
+            {
+                ProvenanceMap["GitBranch"] = string(kGitBranch);
+            }
 
             TiXmlElement * infoTag = new TiXmlElement("Metadata");
             root->LinkEndChild(infoTag);

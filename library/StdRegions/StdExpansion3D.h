@@ -129,8 +129,6 @@ namespace Nektar
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
              *
-             *  This function is a wrapper around the virtual function
-             *  \a v_PhysEvaluate()
              *
              *  Based on the value of the expansion at the quadrature points,
              *  this function calculates the value of the expansion at an
@@ -142,15 +140,12 @@ namespace Nektar
              *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
              *
              *  This function requires that the physical value array
-             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys)
+             *  \f$\mathbf{u}\f$ (implemented as the attribute #phys)
              *  is set.
              *
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& coords);
-
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& coords,
                     const Array<OneD, const NekDouble>& physvals);

@@ -248,7 +248,6 @@ namespace Nektar
                 pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
                                      pFields[i]->UpdatePhys());
                 pFields[i]->SetPhysState(true);
-                pFields[i]->PutPhysInToElmtExp();
             }
 
             // Homogeneous 1D case  Compute forces on all WALL boundaries

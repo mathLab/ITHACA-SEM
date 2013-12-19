@@ -616,9 +616,10 @@ namespace Nektar
             
             for (i = 0; i < 3; ++i)
             {
-                tri->FwdTrans(alloc+i*nqtot, nodalTri->UpdateCoeffs());
+                Array<OneD, NekDouble> coeffs(nodalTri->GetNcoeffs());
+                tri->FwdTrans(alloc+i*nqtot, coeffs);
                 // Apply Vandermonde matrix to project onto nodal space.
-                nodalTri->ModalToNodal(nodalTri->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+                nodalTri->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
             
             // Now extract points from the co-ordinate arrays into the
@@ -1010,9 +1011,10 @@ namespace Nektar
             
             for (i = 0; i < 3; ++i)
             {
-                tet->FwdTrans(alloc+i*nqtot, nodalTet->UpdateCoeffs());
+                Array<OneD, NekDouble> coeffs(nodalTet->GetNcoeffs());
+                tet->FwdTrans(alloc+i*nqtot, coeffs);
                 // Apply Vandermonde matrix to project onto nodal space.
-                nodalTet->ModalToNodal(nodalTet->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+                nodalTet->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
             
             // Now extract points from the co-ordinate arrays into the
@@ -1390,9 +1392,10 @@ namespace Nektar
             
             for (i = 0; i < 3; ++i)
             {
-                prism->FwdTrans(alloc+i*nqtot, nodalPrism->UpdateCoeffs());
+                Array<OneD, NekDouble> coeffs(nodalPrism->GetNcoeffs());
+                prism->FwdTrans(alloc+i*nqtot, coeffs);
                 // Apply Vandermonde matrix to project onto nodal space.
-                nodalPrism->ModalToNodal(nodalPrism->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+                nodalPrism->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
             
             // Now extract points from the co-ordinate arrays into the

@@ -293,25 +293,20 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    Array<OneD, NekDouble> coeffs(E->GetNcoeffs());
+    Array<OneD, NekDouble> phys  (nq1*nq2);
+    E->FwdTrans(sol, coeffs);
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
-    //-------------------------------------------
-    
-    //--------------------------------------------
-    // Write solution
-    ofstream outfile("ProjectFile2D.dat");
-    E->WriteToFile(outfile,eTecplot);
-    outfile.close();
+    E->BwdTrans(coeffs, phys);
     //-------------------------------------------
     
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys, sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------
     
     //-------------------------------------------
@@ -329,7 +324,7 @@ int main(int argc, char *argv[])
         sol[0] = Quad_sol(x[0],x[1],order1,order2,btype1,btype2);
     }
     
-    NekDouble nsol = E->PhysEvaluate(x);
+    NekDouble nsol = E->PhysEvaluate(x, phys);
     cout << "error at x = (" <<x[0] <<","<<x[1] <<"): " << nsol - sol[0] << endl;
     
     return 0;

@@ -106,17 +106,6 @@ int main(int argc, char *argv[])
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //-------------------------------------------  
 
-    //----------------------------------------------
-    // Write solution 
-    ofstream outfile("ProjectContFile2D.pos");
-    Exp->WriteToFile(outfile,eGmsh);
-    outfile.close();
-
-    ofstream outfile2("ProjectContFile2D.dat");
-    Exp->WriteToFile(outfile2,eTecplot);
-    outfile2.close();
-    //----------------------------------------------
-    
     //--------------------------------------------
     // Calculate L_inf error 
     cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;

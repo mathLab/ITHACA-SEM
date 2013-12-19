@@ -76,53 +76,6 @@ namespace Nektar
 
 
         //---------------------------------------
-        // Miscellaneous public 3D function
-        //---------------------------------------
-        
-        void StdPrismExp::WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            int order2 = m_base[2]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp(order0*order1*order2, 0.0);
-
-            NekDouble *mat = wsp.get(); 
-
-            // put coeffs into matrix and reverse order so that r index is
-            // fastest for Prism
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
-            {
-                for(int j = 0; j < order1-i; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
-                    {
-                        // mat[i+j*order1] = m_coeffs[cnt];
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
-                    }
-                }
-            }
-
-            outfile <<"Coeffs = [" << " "; 
-
-            for(int k = 0; k < order2; ++k)
-            {            
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        outfile << mat[i + order0*(j + order1*k)] << " ";
-                    }
-                    outfile << std::endl; 
-                }
-            }
-            outfile << "]"; 
-        }
-        
-        
-        //---------------------------------------
         // Integration Methods
         //---------------------------------------
         
@@ -578,13 +531,13 @@ namespace Nektar
 	/** 
          * \brief Forward transform from physical quadrature space stored in
          * \a inarray and evaluate the expansion coefficients and store in \a
-         * (this)->m_coeffs
+         * outarray
          *  
          *  Inputs:\n
          *  - \a inarray: array of physical quadrature points to be transformed
          * 
          * Outputs:\n
-         *  - (this)->_coeffs: updated array of expansion coefficients. 
+         *  - \a outarray: updated array of expansion coefficients. 
          */
         void StdPrismExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD,       NekDouble>& outarray)
@@ -900,15 +853,15 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
-        NekDouble StdPrismExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi)
-        {
-            return StdPrismExp::v_PhysEvaluate(xi,m_phys);
-        }
+
 
         void StdPrismExp::v_LocCoordToLocCollapsed(
                                               const Array<OneD, const NekDouble>& xi,
                                               Array<OneD, NekDouble>& eta)
+
+        NekDouble StdPrismExp::v_PhysEvaluate(
+            const Array<OneD, const NekDouble>& xi,
+            const Array<OneD, const NekDouble>& physvals)
         {
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
@@ -928,7 +881,7 @@ namespace Nektar
             } 
         }
                                           
-                                                                        
+n                                                                        
 
         NekDouble StdPrismExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& xi,
@@ -1190,73 +1143,6 @@ namespace Nektar
             {
                 return GetBasisType(2);
             }
-        }
-
-        void StdPrismExp::v_WriteToFile(std::ofstream &outfile, 
-                                        OutputFormat   format, 
-                                        const bool     dumpVar, 
-                                        std::string    var)
-        {
-            if (format == eTecplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-                
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-                
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2,  z3"; 
-                    outfile << ", "<< var << std::endl << std::endl;
-                }      
-                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
-                
-                for (int k = 0; k < Qz; ++k) 
-                {
-                    for (int j = 0; j < Qy; ++j)
-                    {
-                        for (int i = 0; i < Qx; ++i)
-                        {
-                            outfile << 0.5*(1.0+eta_x[i])*(1.0-eta_z[k])-1.0 << " "
-                                    << eta_y[j]                              << " "
-                                    << eta_z[k]                              << " "
-                                    << m_phys[i + Qx*(j + Qy*k)]             << std::endl;
-                        }
-                    }
-                }
-            }
-            else if (format == eGnuplot)
-            {
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-                eta_x   = m_base[0]->GetZ();
-                eta_y   = m_base[1]->GetZ();
-                eta_z   = m_base[2]->GetZ();
-                
-                for (int k = 0; k < Qz; ++k) 
-                {
-                    for (int j = 0; j < Qy; ++j)
-                    {
-                        for (int i = 0; i < Qx; ++i)
-                        {
-                            outfile << 0.5*(1.0+eta_x[i])*(1.0-eta_z[k])-1.0 << " "
-                                    << eta_y[j]                              << " "
-                                    << eta_z[k]                              << " "
-                                    << m_phys[i + Qx*(j + Qy*k)]             << std::endl;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }            
         }
 
         bool StdPrismExp::v_IsBoundaryInteriorExpansion()

@@ -71,20 +71,23 @@ namespace Nektar
             inline void AddHDGHelmholtzFaceTerms(
                 const NekDouble                    tau,
                 const int                          edge,
-                StdRegions::StdExpansionSharedPtr  FaceExp,
+                Array<OneD, NekDouble>            &facePhys,
                 const StdRegions::VarCoeffMap     &dirForcing,
-                Array <OneD, NekDouble>           &outarray);
+                Array<OneD, NekDouble>            &outarray);
 
+#if 0
             inline void AddHDGHelmholtzTraceTerms(
                 const NekDouble                                tau,
                 const Array<OneD, const NekDouble>            &inarray,
                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
                 const StdRegions::VarCoeffMap                 &dirForcing,
                 Array<OneD,NekDouble>                         &outarray);
-            
+#endif
+
             inline void AddNormTraceInt(
                 const int                                      dir,
                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> >          &faceCoeffs,
                 Array<OneD,NekDouble>                         &outarray);
 
             inline void AddNormTraceInt(
@@ -97,7 +100,8 @@ namespace Nektar
             inline void AddFaceBoundaryInt(
                 const int                          face,
                 StdRegions::StdExpansionSharedPtr &FaceExp,
-                Array <OneD,NekDouble >           &outarray,
+                Array<OneD, NekDouble>            &facePhys,
+                Array<OneD, NekDouble>            &outarray,
                 const StdRegions::VarCoeffMap     &varcoeffs = StdRegions::NullVarCoeffMap);
             
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
@@ -112,6 +116,7 @@ namespace Nektar
                 const int                                       dir,
                 const Array<OneD, const NekDouble>             &incoeffs,
                 Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
                 Array<OneD, NekDouble>                         &out_d);
             virtual DNekMatSharedPtr v_GenMatrix(
                 const StdRegions::StdMatrixKey &mkey);

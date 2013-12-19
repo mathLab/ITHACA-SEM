@@ -154,9 +154,9 @@ int main(int argc, char *argv[])
 
             //--------------------------------------------
             // Calculate errors
-            NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
-            NekDouble vL2Error   = Exp->L2(Fce->GetPhys());
-            NekDouble vH1Error   = Exp->H1(Fce->GetPhys());
+            NekDouble vLinfError = Exp->Linf(Exp->GetPhys(), Fce->GetPhys());
+            NekDouble vL2Error   = Exp->L2(Exp->GetPhys(), Fce->GetPhys());
+            NekDouble vH1Error   = Exp->H1(Exp->GetPhys(), Fce->GetPhys());
             if (vComm->GetRank() == 0)
             {
                 cout << "L infinity error: " << vLinfError << endl;

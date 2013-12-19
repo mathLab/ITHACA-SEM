@@ -237,18 +237,20 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    lhe->FwdTrans( solution, lhe->UpdateCoeffs() );
+    Array<OneD, NekDouble> phys  (Qx * Qy * Qz);
+    Array<OneD, NekDouble> coeffs(lhe->GetNcoeffs());
+    lhe->FwdTrans( solution, coeffs );
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    lhe->BwdTrans( lhe->GetCoeffs(), lhe->UpdatePhys() );
+    lhe->BwdTrans( coeffs, phys );
     //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_p error
-    cout << "L infinity error: " << lhe->Linf(solution) << endl;
-    cout << "L 2 error:        " << lhe->L2  (solution) << endl;
+    cout << "L infinity error: " << lhe->Linf(phys, solution) << endl;
+    cout << "L 2 error:        " << lhe->L2  (phys, solution) << endl;
     //--------------------------------------------
 
     //-------------------------------------------
@@ -258,7 +260,7 @@ int main(int argc, char *argv[])
     t[1] =  0.5;
     t[2] =  0.5;
 
-    NekDouble numericSolution = lhe->PhysEvaluate(t);
+    NekDouble numericSolution = lhe->PhysEvaluate(t, phys);
 
     solution[0] = Hex_sol( t[0], t[1], t[2], P, Q, R,
                            bType_x, bType_y, bType_z );

@@ -193,6 +193,11 @@ namespace Nektar
             return 0;
         }
 
+        StdRegions::StdExpansionSharedPtr Geometry::v_GetXmap() const
+        {
+            return m_xmap;
+        }
+
         bool Geometry::v_ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
                       NekDouble tol)
@@ -274,16 +279,7 @@ namespace Nektar
                      "This function is only valid for expansion type geometries");
         }
 
-        Array<OneD,NekDouble>& Geometry::v_UpdatePhys(const int i)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            return NullNekDouble1DArray;
-        }
-
-        const LibUtilities::BasisSharedPtr Geometry::v_GetBasis(
-                    const int i,
-                    const int j)
+        const LibUtilities::BasisSharedPtr Geometry::v_GetBasis(const int i)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for shape type geometries");

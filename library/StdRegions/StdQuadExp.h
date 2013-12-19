@@ -150,11 +150,10 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                               const Array<OneD, const NekDouble>& Lcoords);
             STD_REGIONS_EXPORT virtual void v_LocCoordToLocCollapsed(
                                const Array<OneD, const NekDouble>& xi,
                                Array<OneD, NekDouble>& eta);
+
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& Lcoords,
                     const Array<OneD, const NekDouble>& physvals);
@@ -184,15 +183,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                 Array<OneD, NekDouble> &coords_0,
                 Array<OneD, NekDouble> &coords_1,
-                Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray);            
-            STD_REGIONS_EXPORT void v_WriteToFile(std::ofstream &outfile, 
-                    OutputFormat format, 
-                    const bool dumpVar = true, 
-                    std::string var = "v");
-            STD_REGIONS_EXPORT void v_ReadFromFile(std::ifstream &infile, 
-                    OutputFormat format, 
-                    const bool dumpVar = true);
-            STD_REGIONS_EXPORT void v_WriteCoeffsToFile(std::ofstream &outfile);
+                Array<OneD, NekDouble> &coords_2);
 
             //--------------------------
             // Mappings

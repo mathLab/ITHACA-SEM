@@ -39,7 +39,13 @@
 #include <LibUtilities/BasicConst/GitRevision.h>
 #include <string>
 
-const std::string kGitSha1   = "@GIT_SHA1@";
-const std::string kGitBranch = "@GIT_REFSPEC@";
+namespace Nektar
+{
+    namespace NekConstants
+    {
+        extern const std::string kGitSha1   = "@GIT_SHA1@";
+        extern const std::string kGitBranch = "@GIT_REFSPEC@";
+    }
+}
 
 #endif

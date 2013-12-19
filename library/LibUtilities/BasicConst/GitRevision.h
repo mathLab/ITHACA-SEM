@@ -38,7 +38,13 @@
 
 #include <string>
 
-extern const std::string kGitSha1;
-extern const std::string kGitBranch;
+namespace Nektar
+{
+    namespace NekConstants
+    {
+        extern const std::string kGitSha1;
+        extern const std::string kGitBranch;
+    }
+}
 
 #endif

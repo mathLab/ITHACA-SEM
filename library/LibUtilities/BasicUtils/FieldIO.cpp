@@ -477,7 +477,7 @@ namespace Nektar
 
             ASSERTL0(fileNames.size() == elementList.size(),"Outfile names and list of elements ids does not match");
 
-            cout << "Writing MultiFile data in : " << outFile << endl;
+            cout << "Writing multi-file data: " << outFile << endl;
 
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
@@ -987,10 +987,11 @@ namespace Nektar
 
             // Git information
             // If built from a distributed package, do not include this
-            if (kGitSha1 != "GITDIR-NOTFOUND")
+            cout << "git revision: " << NekConstants::kGitSha1 << endl;
+            if (NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
             {
-                ProvenanceMap["GitSHA1"]   = string(kGitSha1);
-                ProvenanceMap["GitBranch"] = string(kGitBranch);
+                ProvenanceMap["GitSHA1"]   = NekConstants::kGitSha1;
+                ProvenanceMap["GitBranch"] = NekConstants::kGitBranch;
             }
 
             TiXmlElement * infoTag = new TiXmlElement("Metadata");

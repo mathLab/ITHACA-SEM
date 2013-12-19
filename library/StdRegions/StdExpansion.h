@@ -848,9 +848,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion>  &exp2d, const int edge);
-
-
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
             {
                 v_NormVectorIProductWRTBase(Fx,Fy,outarray);
@@ -961,9 +958,10 @@ namespace Nektar
                 v_GetInteriorMap(outarray);
             }
 
-            int GetVertexMap(const int localVertexId)
+            int GetVertexMap(const int localVertexId,
+                             bool useCoeffPacking = false)
             {
-                return v_GetVertexMap(localVertexId);
+                return v_GetVertexMap(localVertexId,useCoeffPacking);
             }
 
             void GetEdgeInteriorMap(const int eid, const Orientation edgeOrient,
@@ -1342,8 +1340,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge);
-
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
             
             /**
@@ -1499,6 +1495,15 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
+            const LibUtilities::PointsKeyVector GetPointsKeys() const
+            {
+                LibUtilities::PointsKeyVector p;
+                for (int i = 0; i < m_base.num_elements(); ++i)
+                {
+                    p.push_back(m_base[i]->GetPointsKey());
+                }
+                return p;
+            }
 
             STD_REGIONS_EXPORT Array<OneD, unsigned int> 
                 GetEdgeInverseBoundaryMap(int eid)
@@ -1507,11 +1512,11 @@ namespace Nektar
             }
             
             STD_REGIONS_EXPORT Array<OneD, unsigned int>
-                GetFaceInverseBoundaryMap(int fid)
+                GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = eNoOrientation)
             {
-                return v_GetFaceInverseBoundaryMap(fid);
+                return v_GetFaceInverseBoundaryMap(fid,faceOrient);
             }
-
+ 
             STD_REGIONS_EXPORT DNekMatSharedPtr BuildInverseTransformationMatrix(
                 const DNekScalMatSharedPtr & m_transformationmatrix)
             {
@@ -1840,7 +1845,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
-            STD_REGIONS_EXPORT virtual int v_GetVertexMap(int localVertexId);
+            STD_REGIONS_EXPORT virtual int v_GetVertexMap(int localVertexId,
+                                                          bool useCoeffPacking = false);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid, const Orientation edgeOrient,
                                               Array<OneD, unsigned int> &maparray,
@@ -1986,8 +1992,8 @@ namespace Nektar
                 v_GetEdgeInverseBoundaryMap(int eid);
 
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
-                v_GetFaceInverseBoundaryMap(int fid);
-
+                v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = eNoOrientation);
+            
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(
                     const DNekScalMatSharedPtr & m_transformationmatrix);
 

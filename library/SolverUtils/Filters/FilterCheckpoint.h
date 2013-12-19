@@ -75,6 +75,7 @@ namespace Nektar
             unsigned int m_outputIndex;
             unsigned int m_outputFrequency;
             std::string m_outputFile;
+            LibUtilities::FieldIOSharedPtr m_fld;
         };
     }
 }

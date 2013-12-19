@@ -54,8 +54,10 @@ using namespace std;
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
 #include <boost/program_options.hpp>
+#include <boost/format.hpp>
 
 namespace po = boost::program_options;
 namespace io = boost::iostreams;
@@ -161,6 +163,7 @@ namespace Nektar
          */
         SessionReader::SessionReader(int argc, char *argv[])
         {
+            m_xmlDoc    = 0;
             m_filenames = ParseCommandLineArguments(argc, argv);
 
             ASSERTL0(m_filenames.size() > 0, "No session file(s) given.");
@@ -191,6 +194,7 @@ namespace Nektar
             ASSERTL0(pFilenames.size() > 0, "No filenames specified.");
 
             ParseCommandLineArguments(argc, argv);
+            m_xmlDoc      = 0;
             m_filenames   = pFilenames;
 
             m_filename    = pFilenames[0];
@@ -462,10 +466,16 @@ namespace Nektar
          */
         const std::string SessionReader::GetSessionNameRank() const
         {
-            return m_sessionName + "_P" + boost::lexical_cast<std::string>(
-                m_comm->GetRowComm()->GetRank());
-        }
+            std::string  dirname = m_sessionName + "_xml"; 
+            fs::path     pdirname(dirname);
+            
+            std::string vFilename = "P" + boost::lexical_cast<std::string>(m_comm->GetRowComm()->GetRank());
+            fs::path    pFilename(vFilename);            
 
+            fs::path fullpath = pdirname / pFilename;
+
+            return PortablePath(fullpath);
+        }
 
         /**
          *
@@ -1225,31 +1235,34 @@ namespace Nektar
             // version already present in the loaded XML data.
             for (int i = 1; i < pFilenames.size(); ++i)
             {
-                TiXmlDocument* vTempDoc = new TiXmlDocument;
-                LoadDoc(pFilenames[i], vTempDoc);
-
-                TiXmlHandle docHandle(vTempDoc);
-                TiXmlElement* vTempNektar;
-                vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
-                ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
-                TiXmlElement* p = vTempNektar->FirstChildElement();
-
-                while (p)
+                if((pFilenames[i].compare(pFilenames[i].size()-3,3,"xml") == 0)
+                   ||(pFilenames[i].compare(pFilenames[i].size()-6,6,"xml.gz") == 0))
                 {
-                    TiXmlElement *vMainEntry = 
-                        vMainNektar->FirstChildElement(p->Value());
-                    TiXmlElement *q = new TiXmlElement(*p);
-                    if (vMainEntry)
+                    TiXmlDocument* vTempDoc = new TiXmlDocument;
+                    LoadDoc(pFilenames[i], vTempDoc);
+                    
+                    TiXmlHandle docHandle(vTempDoc);
+                    TiXmlElement* vTempNektar;
+                    vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
+                    ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
+                    TiXmlElement* p = vTempNektar->FirstChildElement();
+                    
+                    while (p)
                     {
-                        vMainNektar->RemoveChild(vMainEntry);
+                        TiXmlElement *vMainEntry = 
+                            vMainNektar->FirstChildElement(p->Value());
+                        TiXmlElement *q = new TiXmlElement(*p);
+                        if (vMainEntry)
+                        {
+                            vMainNektar->RemoveChild(vMainEntry);
+                        }
+                        vMainNektar->LinkEndChild(q);
+                        p = p->NextSiblingElement();
                     }
-                    vMainNektar->LinkEndChild(q);
-                    p = p->NextSiblingElement();
+                    
+                    delete vTempDoc;
                 }
-
-                delete vTempDoc;
             }
-
             return vMainDoc;
         }
 
@@ -1337,16 +1350,8 @@ namespace Nektar
                 {
                     if (GetComm()->GetRank() == 0)
                     {
-                        if (m_verbose)
-                        {
-                            cout << "Loading document" << endl;
-                        }
                         m_xmlDoc = MergeDoc(m_filenames);
 
-                        if (m_verbose)
-                        {
-                            cout << "Partitioning on root process." << endl;
-                        }
                         SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                         MeshPartitionSharedPtr vPartitioner = MemoryManager<
                             MeshPartition>::AllocateSharedPtr(vSession);
@@ -1358,17 +1363,8 @@ namespace Nektar
                 }
                 else
                 {
-                    if (m_verbose)
-                    {
-                        cout << "Loading document" << endl;
-                    }
                     m_xmlDoc = MergeDoc(m_filenames);
 
-                    if (m_verbose)
-                    {
-                        cout << "Rank " << GetComm()->GetRank()
-                             << " participating in partitioning." << endl;
-                    }
                     // Partitioner now operates in parallel
                     // Each process receives partitioning over interconnect
                     // and writes its own session file to the working directory.
@@ -1381,12 +1377,15 @@ namespace Nektar
                     vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
                 }
                 m_comm->Block();
-                if (m_verbose && GetComm()->GetRank() == 0)
-                {
-                    cout << "Partitioning done" << endl;
-                }
 
-                m_filename = GetSessionNameRank() + ".xml";
+                std::string  dirname = GetSessionName() + "_xml";
+                fs::path    pdirname(dirname);
+                boost::format pad("P%1$07d.xml");
+                pad % m_comm->GetRank();
+                fs::path    pFilename(pad.str());
+                fs::path fullpath = pdirname / pFilename;
+
+                m_filename = PortablePath(fullpath);
 
                 if (m_xmlDoc)
                 {

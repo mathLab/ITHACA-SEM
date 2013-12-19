@@ -800,38 +800,6 @@ namespace Nektar
         }
 		
 
-	void ExpList1D::SetUpPhysTangents(
-		const LocalRegions::ExpansionVector &locexp)
-	{
-	    map<int, int> EdgeGID;
-	    int i,cnt,n,id;
-	    LocalRegions::Expansion1DSharedPtr exp1D;
-	    LocalRegions::Expansion2DSharedPtr exp2D;
-
-	    //setup map of all global ids along booundary
-	    for(cnt = i=0; i< (*m_exp).size(); ++i)
-	    {
-                exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
-	        id = exp1D->GetGeom1D()->GetEid();
-	        EdgeGID[id] = cnt++;
-	    }
-	    
-	    //loop over elements and find edges that match
-	    for(cnt = n =0; n< locexp.size(); ++n)
-	    {
-	       for(i=0; i < locexp[n]->GetNedges(); ++i)
-	       {
-                   exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[n]);
-                   id = exp2D->GetGeom2D()->GetEid(i);
-                   if(EdgeGID.count(id)> 0)
-                   {
-                       (*m_exp)[EdgeGID.find(id)->second]
-                           ->SetUpPhysTangents(locexp[n],i);
-                   }
-	       }
-	    }
-	}
-        
         /**
          * Upwind the left and right states given by the Arrays Fwd and Bwd
          * using the vector quantity Vec and ouput the upwinded value in the
@@ -989,66 +957,10 @@ namespace Nektar
             }
         }
 
-/*        void ExpList1D::v_GetTangents(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents)
-        {
-            int i,j,k,e_npoints,offset;
-            Array<OneD,Array<OneD, NekDouble> > loctangent;
-
-            // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
-
-            ASSERTL1(normals.num_elements() >= coordim,
-                     "Output vector does not have sufficient dimensions to "
-                     "match coordim");
-
-            // Process each expansion.
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                // Get the number of points and normals for this expansion.
-                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                for (j = 0; j < 2; ++j)
-                {
-                    loctangent = (*m_exp)[i]->GetMetricInfo()->GetTangent(j);
-
-                    // Get the physical data offset for this expansion.
-                    offset = m_phys_offset[i];
-                    for (k = 0; k < coordim; ++k)
-                    {
-                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1,
-                                                &(tangents[j][k][offset]), 1);
-                    }
-                }
-            }
-*/                // Process each point in the expansion.
-/*                for(j = 0; j < e_npoints; ++j)
-                {
-                    // Process each spatial dimension and copy the values into
-                    // the output array.
-                    for(k = 0; k < coordim; ++k)
-                    {
-                        //normals[k][offset+j] = locnormals[k*e_npoints + j];
-                        normals[k][offset+j] = locnormals[k][j];
-                    }
-                }*/
-
-//        }
 
         /**
          *
          */
-//        void ExpList1D::v_SetUpPhysNormals(
-//                                const StdRegions::StdExpansionVector &locexp)
-//        {
-//            SetUpPhysNormals(locexp);
-//        }
-
-        void ExpList1D::v_SetUpPhysTangents(
-                    const LocalRegions::ExpansionVector &locexp)
-        {
-            SetUpPhysTangents(locexp);
-        }
-
         void ExpList1D::v_ReadGlobalOptimizationParameters()
         {
 //            Array<OneD, int> NumShape(1,0);

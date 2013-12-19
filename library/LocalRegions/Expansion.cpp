@@ -43,7 +43,7 @@ namespace Nektar
     {
         Expansion::Expansion(SpatialDomains::GeometrySharedPtr pGeom) :
                     m_geom(pGeom),
-                    m_metricinfo(m_geom->GetGeomFactors(m_base))
+                    m_metricinfo(m_geom->GetGeomFactors())
         {
             if (!m_metricinfo)
             {
@@ -61,7 +61,8 @@ namespace Nektar
 
                 stringstream err;
                 err << nDim << "D " << type << " Jacobian not positive "
-                    << "(element ID = " << m_geom->GetGlobalID() << ")";
+                    << "(element ID = " << m_geom->GetGlobalID() << ") "
+                    << "(first vertex ID = " << m_geom->GetVid(0) << ")";
                 NEKERROR(ErrorUtil::ewarning, err.str());
             }
         }
@@ -143,14 +144,15 @@ namespace Nektar
         {
             unsigned int nqtot = GetTotPoints();
             SpatialDomains::GeomType type = m_metricinfo->GetGtype();
+            LibUtilities::PointsKeyVector p = GetPointsKeys();
             if (type == SpatialDomains::eRegular ||
                    type == SpatialDomains::eMovingRegular)
             {
-                m_metrics[MetricQuadrature] = Array<OneD, NekDouble>(nqtot, m_metricinfo->GetJac()[0]);
+                m_metrics[MetricQuadrature] = Array<OneD, NekDouble>(nqtot, m_metricinfo->GetJac(p)[0]);
             }
             else
             {
-                m_metrics[MetricQuadrature] = m_metricinfo->GetJac();
+                m_metrics[MetricQuadrature] = m_metricinfo->GetJac(p);
             }
 
             MultiplyByStdQuadratureMetric(m_metrics[MetricQuadrature],

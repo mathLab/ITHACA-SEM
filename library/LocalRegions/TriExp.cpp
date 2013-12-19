@@ -83,7 +83,7 @@ namespace Nektar
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             NekDouble ival;
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
 
@@ -108,62 +108,55 @@ namespace Nektar
                                Array<OneD,NekDouble> &out_d1,
                                Array<OneD,NekDouble> &out_d2)
         {
-            if (m_metricinfo->IsUsingTangents())
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int     nqtot = nquad0*nquad1;
+            const Array<TwoD, const NekDouble>& df
+                            = m_metricinfo->GetDerivFactors(GetPointsKeys());
+
+            Array<OneD,NekDouble> diff0(2*nqtot);
+            Array<OneD,NekDouble> diff1(diff0+nqtot);
+
+            StdTriExp::v_PhysDeriv(inarray, diff0, diff1);
+
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                ASSERTL0(false,
-                        "Computing using tangent vectors no longer supported.");
-            }
-            else
-            {
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int     nqtot = nquad0*nquad1;
-                const Array<TwoD, const NekDouble>& df   = m_metricinfo->GetDerivFactors();
-
-                Array<OneD,NekDouble> diff0(2*nqtot);
-                Array<OneD,NekDouble> diff1(diff0+nqtot);
-
-                StdTriExp::v_PhysDeriv(inarray, diff0, diff1);
-
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                if(out_d0.num_elements())
                 {
-                    if(out_d0.num_elements())
-                    {
-                        Vmath::Vmul  (nqtot,df[0],1,diff0,1, out_d0, 1);
-                        Vmath::Vvtvp (nqtot,df[1],1,diff1,1, out_d0, 1, out_d0,1);
-                    }
-
-                    if(out_d1.num_elements())
-                    {
-                        Vmath::Vmul  (nqtot,df[2],1,diff0,1, out_d1, 1);
-                        Vmath::Vvtvp (nqtot,df[3],1,diff1,1, out_d1, 1, out_d1,1);
-                    }
-
-                    if(out_d2.num_elements())
-                    {
-                        Vmath::Vmul  (nqtot,df[4],1,diff0,1, out_d2, 1);
-                        Vmath::Vvtvp (nqtot,df[5],1,diff1,1, out_d2, 1, out_d2,1);
-                    }
+                    Vmath::Vmul  (nqtot,df[0],1,diff0,1, out_d0, 1);
+                    Vmath::Vvtvp (nqtot,df[1],1,diff1,1, out_d0, 1, out_d0,1);
                 }
-                else // regular geometry
+
+                if(out_d1.num_elements())
                 {
-                    if(out_d0.num_elements())
-                    {
-                        Vmath::Smul (nqtot, df[0][0], diff0, 1, out_d0, 1);
-                        Blas::Daxpy (nqtot, df[1][0], diff1, 1, out_d0, 1);
-                    }
+                    Vmath::Vmul  (nqtot,df[2],1,diff0,1, out_d1, 1);
+                    Vmath::Vvtvp (nqtot,df[3],1,diff1,1, out_d1, 1, out_d1,1);
+                }
 
-                    if(out_d1.num_elements())
-                    {
-                        Vmath::Smul (nqtot, df[2][0], diff0, 1, out_d1, 1);
-                        Blas::Daxpy (nqtot, df[3][0], diff1, 1, out_d1, 1);
-                    }
+                if(out_d2.num_elements())
+                {
+                    Vmath::Vmul  (nqtot,df[4],1,diff0,1, out_d2, 1);
+                    Vmath::Vvtvp (nqtot,df[5],1,diff1,1, out_d2, 1, out_d2,1);
+                }
+            }
+            else // regular geometry
+            {
+                if(out_d0.num_elements())
+                {
+                    Vmath::Smul (nqtot, df[0][0], diff0, 1, out_d0, 1);
+                    Blas::Daxpy (nqtot, df[1][0], diff1, 1, out_d0, 1);
+                }
 
-                    if(out_d2.num_elements())
-                    {
-                        Vmath::Smul (nqtot, df[4][0], diff0, 1, out_d2, 1);
-                        Blas::Daxpy (nqtot, df[5][0], diff1, 1, out_d2, 1);
-                    }
+                if(out_d1.num_elements())
+                {
+                    Vmath::Smul (nqtot, df[2][0], diff0, 1, out_d1, 1);
+                    Blas::Daxpy (nqtot, df[3][0], diff1, 1, out_d1, 1);
+                }
+
+                if(out_d2.num_elements())
+                {
+                    Vmath::Smul (nqtot, df[4][0], diff0, 1, out_d2, 1);
+                    Blas::Daxpy (nqtot, df[5][0], diff1, 1, out_d2, 1);
                 }
             }
         }
@@ -212,7 +205,8 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1;
 
-            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
+            const Array<TwoD, const NekDouble>& df =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD,NekDouble> diff0(2*nqtot);
             Array<OneD,NekDouble> diff1(diff0+nqtot);
@@ -424,7 +418,8 @@ namespace Nektar
             int    nmodes0 = m_base[0]->GetNumModes();
             int    wspsize = max(max(nqtot,m_ncoeffs),nquad1*nmodes0);
 
-            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
+            const Array<TwoD, const NekDouble>& df =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD, NekDouble> tmp0 (6*wspsize);
             Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
@@ -750,9 +745,10 @@ namespace Nektar
         {
             int i;
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
             const SpatialDomains::GeomType type = geomFactors->GetGtype();
-            const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors();
-            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
+            const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors(ptsKeys);
+            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(ptsKeys);
             int nqe = m_base[0]->GetNumPoints();
             int dim = GetCoordim();
 
@@ -808,8 +804,8 @@ namespace Nektar
             {
                 int j;
 
-                int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
-                int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
+                int nquad0 = ptsKeys[0].GetNumPoints();
+                int nquad1 = ptsKeys[1].GetNumPoints();
 
                 LibUtilities::PointsKey from_key;
 
@@ -830,7 +826,7 @@ namespace Nektar
                             normals[i*nquad0+j] = -df[2*i+1][j]*edgejac[j];
                         }
                     }
-                    from_key = geomFactors->GetPointsKey(0);
+                    from_key = ptsKeys[0];
                     break;
                 case 1:
                     for(j = 0; j < nquad1; ++j)
@@ -841,7 +837,7 @@ namespace Nektar
                             normals[i*nquad1+j] = (df[2*i][nquad0*j + nquad0-1] +  df[2*i+1][nquad0*j + nquad0-1])*edgejac[j];
                         }
                     }
-                    from_key = geomFactors->GetPointsKey(1);
+                    from_key = ptsKeys[1];
                     break;
                 case 2:
                     for(j = 0; j < nquad1; ++j)
@@ -852,7 +848,7 @@ namespace Nektar
                             normals[i*nquad1+j] = -df[2*i][nquad0*j]*edgejac[j];
                         }
                     }
-                    from_key = geomFactors->GetPointsKey(1);
+                    from_key = ptsKeys[1];
                     break;
                 default:
                     ASSERTL0(false,"edge is out of range (edge < 3)");
@@ -1214,6 +1210,7 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
+            case StdRegions::eInvLaplacianWithUnityMean:
                 returnval = Expansion2D::v_GenMatrix(mkey);
                 break;
             default:
@@ -1239,6 +1236,7 @@ namespace Nektar
         DNekScalMatSharedPtr TriExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
 
             ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
@@ -1255,7 +1253,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
@@ -1275,7 +1273,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
+                        NekDouble fac = 1.0/(m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
 
@@ -1295,8 +1293,8 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
-                        Array<TwoD, const NekDouble> df = m_metricinfo->GetDerivFactors();
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
+                        Array<TwoD, const NekDouble> df = m_metricinfo->GetDerivFactors(ptsKeys);
                         int dir = 0;
                         switch(mkey.GetMatrixType())
                         {
@@ -1354,8 +1352,9 @@ namespace Nektar
                         DNekMat &lap01 = *GetStdMatrix(lap01key);
                         DNekMat &lap11 = *GetStdMatrix(lap11key);
 
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
-                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
+                        Array<TwoD, const NekDouble> gmat =
+                                                m_metricinfo->GetGmat(ptsKeys);
 
                         int rows = lap00.GetRows();
                         int cols = lap00.GetColumns();
@@ -1372,22 +1371,8 @@ namespace Nektar
                 break;
             case StdRegions::eInvLaplacianWithUnityMean:
                 {
-                    NekDouble one = 1.0;
-                    MatrixKey lapkey(StdRegions::eLaplacian,mkey.GetShapeType(), *this);
-                    DNekMatSharedPtr lmat = GenMatrix(lapkey);
-
-                    // replace first column with inner product wrt 1
-                    int nq = GetTotPoints();
-                    Array<OneD, NekDouble> tmp(nq);
-                    Array<OneD, NekDouble> outarray(m_ncoeffs);
-                    Vmath::Fill(nq,one,tmp,1);
-                    v_IProductWRTBase(tmp, outarray);
-
-                    Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
-                                 &(lmat->GetPtr())[0],m_ncoeffs);
-
-                    lmat->Invert();
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,lmat); //Populate  matrix.
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
                 }
                 break;
             case StdRegions::eHelmholtz:
@@ -1421,7 +1406,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
@@ -1439,9 +1424,9 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
 
-                        const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
+                        const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors(ptsKeys);
                         int dir = 0;
 
                         switch(mkey.GetMatrixType())
@@ -1518,6 +1503,7 @@ namespace Nektar
         DNekScalBlkMatSharedPtr TriExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
             DNekScalBlkMatSharedPtr returnval;
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
 
             ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
@@ -1540,7 +1526,7 @@ namespace Nektar
                 }
                 else
                 {
-                    factor = (m_metricinfo->GetJac())[0];
+                    factor = (m_metricinfo->GetJac(ptsKeys))[0];
                     goto UseStdRegionsMatrix;
                 }
                 break;
@@ -1811,7 +1797,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
             const unsigned int nquad0 = m_base[0]->GetNumPoints();
             const unsigned int nquad1 = m_base[1]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& df   = m_metricinfo->GetDerivFactors();
+            const Array<TwoD, const NekDouble>& df   =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             for(i = 0; i < nquad1; i++)
             {

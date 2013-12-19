@@ -103,9 +103,6 @@ namespace Nektar
 
 
         protected:
-
-            Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
-
             void NewtonIterationForLocCoord(const Array<OneD, const NekDouble> &coords, 
                                             Array<OneD,NekDouble> &Lcoords,
                                             NekDouble &resid);

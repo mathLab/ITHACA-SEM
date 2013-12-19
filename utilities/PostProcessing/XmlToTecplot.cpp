@@ -13,14 +13,21 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
 
-    if(argc != 2)
+    if((argc < 2)||(argc > 3))
     {
-        fprintf(stderr,"Usage: XmlToTecplot  meshfile\n");
+        fprintf(stderr,"Usage: XmlToTecplot [val] meshfile\n");
         exit(1);
     }
 
-    LibUtilities::SessionReaderSharedPtr vSession
-            = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    LibUtilities::SessionReaderSharedPtr vSession;
+    if(argc == 3)
+    {
+        vSession = LibUtilities::SessionReader::CreateInstance(argc-1, argv+1);
+    }
+    else
+    {
+        vSession = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    }
 
     //----------------------------------------------
     // Read in mesh from input file
@@ -82,6 +89,18 @@ int main(int argc, char *argv[])
     
     //-----------------------------------------------
     
+
+    if(argc == 3)
+    {
+        NekDouble val = atof(argv[argc-2]);
+        for(int i = 0; i < Exp[0]->GetNcoeffs(); ++i)
+        {
+            Exp[0]->SetCoeff(i,val);
+        }
+        
+    }
+
+
     //----------------------------------------------
     // Write solution  depending on #define
     string   outfile(strtok(argv[argc-1],"."));

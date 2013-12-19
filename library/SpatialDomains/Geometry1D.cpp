@@ -54,7 +54,7 @@ namespace Nektar
         }
 
 
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::GetXmap(const int i)
+        const StdRegions::StdExpansion1DSharedPtr Geometry1D::GetXmap(const int i)
         {
             return v_GetXmap(i);
         }
@@ -94,7 +94,7 @@ namespace Nektar
         }
 
 
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::v_GetXmap(const int i)
+        const StdRegions::StdExpansion1DSharedPtr Geometry1D::v_GetXmap(const int i)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");

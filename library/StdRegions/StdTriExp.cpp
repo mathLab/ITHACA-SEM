@@ -1284,7 +1284,7 @@ namespace Nektar
             }  
         }
         
-        int StdTriExp::v_GetVertexMap(const int localVertexId)
+        int StdTriExp::v_GetVertexMap(const int localVertexId,bool useCoeffPacking)
         {
             ASSERTL0(
                 GetEdgeBasisType(localVertexId) == LibUtilities::eModified_A ||
@@ -1292,27 +1292,56 @@ namespace Nektar
                 "Mapping not defined for this type of basis");
             
             int localDOF = 0;
-            switch(localVertexId)
+            if(useCoeffPacking == true)
             {
-                case 0:
-                { 
-                    localDOF = 0;    
-                    break;
-                }
-                case 1:
-                {   
-                    localDOF = m_base[1]->GetNumModes();                 
-                    break;
-                }
-                case 2:
-                { 
-                    localDOF = 1;    
-                    break;
-                }
-                default:
+                switch(localVertexId)
                 {
-                    ASSERTL0(false,"eid must be between 0 and 2");
-                    break;
+                case 0:
+                    { 
+                        localDOF = 0;    
+                        break;
+                    }
+                case 1:
+                    { 
+                        localDOF = 1;    
+                        break;
+                    }
+                case 2:
+                    {   
+                        localDOF = m_base[1]->GetNumModes();                 
+                        break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"eid must be between 0 and 2");
+                        break;
+                    }
+                }
+            }
+            else // follow book format for vertex indexing. 
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                        break;
+                    }
+                case 1:
+                    {   
+                        localDOF = m_base[1]->GetNumModes();                 
+                        break;
+                    }
+                case 2:
+                    { 
+                        localDOF = 1;    
+                        break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"eid must be between 0 and 2");
+                        break;
+                    }
                 }
             }
             
@@ -1439,7 +1468,7 @@ namespace Nektar
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A &&
                      GetBasisType(1) == LibUtilities::eModified_B,
-                     "Expansion not of a proper type");
+                     "Expansion not of expected type");
             int i;
             int cnt;
             int nummodes0, nummodes1;
@@ -1563,23 +1592,29 @@ namespace Nektar
             StdTriExp OrthoExp(Ba,Bb);
             
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int j,k;
+            int j, k , cnt = 0;
             
-            int cnt;
-            int cuttoff = (int) (mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio)*nmodes_a);
-            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             
+            NekDouble epsilon = 1.0;
+            int nmodes = min(nmodes_a,nmodes_b);
+            
+            //To avoid the fac[j] from blowing up
+            //NekDouble epsilon = 0.001;
+
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
-            
-            // apply SVV filter. 
-            for(cnt = j = 0; j < nmodes_a; ++j)
+
+            //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
+            // apply SVV filter (JEL)
+            for(j = 0; j < nmodes_a; ++j)
             {
                 for(k = 0; k < nmodes_b-j; ++k)
                 {
-                    if(j + k >= cuttoff)
+                    if(j + k >= cutoff)
                     {
-                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes_a)*(j+k-nmodes_a)/((NekDouble)((j+k-cuttoff+1)*(j+k-cuttoff+1)))));
+                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
                     }
                     cnt++;
                 }

@@ -357,11 +357,13 @@ namespace Nektar
                 std::vector<std::vector<NekDouble> > FieldData;
 
                 // Read the restart file containing this variable
-                LibUtilities::Import(file, FieldDef, FieldData);
+                LibUtilities::FieldIOSharedPtr fld =
+                    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+                fld->Import(file, FieldDef, FieldData);
 
                 LibUtilities::FieldMetaDataMap fieldMetaDataMap;
                 LibUtilities::FieldMetaDataMap::iterator iter;
-                LibUtilities::ImportFieldMetaData(file,fieldMetaDataMap);
+                fld->ImportFieldMetaData(file,fieldMetaDataMap);
                 iter = fieldMetaDataMap.find("Time");
                 if(iter != fieldMetaDataMap.end())
                 {

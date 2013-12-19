@@ -55,6 +55,8 @@ namespace Nektar
             ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
                      "Missing parameter 'OutputFile'.");
             m_outputFile = pParams.find("OutputFile")->second;
+            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
+
         }
 
         FilterThresholdMax::~FilterThresholdMax()
@@ -106,7 +108,7 @@ namespace Nektar
                 pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], vCoeffs);
             }
 
-            LibUtilities::Write(vOutputFilename.str(),FieldDef,FieldData);
+            m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
 
         }
 

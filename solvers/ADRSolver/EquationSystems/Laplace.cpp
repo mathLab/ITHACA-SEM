@@ -61,6 +61,7 @@ namespace Nektar
 
     void Laplace::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
+        EquationSystem::SessionSummary(s);
         SolverUtils::AddSummaryItem(s, "Lambda",
                                     m_factors[StdRegions::eFactorLambda]);
     }

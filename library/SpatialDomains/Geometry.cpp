@@ -151,13 +151,6 @@ namespace Nektar
             return 0;
         }
 
-        void Geometry::v_GenGeomFactors(
-                    const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                "This function is only valid for shape type geometries");
-        }
-
         int Geometry::v_GetNumVerts() const
         {
             NEKERROR(ErrorUtil::efatal,

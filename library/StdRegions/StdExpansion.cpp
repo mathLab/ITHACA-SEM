@@ -1025,11 +1025,6 @@ namespace Nektar
             v_SetUpPhysNormals(edge);
         }
 
-        void StdExpansion::SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge)
-        {
-            v_SetUpPhysTangents(exp2d, edge);
-        }
-
         NekDouble StdExpansion::StdPhysEvaluate(const Array<OneD, const NekDouble> &Lcoord,
                                                 const Array<OneD, const NekDouble> &physvals)
         {
@@ -1074,11 +1069,6 @@ namespace Nektar
         }
 
         void StdExpansion::v_SetUpPhysNormals(const int edge)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-        }
-
-        void StdExpansion::v_SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
@@ -1507,7 +1497,8 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-            int StdExpansion::v_GetVertexMap(const int localVertexId)
+        int StdExpansion::v_GetVertexMap(const int localVertexId,      
+                                         bool useCoeffPacking)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
                 return 0;
@@ -1814,7 +1805,8 @@ namespace Nektar
         }
 
         Array<OneD, unsigned int>
-        StdExpansion::v_GetFaceInverseBoundaryMap(int fid)
+        StdExpansion::v_GetFaceInverseBoundaryMap(int fid,
+                                StdRegions::Orientation faceOrient)
         {
             ASSERTL0(false, "Not implemented.");
             Array<OneD, unsigned int> noinversemap(1);

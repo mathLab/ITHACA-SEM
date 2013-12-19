@@ -1426,44 +1426,6 @@ namespace Nektar
             }
         }
 
-        void ExpList::GetTangents(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents)
-        {
-            int i,j,k,e_npoints,offset;
-            Array<OneD,Array<OneD, NekDouble> > loctangent;
-
-            // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
-
-            ASSERTL0(tangents.num_elements() > 0,
-                     "Must have storage for at least one tangent");
-            ASSERTL1(tangents[0].num_elements() >= coordim,
-                     "Output vector does not have sufficient dimensions to "
-                     "match coordim");
-
-            // Process each expansion.
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                // Get the number of points and normals for this expansion.
-                e_npoints  = (*m_exp)[i]->GetTotPoints();
-                offset     = m_phys_offset[i];
-
-                for (j = 0; j < tangents.num_elements(); ++j)
-                {
-                    loctangent = (*m_exp)[i]->GetMetricInfo()->GetTangent(j);
-                    // Get the physical data offset for this expansion.
-
-                    for (k = 0; k < coordim; ++k)
-                    {
-                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1,
-                                                &(tangents[j][k][offset]), 1);
-                    }
-                }
-            }
-
-        }
-
-
         /**
          * Configures geometric info, such as tangent direction, on each
          * expansion.
@@ -1471,19 +1433,7 @@ namespace Nektar
          */
         void ExpList::ApplyGeomInfo()
         {
-            std::string dir = "TangentX";
-            Array<OneD,NekDouble> coords(2);
 
-            m_session->LoadGeometricInfo("TangentDir",dir,"TangentX");
-            m_session->LoadGeometricInfo("TangentCentreX",coords[0],0.0);
-            m_session->LoadGeometricInfo("TangentCentreY",coords[1],0.0);
-
-            // Apply geometric info to each expansion.
-            for (int i = 0; i < m_exp->size(); ++i)
-            {
-                (*m_exp)[i]->GetMetricInfo()->SetTangentOrientation(dir);
-                (*m_exp)[i]->GetMetricInfo()->SetTangentCircularCentre(coords);
-            }
         }
 
 
@@ -2839,22 +2789,6 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_SetUpPhysTangents(
-                    const LocalRegions::ExpansionVector &locexp)
-        {
-            ASSERTL0(false,
-                      "This method is not defined or valid for this class type");
-        }
-
-        /**
-         */
-        void ExpList::v_SetUpTangents()
-        {
-            for (int i = 0; i < (*m_exp).size(); ++i) {
-                (*m_exp)[i]->GetMetricInfo()->SetUpTangents();
-            }
         }
 
 		/**

@@ -146,7 +146,7 @@ namespace Nektar
             int     ntot = GetTotPoints();
             Array<OneD, NekDouble> wsp(ntot);
 
-            if(sol ==  NullNekDouble1DArray)
+            if (sol.num_elements() == 0)
             {
                 Vmath::Vmul(ntot, phys, 1, phys, 1, wsp, 1);
             }

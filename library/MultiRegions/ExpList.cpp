@@ -1622,11 +1622,22 @@ namespace Nektar
             NekDouble err = 0.0, errl2;
             int    i;
 
-            for (i = 0; i < (*m_exp).size(); ++i)
+            if (soln == NullNekDouble1DArray)
             {
-                errl2 = (*m_exp)[i]->L2(inarray + m_phys_offset[i],
-                                        soln    + m_phys_offset[i]);
-                err += errl2*errl2;
+                for (i = 0; i < (*m_exp).size(); ++i)
+                {
+                    errl2 = (*m_exp)[i]->L2(inarray + m_phys_offset[i]);
+                    err += errl2*errl2;
+                }
+            }
+            else
+            {
+                for (i = 0; i < (*m_exp).size(); ++i)
+                {
+                    errl2 = (*m_exp)[i]->L2(inarray + m_phys_offset[i],
+                                            soln    + m_phys_offset[i]);
+                    err += errl2*errl2;
+                }
             }
 
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);

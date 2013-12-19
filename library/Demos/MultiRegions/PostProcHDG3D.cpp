@@ -235,10 +235,10 @@ int main(int argc, char *argv[])
 	PostProc->EvaluateHDGPostProcessing(PostProc->UpdateCoeffs());
 	PostProc->BwdTrans_IterPerExp(PostProc->GetCoeffs(),PostProc->UpdatePhys());
 	
-	NekDouble vLinfError = Exp->Linf(fce);
-	NekDouble vL2Error   = Exp->L2  (fce);
-	NekDouble L2ErrorPostProc = PostProc->L2(ppSol);
-	NekDouble LinfErrorPostProc = PostProc->Linf(ppSol); 
+	NekDouble vLinfError = Exp->Linf(Exp->GetPhys(), fce);
+	NekDouble vL2Error   = Exp->L2  (Exp->GetPhys(), fce);
+	NekDouble L2ErrorPostProc = PostProc->L2(PostProc->GetPhys(), ppSol);
+	NekDouble LinfErrorPostProc = PostProc->Linf(PostProc->GetPhys(), ppSol); 
 
 	if (vSession->GetComm()->GetRank() == 0)
 	{

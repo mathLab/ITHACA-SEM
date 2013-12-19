@@ -2349,9 +2349,14 @@
                 DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
 
                 NekVector<NekDouble> in (nm_elmt, force, eWrapper);
-                NekVector<NekDouble> out(nm_elmt, tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
+                NekVector<NekDouble> out(nm_elmt);
 
                 out = (*lapsys)*in;
+
+                // Transforming back to modified basis
+                Array<OneD, NekDouble> work(nq_elmt);
+                ppExp->BwdTrans(out.GetPtr(), work);
+                exp  ->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[eid]);
             }
         }
 

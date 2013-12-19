@@ -114,6 +114,11 @@ namespace SolverUtils
         // create the storage space for the body motion description
         int phystot = pFields[0]->GetTotPoints();
         
+        for(int i = 0; i < m_NumVariable; i++)
+        {
+            m_Forcing[i] = Array<OneD, NekDouble> (phystot, 0.0);
+        }
+        
         m_zeta = Array<OneD, Array< OneD, NekDouble> >(10);
         m_eta  = Array<OneD, Array< OneD, NekDouble> >(10);
         

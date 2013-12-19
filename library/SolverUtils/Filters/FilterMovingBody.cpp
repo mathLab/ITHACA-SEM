@@ -158,8 +158,23 @@ namespace Nektar
             {
                 // Open output stream
                 m_outputStream.open(m_outputFile.c_str());
-                m_outputStream << "# Time\t z\t Fx (press)\t Fx (visc)\t Fx (tot)\t"
-                    " Fy (press)\t Fy (visc)\t Fy (tot)\t";
+                m_outputStream << "#";
+                m_outputStream.width(7);
+                m_outputStream << "Time";
+                m_outputStream.width(25);
+                m_outputStream << "z";
+                m_outputStream.width(25);
+                m_outputStream << "Fx (press)";
+                m_outputStream.width(25);
+                m_outputStream << "Fx (visc)";
+                m_outputStream.width(25);
+                m_outputStream << "Fx (tot)";
+                m_outputStream.width(25);
+                m_outputStream << "Fy (press)";
+                m_outputStream.width(25);
+                m_outputStream << "Fy (visc)";
+                m_outputStream.width(25);
+                m_outputStream << "Fy (tot)";
                 m_outputStream << endl;
             }
 
@@ -439,10 +454,14 @@ namespace Nektar
                 
                 Vmath::Vadd(Num_z_pos,Fxp,1,Fxv,1,Fx,1);
                 Vmath::Vadd(Num_z_pos,Fyp,1,Fyv,1,Fy,1);
-                Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
-                Array<OneD, NekDouble> dummy(Num_z_pos,0.0);
                 
-                pFields[0]->GetCoords(dummy,dummy,z_coords);
+                Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
+                Array<OneD, const NekDouble> pts = pFields[0]->GetHomogeneousBasis()->GetZ();
+                
+                NekDouble LZ;
+                m_session->LoadParameter("LZ", LZ);
+                Vmath::Smul(Num_z_pos,LZ/2.0,pts,1,z_coords,1);
+                Vmath::Sadd(Num_z_pos,LZ/2.0,z_coords,1,z_coords,1);
                 
                 
                 for(int i = 0 ; i < Num_z_pos; i++)
@@ -450,7 +469,7 @@ namespace Nektar
                     m_outputStream.width(8);
                     m_outputStream << setprecision(6) << time;
                     
-                    m_outputStream.width(8);
+                    m_outputStream.width(25);
                     m_outputStream << setprecision(6) << z_coords[i];
                     
                     m_outputStream.width(25);

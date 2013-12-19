@@ -70,6 +70,7 @@ namespace SolverUtils
         m_motion[1]    = "y";
         m_IsFromFile   = Array<OneD, bool> (6);
         m_session->LoadParameter("Kinvis",m_kinvis);
+        
         // Loading the x-dispalcement (m_zeta) and the y-displacement (m_eta)
 		// Those two variables are bith functions of z and t and the may come
 		// from an equation (forced vibration) or from another solver which, given

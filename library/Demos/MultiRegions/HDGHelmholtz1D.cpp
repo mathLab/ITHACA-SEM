@@ -136,8 +136,8 @@ int main(int argc, char *argv[])
         //--------------------------------------------
         // Calculate L_inf error
         Fce->SetPhys(fce);
-        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "L infinity error: " << Exp->Linf(Exp->GetPhys(), Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Exp->GetPhys(), Fce->GetPhys()) << endl;
         //--------------------------------------------
     }
     //----------------------------------------------

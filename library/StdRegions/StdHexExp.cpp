@@ -268,49 +268,6 @@ namespace Nektar
         }
 
 
-        //   I/O routine
-        void StdHexExp::v_WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int  order0 = m_base[0]->GetNumModes();
-            int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp
-                            = Array<OneD, NekDouble>(order0*order1*order2, 0.0);
-
-            NekDouble *mat = wsp.get();
-
-            // put coeffs into matrix and reverse order so that r index is
-            // fastest for Prism
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
-            {
-                for(int j = 0; j < order1-i; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
-                    {
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
-                    }
-                }
-            }
-
-            outfile <<"Coeffs = [" << " ";
-
-            for(int k = 0; k < order2; ++k)
-            {
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        outfile << mat[i + order0*(j + order1*k)] <<" ";
-                    }
-                    outfile << std::endl;
-                }
-            }
-            outfile << "]" ;
-        }
-
         bool StdHexExp::v_IsBoundaryInteriorExpansion()
         {
             return (m_base[0]->GetBasisType() == LibUtilities::eModified_A) &&
@@ -794,13 +751,6 @@ namespace Nektar
 
 
         NekDouble StdHexExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoords)
-        {
-            return StdExpansion3D::v_PhysEvaluate(Lcoords, m_phys);
-        }
-
-
-        NekDouble StdHexExp::v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& Lcoords,
                 const Array<OneD, const NekDouble>& physvals)
         {
@@ -1113,79 +1063,6 @@ namespace Nektar
                 return GetBasisType(2);
             }
         }
-
-
-        void StdHexExp::v_WriteToFile(std::ofstream &outfile,
-                                OutputFormat format,
-                                const bool dumpVar,
-                                std::string var)
-        {
-            if(format==eTecplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2,  z3";
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz
-                        <<", F=Point" << endl;
-
-                for(int k = 0; k < Qz; ++k)
-                {
-                    for(int j = 0; j < Qy; ++j)
-                    {
-                        for(int i = 0; i < Qx; ++i)
-                        {
-                            outfile <<  eta_x[i] <<  " " << eta_y[j] << " "
-                                    << eta_z[k] << " "
-                                    << m_phys[i + Qx*(j + Qy*k)] << endl;
-                        }
-                    }
-                }
-            }
-            else if (format==eGnuplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-
-                for(int k = 0; k < Qz; ++k)
-                {
-                    for(int j = 0; j < Qy; ++j)
-                    {
-                        for(int i = 0; i < Qx; ++i)
-                        {
-                            outfile <<  eta_x[i] <<  " " << eta_y[j] << " "
-                                    << eta_z[k] << " "
-                                    << m_phys[i + Qx*(j + Qy*k)] << endl;
-                        }
-                        outfile << endl;
-                    }
-                    outfile << endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested "
-                                "type of output");
-            }
-
-        }
-
 
         void StdHexExp::v_GetCoords( Array<OneD, NekDouble> & xi_x,
                                 Array<OneD, NekDouble> & xi_y,

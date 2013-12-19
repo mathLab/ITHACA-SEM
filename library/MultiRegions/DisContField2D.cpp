@@ -1653,7 +1653,6 @@ namespace Nektar
             }
         }
 
-
         /** 
          * @brief Calculate the \f$ L^2 \f$ error of the \f$ Q_{\rm dir} \f$
          * derivative using the consistent DG evaluation of \f$ Q_{\rm dir} \f$.
@@ -1688,32 +1687,35 @@ namespace Nektar
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
                 eid = m_offset_elmt_id[i];
+
                 // Probably a better way of setting up lambda than this.
                 // Note cannot use PutCoeffsInToElmts since lambda space
                 // is mapped during the solve.
-                for(e = 0; e < (*m_exp)[eid]->GetNedges(); ++e)
+                int nEdges = (*m_exp)[i]->GetNedges();
+                Array<OneD, Array<OneD, NekDouble> > edgeCoeffs(nEdges);
+
+                for(e = 0; e < nEdges; ++e)
                 {
                     edgedir = (*m_exp)[eid]->GetEorient(e);
-
                     ncoeff_edge = elmtToTrace[eid][e]->GetNcoeffs();
+                    edgeCoeffs[e] = Array<OneD, NekDouble>(ncoeff_edge);
+                    Vmath::Vcopy(ncoeff_edge, edge_lambda, 1, edgeCoeffs[e], 1);
                     elmtToTrace[eid][e]->SetCoeffsToOrientation(
-                        edgedir,edge_lambda,edge_lambda);
-                    Vmath::Vcopy(ncoeff_edge,edge_lambda,1,
-                                 elmtToTrace[eid][e]->UpdateCoeffs(),1);
+                        edgedir, edgeCoeffs[e], edgeCoeffs[e]);
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
 
                 (*m_exp)[eid]->DGDeriv(dir,
                                        tmp_coeffs=m_coeffs+m_coeff_offset[eid],
                                        elmtToTrace[eid],
+                                       edgeCoeffs,
                                        out_tmp = out_d+cnt);
                 cnt  += (*m_exp)[eid]->GetNcoeffs();
             }
             
             BwdTrans(out_d,m_phys);
             Vmath::Vsub(m_npoints,m_phys,1,soln,1,m_phys,1);
-
-            return L2();
+            return L2(m_phys);
         }
 
         void DisContField2D::v_HelmSolve(
@@ -1981,18 +1983,21 @@ namespace Nektar
                 int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
                 int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
                 int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
+
                 // Probably a better way of setting up lambda than this.  Note
                 // cannot use PutCoeffsInToElmts since lambda space is mapped
                 // during the solve.
+                int nEdges = (*m_exp)[i]->GetNedges();
+                Array<OneD, Array<OneD, NekDouble> > edgeCoeffs(nEdges);
+
                 for(e = 0; e < (*m_exp)[eid]->GetNedges(); ++e)
                 {
                     edgedir = (*m_exp)[eid]->GetEorient(e);
-
                     ncoeff_edge = elmtToTrace[eid][e]->GetNcoeffs();
+                    edgeCoeffs[e] = Array<OneD, NekDouble>(ncoeff_edge);
+                    Vmath::Vcopy(ncoeff_edge, edge_lambda, 1, edgeCoeffs[e], 1);
                     elmtToTrace[eid][e]->SetCoeffsToOrientation(
-                        edgedir,edge_lambda,edge_lambda);
-                    Vmath::Vcopy(ncoeff_edge,edge_lambda,1,
-                                 elmtToTrace[eid][e]->UpdateCoeffs(),1);
+                        edgedir, edgeCoeffs[e], edgeCoeffs[e]);
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
 
@@ -2042,7 +2047,7 @@ namespace Nektar
                 // (d/dx w, d/dx q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
-                    elmtToTrace[eid], out_tmp);
+                    elmtToTrace[eid], edgeCoeffs, out_tmp);
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
                 //(*m_exp)[eid]->IProductWRTDerivBase(0,qrhs,force);
                 ppExp->IProductWRTDerivBase(0,qrhs,force);
@@ -2051,7 +2056,7 @@ namespace Nektar
                 // + (d/dy w, d/dy q_1)
                 (*m_exp)[eid]->DGDeriv(
                     1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
-                    elmtToTrace[eid], out_tmp);
+                    elmtToTrace[eid], edgeCoeffs, out_tmp);
 
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
                 //(*m_exp)[eid]->IProductWRTDerivBase(1,qrhs,out_tmp);
@@ -2070,14 +2075,14 @@ namespace Nektar
                 DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
                 
                 NekVector<NekDouble> in (nm_elmt,force,eWrapper);
-                //NekVector<NekDouble> out(nm_elmt, tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
-                NekVector<NekDouble> out(nm_elmt, ppExp->UpdateCoeffs(), eWrapper);
+                NekVector<NekDouble> out(nm_elmt);
 
                 out = (*lapsys)*in;
-				
-                //transforming back to modified basis
-                ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
-                (*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
+
+                // Transforming back to modified basis
+                Array<OneD, NekDouble> work(nq_elmt);
+                ppExp->BwdTrans(out.GetPtr(), work);
+                (*m_exp)[eid]->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[eid]);
             }
         }
 

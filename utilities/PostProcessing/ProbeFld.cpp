@@ -224,8 +224,8 @@ int main(int argc, char *argv[])
         int ExpId =  Exp[0]->GetExpIndex(gloCoord,NekConstants::kGeomFactorsTol);
         for (int j = 0; j < nfields; ++j)
         {
-            Exp[j]->PutPhysInToElmtExp();
-            cout << "   " << Exp[j]->GetExp(ExpId)->PhysEvaluate(gloCoord);
+            Array<OneD, NekDouble> phys(Exp[j]->GetPhys() + Exp[j]->GetPhys_Offset(j));
+            cout << "   " << Exp[j]->GetExp(ExpId)->PhysEvaluate(gloCoord, phys);
         }
         cout << endl;
     }

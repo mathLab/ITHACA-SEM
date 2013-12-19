@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
     }
     //----------------------------------------------
     
-    cout << "Linf of field "<< nfield << " is : " << Exp[nfield]->Linf() << endl;
+    cout << "Linf of field "<< nfield << " is : " << Exp[nfield]->Linf(Exp[nfield]->GetPhys()) << endl;
     return  0; 
 }
 

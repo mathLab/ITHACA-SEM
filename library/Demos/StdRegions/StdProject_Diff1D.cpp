@@ -108,6 +108,9 @@ int main(int argc, char *argv[])
     }
   }
 
+  Array<OneD, NekDouble> phys (nq);
+  Array<OneD, NekDouble> coeffs(order);
+
   //--------------------------------------------
   // Take the numerical derivative of the solutiion
   E->PhysDeriv(sol,sol);
@@ -115,41 +118,41 @@ int main(int argc, char *argv[])
   
   //---------------------------------------------
   // Project onto Expansion 
-  E->FwdTrans(sol,E->UpdateCoeffs());
+  E->FwdTrans(sol,coeffs);
   //---------------------------------------------
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
-  E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+  E->BwdTrans(coeffs,phys);
   //-------------------------------------------  
 
   // Define Exact differential of soluiton 
   if(btype != LibUtilities::eFourier)
   {
-    for(i = 0; i < nq; ++i)
-    {
-      sol[i] = 0.0;
-      for(j = 1; j < order; ++j)
+      for(i = 0; i < nq; ++i)
       {
-    sol[i] += j*pow(z[i],j-1);
+          sol[i] = 0.0;
+          for(j = 1; j < order; ++j)
+          {
+              sol[i] += j*pow(z[i],j-1);
+          }
       }
-    }
   }
   else
   {
-    for(i = 0; i < nq; ++i)
-    {
-      sol[i] = 0.0;
-      for(j = 0; j < order/2-1; ++j)
+      for(i = 0; i < nq; ++i)
       {
-      sol[i] += j*M_PI*(cos(j*M_PI*z[i]) - sin(j*M_PI*z[i]));
+          sol[i] = 0.0;
+          for(j = 0; j < order/2-1; ++j)
+          {
+              sol[i] += j*M_PI*(cos(j*M_PI*z[i]) - sin(j*M_PI*z[i]));
+          }
       }
-    }
   }
   //--------------------------------------------
   // Calculate L_inf error 
-  cout << "L infinity error: " << E->Linf(sol) << endl;
-  cout << "L 2 error:        " << E->L2  (sol) << endl;
+  cout << "L infinity error: " << E->Linf(phys,sol) << endl;
+  cout << "L 2 error:        " << E->L2  (phys,sol) << endl;
   //--------------------------------------------
 
 

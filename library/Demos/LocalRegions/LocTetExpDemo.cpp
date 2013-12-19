@@ -204,18 +204,20 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    lte->FwdTrans( solution, lte->UpdateCoeffs() );
+    Array<OneD, NekDouble> coeffs(lte->GetNcoeffs());
+    Array<OneD, NekDouble> phys  (Qx * Qy * Qz);
+    lte->FwdTrans( solution, coeffs );
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    lte->BwdTrans( lte->GetCoeffs(), lte->UpdatePhys() );
+    lte->BwdTrans( coeffs, phys );
     //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_p error
-    cout << "L infinity error: " << lte->Linf(solution) << endl;
-    cout << "L 2 error:        " << lte->L2  (solution) << endl;
+    cout << "L infinity error: " << lte->Linf(phys, solution) << endl;
+    cout << "L 2 error:        " << lte->L2  (phys, solution) << endl;
     //--------------------------------------------
 
     //-------------------------------------------
@@ -230,7 +232,7 @@ int main(int argc, char *argv[])
     t[0] = -0.0;
     t[1] = -1.0;
     t[2] = -1.0;
-    NekDouble numericSolution = lte->PhysEvaluate(t);
+    NekDouble numericSolution = lte->PhysEvaluate(t, phys);
     cout << "Numeric Solution: " << numericSolution << endl;
     cout << "Actual Solution:  " << solution[0] << endl;
     cout << "Interpolation difference from actual solution at x = ( "

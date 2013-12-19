@@ -236,7 +236,7 @@ namespace Nektar
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
             {
-                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&m_coeffs[0],1);
+                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
             }
             else
             {
@@ -467,19 +467,6 @@ namespace Nektar
             return StdTetExp::v_PhysEvaluate(Lcoord,physvals);
         }
 
-
-
-        /**
-         * @param   coord       Physical space coordinate
-         * @returns Evaluation of expansion at given coordinate.
-         */
-        NekDouble TetExp::v_PhysEvaluate(
-                  const Array<OneD, const NekDouble> &coord)
-        {
-            return PhysEvaluate(coord,m_phys);
-        }
-
-
         /**
          * @param   coord       Physical space coordinate
          * @returns Evaluation of expansion at given coordinate.
@@ -498,94 +485,6 @@ namespace Nektar
             // Evaluate point in local (eta) coordinates.
             return StdTetExp::v_PhysEvaluate(Lcoord,physvals);
         }
-
-
-        /** 
-	 * \brief Get the x,y,z coordinates of each quadrature point.
-	 */
-        void TetExp::v_GetCoords(
-                  Array<OneD,NekDouble> &coords_0,
-                  Array<OneD,NekDouble> &coords_1,
-                  Array<OneD,NekDouble> &coords_2)
-        {
-            LibUtilities::BasisSharedPtr CBasis0;
-            LibUtilities::BasisSharedPtr CBasis1;
-            LibUtilities::BasisSharedPtr CBasis2;
-            Array<OneD,NekDouble>  x;
-
-            ASSERTL0(m_geom, "m_geom not define");
-
-            // get physical points defined in Geom
-            m_geom->FillGeom();  //TODO: implement
-
-            switch(m_geom->GetCoordim())
-            {
-            case 3:
-                ASSERTL0(coords_2.num_elements(), "output coords_2 is not defined");
-                CBasis0 = m_geom->GetBasis(2,0);
-                CBasis1 = m_geom->GetBasis(2,1);
-                CBasis2 = m_geom->GetBasis(2,2);
-
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                   (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(2);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints(),
-                                x, 1, coords_2, 1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), CBasis2->GetPointsKey(), &(m_geom->UpdatePhys(2))[0],
-                             m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), &coords_2[0]);
-                }
-            case 2:
-                ASSERTL0(coords_1.num_elements(), "output coords_1 is not defined");
-
-                CBasis0 = m_geom->GetBasis(1,0);
-                CBasis1 = m_geom->GetBasis(1,1);
-                CBasis2 = m_geom->GetBasis(1,2);
-
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                   (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(1);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints(),
-                                x, 1, coords_1, 1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), CBasis2->GetPointsKey(), &(m_geom->UpdatePhys(1))[0],
-                             m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), &coords_1[0]);
-                }
-            case 1:
-                ASSERTL0(coords_0.num_elements(), "output coords_0 is not defined");
-
-                CBasis0 = m_geom->GetBasis(0,0);
-                CBasis1 = m_geom->GetBasis(0,1);
-                CBasis2 = m_geom->GetBasis(0,2);
-
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                   (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(0);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints(),
-                                x, 1, coords_0, 1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), CBasis2->GetPointsKey(), &(m_geom->UpdatePhys(0))[0],
-                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),&coords_0[0]);
-                }
-                break;
-            default:
-                ASSERTL0(false,"Number of dimensions are greater than 3");
-                break;
-            }
-        }
-
 
         /**
 	 * \brief Get the coordinates "coords" at the local coordinates "Lcoords"
@@ -609,88 +508,22 @@ namespace Nektar
             }
         }
 
+        void TetExp::v_GetCoords(
+            Array<OneD, NekDouble> &coords_0,
+            Array<OneD, NekDouble> &coords_1,
+            Array<OneD, NekDouble> &coords_2)
+        {
+            Expansion::v_GetCoords(coords_0, coords_1, coords_2);
+        }
+
 
         //-----------------------------
         // Helper functions
         //-----------------------------
-        void TetExp::v_WriteToFile(
-                  std::ofstream &outfile, 
-                  OutputFormat format, 
-                  const bool dumpVar, 
-                  std::string var)
-        {
-            int i,j;
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-            Array<OneD,NekDouble> coords[3];
 
-            ASSERTL0(m_geom,"m_geom not defined");
-
-            int     coordim  = m_geom->GetCoordim();
-
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-
-            GetCoords(coords[0],coords[1],coords[2]);
-
-            if(format==eTecplot)
-            {
-                if(dumpVar)
-                {
-                    outfile << "Variables = x";
-
-                    if(coordim == 2)
-                    {
-                        outfile << ", y";
-                    }
-                    else if (coordim == 3)
-                    {
-                        outfile << ", y, z";
-                    }
-                    outfile << std::endl << std::endl;
-                }
-
-                outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
-
-                for(i = 0; i < nquad0*nquad1*nquad2; ++i)
-                {
-                    for(j = 0; j < coordim; ++j)
-                    {
-                        outfile << coords[j][i] << " ";
-                    }
-                    outfile << std::endl;
-                }
-            }
-            else if (format==eGnuplot)
-            {
-                for(int k = 0; k < nquad2; ++k)
-                {
-                    for(int j = 0; j < nquad1; ++j)
-                    {
-                        for(int i = 0; i < nquad0; ++i)
-                        {
-                            int n = (k*nquad1 + j)*nquad0 + i;
-                            outfile <<  coords[0][n] <<  " " << coords[1][n] << " "
-                                    << coords[2][n] << " "
-                                    << m_phys[i + nquad0*(j + nquad1*k)] << endl;
-                        }
-                        outfile << endl;
-                    }
-                    outfile << endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
-        }
-
-
-       /**
-        * \brief Return Shape of region, using  ShapeType enum list.
-	*/
+        /**
+         * \brief Return Shape of region, using  ShapeType enum list.
+         */
         LibUtilities::ShapeType TetExp::v_DetShapeType() const
         {
             return LibUtilities::eTetrahedron;
@@ -1108,31 +941,6 @@ namespace Nektar
                 }
             }
         }
-
-
-        NekDouble TetExp::v_Linf(const Array<OneD, const NekDouble> &sol)
-        {
-            return Linf(sol);
-        }
-
-
-        NekDouble TetExp::v_Linf()
-        {
-            return Linf();
-        }
-
-
-        NekDouble TetExp::v_L2(const Array<OneD, const NekDouble> &sol)
-        {
-            return StdExpansion::L2(sol);
-        }
-
-
-        NekDouble TetExp::v_L2()
-        {
-            return StdExpansion::L2();
-        }
-
 
         //-----------------------------
         // Operator creation functions

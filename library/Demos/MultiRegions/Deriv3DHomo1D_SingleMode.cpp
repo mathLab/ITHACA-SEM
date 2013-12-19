@@ -116,18 +116,18 @@ int main(int argc, char *argv[])
     cout << "Deriv u done" << endl;
     
     
-    cout << "L infinity error:  " << Exp_u->Linf(dudx) << endl;
-    cout << "L 2 error  :       " << Exp_u->L2  (dudx) << endl;	
+    cout << "L infinity error:  " << Exp_u->Linf(Exp_u->GetPhys(), dudx) << endl;
+    cout << "L 2 error  :       " << Exp_u->L2  (Exp_u->GetPhys(), dudx) << endl;	
     
     Exp_v->PhysDeriv(Exp_v->GetPhys(),dump,Exp_v->UpdatePhys(),dump);
     
-    cout << "L infinity error:  " << Exp_v->Linf(dvdy) << endl;
-    cout << "L 2 error  :       " << Exp_v->L2  (dvdy) << endl;
+    cout << "L infinity error:  " << Exp_v->Linf(Exp_v->GetPhys(), dvdy) << endl;
+    cout << "L 2 error  :       " << Exp_v->L2  (Exp_v->GetPhys(), dvdy) << endl;
     
     Exp_w->PhysDeriv(Exp_w->GetPhys(),dump,dump,Exp_w->UpdatePhys());
     
-    cout << "L infinity error:  " << Exp_w->Linf(dwdz) << endl;
-    cout << "L 2 error  :       " << Exp_w->L2  (dwdz) << endl;
+    cout << "L infinity error:  " << Exp_w->Linf(Exp_w->GetPhys(), dwdz) << endl;
+    cout << "L 2 error  :       " << Exp_w->L2  (Exp_w->GetPhys(), dwdz) << endl;
     
     return 0;
 }

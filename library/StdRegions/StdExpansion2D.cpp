@@ -113,12 +113,6 @@ namespace Nektar
             }
         }
 
-        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
-        {
-            return PhysEvaluate(coords,m_phys);
-        }
-
-
         NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
         {
             NekDouble val;
@@ -201,35 +195,6 @@ namespace Nektar
                 bool doCheckCollDir1)
         {
             v_IProductWRTBase_SumFacKernel(base0, base1, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1);
-        }
-
-        void StdExpansion2D::v_SetUpPhysNormals(const int edge)
-        {
-           ComputeEdgeNormal(edge);
-        }
-
-        const NormalVector & StdExpansion2D::v_GetEdgeNormal(const int edge) const
-        {
-            std::map<int, NormalVector>::const_iterator x;
-            x = m_edgeNormals.find(edge);
-            ASSERTL0 (x != m_edgeNormals.end(),
-                        "Edge normal not computed.");
-            return x->second;
-        }
-        
-        void StdExpansion2D::v_NegateEdgeNormal(const int edge)
-        {
-            m_negatedNormals[edge] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_edgeNormals[edge][i].num_elements(), 
-                           m_edgeNormals[edge][i], 1);
-            }
-        }
-
-        bool StdExpansion2D::v_EdgeNormalNegated(const int edge)
-        {
-            return m_negatedNormals[edge];
         }
 
         void StdExpansion2D::v_LaplacianMatrixOp_MatFree(

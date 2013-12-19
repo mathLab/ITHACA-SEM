@@ -83,7 +83,7 @@ namespace Nektar
                 const StdRegions::VarCoeffMap                 &dirForcing,
                 Array<OneD,NekDouble>                         &outarray);
 #endif
-            
+
             inline void AddNormTraceInt(
                 const int                                      dir,
                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
@@ -116,6 +116,7 @@ namespace Nektar
                 const int                                       dir,
                 const Array<OneD, const NekDouble>             &incoeffs,
                 Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
                 Array<OneD, NekDouble>                         &out_d);
             virtual DNekMatSharedPtr v_GenMatrix(
                 const StdRegions::StdMatrixKey &mkey);

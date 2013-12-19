@@ -1083,9 +1083,10 @@ namespace Nektar
             void DGDeriv(const int dir,
                          const Array<OneD, const NekDouble>& inarray,
                          Array<OneD, boost::shared_ptr< StdExpansion > > &EdgeExp,
+                         Array<OneD, Array<OneD, NekDouble> > &coeffs,
                          Array<OneD, NekDouble> &outarray)
             {
-                v_DGDeriv (dir, inarray, EdgeExp, outarray);
+                v_DGDeriv (dir, inarray, EdgeExp, coeffs, outarray);
             }
 
 
@@ -1548,10 +1549,12 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
 
-            STD_REGIONS_EXPORT virtual void v_DGDeriv(const int dir,
-                                   const Array<OneD, const NekDouble>& inarray,
-                                   Array<OneD, boost::shared_ptr<StdExpansion> > &EdgeExp,
-                                   Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_DGDeriv(
+                const int dir,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, boost::shared_ptr<StdExpansion> > &EdgeExp,
+                Array<OneD, Array<OneD, NekDouble> > &coeffs,
+                Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 

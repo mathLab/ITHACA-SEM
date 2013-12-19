@@ -1031,6 +1031,7 @@ namespace Nektar
             int                                             dir,
             const Array<OneD, const NekDouble>             &incoeffs,
             Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+            Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
             Array<OneD, NekDouble>                         &out_d)
         {
             int ncoeffs = GetNcoeffs();
@@ -1049,11 +1050,8 @@ namespace Nektar
 
             // Add the boundary integral including the relevant part of
             // the normal
+            AddNormTraceInt(dir, FaceExp, faceCoeffs, coeffs);
 
-            // DM TODO: FIXME
-#if 0
-            AddNormTraceInt(dir, FaceExp, coeffs);
-#endif  
             DNekVec Out_d (ncoeffs,out_d,eWrapper);
 
             Out_d  = InvMass*Coeffs;

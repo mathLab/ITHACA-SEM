@@ -1259,6 +1259,7 @@ namespace Nektar
         void StdExpansion::v_DGDeriv(const int dir,
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, boost::shared_ptr< StdExpansion > > &EdgeExp,
+                                     Array<OneD, Array<OneD, NekDouble> > &coeffs,
                                      Array<OneD, NekDouble> &outarray)
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for "

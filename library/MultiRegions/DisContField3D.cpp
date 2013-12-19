@@ -2229,14 +2229,10 @@
         void  DisContField3D::EvaluateHDGPostProcessing(
             Array<OneD, NekDouble> &outarray)
         {
-            // DM TODO: FIXME
-#if 0
             int    i,cnt,f,ncoeff_face;
             Array<OneD, NekDouble> force, out_tmp,qrhs,qrhs1;
             Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            //StdRegions::Orientation facedir;
 
             int     eid,nq_elmt, nm_elmt;
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
@@ -2249,13 +2245,16 @@
             // Calculate Q using standard DG formulation.
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
-                eid = m_offset_elmt_id[i];
+                LocalRegions::Expansion3DSharedPtr exp =
+                    boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion3D>((*m_exp)[i]);
 
+                eid     = m_offset_elmt_id[i];
                 nq_elmt = (*m_exp)[eid]->GetTotPoints();
                 nm_elmt = (*m_exp)[eid]->GetNcoeffs();
-                qrhs  = Array<OneD, NekDouble>(nq_elmt);
-                qrhs1  = Array<OneD, NekDouble>(nq_elmt);
-                force = Array<OneD, NekDouble>(2*nm_elmt);
+                qrhs    = Array<OneD, NekDouble>(nq_elmt);
+                qrhs1   = Array<OneD, NekDouble>(nq_elmt);
+                force   = Array<OneD, NekDouble>(2*nm_elmt);
                 out_tmp = force + nm_elmt;
                 LocalRegions::ExpansionSharedPtr ppExp;
 
@@ -2265,18 +2264,18 @@
                 int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
                 int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
                 int num_modes2 = (*m_exp)[eid]->GetBasis(2)->GetNumModes();
+
                 // Probably a better way of setting up lambda than this.  Note
                 // cannot use PutCoeffsInToElmts since lambda space is mapped
                 // during the solve.
-                for(f = 0; f < (*m_exp)[eid]->GetNfaces(); ++f)
+                int nFaces = (*m_exp)[eid]->GetNfaces();
+                Array<OneD, Array<OneD, NekDouble> > faceCoeffs(nFaces);
+                for(f = 0; f < nFaces; ++f)
                 {
-                    //facedir = (*m_exp)[eid]->GetFaceOrient(f);
-
                     ncoeff_face = elmtToTrace[eid][f]->GetNcoeffs();
-                    boost::dynamic_pointer_cast<LocalRegions::Expansion3D>((*m_exp)[eid])->SetFaceToGeomOrientation(f,face_lambda);
-                    //elmtToTrace[eid][f]->SetCoeffsToOrientation(facedir,face_lambda,face_lambda);
-                    Vmath::Vcopy(ncoeff_face,face_lambda,1,
-                                 elmtToTrace[eid][f]->UpdateCoeffs(),1);
+                    faceCoeffs[f] = Array<OneD, NekDouble>(ncoeff_face);
+                    Vmath::Vcopy(ncoeff_face, face_lambda, 1, faceCoeffs[f], 1);
+                    exp->SetFaceToGeomOrientation(f, faceCoeffs[f]);
                     face_lambda = face_lambda + ncoeff_face;
                 }
 
@@ -2317,7 +2316,7 @@
                 // (d/dx w, q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
-                    elmtToTrace[eid], out_tmp);
+                    elmtToTrace[eid], faceCoeffs, out_tmp);
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
                 ppExp->IProductWRTDerivBase(0,qrhs,force);
 
@@ -2325,7 +2324,7 @@
                 // + (d/dy w, q_1)
                 (*m_exp)[eid]->DGDeriv(
                     1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
-                    elmtToTrace[eid], out_tmp);
+                    elmtToTrace[eid], faceCoeffs, out_tmp);
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
                 ppExp->IProductWRTDerivBase(1,qrhs,out_tmp);
 
@@ -2334,7 +2333,7 @@
                 // + (d/dz w, q_2)
                 (*m_exp)[eid]->DGDeriv(
                     2,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
-                    elmtToTrace[eid], out_tmp);
+                    elmtToTrace[eid], faceCoeffs, out_tmp);
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
                 ppExp->IProductWRTDerivBase(2,qrhs,out_tmp);
 
@@ -2348,18 +2347,12 @@
                 // get matrix inverse
                 LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, ppExp->DetShapeType(), *ppExp);
                 DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
-                
-                NekVector<NekDouble> in (nm_elmt,force,eWrapper);
-                //NekVector<NekDouble> out(nm_elmt, tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
-                NekVector<NekDouble> out(nm_elmt, ppExp->UpdateCoeffs(), eWrapper);
+
+                NekVector<NekDouble> in (nm_elmt, force, eWrapper);
+                NekVector<NekDouble> out(nm_elmt, tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
 
                 out = (*lapsys)*in;
-				
-                //transforming back to modified basis
-                ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
-                (*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
             }
-#endif
         }
 
         /**

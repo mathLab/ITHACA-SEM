@@ -987,13 +987,9 @@ namespace Nektar
 
             // Git information
             // If built from a distributed package, do not include this
-            if (kGitSha1.size() > 0)
+            if (kGitSha1 != "GITDIR-NOTFOUND")
             {
-                ProvenanceMap["GitSHA1"] = string(kGitSha1);
-            }
-
-            if (kGitBranch.size() > 0)
-            {
+                ProvenanceMap["GitSHA1"]   = string(kGitSha1);
                 ProvenanceMap["GitBranch"] = string(kGitBranch);
             }
 

@@ -121,8 +121,8 @@ namespace Nektar
             Array<OneD, NekDouble> DyD2(ptsx.num_elements());
           
             // Ideally this will be stored in m_geomfactors 
-            m_xmap[0]->PhysDeriv(ptsx,DxD1,DxD2);
-            m_xmap[0]->PhysDeriv(ptsy,DyD1,DyD2);
+            m_xmap->PhysDeriv(ptsx,DxD1,DxD2);
+            m_xmap->PhysDeriv(ptsy,DyD1,DyD2);
 
             int cnt=0; 
             Array<OneD, DNekMatSharedPtr > I(2);
@@ -133,13 +133,13 @@ namespace Nektar
             while(cnt++ < MaxIterations)
             {
                 //  evaluate lagrange interpolant at Lcoords
-                m_xmap[0]->LocCoordToLocCollapsed(Lcoords,eta);
-                I[0] = m_xmap[0]->GetBasis(0)->GetI(eta);
-                I[1] = m_xmap[0]->GetBasis(1)->GetI(eta+1);
+                m_xmap->LocCoordToLocCollapsed(Lcoords,eta);
+                I[0] = m_xmap->GetBasis(0)->GetI(eta);
+                I[1] = m_xmap->GetBasis(1)->GetI(eta+1);
 
                 //calculate the global point `corresponding to Lcoords
-                xmap = m_xmap[0]->PhysEvaluate(I, ptsx);
-                ymap = m_xmap[1]->PhysEvaluate(I, ptsy);
+                xmap = m_xmap->PhysEvaluate(I, ptsx);
+                ymap = m_xmap->PhysEvaluate(I, ptsy);
 
                 F1 = coords[0] - xmap;
                 F2 = coords[1] - ymap;
@@ -151,10 +151,10 @@ namespace Nektar
                 }
 
                 //Interpolate derivative metric at Lcoords
-                derx_1 = m_xmap[0]->PhysEvaluate(I, DxD1);
-                derx_2 = m_xmap[0]->PhysEvaluate(I, DxD2);
-                dery_1 = m_xmap[0]->PhysEvaluate(I, DyD1);
-                dery_2 = m_xmap[0]->PhysEvaluate(I, DyD2);                  
+                derx_1 = m_xmap->PhysEvaluate(I, DxD1);
+                derx_2 = m_xmap->PhysEvaluate(I, DxD2);
+                dery_1 = m_xmap->PhysEvaluate(I, DyD1);
+                dery_2 = m_xmap->PhysEvaluate(I, DyD2);                  
               
                 jac = dery_2*derx_1 - dery_1*derx_2;
                 

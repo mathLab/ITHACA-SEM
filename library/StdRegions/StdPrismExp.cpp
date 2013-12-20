@@ -858,10 +858,6 @@ namespace Nektar
         void StdPrismExp::v_LocCoordToLocCollapsed(
                                               const Array<OneD, const NekDouble>& xi,
                                               Array<OneD, NekDouble>& eta)
-
-        NekDouble StdPrismExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
         {
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
@@ -881,8 +877,6 @@ namespace Nektar
             } 
         }
                                           
-n                                                                        
-
         NekDouble StdPrismExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& xi,
             const Array<OneD, const NekDouble>& physvals)

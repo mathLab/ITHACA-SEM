@@ -109,9 +109,6 @@ namespace Nektar
       //---------------------------------------
       // 3D Geometry Methods
       //---------------------------------------
-
-<<<<<<< HEAD
-
       void Geometry3D::NewtonIterationForLocCoord(
           const Array<OneD, const NekDouble> &coords,
           const Array<OneD, const NekDouble> &ptsx,
@@ -125,15 +122,12 @@ namespace Nektar
 	  static NekDouble Tol       = 1.e-12;  // |x-xp|^2 < EPSILON  error tolerance 
 	  static NekDouble LcoordDiv = 15.0;    // |r,s|    > LcoordDIV stop the search  
 	  
-          Array<OneD, const NekDouble > Jac = m_geomFactors->GetJac();
+          Array<OneD, const NekDouble > Jac = m_geomFactors->GetJac(m_xmap->GetPointsKeys());
           
           NekDouble ScaledTol = Vmath::Vsum(Jac.num_elements(),Jac,1)/
               ((NekDouble)Jac.num_elements());
           ScaledTol *= Tol; 
           
-          Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
-          Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
-          Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
           NekDouble xmap,ymap,zmap, F1,F2, F3;
 
           NekDouble derx_1, derx_2, derx_3, dery_1, dery_2, dery_3,
@@ -150,9 +144,9 @@ namespace Nektar
           Array<OneD, NekDouble> DzD3(ptsx.num_elements());
           
           // Ideally this will be stored in m_geomfactors 
-          m_xmap[0]->PhysDeriv(ptsx,DxD1,DxD2,DxD3);
-          m_xmap[0]->PhysDeriv(ptsy,DyD1,DyD2,DyD3);
-          m_xmap[0]->PhysDeriv(ptsz,DzD1,DzD2,DzD3);
+          m_xmap->PhysDeriv(ptsx,DxD1,DxD2,DxD3);
+          m_xmap->PhysDeriv(ptsy,DyD1,DyD2,DyD3);
+          m_xmap->PhysDeriv(ptsz,DzD1,DzD2,DzD3);
           
           int cnt=0; 
           Array<OneD, DNekMatSharedPtr > I(3);
@@ -163,15 +157,15 @@ namespace Nektar
           while(cnt++ < MaxIterations)
 	  {
 	      //  evaluate lagrange interpolant at Lcoords
-              m_xmap[0]->LocCoordToLocCollapsed(Lcoords,eta);
-	      I[0] = m_xmap[0]->GetBasis(0)->GetI(eta);
-	      I[1] = m_xmap[0]->GetBasis(1)->GetI(eta+1);
-	      I[2] = m_xmap[0]->GetBasis(2)->GetI(eta+2);
+              m_xmap->LocCoordToLocCollapsed(Lcoords,eta);
+	      I[0] = m_xmap->GetBasis(0)->GetI(eta);
+	      I[1] = m_xmap->GetBasis(1)->GetI(eta+1);
+	      I[2] = m_xmap->GetBasis(2)->GetI(eta+2);
 
               //calculate the global point `corresponding to Lcoords
-              xmap = m_xmap[0]->PhysEvaluate(I, ptsx);
-              ymap = m_xmap[1]->PhysEvaluate(I, ptsy);
-              zmap = m_xmap[2]->PhysEvaluate(I, ptsz);
+              xmap = m_xmap->PhysEvaluate(I, ptsx);
+              ymap = m_xmap->PhysEvaluate(I, ptsy);
+              zmap = m_xmap->PhysEvaluate(I, ptsz);
 
               F1 = coords[0] - xmap;
               F2 = coords[1] - ymap;
@@ -184,15 +178,15 @@ namespace Nektar
               }
               
               //Interpolate derivative metric at Lcoords
-              derx_1 = m_xmap[0]->PhysEvaluate(I, DxD1);
-              derx_2 = m_xmap[0]->PhysEvaluate(I, DxD2);
-              derx_3 = m_xmap[0]->PhysEvaluate(I, DxD3);
-              dery_1 = m_xmap[0]->PhysEvaluate(I, DyD1);
-              dery_2 = m_xmap[0]->PhysEvaluate(I, DyD2);                  
-              dery_3 = m_xmap[0]->PhysEvaluate(I, DyD3);          
-              derz_1 = m_xmap[0]->PhysEvaluate(I, DzD1);
-              derz_2 = m_xmap[0]->PhysEvaluate(I, DzD2);                  
-              derz_3 = m_xmap[0]->PhysEvaluate(I, DzD3);          
+              derx_1 = m_xmap->PhysEvaluate(I, DxD1);
+              derx_2 = m_xmap->PhysEvaluate(I, DxD2);
+              derx_3 = m_xmap->PhysEvaluate(I, DxD3);
+              dery_1 = m_xmap->PhysEvaluate(I, DyD1);
+              dery_2 = m_xmap->PhysEvaluate(I, DyD2);                  
+              dery_3 = m_xmap->PhysEvaluate(I, DyD3);          
+              derz_1 = m_xmap->PhysEvaluate(I, DzD1);
+              derz_2 = m_xmap->PhysEvaluate(I, DzD2);                  
+              derz_3 = m_xmap->PhysEvaluate(I, DzD3);          
               
               jac = derx_1*(dery_2*derz_3 - dery_3*derz_2) 
                   - derx_2*(dery_1*derz_3 - dery_3*derz_1)

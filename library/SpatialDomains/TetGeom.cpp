@@ -166,7 +166,6 @@ namespace Nektar
             if(GetMetricInfo()->GetGtype() !=  eRegular)
             {
                 int i;
-                Array<OneD, NekDouble> pts; 
                 Array<OneD, NekDouble> mincoord(3), maxcoord(3);
                 NekDouble diff = 0.0;
 

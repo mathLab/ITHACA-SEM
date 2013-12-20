@@ -1345,7 +1345,7 @@ namespace Nektar
             return 0;
         }
 
-
+        
         NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, DNekMatSharedPtr > & I, const Array<OneD, const NekDouble>& physvals)
         {
             NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");

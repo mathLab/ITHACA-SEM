@@ -749,10 +749,8 @@ namespace Nektar
             }
         }
 
-
-        NekDouble StdHexExp::v_PhysEvaluate(
-                                            const Array<OneD, const NekDouble>& xi,
-                                            Array<OneD, NekDouble>& eta)
+        void StdHexExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                      Array<OneD, NekDouble>& eta)
         {
             eta[0] = xi[0];
             eta[1] = xi[1];

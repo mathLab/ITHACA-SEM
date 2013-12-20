@@ -115,13 +115,23 @@ namespace Nektar
 
         NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
         {
+	    Array<OneD, DNekMatSharedPtr>  I(2);
+	  
+	    I[0] = m_base[0]->GetI(coords);
+	    I[1] = m_base[1]->GetI(coords+1);
+
+	    return v_PhysEvaluate(I,physvals);
+        }
+
+        NekDouble StdExpansion2D::v_PhysEvaluate(
+            const Array<OneD, DNekMatSharedPtr > &I, 
+            const Array<OneD, const NekDouble> &physvals)
+        {
             NekDouble val;
             int i;
             int nq0 = m_base[0]->GetNumPoints();
             int nq1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> wsp1(nq1);
-
-            DNekMatSharedPtr I = m_base[0]->GetI(coords);
 
             ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
             ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
@@ -131,13 +141,12 @@ namespace Nektar
             // interpolate first coordinate direction
             for (i = 0; i < nq1;++i)
             {
-                wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1,
+                wsp1[i] = Blas::Ddot(nq0, &(I[0]->GetPtr())[0], 1,
                                      &physvals[i * nq0], 1);
             }
 
             // interpolate in second coordinate direction
-            I = m_base[1]->GetI(coords+1);
-            val = Blas::Ddot(nq1, I->GetPtr(), 1, wsp1, 1);
+            val = Blas::Ddot(nq1, I[1]->GetPtr(), 1, wsp1, 1);
 
             return val;
         }

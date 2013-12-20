@@ -564,7 +564,7 @@ namespace Nektar
 
         NekDouble StdQuadExp::v_PhysEvaluate(
                                  const Array<OneD, const NekDouble>& coords,
-                                 const Array<OneD, const NekDouble> & physvals)
+                                 const Array<OneD, const NekDouble>& physvals)
         {
             return  StdExpansion2D::v_PhysEvaluate(coords, physvals);
         }

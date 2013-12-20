@@ -115,10 +115,13 @@ namespace Nektar
 
         NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
         {
+            Array<OneD, NekDouble> coll(2);
 	    Array<OneD, DNekMatSharedPtr>  I(2);
 	  
-	    I[0] = m_base[0]->GetI(coords);
-	    I[1] = m_base[1]->GetI(coords+1);
+            LocCoordToLocCollapsed(coords,coll);
+            
+	    I[0] = m_base[0]->GetI(coll);
+	    I[1] = m_base[1]->GetI(coll+1);
 
 	    return v_PhysEvaluate(I,physvals);
         }

@@ -877,17 +877,6 @@ namespace Nektar
             } 
         }
                                           
-        NekDouble StdPrismExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
-        {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
-
-            v_LocCoordToLocCollapsed(xi,eta);
-            return StdExpansion3D::v_PhysEvaluate(eta,physvals);
-        }
-        
- 
         void StdPrismExp::v_GetCoords(Array<OneD, NekDouble>& xi_x,
                                       Array<OneD, NekDouble>& xi_y,
                                       Array<OneD, NekDouble>& xi_z)

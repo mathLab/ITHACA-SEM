@@ -594,12 +594,9 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
-        NekDouble StdPyrExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
+        void StdPyrExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                      Array<OneD, NekDouble>& eta)
         {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
-
             if (fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
                 // Very top point of the pyramid
@@ -614,8 +611,6 @@ namespace Nektar
                 eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0; 
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
             } 
-            
-            return StdExpansion3D::v_PhysEvaluate(eta, physvals);
         }
 
         void StdPyrExp::v_GetCoords(Array<OneD, NekDouble> &xi_x, 

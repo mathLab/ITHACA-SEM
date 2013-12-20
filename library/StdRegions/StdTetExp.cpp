@@ -1120,16 +1120,6 @@ namespace Nektar
             }
         }
 
-        NekDouble StdTetExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
-        {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
-
-            v_LocCoordToLocCollapsed(xi,eta);
-            return StdExpansion3D::v_PhysEvaluate(eta, physvals);
-        }
-        
         void StdTetExp::v_FillMode(
             const int                     mode, 
                   Array<OneD, NekDouble> &outarray)

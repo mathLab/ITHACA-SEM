@@ -757,14 +757,6 @@ namespace Nektar
             eta[2] = xi[2];
         }
                                           
-        NekDouble StdHexExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoords,
-                const Array<OneD, const NekDouble>& physvals)
-        {
-            return StdExpansion3D::v_PhysEvaluate(Lcoords, physvals);
-        }
-
-
         /**
          * @note for hexahedral expansions _base[0] (i.e. p) modes run fastest.
          */

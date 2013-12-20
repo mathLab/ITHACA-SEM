@@ -37,6 +37,7 @@
 #include <SpatialDomains/SegGeom.h>
 #include <boost/shared_ptr.hpp>
 
+#include <iomanip>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -109,11 +110,20 @@ namespace Nektar
             NekDouble &resid)
         {
 
-            static int MaxIterations   = 101;     // maximum iterations for convergence  
-            static NekDouble Tol       = 1.e-16;  // |x-xp|^2 < EPSILON  error tolerance 
+            static int MaxIterations   = 51;     // maximum iterations for convergence  
+            static NekDouble Tol       = 1.e-8;  // |x-xp|^2 < EPSILON  error tolerance 
             static NekDouble LcoordDiv = 15.0;    // |r,s|    > LcoordDIV stop the search              
+            Array<OneD, const NekDouble > Jac = m_geomFactors->GetJac(m_xmap->GetPointsKeys());
+            
+            NekDouble ScaledTol = Vmath::Vsum(Jac.num_elements(),Jac,1)/
+                ((NekDouble)Jac.num_elements());
+            ScaledTol *= Tol; 
+            
             NekDouble xmap,ymap, F1,F2;
             NekDouble derx_1, derx_2, dery_1, dery_2,jac; 
+
+            // save intiial guess for later reference if required. 
+            NekDouble init0 = Lcoords[0], init1 = Lcoords[1];
 
             Array<OneD, NekDouble> DxD1(ptsx.num_elements());
             Array<OneD, NekDouble> DxD2(ptsx.num_elements());
@@ -144,7 +154,7 @@ namespace Nektar
                 F1 = coords[0] - xmap;
                 F2 = coords[1] - ymap;
 
-                if(F1*F1 + F2*F2 < Tol)
+                if(F1*F1 + F2*F2 < ScaledTol)
                 {
                     resid = sqrt(F1*F1 + F2*F2);
                     break;
@@ -176,17 +186,23 @@ namespace Nektar
 	  
             if(cnt >= MaxIterations)
             {
-                std::string msg = "MaxIterations in Newton Iteration (Lcoord = " + boost::lexical_cast<string>(Lcoords[0]) + "," + boost::lexical_cast<string>(Lcoords[1]) + ")"; 
-                
-                WARNINGL1(cnt < MaxIterations,msg.c_str());
-            }
+                Array<OneD, NekDouble> collCoords(2);
+                m_xmap->LocCoordToLocCollapsed(Lcoords,collCoords);
 
-            
-            if(cnt >= 40)
-            {
-                resid = sqrt(F1*F1 + F2*F2);
-                Lcoords[0] = Lcoords[1] = 2.0;    
-            }                        
+                // if coordinate is inside element dump error! 
+                if((collCoords[0] >=  -1.0 && collCoords[0] <= 1.0)&&
+                   (collCoords[1] >=  -1.0 && collCoords[1] <= 1.0))
+                {
+                    std::ostringstream ss;
+                    
+                    ss << "Reached MaxIterations (" << MaxIterations << ") in Newton iteration ";
+                    ss << "Init value ("<< setprecision(4) << init0 << "," << init1<< "," <<") ";
+                    ss << "Fin  value ("<<Lcoords[0] << "," << Lcoords[1]<< "," << ") ";
+                    ss << "Resid = " << resid << " Tolerance = " << sqrt(ScaledTol) ;
+                    
+                    WARNINGL1(cnt < MaxIterations,ss.str());
+                }
+            }
         }
 
         int Geometry2D::v_GetFid() const 

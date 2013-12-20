@@ -430,7 +430,8 @@ void InterpolateField(Array<OneD, MultiRegions::ExpListSharedPtr> &field0,
             }
             else
             {
-                value = x < clamp_up ? clamp_up : (x > clamp_low ? clamp_low : x);
+                value = (value > clamp_up)? clamp_up : ((value < clamp_low)? clamp_low :
+                                                        value);
                 field1[f]->UpdatePhys()[r] = value;
             }
         }

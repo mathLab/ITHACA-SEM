@@ -1262,6 +1262,7 @@ namespace Nektar
             }
             
             std::string outmsg = "Failed to find point in element to tolerance of " + boost::lexical_cast<std::string>(resid);
+            outmsg += " using nearest point found"; 
             WARNINGL0(true,outmsg.c_str());
             Vmath::Vcopy(locCoords.num_elements(),min_locCoords,1,locCoords,1);
 

@@ -40,6 +40,7 @@
 #include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>
 
+#include <iomanip>
 namespace Nektar
 {
   namespace SpatialDomains
@@ -118,8 +119,8 @@ namespace Nektar
           NekDouble &resid)
 {
 	
-	  static int MaxIterations   = 101;     // maximum iterations for convergence  
-	  static NekDouble Tol       = 1.e-12;  // |x-xp|^2 < EPSILON  error tolerance 
+	  static int MaxIterations   = 51;     // maximum iterations for convergence  
+	  static NekDouble Tol       = 1.e-8;  // |x-xp|^2 < EPSILON  error tolerance 
 	  static NekDouble LcoordDiv = 15.0;    // |r,s|    > LcoordDIV stop the search  
 	  
           Array<OneD, const NekDouble > Jac = m_geomFactors->GetJac(m_xmap->GetPointsKeys());
@@ -132,6 +133,9 @@ namespace Nektar
 
           NekDouble derx_1, derx_2, derx_3, dery_1, dery_2, dery_3,
               derz_1, derz_2, derz_3,jac; 
+
+          // save intiial guess for later reference if required. 
+          NekDouble init0 = Lcoords[0], init1 = Lcoords[1], init2 = Lcoords[2];
 
           Array<OneD, NekDouble> DxD1(ptsx.num_elements());
           Array<OneD, NekDouble> DxD2(ptsx.num_elements());
@@ -151,7 +155,7 @@ namespace Nektar
           int cnt=0; 
           Array<OneD, DNekMatSharedPtr > I(3);
           Array<OneD, NekDouble>       eta(3);
-
+          
           F1 = F2 = F3 = 2000; // Starting value of Function
           
           while(cnt++ < MaxIterations)
@@ -220,9 +224,23 @@ namespace Nektar
 	  
 	  if(cnt >= MaxIterations)
 	  {
-              std::string msg = "MaxIterations in Newton Iteration (Lcoord = " + boost::lexical_cast<string>(Lcoords[0]) + "," + boost::lexical_cast<string>(Lcoords[1]) + "," + boost::lexical_cast<string>(Lcoords[2]) + ")"; 
-	    
-              WARNINGL1(cnt < MaxIterations,msg.c_str());
+              Array<OneD, NekDouble> collCoords(3);
+              m_xmap->LocCoordToLocCollapsed(Lcoords,collCoords);
+              
+              // if coordinate is inside element dump error! 
+              if((collCoords[0] >=  -1.0 && collCoords[0] <= 1.0)&&
+                 (collCoords[1] >=  -1.0 && collCoords[1] <= 1.0)&&
+                 (collCoords[2] >=  -1.0 && collCoords[2] <= 1.0))
+              {
+                  std::ostringstream ss;
+                  
+                  ss << "Reached MaxIterations (" << MaxIterations << ") in Newton iteration ";
+                  ss << "Init value ("<< setprecision(4) << init0 << "," << init1<< "," << init2 <<") ";
+                  ss << "Fin  value ("<<Lcoords[0] << "," << Lcoords[1]<< "," << Lcoords[2] << ") ";
+                  ss << "Resid = " << resid << " Tolerance = " << sqrt(ScaledTol) ;
+                  
+                  WARNINGL1(cnt < MaxIterations,ss.str());
+              }
 	  }
       }
       

@@ -143,11 +143,17 @@ namespace Nektar
             const Array<OneD, const NekDouble> &coords, 
             const Array<OneD, const NekDouble> &physvals)
 	{
+            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 	    Array<OneD, DNekMatSharedPtr>  I(3);
-	  
-	    I[0] = m_base[0]->GetI(coords);
-	    I[1] = m_base[1]->GetI(coords+1);
-            I[2] = m_base[2]->GetI(coords+2);
+
+            // Obtain local collapsed corodinate from 
+            // cartesian coordinate. 
+            LocCoordToLocCollapsed(coords,eta);
+            
+            // Get Lagrange interpolants. 
+	    I[0] = m_base[0]->GetI(eta);
+	    I[1] = m_base[1]->GetI(eta+1);
+            I[2] = m_base[2]->GetI(eta+2);
 
 	    return v_PhysEvaluate(I,physvals);
 	}

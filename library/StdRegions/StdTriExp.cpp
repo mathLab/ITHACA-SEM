@@ -682,17 +682,6 @@ namespace Nektar
             }
         }
 
-        NekDouble StdTriExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& coords,
-            const Array<OneD, const NekDouble>& physvals)
-        {
-            Array<OneD, NekDouble> coll(2);
-            
-            v_LocCoordToLocCollapsed(coords,coll);
-            
-            return StdExpansion2D::v_PhysEvaluate(coll,physvals);
-        }
-
         void StdTriExp::v_FillMode(
             const int mode, Array<OneD, NekDouble> &outarray)
         {

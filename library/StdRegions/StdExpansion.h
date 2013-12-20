@@ -645,49 +645,16 @@ namespace Nektar
             inline DNekMatSharedPtr GetStdMatrix(const StdMatrixKey &mkey)
             {
                 return m_stdMatrixManager[mkey];
-                /*
-                map<StdMatrixKey, DNekMatSharedPtr>::iterator it = m_stdMatrixManager.find(mkey);
-                if (it == m_stdMatrixManager.end())
-                {
-                    return (m_stdMatrixManager[mkey] = CreateStdMatrix(mkey));
-                }
-                else
-                {
-                    return it->second;
-                }
-                */
             }
 
             inline DNekBlkMatSharedPtr GetStdStaticCondMatrix(const StdMatrixKey &mkey)
             {
                 return m_stdStaticCondMatrixManager[mkey];
-                /*
-                map<StdMatrixKey, DNekBlkMatSharedPtr>::iterator it = m_stdStaticCondMatrixManager.find(mkey);
-                if (it == m_stdStaticCondMatrixManager.end())
-                {
-                    return (m_stdStaticCondMatrixManager[mkey] = CreateStdStaticCondMatrix(mkey));
-                }
-                else
-                {
-                    return it->second;
-                }
-                */
             }
-			
-	    inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
+
+            inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager[ikey];
-                /*
-                map<IndexMapKey, IndexMapValuesSharedPtr>::iterator it = m_IndexMapManager.find(ikey);
-                if (it == m_IndexMapManager.end())
-                {
-                    return (m_IndexMapManager[ikey] = CreateIndexMap(ikey));
-                }
-                else
-                {
-                    return it->second;
-                }
-                */
             }
 
             const Array<OneD, const NekDouble>& GetPhysNormals(void)
@@ -731,8 +698,8 @@ namespace Nektar
             {
                 return v_GetEorient(edge);
             }
-			
-			StdRegions::Orientation GetPorient(int point)
+
+            StdRegions::Orientation GetPorient(int point)
             {
                 return v_GetPorient(point);
             }
@@ -1326,10 +1293,6 @@ namespace Nektar
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
 	    LibUtilities::NekManager<IndexMapKey, IndexMapValues, IndexMapKey::opLess> m_IndexMapManager;
-
-            //static std::map<StdMatrixKey, DNekMatSharedPtr>    m_stdMatrixManager;
-            //static std::map<StdMatrixKey, DNekBlkMatSharedPtr> m_stdStaticCondMatrixManager;
-            //static std::map<IndexMapKey, IndexMapValuesSharedPtr> m_IndexMapManager;
 
             DNekMatSharedPtr CreateStdMatrix(const StdMatrixKey &mkey)
             {

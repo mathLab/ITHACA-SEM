@@ -75,15 +75,6 @@ namespace Nektar
                 const StdRegions::VarCoeffMap     &dirForcing,
                 Array<OneD, NekDouble>            &outarray);
 
-#if 0
-            inline void AddHDGHelmholtzTraceTerms(
-                const NekDouble                                tau,
-                const Array<OneD, const NekDouble>            &inarray,
-                Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                const StdRegions::VarCoeffMap                 &dirForcing,
-                Array<OneD,NekDouble>                         &outarray);
-#endif
-
             inline void AddNormTraceInt(
                 const int                                      dir,
                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,

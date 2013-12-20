@@ -42,34 +42,6 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-#if 0
-        void Expansion3D::AddHDGHelmholtzTraceTerms(
-            const NekDouble                                tau,
-            const Array<OneD, const NekDouble>            &inarray, 
-            Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,  
-            const StdRegions::VarCoeffMap                 &dirForcing,
-            Array<OneD,NekDouble>                         &outarray)
-        {
-            
-            ASSERTL0(&inarray[0] != &outarray[0],
-                     "Input and output arrays use the same memory");
-            
-            int f,cnt;
-            int order_f;
-            int nfaces = GetNfaces();
-            Array<OneD, const NekDouble> tmp;
-            
-            cnt = 0;
-            for(f = 0; f < nfaces; ++f)
-            {
-                order_f = FaceExp[f]->GetNcoeffs();                    
-                Vmath::Vcopy(order_f,tmp = inarray + cnt, 1, FaceExp[f]->UpdateCoeffs(), 1);
-                FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(), FaceExp[f]->UpdatePhys());
-                AddHDGHelmholtzFaceTerms(tau, f, FaceExp[f], dirForcing, outarray);
-                cnt += order_f;
-            }
-        }
-#endif        
         //  evaluate additional terms in HDG face. Note that this assumes that
         // edges are unpacked into local cartesian order. 
         void Expansion3D::AddHDGHelmholtzFaceTerms(

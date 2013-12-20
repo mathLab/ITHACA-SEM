@@ -40,6 +40,8 @@
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicConst/GitRevision.h>
+
 #include "zlib.h"
 #include <set>
 
@@ -475,7 +477,7 @@ namespace Nektar
 
             ASSERTL0(fileNames.size() == elementList.size(),"Outfile names and list of elements ids does not match");
 
-            cout << "Writing MultiFile data in : " << outFile << endl;
+            cout << "Writing multi-file data: " << outFile << endl;
 
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
@@ -985,12 +987,11 @@ namespace Nektar
 
             // Git information
             // If built from a distributed package, do not include this
-#ifdef GIT_SHA1
-            ProvenanceMap["GitSHA1"] = string(GIT_SHA1);
-#endif
-#ifdef GIT_BRANCH
-            ProvenanceMap["GitBranch"] = string(GIT_BRANCH);
-#endif
+            if (NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
+            {
+                ProvenanceMap["GitSHA1"]   = NekConstants::kGitSha1;
+                ProvenanceMap["GitBranch"] = NekConstants::kGitBranch;
+            }
 
             TiXmlElement * infoTag = new TiXmlElement("Metadata");
             root->LinkEndChild(infoTag);

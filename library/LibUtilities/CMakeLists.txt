@@ -1,7 +1,8 @@
 
 SET(BasicConstHeaders
-	./BasicConst/NektarUnivConsts.hpp
-	./BasicConst/NektarUnivTypeDefs.hpp
+    ./BasicConst/NektarUnivConsts.hpp
+    ./BasicConst/NektarUnivTypeDefs.hpp
+    ./BasicConst/GitRevision.h
 )
 
 SET(BasicUtilsHeaders
@@ -41,7 +42,6 @@ SET(BasicUtilsSources
     ./BasicUtils/Vmath.cpp
     ./BasicUtils/XmlUtil.cpp
 )
-
 
 SET(CommunicationHeaders
     ./Communication/Comm.h
@@ -264,7 +264,7 @@ SET(ExpressionTemplates
 )
 
 SET(BaseHeaders
-	LibUtilitiesDeclspec.h
+    LibUtilitiesDeclspec.h
 )
 
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
@@ -277,7 +277,6 @@ SOURCE_GROUP("Linear Algebra Headers" FILES ${LinearAlgebraHeaders})
 SOURCE_GROUP("Linear Algebra Sources" FILES ${LinearAlgebraSources})
 SOURCE_GROUP("Memory Headers" FILES ${MemoryHeaders})
 SOURCE_GROUP("Memory Sources" FILES ${MemorySources})
-
 
 SOURCE_GROUP("Polylib Headers" FILES ${PolyLibHeaders})
 SOURCE_GROUP("Polylib Sources" FILES ${PolylibSources})
@@ -315,26 +314,26 @@ SET(LibUtilityHeaders
     ${BaseHeaders}
 )
 
+# Define the git branch and SHA1 hash if we are in a git repository. This is
+# stored in an automatically generated file so that the source tree is not built
+# on commit/update.
+SET(GitRevisionFile "${CMAKE_CURRENT_BINARY_DIR}/GitRevision.cpp")
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/BasicConst/GitRevision.cpp.in
+               ${GitRevisionFile})
+
 SET(LibUtilitySources
     ${BasicUtilsSources}
     ${FoundationSources}
     ${PolylibSources}
     ${CommunicationSources}
-	${LinearAlgebraSources}
-	${InterpreterSources}
-	${KernelSources}
+    ${LinearAlgebraSources}
+    ${InterpreterSources}
+    ${KernelSources}
     ${TimeIntegrationSources}
-  	${FFTSources}
+    ${FFTSources}
     ${MemorySources}
+    ${GitRevisionFile}
 )
-
-# Define the git branch and SHA1 hash if we are in a git repository
-# Only apply to FieldIO.cpp to minimise rebuilding on git commit/update.
-IF (NOT ${GIT_REFSPEC} STREQUAL "GITDIR-NOTFOUND")
-    SET_PROPERTY(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/BasicUtils/FieldIO.cpp
-                 APPEND PROPERTY COMPILE_DEFINITIONS
-                 GIT_SHA1=\"${GIT_SHA1}\" GIT_BRANCH=\"${GIT_REFSPEC}\")
-ENDIF ()
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})

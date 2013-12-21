@@ -1186,7 +1186,7 @@ namespace Nektar
             int created = 0;
             do
             {
-                created = fs::is_directory(specPath);
+                created = fs::is_directory(specPath) ? 1 : 0;
                 m_comm->AllReduce(created, ReduceMin);
             } while (!created);
 

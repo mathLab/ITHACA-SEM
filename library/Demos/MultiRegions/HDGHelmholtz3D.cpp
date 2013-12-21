@@ -135,12 +135,7 @@ int main(int argc, char *argv[])
     
     //-----------------------------------------------
     // Write solution to file
-    string out = vSession->GetSessionName();
-    if (vComm->GetSize() > 1)
-    {
-        out += "_P" + boost::lexical_cast<string>(vComm->GetRank());
-    }
-    out += ".fld";
+    string out = vSession->GetSessionName() + ".fld";
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                 = Exp->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());

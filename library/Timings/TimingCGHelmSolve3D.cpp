@@ -201,10 +201,7 @@ int main(int argc, char *argv[])
 	// Define forcing function for first variable defined in file 
 	fce = Array<OneD,NekDouble>(nq);
 	LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
-	for(i = 0; i < nq; ++i)
-	{
-		fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
-	}
+	ffunc->Evaluate(xc0,xc1,xc2,fce);
 	//----------------------------------------------
 
 	//----------------------------------------------
@@ -236,20 +233,15 @@ int main(int argc, char *argv[])
 	//----------------------------------------------
 	// evaluate exact solution 
 	sol = Array<OneD,NekDouble>(nq);
-	for(i = 0; i < nq; ++i)
-	{
-		sol[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
-	}
+	ex_sol->Evaluate(xc0,xc1,xc2,sol);
 	//----------------------------------------------
 
 	//--------------------------------------------
 	// Calculate L_inf error 
 	Sol = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(*Exp);
-	Sol->SetPhys(sol);
-	Sol->SetPhysState(true);   
 
-	NekDouble L2Error    = Exp->L2  (Sol->GetPhys());
-	NekDouble LinfError  = Exp->Linf(Sol->GetPhys()); 
+	NekDouble L2Error    = Exp->L2  (sol);
+	NekDouble LinfError  = Exp->Linf(sol); 
 	//--------------------------------------------        
 	// alternative error calculation
 	const LibUtilities::PointsKey PkeyT1(30,LibUtilities::eGaussLobattoLegendre);
@@ -292,10 +284,7 @@ int main(int argc, char *argv[])
 
 	// evaluate exact solution 
 	Array<OneD,NekDouble> ErrorSol(ErrorNq);
-	for(i = 0; i < ErrorNq; ++i)
-	{
-		ErrorSol[i] = ex_sol->Evaluate(ErrorXc0[i],ErrorXc1[i],ErrorXc2[i]);
-	}
+	ex_sol->Evaluate(ErrorXc0,ErrorXc1,ErrorXc2,ErrorSol);
 
 	// calcualte spectral/hp approximation on the quad points of this new
 	// expansion basis

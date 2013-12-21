@@ -205,10 +205,7 @@ int main(int argc, char *argv[])
 	// Define forcing function for first variable defined in file 
 	fce = Array<OneD,NekDouble>(nq);
 	LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
-	for(i = 0; i < nq; ++i)
-	{
-		fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
-	}
+	ffunc->Evaluate(xc0,xc1,xc2,fce);
 	//----------------------------------------------
 
 	//----------------------------------------------

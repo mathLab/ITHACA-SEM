@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 	NekDouble  lambda;
 	vector<string> vFilenames;
 
-	if(argc != 5)
+	if(argc != 6)
 	{
 		fprintf(stderr,"Usage: TimingHDGHelmSolve3D Type MeshSize NumModes OptimisationLevel\n");
 		fprintf(stderr,"    where: - Type is one of the following:\n");
@@ -39,6 +39,11 @@ int main(int argc, char *argv[])
 		fprintf(stderr,"                  2: Use elemental matrix evaluation using blockmatrices \n");
 		fprintf(stderr,"                  3: Use global matrix evaluation \n");
 		fprintf(stderr,"                  4: Use optimal evaluation (this option requires optimisation-files being set-up) \n");
+		fprintf(stderr,"    where: - LinSysSolver is one of the following:\n");
+		fprintf(stderr,"                  0: Use DirectStaticCond Solver \n");
+		fprintf(stderr,"                  1: Use DirectMultilevelStaticCond Solver\n");
+		fprintf(stderr,"                  2: Use IterativeStaticCond Solver \n");
+		fprintf(stderr,"                  3: Use IterativeMultilevelStaticCond Solver\n");
 		exit(1);
 	}
 
@@ -50,6 +55,8 @@ int main(int argc, char *argv[])
 	int NumModes    = atoi(argv[3]);
 	int optLevel    = atoi(argv[4]);
 	std::string optLevelStr;
+	int SolverType  = atoi(argv[5]);
+	std::string SolverTypeStr;
 
 	//----------------------------------------------
 	// Retrieve the necessary input files
@@ -161,6 +168,37 @@ int main(int argc, char *argv[])
 	LibUtilities::SessionReaderSharedPtr vSession
 		= LibUtilities::SessionReader::CreateInstance(argc, argv, vFilenames);
 
+	switch(SolverType)
+	{
+		case 0:
+			{
+				vSession->SetSolverInfo("GlobalSysSoln", "DirectStaticCond");
+				SolverTypeStr = "DSC";
+			}
+			break;
+		case 1:
+			{
+				vSession->SetSolverInfo("GlobalSysSoln", "DirectMultiLevelStaticCond");
+				SolverTypeStr = "DMSC";
+			}
+			break;
+		case 2:
+			{
+				vSession->SetSolverInfo("GlobalSysSoln", "IterativeStaticCond");
+				SolverTypeStr = "ISC";
+			}
+			break;
+		case 3:
+			{
+				vSession->SetSolverInfo("GlobalSysSoln", "IterativeMultiLevelStaticCond");
+				SolverTypeStr = "IMSC";
+			}
+			break;
+		default:
+			{
+				ASSERTL0(false,"Unrecognised system solver");
+			}
+	}
 	//----------------------------------------------
 	// Read in mesh from input file
 	SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
@@ -452,6 +490,7 @@ int main(int argc, char *argv[])
 
 	ofstream outfile("TimingHDGHelmSolve3D.dat");
 	outfile.precision(0);
+	outfile << setw(10) << SolverTypeStr << " ";
 	outfile << setw(10) << optLevelStr << " ";
 	outfile << setw(10) << TypeStr << " ";
 	outfile << setw(10) << NumElements << " ";

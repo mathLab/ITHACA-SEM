@@ -439,6 +439,7 @@ namespace Nektar
                         break;
                     }
                     case eDirectMultiLevelStaticCond:
+                    case eIterativeMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph);
                         break;

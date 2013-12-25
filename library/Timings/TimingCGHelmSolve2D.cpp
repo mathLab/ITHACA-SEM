@@ -280,8 +280,8 @@ int main(int argc, char *argv[])
 	// Calculate L_inf error 
 	Sol = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*Exp);
 
-	NekDouble L2Error    = Exp->L2  (sol);
-	NekDouble LinfError  = Exp->Linf(sol); 
+	NekDouble L2Error    = Exp->L2  (Exp->GetPhys(), sol);
+	NekDouble LinfError  = Exp->Linf(Exp->GetPhys(), sol); 
 	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// Alternative error computation (finer sampling) 
@@ -330,8 +330,8 @@ int main(int argc, char *argv[])
 	Exp->GlobalToLocal(Exp->GetCoeffs(),ErrorExp->UpdateCoeffs());
 	ErrorExp->BwdTrans_IterPerExp(ErrorExp->GetCoeffs(),ErrorExp->UpdatePhys());
 
-	NekDouble L2ErrorBis    = ErrorExp->L2  (ErrorSol);
-	NekDouble LinfErrorBis  = ErrorExp->Linf(ErrorSol); 
+	NekDouble L2ErrorBis    = ErrorExp->L2  (ErrorExp->GetPhys(), ErrorSol);
+	NekDouble LinfErrorBis  = ErrorExp->Linf(ErrorExp->GetPhys(), ErrorSol); 
 	//--------------------------------------------     
 #if 0
 	cout << "L infinity error: " << LinfErrorBis << endl;

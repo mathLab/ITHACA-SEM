@@ -240,10 +240,7 @@ int main(int argc, char *argv[])
 	// Define forcing function for first variable defined in file 
 	fce = Array<OneD,NekDouble>(nq);
 	LibUtilities::EquationSharedPtr ffunc = vSession->GetFunction("Forcing",0);
-	for(i = 0; i < nq; ++i)
-	{
-		fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
-	}
+	ffunc->Evaluate(xc0,xc1,xc2,fce);
 	//----------------------------------------------
 
 	//----------------------------------------------
@@ -257,6 +254,7 @@ int main(int argc, char *argv[])
 	FlagList flags;
 	StdRegions::ConstFactorMap factors;
 	factors[StdRegions::eFactorLambda] = lambda;
+	factors[StdRegions::eFactorTau] = 1.0;
 	Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
 	//----------------------------------------------
 
@@ -273,20 +271,12 @@ int main(int argc, char *argv[])
 	//----------------------------------------------
 	// evaluate exact solution 
 	sol = Array<OneD,NekDouble>(nq);
-	for(i = 0; i < nq; ++i)
-	{
-		sol[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
-	}
-	//----------------------------------------------
+	ex_sol->Evaluate(xc0,xc1,xc2,sol);
 
 	//--------------------------------------------
 	// Calculate L_inf error 
-	Sol = MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*Exp);
-	Sol->SetPhys(sol);
-	Sol->SetPhysState(true);   
-
-	NekDouble L2Error    = Exp->L2  (Sol->GetPhys());
-	NekDouble LinfError  = Exp->Linf(Sol->GetPhys()); 
+	NekDouble L2Error    = Exp->L2  (Exp->GetPhys(), sol);
+	NekDouble LinfError  = Exp->Linf(Exp->GetPhys(), sol); 
 	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// Alternative error computation (finer sampling) 
@@ -328,17 +318,14 @@ int main(int argc, char *argv[])
 
 	// evaluate exact solution 
 	Array<OneD,NekDouble> ErrorSol(ErrorNq);
-	for(i = 0; i < ErrorNq; ++i)
-	{
-		ErrorSol[i] = ex_sol->Evaluate(ErrorXc0[i],ErrorXc1[i],ErrorXc2[i]);
-	}
+	ex_sol->Evaluate(ErrorXc0,ErrorXc1,ErrorXc2,ErrorSol);
 
 	// calcualte spectral/hp approximation on the quad points of this new
 	// expansion basis
 	ErrorExp->BwdTrans_IterPerExp(Exp->GetCoeffs(),ErrorExp->UpdatePhys());
 
-	NekDouble L2ErrorBis    = ErrorExp->L2  (ErrorSol);
-	NekDouble LinfErrorBis  = ErrorExp->Linf(ErrorSol); 
+	NekDouble L2ErrorBis    = ErrorExp->L2  (ErrorExp->GetPhys(), ErrorSol);
+	NekDouble LinfErrorBis  = ErrorExp->Linf(ErrorExp->GetPhys(), ErrorSol); 
 	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// postprocessing and error computation
@@ -418,8 +405,8 @@ int main(int argc, char *argv[])
 	PostProc->EvaluateHDGPostProcessing(PostProc->UpdateCoeffs());
 	PostProc->BwdTrans_IterPerExp(PostProc->GetCoeffs(),PostProc->UpdatePhys());
 
-	NekDouble L2ErrorPostProc = PostProc->L2(ppSol);
-	NekDouble LinfErrorPostProc = PostProc->Linf(ppSol); 
+	NekDouble L2ErrorPostProc = PostProc->L2(PostProc->GetPhys(),ppSol);
+	NekDouble LinfErrorPostProc = PostProc->Linf(PostProc->GetPhys(),ppSol); 
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// Timing section 

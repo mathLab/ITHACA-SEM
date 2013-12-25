@@ -257,6 +257,7 @@ int main(int argc, char *argv[])
 	FlagList flags;
 	StdRegions::ConstFactorMap factors;
 	factors[StdRegions::eFactorLambda] = lambda;
+	factors[StdRegions::eFactorTau] = 1.0;
 	Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
 	//----------------------------------------------
 
@@ -275,8 +276,8 @@ int main(int argc, char *argv[])
 	sol = Array<OneD,NekDouble>(nq);
 	ex_sol->Evaluate(xc0,xc1,xc2,sol);
 
-	NekDouble L2Error    = Exp->L2  (sol);
-	NekDouble LinfError  = Exp->Linf(sol); 
+	NekDouble L2Error    = Exp->L2  (Exp->GetPhys(), sol);
+	NekDouble LinfError  = Exp->Linf(Exp->GetPhys(), sol); 
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// Alternative error computation (finer sampling) 
@@ -328,8 +329,8 @@ int main(int argc, char *argv[])
 	// expansion basis
 	ErrorExp->BwdTrans_IterPerExp(Exp->GetCoeffs(),ErrorExp->UpdatePhys());
 
-	NekDouble L2ErrorBis    = ErrorExp->L2  (ErrorSol);
-	NekDouble LinfErrorBis  = ErrorExp->Linf(ErrorSol); 
+	NekDouble L2ErrorBis    = ErrorExp->L2  (ErrorExp->GetPhys(), ErrorSol);
+	NekDouble LinfErrorBis  = ErrorExp->Linf(ErrorExp->GetPhys(), ErrorSol); 
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// postprocessing and error computation
@@ -413,8 +414,8 @@ int main(int argc, char *argv[])
 	PostProc->EvaluateHDGPostProcessing(PostProc->UpdateCoeffs());
 	PostProc->BwdTrans_IterPerExp(PostProc->GetCoeffs(),PostProc->UpdatePhys());
 
-	NekDouble L2ErrorPostProc = PostProc->L2(ppSol);
-	NekDouble LinfErrorPostProc = PostProc->Linf(ppSol); 
+	NekDouble L2ErrorPostProc = PostProc->L2(PostProc->GetPhys(), ppSol);
+	NekDouble LinfErrorPostProc = PostProc->Linf(PostProc->GetPhys(), ppSol); 
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// Timing section 

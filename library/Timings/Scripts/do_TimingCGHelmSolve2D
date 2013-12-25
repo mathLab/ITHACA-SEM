@@ -7,7 +7,7 @@ fi
 NumLoops=$1
 TimingResultsFile="./TimingResultsCGHelmSolve2D.dat"
 ExecutableDumpFile="./TimingCGHelmSolve2D.dat"
-MinTimeFile="./MinTime.dat"
+MinTimeFile="./MinTimeCG2D.dat"
 
 MaxNumModesp1=16;
 

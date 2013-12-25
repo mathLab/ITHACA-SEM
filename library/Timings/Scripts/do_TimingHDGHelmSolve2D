@@ -7,7 +7,7 @@ fi
 NumLoops=$1
 TimingResultsFile="./TimingResultsHDGHelmSolve2D.dat"
 ExecutableDumpFile="./TimingHDGHelmSolve2D.dat"
-MinTimeFile="./MinTime.dat"
+MinTimeFile="./MinTimeHDG2D.dat"
 
 MaxNumModesp1=16;
 

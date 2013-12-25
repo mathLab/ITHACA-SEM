@@ -278,8 +278,6 @@ int main(int argc, char *argv[])
 
 	//--------------------------------------------
 	// Calculate L_inf error 
-	Sol = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*Exp);
-
 	NekDouble L2Error    = Exp->L2  (Exp->GetPhys(), sol);
 	NekDouble LinfError  = Exp->Linf(Exp->GetPhys(), sol); 
 	

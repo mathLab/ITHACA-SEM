@@ -1224,6 +1224,7 @@ namespace Nektar
                 {
                 case eDirectFullMatrix:
                 case eIterativeFull:
+                case eIterativeStaticCond:
                 case eXxtFullMatrix:
                 case eXxtStaticCond:
                     {
@@ -1231,7 +1232,6 @@ namespace Nektar
                     }
                     break;
                 case eDirectStaticCond:
-                case eIterativeStaticCond:
                     {
                         CuthillMckeeReordering(boostGraphObj,perm,iperm);
                     }

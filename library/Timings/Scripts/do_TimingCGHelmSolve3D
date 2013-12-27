@@ -37,7 +37,7 @@ do
 						TimingCGHelmSolve3D $Type $MeshSize $NumModes $OptimisationLevel $LinSysSolver
 						echo Nektar++ TimingCGHelmSolve3D $Type $MeshSize $NumModes $OptimisationLevel $LinSysSolver
 
-						read TypeOut NumElementsOut NumModesOut NumCallsOut ElapsedTimeOut TimepCallOut L2Out L2OutBis LinfOut LinfOutBis nLocCoefOut  nGlobCoefOut nLocBCoefOut  nGlobBCoefOut  nLocDCoefOut nGlobDCoefOut nnzOut optLevelOut< $ExecutableDumpFile
+						read  LinSysSolverOut optLevelOut TypeOut NumElementsOut NumModesOut ElapsedTimeOut NumCallsOut TimepCallOut L2Out ppL2Out L2OutBis LinfOut ppLinfOut LinfOutBis nLocCoefOut  nGlobCoefOut nLocBCoefOut  nGlobBCoefOut  nLocDCoefOut nGlobDCoefOut GlobRankOut GlobBndwthOut nnzOut< $ExecutableDumpFile
 						if [ $ElapsedTimeOut -lt $MinTime ]; 
 						then
 							MinTime=$ElapsedTimeOut

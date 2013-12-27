@@ -121,24 +121,23 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
 
-            virtual void v_WriteTecplotZone(std::ofstream &outfile,
-                                            int expansion);
-
+            virtual void v_WriteTecplotConnectivity(std::ofstream &outfile, int expansion);
 
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 
-            virtual NekDouble v_L2(void);
-            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
+            virtual NekDouble v_L2(
+                const Array<OneD, const NekDouble> &inarray,
+                const Array<OneD, const NekDouble> &soln = NullNekDouble1DArray);
 			
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
 
-            virtual void v_GetPeriodicEdges(
+            virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
-                PeriodicMap &periodicEdges)
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces)// default argument for dimension compatibility
                                             
             {
-                m_planes[0]->GetPeriodicEdges(
-                    periodicVerts,periodicEdges);
+                m_planes[0]->GetPeriodicEntities(periodicVerts,periodicEdges);
             }
 
         private:

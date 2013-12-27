@@ -73,6 +73,7 @@ namespace Nektar
         ExpList1D::ExpList1D():
             ExpList()
         {
+            SetExpType(e1D);
         }
 
 
@@ -82,6 +83,7 @@ namespace Nektar
         ExpList1D::ExpList1D(const ExpList1D &In, const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
+            SetExpType(e1D);
         }
 
 
@@ -105,6 +107,8 @@ namespace Nektar
                              const SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpList(pSession,graph1D)
         {
+            SetExpType(e1D);
+
             int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
@@ -172,6 +176,8 @@ namespace Nektar
                 const bool DeclareCoeffPhysArrays):
             ExpList(pSession,graph1D)
         {
+            SetExpType(e1D);
+
             int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
@@ -244,6 +250,8 @@ namespace Nektar
                              const std::string variable):
             ExpList()
         {
+            SetExpType(e1D);
+
             int j, id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
@@ -317,6 +325,8 @@ namespace Nektar
                              const bool DeclareCoeffPhysArrays):
 		ExpList(pSession)
         {
+            SetExpType(e1D);
+
             int id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
@@ -408,19 +418,23 @@ namespace Nektar
                     const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
                     const Array<OneD, const SpatialDomains
                                            ::BoundaryConditionShPtr>  &bndCond,
-                    const StdRegions::StdExpansionVector &locexp,
+                    const LocalRegions::ExpansionVector &locexp,
                     const SpatialDomains::MeshGraphSharedPtr &graph2D,
                     const PeriodicMap &periodicEdges,
                     const bool DeclareCoeffPhysArrays,
                     const std::string variable):
             ExpList()
         {
+            SetExpType(e1D);
+
             int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
             SpatialDomains::Geometry1DSharedPtr SegGeom;
             LocalRegions::SegExpSharedPtr Seg;
+            LocalRegions::Expansion1DSharedPtr exp1D;
+            LocalRegions::Expansion2DSharedPtr exp2D;
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
@@ -433,7 +447,8 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey bkey = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
-                        SegGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
+                        exp1D = LocalRegions::Expansion1D::FromStdExp(bndConstraint[i]->GetExp(j));
+                        SegGeom = exp1D->GetGeom1D();
 
                         Seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, SegGeom);
@@ -450,7 +465,8 @@ namespace Nektar
             {
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
-                    SegGeom = (locexp[i]->GetGeom2D())->GetEdge(j);
+                    exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
+                    SegGeom = (exp2D->GetGeom2D())->GetEdge(j);
 
                     id = SegGeom->GetEid();
 
@@ -784,34 +800,6 @@ namespace Nektar
         }
 		
 
-	void ExpList1D::SetUpPhysTangents(
-		const StdRegions::StdExpansionVector &locexp)
-	{
-	    map<int, int> EdgeGID;
-	    int i,cnt,n,id;
-	    
-	    //setup map of all global ids along booundary
-	    for(cnt = i=0; i< (*m_exp).size(); ++i)
-	    {
-	        id = (*m_exp)[i]->GetGeom1D()->GetEid();
-	        EdgeGID[id] = cnt++;
-	    }
-	    
-	    //loop over elements and find edges that match
-	    for(cnt = n =0; n< locexp.size(); ++n)
-	    {
-	       for(i=0; i < locexp[n]->GetNedges(); ++i)
-	       {
-	       	  id = locexp[n]->GetGeom2D()->GetEid(i);
-	       	  if(EdgeGID.count(id)> 0)
-	       	  {
-	       	      (*m_exp)[EdgeGID.find(id)->second]
-	       	      			->SetUpPhysTangents(locexp[n],i);
-	       	  }
-	       }
-	    }
-	}
-        
         /**
          * Upwind the left and right states given by the Arrays Fwd and Bwd
          * using the vector quantity Vec and ouput the upwinded value in the
@@ -833,7 +821,7 @@ namespace Nektar
             NekDouble Vn;
 
             // Assume whole array is of same coordimate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+            int coordim = GetCoordim(0);
 
             ASSERTL1(Vec.num_elements() >= coordim,
                     "Input vector does not have sufficient dimensions to "
@@ -932,7 +920,7 @@ namespace Nektar
             Array<OneD,Array<OneD,NekDouble> > locnormals;
 
             // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+            int coordim = GetCoordim(0);
 
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
@@ -969,66 +957,10 @@ namespace Nektar
             }
         }
 
-/*        void ExpList1D::v_GetTangents(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents)
-        {
-            int i,j,k,e_npoints,offset;
-            Array<OneD,Array<OneD, NekDouble> > loctangent;
-
-            // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
-
-            ASSERTL1(normals.num_elements() >= coordim,
-                     "Output vector does not have sufficient dimensions to "
-                     "match coordim");
-
-            // Process each expansion.
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                // Get the number of points and normals for this expansion.
-                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                for (j = 0; j < 2; ++j)
-                {
-                    loctangent = (*m_exp)[i]->GetMetricInfo()->GetTangent(j);
-
-                    // Get the physical data offset for this expansion.
-                    offset = m_phys_offset[i];
-                    for (k = 0; k < coordim; ++k)
-                    {
-                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1,
-                                                &(tangents[j][k][offset]), 1);
-                    }
-                }
-            }
-*/                // Process each point in the expansion.
-/*                for(j = 0; j < e_npoints; ++j)
-                {
-                    // Process each spatial dimension and copy the values into
-                    // the output array.
-                    for(k = 0; k < coordim; ++k)
-                    {
-                        //normals[k][offset+j] = locnormals[k*e_npoints + j];
-                        normals[k][offset+j] = locnormals[k][j];
-                    }
-                }*/
-
-//        }
 
         /**
          *
          */
-//        void ExpList1D::v_SetUpPhysNormals(
-//                                const StdRegions::StdExpansionVector &locexp)
-//        {
-//            SetUpPhysNormals(locexp);
-//        }
-
-        void ExpList1D::v_SetUpPhysTangents(
-                    const StdRegions::StdExpansionVector &locexp)
-        {
-            SetUpPhysTangents(locexp);
-        }
-
         void ExpList1D::v_ReadGlobalOptimizationParameters()
         {
 //            Array<OneD, int> NumShape(1,0);

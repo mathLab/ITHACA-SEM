@@ -59,7 +59,7 @@ int main(int argc, char *argv[]){
     BasisType     btype1,btype2,btype3;
 
     ShapeType regionshape;
-    StdExpansion* E;
+    StdExpansion* E = NULL;
     Array<OneD, NekDouble> sol;
 
     if(argc < 23)
@@ -305,18 +305,20 @@ int main(int argc, char *argv[]){
 
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    Array<OneD, NekDouble> coeffs(E->GetNcoeffs());
+    Array<OneD, NekDouble> phys  (nq1*nq2*nq3);
+    E->FwdTrans(sol, coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs, phys);
     //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys, sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------
 
     return 0;
@@ -407,7 +409,7 @@ SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[])
 
     // /////////////////////////////////////////////////////////////////////
     // Set up Hexahedron vertex coordinates
-    // VertexComponent (const int coordim, const int vid, double x,
+    // PointGeom (const int coordim, const int vid, double x,
     //   double y, double z)
     const int nVerts = 8;
     const double point[][3] = {
@@ -422,11 +424,11 @@ SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[])
     };
 
     // Populate the list of verts
-    VertexComponentSharedPtr verts[8];
+    PointGeomSharedPtr verts[8];
     const int three = 3;
 
     for( int i = 0; i < nVerts; ++i ) {
-        verts[i] = MemoryManager<VertexComponent>
+        verts[i] = MemoryManager<PointGeom>
             ::AllocateSharedPtr( three,  i,   point[i][0],
                                  point[i][1], point[i][2] );
     }
@@ -443,7 +445,7 @@ SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[])
     // Populate the list of edges
     SegGeomSharedPtr edges[nEdges];
     for( int i = 0; i < nEdges; ++i ) {
-        VertexComponentSharedPtr vertsArray[2];
+        PointGeomSharedPtr vertsArray[2];
         for( int j = 0; j < 2; ++j ) {
             vertsArray[j] = verts[vertexConnectivity[i][j]];
         }
@@ -492,7 +494,7 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
     
     // /////////////////////////////////////////////////////////////////////
     // Set up Prism vertex coordinates
-    // VertexComponent (const int coordim, const int vid, double x,
+    // PointGeom (const int coordim, const int vid, double x,
     //   double y, double z)
     const int nVerts = 6;
     const double point[][3] = {
@@ -505,11 +507,11 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
     };
 
     // Populate the list of verts
-    VertexComponentSharedPtr verts[nVerts];
+    PointGeomSharedPtr verts[nVerts];
     const int three = 3;
     
     for( int i = 0; i < nVerts; ++i ) {
-        verts[i] = MemoryManager<VertexComponent>
+        verts[i] = MemoryManager<PointGeom>
             ::AllocateSharedPtr( three,  i,   point[i][0],
                                  point[i][1], point[i][2] );
     }
@@ -526,7 +528,7 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
     // Populate the list of edges
     SegGeomSharedPtr edges[nEdges];
     for( int i = 0; i < nEdges; ++i ) {
-        VertexComponentSharedPtr vertsArray[2];
+        PointGeomSharedPtr vertsArray[2];
         for( int j = 0; j < 2; ++j ) {
             vertsArray[j] = verts[vertexConnectivity[i][j]];
         }
@@ -607,12 +609,12 @@ SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[])
 
     // ///////////////////////////////////////////////////////////////////////
     // Populate the list of verts
-    // VertexComponent (const int coordim, const int vid, double x, double y,
+    // PointGeom (const int coordim, const int vid, double x, double y,
     //    double z)
-    VertexComponentSharedPtr verts[4];
+    PointGeomSharedPtr verts[4];
     const int three = 3;
     for(int i=0; i < nVerts; ++i){
-        verts[i] =  MemoryManager<VertexComponent>
+        verts[i] =  MemoryManager<PointGeom>
             ::AllocateSharedPtr(three,i,point[i][0],point[i][1],point[i][2]);
     }
 
@@ -628,7 +630,7 @@ SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[])
     // Populate the list of edges
     SegGeomSharedPtr edges[nEdges];
     for(int i=0; i < nEdges; ++i){
-        VertexComponentSharedPtr vertsArray[2];
+        PointGeomSharedPtr vertsArray[2];
         for(int j=0; j<2; ++j){
             vertsArray[j] = verts[vertexConnectivity[i][j]];
         }

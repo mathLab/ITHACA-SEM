@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion3D *ste;
+    StdRegions::StdExpansion3D *ste = NULL;
     
     if( regionShape == LibUtilities::eTetrahedron ) 
     { 
@@ -157,39 +157,33 @@ int main(int argc, char *argv[]) {
         //---------------------------------------------
     }
      
+    Array<OneD, NekDouble> phys (Qx*Qy*Qz);
+    Array<OneD, NekDouble> coeffs(xModes*yModes*zModes);
+
     //---------------------------------------------
     // Project onto Expansion 
-    ste->FwdTrans( solution, ste->UpdateCoeffs()   );
+    ste->FwdTrans( solution, coeffs );
     //---------------------------------------------
     
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    ste->BwdTrans( ste->GetCoeffs( ), ste->UpdatePhys() );
+    ste->BwdTrans( coeffs, phys );
     //---------------------------------------------
     
     
     //--------------------------------------------
-    // Write solution 
-//     FILE *outfile = fopen("ProjectFile3D.dat","w");
-//     ste->WriteToFile(outfile);
-//     fclose(outfile);
-    //-------------------------------------------   
-       
-       
-       
-    //--------------------------------------------
      // Calculate L_p error 
-    cout << "L infinity error: " << ste->Linf(solution) << endl;
-    cout << "L 2 error:        " << ste->L2  (solution) << endl; 
+    cout << "L infinity error: " << ste->Linf(phys,solution) << endl;
+    cout << "L 2 error:        " << ste->L2  (phys,solution) << endl; 
      //--------------------------------------------  
     
 
     //--------------------------------------------
     // Taking the physical derivative and putting them into dx, dy, dz.
-    ste->PhysDeriv( ste->GetPhys(), dx, dy, dz );        
+    ste->PhysDeriv(phys, dx, dy, dz );        
     //--------------------------------------------     
-         
+    
     
     double error_x = 0, error_y=0, error_z=0;
     
@@ -222,24 +216,11 @@ int main(int argc, char *argv[]) {
         solution[0] = Tet_sol( t[0], t[1], t[2], P, Q, R );        
     }
     
-    NekDouble numericSolution = ste->PhysEvaluate(t);
+    NekDouble numericSolution = ste->PhysEvaluate(t,phys);
     cout << "Interpolation difference from actual solution at x = ( " << 
         t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;
     //-------------------------------------------
       
-   
-    // Testing the physical evaluate(u_phys): projection on to the polynomial space given by the Tetrahedral basis function
-    // The result of output should converge to the interpolation solution 
-//     Array<OneD, const NekDouble> const& u_phys = ste->GetPhys();
-//     Array<OneD, NekDouble> higherDegreeSolution( Qx * Qy * Qz, 0.0 );
-//     for(int n = 0; n < Qx * Qy * Qz; ++n) {
-//         higherDegreeSolution[n]  = Tet_sol( x[n], y[n], z[n], P, Q, R ); 
-//         cout << "higherDegreeSolution["<<n<<"] = " << higherDegreeSolution[n] << ",  u_phys["<<n<<"] = " << u_phys[n]  << 
-//             ",               x = " << x[n] << ", y = " << y[n] << ", z = " << z[n] << endl;
-//         //cout << "         u_p["<<n<<"] = " <<      u_p[n] << endl;
-//     }
-//         
-//     
     return 0;
 }
 

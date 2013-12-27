@@ -79,12 +79,8 @@ namespace Nektar
                 LibUtilities::eModified_C, 2,
                 LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha2Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdPyrExp>::AllocateSharedPtr(A,A,C);
-            }
+            m_xmap = MemoryManager<StdRegions::StdPyrExp>::AllocateSharedPtr(A,A,C);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
         PyrGeom::~PyrGeom()
@@ -99,14 +95,14 @@ namespace Nektar
             v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {   // Based on Spen's book, page 99
 
                 // Point inside tetrahedron
-                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+                PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
 
                 // Edges
-                VertexComponent er0, e10, e30, e40;
+                PointGeom er0, e10, e30, e40;
                 er0.Sub(r,*m_verts[0]);
                 e10.Sub(*m_verts[1],*m_verts[0]);
                 e30.Sub(*m_verts[3],*m_verts[0]);
@@ -114,7 +110,7 @@ namespace Nektar
 
 
                 // Cross products (Normal times area)
-                VertexComponent cp1030, cp3040, cp4010;
+                PointGeom cp1030, cp3040, cp4010;
                 cp1030.Mult(e10,e30);
                 cp3040.Mult(e30,e40);
                 cp4010.Mult(e40,e10);
@@ -571,70 +567,3 @@ namespace Nektar
         }
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: PyrGeom.cpp,v $
-// Revision 1.15  2009/12/16 21:36:53  bnelson
-// Removed unused variables to fix compiler warnings.
-//
-// Revision 1.14  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
-// Added generation of tangential basis into GeomFactors
-// Updated ADR2DManifold solver to use GeomFactors for tangents
-// Added <GEOMINFO> XML session section support in MeshGraph
-// Fixed const-correctness in VmathArray
-// Cleaned up LocalRegions code to generate GeomFactors
-// Removed GenSegExp
-// Temporary fix to SubStructuredGraph
-// Documentation for GlobalLinSys and GlobalMatrix classes
-//
-// Revision 1.13  2009/01/21 16:59:03  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.12  2008/12/18 14:08:58  pvos
-// NekConstants update
-//
-// Revision 1.11  2008/11/25 10:54:41  pvos
-// Corrected small bug
-//
-// Revision 1.10  2008/11/17 08:59:20  ehan
-// Added necessary mapping routines for Tet
-//
-// Revision 1.9  2008/06/18 19:27:51  ehan
-// Added implementation for GetLocCoords(..)
-//
-// Revision 1.8  2008/06/16 22:43:02  ehan
-// Added a new constructor PrismGeom(faces, faceorient).
-//
-// Revision 1.7  2008/06/14 01:22:52  ehan
-// Implemented constructor and FillGeom().
-//
-// Revision 1.6  2008/06/12 21:22:55  delisi
-// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
-//
-// Revision 1.5  2008/06/11 16:10:12  delisi
-// Added the 3D reader.
-//
-// Revision 1.4  2008/05/28 21:52:27  jfrazier
-// Added GeomShapeType initialization for the different shapes.
-//
-// Revision 1.3  2008/04/06 06:00:38  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.2  2008/02/08 23:05:52  jfrazier
-// More work on 3D components.
-//
-// Revision 1.1  2006/05/04 18:59:02  kirby
-// *** empty log message ***
-//
-// Revision 1.10  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.9  2006/03/12 11:06:39  sherwin
-//
-// First complete copy of code standard code but still not compile tested
-//
-// Revision 1.8  2006/02/19 01:37:34  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

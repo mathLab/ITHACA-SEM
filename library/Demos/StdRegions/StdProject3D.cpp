@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
     LibUtilities::BasisType     btype3 =   LibUtilities::eOrtho_C;
     LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
     LibUtilities::ShapeType     regionshape;
-    StdRegions::StdExpansion *E;
+    StdRegions::StdExpansion *E = NULL;
     Array<OneD, NekDouble> sol;
 
     if(argc != 11)
@@ -347,20 +347,24 @@ int main(int argc, char *argv[]){
             break;
     }
 
+    
+    Array<OneD, NekDouble> phys (nq1*nq2*nq3);
+    Array<OneD, NekDouble> coeffs(order1*order2*order3);
+
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    E->FwdTrans(sol,coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs,phys);
     //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys,sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys,sol) << endl;
     //--------------------------------------------
 
     //-------------------------------------------
@@ -384,7 +388,7 @@ int main(int argc, char *argv[]){
                          btype1, btype2, btype3);
     }
 
-    NekDouble nsol = E->PhysEvaluate(x);
+    NekDouble nsol = E->PhysEvaluate(x,phys);
     cout << "error at x = (" << t[0] << "," << t[1] << "," << t[2] << "): "
          << nsol - sol[0] << endl;
     //-------------------------------------------

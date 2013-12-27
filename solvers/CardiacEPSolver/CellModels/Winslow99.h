@@ -71,7 +71,7 @@ namespace Nektar
                const NekDouble time);
 
         /// Prints a summary of the model parameters.
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SummaryList& s);
 
         /// Set initial conditions for cell model
         virtual void v_SetInitialConditions();

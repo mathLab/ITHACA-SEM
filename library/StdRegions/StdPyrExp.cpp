@@ -207,46 +207,6 @@ namespace Nektar
             return TripleInnerProduct(inarray, wx, wy, wz);
         }
         
-        void StdPyrExp::WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            int order2 = m_base[2]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp(order0*order1*order2, 0.0);
-
-            NekDouble *mat = wsp.get(); 
-
-            // put coeffs into matrix and reverse order so that r index is
-            // fastest for Prism
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
-            {
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
-                    {
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
-                    }
-                }
-            }
-
-            outfile <<"Coeffs = [" << " "; 
-
-            for(int k = 0; k < order2; ++k)
-            {            
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        outfile << mat[i + order0*(j + order1*k)] << " ";
-                    }
-                    outfile << std::endl; 
-                }
-            }
-            outfile << "]"; 
-        }
 
         //---------------------------------------
         // Differentiation/integration Methods
@@ -503,54 +463,39 @@ namespace Nektar
                     }
                 }
             }
-            
-            /*
-            // Sum-factorize the triple summation starting with the z-dimension
-            for( int k = 0; k < Qz; ++k ) {
-
-                // Create the matrix of coefficients summed over the z-modes
-                Array<OneD, NekDouble> Ak((P+1)*(Q+1), 0.0);
-                for( int p = 0; p <= P; ++p ) {
-                    for( int q = 0; q <= Q; ++q ) {
-                        for( int r = 0; r <= R - p - q; ++r ) {
-                            int mode = pqr[r + (R+1)*(q + (Q+1)*p)];
-                            cout << p << "   " << q << "   " << r << endl;
-
-                            Ak[q + (Q+1)*p]   +=   inarray[mode]  *  zBasis[k + Qz*mode];     
-                        }
-                    }
-                }
-
-                // Factorize the y-dimension
-                for( int j = 0; j < Qy; ++j ) {
-
-                    // Create the vector of coefficients summed over the y and z-modes
-                    Array<OneD, NekDouble> bjk(P+1, 0.0);
-                    for( int p = 0; p <= P; ++p ) {
-                        for( int q = 0; q <= Q; ++q ) {
-                            int mode = q;
-                            bjk[p]   +=   Ak[q + (Q+1)*p]  *  yBasis[j + Qy*mode];
-                        }
-                    }
-
-                    // Factorize the x-dimension
-                    for( int i = 0; i < Qx; ++i ) {
-                        NekDouble cijk = 0.0;
-                        for( int p = 0; p <= P; ++p ) {
-                            int mode = p;
-                            cijk   +=   bjk[p]  *  xBasis[i + Qx*mode];
-                        }
-                        outarray[i + Qx*(j + Qy*k)] = cijk;
-                    }
-                }
-            }
-            */
         }
 
+        void StdPyrExp::v_BwdTrans_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2)
+        {
+            ASSERTL0(false, "BwdTrans_SumFacKernel not yet implemented.");
+        }
+
+        void StdPyrExp::v_IProductWRTBase_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& base2,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray,
+                      Array<OneD, NekDouble> &wsp,
+                bool doCheckCollDir0,
+                bool doCheckCollDir1,
+                bool doCheckCollDir2)
+        {
+            ASSERTL0(false, "IProductWRTBase_SumFacKernel not yet implemented.");
+        }
 
 	/** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
-            store in \a (this)->m_coeffs  
+            store in \a outarray
             
             Inputs:\n
             
@@ -558,7 +503,7 @@ namespace Nektar
             
             Outputs:\n
             
-            - (this)->_coeffs: updated array of expansion coefficients. 
+            - \a outarray: updated array of expansion coefficients. 
             
         */    
         void StdPyrExp::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
@@ -649,11 +594,6 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
-        NekDouble StdPyrExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& xi)
-        {
-            return PhysEvaluate(xi, m_phys);
-        }
-
         NekDouble StdPyrExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& xi,
             const Array<OneD, const NekDouble>& physvals)
@@ -1138,7 +1078,7 @@ namespace Nektar
 
         }
 
-        int StdPyrExp::v_GetVertexMap(int vId)
+        int StdPyrExp::v_GetVertexMap(int vId, bool useCoeffPacking)
         {
             ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
@@ -1147,8 +1087,33 @@ namespace Nektar
             
             int l = 0;
             
-            switch (vId)
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(0,0,1);
+                    break;
+                case 2:
+                    l = GetMode(0,1,0);
+                    break;
+                case 3:
+                    l = GetMode(1,0,0);
+                    break;
+                case 4:
+                    l = GetMode(1,1,0);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 4");
+                }
+            }
+            else
+            {
+                switch (vId)
+                {
                 case 0:
                     l = GetMode(0,0,0);
                     break;
@@ -1166,8 +1131,9 @@ namespace Nektar
                     break;
                 default:
                     ASSERTL0(false, "local vertex id must be between 0 and 4");
+                }
             }
-            
+                
             return l;
         }
         
@@ -1185,89 +1151,6 @@ namespace Nektar
         {
             return v_GenMatrix(mkey);
         }
-
-        /*
-        void StdPyrExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
-        {
-            if(format==eTecplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-                
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-                
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2,  z3"; 
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
-                
-                for(int k = 0; k < Qz; ++k) 
-                {
-                    for(int j = 0; j < Qy; ++j)
-                    {
-                        for(int i = 0; i < Qx; ++i)
-                        {
-                            //outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
-                            outfile <<  (eta_x[i] + 1.0) * (1.0 - eta_y[j]) * (1.0 - eta_z[k]) / 4  -  1.0 <<  " " << eta_z[k] << " " << m_phys[i + Qx*(j + Qy*k)] << std::endl;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
-        }
-
-        //   I/O routine        
-        void StdPyrExp::WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int  order0 = m_base[0]->GetNumModes();
-            int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(order0*order1*order2, 0.0);
-
-            NekDouble *mat = wsp.get(); 
-
-            // put coeffs into matrix and reverse order so that r index is fastest for Prism 
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
-            {
-                for(int j = 0; j < order1-i; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
-                    {
-                        //                         mat[i+j*order1] = m_coeffs[cnt];
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
-                    }
-                }
-            }
-
-            outfile <<"Coeffs = [" << " "; 
-
-            for(int k = 0; k < order2; ++k)
-            {            
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        //                         outfile << mat[j*order0+i] <<" ";
-                        outfile << mat[i + order0*(j + order1*k)] <<" ";
-                    }
-                    outfile << std::endl; 
-                }
-            }
-            outfile << "]" ; 
-        }
-        */
 
         /**
          * @brief Compute the local mode number in the expansion for a

@@ -17,6 +17,95 @@
 
 using namespace Nektar;
 
+/**
+ * Below is the old function from GeomFactors1D::v_ComputeEdgeTangents. This
+ * However, the vectors were computed in the function below, but is never called
+ * and therefore was never working.
+ *
+ * This utility therefore does not presently work, but the (now removed)
+ * function is kept here for reference.
+ *
+ * -- Chris Cantwell
+ *
+        void GeomFactors1D::v_ComputeEdgeTangents(
+                    const GeometrySharedPtr &geom,
+                    const int edge,
+                    const LibUtilities::PointsKey &to_key)
+        {
+            int k;
+            int nquad= to_key.GetNumPoints();
+            Geometry2DSharedPtr g;
+            ASSERTL0(g= boost::dynamic_pointer_cast<Geometry2D>(geom),
+                     "FAIL");
+
+            GeomFactorsSharedPtr gf = geom->GetMetricInfo();
+            //cannot use m_type here
+            //GeomType gtype = gf->GetGtype();
+            GeomType gtype= m_type;
+            m_tangent =Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
+            for( k=0; k< m_coordDim; ++k)
+            {
+                m_tangent[k] = Array<OneD, NekDouble>(nquad);
+            }
+
+            int i;
+
+            DerivStorage deriv = GetDeriv(m_pointsKey);
+            //FillDeriv(deriv, m_pointsKey);
+
+            NekDouble fac;
+            // Regular geometry case
+            if((gtype == eRegular)||(gtype == eMovingRegular))
+            {
+
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                        Vmath::Fill(nquad, deriv[0][i][0],m_tangent[i],1);
+                }
+
+                // normalise
+                fac = 0.0;
+                for(i =0 ; i < m_coordDim; ++i)
+                {
+                    fac += m_tangent[i][0]*m_tangent[i][0];
+                }
+                fac = 1.0/sqrt(fac);
+                for (i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Smul(nquad,fac,m_tangent[i],1,m_tangent[i],1);
+                }
+            }
+
+            else   // Set up deformed tangents
+            {
+
+            Array<OneD, NekDouble> jac(m_coordDim*nquad);
+
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                    for(int j=0; j<nquad; j++)
+                        {
+                    m_tangent[i][j] = deriv[0][i][j];
+                    }
+                }
+                //normalise normal vectors
+                Array<OneD,NekDouble> work(nquad,0.0);
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Vvtvp(nquad, m_tangent[i],1, m_tangent[i],1,work,1,work,1);
+                }
+
+                Vmath::Vsqrt(nquad,work,1,work,1);
+                Vmath::Sdiv(nquad,1.0,work,1,work,1);
+
+                for(i = 0; i < m_coordDim; ++i)
+                {
+                    Vmath::Vmul(nquad, m_tangent[i],1,work,1,m_tangent[i],1);
+                }
+            }
+        }
+ *
+ */
 int main(int argc, char *argv[])
 {
     void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
@@ -137,7 +226,7 @@ cout<<"cr="<<cr<<endl;
     }
     fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);    
 
-    int lastfield;
+    int lastfield = 0;
     if(solvtype == "CoupledLinearisedNS" && nfields!=2)
     {
         SetFields(graphShPt,boundaryConditions,vSession,fields,nfields-1);
@@ -801,7 +890,8 @@ cout<<"layer region="<<Ireg<<endl;
                      	           ((*elementreg)[0]->m_Element))->GetEorient((*elementreg)[0]
                      	           	   ->m_EdgeIndx);
 
-                     gmat = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetGmat();
+                     gmat = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetGmat(
+                             pressure->GetPlane(0)->GetExp(elmtidreg)->GetPointsKeys());
                      int nq2D = nqedge*nqedge;                     	           
                      
 		     //	setup map between global and local ids
@@ -876,7 +966,7 @@ cout<<"layer region="<<Ireg<<endl;
                      Array<OneD, NekDouble> jacedge (nqedge);
                      Array<OneD, NekDouble> Pre_edge (nqedge);                     
                      Array<OneD, NekDouble> dPre_edge (nqedge);
-                     jacedge = Ilayer->GetPlane(0)->GetExp(k)->GetMetricInfo()->GetJac();
+                     jacedge = Ilayer->GetPlane(0)->GetExp(k)->GetMetricInfo()->GetJac(Ilayer->GetPlane(0)->GetExp(k)->GetPointsKeys());
 
 
                      //check if the metrix is the same for streak and Ilayer obj
@@ -907,7 +997,8 @@ cout<<"layer region="<<Ireg<<endl;
                             GetLeftAdjacentElementExp()->GetEdgeNormal(localEid);
 		     LocalRegions::SegExpSharedPtr  bndSegExp = 
 		          boost::dynamic_pointer_cast<LocalRegions::SegExp>(Ilayer->GetPlane(0)->GetExp(k));                             
-	             tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
+	         // This function call has be deprecated -- cc
+		     //tangents = (bndSegExp)->GetMetricInfo()->GetEdgeTangent();
                      int  physoffsetregIExp = Ilayer->GetPlane(0)->GetPhys_Offset(k);
                      for(int e=0; e< nqedge; e++)
                      {
@@ -931,7 +1022,8 @@ cout<<"layer region="<<Ireg<<endl;
 
 		     //extract metrics factors...
                      //int nq2D= nqedge*nqedge;
-                     deriv = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetDeriv();
+                     LibUtilities::PointsKeyVector ptsKeys = pressure->GetPlane(0)->GetExp(elmtidreg)->GetPointsKeys();
+                     deriv = pressure->GetPlane(0)->GetExp(elmtidreg)->GetMetricInfo()->GetDeriv(ptsKeys);
 
                      Array<OneD, NekDouble> derivelmt(nq2D);
                      int offsetregphys = Ilayer->GetPlane(0)->GetPhys_Offset(k);   
@@ -1071,9 +1163,9 @@ cout<<"layer region="<<Ireg<<endl;
 
 
 
-             NekDouble tmp = pressure->GetPlane(0)->L2();             
+             NekDouble tmp = pressure->GetPlane(0)->L2(pressure->GetPlane(0)->GetPhys());             
              norm2D = tmp*tmp;
-             tmp = pressure->GetPlane(1)->L2();
+             tmp = pressure->GetPlane(1)->L2(pressure->GetPlane(1)->GetPhys());
              norm2D += tmp*tmp;
                           
              Array<OneD, NekDouble> I (2*np,1.0); 
@@ -1674,9 +1766,9 @@ cout<<"elmt id="<<Elmtid[a]<<"  edge id="<<Edgeid[a]<<endl;
 
             // Determine normalisation of pressure so that |P|/A = 1
             NekDouble norm = 0, l2;
-            l2    = wavePressure->GetPlane(0)->L2();
+            l2    = wavePressure->GetPlane(0)->L2(wavePressure->GetPlane(0)->GetPhys());
             norm  = l2*l2;
-            l2    = wavePressure->GetPlane(1)->L2();
+            l2    = wavePressure->GetPlane(1)->L2(wavePressure->GetPlane(0)->GetPhys());
             norm += l2*l2;
             Vmath::Fill(2*npts,1.0,der1,1);
             NekDouble area = waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);

@@ -304,7 +304,7 @@ namespace Nektar
                     break;
                 case LibUtilities::eGauss_Lagrange:
                 {
-                    int nInteriorDofs = m_ncoeffs;
+                    nInteriorDofs = m_ncoeffs;
                     offset = 0;
                 }
                 break;
@@ -471,11 +471,6 @@ namespace Nektar
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
         }
 
-        NekDouble StdSegExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& coords)
-        {
-            return  StdExpansion1D::v_PhysEvaluate(coords, m_phys);
-        }
 
         NekDouble StdSegExp::v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coords,
@@ -541,60 +536,6 @@ namespace Nektar
         //---------------------------------------------------------------------
         // Helper functions
         //---------------------------------------------------------------------
-
-
-        void StdSegExp::v_WriteToFile(
-                std::ofstream &outfile,
-                OutputFormat format,
-                const bool dumpVar,
-                std::string var)
-        {
-            if(format==eTecplot)
-            {
-                int i;
-                int     nquad = m_base[0]->GetNumPoints();
-                Array<OneD, const NekDouble> z = m_base[0]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile << "Variables = z";   
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-
-                outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
-
-                for(i = 0; i < nquad; ++i)
-                {
-                    outfile << z[i] << " " << m_phys[i] << std::endl;
-                }
-            }
-            else if(format==eGmsh)
-            {
-                int i;
-                int     nquad = m_base[0]->GetNumPoints();
-                Array<OneD, const NekDouble> z = m_base[0]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile<<"View.Type = 2;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
- 
-                for(i = 0; i < nquad; ++i)
-                {
-                    outfile << "SP(" << z[i] <<",  0.0, 0.0){" << m_phys[i] << "};" << endl;
-                }
-
-                if(dumpVar)
-                { 
-                    outfile << "};" << endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
-        }
 
         int StdSegExp::v_GetNverts() const
         {
@@ -716,6 +657,7 @@ namespace Nektar
             switch(Btype)
             {
             case LibUtilities::eGLL_Lagrange:
+            case LibUtilities::eGauss_Lagrange:
             case LibUtilities::eChebyshev:
             case LibUtilities::eFourier:
                 for(i = 0 ; i < GetNcoeffs()-2;i++)
@@ -730,17 +672,13 @@ namespace Nektar
                     outarray[i] = i+2;
                 }
                 break;
-            case LibUtilities::eGauss_Lagrange:
-            {
-                outarray[i] = i;
-            }
             default:
                 ASSERTL0(0,"Mapping array is not defined for this expansion");
                 break;
             }
         }
 
-        int StdSegExp::v_GetVertexMap(int localVertexId)
+        int StdSegExp::v_GetVertexMap(int localVertexId,bool useCoeffPacking)
         {
             ASSERTL0((localVertexId==0)||(localVertexId==1),"local vertex id"
                      "must be between 0 or 1");

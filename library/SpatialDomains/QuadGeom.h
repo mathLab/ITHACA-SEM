@@ -39,7 +39,7 @@
 #include <StdRegions/StdRegions.hpp>
 
 #include <SpatialDomains/Geometry2D.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <SpatialDomains/SegGeom.h>     // for SegGeomSharedPtr, etc
 
@@ -66,7 +66,7 @@ namespace Nektar
             
 	    SPATIAL_DOMAINS_EXPORT QuadGeom(
                     const int id, 
-                    const VertexComponentSharedPtr verts[],  
+                    const PointGeomSharedPtr verts[],
                     const SegGeomSharedPtr edges[], 
                     const StdRegions::Orientation eorient[]);
 
@@ -96,17 +96,17 @@ namespace Nektar
                     const QuadGeom              &face2);
             SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
                 GetFaceOrientation(
-                    const VertexComponentVector &face1,
-                    const VertexComponentVector &face2);
+                    const PointGeomVector &face1,
+                    const PointGeomVector &face2);
 
             SPATIAL_DOMAINS_EXPORT static const int kNverts = 4;
             SPATIAL_DOMAINS_EXPORT static const int kNedges = 4;
             SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
 
         protected:
-            VertexComponentVector               m_verts;
+            PointGeomVector                     m_verts;
             SegGeomVector                       m_edges;
-            StdRegions::Orientation         m_eorient[kNedges];
+            StdRegions::Orientation             m_eorient[kNedges];
             int                                 m_fid;
             bool                                m_ownVerts;
             std::list<CompToElmt>               m_elmtMap;
@@ -126,20 +126,16 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT virtual int v_GetCoordim() const;
 
 	    SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr 
-                    v_GetBasis(const int i, const int j);
+                    v_GetBasis(const int i);
 
 	    SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr 
-                    v_GetEdgeBasis(const int i, const int j);
-
-	    SPATIAL_DOMAINS_EXPORT virtual Array<OneD,NekDouble> & 
-                    v_UpdatePhys(const int i);
+                    v_GetEdgeBasis(const int i);
 
 	    SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
                     const int i, 
                     const Array<OneD,const NekDouble> &Lcoord);
 
-	    SPATIAL_DOMAINS_EXPORT void v_GenGeomFactors(
-                    const Array<OneD,const LibUtilities::BasisSharedPtr> &tbasis);
+	    SPATIAL_DOMAINS_EXPORT void v_GenGeomFactors();
 
             SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
 
@@ -154,7 +150,7 @@ namespace Nektar
 
             SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
 
-            SPATIAL_DOMAINS_EXPORT virtual const VertexComponentSharedPtr
+            SPATIAL_DOMAINS_EXPORT virtual const PointGeomSharedPtr
                     v_GetVertex(int i) const;
 
             SPATIAL_DOMAINS_EXPORT virtual const Geometry1DSharedPtr 

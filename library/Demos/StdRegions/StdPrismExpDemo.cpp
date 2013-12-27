@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion *spe;
+    StdRegions::StdExpansion *spe = NULL;
     
     if( regionShape == LibUtilities::ePrism ) 
     { 
@@ -145,28 +145,30 @@ int main(int argc, char *argv[]) {
         // Define solution to be projected
         for(int n = 0; n < Qx * Qy * Qz; ++n) {
             solution[n]  = Prism_sol( x[n], y[n], z[n], P, Q, R, bType_x, bType_y, bType_z );
-            //cout << "Prism_solution["<<n<<"] = " << solution[n] << ",  x = " << x[n] << ", y = " << y[n] << ", z = " << z[n] << endl;
                         
         }
         //----------------------------------------------
                 
     }
                        
+    Array<OneD, NekDouble> phys (Qx*Qy*Qz);
+    Array<OneD, NekDouble> coeffs(xModes*yModes*zModes);
+
     //---------------------------------------------
     // Project onto Expansion 
-   spe->FwdTrans( solution, spe->UpdateCoeffs() );
+   spe->FwdTrans( solution, coeffs );
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-   spe->BwdTrans( spe->GetCoeffs(), spe->UpdatePhys() );
+   spe->BwdTrans( coeffs, phys );
     //-------------------------------------------  
     
     //--------------------------------------------
     // Calculate L_p error 
    cout << "\n*****************************************************\n " << endl;
-   cout << "L infinity error: " << spe->Linf(solution) << endl;
-   cout << "L 2 error:        " << spe->L2  (solution) << endl;
+   cout << "L infinity error: " << spe->Linf(phys,solution) << endl;
+   cout << "L 2 error:        " << spe->L2  (phys,solution) << endl;
    cout << "\n*****************************************************\n " << endl;
     //--------------------------------------------
         
@@ -183,7 +185,7 @@ int main(int argc, char *argv[]) {
     }
     
 
-    NekDouble numericSolution = spe->PhysEvaluate(t);
+    NekDouble numericSolution = spe->PhysEvaluate(t,phys);
     cout << "\n*****************************************************\n " << endl;
     cout << "Interpolation difference from actual solution at x = ( " << 
         t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;

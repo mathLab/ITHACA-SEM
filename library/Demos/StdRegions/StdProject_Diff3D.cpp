@@ -61,7 +61,7 @@ int main(int argc, char *argv[]){
     LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
     LibUtilities::BasisType     btype3 =   LibUtilities::eOrtho_C;
     LibUtilities::ShapeType     regionshape;
-    StdRegions::StdExpansion *E;
+    StdRegions::StdExpansion *E = NULL;
     Array<OneD, NekDouble> x, y, z, sol, dx, dy, dz;
 
     if(argc != 11)
@@ -319,6 +319,9 @@ int main(int argc, char *argv[]){
             break;
     }
 
+    Array<OneD, NekDouble> phys (nq1*nq2*nq3);
+    Array<OneD, NekDouble> coeffs(order1*order2*order3);
+
     //---------------------------------------------
     // Evaluate derivative of solution, add together and put in sol
     E->PhysDeriv(sol,dx,dy,dz);
@@ -328,12 +331,12 @@ int main(int argc, char *argv[]){
 
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    E->FwdTrans(sol,coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs,phys);
     //-------------------------------------------
 
     //----------------------------------------------
@@ -372,8 +375,8 @@ int main(int argc, char *argv[]){
     
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys,sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys,sol) << endl;
     //--------------------------------------------
 
     return 0;

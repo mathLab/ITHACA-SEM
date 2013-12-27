@@ -51,17 +51,10 @@ namespace Nektar
                     "Diagonal",
                     PreconditionerDiagonal::create,
                     "Diagonal Preconditioning");
-
-        string PreconditionerDiagonal::className1
-                = GetPreconFactory().RegisterCreatorFunction(
-                    "Null",
-                    PreconditionerDiagonal::create,
-                    "No Preconditioning");
-
         /**
          * @class Preconditioner
          *
-         * This class implements preconditioning for the conjugate 
+         * This class implements diagonal preconditioning for the conjugate 
 	 * gradient matrix solver.
 	 */
 
@@ -193,33 +186,61 @@ namespace Nektar
                       Array<OneD, NekDouble>& pOutput)
         {
             GlobalSysSolnType solvertype = 
-                m_locToGloMap->GetGlobalSysSolnType();
-            switch (m_preconType)
-            {
-            case MultiRegions::eDiagonal:
-            case MultiRegions::eLinearWithDiagonal:
-                {
-                    int nGlobal = solvertype == eIterativeFull ?
-                        m_locToGloMap->GetNumGlobalCoeffs() :
-                        m_locToGloMap->GetNumGlobalBndCoeffs();
-                    int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-                    int nNonDir = nGlobal-nDir;
-                    Vmath::Vmul(nNonDir, &pInput[0], 1, &m_diagonals[0], 1, &pOutput[0], 1);
-                    
-                    break;
-                }
-                case MultiRegions::eNull:
-                {
-                    Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
-                    break;
-                }
-                default:
-                {
-                    ASSERTL0(0,"Unknown preconditioner");
-                    break;
-                }
-	    }
+                m_locToGloMap->GetGlobalSysSolnType();            
+
+            int nGlobal = solvertype == eIterativeFull ?
+                m_locToGloMap->GetNumGlobalCoeffs() :
+                m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nNonDir = nGlobal-nDir;
+            Vmath::Vmul(nNonDir, &pInput[0], 1, &m_diagonals[0], 1, &pOutput[0], 1);
 	}
+        
+        string PreconditionerNull::className
+        = GetPreconFactory().RegisterCreatorFunction(
+            "Null",
+            PreconditionerNull::create,
+            "No Preconditioning");
+
+        /**
+         * @class Null Preconditioner
+         *
+         * This class implements no preconditioning for the conjugate 
+	 * gradient matrix solver.
+	 */
+         PreconditionerNull::PreconditionerNull(
+                         const boost::shared_ptr<GlobalLinSys> &plinsys,
+	                 const AssemblyMapSharedPtr &pLocToGloMap)
+           : Preconditioner(plinsys, pLocToGloMap),
+             m_preconType(pLocToGloMap->GetPreconType())
+         {
+	 }
+
+        /**
+         *
+         */
+        void PreconditionerNull::v_InitObject()
+        {
+	}
+
+        /**
+         *
+         */
+        void PreconditionerNull::v_BuildPreconditioner()
+        {
+        }
+
+        /**
+         *
+         */
+        void PreconditionerNull::v_DoPreconditioner(
+                const Array<OneD, NekDouble>& pInput,
+                      Array<OneD, NekDouble>& pOutput)
+        {
+            Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
+	}
+
+
     }
 }
 

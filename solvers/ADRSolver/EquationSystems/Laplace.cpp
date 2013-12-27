@@ -59,10 +59,11 @@ namespace Nektar
 
     }
 
-    void Laplace::v_PrintSummary(std::ostream &out)
+    void Laplace::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        out << "\tLambda          : "
-            << m_factors[StdRegions::eFactorLambda] << endl;
+        EquationSystem::SessionSummary(s);
+        SolverUtils::AddSummaryItem(s, "Lambda",
+                                    m_factors[StdRegions::eFactorLambda]);
     }
 
     void Laplace::v_DoSolve()

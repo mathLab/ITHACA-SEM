@@ -337,10 +337,10 @@ namespace Nektar
         NekDouble *u_new   = &outarray[0][0];
         NekDouble *v_new   = &outarray[1][0];
         NekDouble *w_new   = &outarray[2][0];
-        NekDouble *y_new   = isCF3 ? &outarray[3][0] : 0;
+        //NekDouble *y_new   = isCF3 ? &outarray[3][0] : 0;
         NekDouble *v_tau   = &m_gates_tau[0][0];
         NekDouble *w_tau   = &m_gates_tau[1][0];
-        NekDouble *y_tau   = isCF3 ? &m_gates_tau[2][0] : 0;
+        //NekDouble *y_tau   = isCF3 ? &m_gates_tau[2][0] : 0;
 
         // Temporary variables
         NekDouble J_fi, J_so, J_si, h1, h2, h3, alpha, beta;
@@ -389,10 +389,10 @@ namespace Nektar
         }
     }
     
-    void FentonKarma::v_PrintSummary(std::ostream &out)
+    void FentonKarma::v_GenerateSummary(SummaryList& s)
     {
-        out << "\tCell model      : FentonKarma" << std::endl;
-        out << "\tCell model var. : " << lookupIds[model_variant] << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model", "Fenton Karma");
+        SolverUtils::AddSummaryItem(s, "Cell model var.", lookupIds[model_variant]);
     }
     
     
@@ -416,6 +416,7 @@ namespace Nektar
             case 1:  return "v";
             case 2:  return "w";
             case 3:  return "y";
+            default: return "unknown";
         }
     }
 }

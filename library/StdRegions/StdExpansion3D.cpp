@@ -111,12 +111,34 @@ namespace Nektar
             }
         }
 
-        NekDouble StdExpansion3D::v_PhysEvaluate(
-            const Array<OneD, const NekDouble> &coords)
+        void StdExpansion3D::BwdTrans_SumFacKernel(
+            const Array<OneD, const NekDouble>& base0,
+            const Array<OneD, const NekDouble>& base1,
+            const Array<OneD, const NekDouble>& base2,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray,
+                  Array<OneD,       NekDouble>& wsp,
+            bool                                doCheckCollDir0,
+            bool                                doCheckCollDir1,
+            bool                                doCheckCollDir2)
         {
-            return PhysEvaluate(coords,m_phys);
+            v_BwdTrans_SumFacKernel(base0, base1, base2, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1, doCheckCollDir2);
         }
-        
+
+        void StdExpansion3D::IProductWRTBase_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& base2,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray,
+                      Array<OneD, NekDouble> &wsp,
+                bool doCheckCollDir0,
+                bool doCheckCollDir1,
+                bool doCheckCollDir2)
+        {
+            v_IProductWRTBase_SumFacKernel(base0, base1, base2, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1, doCheckCollDir2);
+        }
+
         NekDouble StdExpansion3D::v_PhysEvaluate(
             const Array<OneD, const NekDouble> &coords, 
             const Array<OneD, const NekDouble> &physvals)
@@ -164,6 +186,114 @@ namespace Nektar
             return value;
         }
         
+
+        /**
+         * @param   inarray     Input coefficients.
+         * @param   output      Output coefficients.
+         * @param   mkey        Matrix key
+         */
+        void StdExpansion3D::v_LaplacianMatrixOp_MatFree(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray,
+                const StdRegions::StdMatrixKey &mkey)
+        {
+            if(mkey.GetNVarCoeff() == 0)
+            {
+                // This implementation is only valid when there are no
+                // coefficients associated to the Laplacian operator
+                int nqtot = GetTotPoints();
+
+                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
+
+                // Allocate temporary storage
+                Array<OneD,NekDouble> wsp0(7*nqtot);
+                Array<OneD,NekDouble> wsp1(wsp0+nqtot);
+
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
+                     m_base[2]->Collocation()))
+                {
+                    // LAPLACIAN MATRIX OPERATION
+                    // wsp0 = u       = B   * u_hat
+                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                    BwdTrans_SumFacKernel(base0,base1,base2,inarray,wsp0,wsp1,true,true,true);
+                    LaplacianMatrixOp_MatFree_Kernel(wsp0,outarray,wsp1);
+                }
+                else
+                {
+                    LaplacianMatrixOp_MatFree_Kernel(inarray,outarray,wsp1);
+                }
+            }
+            else
+            {
+                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+            }
+        }
+
+
+        void StdExpansion3D::v_HelmholtzMatrixOp_MatFree(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray,
+                const StdRegions::StdMatrixKey &mkey)
+        {
+            if(mkey.GetNVarCoeff() == 0)
+            {
+                int nquad0  = m_base[0]->GetNumPoints();
+                int nquad1  = m_base[1]->GetNumPoints();
+                int nquad2  = m_base[2]->GetNumPoints();
+                int nmodes0 = m_base[0]->GetNumModes();
+                int nmodes1 = m_base[1]->GetNumModes();
+                int nmodes2 = m_base[2]->GetNumModes();
+                int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
+                                  nquad0*nquad1*(nquad2+nmodes0)+
+                                  nmodes0*nmodes1*nquad2);
+
+                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
+
+                const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
+                const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
+                const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
+                Array<OneD,NekDouble> wsp0(8*wspsize);
+                Array<OneD,NekDouble> wsp1(wsp0+1*wspsize);
+                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
+
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
+                     m_base[2]->Collocation()))
+                {
+                    // MASS MATRIX OPERATION
+                    // The following is being calculated:
+                    // wsp0     = B   * u_hat = u
+                    // wsp1     = W   * wsp0
+                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
+                    BwdTrans_SumFacKernel           (base0,base1,base2,inarray,
+                                                     wsp0,wsp2,true,true,true);
+                    MultiplyByQuadratureMetric      (wsp0,wsp1);
+                    IProductWRTBase_SumFacKernel    (base0,base1,base2,wsp1,
+                                                     outarray,wsp2,true,true,true);
+                    LaplacianMatrixOp_MatFree_Kernel(wsp0,wsp1,wsp2);
+                }
+                else
+                {
+                    // specialised implementation for the classical spectral
+                    // element method
+                    MultiplyByQuadratureMetric      (inarray,outarray);
+                    LaplacianMatrixOp_MatFree_Kernel(inarray,wsp1,wsp2);
+                }
+
+                // outarray = lambda * outarray + wsp1
+                //          = (lambda * M + L ) * u_hat
+                Vmath::Svtvp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,
+                             &outarray[0],1);
+            }
+            else
+            {
+                StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+            }
+
+        }
+
         const NormalVector & StdExpansion3D::v_GetSurfaceNormal() const
         {
             return m_surfaceNormal;

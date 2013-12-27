@@ -48,7 +48,7 @@ using namespace Nektar;
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
- fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps); \
+ fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps);  \
  st = clock();
 #else
 #define Timing(s) \
@@ -68,8 +68,10 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
     FlagList flags;
-    NekDouble    cps = (double)CLOCKS_PER_SEC;
-    NekDouble    st;
+#ifdef TIMING
+    NekDouble st;
+    NekDouble cps = (double)CLOCKS_PER_SEC;
+#endif
 
     if(argc < 2)
     {
@@ -79,6 +81,9 @@ int main(int argc, char *argv[])
 
     try
     {
+        LibUtilities::FieldIOSharedPtr fld =
+            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+
         //----------------------------------------------
         // Read in mesh from input file
         SpatialDomains::MeshGraphSharedPtr graph3D = 
@@ -187,12 +192,7 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------------
         // Write solution to file
-        string out = vSession->GetSessionName();
-        if (vComm->GetSize() > 1)
-        {
-            out += "_P" + boost::lexical_cast<string>(vComm->GetRank());
-        }
-        out += ".fld";
+        string out = vSession->GetSessionName() + ".fld";
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
             Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        LibUtilities::Write(out, FieldDef, FieldData);
+        fld->Write(out, FieldDef, FieldData);
         //-----------------------------------------------
 
         if(ex_sol)
@@ -221,9 +221,9 @@ int main(int argc, char *argv[])
 
             //--------------------------------------------
             // Calculate errors
-            NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
-            NekDouble vL2Error   = Exp->L2(Fce->GetPhys());
-            NekDouble vH1Error   = Exp->H1(Fce->GetPhys());
+            NekDouble vLinfError = Exp->Linf(Exp->GetPhys(), Fce->GetPhys());
+            NekDouble vL2Error   = Exp->L2(Exp->GetPhys(), Fce->GetPhys());
+            NekDouble vH1Error   = Exp->H1(Exp->GetPhys(), Fce->GetPhys());
             if (vComm->GetRank() == 0)
             {
                 cout << "L infinity error: " << vLinfError << endl;

@@ -39,7 +39,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <LibUtilities/Foundations/Basis.h>
 #include <SpatialDomains/Geometry1D.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/Curve.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 
@@ -64,18 +64,18 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT SegGeom(
                         int id,
                         const int coordim,
-                        const VertexComponentSharedPtr vertex[]);
+                        const PointGeomSharedPtr vertex[]);
 
                 SPATIAL_DOMAINS_EXPORT SegGeom(
                         int id,
                         const int coordim,
-                        const VertexComponentSharedPtr vertex[],
+                        const PointGeomSharedPtr vertex[],
                         const CurveSharedPtr &curve);
 
                 SPATIAL_DOMAINS_EXPORT SegGeom(
                         const int id,
-                        const VertexComponentSharedPtr& vert1,
-                        const VertexComponentSharedPtr& vert2);
+                        const PointGeomSharedPtr& vert1,
+                        const PointGeomSharedPtr& vert2);
 
                 SPATIAL_DOMAINS_EXPORT SegGeom(const SegGeom &in);
 
@@ -99,23 +99,23 @@ namespace Nektar
             protected:
                 int                                               m_eid;
                 std::list<CompToElmt>                             m_elmtMap;
-                Array<OneD, StdRegions::StdExpansion1DSharedPtr>  m_xmap;
-                SpatialDomains::VertexComponentSharedPtr          m_verts[kNverts];
+                StdRegions::StdExpansion1DSharedPtr               m_xmap;
+                SpatialDomains::PointGeomSharedPtr                m_verts[kNverts];
                 StdRegions::Orientation                           m_porient[kNverts];
 
 
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
 
-                SPATIAL_DOMAINS_EXPORT virtual VertexComponentSharedPtr
+                SPATIAL_DOMAINS_EXPORT virtual PointGeomSharedPtr
                         v_GetVertex(const int i) const;
 
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetEid() const;
 
                 SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr
-                        v_GetBasis(const int i, const int j);
+                        v_GetBasis(const int i);
 
-                SPATIAL_DOMAINS_EXPORT virtual const
-                        StdRegions::StdExpansion1DSharedPtr& v_GetXmap(const int i);
+                SPATIAL_DOMAINS_EXPORT virtual
+                        StdRegions::StdExpansionSharedPtr v_GetXmap() const;
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
 
@@ -127,9 +127,6 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual bool
                         v_IsElmtConnected(int gvoId, int locId) const;
 
-                SPATIAL_DOMAINS_EXPORT virtual Array<OneD, NekDouble>&
-                        v_UpdatePhys(const int i);
-
                 SPATIAL_DOMAINS_EXPORT virtual LibUtilities::ShapeType
                         v_DetShapeType() const;
 
@@ -137,8 +134,7 @@ namespace Nektar
                         const Array<OneD, const NekDouble>& coords,
                               Array<OneD,NekDouble>& Lcoords);
 
-                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors();
 
                 SPATIAL_DOMAINS_EXPORT virtual StdRegions::Orientation
                         v_GetPorient(const int i) const;
@@ -148,10 +144,6 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
                         const int i,
                         const Array<OneD,const NekDouble> &Lcoord);
-
-                SPATIAL_DOMAINS_EXPORT virtual void v_WriteToFile(
-                              std::ofstream &outfile,
-                        const int dumpVar);
 
                 SPATIAL_DOMAINS_EXPORT virtual int  v_GetNumVerts() const;
 

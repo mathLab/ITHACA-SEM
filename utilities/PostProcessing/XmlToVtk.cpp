@@ -5,6 +5,7 @@
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList3D.h>
+#include <MultiRegions/ExpList3DHomogeneous1D.h>
 
 using namespace Nektar;
 
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraphSharedPtr graphShPt = 
         SpatialDomains::MeshGraph::Read(vSession); //meshfile);
     //----------------------------------------------
-
+                                                                           
     //----------------------------------------------
     // Set up Expansion information
     SpatialDomains::ExpansionMap emap = graphShPt->GetExpansions();
@@ -62,10 +63,39 @@ int main(int argc, char *argv[])
         }
         case 2:
         {
-            MultiRegions::ExpList2DSharedPtr Exp2D;
-            Exp2D = MemoryManager<MultiRegions::ExpList2D>
-                ::AllocateSharedPtr(vSession,graphShPt);
-            Exp[0] =  Exp2D;
+            if(vSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                std::string HomoStr = vSession->GetSolverInfo("HOMOGENEOUS");
+                MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
+
+                ASSERTL0(
+                    HomoStr == "HOMOGENEOUS1D" || HomoStr == "Homogeneous1D" ||
+                    HomoStr == "1D"            || HomoStr == "Homo1D",
+                    "Only 3DH1D supported for XML output currently.");
+
+                int nplanes;
+                vSession->LoadParameter("HomModesZ", nplanes);
+
+                // choose points to be at evenly spaced points at nplanes + 1
+                // points
+                const LibUtilities::PointsKey Pkey(
+                    nplanes + 1, LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::BasisKey  Bkey(
+                    LibUtilities::eFourier, nplanes, Pkey);
+                NekDouble lz = vSession->GetParameter("LZ");
+
+                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
+                    ::AllocateSharedPtr(
+                        vSession, Bkey, lz, false, false, graphShPt);
+                Exp[0] = Exp3DH1;
+            }
+            else
+            {
+                MultiRegions::ExpList2DSharedPtr Exp2D;
+                Exp2D = MemoryManager<MultiRegions::ExpList2D>
+                    ::AllocateSharedPtr(vSession,graphShPt);
+                Exp[0] =  Exp2D;
+            }
             break;
         }
         case 3:

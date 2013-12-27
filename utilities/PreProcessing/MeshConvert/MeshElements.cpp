@@ -118,7 +118,7 @@ namespace Nektar
             
             return nEnt;
         }
-        
+
         /**
          * @brief Test equality of two conditions - i.e. compare types, fields
          * and values but _not_ composite ids.
@@ -434,7 +434,7 @@ namespace Nektar
         SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
         {
             // Create edge vertices.
-            SpatialDomains::VertexComponentSharedPtr p[2];
+            SpatialDomains::PointGeomSharedPtr p[2];
             p[0] = vertex[0]->GetGeom(coordDim);
             p[1] = vertex[1]->GetGeom(coordDim);
             
@@ -530,7 +530,7 @@ namespace Nektar
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
         {
             SpatialDomains::SegGeomSharedPtr         edges[3];
-            SpatialDomains::VertexComponentSharedPtr verts[3];
+            SpatialDomains::PointGeomSharedPtr verts[3];
             
             for (int i = 0; i < 3; ++i)
             {
@@ -616,9 +616,10 @@ namespace Nektar
             
             for (i = 0; i < 3; ++i)
             {
-                tri->FwdTrans(alloc+i*nqtot, nodalTri->UpdateCoeffs());
+                Array<OneD, NekDouble> coeffs(nodalTri->GetNcoeffs());
+                tri->FwdTrans(alloc+i*nqtot, coeffs);
                 // Apply Vandermonde matrix to project onto nodal space.
-                nodalTri->ModalToNodal(nodalTri->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+                nodalTri->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
             
             // Now extract points from the co-ordinate arrays into the
@@ -772,7 +773,7 @@ namespace Nektar
         SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
         {
             SpatialDomains::SegGeomSharedPtr         edges[4];
-            SpatialDomains::VertexComponentSharedPtr verts[4];
+            SpatialDomains::PointGeomSharedPtr verts[4];
             
             for (int i = 0; i < 4; ++i)
             {
@@ -1010,9 +1011,10 @@ namespace Nektar
             
             for (i = 0; i < 3; ++i)
             {
-                tet->FwdTrans(alloc+i*nqtot, nodalTet->UpdateCoeffs());
+                Array<OneD, NekDouble> coeffs(nodalTet->GetNcoeffs());
+                tet->FwdTrans(alloc+i*nqtot, coeffs);
                 // Apply Vandermonde matrix to project onto nodal space.
-                nodalTet->ModalToNodal(nodalTet->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+                nodalTet->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
             
             // Now extract points from the co-ordinate arrays into the
@@ -1122,7 +1124,7 @@ namespace Nektar
                 struct TetOrient faceNodes(nodes, i);
                 faces.insert(faceNodes);
             }
-            
+
             // Order vertices with highest global vertex at top degenerate
             // point. Place second highest global vertex at base degenerate
             // point.
@@ -1390,9 +1392,10 @@ namespace Nektar
             
             for (i = 0; i < 3; ++i)
             {
-                prism->FwdTrans(alloc+i*nqtot, nodalPrism->UpdateCoeffs());
+                Array<OneD, NekDouble> coeffs(nodalPrism->GetNcoeffs());
+                prism->FwdTrans(alloc+i*nqtot, coeffs);
                 // Apply Vandermonde matrix to project onto nodal space.
-                nodalPrism->ModalToNodal(nodalPrism->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+                nodalPrism->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
             
             // Now extract points from the co-ordinate arrays into the

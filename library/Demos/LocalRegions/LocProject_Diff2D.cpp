@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
     LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
     LibUtilities::ShapeType     regionshape;
-    StdRegions::StdExpansion2D *E;
+    StdRegions::StdExpansion2D *E = NULL;
     Array<OneD, NekDouble> sol,x,y,dx,dy;
     Array<OneD, NekDouble> coords(8);
     StdRegions::Orientation edgeDir = StdRegions::eForwards;
@@ -195,14 +195,14 @@ int main(int argc, char *argv[])
             coords[5]    =   atof(argv[13]);
 
             // Set up coordinates
-            SpatialDomains::VertexComponentSharedPtr verts[3];
+            SpatialDomains::PointGeomSharedPtr verts[3];
             const int zero = 0;
             const int one=1;
             const int two=2;
             const double dZero = 0.0;
-            verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
-            verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
-            verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
+            verts[0] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
+            verts[1] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
+            verts[2] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
 
             // Set up Edges
             SpatialDomains::SegGeomSharedPtr edges[3];
@@ -262,11 +262,11 @@ int main(int argc, char *argv[])
                 const int two=2;
                 const int three=3;
                 const double dZero=0.0;
-                SpatialDomains::VertexComponentSharedPtr verts[4];
-                verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
-                verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
-                verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
-                verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
+                SpatialDomains::PointGeomSharedPtr verts[4];
+                verts[0] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
+                verts[1] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
+                verts[2] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
+                verts[3] = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
                 
                 // Set up Edges
                 SpatialDomains::SegGeomSharedPtr edges[4];
@@ -316,12 +316,14 @@ int main(int argc, char *argv[])
     
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    Array<OneD, NekDouble> coeffs(E->GetNcoeffs());
+    Array<OneD, NekDouble> phys  (nq1*nq2);
+    E->FwdTrans(sol, coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs, phys);
     //-------------------------------------------
 
     //----------------------------------------------
@@ -352,18 +354,11 @@ int main(int argc, char *argv[])
         ASSERTL0(false, "Not a 2D expansion.");
         break;
     }
-    
-    //--------------------------------------------
-    // Write solution
-    ofstream outfile("ProjectFile2D.dat");
-    E->WriteToFile(outfile,eTecplot);
-    outfile.close();
-    //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys, sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------
 
     return 0;

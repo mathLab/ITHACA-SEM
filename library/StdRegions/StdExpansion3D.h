@@ -102,14 +102,33 @@ namespace Nektar
                                  Array<OneD, NekDouble> &outarray_d2,
                                  Array<OneD, NekDouble> &outarray_d3);
 
+            STD_REGIONS_EXPORT void BwdTrans_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& base2,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray,
+                      Array<OneD,       NekDouble>& wsp,
+                bool                                doCheckCollDir0,
+                bool                                doCheckCollDir1,
+                bool                                doCheckCollDir2);
+
+            STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2);
 
         protected:
 
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
              *
-             *  This function is a wrapper around the virtual function
-             *  \a v_PhysEvaluate()
              *
              *  Based on the value of the expansion at the quadrature points,
              *  this function calculates the value of the expansion at an
@@ -121,18 +140,48 @@ namespace Nektar
              *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
              *
              *  This function requires that the physical value array
-             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys)
+             *  \f$\mathbf{u}\f$ (implemented as the attribute #phys)
              *  is set.
              *
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& coords);
-
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& coords,
                     const Array<OneD, const NekDouble>& physvals);
+
+            STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& base2,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray,
+                      Array<OneD,       NekDouble>& wsp,
+                bool                                doCheckCollDir0,
+                bool                                doCheckCollDir1,
+                bool                                doCheckCollDir2) = 0;
+
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& base2,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble>&       outarray,
+                      Array<OneD, NekDouble>&       wsp,
+                bool                                doCheckCollDir0,
+                bool                                doCheckCollDir1,
+                bool                                doCheckCollDir2) = 0;
+
+            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,NekDouble> &outarray,
+                    const StdRegions::StdMatrixKey &mkey);
+
+            STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,NekDouble> &outarray,
+                    const StdRegions::StdMatrixKey &mkey);
+
 
             STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(
                 const int face);

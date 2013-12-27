@@ -108,29 +108,6 @@ int main(int argc, char *argv[])
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //-------------------------------------------  
 
-    //----------------------------------------------
-    // Write solution 
-//    ofstream outfile("ProjectLocFile2D.pos");
-//    Exp->WriteToFile(outfile,eGmsh);
-//    outfile.close();
-//
-//    ofstream outfile2("ProjectLocFile2D.dat");
-//    Exp->WriteToFile(outfile2,eTecplot);
-//    outfile2.close();
-    string   out = meshfile + ".fld";
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                                                = Exp->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-    for(i = 0; i < FieldDef.size(); ++i)
-    {
-        FieldDef[i]->m_fields.push_back("u");
-        Exp->AppendFieldData(FieldDef[i], FieldData[i]);
-    }
-    LibUtilities::Write(out, FieldDef, FieldData);
-
-    //----------------------------------------------
-    
     //--------------------------------------------
     // Calculate L_inf error 
     if (vSession->GetComm()->GetRank() == 0)

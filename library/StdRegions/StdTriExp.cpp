@@ -271,12 +271,14 @@ namespace Nektar
                                   inarray,outarray,wsp);
         }
 
-        void StdTriExp::BwdTrans_SumFacKernel(
+        void StdTriExp::v_BwdTrans_SumFacKernel(
             const Array<OneD, const NekDouble>& base0, 
             const Array<OneD, const NekDouble>& base1,
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray,
-                  Array<OneD,       NekDouble>& wsp)
+                  Array<OneD,       NekDouble>& wsp,
+                  bool                          doCheckCollDir0,
+                  bool                          doCheckCollDir1)
         {
             int  i;
             int  mode;
@@ -502,12 +504,14 @@ namespace Nektar
                 tmp,outarray,wsp);
         }
         
-        void StdTriExp::IProductWRTBase_SumFacKernel(
+        void StdTriExp::v_IProductWRTBase_SumFacKernel(
             const Array<OneD, const NekDouble>& base0, 
             const Array<OneD, const NekDouble>& base1,
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray,
-                  Array<OneD,       NekDouble>& wsp)
+                  Array<OneD,       NekDouble>& wsp,
+                  bool                          doCheckCollDir0,
+                  bool                          doCheckCollDir1)
         {
             int    i;
             int    mode;
@@ -553,7 +557,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             int nq = GetTotPoints();
-            MatrixType mtype;
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch(dir)
             {
@@ -639,7 +643,7 @@ namespace Nektar
           
                     IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                                  m_base[1]->GetBdata(),
-                                                 tmp0,tmp3,gfac0); 
+                                                 tmp0,tmp3,gfac0);
 
                     MultiplyByQuadratureMetric(inarray,tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
@@ -660,13 +664,6 @@ namespace Nektar
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
-
-        NekDouble StdTriExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& coords)
-        {
-            return PhysEvaluate(coords,m_phys);
-        }
-
         NekDouble StdTriExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& coords,
             const Array<OneD, const NekDouble>& physvals)
@@ -828,278 +825,6 @@ namespace Nektar
             }
         }
 
-        void StdTriExp::v_ReadFromFile(
-            std::ifstream &infile, 
-            OutputFormat   format, 
-            const bool     dumpVar)
-        {
-            if (format == eTecplot)
-            {
-                int  i,j;
-                int  nq0,nq1;
-                int  nquad0 = m_base[0]->GetNumPoints();
-                int  nquad1 = m_base[1]->GetNumPoints();
-                char str[256];
-
-                if(dumpVar)
-                {
-                    infile.getline(str,sizeof(str));
-                    infile.getline(str,sizeof(str));
-                }
-                infile.getline(str,sizeof(str));
-                sscanf(str,"Zone, I=%d, J=%d",&nq0,&nq1);
-                ASSERTL1(nq0 == nquad0,"nquad0 does not match");
-                ASSERTL1(nq1 == nquad1,"nquad0 does not match");
-                
-                for(j = 0; j < nquad1; ++j)
-                {
-                    for(i = 0; i < nquad0; ++i)
-                    {
-                        infile.getline(str,sizeof(str));
-                        sscanf(str,"%*f %*f %lf",&m_phys[0]+j*nquad0+i);
-                    }
-                }
-            } 
-            else
-            {
-                ASSERTL0(false, "Input routine not implemented for "
-                         "requested type of output");
-            }
-        }
-
-        void StdTriExp::v_WriteToFile(
-            std::ofstream &outfile,
-            OutputFormat   format,
-            const bool     dumpVar,
-            std::string    var)
-        {
-            if(format==eTecplot)
-            {
-                int  i,j;
-                int  nquad0 = m_base[0]->GetNumPoints();
-                int  nquad1 = m_base[1]->GetNumPoints();
-                Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
-                Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
-                
-                if(dumpVar)
-                { 
-                    outfile << "Variables = z1,  z2"; 
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-                outfile << "Zone, I=" << nquad0
-                        << ", J=" << nquad1 <<", F=Point" << std::endl;
-                
-                for(j = 0; j < nquad1; ++j)
-                {
-                    for(i = 0; i < nquad0; ++i)
-                    {
-                        outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << 
-                            z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
-                    }
-                }
-            }
-            else if(format==eGmsh)
-            {   
-                if(dumpVar)
-                {
-                    outfile<<"View.MaxRecursionLevel = 4;"<<endl;
-                    outfile<<"View.TargetError = 0.00;"<<endl;
-                    outfile<<"View.AdaptVisualizationGrid = 1;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
-                
-                outfile<<"ST("<<endl;                
-                // write the coordinates of the vertices of the triangle
-                outfile<<"-1.0, -1.0, 0.0,"<<endl;
-                outfile<<" 1.0, -1.0, 0.0,"<<endl;
-                outfile<<"-1.0,  1.0, 0.0" <<endl;
-                outfile<<")"<<endl;
-
-                // calculate the coefficients (monomial format)
-                int i,j;
-                int maxnummodes = max(m_base[0]->GetNumModes(),
-                                      m_base[1]->GetNumModes());
-                   
-                const LibUtilities::PointsKey Pkey1Gmsh(
-                    maxnummodes,LibUtilities::eGaussGaussLegendre);
-                const LibUtilities::PointsKey Pkey2Gmsh(
-                    maxnummodes,LibUtilities::eGaussGaussLegendre);
-                const LibUtilities::BasisKey  Bkey1Gmsh(
-                    m_base[0]->GetBasisType(),maxnummodes,Pkey1Gmsh);
-                const LibUtilities::BasisKey  Bkey2Gmsh(
-                    m_base[1]->GetBasisType(),maxnummodes,Pkey2Gmsh);
-                LibUtilities::PointsType ptype = LibUtilities::eNodalTriElec;
-
-                StdRegions::StdNodalTriExpSharedPtr EGmsh;
-                EGmsh = MemoryManager<StdRegions::StdNodalTriExp>::
-                    AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh,ptype);
-                
-                Array<OneD,NekDouble> xi1(EGmsh->GetNcoeffs());
-                Array<OneD,NekDouble> xi2(EGmsh->GetNcoeffs());
-                EGmsh->GetNodalPoints(xi1,xi2);
-                
-                Array<OneD,NekDouble> x(EGmsh->GetNcoeffs());
-                Array<OneD,NekDouble> y(EGmsh->GetNcoeffs());
-                
-                for(i=0;i<EGmsh->GetNcoeffs();i++)
-                {
-                    x[i] = 0.5*(1.0+xi1[i]);
-                    y[i] = 0.5*(1.0+xi2[i]);
-                }
-
-                int cnt  = 0;
-                int cnt2 = 0;
-                int nDumpCoeffs = maxnummodes*maxnummodes;
-                Array<TwoD, int> dumpExponentMap(nDumpCoeffs,3,0);
-                Array<OneD, int> indexMap(EGmsh->GetNcoeffs(),0);
-                Array<TwoD, int> exponentMap(EGmsh->GetNcoeffs(),3,0);
-                for(i = 0; i < maxnummodes; i++)
-                {
-                    for(j = 0; j < maxnummodes; j++)
-                    {
-                        if(j<maxnummodes-i)
-                        {
-                            exponentMap[cnt][0] = j;
-                            exponentMap[cnt][1] = i;
-                            indexMap[cnt++]  = cnt2;
-                        }
-
-                        dumpExponentMap[cnt2][0]   = j;
-                        dumpExponentMap[cnt2++][1] = i;
-                    }            
-                }
-
-                NekMatrix<NekDouble> vdm(EGmsh->GetNcoeffs(),
-                                         EGmsh->GetNcoeffs());
-                for(i = 0 ; i < EGmsh->GetNcoeffs(); i++)
-                {
-                    for(j = 0 ; j < EGmsh->GetNcoeffs(); j++)
-                    {
-                        vdm(i,j) = pow(x[i],exponentMap[j][0])*
-                            pow(y[i],exponentMap[j][1]);
-                    }
-                } 
-
-                vdm.Invert();  
-
-                Array<OneD, NekDouble> tmp2(EGmsh->GetNcoeffs());
-                EGmsh->ModalToNodal(m_coeffs,tmp2);       
-
-                NekVector<NekDouble> in(EGmsh->GetNcoeffs(),tmp2,eWrapper);
-                NekVector<NekDouble> out(EGmsh->GetNcoeffs());
-                out = vdm*in;
-
-                Array<OneD,NekDouble> dumpOut(nDumpCoeffs,0.0);
-                for(i = 0 ; i < EGmsh->GetNcoeffs(); i++)
-                {
-                    dumpOut[ indexMap[i]  ] = out[i];
-                }
-
-                //write the coefficients
-                outfile<<"{";
-                for(i = 0; i < nDumpCoeffs; i++)
-                {
-                    outfile<<dumpOut[i];
-                    if(i < nDumpCoeffs - 1)
-                    {
-                        outfile<<", ";
-                    }
-                }
-                outfile<<"};"<<endl;
-              
-                if(dumpVar)
-                {   
-                    outfile<<"INTERPOLATION_SCHEME"<<endl;
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nDumpCoeffs; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < nDumpCoeffs; j++)
-                        {
-                            if(i==j)
-                            {
-                                outfile<<"1.00";
-                            }
-                            else
-                            {
-                                outfile<<"0.00";
-                            }
-                            if(j < nDumpCoeffs - 1)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nDumpCoeffs - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"}"<<endl;
-                        }
-                    }
-                    
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nDumpCoeffs; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < 3; j++)
-                        {
-                            outfile<<dumpExponentMap[i][j];
-                            if(j < 2)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nDumpCoeffs  - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"};"<<endl;
-                        }
-                    }
-                    outfile<<"};"<<endl;
-                }                 
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for "
-                         "requested type of output");
-            }
-        }
-
-        void StdTriExp::v_WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int  i,j;
-            int  order0 = m_base[0]->GetNumModes();
-            int  order1 = m_base[1]->GetNumModes();
-            int  cnt = 0;
-            Array<OneD, NekDouble> wsp(order0*order1,0.0);
-
-            // Put coeffs into matrix and reverse order so that p index is
-            // fastest; recall q is fastest for triangles.
-            for(i = 0; i < order0; ++i)
-            {
-                for(j = 0; j < order1-i; ++j,cnt++)
-                {
-                    wsp[i+j*order1] = m_coeffs[cnt];
-                }
-            }
-
-            outfile <<"Coeffs = [" << " "; 
-
-            for(j = 0; j < order1; ++j)
-            {
-                for(i = 0; i < order0; ++i)
-                {
-                    outfile << wsp[j*order0+i] <<" ";
-                }
-                outfile << std::endl; 
-            }
-            outfile << "]" ; 
-        }
         
         void StdTriExp::v_GetCoords(Array<OneD, NekDouble> &coords_0, 
                                     Array<OneD, NekDouble> &coords_1,
@@ -1275,35 +1000,64 @@ namespace Nektar
             }  
         }
         
-        int StdTriExp::v_GetVertexMap(const int localVertexId)
+        int StdTriExp::v_GetVertexMap(const int localVertexId,bool useCoeffPacking)
         {
             ASSERTL0(
                 GetEdgeBasisType(localVertexId) == LibUtilities::eModified_A ||
                 GetEdgeBasisType(localVertexId) == LibUtilities::eModified_B,
                 "Mapping not defined for this type of basis");
             
-            int localDOF;
-            switch(localVertexId)
+            int localDOF = 0;
+            if(useCoeffPacking == true)
             {
-                case 0:
-                { 
-                    localDOF = 0;    
-                    break;
-                }
-                case 1:
-                {   
-                    localDOF = m_base[1]->GetNumModes();                 
-                    break;
-                }
-                case 2:
-                { 
-                    localDOF = 1;    
-                    break;
-                }
-                default:
+                switch(localVertexId)
                 {
-                    ASSERTL0(false,"eid must be between 0 and 2");
-                    break;
+                case 0:
+                    { 
+                        localDOF = 0;    
+                        break;
+                    }
+                case 1:
+                    { 
+                        localDOF = 1;    
+                        break;
+                    }
+                case 2:
+                    {   
+                        localDOF = m_base[1]->GetNumModes();                 
+                        break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"eid must be between 0 and 2");
+                        break;
+                    }
+                }
+            }
+            else // follow book format for vertex indexing. 
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                        break;
+                    }
+                case 1:
+                    {   
+                        localDOF = m_base[1]->GetNumModes();                 
+                        break;
+                    }
+                case 2:
+                    { 
+                        localDOF = 1;    
+                        break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"eid must be between 0 and 2");
+                        break;
+                    }
                 }
             }
             
@@ -1430,7 +1184,7 @@ namespace Nektar
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A &&
                      GetBasisType(1) == LibUtilities::eModified_B,
-                     "Expansion not of a proper type");
+                     "Expansion not of expected type");
             int i;
             int cnt;
             int nummodes0, nummodes1;
@@ -1536,77 +1290,6 @@ namespace Nektar
             StdTriExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
         
-        void StdTriExp::v_LaplacianMatrixOp_MatFree(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdMatrixKey                 &mkey)
-        {
-            if(mkey.GetNVarCoeff() == 0)
-            {
-                // This implementation is only valid when there are no
-                // coefficients associated to the Laplacian operator
-                int    i;
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int    nquadmax = max(nquad0,nquad1);
-                int    nqtot = nquad0*nquad1; 
-
-                Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
-                Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-                Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-                Array<OneD,NekDouble> tmp(physValues+3*nqtot);
-                Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
-
-                BwdTrans_SumFac(inarray,physValues);
-
-                // Laplacian matrix operation
-                PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-                // multiply with metric terms of collapsed coordinate system
-                const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
-                const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
-
-                for(i = 0; i < nquad0; ++i)
-                {
-                    gfac0[i] = 0.5*(1+z0[i]);
-                }        
-            
-                for(i = 0; i < nquad1; ++i) 
-                {
-                    Vmath::Vvtvp(nquad0,&gfac0[0],1,
-                                 dPhysValuesdy.get()+i*nquad0,1,
-                                 dPhysValuesdx.get()+i*nquad0,1,
-                                 dPhysValuesdx.get()+i*nquad0,1);
-                } 
-
-                for(i = 0; i < nquad1; ++i)
-                {
-                    gfac0[i] = 2.0/(1-z1[i]);
-                }
-
-                for(i = 0; i < nquad1; ++i)  
-                {
-                    Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
-                }
-             
-                MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
-                MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
-                
-                IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
-                                             m_base[1]->GetBdata(),
-                                             dPhysValuesdx,outarray,physValues);
-                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                             m_base[1]->GetDbdata(),
-                                             dPhysValuesdy,tmp,physValues);  
-                Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,
-                            outarray.get(),1);          
-            }    
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(
-                    inarray,outarray,mkey);
-            }    
-        }       
-
 
         void StdTriExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                              const StdMatrixKey &mkey)
@@ -1625,23 +1308,29 @@ namespace Nektar
             StdTriExp OrthoExp(Ba,Bb);
             
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int j,k;
+            int j, k , cnt = 0;
             
-            int cnt;
-            int cuttoff = (int) (mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio)*nmodes_a);
-            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             
+            NekDouble epsilon = 1.0;
+            int nmodes = min(nmodes_a,nmodes_b);
+            
+            //To avoid the fac[j] from blowing up
+            //NekDouble epsilon = 0.001;
+
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
-            
-            // apply SVV filter. 
-            for(cnt = j = 0; j < nmodes_a; ++j)
+
+            //cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
+            // apply SVV filter (JEL)
+            for(j = 0; j < nmodes_a; ++j)
             {
                 for(k = 0; k < nmodes_b-j; ++k)
                 {
-                    if(j + k >= cuttoff)
+                    if(j + k >= cutoff)
                     {
-                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes_a)*(j+k-nmodes_a)/((NekDouble)((j+k-cuttoff+1)*(j+k-cuttoff+1)))));
+                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
                     }
                     cnt++;
                 }
@@ -1651,72 +1340,6 @@ namespace Nektar
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
         
-        void StdTriExp::v_HelmholtzMatrixOp_MatFree(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdMatrixKey                 &mkey)
-        {
-            int    i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
-            int    nquadmax = max(nquad0,nquad1);
-            NekDouble lambda = mkey.GetConstFactor(eFactorLambda);
-
-            Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
-            Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-            Array<OneD,NekDouble> tmp(physValues+3*nqtot);
-            Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
-
-            BwdTrans_SumFac(inarray,physValues);
-
-            // mass matrix operation
-            IProductWRTBase_SumFac(physValues,tmp);
-
-            // Laplacian matrix operation
-            PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-            // multiply with metric terms of collapsed coordinate system
-            const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
-            const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
-
-            for(i = 0; i < nquad0; ++i)
-            {
-                gfac0[i] = 0.5*(1+z0[i]);
-            }        
-            
-            for(i = 0; i < nquad1; ++i) 
-            {
-                Vmath::Vvtvp(nquad0,&gfac0[0],1,
-                             dPhysValuesdy.get()+i*nquad0,1,
-                             dPhysValuesdx.get()+i*nquad0,1,
-                             dPhysValuesdx.get()+i*nquad0,1);
-            } 
-
-            for(i = 0; i < nquad1; ++i)
-            {
-                gfac0[i] = 2.0/(1-z1[i]);
-            }
-
-            for(i = 0; i < nquad1; ++i)  
-            {
-                Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
-            }
-             
-            MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
-            MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
-            
-            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
-                                         m_base[1]->GetBdata(),
-                                         dPhysValuesdx,outarray,physValues);
-            Blas::Daxpy(m_ncoeffs, lambda, tmp.get(), 1, outarray.get(), 1);
-
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetDbdata(),
-                                         dPhysValuesdy,tmp,physValues);  
-            Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,
-                        outarray.get(),1);                  
-        }
 
         void StdTriExp::v_GeneralMatrixOp_MatOp(
             const Array<OneD, const NekDouble> &inarray,
@@ -1744,7 +1367,7 @@ namespace Nektar
         // Private helper functions
         //---------------------------------------
         
-        void StdTriExp::MultiplyByQuadratureMetric(
+        void StdTriExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
         {
@@ -1765,7 +1388,8 @@ namespace Nektar
                 
             switch(m_base[1]->GetPointsType())
             {
-                // Legendre inner product 
+                // Legendre inner product
+                case LibUtilities::ePolyEvenlySpaced:
                 case LibUtilities::eGaussLobattoLegendre: 
                     for(i = 0; i < nquad1; ++i)
                     {

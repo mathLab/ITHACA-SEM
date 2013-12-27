@@ -35,6 +35,10 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/ExpList.h>
+#include <LocalRegions/Expansion.h>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion3D.h>
+
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -93,6 +97,53 @@ namespace Nektar
         }
 
 
+        
+        /**
+         * Given faceOrient of a local element to its local face and
+         * perFaceOrient which states the alignment of one periodic
+         * face to the other global face determine a new faceOrient
+         * that takes this local element face to the global/unique
+         * face
+         */ 
+        StdRegions::Orientation  DeterminePeriodicFaceOrient(
+                       StdRegions::Orientation   faceOrient,
+                       StdRegions::Orientation   perFaceOrient)
+        {
+            
+            StdRegions::Orientation  returnval = faceOrient;
+            
+            if(perFaceOrient != StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+            {
+                int tmp1 = (int)faceOrient    - 5;
+                int tmp2 = (int)perFaceOrient - 5;
+                        
+                int flipDir1Map [8] = {2,3,0,1,6,7,4,5};
+                int flipDir2Map [8] = {1,0,3,2,5,4,7,6};
+                int transposeMap[8] = {4,5,6,7,0,2,1,3};
+
+                // Transpose orientation
+                if (tmp2 > 3)
+                {
+                    tmp1 = transposeMap[tmp1];
+                }
+                
+                // Reverse orientation in direction 1.
+                if (tmp2 == 2 || tmp2 == 3 || tmp2 == 6 || tmp2 == 7)
+                {
+                    tmp1 = flipDir1Map[tmp1];
+                }
+                
+                // Reverse orientation in direction 2
+                if (tmp2 % 2 == 1)
+                {
+                    tmp1 = flipDir2Map[tmp1];
+                }
+                
+                returnval = (StdRegions::Orientation)(tmp1+5);
+            }
+            return returnval;
+        }
+
 
         /**
          * Sets up the global to universal mapping of degrees of freedom across
@@ -104,7 +155,7 @@ namespace Nektar
             const PeriodicMap &perEdges,
             const PeriodicMap &perFaces)
         {
-            StdRegions::StdExpansionSharedPtr locExpansion;
+            LocalRegions::ExpansionSharedPtr locExpansion;
             int nDim = 0;
             int nVert = 0;
             int nEdge = 0;
@@ -130,7 +181,7 @@ namespace Nektar
             Array<OneD, unsigned int>   interiorMap;
             PeriodicMap::const_iterator pIt;
 
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
 
             m_globalToUniversalMap = Nektar::Array<OneD, int>(m_numGlobalCoeffs, -1);
@@ -141,7 +192,7 @@ namespace Nektar
             // Loop over all the elements in the domain to gather mesh data
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion>(locExpVector[i]);
+                locExpansion = locExpVector[i];
                 nVert += locExpansion->GetNverts();
                 nEdge += locExpansion->GetNedges();
                 nFace += locExpansion->GetNfaces();
@@ -172,7 +223,7 @@ namespace Nektar
             // Assemble global to universal mapping for this process
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion>(locExpVector[i]);
+                locExpansion = locExpVector[i];
                 nDim = locExpansion->GetShapeDimension();
                 cnt = locExp.GetCoeff_Offset(i);
 
@@ -199,15 +250,7 @@ namespace Nektar
                 // Loop over all edges of element i
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
-                    if (nDim == 2)
-                    {
-                        meshEdgeId = locExpansion->GetGeom2D()->GetEid(j);
-                    }
-                    else
-                    {
-                        meshEdgeId = locExpansion->GetGeom3D()->GetEid(j);
-                    }
-
+                    meshEdgeId = locExpansion->GetGeom()->GetEid(j);
                     pIt = perEdges.find(meshEdgeId);
                     if (pIt != perEdges.end())
                     {
@@ -235,17 +278,26 @@ namespace Nektar
                 // Loop over all faces of element i
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    faceOrient          = (locExpansion->GetGeom3D())->GetFaceOrient(j);
+                    faceOrient = boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion3D>(
+                            locExpansion)->GetGeom3D()->GetFaceOrient(j);
 
-                    locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
-                    dof = locExpansion->GetFaceIntNcoeffs(j);
-                    meshFaceId = (locExpansion->GetGeom3D())->GetFid(j);
-
+                    meshFaceId = locExpansion->GetGeom()->GetFid(j);
+                    
                     pIt = perFaces.find(meshFaceId);
                     if (pIt != perFaces.end())
                     {
+                        if(meshFaceId == min(meshFaceId, pIt->second[0].id))
+                        {
+                            faceOrient = DeterminePeriodicFaceOrient(faceOrient,pIt->second[0].orient);
+                        }
                         meshFaceId = min(meshFaceId, pIt->second[0].id);
                     }
+                    
+                    
+                    locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
+                    dof = locExpansion->GetFaceIntNcoeffs(j);
+
 
                     for(k = 0; k < dof; ++k)
                     {
@@ -310,7 +362,7 @@ namespace Nektar
 
             int i, j;
             int nverts = 0;
-            const boost::shared_ptr<StdRegions::StdExpansionVector> exp
+            const boost::shared_ptr<LocalRegions::ExpansionVector> exp
                 = locexp.GetExp();
             int nelmts = exp->size();
 
@@ -346,15 +398,17 @@ namespace Nektar
                 {
                     returnval->m_localToGlobalMap[cnt] =
                         returnval->m_localToGlobalBndMap[cnt] =
-                        m_localToGlobalMap[cnt1 + (*exp)[i]->GetVertexMap(j)];
+                        m_localToGlobalMap[cnt1 + (*exp)[i]->GetVertexMap(j,true)];
                     GlobCoeffs[returnval->m_localToGlobalMap[cnt]] = 1;
 
+#if 1
                     // Set up numLocalDirBndCoeffs
-                    if (returnval->m_localToGlobalMap[cnt] <
+                    if ((returnval->m_localToGlobalMap[cnt]) <
                             m_numGlobalDirBndCoeffs)
                     {
-                        returnval->m_numLocalDirBndCoeffs++;
+                            returnval->m_numLocalDirBndCoeffs++;
                     }
+#endif
                     cnt++;
                 }
                 cnt1 += (*exp)[i]->GetNcoeffs();
@@ -425,7 +479,7 @@ namespace Nektar
                     returnval->m_localToGlobalMap[i] = GlobCoeffs[cnt];
                 }
             }
-
+            
             return returnval;
         }
 

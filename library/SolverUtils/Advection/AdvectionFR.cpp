@@ -41,9 +41,11 @@
 #include <StdRegions/StdSegExp.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <boost/math/special_functions/gamma.hpp>
+#include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion2D.h>
+
 #include <iostream>
 #include <iomanip>
-
 
 namespace Nektar
 {
@@ -145,16 +147,20 @@ namespace Nektar
 
             Array<OneD, NekDouble> auxArray1;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
-                        
+            LibUtilities::PointsKeyVector ptsKeys;
+
             switch (nDimensions)
             {
                 case 1:
                 {
                     for (n = 0; n < nElements; ++n) 
                     {
+                        ptsKeys = pFields[0]->GetExp(n)->GetPointsKeys();
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
-                        jac = pFields[0]->GetExp(n)->GetGeom1D()->GetJac();
+                        jac = LocalRegions::Expansion1D::FromStdExp(
+                            pFields[0]->GetExp(n))->GetGeom1D()
+                                ->GetMetricInfo()->GetJac(ptsKeys);
                         for (i = 0; i < nLocalSolutionPts; ++i)
                         {
                             m_jac[i+phys_offset] = jac[0];
@@ -175,6 +181,8 @@ namespace Nektar
                     m_Q2D_e2 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     m_Q2D_e3 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     
+                    LibUtilities::PointsKeyVector ptsKeys;
+
                     for (n = 0; n < nElements; ++n)
                     {
                         base        = pFields[0]->GetExp(n)->GetBase();
@@ -196,13 +204,20 @@ namespace Nektar
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
                             3, auxArray1 = m_Q2D_e3[n]);
                         
+                        ptsKeys = pFields[0]->GetExp(n)->GetPointsKeys();
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
                         
-                        jac  = pFields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                        gmat = pFields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                        jac  = LocalRegions::Expansion2D::FromStdExp(
+                            pFields[0]->GetExp(n))->GetGeom2D()->
+                                GetMetricInfo()->GetJac(ptsKeys);
+                        gmat = LocalRegions::Expansion2D::FromStdExp(
+                            pFields[0]->GetExp(n))->GetGeom2D()->
+                                GetMetricInfo()->GetDerivFactors(ptsKeys);
                         
-                        if (pFields[0]->GetExp(n)->GetGeom2D()->GetGtype()
+                        if (LocalRegions::Expansion2D::FromStdExp(
+                                pFields[0]->GetExp(n))->GetGeom2D()
+                                    ->GetMetricInfo()->GetGtype()
                             == SpatialDomains::eDeformed)
                         {
                             for (i = 0; i < nLocalSolutionPts; ++i)
@@ -996,7 +1011,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
         {
-            int i, n;
+            int n;
             int nLocalSolutionPts, phys_offset;
                         
             LibUtilities::BasisSharedPtr Basis;
@@ -1264,8 +1279,6 @@ namespace Nektar
             int n, e, i, j, cnt;
             
             int nElements   = fields[0]->GetExpSize();
-            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
-            
             int nLocalSolutionPts;
             int nEdgePts;
             int trace_offset;

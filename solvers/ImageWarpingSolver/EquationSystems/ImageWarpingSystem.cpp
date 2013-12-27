@@ -250,8 +250,8 @@ namespace Nektar
         }
     }
     
-    void ImageWarpingSystem::v_PrintSummary(std::ostream &out)
+    void ImageWarpingSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
     }
 }

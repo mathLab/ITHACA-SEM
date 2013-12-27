@@ -97,11 +97,25 @@ namespace Nektar
                                const Array<OneD, const NekDouble>& w0,
                                const Array<OneD, const NekDouble>& w1);
 
+            STD_REGIONS_EXPORT void BwdTrans_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0 = true,
+                    bool doCheckCollDir1 = true);
+
+            STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0 = true,
+                    bool doCheckCollDir1 = true);
 
         protected:
-            std::map<int, NormalVector> m_edgeNormals;
-            std::map<int, bool> m_negatedNormals;
-            NormalVector m_surfaceNormal;
 
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
@@ -125,13 +139,36 @@ namespace Nektar
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
-
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 
-            STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
-            STD_REGIONS_EXPORT virtual bool v_EdgeNormalNegated(const int edge);
-        
+
+            STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1) = 0;
+
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> &outarray,
+                    Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1) = 0;
+
+            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
+                        const Array<OneD, const NekDouble> &inarray,
+                              Array<OneD,       NekDouble> &outarray,
+                        const StdRegions::StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
+                        const Array<OneD, const NekDouble> &inarray,
+                              Array<OneD,       NekDouble> &outarray,
+                        const StdRegions::StdMatrixKey &mkey);
+
         private:
 
             // Virtual Functions ----------------------------------------
@@ -149,11 +186,6 @@ namespace Nektar
             {
                 return 2;
             }
-
-            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
-
-            STD_REGIONS_EXPORT const NormalVector & v_GetEdgeNormal(const int edge) const;
-
     };
 
         typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;

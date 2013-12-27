@@ -101,17 +101,14 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
-                Array<OneD, NekDouble> &coords_0,
-                Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
-                Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray);
-            
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                 const Array<OneD, const NekDouble> &Lcoords, 
                       Array<OneD,       NekDouble> &coords);
 
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                const Array<OneD, const NekDouble> &coord);
+            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
+                      Array<OneD,       NekDouble> &coords_1,
+                      Array<OneD,       NekDouble> &coords_2,
+                      Array<OneD,       NekDouble> &coords_3);
 
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coord,
@@ -121,14 +118,6 @@ namespace Nektar
             //---------------------------------------
             // Helper functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT void v_WriteToFile(
-                std::ofstream &outfile, 
-                OutputFormat   format, 
-                const bool     dumpVar = true, 
-                std::string    var = "v");
-            LOCAL_REGIONS_EXPORT virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
-            LOCAL_REGIONS_EXPORT virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const;
-            LOCAL_REGIONS_EXPORT virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const;
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
             

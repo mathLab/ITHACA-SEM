@@ -53,13 +53,7 @@ namespace Nektar
         {
         }
 
-
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::GetXmap(const int i)
-        {
-            return v_GetXmap(i);
-        }
-
-        VertexComponentSharedPtr Geometry1D::GetVertex(const int i) const
+        PointGeomSharedPtr Geometry1D::GetVertex(const int i) const
         {
             return v_GetVertex(i);
         }
@@ -67,11 +61,6 @@ namespace Nektar
         LibUtilities::ShapeType Geometry1D::DetShapeType() const
         {
             return v_DetShapeType();
-        }
-
-        void Geometry1D::WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            v_WriteToFile(outfile,dumpVar);
         }
 
         int Geometry1D::GetEid() const
@@ -93,20 +82,11 @@ namespace Nektar
             return 0;
         }
 
-
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::v_GetXmap(const int i)
+        PointGeomSharedPtr Geometry1D::v_GetVertex(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
-            static StdRegions::StdExpansion1DSharedPtr returnval;
-            return returnval; 
-        }
-
-        VertexComponentSharedPtr Geometry1D::v_GetVertex(const int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            VertexComponentSharedPtr returnval;
+            PointGeomSharedPtr returnval;
             return returnval;
         }
 
@@ -123,14 +103,5 @@ namespace Nektar
                      "This function is only valid for expansion type geometries");
             return LibUtilities::eNoShapeType;
         }
-
-        void Geometry1D::v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-        }
-
-
-
     }; //end of namespace
 }; //end of namespace

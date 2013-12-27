@@ -88,10 +88,10 @@ namespace Nektar
 
     }
 
-    void NavierStokesCFE::v_PrintSummary(std::ostream &out)
+    void NavierStokesCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        CompressibleFlowSystem::v_PrintSummary(out);
-        out << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
+        CompressibleFlowSystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Problem Type", ProblemTypeMap[m_problemType]);
     }
 
     void NavierStokesCFE::v_SetInitialConditions(
@@ -221,7 +221,6 @@ namespace Nektar
         NekDouble                             time)
     {
         int nvariables = m_fields.num_elements();
-        int nq         = inarray[0].num_elements();
         int cnt        = 0;
         
         // loop over Boundary Regions

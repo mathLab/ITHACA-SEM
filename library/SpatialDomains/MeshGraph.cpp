@@ -439,7 +439,7 @@ namespace Nektar
                         // was nothing to read.
                         if (!vertexDataStrm.fail())
                         {
-                            VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
+                            PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
                             m_vertSet[indx] = vert;
                         }
                     }
@@ -983,7 +983,8 @@ namespace Nektar
                 else if(expType == "ELEMENTS")  // Reading a file with the expansion definition
                 {
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
-                    LibUtilities::ImportFieldDefs(doc, fielddefs, true);
+                    LibUtilities::FieldIO f(m_session->GetComm());
+                    f.ImportFieldDefs(doc, fielddefs, true);
                     cout << "    Number of elements: " << fielddefs.size() << endl;
                     SetExpansions(fielddefs);
                 }
@@ -1181,7 +1182,7 @@ namespace Nektar
                             // was nothing to read.
                             if (!elementDataStrm.fail())
                             {
-                                VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_meshDimension, edgeindx, xval, yval, zval));
+                                PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_meshDimension, edgeindx, xval, yval, zval));
 
                                 curve->m_points.push_back(vert);
                             }
@@ -1282,7 +1283,7 @@ namespace Nektar
                             // indicating that there was nothing to read.
                             if (!elementDataStrm.fail())
                             {
-                                VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_meshDimension, faceindx, xval, yval, zval));
+                                PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_meshDimension, faceindx, xval, yval, zval));
                                 curve->m_points.push_back(vert);
                             }
                         }
@@ -2843,10 +2844,10 @@ namespace Nektar
         /**
          *
          */
-        VertexComponentSharedPtr MeshGraph::AddVertex(NekDouble x, NekDouble y, NekDouble z)
+        PointGeomSharedPtr MeshGraph::AddVertex(NekDouble x, NekDouble y, NekDouble z)
         {
             unsigned int nextId = m_vertSet.rbegin()->first + 1;
-            VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_spaceDimension, nextId, x, y, z));
+            PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_spaceDimension, nextId, x, y, z));
             m_vertSet[nextId] = vert;
             return vert;
         }
@@ -2855,10 +2856,10 @@ namespace Nektar
         /**
          *
          */
-        SegGeomSharedPtr MeshGraph::AddEdge(VertexComponentSharedPtr v0, VertexComponentSharedPtr v1,
+        SegGeomSharedPtr MeshGraph::AddEdge(PointGeomSharedPtr v0, PointGeomSharedPtr v1,
                 CurveSharedPtr curveDefinition)
         {
-            VertexComponentSharedPtr vertices[] = {v0, v1};
+            PointGeomSharedPtr vertices[] = {v0, v1};
             SegGeomSharedPtr edge;
             int edgeId = m_segGeoms.rbegin()->first + 1;
 

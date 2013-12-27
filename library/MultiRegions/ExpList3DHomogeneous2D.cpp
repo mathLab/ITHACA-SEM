@@ -45,6 +45,7 @@ namespace Nektar
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D():
             ExpListHomogeneous2D()
         {
+            SetExpType(e3DH2D);
         }
 
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -56,6 +57,7 @@ namespace Nektar
 													   const bool dealiasing):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
+            SetExpType(e3DH2D);
         }
 
         // Constructor for ExpList3DHomogeneous2D to act as a Explist1D field
@@ -69,6 +71,8 @@ namespace Nektar
                                                        const SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
+            SetExpType(e3DH2D);
+
             int n,j,nel;
             bool False = false;
             ExpList1DSharedPtr line_zero;
@@ -77,7 +81,7 @@ namespace Nektar
             m_lines[0] = line_zero = MemoryManager<ExpList1D>::AllocateSharedPtr(m_session,graph1D,
                                                                       False);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
             nel = m_lines[0]->GetExpSize();
 
             for(j = 0; j < nel; ++j)
@@ -112,6 +116,8 @@ namespace Nektar
         ExpList3DHomogeneous2D::ExpList3DHomogeneous2D(const ExpList3DHomogeneous2D &In, const bool DeclareLinesSetCoeffPhys):
             ExpListHomogeneous2D(In)
         {
+            SetExpType(e3DH2D);
+
             if(DeclareLinesSetCoeffPhys)
             {
                 bool False = false;
@@ -380,56 +386,29 @@ namespace Nektar
         }
 
 
-        NekDouble ExpList3DHomogeneous2D::v_L2(const Array<OneD, const NekDouble> &soln)
+        NekDouble ExpList3DHomogeneous2D::v_L2(
+            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &soln)
         {
             int cnt = 0;
             NekDouble errL2,err = 0.0;
             Array<OneD, const NekDouble> w_y = m_homogeneousBasis_y->GetW();
-			Array<OneD, const NekDouble> w_z = m_homogeneousBasis_z->GetW();
-			
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-
+            Array<OneD, const NekDouble> w_z = m_homogeneousBasis_z->GetW();
+            
+            int nylines = m_homogeneousBasis_y->GetNumPoints();
+            int nzlines = m_homogeneousBasis_z->GetNumPoints();
+            
             for(int m = 0; m < nzlines; ++m)
             {
-				for(int n = 0; n < nylines; ++n)
-				{
-					errL2 = m_lines[n+(m*nylines)]->L2(soln + cnt);
-					cnt  += m_lines[n+(m*nylines)]->GetTotPoints();
-					err  += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
-				}
+                for(int n = 0; n < nylines; ++n)
+                {
+                    errL2 = m_lines[n+(m*nylines)]->L2(inarray + cnt, soln + cnt);
+                    cnt  += m_lines[n+(m*nylines)]->GetTotPoints();
+                    err  += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
+                }
             }
-
-            return sqrt(err);
-        }
-
-
-        NekDouble ExpList3DHomogeneous2D::v_L2(void)
-        {
-            NekDouble errL2,err = 0;
-			Array<OneD, const NekDouble> w_y = m_homogeneousBasis_y->GetW();
-			Array<OneD, const NekDouble> w_z = m_homogeneousBasis_z->GetW();
-			
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-
-            for(int m = 0; m < nzlines; ++m)
-            {
-				for(int n = 0; n < nylines; ++n)
-				{
-					errL2 = m_lines[n+(m*nylines)]->L2();
-					err += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
-				}
-			}
-
+            
             return sqrt(err);
         }
     } //end of namespace
 } //end of namespace
-
-
-/**
-* $Log: v $
-*
-**/
-

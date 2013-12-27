@@ -33,18 +33,48 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/Foundations/Interp.h>
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/MatrixKey.h>
 
+#include <SpatialDomains/MeshComponents.h>
 
 namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion::Expansion(void)
+        Expansion::Expansion(SpatialDomains::GeometrySharedPtr pGeom) :
+                    m_geom(pGeom),
+                    m_metricinfo(m_geom->GetGeomFactors())
         {
+            if (!m_metricinfo)
+            {
+                return;
+            }
+
+            if (!m_metricinfo->IsValid())
+            {
+                int nDim = m_base.num_elements();
+                string type = "regular";
+                if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    type = "deformed";
+                }
+
+                stringstream err;
+                err << nDim << "D " << type << " Jacobian not positive "
+                    << "(element ID = " << m_geom->GetGlobalID() << ") "
+                    << "(first vertex ID = " << m_geom->GetVid(0) << ")";
+                NEKERROR(ErrorUtil::ewarning, err.str());
+            }
         }
         
+        Expansion::Expansion(const Expansion &pSrc) :
+                m_geom(pSrc.m_geom),
+                m_metricinfo(pSrc.m_metricinfo)
+        {
+
+        }
 
         Expansion::~Expansion()
         {
@@ -77,10 +107,139 @@ namespace Nektar
             return GetLocMatrix(mkey);
         }
 
+        SpatialDomains::GeometrySharedPtr Expansion::GetGeom() const
+        {
+            return m_geom;
+        }
+
+        const SpatialDomains::GeomFactorsSharedPtr& Expansion::v_GetMetricInfo() const
+        {
+            return m_metricinfo;
+        }
+
+
         DNekScalMatSharedPtr Expansion::v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekScalMatSharedPtr;
+        }
+
+        void Expansion::v_MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                                 Array<OneD, NekDouble> &outarray)
+        {
+            const int nqtot = GetTotPoints();
+
+            if (m_metrics.count(MetricQuadrature) == 0)
+            {
+                ComputeQuadratureMetric();
+            }
+
+            Vmath::Vmul(nqtot, m_metrics[MetricQuadrature], 1, inarray, 1, outarray, 1);
+        }
+
+        void Expansion::ComputeLaplacianMetric()
+        {
+            v_ComputeLaplacianMetric();
+        }
+
+        void Expansion::ComputeQuadratureMetric()
+        {
+            unsigned int nqtot = GetTotPoints();
+            SpatialDomains::GeomType type = m_metricinfo->GetGtype();
+            LibUtilities::PointsKeyVector p = GetPointsKeys();
+            if (type == SpatialDomains::eRegular ||
+                   type == SpatialDomains::eMovingRegular)
+            {
+                m_metrics[MetricQuadrature] = Array<OneD, NekDouble>(nqtot, m_metricinfo->GetJac(p)[0]);
+            }
+            else
+            {
+                m_metrics[MetricQuadrature] = m_metricinfo->GetJac(p);
+            }
+
+            MultiplyByStdQuadratureMetric(m_metrics[MetricQuadrature],
+                                                   m_metrics[MetricQuadrature]);
+        }
+
+        void Expansion::v_GetCoords(
+            Array<OneD, NekDouble> &coords_0,
+            Array<OneD, NekDouble> &coords_1,
+            Array<OneD, NekDouble> &coords_2)
+        {
+            ASSERTL1(m_geom, "m_geom not defined");
+
+            // get physical points defined in Geom
+            m_geom->FillGeom();
+
+            const int expDim = m_base.num_elements();
+            int       nqGeom = 1;
+            bool      doCopy = true;
+
+            Array<OneD, LibUtilities::BasisSharedPtr> CBasis(expDim);
+            Array<OneD, Array<OneD, NekDouble> > tmp(3);
+
+            for (int i = 0; i < expDim; ++i)
+            {
+                CBasis[i] = m_geom->GetBasis(i);
+                nqGeom   *= CBasis[i]->GetNumPoints();
+                doCopy    = doCopy && m_base[i]->GetBasisKey().SamePoints(
+                                                      CBasis[i]->GetBasisKey());
+            }
+
+            tmp[0] = coords_0;
+            tmp[1] = coords_1;
+            tmp[2] = coords_2;
+
+            if (doCopy)
+            {
+                for (int i = 0; i < m_geom->GetCoordim(); ++i)
+                {
+                    m_geom->GetXmap()->BwdTrans(m_geom->GetCoeffs(i), tmp[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < m_geom->GetCoordim(); ++i)
+                {
+                    Array<OneD, NekDouble> tmpGeom(nqGeom);
+                    m_geom->GetXmap()->BwdTrans(m_geom->GetCoeffs(i), tmpGeom);
+
+                    switch (expDim)
+                    {
+                        case 1:
+                        {
+                            LibUtilities::Interp1D(
+                                CBasis[0]->GetPointsKey(), &tmpGeom[0],
+                                m_base[0]->GetPointsKey(), &tmp[i][0]);
+                            break;
+                        }
+                        case 2:
+                        {
+                            LibUtilities::Interp2D(
+                                CBasis[0]->GetPointsKey(),
+                                CBasis[1]->GetPointsKey(),
+                                &tmpGeom[0],
+                                m_base[0]->GetPointsKey(),
+                                m_base[1]->GetPointsKey(),
+                                &tmp[i][0]);
+                            break;
+                        }
+                        case 3:
+                        {
+                            LibUtilities::Interp3D(
+                                CBasis[0]->GetPointsKey(),
+                                CBasis[1]->GetPointsKey(),
+                                CBasis[2]->GetPointsKey(),
+                                &tmpGeom[0],
+                                m_base[0]->GetPointsKey(),
+                                m_base[1]->GetPointsKey(),
+                                m_base[2]->GetPointsKey(),
+                                &tmp[i][0]);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         DNekMatSharedPtr Expansion::v_BuildTransformationMatrix(
@@ -97,7 +256,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekMatSharedPtr;
         }
-
     } //end of namespace
 } //end of namespace
 

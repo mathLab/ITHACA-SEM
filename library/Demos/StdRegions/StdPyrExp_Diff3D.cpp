@@ -10,8 +10,6 @@
 using namespace std;
 using namespace Nektar;
 
-
-
                                  
 NekDouble Pyramid_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R);                                 
 NekDouble Pyramid_Diff_Sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, int dir);                                
@@ -112,7 +110,7 @@ int main(int argc, char *argv[]) {
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion3D *sPyrE;
+    StdRegions::StdExpansion3D *sPyrE = NULL;
     
     if( regionShape == LibUtilities::ePyramid ) 
     { 
@@ -154,68 +152,69 @@ int main(int argc, char *argv[]) {
                 
     }
        
+    Array<OneD, NekDouble> phys (Qx*Qy*Qz);
+    Array<OneD, NekDouble> coeffs(xModes*yModes*zModes);
+                 
     //---------------------------------------------
     // Project onto Expansion 
-   sPyrE->FwdTrans( solution, sPyrE->UpdateCoeffs() );
+    sPyrE->FwdTrans( solution, coeffs );
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-   // sPyrE->SetPhys( sPyrE->BwdTrans( sPyrE->GetCoeffs() ) );
-   sPyrE->BwdTrans( sPyrE->GetCoeffs(), sPyrE->UpdatePhys() );
+    // sPyrE->SetPhys( sPyrE->BwdTrans( sPyrE->GetCoeffs() ) );
+    sPyrE->BwdTrans( coeffs, phys );
     //-------------------------------------------  
     
     //--------------------------------------------
     // Calculate L_p error 
    cout << "\n*****************************************************\n " << endl;
-   cout << "L infinity error: " << sPyrE->Linf(solution) << endl;
-   cout << "L 2 error:        " << sPyrE->L2  (solution) << endl;
+   cout << "L infinity error: " << sPyrE->Linf(phys,solution) << endl;
+   cout << "L 2 error:        " << sPyrE->L2  (phys,solution) << endl;
    cout << "\n*****************************************************\n " << endl;
     //--------------------------------------------
         
         
- //--------------------------------------------
-    // Taking the physical derivative and putting them into dx, dy, dz.
-    sPyrE->PhysDeriv( sPyrE->GetPhys(), dx, dy, dz );        
-    //--------------------------------------------     
-         
+   //--------------------------------------------
+   // Taking the physical derivative and putting them into dx, dy, dz.
+   sPyrE->PhysDeriv( phys, dx, dy, dz );        
+   //--------------------------------------------     
+   
+   
+   double error_x = 0, error_y=0, error_z=0;
+   
+   for( int n = 0; n < Qx*Qy*Qz; ++n ) {
+       
+       error_x += fabs(diff_solution_x[n] - dx[n]);
+       error_y += fabs(diff_solution_y[n] - dy[n]);
+       error_z += fabs(diff_solution_z[n] - dz[n]);
+       cout << "diff_solution_x[n] = " << diff_solution_x[n] << ",    dx[n] = " << dx[n] << ",     " <<
+           "diff_solution_y[n] = " << diff_solution_y[n] << ",    dy[n] = " << dy[n] << ",     " <<
+           "diff_solution_z[n] = " << diff_solution_z[n] << ",    dz[n] = " << dz[n] << ",     " <<
+           endl;
+   }
     
-    double error_x = 0, error_y=0, error_z=0;
-    
-    for( int n = 0; n < Qx*Qy*Qz; ++n ) {
-    
-        error_x += fabs(diff_solution_x[n] - dx[n]);
-        error_y += fabs(diff_solution_y[n] - dy[n]);
-        error_z += fabs(diff_solution_z[n] - dz[n]);
-        cout << "diff_solution_x[n] = " << diff_solution_x[n] << ",    dx[n] = " << dx[n] << ",     " <<
-                "diff_solution_y[n] = " << diff_solution_y[n] << ",    dy[n] = " << dy[n] << ",     " <<
-                "diff_solution_z[n] = " << diff_solution_z[n] << ",    dz[n] = " << dz[n] << ",     " <<
-        endl;
-        
-        
-    }
-    
-    cout << "\n ******************************************** " << endl;
-    cout << "L 1 error of derivatives X =  " <<  error_x << endl;
-    cout << "L 1 error of derivatives Y =  " <<  error_y << endl;
-    cout << "L 1 error of derivatives Z =  " <<  error_z << endl;
-    cout << "******************************************** \n" << endl;
-    //-------------------------------------------        
-        
-        
-    //-------------------------------------------
-    // Evaulate solution at x = y = z = 0  and print error
-    Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
-    
-    t[0] = -0.19;
-    t[1] = -0.5;
-    t[2] = 0.25;
-
-
-    if( regionShape == LibUtilities::ePyramid ) 
-    {
-        diff_solution_x[0] = Pyramid_Diff_Sol( t[0], t[1], t[2], P, Q, R, 1 );  
-    }
+   cout << "\n ******************************************** " << endl;
+   cout << "L 1 error of derivatives X =  " <<  error_x << endl;
+   cout << "L 1 error of derivatives Y =  " <<  error_y << endl;
+   cout << "L 1 error of derivatives Z =  " <<  error_z << endl;
+   cout << "******************************************** \n" << endl;
+   //-------------------------------------------        
+   
+   
+   //-------------------------------------------
+   // Evaulate solution at x = y = z = 0  and print error
+   Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
+   
+   t[0] = -0.19;
+   t[1] = -0.5;
+   t[2] = 0.25;
+   
+   
+   if( regionShape == LibUtilities::ePyramid ) 
+   {
+       diff_solution_x[0] = Pyramid_Diff_Sol( t[0], t[1], t[2], P, Q, R, 1 );  
+   }
     
     
     return 0;

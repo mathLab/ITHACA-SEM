@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     NekDouble x[2];
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;
-    StdRegions::StdExpansion1D  *E;
+    StdRegions::StdExpansion1D  *E = NULL;
 
     if(argc != 6)
     {
@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------------
     // Define a segment expansion based on basis definition
-    SpatialDomains::VertexComponentSharedPtr  vert1(new SpatialDomains::VertexComponent(1,0,x[0],0,0));
-    SpatialDomains::VertexComponentSharedPtr  vert2(new SpatialDomains::VertexComponent(1,0,x[1],0,0));
+    SpatialDomains::PointGeomSharedPtr  vert1(new SpatialDomains::PointGeom(1,0,x[0],0,0));
+    SpatialDomains::PointGeomSharedPtr  vert2(new SpatialDomains::PointGeom(1,0,x[1],0,0));
     SpatialDomains::SegGeomSharedPtr geom(new SpatialDomains::SegGeom(0,vert1,vert2));
     geom->SetOwnData();
 
@@ -116,21 +116,16 @@ int main(int argc, char *argv[])
     //---------------------------------------------
 
     //---------------------------------------------
-    // Project onto Expansion 
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    // Project onto Expansion
+    Array<OneD, NekDouble> coeffs(E->GetNcoeffs());
+    Array<OneD, NekDouble> phys(nq);
+    E->FwdTrans(sol, coeffs);
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs, phys);
     //-------------------------------------------  
-
-    //--------------------------------------------
-    // Write solution 
-    ofstream outfile("ProjectFile1D_Diff.dat");
-    E->WriteToFile(outfile,eTecplot);
-    outfile.close();
-    //-------------------------------------------
 
     //-------------------------------------------------
     // Define derivative of the solution
@@ -152,8 +147,8 @@ int main(int argc, char *argv[])
 
     //--------------------------------------------
     // Calculate L_inf error 
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys, sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------
 
     return 0;

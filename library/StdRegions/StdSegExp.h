@@ -148,8 +148,6 @@ namespace Nektar
             //----------------------------
             // Evaluations Methods
             //---------------------------
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& Lcoords);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& Lcoords,
@@ -185,9 +183,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(
                     Array<OneD, unsigned int>& outarray);
 
-            STD_REGIONS_EXPORT virtual int v_GetVertexMap(
-                    int localVertexId);
-
+            STD_REGIONS_EXPORT virtual int v_GetVertexMap(int localVertexId,
+                                                          bool useCoeffPacking = false);
 
             //----------------------------
             // Helper functions
@@ -200,11 +197,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(
                     const std::vector<unsigned int> &nummodes,
                     int &modes_offset);
-            STD_REGIONS_EXPORT virtual void v_WriteToFile(
-                    std::ofstream &outfile,
-                    OutputFormat format,
-                    const bool dumpVar = true,
-                    std::string var = "v");
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType
                 v_DetShapeType() const;
 

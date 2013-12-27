@@ -42,90 +42,81 @@ namespace Nektar
     namespace StdRegions
     {
 
-		StdExpansion0D::StdExpansion0D()
-		{
-		}
-		
-		StdExpansion0D::StdExpansion0D(int numcoeffs, const LibUtilities::BasisKey &Ba):
-        StdExpansion(numcoeffs,1,Ba)
-		{
-		}
-		
-		StdExpansion0D::StdExpansion0D(const StdExpansion0D &T):StdExpansion(T)
-		{
-		}
-		
-		StdExpansion0D::~StdExpansion0D()
-		{
-		}
-
-		
-		//----------------------------
-		// Differentiation Methods
-		//-----------------------------
-		
-		void StdExpansion0D::PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
-											 Array<OneD, NekDouble>& outarray)
-		{
-			int nquad = GetTotPoints();
-			DNekMatSharedPtr D = m_base[0]->GetD();
-			
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-			
-			if( inarray.data() == outarray.data())
-			{
-				Array<OneD, NekDouble> wsp(nquad);
-				CopyArray(inarray, wsp);
-				Blas::Dgemv('N',nquad,nquad,1.0,&(D->GetPtr())[0],nquad,
-							&wsp[0],1,0.0,&outarray[0],1);
-			}
-			else
-			{
-				Blas::Dgemv('N',nquad,nquad,1.0,&(D->GetPtr())[0],nquad,
-							&inarray[0],1,0.0,&outarray[0],1);
-			}
-			
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-			
-			NekVector<NekDouble> out(nquad,outarray,eWrapper);
-			
-			if(inarray.data() == outarray.data()) // copy intput array
-			{
-				NekVector<NekDouble> in(nquad,inarray,eCopy);
-				out = (*D)*in;
-			}
-			else
-			{
-				NekVector<NekDouble> in (nquad,inarray,eWrapper);
-				out = (*D)*in;
-			}
-			
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS
-		}
-		
-		NekDouble StdExpansion0D::v_PhysEvaluate(
-												 const Array<OneD, const NekDouble>& Lcoord)
+        StdExpansion0D::StdExpansion0D()
         {
-            return PhysEvaluate(Lcoord,m_phys);
+        }
+	
+        StdExpansion0D::StdExpansion0D(int numcoeffs, const LibUtilities::BasisKey &Ba):
+            StdExpansion(numcoeffs,1,Ba)
+        {
+        }
+		
+        StdExpansion0D::StdExpansion0D(const StdExpansion0D &T):StdExpansion(T)
+        {
+        }
+	
+        StdExpansion0D::~StdExpansion0D()
+        {
         }
         
-        NekDouble StdExpansion0D::v_PhysEvaluate(
-												 const Array<OneD, const NekDouble>& Lcoord,
-												 const Array<OneD, const NekDouble>& physvals)
+	
+        //----------------------------
+        // Differentiation Methods
+        //-----------------------------
+	
+        void StdExpansion0D::PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
+                                             Array<OneD, NekDouble>& outarray)
         {
-			int    nquad = GetTotPoints();
-			NekDouble  val;
-			DNekMatSharedPtr I = m_base[0]->GetI(Lcoord);
-			
-			ASSERTL2(Lcoord[0] >= -1,"Lcoord[0] < -1");
-			ASSERTL2(Lcoord[0] <=  1,"Lcoord[0] >  1");
-			
-			val = Blas::Ddot(nquad, I->GetPtr(), 1, physvals, 1);
-			
-			return val;
-		}
-		
-		
+            int nquad = GetTotPoints();
+            DNekMatSharedPtr D = m_base[0]->GetD();
+            
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+            
+            if( inarray.data() == outarray.data())
+            {
+                Array<OneD, NekDouble> wsp(nquad);
+                CopyArray(inarray, wsp);
+                Blas::Dgemv('N',nquad,nquad,1.0,&(D->GetPtr())[0],nquad,
+                            &wsp[0],1,0.0,&outarray[0],1);
+			}
+            else
+            {
+                Blas::Dgemv('N',nquad,nquad,1.0,&(D->GetPtr())[0],nquad,
+                            &inarray[0],1,0.0,&outarray[0],1);
+            }
+            
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+            
+            NekVector<NekDouble> out(nquad,outarray,eWrapper);
+            
+            if(inarray.data() == outarray.data()) // copy intput array
+            {
+                NekVector<NekDouble> in(nquad,inarray,eCopy);
+                out = (*D)*in;
+            }
+            else
+            {
+                NekVector<NekDouble> in (nquad,inarray,eWrapper);
+                out = (*D)*in;
+            }
+            
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS
+        }
+	
+        NekDouble StdExpansion0D::v_PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord, const Array<OneD, const NekDouble>& physvals)
+        {
+            int    nquad = GetTotPoints();
+            NekDouble  val;
+            DNekMatSharedPtr I = m_base[0]->GetI(Lcoord);
+            
+            ASSERTL2(Lcoord[0] >= -1,"Lcoord[0] < -1");
+            ASSERTL2(Lcoord[0] <=  1,"Lcoord[0] >  1");
+            
+            val = Blas::Ddot(nquad, I->GetPtr(), 1, physvals, 1);
+            
+            return val;
+        }
+	
     }//end namespace
 }//end namespace
 

@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     NekDouble x[2];
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;
-    StdRegions::StdExpansion1D  *E;
+    StdRegions::StdExpansion1D  *E = NULL;
 
     if(argc != 6)
     {
@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
     const int zero=0;
     const int one=1;
     const double dZero=0.0;
-    SpatialDomains::VertexComponentSharedPtr  vert1 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[0],dZero,dZero);
-    SpatialDomains::VertexComponentSharedPtr  vert2 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[1],dZero,dZero);
+    SpatialDomains::PointGeomSharedPtr  vert1 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(one,zero,x[0],dZero,dZero);
+    SpatialDomains::PointGeomSharedPtr  vert2 = MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr(one,zero,x[1],dZero,dZero);
     SpatialDomains::SegGeomSharedPtr geom = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,vert1,vert2);
     geom->SetOwnData();
 
@@ -110,26 +110,21 @@ int main(int argc, char *argv[])
     //---------------------------------------------
 
     //---------------------------------------------
-    // Project onto Expansion 
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    // Project onto Expansion
+    Array<OneD, NekDouble> coeffs(E->GetNcoeffs());
+    Array<OneD, NekDouble> phys  (nq);
+    E->FwdTrans(sol, coeffs);
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs, phys);
     //-------------------------------------------  
 
     //--------------------------------------------
-    // Write solution 
-    ofstream outfile("ProjectFile1D.dat");
-    E->WriteToFile(outfile,eTecplot);
-    outfile.close();
-    //-------------------------------------------
-
-    //--------------------------------------------
     // Calculate L_inf error 
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys, sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------
 
     //-------------------------------------------
@@ -148,7 +143,7 @@ int main(int argc, char *argv[])
     }
 
     Array<OneD,NekDouble> lcoord(1,0.0);
-    double nsol = E->PhysEvaluate(lcoord);
+    double nsol = E->PhysEvaluate(lcoord, phys);
     cout << "error at (xi = 0) x = " << xm[0] << " : " << nsol - sol[0] << endl;
 
     //-------------------------------------------

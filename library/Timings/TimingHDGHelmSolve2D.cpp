@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
 	// Interpolation of trace 
 	std::vector<LibUtilities::FieldDefinitionsSharedPtr> TraceDef 
 		= Exp->GetTrace()->GetFieldDefinitions();
-	std::vector<std::vector<NekDouble> > TraceData(FieldDef.size());
+	std::vector<std::vector<NekDouble> > TraceData(TraceDef.size());
 	for(i = 0; i < TraceDef.size(); ++i)
 	{
 		TraceDef[i]->m_fields.push_back(fieldstr);

@@ -80,8 +80,36 @@ namespace Nektar
         }
     }
     
-    std::string MetricFile::CalculateHash(std::string filename)
+    std::string MetricFile::CalculateHash(std::string pfilename)
     {
+        int fdot   = pfilename.find_last_of('.');
+        string ending = pfilename.substr(fdot);
+        string filename; 
+
+        if(ending == ".fld" || ending == ".chk" || ending == ".rst")
+        {
+            TiXmlDocument *xmlFldFile = new TiXmlDocument(pfilename);
+            xmlFldFile->LoadFile(pfilename);
+            
+            // strip out meta data before check
+            TiXmlElement* vNektar = 
+                xmlFldFile->FirstChildElement("NEKTAR");
+
+            TiXmlNode* vMetaData = 
+                vNektar->FirstChild("Metadata");
+            
+            if(vMetaData) // delete section 
+            {
+                vNektar->RemoveChild(vMetaData);
+            }
+            filename = pfilename + ".tmp";
+            xmlFldFile->SaveFile(filename);
+        }
+        else
+        {
+            filename = pfilename;
+        }
+            
         // Open file.
         std::ifstream testFile(filename.c_str(), std::ios::binary);
         ASSERTL0(testFile.is_open(), "Error opening file "+filename);

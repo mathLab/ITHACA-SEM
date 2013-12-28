@@ -195,7 +195,7 @@ namespace Nektar
             }
             else
             {
-                m_f->m_exp[0]->GetExp(expansion)->WriteTecplotZone(outfile);
+                m_f->m_exp[0]->WriteTecplotZone(outfile,expansion);
             }
         }
 
@@ -257,10 +257,7 @@ namespace Nektar
             }
             else
             {
-                m_f->m_exp[field]->GetExp(expansion)->SetPhys(
-                                  m_f->m_exp[field]->GetPhys()+
-                                  m_f->m_exp[field]->GetPhys_Offset(expansion));
-                m_f->m_exp[field]->GetExp(expansion)->WriteTecplotField(outfile);
+                m_f->m_exp[field]->WriteTecplotField(outfile,expansion);
             }
         }
 

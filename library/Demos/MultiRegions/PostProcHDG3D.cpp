@@ -161,6 +161,14 @@ int main(int argc, char *argv[])
 	BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyT1));
 	BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_B, num_modes+1, PkeyT2));
 	BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_C, num_modes+1, PkeyT3));
+	//Prism
+	const LibUtilities::PointsKey PkeyP1(num_points+1,LibUtilities::eGaussLobattoLegendre);
+	const LibUtilities::PointsKey PkeyP2(num_points+1,LibUtilities::eGaussLobattoLegendre);
+	const LibUtilities::PointsKey PkeyP3(num_points,LibUtilities::eGaussRadauMAlpha1Beta0);//need to doublecheck this one
+	LibUtilities::BasisKeyVector  BkeyP;
+	BkeyP.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyP1));
+	BkeyP.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyP2));
+	BkeyP.push_back(LibUtilities::BasisKey(LibUtilities::eModified_B, num_modes+1, PkeyP3));
 	//Hexahedron
 	const LibUtilities::PointsKey PkeyH(num_points+1,LibUtilities::eGaussLobattoLegendre);
 	LibUtilities::BasisKeyVector  BkeyH;
@@ -170,6 +178,7 @@ int main(int argc, char *argv[])
 
 
 	graph3D->SetBasisKey(LibUtilities::eTetrahedron, BkeyT);
+	graph3D->SetBasisKey(LibUtilities::ePrism, BkeyP);
 	graph3D->SetBasisKey(LibUtilities::eHexahedron, BkeyH);
 
 	MultiRegions::DisContField3DSharedPtr PostProc = 

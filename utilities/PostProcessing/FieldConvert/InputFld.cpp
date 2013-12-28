@@ -141,6 +141,7 @@ namespace Nektar
             }
             m_f->m_session = LibUtilities::SessionReader::
                 CreateInstance(argc, argv);
+            m_f->m_session->GetComm();
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session);
             
             // Set up expansion list

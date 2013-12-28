@@ -58,7 +58,6 @@ namespace Nektar
         
         void OutputFld::Process(po::variables_map &vm)
         {
-            int i, j;
             if (m_f->m_verbose)
             {
                 cout << "OutputFld: Writing file..." << endl;

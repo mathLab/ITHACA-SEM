@@ -45,7 +45,7 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
-#include "Field.h"
+#include "Field.hpp"
 
 namespace po = boost::program_options;
 

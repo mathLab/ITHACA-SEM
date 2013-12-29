@@ -114,8 +114,6 @@ namespace Nektar
             {
                 ASSERTL0(false,"no input file found");
             }
-
-            LibUtilities::Import(m_files[fldending][0], m_f->m_fielddef, m_f->m_data);
             
             if (m_files.count("xml") == 0 && m_files.count("xml.gz") == 0 )
             {
@@ -134,7 +132,8 @@ namespace Nektar
 
             int argc = m_files[xml_ending].size()+1;
             char *argv[argc];
-            argv[0] = "ProcessField";
+            const char *instring = "ProcessField";
+            argv[0] = strdup(instring);
             for (int i = 0; i < m_files[xml_ending].size(); ++i)
             {
                 argv[i+1] = strdup(m_files[xml_ending][i].c_str());
@@ -143,16 +142,17 @@ namespace Nektar
                 CreateInstance(argc, argv);
             m_f->m_session->GetComm();
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session);
+            m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
+                ::AllocateSharedPtr(m_f->m_session->GetComm());
             
             // Set up expansion list
+            m_f->m_exp.resize(1);
             int expdim  = m_f->m_graph->GetMeshDimension();
-            int nfields = m_f->m_fielddef[0]->m_fields.size();
             
-
             if(m_requireEquiSpaced) // set up points to be equispaced 
             {
                 int i,j;
-                int nPointsNew = -1;
+                int nPointsNew = 0;
                 
                 if(vm.count("output-points"))
                 {
@@ -161,46 +161,10 @@ namespace Nektar
                     nPointsNew = expession.Evaluate();
                 }
                 
-                
-                
 
-
-                for(i = 0; i < m_f->m_fielddef.size(); ++i)
-                {
-                    vector<LibUtilities::PointsType> ptype;
-                    for(j = 0; j < 3; ++j)
-                    {
-                        ptype.push_back(LibUtilities::ePolyEvenlySpaced);
-                    }
-                    
-                    m_f->m_fielddef[i]->m_pointsDef = true;
-                    m_f->m_fielddef[i]->m_points    = ptype;
-                    
-                    vector<unsigned int> porder;
-                    if(nPointsNew != -1)
-                    {
-                        for(j = 0; j < m_f->m_fielddef[i]->m_numModes.size(); ++j)
-                        {
-                            porder.push_back(nPointsNew);
-                        }
-                    }
-                    else
-                    {
-                        for(j = 0; j < m_f->m_fielddef[i]->m_numModes.size(); ++j)
-                        {
-                            porder.push_back(m_f->m_fielddef[i]->m_numModes[j]);
-                        }
-                    }
-                    
-                    m_f->m_fielddef[i]->m_numPointsDef = true;
-                    m_f->m_fielddef[i]->m_numPoints = porder;
-                }
-                
-                m_f->m_graph->SetExpansions(m_f->m_fielddef);
+                m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
             }
-
-            m_f->m_exp.resize(nfields);
-        
+            
             bool useFFT     = false;
             bool dealiasing = false;
 
@@ -234,13 +198,6 @@ namespace Nektar
                             AllocateSharedPtr(m_f->m_session, Bkey, ly, useFFT, 
                                               dealiasing, m_f->m_graph);
                         m_f->m_exp[0] = Exp2DH1;
-                        
-                        for (int i = 1; i < nfields; ++i)
-                        {
-                            m_f->m_exp[i] = MemoryManager<MultiRegions::
-                            ExpList2DHomogeneous1D>::
-                            AllocateSharedPtr(*Exp2DH1);
-                        }
                     }
                     else if (m_f->m_fielddef[0]->m_numHomogeneousDir == 2)
                     {
@@ -274,13 +231,6 @@ namespace Nektar
                                               ly, lz, useFFT, dealiasing, 
                                               m_f->m_graph);
                         m_f->m_exp[0] = Exp3DH2;
-                        
-                        for (int i = 1; i < nfields; ++i)
-                        {
-                            m_f->m_exp[i] = MemoryManager<MultiRegions::
-                                ExpList3DHomogeneous2D>::
-                                AllocateSharedPtr(*Exp3DH2);
-                        }
                     }
                     else
                     {
@@ -288,11 +238,6 @@ namespace Nektar
                         Exp1D = MemoryManager<MultiRegions::ExpList1D>
                         ::AllocateSharedPtr(m_f->m_session, m_f->m_graph);
                         m_f->m_exp[0] = Exp1D;
-                        for (int i = 1; i < nfields; ++i)
-                        {
-                            m_f->m_exp[i] = MemoryManager<MultiRegions::ExpList1D>
-                                ::AllocateSharedPtr(*Exp1D);
-                        }
                     }
                 }
                 break;
@@ -322,13 +267,6 @@ namespace Nektar
                             AllocateSharedPtr(m_f->m_session, Bkey, lz, useFFT, 
                                               dealiasing, m_f->m_graph);
                         m_f->m_exp[0] = Exp3DH1;
-                        
-                        for (int i = 1; i < nfields; ++i)
-                        {
-                            m_f->m_exp[i] = MemoryManager<MultiRegions::
-                                ExpList3DHomogeneous1D>::
-                                AllocateSharedPtr(*Exp3DH1);   
-                        }
                     }
                     else
                     {
@@ -337,11 +275,6 @@ namespace Nektar
                             ::AllocateSharedPtr(m_f->m_session,m_f->m_graph);
                         m_f->m_exp[0] = Exp2D;
                         
-                        for (int i = 1; i < nfields; ++i)
-                        {
-                            m_f->m_exp[i] = MemoryManager<MultiRegions::ExpList2D>
-                                ::AllocateSharedPtr(*Exp2D);
-                        }
                     }
                 }
                 break;
@@ -351,17 +284,32 @@ namespace Nektar
                     Exp3D = MemoryManager<MultiRegions::ExpList3D>
                         ::AllocateSharedPtr(m_f->m_session, m_f->m_graph);
                     m_f->m_exp[0] = Exp3D;
-                    
-                    for (int i = 1; i < nfields; ++i)
-                    {
-                        m_f->m_exp[i] = MemoryManager<MultiRegions::ExpList3D>
-                            ::AllocateSharedPtr(*Exp3D);
-                    }
                 }
                 break;
             default:
                 ASSERTL0(false, "Expansion dimension not recognised");
                 break;
+            }
+            
+            int numexp = m_f->m_exp[0]->GetExpSize(); 
+            Array<OneD,int> ElementGIDs(numexp);
+            // Define list of global element ids 
+            for(int i = 0; i < numexp; ++i)
+            {
+                ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
+            }
+
+            m_f->m_fld->Import(m_files[fldending][0], m_f->m_fielddef, m_f->m_data, 
+                               LibUtilities::NullFieldMetaDataMap,
+                               ElementGIDs);
+            
+            int nfields = m_f->m_fielddef[0]->m_fields.size();
+            m_f->m_exp.resize(nfields);
+        
+            // declare other fields; 
+            for (int i = 1; i < nfields; ++i)
+            {
+                m_f->m_exp[i] = m_f->AppendExpList();
             }
             
             for (int j = 0; j < nfields; ++j)

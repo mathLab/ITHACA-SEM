@@ -1,6 +1,6 @@
 SET(FieldConvertHeaders 
     Module.h
-    Field.h
+    Field.hpp
     InputFld.h
     OutputTecplot.h
     OutputVtk.h
@@ -21,9 +21,13 @@ SET(FieldConvertSources
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
 
 
-    ADD_NEKTAR_TEST(chan3D_tec)
-    ADD_NEKTAR_TEST(chan3D_tec_n10)
-    ADD_NEKTAR_TEST(chan3D_vtu)
-    ADD_NEKTAR_TEST(chan3D_vort)
+ADD_NEKTAR_TEST(chan3D_tec)
+ADD_NEKTAR_TEST(chan3D_tec_n10)
+ADD_NEKTAR_TEST(chan3D_vtu)
+ADD_NEKTAR_TEST(chan3D_vort)
 
+
+IF (NEKTAR_USE_MPI)
+    ADD_NEKTAR_TEST(chan3D_tec_par)
+ENDIF (NEKTAR_USE_MPI)
 

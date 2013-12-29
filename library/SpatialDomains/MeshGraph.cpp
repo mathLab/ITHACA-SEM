@@ -2032,8 +2032,52 @@ namespace Nektar
                     }
                 }
             }
-
         }
+
+        /** 
+         * \brief Reset all points keys to have equispaced points with
+         * optional arguemtn of \a npoints which redefines how many
+         * points are to be used.
+         */
+        void MeshGraph::SetExpansionsToEvenlySpacedPoints(int npoints)
+        {
+            ExpansionMapShPtrMapIter   it;
+
+            // iterate over all defined expansions
+            for(it = m_expansionMapShPtrMap.begin(); it != m_expansionMapShPtrMap.end(); ++it)
+            {
+                ExpansionMapIter expIt;
+                
+                for(expIt = it->second->begin(); expIt != it->second->end(); ++expIt)
+                {
+                    for(int i = 0; i < expIt->second->m_basisKeyVector.size(); ++i)
+                    {
+                        LibUtilities::BasisKey  bkeyold = expIt->second->m_basisKeyVector[i]; 
+                        
+                        int npts;
+
+                        if(npoints) // use input
+                        {
+                            npts = npoints;
+                        }
+                        else
+                        {
+                            npts = bkeyold.GetNumModes();
+                        }
+                        
+
+                        const LibUtilities::PointsKey pkey(npts,LibUtilities::ePolyEvenlySpaced);
+                        LibUtilities::BasisKey bkeynew(bkeyold.GetBasisType(),bkeyold.GetNumModes(), pkey);
+                        expIt->second->m_basisKeyVector[i] = bkeynew; 
+                        
+                    }
+                }
+            }
+        }
+
+
+
+
 
         /**
          * For each element of shape given by \a shape in field \a

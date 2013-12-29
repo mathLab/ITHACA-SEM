@@ -82,7 +82,6 @@ namespace Nektar
             int addfields = (spacedim == 2)? 1:3;
             
             int npoints = m_f->m_exp[0]->GetNpoints();
-            int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
             Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
             Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
             m_f->m_exp.resize(nfields+addfields);

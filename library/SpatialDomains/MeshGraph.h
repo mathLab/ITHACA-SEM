@@ -152,6 +152,7 @@ namespace Nektar
 
         typedef boost::shared_ptr<ExpansionMap> ExpansionMapShPtr;
         typedef std::map<std::string, ExpansionMapShPtr> ExpansionMapShPtrMap;
+        typedef std::map<std::string, ExpansionMapShPtr>::iterator  ExpansionMapShPtrMapIter;
 
 
         typedef std::map<std::string, std::string> GeomInfoMap;
@@ -259,6 +260,10 @@ namespace Nektar
                                                                 &fielddef,
                         std::vector< std::vector<LibUtilities::PointsType> >
                                                                 &pointstype );
+
+                /// Sets expansions to have equispaced points 
+                SPATIAL_DOMAINS_EXPORT void SetExpansionsToEvenlySpacedPoints(
+                                                        int npoints = 0);
 
                 /// This function sets the expansion #exp in map with entry #variable
                 inline void SetExpansions(

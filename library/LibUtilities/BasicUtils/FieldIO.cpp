@@ -42,6 +42,8 @@
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicConst/GitRevision.h>
 
+#include <MultiRegions/ExpList.h>
+
 #include "zlib.h"
 #include <set>
 
@@ -109,6 +111,7 @@ namespace Nektar
                         FieldMetaDataMap &fieldinfomap,
                         const Array<OneD, int> ElementiDs)
         {
+#if 0 
 #ifdef NEKTAR_USE_MPI
             int size;
             int init;
@@ -126,6 +129,7 @@ namespace Nektar
                      "This static function is not available in parallel. Please"
                      "instantiate a FieldIO object for parallel use.");
             }
+#endif
 #endif
             CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
             FieldIO f(c);

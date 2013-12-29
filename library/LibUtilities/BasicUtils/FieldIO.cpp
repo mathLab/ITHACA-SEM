@@ -42,8 +42,6 @@
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicConst/GitRevision.h>
 
-#include <MultiRegions/ExpList.h>
-
 #include "zlib.h"
 #include <set>
 

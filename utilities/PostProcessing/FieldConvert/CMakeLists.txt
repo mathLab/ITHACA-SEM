@@ -29,5 +29,7 @@ ADD_NEKTAR_TEST(chan3D_vort)
 
 IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(chan3D_tec_par)
+    ADD_NEKTAR_TEST(chan3D_vtu_par)
+    ADD_NEKTAR_TEST(chan3D_vort_par)
 ENDIF (NEKTAR_USE_MPI)
 

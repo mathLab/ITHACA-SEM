@@ -41,8 +41,6 @@
 #include <TestData.h>
 #include <Metric.h>
 
-#include <boost/filesystem.hpp>
-#include <boost/version.hpp>
 #include <boost/program_options.hpp>
 #include <boost/thread.hpp>
 
@@ -51,9 +49,8 @@ using namespace Nektar;
 
 // Define some namespace aliases
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 
-string PortablePath(const boost::filesystem::path& path)
+std::string PortablePath(const boost::filesystem::path& path)
 {
     boost::filesystem::path temp = path;
 #if BOOST_VERSION > 104200

@@ -88,7 +88,7 @@ namespace Nektar
 
         InputFld::~InputFld()
         {
-            
+            m_f->m_session->Finalise();
         }
 
         /**
@@ -138,20 +138,58 @@ namespace Nektar
             {
                 argv[i+1] = strdup(m_files[xml_ending][i].c_str());
             }
+
+
+            SpatialDomains::DomainRangeShPtr rng = SpatialDomains::NullDomainRangeShPtr; 
+            // define range to process output 
+            if(vm.count("range"))
+            {
+                vector<NekDouble> values;
+                ASSERTL0(ParseUtils::GenerateUnOrderedVector(vm["range"].as<string>().c_str(),values),"Failed to interpret range string");
+                
+                ASSERTL0(values.size() > 1,"Do not have minimum values of xmin,xmax");
+                ASSERTL0(values.size()%2 == 0,"Do not have an even number of range values");
+                int nvalues = values.size()/2;
+                rng = MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
+
+                rng->doZrange = false;
+                rng->doYrange = false;
+                
+                switch(nvalues)
+                {
+                case 3:
+                    rng->doZrange = true;
+                    rng->zmin = values[4];
+                    rng->zmax = values[5];
+                case 2:
+                    rng->doYrange = true;
+                    rng->ymin = values[2];
+                    rng->ymax = values[3];
+                case 1:
+                    rng->doXrange = true;
+                    rng->xmin = values[0];
+                    rng->xmax = values[1];
+                    break;
+                default:
+                    ASSERTL0(false,"too many values specfied in range");
+                }    
+            }
+
+
             m_f->m_session = LibUtilities::SessionReader::
                 CreateInstance(argc, argv);
             m_f->m_session->GetComm();
-            m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session);
+            m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
             m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                 ::AllocateSharedPtr(m_f->m_session->GetComm());
             
+
             // Set up expansion list
             m_f->m_exp.resize(1);
             int expdim  = m_f->m_graph->GetMeshDimension();
             
             if(m_requireEquiSpaced) // set up points to be equispaced 
             {
-                int i,j;
                 int nPointsNew = 0;
                 
                 if(vm.count("output-points"))
@@ -167,6 +205,23 @@ namespace Nektar
             
             bool useFFT     = false;
             bool dealiasing = false;
+            
+            // currently load all field (possibly could read data from expansion list
+            // but it is re-arranged in expansion) 
+            
+            const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
+            
+            Array<OneD,int> ElementGIDs(expansions.size());
+            SpatialDomains::ExpansionMap::const_iterator expIt;
+            int i = 0;
+            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            {
+                ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
+            }
+
+            m_f->m_fld->Import(m_files[fldending][0],m_f->m_fielddef,m_f->m_data,
+                               LibUtilities::NullFieldMetaDataMap,
+                               ElementGIDs);
 
             switch (expdim)
             {
@@ -291,17 +346,6 @@ namespace Nektar
                 break;
             }
             
-            int numexp = m_f->m_exp[0]->GetExpSize(); 
-            Array<OneD,int> ElementGIDs(numexp);
-            // Define list of global element ids 
-            for(int i = 0; i < numexp; ++i)
-            {
-                ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
-            }
-
-            m_f->m_fld->Import(m_files[fldending][0], m_f->m_fielddef, m_f->m_data, 
-                               LibUtilities::NullFieldMetaDataMap,
-                               ElementGIDs);
             
             int nfields = m_f->m_fielddef[0]->m_fields.size();
             m_f->m_exp.resize(nfields);

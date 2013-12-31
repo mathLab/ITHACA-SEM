@@ -50,6 +50,8 @@ int main(int argc, char* argv[])
         ("modules-list,l", "Print the list of available modules.")
         ("output-points,n",po::value<string>(),
          "Output at p equipspaced points (for .dat, .vtk).")
+        ("range,r",po::value<string>(),
+         "define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) in which any vertex is contained .")
         ("modules-opt,p",  po::value<string>(),
              "Print options for a module.")
         ("module,m",       po::value<vector<string> >(), 
@@ -155,7 +157,7 @@ int main(int argc, char* argv[])
         cerr << "ERROR: You must specify input(s) and and output file." << endl;
         return 1;
     }
-
+    
     /*
      * Process list of modules. Each element of the vector of module strings can
      * be in the following form:
@@ -165,7 +167,7 @@ int main(int argc, char* argv[])
      * where the only required argument is 'modname', specifing the name of the
      * module to load.
      */
-
+    
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;

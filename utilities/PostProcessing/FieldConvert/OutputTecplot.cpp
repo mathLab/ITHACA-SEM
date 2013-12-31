@@ -88,28 +88,13 @@ namespace Nektar
                 var = var + ", " + m_f->m_fielddef[0]->m_fields[j];
             }
                 
-            if (expdim == 3)
+            WriteTecplotHeader(outfile,var);
+            WriteTecplotZone(outfile);
+            for(int j = 0; j < m_f->m_exp.size(); ++j)
             {
-                WriteTecplotHeader(outfile,var);
-                WriteTecplotZone(outfile);
-                for(int j = 0; j < m_f->m_exp.size(); ++j)
-                {
-                    WriteTecplotField(j,outfile);
-                }
-                WriteTecplotConnectivity(outfile);
+                WriteTecplotField(j,outfile);
             }
-            else
-            {
-                WriteTecplotHeader(outfile,var);
-                for (int i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
-                {
-                    WriteTecplotZone(outfile,i);
-                    for (int j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
-                    {
-                        WriteTecplotField(j,outfile,i);
-                    }
-                }
-            }
+            WriteTecplotConnectivity(outfile);
             
             cout << "Written file: " << filename << endl;
             //  Put in a block ot amke sure all outputs have been completed

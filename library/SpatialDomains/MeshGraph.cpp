@@ -72,7 +72,8 @@ namespace Nektar
          */
         MeshGraph::MeshGraph():
             m_meshDimension(3),
-            m_spaceDimension(3)
+            m_spaceDimension(3),
+            m_domainRange(NullDomainRangeShPtr)
         {
         }
 
@@ -84,7 +85,8 @@ namespace Nektar
                 unsigned int meshDimension,
                 unsigned int spaceDimension) :
             m_meshDimension(meshDimension),
-            m_spaceDimension(spaceDimension)
+            m_spaceDimension(spaceDimension),
+            m_domainRange(NullDomainRangeShPtr)
         {
         }
 
@@ -93,8 +95,10 @@ namespace Nektar
          *
          */
         MeshGraph::MeshGraph(
-                const LibUtilities::SessionReaderSharedPtr &pSession) :
-            m_session(pSession)
+                             const LibUtilities::SessionReaderSharedPtr &pSession,
+                             const DomainRangeShPtr &rng) :
+            m_session(pSession),
+            m_domainRange(rng)
         {
         }
 
@@ -112,7 +116,8 @@ namespace Nektar
          *
          */
         boost::shared_ptr<MeshGraph> MeshGraph::Read(
-                const LibUtilities::SessionReaderSharedPtr &pSession)
+                      const LibUtilities::SessionReaderSharedPtr &pSession, 
+                      DomainRangeShPtr &rng)
         {
             boost::shared_ptr<MeshGraph> returnval;
 
@@ -146,15 +151,15 @@ namespace Nektar
             switch(meshDim)
             {
             case 1:
-                returnval = MemoryManager<MeshGraph1D>::AllocateSharedPtr(pSession);
+                returnval = MemoryManager<MeshGraph1D>::AllocateSharedPtr(pSession,rng);
                 break;
 
             case 2:
-                returnval = MemoryManager<MeshGraph2D>::AllocateSharedPtr(pSession);
+                returnval = MemoryManager<MeshGraph2D>::AllocateSharedPtr(pSession,rng);
                 break;
 
             case 3:
-                returnval = MemoryManager<MeshGraph3D>::AllocateSharedPtr(pSession);
+                returnval = MemoryManager<MeshGraph3D>::AllocateSharedPtr(pSession,rng);
                 break;
 
             default:
@@ -1024,7 +1029,7 @@ namespace Nektar
             std::string elementStr = elementChild->ToText()->ValueStr();
 
             elementStr = elementStr.substr(elementStr.find_first_not_of(" "));
-
+            
             std::string::size_type indxBeg = elementStr.find_first_of('[') + 1;
             std::string::size_type indxEnd = elementStr.find_last_of(']') - 1;
             std::string indxStr = elementStr.substr(indxBeg, indxEnd - indxBeg + 1);
@@ -1320,6 +1325,141 @@ namespace Nektar
             ReadCurves(doc);
         }
 
+        void MeshGraph::SetDomainRange (NekDouble xmin, NekDouble xmax, NekDouble ymin, 
+                             NekDouble ymax, NekDouble zmin, NekDouble zmax)
+        {
+            if(m_domainRange == NullDomainRangeShPtr)
+            {
+                m_domainRange = MemoryManager<DomainRange>::AllocateSharedPtr();
+                m_domainRange->doXrange = true;
+            }
+            
+            m_domainRange->xmin = xmin;
+            m_domainRange->xmax = xmax;
+            
+            if(ymin == NekConstants::kNekUnsetDouble)
+            {
+                m_domainRange->doYrange = false;
+            }
+            else
+            {
+                m_domainRange->doYrange = true;
+                m_domainRange->ymin = ymin;
+                m_domainRange->ymax = ymax;
+            }
+
+            if(zmin == NekConstants::kNekUnsetDouble)
+            {
+                m_domainRange->doZrange = false;
+            }
+            else
+            {
+                m_domainRange->doZrange = true;
+                m_domainRange->zmin = zmin;
+                m_domainRange->zmax = zmax;
+            }
+        }
+
+        bool MeshGraph::CheckRange(Geometry2D &geom)
+        {
+            bool returnval = true;
+            
+            if(m_domainRange  != NullDomainRangeShPtr)
+            {
+                int nverts  = geom.GetNumVerts();
+                int coordim = geom.GetCoordim();
+                
+                if(m_domainRange->doXrange)
+                {
+                    for(int i = 0; i < nverts; ++i)
+                    {
+                        if((*geom.GetVertex(i))[0] < m_domainRange->xmin ||
+                           (*geom.GetVertex(i))[0] > m_domainRange->xmax)
+                        {
+                            returnval = false;
+                        }
+                    }
+                }
+
+                if(m_domainRange->doYrange)
+                {
+                    for(int i = 0; i < nverts; ++i)
+                    {
+                        if((*geom.GetVertex(i))[1] < m_domainRange->ymin ||
+                           (*geom.GetVertex(i))[1] > m_domainRange->ymax)
+                        {
+                            returnval = false;
+                        }
+                    }
+                }
+                
+                if(coordim > 2)
+                {
+                    if(m_domainRange->doZrange)
+                    {
+                        for(int i = 0; i < nverts; ++i)
+                        {
+                            if((*geom.GetVertex(i))[2] < m_domainRange->zmin ||
+                               (*geom.GetVertex(i))[2] > m_domainRange->zmax)
+                            {
+                                returnval = false;
+                            }
+                        }
+                    }
+                }
+            }
+            return returnval;
+        }
+
+        
+        /* Domain checker for 3D geometries */ 
+        bool MeshGraph::CheckRange(Geometry3D &geom)
+        {
+            bool returnval = true;
+            
+            if(m_domainRange  != NullDomainRangeShPtr)
+            {
+                int nverts  = geom.GetNumVerts();
+                
+                if(m_domainRange->doXrange)
+                {
+                    for(int i = 0; i < nverts; ++i)
+                    {
+                        if((*geom.GetVertex(i))[0] < m_domainRange->xmin ||
+                           (*geom.GetVertex(i))[0] > m_domainRange->xmax)
+                        {
+                            returnval = false;
+                        }
+                    }
+                }
+
+                if(m_domainRange->doYrange)
+                {
+                    for(int i = 0; i < nverts; ++i)
+                    {
+                        if((*geom.GetVertex(i))[1] < m_domainRange->ymin ||
+                           (*geom.GetVertex(i))[1] > m_domainRange->ymax)
+                        {
+                            returnval = false;
+                        }
+                    }
+                }
+                
+                if(m_domainRange->doZrange)
+                {
+                    for(int i = 0; i < nverts; ++i)
+                    {
+                        if((*geom.GetVertex(i))[2] < m_domainRange->zmin ||
+                           (*geom.GetVertex(i))[2] > m_domainRange->zmax)
+                        {
+                            returnval = false;
+                        }
+                    }
+                }
+            }
+            
+            return returnval;
+        }
 
         /**
          *
@@ -1379,6 +1519,7 @@ namespace Nektar
                 // being added in the first place.
                 if (std::find(addedVector.begin(), addedVector.end(), *iter) == addedVector.end())
                 {
+                    
                     // If the composite listed is not found and we are working
                     // on a partitioned mesh, silently ignore it.
                     if (m_meshComposites.find(*iter) == m_meshComposites.end()
@@ -1386,6 +1527,7 @@ namespace Nektar
                     {
                         continue;
                     }
+
                     addedVector.push_back(*iter);
                     Composite composite = GetComposite(*iter);
                     CompositeMap::iterator compIter;
@@ -1398,7 +1540,7 @@ namespace Nektar
                         char str[64];
                         ::sprintf(str, "%d", *iter);
                         NEKERROR(ErrorUtil::ewarning, (std::string("Undefined composite: ") + str).c_str());
-
+                        
                     }
                 }
             }

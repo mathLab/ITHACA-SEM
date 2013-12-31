@@ -124,6 +124,7 @@ namespace Nektar
             int m_FaceIndx;
         };
 
+
         typedef boost::shared_ptr<ElementEdge> ElementEdgeSharedPtr;
         typedef std::vector<ElementEdgeSharedPtr> ElementEdgeVector;
         typedef boost::shared_ptr<ElementEdgeVector> ElementEdgeVectorSharedPtr;
@@ -131,6 +132,23 @@ namespace Nektar
         typedef boost::shared_ptr<ElementFace> ElementFaceSharedPtr;
         typedef std::vector<ElementFaceSharedPtr> ElementFaceVector;
         typedef boost::shared_ptr<ElementFaceVector> ElementFaceVectorSharedPtr;
+
+        // set restriction on domain range for post-processing. 
+        struct DomainRange
+        {
+            bool doXrange; 
+            NekDouble xmin;
+            NekDouble xmax;
+            bool doYrange; 
+            NekDouble ymin;
+            NekDouble ymax;
+            bool doZrange; 
+            NekDouble zmin;
+            NekDouble zmax;
+        };
+        
+        typedef boost::shared_ptr<DomainRange> DomainRangeShPtr;
+        static DomainRangeShPtr NullDomainRangeShPtr;
 
         struct Expansion
         {
@@ -168,14 +186,17 @@ namespace Nektar
                         unsigned int spaceDimension);
 
                 SPATIAL_DOMAINS_EXPORT MeshGraph(
-                        const LibUtilities::SessionReaderSharedPtr &pSession);
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        const DomainRangeShPtr &rng = NullDomainRangeShPtr);
+
 
                 SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
 
                 /* ---- Mesh Reading routines ---- */
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
-                        const LibUtilities::SessionReaderSharedPtr &pSession);
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        DomainRangeShPtr &rng = NullDomainRangeShPtr);
 
                 /// \todo Remove updated routine
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
@@ -223,6 +244,20 @@ namespace Nektar
                 /// Dimension of the space (can be a 1D curve in 3D space).
                 inline int GetSpaceDimension() const;
 
+
+                /* Range definitions for postprorcessing */
+                SPATIAL_DOMAINS_EXPORT void SetDomainRange
+                    (NekDouble xmin, NekDouble xmax, 
+                     NekDouble ymin = NekConstants::kNekUnsetDouble, 
+                     NekDouble ymax = NekConstants::kNekUnsetDouble,
+                     NekDouble zmin = NekConstants::kNekUnsetDouble, 
+                     NekDouble zmax = NekConstants::kNekUnsetDouble);
+
+                /// Check if goemetry is in range definition if activated
+                bool CheckRange(Geometry2D &geom);
+
+                /// Check if goemetry is in range definition if activated
+                bool CheckRange(Geometry3D &geom);
 
                 /* ---- Composites and Domain ---- */
                 inline Composite GetComposite(int whichComposite) const;
@@ -363,10 +398,12 @@ namespace Nektar
 
                 CompositeMap                            m_meshComposites;
                 CompositeMap                            m_domain;
+                DomainRangeShPtr                        m_domainRange;
 
                 ExpansionMapShPtrMap                    m_expansionMapShPtrMap;
 
                 GeomInfoMap                             m_geomInfo;
+
 
                 ExpansionMapShPtr    SetUpExpansionMap(void);
         };

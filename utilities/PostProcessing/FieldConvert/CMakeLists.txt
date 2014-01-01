@@ -25,6 +25,10 @@ ADD_NEKTAR_TEST(chan3D_tec)
 ADD_NEKTAR_TEST(chan3D_tec_n10)
 ADD_NEKTAR_TEST(chan3D_vtu)
 ADD_NEKTAR_TEST(chan3D_vort)
+ADD_NEKTAR_TEST(bfs_tec)
+ADD_NEKTAR_TEST(bfs_tec_rng)
+ADD_NEKTAR_TEST(bfs_vort)
+ADD_NEKTAR_TEST(bfs_vort_rng)
 
 
 IF (NEKTAR_USE_MPI)

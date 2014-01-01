@@ -270,11 +270,6 @@ int main(int argc, char* argv[])
 
         //-----------------------------------------------
         // Write solution to file
-        if (vSession->GetComm()->GetSize() > 1)
-        {
-            int rank = vSession->GetComm()->GetRank();
-            outfile += "." + boost::lexical_cast<string>(rank);
-        }
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                 = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());

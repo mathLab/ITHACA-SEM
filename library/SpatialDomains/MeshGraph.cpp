@@ -1369,41 +1369,61 @@ namespace Nektar
                 int nverts  = geom.GetNumVerts();
                 int coordim = geom.GetCoordim();
                 
+                // exclude elements outside x range if all vertices not in region 
                 if(m_domainRange->doXrange)
                 {
+                    int ncnt = 0;
                     for(int i = 0; i < nverts; ++i)
                     {
                         if((*geom.GetVertex(i))[0] < m_domainRange->xmin ||
                            (*geom.GetVertex(i))[0] > m_domainRange->xmax)
                         {
-                            returnval = false;
+                            ncnt++;
                         }
+                    }
+                    if(ncnt == nverts)
+                    {
+                        returnval = false;
                     }
                 }
 
+                // exclude elements outside y range if all vertices not in region 
                 if(m_domainRange->doYrange)
                 {
+                    int ncnt = 0; 
                     for(int i = 0; i < nverts; ++i)
                     {
                         if((*geom.GetVertex(i))[1] < m_domainRange->ymin ||
                            (*geom.GetVertex(i))[1] > m_domainRange->ymax)
                         {
-                            returnval = false;
+                            ncnt++;
                         }
+                    }
+                    if(ncnt == nverts)
+                    {
+                        returnval = false;
                     }
                 }
                 
                 if(coordim > 2)
                 {
+                    // exclude elements outside z range if all vertices not in region 
                     if(m_domainRange->doZrange)
                     {
+                        int ncnt = 0; 
                         for(int i = 0; i < nverts; ++i)
                         {
                             if((*geom.GetVertex(i))[2] < m_domainRange->zmin ||
                                (*geom.GetVertex(i))[2] > m_domainRange->zmax)
                             {
-                                returnval = false;
+                                ncnt++;
                             }
+                        }
+
+                        if(ncnt == nverts)
+                        {
+                            returnval = false;
+
                         }
                     }
                 }

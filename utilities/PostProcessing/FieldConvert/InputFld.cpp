@@ -368,6 +368,27 @@ namespace Nektar
                 m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(), 
                                         m_f->m_exp[j]->UpdatePhys());
             }
+
+
+            // if range is defined reset up output field in case or
+            // reducing fld definition
+            if(vm.count("range"))
+            {
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+                    = m_f->m_exp[0]->GetFieldDefinitions();
+                std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+                
+                for (int j = 0; j < nfields; ++j)
+                {
+                    for (i = 0; i < FieldDef.size(); ++i)
+                    {   
+                        FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                        m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+                    }
+                }   
+                m_f->m_fielddef = FieldDef;
+                m_f->m_data     = FieldData;
+            }
         }
     }
 }

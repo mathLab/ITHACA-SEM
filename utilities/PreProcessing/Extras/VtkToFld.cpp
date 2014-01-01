@@ -279,7 +279,9 @@ int main(int argc, char* argv[])
             FieldDef[i]->m_fields.push_back(outname);
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        LibUtilities::Write(outfile, FieldDef, FieldData);
+
+        LibUtilities::FieldIO vFld(vSession->GetComm());
+        vFld.Write(outfile, FieldDef, FieldData);
         //-----------------------------------------------
     }
     catch (...) {

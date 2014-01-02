@@ -137,6 +137,7 @@ namespace Nektar
             for (i = 0; i < addfields; ++i)
             {
                 m_f->m_exp[nfields + i] = m_f->AppendExpList();
+                m_f->m_exp[nfields + i]->UpdatePhys() = outfield[i];
                 m_f->m_exp[nfields + i]->FwdTrans(outfield[i],
                                     m_f->m_exp[nfields + i]->UpdateCoeffs());
             }
@@ -175,6 +176,17 @@ namespace Nektar
             
             m_f->m_fielddef = FieldDef;
             m_f->m_data     = FieldData;
+
+
+            // output error for regression checking. 
+            if (vm.count("error"))
+            {
+                for (j = 0; j < nfields + addfields; ++j)
+                {
+                    cout << "Linf error: " << m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys()) << endl;
+                    cout << "L2 error: " << m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys()) << endl;
+                }
+            }
         }
     }
 }

@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
         ("modules-list,l", "Print the list of available modules.")
         ("output-points,n",po::value<string>(),
          "Output at p equipspaced points (for .dat, .vtk).")
+        ("error,e",  "write error of fields for regression checking")
         ("range,r",po::value<string>(),
          "define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) in which any vertex is contained .")
         ("modules-opt,p",  po::value<string>(),

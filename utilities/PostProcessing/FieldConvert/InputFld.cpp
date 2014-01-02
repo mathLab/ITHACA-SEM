@@ -88,6 +88,7 @@ namespace Nektar
 
         InputFld::~InputFld()
         {
+            m_f->m_session->GetComm()->Finalise();
         }
 
         /**

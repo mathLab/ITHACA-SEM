@@ -181,10 +181,17 @@ namespace Nektar
             // output error for regression checking. 
             if (vm.count("error"))
             {
+                int rank = m_f->m_session->GetComm()->GetRank();
+                
                 for (j = 0; j < nfields + addfields; ++j)
                 {
-                    cout << "Linf error: " << m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys()) << endl;
-                    cout << "L2 error: " << m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys()) << endl;
+                    NekDouble l2err   = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
+                    NekDouble linferr = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
+                    if(rank == 0)
+                    {
+                        cout << "L 2 error (variable "<< FieldDef[0]->m_fields[j] << ") : " << l2err  << endl;
+                        cout << "L inf error (variable "<< FieldDef[0]->m_fields[j] << ") : " << linferr << endl;
+                    }
                 }
             }
         }

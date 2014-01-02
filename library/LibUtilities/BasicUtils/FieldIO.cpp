@@ -1182,6 +1182,14 @@ namespace Nektar
             // target directory has been created by the root process
             m_comm->Block();
 
+            // Sit in a loop and make sure target directory has been created
+            int created = 0;
+            do
+            {
+                created = fs::is_directory(specPath) ? 1 : 0;
+                m_comm->AllReduce(created, ReduceMin);
+            } while (!created);
+
             // Pad rank to 8char filenames, e.g. P0000000.fld
             boost::format pad("P%1$07d.fld");
             pad % m_comm->GetRank();

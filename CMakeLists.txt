@@ -163,6 +163,7 @@ ENDIF ()
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
+INCLUDE (ThirdPartyScotch)
 INCLUDE (ThirdPartyBoost)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyFFTW)
@@ -294,6 +295,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindScotch.cmake
 	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/NektarCommon.cmake

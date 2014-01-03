@@ -47,6 +47,12 @@ MACRO(SET_LAPACK_LINK_LIBRARIES name)
 
     ENDIF( NEKTAR_USE_BLAS_LAPACK )
 
+    IF( NEKTAR_USE_SCOTCH )
+        TARGET_LINK_LIBRARIES(${name} ${SCOTCHMETIS_LIB} ${SCOTCH_LIB})
+        #        TARGET_LINK_LIBRARIES(${name} optimized ${SCOTCHMETIS_LIB}
+        #   ${SCOTCH_LIB} debug ${SCOTCHMETIS_LIB} ${SCOTCH_LIB} )
+    ENDIF (NEKTAR_USE_SCOTCH )
+
     IF( NEKTAR_USE_METIS )    
         TARGET_LINK_LIBRARIES(${name} optimized ${METIS_LIB} debug 
             ${METIS_LIB} )

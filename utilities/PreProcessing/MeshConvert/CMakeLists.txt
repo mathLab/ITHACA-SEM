@@ -41,3 +41,6 @@ ENDIF (NEKTAR_USE_VTK)
 
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
 
+IF (NEKTAR_USE_VTK)
+    TARGET_LINK_LIBRARIES(MeshConvert vtkCommon vtkIO vtkGraphics)
+ENDIF (NEKTAR_USE_VTK)

@@ -48,6 +48,12 @@ namespace Metis
         void AS_METIS_NodeND(int *nVerts, int *xadj, int *adjncy, int *vwgt,
                              int *options, int *perm, int *iperm, int *map,
                              int *mdswitch);
+
+        // Scotch version
+        void   METIS_PartGraphVKway(int *nVerts, int *xadj, int *adjcy,
+                int *vertWgt, int *vertSize,
+                int *wgtFlag, int *numflag, int *nparts,
+                int *options, int *volume, int *part);
     }
 
     inline static void as_onmetis(
@@ -79,22 +85,29 @@ namespace Metis
             int&                              volume,
             Nektar::Array<Nektar::OneD, int>& part)
     {
+        int wgtflag = 0;
         int *vwgt = 0;
         int *vsize = 0;
         if (vertWgt.num_elements() > 0)
         {
+            wgtflag += 1;
             vwgt = &vertWgt[0];
         }
         if (vertSize.num_elements() > 0)
         {
+            wgtflag += 2;
             vsize = &vertSize[0];
         }
+        int numflag = 0;
         // number of balancing conditions (size of vertex multi-weight)
         int ncon = nVertConds;
         int options[METIS_NOPTIONS];
         METIS_SetDefaultOptions(options);
-        METIS_PartGraphKway(&nVerts, &ncon, &xadj[0], &adjcy[0], vwgt, vsize,
-                            0, &nparts, 0, 0, options, &volume, &part[0]);
+        //METIS_PartGraphKway(&nVerts, &ncon, &xadj[0], &adjcy[0], vwgt, vsize,
+        //                    0, &nparts, 0, 0, options, &volume, &part[0]);
+        METIS_PartGraphVKway(&nVerts, &xadj[0], &adjcy[0], vwgt, vsize,
+                            &wgtflag, &numflag, &nparts, options, &volume,
+                            &part[0]);
     }
 }
 #endif //NEKTAR_LIB_UTILITIES_BASICUTILS_METIS_HPP

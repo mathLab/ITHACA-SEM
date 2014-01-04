@@ -67,17 +67,8 @@ ${TINYXML_INCLUDE_DIR}/tinyxml.h
 ADD_DEFINITIONS(-DSPATIAL_DOMAINS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(SpatialDomains lib ${NEKTAR_LIBRARY_TYPE} ${SPATIAL_DOMAINS_SOURCES} ${SPATIAL_DOMAINS_HEADERS})
-TARGET_LINK_LIBRARIES(SpatialDomains
-        optimized LibUtilities debug LibUtilities-g
-        optimized StdRegions  debug StdRegions-g
-        optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
-        ${Boost_THREAD_LIBRARY}
-		${Boost_DATE_TIME_LIBRARY}
-		${Boost_IOSTREAMS_LIBRARY}
-		${Boost_ZLIB_LIBRARY}
-	)
 
-SET_LAPACK_LINK_LIBRARIES(SpatialDomains)
+TARGET_LINK_LIBRARIES(SpatialDomains StdRegions LibUtilities)
 
 INSTALL(FILES ${SPATIAL_DOMAINS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/SpatialDomains COMPONENT dev)
 

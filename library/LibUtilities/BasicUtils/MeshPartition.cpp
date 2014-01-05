@@ -47,7 +47,6 @@
 
 #include <tinyxml/tinyxml.h>
 
-#include <LibUtilities/BasicUtils/Metis.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
@@ -63,6 +62,14 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        MeshPartitionFactory& GetMeshPartitionFactory()
+        {
+            typedef Loki::SingletonHolder<MeshPartitionFactory,
+                Loki::CreateUsingNew,
+                Loki::NoDestroy > Type;
+            return Type::Instance();
+        }
+
         MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession) :
                 m_numFields(0),
                 m_fieldNameToId(),
@@ -708,7 +715,7 @@ namespace Nektar
                     {
                         // Attempt partitioning using METIS.
                         int ncon = m_weightingRequired ? 2*m_numFields : 1;
-                        Metis::PartGraphVKway(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
+                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(part);
                         if (!m_shared)

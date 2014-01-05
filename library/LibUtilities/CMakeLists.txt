@@ -15,6 +15,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/MeshPartition.h
+    ./BasicUtils/MeshPartitionMetis.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/NekPtr.hpp
@@ -37,6 +38,7 @@ SET(BasicUtilsSources
     ./BasicUtils/FieldIO.cpp
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
+    ./BasicUtils/MeshPartitionMetis.cpp
     ./BasicUtils/SessionReader.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
@@ -56,6 +58,13 @@ SET(CommunicationSources
     ./Communication/CommSerial.cpp
     ./Communication/Transposition.cpp
 )
+
+IF(NEKTAR_USE_SCOTCH)
+    SET(BasicUtilsHeaders ${BasicUtilsHeaders}
+        ./BasicUtils/MeshPartitionScotch.h)
+    SET(BasicUtilsSources ${BasicUtilsSources}
+        ./BasicUtils/MeshPartitionScotch.cpp)
+ENDIF(NEKTAR_USE_SCOTCH)
 
 IF(NEKTAR_USE_MPI)
     SET(CommunicationHeaders ${CommunicationHeaders} 
@@ -346,7 +355,7 @@ ADD_DEPENDENCIES(${name}  modmetis-5.1.0 boost tinyxml zlib-1.2.7)
 ### Static libraries do not need to be linked by 
 # Scotch
 IF( NEKTAR_USE_SCOTCH )
-    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE ${SCOTCHMETIS_LIB}
+    TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE
         ${SCOTCH_LIB} ${SCOTCHERR_LIB})
 ENDIF ()
 

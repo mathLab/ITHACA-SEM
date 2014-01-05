@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Metis.hpp
+// File Scotch.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,46 +29,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: wrapper of functions around METIS routines
+// Description: wrapper of functions around Scotch routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_BASICUTILS_METIS_HPP
-#define NEKTAR_LIB_UTILITIES_BASICUTILS_METIS_HPP
+#ifndef NEKTAR_LIB_UTILITIES_BASICUTILS_SCOTCH_HPP
+#define NEKTAR_LIB_UTILITIES_BASICUTILS_SCOTCH_HPP
 
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-
-#include "metis.h"
-
-namespace Metis
+namespace Scotch
 {
-    extern "C"
-    {
-        void AS_METIS_NodeND(int *nVerts, int *xadj, int *adjncy, int *vwgt,
-                             int *options, int *perm, int *iperm, int *map,
-                             int *mdswitch);
+    extern "C" {
+        // Scotch version of old metis call
+        void   METIS_PartGraphVKway(int *nVerts, int *xadj, int *adjcy,
+                int *vertWgt, int *vertSize,
+                int *wgtFlag, int *numflag, int *nparts,
+                int *options, int *volume, int *part);
+
     }
 
-    inline static void as_onmetis(
-            int                              nVerts,
-            Nektar::Array<Nektar::OneD, int> xadj,
-            Nektar::Array<Nektar::OneD, int> adjncy,
-            Nektar::Array<Nektar::OneD, int> perm,
-            Nektar::Array<Nektar::OneD, int> iperm,
-            Nektar::Array<Nektar::OneD, int> map,
-            int                              mdswitch = 1)
-    {
-        ASSERTL1(xadj.num_elements() == nVerts+1,"Array xadj out of bounds");
-        ASSERTL1(perm.num_elements() == nVerts,"Array perm out of bounds");
-        ASSERTL1(iperm.num_elements() == nVerts,"Array iperm out of bounds");
-
-        AS_METIS_NodeND(&nVerts, &xadj[0], &adjncy[0], NULL, NULL, &perm[0],
-                        &iperm[0], &map[0], &mdswitch);
-    }
-
-
-    inline static void PartGraphVKway( 
+    inline static void PartGraphVKway(
             int&                              nVerts,
             int&                              nVertConds,
             Nektar::Array<Nektar::OneD, int>& xadj,
@@ -79,22 +58,28 @@ namespace Metis
             int&                              volume,
             Nektar::Array<Nektar::OneD, int>& part)
     {
+        int wgtflag = 0;
         int *vwgt = 0;
         int *vsize = 0;
         if (vertWgt.num_elements() > 0)
         {
+            wgtflag += 1;
             vwgt = &vertWgt[0];
         }
         if (vertSize.num_elements() > 0)
         {
+            wgtflag += 2;
             vsize = &vertSize[0];
         }
+        int numflag = 0;
         // number of balancing conditions (size of vertex multi-weight)
-        int ncon = nVertConds;
-        int options[METIS_NOPTIONS];
-        METIS_SetDefaultOptions(options);
-        METIS_PartGraphKway(&nVerts, &ncon, &xadj[0], &adjcy[0], vwgt, vsize,
-                            0, &nparts, 0, 0, options, &volume, &part[0]);
+        int options[5];
+        options[0] = 0;
+        //METIS_SetDefaultOptions(options);
+        METIS_PartGraphVKway(&nVerts, &xadj[0], &adjcy[0], vwgt, vsize,
+                            &wgtflag, &numflag, &nparts, options, &volume,
+                            &part[0]);
     }
+
 }
-#endif //NEKTAR_LIB_UTILITIES_BASICUTILS_METIS_HPP
+

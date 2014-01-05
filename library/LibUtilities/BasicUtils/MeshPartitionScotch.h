@@ -50,9 +50,11 @@ namespace LibUtilities
     {
         public:
             /// Creates an instance of this class
-            static MeshPartitionSharedPtr create(const SessionReaderSharedPtr& pSession)
+            static MeshPartitionSharedPtr create(
+                    const SessionReaderSharedPtr& pSession)
             {
-                return MemoryManager<MeshPartitionScotch>::AllocateSharedPtr(pSession);
+                return MemoryManager<MeshPartitionScotch>
+                                                ::AllocateSharedPtr(pSession);
             }
 
             /// Name of class

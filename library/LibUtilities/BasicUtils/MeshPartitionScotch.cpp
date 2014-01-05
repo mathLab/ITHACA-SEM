@@ -91,12 +91,10 @@ namespace LibUtilities
         // number of balancing conditions (size of vertex multi-weight)
         int options[5];
         options[0] = 0;
-        //METIS_SetDefaultOptions(options);
+
         PartGraphVKway(&nVerts, &xadj[0], &adjcy[0], vwgt, vsize,
                             &wgtflag, &numflag, &nparts, options, &volume,
                             &part[0]);
-
-        //Scotch::PartGraphVKway(nVerts, nVertConds, xadj, adjcy, vertWgt, vertSize, nparts, volume, part);
     }
 
 
@@ -113,13 +111,13 @@ namespace LibUtilities
             SCOTCH_Num * const          volume,
             SCOTCH_Num * const          part)
     {
-        SCOTCH_Num                  baseval;
-        const SCOTCH_Num *          vwgt2;
-        const SCOTCH_Num *          vsize2;
-        SCOTCH_Num                  vsizval;            /* Communication volume of    current vertex */
-        SCOTCH_Num                  vertnbr;
-        SCOTCH_Num                  vertnum;
-        SCOTCH_Num                  edgenum;
+        SCOTCH_Num          baseval;
+        const SCOTCH_Num *  vwgt2;
+        const SCOTCH_Num *  vsize2;
+        SCOTCH_Num          vsizval; /// Communication volume of current vertex
+        SCOTCH_Num          vertnbr;
+        SCOTCH_Num          vertnum;
+        SCOTCH_Num          edgenum;
         const SCOTCH_Num *  edgetax;
         const SCOTCH_Num *  parttax;
         SCOTCH_Num *        nghbtab;
@@ -131,38 +129,51 @@ namespace LibUtilities
         vertnbr = *n;
         edgetax = adjncy - baseval;
 
-        if (vsize2 == NULL) {                           /* If no communication load   data provided */
-            if (PartGraph2 (n, xadj, adjncy, vwgt2, NULL, numflag,        nparts, part, SCOTCH_STRATDEFAULT, 0.01) != 0)
+        // If no communication load   data provided
+        if (vsize2 == NULL) {
+            if (PartGraph2 (n, xadj, adjncy, vwgt2, NULL, numflag, nparts,
+                            part, SCOTCH_STRATDEFAULT, 0.01) != 0)
                 return;
         }
-        else {                                          /* Will have to turn          communication volumes into edge loads */
+
+        // Will have to turn communication volumes into edge loads
+        else {
             const SCOTCH_Num *  vsiztax;
-            SCOTCH_Num                  edgenbr;
+            SCOTCH_Num          edgenbr;
             SCOTCH_Num *        edlotax;
-            int                         o;
+            int                 o;
 
             edgenbr = xadj[vertnbr] - baseval;
-            if ((edlotax = malloc (edgenbr * sizeof (SCOTCH_Num))) == NULL)
+            if ((edlotax =
+                 (SCOTCH_Num*) malloc (edgenbr * sizeof (SCOTCH_Num))) == NULL)
+            {
                 return;
-            edlotax -= baseval;                           /* Base access to edlotax */
+            }
+
+            edlotax -= baseval; // Base access to edlotax
             vsiztax  = vsize2 - baseval;
 
-            for (vertnum = 0, edgenum = baseval;          /* Un-based scan of vertex    array xadj */
+            // Un-based scan of vertex array xadj
+            for (vertnum = 0, edgenum = baseval;
                     vertnum < vertnbr; vertnum ++) {
-                SCOTCH_Num          vsizval;                /* Communication size of      current vertex */
-                SCOTCH_Num          edgennd;
+                SCOTCH_Num      vsizval; // Communication size of current vertex
+                SCOTCH_Num      edgennd;
 
                 vsizval = vsize2[vertnum];
-                for (edgennd = xadj[vertnum + 1]; edgenum < edgennd; edgenum ++) { /*     Based traversal of edge array adjncy */
-                    SCOTCH_Num          vertend;              /* Based end vertex           number                                     */
+                // Based traversal of edge array adjncy
+                for (edgennd = xadj[vertnum + 1];
+                     edgenum < edgennd;
+                     edgenum ++) {
+
+                    SCOTCH_Num  vertend; // Based end vertex number
 
                     vertend = edgetax[edgenum];
                     edlotax[edgenum] = vsizval + vsiztax[vertend];
                 }
             }
 
-            o = PartGraph2 (n, xadj, adjncy, vwgt2, edlotax + baseval,    numflag, nparts, part,
-                    SCOTCH_STRATDEFAULT, 0.01);
+            o = PartGraph2 (n, xadj, adjncy, vwgt2, edlotax + baseval, numflag,
+                            nparts, part, SCOTCH_STRATDEFAULT, 0.01);
 
             free (edlotax + baseval);
 
@@ -170,30 +181,40 @@ namespace LibUtilities
                 return;
         }
 
-        if ((nghbtab = malloc (*nparts * sizeof (SCOTCH_Num))) == NULL)
+        if ((nghbtab =
+             (SCOTCH_Num*) malloc (*nparts * sizeof (SCOTCH_Num))) == NULL)
+        {
             return;
+        }
+
         memset (nghbtab, ~0, *nparts * sizeof (SCOTCH_Num));
 
         parttax = part - baseval;
-        vsizval = 1;                                      /* Assume no vertex         communication sizes */
-        for (vertnum = 0, edgenum = baseval, commvol = 0; /* Un-based scan of vertex  array xadj   */
+        vsizval = 1; // Assume no vertex communication sizes
+
+        // Un-based scan of vertex array xadj
+        for (vertnum = 0, edgenum = baseval, commvol = 0;
                 vertnum < vertnbr; vertnum ++) {
-            SCOTCH_Num          partval;
-            SCOTCH_Num          edgennd;
+            SCOTCH_Num      partval;
+            SCOTCH_Num      edgennd;
 
             partval = part[vertnum];
-            nghbtab[partval] = vertnum;                   /* Do not count local         neighbors in communication volume */
+            nghbtab[partval] = vertnum; // Do not count local neighbors in
+                                        // communication volume
             if (vsize2 != NULL)
                 vsizval = vsize2[vertnum];
 
-            for (edgennd = xadj[vertnum + 1]; edgenum < edgennd; edgenum ++) { /* Based traversal of edge array adjncy */
-                SCOTCH_Num          vertend;                /* Based end vertex           number                                   */
-                SCOTCH_Num          partend;
+            // Based traversal of edge array adjncy
+            for (edgennd = xadj[vertnum + 1]; edgenum < edgennd; edgenum ++) {
+                SCOTCH_Num  vertend; // Based end vertex number
+                SCOTCH_Num  partend;
 
                 vertend = edgetax[edgenum];
                 partend = parttax[vertend];
-                if (nghbtab[partend] != vertnum) {          /* If first neighbor in this  part */
-                    nghbtab[partend] = vertnum;               /* Set part as accounted      for      */
+
+                // If first neighbor in this part set part as accounted for
+                if (nghbtab[partend] != vertnum) {
+                    nghbtab[partend] = vertnum;
                     commvol += vsizval;
                 }
             }
@@ -215,41 +236,44 @@ namespace LibUtilities
             SCOTCH_Num                  flagval,
             double                      kbalval)
     {
-      SCOTCH_Graph        grafdat;                    /* Scotch graph object to     interface with libScotch */
-      SCOTCH_Strat        stradat;
-      SCOTCH_Num          baseval;
-      SCOTCH_Num          vertnbr;
-      int                 o;
+        // Scotch graph object to interface with libScotch
+        SCOTCH_Graph        grafdat;
+        SCOTCH_Strat        stradat;
+        SCOTCH_Num          baseval;
+        SCOTCH_Num          vertnbr;
+        int                 o;
 
-      SCOTCH_graphInit (&grafdat);
+        SCOTCH_graphInit (&grafdat);
 
-      baseval = *numflag;
-      vertnbr = *n;
+        baseval = *numflag;
+        vertnbr = *n;
 
-      o = 1;                                          /* Assume something will go   wrong */
-      if (SCOTCH_graphBuild (&grafdat, baseval, vertnbr, xadj, xadj + 1, vwgt, NULL,
-                             xadj[vertnbr] - baseval, adjncy, adjwgt) == 0) {
-        SCOTCH_stratInit          (&stradat);
-        SCOTCH_stratGraphMapBuild (&stradat, flagval, *nparts, kbalval);
-    #ifdef SCOTCH_DEBUG_ALL
-        if (SCOTCH_graphCheck (&grafdat) == 0)        /* TRICK: next instruction    called only if graph is consistent */
-    #endif /* SCOTCH_DEBUG_ALL */
-        o = SCOTCH_graphPart (&grafdat, *nparts, &stradat, part);
-        SCOTCH_stratExit (&stradat);
-      }
-      SCOTCH_graphExit (&grafdat);
+        o = 1; // Assume something will go wrong
+        if (SCOTCH_graphBuild (&grafdat, baseval, vertnbr, xadj, xadj + 1,
+                               vwgt, NULL, xadj[vertnbr] - baseval, adjncy,
+                               adjwgt) == 0) {
+            SCOTCH_stratInit          (&stradat);
+            SCOTCH_stratGraphMapBuild (&stradat, flagval, *nparts, kbalval);
+#ifdef SCOTCH_DEBUG_ALL
+            // TRICK: next instruction called only if graph is consistent
+            if (SCOTCH_graphCheck (&grafdat) == 0)
+#endif /* SCOTCH_DEBUG_ALL */
+                o = SCOTCH_graphPart (&grafdat, *nparts, &stradat, part);
+            SCOTCH_stratExit (&stradat);
+        }
+        SCOTCH_graphExit (&grafdat);
 
-      if (o != 0)
-        return (1);
+        if (o != 0)
+            return (1);
 
-      if (baseval != 0) {                             /* MeTiS part array is based, Scotch is not */
-        SCOTCH_Num          vertnum;
+        if (baseval != 0) { // MeTiS part array is based, Scotch is not
+            SCOTCH_Num          vertnum;
 
-        for (vertnum = 0; vertnum < vertnbr; vertnum ++)
-          part[vertnum] += baseval;
-      }
+            for (vertnum = 0; vertnum < vertnbr; vertnum ++)
+                part[vertnum] += baseval;
+        }
 
-      return (0);
+        return (0);
     }
 
 }

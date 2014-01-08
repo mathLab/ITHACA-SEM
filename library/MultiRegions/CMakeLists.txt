@@ -100,19 +100,19 @@ IF(NEKTAR_USE_MPI)
         GlobalLinSysXxt.h
         GlobalLinSysXxtFull.h
         GlobalLinSysXxtStaticCond.h
-        PreconditionerLinear.cpp
-        PreconditionerLinearWithLowEnergy.cpp
-        PreconditionerLinearWithDiag.cpp
-        PreconditionerLinearWithBlock.cpp
+        PreconditionerLinear.h
+        PreconditionerLinearWithLowEnergy.h
+        PreconditionerLinearWithDiag.h
+        PreconditionerLinearWithBlock.h
     )
     SET(MULTI_REGIONS_SOURCES ${MULTI_REGIONS_SOURCES}
         GlobalLinSysXxt.cpp
         GlobalLinSysXxtFull.cpp
         GlobalLinSysXxtStaticCond.cpp
-        PreconditionerLinear.h
-        PreconditionerLinearWithLowEnergy.h
-        PreconditionerLinearWithDiag.h
-        PreconditionerLinearWithBlock.h
+        PreconditionerLinear.cpp
+        PreconditionerLinearWithLowEnergy.cpp
+        PreconditionerLinearWithDiag.cpp
+        PreconditionerLinearWithBlock.cpp
     )
 ENDIF(NEKTAR_USE_MPI)
 

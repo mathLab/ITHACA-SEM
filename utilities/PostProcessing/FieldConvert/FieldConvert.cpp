@@ -310,6 +310,7 @@ int main(int argc, char* argv[])
     for (int i = 0; i < modules.size(); ++i)
     {
         modules[i]->Process(vm);
+        cout.flush();
     }
     
     return 0;

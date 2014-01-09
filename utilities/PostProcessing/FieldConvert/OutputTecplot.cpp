@@ -59,6 +59,11 @@ namespace Nektar
         
         void OutputTecplot::Process(po::variables_map &vm)
         {
+            if(!m_f->m_exp.size()) // do nothing if no expansion defined
+            {
+                return; 
+            }
+
             if (m_f->m_verbose)
             {
                 cout << "OutputTecplot: Writing file..." << endl;
@@ -97,8 +102,6 @@ namespace Nektar
             WriteTecplotConnectivity(outfile);
             
             cout << "Written file: " << filename << endl;
-            //  Put in a block ot amke sure all outputs have been completed
-            m_f->m_session->GetComm()->Block(); 
         }        
 
         /**

@@ -59,6 +59,11 @@ namespace Nektar
         
         void OutputVtk::Process(po::variables_map &vm)
         {
+            if(!m_f->m_exp.size()) // do nothing if no expansion defined
+            {
+                return; 
+            }
+
             int i, j;
             if (m_f->m_verbose)
             {
@@ -96,8 +101,6 @@ namespace Nektar
             }
             m_f->m_exp[0]->WriteVtkFooter(outfile);
             cout << "Written file: " << filename << endl;
-            //  Put in a block ot amke sure all outputs have been completed
-            m_f->m_session->GetComm()->Block(); 
         }        
     }
 }

@@ -120,23 +120,26 @@ namespace Nektar
                 return;
             }
             
-            string xml_ending; 
-            if(m_files.count("xml") == 0)
-            {
-                xml_ending = "xml.gz";
-            }
-            else
-            {
-                xml_ending = "xml";
-            }
+            string xml_ending = "xml";
+            string xml_gz_ending = "xml.gz";
 
-            int argc = m_files[xml_ending].size()+1;
+
+            int   argc = m_files[xml_ending].size()+m_files[xml_gz_ending].size()+1;
             char *argv[argc];
             const char *instring = "ProcessField";
             argv[0] = strdup(instring);
-            for (int i = 0; i < m_files[xml_ending].size(); ++i)
+            // load .xml ending
+            
+            int i;
+            for (i = 0; i < m_files[xml_ending].size(); ++i)
             {
                 argv[i+1] = strdup(m_files[xml_ending][i].c_str());
+            }
+
+            // load any .xml.gz endings
+            for (int j =0; j < m_files[xml_gz_ending].size(); ++j)
+            {
+                argv[i+j+1] = strdup(m_files[xml_gz_ending][j].c_str());
             }
 
 
@@ -185,7 +188,6 @@ namespace Nektar
             
 
             // Set up expansion list
-            m_f->m_exp.resize(1);
             int expdim  = m_f->m_graph->GetMeshDimension();
             
             if(m_requireEquiSpaced) // set up points to be equispaced 
@@ -210,10 +212,22 @@ namespace Nektar
             // but it is re-arranged in expansion) 
             
             const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
+  
             
+            // if Range has been speficied it is possible to have a
+            // partition which is empty so ccheck this and return if
+            // no elements present.
+            if(!expansions.size())
+            {
+                return;
+            }
+
+            m_f->m_exp.resize(1);
+
             Array<OneD,int> ElementGIDs(expansions.size());
             SpatialDomains::ExpansionMap::const_iterator expIt;
-            int i = 0;
+
+            i = 0;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
             {
                 ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();

@@ -1502,7 +1502,7 @@ namespace Nektar
                         if (iter != extraDirVerts.end() && 
                             foundExtraVerts.count(meshVertId) == 0)
                         {
-                            int loc = bndCondExp[i]->GetCoeff_Offset(j) + 
+                            int loc = bndCondExp[i]->GetCoeff_Offset(j) +
                                 bndCondFaceExp->GetVertexMap(k);
                             int gid = graphVertOffset[
                                                       vertReorderedGraphVertId[meshVertId]];
@@ -1574,11 +1574,11 @@ namespace Nektar
                         {
                             for(l = 0; l < nEdgeInteriorCoeffs; ++l)
                             {
-                                int loc = bndCondExp[i]->GetCoeff_Offset(j) + 
+                                int loc = bndCondExp[i]->GetCoeff_Offset(j) +
                                     edgeInteriorMap[l];
                                 int gid = graphVertOffset[
                                     edgeReorderedGraphVertId[meshEdgeId]]+l;
-                                ExtraDirDof t(loc, gid, 1.0);
+                                ExtraDirDof t(loc, gid, edgeInteriorSign[l]);
                                 m_extraDirDofs[i].push_back(t);
                             }
                             foundExtraEdges.insert(meshEdgeId);
@@ -1655,7 +1655,7 @@ namespace Nektar
             {
                 for (i = 0; i < Tit->second.size(); ++i)
                 {
-                    boost::get<2>(Tit->second.at(i)) = 1.0/valence[Tit->second.at(i).get<1>()];
+                    boost::get<2>(Tit->second.at(i)) /= valence[Tit->second.at(i).get<1>()];
                 }
             }
 

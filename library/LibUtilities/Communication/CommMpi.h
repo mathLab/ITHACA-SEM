@@ -81,8 +81,10 @@ namespace Nektar
             virtual void v_Block();
             virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData);
             virtual void v_Send(int pProc, Array<OneD, int>& pData);
+            virtual void v_Send(int pProc, std::vector<unsigned int>& pData);
             virtual void v_Recv(int pProc, Array<OneD, NekDouble>& pData);
             virtual void v_Recv(int pProc, Array<OneD, int>& pData);
+            virtual void v_Recv(int pProc, std::vector<unsigned int>& pData);
             virtual void v_SendRecv(int pSendProc,
                                     Array<OneD, NekDouble>& pSendData,
                                     int pRecvProc,
@@ -104,6 +106,8 @@ namespace Nektar
             virtual void v_AllReduce(Array<OneD, NekDouble>& pData,
                                      enum ReduceOperator pOp);
             virtual void v_AllReduce(Array<OneD, int      >& pData,
+                                     enum ReduceOperator pOp);
+            virtual void v_AllReduce(std::vector<unsigned int>& pData,
                                      enum ReduceOperator pOp);
 			virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
 									Array<OneD, NekDouble>& pRecvData);

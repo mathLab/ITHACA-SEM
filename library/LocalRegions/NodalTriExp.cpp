@@ -99,7 +99,7 @@ namespace Nektar
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             NekDouble ival;
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
             
@@ -158,7 +158,8 @@ namespace Nektar
             int    nqtot  = nquad0*nquad1; 
             int    wspsize = max(nqtot,m_ncoeffs);
 
-            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
+            const Array<TwoD, const NekDouble>& df =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             
             Array<OneD, NekDouble> tmp0 (6*wspsize);
             Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
@@ -268,7 +269,8 @@ namespace Nektar
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int     nqtot = nquad0*nquad1;
-            const Array<TwoD, const NekDouble>& df   = m_metricinfo->GetDerivFactors();
+            const Array<TwoD, const NekDouble>& df
+                            = m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD,NekDouble> diff0(2*nqtot);
             Array<OneD,NekDouble> diff1(diff0+nqtot);
@@ -372,82 +374,7 @@ namespace Nektar
                                     Array<OneD,NekDouble> &coords_1,
                                     Array<OneD,NekDouble> &coords_2)
         {
-            LibUtilities::BasisSharedPtr CBasis0;
-            LibUtilities::BasisSharedPtr CBasis1;
-            Array<OneD,NekDouble>  x;
-            
-            ASSERTL0(m_geom, "m_geom not define");
-            
-            // get physical points defined in Geom
-            m_geom->FillGeom();
-            
-            switch(m_geom->GetCoordim())
-            {
-            case 3:
-                ASSERTL0(coords_2.num_elements() != 0, 
-                         "output coords_2 is not defined");
-                
-                CBasis0 = m_geom->GetBasis(2,0); 
-                CBasis1 = m_geom->GetBasis(2,1);
-                
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(2);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                m_base[1]->GetNumPoints(),
-                                &x[0],1,&coords_2[0],1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(),&(m_geom->UpdatePhys(2))[0],
-                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_2[0]);
-                }
-            case 2:
-                ASSERTL0(coords_1.num_elements(), 
-                         "output coords_1 is not defined");
-                
-                CBasis0 = m_geom->GetBasis(1,0); 
-                CBasis1 = m_geom->GetBasis(1,1);
-                
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(1);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                m_base[1]->GetNumPoints(),
-                                &x[0],1,&coords_1[0],1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), &(m_geom->UpdatePhys(1))[0],
-                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_1[0]);
-                }
-            case 1:
-                ASSERTL0(coords_0.num_elements(), 
-                         "output coords_0 is not defined");
-                
-                CBasis0 = m_geom->GetBasis(0,0); 
-                CBasis1 = m_geom->GetBasis(0,1);
-                
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(0);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                m_base[1]->GetNumPoints(),
-                                &x[0],1,&coords_0[0],1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), &(m_geom->UpdatePhys(0))[0],
-                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_0[0]);
-                }
-                break;
-            default:
-                ASSERTL0(false,"Number of dimensions are greater than 2");
-                break;
-            }
+            Expansion::v_GetCoords(coords_0, coords_1, coords_2);
         }
         
         // get the coordinates "coords" at the local coordinates "Lcoords"
@@ -468,216 +395,6 @@ namespace Nektar
             }
         }
               
-        void NodalTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
-        { 
-            if(format==eTecplot)
-            {
-                int i,j;
-                int nquad0 = m_base[0]->GetNumPoints();
-                int nquad1 = m_base[1]->GetNumPoints();
-                Array<OneD,NekDouble> coords[3];
-                
-                ASSERTL0(m_geom,"m_geom not defined");
-                
-                int     coordim  = m_geom->GetCoordim();
-                
-                coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-                coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-                coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-                
-                GetCoords(coords[0],coords[1],coords[2]);
-                
-                if(dumpVar)
-                {
-                    outfile << "Variables = x";
-                    
-                    if(coordim == 2)
-                    {
-                        outfile << ", y";
-                    }
-                    else if (coordim == 3)
-                    {
-                        outfile << ", y, z";
-                    }
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-                
-                outfile << "Zone, I=" << nquad0 << ", J=" << 
-                    nquad1 <<", F=Point" << std::endl;
-                
-                for(i = 0; i < nquad0*nquad1; ++i)
-                {
-                    for(j = 0; j < coordim; ++j)
-                    {
-                        outfile << coords[j][i] << " ";
-                    }
-                    outfile << m_phys[i] << std::endl;
-                }
-            }
-            else if(format==eGmsh)
-            {   
-                if(dumpVar)
-                {
-                    outfile<<"View.MaxRecursionLevel = 4;"<<endl;
-                    outfile<<"View.TargetError = 0.00;"<<endl;
-                    outfile<<"View.AdaptVisualizationGrid = 1;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
-
-                outfile<<"ST("<<endl;                
-                // write the coordinates of the vertices of the triangle
-                Array<OneD,NekDouble> coordVert1(2);
-                Array<OneD,NekDouble> coordVert2(2);
-                Array<OneD,NekDouble> coordVert3(2);
-                coordVert1[0]=-1.0;
-                coordVert1[1]=-1.0;
-                coordVert2[0]=1.0;
-                coordVert2[1]=-1.0;
-                coordVert3[0]=-1.0;
-                coordVert3[1]=1.0;
-                outfile<<m_geom->GetCoord(0,coordVert1)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert1)<<", 0.0,"<<endl;
-                outfile<<m_geom->GetCoord(0,coordVert2)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert2)<<", 0.0,"<<endl;
-                outfile<<m_geom->GetCoord(0,coordVert3)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert3)<<", 0.0"<<endl;
-                outfile<<")"<<endl;
-
-
-                // calculate the coefficients (monomial format)
-                int i,j;
-
-                Array<OneD,NekDouble> xi1(GetNcoeffs());
-                Array<OneD,NekDouble> xi2(GetNcoeffs());
-                GetNodalPoints(xi1,xi2);
-                
-                Array<OneD,NekDouble> x(GetNcoeffs());
-                Array<OneD,NekDouble> y(GetNcoeffs());
-                
-                for(i=0;i<GetNcoeffs();i++)
-                {
-                    x[i] = 0.5*(1.0+xi1[i]);
-                    y[i] = 0.5*(1.0+xi2[i]);
-                }
-
-                int cnt  = 0;
-                int cnt2 = 0;
-                int maxnummodes = max(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                int nDumpCoeffs = maxnummodes*maxnummodes;
-                Array<TwoD, int> dumpExponentMap(nDumpCoeffs,3,0);
-                Array<OneD, int> indexMap(GetNcoeffs(),0);
-                Array<TwoD, int> exponentMap(GetNcoeffs(),3,0);
-                for(i = 0; i < maxnummodes; i++)
-                {
-                    for(j = 0; j < maxnummodes; j++)
-                    {
-                        if(j<maxnummodes-i)
-                        {
-                            exponentMap[cnt][0] = j;
-                            exponentMap[cnt][1] = i;
-                            indexMap[cnt++]  = cnt2;
-                        }
-
-                        dumpExponentMap[cnt2][0]   = j;
-                        dumpExponentMap[cnt2++][1] = i;
-                    }            
-                }
-
-                NekMatrix<NekDouble> vdm(GetNcoeffs(),GetNcoeffs());
-                for(i = 0 ; i < GetNcoeffs(); i++)
-                {
-                    for(j = 0 ; j < GetNcoeffs(); j++)
-                    {
-                        vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
-                    }
-                } 
-
-                vdm.Invert();  
-
-                NekVector<NekDouble> in(GetNcoeffs(),m_coeffs,eWrapper);
-                NekVector<NekDouble> out(GetNcoeffs());
-                out = vdm*in;
-
-                Array<OneD,NekDouble> dumpOut(nDumpCoeffs,0.0);
-                for(i = 0 ; i < GetNcoeffs(); i++)
-                {
-                    dumpOut[ indexMap[i]  ] = out[i];
-                }
-
-                //write the coefficients
-                outfile<<"{";
-                for(i = 0; i < nDumpCoeffs; i++)
-                {
-                    outfile<<dumpOut[i];
-                    if(i < nDumpCoeffs - 1)
-                    {
-                        outfile<<", ";
-                    }
-                }
-                outfile<<"};"<<endl;
-              
-                if(dumpVar)
-                {   
-                    outfile<<"INTERPOLATION_SCHEME"<<endl;
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nDumpCoeffs; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < nDumpCoeffs; j++)
-                        {
-                            if(i==j)
-                            {
-                                outfile<<"1.00";
-                            }
-                            else
-                            {
-                                outfile<<"0.00";
-                            }
-                            if(j < nDumpCoeffs - 1)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nDumpCoeffs - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"}"<<endl;
-                        }
-                    }
-                    
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nDumpCoeffs; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < 3; j++)
-                        {
-                            outfile<<dumpExponentMap[i][j];
-                            if(j < 2)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nDumpCoeffs  - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"};"<<endl;
-                        }
-                    }
-                    outfile<<"};"<<endl;
-                }    
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
-        }      
-        
         DNekMatSharedPtr NodalTriExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
@@ -689,19 +406,23 @@ namespace Nektar
             return tmp->GetStdMatrix(mkey);  
         }
 
-        NekDouble NodalTriExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
+        NekDouble NodalTriExp::PhysEvaluate(
+            const Array<OneD, const NekDouble> &coord,
+            const Array<OneD, const NekDouble> &physvals)
+
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(2);
             
             ASSERTL0(m_geom,"m_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
             
-            return StdNodalTriExp::v_PhysEvaluate(Lcoord);
+            return StdNodalTriExp::v_PhysEvaluate(Lcoord, physvals);
         }
         
         DNekScalMatSharedPtr NodalTriExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
 
             ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
@@ -719,7 +440,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
@@ -739,7 +460,7 @@ namespace Nektar
                     }
                     else
                     {                       
-                        NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
+                        NekDouble fac = 1.0/(m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);
                     }
@@ -768,8 +489,9 @@ namespace Nektar
                         DNekMat &lap01 = *GetStdMatrix(lap01key);
                         DNekMat &lap11 = *GetStdMatrix(lap11key);
 
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
-                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
+                        Array<TwoD, const NekDouble> gmat =
+                                                m_metricinfo->GetGmat(ptsKeys);
 
                         int rows = lap00.GetRows();
                         int cols = lap00.GetColumns();
@@ -953,8 +675,9 @@ namespace Nektar
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
             const SpatialDomains::GeomType type = geomFactors->GetGtype();
 
-            const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors();
-            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
+            const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors(ptsKeys);
+            const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac(ptsKeys);
             int nqe = m_base[0]->GetNumPoints();
             int dim = GetCoordim();
 
@@ -1010,8 +733,8 @@ namespace Nektar
             {
                 int j;
 
-                int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
-                int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
+                int nquad0 = ptsKeys[0].GetNumPoints();
+                int nquad1 = ptsKeys[1].GetNumPoints();
 
                 LibUtilities::PointsKey from_key;
 
@@ -1032,7 +755,7 @@ namespace Nektar
                             normals[i*nquad0+j] = -df[2*i+1][j]*edgejac[j];
                         }
                     }
-                    from_key = geomFactors->GetPointsKey(0);
+                    from_key = ptsKeys[0];
                     break;
                 case 1:
                     for(j = 0; j < nquad1; ++j)
@@ -1043,7 +766,7 @@ namespace Nektar
                             normals[i*nquad1+j] = (df[2*i][nquad0*j + nquad0-1] +  df[2*i+1][nquad0*j + nquad0-1])*edgejac[j];
                         }
                     }
-                    from_key = geomFactors->GetPointsKey(1);
+                    from_key = ptsKeys[1];
                     break;
                 case 2:
                     for(j = 0; j < nquad1; ++j)
@@ -1054,7 +777,7 @@ namespace Nektar
                             normals[i*nquad1+j] = -df[2*i][nquad0*j]*edgejac[j];
                         }
                     }
-                    from_key = geomFactors->GetPointsKey(1);
+                    from_key = ptsKeys[1];
                     break;
                 default:
                     ASSERTL0(false,"edge is out of range (edge < 3)");
@@ -1104,122 +827,3 @@ namespace Nektar
 
     }//end of namespace
 }//end of namespace
-
-/** 
- *    $Log: NodalTriExp.cpp,v $
- *    Revision 1.34  2009/12/17 17:48:22  bnelson
- *    Fixed visual studio compiler warning.
- *
- *    Revision 1.33  2009/12/15 18:09:02  cantwell
- *    Split GeomFactors into 1D, 2D and 3D
- *    Added generation of tangential basis into GeomFactors
- *    Updated ADR2DManifold solver to use GeomFactors for tangents
- *    Added <GEOMINFO> XML session section support in MeshGraph
- *    Fixed const-correctness in VmathArray
- *    Cleaned up LocalRegions code to generate GeomFactors
- *    Removed GenSegExp
- *    Temporary fix to SubStructuredGraph
- *    Documentation for GlobalLinSys and GlobalMatrix classes
- *
- *    Revision 1.32  2009/10/30 14:00:06  pvos
- *    Multi-level static condensation updates
- *
- *    Revision 1.31  2009/04/27 21:34:07  sherwin
- *    Updated WriteToField
- *
- *    Revision 1.30  2009/03/15 22:13:54  sherwin
- *    Fixed Array definition error spotted by Tim
- *
- *    Revision 1.29  2009/01/21 16:59:57  pvos
- *    Added additional geometric factors to improve efficiency
- *
- *    Revision 1.28  2008/11/05 16:08:15  pvos
- *    Added elemental optimisation functionality
- *
- *    Revision 1.27  2008/09/09 15:05:09  sherwin
- *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
- *
- *    Revision 1.26  2008/07/09 11:44:49  sherwin
- *    Replaced GetScaleFactor call with GetConstant(0)
- *
- *    Revision 1.25  2008/07/04 10:19:04  pvos
- *    Some updates
- *
- *    Revision 1.24  2008/06/05 20:17:41  ehan
- *    Fixed undefined function GetGtype() in the ASSERTL2().
- *
- *    Revision 1.23  2008/05/30 00:33:48  delisi
- *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
- *
- *    Revision 1.22  2008/05/29 21:33:37  pvos
- *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
- *
- *    Revision 1.21  2008/05/29 01:02:13  bnelson
- *    Added precompiled header support.
- *
- *    Revision 1.20  2008/05/07 16:05:21  pvos
- *    Mapping + Manager updates
- *
- *    Revision 1.19  2008/04/06 05:59:04  bnelson
- *    Changed ConstArray to Array<const>
- *
- *    Revision 1.18  2008/03/18 14:12:53  pvos
- *    Update for nodal triangular helmholtz solver
- *
- *    Revision 1.17  2007/12/17 13:04:30  sherwin
- *    Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
- *
- *    Revision 1.16  2007/11/20 16:28:45  sherwin
- *    Added terms for UDG Helmholtz solver
- *
- *    Revision 1.15  2007/08/11 23:41:21  sherwin
- *    Various updates
- *
- *    Revision 1.14  2007/07/31 01:29:43  bnelson
- *    *** empty log message ***
- *
- *    Revision 1.13  2007/07/28 05:09:32  sherwin
- *    Fixed version with updated MemoryManager
- *
- *    Revision 1.12  2007/07/20 00:45:50  bnelson
- *    Replaced boost::shared_ptr with Nektar::ptr
- *
- *    Revision 1.11  2007/07/12 12:53:00  sherwin
- *    Updated to have a helmholtz matrix
- *
- *    Revision 1.10  2007/07/11 19:25:57  sherwin
- *    update for new Manager structure
- *
- *    Revision 1.9  2007/07/11 06:36:22  sherwin
- *    Updates with MatrixManager update
- *
- *    Revision 1.8  2007/07/10 17:17:22  sherwin
- *    Introduced Scaled Matrices into the MatrixManager
- *
- *    Revision 1.7  2007/06/17 19:00:44  bnelson
- *    Removed unused variables.
- *
- *    Revision 1.6  2007/06/07 15:54:18  pvos
- *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
- *    Also made corrections to various ASSERTL2 calls
- *
- *    Revision 1.5  2007/06/06 11:29:31  pvos
- *    Changed ErrorUtil::Error into NEKERROR (modifications in ErrorUtil.hpp caused compiler errors)
- *
- *    Revision 1.4  2007/06/01 17:08:07  pvos
- *    Modification to make LocalRegions/Project2D run correctly (PART1)
- *
- *    Revision 1.3  2007/05/31 19:13:12  pvos
- *    Updated NodalTriExp + LocalRegions/Project2D + some other modifications
- *
- *    Revision 1.2  2006/12/10 18:59:46  sherwin
- *    Updates for Nodal points
- *
- *    Revision 1.1  2006/05/04 18:58:45  kirby
- *    *** empty log message ***
- *
- *    Revision 1.3  2006/03/12 07:43:32  sherwin
- *
- *    First revision to meet coding standard. Needs to be compiled
- *
- **/

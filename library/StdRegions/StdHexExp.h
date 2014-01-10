@@ -104,6 +104,10 @@ namespace Nektar
                           Array<OneD, NekDouble> &out_d0,
                           Array<OneD, NekDouble> &out_d1,
                           Array<OneD, NekDouble> &out_d2);
+            STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
+                    const int dir,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble>& outarray);
 
             //---------------------------------------
             // Transforms
@@ -178,9 +182,6 @@ namespace Nektar
             // Evaluation functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& Lcoords);
-
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& Lcoords,
                     const Array<OneD, const NekDouble>& physvals);
 
@@ -214,13 +215,6 @@ namespace Nektar
                     v_DetFaceBasisKey(const int i, const int k) const;
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(
                     const int i) const;
-            STD_REGIONS_EXPORT virtual void v_WriteToFile(
-                    std::ofstream &outfile,
-                    OutputFormat format,
-                    const bool dumpVar = true,
-                    std::string var = "v");
-            STD_REGIONS_EXPORT virtual void v_WriteCoeffsToFile(
-                    std::ofstream &outfile);
             STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                     Array<OneD, NekDouble> &coords_x,

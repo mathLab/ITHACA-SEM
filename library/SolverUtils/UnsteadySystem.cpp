@@ -657,8 +657,16 @@ namespace Nektar
                             = m_session->GetFunctionFilename(
                                 "InitialConditions", m_session->GetVariable(i));
 
-                        LibUtilities::ImportFieldMetaData(
-                            filename, m_fieldMetaDataMap);
+                        fs::path pfilename(filename);
+
+                        // redefine path for parallel file which is in directory
+                        if(fs::is_directory(pfilename))
+                        {
+                            fs::path metafile("Info.xml");
+                            fs::path fullpath = pfilename / metafile;
+                            filename = LibUtilities::PortablePath(fullpath);
+                        }
+                        m_fld->ImportFieldMetaData(filename, m_fieldMetaDataMap);
 
                         // check to see if time defined
                         if (m_fieldMetaDataMap !=

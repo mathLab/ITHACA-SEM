@@ -90,12 +90,6 @@ int main(int argc, char *argv[])
     //-------------------------------------------  
 
     //--------------------------------------------
-    // Write solution 
-    ofstream outfile("ProjectLocFile1D.dat");
-    Exp->WriteToFile(outfile);
-    //-------------------------------------------
-
-    //--------------------------------------------
     // Calculate L_inf error
     if (vSession->GetComm()->GetRank() == 0)
     {

@@ -264,22 +264,22 @@ namespace Nektar
             };
 	
         enum Orientation
-            {
-                eNoOrientation,
-                eFwd,
-                eBwd,
-                eForwards,
-                eBackwards,
-                eDir1FwdDir1_Dir2FwdDir2,
-                eDir1FwdDir1_Dir2BwdDir2,
-                eDir1BwdDir1_Dir2FwdDir2,
-                eDir1BwdDir1_Dir2BwdDir2,
-                eDir1FwdDir2_Dir2FwdDir1,
-                eDir1FwdDir2_Dir2BwdDir1,
-                eDir1BwdDir2_Dir2FwdDir1,
-                eDir1BwdDir2_Dir2BwdDir1,
-                SIZE_Orientation
-            };
+        {
+            eNoOrientation,
+            eFwd,
+            eBwd,
+            eForwards,
+            eBackwards,
+            eDir1FwdDir1_Dir2FwdDir2,  // These flags are interpreted as
+            eDir1FwdDir1_Dir2BwdDir2,  // taking the second direction to the 
+            eDir1BwdDir1_Dir2FwdDir2,  // first direction. So Dir1FwdDir2 takes 
+            eDir1BwdDir1_Dir2BwdDir2,  // direction 2 and makes it backward 
+            eDir1FwdDir2_Dir2FwdDir1,  // to direction 1 in the mapped face. 
+            eDir1FwdDir2_Dir2BwdDir1,  // Note be careful not to flip this 
+            eDir1BwdDir2_Dir2FwdDir1,  // convention especially when using 
+            eDir1BwdDir2_Dir2BwdDir1,  // transposed mappings.
+            SIZE_Orientation
+        };
 	
         const char* const OrientationMap[] =
             {

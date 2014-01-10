@@ -230,6 +230,9 @@ int main(int argc, char *argv[])
             break;
     }
 
+    Array<OneD, NekDouble> phys (nq1*nq2);
+    Array<OneD, NekDouble> coeffs(order1*order2);
+
     //---------------------------------------------
     // Evaluate derivative of solution, add together and put in sol
     E->PhysDeriv(sol,dx,dy);
@@ -238,19 +241,19 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    E->FwdTrans(sol,coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs,phys);
     //-------------------------------------------
 
     //----------------------------------------------
     // Define exact solution of differential
     switch(regionshape)
     {
-        case LibUtilities::eTriangle:
+    case LibUtilities::eTriangle:
         {
             //----------------------------------------------
             // Define solution to be differentiated
@@ -261,7 +264,7 @@ int main(int argc, char *argv[])
             //----------------------------------------------
         }
         break;
-        case LibUtilities::eQuadrilateral:
+    case LibUtilities::eQuadrilateral:
         {
             for(i = 0; i < nq1*nq2; ++i)
             {
@@ -270,15 +273,15 @@ int main(int argc, char *argv[])
         }
         //---------------------------------------------
         break;
-        default:
-            ASSERTL0(false, "Not a 2D expansion.");
-            break;
+    default:
+        ASSERTL0(false, "Not a 2D expansion.");
+        break;
     }
 
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys,sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys,sol) << endl;
     //--------------------------------------------
     return 0;
 }

@@ -29,40 +29,45 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
-//
+//  Description: Spatial domains definitions and enumerations.
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SPATIALDOMAINS_SPATIALDOMAINS_H
 #define NEKTAR_SPATIALDOMAINS_SPATIALDOMAINS_H
-
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        /**
+         * @brief Indicates the type of element geometry.
+         *
+         * This property of the element geometry is used to indicate the
+         * necessary storage for the element's geometric information and its
+         * corresponding computational complexity. In many cases significant
+         * savings in both cases can be made based on this information, in
+         * comparison to the most generic case.
+         */
         enum GeomType
         {
-            eNoGeomType,
-            eRegular,
-            eDeformed,
-            eMovingRegular,
+            eNoGeomType,    ///< No type defined.
+            eRegular,       ///< Geometry is straight-sided with constant
+                            ///  geometric factors.
+            eDeformed,      ///< Geometry is curved or has non-constant factors.
+            eMovingRegular, ///< Currently unused.
         };
 
+        /**
+         * @brief Indicates if the geometric information for an element has
+         *        been populated.
+         */
         enum GeomState
         {
-            eNotFilled,
-            ePtsFilled
+            eNotFilled,     ///< Geometric information has not been generated.
+            ePtsFilled      ///< Geometric information has been generated.
         };
 
-        enum MeshParams
-        {
-            eFieldExpansionOrder,
-            eElementWork,
-
-            // Don't change below here
-            SIZE_MeshParams
-        };
     }; // end of namespace
 }; // end of namespace
 

@@ -506,29 +506,26 @@ namespace Nektar
                     Array<OneD, NekDouble> coord(2);
                     tri->GetCoords(x,y,z);
                     nquad = nq*(nq+1)/2;
-                    Vmath::Vcopy(nq*nq, x, 1, stdtri->UpdatePhys(), 1);
 
                     for (int j = 0; j < nquad; ++j)
                     {
                         coord[0] = xnodal[j];
                         coord[1] = ynodal[j];
-                        x[j] = stdtri->PhysEvaluate(coord);
+                        x[j] = stdtri->PhysEvaluate(coord, x);
                     }
                     
-                    Vmath::Vcopy(nq*nq, y, 1, stdtri->UpdatePhys(), 1);
                     for (int j = 0; j < nquad; ++j)
                     {
                         coord[0] = xnodal[j];
                         coord[1] = ynodal[j];
-                        y[j] = stdtri->PhysEvaluate(coord);
+                        y[j] = stdtri->PhysEvaluate(coord, y);
                     }
 
-                    Vmath::Vcopy(nq*nq, z, 1, stdtri->UpdatePhys(), 1);
                     for (int j = 0; j < nquad; ++j)
                     {
                         coord[0] = xnodal[j];
                         coord[1] = ynodal[j];
-                        z[j] = stdtri->PhysEvaluate(coord);
+                        z[j] = stdtri->PhysEvaluate(coord, z);
                     }
                 }
                 else if (e->GetConf().e == eQuadrilateral)

@@ -98,7 +98,7 @@ namespace Nektar
         }
 
         bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs)
-        {   
+        {
             if(lhs.m_matrixType < rhs.m_matrixType)
             {
                 return true;

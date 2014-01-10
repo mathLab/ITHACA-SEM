@@ -43,7 +43,7 @@ ENDMACRO(ADD_UTILITIES_EXECUTABLE name component source)
 
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/library ${CMAKE_SOURCE_DIR}/utilities)
 
-SUBDIRS( PreProcessing  PostProcessing)
+SUBDIRS(PreProcessing PostProcessing)
 
 SET(CPACK_COMPONENTS_ALL util)
 

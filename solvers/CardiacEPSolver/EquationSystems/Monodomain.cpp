@@ -234,12 +234,7 @@ namespace Nektar
                 m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[k]],
                                                  m_fields[0]->UpdateCoeffs());
                 std::stringstream filename;
-                filename << "Conductivity_" << varCoeffString[k];
-                if (m_comm->GetSize() > 1)
-                {
-                    filename << "_P" << m_comm->GetRank();
-                }
-                filename << ".fld";
+                filename << "Conductivity_" << varCoeffString[k] << ".fld";
                 WriteFld(filename.str());
 
                 ++k;

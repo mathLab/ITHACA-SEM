@@ -2,6 +2,7 @@ SET(MeshConvertHeaders
     Module.h
     InputGmsh.h
     InputNek.h
+    InputNekpp.h
     InputPly.h
     InputSem.h
     InputSwan.h
@@ -20,6 +21,7 @@ SET(MeshConvertSources
     Module.cpp
     InputGmsh.cpp
     InputNek.cpp
+    InputNekpp.cpp
     InputPly.cpp
     InputSem.cpp
     InputSwan.cpp

@@ -66,7 +66,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
                     LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_fid = id;
+            m_globalID = m_fid;
 
             m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
             SetUpCoeffs(m_xmap->GetNcoeffs());
@@ -83,6 +83,7 @@ namespace Nektar
                 Geometry2D(verts[0]->GetCoordim()),
                 m_fid(id)
         {
+            m_globalID = m_fid;
             m_shapeType = LibUtilities::eTriangle;
 
             /// Copy the vert shared pointers.
@@ -128,6 +129,7 @@ namespace Nektar
                 Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
                 m_fid(id)
         {
+            m_globalID = m_fid;
             m_shapeType = LibUtilities::eTriangle;
 
             /// Copy the edge shared pointers.
@@ -182,6 +184,7 @@ namespace Nektar
                 Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
                 m_fid(id)
         {
+            m_globalID = m_fid;
             m_shapeType =  LibUtilities::eTriangle;
 
             /// Copy the edge shared pointers.
@@ -329,6 +332,7 @@ namespace Nektar
 
             // From TriFaceComponent
             m_fid = in.m_fid;
+            m_globalID = m_fid;
             m_ownVerts = in.m_ownVerts;
             std::list<CompToElmt>::const_iterator def;
             for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)

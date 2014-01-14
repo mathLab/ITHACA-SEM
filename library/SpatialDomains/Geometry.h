@@ -352,11 +352,13 @@ namespace Nektar
             return v_ContainsPoint(gloCoord,locCoord,tol);
         }
 
+        /// return the id of the \f$j^{th}\f$ edge attached to the \f$ i^{th}\f$ vertex
         inline int Geometry::GetVertexEdgeMap(int i, int j) const
         {
             return v_GetVertexEdgeMap(i,j);
         }
 
+        /// return the id of the \f$j^{th}\f$ face attached to the \f$ i^{th}\f$ vertex
         inline int Geometry::GetVertexFaceMap(int i, int j) const
         {
             return v_GetVertexFaceMap(i,j);

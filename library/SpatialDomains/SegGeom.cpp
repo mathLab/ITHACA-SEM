@@ -58,7 +58,7 @@ namespace Nektar
                 LibUtilities::PointsKey(3, LibUtilities::eGaussLobattoLegendre));
 
             m_shapeType = LibUtilities::eSegment;
-            m_eid = id;
+            m_globalID = m_eid = id;
             m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
@@ -70,7 +70,7 @@ namespace Nektar
             Geometry1D(coordim)
         {
             m_shapeType = LibUtilities::eSegment;
-            m_eid   = id;
+            m_globalID = m_eid   = id;
             m_state = eNotFilled;
 
             if (coordim > 0)
@@ -97,7 +97,7 @@ namespace Nektar
             Geometry1D(coordim)
         {
             m_shapeType = LibUtilities::eSegment;
-            m_eid = id;
+            m_globalID =  m_eid = id;
             m_state = eNotFilled;
 
             if (coordim > 0)
@@ -176,7 +176,7 @@ namespace Nektar
                                               LibUtilities::eGaussLobattoLegendre
                                            )
                                           );
-            m_eid = id;
+            m_globalID = m_eid = id;
             m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
@@ -187,7 +187,7 @@ namespace Nektar
             m_shapeType = in.m_shapeType;
 
             // info from EdgeComponent class
-            m_eid     = in.m_eid;
+            m_globalID = m_eid     = in.m_eid;
             std::list<CompToElmt>::const_iterator def;
             for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
             {

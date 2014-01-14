@@ -99,7 +99,6 @@ namespace Nektar
             protected:
                 int                                               m_eid;
                 std::list<CompToElmt>                             m_elmtMap;
-                StdRegions::StdExpansion1DSharedPtr               m_xmap;
                 SpatialDomains::PointGeomSharedPtr                m_verts[kNverts];
                 StdRegions::Orientation                           m_porient[kNverts];
 

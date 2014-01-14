@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <SolverUtils/Driver.h>
 #include <SolverUtils/EquationSystem.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
@@ -44,6 +45,17 @@ int main(int argc, char *argv[])
     // Create session reader
     LibUtilities::SessionReaderSharedPtr session;
     session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    
+    
+    string vDriverModule;
+    DriverSharedPtr drv;
+    
+    // Create driver
+    session->LoadSolverInfo("Driver", vDriverModule, "SteadyState");
+    drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+    
+    drv->Execute();
+
 
     time_t starttime, endtime;
     NekDouble CPUtime;

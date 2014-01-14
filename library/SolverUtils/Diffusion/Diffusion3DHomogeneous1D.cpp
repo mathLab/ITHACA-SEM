@@ -134,8 +134,17 @@ namespace Nektar
 
             m_fieldsPlane   = Array<OneD, MultiRegions::ExpListSharedPtr>
                                                             (nConvectiveFields);
-            m_inarrayPlane  = Array<OneD, Array<OneD, NekDouble> >
+            
+            if (m_fluxVectorNS)
+            {
+                m_inarrayPlane  = Array<OneD, Array<OneD, NekDouble> >
+                                                        (nConvectiveFields - 1);
+            }
+            else
+            {
+                m_inarrayPlane  = Array<OneD, Array<OneD, NekDouble> >
                                                             (nConvectiveFields);
+            }
             m_outarrayPlane = Array<OneD, Array<OneD, NekDouble> >
                                                             (nConvectiveFields);
             m_planePos      = Array<OneD, unsigned int>     (m_numPlanes);
@@ -147,8 +156,7 @@ namespace Nektar
 
             if (m_fluxVectorNS)
             {
-                m_fluxVecNSStore = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
-                    nConvectiveFields);
+                m_fluxVecNSStore = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(3);
                 m_derivStore     = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
                     3);
                 m_homoDerivStore = Array<OneD, Array<OneD, NekDouble> >(
@@ -160,14 +168,20 @@ namespace Nektar
                         m_numPlanes);
 
                 // Set up storage for flux vector.
-                for (int i = 0; i < nConvectiveFields; ++i)
+                for (int i = 0; i < 3; ++i)
                 {
-                    m_fluxVecNSStore[i] = Array<OneD, Array<OneD, NekDouble> >(3);
-                    m_homoDerivStore[i] = Array<OneD, NekDouble>(m_numPoints);
-                    for (int j = 0; j < 3; ++j)
+                    m_fluxVecNSStore[i] = Array<OneD, Array<OneD, NekDouble> >
+                                                            (nConvectiveFields);
+                    for (int j = 0; j < nConvectiveFields; ++j)
                     {
                         m_fluxVecNSStore[i][j] = Array<OneD, NekDouble>(m_numPoints);
                     }
+                }
+                
+                for (int i = 0; i < nConvectiveFields; ++i)
+                {
+                    m_homoDerivStore[i] = Array<OneD, NekDouble>(m_numPoints);
+
                 }
 
                 for (int i = 0; i < 3; ++i)
@@ -183,23 +197,26 @@ namespace Nektar
                 for (int i = 0; i < m_numPlanes; ++i)
                 {
                     m_fluxVecNSPlane[i] =
-                        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
-                            nConvectiveFields);
-                    m_homoDerivPlane[i] = Array<OneD, Array<OneD, NekDouble> >(
-                        nConvectiveFields);
-                    for (int j = 0; j < nConvectiveFields; ++j)
+                        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(3);
+                    m_homoDerivPlane[i] = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+                    
+                    for (int j = 0; j < 3; ++j)
                     {
-                        m_homoDerivPlane[i][j] = Array<OneD, NekDouble>(
-                            m_numPointsPlane,
-                            m_homoDerivStore[j] + m_planePos[i]);
                         m_fluxVecNSPlane[i][j] =
-                            Array<OneD, Array<OneD, NekDouble> >(3);
-                        for (int k = 0; k < 3; ++k)
+                        Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+                        for (int k = 0; k < nConvectiveFields; ++k)
                         {
                             m_fluxVecNSPlane[i][j][k] = Array<OneD, NekDouble>(
                                 m_numPointsPlane,
                                 m_fluxVecNSStore[j][k] + m_planePos[i]);
                         }
+                    }
+                    
+                    for (int j = 0; j < nConvectiveFields; ++j)
+                    {
+                        m_homoDerivPlane[i][j] = Array<OneD, NekDouble>(
+                            m_numPointsPlane,
+                            m_homoDerivStore[j] + m_planePos[i]);
                     }
                 }
             }
@@ -215,19 +232,23 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            cout << nConvectiveFields << endl;
+            //cout << nConvectiveFields << endl;
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
+            Array<OneD, Array<OneD, NekDouble> > viscHComp;
             const int nPointsTot = fields[0]->GetNpoints();
             int i, j;
             NekDouble beta;
 
             if (m_fluxVectorNS)
             {
+                viscHComp = Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
                 for (i = 0; i < nConvectiveFields - 1; ++i)
                 {
                     fields[0]->PhysDeriv(2, inarray[i], m_homoDerivStore[i]);
+                    viscHComp[i] = Array<OneD, NekDouble>(m_numPoints);
                 }
             }
+            
 
             for (i = 0; i < m_numPlanes; ++i)
             {
@@ -255,26 +276,51 @@ namespace Nektar
                                      m_fieldsPlane,
                                      m_inarrayPlane,
                                      m_outarrayPlane);
+                
+                if (m_fluxVectorNS)
+                {
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > viscTensor = m_planeDiff->GetFluxTensor();
+
+                    // Extract H (viscTensor[2])
+                    for (int j = 0; j < nConvectiveFields - 1; ++j)
+                    {
+                        Vmath::Vcopy(m_numPointsPlane,
+                                     viscTensor[2][j+1]  + m_planePos[i], 1,
+                                     tmp2 = viscHComp[j] + m_planePos[i], 1);
+                    }
+                }
             }
 
-            for (j = 0; j < nConvectiveFields; ++j)
+            if (m_fluxVectorNS)
             {
-                fields[j]->HomogeneousFwdTrans(inarray[j], tmp);
-
-                for (i = 0; i < m_numPlanes; ++i)
+                for (j = 0; j < nConvectiveFields - 1; ++j)
                 {
-                    beta  = 2*M_PI*m_trans->GetK(i)/m_homoLen;
-                    beta *= beta;
-
-                    Vmath::Smul(m_numPointsPlane,
-                                beta,
-                                &tmp[0] + i*m_numPointsPlane, 1,
-                                &tmp[0] + i*m_numPointsPlane, 1);
+                    fields[j+1]->PhysDeriv(2, viscHComp[j], tmp);
+                    Vmath::Vadd(nPointsTot, outarray[j+1], 1, tmp, 1, outarray[j+1], 1);
                 }
+            }
+            else
+            {
+                for (j = 0; j < nConvectiveFields; ++j)
+                {
+                    fields[j]->HomogeneousFwdTrans(inarray[j], tmp);
 
-                fields[0]->HomogeneousBwdTrans(tmp, tmp);
+                    for (i = 0; i < m_numPlanes; ++i)
+                    {
+                        beta  = 2*M_PI*m_trans->GetK(i)/m_homoLen;
+                        beta *= beta;
 
-                Vmath::Vsub(nPointsTot, outarray[j], 1, tmp, 1, outarray[j], 1);
+                        Vmath::Smul(m_numPointsPlane,
+                                    beta,
+                                    &tmp[0] + i*m_numPointsPlane, 1,
+                                    &tmp[0] + i*m_numPointsPlane, 1);
+                    }
+
+                    fields[0]->HomogeneousBwdTrans(tmp, tmp);
+
+                    Vmath::Vsub(nPointsTot, outarray[j], 1, tmp, 1,
+                                outarray[j], 1);
+                }
             }
         }
 

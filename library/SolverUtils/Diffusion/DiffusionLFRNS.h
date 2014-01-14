@@ -52,11 +52,6 @@ namespace Nektar
             
             static std::string                   type[];
             
-            void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
-            {
-                m_homoDerivs = deriv;
-            }
-            
             Array<OneD, NekDouble>               m_jac;
             Array<OneD, Array<OneD, NekDouble> > m_gmat;
             
@@ -190,6 +185,12 @@ namespace Nektar
             {
                 fluxvector = m_viscTensor;
             };
+            
+            virtual void v_SetHomoDerivs(
+                                         Array<OneD, Array<OneD, NekDouble> > &deriv)
+            {
+                m_homoDerivs = deriv;
+            }
         };
         
         typedef boost::shared_ptr<DiffusionLFRNS> DiffusionLFRNSSharedPtr;

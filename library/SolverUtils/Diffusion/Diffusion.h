@@ -112,6 +112,11 @@ namespace Nektar
                 v_SetHomoDerivs(deriv);
             }
 
+            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &GetFluxTensor()
+            {
+                return v_GetFluxTensor();
+            }
+            
         protected:
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
@@ -130,6 +135,12 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
 
+            }
+            
+            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
+            {
+                static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmp;
+                return tmp;
             }
 
             DiffusionFluxVecCB     m_fluxVector;

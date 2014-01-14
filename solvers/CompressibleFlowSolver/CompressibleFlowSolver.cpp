@@ -46,15 +46,16 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr session;
     session = LibUtilities::SessionReader::CreateInstance(argc, argv);
     
-    
-    string vDriverModule;
-    DriverSharedPtr drv;
-    
-    // Create driver
-    session->LoadSolverInfo("Driver", vDriverModule, "SteadyState");
-    drv = GetDriverFactory().CreateInstance(vDriverModule, session);
-    
-    drv->Execute();
+    // === Added for using SteadyState driver for compressible solver
+    if (session->GetSolverInfo("Driver") == "SteadyState")
+    {
+        string vDriverModule;
+        DriverSharedPtr drv;
+        session->LoadSolverInfo("Driver", vDriverModule, "SteadyState");
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+        drv->Execute();
+    }
+    // === end ===
 
 
     time_t starttime, endtime;

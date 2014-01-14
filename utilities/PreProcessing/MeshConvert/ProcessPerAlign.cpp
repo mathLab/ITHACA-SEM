@@ -63,13 +63,13 @@ namespace Nektar
          */
         ProcessPerAlign::ProcessPerAlign(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["surf1"]  = ConfigOption(false, "-1",
+            m_config["surf1"]  = ConfigOption(false, "-1",
                 "Tag identifying first surface.");
-            config["surf2"]  = ConfigOption(false, "-1",
+            m_config["surf2"]  = ConfigOption(false, "-1",
                 "Tag identifying first surface.");
-            config["dir"]    = ConfigOption(false, "",
+            m_config["dir"]    = ConfigOption(false, "",
                 "Direction in which to align (either x, y, or z)");
-            config["orient"] = ConfigOption(true,  "0",
+            m_config["orient"] = ConfigOption(true,  "0",
                 "Attempt to reorient tets and prisms");
         }
 
@@ -86,10 +86,10 @@ namespace Nektar
             static int tetFaceNodes[4][3] = {
                 {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
 
-            int    surf1  = config["surf1"]. as<int>   ();
-            int    surf2  = config["surf2"]. as<int>   ();
-            string dir    = config["dir"].   as<string>();
-            bool   orient = config["orient"].as<bool>  ();
+            int    surf1  = m_config["surf1"]. as<int>   ();
+            int    surf2  = m_config["surf2"]. as<int>   ();
+            string dir    = m_config["dir"].   as<string>();
+            bool   orient = m_config["orient"].as<bool>  ();
 
             if (surf1 == -1)
             {
@@ -117,17 +117,17 @@ namespace Nektar
             vec[1] = dir == "y" ? 1.0 : 0.0;
             vec[2] = dir == "z" ? 1.0 : 0.0;
 
-            CompositeMap::iterator it1 = m->composite.find(surf1);
-            CompositeMap::iterator it2 = m->composite.find(surf2);
+            CompositeMap::iterator it1 = m_mesh->m_composite.find(surf1);
+            CompositeMap::iterator it2 = m_mesh->m_composite.find(surf2);
 
-            if (it1 == m->composite.end())
+            if (it1 == m_mesh->m_composite.end())
             {
                 cerr << "WARNING: Couldn't find surface " << surf1
                      << ". Skipping periodic alignment." << endl;
                 return;
             }
 
-            if (it2 == m->composite.end())
+            if (it2 == m_mesh->m_composite.end())
             {
                 cerr << "WARNING: Couldn't find surface " << surf2 << ", "
                      << "skipping periodic alignment." << endl;
@@ -203,13 +203,13 @@ namespace Nektar
                         {
                             for (int k = 0; k < nVerts; ++k)
                             {
-                                NodeSharedPtr n1 = c1->items[i]->GetFaceLink()->vertexList[k];
+                                NodeSharedPtr n1 = c1->items[i]->GetFaceLink()->m_vertexList[k];
                                 int l;
                                 
                                 for (l = 0; l < nVerts; ++l)
                                 {
                                     NodeSharedPtr n2 =
-                                        c2->items[it->first]->GetFaceLink()->vertexList[l];
+                                        c2->items[it->first]->GetFaceLink()->m_vertexList[l];
                                     
                                     Node dn = *n2 - *n1;
                                     if (fabs(fabs(dn.x*vec[0] + dn.y*vec[1] +

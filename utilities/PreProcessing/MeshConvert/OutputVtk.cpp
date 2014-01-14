@@ -66,7 +66,7 @@ namespace Nektar
         
         void OutputVtk::Process()
         {
-            if (m->verbose)
+            if (m_mesh->verbose)
             {
                 cout << "OutputVtk: Writing file..." << endl;
             }
@@ -78,8 +78,8 @@ namespace Nektar
             std::set<NodeSharedPtr>::iterator it;
 
             std::set<NodeSharedPtr> tmp(
-                    m->vertexSet.begin(),
-                    m->vertexSet.end());
+                    m_mesh->m_vertexSet.begin(),
+                    m_mesh->m_vertexSet.end());
 
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
@@ -88,7 +88,7 @@ namespace Nektar
             }
 
             vtkIdType p[8];
-            vector<ElementSharedPtr> &elmt = m->element[m->expDim];
+            vector<ElementSharedPtr> &elmt = m_mesh->element[m_mesh->expDim];
             for(int i = 0; i < elmt.size(); ++i)
             {
                 int vertexCount = elmt[i]->GetVertexCount();
@@ -104,7 +104,7 @@ namespace Nektar
 
             // Write out the new mesh
             vtkPolyDataWriter *vtkMeshWriter = vtkPolyDataWriter::New();
-            vtkMeshWriter->SetFileName(config["outfile"].as<string>().c_str());
+            vtkMeshWriter->SetFileName(m_config["outfile"].as<string>().c_str());
             vtkMeshWriter->SetInput(vtkMesh);
             vtkMeshWriter->Update();
         }        

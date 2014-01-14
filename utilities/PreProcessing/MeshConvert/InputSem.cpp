@@ -80,7 +80,7 @@ namespace Nektar
             // Open the file stream.
             OpenStream();
 
-            if (m->verbose)
+            if (m_mesh->verbose)
             {
                 cout << "InputSem: Start reading file..." << endl;
             }
@@ -161,12 +161,12 @@ namespace Nektar
                 }
             }
 
-            m->expDim = 0;
+            m_mesh->expDim = 0;
             string tag;
             int start, end, nVertices, nEntities, nCurves, nSurf, nGroups, nBCs;
             int id, i, j, k;
             vector<double> hoXData, hoYData;
-            ElementType elType = eQuadrilateral;
+            LibUtilities::ShapeType elType = LibUtilities::eQuadrilateral;
             ifstream homeshFile;
 
             // Begin by reading in list of nodes which define the linear
@@ -190,16 +190,16 @@ namespace Nektar
                 double x = 0, y = 0, z = 0;
                 ss >> id >> x >> y >> z;
                 
-                if ((y * y) > 0.000001 && m->spaceDim != 3)
+                if ((y * y) > 0.000001 && m_mesh->spaceDim != 3)
                 {
-                    m->spaceDim = 2;
+                    m_mesh->spaceDim = 2;
                 }
                 if ((z * z) > 0.000001)
                 {
-                    m->spaceDim = 3;
+                    m_mesh->spaceDim = 3;
                 }
                 id -= 1; // counter starts at 0
-                m->node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
+                m_mesh->node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
                 ++i;
             }
 
@@ -235,7 +235,7 @@ namespace Nektar
                 {
                     int node = 0;
                     ss >> node;
-                    nodeList.push_back(m->node[node-1]);
+                    nodeList.push_back(m_mesh->node[node-1]);
                 }
                 
                 // Create element
@@ -244,17 +244,17 @@ namespace Nektar
                     CreateInstance(elType,conf,nodeList,tags);
                 
                 // Determine mesh expansion dimension
-                if (E->GetDim() > m->expDim) {
-                    m->expDim = E->GetDim();
+                if (E->GetDim() > m_mesh->expDim) {
+                    m_mesh->expDim = E->GetDim();
                 }
-                m->element[E->GetDim()].push_back(E);
+                m_mesh->element[E->GetDim()].push_back(E);
                 ++i;
             }
         
             // Finally, process curves.
             if (sectionMap["CURVES"] != std::streampos(-1))
             {
-                int np, nel, nodeId = m->node.size();
+                int np, nel, nodeId = m_mesh->node.size();
                 
                 mshFile.seekg(sectionMap["CURVES"]);
                 getline(mshFile, line);
@@ -270,7 +270,7 @@ namespace Nektar
                 // is 0, no nead to load high order mesh file.
                 if (nCurves > 0)
                 {
-                    string fname    = config["infile"].as<string>();
+                    string fname    = m_config["infile"].as<string>();
                     int    ext      = fname.find_last_of('.');
                     string meshfile = fname.substr(0,ext) + ".msh";
                     
@@ -289,7 +289,7 @@ namespace Nektar
                     ss.clear(); ss.str(line);
                     ss >> np >> nel >> nel >> nel;
                     
-                    if (nel != m->element[m->expDim].size())
+                    if (nel != m_mesh->element[m_mesh->expDim].size())
                     {
                         cerr << "Number of elements mismatch in mesh file." << endl;
                         abort();
@@ -336,7 +336,7 @@ namespace Nektar
                     // See if we have already retrieved high-order data
                     // for this elements; prevents unnecessary computation
                     // for elements with multiple curves.
-                    if (m->element[2][elmt]->GetConf().order > 1)
+                    if (m_mesh->element[2][elmt]->GetConf().order > 1)
                     {
                         ++i;
                         continue;
@@ -397,7 +397,7 @@ namespace Nektar
                     
                     // Grab existing element from list and retrieve tags and
                     // vertices; insert these into existing edge nodes.
-                    ElementSharedPtr      e      = m->element[2][elmt];
+                    ElementSharedPtr      e      = m_mesh->element[2][elmt];
                     vector<NodeSharedPtr> elvert = e->GetVertexList();
                     vector<int>           tags   = e->GetTagList();
                     edgeNodes.insert(edgeNodes.begin(), elvert.begin(), elvert.end());
@@ -406,7 +406,7 @@ namespace Nektar
                     // quadrilateral of the correct order.
                     ElmtConfig conf(elType,np-1,true,false,true,
                                     LibUtilities::eGaussLobattoLegendre);
-                    m->element[2][elmt] = GetElementFactory().
+                    m_mesh->element[2][elmt] = GetElementFactory().
                         CreateInstance(elType,conf,edgeNodes,tags);
                     
                     ++i;
@@ -423,7 +423,7 @@ namespace Nektar
                 
                 while (ss >> tag)
                 {
-                    m->fields.push_back(tag);
+                    m_mesh->fields.push_back(tag);
                 }
             }
             
@@ -479,7 +479,7 @@ namespace Nektar
                     ss >> id >> tag >> nF;
 
                     p = ConditionSharedPtr(new Condition());
-                    m->condition[conditionMap[tag]] = p;
+                    m_mesh->condition[conditionMap[tag]] = p;
                     
                     // Read boundary condition.
                     j = 0;
@@ -535,7 +535,7 @@ namespace Nektar
                     // Finally set composite for condition. In this case, all
                     // composites will be lines so there is one set per
                     // composite.
-                    p->composite.push_back(conditionMap[tag]+1);
+                    p->m_composite.push_back(conditionMap[tag]+1);
                     
                     ++i;
                 }
@@ -568,7 +568,7 @@ namespace Nektar
                     if (word == "<P>")
                     {
                         // If this is the first periodic boundary condition
-                        // encountered, then set up m->condition with two
+                        // encountered, then set up m_mesh->condition with two
                         // periodic conditions.
                         if (periodicTagId == -1)
                         {
@@ -577,21 +577,21 @@ namespace Nektar
                                 ConditionSharedPtr(new Condition());
                             ConditionSharedPtr out = 
                                 ConditionSharedPtr(new Condition());
-                            for (j = 0; j < m->fields.size(); ++j)
+                            for (j = 0; j < m_mesh->fields.size(); ++j)
                             {
                                 in-> type.push_back(ePeriodic);
                                 out->type.push_back(ePeriodic);
-                                in-> field.push_back(m->fields[j]);
-                                out->field.push_back(m->fields[j]);
+                                in-> field.push_back(m_mesh->fields[j]);
+                                out->field.push_back(m_mesh->fields[j]);
                                 in-> value.push_back("["+boost::lexical_cast<
                                     string>(periodicTagId+1)+"]");
                                 out->value.push_back("["+boost::lexical_cast<
                                     string>(periodicTagId)+"]");
                             }
-                            in-> composite.push_back(periodicTagId+1);
-                            out->composite.push_back(periodicTagId+2);
-                            m->  condition[periodicTagId]   = in;
-                            m->  condition[periodicTagId+1] = out;
+                            in-> m_composite.push_back(periodicTagId+1);
+                            out->m_composite.push_back(periodicTagId+2);
+                            m_mesh->  condition[periodicTagId]   = in;
+                            m_mesh->  condition[periodicTagId+1] = out;
                         }
                         
                         int elmtB, sideB;
@@ -639,8 +639,8 @@ namespace Nektar
         
         void InputSem::insertEdge(int elmt, int side, int tagId)
         {
-            EdgeSharedPtr edge = m->element[2][elmt]->GetEdge(side);
-            vector<NodeSharedPtr> edgeNodes = edge->edgeNodes;
+            EdgeSharedPtr edge = m_mesh->element[2][elmt]->GetEdge(side);
+            vector<NodeSharedPtr> edgeNodes = edge->m_edgeNodes;
             edgeNodes.insert(edgeNodes.begin(),edge->n2);
             edgeNodes.insert(edgeNodes.begin(),edge->n1);
             int order = edgeNodes.size()-1;
@@ -648,11 +648,11 @@ namespace Nektar
             vector<int> tags;
             tags.push_back(tagId);
             
-            ElmtConfig conf(eLine, order, order > 1, false, true,
+            ElmtConfig conf(LibUtilities::eSegment, order, order > 1, false, true,
                             LibUtilities::eGaussLobattoLegendre);
             ElementSharedPtr E = GetElementFactory().
-                CreateInstance(eLine,conf,edgeNodes,tags);
-            m->element[1].push_back(E);
+                CreateInstance(LibUtilities::eSegment,conf,edgeNodes,tags);
+            m_mesh->element[1].push_back(E);
         }
     }
 }

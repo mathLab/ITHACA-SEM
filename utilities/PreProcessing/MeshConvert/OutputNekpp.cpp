@@ -58,7 +58,7 @@ namespace Nektar
 
         OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
         {
-            config["z"] = ConfigOption(true, "0",
+            m_config["z"] = ConfigOption(true, "0",
                 "Compress output file and append a .gz extension.");
         }
 
@@ -69,7 +69,7 @@ namespace Nektar
         
         void OutputNekpp::Process()
         {
-            if (m->verbose)
+            if (m_mesh->verbose)
             {
                 cout << "OutputNekpp: Writing file..." << endl;
             }
@@ -83,8 +83,8 @@ namespace Nektar
 
             // Begin <GEOMETRY> section
             TiXmlElement * geomTag = new TiXmlElement( "GEOMETRY" );
-            geomTag->SetAttribute("DIM", m->expDim);
-            geomTag->SetAttribute("SPACE", m->spaceDim);
+            geomTag->SetAttribute("DIM", m_mesh->expDim);
+            geomTag->SetAttribute("SPACE", m_mesh->spaceDim);
             root->LinkEndChild( geomTag );
 
             WriteXmlNodes     (geomTag);
@@ -98,10 +98,10 @@ namespace Nektar
             WriteXmlConditions(root);
             
             // Extract the output filename and extension
-            string filename = config["outfile"].as<string>();
+            string filename = m_config["outfile"].as<string>();
 
             // Compress output and append .gz extension
-            if (config["z"].as<bool>())
+            if (m_config["z"].as<bool>())
             {
                 filename += ".gz";
                 ofstream fout(filename.c_str(),
@@ -128,8 +128,8 @@ namespace Nektar
             std::set<NodeSharedPtr>::iterator it;
 
             std::set<NodeSharedPtr> tmp(
-                    m->vertexSet.begin(),
-                    m->vertexSet.end());
+                    m_mesh->m_vertexSet.begin(),
+                    m_mesh->m_vertexSet.end());
 
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
@@ -147,14 +147,12 @@ namespace Nektar
 
         void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot)
         {
-            if (m->expDim >= 2)
+            if (m_mesh->expDim >= 2)
             {
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
                 std::set<EdgeSharedPtr>::iterator it;
-                std::set<EdgeSharedPtr> tmp(
-                        m->edgeSet.begin(),
-                        m->edgeSet.end());
-                
+                std::set<EdgeSharedPtr> tmp(m_mesh->m_edgeSet.begin(),
+                                            m_mesh->m_edgeSet.end());
                 for (it = tmp.begin(); it != tmp.end(); ++it)
                 {
                     EdgeSharedPtr ed = *it;
@@ -172,25 +170,25 @@ namespace Nektar
 
         void OutputNekpp::WriteXmlFaces(TiXmlElement * pRoot)
         {
-            if (m->expDim == 3)
+            if (m_mesh->expDim == 3)
             {
                 TiXmlElement* verTag = new TiXmlElement( "FACE" );
                 std::set<FaceSharedPtr>::iterator it;
                 std::set<FaceSharedPtr> tmp(
-                        m->faceSet.begin(),
-                        m->faceSet.end());
+                        m_mesh->m_faceSet.begin(),
+                        m_mesh->m_faceSet.end());
 
                 for (it = tmp.begin(); it != tmp.end(); ++it)
                 {
                     stringstream s;
                     FaceSharedPtr fa = *it;
 
-                    for (int j = 0; j < fa->edgeList.size(); ++j)
+                    for (int j = 0; j < fa->m_edgeList.size(); ++j)
                     {
-                        s << setw(10) << fa->edgeList[j]->id;
+                        s << setw(10) << fa->m_edgeList[j]->id;
                     }
                     TiXmlElement * f;
-                    switch(fa->vertexList.size())
+                    switch(fa->m_vertexList.size())
                     {
                         case 3:
                             f = new TiXmlElement("T");
@@ -212,7 +210,7 @@ namespace Nektar
         void OutputNekpp::WriteXmlElements(TiXmlElement * pRoot)
         {
             TiXmlElement* verTag = new TiXmlElement( "ELEMENT" );
-            vector<ElementSharedPtr> &elmt = m->element[m->expDim];
+            vector<ElementSharedPtr> &elmt = m_mesh->element[m_mesh->expDim];
 
             for(int i = 0; i < elmt.size(); ++i)
             {
@@ -230,9 +228,9 @@ namespace Nektar
 
             bool curve = false;
             EdgeSet::iterator it;
-            for (it = m->edgeSet.begin(); it != m->edgeSet.end(); ++it)
+            for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); ++it)
             {
-                if ((*it)->edgeNodes.size() > 0) 
+                if ((*it)->m_edgeNodes.size() > 0) 
                 {
                     curve = true;
                     break;
@@ -242,9 +240,9 @@ namespace Nektar
 
             TiXmlElement * curved = new TiXmlElement ("CURVED" );
 
-            for (it = m->edgeSet.begin(); it != m->edgeSet.end(); ++it)
+            for (it = m_mesh->m_edgeSet.begin(); it != m_mesh->m_edgeSet.end(); ++it)
             {
-                if ((*it)->edgeNodes.size() > 0)
+                if ((*it)->m_edgeNodes.size() > 0)
                 {
                     TiXmlElement * e = new TiXmlElement( "E" );
                     e->SetAttribute("ID",        edgecnt++);
@@ -261,11 +259,11 @@ namespace Nektar
             int facecnt = 0;
 
             // 2D elements in 3-space, output face curvature information
-            if (m->expDim == 2 && m->spaceDim == 3)
+            if (m_mesh->expDim == 2 && m_mesh->spaceDim == 3)
             {
                 vector<ElementSharedPtr>::iterator it;
-                for (it  = m->element[m->expDim].begin();
-                     it != m->element[m->expDim].end(); ++it)
+                for (it  = m_mesh->element[m_mesh->expDim].begin();
+                     it != m_mesh->element[m_mesh->expDim].end(); ++it)
                 {
                     // Only generate face curve if there are volume nodes
                     if ((*it)->GetVolumeNodes().size() > 0)
@@ -283,12 +281,12 @@ namespace Nektar
                     }
                 }
             }
-            else if (m->expDim == 3)
+            else if (m_mesh->expDim == 3)
             {
                 FaceSet::iterator it2;
-                for (it2 = m->faceSet.begin(); it2 != m->faceSet.end(); ++it2)
+                for (it2 = m_mesh->m_faceSet.begin(); it2 != m_mesh->m_faceSet.end(); ++it2)
                 {
-                    if ((*it2)->faceNodes.size() > 0)
+                    if ((*it2)->m_faceNodes.size() > 0)
                     {
                         TiXmlElement * f = new TiXmlElement( "F" );
                         f->SetAttribute("ID",       facecnt++);
@@ -313,7 +311,7 @@ namespace Nektar
             ConditionMap::iterator it2;
             int j = 0;
 
-            for (it = m->composite.begin(); it != m->composite.end(); ++it, ++j)
+            for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end(); ++it, ++j)
             {
                 if (it->second->items.size() > 0) 
                 {
@@ -321,8 +319,8 @@ namespace Nektar
                     bool doSort = true;
                     
                     // Ensure that this composite is not used for periodic BCs!
-                    for (it2  = m->condition.begin(); 
-                         it2 != m->condition.end(); ++it2)
+                    for (it2  = m_mesh->condition.begin(); 
+                         it2 != m_mesh->condition.end(); ++it2)
                     {
                         ConditionSharedPtr c = it2->second;
                         
@@ -333,9 +331,9 @@ namespace Nektar
                             continue;
                         }
 
-                        for (int i = 0; i < c->composite.size(); ++i)
+                        for (int i = 0; i < c->m_composite.size(); ++i)
                         {
-                            if (c->composite[i] == j)
+                            if (c->m_composite[i] == j)
                             {
                                 doSort = false;
                             }
@@ -365,9 +363,9 @@ namespace Nektar
             std::string list;
             CompositeMap::iterator it;
             
-            for (it = m->composite.begin(); it != m->composite.end(); ++it)
+            for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end(); ++it)
             {
-                if (it->second->items[0]->GetDim() == m->expDim)
+                if (it->second->items[0]->GetDim() == m_mesh->expDim)
                 {
                     if (list.length() > 0)
                     {
@@ -386,9 +384,9 @@ namespace Nektar
             TiXmlElement * expansions = new TiXmlElement ("EXPANSIONS");
             CompositeMap::iterator it;
             
-            for (it = m->composite.begin(); it != m->composite.end(); ++it)
+            for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end(); ++it)
             {
-                if (it->second->items[0]->GetDim() == m->expDim)
+                if (it->second->items[0]->GetDim() == m_mesh->expDim)
                 {
                     TiXmlElement * exp = new TiXmlElement ( "E");
                     exp->SetAttribute("COMPOSITE", "C["
@@ -397,16 +395,16 @@ namespace Nektar
                     exp->SetAttribute("NUMMODES",4);
                     exp->SetAttribute("TYPE","MODIFIED");
                     
-                    if (m->fields.size() == 0)
+                    if (m_mesh->fields.size() == 0)
                     {
                         exp->SetAttribute("FIELDS","u");
                     }
                     else
                     {
                         string fstr;
-                        for (int i = 0; i < m->fields.size(); ++i)
+                        for (int i = 0; i < m_mesh->fields.size(); ++i)
                         {
-                            fstr += m->fields[i]+",";
+                            fstr += m_mesh->fields[i]+",";
                         }
                         fstr = fstr.substr(0,fstr.length()-1);
                         exp->SetAttribute("FIELDS", fstr);
@@ -430,7 +428,7 @@ namespace Nektar
                 new TiXmlElement("VARIABLES");
             ConditionMap::iterator it;
             
-            for (it = m->condition.begin(); it != m->condition.end(); ++it)
+            for (it = m_mesh->condition.begin(); it != m_mesh->condition.end(); ++it)
             {
                 ConditionSharedPtr c = it->second;
                 string tmp;
@@ -439,9 +437,9 @@ namespace Nektar
                 TiXmlElement *b = new TiXmlElement("B");
                 b->SetAttribute("ID", boost::lexical_cast<string>(it->first));
                 
-                for (int i = 0; i < c->composite.size(); ++i)
+                for (int i = 0; i < c->m_composite.size(); ++i)
                 {
-                    tmp += boost::lexical_cast<string>(c->composite[i]) + ",";
+                    tmp += boost::lexical_cast<string>(c->m_composite[i]) + ",";
                 }
                 
                 tmp = tmp.substr(0, tmp.length()-1);
@@ -482,21 +480,21 @@ namespace Nektar
                 boundaryconditions->LinkEndChild(region);
             }
 
-            for (int i = 0; i < m->fields.size(); ++i)
+            for (int i = 0; i < m_mesh->fields.size(); ++i)
             {
                 TiXmlElement *v = new TiXmlElement("V");
                 v->SetAttribute("ID", boost::lexical_cast<std::string>(i));
-                TiXmlText *t0 = new TiXmlText(m->fields[i]);
+                TiXmlText *t0 = new TiXmlText(m_mesh->fields[i]);
                 v->LinkEndChild(t0);
                 variables->LinkEndChild(v);
             }
             
-            if (m->fields.size() > 0)
+            if (m_mesh->fields.size() > 0)
             {
                 conditions->LinkEndChild(variables);
             }
             
-            if (m->condition.size() > 0)
+            if (m_mesh->condition.size() > 0)
             {
                 conditions->LinkEndChild(boundaryregions);
                 conditions->LinkEndChild(boundaryconditions);

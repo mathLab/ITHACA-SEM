@@ -69,15 +69,15 @@ namespace Nektar
             // Open the file stream.
             OpenStream();
             
-            m->expDim = 0;
+            m_mesh->expDim = 0;
             string line;
             int nVertices = 0;
             int nEntities = 0;
             int nProperties = 0;
-            ElementType elType = eTriangle;
+            LibUtilities::ShapeType elType = LibUtilities::eTriangle;
             map<string, int> propMap;
 
-            if (m->verbose)
+            if (m_mesh->verbose)
             {
                 cout << "InputPly: Start reading file..." << endl;
             }
@@ -124,15 +124,15 @@ namespace Nektar
                         double y = data[propMap["y"]];
                         double z = data[propMap["z"]];
                         
-                        if ((y * y) > 0.000001 && m->spaceDim != 3)
+                        if ((y * y) > 0.000001 && m_mesh->spaceDim != 3)
                         {
-                            m->spaceDim = 2;
+                            m_mesh->spaceDim = 2;
                         }
                         if ((z * z) > 0.000001)
                         {
-                            m->spaceDim = 3;
+                            m_mesh->spaceDim = 3;
                         }
-                        m->node.push_back(
+                        m_mesh->node.push_back(
                             boost::shared_ptr<Node>(new Node(i, x, y, z)));
                         
                         // Read vertex normals.
@@ -141,7 +141,7 @@ namespace Nektar
                             double nx = data[propMap["nx"]];
                             double ny = data[propMap["ny"]];
                             double nz = data[propMap["nz"]];
-                            m->vertexNormals[i] = Node(0, nx, ny, nz);
+                            m_mesh->m_vertexNormals[i] = Node(0, nx, ny, nz);
                         }
                     }
 
@@ -163,7 +163,7 @@ namespace Nektar
                         {
                             int node = 0;
                             st >> node;
-                            nodeList.push_back(m->node[node]);
+                            nodeList.push_back(m_mesh->node[node]);
                         }
                         
                         // Create element
@@ -172,11 +172,11 @@ namespace Nektar
                             CreateInstance(elType,conf,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m->expDim) 
+                        if (E->GetDim() > m_mesh->expDim) 
                         {
-                            m->expDim = E->GetDim();
+                            m_mesh->expDim = E->GetDim();
                         }
-                        m->element[E->GetDim()].push_back(E);
+                        m_mesh->element[E->GetDim()].push_back(E);
                     }
                 }
             }

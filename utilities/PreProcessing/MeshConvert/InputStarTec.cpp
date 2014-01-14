@@ -81,10 +81,10 @@ namespace Nektar
          */
         void InputTec::Process()
         {
-            m->expDim   = 3;
-            m->spaceDim = 3;
+            m_mesh->expDim   = 3;
+            m_mesh->spaceDim = 3;
             
-            if (m->verbose)
+            if (m_mesh->verbose)
             {
                 cout << "InputStarTec: Start reading file..." << endl;
             }
@@ -370,7 +370,7 @@ namespace Nektar
                 // consistent numbering for singular vertex re-ordering
                 ResetNodes(Nodes,ElementFaces,FaceNodes);
                 
-                m->node = Nodes;
+                m_mesh->node = Nodes;
 
                 // create Prisms/Pyramids first
                 for(i = 0; i < nelements; ++i)
@@ -400,12 +400,12 @@ namespace Nektar
             {
                 cout << " (2D)" << endl;
 
-                // find ids of VertNodes from m->vertexSet so that we can identify
+                // find ids of VertNodes from m_mesh->vertexSet so that we can identify
                 for(i = 0; i < Nodes.size(); ++i)
                 {
-                    NodeSet::iterator it = m->vertexSet.find(Nodes[i]);
+                    NodeSet::iterator it = m_mesh->m_vertexSet.find(Nodes[i]);
                     
-                    if (it == m->vertexSet.end())
+                    if (it == m_mesh->m_vertexSet.end())
                     {
                         ASSERTL0(false,"Failed to find face vertex in 3D list");
                     }
@@ -678,16 +678,16 @@ namespace Nektar
                                     vector<vector<int> >&FaceNodes,
                                     int nComposite)
         {
-            ElementType elType;
+            LibUtilities::ShapeType elType;
             // set up Node list
 
             if(ElementFaces.size() == 3)
             {
-                elType = eTriangle;
+                elType = LibUtilities::eTriangle;
             }
             else if(ElementFaces.size() == 4)
             {
-                elType = eQuadrilateral;
+                elType = LibUtilities::eQuadrilateral;
             }
             else
             {
@@ -711,7 +711,7 @@ namespace Nektar
             ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
                                                                      nodeList,tags);
             
-            m->element[E->GetDim()].push_back(E);
+            m_mesh->element[E->GetDim()].push_back(E);
         }
 
         void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
@@ -719,28 +719,28 @@ namespace Nektar
                                     vector<vector<int> >&FaceNodes,
                                     int nComposite, bool DoOrient)
         {
-            ElementType elType;
+            LibUtilities::ShapeType elType;
             // set up Node list
             Array<OneD, int> Nodes = SortFaceNodes(VertNodes, ElementFaces, FaceNodes);
             int nnodes = Nodes.num_elements();
-            map<ElementType,int> domainComposite;
+            map<LibUtilities::ShapeType,int> domainComposite;
 
             
             // Set Nodes  -- Not sure we need this so could 
-            //m->node = VertNodes;
+            //m_mesh->node = VertNodes;
 
             // element type
             if(nnodes == 4)
             {
-                elType = eTetrahedron;
+                elType = LibUtilities::eTetrahedron;
             }
             else if(nnodes == 5)
             {
-                elType = ePyramid;
+                elType = LibUtilities::ePyramid;
             }
             else if(nnodes == 6)
             {
-                elType = ePrism;
+                elType = LibUtilities::ePrism;
             }
             else
             {
@@ -761,13 +761,13 @@ namespace Nektar
             
             
             // Create element
-            if(nnodes != ePyramid)
+            if(nnodes != LibUtilities::ePyramid)
             {
                 ElmtConfig conf(elType,1,false,false,DoOrient);
                 ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
                                                            nodeList,tags);
                 
-                m->element[E->GetDim()].push_back(E);
+                m_mesh->element[E->GetDim()].push_back(E);
             }
             else
             {

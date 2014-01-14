@@ -60,7 +60,7 @@ namespace Nektar
 
         ProcessTetSplit::ProcessTetSplit(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["nq"]   = ConfigOption(false, "3",
+            m_config["nq"]   = ConfigOption(false, "3",
                 "Number of points in high order elements.");
         }
 
@@ -71,7 +71,7 @@ namespace Nektar
 
         void ProcessTetSplit::Process()
         {
-            int nodeId = m->vertexSet.size();
+            int nodeId = m_mesh->m_vertexSet.size();
 
             // Set up map which identifies edges (as pairs of vertex ids)
             // including their vertices to the offset/stride in the 3d array of
@@ -81,7 +81,7 @@ namespace Nektar
             map<ipair, ipair> edgeMap;
             map<ipair, ipair>::iterator it;
 
-            int nq  = config["nq"].as<int>();
+            int nq  = m_config["nq"].as<int>();
             int ne  = nq-2;        // Edge interior
             int nft = (ne-1)*ne/2; // Face interior (triangle)
             int nfq = ne*ne;       // Face interior (quad)
@@ -124,7 +124,7 @@ namespace Nektar
              * Tetrahedra", J. Dompierre et al.
              */
 
-            // Denotes a set of indices inside m->element[m->expDim-1] which are
+            // Denotes a set of indices inside m_mesh->element[m_mesh->expDim-1] which are
             // to be removed. These are precisely the quadrilateral boundary
             // faces which will be replaced by two triangular faces.
             set<int> toRemove;
@@ -177,14 +177,14 @@ namespace Nektar
             LibUtilities::PointsManager()[elec]->GetPoints(rp,sp);
 
             // Make a copy of the element list.
-            vector<ElementSharedPtr> el = m->element[m->expDim];
-            m->element[m->expDim].clear();
+            vector<ElementSharedPtr> el = m_mesh->element[m_mesh->expDim];
+            m_mesh->element[m_mesh->expDim].clear();
 
             for (int i = 0; i < el.size(); ++i)
             {
-                if (el[i]->GetConf().e != ePrism)
+                if (el[i]->GetConf().m_e != LibUtilities::ePrism)
                 {
-                    m->element[m->expDim].push_back(el[i]);
+                    m_mesh->element[m_mesh->expDim].push_back(el[i]);
                     continue;
                 }
 
@@ -238,7 +238,7 @@ namespace Nektar
                 // mapped element can be read from.
                 SpatialDomains::PrismGeomSharedPtr geomLayer =
                     boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
-                        el[i]->GetGeom(m->spaceDim));
+                        el[i]->GetGeom(m_mesh->spaceDim));
                 LibUtilities::BasisKey B0(
                     LibUtilities::eOrtho_A, nq,
                     LibUtilities::PointsKey(
@@ -349,9 +349,9 @@ namespace Nektar
 
                     // Create new tetrahedron with edge curvature.
                     vector<int> tags = el[i]->GetTagList();
-                    ElmtConfig conf(eTetrahedron, nq-1, false, false);
+                    ElmtConfig conf(LibUtilities::eTetrahedron, nq-1, false, false);
                     ElementSharedPtr elmt = GetElementFactory().
-                        CreateInstance(eTetrahedron,conf,tetNodes,tags);
+                        CreateInstance(LibUtilities::eTetrahedron,conf,tetNodes,tags);
 
                     // Extract interior face data.
                     for (int k = 0; k < 4; ++k)
@@ -363,7 +363,7 @@ namespace Nektar
 
                         for (int l = 0; l < 3; ++l)
                         {
-                            NodeSharedPtr v = face->vertexList[l];
+                            NodeSharedPtr v = face->m_vertexList[l];
                             triNodes[l] =
                                 stdPrismNodes[prismVerts[v->id]];
                         }
@@ -371,9 +371,9 @@ namespace Nektar
                         // Create a triangle with the standard nodes of the
                         // prism.
                         vector<int> tags;
-                        ElmtConfig conf(eTriangle, 1, false, false);
+                        ElmtConfig conf(LibUtilities::eTriangle, 1, false, false);
                         ElementSharedPtr elmt = GetElementFactory().
-                            CreateInstance(eTriangle,conf,triNodes,tags);
+                            CreateInstance(LibUtilities::eTriangle,conf,triNodes,tags);
                         SpatialDomains::GeometrySharedPtr triGeom =
                             elmt->GetGeom(3);
                         triGeom->FillGeom();
@@ -393,12 +393,12 @@ namespace Nektar
                             NekDouble xc = geomLayer->GetCoord(0, tmp2);
                             NekDouble yc = geomLayer->GetCoord(1, tmp2);
                             NekDouble zc = geomLayer->GetCoord(2, tmp2);
-                            face->faceNodes.push_back(
+                            face->m_faceNodes.push_back(
                                 NodeSharedPtr(new Node(nodeId++, xc, yc, zc)));
                         }
                     }
 
-                    m->element[m->expDim].push_back(elmt);
+                    m_mesh->element[m_mesh->expDim].push_back(elmt);
                 }
 
                 // Now check to see if this one of the quadrilateral faces is
@@ -422,12 +422,12 @@ namespace Nektar
                     vector<int>           faceNodes  (3);
                     vector<int>           tmp;
                     vector<int>           tagBE;
-                    ElmtConfig            bconf(eTriangle, 1, true, true);
+                    ElmtConfig            bconf(LibUtilities::eTriangle, 1, true, true);
                     ElementSharedPtr      elmt;
 
                     // Mark existing boundary face for removal.
                     toRemove.insert(bl);
-                    tagBE =  m->element[m->expDim-1][bl]->GetTagList();
+                    tagBE =  m_mesh->element[m_mesh->expDim-1][bl]->GetTagList();
 
                     // First loop over tets.
                     for (int j = 0; j < 3; ++j)
@@ -467,8 +467,8 @@ namespace Nektar
                                 triNodeList[1] = nodeList[mapPrism[tmp[1]]];
                                 triNodeList[2] = nodeList[mapPrism[tmp[2]]];
                                 elmt           = GetElementFactory().
-                                    CreateInstance(eTriangle,bconf,triNodeList,tagBE);
-                                m->element[m->expDim-1].push_back(elmt);
+                                    CreateInstance(LibUtilities::eTriangle,bconf,triNodeList,tagBE);
+                                m_mesh->element[m_mesh->expDim-1].push_back(elmt);
                             }
                         }
                     }
@@ -477,16 +477,16 @@ namespace Nektar
 
             // Remove 2D elements.
             vector<ElementSharedPtr> tmp;
-            for (int i = 0; i < m->element[m->expDim-1].size(); ++i)
+            for (int i = 0; i < m_mesh->element[m_mesh->expDim-1].size(); ++i)
             {
                 set<int>::iterator it = toRemove.find(i);
                 if (it == toRemove.end())
                 {
-                    tmp.push_back(m->element[m->expDim-1][i]);
+                    tmp.push_back(m_mesh->element[m_mesh->expDim-1][i]);
                 }
             }
 
-            m->element[m->expDim-1] = tmp;
+            m_mesh->element[m_mesh->expDim-1] = tmp;
 
             // Re-process mesh to eliminate duplicate vertices and edges.
             ProcessVertices();

@@ -58,20 +58,74 @@ namespace Nektar
         
         void OutputFld::Process(po::variables_map &vm)
         {
-            if (m_f->m_verbose)
-            {
-                cout << "OutputFld: Writing file..." << endl;
-            }
-            
+         
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
 
-            // Write the output file
-            m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+            if(vm.count("boundary-region"))
+            {
+                vector<unsigned int> values;
+                ASSERTL0(ParseUtils::GenerateOrderedVector(vm["boundary-region"].as<string>().c_str(),values),"Failed to interpret range string");
+                
+                
+                if (m_f->m_verbose)
+                {
+                    cout << "OutputFld: Writing boundary file(s): "; 
+                    for(int i = 0; i < values.size(); ++i)
+                    {
+                        cout << values[i];
+                        if(i < values.size()-1) 
+                        {
+                            cout << ",";
+                        }
+                    }
+                    cout << endl;
+                }
+                
+                int nfields = m_f->m_exp.size();
+                Array<OneD, Array<OneD, const MultiRegions::ExpListSharedPtr> > BndExp(nfields);
+                for(int i = 0; i < nfields; ++i)
+                {
+                    BndExp[i] = m_f->m_exp[0]->GetBndCondExpansions();
+                }
 
-            //  Put in a block ot amke sure all outputs have been completed
-            m_f->m_session->GetComm()->Block(); 
+                // find ending of output file and insert _b1, _b2
+                int    dot = filename.find_last_of('.') + 1;
+                string ext = filename.substr(dot, filename.length() - dot);
+                string name = filename.substr(0, dot-1);
 
+
+                for(int i = 0; i < values.size(); ++i)
+                {
+                    string outname = name  + "_b" + boost::lexical_cast<string>(i) + "." + ext;
+                    
+                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+                        = BndExp[0][values[i]]->GetFieldDefinitions();
+                    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+                    for(int j = 0; j < nfields; ++j)
+                    {
+                        for(int k = 0; k < FieldDef.size(); ++k)
+                        {
+                            BndExp[j][values[i]]->AppendFieldData(FieldDef[k], 
+                                                                  FieldData[k]);
+                            FieldDef[k]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                        }
+                    }
+                    
+                    m_f->m_fld->Write(outname,FieldDef,FieldData);
+                }
+            }
+            else
+            {
+                if (m_f->m_verbose)
+                {
+                    cout << "OutputFld: Writing file..." << endl;
+                }
+
+                // Write the output file
+                m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+            }
         }        
     }
 }

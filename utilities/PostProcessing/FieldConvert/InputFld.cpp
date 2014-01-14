@@ -41,12 +41,12 @@ using namespace std;
 
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
+#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/DisContField3D.h>
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
@@ -122,14 +122,18 @@ namespace Nektar
             
             string xml_ending = "xml";
             string xml_gz_ending = "xml.gz";
+            bool DeclareExpansionAsField = false;
 
+            if(vm.count("boundary-region"))
+            {
+                DeclareExpansionAsField = true;
+            }
 
             int   argc = m_files[xml_ending].size()+m_files[xml_gz_ending].size()+1;
             char *argv[argc];
             const char *instring = "ProcessField";
             argv[0] = strdup(instring);
             // load .xml ending
-            
             int i;
             for (i = 0; i < m_files[xml_ending].size(); ++i)
             {
@@ -293,12 +297,12 @@ namespace Nektar
                         
                         NekDouble ly = m_f->m_fielddef[0]->m_homogeneousLengths[0];
                         NekDouble lz = m_f->m_fielddef[0]->m_homogeneousLengths[1];
-                        
                         Exp3DH2 = MemoryManager<MultiRegions::
                             ExpList3DHomogeneous2D>::
                             AllocateSharedPtr(m_f->m_session, BkeyY, BkeyZ, 
                                               ly, lz, useFFT, dealiasing, 
                                               m_f->m_graph);
+                        
                         m_f->m_exp[0] = Exp3DH2;
                     }
                     else
@@ -340,8 +344,18 @@ namespace Nektar
                     else
                     {
                         MultiRegions::ExpList2DSharedPtr Exp2D;
-                        Exp2D = MemoryManager<MultiRegions::ExpList2D>
-                            ::AllocateSharedPtr(m_f->m_session,m_f->m_graph);
+
+                        if(DeclareExpansionAsField)
+                        {
+                            Exp2D = MemoryManager<MultiRegions::DisContField2D>
+                                ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,
+                                                    m_f->m_session->GetVariable(0));
+                        }
+                        else
+                        {
+                            Exp2D = MemoryManager<MultiRegions::ExpList2D>
+                                ::AllocateSharedPtr(m_f->m_session,m_f->m_graph);
+                        }
                         m_f->m_exp[0] = Exp2D;
                         
                     }
@@ -350,8 +364,18 @@ namespace Nektar
             case 3:
                 {
                     MultiRegions::ExpList3DSharedPtr Exp3D;
-                    Exp3D = MemoryManager<MultiRegions::ExpList3D>
-                        ::AllocateSharedPtr(m_f->m_session, m_f->m_graph);
+
+                    if(DeclareExpansionAsField)
+                    {
+                        Exp3D = MemoryManager<MultiRegions::DisContField3D>
+                            ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,
+                                                m_f->m_session->GetVariable(0));
+                    }
+                    else
+                    {
+                        Exp3D = MemoryManager<MultiRegions::ExpList3D>
+                            ::AllocateSharedPtr(m_f->m_session, m_f->m_graph);
+                    }
                     m_f->m_exp[0] = Exp3D;
                 }
                 break;

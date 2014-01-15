@@ -145,7 +145,7 @@ namespace Nektar
                 fs::path    pdirname(dirname);
                 
                 boost::format pad("P%1$07d.xml");
-                pad % rank;
+                pad % i;
                 fs::path    pFilename(pad.str());
                 
                 fs::path fullpath = pdirname / pFilename; 

@@ -789,55 +789,9 @@ namespace Nektar
                     }
                     break;
                 case 2:
+                    for(int j=0; j< edge.size(); ++j)
                     {
-                        NekDouble cross = 0.0;
-                        
-                        // caclulate sign based on cross product of vertices
-                        if(m_edge[0]->n1 == m_edge[1]->n1)
-                        {
-                            cross  = (m_edge[0]->n2->m_x - m_edge[0]->n1->m_x)*
-                                (m_edge[1]->n2->m_y - m_edge[1]->n1->m_y) - 
-                                (m_edge[0]->n2->m_y - m_edge[0]->n1->m_y)*
-                                (m_edge[1]->n2->m_x - m_edge[1]->n1->m_x); 
-                        }
-                        else if(m_edge[0]->n1 == m_edge[1]->n2)
-                        {
-                            cross  = (m_edge[0]->n2->m_x - m_edge[0]->n1->m_x)*
-                                (m_edge[1]->n1->m_y - m_edge[1]->n2->m_y) - 
-                                (m_edge[0]->n2->m_y - m_edge[0]->n1->m_y)*
-                                (m_edge[1]->n1->m_x - m_edge[1]->n2->m_x); 
-                        }
-                        else if(m_edge[0]->n2 == m_edge[1]->n1)
-                        {
-                            cross  = (m_edge[0]->n1->m_x - m_edge[0]->n2->m_x)*
-                                (m_edge[1]->n2->m_y - m_edge[1]->n1->m_y) - 
-                                (m_edge[0]->n1->m_y - m_edge[0]->n2->m_y)*
-                                (m_edge[1]->n2->m_x - m_edge[1]->n1->m_x); 
-
-                        }
-                        else if(m_edge[0]->n2 == m_edge[1]->n2)
-                        {
-                            cross  = (m_edge[0]->n1->m_x - m_edge[0]->n2->m_x)*
-                                (m_edge[1]->n1->m_y - m_edge[1]->n2->m_y) - 
-                                (m_edge[0]->n1->m_y - m_edge[0]->n2->m_y)*
-                                (m_edge[1]->n1->m_x - m_edge[1]->n2->m_x); 
-                        }
-                        
-                        // provide edges in anticlockwise sense
-                        if(cross  < 0.0)
-                        {
-                            for(int j=0; j< m_edge.size(); ++j)
-                            {
-                                s << std::setw(5) << m_edge[j]->m_id << " ";
-                            }
-                        }
-                        else
-                        {
-                            for(int j=m_edge.size()-1; j>=0; --j)
-                            {
-                                s << std::setw(5) << m_edge[j]->m_id << " ";
-                            }
-                        }
+                        s << std::setw(5) << m_edge[j]->m_id << " ";
                     }
                     break;
                 case 3:

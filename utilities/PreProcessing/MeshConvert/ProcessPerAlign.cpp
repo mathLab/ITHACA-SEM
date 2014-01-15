@@ -83,13 +83,10 @@ namespace Nektar
 
         void ProcessPerAlign::Process()
         {
-            static int tetFaceNodes[4][3] = {
-                {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
-
-            int    surf1  = m_config["surf1"]. as<int>   ();
-            int    surf2  = m_config["surf2"]. as<int>   ();
-            string dir    = m_config["dir"].   as<string>();
-            bool   orient = m_config["orient"].as<bool>  ();
+            int    surf1  = config["surf1"]. as<int>   ();
+            int    surf2  = config["surf2"]. as<int>   ();
+            string dir    = config["dir"].   as<string>();
+            bool   orient = config["orient"].as<bool>  ();
 
             if (surf1 == -1)
             {

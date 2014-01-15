@@ -501,9 +501,14 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(2,3)] = 4 + n;
             edgeNodeMap[pair<int,int>(3,1)] = 4 + 2*n;
 
-            // Add vertices
+            // Add vertices. This logic will determine (in 2D) whether the
+            // element is clockwise (sum > 0) or counter-clockwise (sum < 0).
+            NekDouble sum = 0.0;
             for (int i = 0; i < 3; ++i) {
+                int o = (i+1) % 3;
                 m_vertex.push_back(pNodeList[i]);
+                sum += (pNodeList[o]->m_x - pNodeList[i]->m_x) *
+                       (pNodeList[o]->m_y + pNodeList[i]->m_y);
             }
 
             // Create edges (with corresponding set of edge points)
@@ -521,13 +526,20 @@ namespace Nektar
                                                         m_conf.m_edgeCurveType)));
             }
 
+            if (pConf.reorient)
+            {
+                if (sum > 0.0)
+                {
+                    reverse(edge.begin(), edge.end());
+                }
+            }
+
             if (m_conf.m_faceNodes)
             {
                 volumeNodes.insert(volumeNodes.begin(),
                                    pNodeList.begin()+3*m_conf.order,
                                    pNodeList.end());
             }
-
         }
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
@@ -679,10 +691,14 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(3,4)] = 5 + 2*n;
             edgeNodeMap[pair<int,int>(4,1)] = 5 + 3*n;
 
-            // Add vertices
-            for (int i = 0; i < 4; ++i) 
-            {
+            // Add vertices. This logic will determine (in 2D) whether the
+            // element is clockwise (sum > 0) or counter-clockwise (sum < 0).
+            NekDouble sum = 0.0;
+            for (int i = 0; i < 4; ++i) {
+                int o = (i+1) % 4;
                 m_vertex.push_back(pNodeList[i]);
+                sum += (pNodeList[o]->m_x - pNodeList[i]->m_x) *
+                       (pNodeList[o]->m_y + pNodeList[i]->m_y);
             }
 
             // Create edges (with corresponding set of edge points)
@@ -698,6 +714,14 @@ namespace Nektar
                                                         pNodeList[it->first.second-1],
                                                         edgeNodes,
                                                         m_conf.m_edgeCurveType)));
+            }
+
+            if (pConf.reorient)
+            {
+                if (sum > 0.0)
+                {
+                    reverse(edge.begin(), edge.end());
+                }
             }
 
             if (m_conf.m_faceNodes)

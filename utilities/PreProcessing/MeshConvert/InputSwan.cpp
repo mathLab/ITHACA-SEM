@@ -67,13 +67,13 @@ namespace Nektar
             vector<int> tmp, tets;
             vector<double> pts;
 
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputSwan: Start reading file..." << endl;
             }
 
-            m_mesh->expDim = 3;
-            m_mesh->spaceDim = 3;
+            m_mesh->m_expDim = 3;
+            m_mesh->m_spaceDim = 3;
             
             // First read in header; 4 integers containing number of tets,
             // number of points, nas2 (unknown) and order of the grid
@@ -139,7 +139,7 @@ namespace Nektar
                 double x    = pts [            i];
                 double y    = pts [1*NB_Points+i];
                 double z    = pts [2*NB_Points+i];
-                m_mesh->node.push_back(boost::shared_ptr<Node>(new Node(vid, x, y, z)));
+                m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(vid, x, y, z)));
                 vid++;
             }
             
@@ -151,7 +151,7 @@ namespace Nektar
                 for (j = 0; j < 20; ++j)
                 {
                     int vid = tets[j*NB_Tet+i+1];
-                    nodeList.push_back(m_mesh->node[vid-1]);
+                    nodeList.push_back(m_mesh->m_node[vid-1]);
                 }
                 
                 vector<int> tags;
@@ -161,7 +161,7 @@ namespace Nektar
                 ElmtConfig conf(elType,3,true,true);
                 ElementSharedPtr E = GetElementFactory().
                     CreateInstance(elType,conf,nodeList,tags);
-                m_mesh->element[3].push_back(E);
+                m_mesh->m_element[3].push_back(E);
             }
             
             // Attempt to read in composites. Need to determine number of
@@ -192,7 +192,7 @@ namespace Nektar
                 
                 for (j = 0; j < 3; ++j)
                 {
-                    nodeList.push_back(m_mesh->node[tets[i+j*n_tri]-1]);
+                    nodeList.push_back(m_mesh->m_node[tets[i+j*n_tri]-1]);
                 }
                 
                 vector<int> tags;
@@ -202,7 +202,7 @@ namespace Nektar
                 ElmtConfig conf(elType,1,false,false);
                 ElementSharedPtr E = GetElementFactory().
                     CreateInstance(elType,conf,nodeList,tags);
-                m_mesh->element[2].push_back(E);
+                m_mesh->m_element[2].push_back(E);
             }
 
             mshFile.close();

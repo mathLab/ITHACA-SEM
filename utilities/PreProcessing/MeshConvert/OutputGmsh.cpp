@@ -80,7 +80,7 @@ namespace Nektar
          */
         void OutputGmsh::Process()
         {
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "OutputGmsh: Writing file..." << endl;
             }
@@ -100,9 +100,9 @@ namespace Nektar
             
             // Do first pass over elements of expansion dimension to determine
             // which elements need completion.
-            for (int i = 0; i < m_mesh->element[m_mesh->expDim].size(); ++i)
+            for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
             {
-                ElementSharedPtr e = m_mesh->element[m_mesh->expDim][i];
+                ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim][i];
                 if (e->GetMaxOrder() > maxOrder)
                 {
                     maxOrder = e->GetMaxOrder();
@@ -113,18 +113,18 @@ namespace Nektar
             
             for (int d = 1; d <= 3; ++d)
             {
-                for (int i = 0; i < m_mesh->element[d].size(); ++i)
+                for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
                 {
-                    ElementSharedPtr e = m_mesh->element[d][i];
-                    if ((e->GetConf().order <= 1        && maxOrder > 1) ||
-                        (e->GetConf().order == maxOrder && e->GetConf().m_faceNodes == false))
+                    ElementSharedPtr e = m_mesh->m_element[d][i];
+                    if ((e->GetConf().m_order <= 1        && maxOrder > 1) ||
+                        (e->GetConf().m_order == maxOrder && e->GetConf().m_faceNodes == false))
                     {
                         toComplete.push_back(e);
                     }
                     // Generate geometry information for this element. This will
                     // be stored locally inside each element.
                     SpatialDomains::GeometrySharedPtr geom =
-                        m_mesh->element[d][i]->GetGeom(m_mesh->spaceDim);
+                        m_mesh->m_element[d][i]->GetGeom(m_mesh->m_spaceDim);
                 }
             }
             
@@ -138,17 +138,17 @@ namespace Nektar
             for (int d = 1; d <= 3; ++d)
             {
                 //cout << "D = " << d << endl;
-                for (int i = 0; i < m_mesh->element[d].size(); ++i)
+                for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
                 {
                     // Keep track of faces and edges to ensure that high-order
                     // nodes are only added once on common faces/edges.
                     boost::unordered_set<int> edgesDone;
                     boost::unordered_set<int> facesDone;
-                    ElementSharedPtr e = m_mesh->element[d][i];
+                    ElementSharedPtr e = m_mesh->m_element[d][i];
                     
                     //cout << "Element " << i << ": ";
                     
-                    if (e->GetConf().order > 1)
+                    if (e->GetConf().m_order > 1)
                     {
                         vector<NodeSharedPtr> tmp;
                         vector<EdgeSharedPtr> edgeList = e->GetEdgeList();
@@ -239,9 +239,9 @@ namespace Nektar
             
             for (int d = 1; d <= 3; ++d)
             {
-                for (int i = 0; i < m_mesh->element[d].size(); ++i, ++id)
+                for (int i = 0; i < m_mesh->m_element[d].size(); ++i, ++id)
                 {
-                    ElementSharedPtr e = m_mesh->element[d][i];
+                    ElementSharedPtr e = m_mesh->m_element[d][i];
                     
                     // First output element ID and type.
                     mshFile << id                   << " " 
@@ -278,7 +278,7 @@ namespace Nektar
                         tags.push_back(nodeList[j]->m_id);
                     }
                     
-                    if (e->GetConf().order > 1)
+                    if (e->GetConf().m_order > 1)
                     {
                         for (int j = 0; j < edgeList.size(); ++j)
                         {
@@ -310,7 +310,7 @@ namespace Nektar
                     // Re-order tetrahedral vertices.
                     if (e->GetConf().m_e == LibUtilities::eTetrahedron)
                     {
-                        int order = e->GetConf().order;
+                        int order = e->GetConf().m_order;
                         if (order > 4)
                         {
                             cerr << "Temporary error: Gmsh tets only supported "
@@ -397,7 +397,7 @@ namespace Nektar
                     // Re-order prism vertices.
                     else if (e->GetConf().m_e == LibUtilities::ePrism)
                     {
-                        int order = e->GetConf().order;
+                        int order = e->GetConf().m_order;
                         if (order > 2)
                         {
                             cerr << "Temporary error: Gmsh prisms only "

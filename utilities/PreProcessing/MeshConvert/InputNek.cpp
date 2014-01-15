@@ -101,10 +101,10 @@ namespace Nektar
             elmOrder.push_back(LibUtilities::eTetrahedron);
             elmOrder.push_back(LibUtilities::eHexahedron);
              
-            m_mesh->expDim   = 0;
-            m_mesh->spaceDim = 0;
+            m_mesh->m_expDim   = 0;
+            m_mesh->m_spaceDim = 0;
             
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputNek: Start reading file..." << endl;
             }
@@ -171,24 +171,24 @@ namespace Nektar
             // Now read in number of elements and space dimension.
             getline(mshFile, line);
             s.clear(); s.str(line);
-            s >> nElements >> m_mesh->expDim;
-            m_mesh->spaceDim = m_mesh->expDim;
+            s >> nElements >> m_mesh->m_expDim;
+            m_mesh->m_spaceDim = m_mesh->m_expDim;
             
             // Set up field names.
-            m_mesh->fields.push_back("u");
-            m_mesh->fields.push_back("v");
-            if (m_mesh->spaceDim > 2)
+            m_mesh->m_fields.push_back("u");
+            m_mesh->m_fields.push_back("v");
+            if (m_mesh->m_spaceDim > 2)
             {
-                m_mesh->fields.push_back("w");
+                m_mesh->m_fields.push_back("w");
             }
-            m_mesh->fields.push_back("p");
+            m_mesh->m_fields.push_back("p");
             
             // Loop over and create elements.
             for (i = 0; i < nElements; ++i)
             {
                 getline(mshFile, line);
                 
-                if (m_mesh->expDim == 2)
+                if (m_mesh->m_expDim == 2)
                 {
                     if (line.find("Qua") != string::npos || 
                         line.find("qua") != string::npos)
@@ -239,7 +239,7 @@ namespace Nektar
                 // Read in number of vertices for element type.
                 const int nNodes = GetNnodes(elType);
 
-                for (j = 0; j < m_mesh->expDim; ++j)
+                for (j = 0; j < m_mesh->m_expDim; ++j)
                 {
                     getline(mshFile,line);
                     s.clear(); s.str(line);
@@ -250,7 +250,7 @@ namespace Nektar
                 }
                 
                 // Zero co-ordinates bigger than expansion dimension.
-                for (j = m_mesh->expDim; j < 3; ++j)
+                for (j = m_mesh->m_expDim; j < 3; ++j)
                 {
                     for (k = 0; k < nNodes; ++k)
                     {
@@ -321,7 +321,7 @@ namespace Nektar
                     ElmtConfig conf(elType,1,false,false);
                     ElementSharedPtr E = GetElementFactory().
                         CreateInstance(elType,conf,nodeList,tags);
-                    m_mesh->element[E->GetDim()].push_back(E);
+                    m_mesh->m_element[E->GetDim()].push_back(E);
                 }
             }
 
@@ -401,17 +401,17 @@ namespace Nektar
                     s >> faceId >> elId >> word;
                     faceId--;
                     elId = elMap[elId-1];
-                    ElementSharedPtr el = m_mesh->element[m_mesh->expDim][elId];
+                    ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][elId];
                     
                     if (el->GetConf().m_e == LibUtilities::ePrism && faceId % 2 == 0)
                     {
                         boost::shared_ptr<Prism> p = 
                             boost::dynamic_pointer_cast<Prism>(el);
-                        if (p->orientation == 1)
+                        if (p->m_orientation == 1)
                         {
                             faceId = (faceId+2) % 6;
                         }
-                        else if (p->orientation == 2)
+                        else if (p->m_orientation == 2)
                         {
                             faceId = (faceId+4) % 6;
                         }
@@ -420,7 +420,7 @@ namespace Nektar
                     {
                         boost::shared_ptr<Tetrahedron> t =
                             boost::dynamic_pointer_cast<Tetrahedron>(el);
-                        faceId = t->orientationMap[faceId];
+                        faceId = t->m_orientationMap[faceId];
                     }
                     
                     it = curveTags.find(word);
@@ -442,7 +442,7 @@ namespace Nektar
                         if (el->GetConf().m_e == LibUtilities::ePrism && faceId % 2 == 1)
                         {
                             offset = boost::dynamic_pointer_cast<Prism>(
-                                el)->orientation;
+                                el)->m_orientation;
                         }
                         
                         // Read x/y/z coordinates.
@@ -481,7 +481,7 @@ namespace Nektar
                         
                         // Add edge/face to list of faces to apply spherigons
                         // to.
-                        m_mesh->spherigonSurfs.insert(make_pair(elId, faceId));
+                        m_mesh->m_spherigonSurfs.insert(make_pair(elId, faceId));
                     }
                     else if (it->second.first == eFile)
                     {
@@ -561,7 +561,7 @@ namespace Nektar
                         {
                             boost::shared_ptr<Prism> pr = 
                                 boost::static_pointer_cast<Prism>(el);
-                            if (pr->orientation == 1)
+                            if (pr->m_orientation == 1)
                             {
                                 // Prism has been rotated counter-clockwise;
                                 // rotate face, reverse what was the last edge
@@ -569,7 +569,7 @@ namespace Nektar
                                 (*hoIt)->Rotate(1);
                                 reverseSide = 0;
                             }
-                            else if (pr->orientation == 2)
+                            else if (pr->m_orientation == 2)
                             {
                                 // Prism has been rotated clockwise; rotate
                                 // face, reverse what was the last edge (now
@@ -614,7 +614,7 @@ namespace Nektar
                             }
                             
                             edge->m_edgeNodes.clear();
-                            edge->curveType = LibUtilities::eGaussLobattoLegendre;
+                            edge->m_curveType = LibUtilities::eGaussLobattoLegendre;
                             
                             for (int k = 0; k < N-2; ++k)
                             {
@@ -630,7 +630,7 @@ namespace Nektar
                             }
                         }
 
-                        f->curveType = LibUtilities::eNodalTriElec;
+                        f->m_curveType = LibUtilities::eNodalTriElec;
                         for (int j = 3+3*(N-2); j < Ntot; ++j)
                         {
                             f->m_faceNodes.push_back((*hoIt)->surfVerts[j]);
@@ -685,7 +685,7 @@ namespace Nektar
                     // Wall boundary.
                     case 'W':
                     {
-                        for (i = 0; i < m_mesh->fields.size()-1; ++i)
+                        for (i = 0; i < m_mesh->m_fields.size()-1; ++i)
                         {
                             vals.push_back("0");
                             type.push_back(eDirichlet);
@@ -701,7 +701,7 @@ namespace Nektar
                     case 'V':
                     case 'v':
                     {
-                        for (i = 0; i < m_mesh->fields.size()-1; ++i)
+                        for (i = 0; i < m_mesh->m_fields.size()-1; ++i)
                         {
                             getline(mshFile, line);
                             size_t p = line.find_first_of('=');
@@ -719,13 +719,13 @@ namespace Nektar
                     // Natural outflow condition (default value = 0.0?)
                     case 'O':
                     {
-                        for (i = 0; i < m_mesh->fields.size(); ++i)
+                        for (i = 0; i < m_mesh->m_fields.size(); ++i)
                         {
                             vals.push_back("0");
                             type.push_back(eNeumann);
                         }
                         // Set zero Dirichlet condition for outflow.
-                        type[m_mesh->fields.size()-1] = eDirichlet;
+                        type[m_mesh->m_fields.size()-1] = eDirichlet;
                         break;
                     }
                     
@@ -745,7 +745,7 @@ namespace Nektar
                 }
                 
                 // Populate condition information.
-                c->field = m_mesh->fields;
+                c->field = m_mesh->m_fields;
                 c->type  = type;
                 c->value = vals;
                 
@@ -754,7 +754,7 @@ namespace Nektar
                 // probably be made faster!
                 ConditionMap::iterator it;
                 bool found = false;
-                for (it = m_mesh->condition.begin(); it != m_mesh->condition.end(); ++it)
+                for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end(); ++it)
                 {
                     if (c == it->second)
                     {
@@ -764,7 +764,7 @@ namespace Nektar
                 }
                 
                 int compTag, conditionId;
-                ElementSharedPtr elm = m_mesh->element[m_mesh->spaceDim][elId];
+                ElementSharedPtr elm = m_mesh->m_element[m_mesh->m_spaceDim][elId];
                 ElementSharedPtr surfEl;
 
                 // Create element for face (3D) or segment (2D). At the moment
@@ -779,11 +779,11 @@ namespace Nektar
                     {
                         boost::shared_ptr<Prism> p = 
                             boost::dynamic_pointer_cast<Prism>(elm);
-                        if (p->orientation == 1)
+                        if (p->m_orientation == 1)
                         {
                             faceId = (faceId+2) % 6;
                         }
-                        else if (p->orientation == 2)
+                        else if (p->m_orientation == 2)
                         {
                             faceId = (faceId+4) % 6;
                         }
@@ -792,7 +792,7 @@ namespace Nektar
                     {
                         boost::shared_ptr<Tetrahedron> t =
                             boost::dynamic_pointer_cast<Tetrahedron>(elm);
-                        faceId = t->orientationMap[faceId];
+                        faceId = t->m_orientationMap[faceId];
                     }
                     
                     FaceSharedPtr f = elm->GetFace(faceId);
@@ -817,8 +817,8 @@ namespace Nektar
                     {
                         surfEl->GetEdge(i)->m_edgeNodes = 
                             f->m_edgeList[i]->m_edgeNodes;
-                        surfEl->GetEdge(i)->curveType = 
-                            f->m_edgeList[i]->curveType;
+                        surfEl->GetEdge(i)->m_curveType = 
+                            f->m_edgeList[i]->m_curveType;
                     }
                 }
                 else
@@ -826,8 +826,8 @@ namespace Nektar
                     EdgeSharedPtr f = elm->GetEdge(faceId);
                     
                     vector<NodeSharedPtr> nodeList;
-                    nodeList.push_back(f->n1);
-                    nodeList.push_back(f->n2);
+                    nodeList.push_back(f->m_n1);
+                    nodeList.push_back(f->m_n2);
                     
                     vector<int> tags;
                     
@@ -842,10 +842,10 @@ namespace Nektar
                     // If condition does not already exist, add to condition
                     // list, create new composite tag and put inside
                     // surfaceCompMap.
-                    conditionId = m_mesh->condition.size();
+                    conditionId = m_mesh->m_condition.size();
                     compTag     = nComposite;
                     c->m_composite.push_back(compTag);
-                    m_mesh->condition[conditionId] = c;
+                    m_mesh->m_condition[conditionId] = c;
                     
                     surfaceCompMap[conditionId].push_back(
                         pair<int,LibUtilities::ShapeType>(nComposite,surfEl->GetConf().m_e));
@@ -886,7 +886,7 @@ namespace Nektar
                         it2->second.push_back(pair<int,LibUtilities::ShapeType>(
                             nComposite,surfEl->GetConf().m_e));
                         compTag = nComposite;
-                        m_mesh->condition[it->first]->m_composite.push_back(compTag);
+                        m_mesh->m_condition[it->first]->m_composite.push_back(compTag);
                         nComposite++;
                     }
                     
@@ -901,7 +901,7 @@ namespace Nektar
                 surfEl->SetTagList (existingTags);
                 surfEl->SetId      (nSurfaces);
                 
-                m_mesh->element[surfEl->GetDim()].push_back(surfEl);
+                m_mesh->m_element[surfEl->GetDim()].push_back(surfEl);
                 nSurfaces++;
             }
 

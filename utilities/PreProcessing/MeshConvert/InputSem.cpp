@@ -80,7 +80,7 @@ namespace Nektar
             // Open the file stream.
             OpenStream();
 
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputSem: Start reading file..." << endl;
             }
@@ -161,7 +161,7 @@ namespace Nektar
                 }
             }
 
-            m_mesh->expDim = 0;
+            m_mesh->m_expDim = 0;
             string tag;
             int start, end, nVertices, nEntities, nCurves, nSurf, nGroups, nBCs;
             int id, i, j, k;
@@ -190,16 +190,16 @@ namespace Nektar
                 double x = 0, y = 0, z = 0;
                 ss >> id >> x >> y >> z;
                 
-                if ((y * y) > 0.000001 && m_mesh->spaceDim != 3)
+                if ((y * y) > 0.000001 && m_mesh->m_spaceDim != 3)
                 {
-                    m_mesh->spaceDim = 2;
+                    m_mesh->m_spaceDim = 2;
                 }
                 if ((z * z) > 0.000001)
                 {
-                    m_mesh->spaceDim = 3;
+                    m_mesh->m_spaceDim = 3;
                 }
                 id -= 1; // counter starts at 0
-                m_mesh->node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
+                m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
                 ++i;
             }
 
@@ -235,7 +235,7 @@ namespace Nektar
                 {
                     int node = 0;
                     ss >> node;
-                    nodeList.push_back(m_mesh->node[node-1]);
+                    nodeList.push_back(m_mesh->m_node[node-1]);
                 }
                 
                 // Create element
@@ -244,17 +244,17 @@ namespace Nektar
                     CreateInstance(elType,conf,nodeList,tags);
                 
                 // Determine mesh expansion dimension
-                if (E->GetDim() > m_mesh->expDim) {
-                    m_mesh->expDim = E->GetDim();
+                if (E->GetDim() > m_mesh->m_expDim) {
+                    m_mesh->m_expDim = E->GetDim();
                 }
-                m_mesh->element[E->GetDim()].push_back(E);
+                m_mesh->m_element[E->GetDim()].push_back(E);
                 ++i;
             }
         
             // Finally, process curves.
             if (sectionMap["CURVES"] != std::streampos(-1))
             {
-                int np, nel, nodeId = m_mesh->node.size();
+                int np, nel, nodeId = m_mesh->m_node.size();
                 
                 mshFile.seekg(sectionMap["CURVES"]);
                 getline(mshFile, line);
@@ -289,7 +289,7 @@ namespace Nektar
                     ss.clear(); ss.str(line);
                     ss >> np >> nel >> nel >> nel;
                     
-                    if (nel != m_mesh->element[m_mesh->expDim].size())
+                    if (nel != m_mesh->m_element[m_mesh->m_expDim].size())
                     {
                         cerr << "Number of elements mismatch in mesh file." << endl;
                         abort();
@@ -336,7 +336,7 @@ namespace Nektar
                     // See if we have already retrieved high-order data
                     // for this elements; prevents unnecessary computation
                     // for elements with multiple curves.
-                    if (m_mesh->element[2][elmt]->GetConf().order > 1)
+                    if (m_mesh->m_element[2][elmt]->GetConf().m_order > 1)
                     {
                         ++i;
                         continue;
@@ -397,7 +397,7 @@ namespace Nektar
                     
                     // Grab existing element from list and retrieve tags and
                     // vertices; insert these into existing edge nodes.
-                    ElementSharedPtr      e      = m_mesh->element[2][elmt];
+                    ElementSharedPtr      e      = m_mesh->m_element[2][elmt];
                     vector<NodeSharedPtr> elvert = e->GetVertexList();
                     vector<int>           tags   = e->GetTagList();
                     edgeNodes.insert(edgeNodes.begin(), elvert.begin(), elvert.end());
@@ -406,7 +406,7 @@ namespace Nektar
                     // quadrilateral of the correct order.
                     ElmtConfig conf(elType,np-1,true,false,true,
                                     LibUtilities::eGaussLobattoLegendre);
-                    m_mesh->element[2][elmt] = GetElementFactory().
+                    m_mesh->m_element[2][elmt] = GetElementFactory().
                         CreateInstance(elType,conf,edgeNodes,tags);
                     
                     ++i;
@@ -423,7 +423,7 @@ namespace Nektar
                 
                 while (ss >> tag)
                 {
-                    m_mesh->fields.push_back(tag);
+                    m_mesh->m_fields.push_back(tag);
                 }
             }
             
@@ -479,7 +479,7 @@ namespace Nektar
                     ss >> id >> tag >> nF;
 
                     p = ConditionSharedPtr(new Condition());
-                    m_mesh->condition[conditionMap[tag]] = p;
+                    m_mesh->m_condition[conditionMap[tag]] = p;
                     
                     // Read boundary condition.
                     j = 0;
@@ -568,7 +568,7 @@ namespace Nektar
                     if (word == "<P>")
                     {
                         // If this is the first periodic boundary condition
-                        // encountered, then set up m_mesh->condition with two
+                        // encountered, then set up m_mesh->m_condition with two
                         // periodic conditions.
                         if (periodicTagId == -1)
                         {
@@ -577,12 +577,12 @@ namespace Nektar
                                 ConditionSharedPtr(new Condition());
                             ConditionSharedPtr out = 
                                 ConditionSharedPtr(new Condition());
-                            for (j = 0; j < m_mesh->fields.size(); ++j)
+                            for (j = 0; j < m_mesh->m_fields.size(); ++j)
                             {
                                 in-> type.push_back(ePeriodic);
                                 out->type.push_back(ePeriodic);
-                                in-> field.push_back(m_mesh->fields[j]);
-                                out->field.push_back(m_mesh->fields[j]);
+                                in-> field.push_back(m_mesh->m_fields[j]);
+                                out->field.push_back(m_mesh->m_fields[j]);
                                 in-> value.push_back("["+boost::lexical_cast<
                                     string>(periodicTagId+1)+"]");
                                 out->value.push_back("["+boost::lexical_cast<
@@ -590,8 +590,8 @@ namespace Nektar
                             }
                             in-> m_composite.push_back(periodicTagId+1);
                             out->m_composite.push_back(periodicTagId+2);
-                            m_mesh->  condition[periodicTagId]   = in;
-                            m_mesh->  condition[periodicTagId+1] = out;
+                            m_mesh->m_condition[periodicTagId]   = in;
+                            m_mesh->m_condition[periodicTagId+1] = out;
                         }
                         
                         int elmtB, sideB;
@@ -639,10 +639,10 @@ namespace Nektar
         
         void InputSem::insertEdge(int elmt, int side, int tagId)
         {
-            EdgeSharedPtr edge = m_mesh->element[2][elmt]->GetEdge(side);
+            EdgeSharedPtr edge = m_mesh->m_element[2][elmt]->GetEdge(side);
             vector<NodeSharedPtr> edgeNodes = edge->m_edgeNodes;
-            edgeNodes.insert(edgeNodes.begin(),edge->n2);
-            edgeNodes.insert(edgeNodes.begin(),edge->n1);
+            edgeNodes.insert(edgeNodes.begin(),edge->m_n2);
+            edgeNodes.insert(edgeNodes.begin(),edge->m_n1);
             int order = edgeNodes.size()-1;
             
             vector<int> tags;
@@ -652,7 +652,7 @@ namespace Nektar
                             LibUtilities::eGaussLobattoLegendre);
             ElementSharedPtr E = GetElementFactory().
                 CreateInstance(LibUtilities::eSegment,conf,edgeNodes,tags);
-            m_mesh->element[1].push_back(E);
+            m_mesh->m_element[1].push_back(E);
         }
     }
 }

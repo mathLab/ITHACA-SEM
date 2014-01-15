@@ -82,8 +82,8 @@ namespace Nektar
             // Open the file stream.
             OpenStream();
             
-            m_mesh->expDim = 0;
-            m_mesh->spaceDim = 0;
+            m_mesh->m_expDim = 0;
+            m_mesh->m_spaceDim = 0;
             string line;
             int nVertices = 0;
             int nEntities = 0;
@@ -91,7 +91,7 @@ namespace Nektar
             int prevId = -1;
             map<unsigned int, ElmtConfig>::iterator it;
 
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputGmsh: Start reading file..." << endl;
             }
@@ -117,17 +117,17 @@ namespace Nektar
                         double x = 0, y = 0, z = 0;
                         st >> id >> x >> y >> z;
 
-                        if ((x * x) > 0.000001 && m_mesh->spaceDim < 1)
+                        if ((x * x) > 0.000001 && m_mesh->m_spaceDim < 1)
                         {
-                            m_mesh->spaceDim = 1;
+                            m_mesh->m_spaceDim = 1;
                         }
-                        if ((y * y) > 0.000001 && m_mesh->spaceDim < 2)
+                        if ((y * y) > 0.000001 && m_mesh->m_spaceDim < 2)
                         {
-                            m_mesh->spaceDim = 2;
+                            m_mesh->m_spaceDim = 2;
                         }
-                        if ((z * z) > 0.000001 && m_mesh->spaceDim < 3)
+                        if ((z * z) > 0.000001 && m_mesh->m_spaceDim < 3)
                         {
-                            m_mesh->spaceDim = 3;
+                            m_mesh->m_spaceDim = 3;
                         }
                         
                         id -= 1; // counter starts at 0
@@ -138,7 +138,7 @@ namespace Nektar
                             abort();
                         }
                         prevId = id;
-                        m_mesh->node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
+                        m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
                     }
                 }
                 // Process elements
@@ -182,7 +182,7 @@ namespace Nektar
                             int node = 0;
                             st >> node;
                             node -= 1; // counter starts at 0
-                            nodeList.push_back(m_mesh->node[node]);
+                            nodeList.push_back(m_mesh->m_node[node]);
                         }
 
                         // Prism nodes need re-ordering for Nektar++.
@@ -197,7 +197,7 @@ namespace Nektar
                             // correctly.
                             swap(nodeList[4], nodeList[2]);
                             
-                            if (it->second.order == 2)
+                            if (it->second.m_order == 2)
                             {
                                 vector<NodeSharedPtr> nodemap(18);
                                 
@@ -226,7 +226,7 @@ namespace Nektar
                                 
                                 nodeList = nodemap;
                             }
-                            else if (it->second.order > 2)
+                            else if (it->second.m_order > 2)
                             {
                                 cerr << "Error: gmsh prisms only supported up "
                                      << "to second order." << endl;
@@ -239,10 +239,10 @@ namespace Nektar
                             CreateInstance(it->second.m_e,it->second,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m_mesh->expDim) {
-                            m_mesh->expDim = E->GetDim();
+                        if (E->GetDim() > m_mesh->m_expDim) {
+                            m_mesh->m_expDim = E->GetDim();
                         }
-                        m_mesh->element[E->GetDim()].push_back(E);
+                        m_mesh->m_element[E->GetDim()].push_back(E);
                     }
                 }
             }

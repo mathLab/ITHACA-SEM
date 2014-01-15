@@ -69,7 +69,7 @@ namespace Nektar
                          unsigned int pNumNodes,
                          unsigned int pGotNodes) 
             : m_conf(pConf), 
-              curveType(LibUtilities::ePolyEvenlySpaced),
+              m_curveType(LibUtilities::ePolyEvenlySpaced),
               m_geom()
         {
             if (pNumNodes != pGotNodes)
@@ -86,7 +86,7 @@ namespace Nektar
          */
         unsigned int Mesh::GetNumElements()
         {
-            return element[expDim].size();
+            return m_element[m_expDim].size();
         }
         
         /**
@@ -97,8 +97,8 @@ namespace Nektar
         {
             unsigned int i, nElmt = 0;
             
-            for (i = 0; i < expDim; ++i)
-                nElmt += element[i].size();
+            for (i = 0; i < m_expDim; ++i)
+                nElmt += m_element[i].size();
             
             return nElmt;
         }
@@ -111,9 +111,9 @@ namespace Nektar
         {
             unsigned int nEnt = 0;
             
-            for (unsigned int d = 0; d <= expDim; ++d)
+            for (unsigned int d = 0; d <= m_expDim; ++d)
             {
-                nEnt += element[d].size();
+                nEnt += m_element[d].size();
             }
             
             return nEnt;
@@ -176,8 +176,8 @@ namespace Nektar
          */
         bool operator==(EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
         {
-            return ( ((*(p1->n1) == *(p2->n1)) && (*(p1->n2) == *(p2->n2)))
-                  || ((*(p1->n2) == *(p2->n1)) && (*(p1->n1) == *(p2->n2))));
+            return ( ((*(p1->m_n1) == *(p2->m_n1)) && (*(p1->m_n2) == *(p2->m_n2)))
+                  || ((*(p1->m_n2) == *(p2->m_n1)) && (*(p1->m_n1) == *(p2->m_n2))));
         }
 
         /**
@@ -231,13 +231,13 @@ namespace Nektar
             m_vertex[p] = pNew;
             for (unsigned int i = 0; i < m_edge.size(); ++i)
             {
-                if (m_edge[i]->n1 == vOld)
+                if (m_edge[i]->m_n1 == vOld)
                 {
-                    m_edge[i]->n1 = pNew;
+                    m_edge[i]->m_n1 = pNew;
                 }
-                else if (m_edge[i]->n2 == vOld)
+                else if (m_edge[i]->m_n2 == vOld)
                 {
-                    m_edge[i]->n2 = pNew;
+                    m_edge[i]->m_n2 = pNew;
                 }
             }
             for (unsigned int i = 0; i < m_face.size(); ++i)
@@ -252,13 +252,13 @@ namespace Nektar
                 }
                 for (unsigned int j = 0; j < m_face[i]->m_edgeList.size(); ++j)
                 {
-                    if (m_face[i]->m_edgeList[j]->n1 == vOld)
+                    if (m_face[i]->m_edgeList[j]->m_n1 == vOld)
                     {
-                        m_face[i]->m_edgeList[j]->n1 = pNew;
+                        m_face[i]->m_edgeList[j]->m_n1 = pNew;
                     }
-                    else if (m_face[i]->m_edgeList[j]->n2 == vOld)
+                    else if (m_face[i]->m_edgeList[j]->m_n2 == vOld)
                     {
-                        m_face[i]->m_edgeList[j]->n2 = pNew;
+                        m_face[i]->m_edgeList[j]->m_n2 = pNew;
                     }
                 }
             }
@@ -334,19 +334,19 @@ namespace Nektar
             if (doSort)
             {
                 element_id_less_than sortOperator;
-                sort(items.begin(), items.end(), sortOperator);
+                sort(m_items.begin(), m_items.end(), sortOperator);
             }
 #endif
 
             stringstream st;
             vector<ElementSharedPtr>::iterator it;
             bool range = false;
-            int vId = items[0]->GetId();
+            int vId = m_items[0]->GetId();
             int prevId = vId;
 
-            st << " " << tag << "[" << vId;
+            st << " " << m_tag << "[" << vId;
 
-            for (it = items.begin()+1; it != items.end(); ++it){
+            for (it = m_items.begin()+1; it != m_items.end(); ++it){
                 // store previous element ID and get current one
                 prevId = vId;
                 vId = (*it)->GetId();
@@ -356,7 +356,7 @@ namespace Nektar
                 {
                     range = true;
                     // if this is the last element, it's the end of a range, so write
-                    if (*it == items.back())
+                    if (*it == m_items.back())
                     {
                         st << "-" << vId;
                     }
@@ -418,14 +418,14 @@ namespace Nektar
             m_tag     = "S";
             m_dim     = 1;
             m_taglist = pTagList;
-            int n     = m_conf.order-1;
+            int n     = m_conf.m_order-1;
             
             // Add vertices
             for (int i = 0; i < 2; ++i) {
                 m_vertex.push_back(pNodeList[i]);
             }
             vector<NodeSharedPtr> edgeNodes;
-            if (m_conf.order > 1) {
+            if (m_conf.m_order > 1) {
                 for (int j = 0; j<n; ++j) {
                     edgeNodes.push_back(pNodeList[2+j]);
                 }
@@ -445,7 +445,7 @@ namespace Nektar
             {
                 SpatialDomains::CurveSharedPtr c = 
                     MemoryManager<SpatialDomains::Curve>::
-                    AllocateSharedPtr(m_id, m_edge[0]->curveType);
+                    AllocateSharedPtr(m_id, m_edge[0]->m_curveType);
                 
                 c->m_points.push_back(p[0]);
                 for (int i = 0; i < m_edge[0]->m_edgeNodes.size(); ++i)
@@ -471,7 +471,7 @@ namespace Nektar
          */
         unsigned int Line::GetNumNodes(ElmtConfig pConf)
         {
-            return pConf.order+1;
+            return pConf.m_order+1;
         }
 
 
@@ -489,8 +489,8 @@ namespace Nektar
             m_tag     = "T";
             m_dim     = 2;
             m_taglist = pTagList;
-            curveType = LibUtilities::eNodalTriEvenlySpaced;
-            int n     = m_conf.order-1;
+            m_curveType = LibUtilities::eNodalTriEvenlySpaced;
+            int n     = m_conf.m_order-1;
 
             // Create a map to relate edge nodes to a pair of vertices
             // defining an edge. This is based on the ordering produced by
@@ -515,7 +515,7 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (m_conf.order > 1) {
+                if (m_conf.m_order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
@@ -526,7 +526,7 @@ namespace Nektar
                                                         m_conf.m_edgeCurveType)));
             }
 
-            if (pConf.reorient)
+            if (pConf.m_reorient)
             {
                 if (sum > 0.0)
                 {
@@ -536,8 +536,8 @@ namespace Nektar
 
             if (m_conf.m_faceNodes)
             {
-                volumeNodes.insert(volumeNodes.begin(),
-                                   pNodeList.begin()+3*m_conf.order,
+                m_volumeNodes.insert(m_volumeNodes.begin(),
+                                   pNodeList.begin()+3*m_conf.m_order,
                                    pNodeList.end());
             }
         }
@@ -570,7 +570,7 @@ namespace Nektar
          */
         unsigned int Triangle::GetNumNodes(ElmtConfig pConf)
         {
-            int n = pConf.order;
+            int n = pConf.m_order;
             if (!pConf.m_faceNodes)
                 return (n+1)+2*(n-1)+1;
             else
@@ -654,13 +654,13 @@ namespace Nektar
             int pos = 3 + 3*(order-1);
             for (i = pos; i < (order+1)*(order+2)/2; ++i)
             {
-                volumeNodes.push_back(
+                m_volumeNodes.push_back(
                     NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
             }
             
-            m_conf.order       = order;
+            m_conf.m_order       = order;
             m_conf.m_faceNodes   = true;
-            m_conf.volumeNodes = true;
+            m_conf.m_volumeNodes = true;
         }
 
 
@@ -679,7 +679,7 @@ namespace Nektar
             m_tag = "Q";
             m_dim = 2;
             m_taglist = pTagList;
-            int n = m_conf.order-1;
+            int n = m_conf.m_order-1;
 
             // Create a map to relate edge nodes to a pair of vertices
             // defining an edge. This is based on the ordering produced by
@@ -705,7 +705,7 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (m_conf.order > 1) {
+                if (m_conf.m_order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
@@ -716,7 +716,7 @@ namespace Nektar
                                                         m_conf.m_edgeCurveType)));
             }
 
-            if (pConf.reorient)
+            if (pConf.m_reorient)
             {
                 if (sum > 0.0)
                 {
@@ -726,8 +726,8 @@ namespace Nektar
 
             if (m_conf.m_faceNodes)
             {
-                volumeNodes.insert(volumeNodes.begin(), 
-                                   pNodeList.begin()+4*m_conf.order,
+                m_volumeNodes.insert(m_volumeNodes.begin(), 
+                                   pNodeList.begin()+4*m_conf.m_order,
                                    pNodeList.end());
             }
         }
@@ -768,8 +768,8 @@ namespace Nektar
                 m_edge[i]->m_edgeNodes.clear();
                 /*
                 cout << "EDGE " << i << " = " 
-                     << m_edge[i]->n1->m_x << "," << m_edge[i]->n1->m_y << " "
-                     << m_edge[i]->n2->m_x << "," << m_edge[i]->n2->m_y << endl;
+                     << m_edge[i]->m_n1->m_x << "," << m_edge[i]->m_n1->m_y << " "
+                     << m_edge[i]->m_n2->m_x << "," << m_edge[i]->m_n2->m_y << endl;
                 */
                 for (int j = 1; j < order; ++j, pos += edgeMap[i][1])
                 {
@@ -780,21 +780,21 @@ namespace Nektar
             }
 
             // Extract face-interior nodes.
-            volumeNodes.clear();
+            m_volumeNodes.clear();
             for (int i = 1; i < order; ++i)
             {
                 int pos = i*(order+1);
                 for (int j = 1; j < order; ++j)
                 {
-                    volumeNodes.push_back(
+                    m_volumeNodes.push_back(
                         NodeSharedPtr(new Node(0, x[pos+j], y[pos+j], z[pos+j])));
                     //cout << "here" << endl;
                 }                
             }
             
-            m_conf.order       = order;
+            m_conf.m_order       = order;
             m_conf.m_faceNodes   = true;
-            m_conf.volumeNodes = true;
+            m_conf.m_volumeNodes = true;
         }
 
         SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
@@ -826,7 +826,7 @@ namespace Nektar
          */
         unsigned int Quadrilateral::GetNumNodes(ElmtConfig pConf)
         {
-            int n = pConf.order;
+            int n = pConf.m_order;
             if (!pConf.m_faceNodes)
                 return 4*n;
             else
@@ -848,7 +848,7 @@ namespace Nektar
             m_tag = "A";
             m_dim = 3;
             m_taglist = pTagList;
-            int n = m_conf.order-1;
+            int n = m_conf.m_order-1;
 
             // Create a map to relate edge nodes to a pair of vertices
             // defining an edge.
@@ -871,7 +871,7 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (m_conf.order > 1) {
+                if (m_conf.m_order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
@@ -885,7 +885,7 @@ namespace Nektar
             
             // Reorient the tet to ensure collapsed coordinates align between adjacent
             // elements.
-            if (m_conf.reorient)
+            if (m_conf.m_reorient)
             {
                 OrientTet();
             }
@@ -907,8 +907,8 @@ namespace Nektar
                     NodeSharedPtr b = m_vertex[face_ids[j][(k+1)%3]];
                     for (unsigned int i = 0; i < m_edge.size(); ++i)
                     {
-                        if ( ((*(m_edge[i]->n1)==*a) && (*(m_edge[i]->n2)==*b))
-                                || ((*(m_edge[i]->n1)==*b) && (*(m_edge[i]->n2) == *a)) )
+                        if ( ((*(m_edge[i]->m_n1)==*a) && (*(m_edge[i]->m_n2)==*b))
+                                || ((*(m_edge[i]->m_n1)==*b) && (*(m_edge[i]->m_n2) == *a)) )
                         {
                             face_edges[j][k] = i;
                             faceEdges.push_back(m_edge[i]);
@@ -960,10 +960,10 @@ namespace Nektar
          */
         unsigned int Tetrahedron::GetNumNodes(ElmtConfig pConf)
         {
-            int n = pConf.order;
-            if (pConf.volumeNodes && pConf.m_faceNodes)
+            int n = pConf.m_order;
+            if (pConf.m_volumeNodes && pConf.m_faceNodes)
                 return (n+1)*(n+2)*(n+3)/6;
-            else if (!pConf.volumeNodes && pConf.m_faceNodes)
+            else if (!pConf.m_volumeNodes && pConf.m_faceNodes)
                 return 4*(n+1)*(n+2)/2-6*(n+1)+4;
             else
                 return 6*(n+1)-8;
@@ -1073,13 +1073,13 @@ namespace Nektar
             int pos = 4 + 6*(order-1) + 4*(order-2)*(order-1)/2;
             for (i = pos; i < (order+1)*(order+2)*(order+3)/6; ++i)
             {
-                volumeNodes.push_back(
+                m_volumeNodes.push_back(
                     NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
             }
             
-            m_conf.order       = order;
+            m_conf.m_order       = order;
             m_conf.m_faceNodes   = true;
-            m_conf.volumeNodes = true;
+            m_conf.m_volumeNodes = true;
         }
 
         struct TetOrient
@@ -1198,7 +1198,7 @@ namespace Nektar
                 struct TetOrient faceNodes(nodes, 0);
                 
                 it = faces.find(faceNodes);
-                orientationMap[it->fid] = i;
+                m_orientationMap[it->fid] = i;
             }
         }
 
@@ -1217,7 +1217,7 @@ namespace Nektar
             m_tag     = "R";
             m_dim     = 3;
             m_taglist = pTagList;
-            int n     = m_conf.order-1;
+            int n     = m_conf.m_order-1;
 
             // Create a map to relate edge nodes to a pair of vertices
             // defining an edge. This is based on the ordering produced by
@@ -1247,7 +1247,7 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (m_conf.order > 1) {
+                if (m_conf.m_order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
@@ -1260,7 +1260,7 @@ namespace Nektar
                 m_edge.back()->m_id = eid++;
             }
             
-            if (m_conf.reorient)
+            if (m_conf.m_reorient)
             {
                 OrientPrism();
             }
@@ -1284,8 +1284,8 @@ namespace Nektar
                     NodeSharedPtr b = m_vertex[face_ids[j][(k+1) % nEdge]];
                     for (unsigned int i = 0; i < m_edge.size(); ++i)
                     {
-                        if ((m_edge[i]->n1 == a && m_edge[i]->n2 == b) || 
-                            (m_edge[i]->n1 == b && m_edge[i]->n2 == a))
+                        if ((m_edge[i]->m_n1 == a && m_edge[i]->m_n2 == b) || 
+                            (m_edge[i]->m_n1 == b && m_edge[i]->m_n2 == a))
                         {
                             faceEdges.push_back(m_edge[i]);
                             face_edges[j][k] = i;
@@ -1327,10 +1327,10 @@ namespace Nektar
          */
         unsigned int Prism::GetNumNodes(ElmtConfig pConf)
         {
-            int n = pConf.order;
-            if (pConf.m_faceNodes && pConf.volumeNodes)
+            int n = pConf.m_order;
+            if (pConf.m_faceNodes && pConf.m_volumeNodes)
                 return (n+1)*(n+1)*(n+2)/2;
-            else if (pConf.m_faceNodes && !pConf.volumeNodes)
+            else if (pConf.m_faceNodes && !pConf.m_volumeNodes)
                 return 3*(n+1)*(n+1)+2*(n+1)*(n+2)/2-9*(n+1)+6;
             else
                 return 9*(n+1)-12;
@@ -1455,13 +1455,13 @@ namespace Nektar
             // Finally extract volume nodes.
             for (i = pos; i < (order+1)*(order+1)*(order+2)/2; ++i)
             {
-                volumeNodes.push_back(
+                m_volumeNodes.push_back(
                     NodeSharedPtr(new Node(0, xo[i], yo[i], zo[i])));
             }
             
-            m_conf.order       = order;
+            m_conf.m_order       = order;
             m_conf.m_faceNodes   = true;
-            m_conf.volumeNodes = true;
+            m_conf.m_volumeNodes = true;
         }
 
         /**
@@ -1511,7 +1511,7 @@ namespace Nektar
 
             if (lid[0] == 4 || lid[0] == 5) 
             {
-                orientation = 0;
+                m_orientation = 0;
             } 
             else if (lid[0] == 1 || lid[0] == 2) 
             {
@@ -1524,7 +1524,7 @@ namespace Nektar
                 vertexmap[4] = m_vertex[1];
                 vertexmap[5] = m_vertex[2];
                 m_vertex = vertexmap;
-                orientation = 1;
+                m_orientation = 1;
             }
             else if (lid[0] == 0 || lid[0] == 3)
             {
@@ -1537,7 +1537,7 @@ namespace Nektar
                 vertexmap[4] = m_vertex[0];
                 vertexmap[5] = m_vertex[3];
                 m_vertex = vertexmap;
-                orientation = 2;
+                m_orientation = 2;
             }
             else
             {
@@ -1560,7 +1560,7 @@ namespace Nektar
             m_tag = "H";
             m_dim = 3;
             m_taglist = pTagList;
-            int n = m_conf.order-1;
+            int n = m_conf.m_order-1;
             
             // Create a map to relate edge nodes to a pair of vertices defining an edge
             // This is based on the ordering produced by gmsh.
@@ -1588,7 +1588,7 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (m_conf.order > 1) {
+                if (m_conf.m_order > 1) {
                     for (int j = it->second; j < it->second + n; ++j) {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
@@ -1614,8 +1614,8 @@ namespace Nektar
                     NodeSharedPtr b = m_vertex[face_ids[j][(k+1)%4]];
                     for (unsigned int i = 0; i < m_edge.size(); ++i)
                     {
-                        if ( ((*(m_edge[i]->n1)==*a) && (*(m_edge[i]->n2)==*b))
-                                || ((*(m_edge[i]->n1)==*b) && (*(m_edge[i]->n2) == *a)) )
+                        if ( ((*(m_edge[i]->m_n1)==*a) && (*(m_edge[i]->m_n2)==*b))
+                                || ((*(m_edge[i]->m_n1)==*b) && (*(m_edge[i]->m_n2) == *a)) )
                         {
                             faceEdges.push_back(m_edge[i]);
                             break;
@@ -1657,10 +1657,10 @@ namespace Nektar
          */
         unsigned int Hexahedron::GetNumNodes(ElmtConfig pConf)
         {
-            int n = pConf.order;
-            if (pConf.m_faceNodes && pConf.volumeNodes)
+            int n = pConf.m_order;
+            if (pConf.m_faceNodes && pConf.m_volumeNodes)
                 return (n+1)*(n+1)*(n+1);
-            else if (pConf.m_faceNodes && !pConf.volumeNodes)
+            else if (pConf.m_faceNodes && !pConf.m_volumeNodes)
                 return 6*(n+1)*(n+1)-12*(n+1)+8;
             else
                 return 12*(n+1)-16;

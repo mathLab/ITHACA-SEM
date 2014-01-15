@@ -69,7 +69,7 @@ namespace Nektar
         
         void OutputNekpp::Process()
         {
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "OutputNekpp: Writing file..." << endl;
             }
@@ -83,8 +83,8 @@ namespace Nektar
 
             // Begin <GEOMETRY> section
             TiXmlElement * geomTag = new TiXmlElement( "GEOMETRY" );
-            geomTag->SetAttribute("DIM", m_mesh->expDim);
-            geomTag->SetAttribute("SPACE", m_mesh->spaceDim);
+            geomTag->SetAttribute("DIM", m_mesh->m_expDim);
+            geomTag->SetAttribute("SPACE", m_mesh->m_spaceDim);
             root->LinkEndChild( geomTag );
 
             WriteXmlNodes     (geomTag);
@@ -147,7 +147,7 @@ namespace Nektar
 
         void OutputNekpp::WriteXmlEdges(TiXmlElement * pRoot)
         {
-            if (m_mesh->expDim >= 2)
+            if (m_mesh->m_expDim >= 2)
             {
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
                 std::set<EdgeSharedPtr>::iterator it;
@@ -158,7 +158,7 @@ namespace Nektar
                     EdgeSharedPtr ed = *it;
                     stringstream s;
 
-                    s << setw(5) << ed->n1->m_id << "  " << ed->n2->m_id << "   ";
+                    s << setw(5) << ed->m_n1->m_id << "  " << ed->m_n2->m_id << "   ";
                     TiXmlElement * e = new TiXmlElement( "E" );
                     e->SetAttribute("ID",ed->m_id);
                     e->LinkEndChild( new TiXmlText(s.str()) );
@@ -170,7 +170,7 @@ namespace Nektar
 
         void OutputNekpp::WriteXmlFaces(TiXmlElement * pRoot)
         {
-            if (m_mesh->expDim == 3)
+            if (m_mesh->m_expDim == 3)
             {
                 TiXmlElement* verTag = new TiXmlElement( "FACE" );
                 std::set<FaceSharedPtr>::iterator it;
@@ -210,7 +210,7 @@ namespace Nektar
         void OutputNekpp::WriteXmlElements(TiXmlElement * pRoot)
         {
             TiXmlElement* verTag = new TiXmlElement( "ELEMENT" );
-            vector<ElementSharedPtr> &elmt = m_mesh->element[m_mesh->expDim];
+            vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
 
             for(int i = 0; i < elmt.size(); ++i)
             {
@@ -249,7 +249,7 @@ namespace Nektar
                     e->SetAttribute("EDGEID",    (*it)->m_id);
                     e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
                     e->SetAttribute("TYPE", 
-                        LibUtilities::kPointsTypeStr[(*it)->curveType]);
+                        LibUtilities::kPointsTypeStr[(*it)->m_curveType]);
                     TiXmlText * t0 = new TiXmlText((*it)->GetXmlCurveString());
                     e->LinkEndChild(t0);
                     curved->LinkEndChild(e);
@@ -259,11 +259,11 @@ namespace Nektar
             int facecnt = 0;
 
             // 2D elements in 3-space, output face curvature information
-            if (m_mesh->expDim == 2 && m_mesh->spaceDim == 3)
+            if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
             {
                 vector<ElementSharedPtr>::iterator it;
-                for (it  = m_mesh->element[m_mesh->expDim].begin();
-                     it != m_mesh->element[m_mesh->expDim].end(); ++it)
+                for (it  = m_mesh->m_element[m_mesh->m_expDim].begin();
+                     it != m_mesh->m_element[m_mesh->m_expDim].end(); ++it)
                 {
                     // Only generate face curve if there are volume nodes
                     if ((*it)->GetVolumeNodes().size() > 0)
@@ -281,7 +281,7 @@ namespace Nektar
                     }
                 }
             }
-            else if (m_mesh->expDim == 3)
+            else if (m_mesh->m_expDim == 3)
             {
                 FaceSet::iterator it2;
                 for (it2 = m_mesh->m_faceSet.begin(); it2 != m_mesh->m_faceSet.end(); ++it2)
@@ -293,7 +293,7 @@ namespace Nektar
                         f->SetAttribute("FACEID",   (*it2)->m_id);
                         f->SetAttribute("NUMPOINTS",(*it2)->GetNodeCount());
                         f->SetAttribute("TYPE",
-                                        LibUtilities::kPointsTypeStr[(*it2)->curveType]);
+                                        LibUtilities::kPointsTypeStr[(*it2)->m_curveType]);
                         TiXmlText * t0 = new TiXmlText((*it2)->GetXmlCurveString());
                         f->LinkEndChild(t0);
                         curved->LinkEndChild(f);
@@ -313,14 +313,14 @@ namespace Nektar
 
             for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end(); ++it, ++j)
             {
-                if (it->second->items.size() > 0) 
+                if (it->second->m_items.size() > 0) 
                 {
                     TiXmlElement *comp_tag = new TiXmlElement("C"); // Composite
                     bool doSort = true;
                     
                     // Ensure that this composite is not used for periodic BCs!
-                    for (it2  = m_mesh->condition.begin(); 
-                         it2 != m_mesh->condition.end(); ++it2)
+                    for (it2  = m_mesh->m_condition.begin(); 
+                         it2 != m_mesh->m_condition.end(); ++it2)
                     {
                         ConditionSharedPtr c = it2->second;
                         
@@ -340,7 +340,7 @@ namespace Nektar
                         }
                     }
 
-                    doSort = doSort && it->second->reorder;
+                    doSort = doSort && it->second->m_reorder;
                     comp_tag->SetAttribute("ID", it->second->m_id);
                     comp_tag->LinkEndChild(
                         new TiXmlText(it->second->GetXmlString(doSort)));
@@ -365,7 +365,7 @@ namespace Nektar
             
             for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end(); ++it)
             {
-                if (it->second->items[0]->GetDim() == m_mesh->expDim)
+                if (it->second->m_items[0]->GetDim() == m_mesh->m_expDim)
                 {
                     if (list.length() > 0)
                     {
@@ -386,7 +386,7 @@ namespace Nektar
             
             for (it = m_mesh->m_composite.begin(); it != m_mesh->m_composite.end(); ++it)
             {
-                if (it->second->items[0]->GetDim() == m_mesh->expDim)
+                if (it->second->m_items[0]->GetDim() == m_mesh->m_expDim)
                 {
                     TiXmlElement * exp = new TiXmlElement ( "E");
                     exp->SetAttribute("COMPOSITE", "C["
@@ -395,16 +395,16 @@ namespace Nektar
                     exp->SetAttribute("NUMMODES",4);
                     exp->SetAttribute("TYPE","MODIFIED");
                     
-                    if (m_mesh->fields.size() == 0)
+                    if (m_mesh->m_fields.size() == 0)
                     {
                         exp->SetAttribute("FIELDS","u");
                     }
                     else
                     {
                         string fstr;
-                        for (int i = 0; i < m_mesh->fields.size(); ++i)
+                        for (int i = 0; i < m_mesh->m_fields.size(); ++i)
                         {
-                            fstr += m_mesh->fields[i]+",";
+                            fstr += m_mesh->m_fields[i]+",";
                         }
                         fstr = fstr.substr(0,fstr.length()-1);
                         exp->SetAttribute("FIELDS", fstr);
@@ -428,7 +428,7 @@ namespace Nektar
                 new TiXmlElement("VARIABLES");
             ConditionMap::iterator it;
             
-            for (it = m_mesh->condition.begin(); it != m_mesh->condition.end(); ++it)
+            for (it = m_mesh->m_condition.begin(); it != m_mesh->m_condition.end(); ++it)
             {
                 ConditionSharedPtr c = it->second;
                 string tmp;
@@ -480,21 +480,21 @@ namespace Nektar
                 boundaryconditions->LinkEndChild(region);
             }
 
-            for (int i = 0; i < m_mesh->fields.size(); ++i)
+            for (int i = 0; i < m_mesh->m_fields.size(); ++i)
             {
                 TiXmlElement *v = new TiXmlElement("V");
                 v->SetAttribute("ID", boost::lexical_cast<std::string>(i));
-                TiXmlText *t0 = new TiXmlText(m_mesh->fields[i]);
+                TiXmlText *t0 = new TiXmlText(m_mesh->m_fields[i]);
                 v->LinkEndChild(t0);
                 variables->LinkEndChild(v);
             }
             
-            if (m_mesh->fields.size() > 0)
+            if (m_mesh->m_fields.size() > 0)
             {
                 conditions->LinkEndChild(variables);
             }
             
-            if (m_mesh->condition.size() > 0)
+            if (m_mesh->m_condition.size() > 0)
             {
                 conditions->LinkEndChild(boundaryregions);
                 conditions->LinkEndChild(boundaryconditions);

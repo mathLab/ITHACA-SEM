@@ -69,7 +69,7 @@ namespace Nektar
             // Open the file stream.
             OpenStream();
             
-            m_mesh->expDim = 0;
+            m_mesh->m_expDim = 0;
             string line;
             int nVertices = 0;
             int nEntities = 0;
@@ -77,7 +77,7 @@ namespace Nektar
             LibUtilities::ShapeType elType = LibUtilities::eTriangle;
             map<string, int> propMap;
 
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputPly: Start reading file..." << endl;
             }
@@ -124,15 +124,15 @@ namespace Nektar
                         double y = data[propMap["y"]];
                         double z = data[propMap["z"]];
                         
-                        if ((y * y) > 0.000001 && m_mesh->spaceDim != 3)
+                        if ((y * y) > 0.000001 && m_mesh->m_spaceDim != 3)
                         {
-                            m_mesh->spaceDim = 2;
+                            m_mesh->m_spaceDim = 2;
                         }
                         if ((z * z) > 0.000001)
                         {
-                            m_mesh->spaceDim = 3;
+                            m_mesh->m_spaceDim = 3;
                         }
-                        m_mesh->node.push_back(
+                        m_mesh->m_node.push_back(
                             boost::shared_ptr<Node>(new Node(i, x, y, z)));
                         
                         // Read vertex normals.
@@ -163,7 +163,7 @@ namespace Nektar
                         {
                             int node = 0;
                             st >> node;
-                            nodeList.push_back(m_mesh->node[node]);
+                            nodeList.push_back(m_mesh->m_node[node]);
                         }
                         
                         // Create element
@@ -172,11 +172,11 @@ namespace Nektar
                             CreateInstance(elType,conf,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m_mesh->expDim) 
+                        if (E->GetDim() > m_mesh->m_expDim) 
                         {
-                            m_mesh->expDim = E->GetDim();
+                            m_mesh->m_expDim = E->GetDim();
                         }
-                        m_mesh->element[E->GetDim()].push_back(E);
+                        m_mesh->m_element[E->GetDim()].push_back(E);
                     }
                 }
             }

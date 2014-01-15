@@ -84,8 +84,8 @@ namespace Nektar
             SpatialDomains::MeshGraphSharedPtr graph =
                 SpatialDomains::MeshGraph::Read(pSession);
 
-            m_mesh->expDim   = graph->GetMeshDimension ();
-            m_mesh->spaceDim = graph->GetSpaceDimension();
+            m_mesh->m_expDim   = graph->GetMeshDimension ();
+            m_mesh->m_spaceDim = graph->GetSpaceDimension();
 
             // Copy vertices.
             map<int, NodeSharedPtr> vIdMap;
@@ -202,7 +202,7 @@ namespace Nektar
                 int id = cvec[i]->m_curveID;
                 ASSERTL1(eIdMap.find(id) != eIdMap.end(),"Failed to find curved edge");
                 EdgeSharedPtr edg = eIdMap[id];
-                edg->curveType = cvec[i]->m_ptype;
+                edg->m_curveType = cvec[i]->m_ptype;
                 for(int j = 0; j < cvec[i]->m_points.size()-2; ++j)
                 {
                     NodeSharedPtr n(new Node(j, (*cvec[i]->m_points[j+1])(0),
@@ -220,7 +220,7 @@ namespace Nektar
                 int id = cvec[i]->m_curveID;
                 ASSERTL1(fIdMap.find(id) != fIdMap.end(),"Failed to find curved edge");
                 FaceSharedPtr fac = fIdMap[id];
-                fac->curveType = cvec[i]->m_ptype;
+                fac->m_curveType = cvec[i]->m_ptype;
                 int Ntot = cvec[i]->m_points.size();
                 int N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
                 for(int j = 3+3*(N-2); j < Ntot; ++j)
@@ -233,7 +233,7 @@ namespace Nektar
             }
             
 
-            // Get hold of mesh composites and set up m_mesh->elements
+            // Get hold of mesh composites and set up m_mesh->m_elements
 
             SpatialDomains::CompositeMap       GraphComps= graph->GetComposites();
             SpatialDomains::CompositeMapIter   compIt;
@@ -241,7 +241,7 @@ namespace Nektar
 
 
             // calculate the number of element of dimension
-            // m_mesh->expDim in composite list so we can set up
+            // m_mesh->m_expDim in composite list so we can set up
             // element vector of this size to allow for
             // non-consecutive insertion to list (Might consider
             // setting element up as a map)?
@@ -251,12 +251,12 @@ namespace Nektar
                 // Get hold of dimension
                 int dim = (*compIt->second)[0]->GetShapeDim();
                 
-                if(dim == m_mesh->expDim) 
+                if(dim == m_mesh->m_expDim) 
                 {
                     nel += (*compIt->second).size();
                 }
             }
-            m_mesh->element[m_mesh->expDim].resize(nel);
+            m_mesh->m_element[m_mesh->m_expDim].resize(nel);
 
             // loop over all composites and set up elements with edges and faces from the maps above. 
             for(compIt = GraphComps.begin(); compIt != GraphComps.end(); ++compIt)
@@ -286,13 +286,13 @@ namespace Nektar
                     
                     E->SetId((*geomIt)->GetGlobalID());
                     
-                    if(dim == m_mesh->expDim) // load mesh into location baded on globalID
+                    if(dim == m_mesh->m_expDim) // load mesh into location baded on globalID
                     {
-                        m_mesh->element[dim][(*geomIt)->GetGlobalID()] = E;
+                        m_mesh->m_element[dim][(*geomIt)->GetGlobalID()] = E;
                     }
                     else // push onto vector for later usage as composite region
                     {
-                        m_mesh->element[dim].push_back(E);
+                        m_mesh->m_element[dim].push_back(E);
                     }
                     
                     if(dim > 1)
@@ -303,7 +303,7 @@ namespace Nektar
                             EdgeSharedPtr edg = eIdMap[(*geomIt)->GetEid(i)];
                             E->SetEdge(i,edg);
                             // set up link back to this element
-                            edg->elLink.push_back(pair<ElementSharedPtr,int>(E,i));
+                            edg->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));
                         }
                     }
                     
@@ -315,7 +315,7 @@ namespace Nektar
                             FaceSharedPtr fac = fIdMap[(*geomIt)->GetFid(i)];
                             E->SetFace(i,fac);
                             // set up link back to this slement
-                            fac->elLink.push_back(pair<ElementSharedPtr,int>(E,i));
+                            fac->m_elLink.push_back(pair<ElementSharedPtr,int>(E,i));
                         }
                     }
                 }                             

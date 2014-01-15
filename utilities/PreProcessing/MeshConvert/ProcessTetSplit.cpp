@@ -124,7 +124,7 @@ namespace Nektar
              * Tetrahedra", J. Dompierre et al.
              */
 
-            // Denotes a set of indices inside m_mesh->element[m_mesh->expDim-1] which are
+            // Denotes a set of indices inside m_mesh->m_element[m_mesh->m_expDim-1] which are
             // to be removed. These are precisely the quadrilateral boundary
             // faces which will be replaced by two triangular faces.
             set<int> toRemove;
@@ -177,14 +177,14 @@ namespace Nektar
             LibUtilities::PointsManager()[elec]->GetPoints(rp,sp);
 
             // Make a copy of the element list.
-            vector<ElementSharedPtr> el = m_mesh->element[m_mesh->expDim];
-            m_mesh->element[m_mesh->expDim].clear();
+            vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+            m_mesh->m_element[m_mesh->m_expDim].clear();
 
             for (int i = 0; i < el.size(); ++i)
             {
                 if (el[i]->GetConf().m_e != LibUtilities::ePrism)
                 {
-                    m_mesh->element[m_mesh->expDim].push_back(el[i]);
+                    m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
                     continue;
                 }
 
@@ -238,7 +238,7 @@ namespace Nektar
                 // mapped element can be read from.
                 SpatialDomains::PrismGeomSharedPtr geomLayer =
                     boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
-                        el[i]->GetGeom(m_mesh->spaceDim));
+                        el[i]->GetGeom(m_mesh->m_spaceDim));
                 LibUtilities::BasisKey B0(
                     LibUtilities::eOrtho_A, nq,
                     LibUtilities::PointsKey(
@@ -378,7 +378,7 @@ namespace Nektar
                             elmt->GetGeom(3);
                         triGeom->FillGeom();
                         o = 3 + 3*ne;
-                        face->curveType = LibUtilities::eNodalTriEvenlySpaced;
+                        face->m_curveType = LibUtilities::eNodalTriEvenlySpaced;
 
                         for (int l = 0; l < nft; ++l)
                         {
@@ -398,7 +398,7 @@ namespace Nektar
                         }
                     }
 
-                    m_mesh->element[m_mesh->expDim].push_back(elmt);
+                    m_mesh->m_element[m_mesh->m_expDim].push_back(elmt);
                 }
 
                 // Now check to see if this one of the quadrilateral faces is
@@ -427,7 +427,7 @@ namespace Nektar
 
                     // Mark existing boundary face for removal.
                     toRemove.insert(bl);
-                    tagBE =  m_mesh->element[m_mesh->expDim-1][bl]->GetTagList();
+                    tagBE =  m_mesh->m_element[m_mesh->m_expDim-1][bl]->GetTagList();
 
                     // First loop over tets.
                     for (int j = 0; j < 3; ++j)
@@ -468,7 +468,7 @@ namespace Nektar
                                 triNodeList[2] = nodeList[mapPrism[tmp[2]]];
                                 elmt           = GetElementFactory().
                                     CreateInstance(LibUtilities::eTriangle,bconf,triNodeList,tagBE);
-                                m_mesh->element[m_mesh->expDim-1].push_back(elmt);
+                                m_mesh->m_element[m_mesh->m_expDim-1].push_back(elmt);
                             }
                         }
                     }
@@ -477,16 +477,16 @@ namespace Nektar
 
             // Remove 2D elements.
             vector<ElementSharedPtr> tmp;
-            for (int i = 0; i < m_mesh->element[m_mesh->expDim-1].size(); ++i)
+            for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim-1].size(); ++i)
             {
                 set<int>::iterator it = toRemove.find(i);
                 if (it == toRemove.end())
                 {
-                    tmp.push_back(m_mesh->element[m_mesh->expDim-1][i]);
+                    tmp.push_back(m_mesh->m_element[m_mesh->m_expDim-1][i]);
                 }
             }
 
-            m_mesh->element[m_mesh->expDim-1] = tmp;
+            m_mesh->m_element[m_mesh->m_expDim-1] = tmp;
 
             // Re-process mesh to eliminate duplicate vertices and edges.
             ProcessVertices();

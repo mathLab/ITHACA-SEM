@@ -71,8 +71,7 @@ namespace Nektar
          * points on high-order edges/faces, although this information is not
          * contained within this class.
          */
-        class Node 
-        {
+        class Node {
         public:
             /// Create a new node at a specified coordinate.
             Node(int pId, double pX, double pY, double pZ)
@@ -234,12 +233,12 @@ namespace Nektar
             Edge(NodeSharedPtr pVertex1, NodeSharedPtr pVertex2, 
                  std::vector<NodeSharedPtr> pEdgeNodes,
                  LibUtilities::PointsType pCurveType) 
-                : n1(pVertex1), n2(pVertex2), m_edgeNodes(pEdgeNodes),
-                  curveType(pCurveType), m_geom() {}
+                : m_n1(pVertex1), m_n2(pVertex2), m_edgeNodes(pEdgeNodes),
+                  m_curveType(pCurveType), m_geom() {}
             /// Copies an existing edge.
             Edge(const Edge& pSrc)
-                : n1(pSrc.n1), n2(pSrc.n2), m_edgeNodes(pSrc.m_edgeNodes),
-                  curveType(pSrc.curveType), m_geom(pSrc.m_geom) {}
+                : m_n1(pSrc.m_n1), m_n2(pSrc.m_n2), m_edgeNodes(pSrc.m_edgeNodes),
+                  m_curveType(pSrc.m_curveType), m_geom(pSrc.m_geom) {}
             ~Edge() {}
 
             /// Returns the total number of nodes defining the edge.
@@ -255,14 +254,14 @@ namespace Nektar
                 std::stringstream s;
                 std::string str;
                 s << std::scientific << std::setprecision(8) << "     "
-                  <<  n1->m_x << "  " << n1->m_y << "  " << n1->m_z << "     ";
+                  <<  m_n1->m_x << "  " << m_n1->m_y << "  " << m_n1->m_z << "     ";
                 for (int k = 0; k < m_edgeNodes.size(); ++k) {
                     s << std::scientific << std::setprecision(8) << "     "
                       <<  m_edgeNodes[k]->m_x << "  " << m_edgeNodes[k]->m_y
                       << "  " << m_edgeNodes[k]->m_z << "     ";
                 }
                 s << std::scientific << std::setprecision(8) << "     "
-                  <<  n2->m_x << "  " << n2->m_y << "  " << n2->m_z;
+                  <<  m_n2->m_x << "  " << m_n2->m_y << "  " << m_n2->m_z;
                 return s.str();
             }
 
@@ -271,15 +270,15 @@ namespace Nektar
             {
                 // Create edge vertices.
                 SpatialDomains::PointGeomSharedPtr p[2];
-                p[0] = n1->GetGeom(coordDim);
-                p[1] = n2->GetGeom(coordDim);
+                p[0] = m_n1->GetGeom(coordDim);
+                p[1] = m_n2->GetGeom(coordDim);
                 
                 // Create a curve if high-order information exists.
                 if (m_edgeNodes.size() > 0)
                 {
                     SpatialDomains::CurveSharedPtr c = 
                         MemoryManager<SpatialDomains::Curve>::
-                        AllocateSharedPtr(m_id, curveType);
+                        AllocateSharedPtr(m_id, m_curveType);
                     
                     c->m_points.push_back(p[0]);
                     for (int i = 0; i < m_edgeNodes.size(); ++i)
@@ -303,15 +302,15 @@ namespace Nektar
             /// ID of edge.
             unsigned int m_id;
             /// First vertex node.
-            NodeSharedPtr n1;
+            NodeSharedPtr m_n1;
             /// Second vertex node.
-            NodeSharedPtr n2;
+            NodeSharedPtr m_n2;
             /// List of control nodes between the first and second vertices.
             std::vector<NodeSharedPtr> m_edgeNodes;
             /// Distributions of points along edge.
-            LibUtilities::PointsType curveType;
+            LibUtilities::PointsType m_curveType;
             /// Element(s) which are linked to this edge.
-            vector<pair<ElementSharedPtr, int> > elLink; 
+            vector<pair<ElementSharedPtr, int> > m_elLink; 
 
         private:
             SpatialDomains::SegGeomSharedPtr m_geom;
@@ -334,8 +333,8 @@ namespace Nektar
             std::size_t operator()(EdgeSharedPtr const& p) const
             {
                 std::size_t seed = 0;
-                unsigned int id1 = p->n1->m_id;
-                unsigned int id2 = p->n2->m_id;
+                unsigned int id1 = p->m_n1->m_id;
+                unsigned int id2 = p->m_n2->m_id;
                 boost::hash_combine(seed, id1 < id2 ? id1 : id2);
                 boost::hash_combine(seed, id2 < id1 ? id1 : id2);
                 return seed;
@@ -359,15 +358,15 @@ namespace Nektar
                  std::vector<EdgeSharedPtr> pEdgeList,
                  LibUtilities::PointsType   pCurveType)
                 : m_vertexList(pVertexList), 
-                  m_edgeList  (pEdgeList),
-                  m_faceNodes (pFaceNodes), 
-                  curveType (pCurveType),
-                  m_geom    () {}
+                m_edgeList  (pEdgeList),
+                m_faceNodes (pFaceNodes), 
+                m_curveType (pCurveType),
+                 m_geom    () {}
             
             /// Copy an existing face.
             Face(const Face& pSrc)
                 : m_vertexList(pSrc.m_vertexList), m_edgeList  (pSrc.m_edgeList),
-                  m_faceNodes (pSrc.m_faceNodes),  curveType (pSrc.curveType),
+                m_faceNodes (pSrc.m_faceNodes),  m_curveType (pSrc.m_curveType),
                   m_geom    (pSrc.m_geom) {}
             ~Face() {}
 
@@ -407,9 +406,9 @@ namespace Nektar
                 std::string str;
                 
                 // Treat 2D point distributions differently to 3D.
-                if (curveType == LibUtilities::eNodalTriFekete       || 
-                    curveType == LibUtilities::eNodalTriEvenlySpaced ||
-                    curveType == LibUtilities::eNodalTriElec)
+                if (m_curveType == LibUtilities::eNodalTriFekete       || 
+                    m_curveType == LibUtilities::eNodalTriEvenlySpaced ||
+                    m_curveType == LibUtilities::eNodalTriElec)
                 {
                     vector<NodeSharedPtr> tmp;
                     int n = m_edgeList[0]->GetNodeCount();
@@ -419,7 +418,7 @@ namespace Nektar
                     {
                         tmp.insert(tmp.end(), m_edgeList[k]->m_edgeNodes.begin(),
                                    m_edgeList[k]->m_edgeNodes.end());
-                        if (m_edgeList[k]->n1 != m_vertexList[k])
+                        if (m_edgeList[k]->m_n1 != m_vertexList[k])
                         {
                             // If edge orientation is reversed relative to node
                             // ordering, we need to reverse order of nodes.
@@ -459,7 +458,7 @@ namespace Nektar
                     int skips[4][2] = {{0,1}, {n-1,n}, {n*(n-1),1}, {0,n}};
                     for (int i = 0; i < 4; ++i)
                     {
-                        bool reverseEdge = m_edgeList[i]->n1 == m_vertexList[i];
+                        bool reverseEdge = m_edgeList[i]->m_n1 == m_vertexList[i];
                         
                         if (reverseEdge)
                         {
@@ -505,7 +504,7 @@ namespace Nektar
                 int nEdge = m_edgeList.size();
                 
                 SpatialDomains::SegGeomSharedPtr edges[4];
-                StdRegions::Orientation      edgeo[4];
+                StdRegions::Orientation          edgeo[4];
                 
                 for (int i = 0; i < nEdge; ++i)
                 {
@@ -541,9 +540,9 @@ namespace Nektar
             /// List of face-interior nodes defining the shape of the face.
             std::vector<NodeSharedPtr> m_faceNodes;
             /// Distribution of points in this face.
-            LibUtilities::PointsType   curveType;
+            LibUtilities::PointsType   m_curveType;
             /// Element(s) which are linked to this face.
-            vector<pair<ElementSharedPtr, int> > elLink; 
+            vector<pair<ElementSharedPtr, int> > m_elLink; 
             
             SpatialDomains::Geometry2DSharedPtr m_geom;
         };
@@ -587,11 +586,11 @@ namespace Nektar
                        bool pFn, bool pVn, bool pReorient = true,
                        LibUtilities::PointsType pECt=LibUtilities::ePolyEvenlySpaced,
                        LibUtilities::PointsType pFCt=LibUtilities::ePolyEvenlySpaced):
-            m_e(pE), m_faceNodes(pFn), volumeNodes(pVn), order(pOrder),
-                reorient(pReorient), m_edgeCurveType(pECt), m_faceCurveType(pFCt) {}
+            m_e(pE), m_faceNodes(pFn), m_volumeNodes(pVn), m_order(pOrder),
+                m_reorient(pReorient), m_edgeCurveType(pECt), m_faceCurveType(pFCt) {}
             ElmtConfig(ElmtConfig const &p) :
-            m_e(p.m_e), m_faceNodes(p.m_faceNodes), volumeNodes(p.volumeNodes), 
-                order(p.order), reorient(p.reorient), 
+            m_e(p.m_e), m_faceNodes(p.m_faceNodes), m_volumeNodes(p.m_volumeNodes), 
+                m_order(p.m_order), m_reorient(p.m_reorient), 
                 m_edgeCurveType(p.m_edgeCurveType), m_faceCurveType(p.m_faceCurveType) {}
 
             ElmtConfig() {}
@@ -606,12 +605,12 @@ namespace Nektar
             /// nodes. These are not supported by either the mesh converter or
             /// Nektar++ but are included for completeness and are required
             /// for some output modules (e.g. Gmsh).
-            bool                     volumeNodes;
+            bool                     m_volumeNodes;
             /// Order of the element.
-            unsigned int             order;
+            unsigned int             m_order;
             /// Denotes whether the element needs to be re-orientated for a
             /// spectral element framework.
-            bool                     reorient;
+            bool                     m_reorient;
             /// Distribution of points in edges.
             LibUtilities::PointsType m_edgeCurveType;
             /// Distribution of points in faces.
@@ -679,22 +678,22 @@ namespace Nektar
             }
             /// Access the list of volume nodes.
             std::vector<NodeSharedPtr> GetVolumeNodes() const {
-                return volumeNodes;
+                return m_volumeNodes;
             }
             void SetVolumeNodes(std::vector<NodeSharedPtr> &nodes) {
-                volumeNodes = nodes;
+                m_volumeNodes = nodes;
             }
             LibUtilities::PointsType GetCurveType() const {
-                return curveType;
+                return m_curveType;
             }
             void SetCurveType(LibUtilities::PointsType cT) {
-                curveType = cT;
+                m_curveType = cT;
             }
             /// Returns the total number of nodes (vertices, edge nodes and
             /// face nodes and volume nodes).
             unsigned int GetNodeCount() const
             {
-                unsigned int n = volumeNodes.size();
+                unsigned int n = m_volumeNodes.size();
                 if (m_dim == 2)
                 {
                     for (int i = 0; i < m_edge.size(); ++i)
@@ -933,7 +932,7 @@ namespace Nektar
                     for (int i = 0; i < 3; ++i)
                     {
                         std::copy(m_edge[i]->m_edgeNodes.begin(), m_edge[i]->m_edgeNodes.end(), nodeList.begin() + 3 + i*(n-2));
-                        if (m_edge[i]->n1 != m_vertex[i])
+                        if (m_edge[i]->m_n1 != m_vertex[i])
                         {
                             // If edge orientation is reversed relative to node
                             // ordering, we need to reverse order of nodes.
@@ -945,8 +944,8 @@ namespace Nektar
                     // Triangle ordering lists vertices, edges then interior.
                     // Interior nodes are row by row from edge 0 up to vertex 2
                     // so need to reorder interior nodes only.
-                    std::vector<NodeSharedPtr> interior(volumeNodes.size());
-                    std::copy(volumeNodes.begin(), volumeNodes.end(), interior.begin());
+                    std::vector<NodeSharedPtr> interior(m_volumeNodes.size());
+                    std::copy(m_volumeNodes.begin(), m_volumeNodes.end(), interior.begin());
                     interior = tensorNodeOrdering(interior, n-3);
                     std::copy(interior.begin(), interior.end(), nodeList.begin() + 3*(n-1));
                 }
@@ -964,7 +963,7 @@ namespace Nektar
                                   m_edge[i]->m_edgeNodes.end(),
                                   nodeList.begin() + 4 + i*(n-2));
 
-                        if (m_edge[i]->n1 != m_vertex[i])
+                        if (m_edge[i]->m_n1 != m_vertex[i])
                         {
                             // If m_edge orientation is reversed relative to node
                             // ordering, we need to reverse order of nodes.
@@ -972,7 +971,7 @@ namespace Nektar
                                          nodeList.begin() + 4 + (i+1)*(n-2));
                         }
                     }
-                    std::copy(volumeNodes.begin(), volumeNodes.end(), nodeList.begin() + 4*(n-1));
+                    std::copy(m_volumeNodes.begin(), m_volumeNodes.end(), nodeList.begin() + 4*(n-1));
 
                     // Quadrilateral ordering lists all nodes row by row
                     // starting from edge 0 up to edge 2, so need to reorder
@@ -1054,9 +1053,9 @@ namespace Nektar
             /// List of element faces.
             std::vector<FaceSharedPtr> m_face;
             /// List of element volume nodes.
-            std::vector<NodeSharedPtr> volumeNodes;
+            std::vector<NodeSharedPtr> m_volumeNodes;
             /// Volume curve type
-            LibUtilities::PointsType curveType;
+            LibUtilities::PointsType m_curveType;
             /// Pointer to the corresponding edge if element is a 2D boundary.
             EdgeSharedPtr m_edgeLink;
             /// Pointer to the corresponding face if element is a 3D boundary.
@@ -1107,7 +1106,7 @@ namespace Nektar
          */
         class Composite {
         public:
-            Composite() : reorder(true) {}
+            Composite() : m_reorder(true) {}
 
             /// Generate the list of IDs of elements within this composite.
             std::string GetXmlString(bool doSort=true);
@@ -1115,11 +1114,11 @@ namespace Nektar
             /// ID of composite.
             unsigned int m_id;
             /// Element type tag.
-            std::string tag;
+            std::string m_tag;
             /// Determines whether items can be reordered.
-            bool reorder;
+            bool m_reorder;
             /// List of elements in this composite.
-            std::vector<ElementSharedPtr> items;
+            std::vector<ElementSharedPtr> m_items;
         };
         /// Shared pointer to a composite.
         typedef boost::shared_ptr<Composite> CompositeSharedPtr;
@@ -1164,16 +1163,16 @@ namespace Nektar
         class Mesh
         {
         public:
-            Mesh() : verbose(false) {}
+            Mesh() : m_verbose(false) {}
             
             /// Verbose flag
-            bool                            verbose;
+            bool                            m_verbose;
             /// Dimension of the expansion.
-            unsigned int                    expDim;
+            unsigned int                    m_expDim;
             /// Dimension of the space in which the mesh is defined.
-            unsigned int                    spaceDim;
+            unsigned int                    m_spaceDim;
             /// List of mesh nodes.
-            std::vector<NodeSharedPtr>      node;
+            std::vector<NodeSharedPtr>      m_node;
             /// Set of element vertices.
             NodeSet                         m_vertexSet;
             /// Set of element edges.
@@ -1181,18 +1180,18 @@ namespace Nektar
             /// Set of element faces.
             FaceSet                         m_faceSet;
             /// Map for elements.
-            ElementMap                      element;
+            ElementMap                      m_element;
             /// Map for composites.
             CompositeMap                    m_composite;
             /// Boundary conditions maps tag to condition.
-            ConditionMap                    condition;
+            ConditionMap                    m_condition;
             /// List of fields names.
-            std::vector<std::string>        fields;
+            std::vector<std::string>        m_fields;
             /// Map of vertex normals.
             boost::unordered_map<int, Node> m_vertexNormals;
             /// Set of all pairs of element ID and edge/face number on which to
             /// apply spherigon surface smoothing.
-            set<pair<int,int> >             spherigonSurfs;
+            set<pair<int,int> >             m_spherigonSurfs;
             /// Returns the total number of elements in the mesh with
             /// dimension expDim.
             unsigned int                    GetNumElements();
@@ -1278,7 +1277,7 @@ namespace Nektar
                 vector<EdgeSharedPtr> m_edges = e->GetEdgeList();
                 for (int i = 0; i < m_edges.size(); ++i)
                 {
-                    m_edges[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                    m_edges[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
                 }
                 return e;
             }
@@ -1314,7 +1313,7 @@ namespace Nektar
                 vector<EdgeSharedPtr> m_edges = e->GetEdgeList();
                 for (int i = 0; i < m_edges.size(); ++i)
                 {
-                    m_edges[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                    m_edges[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
                 }
                 return e;
             }
@@ -1350,7 +1349,7 @@ namespace Nektar
                 vector<FaceSharedPtr> faces = e->GetFaceList();
                 for (int i = 0; i < faces.size(); ++i)
                 {
-                    faces[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                    faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
                 }
                 return e;
             }
@@ -1371,7 +1370,7 @@ namespace Nektar
             /**
              * Orientation of tet; unchanged = 0; base vertex swapped = 1.
              */
-            int orientationMap[4];
+            int m_orientationMap[4];
 
         protected:
             void OrientTet();
@@ -1395,7 +1394,7 @@ namespace Nektar
                 vector<FaceSharedPtr> faces = e->GetFaceList();
                 for (int i = 0; i < faces.size(); ++i)
                 {
-                    faces[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                    faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
                 }
                 return e;
             }
@@ -1417,7 +1416,7 @@ namespace Nektar
              * Orientation of prism; unchanged = 0; clockwise = 1;
              * counter-clockwise = 2. This is set by OrientPrism.
              */
-            unsigned int orientation;
+            unsigned int m_orientation;
 
         protected:
             void OrientPrism();
@@ -1440,7 +1439,7 @@ namespace Nektar
                 vector<FaceSharedPtr> faces = e->GetFaceList();
                 for (int i = 0; i < faces.size(); ++i)
                 {
-                    faces[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                    faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
                 }
                 return e;
             }

@@ -72,18 +72,18 @@ namespace Nektar
             sort(surfs.begin(), surfs.end());
 
             // If we're running in verbose mode print out a list of surfaces.
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "ProcessExtractSurf: extracting surface"
                      << (surfs.size() > 1 ? "s" : "") << " " << surf << endl;
             }
 
             // Make a copy of all existing elements of one dimension lower.
-            vector<ElementSharedPtr> el = m_mesh->element[m_mesh->expDim-1];
+            vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim-1];
 
             // Clear all elements.
-            m_mesh->element[m_mesh->expDim]  .clear();
-            m_mesh->element[m_mesh->expDim-1].clear();
+            m_mesh->m_element[m_mesh->m_expDim]  .clear();
+            m_mesh->m_element[m_mesh->m_expDim-1].clear();
 
             // Clear existing vertices, edges and faces.
             m_mesh->m_vertexSet.clear();
@@ -96,7 +96,7 @@ namespace Nektar
                 vector<EdgeSharedPtr> edges = el[i]->GetEdgeList();
                 for (j = 0; j < edges.size(); ++j)
                 {
-                    edges[j]->elLink.clear();
+                    edges[j]->m_elLink.clear();
                 }
 
                 FaceSharedPtr f = el[i]->GetFaceLink();
@@ -104,7 +104,7 @@ namespace Nektar
                 {
                     for (j = 0; j < f->m_edgeList.size(); ++j)
                     {
-                        f->m_edgeList[j]->elLink.clear();
+                        f->m_edgeList[j]->m_elLink.clear();
                     }
                 }
             }
@@ -156,7 +156,7 @@ namespace Nektar
                     {
                         m_mesh->m_edgeSet.insert(f->m_edgeList[j]);
                         elmt->SetEdge(j, f->m_edgeList[j]);
-                        f->m_edgeList[j]->elLink.push_back(
+                        f->m_edgeList[j]->m_elLink.push_back(
                             std::make_pair(elmt, j));
                     }
                     elmt->SetId(f->m_id);
@@ -175,11 +175,11 @@ namespace Nektar
                 keptIds.insert(elmt->GetId());
 
                 // Push element back into the list.
-                m_mesh->element[m_mesh->expDim-1].push_back(elmt);
+                m_mesh->m_element[m_mesh->m_expDim-1].push_back(elmt);
             }
 
             // Decrement the expansion dimension to get manifold embedding.
-            m_mesh->expDim--;
+            m_mesh->m_expDim--;
 
             // Now process composites. This is necessary because 2D surfaces may
             // contain both quadrilaterals and triangles and so need to be split
@@ -194,23 +194,23 @@ namespace Nektar
             // which don't have elements of the correct dimension.
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
-                if (it->second->items[0]->GetDim() != m_mesh->expDim)
+                if (it->second->m_items[0]->GetDim() != m_mesh->m_expDim)
                 {
                     continue;
                 }
 
-                vector<ElementSharedPtr> el = it->second->items;
-                it->second->items.clear();
+                vector<ElementSharedPtr> el = it->second->m_items;
+                it->second->m_items.clear();
 
                 for (i = 0; i < el.size(); ++i)
                 {
                     if (keptIds.count(el[i]->GetId()) > 0)
                     {
-                        it->second->items.push_back(el[i]);
+                        it->second->m_items.push_back(el[i]);
                     }
                 }
 
-                if (it->second->items.size() == 0)
+                if (it->second->m_items.size() == 0)
                 {
                     continue;
                 }
@@ -231,12 +231,12 @@ namespace Nektar
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
                 CompositeSharedPtr c = it->second;
-                vector<ElementSharedPtr> el = c->items;
+                vector<ElementSharedPtr> el = c->m_items;
 
                 // Remove all but the first element from this composite.
                 string initialTag = el[0]->GetTag();
-                c->items.resize(1);
-                c->tag = initialTag;
+                c->m_items.resize(1);
+                c->m_tag = initialTag;
 
                 // newComps stores the new composites. The key is the composite
                 // type (e.g. Q for quad) and value is the composite.
@@ -256,18 +256,18 @@ namespace Nektar
                     {
                         CompositeSharedPtr newComp(new Composite());
                         newComp->m_id  = maxId++;
-                        newComp->tag = tag;
-                        newComp->items.push_back(el[i]);
+                        newComp->m_tag = tag;
+                        newComp->m_items.push_back(el[i]);
                         newComps[tag] = newComp;
                     }
                     else
                     {
-                        it2->second->items.push_back(el[i]);
+                        it2->second->m_items.push_back(el[i]);
                     }
                 }
 
                 // Print out mapping information if we remapped composite IDs.
-                if (m_mesh->verbose && newComps.size() > 1)
+                if (m_mesh->m_verbose && newComps.size() > 1)
                 {
                     cout << "- Mapping composite " << it->first << " ->";
                 }
@@ -276,15 +276,15 @@ namespace Nektar
                 for (i = 0, it2 = newComps.begin(); it2 != newComps.end();
                      ++it2, ++i)
                 {
-                    if (m_mesh->verbose && newComps.size() > 1)
+                    if (m_mesh->m_verbose && newComps.size() > 1)
                     {
                         cout << (i > 0 ? ", " : " ") << it2->second->m_id << "("
-                             << it2->second->tag << ")";
+                             << it2->second->m_tag << ")";
                     }
                     m_mesh->m_composite[it2->second->m_id] = it2->second;
                 }
 
-                if (m_mesh->verbose && newComps.size() > 1)
+                if (m_mesh->m_verbose && newComps.size() > 1)
                 {
                     cout << endl;
                 }

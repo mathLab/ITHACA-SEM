@@ -51,8 +51,8 @@ namespace Nektar
                 std::size_t seed = 0;
                 boost::hash_combine(seed, (int)el.m_e        );
                 boost::hash_combine(seed,      el.m_faceNodes  );
-                boost::hash_combine(seed,      el.volumeNodes);
-                boost::hash_combine(seed,      el.order      );
+                boost::hash_combine(seed,      el.m_volumeNodes);
+                boost::hash_combine(seed,      el.m_order      );
                 return seed;
             }
         };
@@ -61,8 +61,8 @@ namespace Nektar
         {
             return p1.m_e         == p2.m_e         &&
                    p1.m_faceNodes   == p2.m_faceNodes   &&
-                   p1.volumeNodes == p2.volumeNodes &&
-                   p1.order       == p2.order;
+                   p1.m_volumeNodes == p2.m_volumeNodes &&
+                   p1.m_order       == p2.m_order;
         }
 
         /// Converter for Gmsh files.

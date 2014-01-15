@@ -81,10 +81,10 @@ namespace Nektar
          */
         void InputTec::Process()
         {
-            m_mesh->expDim   = 3;
-            m_mesh->spaceDim = 3;
+            m_mesh->m_expDim   = 3;
+            m_mesh->m_spaceDim = 3;
             
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputStarTec: Start reading file..." << endl;
             }
@@ -370,7 +370,7 @@ namespace Nektar
                 // consistent numbering for singular vertex re-ordering
                 ResetNodes(Nodes,ElementFaces,FaceNodes);
                 
-                m_mesh->node = Nodes;
+                m_mesh->m_node = Nodes;
 
                 // create Prisms/Pyramids first
                 for(i = 0; i < nelements; ++i)
@@ -400,7 +400,7 @@ namespace Nektar
             {
                 cout << " (2D)" << endl;
 
-                // find ids of VertNodes from m_mesh->vertexSet so that we can identify
+                // find ids of VertNodes from m_mesh->m_vertexSet so that we can identify
                 for(i = 0; i < Nodes.size(); ++i)
                 {
                     NodeSet::iterator it = m_mesh->m_vertexSet.find(Nodes[i]);
@@ -711,7 +711,7 @@ namespace Nektar
             ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
                                                                      nodeList,tags);
             
-            m_mesh->element[E->GetDim()].push_back(E);
+            m_mesh->m_element[E->GetDim()].push_back(E);
         }
 
         void InputTec::GenElement3D(vector<NodeSharedPtr> &VertNodes,
@@ -727,7 +727,7 @@ namespace Nektar
 
             
             // Set Nodes  -- Not sure we need this so could 
-            //m_mesh->node = VertNodes;
+            //m_mesh->m_node = VertNodes;
 
             // element type
             if(nnodes == 4)
@@ -767,7 +767,7 @@ namespace Nektar
                 ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
                                                            nodeList,tags);
                 
-                m_mesh->element[E->GetDim()].push_back(E);
+                m_mesh->m_element[E->GetDim()].push_back(E);
             }
             else
             {

@@ -75,7 +75,7 @@ namespace Nektar
 
         void ProcessBL::Process()
         {
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "ProcessBL: Refining prismatic boundary layer..."
                      << endl;
@@ -158,9 +158,9 @@ namespace Nektar
 
                 // If surface is defined, process list of elements to find those
                 // that are connected to it.
-                for (int i = 0; i < m_mesh->element[m_mesh->expDim].size(); ++i)
+                for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
                 {
-                    ElementSharedPtr el = m_mesh->element[m_mesh->expDim][i];
+                    ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
                     int nSurf = el->GetFaceCount();
 
                     for (int j = 0; j < nSurf; ++j)
@@ -171,7 +171,7 @@ namespace Nektar
                             continue;
                         }
 
-                        ElementSharedPtr bEl  = m_mesh->element[m_mesh->expDim-1][bl];
+                        ElementSharedPtr bEl  = m_mesh->m_element[m_mesh->m_expDim-1][bl];
                         vector<int>      tags = bEl->GetTagList();
                         vector<int>      inter;
 
@@ -216,9 +216,9 @@ namespace Nektar
             {
                 // Otherwise, add all prismatic elements and assume face 1 of
                 // the prism lies on the surface.
-                for (int i = 0; i < m_mesh->element[m_mesh->expDim].size(); ++i)
+                for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
                 {
-                    ElementSharedPtr el = m_mesh->element[m_mesh->expDim][i];
+                    ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
 
                     if (el->GetConf().m_e != LibUtilities::ePrism)
                     {
@@ -237,15 +237,15 @@ namespace Nektar
 
             // Erase all elements from the element list. Elements will be
             // re-added as they are split.
-            vector<ElementSharedPtr> el = m_mesh->element[m_mesh->expDim];
-            m_mesh->element[m_mesh->expDim].clear();
+            vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+            m_mesh->m_element[m_mesh->m_expDim].clear();
 
             // Iterate over list of elements of expansion dimension.
             for (int i = 0; i < el.size(); ++i)
             {
                 if (splitEls.count(el[i]->GetId()) == 0)
                 {
-                    m_mesh->element[m_mesh->expDim].push_back(el[i]);
+                    m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
                     continue;
                 }
 
@@ -263,7 +263,7 @@ namespace Nektar
                 // Get elemental geometry object.
                 SpatialDomains::PrismGeomSharedPtr geom =
                     boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
-                        el[i]->GetGeom(m_mesh->spaceDim));
+                        el[i]->GetGeom(m_mesh->m_spaceDim));
 
                 // Determine whether to use reverse points.
                 LibUtilities::PointsType t = splitEls[el[i]->GetId()] == 1 ?
@@ -430,7 +430,7 @@ namespace Nektar
                                 NodeSharedPtr(
                                     new Node(nodeId++,x[pos],y[pos],z[pos])));
                         }
-                        HOedge->curveType = pt;
+                        HOedge->m_curveType = pt;
                     }
 
                     // Change the surface elements of the quad face on the
@@ -444,7 +444,7 @@ namespace Nektar
                         if (j == 0)
                         {
                             // For first layer reuse existing 2D element.
-                            ElementSharedPtr e = m_mesh->element[m_mesh->expDim-1][bl];
+                            ElementSharedPtr e = m_mesh->m_element[m_mesh->m_expDim-1][bl];
                             for (int k = 0; k < 4; ++k)
                             {
                                 e->SetVertex(
@@ -460,16 +460,16 @@ namespace Nektar
                                 qNodeList[k] = nodeList[prismFaceNodes[fid][k]];
                             }
                             vector<int> tagBE;
-                            tagBE = m_mesh->element[m_mesh->expDim-1][bl]->GetTagList();
+                            tagBE = m_mesh->m_element[m_mesh->m_expDim-1][bl]->GetTagList();
                             ElmtConfig bconf(LibUtilities::eQuadrilateral,1,true,true,false);
                             ElementSharedPtr boundaryElmt = GetElementFactory().
                                 CreateInstance(LibUtilities::eQuadrilateral,bconf,
                                                qNodeList,tagBE);
-                            m_mesh->element[m_mesh->expDim-1].push_back(boundaryElmt);
+                            m_mesh->m_element[m_mesh->m_expDim-1].push_back(boundaryElmt);
                         }
                     }
 
-                    m_mesh->element[m_mesh->expDim].push_back(elmt);
+                    m_mesh->m_element[m_mesh->m_expDim].push_back(elmt);
                 }
             }
 

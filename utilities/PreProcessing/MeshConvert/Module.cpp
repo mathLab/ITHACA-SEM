@@ -109,7 +109,7 @@ namespace Nektar
          */
         void Module::ProcessVertices()
         {
-            vector<ElementSharedPtr> &elmt = m_mesh->element[m_mesh->expDim];
+            vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
 
             m_mesh->m_vertexSet.clear();
 
@@ -148,11 +148,11 @@ namespace Nektar
          */
         void Module::ProcessEdges(bool ReprocessEdges)
         {
-            if (m_mesh->expDim < 2) return;
+            if (m_mesh->m_expDim < 2) return;
 
             if(ReprocessEdges)
             {
-                vector<ElementSharedPtr> &elmt = m_mesh->element[m_mesh->expDim];
+                vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
                 
                 m_mesh->m_edgeSet.clear();
                 
@@ -176,11 +176,11 @@ namespace Nektar
                             if (e2->m_edgeNodes.size() == 0 &&
                                 ed->m_edgeNodes.size() > 0)
                             {
-                                e2->curveType = ed->curveType;
+                                e2->m_curveType = ed->m_curveType;
                                 e2->m_edgeNodes = ed->m_edgeNodes;
                                 
                                 // Reverse nodes if appropriate.
-                                if (e2->n1->m_id != ed->n1->m_id)
+                                if (e2->m_n1->m_id != ed->m_n1->m_id)
                                 {
                                     reverse(e2->m_edgeNodes.begin(),
                                             e2->m_edgeNodes.end());
@@ -188,7 +188,7 @@ namespace Nektar
                             }
                             
                             // Update edge to element map.
-                            (*(testIns.first))->elLink.push_back(
+                            (*(testIns.first))->m_elLink.push_back(
                                              pair<ElementSharedPtr,int>(elmt[i],j));
                         }
                     }
@@ -196,14 +196,14 @@ namespace Nektar
             }
 
             // Create links for 1D elements
-            for (int i = 0; i < m_mesh->element[1].size(); ++i)
+            for (int i = 0; i < m_mesh->m_element[1].size(); ++i)
             {
-                NodeSharedPtr v0 = m_mesh->element[1][i]->GetVertex(0);
-                NodeSharedPtr v1 = m_mesh->element[1][i]->GetVertex(1);
+                NodeSharedPtr v0 = m_mesh->m_element[1][i]->GetVertex(0);
+                NodeSharedPtr v1 = m_mesh->m_element[1][i]->GetVertex(1);
                 vector<NodeSharedPtr> edgeNodes;
                 EdgeSharedPtr E = boost::shared_ptr<Edge>(
                                        new Edge(v0, v1, edgeNodes,
-                             m_mesh->element[1][i]->GetConf().m_edgeCurveType));
+                             m_mesh->m_element[1][i]->GetConf().m_edgeCurveType));
                 EdgeSet::iterator it = m_mesh->m_edgeSet.find(E);
                 if (it == m_mesh->m_edgeSet.end())
                 {
@@ -211,14 +211,14 @@ namespace Nektar
                          << "1D element " << i << endl;
                     abort();
                 }
-                m_mesh->element[1][i]->SetEdgeLink(*it);
+                m_mesh->m_element[1][i]->SetEdgeLink(*it);
 
                 // Update 2D element boundary map.
-                ASSERTL0((*it)->elLink.size() != 0,
+                ASSERTL0((*it)->m_elLink.size() != 0,
                          "Empty boundary map!");
-                ASSERTL0((*it)->elLink.size() == 1,
+                ASSERTL0((*it)->m_elLink.size() == 1,
                          "Too many elements in boundary map!");
-                pair<ElementSharedPtr, int> eMap = (*it)->elLink.at(0);
+                pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
                 eMap.first->SetBoundaryLink(eMap.second, i);
             }
         }
@@ -241,11 +241,11 @@ namespace Nektar
          */
         void Module::ProcessFaces(bool ReprocessFaces)
         {
-            if (m_mesh->expDim < 3) return;
+            if (m_mesh->m_expDim < 3) return;
 
             if(ReprocessFaces)
             {
-                vector<ElementSharedPtr> &elmt = m_mesh->element[m_mesh->expDim];
+                vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
                 
                 m_mesh->m_faceSet.clear();
                 
@@ -265,7 +265,7 @@ namespace Nektar
                         {
                             elmt[i]->SetFace(j,*testIns.first);
                             // Update face to element map.
-                            (*(testIns.first))->elLink.push_back(
+                            (*(testIns.first))->m_elLink.push_back(
                             pair<ElementSharedPtr,int>(elmt[i],j));
                         }
                     }
@@ -273,14 +273,14 @@ namespace Nektar
             }
 
             // Create links for 2D elements
-            for (int i = 0; i < m_mesh->element[2].size(); ++i)
+            for (int i = 0; i < m_mesh->m_element[2].size(); ++i)
             {
-                vector<NodeSharedPtr> vertices = m_mesh->element[2][i]->GetVertexList();
+                vector<NodeSharedPtr> vertices = m_mesh->m_element[2][i]->GetVertexList();
                 vector<NodeSharedPtr> faceNodes;
-                vector<EdgeSharedPtr> edgeList = m_mesh->element[2][i]->GetEdgeList();
+                vector<EdgeSharedPtr> edgeList = m_mesh->m_element[2][i]->GetEdgeList();
                 FaceSharedPtr F = boost::shared_ptr<Face>(
                     new Face(vertices, faceNodes, edgeList,
-                             m_mesh->element[2][i]->GetConf().m_faceCurveType));
+                             m_mesh->m_element[2][i]->GetConf().m_faceCurveType));
                 FaceSet::iterator it = m_mesh->m_faceSet.find(F);
                 if (it == m_mesh->m_faceSet.end())
                 {
@@ -288,14 +288,14 @@ namespace Nektar
                          << "element " << i << endl;
                     abort();
                 }
-                m_mesh->element[2][i]->SetFaceLink(*it);
+                m_mesh->m_element[2][i]->SetFaceLink(*it);
 
                 // Update 3D element boundary map.
-                ASSERTL0((*it)->elLink.size() != 0,
+                ASSERTL0((*it)->m_elLink.size() != 0,
                          "Empty element link map!");
-                ASSERTL0((*it)->elLink.size() == 1,
+                ASSERTL0((*it)->m_elLink.size() == 1,
                          "Too many elements in element link map!");
-                pair<ElementSharedPtr, int> eMap = (*it)->elLink.at(0);
+                pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
                 eMap.first->SetBoundaryLink(eMap.second, i);
             }
         }
@@ -311,9 +311,9 @@ namespace Nektar
         void Module::ProcessElements()
         {
             int cnt = 0;
-            for (int i = 0; i < m_mesh->element[m_mesh->expDim].size(); ++i)
+            for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
             {
-                m_mesh->element[m_mesh->expDim][i]->SetId(cnt++);
+                m_mesh->m_element[m_mesh->m_expDim][i]->SetId(cnt++);
             }
         }
 
@@ -333,9 +333,9 @@ namespace Nektar
             // For each element, check to see if a composite has been
             // created. If not, create a new composite. Otherwise, add the
             // element to the composite.
-            for (int d = 0; d <= m_mesh->expDim; ++d)
+            for (int d = 0; d <= m_mesh->m_expDim; ++d)
             {
-                vector<ElementSharedPtr> &elmt = m_mesh->element[d];
+                vector<ElementSharedPtr> &elmt = m_mesh->m_element[d];
 
                 for (int i = 0; i < elmt.size(); ++i)
                 {
@@ -350,20 +350,20 @@ namespace Nektar
                                                             new Composite());
                         pair<CompositeMap::iterator, bool> testIns;
                         tmp->m_id  = tagid;
-                        tmp->tag = elmt[i]->GetTag();
+                        tmp->m_tag = elmt[i]->GetTag();
                         testIns  = m_mesh->m_composite.insert(
                             pair<unsigned int, CompositeSharedPtr>(tagid,tmp));
                         it       = testIns.first;
                     }
 
-                    if (elmt[i]->GetTag() != it->second->tag)
+                    if (elmt[i]->GetTag() != it->second->m_tag)
                     {
                         cout << "Different types of elements in same composite!" << endl;
-                        cout << " -> Composite uses " << it->second->tag << endl;
+                        cout << " -> Composite uses " << it->second->m_tag << endl;
                         cout << " -> Element uses   " << elmt[i]->GetTag() << endl;
                         cout << "Have you specified physical volumes and surfaces?" << endl;
                     }
-                    it->second->items.push_back(elmt[i]);
+                    it->second->m_items.push_back(elmt[i]);
                 }
             }
         }
@@ -398,7 +398,7 @@ namespace Nektar
             // Loop over elements and extract any that are prisms.
             int i, j, k;
 
-            if (m_mesh->expDim < 3)
+            if (m_mesh->m_expDim < 3)
             {
                 return;
             }
@@ -408,9 +408,9 @@ namespace Nektar
             PerMap::iterator pIt;
 
             // Compile list of prisms and tets.
-            for (i = 0; i < m_mesh->element[3].size(); ++i)
+            for (i = 0; i < m_mesh->m_element[3].size(); ++i)
             {
-                ElementSharedPtr el = m_mesh->element[3][i];
+                ElementSharedPtr el = m_mesh->m_element[3][i];
 
                 if (el->GetConf().m_e == LibUtilities::ePrism)
                 {
@@ -570,7 +570,7 @@ namespace Nektar
                         LibUtilities::ePrism, conf, nodes, tags);
 
                     // Replace old prism.
-                    m_mesh->element[3][line[i]->GetId()] = el;
+                    m_mesh->m_element[3][line[i]->GetId()] = el;
                 }
             }
 
@@ -608,7 +608,7 @@ namespace Nektar
             set<int>::iterator it2;
             for (it2 = tetsDone.begin(); it2 != tetsDone.end(); ++it2)
             {
-                ElementSharedPtr el = m_mesh->element[3][*it2];
+                ElementSharedPtr el = m_mesh->m_element[3][*it2];
                 vector<NodeSharedPtr> nodes = el->GetVertexList();
                 vector<int> tags = el->GetTagList();
 
@@ -622,7 +622,7 @@ namespace Nektar
 
                 // Recreate tet.
                 ElmtConfig conf(LibUtilities::eTetrahedron, 1, false, false, true);
-                m_mesh->element[3][*it2] = GetElementFactory().CreateInstance(
+                m_mesh->m_element[3][*it2] = GetElementFactory().CreateInstance(
                     LibUtilities::eTetrahedron, conf, nodes, tags);
             }
 
@@ -656,12 +656,12 @@ namespace Nektar
 
             // Remove this prism from the list.
             prismsDone.erase(it);
-            line.push_back(m_mesh->element[3][prism]);
+            line.push_back(m_mesh->m_element[3][prism]);
 
             // Now find prisms connected to this one through a triangular face.
             for (i = 1; i <= 3; i += 2)
             {
-                FaceSharedPtr f = m_mesh->element[3][prism]->GetFace(i);
+                FaceSharedPtr f = m_mesh->m_element[3][prism]->GetFace(i);
                 int nextId;
 
                 // See if this face is periodic.
@@ -670,22 +670,22 @@ namespace Nektar
                 if (it2 != perFaces.end())
                 {
                     int id2 = it2->second.first->m_id;
-                    nextId  = it2->second.first->elLink[0].first->GetId();
+                    nextId  = it2->second.first->m_elLink[0].first->GetId();
                     perFaces.erase(it2);
                     perFaces.erase(id2);
                     PrismLines(nextId, perFaces, prismsDone, line);
                 }
 
                 // Nothing else connected to this face.
-                if (f->elLink.size() == 1)
+                if (f->m_elLink.size() == 1)
                 {
                     continue;
                 }
 
-                nextId = f->elLink[0].first->GetId();
-                if (nextId == m_mesh->element[3][prism]->GetId())
+                nextId = f->m_elLink[0].first->GetId();
+                if (nextId == m_mesh->m_element[3][prism]->GetId())
                 {
-                    nextId = f->elLink[1].first->GetId();
+                    nextId = f->m_elLink[1].first->GetId();
                 }
 
                 PrismLines(nextId, perFaces, prismsDone, line);
@@ -760,11 +760,11 @@ namespace Nektar
         {
             // Compute the number of full-dimensional elements and boundary
             // elements.
-            cerr << "Expansion dimension is " << m_mesh->expDim << endl;
-            cerr << "Space dimension is " << m_mesh->spaceDim << endl;
-            cerr << "Read " << m_mesh->node.size() << " nodes" << endl;
+            cerr << "Expansion dimension is " << m_mesh->m_expDim << endl;
+            cerr << "Space dimension is " << m_mesh->m_spaceDim << endl;
+            cerr << "Read " << m_mesh->m_node.size() << " nodes" << endl;
             cerr << "Read " << m_mesh->GetNumElements() << " "
-                 << m_mesh->expDim << "-D elements" << endl;
+                 << m_mesh->m_expDim << "-D elements" << endl;
             cerr << "Read " << m_mesh->GetNumBndryElements()
                  << " boundary elements" << endl;
         }

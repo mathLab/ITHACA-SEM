@@ -111,15 +111,15 @@ namespace Nektar
         {
             double inv_mag;
 
-            c.x = a.y*b.z - a.z*b.y;
-            c.y = a.z*b.x - a.x*b.z;
-            c.z = a.x*b.y - a.y*b.x;
+            c.m_x = a.m_y*b.m_z - a.m_z*b.m_y;
+            c.m_y = a.m_z*b.m_x - a.m_x*b.m_z;
+            c.m_z = a.m_x*b.m_y - a.m_y*b.m_x;
 
-            inv_mag = 1.0/sqrt(c.x*c.x + c.y*c.y + c.z*c.z);
+            inv_mag = 1.0/sqrt(c.m_x*c.m_x + c.m_y*c.m_y + c.m_z*c.m_z);
             
-            c.x = c.x*inv_mag;
-            c.y = c.y*inv_mag;
-            c.z = c.z*inv_mag;
+            c.m_x = c.m_x*inv_mag;
+            c.m_y = c.m_y*inv_mag;
+            c.m_z = c.m_z*inv_mag;
         }
         
         /**
@@ -128,9 +128,9 @@ namespace Nektar
          */
         double ProcessSpherigon::CrossProdMag(Node &a, Node &b)
         {
-            double tmp1 = a.y*b.z - a.z*b.y;
-            double tmp2 = a.z*b.x - a.x*b.z;
-            double tmp3 = a.x*b.y - a.y*b.x;
+            double tmp1 = a.m_y*b.m_z - a.m_z*b.m_y;
+            double tmp2 = a.m_z*b.m_x - a.m_x*b.m_z;
+            double tmp3 = a.m_x*b.m_y - a.m_y*b.m_x;
             return sqrt(tmp1*tmp1 + tmp2*tmp2 + tmp3*tmp3);
         }
 
@@ -251,19 +251,19 @@ namespace Nektar
                     // Calculate gradient vector and invert.
                     Node dx  = *(node[1]) - *(node[0]);
                     dx      /= sqrt(dx.abs2());
-                    n.x      = -dx.y;
-                    n.y      = dx.x;
-                    n.z      = 0;
+                    n.m_x      = -dx.m_y;
+                    n.m_y      = dx.m_x;
+                    n.m_z      = 0;
                 }
                 
                 // Insert face normal into vertex normal list or add to existing
                 // value.
                 for (int j = 0; j < nV; ++j)
                 {
-                    nIt = m_mesh->m_vertexNormals.find(e->GetVertex(j)->id);
+                    nIt = m_mesh->m_vertexNormals.find(e->GetVertex(j)->m_id);
                     if (nIt == m_mesh->m_vertexNormals.end())
                     {
-                        m_mesh->m_vertexNormals[e->GetVertex(j)->id] = n;
+                        m_mesh->m_vertexNormals[e->GetVertex(j)->m_id] = n;
                     }
                     else
                     {
@@ -556,7 +556,7 @@ namespace Nektar
                 for (int j = 0; j < nV; ++j)
                 {
                     v.push_back(*(e->GetVertex(j)));
-                    vN.push_back(m_mesh->m_vertexNormals[v[j].id]);
+                    vN.push_back(m_mesh->m_vertexNormals[v[j].m_id]);
                 }
 
                 vector<Node>   tmp  (nV);
@@ -636,7 +636,7 @@ namespace Nektar
                     // Apply C1 blending function to the surface. TODO: Add
                     // option to do (more efficient) C0 blending function.
                     SuperBlend(r, Qp, P, blend);
-                    P.x = P.y = P.z = 0.0;
+                    P.m_x = P.m_y = P.m_z = 0.0;
                     
                     // Apply blending (equation 4).
                     for (int k = 0; k < nV; ++k)
@@ -653,7 +653,7 @@ namespace Nektar
                 
                 for (int edge = 0; edge < e->GetEdgeCount(); ++edge)
                 {
-                    eIt = visitedEdges.find(e->GetEdge(edge)->id);
+                    eIt = visitedEdges.find(e->GetEdge(edge)->m_id);
                     if (eIt == visitedEdges.end())
                     {
                         bool reverseEdge = !(v[vertMap[offset][edge][0]] ==
@@ -688,7 +688,7 @@ namespace Nektar
                         e->GetEdge(edge)->curveType =
                             LibUtilities::eGaussLobattoLegendre;
 
-                        visitedEdges.insert(e->GetEdge(edge)->id);
+                        visitedEdges.insert(e->GetEdge(edge)->m_id);
                     }
                 }
                 

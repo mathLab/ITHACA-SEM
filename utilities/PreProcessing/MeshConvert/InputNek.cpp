@@ -313,7 +313,7 @@ namespace Nektar
                         }
                         else
                         {
-                            nodeList[k]->id = nodeCounter++;
+                            nodeList[k]->m_id = nodeCounter++;
                         }
                     }
                     
@@ -450,26 +450,26 @@ namespace Nektar
                         s.clear(); s.str(line);
                         for (j = 0; j < tmp.size(); ++j)
                         {
-                            s >> n[j].x;
+                            s >> n[j].m_x;
                         }
 
                         getline(mshFile, line);
                         s.clear(); s.str(line);
                         for (j = 0; j < tmp.size(); ++j)
                         {
-                            s >> n[j].y;
+                            s >> n[j].m_y;
                         }
 
                         getline(mshFile, line);
                         s.clear(); s.str(line);
                         for (j = 0; j < tmp.size(); ++j)
                         {
-                            s >> n[j].z;
+                            s >> n[j].m_z;
                         }
                             
                         for (j = 0; j < tmp.size(); ++j)
                         {
-                            int id = tmp[(j+offset) % tmp.size()]->id;
+                            int id = tmp[(j+offset) % tmp.size()]->m_id;
                             boost::unordered_map<int, Node>::iterator vIt =
                                 m_mesh->m_vertexNormals.find(id);
                             

@@ -84,7 +84,7 @@ namespace Nektar
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
                 NodeSharedPtr n = *it;
-                vtkPoints->InsertPoint(n->id, n->x, n->y, n->z);
+                vtkPoints->InsertPoint(n->m_id, n->m_x, n->m_y, n->m_z);
             }
 
             vtkIdType p[8];

@@ -166,7 +166,7 @@ namespace Nektar
 
         std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n)
         {
-            os << n->x << " " << n->y << " " << n->z;
+            os << n->m_x << " " << n->m_y << " " << n->m_z;
             return os;
         }
 
@@ -185,7 +185,7 @@ namespace Nektar
          */
         bool operator< (EdgeSharedPtr const &p1, EdgeSharedPtr const &p2)
         {
-            return p1->id < p2->id;
+            return p1->m_id < p2->m_id;
         }
 
         /**
@@ -212,7 +212,7 @@ namespace Nektar
          */
         bool operator< (FaceSharedPtr const &p1, FaceSharedPtr const &p2)
         {
-            return p1->id < p2->id;
+            return p1->m_id < p2->m_id;
         }
 
         /**
@@ -329,11 +329,14 @@ namespace Nektar
          */
         string Composite::GetXmlString(bool doSort)
         {
+
+#if 0 // turn this option off since causes problem with InputNekpp.cpp 
             if (doSort)
             {
                 element_id_less_than sortOperator;
                 sort(items.begin(), items.end(), sortOperator);
             }
+#endif
 
             stringstream st;
             vector<ElementSharedPtr>::iterator it;
@@ -741,8 +744,8 @@ namespace Nektar
                 m_edge[i]->m_edgeNodes.clear();
                 /*
                 cout << "EDGE " << i << " = " 
-                     << m_edge[i]->n1->x << "," << m_edge[i]->n1->y << " "
-                     << m_edge[i]->n2->x << "," << m_edge[i]->n2->y << endl;
+                     << m_edge[i]->n1->m_x << "," << m_edge[i]->n1->m_y << " "
+                     << m_edge[i]->n2->m_x << "," << m_edge[i]->n2->m_y << endl;
                 */
                 for (int j = 1; j < order; ++j, pos += edgeMap[i][1])
                 {
@@ -853,7 +856,7 @@ namespace Nektar
                                                         pNodeList[it->first.second-1],
                                                         edgeNodes,
                                                         m_conf.m_edgeCurveType)));
-                m_edge.back()->id = eid++;
+                m_edge.back()->m_id = eid++;
             }
             
             // Reorient the tet to ensure collapsed coordinates align between adjacent
@@ -1116,9 +1119,9 @@ namespace Nektar
             {
                 vector<int> nodes(3);
                 
-                nodes[0] = m_vertex[face_ids[i][0]]->id;
-                nodes[1] = m_vertex[face_ids[i][1]]->id;
-                nodes[2] = m_vertex[face_ids[i][2]]->id;
+                nodes[0] = m_vertex[face_ids[i][0]]->m_id;
+                nodes[1] = m_vertex[face_ids[i][1]]->m_id;
+                nodes[2] = m_vertex[face_ids[i][2]]->m_id;
                 
                 sort(nodes.begin(), nodes.end());
                 struct TetOrient faceNodes(nodes, i);
@@ -1133,15 +1136,15 @@ namespace Nektar
             // Calculate a.(b x c) to determine tet volume; if negative,
             // reverse order of non-degenerate points to correctly orientate
             // the tet.
-            double ax  = m_vertex[1]->x-m_vertex[0]->x;
-            double ay  = m_vertex[1]->y-m_vertex[0]->y;
-            double az  = m_vertex[1]->z-m_vertex[0]->z;
-            double bx  = m_vertex[2]->x-m_vertex[0]->x;
-            double by  = m_vertex[2]->y-m_vertex[0]->y;
-            double bz  = m_vertex[2]->z-m_vertex[0]->z;
-            double cx  = m_vertex[3]->x-m_vertex[0]->x;
-            double cy  = m_vertex[3]->y-m_vertex[0]->y;
-            double cz  = m_vertex[3]->z-m_vertex[0]->z;
+            double ax  = m_vertex[1]->m_x-m_vertex[0]->m_x;
+            double ay  = m_vertex[1]->m_y-m_vertex[0]->m_y;
+            double az  = m_vertex[1]->m_z-m_vertex[0]->m_z;
+            double bx  = m_vertex[2]->m_x-m_vertex[0]->m_x;
+            double by  = m_vertex[2]->m_y-m_vertex[0]->m_y;
+            double bz  = m_vertex[2]->m_z-m_vertex[0]->m_z;
+            double cx  = m_vertex[3]->m_x-m_vertex[0]->m_x;
+            double cy  = m_vertex[3]->m_y-m_vertex[0]->m_y;
+            double cz  = m_vertex[3]->m_z-m_vertex[0]->m_z;
             double vol = cx*(ay*bz-az*by)+cy*(az*bx-ax*bz)+cz*(ax*by-ay*bx);
             vol       /= 6.0;
             
@@ -1163,9 +1166,9 @@ namespace Nektar
             {
                 vector<int> nodes(3);
                 
-                nodes[0] = m_vertex[face_ids[i][0]]->id;
-                nodes[1] = m_vertex[face_ids[i][1]]->id;
-                nodes[2] = m_vertex[face_ids[i][2]]->id;
+                nodes[0] = m_vertex[face_ids[i][0]]->m_id;
+                nodes[1] = m_vertex[face_ids[i][1]]->m_id;
+                nodes[2] = m_vertex[face_ids[i][2]]->m_id;
                 sort(nodes.begin(), nodes.end());
                 
                 struct TetOrient faceNodes(nodes, 0);
@@ -1230,7 +1233,7 @@ namespace Nektar
                              pNodeList[it->first.second-1],
                              edgeNodes,
                              m_conf.m_edgeCurveType)));
-                m_edge.back()->id = eid++;
+                m_edge.back()->m_id = eid++;
             }
             
             if (m_conf.reorient)
@@ -1466,7 +1469,7 @@ namespace Nektar
             for (int i = 0; i < 6; ++i)
             {
                 lid[i] = i;
-                gid[i] = m_vertex[i]->id;
+                gid[i] = m_vertex[i]->m_id;
             }
 
             gid[0] = gid[3] = max(gid[0], gid[3]);

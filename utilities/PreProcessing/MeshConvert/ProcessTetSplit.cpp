@@ -199,11 +199,11 @@ namespace Nektar
                 }
 
                 // Determine minimum ID of the nodes in this prism.
-                int minElId = nodeList[0]->id;
+                int minElId = nodeList[0]->m_id;
                 int minId   = 0;
                 for (int j = 1; j < 6; ++j)
                 {
-                    int curId = nodeList[j]->id;
+                    int curId = nodeList[j]->m_id;
                     if (curId < minElId)
                     {
                         minElId = curId;
@@ -214,10 +214,10 @@ namespace Nektar
                 int offset;
 
                 // Split prism using paper criterion.
-                int id1 = min(nodeList[indir[minId][1]]->id,
-                              nodeList[indir[minId][5]]->id);
-                int id2 = min(nodeList[indir[minId][2]]->id,
-                              nodeList[indir[minId][4]]->id);
+                int id1 = min(nodeList[indir[minId][1]]->m_id,
+                              nodeList[indir[minId][5]]->m_id);
+                int id2 = min(nodeList[indir[minId][2]]->m_id,
+                              nodeList[indir[minId][4]]->m_id);
 
                 if (id1 < id2)
                 {
@@ -289,7 +289,7 @@ namespace Nektar
                 map<int, int> prismVerts;
                 for (int j = 0; j < 6; ++j)
                 {
-                    prismVerts[el[i]->GetVertex(j)->id] = j;
+                    prismVerts[el[i]->GetVertex(j)->m_id] = j;
                 }
 
                 for (int j = 0; j < 3; ++j)
@@ -365,7 +365,7 @@ namespace Nektar
                         {
                             NodeSharedPtr v = face->m_vertexList[l];
                             triNodes[l] =
-                                stdPrismNodes[prismVerts[v->id]];
+                                stdPrismNodes[prismVerts[v->m_id]];
                         }
 
                         // Create a triangle with the standard nodes of the

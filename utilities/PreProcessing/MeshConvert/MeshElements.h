@@ -71,102 +71,103 @@ namespace Nektar
          * points on high-order edges/faces, although this information is not
          * contained within this class.
          */
-        class Node {
+        class Node 
+        {
         public:
             /// Create a new node at a specified coordinate.
             Node(int pId, double pX, double pY, double pZ)
-                : id(pId), x(pX), y(pY), z(pZ), m_geom() {}
+        : m_id(pId), m_x(pX), m_y(pY), m_z(pZ), m_geom() {}
             /// Copy an existing node.
             Node(const Node& pSrc)
-                : id(pSrc.id), x(pSrc.x), y(pSrc.y), 
-                  z(pSrc.z), m_geom() {}
-            Node() : id(0), x(0.0), y(0.0), z(0.0), m_geom() {}
+                : m_id(pSrc.m_id), m_x(pSrc.m_x), m_y(pSrc.m_y), 
+                  m_z(pSrc.m_z), m_geom() {}
+            Node() : m_id(0), m_x(0.0), m_y(0.0), m_z(0.0), m_geom() {}
             ~Node() {}
 
             /// Reset the local id;
             void SetID(int pId)
             {
-                id = pId;
+                m_id = pId;
             }
 
             /// Get the local id;
             int GetID(void)
             {
-                return id;
+                return m_id;
             }
 
             /// Define node ordering based on ID.
             bool operator<(const Node& pSrc)
             {
-                return (id < pSrc.id);
+                return (m_id < pSrc.m_id);
             }
             /// Define node equality based on coordinate.
             bool operator==(const Node& pSrc)
             {
-                return x == pSrc.x && y == pSrc.y && z == pSrc.z;
+                return m_x == pSrc.m_x && m_y == pSrc.m_y && m_z == pSrc.m_z;
             }
             
             Node operator+(const Node &pSrc) const
             {
-                return Node(id, x+pSrc.x, y+pSrc.y, z+pSrc.z);
+                return Node(m_id, m_x+pSrc.m_x, m_y+pSrc.m_y, m_z+pSrc.m_z);
             }
             
             Node operator-(const Node &pSrc) const
             {
-                return Node(id, x-pSrc.x, y-pSrc.y, z-pSrc.z);
+                return Node(m_id, m_x-pSrc.m_x, m_y-pSrc.m_y, m_z-pSrc.m_z);
             }
 
             Node operator*(const Node &pSrc) const
             {
-                return Node(id, x*pSrc.x, y*pSrc.y, z*pSrc.z);
+                return Node(m_id, m_x*pSrc.m_x, m_y*pSrc.m_y, m_z*pSrc.m_z);
             }
             
             Node operator*(const double &alpha) const
             {
-                return Node(id, alpha*x, alpha*y, alpha*z);
+                return Node(m_id, alpha*m_x, alpha*m_y, alpha*m_z);
             }
             
             Node operator/(const double &alpha) const
             {
-                return Node(id, x/alpha, y/alpha, z/alpha);
+                return Node(m_id, m_x/alpha, m_y/alpha, m_z/alpha);
             }
             
             void operator+=(const Node &pSrc)
             {
-                x += pSrc.x;
-                y += pSrc.y;
-                z += pSrc.z;
+                m_x += pSrc.m_x;
+                m_y += pSrc.m_y;
+                m_z += pSrc.m_z;
             }
             
             void operator*=(const double &alpha)
             {
-                x *= alpha;
-                y *= alpha;
-                z *= alpha;
+                m_x *= alpha;
+                m_y *= alpha;
+                m_z *= alpha;
             }
             
             void operator/=(const double &alpha)
             {
-                x /= alpha;
-                y /= alpha;
-                z /= alpha;
+                m_x /= alpha;
+                m_y /= alpha;
+                m_z /= alpha;
             }
             
             double abs2() const
             {
-                return x*x+y*y+z*z;
+                return m_x*m_x+m_y*m_y+m_z*m_z;
             }
 
             double dot(const Node &pSrc) const
             {
-                return x*pSrc.x + y*pSrc.y + z*pSrc.z;
+                return m_x*pSrc.m_x + m_y*pSrc.m_y + m_z*pSrc.m_z;
             }
 
 
             Node curl(const Node &pSrc) const
             {
-                return Node(id, y*pSrc.z - z*pSrc.y, 
-                            z*pSrc.x-x*pSrc.z, x*pSrc.y-y*pSrc.x);
+                return Node(m_id, m_y*pSrc.m_z - m_z*pSrc.m_y, 
+                            m_z*pSrc.m_x-m_x*pSrc.m_z, m_x*pSrc.m_y-m_y*pSrc.m_x);
             }
 
             /// Generate a %SpatialDomains::PointGeom for this node.
@@ -178,18 +179,18 @@ namespace Nektar
                 }
                 
                 m_geom = MemoryManager<SpatialDomains::PointGeom>::
-                    AllocateSharedPtr(coordDim,id,x,y,z);
+                    AllocateSharedPtr(coordDim,m_id,m_x,m_y,m_z);
                 return m_geom;
             }
             
             /// ID of node.
-            int id;
+            int m_id;
             /// X-coordinate.
-            double x;
+            double m_x;
             /// Y-coordinate.
-            double y;
+            double m_y;
             /// Z-coordinate.
-            double z;
+            double m_z;
             
         private:
             SpatialDomains::PointGeomSharedPtr m_geom;
@@ -212,9 +213,9 @@ namespace Nektar
             std::size_t operator()(NodeSharedPtr const& p) const
             {
                 std::size_t seed = 0;
-                boost::hash_combine(seed, p->x);
-                boost::hash_combine(seed, p->y);
-                boost::hash_combine(seed, p->z);
+                boost::hash_combine(seed, p->m_x);
+                boost::hash_combine(seed, p->m_y);
+                boost::hash_combine(seed, p->m_z);
                 return seed;
             }
         };
@@ -254,14 +255,14 @@ namespace Nektar
                 std::stringstream s;
                 std::string str;
                 s << std::scientific << std::setprecision(8) << "     "
-                  <<  n1->x << "  " << n1->y << "  " << n1->z << "     ";
+                  <<  n1->m_x << "  " << n1->m_y << "  " << n1->m_z << "     ";
                 for (int k = 0; k < m_edgeNodes.size(); ++k) {
                     s << std::scientific << std::setprecision(8) << "     "
-                      <<  m_edgeNodes[k]->x << "  " << m_edgeNodes[k]->y
-                      << "  " << m_edgeNodes[k]->z << "     ";
+                      <<  m_edgeNodes[k]->m_x << "  " << m_edgeNodes[k]->m_y
+                      << "  " << m_edgeNodes[k]->m_z << "     ";
                 }
                 s << std::scientific << std::setprecision(8) << "     "
-                  <<  n2->x << "  " << n2->y << "  " << n2->z;
+                  <<  n2->m_x << "  " << n2->m_y << "  " << n2->m_z;
                 return s.str();
             }
 
@@ -278,7 +279,7 @@ namespace Nektar
                 {
                     SpatialDomains::CurveSharedPtr c = 
                         MemoryManager<SpatialDomains::Curve>::
-                        AllocateSharedPtr(id, curveType);
+                        AllocateSharedPtr(m_id, curveType);
                     
                     c->m_points.push_back(p[0]);
                     for (int i = 0; i < m_edgeNodes.size(); ++i)
@@ -288,19 +289,19 @@ namespace Nektar
                     c->m_points.push_back(p[1]);
                     
                     m_geom = MemoryManager<SpatialDomains::SegGeom>::
-                        AllocateSharedPtr(id, coordDim, p, c);
+                        AllocateSharedPtr(m_id, coordDim, p, c);
                 }
                 else
                 {
                     m_geom = MemoryManager<SpatialDomains::SegGeom>::
-                        AllocateSharedPtr(id, coordDim, p);
+                        AllocateSharedPtr(m_id, coordDim, p);
                 }
                 
                 return m_geom;
             }
 
             /// ID of edge.
-            unsigned int id;
+            unsigned int m_id;
             /// First vertex node.
             NodeSharedPtr n1;
             /// Second vertex node.
@@ -333,8 +334,8 @@ namespace Nektar
             std::size_t operator()(EdgeSharedPtr const& p) const
             {
                 std::size_t seed = 0;
-                unsigned int id1 = p->n1->id;
-                unsigned int id2 = p->n2->id;
+                unsigned int id1 = p->n1->m_id;
+                unsigned int id2 = p->n2->m_id;
                 boost::hash_combine(seed, id1 < id2 ? id1 : id2);
                 boost::hash_combine(seed, id2 < id1 ? id1 : id2);
                 return seed;
@@ -430,8 +431,8 @@ namespace Nektar
                     
                     for (int k = 0; k < tmp.size(); ++k) {
                         s << std::scientific << std::setprecision(8) << "    "
-                          <<  tmp[k]->x << "  " << tmp[k]->y
-                          << "  " << tmp[k]->z << "    ";
+                          <<  tmp[k]->m_x << "  " << tmp[k]->m_y
+                          << "  " << tmp[k]->m_z << "    ";
                     }
                     
                     return s.str();
@@ -489,8 +490,8 @@ namespace Nektar
 
                     for (int k = 0; k < tmp.size(); ++k) {
                         s << std::scientific << std::setprecision(8) << "    "
-                          <<  tmp[k]->x << "  " << tmp[k]->y
-                          << "  " << tmp[k]->z << "    ";
+                          <<  tmp[k]->m_x << "  " << tmp[k]->m_y
+                          << "  " << tmp[k]->m_z << "    ";
                     }
                     
                     return s.str();
@@ -520,19 +521,19 @@ namespace Nektar
                 if (nEdge == 3)
                 {
                     m_geom = MemoryManager<SpatialDomains::TriGeom>::
-                        AllocateSharedPtr(id, edges, edgeo);
+                        AllocateSharedPtr(m_id, edges, edgeo);
                 }
                 else
                 {
                     m_geom = MemoryManager<SpatialDomains::QuadGeom>::
-                        AllocateSharedPtr(id, edges, edgeo);
+                        AllocateSharedPtr(m_id, edges, edgeo);
                 }
 
                 return m_geom;
             }
             
             /// ID of the face.
-            unsigned int id;
+            unsigned int m_id;
             /// List of vertex nodes.
             std::vector<NodeSharedPtr> m_vertexList;
             /// List of corresponding edges.
@@ -562,7 +563,7 @@ namespace Nektar
                 
                 for (int i = 0; i < nVert; ++i)
                 {
-                    ids[i] = p->m_vertexList[i]->id;
+                    ids[i] = p->m_vertexList[i]->m_id;
                 }
                 
                 std::sort(ids.begin(), ids.end());
@@ -634,8 +635,8 @@ namespace Nektar
             /// Returns the ID of the element (or associated edge or face for
             /// boundary elements).
             unsigned int GetId() const {
-                if (m_faceLink.get() != 0) return m_faceLink->id;
-                if (m_edgeLink.get() != 0) return m_edgeLink->id;
+                if (m_faceLink.get() != 0) return m_faceLink->m_id;
+                if (m_edgeLink.get() != 0) return m_edgeLink->m_id;
                 return m_id;
             }
             /// Returns the expansion dimension of the element.
@@ -784,7 +785,7 @@ namespace Nektar
                 case 1:
                     for(int j=0; j< m_vertex.size(); ++j)
                     {
-                        s << std::setw(5) << m_vertex[j]->id << " ";
+                        s << std::setw(5) << m_vertex[j]->m_id << " ";
                     }
                     break;
                 case 2:
@@ -794,32 +795,32 @@ namespace Nektar
                         // caclulate sign based on cross product of vertices
                         if(m_edge[0]->n1 == m_edge[1]->n1)
                         {
-                            cross  = (m_edge[0]->n2->x - m_edge[0]->n1->x)*
-                                (m_edge[1]->n2->y - m_edge[1]->n1->y) - 
-                                (m_edge[0]->n2->y - m_edge[0]->n1->y)*
-                                (m_edge[1]->n2->x - m_edge[1]->n1->x); 
+                            cross  = (m_edge[0]->n2->m_x - m_edge[0]->n1->m_x)*
+                                (m_edge[1]->n2->m_y - m_edge[1]->n1->m_y) - 
+                                (m_edge[0]->n2->m_y - m_edge[0]->n1->m_y)*
+                                (m_edge[1]->n2->m_x - m_edge[1]->n1->m_x); 
                         }
                         else if(m_edge[0]->n1 == m_edge[1]->n2)
                         {
-                            cross  = (m_edge[0]->n2->x - m_edge[0]->n1->x)*
-                                (m_edge[1]->n1->y - m_edge[1]->n2->y) - 
-                                (m_edge[0]->n2->y - m_edge[0]->n1->y)*
-                                (m_edge[1]->n1->x - m_edge[1]->n2->x); 
+                            cross  = (m_edge[0]->n2->m_x - m_edge[0]->n1->m_x)*
+                                (m_edge[1]->n1->m_y - m_edge[1]->n2->m_y) - 
+                                (m_edge[0]->n2->m_y - m_edge[0]->n1->m_y)*
+                                (m_edge[1]->n1->m_x - m_edge[1]->n2->m_x); 
                         }
                         else if(m_edge[0]->n2 == m_edge[1]->n1)
                         {
-                            cross  = (m_edge[0]->n1->x - m_edge[0]->n2->x)*
-                                (m_edge[1]->n2->y - m_edge[1]->n1->y) - 
-                                (m_edge[0]->n1->y - m_edge[0]->n2->y)*
-                                (m_edge[1]->n2->x - m_edge[1]->n1->x); 
+                            cross  = (m_edge[0]->n1->m_x - m_edge[0]->n2->m_x)*
+                                (m_edge[1]->n2->m_y - m_edge[1]->n1->m_y) - 
+                                (m_edge[0]->n1->m_y - m_edge[0]->n2->m_y)*
+                                (m_edge[1]->n2->m_x - m_edge[1]->n1->m_x); 
 
                         }
                         else if(m_edge[0]->n2 == m_edge[1]->n2)
                         {
-                            cross  = (m_edge[0]->n1->x - m_edge[0]->n2->x)*
-                                (m_edge[1]->n1->y - m_edge[1]->n2->y) - 
-                                (m_edge[0]->n1->y - m_edge[0]->n2->y)*
-                                (m_edge[1]->n1->x - m_edge[1]->n2->x); 
+                            cross  = (m_edge[0]->n1->m_x - m_edge[0]->n2->m_x)*
+                                (m_edge[1]->n1->m_y - m_edge[1]->n2->m_y) - 
+                                (m_edge[0]->n1->m_y - m_edge[0]->n2->m_y)*
+                                (m_edge[1]->n1->m_x - m_edge[1]->n2->m_x); 
                         }
                         
                         // provide edges in anticlockwise sense
@@ -827,14 +828,14 @@ namespace Nektar
                         {
                             for(int j=0; j< m_edge.size(); ++j)
                             {
-                                s << std::setw(5) << m_edge[j]->id << " ";
+                                s << std::setw(5) << m_edge[j]->m_id << " ";
                             }
                         }
                         else
                         {
                             for(int j=m_edge.size()-1; j>=0; --j)
                             {
-                                s << std::setw(5) << m_edge[j]->id << " ";
+                                s << std::setw(5) << m_edge[j]->m_id << " ";
                             }
                         }
                     }
@@ -842,7 +843,7 @@ namespace Nektar
                 case 3:
                     for(int j=0; j< m_face.size(); ++j)
                     {
-                        s << std::setw(5) << m_face[j]->id << " ";
+                        s << std::setw(5) << m_face[j]->m_id << " ";
                     }
                     break;
                 }
@@ -1037,8 +1038,8 @@ namespace Nektar
                 for (int k = 0; k < nodeList.size(); ++k)
                 {
                     s << std::scientific << std::setprecision(8) << "    "
-                      <<  nodeList[k]->x << "  " << nodeList[k]->y
-                      << "  " << nodeList[k]->z << "    ";
+                      <<  nodeList[k]->m_x << "  " << nodeList[k]->m_y
+                      << "  " << nodeList[k]->m_z << "    ";
 
                 }
                 return s.str();
@@ -1061,14 +1062,14 @@ namespace Nektar
                 int i, j;
                 for (i = 0; i < m_vertex.size(); ++i)
                 {
-                    cout << m_vertex[i]->x << " " << m_vertex[i]->y << " " << m_vertex[i]->z << endl;
+                    cout << m_vertex[i]->m_x << " " << m_vertex[i]->m_y << " " << m_vertex[i]->m_z << endl;
                 }
                 for (i = 0; i < m_edge.size(); ++i)
                 {
                     for (j = 0; j < m_edge[i]->m_edgeNodes.size(); ++j)
                     {
                         NodeSharedPtr n = m_edge[i]->m_edgeNodes[j];
-                        cout << n->x << " " << n->y << " " << n->z << endl;
+                        cout << n->m_x << " " << n->m_y << " " << n->m_z << endl;
                     }
                 }
                 for (i = 0; i < m_face.size(); ++i)
@@ -1076,7 +1077,7 @@ namespace Nektar
                     for (j = 0; j < m_face[i]->m_faceNodes.size(); ++j)
                     {
                         NodeSharedPtr n = m_face[i]->m_faceNodes[j];
-                        cout << n->x << " " << n->y << " " << n->z << endl;
+                        cout << n->m_x << " " << n->m_y << " " << n->m_z << endl;
                     }
                 }
             }
@@ -1158,7 +1159,7 @@ namespace Nektar
             std::string GetXmlString(bool doSort=true);
 
             /// ID of composite.
-            unsigned int id;
+            unsigned int m_id;
             /// Element type tag.
             std::string tag;
             /// Determines whether items can be reordered.

@@ -318,7 +318,7 @@ namespace Nektar
                 for (int j = 0; j < 3; ++j)
                 {
                     int locEdge = splitEdge[j];
-                    int edgeId  = el[i]->GetEdge(locEdge)->id;
+                    int edgeId  = el[i]->GetEdge(locEdge)->m_id;
 
                     // Determine whether we have already generated vertices
                     // along this edge.

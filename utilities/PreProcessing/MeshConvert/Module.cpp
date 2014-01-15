@@ -121,7 +121,7 @@ namespace Nektar
                         m_mesh->m_vertexSet.insert(elmt[i]->GetVertex(j));
                     if (testIns.second)
                     {
-                        (*(testIns.first))->id = vid++;
+                        (*(testIns.first))->m_id = vid++;
                     }
                     else
                     {
@@ -167,7 +167,7 @@ namespace Nektar
                         
                         if (testIns.second)
                         {
-                            (*(testIns.first))->id = eid++;
+                            (*(testIns.first))->m_id = eid++;
                         }
                         else
                         {
@@ -180,7 +180,7 @@ namespace Nektar
                                 e2->m_edgeNodes = ed->m_edgeNodes;
                                 
                                 // Reverse nodes if appropriate.
-                                if (e2->n1->id != ed->n1->id)
+                                if (e2->n1->m_id != ed->n1->m_id)
                                 {
                                     reverse(e2->m_edgeNodes.begin(),
                                             e2->m_edgeNodes.end());
@@ -259,7 +259,7 @@ namespace Nektar
                         
                         if (testIns.second)
                         {
-                            (*(testIns.first))->id = fid++;
+                            (*(testIns.first))->m_id = fid++;
                         }
                         else
                         {
@@ -347,9 +347,9 @@ namespace Nektar
                     if (it == m_mesh->m_composite.end())
                     {
                         CompositeSharedPtr tmp = boost::shared_ptr<Composite>(
-                            new Composite);
+                                                            new Composite());
                         pair<CompositeMap::iterator, bool> testIns;
-                        tmp->id  = tagid;
+                        tmp->m_id  = tagid;
                         tmp->tag = elmt[i]->GetTag();
                         testIns  = m_mesh->m_composite.insert(
                             pair<unsigned int, CompositeSharedPtr>(tagid,tmp));
@@ -426,7 +426,7 @@ namespace Nektar
             NodeSet::iterator it;
             for (it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); ++it)
             {
-                (*it)->id = -1;
+                (*it)->m_id = -1;
             }
 
             // Counter for new node IDs.
@@ -461,21 +461,21 @@ namespace Nektar
                         line[i]->GetFace(1), line[i]->GetFace(3)
                     };
 
-                    fIt[0] = facesDone.find(f[0]->id);
-                    fIt[1] = facesDone.find(f[1]->id);
+                    fIt[0] = facesDone.find(f[0]->m_id);
+                    fIt[1] = facesDone.find(f[1]->m_id);
 
                     // See if either of these faces is periodic. If it is, then
                     // assign ids accordingly.
                     for (j = 0; j < 2; ++j)
                     {
-                        pIt = perFaces.find(f[j]->id);
+                        pIt = perFaces.find(f[j]->m_id);
 
                         if (pIt == perFaces.end())
                         {
                             continue;
                         }
 
-                        fIt2 = facesDone.find(pIt->second.first->id);
+                        fIt2 = facesDone.find(pIt->second.first->m_id);
 
                         if (fIt[j] == facesDone.end() &&
                             fIt2   != facesDone.end())
@@ -500,15 +500,15 @@ namespace Nektar
                             for (k = 0; k < 3; ++k)
                             {
                                 NodeSharedPtr n = nodes[prismTris[j][k]];
-                                if (n->id == -1)
+                                if (n->m_id == -1)
                                 {
-                                    n->id = nodeId++;
+                                    n->m_id = nodeId++;
                                 }
                             }
                         }
 
-                        facesDone.insert(f[0]->id);
-                        facesDone.insert(f[1]->id);
+                        facesDone.insert(f[0]->m_id);
+                        facesDone.insert(f[1]->m_id);
                     }
                     else
                     {
@@ -522,9 +522,9 @@ namespace Nektar
                         // face corresponds to the highest ID - this signifies
                         // the singular point of the line of prisms.
                         int tmp1[3] = {
-                            nodes[prismTris[o][0]]->id,
-                            nodes[prismTris[o][1]]->id,
-                            nodes[prismTris[o][2]]->id
+                            nodes[prismTris[o][0]]->m_id,
+                            nodes[prismTris[o][1]]->m_id,
+                            nodes[prismTris[o][2]]->m_id
                         };
                         int tmp2[3] = {0,1,2};
 
@@ -550,18 +550,18 @@ namespace Nektar
                         for (j = 0; j < 3; ++j)
                         {
                             NodeSharedPtr n = nodes[prismTris[t][tmp2[j]]];
-                            if (n->id == -1)
+                            if (n->m_id == -1)
                             {
-                                n->id = nodeId++;
+                                n->m_id = nodeId++;
                             }
                         }
 
-                        facesDone.insert(f[t]->id);
+                        facesDone.insert(f[t]->m_id);
                     }
 
                     for (j = 0; j < 6; ++j)
                     {
-                        ASSERTL1(nodes[j]->id != -1, "Renumbering error");
+                        ASSERTL1(nodes[j]->m_id != -1, "Renumbering error");
                     }
 
                     // Recreate prism with the new ordering.
@@ -578,7 +578,7 @@ namespace Nektar
             for (pIt = perFaces.begin(); pIt != perFaces.end(); ++pIt)
             {
                 FaceSharedPtr f2       = pIt->second.first;
-                FaceSharedPtr f1       = perFaces[f2->id].first;
+                FaceSharedPtr f1       = perFaces[f2->m_id].first;
                 vector<int>   perVerts = pIt->second.second;
                 int           nVerts   = perVerts.size();
 
@@ -588,12 +588,12 @@ namespace Nektar
                     NodeSharedPtr n1 = f1->m_vertexList[j];
                     NodeSharedPtr n2 = f2->m_vertexList[perVerts[j]];
 
-                    if (n1->id == -1 && n2->id == -1)
+                    if (n1->m_id == -1 && n2->m_id == -1)
                     {
-                        n1->id = nodeId++;
-                        n2->id = nodeId++;
+                        n1->m_id = nodeId++;
+                        n2->m_id = nodeId++;
                     }
-                    else if (n1->id != -1 && n2->id != -1)
+                    else if (n1->m_id != -1 && n2->m_id != -1)
                     {
                         continue;
                     }
@@ -614,9 +614,9 @@ namespace Nektar
 
                 for (i = 0; i < 4; ++i)
                 {
-                    if (nodes[i]->id == -1)
+                    if (nodes[i]->m_id == -1)
                     {
-                        nodes[i]->id = nodeId++;
+                        nodes[i]->m_id = nodeId++;
                     }
                 }
 
@@ -629,9 +629,9 @@ namespace Nektar
             // Enumerate rest of vertices.
             for (it = m_mesh->m_vertexSet.begin(); it != m_mesh->m_vertexSet.end(); ++it)
             {
-                if ((*it)->id == -1)
+                if ((*it)->m_id == -1)
                 {
-                    (*it)->id = nodeId++;
+                    (*it)->m_id = nodeId++;
                 }
             }
 
@@ -665,11 +665,11 @@ namespace Nektar
                 int nextId;
 
                 // See if this face is periodic.
-                it2 = perFaces.find(f->id);
+                it2 = perFaces.find(f->m_id);
                 
                 if (it2 != perFaces.end())
                 {
-                    int id2 = it2->second.first->id;
+                    int id2 = it2->second.first->m_id;
                     nextId  = it2->second.first->elLink[0].first->GetId();
                     perFaces.erase(it2);
                     perFaces.erase(id2);

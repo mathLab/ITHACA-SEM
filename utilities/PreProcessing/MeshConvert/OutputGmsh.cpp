@@ -164,26 +164,26 @@ namespace Nektar
                         for (int j = 0; j < edgeList.size(); ++j)
                         {
                             boost::unordered_set<int>::iterator it = 
-                                edgesDone.find(edgeList[j]->id);
+                                edgesDone.find(edgeList[j]->m_id);
                             if (it == edgesDone.end() || d != 3)
                             {
                                 tmp.insert(tmp.end(), 
                                            edgeList[j]->m_edgeNodes.begin(),
                                            edgeList[j]->m_edgeNodes.end());
-                                edgesDone.insert(edgeList[j]->id);
+                                edgesDone.insert(edgeList[j]->m_id);
                             }
                         }
                         
                         for (int j = 0; j < faceList.size(); ++j)
                         {
                             boost::unordered_set<int>::iterator it = 
-                                facesDone.find(faceList[j]->id);
+                                facesDone.find(faceList[j]->m_id);
                             if (it == facesDone.end() || d != 3)
                             {
                                 tmp.insert(tmp.end(), 
                                            faceList[j]->m_faceNodes.begin(),
                                            faceList[j]->m_faceNodes.end());
-                                facesDone.insert(faceList[j]->id);
+                                facesDone.insert(faceList[j]->m_id);
                             }
                         }
                         
@@ -201,11 +201,11 @@ namespace Nektar
                             
                             if (testIns.second)
                             {
-                                (*(testIns.first))->id = id++;
+                                (*(testIns.first))->m_id = id++;
                             }
                             else
                             {
-                                tmp[j]->id = (*(testIns.first))->id;
+                                tmp[j]->m_id = (*(testIns.first))->m_id;
                             }
                         }
                     }
@@ -222,9 +222,9 @@ namespace Nektar
             
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
-                mshFile << (*it)->id << " " << scientific << setprecision(10)
-                        << (*it)->x << " " 
-                        << (*it)->y  << " " << (*it)->z 
+                mshFile << (*it)->m_id << " " << scientific << setprecision(10)
+                        << (*it)->m_x << " " 
+                        << (*it)->m_y  << " " << (*it)->m_z 
                         << endl;
             }
             
@@ -275,7 +275,7 @@ namespace Nektar
                     
                     for (int j = 0; j < nodeList.size(); ++j)
                     {
-                        tags.push_back(nodeList[j]->id);
+                        tags.push_back(nodeList[j]->m_id);
                     }
                     
                     if (e->GetConf().order > 1)
@@ -285,7 +285,7 @@ namespace Nektar
                             nodeList = edgeList[j]->m_edgeNodes;
                             for (int k = 0; k < nodeList.size(); ++k)
                             {
-                                tags.push_back(nodeList[k]->id);
+                                tags.push_back(nodeList[k]->m_id);
                                 //cout << "EDGENODE" << endl;
                             }
                         }
@@ -296,14 +296,14 @@ namespace Nektar
                             for (int k = 0; k < nodeList.size(); ++k)
                             {
                                 //cout << "FACENODE" << endl;
-                                tags.push_back(nodeList[k]->id);
+                                tags.push_back(nodeList[k]->m_id);
                             }
                         }
                         
                         for (int j = 0; j < volList.size(); ++j)
                         {
                             //cout << "VOLNODE" << endl;
-                            tags.push_back(volList[j]->id);
+                            tags.push_back(volList[j]->m_id);
                         }
                     }
 

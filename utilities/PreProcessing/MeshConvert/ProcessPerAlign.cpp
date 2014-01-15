@@ -185,12 +185,12 @@ namespace Nektar
                     }
 
                     Node dx = it->second - centroid;
-                    if (fabs(fabs(dx.x*vec[0] + dx.y*vec[1] + dx.z*vec[2])/
+                    if (fabs(fabs(dx.m_x*vec[0] + dx.m_y*vec[1] + dx.m_z*vec[2])/
                              sqrt(dx.abs2()) - 1.0) < 1e-8)
                     {
                         // Found match
-                        int id1 = c1->items[i]        ->GetFaceLink()->id;
-                        int id2 = c2->items[it->first]->GetFaceLink()->id;
+                        int id1 = c1->items[i]        ->GetFaceLink()->m_id;
+                        int id2 = c2->items[it->first]->GetFaceLink()->m_id;
 
                         elmtDone.insert(it->first);
                         elmtPairs[i] = it->first;
@@ -212,15 +212,15 @@ namespace Nektar
                                         c2->items[it->first]->GetFaceLink()->m_vertexList[l];
                                     
                                     Node dn = *n2 - *n1;
-                                    if (fabs(fabs(dn.x*vec[0] + dn.y*vec[1] +
-                                                  dn.z*vec[2])/
+                                    if (fabs(fabs(dn.m_x*vec[0] + dn.m_y*vec[1] +
+                                                  dn.m_z*vec[2])/
                                              sqrt(dn.abs2()) - 1.0) < 1e-8)
                                     {
                                         perVerts   [k] = l;
                                         perVertsInv[l] = k;
                                         
-                                        int id1 = n1->id;
-                                        int id2 = n2->id;
+                                        int id1 = n1->m_id;
+                                        int id2 = n2->m_id;
                                         if (vertCheck.count(id1) == 0)
                                         {
                                             vertCheck[id1] = id2;

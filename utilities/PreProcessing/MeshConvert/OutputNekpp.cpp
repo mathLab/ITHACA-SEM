@@ -136,9 +136,9 @@ namespace Nektar
                 NodeSharedPtr n = *it;
                 stringstream s;
                 s << scientific << setprecision(8) 
-                  << n->x << " " << n->y << " " << n->z;
+                  << n->m_x << " " << n->m_y << " " << n->m_z;
                 TiXmlElement * v = new TiXmlElement( "V" );
-                v->SetAttribute("ID",n->id);
+                v->SetAttribute("ID",n->m_id);
                 v->LinkEndChild(new TiXmlText(s.str()));
                 verTag->LinkEndChild(v);
             }
@@ -158,9 +158,9 @@ namespace Nektar
                     EdgeSharedPtr ed = *it;
                     stringstream s;
 
-                    s << setw(5) << ed->n1->id << "  " << ed->n2->id << "   ";
+                    s << setw(5) << ed->n1->m_id << "  " << ed->n2->m_id << "   ";
                     TiXmlElement * e = new TiXmlElement( "E" );
-                    e->SetAttribute("ID",ed->id);
+                    e->SetAttribute("ID",ed->m_id);
                     e->LinkEndChild( new TiXmlText(s.str()) );
                     verTag->LinkEndChild(e);
                 }
@@ -185,7 +185,7 @@ namespace Nektar
 
                     for (int j = 0; j < fa->m_edgeList.size(); ++j)
                     {
-                        s << setw(10) << fa->m_edgeList[j]->id;
+                        s << setw(10) << fa->m_edgeList[j]->m_id;
                     }
                     TiXmlElement * f;
                     switch(fa->m_vertexList.size())
@@ -199,7 +199,7 @@ namespace Nektar
                         default:
                             abort();
                     }
-                    f->SetAttribute("ID", fa->id);
+                    f->SetAttribute("ID", fa->m_id);
                     f->LinkEndChild( new TiXmlText(s.str()));
                     verTag->LinkEndChild(f);
                 }
@@ -246,7 +246,7 @@ namespace Nektar
                 {
                     TiXmlElement * e = new TiXmlElement( "E" );
                     e->SetAttribute("ID",        edgecnt++);
-                    e->SetAttribute("EDGEID",    (*it)->id);
+                    e->SetAttribute("EDGEID",    (*it)->m_id);
                     e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
                     e->SetAttribute("TYPE", 
                         LibUtilities::kPointsTypeStr[(*it)->curveType]);
@@ -290,7 +290,7 @@ namespace Nektar
                     {
                         TiXmlElement * f = new TiXmlElement( "F" );
                         f->SetAttribute("ID",       facecnt++);
-                        f->SetAttribute("FACEID",   (*it2)->id);
+                        f->SetAttribute("FACEID",   (*it2)->m_id);
                         f->SetAttribute("NUMPOINTS",(*it2)->GetNodeCount());
                         f->SetAttribute("TYPE",
                                         LibUtilities::kPointsTypeStr[(*it2)->curveType]);
@@ -341,14 +341,14 @@ namespace Nektar
                     }
 
                     doSort = doSort && it->second->reorder;
-                    comp_tag->SetAttribute("ID", it->second->id);
+                    comp_tag->SetAttribute("ID", it->second->m_id);
                     comp_tag->LinkEndChild(
                         new TiXmlText(it->second->GetXmlString(doSort)));
                     verTag->LinkEndChild(comp_tag);
                 }
                 else
                 {
-                    cout << "Composite " << it->second->id << " "
+                    cout << "Composite " << it->second->m_id << " "
                          << "contains nothing." << endl;
                 }
             }
@@ -371,7 +371,7 @@ namespace Nektar
                     {
                         list += ",";
                     }
-                    list += boost::lexical_cast<std::string>(it->second->id);
+                    list += boost::lexical_cast<std::string>(it->second->m_id);
                 }
             }
             domain->LinkEndChild( new TiXmlText(" C[" + list + "] "));
@@ -390,7 +390,7 @@ namespace Nektar
                 {
                     TiXmlElement * exp = new TiXmlElement ( "E");
                     exp->SetAttribute("COMPOSITE", "C["
-                        + boost::lexical_cast<std::string>(it->second->id)
+                        + boost::lexical_cast<std::string>(it->second->m_id)
                         + "]");
                     exp->SetAttribute("NUMMODES",4);
                     exp->SetAttribute("TYPE","MODIFIED");

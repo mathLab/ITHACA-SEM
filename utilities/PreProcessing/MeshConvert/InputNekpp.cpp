@@ -101,9 +101,9 @@ namespace Nektar
             }
 
             map<int, EdgeSharedPtr> eIdMap;
+            map<int, EdgeSharedPtr>::iterator itEmap;
             map<int, FaceSharedPtr> fIdMap;
-
-
+            map<int, FaceSharedPtr>::iterator itFmap;
 
             // Load up all edges from graph
             {
@@ -128,7 +128,7 @@ namespace Nektar
                                                               curve, ptype));
                     
                     testIns = m_mesh->m_edgeSet.insert(ed);
-                    (*(testIns.first))->id = it->second->GetEid();
+                    (*(testIns.first))->m_id = it->second->GetEid();
                     eIdMap[it->second->GetEid()] = ed;
                 }
             }
@@ -161,7 +161,7 @@ namespace Nektar
                     FaceSharedPtr fac = FaceSharedPtr( new Face(faceVertices,faceNodes,faceEdges,
                                                                 LibUtilities::ePolyEvenlySpaced));
                     testIns = m_mesh->m_faceSet.insert(fac);
-                    (*(testIns.first))->id = it->second->GetFid();
+                    (*(testIns.first))->m_id = it->second->GetFid();
                     fIdMap[it->second->GetFid()] = fac;
                 }
 
@@ -187,10 +187,51 @@ namespace Nektar
                     FaceSharedPtr fac = FaceSharedPtr( new Face(faceVertices,faceNodes,faceEdges,
                                                                 LibUtilities::ePolyEvenlySpaced));
                     testIns = m_mesh->m_faceSet.insert(fac);
-                    (*(testIns.first))->id = it2->second->GetFid();
+                    (*(testIns.first))->m_id = it2->second->GetFid();
                     fIdMap[it2->second->GetFid()] = fac;
                 }
             }
+
+            // Set up curved information
+
+            // Curved Edges
+            SpatialDomains::CurveVector cvec = graph->GetCurvedEdges();
+            
+            for(int i = 0; i < cvec.size(); ++i)
+            {
+                int id = cvec[i]->m_curveID;
+                ASSERTL1(eIdMap.find(id) != eIdMap.end(),"Failed to find curved edge");
+                EdgeSharedPtr edg = eIdMap[id];
+                edg->curveType = cvec[i]->m_ptype;
+                for(int j = 0; j < cvec[i]->m_points.size()-2; ++j)
+                {
+                    NodeSharedPtr n(new Node(j, (*cvec[i]->m_points[j+1])(0),
+                                             (*cvec[i]->m_points[j+1])(1),
+                                             (*cvec[i]->m_points[j+1])(2)));
+                    edg->m_edgeNodes.push_back(n);
+                }
+            }
+
+            // Curved Faces
+            cvec = graph->GetCurvedFaces();
+            
+            for(int i = 0; i < cvec.size(); ++i)
+            {
+                int id = cvec[i]->m_curveID;
+                ASSERTL1(fIdMap.find(id) != fIdMap.end(),"Failed to find curved edge");
+                FaceSharedPtr fac = fIdMap[id];
+                fac->curveType = cvec[i]->m_ptype;
+                int Ntot = cvec[i]->m_points.size();
+                int N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
+                for(int j = 3+3*(N-2); j < Ntot; ++j)
+                {
+                    NodeSharedPtr n(new Node(j, (*cvec[i]->m_points[j])(0),
+                                             (*cvec[i]->m_points[j])(1),
+                                             (*cvec[i]->m_points[j])(2)));
+                    fac->m_faceNodes.push_back(n);
+                }
+            }
+            
 
             // Get hold of mesh composites and set up m_mesh->elements
 

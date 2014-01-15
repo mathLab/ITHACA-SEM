@@ -115,13 +115,13 @@ namespace Nektar
             pad % rank;
             fs::path    pFilename(pad.str());
             
-            if(rank == 0)
-            {
+//            if(rank == 0)
+//            {
                 if(!fs::is_directory(dirname))
                 {
                     fs::create_directory(dirname);
                 }
-            }
+//            }
             m_comm->Block();
             
             fs::path fullpath = pdirname / pFilename; 

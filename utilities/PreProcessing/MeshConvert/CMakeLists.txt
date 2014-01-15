@@ -1,5 +1,4 @@
 SET(MeshConvertHeaders 
-    Module.h
     InputGmsh.h
     InputNek.h
     InputNekpp.h
@@ -7,6 +6,8 @@ SET(MeshConvertHeaders
     InputSem.h
     InputSwan.h
     InputStarTec.h
+    MeshElements.h
+    Module.h
     OutputGmsh.h
     OutputNekpp.h
     ProcessBL.h
@@ -16,11 +17,9 @@ SET(MeshConvertHeaders
     ProcessPerAlign.h
     ProcessSpherigon.h
     ProcessTetSplit.h
-    MeshElements.h
 )
 
 SET(MeshConvertSources 
-    Module.cpp
     InputGmsh.cpp
     InputNek.cpp
     InputNekpp.cpp
@@ -28,6 +27,9 @@ SET(MeshConvertSources
     InputSem.cpp
     InputSwan.cpp
     InputStarTec.cpp
+    MeshConvert.cpp
+    MeshElements.cpp
+    Module.cpp
     OutputGmsh.cpp
     OutputNekpp.cpp
     ProcessBL.cpp
@@ -37,8 +39,7 @@ SET(MeshConvertSources
     ProcessPerAlign.cpp
     ProcessSpherigon.cpp
     ProcessTetSplit.cpp
-    MeshConvert.cpp
-    MeshElements.cpp)
+)
 
 IF (NEKTAR_USE_VTK)
     SET(MeshConvertHeaders ${MeshConvertHeaders} InputVtk.h OutputVtk.h)

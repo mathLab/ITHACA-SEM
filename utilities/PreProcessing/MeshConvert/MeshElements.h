@@ -789,7 +789,7 @@ namespace Nektar
                     }
                     break;
                 case 2:
-                    for(int j=0; j< edge.size(); ++j)
+                    for(int j=0; j< m_edge.size(); ++j)
                     {
                         s << std::setw(5) << m_edge[j]->m_id << " ";
                     }

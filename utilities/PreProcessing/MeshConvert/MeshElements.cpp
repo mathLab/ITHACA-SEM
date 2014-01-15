@@ -530,7 +530,7 @@ namespace Nektar
             {
                 if (sum > 0.0)
                 {
-                    reverse(edge.begin(), edge.end());
+                    reverse(m_edge.begin(), m_edge.end());
                 }
             }
 
@@ -720,7 +720,7 @@ namespace Nektar
             {
                 if (sum > 0.0)
                 {
-                    reverse(edge.begin(), edge.end());
+                    reverse(m_edge.begin(), m_edge.end());
                 }
             }
 

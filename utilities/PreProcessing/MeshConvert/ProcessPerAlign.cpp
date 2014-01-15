@@ -83,10 +83,10 @@ namespace Nektar
 
         void ProcessPerAlign::Process()
         {
-            int    surf1  = config["surf1"]. as<int>   ();
-            int    surf2  = config["surf2"]. as<int>   ();
-            string dir    = config["dir"].   as<string>();
-            bool   orient = config["orient"].as<bool>  ();
+            int    surf1  = m_config["surf1"]. as<int>   ();
+            int    surf2  = m_config["surf2"]. as<int>   ();
+            string dir    = m_config["dir"].   as<string>();
+            bool   orient = m_config["orient"].as<bool>  ();
 
             if (surf1 == -1)
             {

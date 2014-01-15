@@ -49,11 +49,11 @@ namespace Nektar
         ModuleKey ProcessDetectSurf::className = 
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "detect"), ProcessDetectSurf::create,
-                "Process elements based on values of Jacobian.");
+                "Process elements to detect a surface.");
 
         ProcessDetectSurf::ProcessDetectSurf(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["vol"] = ConfigOption(false, "-1",
+            m_config["vol"] = ConfigOption(false, "-1",
                 "Tag identifying surface to process.");
         }
 
@@ -70,14 +70,14 @@ namespace Nektar
 
         void ProcessDetectSurf::Process()
         {
-            if (m->expDim > 2)
+            if (m_mesh->expDim > 2)
             {
                 cerr << "Surface detection only implemented for 2D meshes" << endl;
                 return;
             }
 
             int i, j;
-            string surf = config["vol"].as<string>();
+            string surf = m_config["vol"].as<string>();
 
             // Obtain vector of surface IDs from string.
             vector<unsigned int> surfs;
@@ -88,7 +88,7 @@ namespace Nektar
             }
 
             // If we're running in verbose mode print out a list of surfaces.
-            if (m->verbose)
+            if (m_mesh->verbose)
             {
                 cout << "ProcessDetectSurf: detecting surfaces";
                 if (surfs.size() > 0)
@@ -98,7 +98,7 @@ namespace Nektar
                 }
             }
 
-            vector<ElementSharedPtr> &el = m->element[m->expDim];
+            vector<ElementSharedPtr> &el = m_mesh->element[m_mesh->expDim];
             map<int, EdgeInfo> edgeCount;
             set<int> doneIds;
             map<int, int> idMap;
@@ -128,7 +128,7 @@ namespace Nektar
                 for (j = 0; j < elmt->GetEdgeCount(); ++j)
                 {
                     EdgeSharedPtr e = elmt->GetEdge(j);
-                    int eId = e->id;
+                    int eId = e->m_id;
                     edgeCount[eId].count++;
                     edgeCount[eId].edge = e;
                 }
@@ -141,7 +141,7 @@ namespace Nektar
             CompositeMap::iterator cIt;
             unsigned int maxId = 0;
 
-            for (cIt = m->composite.begin(); cIt != m->composite.end(); ++cIt)
+            for (cIt = m_mesh->m_composite.begin(); cIt != m_mesh->m_composite.end(); ++cIt)
             {
                 maxId = std::max(cIt->first, maxId);
             }
@@ -153,7 +153,7 @@ namespace Nektar
             while (doneIds.size() > 0)
             {
                 ElementSharedPtr start
-                    = m->element[m->expDim][idMap[*(doneIds.begin())]];
+                    = m_mesh->element[m_mesh->expDim][idMap[*(doneIds.begin())]];
 
                 vector<ElementSharedPtr> block;
                 FindContiguousSurface(start, doneIds, block);
@@ -167,7 +167,7 @@ namespace Nektar
 
                     for (j = 0; j < elmt->GetEdgeCount(); ++j)
                     {
-                        eIt = edgeCount.find(elmt->GetEdge(j)->id);
+                        eIt = edgeCount.find(elmt->GetEdge(j)->m_id);
                         ASSERTL0(eIt != edgeCount.end(), "Couldn't find edge");
                         eIt->second.group = maxId;
                     }
@@ -184,14 +184,14 @@ namespace Nektar
                 }
 
                 unsigned int compId = eIt->second.group;
-                CompositeMap::iterator cIt = m->composite.find(compId);
+                CompositeMap::iterator cIt = m_mesh->m_composite.find(compId);
 
-                if (cIt == m->composite.end())
+                if (cIt == m_mesh->m_composite.end())
                 {
                     CompositeSharedPtr comp(new Composite());
-                    comp->id  = compId;
+                    comp->m_id  = compId;
                     comp->tag = "E";
-                    cIt = m->composite.insert(std::make_pair(compId, comp)).first;
+                    cIt = m_mesh->m_composite.insert(std::make_pair(compId, comp)).first;
                 }
 
                 vector<int> tags(1);
@@ -200,9 +200,9 @@ namespace Nektar
                 nodeList[0] = eIt->second.edge->n1;
                 nodeList[1] = eIt->second.edge->n2;
 
-                ElmtConfig conf(eLine, 1, false, false);
+                ElmtConfig conf(LibUtilities::eSegment, 1, false, false);
                 ElementSharedPtr elmt = GetElementFactory().
-                    CreateInstance(eLine,conf,nodeList,tags);
+                    CreateInstance(LibUtilities::eSegment,conf,nodeList,tags);
                 elmt->SetEdgeLink(eIt->second.edge);
 
                 cIt->second->items.push_back(elmt);

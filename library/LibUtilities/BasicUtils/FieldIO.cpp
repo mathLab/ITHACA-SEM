@@ -1084,7 +1084,8 @@ namespace Nektar
             fs::path specPath (outname);
 
             // Remove any existing file which is in the way
-            int existCheck = fs::exists(specPath) ? 1 : 0;
+            fs::remove_all(specPath);
+/*            int existCheck = fs::exists(specPath) ? 1 : 0;
             m_comm->AllReduce(existCheck, ReduceMax);
 
             if (existCheck)
@@ -1119,7 +1120,7 @@ namespace Nektar
                     }
                 }
             }
-
+*/
             // serial processing just add ending.
             if(nprocs == 1)
             {
@@ -1139,6 +1140,9 @@ namespace Nektar
                                             fielddefs[i]->m_elementIDs.end());
             }
             m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
+
+            // Create the destination directory
+            fs::create_directory(specPath);
 
             // Collate per-process element lists on root process to generate
             // the info file.
@@ -1164,9 +1168,6 @@ namespace Nektar
                     filenames.push_back(pad.str());
                 }
 
-                // Create the destination directory
-                fs::create_directory(specPath);
-
                 // Write the Info.xml file
                 string infofile = LibUtilities::PortablePath(specPath / fs::path("Info.xml"));
                 WriteMultiFldFileIDs(infofile, filenames, ElementIDs,
@@ -1182,14 +1183,14 @@ namespace Nektar
             // target directory has been created by the root process
             m_comm->Block();
 
-            // Sit in a loop and make sure target directory has been created
+/*            // Sit in a loop and make sure target directory has been created
             int created = 0;
             do
             {
                 created = fs::is_directory(specPath) ? 1 : 0;
                 m_comm->AllReduce(created, ReduceMin);
             } while (!created);
-
+*/
             // Pad rank to 8char filenames, e.g. P0000000.fld
             boost::format pad("P%1$07d.fld");
             pad % m_comm->GetRank();

@@ -207,19 +207,6 @@ namespace Nektar
 
                 cIt->second->items.push_back(elmt);
             }
-            
-            /*
-            CompositeSharedPtr comp (new Composite());
-            ++maxId;
-            
-            map<int, pair<int, EdgeSharedPtr> >::iterator it;
-            for (it = edgeCount.begin(); it != edgeCount.end(); ++it)
-            {
-                ElmtConfig conf(eLine, 1, false, false);
-                ElementSharedPtr elmt = GetElementFactory().
-                    CreateInstance(eLine,conf,nodeList,tags);
-            }
-            */
         }
 
         void ProcessDetectSurf::FindContiguousSurface(

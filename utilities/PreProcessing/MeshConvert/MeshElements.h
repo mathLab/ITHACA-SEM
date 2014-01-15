@@ -798,65 +798,11 @@ namespace Nektar
                     }
                     break;
                 case 2:
-                {
                     for(int j=0; j< edge.size(); ++j)
                     {
                         s << std::setw(5) << edge[j]->id << " ";
                     }
                     break;
-                    /*
-                        NekDouble cross = 0.0;
-                        
-                        // caclulate sign based on cross product of vertices
-                        if(edge[0]->n1 == edge[1]->n1)
-                        {
-                            cross  = (edge[0]->n2->x - edge[0]->n1->x)*
-                                (edge[1]->n2->y - edge[1]->n1->y) - 
-                                (edge[0]->n2->y - edge[0]->n1->y)*
-                                (edge[1]->n2->x - edge[1]->n1->x); 
-                        }
-                        else if(edge[0]->n1 == edge[1]->n2)
-                        {
-                            cross  = (edge[0]->n2->x - edge[0]->n1->x)*
-                                (edge[1]->n1->y - edge[1]->n2->y) - 
-                                (edge[0]->n2->y - edge[0]->n1->y)*
-                                (edge[1]->n1->x - edge[1]->n2->x); 
-                        }
-                        else if(edge[0]->n2 == edge[1]->n1)
-                        {
-                            cross  = (edge[0]->n1->x - edge[0]->n2->x)*
-                                (edge[1]->n2->y - edge[1]->n1->y) - 
-                                (edge[0]->n1->y - edge[0]->n2->y)*
-                                (edge[1]->n2->x - edge[1]->n1->x); 
-
-                        }
-                        else if(edge[0]->n2 == edge[1]->n2)
-                        {
-                            cross  = (edge[0]->n1->x - edge[0]->n2->x)*
-                                (edge[1]->n1->y - edge[1]->n2->y) - 
-                                (edge[0]->n1->y - edge[0]->n2->y)*
-                                (edge[1]->n1->x - edge[1]->n2->x); 
-                        }
-                        
-                        // provide edges in anticlockise sense
-                        if(cross  < 0.0)
-                        {
-                            for(int j=0; j< edge.size(); ++j)
-                            {
-                                s << std::setw(5) << edge[j]->id << " ";
-                            }
-                        }
-                        else
-                        {
-                            for(int j=edge.size()-1; j>=0; --j)
-                            {
-                                s << std::setw(5) << edge[j]->id << " ";
-                            }
-                        }
-                    }
-                    break;
-                    */
-                    }
                 case 3:
                     for(int j=0; j< face.size(); ++j)
                     {

@@ -150,9 +150,8 @@ namespace Nektar
         {
             if (m->expDim < 2) return;
 
-            vector<ElementSharedPtr> &elmt = m->element[m->expDim];
-
             m->edgeSet.clear();
+            vector<ElementSharedPtr> &elmt = m->element[m->expDim];
 
             // Scan all elements and generate list of unique edges
             for (int i = 0, eid = 0; i < elmt.size(); ++i)

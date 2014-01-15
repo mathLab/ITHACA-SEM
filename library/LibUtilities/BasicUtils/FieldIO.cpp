@@ -1085,42 +1085,7 @@ namespace Nektar
 
             // Remove any existing file which is in the way
             fs::remove_all(specPath);
-/*            int existCheck = fs::exists(specPath) ? 1 : 0;
-            m_comm->AllReduce(existCheck, ReduceMax);
 
-            if (existCheck)
-            {
-                // First remove all files on the root process.
-                if (m_comm->GetRank() == 0)
-                {
-                    fs::remove_all(specPath);
-                }
-
-                m_comm->Block();
-
-                // Check to see if the files still exist on non-root processes.
-                int existCheck = rank > 0 && fs::exists(specPath) ? 1 : 0;
-                m_comm->AllReduce(existCheck, ReduceMax);
-
-                // If they do (i.e. a non-shared filesystem) then go through all
-                // other processors and try to perform removal there. Note this
-                // could be made quicker by the use of a per-node MPI
-                // communicator.
-                if (existCheck > 0)
-                {
-                    for (int i = 1; i < nprocs; ++i)
-                    {
-                        m_comm->Block();
-
-                        if (rank == i && fs::exists(specPath))
-                        {
-                            // Recursively remove directories
-                            fs::remove_all(specPath);
-                        }
-                    }
-                }
-            }
-*/
             // serial processing just add ending.
             if(nprocs == 1)
             {
@@ -1169,7 +1134,8 @@ namespace Nektar
                 }
 
                 // Write the Info.xml file
-                string infofile = LibUtilities::PortablePath(specPath / fs::path("Info.xml"));
+                string infofile = LibUtilities::PortablePath(
+                                            specPath / fs::path("Info.xml"));
                 WriteMultiFldFileIDs(infofile, filenames, ElementIDs,
                                      fieldmetadatamap);
             }
@@ -1179,18 +1145,6 @@ namespace Nektar
                 m_comm->Send(0, idlist);
             }
 
-            // Ensure all processors are aligned for the write and ensure
-            // target directory has been created by the root process
-            m_comm->Block();
-
-/*            // Sit in a loop and make sure target directory has been created
-            int created = 0;
-            do
-            {
-                created = fs::is_directory(specPath) ? 1 : 0;
-                m_comm->AllReduce(created, ReduceMin);
-            } while (!created);
-*/
             // Pad rank to 8char filenames, e.g. P0000000.fld
             boost::format pad("P%1$07d.fld");
             pad % m_comm->GetRank();

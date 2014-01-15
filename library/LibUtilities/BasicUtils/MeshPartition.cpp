@@ -115,14 +115,10 @@ namespace Nektar
             pad % rank;
             fs::path    pFilename(pad.str());
             
-//            if(rank == 0)
-//            {
-                if(!fs::is_directory(dirname))
-                {
-                    fs::create_directory(dirname);
-                }
-//            }
-            m_comm->Block();
+            if(!fs::is_directory(dirname))
+            {
+                fs::create_directory(dirname);
+            }
             
             fs::path fullpath = pdirname / pFilename; 
             vNew.SaveFile(PortablePath(fullpath));

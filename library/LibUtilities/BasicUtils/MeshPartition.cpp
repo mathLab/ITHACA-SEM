@@ -51,12 +51,13 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adjacency_iterator.hpp>
 #include <boost/graph/detail/edge.hpp>
-
+#include <boost/format.hpp>
 
 namespace Nektar
 {
@@ -105,8 +106,20 @@ namespace Nektar
 
             vNew.LinkEndChild(vElmtNektar);
 
-            std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(rank) + ".xml";
-            vNew.SaveFile(vFilename.c_str());
+            std::string  dirname = pSession->GetSessionName() + "_xml"; 
+            fs::path    pdirname(dirname);
+            
+            boost::format pad("P%1$07d.xml");
+            pad % rank;
+            fs::path    pFilename(pad.str());
+            
+            if(!fs::is_directory(dirname))
+            {
+                fs::create_directory(dirname);
+            }
+            
+            fs::path fullpath = pdirname / pFilename; 
+            vNew.SaveFile(PortablePath(fullpath));
         }
 
         void MeshPartition::WriteAllPartitions(LibUtilities::SessionReaderSharedPtr& pSession)
@@ -124,8 +137,21 @@ namespace Nektar
 
                 vNew.LinkEndChild(vElmtNektar);
 
-                std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(i) + ".xml";
-                vNew.SaveFile(vFilename.c_str());
+                std::string  dirname = pSession->GetSessionName() + "_xml"; 
+                fs::path    pdirname(dirname);
+                
+                boost::format pad("P%1$07d.xml");
+                pad % i;
+                fs::path    pFilename(pad.str());
+                
+                fs::path fullpath = pdirname / pFilename; 
+                
+                if(!fs::is_directory(dirname))
+                {
+                    fs::create_directory(dirname);
+                }
+
+                vNew.SaveFile(PortablePath(fullpath));
             }
         }
 

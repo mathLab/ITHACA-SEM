@@ -151,8 +151,6 @@ namespace Nektar
             // Evaluation functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoords);
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& Lcoords,
                 const Array<OneD, const NekDouble>& physvals);
             STD_REGIONS_EXPORT virtual void v_FillMode(
@@ -175,21 +173,10 @@ namespace Nektar
                 int &modes_offset);
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(
                 const int i) const;
-            STD_REGIONS_EXPORT virtual void v_ReadFromFile(
-                std::ifstream &infile,
-                OutputFormat   format,
-                const bool     dumpVar = true);
-            STD_REGIONS_EXPORT virtual void v_WriteToFile(
-                std::ofstream &outfile,
-                OutputFormat format,
-                const bool dumpVar = true,
-                std::string var = "v");
-            STD_REGIONS_EXPORT virtual void v_WriteCoeffsToFile(
-                std::ofstream &outfile);
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                 Array<OneD, NekDouble> &coords_x,
                 Array<OneD, NekDouble> &coords_y,
-                Array<OneD, NekDouble> &coords_z = NullNekDouble1DArray);
+                Array<OneD, NekDouble> &coords_z);
             STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
             STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey

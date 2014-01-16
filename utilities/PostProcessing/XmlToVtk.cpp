@@ -39,6 +39,7 @@
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList3D.h>
+#include <MultiRegions/ExpList3DHomogeneous1D.h>
 
 using namespace Nektar;
 
@@ -48,7 +49,7 @@ int main(int argc, char *argv[])
     {
         cerr << "Usage: XmlToVtk  meshfile" << endl;
         exit(1);
-    }    
+    }
 
     LibUtilities::SessionReader::RegisterCmdLineFlag(
         "jacobian", "j", "Output Jacobian as scalar field");
@@ -60,13 +61,13 @@ int main(int argc, char *argv[])
 
     // Read in mesh from input file
     string meshfile(argv[argc-1]);
-    SpatialDomains::MeshGraphSharedPtr graphShPt = 
+    SpatialDomains::MeshGraphSharedPtr graphShPt =
         SpatialDomains::MeshGraph::Read(vSession); //meshfile);
 
     // Set up Expansion information
     SpatialDomains::ExpansionMap emap = graphShPt->GetExpansions();
     SpatialDomains::ExpansionMapIter it;
-    
+
     for (it = emap.begin(); it != emap.end(); ++it)
     {
         for (int i = 0; i < it->second->m_basisKeyVector.size(); ++i)
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
                                         LibUtilities::ePolyEvenlySpaced));
         }
     }
-    
+
     // Define Expansion
     int expdim  = graphShPt->GetMeshDimension();
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(1);
@@ -96,10 +97,39 @@ int main(int argc, char *argv[])
         }
         case 2:
         {
-            MultiRegions::ExpList2DSharedPtr Exp2D;
-            Exp2D = MemoryManager<MultiRegions::ExpList2D>
-                ::AllocateSharedPtr(vSession,graphShPt);
-            Exp[0] =  Exp2D;
+            if(vSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                std::string HomoStr = vSession->GetSolverInfo("HOMOGENEOUS");
+                MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
+
+                ASSERTL0(
+                    HomoStr == "HOMOGENEOUS1D" || HomoStr == "Homogeneous1D" ||
+                    HomoStr == "1D"            || HomoStr == "Homo1D",
+                    "Only 3DH1D supported for XML output currently.");
+
+                int nplanes;
+                vSession->LoadParameter("HomModesZ", nplanes);
+
+                // choose points to be at evenly spaced points at nplanes + 1
+                // points
+                const LibUtilities::PointsKey Pkey(
+                    nplanes + 1, LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::BasisKey  Bkey(
+                    LibUtilities::eFourier, nplanes, Pkey);
+                NekDouble lz = vSession->GetParameter("LZ");
+
+                Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>
+                    ::AllocateSharedPtr(
+                        vSession, Bkey, lz, false, false, graphShPt);
+                Exp[0] = Exp3DH1;
+            }
+            else
+            {
+                MultiRegions::ExpList2DSharedPtr Exp2D;
+                Exp2D = MemoryManager<MultiRegions::ExpList2D>
+                    ::AllocateSharedPtr(vSession,graphShPt);
+                Exp[0] =  Exp2D;
+            }
             break;
         }
         case 3:
@@ -116,7 +146,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    
+
     // Write out VTK file.
     string   outname(strtok(argv[argc-1],"."));
     outname += ".vtu";
@@ -150,7 +180,7 @@ int main(int argc, char *argv[])
                 Vmath::Fill (npts, g->GetJac()[0], tmp = Exp[0]->UpdatePhys()
                                  + Exp[0]->GetPhys_Offset(i), 1);
             }
-            
+
             Exp[0]->WriteVtkPieceHeader(outfile, i);
             Exp[0]->WriteVtkPieceData  (outfile, i, "Jac");
             Exp[0]->WriteVtkPieceFooter(outfile, i);
@@ -159,10 +189,10 @@ int main(int argc, char *argv[])
         unsigned int n
             = Vmath::Imin(Exp[0]->GetNpoints(), Exp[0]->GetPhys(), 1);
         cout << "- Minimum Jacobian: "
-             << Vmath::Vmin(Exp[0]->GetNpoints(), Exp[0]->GetPhys(), 1) 
+             << Vmath::Vmin(Exp[0]->GetNpoints(), Exp[0]->GetPhys(), 1)
              << " at coords (" << x0[n] << ", " << x1[n] << ", " << x2[n] << ")"
              << endl;
-        
+
     }
     else
     {
@@ -175,7 +205,7 @@ int main(int argc, char *argv[])
     }
 
     Exp[0]->WriteVtkFooter(outfile);
-    
+
     return 0;
 }
 

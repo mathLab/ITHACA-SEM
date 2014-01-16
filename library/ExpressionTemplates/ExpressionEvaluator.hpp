@@ -302,8 +302,6 @@ namespace expt
         template<typename Expression>
         static typename Expression::ResultType Evaluate(const Expression& expression)
         {
-            typedef typename Expression::Indices Indices;
-
             // Perform the optimizations on the parse three.
             typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedNodeType OptimizedParseTree;
             typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedIndicesType TransformedIndicesType;
@@ -320,8 +318,6 @@ namespace expt
         template<typename Expression>
         static void Evaluate(const Expression& expression, typename Expression::ResultType& accum)
         {
-            typedef typename Expression::Indices Indices;
-
             // Perform the optimizations on the parse three.
             typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedNodeType OptimizedParseTree;
             typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedIndicesType TransformedIndicesType;
@@ -341,8 +337,6 @@ namespace expt
         template<typename Expression>
         static void EvaluateWithoutAliasingCheck(const Expression& expression, typename Expression::ResultType& accum)
         {
-            typedef typename Expression::Indices Indices;
-
             // Perform the optimizations on the parse three.
             typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedNodeType OptimizedParseTree;
             typedef typename RemoveUnecessaryTemporaries<Expression>::TransformedIndicesType TransformedIndicesType;

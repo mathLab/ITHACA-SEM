@@ -140,12 +140,6 @@ namespace Nektar
         }
 
         NekDouble StdExpansion3D::v_PhysEvaluate(
-            const Array<OneD, const NekDouble> &coords)
-        {
-            return PhysEvaluate(coords,m_phys);
-        }
-        
-        NekDouble StdExpansion3D::v_PhysEvaluate(
             const Array<OneD, const NekDouble> &coords, 
             const Array<OneD, const NekDouble> &physvals)
         {

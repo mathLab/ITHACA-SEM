@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description> 3D Helmholtz/Steady Diffusion Reaction with Periodic BCs P=3 </description>
+    <description> 3D Helmholtz/Steady Diffusion Reaction with Periodic BCs P=5 </description>
     <executable>ADRSolver</executable>
     <parameters>Helmholtz3D_CubePeriodic.xml</parameters>
     <files>

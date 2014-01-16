@@ -36,9 +36,9 @@
 #include <SpatialDomains/Geometry3D.h>
 
 #include <SpatialDomains/Geometry2D.h>
-#include <SpatialDomains/GeomFactors3D.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/PointGeom.h>
-#include <SpatialDomains/SegGeom.h>     // for SegGeomSharedPtr
+#include <SpatialDomains/SegGeom.h>
 
 namespace Nektar
 {
@@ -109,30 +109,31 @@ namespace Nektar
       //---------------------------------------
       // 3D Geometry Methods
       //---------------------------------------
-      void Geometry3D::NewtonIterationForLocCoord
-      (const Array<OneD, const NekDouble> &coords, 
-                          Array<OneD,NekDouble> &Lcoords)
+
+      void Geometry3D::NewtonIterationForLocCoord(
+          const Array<OneD, const NekDouble> &coords,
+          const Array<OneD, const NekDouble> &ptsx,
+          const Array<OneD, const NekDouble> &ptsy,
+          const Array<OneD, const NekDouble> &ptsz,
+                Array<OneD,       NekDouble> &Lcoords)
       {
-          
-          Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
-          Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
-          Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
-          NekDouble xmap,ymap,zmap, F1,F2, F3;
+          NekDouble xmap, ymap, zmap, F1,F2, F3;
           NekDouble der1_x, der2_x, der3_x, der1_y, der2_y, der3_y,
               der1_z, der2_z, der3_z; 
           const Array<TwoD, const NekDouble> &gmat
-                                      = m_geomFactors->GetDerivFactors();
-          
+              = m_geomFactors->GetDerivFactors(GetPointsKeys());
+
           // Unfortunately need the points in an Array to interpolate
-          Array<OneD, NekDouble> D1Dx(ptsx.num_elements(),&gmat[0][0]);
-          Array<OneD, NekDouble> D1Dy(ptsx.num_elements(),&gmat[1][0]);
-          Array<OneD, NekDouble> D1Dz(ptsx.num_elements(),&gmat[2][0]);
-          Array<OneD, NekDouble> D2Dx(ptsx.num_elements(),&gmat[3][0]);
-          Array<OneD, NekDouble> D2Dy(ptsx.num_elements(),&gmat[4][0]);
-          Array<OneD, NekDouble> D2Dz(ptsx.num_elements(),&gmat[5][0]);
-          Array<OneD, NekDouble> D3Dx(ptsx.num_elements(),&gmat[6][0]);
-          Array<OneD, NekDouble> D3Dy(ptsx.num_elements(),&gmat[7][0]);
-          Array<OneD, NekDouble> D3Dz(ptsx.num_elements(),&gmat[8][0]);
+          int npts = ptsx.num_elements();
+          Array<OneD, NekDouble> D1Dx(npts, &gmat[0][0]);
+          Array<OneD, NekDouble> D1Dy(npts, &gmat[1][0]);
+          Array<OneD, NekDouble> D1Dz(npts, &gmat[2][0]);
+          Array<OneD, NekDouble> D2Dx(npts, &gmat[3][0]);
+          Array<OneD, NekDouble> D2Dy(npts, &gmat[4][0]);
+          Array<OneD, NekDouble> D2Dz(npts, &gmat[5][0]);
+          Array<OneD, NekDouble> D3Dx(npts, &gmat[6][0]);
+          Array<OneD, NekDouble> D3Dy(npts, &gmat[7][0]);
+          Array<OneD, NekDouble> D3Dz(npts, &gmat[8][0]);
           
           int cnt=0; 
           int MaxIterations = 40;
@@ -143,9 +144,9 @@ namespace Nektar
           while(cnt++ < MaxIterations)
           {
               //calculate the global point `corresponding to Lcoords
-              xmap = m_xmap[0]->PhysEvaluate(Lcoords, ptsx);
-              ymap = m_xmap[1]->PhysEvaluate(Lcoords, ptsy);
-              zmap = m_xmap[2]->PhysEvaluate(Lcoords, ptsz);
+              xmap = m_xmap->PhysEvaluate(Lcoords, ptsx);
+              ymap = m_xmap->PhysEvaluate(Lcoords, ptsy);
+              zmap = m_xmap->PhysEvaluate(Lcoords, ptsz);
               
               F1 = coords[0] - xmap;
               F2 = coords[1] - ymap;
@@ -158,15 +159,15 @@ namespace Nektar
               }
               
               //Interpolate derivative metric at Lcoords
-              der1_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dx);
-              der2_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dy);
-              der3_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dz);
-              der1_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dx);
-              der2_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dy);                  
-              der3_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dz);          
-              der1_z = m_xmap[2]->PhysEvaluate(Lcoords, D3Dx);
-              der2_z = m_xmap[2]->PhysEvaluate(Lcoords, D3Dy);                  
-              der3_z = m_xmap[2]->PhysEvaluate(Lcoords, D3Dz);          
+              der1_x = m_xmap->PhysEvaluate(Lcoords, D1Dx);
+              der2_x = m_xmap->PhysEvaluate(Lcoords, D1Dy);
+              der3_x = m_xmap->PhysEvaluate(Lcoords, D1Dz);
+              der1_y = m_xmap->PhysEvaluate(Lcoords, D2Dx);
+              der2_y = m_xmap->PhysEvaluate(Lcoords, D2Dy);
+              der3_y = m_xmap->PhysEvaluate(Lcoords, D2Dz);
+              der1_z = m_xmap->PhysEvaluate(Lcoords, D3Dx);
+              der2_z = m_xmap->PhysEvaluate(Lcoords, D3Dy);
+              der3_z = m_xmap->PhysEvaluate(Lcoords, D3Dz);
               
               Lcoords[0] = Lcoords[0] + der1_x*(coords[0]-xmap) + 
                   der1_y*(coords[1]-ymap) +  der1_z*(coords[2]-zmap);
@@ -179,7 +180,7 @@ namespace Nektar
           if(cnt >= 40)
           {
               Lcoords[0] = Lcoords[1] = Lcoords[2] = 2.0;    
-          }                        
+          }
       }
       
       
@@ -202,42 +203,37 @@ namespace Nektar
           {
               m_faces[i]->FillGeom();
 
-              int nFaceCoeffs = (*m_faces[i])[0]->GetNcoeffs();
+              int nFaceCoeffs = m_faces[i]->GetXmap()->GetNcoeffs();
+
               Array<OneD, unsigned int> mapArray (nFaceCoeffs);
               Array<OneD,          int> signArray(nFaceCoeffs);
               
               if (m_forient[i] < 9)
               {
-                  m_xmap[0]->GetFaceToElementMap(
-                      i,m_forient[i],mapArray,signArray,
-                      m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0),
-                      m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1));
+                  m_xmap->GetFaceToElementMap(
+                      i, m_forient[i], mapArray, signArray,
+                      m_faces[i]->GetXmap()->GetEdgeNcoeffs(0),
+                      m_faces[i]->GetXmap()->GetEdgeNcoeffs(1));
               }
               else
               {
-                  m_xmap[0]->GetFaceToElementMap(
-                      i,m_forient[i],mapArray,signArray,
-                      m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(1),
-                      m_faces[i]->GetXmap(0)->GetEdgeNcoeffs(0));
+                  m_xmap->GetFaceToElementMap(
+                      i, m_forient[i], mapArray, signArray,
+                      m_faces[i]->GetXmap()->GetEdgeNcoeffs(1),
+                      m_faces[i]->GetXmap()->GetEdgeNcoeffs(0));
               }
 
-              for(j = 0; j < m_coordim; j++)
+              for (j = 0; j < m_coordim; j++)
               {
-                  const Array<OneD, const NekDouble> &coeffs = 
-                      (*m_faces[i])[j]->GetCoeffs();
+                  const Array<OneD, const NekDouble> &coeffs =
+                      m_faces[i]->GetCoeffs(j);
 
-                  for(k = 0; k < nFaceCoeffs; k++)
+                  for (k = 0; k < nFaceCoeffs; k++)
                   {
                       NekDouble v = signArray[k] * coeffs[k];
-                      (m_xmap[j]->UpdateCoeffs())[mapArray[k]] = v;
+                      m_coeffs[j][mapArray[k]] = v;
                   }
               }
-          }
-
-          for(i = 0; i < m_coordim; ++i)
-          {
-              m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs (),
-                                  m_xmap[i]->UpdatePhys());
           }
 
           m_state = ePtsFilled;
@@ -246,8 +242,7 @@ namespace Nektar
         /**
          * Generate the geometry factors for this element.
          */
-        void Geometry3D::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void Geometry3D::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -258,17 +253,16 @@ namespace Nektar
                 // check to see if expansions are linear
                 for(int i = 0; i < m_coordim; ++i)
                 {
-                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                        m_xmap[i]->GetBasisNumModes(2) != 2)
+                    if (m_xmap->GetBasisNumModes(0) != 2 ||
+                        m_xmap->GetBasisNumModes(1) != 2 ||
+                        m_xmap->GetBasisNumModes(2) != 2)
                     {
                         Gtype = eDeformed;
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis);
-
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap, m_coeffs);
                 m_geomFactorsState = ePtsFilled;
             }
         }
@@ -280,26 +274,19 @@ namespace Nektar
       NekDouble Geometry3D::v_GetCoord(
           const int i, const Array<OneD, const NekDouble> &Lcoord)
       {
-          ASSERTL1(m_state == ePtsFilled, "Geometry is not in physical space.");
-          return m_xmap[i]->PhysEvaluate(Lcoord);
+          ASSERTL1(m_state == ePtsFilled,
+                   "Geometry is not in physical space");
+
+          Array<OneD, NekDouble> tmp(m_xmap->GetTotPoints());
+          m_xmap->BwdTrans(m_coeffs[i], tmp);
+
+          return m_xmap->PhysEvaluate(Lcoord, tmp);
       }
 
 
       //---------------------------------------
       // Helper functions
       //---------------------------------------
-
-      /**
-       * @brief Return the co-ordinate mapping for dimension i.
-       */
-      StdRegions::StdExpansion3DSharedPtr Geometry3D::GetXmap(const int i)
-      {
-          return v_GetXmap(i);
-      }
-      StdRegions::StdExpansion3DSharedPtr Geometry3D::v_GetXmap(const int i)
-      {
-          return m_xmap[i];
-      }
 
       /**
        * @brief Return the dimension of this element.
@@ -397,18 +384,9 @@ namespace Nektar
        * @brief Return the j-th basis of the i-th co-ordinate dimension.
        */
       const LibUtilities::BasisSharedPtr Geometry3D::v_GetBasis(
-          const int i, const int j)
+          const int i)
       {
-          return m_xmap[i]->GetBasis(j);
-      }
-
-      /**
-       * @brief Return a reference to the physical space of co-ordinate
-       * dimension i.
-       */
-      Array<OneD,NekDouble> &Geometry3D::v_UpdatePhys(const int i)
-      {
-          return m_xmap[i]->UpdatePhys();
+          return m_xmap->GetBasis(i);
       }
 
       /**

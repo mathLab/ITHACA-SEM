@@ -103,6 +103,7 @@ namespace Nektar
                 StdRegions::eVarCoeffD12,
                 StdRegions::eVarCoeffD22
         };
+        std::string varCoeffString[6] = {"xx","xy","yy","xz","yz","zz"};
         std::string aniso_var[3] = {"fx", "fy", "fz"};
 
         const int nq            = m_fields[0]->GetNpoints();
@@ -224,19 +225,20 @@ namespace Nektar
 
 
         // Write out conductivity values
-        for (int i = 0; i < m_spacedim; ++i)
+        for (int j = 0, k = 0; j < m_spacedim; ++j)
         {
-            // Transform variable coefficient and write out to file.
-            m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],
-                                             m_fields[0]->UpdateCoeffs());
-            std::stringstream filename;
-            filename << "Conductivity_" << aniso_var[i];
-            if (m_comm->GetSize() > 1)
+            // Loop through rows of D
+            for (int i = 0; i < j + 1; ++i)
             {
-                filename << "_P" << m_comm->GetRank();
+                // Transform variable coefficient and write out to file.
+                m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[k]],
+                                                 m_fields[0]->UpdateCoeffs());
+                std::stringstream filename;
+                filename << "Conductivity_" << varCoeffString[k] << ".fld";
+                WriteFld(filename.str());
+
+                ++k;
             }
-            filename << ".fld";
-            WriteFld(filename.str());
         }
 
         // Search through the loaded filters and pass the cell model to any

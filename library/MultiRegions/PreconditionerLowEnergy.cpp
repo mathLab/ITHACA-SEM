@@ -524,6 +524,8 @@ namespace Nektar
                     }
                 }
                 
+                Array<OneD, unsigned int>           faceInteriorMap;
+                Array<OneD, int>                    faceInteriorSign;
                 //loop over the faces of the expansion
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
@@ -532,7 +534,7 @@ namespace Nektar
 
                     nfacemodes = locExpansion->GetFaceIntNcoeffs(j);
 
-                    //Check if face is has dirichlet values
+                    //Check if face has dirichlet values
                     if(faceDirMap.count(meshFaceId)==0)
                     {
                         // Determine the Global edge offset
@@ -667,7 +669,7 @@ namespace Nektar
                                 }
 
                                 VertBlockToUniversalMap[globalrow]
-                                    = meshVertId * maxEdgeDof * maxEdgeDof + 1;
+                                    = meshVertId + 1;
                             }
                         }
                     }
@@ -721,10 +723,24 @@ namespace Nektar
 
                     meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(fid);
                     
-                    Array<OneD, unsigned int> facemodearray = locExpansion->GetFaceInverseBoundaryMap(fid);
-
                     if(faceDirMap.count(meshFaceId)==0)
                     {
+                        Array<OneD, unsigned int> facemodearray;
+                        StdRegions::Orientation faceOrient = locExpansion->GetFaceOrient(fid);
+                        
+                        pIt = periodicFaces.find(meshFaceId);
+                        if (pIt != periodicFaces.end())
+                        {
+                            if(meshFaceId == min(meshFaceId, pIt->second[0].id))
+                            {
+                                facemodearray = locExpansion->GetFaceInverseBoundaryMap(fid,faceOrient);
+                                faceOrient = DeterminePeriodicFaceOrient(faceOrient,pIt->second[0].orient);
+                            }
+                        }
+                        
+                        facemodearray = locExpansion->GetFaceInverseBoundaryMap(fid,faceOrient);
+                        
+                        
                         for (v=0; v<nfacemodes; ++v)
                         {
                             fMap1=facemodearray[v];

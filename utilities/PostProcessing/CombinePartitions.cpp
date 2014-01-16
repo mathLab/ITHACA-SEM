@@ -4,6 +4,8 @@
 
 #include <tinyxml/tinyxml.h>
 
+#include <LibUtilities/BasicUtils/FileSystem.h>
+
 int main(int argc, char *argv[]) 
 {
     bool DeleteFiles = false;
@@ -27,14 +29,25 @@ int main(int argc, char *argv[])
     docOutput.LinkEndChild(decl);
 
     TiXmlElement *master = new TiXmlElement("NEKTAR");
+    std::string basename = argv[argc-1];
+    std::string extension = argv[argc-1];
+    basename = basename.substr(0, basename.find_last_of("."));
+    extension = extension.substr(extension.find_last_of(".") + 1);
+    
+    fs::path infile(argv[argc-1]);
+    bool isdirectory = fs::is_directory(infile);
+    
     for (int n = 0; n < atoi(argv[argc-2]); ++n)
     {
-        std::string basename = argv[argc-1];
-        std::string extension = argv[argc-1];
-        basename = basename.substr(0, basename.find_last_of("."));
-        extension = extension.substr(extension.find_last_of(".") + 1);
         std::stringstream filename;
-        filename << basename << "_P" << n << "." << extension;
+        if(isdirectory)
+        {
+            filename << argv[argc-1] << "/P" << n << ".fld"; 
+        }
+        else
+        {
+            filename << basename << "_P" << n << "." << extension;
+        }
         TiXmlDocument docInput;
         if (!docInput.LoadFile(filename.str()))
         {
@@ -63,9 +76,18 @@ int main(int argc, char *argv[])
     }
     
     docOutput.LinkEndChild(master);
-    if (!docOutput.SaveFile(argv[argc-1]))
+    
+    if(isdirectory)
     {
-        std::cerr << "Unable to write file '" << argv[argc-2] << "'." << std::endl;
+        std::string outname = basename  + "_combined" + "." + extension; ;
+        if (!docOutput.SaveFile(outname))
+        {
+            std::cerr << "Unable to write file '" << outname << "'." << std::endl;
+        }
+    }
+    else if (!docOutput.SaveFile(argv[argc-1]))
+    {
+        std::cerr << "Unable to write file '" << argv[argc-1] << "'." << std::endl;
     }
     else
     {

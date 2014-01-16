@@ -54,6 +54,11 @@ namespace Nektar
 
         typedef boost::tuple<int, int, NekDouble> ExtraDirDof;
 
+        StdRegions::Orientation  DeterminePeriodicFaceOrient(
+                       StdRegions::Orientation   faceOrient1,
+                       StdRegions::Orientation   faceOrient2);
+
+  
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG: public AssemblyMap
         {

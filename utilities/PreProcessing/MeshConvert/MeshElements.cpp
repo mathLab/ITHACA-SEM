@@ -498,9 +498,14 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(2,3)] = 4 + n;
             edgeNodeMap[pair<int,int>(3,1)] = 4 + 2*n;
 
-            // Add vertices
+            // Add vertices. This logic will determine (in 2D) whether the
+            // element is clockwise (sum > 0) or counter-clockwise (sum < 0).
+            NekDouble sum = 0.0;
             for (int i = 0; i < 3; ++i) {
+                int o = (i+1) % 3;
                 vertex.push_back(pNodeList[i]);
+                sum += (pNodeList[o]->x - pNodeList[i]->x) *
+                       (pNodeList[o]->y + pNodeList[i]->y);
             }
 
             // Create edges (with corresponding set of edge points)
@@ -518,13 +523,20 @@ namespace Nektar
                                                       m_conf.edgeCurveType)));
             }
 
+            if (pConf.reorient)
+            {
+                if (sum > 0.0)
+                {
+                    reverse(edge.begin(), edge.end());
+                }
+            }
+
             if (m_conf.faceNodes)
             {
                 volumeNodes.insert(volumeNodes.begin(),
                                    pNodeList.begin()+3*m_conf.order,
                                    pNodeList.end());
             }
-
         }
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
@@ -616,9 +628,10 @@ namespace Nektar
             
             for (i = 0; i < 3; ++i)
             {
-                tri->FwdTrans(alloc+i*nqtot, nodalTri->UpdateCoeffs());
+                Array<OneD, NekDouble> coeffs(nodalTri->GetNcoeffs());
+                tri->FwdTrans(alloc+i*nqtot, coeffs);
                 // Apply Vandermonde matrix to project onto nodal space.
-                nodalTri->ModalToNodal(nodalTri->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+                nodalTri->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
             
             // Now extract points from the co-ordinate arrays into the
@@ -675,10 +688,14 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(3,4)] = 5 + 2*n;
             edgeNodeMap[pair<int,int>(4,1)] = 5 + 3*n;
 
-            // Add vertices
-            for (int i = 0; i < 4; ++i) 
-            {
+            // Add vertices. This logic will determine (in 2D) whether the
+            // element is clockwise (sum > 0) or counter-clockwise (sum < 0).
+            NekDouble sum = 0.0;
+            for (int i = 0; i < 4; ++i) {
+                int o = (i+1) % 4;
                 vertex.push_back(pNodeList[i]);
+                sum += (pNodeList[o]->x - pNodeList[i]->x) *
+                       (pNodeList[o]->y + pNodeList[i]->y);
             }
 
             // Create edges (with corresponding set of edge points)
@@ -694,6 +711,14 @@ namespace Nektar
                                                       pNodeList[it->first.second-1],
                                                       edgeNodes,
                                                       m_conf.edgeCurveType)));
+            }
+
+            if (pConf.reorient)
+            {
+                if (sum > 0.0)
+                {
+                    reverse(edge.begin(), edge.end());
+                }
             }
 
             if (m_conf.faceNodes)
@@ -1010,9 +1035,10 @@ namespace Nektar
             
             for (i = 0; i < 3; ++i)
             {
-                tet->FwdTrans(alloc+i*nqtot, nodalTet->UpdateCoeffs());
+                Array<OneD, NekDouble> coeffs(nodalTet->GetNcoeffs());
+                tet->FwdTrans(alloc+i*nqtot, coeffs);
                 // Apply Vandermonde matrix to project onto nodal space.
-                nodalTet->ModalToNodal(nodalTet->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+                nodalTet->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
             
             // Now extract points from the co-ordinate arrays into the
@@ -1390,9 +1416,10 @@ namespace Nektar
             
             for (i = 0; i < 3; ++i)
             {
-                prism->FwdTrans(alloc+i*nqtot, nodalPrism->UpdateCoeffs());
+                Array<OneD, NekDouble> coeffs(nodalPrism->GetNcoeffs());
+                prism->FwdTrans(alloc+i*nqtot, coeffs);
                 // Apply Vandermonde matrix to project onto nodal space.
-                nodalPrism->ModalToNodal(nodalPrism->GetCoeffs(), tmp=alloc+(i+3)*nqtot);
+                nodalPrism->ModalToNodal(coeffs, tmp=alloc+(i+3)*nqtot);
             }
             
             // Now extract points from the co-ordinate arrays into the

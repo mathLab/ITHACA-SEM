@@ -43,6 +43,7 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
+    LibUtilities::FieldIOSharedPtr       fld;
     SpatialDomains::MeshGraphSharedPtr   graph;
     MultiRegions::ContField2DSharedPtr   field;
     LibUtilities::EquationSharedPtr      ffunc, ex_sol;
@@ -52,6 +53,10 @@ int main(int argc, char *argv[])
     {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+        // Create Field I/O object.
+        fld     = MemoryManager<LibUtilities::FieldIO>::
+                    AllocateSharedPtr(session->GetComm());
 
         // Get some information about the session
         string       fileName    = session->GetFilename();
@@ -74,7 +79,7 @@ int main(int argc, char *argv[])
         field->GetCoords(x0,x1,x2);
 
         // Evaluate initial condition at these points
-        ffunc = session->GetFunction("ExactSolution", "u");
+        ffunc = session->GetFunction("InitialConditions", "u");
         ffunc->Evaluate(x0, x1, x2, 0.0, field->UpdatePhys());
 
         // Compute lambda in the Helmholtz problem
@@ -86,21 +91,22 @@ int main(int argc, char *argv[])
             Vmath::Smul(nq, -1.0/delta_t/epsilon, field->GetPhys(),    1,
                                                   field->UpdatePhys(), 1);
 
-            field->HelmSolve(field->GetPhys(), field->UpdateCoeffs(), NullFlagList, factors);
+            field->HelmSolve(field->GetPhys(), field->UpdateCoeffs(),
+                             NullFlagList, factors);
 
             field->BwdTrans(field->GetCoeffs(), field->UpdatePhys());
         }
 
         // Write solution to file
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                                                    = field->GetFieldDefinitions();
+                        = field->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
         for(int i = 0; i < FieldDef.size(); ++i)
         {
             FieldDef[i]->m_fields.push_back("u");
             field->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        LibUtilities::Write(outFile, FieldDef, FieldData);
+        fld->Write(outFile, FieldDef, FieldData);
 
         // Check for exact solution
         ex_sol = session->GetFunction("ExactSolution",0);
@@ -115,9 +121,12 @@ int main(int argc, char *argv[])
 
             //--------------------------------------------
             // Calculate errors
-            cout << "L infinity error: " << field->Linf(exact) << endl;
-            cout << "L 2 error:        " << field->L2(exact) << endl;
-            cout << "H 1 error:        " << field->H1(exact) << endl;
+            cout << "L inf error: " 
+                 << field->Linf(field->GetPhys(), exact) << endl;
+            cout << "L 2 error:        " 
+                 << field->L2(field->GetPhys(), exact) << endl;
+            cout << "H 1 error:        "
+                 << field->H1(field->GetPhys(), exact) << endl;
             //--------------------------------------------
         }
 

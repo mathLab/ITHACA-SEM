@@ -59,6 +59,7 @@ class Diffusion
 
     private:
         LibUtilities::SessionReaderSharedPtr            session;
+        LibUtilities::FieldIOSharedPtr                  fld;
         string                                          sessionName;
         string                                          fileName;
         SpatialDomains::MeshGraphSharedPtr              graph;
@@ -69,6 +70,7 @@ class Diffusion
         LibUtilities::TimeIntegrationSchemeOperators    ode;
         Array<OneD, Array<OneD, NekDouble> >            fields;
 
+        string                                          scheme;
         unsigned int                                    nSteps;
         NekDouble                                       delta_t;
         NekDouble                                       epsilon;
@@ -82,25 +84,30 @@ class Diffusion
 Diffusion::Diffusion(int argc, char* argv[])
 {
     // Create session reader.
-    session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    session     = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+    // Create Field I/O object.
+    fld         = MemoryManager<LibUtilities::FieldIO>::
+                    AllocateSharedPtr(session->GetComm());
 
     // Get some information from the session
     fileName    = session->GetFilename();
     sessionName = session->GetSessionName();
+    scheme      = session->GetSolverInfo("TimeIntegrationMethod");
     nSteps      = session->GetParameter("NumSteps");
     delta_t     = session->GetParameter("TimeStep");
     epsilon     = session->GetParameter("epsilon");
     lambda      = 1.0/delta_t/epsilon;
 
     // Read the geometry and the expansion information
-    graph = SpatialDomains::MeshGraph::Read(session);
+    graph       = SpatialDomains::MeshGraph::Read(session);
 
     // Set up the field
-    field = MemoryManager<MultiRegions::ContField2D>
-        ::AllocateSharedPtr(session, graph, session->GetVariable(0));
+    field       = MemoryManager<MultiRegions::ContField2D>::
+                    AllocateSharedPtr(session, graph, session->GetVariable(0));
 
-    fields = Array<OneD, Array<OneD, NekDouble> >(1);
-    fields[0] = field->UpdatePhys();
+    fields      = Array<OneD, Array<OneD, NekDouble> >(1);
+    fields[0]   = field->UpdatePhys();
 
     // Get coordinates of physical points
     unsigned int nq = field->GetNpoints();
@@ -109,7 +116,7 @@ Diffusion::Diffusion(int argc, char* argv[])
 
     // Evaluate initial condition
     LibUtilities::EquationSharedPtr ffunc
-        = session->GetFunction("ExactSolution", "u");
+        = session->GetFunction("InitialConditions", "u");
     ffunc->Evaluate(x0,x1,x2,0.0,field->UpdatePhys());
 }
 
@@ -120,7 +127,8 @@ Diffusion::~Diffusion()
 
 void Diffusion::TimeIntegrate()
 {
-    IntScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("BackwardEuler");
+    IntScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
+                    CreateInstance(scheme);
 
     ode.DefineImplicitSolve(&Diffusion::DoImplicitSolve, this);
 
@@ -176,7 +184,7 @@ void Diffusion::WriteSolution()
         FieldDef[i]->m_fields.push_back("u");
         field->AppendFieldData(FieldDef[i], FieldData[i]);
     }
-    LibUtilities::Write(session->GetSessionName() + ".fld", FieldDef, FieldData);
+    fld->Write(session->GetSessionName() + ".fld", FieldDef, FieldData);
 
 }
 
@@ -197,9 +205,12 @@ void Diffusion::ExactSolution()
         ex_sol->Evaluate(x0, x1, x2, (nSteps)*delta_t, exact);
 
         // Calculate errors
-        cout << "L infinity error: " << field->Linf(exact) << endl;
-        cout << "L 2 error:        " << field->L2(exact) << endl;
-        cout << "H 1 error:        " << field->H1(exact) << endl;
+        cout << "L inf error:      " 
+             << field->Linf(field->GetPhys(), exact) << endl;
+        cout << "L 2 error:        " 
+             << field->L2(field->GetPhys(), exact) << endl;
+        cout << "H 1 error:        " 
+             << field->H1(field->GetPhys(), exact) << endl;
     }
 
 }

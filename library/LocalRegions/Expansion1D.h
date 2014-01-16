@@ -96,7 +96,7 @@ namespace Nektar
                 {
                     return boost::dynamic_pointer_cast<Expansion1D>(pSrc);
                 }
-
+			
             protected:
                 virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
@@ -109,7 +109,7 @@ namespace Nektar
                         const int vert,
                         const Array<OneD, const NekDouble > &primCoeffs,
                               Array<OneD, NekDouble> &coeffs);
-
+			
             private:
                 Expansion2DWeakPtr m_elementLeft;
                 Expansion2DWeakPtr m_elementRight;
@@ -160,7 +160,6 @@ namespace Nektar
         {
             return boost::dynamic_pointer_cast<SpatialDomains::Geometry1D>(m_geom);
         }
-
     } //end of namespace
 } //end of namespace
 

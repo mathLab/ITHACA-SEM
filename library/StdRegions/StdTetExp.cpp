@@ -491,6 +491,13 @@ namespace Nektar
             StdTetExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
+        void StdTetExp::v_StdPhysDeriv(
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            StdTetExp::v_PhysDeriv(dir, inarray, outarray);
+        }
 
         //---------------------------------------
         // Transforms
@@ -1081,12 +1088,6 @@ namespace Nektar
         //---------------------------------------
 
         NekDouble StdTetExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi)
-        {
-            return v_PhysEvaluate(xi, m_phys);
-        }
-
-        NekDouble StdTetExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& xi,
             const Array<OneD, const NekDouble>& physvals)
         {
@@ -1399,89 +1400,6 @@ namespace Nektar
             }
         }
 
-        void StdTetExp::v_WriteToFile(
-            std::ofstream &outfile,
-            OutputFormat   format, 
-            const bool     dumpVar, 
-            std::string    var)
-        {
-            if (format == eTecplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2,  z3";
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-                outfile << "Zone, I=" << Qx <<", J=" << Qy 
-                        <<", K=" << Qz <<", F=Point" << std::endl;
-
-                for(int k = 0; k < Qz; ++k)
-                {
-                    for(int j = 0; j < Qy; ++j)
-                    {
-                        for(int i = 0; i < Qx; ++i)
-                        {
-                            outfile << (eta_x[i] + 1.0) * (1.0 - eta_y[j]) * (1.0 - eta_z[k]) / 4  -  1.0 <<  " " << eta_z[k] << " " << m_phys[i + Qx*(j + Qy*k)] << std::endl;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented "
-                         "for requested type of output");
-            }
-        }
-
-        void StdTetExp::v_WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int  order0 = m_base[0]->GetNumModes();
-            int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp(order0*order1*order2, 0.0);
-            NekDouble *mat = wsp.get();
-
-            // put coeffs into matrix and reverse order so that p index is
-            // fastest recall q is fastest for tri's
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
-            {
-                for(int j = 0; j < order1-i; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
-                    {
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
-                    }
-                }
-            }
-
-            outfile <<"Coeffs = [" << " ";
-
-            for(int k = 0; k < order2; ++k)
-            {
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        outfile << mat[i + order0*(j + order1*k)] <<" ";
-                    }
-                    outfile << std::endl;
-                }
-            }
-            outfile << "]" ;
-        }
-
         void StdTetExp::v_GetCoords(
             Array<OneD, NekDouble> &xi_x,
             Array<OneD, NekDouble> &xi_y,
@@ -1663,7 +1581,7 @@ namespace Nektar
             }
         }
         
-        int StdTetExp::v_GetVertexMap(const int localVertexId)
+        int StdTetExp::v_GetVertexMap(const int localVertexId, bool useCoeffPacking)
         {
             ASSERTL0((GetEdgeBasisType(localVertexId)==LibUtilities::eModified_A)||
                      (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_B)||
@@ -1671,34 +1589,70 @@ namespace Nektar
                      "Mapping not defined for this type of basis");
 
             int localDOF = 0;
-            switch(localVertexId)
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
+                switch(localVertexId)
+                {
                 case 0:
-                {
-                    localDOF = GetMode(0,0,0);
-                    break;
-                }
+                    {
+                        localDOF = GetMode(0,0,0);
+                        break;
+                    }
                 case 1:
-                {
-                    localDOF = GetMode(1,0,0);
-                    break;
-                }
+                    {
+                        localDOF = GetMode(0,0,1);
+                        break;
+                    }
                 case 2:
-                {
-                    localDOF = GetMode(0,1,0);
-                    break;
-                }
+                    {
+                        localDOF = GetMode(0,1,0);
+                        break;
+                    }
                 case 3:
-                {
-                    localDOF = GetMode(0,0,1);
-                    break;
-                }
+                    {
+                        localDOF = GetMode(1,0,0);
+                        break;
+                    }
                 default:
-                {
-                    ASSERTL0(false,"Vertex ID must be between 0 and 3");
-                    break;
+                    {
+                        ASSERTL0(false,"Vertex ID must be between 0 and 3");
+                        break;
+                    }
                 }
             }
+            else
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    {
+                        localDOF = GetMode(0,0,0);
+                        break;
+                    }
+                case 1:
+                    {
+                        localDOF = GetMode(1,0,0);
+                        break;
+                    }
+                case 2:
+                    {
+                        localDOF = GetMode(0,1,0);
+                        break;
+                    }
+                case 3:
+                    {
+                    localDOF = GetMode(0,0,1);
+                    break;
+                    }
+                default:
+                    {
+                        ASSERTL0(false,"Vertex ID must be between 0 and 3");
+                        break;
+                    }
+                }
+
+            }
+
             return localDOF;
         }
 
@@ -2162,6 +2116,14 @@ namespace Nektar
         void StdTetExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                              const StdMatrixKey &mkey)
         {
+            //To do : 1) add a test to ensure 0 \leq SvvCutoff \leq 1.
+            //        2) check if the transfer function needs an analytical
+            //           Fourier transform.
+            //        3) if it doesn't : find a transfer function that renders
+            //           the if( cutoff_a ...) useless to reduce computational
+            //           cost.
+            //        4) add SVVDiffCoef to both models!!
+            
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
             int qc = m_base[2]->GetNumPoints();
@@ -2177,34 +2139,46 @@ namespace Nektar
             LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
             LibUtilities::BasisKey Bc(LibUtilities::eOrtho_C,nmodes_c,pc);
+
             StdTetExp OrthoExp(Ba,Bb,Bc);
             
-            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int i,j,k;
             
-            int cnt;
-            int cuttoff = (int) (mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio)*nmodes_a);
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            int i,j,k,cnt = 0;
+
+            //SVV filter paramaters (how much added diffusion relative to physical one
+            // and fraction of modes from which you start applying this added diffusion)
+            //
             NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+
+            
+            //Defining the cut of mode
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            int cutoff_c = (int) (SVVCutOff*nmodes_c);
+            int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
+            NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
+            NekDouble epsilon = 1;
             
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
-            
-            // apply SVV filter. 
-            for(cnt = i = 0; i < nmodes_a; ++i)
+
+            //------"New" Version August 22nd '13--------------------
+            for(i = 0; i < nmodes_a; ++i)
             {
-                for(cnt = j = 0; j < nmodes_b-j; ++j)
+                for(j = 0; j < nmodes_b-i; ++j)
                 {
-                    for(k = 0; k < nmodes_c-j-k; ++k)
+                    for(k = 0; k < nmodes_c-i-j; ++k)
                     {
-                        if(i + j + k >= cuttoff)
+                        if(i + j + k >= cutoff)
                         {
-                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+j+k-nmodes_a)*(i+j+k-nmodes_a)/((NekDouble)((i+j+k-cuttoff+1)*(i+j+k-cuttoff+1)))));
+                            orthocoeffs[cnt] *= ((1.0+SvvDiffCoeff)*exp(-(i+j+k-nmodes)*(i+j+k-nmodes)/((NekDouble)((i+j+k-cutoff+epsilon)*(i+j+k-cutoff+epsilon)))));
                         }
                         cnt++;
                     }
                 }
-            }
-            
+            }   
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }

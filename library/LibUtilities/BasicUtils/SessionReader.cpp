@@ -54,8 +54,10 @@ using namespace std;
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
 #include <boost/program_options.hpp>
+#include <boost/format.hpp>
 
 namespace po = boost::program_options;
 namespace io = boost::iostreams;
@@ -161,12 +163,12 @@ namespace Nektar
          */
         SessionReader::SessionReader(int argc, char *argv[])
         {
-            std::vector<std::string> vFilenames = 
-                ParseCommandLineArguments(argc, argv);
+            m_xmlDoc    = 0;
+            m_filenames = ParseCommandLineArguments(argc, argv);
 
-            ASSERTL0(vFilenames.size() > 0, "No session file(s) given.");
+            ASSERTL0(m_filenames.size() > 0, "No session file(s) given.");
 
-            m_filename    = vFilenames[0];
+            m_filename    = m_filenames[0];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
             if (m_filename.size() > 3 &&
                 m_filename.substr(m_filename.size() - 3, 3) == ".gz")
@@ -174,10 +176,9 @@ namespace Nektar
                 m_sessionName =
                     m_sessionName.substr(0, m_sessionName.find_last_of('.'));
             }
-            m_xmlDoc      = MergeDoc(vFilenames);
 
             // Create communicator
-            CreateComm(argc, argv, m_filename);
+            CreateComm(argc, argv);
         }
 
 
@@ -192,8 +193,9 @@ namespace Nektar
         {
             ASSERTL0(pFilenames.size() > 0, "No filenames specified.");
 
-            std::vector<std::string> vFilenames = 
-                ParseCommandLineArguments(argc, argv);
+            ParseCommandLineArguments(argc, argv);
+            m_xmlDoc      = 0;
+            m_filenames   = pFilenames;
 
             m_filename    = pFilenames[0];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
@@ -203,12 +205,11 @@ namespace Nektar
                 m_sessionName =
                     m_sessionName.substr(0, m_sessionName.find_last_of('.'));
             }
-            m_xmlDoc      = MergeDoc(pFilenames);
 
             // Create communicator
             if (!pComm.get())
             {
-                CreateComm(argc, argv, m_filename);
+                CreateComm(argc, argv);
             }
             else
             {
@@ -222,7 +223,7 @@ namespace Nektar
          */
         SessionReader::~SessionReader()
         {
-
+            delete m_xmlDoc;
         }
 
 
@@ -265,6 +266,14 @@ namespace Nektar
                                  "override a SOLVERINFO property")
                 ("parameter,P",  po::value<vector<std::string> >(),
                                  "override a parameter")
+                ("shared-filesystem,s", "Using shared filesystem.")
+                ("npx",          po::value<int>(),
+                                 "number of procs in X-dir")
+                ("npy",          po::value<int>(),
+                                 "number of procs in Y-dir")
+                ("npz",          po::value<int>(),
+                                 "number of procs in Z-dir")
+
             ;
             
             CmdLineArgMap::const_iterator cmdIt;
@@ -457,10 +466,16 @@ namespace Nektar
          */
         const std::string SessionReader::GetSessionNameRank() const
         {
-            return m_sessionName + "_P" + boost::lexical_cast<std::string>(
-                m_comm->GetRowComm()->GetRank());
-        }
+            std::string  dirname = m_sessionName + "_xml"; 
+            fs::path     pdirname(dirname);
+            
+            std::string vFilename = "P" + boost::lexical_cast<std::string>(m_comm->GetRowComm()->GetRank());
+            fs::path    pFilename(vFilename);            
 
+            fs::path fullpath = pdirname / pFilename;
+
+            return PortablePath(fullpath);
+        }
 
         /**
          *
@@ -1132,10 +1147,11 @@ namespace Nektar
         /**
          *
          */
-        std::string SessionReader::GetCmdLineArgument(
+        template <typename T>
+        T SessionReader::GetCmdLineArgument(
             const std::string& pName) const
         {
-            return m_cmdLineOptions.find(pName)->second.as<std::string>();
+            return m_cmdLineOptions.find(pName)->second.as<T>();
         }
 
 
@@ -1219,31 +1235,34 @@ namespace Nektar
             // version already present in the loaded XML data.
             for (int i = 1; i < pFilenames.size(); ++i)
             {
-                TiXmlDocument* vTempDoc = new TiXmlDocument;
-                LoadDoc(pFilenames[i], vTempDoc);
-
-                TiXmlHandle docHandle(vTempDoc);
-                TiXmlElement* vTempNektar;
-                vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
-                ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
-                TiXmlElement* p = vTempNektar->FirstChildElement();
-
-                while (p)
+                if((pFilenames[i].compare(pFilenames[i].size()-3,3,"xml") == 0)
+                   ||(pFilenames[i].compare(pFilenames[i].size()-6,6,"xml.gz") == 0))
                 {
-                    TiXmlElement *vMainEntry = 
-                        vMainNektar->FirstChildElement(p->Value());
-                    TiXmlElement *q = new TiXmlElement(*p);
-                    if (vMainEntry)
+                    TiXmlDocument* vTempDoc = new TiXmlDocument;
+                    LoadDoc(pFilenames[i], vTempDoc);
+                    
+                    TiXmlHandle docHandle(vTempDoc);
+                    TiXmlElement* vTempNektar;
+                    vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
+                    ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
+                    TiXmlElement* p = vTempNektar->FirstChildElement();
+                    
+                    while (p)
                     {
-                        vMainNektar->RemoveChild(vMainEntry);
+                        TiXmlElement *vMainEntry = 
+                            vMainNektar->FirstChildElement(p->Value());
+                        TiXmlElement *q = new TiXmlElement(*p);
+                        if (vMainEntry)
+                        {
+                            vMainNektar->RemoveChild(vMainEntry);
+                        }
+                        vMainNektar->LinkEndChild(q);
+                        p = p->NextSiblingElement();
                     }
-                    vMainNektar->LinkEndChild(q);
-                    p = p->NextSiblingElement();
+                    
+                    delete vTempDoc;
                 }
-
-                delete vTempDoc;
             }
-
             return vMainDoc;
         }
 
@@ -1287,8 +1306,7 @@ namespace Nektar
          */
         void SessionReader::CreateComm(
             int               &argc, 
-            char*              argv[], 
-            const std::string &pFilename)
+            char*              argv[])
         {
             if (argc == 0)
             {
@@ -1296,19 +1314,8 @@ namespace Nektar
             }
             else
             {
-                TiXmlHandle docHandle(m_xmlDoc);
-                TiXmlElement* e;
-                e = docHandle.FirstChildElement("NEKTAR").
-                    FirstChildElement("CONDITIONS").Element();
-
-                ReadSolverInfo(e);
-
                 string vCommModule("Serial");
-                if (e && DefinesSolverInfo("Communication"))
-                {
-                    vCommModule = GetSolverInfo("Communication");
-                }
-                else if (GetCommFactory().ModuleExists("ParallelMPI"))
+                if (GetCommFactory().ModuleExists("ParallelMPI"))
                 {
                     vCommModule = "ParallelMPI";
                 }
@@ -1339,28 +1346,67 @@ namespace Nektar
             // Partition mesh into length of row comms
             if (vCommMesh->GetSize() > 1)
             {
-                // Partitioner now operates in parallel
-                // Each process receives partitioning over interconnect
-                // and writes its own session file to the working directory.
-                SessionReaderSharedPtr vSession     = GetSharedThisPtr();
-                MeshPartitionSharedPtr vPartitioner = MemoryManager<
-                    MeshPartition>::AllocateSharedPtr(vSession);
-                vPartitioner->PartitionMesh();
-                vPartitioner->WriteLocalPartition(vSession);
-                vPartitioner->GetCompositeOrdering(m_compOrder);
-                vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+                if (DefinesCmdLineArgument("shared-filesystem"))
+                {
+                    if (GetComm()->GetRank() == 0)
+                    {
+                        m_xmlDoc = MergeDoc(m_filenames);
+
+                        SessionReaderSharedPtr vSession     = GetSharedThisPtr();
+                        MeshPartitionSharedPtr vPartitioner = MemoryManager<
+                            MeshPartition>::AllocateSharedPtr(vSession);
+                        vPartitioner->PartitionMesh(true);
+                        vPartitioner->WriteAllPartitions(vSession);
+                        vPartitioner->GetCompositeOrdering(m_compOrder);
+                        vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+                    }
+                }
+                else
+                {
+                    m_xmlDoc = MergeDoc(m_filenames);
+
+                    // Partitioner now operates in parallel
+                    // Each process receives partitioning over interconnect
+                    // and writes its own session file to the working directory.
+                    SessionReaderSharedPtr vSession     = GetSharedThisPtr();
+                    MeshPartitionSharedPtr vPartitioner = MemoryManager<
+                        MeshPartition>::AllocateSharedPtr(vSession);
+                    vPartitioner->PartitionMesh(false);
+                    vPartitioner->WriteLocalPartition(vSession);
+                    vPartitioner->GetCompositeOrdering(m_compOrder);
+                    vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+                }
                 m_comm->Block();
 
-                m_filename = GetSessionNameRank() + ".xml";
+                std::string  dirname = GetSessionName() + "_xml";
+                fs::path    pdirname(dirname);
+                boost::format pad("P%1$07d.xml");
+                pad % m_comm->GetRank();
+                fs::path    pFilename(pad.str());
+                fs::path fullpath = pdirname / pFilename;
 
-                delete m_xmlDoc;
+                m_filename = PortablePath(fullpath);
+
+                if (m_xmlDoc)
+                {
+                    delete m_xmlDoc;
+                }
                 m_xmlDoc = new TiXmlDocument(m_filename);
+
                 ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
 
-                bool loadOkay = m_xmlDoc->LoadFile();
+                bool loadOkay = m_xmlDoc->LoadFile(m_filename);
                 ASSERTL0(loadOkay, "Unable to load file: " + m_filename      + 
                          ". Check XML standards compliance. Error on line: " +
                          boost::lexical_cast<std::string>(m_xmlDoc->Row()));
+            }
+            else
+            {
+                if (m_xmlDoc)
+                {
+                    delete m_xmlDoc;
+                }
+                m_xmlDoc = MergeDoc(m_filenames);
             }
         }
 
@@ -1374,31 +1420,19 @@ namespace Nektar
          */
         void SessionReader::PartitionComm()
         {
-            // Session not yet loaded, so load parameters section
-            TiXmlHandle docHandle(m_xmlDoc);
-            TiXmlElement* e;
-            e = docHandle.FirstChildElement("NEKTAR").
-                FirstChildElement("CONDITIONS").Element();
-
-            ReadParameters(e);
-			
-            if (e && m_comm->GetSize() > 1)
+            if (m_comm->GetSize() > 1)
             {
                 int nProcZ = 1;
                 int nProcY = 1;
                 int nProcX = 1;
-				
-                if(DefinesParameter("PROC_Z"))
-                {
-                    LoadParameter("PROC_Z", nProcZ, 1);
+                if (DefinesCmdLineArgument("npx")) {
+                    nProcX = GetCmdLineArgument<int>("npx");
                 }
-                if(DefinesParameter("PROC_Y"))
-                {
-                    LoadParameter("PROC_Y", nProcY, 1);
+                if (DefinesCmdLineArgument("npy")) {
+                    nProcY = GetCmdLineArgument<int>("npy");
                 }
-                if(DefinesParameter("PROC_X"))
-                {
-                    LoadParameter("PROC_X", nProcX, 1);
+                if (DefinesCmdLineArgument("npz")) {
+                    nProcZ = GetCmdLineArgument<int>("npz");
                 }
 
                 ASSERTL0(m_comm->GetSize() % (nProcZ*nProcY*nProcX) == 0,

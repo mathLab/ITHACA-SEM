@@ -113,18 +113,20 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans( sol, E->UpdateCoeffs() );
+    Array<OneD, NekDouble> coeffs(E->GetNcoeffs());
+    Array<OneD, NekDouble> phys  (ntotquad);
+    E->FwdTrans( sol, coeffs );
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans( E->GetCoeffs(), E->UpdatePhys() );
+    E->BwdTrans( coeffs, phys );
     //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_p error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys, sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------
 
     //-------------------------------------------
@@ -139,7 +141,7 @@ int main(int argc, char *argv[])
     exact_sol = Hex_sol( t[0], t[1], t[2], nummodes0, nummodes1, nummodes2,
                          bType, bType, bType);
 
-    NekDouble numericSolution = E->PhysEvaluate(t);
+    NekDouble numericSolution = E->PhysEvaluate(t, phys);
     cout << "Numeric solution = " << numericSolution << endl;
     cout << "Exact solution = " << exact_sol << endl;
     cout << "Difference at x = ( "

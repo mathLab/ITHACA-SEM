@@ -51,12 +51,13 @@
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adjacency_iterator.hpp>
 #include <boost/graph/detail/edge.hpp>
-
+#include <boost/format.hpp>
 
 namespace Nektar
 {
@@ -78,12 +79,13 @@ namespace Nektar
 
         }
 
-        void MeshPartition::PartitionMesh()
+        void MeshPartition::PartitionMesh(bool shared)
         {
             ASSERTL0(m_comm->GetRowComm()->GetSize() > 1,
                      "Partitioning only necessary in parallel case.");
             ASSERTL0(m_meshElements.size() >= m_comm->GetRowComm()->GetSize(),
                      "Too few elements for this many processes.");
+            m_shared = shared;
 
             if (m_weightingRequired)  WeightElements();
             CreateGraph(m_mesh);
@@ -99,12 +101,58 @@ namespace Nektar
             TiXmlElement* vElmtNektar;
             vElmtNektar = new TiXmlElement("NEKTAR");
 
-            OutputPartition(pSession, m_localPartition, vElmtNektar);
+            int rank = m_comm->GetRowComm()->GetRank();
+            OutputPartition(pSession, m_localPartition[rank], vElmtNektar);
 
             vNew.LinkEndChild(vElmtNektar);
 
-            std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(m_comm->GetRowComm()->GetRank()) + ".xml";
-            vNew.SaveFile(vFilename.c_str());
+            std::string  dirname = pSession->GetSessionName() + "_xml"; 
+            fs::path    pdirname(dirname);
+            
+            boost::format pad("P%1$07d.xml");
+            pad % rank;
+            fs::path    pFilename(pad.str());
+            
+            if(!fs::is_directory(dirname))
+            {
+                fs::create_directory(dirname);
+            }
+            
+            fs::path fullpath = pdirname / pFilename; 
+            vNew.SaveFile(PortablePath(fullpath));
+        }
+
+        void MeshPartition::WriteAllPartitions(LibUtilities::SessionReaderSharedPtr& pSession)
+        {
+            for (int i = 0; i < m_comm->GetRowComm()->GetSize(); ++i)
+            {
+                TiXmlDocument vNew;
+                TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
+                vNew.LinkEndChild(decl);
+
+                TiXmlElement* vElmtNektar;
+                vElmtNektar = new TiXmlElement("NEKTAR");
+
+                OutputPartition(pSession, m_localPartition[i], vElmtNektar);
+
+                vNew.LinkEndChild(vElmtNektar);
+
+                std::string  dirname = pSession->GetSessionName() + "_xml"; 
+                fs::path    pdirname(dirname);
+                
+                boost::format pad("P%1$07d.xml");
+                pad % i;
+                fs::path    pFilename(pad.str());
+                
+                fs::path fullpath = pdirname / pFilename; 
+                
+                if(!fs::is_directory(dirname))
+                {
+                    fs::create_directory(dirname);
+                }
+
+                vNew.SaveFile(PortablePath(fullpath));
+            }
         }
 
         void MeshPartition::GetCompositeOrdering(CompositeOrdering &composites)
@@ -594,7 +642,7 @@ namespace Nektar
         }
 
         void MeshPartition::PartitionGraph(BoostSubGraph& pGraph,
-                                           BoostSubGraph& pLocalPartition)
+                                           std::vector<BoostSubGraph>& pLocalPartition)
         {
             int i;
             int nGraphVerts = boost::num_vertices(pGraph);
@@ -658,22 +706,29 @@ namespace Nektar
                         Metis::PartGraphVKway(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(part);
-                        // distribute among columns
-                        for (i = 1; i < m_comm->GetColumnComm()->GetSize(); ++i)
+                        if (!m_shared)
                         {
-                            m_comm->GetColumnComm()->Send(i, part);
+                            // distribute among columns
+                            for (i = 1; i < m_comm->GetColumnComm()->GetSize(); ++i)
+                            {
+                                m_comm->GetColumnComm()->Send(i, part);
+                            }
                         }
                     }
                     else 
                     {
                         m_comm->GetColumnComm()->Recv(0, part);
                     }
-                    m_comm->GetColumnComm()->Block();
-                    //////////////////////////////////
-                    // distribute among rows
-                    for (i = 1; i < m_comm->GetRowComm()->GetSize(); ++i)
+                    if (!m_shared)
                     {
-                        m_comm->GetRowComm()->Send(i, part);
+                        m_comm->GetColumnComm()->Block();
+
+                        //////////////////////////////////
+                        // distribute among rows
+                        for (i = 1; i < m_comm->GetRowComm()->GetSize(); ++i)
+                        {
+                            m_comm->GetRowComm()->Send(i, part);
+                        }
                     }
                 }
                 catch (...)
@@ -688,7 +743,12 @@ namespace Nektar
             }
 
             // Create boost subgraph for this process's partitions
-            pLocalPartition = pGraph.create_subgraph();
+            int nCols = m_comm->GetRowComm()->GetSize();
+            pLocalPartition.resize(nCols);
+            for (i = 0; i < nCols; ++i)
+            {
+                pLocalPartition[i] = pGraph.create_subgraph();
+            }
 
             // Populate subgraph
             i = 0;
@@ -696,12 +756,9 @@ namespace Nektar
                   vertit != vertit_end;
                   ++vertit, ++i)
             {
-                if (part[i] == m_comm->GetRowComm()->GetRank())
-                {
-                    pGraph[*vertit].partition = part[i];
-                    pGraph[*vertit].partid = boost::num_vertices(pLocalPartition);
-                    boost::add_vertex(i, pLocalPartition);
-                }
+                pGraph[*vertit].partition = part[i];
+                pGraph[*vertit].partid = boost::num_vertices(pLocalPartition[part[i]]);
+                boost::add_vertex(i, pLocalPartition[part[i]]);
             }
         }
 

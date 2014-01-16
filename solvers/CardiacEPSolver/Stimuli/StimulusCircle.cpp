@@ -170,7 +170,7 @@ namespace Nektar
     /**
      *
      */
-    void StimulusCirc::v_PrintSummary(std::ostream &out)
+    void StimulusCirc::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         
     }

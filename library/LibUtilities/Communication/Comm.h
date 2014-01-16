@@ -35,6 +35,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_COMM_H
 #define NEKTAR_LIB_UTILITIES_COMM_H
 
+#include <vector>
+
 #include <boost/enable_shared_from_this.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -85,8 +87,10 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT inline void Block();
                 LIB_UTILITIES_EXPORT inline void Send(int pProc, Array<OneD, NekDouble>& pData);
                 LIB_UTILITIES_EXPORT inline void Send(int pProc, Array<OneD, int>& pData);
+                LIB_UTILITIES_EXPORT inline void Send(int pProc, std::vector<unsigned int>& pData);
                 LIB_UTILITIES_EXPORT inline void Recv(int pProc, Array<OneD, NekDouble>& pData);
                 LIB_UTILITIES_EXPORT inline void Recv(int pProc, Array<OneD, int>& pData);
+                LIB_UTILITIES_EXPORT inline void Recv(int pProc, std::vector<unsigned int>& pData);
                 LIB_UTILITIES_EXPORT inline void SendRecv(int pSendProc,
                                      Array<OneD, NekDouble>& pSendData,
                                      int pRecvProc,
@@ -106,6 +110,8 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT inline void AllReduce(Array<OneD, NekDouble>& pData,
                                          enum ReduceOperator pOp);
                 LIB_UTILITIES_EXPORT inline void AllReduce(Array<OneD, int      >& pData,
+                                         enum ReduceOperator pOp);
+                LIB_UTILITIES_EXPORT inline void AllReduce(std::vector<unsigned int>& pData,
                                          enum ReduceOperator pOp);
 			    LIB_UTILITIES_EXPORT inline void AlltoAll(Array<OneD, NekDouble>& pSendData,
 														 Array<OneD, NekDouble>& pRecvData);
@@ -141,8 +147,10 @@ namespace Nektar
                 virtual void v_Block() = 0;
                 virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData) = 0;
                 virtual void v_Send(int pProc, Array<OneD, int>& pData) = 0;
+                virtual void v_Send(int pProc, std::vector<unsigned int>& pData) = 0;
                 virtual void v_Recv(int pProc, Array<OneD, NekDouble>& pData) = 0;
                 virtual void v_Recv(int pProc, Array<OneD, int>& pData) = 0;
+                virtual void v_Recv(int pProc, std::vector<unsigned int>& pData) = 0;
                 virtual void v_SendRecv(int pSendProc,
                                         Array<OneD, NekDouble>& pSendData,
                                         int pRecvProc,
@@ -164,6 +172,8 @@ namespace Nektar
                 virtual void v_AllReduce(Array<OneD, NekDouble>& pData,
                                          enum ReduceOperator pOp) = 0;
                 virtual void v_AllReduce(Array<OneD, int      >& pData,
+                                         enum ReduceOperator pOp) = 0;
+                virtual void v_AllReduce(std::vector<unsigned int>& pData,
                                          enum ReduceOperator pOp) = 0;
 			    virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
 										Array<OneD, NekDouble>& pRecvData) = 0;
@@ -261,6 +271,22 @@ namespace Nektar
         /**
          *
          */
+        inline void Comm::Send(int pProc, std::vector<unsigned int>& pData)
+        {
+            v_Send(pProc, pData);
+        }
+
+        /**
+         *
+         */
+        inline void Comm::Recv(int pProc, std::vector<unsigned int>& pData)
+        {
+            v_Recv(pProc, pData);
+        }
+
+        /**
+         *
+         */
         inline void Comm::SendRecv(int pSendProc,
                              Array<OneD, NekDouble>& pSendData,
                              int pRecvProc,
@@ -339,7 +365,16 @@ namespace Nektar
         }
 		
 		
-		/**
+        /**
+         *
+         */
+        inline void Comm::AllReduce(std::vector<unsigned int>& pData, enum ReduceOperator pOp)
+        {
+            v_AllReduce(pData, pOp);
+        }
+
+
+        /**
          *
          */
 		inline void Comm::AlltoAll(Array<OneD, NekDouble>& pSendData,Array<OneD, NekDouble>& pRecvData)

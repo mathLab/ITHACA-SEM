@@ -76,53 +76,6 @@ namespace Nektar
 
 
         //---------------------------------------
-        // Miscellaneous public 3D function
-        //---------------------------------------
-        
-        void StdPrismExp::WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            int order2 = m_base[2]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp(order0*order1*order2, 0.0);
-
-            NekDouble *mat = wsp.get(); 
-
-            // put coeffs into matrix and reverse order so that r index is
-            // fastest for Prism
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
-            {
-                for(int j = 0; j < order1-i; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
-                    {
-                        // mat[i+j*order1] = m_coeffs[cnt];
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
-                    }
-                }
-            }
-
-            outfile <<"Coeffs = [" << " "; 
-
-            for(int k = 0; k < order2; ++k)
-            {            
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        outfile << mat[i + order0*(j + order1*k)] << " ";
-                    }
-                    outfile << std::endl; 
-                }
-            }
-            outfile << "]"; 
-        }
-        
-        
-        //---------------------------------------
         // Integration Methods
         //---------------------------------------
         
@@ -441,6 +394,12 @@ namespace Nektar
             StdPrismExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
         
+        void StdPrismExp::v_StdPhysDeriv(const int dir,
+                                      const Array<OneD, const NekDouble>& inarray,
+                                            Array<OneD,       NekDouble>& outarray)
+        {
+            StdPrismExp::v_PhysDeriv(dir, inarray, outarray);
+        }
         
         //---------------------------------------
         // Transforms
@@ -572,13 +531,13 @@ namespace Nektar
 	/** 
          * \brief Forward transform from physical quadrature space stored in
          * \a inarray and evaluate the expansion coefficients and store in \a
-         * (this)->m_coeffs
+         * outarray
          *  
          *  Inputs:\n
          *  - \a inarray: array of physical quadrature points to be transformed
          * 
          * Outputs:\n
-         *  - (this)->_coeffs: updated array of expansion coefficients. 
+         *  - \a outarray: updated array of expansion coefficients. 
          */
         void StdPrismExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD,       NekDouble>& outarray)
@@ -895,12 +854,6 @@ namespace Nektar
         //---------------------------------------
         
         NekDouble StdPrismExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi)
-        {
-            return StdPrismExp::v_PhysEvaluate(xi,m_phys);
-        }
-
-        NekDouble StdPrismExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& xi,
             const Array<OneD, const NekDouble>& physvals)
         {
@@ -1177,73 +1130,6 @@ namespace Nektar
             }
         }
 
-        void StdPrismExp::v_WriteToFile(std::ofstream &outfile, 
-                                        OutputFormat   format, 
-                                        const bool     dumpVar, 
-                                        std::string    var)
-        {
-            if (format == eTecplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-                
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-                
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2,  z3"; 
-                    outfile << ", "<< var << std::endl << std::endl;
-                }      
-                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
-                
-                for (int k = 0; k < Qz; ++k) 
-                {
-                    for (int j = 0; j < Qy; ++j)
-                    {
-                        for (int i = 0; i < Qx; ++i)
-                        {
-                            outfile << 0.5*(1.0+eta_x[i])*(1.0-eta_z[k])-1.0 << " "
-                                    << eta_y[j]                              << " "
-                                    << eta_z[k]                              << " "
-                                    << m_phys[i + Qx*(j + Qy*k)]             << std::endl;
-                        }
-                    }
-                }
-            }
-            else if (format == eGnuplot)
-            {
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-                eta_x   = m_base[0]->GetZ();
-                eta_y   = m_base[1]->GetZ();
-                eta_z   = m_base[2]->GetZ();
-                
-                for (int k = 0; k < Qz; ++k) 
-                {
-                    for (int j = 0; j < Qy; ++j)
-                    {
-                        for (int i = 0; i < Qx; ++i)
-                        {
-                            outfile << 0.5*(1.0+eta_x[i])*(1.0-eta_z[k])-1.0 << " "
-                                    << eta_y[j]                              << " "
-                                    << eta_z[k]                              << " "
-                                    << m_phys[i + Qx*(j + Qy*k)]             << std::endl;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }            
-        }
-
         bool StdPrismExp::v_IsBoundaryInteriorExpansion()
         {
             return (m_base[0]->GetBasisType() == LibUtilities::eModified_A) &&
@@ -1511,7 +1397,7 @@ namespace Nektar
             }
         }
         
-        int StdPrismExp::v_GetVertexMap(const int vId)
+        int StdPrismExp::v_GetVertexMap(const int vId, bool useCoeffPacking)
         {
             ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
@@ -1520,8 +1406,36 @@ namespace Nektar
             
             int l = 0;
             
-            switch (vId)
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(0,0,1);
+                    break;
+                case 2:
+                    l = GetMode(0,1,0);
+                    break;
+                case 3:
+                    l = GetMode(0,1,1);
+                    break;
+                case 4:
+                    l = GetMode(1,0,0);
+                    break;
+                case 5:
+                    l = GetMode(1,1,0);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 5");
+                }
+            }
+            else
+            {
+                switch (vId)
+                {
                 case 0:
                     l = GetMode(0,0,0);
                     break;
@@ -1542,6 +1456,7 @@ namespace Nektar
                     break;
                 default:
                     ASSERTL0(false, "local vertex id must be between 0 and 5");
+                }
             }
             
             return l;
@@ -2062,34 +1977,38 @@ namespace Nektar
             StdPrismExp OrthoExp(Ba,Bb,Bc);
             
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
-            int i,j,k;
+            int i,j,k,cnt = 0;
             
-            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
-            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            //SVV filter paramaters (how much added diffusion relative to physical one
+            // and fraction of modes from which you start applying this added diffusion)
+            //
+            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+            
+            //Defining the cut of mode
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            int cutoff_c = (int) (SVVCutOff*nmodes_c);
+            //To avoid the fac[j] from blowing up
+            NekDouble epsilon = 1;
             
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
+            int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
+            NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
             
-            //  Filter just trilinear space
-            int nmodes = max(nmodes_a,nmodes_b);
-            nmodes = max(nmodes,nmodes_c);
-            
-            Array<OneD, NekDouble> fac(nmodes,1.0);
-            for(j = cutoff; j < nmodes; ++j)
+            //------"New" Version August 22nd '13--------------------
+            for(i = 0; i < nmodes_a; ++i)//P
             {
-                fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
-            }
-            
-            for(i = 0; i < nmodes_a; ++i)
-            {
-                for(j = 0; j < nmodes_b; ++j)
+                for(j = 0; j < nmodes_b; ++j) //Q
                 {
-                    for(k =  0; k +j < nmodes_c; ++k)
+                    for(k = 0; k < nmodes_c-i; ++k) //R
                     {
-                        if((i >= cutoff)||(j +k >= cutoff))
+                        if(j >= cutoff ||  i + k >= cutoff)
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j+k]*fac[j+k]));
+                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
                         }
+                        cnt++;
                     }
                 }
             }

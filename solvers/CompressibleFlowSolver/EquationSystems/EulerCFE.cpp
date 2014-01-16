@@ -99,10 +99,10 @@ namespace Nektar
     /**
      * @brief Print out a summary with some relevant information.
      */
-    void EulerCFE::v_PrintSummary(std::ostream &out)
+    void EulerCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        CompressibleFlowSystem::v_PrintSummary(out);
-        out << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
+        CompressibleFlowSystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Problem Type", ProblemTypeMap[m_problemType]);
     }
 
     /**

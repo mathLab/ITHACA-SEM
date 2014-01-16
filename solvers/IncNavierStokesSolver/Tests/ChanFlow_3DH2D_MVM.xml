@@ -103,4 +103,10 @@
 
     </CONDITIONS>
 
+    <FORCING>
+        <FORCE TYPE="Body">
+            <BODYFORCE> BodyForce </BODYFORCE>
+        </FORCE>
+    </FORCING>
+
 </NEKTAR>

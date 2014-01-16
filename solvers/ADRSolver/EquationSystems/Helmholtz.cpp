@@ -39,7 +39,7 @@ namespace Nektar
 {
     string Helmholtz::className1 = GetEquationSystemFactory().RegisterCreatorFunction("Helmholtz", Helmholtz::create);
     string Helmholtz::className2 = GetEquationSystemFactory().RegisterCreatorFunction("SteadyDiffusionReaction", Helmholtz::create);
-
+    
     Helmholtz::Helmholtz(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : Poisson(pSession)
@@ -60,9 +60,9 @@ namespace Nektar
 
     }
 
-    void Helmholtz::v_PrintSummary(std::ostream &out)
+    void Helmholtz::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        Poisson::v_PrintSummary(out);
+        Poisson::v_GenerateSummary(s);
     }
 
     Array<OneD, bool> Helmholtz::v_GetSystemSingularChecks()

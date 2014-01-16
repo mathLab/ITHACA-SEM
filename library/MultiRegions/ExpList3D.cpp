@@ -51,10 +51,12 @@ namespace Nektar
 
         ExpList3D::ExpList3D(): ExpList()
         {
+            SetExpType(e3D);
         }
 
         ExpList3D::ExpList3D(const ExpList3D &In): ExpList(In)
         {
+            SetExpType(e3D);
         }
 
         ExpList3D::~ExpList3D()
@@ -73,6 +75,7 @@ namespace Nektar
                              const LibUtilities::PointsType TetNb):
             ExpList(pSession,graph3D)
         {
+            SetExpType(e3D);
 
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;
@@ -168,6 +171,8 @@ namespace Nektar
                              const std::string  &variable) :
             ExpList(pSession,graph3D)
         {
+            SetExpType(e3D);
+
             LocalRegions::TetExpSharedPtr   tet;
             LocalRegions::HexExpSharedPtr   hex;
             LocalRegions::PrismExpSharedPtr prism;
@@ -287,6 +292,8 @@ namespace Nektar
         ExpList3D::ExpList3D(const SpatialDomains::ExpansionMap &expansions):
             ExpList()
         {
+            SetExpType(e3D);
+
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;
             LocalRegions::PrismExpSharedPtr prism;

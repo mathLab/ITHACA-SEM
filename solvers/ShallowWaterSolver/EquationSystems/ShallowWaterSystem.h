@@ -36,93 +36,62 @@
 #ifndef NEKTAR_SOLVERS_SHALLOWWATERSOLVER_EQUATIONSYSTEMS_SHALLOWWATERSYSTEM_H
 #define NEKTAR_SOLVERS_SHALLOWWATERSOLVER_EQUATIONSYSTEMS_SHALLOWWATERSYSTEM_H
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-#include <SolverUtils/EquationSystem.h>
-
-using namespace Nektar::SolverUtils;
+#include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/Diffusion/Diffusion.h>
 
 namespace Nektar
 {
   
-    enum UpwindType
-  {           
-    eNotSet,             ///< flux not defined
-    eAverage,            ///< averaged (or centred) flux
-    eHLL,                ///< Harten-Lax-Leer flux
-    eHLLC,               ///< Harten-Lax-Leer Contact wave flux
-    SIZE_UpwindType      ///< Length of enum list
-  };
-  
-  const char* const UpwindTypeMap[] =
-    {
-      "NoSet",
-      "Average",
-      "HLL",
-      "HLLC",
-    };
-
-    /// Base class for unsteady solvers.
-    class ShallowWaterSystem : public EquationSystem
+  /// Base class for unsteady solvers.
+  class ShallowWaterSystem : public SolverUtils::UnsteadySystem
     {
     public:
+       friend class MemoryManager<ShallowWaterSystem>;
+
+        /// Creates an instance of this class
+        static SolverUtils::EquationSystemSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+        {
+            return MemoryManager<ShallowWaterSystem>::AllocateSharedPtr(pSession);
+        }
+	
+        /// Name of class
+        static std::string className;
+	
         /// Destructor
         virtual ~ShallowWaterSystem();
 
     protected:
-	///< numerical upwind flux selector
-	UpwindType                                      m_upwindType;     
-        /// Number of time steps between outputting status information.
-        int                                             m_infosteps;
-        /// The time integration method to use.
-        LibUtilities::TimeIntegrationMethod             m_timeIntMethod;
-        /// The time integration scheme operators to use.
-        LibUtilities::TimeIntegrationSchemeOperators    m_ode;
-        /// Indicates if explicit or implicit treatment of diffusion is used.
-        bool                                            m_explicitDiffusion;
-        /// Indicates if explicit or implicit treatment of advection is used.
-        bool                                            m_explicitAdvection;
+	SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
+        SolverUtils::RiemannSolverSharedPtr m_riemannSolverLDG;
+        SolverUtils::AdvectionSharedPtr     m_advection;
+        SolverUtils::DiffusionSharedPtr     m_diffusion;
+
 	/// Indicates if variables are primitive or conservative
 	bool                                            m_primitive;
+	/// Indicates if constant depth case 
+	bool                                            m_constantDepth;
 	/// Acceleration of gravity 
 	NekDouble                                       m_g;
 	/// Still water depth
 	Array<OneD, NekDouble>                          m_depth;
+	// Bottom slopes
+	Array<OneD, Array<OneD, NekDouble> >            m_bottomSlope;
 	/// Coriolis force     
 	Array<OneD, NekDouble>                          m_coriolis;
-	
+	// Location of velocity vector.
+	Array<OneD, NekDouble>                          m_velLoc;
         /// Initialises UnsteadySystem class members.
         ShallowWaterSystem(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
 
-        /// Solves an unsteady problem.
-        virtual void v_DoSolve();
-
-        /// Sets up initial conditions.
-        virtual void v_DoInitialise();
-
         /// Print a summary of time stepping parameters.
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
-        ///
-        virtual void v_NumericalFlux(
-                    Array<OneD, Array<OneD, NekDouble> > &physfield,
-                    Array<OneD, Array<OneD, NekDouble> > &numflux);
-
-        ///
-        virtual void v_NumericalFlux(
-                    Array<OneD, Array<OneD, NekDouble> > &physfield,
-                    Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                    Array<OneD, Array<OneD, NekDouble> > &numfluxY );
-
-     
-        /// Evaulate flux = m_fields*ivel for i th component of Vu for
-        /// direction j
-        virtual void v_GetFluxVector(const int i, const int j,
-                    Array<OneD, Array<OneD, NekDouble> > &physfield,
-                    Array<OneD, Array<OneD, NekDouble> > &flux);
-	
-	void PrimitiveToConservative()
+   	void PrimitiveToConservative()
 	{
 	  v_PrimitiveToConservative();
 	}
@@ -133,8 +102,36 @@ namespace Nektar
 	  v_ConservativeToPrimitive();
 	}
 	virtual void v_ConservativeToPrimitive();
+
+
+	NekDouble GetGravity()
+        {
+            return m_g;
+        }
+      
+	const Array<OneD, NekDouble> &GetVelLoc()
+        {
+            return m_velLoc;
+        }
+
+	const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()
+        {
+            return m_traceNormals;
+        }
 	
+	const Array<OneD, NekDouble> &GetDepth()
+        {
+            return m_depth;
+        }
+
+	bool IsConstantDepth()
+	{
+	  return m_constantDepth;
+	}
 	
+	void CopyBoundaryTrace(const Array<OneD, NekDouble>&Fwd, Array<OneD, NekDouble>&Bwd);
+
+
     private:
 	/// 
 	void EvaluateWaterDepth(void);

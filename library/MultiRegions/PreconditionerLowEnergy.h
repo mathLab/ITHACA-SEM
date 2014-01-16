@@ -55,9 +55,9 @@ namespace Nektar
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
-                        const boost::shared_ptr<GlobalLinSys> &plinsys,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                const boost::shared_ptr<GlobalLinSys> &plinsys,
+                const boost::shared_ptr<AssemblyMap>
+                &pLocToGloMap)
             {
 	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
@@ -68,55 +68,43 @@ namespace Nektar
             static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerLowEnergy(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
-	                 const AssemblyMapSharedPtr &pLocToGloMap);
+                const boost::shared_ptr<GlobalLinSys> &plinsys,
+                const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerLowEnergy() {}
+                virtual ~PreconditionerLowEnergy() {}
 
 	protected:
 
-            const boost::weak_ptr<GlobalLinSys>         m_linsys;
+            const boost::weak_ptr<GlobalLinSys> m_linsys;
+            boost::shared_ptr<AssemblyMap> m_locToGloMap;
 
-	    DNekBlkMatSharedPtr                         BlkMat;
-            DNekScalMatSharedPtr                        bnd_mat;
+	    DNekBlkMatSharedPtr     m_BlkMat;
+            DNekScalMatSharedPtr    m_bnd_mat;
 
-	    DNekScalMatSharedPtr                        m_TetR;
-	    DNekScalMatSharedPtr                        m_TetRT;
-	    DNekScalMatSharedPtr                        m_PrismR;
-	    DNekScalMatSharedPtr                        m_PrismRT;
+            DNekScalBlkMatSharedPtr m_RBlk;
+            DNekScalBlkMatSharedPtr m_RTBlk;
+            DNekScalBlkMatSharedPtr m_InvRBlk;
+            DNekScalBlkMatSharedPtr m_InvRTBlk;
 
-            DNekScalBlkMatSharedPtr                     m_schurCompl;
-            DNekScalBlkMatSharedPtr                     m_BinvD;
-            DNekScalBlkMatSharedPtr                     m_C;
-            DNekScalBlkMatSharedPtr                     m_invD;
+            DNekScalMatSharedPtr    m_Rtet;
+            DNekScalMatSharedPtr    m_RTtet;
+            DNekScalMatSharedPtr    m_Rinvtet;
+            DNekScalMatSharedPtr    m_RTinvtet;
 
-            DNekScalBlkMatSharedPtr                     m_RBlk;
-            DNekScalBlkMatSharedPtr                     m_RTBlk;
-            DNekScalBlkMatSharedPtr                     m_InvRBlk;
-            DNekScalBlkMatSharedPtr                     m_InvRTBlk;
+            DNekScalMatSharedPtr    m_Rhex;
+            DNekScalMatSharedPtr    m_RThex;
+            DNekScalMatSharedPtr    m_Rinvhex;
+            DNekScalMatSharedPtr    m_RTinvhex;
 
-            DNekScalBlkMatSharedPtr                     m_S1Blk;
+            DNekScalMatSharedPtr    m_Rprism;
+            DNekScalMatSharedPtr    m_RTprism;
+            DNekScalMatSharedPtr    m_Rinvprism;
+            DNekScalMatSharedPtr    m_RTinvprism;
 
-            boost::shared_ptr<AssemblyMap>              m_locToGloMap;
-
-            DNekScalMatSharedPtr Rtet;
-            DNekScalMatSharedPtr RTtet;
-            DNekScalMatSharedPtr Rinvtet;
-            DNekScalMatSharedPtr RTinvtet;
-
-            DNekScalMatSharedPtr Rhex;
-            DNekScalMatSharedPtr RThex;
-            DNekScalMatSharedPtr Rinvhex;
-            DNekScalMatSharedPtr RTinvhex;
-
-            DNekScalMatSharedPtr Rprism;
-            DNekScalMatSharedPtr RTprism;
-            DNekScalMatSharedPtr Rinvprism;
-            DNekScalMatSharedPtr RTinvprism;
-
-            Array<OneD, NekDouble>      m_locToGloSignMult;
-            Array<OneD, NekDouble>      m_multiplicity;
+            Array<OneD, NekDouble>  m_locToGloSignMult;
+            Array<OneD, NekDouble>  m_multiplicity;
+            Array<OneD, int>        m_map;
 
 	private:
 

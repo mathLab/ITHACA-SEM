@@ -268,49 +268,6 @@ namespace Nektar
         }
 
 
-        //   I/O routine
-        void StdHexExp::v_WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int  order0 = m_base[0]->GetNumModes();
-            int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp
-                            = Array<OneD, NekDouble>(order0*order1*order2, 0.0);
-
-            NekDouble *mat = wsp.get();
-
-            // put coeffs into matrix and reverse order so that r index is
-            // fastest for Prism
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
-            {
-                for(int j = 0; j < order1-i; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
-                    {
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
-                    }
-                }
-            }
-
-            outfile <<"Coeffs = [" << " ";
-
-            for(int k = 0; k < order2; ++k)
-            {
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        outfile << mat[i + order0*(j + order1*k)] <<" ";
-                    }
-                    outfile << std::endl;
-                }
-            }
-            outfile << "]" ;
-        }
-
         bool StdHexExp::v_IsBoundaryInteriorExpansion()
         {
             return (m_base[0]->GetBasisType() == LibUtilities::eModified_A) &&
@@ -382,6 +339,13 @@ namespace Nektar
             StdHexExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
+
+        void StdHexExp::v_StdPhysDeriv(const int dir,
+                               const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD,       NekDouble>& outarray)
+        {
+            StdHexExp::v_PhysDeriv(dir, inarray, outarray);
+        }
 
         /**
          * Backward transformation is three dimensional tensorial expansion
@@ -787,13 +751,6 @@ namespace Nektar
 
 
         NekDouble StdHexExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoords)
-        {
-            return StdExpansion3D::v_PhysEvaluate(Lcoords, m_phys);
-        }
-
-
-        NekDouble StdHexExp::v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& Lcoords,
                 const Array<OneD, const NekDouble>& physvals)
         {
@@ -1106,79 +1063,6 @@ namespace Nektar
                 return GetBasisType(2);
             }
         }
-
-
-        void StdHexExp::v_WriteToFile(std::ofstream &outfile,
-                                OutputFormat format,
-                                const bool dumpVar,
-                                std::string var)
-        {
-            if(format==eTecplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2,  z3";
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz
-                        <<", F=Point" << endl;
-
-                for(int k = 0; k < Qz; ++k)
-                {
-                    for(int j = 0; j < Qy; ++j)
-                    {
-                        for(int i = 0; i < Qx; ++i)
-                        {
-                            outfile <<  eta_x[i] <<  " " << eta_y[j] << " "
-                                    << eta_z[k] << " "
-                                    << m_phys[i + Qx*(j + Qy*k)] << endl;
-                        }
-                    }
-                }
-            }
-            else if (format==eGnuplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-
-                for(int k = 0; k < Qz; ++k)
-                {
-                    for(int j = 0; j < Qy; ++j)
-                    {
-                        for(int i = 0; i < Qx; ++i)
-                        {
-                            outfile <<  eta_x[i] <<  " " << eta_y[j] << " "
-                                    << eta_z[k] << " "
-                                    << m_phys[i + Qx*(j + Qy*k)] << endl;
-                        }
-                        outfile << endl;
-                    }
-                    outfile << endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested "
-                                "type of output");
-            }
-
-        }
-
 
         void StdHexExp::v_GetCoords( Array<OneD, NekDouble> & xi_x,
                                 Array<OneD, NekDouble> & xi_y,
@@ -1526,7 +1410,7 @@ namespace Nektar
          * @param   localVertexId   ID of vertex (0..7)
          * @returns Position of vertex in local numbering scheme.
          */
-        int StdHexExp::v_GetVertexMap(const int localVertexId)
+        int StdHexExp::v_GetVertexMap(const int localVertexId, bool useCoeffPacking)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -1550,45 +1434,105 @@ namespace Nektar
                                 m_base[1]->GetNumModes(),
                                 m_base[2]->GetNumModes()};
 
-            // Right face (vertices 1,2,5,6)
-            if( (localVertexId % 4) % 3 > 0 )
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
-                if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
+                if(localVertexId > 3)
                 {
-                    p = nummodes[0]-1;
+                    if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
+                    {
+                        r = nummodes[2]-1;
+                    }
+                    else
+                    {
+                        r = 1;
+                    }
                 }
-                else
+                
+                switch(localVertexId % 4)
                 {
-                    p = 1;
+                case 0:
+                    break;
+                case 1:
+                    {
+                        if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
+                        {
+                            p = nummodes[0]-1;
+                        }
+                        else
+                        {
+                            p = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    {
+                        if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                        {
+                            q = nummodes[1]-1;
+                        }
+                        else
+                        {
+                            q = 1;
+                        }
+                    }
+                    break;
+                case 3:
+                    {
+                        if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                        {
+                            p = nummodes[0]-1;
+                            q = nummodes[1]-1;
+                        }
+                        else
+                        {
+                            p = 1;
+                            q = 1;
+                        }
+                    }
+                    break;
                 }
             }
-
-            // Back face (vertices 2,3,6,7)
-            if( localVertexId % 4 > 1 )
+            else
             {
-                if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                // Right face (vertices 1,2,5,6)
+                if( (localVertexId % 4) % 3 > 0 )
                 {
-                    q = nummodes[1]-1;
+                    if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
+                    {
+                        p = nummodes[0]-1;
+                    }
+                    else
+                    {
+                        p = 1;
+                    }
                 }
-                else
+                
+                // Back face (vertices 2,3,6,7)
+                if( localVertexId % 4 > 1 )
                 {
-                    q = 1;
+                    if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                    {
+                        q = nummodes[1]-1;
+                    }
+                    else
+                    {
+                        q = 1;
+                    }
+                }
+                
+                // Top face (vertices 4,5,6,7)
+                if( localVertexId > 3)
+                {
+                    if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
+                    {
+                        r = nummodes[2]-1;
+                    }
+                    else
+                    {
+                        r = 1;
+                    }
                 }
             }
-
-            // Top face (vertices 4,5,6,7)
-            if( localVertexId > 3)
-            {
-                if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
-                {
-                    r = nummodes[2]-1;
-                }
-                else
-                {
-                    r = 1;
-                }
-            }
-
             // Compute the local number.
             return r*nummodes[0]*nummodes[1] + q*nummodes[0] + p;
         }
@@ -2450,132 +2394,7 @@ namespace Nektar
             StdHexExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
-
-        void StdHexExp::v_LaplacianMatrixOp_MatFree(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdMatrixKey &mkey)
-        {
-            ASSERTL0(false,"StdHexExp::v_LaplacianMatrixOp_MatFree needs fixing");
-/*            if(mkey.GetNvariableLaplacianCoefficients() == 0)
-            {
-                // This implementation is only valid when there are no coefficients
-                // associated to the Laplacian operator
-                int       nquad0  = m_base[0]->GetNumPoints();
-                int       nquad1  = m_base[1]->GetNumPoints();
-                int       nqtot   = nquad0*nquad1;
-                int       nmodes0 = m_base[0]->GetNumModes();
-                int       nmodes1 = m_base[1]->GetNumModes();
-                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-
-                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-
-                // Allocate temporary storage
-                Array<OneD,NekDouble> wsp0(3*wspsize);
-                Array<OneD,NekDouble> wsp1(wsp0+wspsize);
-                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-
-                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-                {
-                    // LAPLACIAN MATRIX OPERATION
-                    // wsp0 = u       = B   * u_hat
-                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                    BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1,true,true);
-                    StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
-                }
-                else
-                {
-                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
-                }
-
-                // wsp1 = k = wsp1 * w0 * w1
-                // wsp2 = l = wsp2 * w0 * w1
-                MultiplyByQuadratureMetric(wsp1,wsp1);
-                MultiplyByQuadratureMetric(wsp2,wsp2);
-
-                // outarray = m = (D_xi1 * B)^T * k
-                // wsp1     = n = (D_xi2 * B)^T * l
-                IProductWRTBase_SumFacKernel(dbase0,base1,wsp1,outarray,wsp0,false,true);
-                IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,    wsp0,true,false);
-
-                // outarray = outarray + wsp1
-                //          = L * u_hat
-                Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }*/
-        }
-
-        void StdHexExp::v_HelmholtzMatrixOp_MatFree(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdMatrixKey &mkey)
-        {
-            ASSERTL0(false,"StdHexExp::v_HelmholtzMatrixOp_MatFree needs fixing");
-/*            int       nquad0  = m_base[0]->GetNumPoints();
-            int       nquad1  = m_base[1]->GetNumPoints();
-            int       nqtot   = nquad0*nquad1;
-            int       nmodes0 = m_base[0]->GetNumModes();
-            int       nmodes1 = m_base[1]->GetNumModes();
-            int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-            NekDouble lambda  = mkey.GetConstant(0);
-
-            const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-            const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-            const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-            const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-
-            // Allocate temporary storage
-            Array<OneD,NekDouble> wsp0(4*wspsize);
-            Array<OneD,NekDouble> wsp1(wsp0+wspsize);
-            Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-            Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
-
-            if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-            {
-                // MASS MATRIX OPERATION
-                // The following is being calculated:
-                // wsp0     = B   * u_hat = u
-                // wsp1     = W   * wsp0
-                // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
-                BwdTrans_SumFacKernel       (base0,base1,inarray,wsp0,    wsp1,true,true);
-                MultiplyByQuadratureMetric  (wsp0,wsp2);
-                IProductWRTBase_SumFacKernel(base0,base1,wsp2,   outarray,wsp1,true,true);
-
-                // LAPLACIAN MATRIX OPERATION
-                // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
-            }
-            else
-            {
-                // specialised implementation for the classical spectral element method
-                StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
-                MultiplyByQuadratureMetric(inarray,outarray);
-            }
-
-            // wsp1 = k = wsp1 * w0 * w1
-            // wsp2 = l = wsp2 * w0 * w1
-            MultiplyByQuadratureMetric(wsp1,wsp1);
-            MultiplyByQuadratureMetric(wsp2,wsp2);
-
-            // wsp1 = m = (D_xi1 * B)^T * k
-            // wsp0 = n = (D_xi2 * B)^T * l
-            IProductWRTBase_SumFacKernel(dbase0,base1,wsp1,wsp0,wsp3,false,true);
-            IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,wsp3,true,false);
-
-            // outarray = lambda * outarray + (wsp0 + wsp1)
-            //          = (lambda * M + L ) * u_hat
-            Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,&wsp0[0],1,&outarray[0],1);
-*/        }
-
-
+        
         void StdHexExp::v_GeneralMatrixOp_MatOp(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
@@ -2670,6 +2489,7 @@ namespace Nektar
             for(j = cutoff; j < nmodes; ++j)
             {
                 fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
+                fac[j] *= fac[j]; //added this line to conform with equation
             }
 
             for(i = 0; i < nmodes_a; ++i)
@@ -2680,7 +2500,7 @@ namespace Nektar
                     {
                         if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j]*fac[k]));
+                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]+fac[j]+fac[k]));
                         }
                     }
                 }
@@ -2689,7 +2509,6 @@ namespace Nektar
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        
-
     }
 }
 

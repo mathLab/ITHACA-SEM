@@ -126,20 +126,16 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT virtual int v_GetCoordim() const;
 
 	    SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr 
-                    v_GetBasis(const int i, const int j);
+                    v_GetBasis(const int i);
 
 	    SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr 
-                    v_GetEdgeBasis(const int i, const int j);
-
-	    SPATIAL_DOMAINS_EXPORT virtual Array<OneD,NekDouble> & 
-                    v_UpdatePhys(const int i);
+                    v_GetEdgeBasis(const int i);
 
 	    SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
                     const int i, 
                     const Array<OneD,const NekDouble> &Lcoord);
 
-	    SPATIAL_DOMAINS_EXPORT void v_GenGeomFactors(
-                    const Array<OneD,const LibUtilities::BasisSharedPtr> &tbasis);
+	    SPATIAL_DOMAINS_EXPORT void v_GenGeomFactors();
 
             SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
 

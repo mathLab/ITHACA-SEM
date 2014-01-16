@@ -98,6 +98,12 @@
     
   </CONDITIONS>
 
+  <FORCING>
+      <FORCE TYPE="Body">
+          <BODYFORCE> BodyForce </BODYFORCE>
+      </FORCE>
+  </FORCING>
+
   <GEOMETRY DIM="2" SPACE="2">
     
     <VERTEX>

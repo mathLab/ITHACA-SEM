@@ -355,7 +355,6 @@ namespace Nektar
             // which can be reordered depending on the type of solver we would
             // like to use.
             typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-            typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
 
             BoostGraph boostGraphObj;
             int trace_id,trace_id1;
@@ -764,7 +763,6 @@ namespace Nektar
             // which can be reordered depending on the type of solver we would
             // like to use.
             typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-            typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
 
             BoostGraph boostGraphObj;
             int face_id, face_id1;
@@ -1087,7 +1085,7 @@ namespace Nektar
                         LocalRegions::PointExpSharedPtr locPointExp = 
                             boost::dynamic_pointer_cast<
                                 LocalRegions::PointExp>(m_elmtToTrace[eid][j]);
-                        id = locPointExp->GetGeom()->GetVid();
+                        id = locPointExp->GetGeom()->GetGlobalID();
                         vGlobalId = m_localToGlobalBndMap[cnt+j];
                         m_globalToUniversalBndMap[vGlobalId]
                             = id * maxDof + j + 1;

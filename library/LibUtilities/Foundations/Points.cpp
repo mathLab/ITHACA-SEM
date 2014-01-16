@@ -49,7 +49,7 @@ namespace Nektar
         bool operator==(const PointsKey &lhs, const PointsKey &rhs)
         {
             return (lhs.m_numpoints == rhs.m_numpoints &&
-                lhs.m_pointstype == rhs.m_pointstype);
+                    lhs.m_pointstype == rhs.m_pointstype);
         }
 
         bool operator<(const PointsKey &lhs, const PointsKey &rhs)
@@ -64,7 +64,27 @@ namespace Nektar
                 return false;
             }
             
-            return (lhs.m_pointstype < rhs.m_pointstype);
+            if (lhs.m_pointstype < rhs.m_pointstype)
+            {
+                return true;
+            }
+
+            if (lhs.m_pointstype > rhs.m_pointstype)
+            {
+                return false;
+            }
+            
+            if(lhs.m_factor < rhs.m_factor)
+            {
+                return true;
+            }
+            
+            if(lhs.m_factor > rhs.m_factor)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         bool PointsKey::opLess::operator()(const PointsKey &lhs, const PointsKey &rhs) const

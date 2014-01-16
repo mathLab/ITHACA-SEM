@@ -168,17 +168,20 @@ int main(int argc, char *argv[])
         {
             LocalRegions::ExpansionSharedPtr e = Exp[0]->GetExp(i);
             SpatialDomains::GeomFactorsSharedPtr g = e->GetMetricInfo();
+            LibUtilities::PointsKeyVector ptsKeys = e->GetPointsKeys();
             unsigned int npts = e->GetTotPoints();
 
             if (g->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vcopy(npts, g->GetJac(), 1, tmp = Exp[0]->UpdatePhys()
-                                 + Exp[0]->GetPhys_Offset(i), 1);
+                Vmath::Vcopy(npts, g->GetJac(ptsKeys), 1, 
+                                   tmp = Exp[0]->UpdatePhys()
+                                        + Exp[0]->GetPhys_Offset(i), 1);
             }
             else
             {
-                Vmath::Fill (npts, g->GetJac()[0], tmp = Exp[0]->UpdatePhys()
-                                 + Exp[0]->GetPhys_Offset(i), 1);
+                Vmath::Fill (npts, g->GetJac(ptsKeys)[0], 
+                                   tmp = Exp[0]->UpdatePhys()
+                                        + Exp[0]->GetPhys_Offset(i), 1);
             }
 
             Exp[0]->WriteVtkPieceHeader(outfile, i);

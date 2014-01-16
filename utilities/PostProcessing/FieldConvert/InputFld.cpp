@@ -39,14 +39,6 @@ using namespace std;
 
 #include "InputFld.h"
 
-#include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList2DHomogeneous1D.h>
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList3DHomogeneous2D.h>
-
-#include <MultiRegions/DisContField2D.h>
-#include <MultiRegions/DisContField3D.h>
 
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
@@ -122,11 +114,10 @@ namespace Nektar
             
             string xml_ending = "xml";
             string xml_gz_ending = "xml.gz";
-            bool DeclareExpansionAsField = false;
 
             if(vm.count("boundary-region"))
             {
-                DeclareExpansionAsField = true;
+                m_f->m_declareExpansionAsContField = true;
             }
 
             int   argc = m_files[xml_ending].size()+m_files[xml_gz_ending].size()+1;
@@ -266,6 +257,13 @@ namespace Nektar
                             Bkey(m_f->m_fielddef[0]->m_basis[1], nplanes, Pkey);
                         NekDouble ly = m_f->m_fielddef[0]->m_homogeneousLengths[0];
                         
+                        
+                        if(m_f->m_declareExpansionAsContField||
+                            m_f->m_declareExpansionAsDisContField)
+                        {
+                            ASSERTL0(false,"ContField2DHomogeneous1D or DisContField2DHomogenenous1D has not been implemented");
+                        }
+
                         Exp2DH1 = MemoryManager<MultiRegions::
                         ExpList2DHomogeneous1D>::
                             AllocateSharedPtr(m_f->m_session, Bkey, ly, useFFT, 
@@ -297,19 +295,60 @@ namespace Nektar
                         
                         NekDouble ly = m_f->m_fielddef[0]->m_homogeneousLengths[0];
                         NekDouble lz = m_f->m_fielddef[0]->m_homogeneousLengths[1];
-                        Exp3DH2 = MemoryManager<MultiRegions::
-                            ExpList3DHomogeneous2D>::
-                            AllocateSharedPtr(m_f->m_session, BkeyY, BkeyZ, 
-                                              ly, lz, useFFT, dealiasing, 
-                                              m_f->m_graph);
-                        
+
+                        if(m_f->m_declareExpansionAsContField)
+                        {
+                            Exp3DH2 = MemoryManager<MultiRegions::
+                                ContField3DHomogeneous2D>::
+                                AllocateSharedPtr(m_f->m_session, BkeyY, BkeyZ, 
+                                                  ly, lz, useFFT, dealiasing, 
+                                                  m_f->m_graph,
+                                                  m_f->m_session->GetVariable(0));
+                        }
+                        else if(m_f->m_declareExpansionAsContField)
+                        {
+                            Exp3DH2 = MemoryManager<MultiRegions::
+                                DisContField3DHomogeneous2D>::
+                                AllocateSharedPtr(m_f->m_session, BkeyY, BkeyZ, 
+                                                  ly, lz, useFFT, dealiasing, 
+                                                  m_f->m_graph,
+                                                  m_f->m_session->GetVariable(0));
+                        }
+                        else
+                        {
+                            Exp3DH2 = MemoryManager<MultiRegions::
+                                ExpList3DHomogeneous2D>::
+                                AllocateSharedPtr(m_f->m_session, BkeyY, BkeyZ, 
+                                                  ly, lz, useFFT, dealiasing, 
+                                                  m_f->m_graph);
+                        }
+
+
                         m_f->m_exp[0] = Exp3DH2;
                     }
                     else
                     {
                         MultiRegions::ExpList1DSharedPtr Exp1D;
-                        Exp1D = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(m_f->m_session, m_f->m_graph);
+
+                        if(m_f->m_declareExpansionAsContField)
+                        {
+                            Exp1D = MemoryManager<MultiRegions::ContField1D>
+                                ::AllocateSharedPtr(m_f->m_session, m_f->m_graph,
+                                                    m_f->m_session->GetVariable(0));
+                        }
+                        else if(m_f->m_declareExpansionAsContField)
+                        {
+                            Exp1D = MemoryManager<MultiRegions::DisContField1D>
+                                ::AllocateSharedPtr(m_f->m_session, m_f->m_graph,
+                                                  m_f->m_session->GetVariable(0));
+                        }
+                        else 
+                        {
+                            Exp1D = MemoryManager<MultiRegions::ExpList1D>
+                                ::AllocateSharedPtr(m_f->m_session, m_f->m_graph);
+                        }
+
+
                         m_f->m_exp[0] = Exp1D;
                     }
                 }
@@ -335,17 +374,43 @@ namespace Nektar
                             Bkey(m_f->m_fielddef[0]->m_basis[2], nplanes, Pkey);
                         NekDouble lz = m_f->m_fielddef[0]->m_homogeneousLengths[0];
                         
-                        Exp3DH1 = MemoryManager<MultiRegions::
-                            ExpList3DHomogeneous1D>::
-                            AllocateSharedPtr(m_f->m_session, Bkey, lz, useFFT, 
-                                              dealiasing, m_f->m_graph);
+                        if(m_f->m_declareExpansionAsContField)
+                        {
+                            Exp3DH1 = MemoryManager<MultiRegions::
+                                ContField3DHomogeneous1D>::
+                                AllocateSharedPtr(m_f->m_session, Bkey, lz, useFFT, 
+                                                  dealiasing, m_f->m_graph,
+                                                  m_f->m_session->GetVariable(0));
+                        }
+                        else if (m_f->m_declareExpansionAsContField)
+                        {
+                            Exp3DH1 = MemoryManager<MultiRegions::
+                                DisContField3DHomogeneous1D>::
+                                AllocateSharedPtr(m_f->m_session,
+                                                  Bkey, lz, useFFT, 
+                                                  dealiasing, m_f->m_graph,
+                                                  m_f->m_session->GetVariable(0));
+                        }
+                        else
+                        {
+                            Exp3DH1 = MemoryManager<MultiRegions::
+                                ExpList3DHomogeneous1D>::
+                                AllocateSharedPtr(m_f->m_session, Bkey, lz, useFFT, 
+                                                  dealiasing, m_f->m_graph);
+                        }
                         m_f->m_exp[0] = Exp3DH1;
                     }
                     else
                     {
                         MultiRegions::ExpList2DSharedPtr Exp2D;
 
-                        if(DeclareExpansionAsField)
+                        if(m_f->m_declareExpansionAsContField)
+                        {
+                            Exp2D = MemoryManager<MultiRegions::ContField2D>
+                                ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,
+                                                    m_f->m_session->GetVariable(0));
+                        }
+                        else if(m_f->m_declareExpansionAsDisContField)
                         {
                             Exp2D = MemoryManager<MultiRegions::DisContField2D>
                                 ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,
@@ -365,7 +430,13 @@ namespace Nektar
                 {
                     MultiRegions::ExpList3DSharedPtr Exp3D;
 
-                    if(DeclareExpansionAsField)
+                    if(m_f->m_declareExpansionAsContField)
+                    {
+                        Exp3D = MemoryManager<MultiRegions::ContField3D>
+                            ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,
+                                                m_f->m_session->GetVariable(0));
+                    }
+                    else if(m_f->m_declareExpansionAsDisContField)
                     {
                         Exp3D = MemoryManager<MultiRegions::DisContField3D>
                             ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,

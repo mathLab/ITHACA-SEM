@@ -121,9 +121,9 @@ int main(int argc, char *argv[])
 
             //--------------------------------------------
             // Calculate errors
-            cout << "L inf error: " 
+            cout << "L inf error:      "
                  << field->Linf(field->GetPhys(), exact) << endl;
-            cout << "L 2 error:        " 
+            cout << "L 2 error:        "
                  << field->L2(field->GetPhys(), exact) << endl;
             cout << "H 1 error:        "
                  << field->H1(field->GetPhys(), exact) << endl;

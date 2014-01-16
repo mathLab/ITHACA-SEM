@@ -13,4 +13,6 @@ IF( NEKTAR_SOLVER_DIFFUSION )
     ADD_SOLVER_EXECUTABLE(DiffusionSolverTimeInt solvers 
         ${DiffusionSolverTimeIntSource})
 
+    ADD_NEKTAR_TEST(ImDiffusion_m6)
+    ADD_NEKTAR_TEST(ImDiffusion_m6_time_int)
 ENDIF( NEKTAR_SOLVER_DIFFUSION )

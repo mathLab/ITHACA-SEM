@@ -47,26 +47,48 @@ namespace Nektar
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eOutputModule, "fld"), OutputFld::create,
                 "Writes a FLD file.");
-
+        
         OutputFld::OutputFld(FieldSharedPtr f) : OutputModule(f)
         {
         }
-
+        
         OutputFld::~OutputFld()
         {
         }
         
         void OutputFld::Process(po::variables_map &vm)
-        {
-         
+        {         
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
-
+            
             if(vm.count("boundary-region"))
             {
-                vector<unsigned int> values;
-                ASSERTL0(ParseUtils::GenerateOrderedVector(vm["boundary-region"].as<string>().c_str(),values),"Failed to interpret range string");
+                vector<string> tmp1;
+                ModuleKey      module;
                 
+                string boptions = vm["boundary-region"].as<string>().c_str();
+                boost::split(tmp1, boptions, boost::is_any_of(":"));
+                
+                vector<unsigned int> values;
+                ASSERTL0(ParseUtils::GenerateOrderedVector(tmp1[0].c_str(),values),
+                         "Failed to interpret range string");
+                
+                if(tmp1.size() == 2)
+                {
+                    // Extract data to boundaryconditions/ 
+                    if(tmp1[1].compare("FldToBoundary") <=0)
+                    {
+                        for(int i = 0; i < m_f->m_exp.size(); ++i)
+                        {
+                            m_f->m_exp[i]->FillBndCondFromField();
+                        }
+                    }
+                    
+                }
+                else
+                {
+                    ASSERTL0(false,"boundary-region option is not recognised");
+                }
                 
                 if (m_f->m_verbose)
                 {
@@ -94,10 +116,10 @@ namespace Nektar
                 string ext = filename.substr(dot, filename.length() - dot);
                 string name = filename.substr(0, dot-1);
 
-
                 for(int i = 0; i < values.size(); ++i)
                 {
-                    string outname = name  + "_b" + boost::lexical_cast<string>(i) + "." + ext;
+                    string outname = name  + "_b" + boost::lexical_cast<string>(i) + 
+                        "." + ext;
                     
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                         = BndExp[0][values[i]]->GetFieldDefinitions();
@@ -109,7 +131,8 @@ namespace Nektar
                         {
                             BndExp[j][values[i]]->AppendFieldData(FieldDef[k], 
                                                                   FieldData[k]);
-                            FieldDef[k]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                            FieldDef[k]->m_fields.push_back(m_f->m_fielddef[0]->
+                                                            m_fields[j]);
                         }
                     }
                     

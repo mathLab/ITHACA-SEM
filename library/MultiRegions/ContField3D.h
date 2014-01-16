@@ -158,6 +158,8 @@ namespace Nektar
             /// Impose the Dirichlet Boundary Conditions on outarray 
             virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
+            virtual void v_FillBndCondFromField();
+
             virtual void v_LocalToGlobal(void);
 
 

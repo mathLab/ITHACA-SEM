@@ -405,6 +405,9 @@ namespace Nektar
             /// Impose Dirichlet Boundary Conditions onto Array
             inline void ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
+            /// Fill Bnd Condition expansion from the values stored in expansion
+            inline void FillBndCondFromField(void);
+
             /// Put the coefficients into global ordering using m_coeffs 
             inline void LocalToGlobal(void);
 
@@ -682,6 +685,7 @@ namespace Nektar
                                  std::vector<unsigned int> &HomoZIDs = LibUtilities::NullUnsignedIntVector,
                                  std::vector<unsigned int> &HomoYIDs = LibUtilities::NullUnsignedIntVector);
             
+
             const NekOptimize::GlobalOptParamSharedPtr &GetGlobalOptParam(void)
             {
                 return m_globalOptParam;
@@ -1037,6 +1041,9 @@ namespace Nektar
             // wrapper functions about virtual functions
             virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
+            virtual void v_FillBndCondFromField();
+
+
             virtual void v_LocalToGlobal(void);
 
             virtual void v_GlobalToLocal(void);
@@ -1117,8 +1124,7 @@ namespace Nektar
                                        const Array<OneD, NekDouble> &TotField, 
                                        int BndID);
             
-            virtual void v_NormVectorIProductWRTBase(
-                                                     Array<OneD, const NekDouble> &V1,
+            virtual void v_NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
                                                      Array<OneD, const NekDouble> &V2,
                                                      Array<OneD, NekDouble> &outarray,
                                                      int BndID);
@@ -1133,7 +1139,6 @@ namespace Nektar
             virtual std::vector<LibUtilities::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
 
             virtual void  v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef);
-
 
             virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
 
@@ -1674,6 +1679,11 @@ namespace Nektar
         inline void ExpList::ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
             v_ImposeDirichletConditions(outarray);
+        }
+        
+        inline void ExpList::FillBndCondFromField(void)
+        {
+            v_FillBndCondFromField();
         }
 
         inline void ExpList::LocalToGlobal(void)

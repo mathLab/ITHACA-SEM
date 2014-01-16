@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputVtk.cpp
+//  File: OutputTecplot.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: DAT file format output.
+//  Description: Dat file format output.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,8 +69,6 @@ namespace Nektar
                 cout << "OutputTecplot: Writing file..." << endl;
             }
             
-            int expdim  = m_f->m_graph->GetMeshDimension();
-
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
 

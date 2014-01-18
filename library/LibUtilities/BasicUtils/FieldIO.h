@@ -63,7 +63,7 @@ namespace Nektar
 
         typedef std::map<std::string, std::string>  FieldMetaDataMap;
         static  FieldMetaDataMap  NullFieldMetaDataMap;
-        
+        static std::vector<std::vector< NekDouble> > NullVectorVectorDouble;
 
         struct FieldDefinitions
         {
@@ -141,7 +141,7 @@ namespace Nektar
         LIB_UTILITIES_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata,
+                        std::vector<std::vector<NekDouble> > &fielddata = NullVectorVectorDouble,
                         FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap,
                         const Array<OneD, int> ElementiDs = NullInt1DArray);
 
@@ -165,7 +165,7 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata,
+                        std::vector<std::vector<NekDouble> > &fielddata = NullVectorVectorDouble,
                         FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap,
                         const Array<OneD, int> ElementiDs = NullInt1DArray);
 

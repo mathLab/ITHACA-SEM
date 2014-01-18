@@ -465,7 +465,7 @@ namespace Nektar
                             for (int j = n-2; j > 0; --j)
                             {
                                 tmp[skips[i][0] + j*skips[i][1]] = 
-                                    m_edgeList[i]->m_edgeNodes[j];
+                                    m_edgeList[i]->m_edgeNodes[j-1];
                             }
                         }
                         else
@@ -473,7 +473,7 @@ namespace Nektar
                             for (int j = 1; j < n-1; ++j)
                             {
                                 tmp[skips[i][0] + j*skips[i][1]] = 
-                                    m_edgeList[i]->m_edgeNodes[j];
+                                    m_edgeList[i]->m_edgeNodes[j-1];
                             }
                         }
                     }
@@ -483,7 +483,7 @@ namespace Nektar
                     {
                         for (int j = 1; j < n-1; ++j)
                         {
-                            tmp[i*n+j] = m_faceNodes[(i-2)*(n-2)+(j-2)];
+                            tmp[i*n+j] = m_faceNodes[(i-1)*(n-2)+(j-1)];
                         }
                     }
 

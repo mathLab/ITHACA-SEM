@@ -222,13 +222,35 @@ namespace Nektar
                 FaceSharedPtr fac = fIdMap[id];
                 fac->m_curveType = cvec[i]->m_ptype;
                 int Ntot = cvec[i]->m_points.size();
-                int N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
-                for(int j = 3+3*(N-2); j < Ntot; ++j)
+                
+
+                if (fac->m_curveType == LibUtilities::eNodalTriFekete       || 
+                    fac->m_curveType == LibUtilities::eNodalTriEvenlySpaced ||
+                    fac->m_curveType == LibUtilities::eNodalTriElec)
                 {
-                    NodeSharedPtr n(new Node(j, (*cvec[i]->m_points[j])(0),
-                                             (*cvec[i]->m_points[j])(1),
-                                             (*cvec[i]->m_points[j])(2)));
-                    fac->m_faceNodes.push_back(n);
+                    int N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
+                    for(int j = 3+3*(N-2); j < Ntot; ++j)
+                    {
+                        NodeSharedPtr n(new Node(j, (*cvec[i]->m_points[j])(0),
+                                                 (*cvec[i]->m_points[j])(1),
+                                                 (*cvec[i]->m_points[j])(2)));
+                        fac->m_faceNodes.push_back(n);
+                    }
+                }
+                else // quad face. 
+                {
+                    int N    = sqrt(Ntot);
+                    for(int j = 1; j < N-1; ++j)
+                    {
+                        for(int k = 1; k < N-1; ++k)
+                        {
+                            NodeSharedPtr n(new Node((j-1)*(N-2)+k-1, 
+                                                     (*cvec[i]->m_points[j*N+k])(0),
+                                                     (*cvec[i]->m_points[j*N+k])(1),
+                                                     (*cvec[i]->m_points[j*N+k])(2)));
+                            fac->m_faceNodes.push_back(n);
+                        }
+                    }
                 }
             }
             

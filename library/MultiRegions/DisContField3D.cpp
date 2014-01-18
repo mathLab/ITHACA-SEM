@@ -759,7 +759,7 @@
 
                 SpatialDomains::Composite c = it->second->begin()->second;
                 vector<unsigned int> tmpOrder;
-
+                
                 // From the composite, we now construct the allVerts, allEdges
                 // and allCoord map so that they can be transferred across
                 // processors. We also populate the locFaces set to store a

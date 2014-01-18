@@ -83,25 +83,31 @@ namespace Nektar
             }
             // Write solution.
             ofstream outfile(filename.c_str());
-    
-            std::string var = m_f->m_fielddef[0]->m_fields[0];
-                
-            for (int j = 1; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
+            std::string var;
+            if(m_f->m_fielddef.size())
             {
-                var = var + ", " + m_f->m_fielddef[0]->m_fields[j];
+                var = m_f->m_fielddef[0]->m_fields[0];
+                
+                for (int j = 1; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
+                {
+                    var = var + ", " + m_f->m_fielddef[0]->m_fields[j];
+                }
             }
                 
             WriteTecplotHeader(outfile,var);
             WriteTecplotZone(outfile);
-            for(int j = 0; j < m_f->m_exp.size(); ++j)
+            if(var.length()) // see if any variables are defined
             {
-                WriteTecplotField(j,outfile);
-            }
+                for(int j = 0; j < m_f->m_exp.size(); ++j)
+                {
+                    WriteTecplotField(j,outfile);
+                }
+            } 
+
             WriteTecplotConnectivity(outfile);
             
             cout << "Written file: " << filename << endl;
-        }        
-
+        }
         /**
          * Write Tecplot Files Header
          * @param   outfile Output file name.
@@ -122,7 +128,15 @@ namespace Nektar
             {
                 outfile << ", y, z";
             }
-            outfile << ", "<< var << std::endl << std::endl;
+
+            if(var.length())
+            {
+                outfile << ", "<< var << std::endl << std::endl;
+            }
+            else
+            {
+                outfile << std::endl << std::endl;
+            }
         }
 
 

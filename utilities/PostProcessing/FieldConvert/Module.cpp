@@ -81,7 +81,7 @@ namespace Nektar
                      << "module." << endl;
             }
             
-            m_files[fileType].push_back(fileName);
+            m_f->m_inputfiles[fileType].push_back(fileName);
         }
         /**
          * @brief Open a file for output.

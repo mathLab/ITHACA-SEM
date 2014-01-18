@@ -423,7 +423,7 @@ namespace Nektar
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
-                        if(fielddata != NullVectorVectorDouble)
+                        if(fielddata != NullVectorNekDoubleVector)
                         {
                             ImportFieldData(doc1, fielddefs, fielddata);
                         }
@@ -468,7 +468,7 @@ namespace Nektar
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
-                        if(fielddata != NullVectorVectorDouble)
+                        if(fielddata != NullVectorNekDoubleVector)
                         {
                             ImportFieldData(doc1, fielddefs, fielddata);
                         }
@@ -490,7 +490,7 @@ namespace Nektar
                 
                 ImportFieldMetaData(doc,fieldmetadatamap);
                 ImportFieldDefs(doc, fielddefs, false);
-                if(fielddata != NullVectorVectorDouble)
+                if(fielddata != NullVectorNekDoubleVector)
                 {
                     ImportFieldData(doc, fielddefs, fielddata);
                 }

@@ -176,7 +176,6 @@ namespace Nektar
         protected:
             /// Print summary of elements.
             void PrintSummary();
-            map<string, vector<string> > m_files;
             set<string> m_allowedFiles;
 
         };

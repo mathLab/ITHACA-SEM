@@ -63,6 +63,7 @@ namespace Nektar
             
             if(vm.count("boundary-region"))
             {
+
                 vector<string> tmp1;
                 ModuleKey      module;
                 
@@ -84,10 +85,6 @@ namespace Nektar
                         }
                     }
                     
-                }
-                else
-                {
-                    ASSERTL0(false,"boundary-region option is not recognised");
                 }
                 
                 if (m_f->m_verbose)
@@ -129,6 +126,8 @@ namespace Nektar
                     {
                         for(int k = 0; k < FieldDef.size(); ++k)
                         {
+
+                            ASSERTL0(values[i] < BndExp[j].num_elements(),"Boundary region " + boost::lexical_cast<string>(values[i]) +" is not defined in input file");
                             BndExp[j][values[i]]->AppendFieldData(FieldDef[k], 
                                                                   FieldData[k]);
                             FieldDef[k]->m_fields.push_back(m_f->m_fielddef[0]->

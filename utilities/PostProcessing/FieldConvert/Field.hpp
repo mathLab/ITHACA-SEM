@@ -70,6 +70,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr m_session;
             SpatialDomains::MeshGraphSharedPtr   m_graph;
             LibUtilities::FieldIOSharedPtr       m_fld;
+            map<string, vector<string> >         m_inputfiles;
             
             MultiRegions::ExpListSharedPtr AppendExpList(string var = "DefaultVar")
             {

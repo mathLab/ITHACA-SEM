@@ -244,26 +244,15 @@ int main(int argc, char* argv[])
         
         // Create module.
         ModuleSharedPtr mod;
-        if (i == 0 || i >= nInput)
-        {
-            mod = GetModuleFactory().CreateInstance(module, f);
-            modules.push_back(mod);
-        }
-        
-        if (i == 0)
-        {
-            inputModule = boost::dynamic_pointer_cast<InputModule>(mod);
-        }
+        mod = GetModuleFactory().CreateInstance(module, f);
+        modules.push_back(mod);
         
         if (i < nInput)
         {
+            inputModule = boost::dynamic_pointer_cast<InputModule>(mod);
             inputModule->AddFile(module.second, tmp1[0]);
         }
         
-        if (i >= 1 && i < nInput)
-        {
-            mod = inputModule;
-        }
         
         // Set options for this module.
         for (int j = offset; j < tmp1.size(); ++j)

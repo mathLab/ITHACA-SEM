@@ -459,10 +459,19 @@ namespace Nektar
             int nfields = m_f->m_fielddef[0]->m_fields.size();
             m_f->m_exp.resize(nfields);
         
+            vector<string> vars = m_f->m_session->GetVariables();
+
             // declare other fields; 
             for (int i = 1; i < nfields; ++i)
             {
-                m_f->m_exp[i] = m_f->AppendExpList();
+                if(i < vars.size())
+                {
+                    m_f->m_exp[i] = m_f->AppendExpList(vars[i]);
+                }
+                else
+                {
+                    m_f->m_exp[i] = m_f->AppendExpList();
+                }                   
             }
             
             for (int j = 0; j < nfields; ++j)

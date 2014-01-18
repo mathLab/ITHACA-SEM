@@ -71,7 +71,7 @@ namespace Nektar
             SpatialDomains::MeshGraphSharedPtr   m_graph;
             LibUtilities::FieldIOSharedPtr       m_fld;
             
-            MultiRegions::ExpListSharedPtr AppendExpList()
+            MultiRegions::ExpListSharedPtr AppendExpList(string var = "DefaultVar")
             {
                 MultiRegions::ExpListSharedPtr tmp;
                 switch (m_graph->GetMeshDimension())
@@ -139,7 +139,7 @@ namespace Nektar
                                     ContField1D>(m_exp[0]);
                                 
                                 tmp = MemoryManager<MultiRegions::ContField1D>::
-                                    AllocateSharedPtr(*tmp2);
+                                    AllocateSharedPtr(m_session,m_graph,var);
                             }
                             else if(m_declareExpansionAsDisContField)
                             {
@@ -148,7 +148,7 @@ namespace Nektar
                                     DisContField1D>(m_exp[0]);
                                 
                                 tmp = MemoryManager<MultiRegions::DisContField1D>::
-                                    AllocateSharedPtr(*tmp2);
+                                    AllocateSharedPtr(m_session,m_graph,var);
                             }
                             else
                             {
@@ -176,6 +176,8 @@ namespace Nektar
                                 tmp = MemoryManager<MultiRegions::
                                     ContField3DHomogeneous1D>::
                                     AllocateSharedPtr(*tmp2);
+
+                                //WARNINGL0(false,"ContField is not copying BCs");
                             }
                             else  if(m_declareExpansionAsDisContField)
                             {
@@ -186,6 +188,7 @@ namespace Nektar
                                 tmp = MemoryManager<MultiRegions::
                                     DisContField3DHomogeneous1D>::
                                     AllocateSharedPtr(*tmp2);
+                                //  WARNINGL0(false,"DisContField is not copying BCs");
                             }
                             else  
                             {
@@ -208,7 +211,7 @@ namespace Nektar
                                     ContField2D>(m_exp[0]);
                                 
                                 tmp = MemoryManager<MultiRegions::ContField2D>::
-                                    AllocateSharedPtr(*tmp2);
+                                    AllocateSharedPtr(*tmp2,m_graph,var);
                             }
                             else if(m_declareExpansionAsDisContField)
                             {
@@ -217,7 +220,7 @@ namespace Nektar
                                     DisContField2D>(m_exp[0]);
                                 
                                 tmp = MemoryManager<MultiRegions::DisContField2D>::
-                                    AllocateSharedPtr(*tmp2);
+                                    AllocateSharedPtr(*tmp2,m_graph,var);
                             }
                             else
                             {
@@ -240,7 +243,7 @@ namespace Nektar
                                 ContField3D>(m_exp[0]);
                             
                             tmp = MemoryManager<MultiRegions::ContField3D>::
-                                AllocateSharedPtr(*tmp2);
+                                AllocateSharedPtr(*tmp2,m_graph,var);
                         }
                         else if(m_declareExpansionAsDisContField)
                         {
@@ -249,7 +252,7 @@ namespace Nektar
                                 DisContField3D>(m_exp[0]);
                             
                             tmp = MemoryManager<MultiRegions::DisContField3D>::
-                                AllocateSharedPtr(*tmp2);
+                                AllocateSharedPtr(*tmp2,m_graph,var);
                         }
                         else
                         {

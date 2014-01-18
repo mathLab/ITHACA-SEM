@@ -108,7 +108,7 @@ namespace Nektar
                 Array<OneD, Array<OneD, const MultiRegions::ExpListSharedPtr> > BndExp(nfields);
                 for(int i = 0; i < nfields; ++i)
                 {
-                    BndExp[i] = m_f->m_exp[0]->GetBndCondExpansions();
+                    BndExp[i] = m_f->m_exp[i]->GetBndCondExpansions();
                 }
 
                 // find ending of output file and insert _b1, _b2
@@ -137,6 +137,27 @@ namespace Nektar
                     }
                     
                     m_f->m_fld->Write(outname,FieldDef,FieldData);
+
+
+                    // output error for regression checking. 
+                    if (vm.count("error"))
+                    {
+                        int rank = m_f->m_session->GetComm()->GetRank();
+                        
+                        for (int j = 0; j < nfields; ++j)
+                        {
+                            BndExp[j][values[i]]->BwdTrans(BndExp[j][values[i]]->GetCoeffs(),BndExp[j][values[i]]->UpdatePhys());
+                            NekDouble l2err   = BndExp[j][values[i]]->L2(BndExp[j][values[i]]->GetPhys());
+                            NekDouble linferr = BndExp[j][values[i]]->Linf(BndExp[j][values[i]]->GetPhys());
+                            
+                            if(rank == 0)
+                            {
+                                cout << "L 2 error (variable "<< FieldDef[0]->m_fields[j] << ") : " << l2err  << endl;
+                                cout << "L inf error (variable "<< FieldDef[0]->m_fields[j] << ") : " << linferr << endl;
+                            }
+                        }
+                    }
+
                 }
             }
             else
@@ -148,6 +169,31 @@ namespace Nektar
 
                 // Write the output file
                 m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
+
+
+                // output error for regression checking. 
+                if (vm.count("error"))
+                {
+                    int rank = m_f->m_session->GetComm()->GetRank();
+                    
+                    for (int j = 0; j < m_f->m_exp.size(); ++j)
+                    {
+                        if(m_f->m_exp[j]->GetPhysState() == false)
+                        {
+                            m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
+                                                    m_f->m_exp[j]->UpdatePhys());
+                        }
+
+                        NekDouble l2err   = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
+                        NekDouble linferr = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
+                        if(rank == 0)
+                        {
+                            cout << "L 2 error (variable "<< m_f->m_fielddef[0]->m_fields[j] << ") : " << l2err  << endl;
+                            cout << "L inf error (variable "<< m_f->m_fielddef[0]->m_fields[j] << ") : " << linferr << endl;
+                        }
+                    }
+                }
+
             }
         }        
     }

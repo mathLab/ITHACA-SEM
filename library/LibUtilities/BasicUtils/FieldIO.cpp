@@ -1084,7 +1084,14 @@ namespace Nektar
             fs::path specPath (outname);
 
             // Remove any existing file which is in the way
-            fs::remove_all(specPath);
+            try
+            {
+                fs::remove_all(specPath);
+            }
+            catch (fs::filesystem_error& e)
+            {
+                std::cout << "Warning: " << e.what() << std::endl;
+            }
 
             // serial processing just add ending.
             if(nprocs == 1)

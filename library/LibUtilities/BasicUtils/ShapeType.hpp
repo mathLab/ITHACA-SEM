@@ -160,31 +160,15 @@ namespace Nektar
         {
             inline int getNumberOfCoefficients(int Na, int Nb, int Nc)
             {
-                int nCoef = 0;
-                for (int c = 0; c < Nc; ++c)
-                {
-                    for (int b = 0; b < std::min(Nc-c,Nb); ++b)
-                    {
-                        for (int a = 0 ; a < std::min(Nc-c,Na); ++a)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                /*
-                for (int a = 0; a < Na; ++a)
-                {
-                    for (int b = 0; b < Nb; ++b)
-                    {
-                        for (int c = 0; c < Nc - a - b; ++c)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                */
-                //std::cout << "Na = " << Na << " Nb = " << Nb << " Nc = " << Nc << " nCoef = " << nCoef << std::endl;
-                return nCoef;
+                // Count number of coefficients explicitly.
+                const int Pi = Na - 2, Qi = Nb - 2, Ri = Nc - 2;
+                int nCoeff = 
+                    5 +                        // vertices
+                    Pi * 2 + Qi * 2 + Ri * 4 + // base edges
+                    Pi * Qi +                  // base quad
+                    Pi * (2*Ri - Pi - 1) +     // p-r triangles;
+                    Qi * (2*Ri - Qi - 1);      // q-r triangles;
+                return nCoeff + StdTetData::getNumberOfCoefficients(Pi-2, Qi-2, Ri-2);
             }
         }
 

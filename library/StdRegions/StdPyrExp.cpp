@@ -47,16 +47,19 @@ namespace Nektar
         StdPyrExp::StdPyrExp(const LibUtilities::BasisKey &Ba,
                              const LibUtilities::BasisKey &Bb,
                              const LibUtilities::BasisKey &Bc) 
-            : StdExpansion  (LibUtilities::StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
-                                                                 Bb.GetNumModes(),
-                                                                 Bc.GetNumModes()),
+            : StdExpansion  (LibUtilities::StdPyrData::getNumberOfCoefficients(
+                                 Ba.GetNumModes(),
+                                 Bb.GetNumModes(),
+                                 Bc.GetNumModes()),
                              3, Ba, Bb, Bc),
-              StdExpansion3D(LibUtilities::StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
-                                                                 Bb.GetNumModes(),
-                                                                 Bc.GetNumModes()),
-                             Ba, Bb, Bc)
+              StdExpansion3D(LibUtilities::StdPyrData::getNumberOfCoefficients(
+                                 Ba.GetNumModes(),
+                                 Bb.GetNumModes(),
+                                 Bc.GetNumModes()),
+                             Ba, Bb, Bc),
+              m_map(m_ncoeffs),
+              m_rmap(m_ncoeffs)
         {
-
             if (Ba.GetNumModes() > Bc.GetNumModes())
             {
                 ASSERTL0(false, "order in 'a' direction is higher "
@@ -66,6 +69,153 @@ namespace Nektar
             {
                 ASSERTL0(false, "order in 'b' direction is higher "
                          "than order in 'c' direction");
+            }
+
+            // Set up mode mapping which takes 0\leq i\leq N_coeffs -> (p,q,r)
+            // of the 3D tensor product
+            const int P = Ba.GetNumModes() - 1;
+            const int Q = Bb.GetNumModes() - 1;
+            const int R = Bc.GetNumModes() - 1;
+            int cnt = 0;
+
+            // Vertices
+            m_map [cnt  ] = triple(0, 0, 0);
+            m_rmap[cnt++] = 0;
+            m_map [cnt  ] = triple(1, 0, 0);
+            m_rmap[cnt++] = 0;
+            m_map [cnt  ] = triple(1, 1, 0);
+            m_rmap[cnt++] = 0;
+            m_map [cnt  ] = triple(0, 1, 0);
+            m_rmap[cnt++] = 0;
+            m_map [cnt  ] = triple(0, 0, 1);
+            m_rmap[cnt++] = 1;
+
+            // Edge 0
+            for (int i = 2; i <= P; ++i)
+            {
+                m_map [cnt  ] = triple(i, 0, 0);
+                m_rmap[cnt++] = GetTetMode(i, 0, 0);
+            }
+
+            // Edge 1
+            for (int i = 2; i <= Q; ++i)
+            {
+                m_map [cnt  ] = triple(1, i, 0);
+                m_rmap[cnt++] = GetTetMode(0, i, 0);
+            }
+
+            // Edge 2
+            for (int i = 2; i <= P; ++i)
+            {
+                m_map [cnt  ] = triple(i, 1, 0);
+                m_rmap[cnt++] = GetTetMode(i, 0, 0);
+            }
+
+            // Edge 3
+            for (int i = 2; i <= Q; ++i)
+            {
+                m_map [cnt  ] = triple(0, i, 0);
+                m_rmap[cnt++] = GetTetMode(0, i, 0);
+            }
+
+            // Edge 4
+            for (int i = 2; i <= R; ++i)
+            {
+                m_map [cnt  ] = triple(0, 0, i);
+                m_rmap[cnt++] = i;
+            }
+
+            // Edge 5
+            for (int i = 2; i <= R; ++i)
+            {
+                m_map [cnt  ] = triple(1, 0, i);
+                m_rmap[cnt++] = i;
+            }
+
+            // Edge 6
+            for (int i = 2; i <= R; ++i)
+            {
+                m_map [cnt  ] = triple(1, 1, i);
+                m_rmap[cnt++] = i;
+            }
+
+            // Edge 7
+            for (int i = 2; i <= R; ++i)
+            {
+                m_map [cnt  ] = triple(0, 1, i);
+                m_rmap[cnt++] = i;
+            }
+
+            // Face 0
+            for (int i = 2; i <= P; ++i)
+            {
+                for (int j = 2; j <= Q; ++j)
+                {
+                    m_map [cnt  ] = triple(i, j, 0);
+
+                    // TODO: check this
+                    //if (j > Q-i)
+                    //{
+                    //    m_rmap[cnt++] = GetTetMode(i, i + Q - j, 0);
+                    //}
+                    //else
+                    //{
+                    m_rmap[cnt++] = 0;//GetTetMode(i, j, 0);
+                        //}
+                }
+            }
+
+            // Face 1
+            for (int i = 2; i <= P; ++i)
+            {
+                for (int j = 1; j <= R-i; ++j)
+                {
+                    m_map [cnt  ] = triple(i, 0, j);
+                    m_rmap[cnt++] = GetTetMode(i, 0, j);
+                }
+            }
+
+            // Face 2
+            for (int i = 2; i <= Q; ++i)
+            {
+                for (int j = 1; j <= R-i; ++j)
+                {
+                    m_map [cnt  ] = triple(1, i, j);
+                    m_rmap[cnt++] = GetTetMode(0, i, j);
+                }
+            }
+
+            // Face 3
+            for (int i = 2; i <= P; ++i)
+            {
+                for (int j = 1; j <= R-i; ++j)
+                {
+                    m_map [cnt  ] = triple(i, 1, j);
+                    m_rmap[cnt++] = GetTetMode(i, 0, j);
+                }
+            }
+
+            // Face 4
+            for (int i = 2; i <= Q; ++i)
+            {
+                for (int j = 1; j <= R-i; ++j)
+                {
+                    m_map [cnt  ] = triple(0, i, j);
+                    m_rmap[cnt++] = GetTetMode(0, i, j);
+                }
+            }
+
+            // Interior (tetrahedral modes)
+            for (int i = 2; i <= P; ++i)
+            {
+            	for (int j = 1; j <= Q-i; ++j)
+            	{
+                    for (int k = 1; k <= R-i-j; ++k)
+                    {
+                        m_map [cnt  ] = triple(i,j,k);
+                        m_rmap[cnt++] = GetTetMode(i, j, k);
+                    }
+            	}
             }
         }
 
@@ -142,6 +292,8 @@ namespace Nektar
                     &outarray[0] + ij, nx*ny                // Output has same offset and stride as input
                     );
             }
+
+            
         }
         
         // Inner-Product with respect to the weights: i.e., this is the triple
@@ -417,46 +569,31 @@ namespace Nektar
             int     Qy = m_base[1]->GetNumPoints();
             int     Qz = m_base[2]->GetNumPoints();
 
-            int     P = m_base[0]->GetNumModes() - 1;
-            int     Q = m_base[1]->GetNumModes() - 1;
-            int     R = m_base[2]->GetNumModes() - 1;
-
             Array<OneD, const NekDouble> bx = m_base[0]->GetBdata();
             Array<OneD, const NekDouble> by = m_base[1]->GetBdata();
             Array<OneD, const NekDouble> bz = m_base[2]->GetBdata();
-
-            /*
-            // Create an index map from the hexahedron to the pyramid.
-            Array<OneD, int> pqr = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
-            for( int p = 0, mode = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q; ++q ) {
-                    for( int r = 0; r <= R - p - q ; ++r, ++mode ) {
-                        pqr[r + (R+1)*(q + (Q+1)*p)] = mode;
-                    }
-                }
-            }
-            */
 
             for (int k = 0; k < Qz; ++k) {
                 for (int j = 0; j < Qy; ++j) {
                     for (int i = 0; i < Qx; ++i) {
                         NekDouble sum = 0.0;
-                        for (int r = 0; r <= R; ++r) {
-                            for (int q = 0; q <= min(R-r,Q); ++q) {
-                                for (int p = 0; p <= min(R-r,P); ++p) {
-                                    int mode = GetMode(p,q,r);
-                                    sum += inarray[mode]*
-                                        bx[i + Qx*p]*
-                                        by[j + Qy*q]*
-                                        bz[k + Qz*GetTetMode(p,q,r)];
-                                }
-                            }
+
+                        for (int cnt = 0; cnt < m_ncoeffs; ++cnt)
+                        {
+                            triple &idx = m_map[cnt];
+                            const int p = boost::get<0>(idx);
+                            const int q = boost::get<1>(idx);
+                            const int r = boost::get<2>(idx);
+                            sum += inarray[cnt]*
+                                bx[i + Qx*p]*
+                                by[j + Qy*q]*
+                                bz[k + Qz*m_rmap[cnt]];
                         }
-                        
+
                         // Add in contributions from singular vertices;
                         // i.e. (p,q,r) = (1,1,1),(0,1,1),(1,0,1)
-                        int m = GetMode(0,0,1);
-                        sum += inarray[m]*bz[k*Qz]*(bx[i+Qx]*by[j+Qy]+
+                        int m = 4;
+                        sum += inarray[m]*bz[k+Qz]*(bx[i+Qx]*by[j+Qy]+
                                                     bx[i   ]*by[j+Qy]+
                                                     bx[i+Qx]*by[j   ]);
                         outarray[i + Qx*(j + Qy*k)] = sum;
@@ -545,10 +682,6 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            int P = m_base[0]->GetNumModes()-1;
-            int Q = m_base[1]->GetNumModes()-1;
-            int R = m_base[2]->GetNumModes()-1;
-
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
@@ -557,39 +690,47 @@ namespace Nektar
             const Array<OneD, const NekDouble> &by = m_base[1]->GetBdata();
             const Array<OneD, const NekDouble> &bz = m_base[2]->GetBdata();
 
-            for( int r = 0; r <= R; ++r ) {
-                for( int q = 0; q <= min(R-r,Q); ++q ) {
-                    for( int p = 0; p <= min(R-r,P); ++p ) {
-                        // Compute tensor product of inarray with the 3 basis functions
-                        Array<OneD, NekDouble> g_pqr = Array<OneD, NekDouble>( Qx*Qy*Qz, 0.0 );
-                        for( int k = 0; k < Qz; ++k ) {
-                            for( int j = 0; j < Qy; ++j ) {
-                                for( int i = 0; i < Qx; ++i ) {
-                                    int s = i + Qx*(j + Qy*k);
-                                    cout << p << " " << q << " " << r << " " << GetTetMode(p,q,r) << endl;
-                                    g_pqr[s] += inarray[s] * 
-                                        bx[i + Qx*p] * 
-                                        by[j + Qy*q] * 
-                                        bz[k + Qz*GetTetMode(p,q,r)];
-                                    
-                                    if (p == 0 && q == 0 && r == 1)
-                                    {
-                                        g_pqr[s] += inarray[s] * bz[k+Qz]*(
-                                            bx[i+Qx]*by[j+Qy] + 
-                                            bx[i+Qx]*by[j   ] + 
-                                            bx[i   ]*by[j+Qy]);
-                                    }
-                                }
+            // Initial pyramid implementation. We need to iterate over vertices,
+            // edge int, face int and then interior.
+            for (int cnt = 0; cnt < m_ncoeffs; ++cnt)
+            {
+                // Get triple (p,q,r) which corresponds to this coefficient.
+                triple &idx = m_map[cnt];
+                const int p = boost::get<0>(idx);
+                const int q = boost::get<1>(idx);
+                const int r = boost::get<2>(idx);
+
+                Array<OneD, NekDouble> g_pqr(Qx*Qy*Qz, 0.0);
+                
+                for (int k = 0; k < Qz; ++k)
+                {
+                    for (int j = 0; j < Qy; ++j)
+                    {
+                        for (int i = 0; i < Qx; ++i)
+                        {
+                            int s = i + Qx*(j + Qy*k);
+
+                            g_pqr[s] += inarray[s] * 
+                                bx[i + Qx*p] * 
+                                by[j + Qy*q] * 
+                                bz[k + Qz*m_rmap[cnt]];
+
+                            // Add missing contributions from top vertex mode.
+                            if (p == 0 && q == 0 && r == 1)
+                            {
+                                g_pqr[s] += inarray[s] * bz[k+Qz]*(
+                                    bx[i+Qx]*by[j+Qy] + 
+                                    bx[i+Qx]*by[j   ] + 
+                                    bx[i   ]*by[j+Qy]);
                             }
                         }
-                        
-                        outarray[GetMode(p,q,r)] = Integral( g_pqr );
-                   }
+                    }
                 }
+
+                outarray[cnt] = Integral(g_pqr);
             }
         }
-        
-        
+
         //---------------------------------------
         // Evaluation functions
         //---------------------------------------
@@ -1191,33 +1332,33 @@ namespace Nektar
 
         int StdPyrExp::GetTetMode(const int I, const int J, const int K)
         {
-            const int P = m_base[0]->GetNumModes();
             const int Q = m_base[1]->GetNumModes();
             const int R = m_base[2]->GetNumModes();
-
+            
             int i,j,q_hat,k_hat;
             int cnt = 0;
-            
-            // Skip along the stacks (K)
+
+            // Traverse to q-r plane number I
             for (i = 0; i < I; ++i)
             {
-                q_hat = min(Q,P-i);
-                k_hat = min(R-Q, max(0, R-i));
-                cnt += q_hat*(q_hat+1)/2 - k_hat*Q;
+                // Size of triangle part
+                q_hat = min(Q,R-i);
+                // Size of rectangle part
+                k_hat = max(R-Q-i,0);
+                cnt  += q_hat*(q_hat+1)/2 + k_hat*Q;
             }
             
-            // Skip across the columns (J)
-            q_hat = min(Q,P-I);
-            k_hat = min(R-Q, max(0, R-I));
+            // Traverse to q column J
+            q_hat = R-I;
             for (j = 0; j < J; ++j)
             {
-                cnt += q_hat + k_hat - j;
+                cnt += q_hat;
+                q_hat--;
             }
             
-            // Skip up the columns (K)
+            // Traverse up stacks to K
             cnt += K;
             
-            // Return the final mode number
             return cnt;
         }
 

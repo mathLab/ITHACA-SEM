@@ -58,6 +58,7 @@
 
 namespace ptime = boost::posix_time;
 namespace ip = boost::asio::ip;
+namespace errc = boost::system::errc;
 
 namespace Nektar
 {
@@ -148,8 +149,6 @@ namespace Nektar
             TiXmlDocument doc;
             TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
             doc.LinkEndChild(decl);
-
-            cout << "Writing outfile: " << filename << endl;
 
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
@@ -476,8 +475,6 @@ namespace Nektar
             doc.LinkEndChild(decl);
 
             ASSERTL0(fileNames.size() == elementList.size(),"Outfile names and list of elements ids does not match");
-
-            cout << "Writing multi-file data: " << outFile << endl;
 
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
@@ -1090,7 +1087,8 @@ namespace Nektar
             }
             catch (fs::filesystem_error& e)
             {
-                std::cout << "Warning: " << e.what() << std::endl;
+                ASSERTL0(e.code().value() == errc::no_such_file_or_directory,
+                         "Filesystem error: " + string(e.what()));
             }
 
             // serial processing just add ending.
@@ -1114,7 +1112,14 @@ namespace Nektar
             m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
 
             // Create the destination directory
-            fs::create_directory(specPath);
+            try
+            {
+                fs::create_directory(specPath);
+            }
+            catch (fs::filesystem_error& e)
+            {
+                ASSERTL0(false, "Filesystem error: " + string(e.what()));
+            }
 
             // Collate per-process element lists on root process to generate
             // the info file.
@@ -1143,6 +1148,8 @@ namespace Nektar
                 // Write the Info.xml file
                 string infofile = LibUtilities::PortablePath(
                                             specPath / fs::path("Info.xml"));
+
+                cout << "Writing: " << specPath << endl;
                 WriteMultiFldFileIDs(infofile, filenames, ElementIDs,
                                      fieldmetadatamap);
             }

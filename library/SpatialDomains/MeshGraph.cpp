@@ -2092,8 +2092,11 @@ namespace Nektar
                         for(k = 0; k < fields.size(); ++k)
                         {
                             expansionMap = m_expansionMapShPtrMap.find(fields[k])->second;
-                            (*expansionMap)[id]->m_geomShPtr = geom;
-                            (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
+                            if((*expansionMap).find(id) != (*expansionMap).end())
+                            {
+                                (*expansionMap)[id]->m_geomShPtr = geom;
+                                (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
+                            }
                         }
                     }
                 }
@@ -2300,8 +2303,11 @@ namespace Nektar
                     for(k = 0; k < fields.size(); ++k)
                     {
                         expansionMap = m_expansionMapShPtrMap.find(fields[k])->second;
-                        (*expansionMap)[id]->m_geomShPtr = geom;
-                        (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
+                        if((*expansionMap).find(id) != (*expansionMap).end())
+                        {
+                            (*expansionMap)[id]->m_geomShPtr = geom;
+                            (*expansionMap)[id]->m_basisKeyVector = bkeyvec;
+                        }
                     }
                 }
             }

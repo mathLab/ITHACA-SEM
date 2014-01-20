@@ -179,22 +179,7 @@ namespace Nektar
 
             // Set up expansion list
             int expdim  = m_f->m_graph->GetMeshDimension();
-            
-            if(m_requireEquiSpaced) // set up points to be equispaced 
-            {
-                int nPointsNew = 0;
-                
-                if(vm.count("output-points"))
-                {
-                    LibUtilities::Equation expession(m_f->m_session, 
-                                                     vm["output-points"].as<string>());
-                    nPointsNew = expession.Evaluate();
-                }
-                
-
-                m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
-            }
-            
+                        
             bool useFFT     = false;
             bool dealiasing = false;
             
@@ -202,7 +187,7 @@ namespace Nektar
             // but it is re-arranged in expansion) 
             
             const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
-  
+ 
             
             // if Range has been speficied it is possible to have a
             // partition which is empty so ccheck this and return if
@@ -215,7 +200,6 @@ namespace Nektar
             m_f->m_exp.resize(1);
 
 
-
             // load fielddef if fld file is defined This gives
             // precedence to Homogeneous definition in fld file
             int NumHomogeneousDir = 0;
@@ -225,6 +209,10 @@ namespace Nektar
                     ::AllocateSharedPtr(m_f->m_session->GetComm());
                 m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef);
                 NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
+
+                //----------------------------------------------
+                // Set up Expansion information to use mode order from field
+                m_f->m_graph->SetExpansions(m_f->m_fielddef);
             }
             else
             {
@@ -244,7 +232,22 @@ namespace Nektar
                     }
                 }
             }
+            
+            // reset expansion defintion to use equispaced points if required. 
+            if(m_requireEquiSpaced) // set up points to be equispaced 
+            {
+                int nPointsNew = 0;
+                
+                if(vm.count("output-points"))
+                {
+                    LibUtilities::Equation expession(m_f->m_session, 
+                                                     vm["output-points"].as<string>());
+                    nPointsNew = expession.Evaluate();
+                }
+                
 
+                m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
+            }
 
             switch (expdim)
             {

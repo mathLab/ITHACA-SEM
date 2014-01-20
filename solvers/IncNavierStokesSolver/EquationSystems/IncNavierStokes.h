@@ -40,6 +40,8 @@
 #include <SolverUtils/UnsteadySystem.h>
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
+#include <SolverUtils/Forcing/Forcing.h>
 
 namespace Nektar
 {     
@@ -133,45 +135,21 @@ namespace Nektar
             return  m_velocity; 
         }
 
-        NekDouble GetSubstepTimeStep();
         
         Array<OneD, NekDouble> GetElmtCFLVals(void);
         
         NekDouble GetCFLEstimate(int &elmtid);
 
-        // Mapping of the real convective field on the standard element.
-        // This function gives back the convective filed in the standard
-        // element to calculate the stability region of the problem in a
-        // unique way.
-        Array<OneD,NekDouble> GetMaxStdVelocity(
-                const Array<OneD, Array<OneD,NekDouble> > inarray);
-
-
-        // Sub-stepping related methods
-        void SubStepAdvection (
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
-                const NekDouble time);
-
-        void SubStepProjection(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
-                const NekDouble time);
-
-        void SubStepExtrapoloteField(
-                NekDouble toff,
-                Array< OneD, Array<OneD, NekDouble> > &ExtVel);
-
-        void AddAdvectionPenaltyFlux(
-                const Array<OneD, const Array<OneD, NekDouble> > &velfield,
-                const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray);
+        void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
 
     protected:
+		
+        // pointer to the extrapolation class for sub-stepping and HOPBS
+        
+        ExtrapolateSharedPtr m_extrapolation;
+		
         /// modal energy file
         std::ofstream m_mdlFile;
-
-        LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
 
         /// bool to identify if using a substepping scheme
         bool m_subSteppingScheme;
@@ -179,13 +157,12 @@ namespace Nektar
         bool m_SmoothAdvection;
 
         LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
-        //LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
-        LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
-
-        Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
 
         /// Advection term
         AdvectionTermSharedPtr m_advObject;
+
+        /// Forcing terms
+        std::vector<SolverUtils::ForcingSharedPtr>               m_forcing;
 
         /// Number of fields to be convected;
         int   m_nConvectiveFields;
@@ -196,7 +173,6 @@ namespace Nektar
 
         /// Pointer to field holding pressure field
         MultiRegions::ExpListSharedPtr m_pressure;
-
         /// Kinematic viscosity
         NekDouble   m_kinvis;
         /// dump energy to file at steps time
@@ -218,10 +194,6 @@ namespace Nektar
         /// RHS Factor for Radiation Condition
         Array<OneD, Array<OneD, NekDouble> > m_fieldsRadiationFactor;
 
-        /// Time integration classes
-        LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
-        LibUtilities::TimeIntegrationWrapperSharedPtr m_integrationScheme;
-
         /// Number of time integration steps AND Order of extrapolation for
         /// pressure boundary conditions.
         int m_intSteps;
@@ -234,15 +206,9 @@ namespace Nektar
             return m_equationType;
         }
 
-        void AdvanceInTime(int nsteps);
-
-        void SubStepAdvance   (const int nstep);
-        void SubStepSaveFields(const int nstep);
-
-        void EvaluateAdvectionTerms(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
-                      Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
+        void EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+									Array<OneD, Array<OneD, NekDouble> > &outarray,
+									Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
 
         void WriteModalEnergy(void);
 
@@ -260,21 +226,6 @@ namespace Nektar
             return m_pressure;
         }
 
-        virtual void v_PrintSummary(std::ostream &out)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
-        virtual void v_DoInitialise(void)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
-        virtual void v_DoSolve(void)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
         virtual void v_TransCoeffToPhys(void)
         {
             ASSERTL0(false,"This method is not defined in this class");
@@ -284,6 +235,11 @@ namespace Nektar
         {
             ASSERTL0(false,"This method is not defined in this class");
         }
+
+        virtual int v_GetForceDimension()=0;
+
+        virtual bool v_PreIntegrate(int step);
+        virtual bool v_PostIntegrate(int step);
 
     private:
 

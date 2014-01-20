@@ -1,7 +1,8 @@
 
 SET(BasicConstHeaders
-	./BasicConst/NektarUnivConsts.hpp
-	./BasicConst/NektarUnivTypeDefs.hpp
+    ./BasicConst/NektarUnivConsts.hpp
+    ./BasicConst/NektarUnivTypeDefs.hpp
+    ./BasicConst/GitRevision.h
 )
 
 SET(BasicUtilsHeaders
@@ -11,6 +12,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/Equation.h
     ./BasicUtils/FieldIO.h
+    ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
@@ -33,13 +35,13 @@ SET(BasicUtilsSources
     ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/Equation.cpp
     ./BasicUtils/FieldIO.cpp
+    ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
     ./BasicUtils/XmlUtil.cpp
 )
-
 
 SET(CommunicationHeaders
     ./Communication/Comm.h
@@ -262,7 +264,7 @@ SET(ExpressionTemplates
 )
 
 SET(BaseHeaders
-	LibUtilitiesDeclspec.h
+    LibUtilitiesDeclspec.h
 )
 
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
@@ -275,7 +277,6 @@ SOURCE_GROUP("Linear Algebra Headers" FILES ${LinearAlgebraHeaders})
 SOURCE_GROUP("Linear Algebra Sources" FILES ${LinearAlgebraSources})
 SOURCE_GROUP("Memory Headers" FILES ${MemoryHeaders})
 SOURCE_GROUP("Memory Sources" FILES ${MemorySources})
-
 
 SOURCE_GROUP("Polylib Headers" FILES ${PolyLibHeaders})
 SOURCE_GROUP("Polylib Sources" FILES ${PolylibSources})
@@ -313,19 +314,26 @@ SET(LibUtilityHeaders
     ${BaseHeaders}
 )
 
+# Define the git branch and SHA1 hash if we are in a git repository. This is
+# stored in an automatically generated file so that the source tree is not built
+# on commit/update.
+SET(GitRevisionFile "${CMAKE_CURRENT_BINARY_DIR}/GitRevision.cpp")
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/BasicConst/GitRevision.cpp.in
+               ${GitRevisionFile})
+
 SET(LibUtilitySources
     ${BasicUtilsSources}
     ${FoundationSources}
     ${PolylibSources}
     ${CommunicationSources}
-	${LinearAlgebraSources}
-	${InterpreterSources}
-	${KernelSources}
+    ${LinearAlgebraSources}
+    ${InterpreterSources}
+    ${KernelSources}
     ${TimeIntegrationSources}
-  	${FFTSources}
+    ${FFTSources}
     ${MemorySources}
+    ${GitRevisionFile}
 )
-
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
@@ -335,6 +343,7 @@ TARGET_LINK_LIBRARIES(LibUtilities
     ${Boost_IOSTREAMS_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
+    ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
     ${ZLIB_LIBRARY}
     ${TINYXML_LIB}

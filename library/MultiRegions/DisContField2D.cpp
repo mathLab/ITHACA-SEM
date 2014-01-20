@@ -37,7 +37,9 @@
 #include <MultiRegions/DisContField2D.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion2D.h>
-#include <LocalRegions/Expansion.h>     // for Expansion
+#include <LocalRegions/Expansion.h> 
+#include <LocalRegions/QuadExp.h>   
+#include <LocalRegions/TriExp.h>    
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
@@ -654,7 +656,6 @@ namespace Nektar
                     if (type == SpatialDomains::eI    || 
                         type == SpatialDomains::eCalcBC)
                     {
-                        locExpList->SetUpPhysTangents(*m_exp);
                         SetUpPhysNormals();
                     }
                 }
@@ -704,6 +705,16 @@ namespace Nektar
             
             int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
+
+            // Set up a set of all local verts and edges. 
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                for(j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
+                {
+                    int id = (*m_exp)[i]->GetGeom()->GetVid(j);
+                    locVerts.insert(id);
+                }
+            }
 
             // Construct list of all periodic pairs local to this process.
             for (it = bregions.begin(); it != bregions.end(); ++it)
@@ -777,8 +788,6 @@ namespace Nektar
                     vertList[0] = segGeom->GetVid(0);
                     vertList[1] = segGeom->GetVid(1);
                     allVerts[(*c)[i]->GetGlobalID()] = vertList;
-                    locVerts.insert(vertList[0]);
-                    locVerts.insert(vertList[1]);
                 }
 
                 if (vComm->GetSize() == 1)
@@ -918,6 +927,8 @@ namespace Nektar
             map<int,int>::iterator cIt, pIt;
             map<int,int>::const_iterator oIt;
 
+            map<int,int> allCompPairs;
+
             // Store temporary map of periodic vertices which will hold all
             // periodic vertices on the entire mesh so that doubly periodic
             // vertices can be counted properly across partitions. Local
@@ -1008,6 +1019,9 @@ namespace Nektar
                              orientMap.count(ids[1]) > 0,
                              "Unable to find edge in orientation map.");
 
+                    allCompPairs[pIt->first ] = pIt->second;
+                    allCompPairs[pIt->second] = pIt->first;
+
                     for (i = 0; i < 2; ++i)
                     {
                         if (!local[i])
@@ -1089,6 +1103,78 @@ namespace Nektar
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            Array<OneD, int> pairSizes(n, 0);
+            pairSizes[p] = allCompPairs.size();
+            vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
+
+            int totPairSizes = Vmath::Vsum(n, pairSizes, 1);
+
+            Array<OneD, int> pairOffsets(n, 0);
+            pairOffsets[0] = 0;
+
+            for (i = 1; i < n; ++i)
+            {
+                pairOffsets[i] = pairOffsets[i-1] + pairSizes[i-1];
+            }
+
+            Array<OneD, int> first (totPairSizes, 0);
+            Array<OneD, int> second(totPairSizes, 0);
+
+            cnt = pairOffsets[p];
+
+            for (pIt = allCompPairs.begin(); pIt != allCompPairs.end(); ++pIt)
+            {
+                first [cnt  ] = pIt->first;
+                second[cnt++] = pIt->second;
+            }
+
+            vComm->AllReduce(first,  LibUtilities::ReduceSum);
+            vComm->AllReduce(second, LibUtilities::ReduceSum);
+
+            allCompPairs.clear();
+
+            for(cnt = 0; cnt < totPairSizes; ++cnt)
+            {
+                allCompPairs[first[cnt]] = second[cnt];
+            }
+
+            // Search for periodic vertices and edges which are not in a
+            // periodic composite but lie in this process. First, loop over all
+            // information we have from other processors.
+            for (cnt = i = 0; i < totEdges; ++i)
+            {
+                int edgeId    = edgeIds[i];
+
+                ASSERTL0(allCompPairs.count(edgeId) > 0,
+                         "Unable to find matching periodic edge.");
+
+                int perEdgeId = allCompPairs[edgeId];
+
+                for (j = 0; j < edgeVerts[i]; ++j, ++cnt)
+                {
+                    int vId = vertIds[cnt];
+
+                    PeriodicMap::iterator perId = periodicVerts.find(vId);
+
+                    if (perId == periodicVerts.end())
+                    {
+                        // This vertex is not included in the map. Figure out
+                        // which vertex it is supposed to be periodic
+                        // with. perEdgeId is the edge ID which is periodic with
+                        // edgeId. The logic is much the same as the loop above.
+                        int perVertexId =
+                            orientMap[edgeId] == orientMap[perEdgeId] ?
+                            vertMap[perEdgeId][(j+1)%2] : vertMap[perEdgeId][j];
+
+                        PeriodicEntity ent(perVertexId,
+                                           StdRegions::eNoOrientation,
+                                           locVerts.count(perVertexId) > 0);
+
+                        periodicVerts[vId].push_back(ent);
                     }
                 }
             }
@@ -1568,7 +1654,6 @@ namespace Nektar
             }
         }
 
-
         /** 
          * @brief Calculate the \f$ L^2 \f$ error of the \f$ Q_{\rm dir} \f$
          * derivative using the consistent DG evaluation of \f$ Q_{\rm dir} \f$.
@@ -1603,32 +1688,35 @@ namespace Nektar
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
                 eid = m_offset_elmt_id[i];
+
                 // Probably a better way of setting up lambda than this.
                 // Note cannot use PutCoeffsInToElmts since lambda space
                 // is mapped during the solve.
-                for(e = 0; e < (*m_exp)[eid]->GetNedges(); ++e)
+                int nEdges = (*m_exp)[i]->GetNedges();
+                Array<OneD, Array<OneD, NekDouble> > edgeCoeffs(nEdges);
+
+                for(e = 0; e < nEdges; ++e)
                 {
                     edgedir = (*m_exp)[eid]->GetEorient(e);
-
                     ncoeff_edge = elmtToTrace[eid][e]->GetNcoeffs();
+                    edgeCoeffs[e] = Array<OneD, NekDouble>(ncoeff_edge);
+                    Vmath::Vcopy(ncoeff_edge, edge_lambda, 1, edgeCoeffs[e], 1);
                     elmtToTrace[eid][e]->SetCoeffsToOrientation(
-                        edgedir,edge_lambda,edge_lambda);
-                    Vmath::Vcopy(ncoeff_edge,edge_lambda,1,
-                                 elmtToTrace[eid][e]->UpdateCoeffs(),1);
+                        edgedir, edgeCoeffs[e], edgeCoeffs[e]);
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
 
                 (*m_exp)[eid]->DGDeriv(dir,
                                        tmp_coeffs=m_coeffs+m_coeff_offset[eid],
                                        elmtToTrace[eid],
+                                       edgeCoeffs,
                                        out_tmp = out_d+cnt);
                 cnt  += (*m_exp)[eid]->GetNcoeffs();
             }
             
             BwdTrans(out_d,m_phys);
             Vmath::Vsub(m_npoints,m_phys,1,soln,1,m_phys,1);
-
-            return L2();
+            return L2(m_phys);
         }
 
         void DisContField2D::v_HelmSolve(
@@ -1865,7 +1953,7 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             int    i,cnt,e,ncoeff_edge;
-            Array<OneD, NekDouble> force, out_tmp,qrhs;
+            Array<OneD, NekDouble> force, out_tmp, qrhs, qrhs1;
             Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
@@ -1887,37 +1975,93 @@ namespace Nektar
                 nq_elmt = (*m_exp)[eid]->GetTotPoints();
                 nm_elmt = (*m_exp)[eid]->GetNcoeffs();
                 qrhs  = Array<OneD, NekDouble>(nq_elmt);
+                qrhs1  = Array<OneD, NekDouble>(nq_elmt);
                 force = Array<OneD, NekDouble>(2*nm_elmt);
                 out_tmp = force + nm_elmt;
+                LocalRegions::ExpansionSharedPtr ppExp;
+
+                int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
+                int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
+                int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
+                int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
 
                 // Probably a better way of setting up lambda than this.  Note
                 // cannot use PutCoeffsInToElmts since lambda space is mapped
                 // during the solve.
+                int nEdges = (*m_exp)[i]->GetNedges();
+                Array<OneD, Array<OneD, NekDouble> > edgeCoeffs(nEdges);
+
                 for(e = 0; e < (*m_exp)[eid]->GetNedges(); ++e)
                 {
                     edgedir = (*m_exp)[eid]->GetEorient(e);
-
                     ncoeff_edge = elmtToTrace[eid][e]->GetNcoeffs();
+                    edgeCoeffs[e] = Array<OneD, NekDouble>(ncoeff_edge);
+                    Vmath::Vcopy(ncoeff_edge, edge_lambda, 1, edgeCoeffs[e], 1);
                     elmtToTrace[eid][e]->SetCoeffsToOrientation(
-                        edgedir,edge_lambda,edge_lambda);
-                    Vmath::Vcopy(ncoeff_edge,edge_lambda,1,
-                                 elmtToTrace[eid][e]->UpdateCoeffs(),1);
+                        edgedir, edgeCoeffs[e], edgeCoeffs[e]);
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
 
+                //creating orthogonal expansion (checking if we have quads or triangles)
+                LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
+                switch(shape)
+                {
+                    case LibUtilities::eQuadrilateral:
+                    {
+                        const LibUtilities::PointsKey PkeyQ1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyQ2(num_points1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey  BkeyQ1(LibUtilities::eOrtho_A, num_modes0, PkeyQ1);
+                        LibUtilities::BasisKey  BkeyQ2(LibUtilities::eOrtho_A, num_modes1, PkeyQ2);
+                        SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+                    }
+                    break;
+                    case LibUtilities::eTriangle:
+                    {
+                        const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
+                        LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
+                        SpatialDomains::TriGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(BkeyT1, BkeyT2, tGeom);
+                    }
+                    break;
+                    default:
+                        ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
+                };
+
+
+                //SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
+                //LocalRegions::QuadExpSharedPtr ppExp = 
+                //	MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+                //Orthogonal expansion created
+
+                //In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
+                //===============================================================================================
+                //(*m_exp)[eid]->BwdTrans(tmp_coeffs = m_coeffs + m_coeff_offset[eid],(*m_exp)[eid]->UpdatePhys());
+                //(*m_exp)[eid]->PhysDeriv((*m_exp)[eid]->GetPhys(), qrhs, qrhs1);
+                //ppExp->IProductWRTDerivBase(0,qrhs,force);
+                //ppExp->IProductWRTDerivBase(1,qrhs1,out_tmp);
+                //===============================================================================================
+               
+                //DGDeriv	
                 // (d/dx w, d/dx q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
-                    elmtToTrace[eid], out_tmp);
+                    elmtToTrace[eid], edgeCoeffs, out_tmp);
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
-                (*m_exp)[eid]->IProductWRTDerivBase(0,qrhs,force);
+                //(*m_exp)[eid]->IProductWRTDerivBase(0,qrhs,force);
+                ppExp->IProductWRTDerivBase(0,qrhs,force);
+
 
                 // + (d/dy w, d/dy q_1)
                 (*m_exp)[eid]->DGDeriv(
                     1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
-                    elmtToTrace[eid], out_tmp);
+                    elmtToTrace[eid], edgeCoeffs, out_tmp);
+
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
-                (*m_exp)[eid]->IProductWRTDerivBase(1,qrhs,out_tmp);
+                //(*m_exp)[eid]->IProductWRTDerivBase(1,qrhs,out_tmp);
+                ppExp->IProductWRTDerivBase(1,qrhs,out_tmp);
 
                 Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
 
@@ -1928,18 +2072,18 @@ namespace Nektar
 
                 // multiply by inverse Laplacian matrix
                 // get matrix inverse
-                LocalRegions::MatrixKey  lapkey(
-                    StdRegions::eInvLaplacianWithUnityMean,  
-                    (*m_exp)[eid]->DetShapeType(), *(*m_exp)[eid]);
-                DNekScalMatSharedPtr lapsys = 
-                    boost::dynamic_pointer_cast<LocalRegions::Expansion>(
-                        (*m_exp)[eid])->GetLocMatrix(lapkey);
+                LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, ppExp->DetShapeType(), *ppExp);
+                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
                 
                 NekVector<NekDouble> in (nm_elmt,force,eWrapper);
-                NekVector<NekDouble> out(nm_elmt,
-                    tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
+                NekVector<NekDouble> out(nm_elmt);
 
                 out = (*lapsys)*in;
+
+                // Transforming back to modified basis
+                Array<OneD, NekDouble> work(nq_elmt);
+                ppExp->BwdTrans(out.GetPtr(), work);
+                (*m_exp)[eid]->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[eid]);
             }
         }
 
@@ -2007,7 +2151,8 @@ namespace Nektar
 
                              std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
-                             Import(filebcs,FieldDef, FieldData);
+                             LibUtilities::FieldIO f(m_session->GetComm());
+                             f.Import(filebcs,FieldDef, FieldData);
 
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
@@ -2054,7 +2199,8 @@ namespace Nektar
 
                              std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
-                             LibUtilities::Import(filebcs,FieldDef, FieldData);
+                             LibUtilities::FieldIO f(m_session->GetComm());
+                             f.Import(filebcs,FieldDef, FieldData);
 
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
@@ -2107,8 +2253,8 @@ namespace Nektar
 
                             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                             std::vector<std::vector<NekDouble> >   FieldData;
-
-                            Import(filebcs,FieldDef, FieldData);
+                            LibUtilities::FieldIO f(m_session->GetComm());
+                            f.Import(filebcs,FieldDef, FieldData);
 
                             // copy FieldData into locExpList
                             locExpList->ExtractDataToCoeffs(

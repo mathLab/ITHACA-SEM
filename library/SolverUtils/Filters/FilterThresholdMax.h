@@ -75,6 +75,7 @@ namespace Nektar
             NekDouble m_thresholdValue;
             NekDouble m_initialValue;
             std::string m_outputFile;
+            LibUtilities::FieldIOSharedPtr m_fld;
         };
     }
 }

@@ -1,465 +1,467 @@
-//////////////////////////////////////////////////////////////////////////////
-//
-// File DisContField3D.cpp
-//
-// For more information, please see: http://www.nektar.info
-//
-// The MIT License
-//
-// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-// Department of Aeronautics, Imperial College London (UK), and Scientific
-// Computing and Imaging Institute, University of Utah (USA).
-//
-// License for the specific language governing rights and limitations under
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the "Software"),
-// to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
-//
-// Description: Field definition for 3D domain with boundary
-// conditions using LDG flux
-//
-///////////////////////////////////////////////////////////////////////////////
+ //////////////////////////////////////////////////////////////////////////////
+ //
+ // File DisContField3D.cpp
+ //
+ // For more information, please see: http://www.nektar.info
+ //
+ // The MIT License
+ //
+ // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+ // Department of Aeronautics, Imperial College London (UK), and Scientific
+ // Computing and Imaging Institute, University of Utah (USA).
+ //
+ // License for the specific language governing rights and limitations under
+ // Permission is hereby granted, free of charge, to any person obtaining a
+ // copy of this software and associated documentation files (the "Software"),
+ // to deal in the Software without restriction, including without limitation
+ // the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ // and/or sell copies of the Software, and to permit persons to whom the
+ // Software is furnished to do so, subject to the following conditions:
+ //
+ // The above copyright notice and this permission notice shall be included
+ // in all copies or substantial portions of the Software.
+ //
+ // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ // OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ // THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ // DEALINGS IN THE SOFTWARE.
+ //
+ // Description: Field definition for 3D domain with boundary
+ // conditions using LDG flux
+ //
+ ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/DisContField3D.h>
-#include <LocalRegions/Expansion3D.h>
-#include <LocalRegions/Expansion2D.h>
-#include <SpatialDomains/MeshGraph3D.h>
+ #include <MultiRegions/DisContField3D.h>
+ #include <LocalRegions/Expansion3D.h>
+ #include <LocalRegions/Expansion2D.h>
+ #include <SpatialDomains/MeshGraph3D.h>
+ #include <LocalRegions/HexExp.h>
+ #include <LocalRegions/TetExp.h>
 
-#include <boost/assign/std/vector.hpp>
+ #include <boost/assign/std/vector.hpp>
 
-using namespace boost::assign;
+ using namespace boost::assign;
 
-namespace Nektar
-{
-    namespace MultiRegions
-    {
-        /**
-         * @class DisContField3D
-         * Abstraction of a global discontinuous three-dimensional spectral/hp
-         * element expansion which approximates the solution of a set of
-         * partial differential equations.
-         */
+ namespace Nektar
+ {
+     namespace MultiRegions
+     {
+         /**
+          * @class DisContField3D
+          * Abstraction of a global discontinuous three-dimensional spectral/hp
+          * element expansion which approximates the solution of a set of
+          * partial differential equations.
+          */
 
-        /**
-         * @brief Default constructor.
-         */
-        DisContField3D::DisContField3D() :
-            ExpList3D             (),
-            m_bndCondExpansions   (),
-            m_bndConditions       (),
-            m_trace(NullExpListSharedPtr)
-        {
-        }
+         /**
+          * @brief Default constructor.
+          */
+         DisContField3D::DisContField3D() :
+             ExpList3D             (),
+             m_bndCondExpansions   (),
+             m_bndConditions       (),
+             m_trace(NullExpListSharedPtr)
+         {
+         }
 
-        /**
-         * @brief Constructs a global discontinuous field based on an input mesh
-         * with boundary conditions.
-         */
-        DisContField3D::DisContField3D(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const SpatialDomains::MeshGraphSharedPtr   &graph3D,
-            const std::string                          &variable,
-            const bool                                  SetUpJustDG)
-            : ExpList3D          (pSession,graph3D,variable),
-              m_bndCondExpansions(),
-              m_bndConditions    (),
-              m_trace(NullExpListSharedPtr)
-        {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
-            
-            GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-            
-            // Find periodic edges for this variable.
-            FindPeriodicFaces(bcs, variable);
+         /**
+          * @brief Constructs a global discontinuous field based on an input mesh
+          * with boundary conditions.
+          */
+         DisContField3D::DisContField3D(
+             const LibUtilities::SessionReaderSharedPtr &pSession,
+             const SpatialDomains::MeshGraphSharedPtr   &graph3D,
+             const std::string                          &variable,
+             const bool                                  SetUpJustDG)
+             : ExpList3D          (pSession,graph3D,variable),
+               m_bndCondExpansions(),
+               m_bndConditions    (),
+               m_trace(NullExpListSharedPtr)
+         {
+             SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
 
-            if(SetUpJustDG)
-            {
-                SetUpDG();
-            }
-            else
-            {
-                // Set element edges to point to Robin BC edges if required.
-                int i,cnt,f;
-                Array<OneD, int> ElmtID, FaceID;
-                GetBoundaryToElmtMap(ElmtID, FaceID);
+             GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
+             EvaluateBoundaryConditions();
+             ApplyGeomInfo();
 
-                for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-                {
-                    MultiRegions::ExpListSharedPtr locExpList;
-                    locExpList = m_bndCondExpansions[i];
-                    
-                    for(f = 0; f < locExpList->GetExpSize(); ++f)
-                    {
-                        LocalRegions::Expansion3DSharedPtr exp3d
-                            = boost::dynamic_pointer_cast<
-                                LocalRegions::Expansion3D>((*m_exp)[ElmtID[cnt+f]]);
-                        LocalRegions::Expansion2DSharedPtr exp2d
-                            = boost::dynamic_pointer_cast<
-                                LocalRegions::Expansion2D>(locExpList->GetExp(f));
-                        
-                        exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
-                        exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
-                    }
-                    cnt += m_bndCondExpansions[i]->GetExpSize();
-                }
-            }
-        }
-        
-        /*
-         * @brief Copy type constructor which declares new boundary conditions
-         * and re-uses mapping info and trace space if possible
-         */
-        DisContField3D::DisContField3D( 
-            const DisContField3D                     &In,
-            const SpatialDomains::MeshGraphSharedPtr &graph3D,
-            const std::string                        &variable,
-            const bool                                SetUpJustDG) 
-            : ExpList3D(In), 
-              m_trace(NullExpListSharedPtr)
-        {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
-            
-            GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo();
-           
-            if(!SameTypeOfBoundaryConditions(In))
-            {
-                // Find periodic edges for this variable.
-                FindPeriodicFaces(bcs, variable);
-               
-                if (SetUpJustDG)
-                {
-                    SetUpDG(variable);
-                }
-                else
-                {
-                    int i,cnt,f;
-                    Array<OneD, int> ElmtID,FaceID;
-                    GetBoundaryToElmtMap(ElmtID,FaceID);
-                   
-                    for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-                    {
-                        MultiRegions::ExpListSharedPtr locExpList;
-                        locExpList = m_bndCondExpansions[i];
-                       
-                        for(f = 0; f < locExpList->GetExpSize(); ++f)
-                        {
-                            LocalRegions::Expansion3DSharedPtr exp3d
-                                = boost::dynamic_pointer_cast<
-                                    LocalRegions::Expansion3D>(
-                                        (*m_exp)[ElmtID[cnt+f]]);
-                            LocalRegions::Expansion2DSharedPtr exp2d
-                                = boost::dynamic_pointer_cast<
-                                    LocalRegions::Expansion2D>(
-                                        locExpList->GetExp(f));
-                           
-                            exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
-                            exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
-                        }
-                       
-                        cnt += m_bndCondExpansions[i]->GetExpSize();
-                    }
-                    SetUpPhysNormals();
-                }
-               
-            }
-            //else if we have the same boundary condition
-            else
-            {
-                if(SetUpJustDG)
-                {
-                    m_globalBndMat = In.m_globalBndMat;
-                    m_trace        = In.m_trace;
-                    m_traceMap     = In.m_traceMap;
-                }
-                else 
-                {
-                    m_globalBndMat = In.m_globalBndMat;
-                    m_trace        = In.m_trace;
-                    m_traceMap     = In.m_traceMap;
-                   
-                    int i,cnt,f;
-                    Array<OneD, int> ElmtID,FaceID;
-                    GetBoundaryToElmtMap(ElmtID,FaceID);
-                   
-                    for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-                    {
-                        MultiRegions::ExpListSharedPtr locExpList;
-                        locExpList = m_bndCondExpansions[i];
-                       
-                        for(f = 0; f < locExpList->GetExpSize(); ++f)
-                        {
-                            LocalRegions::Expansion3DSharedPtr exp3d
-                                = boost::dynamic_pointer_cast<
-                                    LocalRegions::Expansion3D>(
-                                        (*m_exp)[ElmtID[cnt+f]]);
-                            LocalRegions::Expansion2DSharedPtr exp2d
-                                = boost::dynamic_pointer_cast<
-                                    LocalRegions::Expansion2D>(
-                                        locExpList->GetExp(f));
-                           
-                            exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
-                            exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
-                        }
-                       
-                        cnt += m_bndCondExpansions[i]->GetExpSize();
-                    }
+             // Find periodic edges for this variable.
+             FindPeriodicFaces(bcs, variable);
 
-                    if(m_session->DefinesSolverInfo("PROJECTION"))
-                    {
-                        std::string ProjectStr = 
-                            m_session->GetSolverInfo("PROJECTION");
-                        if (ProjectStr == "MixedCGDG"           ||
-                            ProjectStr == "Mixed_CG_Discontinuous")
-                        {
-                            SetUpDG(variable);
-                        }
-                        else
-                        {
-                            SetUpPhysNormals();
-                        }
-                    }
-                    else
-                    {
-                        SetUpPhysNormals();
-                    }                       
-                }
-            }
-        }
+             if(SetUpJustDG)
+             {
+                 SetUpDG();
+             }
+             else
+             {
+                 // Set element edges to point to Robin BC edges if required.
+                 int i,cnt,f;
+                 Array<OneD, int> ElmtID, FaceID;
+                 GetBoundaryToElmtMap(ElmtID, FaceID);
 
-        /**
-         *
-         */
-        DisContField3D::DisContField3D(const DisContField3D &In) :
-            ExpList3D(In),
-            m_bndCondExpansions   (In.m_bndCondExpansions),
-            m_bndConditions       (In.m_bndConditions),
-            m_globalBndMat        (In.m_globalBndMat),
-            m_trace               (In.m_trace),
-            m_traceMap            (In.m_traceMap)
-        {
-        }
+                 for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                 {
+                     MultiRegions::ExpListSharedPtr locExpList;
+                     locExpList = m_bndCondExpansions[i];
 
-        /**
-         * @brief Destructor.
-         */
-        DisContField3D::~DisContField3D()
-        {
-        }
+                     for(f = 0; f < locExpList->GetExpSize(); ++f)
+                     {
+                         LocalRegions::Expansion3DSharedPtr exp3d
+                             = boost::dynamic_pointer_cast<
+                                 LocalRegions::Expansion3D>((*m_exp)[ElmtID[cnt+f]]);
+                         LocalRegions::Expansion2DSharedPtr exp2d
+                             = boost::dynamic_pointer_cast<
+                                 LocalRegions::Expansion2D>(locExpList->GetExp(f));
 
-        GlobalLinSysSharedPtr DisContField3D::GetGlobalBndLinSys(
-            const GlobalLinSysKey &mkey)
-        {
-            ASSERTL0(mkey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam,
-                     "Routine currently only tested for HybridDGHelmholtz");
-            ASSERTL1(mkey.GetGlobalSysSolnType() == 
-                     m_traceMap->GetGlobalSysSolnType(),
-                     "The local to global map is not set up for the requested "
-                     "solution type");
-            
-            GlobalLinSysSharedPtr glo_matrix;
-            GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
-            
-            if (matrixIter == m_globalBndMat->end())
-            {
-                glo_matrix = GenGlobalBndLinSys(mkey,m_traceMap);
-                (*m_globalBndMat)[mkey] = glo_matrix;
-            }
-            else
-            {
-                glo_matrix = matrixIter->second;
-            }
+                         exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
+                         exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
+                     }
+                     cnt += m_bndCondExpansions[i]->GetExpSize();
+                 }
+             }
+         }
 
-            return glo_matrix;
-        }
-        
-        /**
-         * @brief Set up all DG member variables and maps.
-         */
-        void DisContField3D::SetUpDG(const std::string variable)
-        {
-            if (m_trace != NullExpListSharedPtr)
-            {
-                return;
-            }
-            
-            ExpList2DSharedPtr trace;
-            
-            SpatialDomains::MeshGraph3DSharedPtr graph3D = 
-                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
-                    m_graph);
-            
-            // Set up matrix map
-            m_globalBndMat = MemoryManager<GlobalLinSysMap>::
-                AllocateSharedPtr();
-            
-            // Set up Trace space
-            bool UseGenSegExp = true;
-            trace = MemoryManager<ExpList2D>::AllocateSharedPtr(
-                m_session, m_bndCondExpansions, m_bndConditions,
-                *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
+         /*
+          * @brief Copy type constructor which declares new boundary conditions
+          * and re-uses mapping info and trace space if possible
+          */
+         DisContField3D::DisContField3D( 
+             const DisContField3D                     &In,
+             const SpatialDomains::MeshGraphSharedPtr &graph3D,
+             const std::string                        &variable,
+             const bool                                SetUpJustDG) 
+             : ExpList3D(In), 
+               m_trace(NullExpListSharedPtr)
+         {
+             SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
 
-            m_trace    = trace;
-            m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
-                m_session,graph3D,trace,*this,m_bndCondExpansions,
-                m_bndConditions, m_periodicFaces,variable);
+             GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
+             EvaluateBoundaryConditions();
+             ApplyGeomInfo();
 
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
-            // Scatter trace segments to 3D elements. For each element, we find
-            // the trace segment associated to each edge. The element then
-            // retains a pointer to the trace space segments, to ensure
-            // uniqueness of normals when retrieving from two adjoining elements
-            // which do not lie in a plane.
-            for (int i = 0; i < m_exp->size(); ++i)
-            {
-                for (int j = 0; j < (*m_exp)[i]->GetNfaces(); ++j)
-                {
-                    LocalRegions::Expansion3DSharedPtr exp3d =
-                        boost::dynamic_pointer_cast<
-                            LocalRegions::Expansion3D>((*m_exp)[i]);
-                    LocalRegions::Expansion2DSharedPtr exp2d =
-                        boost::dynamic_pointer_cast<
-                            LocalRegions::Expansion2D>(elmtToTrace[i][j]);
-                    exp3d->SetFaceExp           (j, exp2d);
-                    exp2d->SetAdjacentElementExp(j, exp3d);
-                }
-            }
-            
-            // Set up physical normals
-            SetUpPhysNormals();
-            
-            // Set up information for parallel jobs.
-            for (int i = 0; i < m_trace->GetExpSize(); ++i)
-            {
-                LocalRegions::Expansion2DSharedPtr traceEl = 
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion2D>(m_trace->GetExp(i));
+             if(!SameTypeOfBoundaryConditions(In))
+             {
+                 // Find periodic edges for this variable.
+                 FindPeriodicFaces(bcs, variable);
 
-                int offset      = m_trace->GetPhys_Offset(i);
-                int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
-                PeriodicMap::iterator pIt = m_periodicFaces.find(
-                    traceGeomId);
+                 if (SetUpJustDG)
+                 {
+                     SetUpDG(variable);
+                 }
+                 else
+                 {
+                     int i,cnt,f;
+                     Array<OneD, int> ElmtID,FaceID;
+                     GetBoundaryToElmtMap(ElmtID,FaceID);
 
-                if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
-                {
-                    if (traceGeomId != min(pIt->second[0].id, traceGeomId))
-                    {
-                        traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
-                            traceEl->GetLeftAdjacentElementFace());
-                    }
-                }
-                else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
-                {
-                    traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
-                        traceEl->GetLeftAdjacentElementFace());
-                }
-            }
-            
-            int cnt, n, e;
-            
-            // Identify boundary faces
-            for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {
-                if (m_bndConditions[n]->GetBoundaryConditionType() != 
-                    SpatialDomains::ePeriodic)
-                {
-                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
-                    {
-                        m_boundaryFaces.insert(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
-                    }
-                }
-                cnt += m_bndCondExpansions[n]->GetExpSize();
-            }
-                
-            // Set up information for periodic boundary conditions.
-            boost::unordered_map<int,pair<int,int> > perFaceToExpMap;
-            boost::unordered_map<int,pair<int,int> >::iterator it2;
-            cnt = 0;
-            LocalRegions::Expansion3DSharedPtr exp3d;
-            for (int n = 0; n < m_exp->size(); ++n)
-            {
-                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
-                for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
-                {
-                    PeriodicMap::iterator it = m_periodicFaces.find(
-                        exp3d->GetGeom3D()->GetFid(e));
-                    
-                    if (it != m_periodicFaces.end())
-                    {
-                        perFaceToExpMap[it->first] = make_pair(n, e);
-                    }
-                }
-            }
-            
-            // Set up left-adjacent face list.
-            m_leftAdjacentFaces.resize(cnt);
-            cnt = 0;
-            for (int i = 0; i < m_exp->size(); ++i)
-            {
-                for (int j = 0; j < (*m_exp)[i]->GetNfaces(); ++j, ++cnt)
-                {
-                    m_leftAdjacentFaces[cnt] = IsLeftAdjacentFace(i, j);
-                }
-            }
+                     for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                     {
+                         MultiRegions::ExpListSharedPtr locExpList;
+                         locExpList = m_bndCondExpansions[i];
 
-            // Set up mapping to copy Fwd of periodic bcs to Bwd of other edge.
-            cnt = 0;
-            for (int n = 0; n < m_exp->size(); ++n)
-            {
-                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
-                for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
-                {
-                    int faceGeomId = exp3d->GetGeom3D()->GetFid(e);
-                    int offset = m_trace->GetPhys_Offset(
-                        elmtToTrace[n][e]->GetElmtId());
+                         for(f = 0; f < locExpList->GetExpSize(); ++f)
+                         {
+                             LocalRegions::Expansion3DSharedPtr exp3d
+                                 = boost::dynamic_pointer_cast<
+                                     LocalRegions::Expansion3D>(
+                                         (*m_exp)[ElmtID[cnt+f]]);
+                             LocalRegions::Expansion2DSharedPtr exp2d
+                                 = boost::dynamic_pointer_cast<
+                                     LocalRegions::Expansion2D>(
+                                         locExpList->GetExp(f));
 
-                    // Check to see if this face is periodic.
-                    PeriodicMap::iterator it = m_periodicFaces.find(faceGeomId);
+                             exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
+                             exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
+                         }
 
-                    if (it != m_periodicFaces.end())
-                    {
-                        const PeriodicEntity &ent = it->second[0];
-                        it2 = perFaceToExpMap.find(ent.id);
+                         cnt += m_bndCondExpansions[i]->GetExpSize();
+                     }
+                     SetUpPhysNormals();
+                 }
 
-                        if (it2 == perFaceToExpMap.end())
-                        {
-                            if (m_session->GetComm()->GetSize() > 1 &&
-                                !ent.isLocal)
-                            {
-                                continue;
-                            }
-                            else
-                            {
-                                ASSERTL1(false, "Periodic edge not found!");
-                            }
-                        }
+             }
+             //else if we have the same boundary condition
+             else
+             {
+                 if(SetUpJustDG)
+                 {
+                     m_globalBndMat = In.m_globalBndMat;
+                     m_trace        = In.m_trace;
+                     m_traceMap     = In.m_traceMap;
+                 }
+                 else 
+                 {
+                     m_globalBndMat = In.m_globalBndMat;
+                     m_trace        = In.m_trace;
+                     m_traceMap     = In.m_traceMap;
 
-                        ASSERTL1(m_leftAdjacentFaces[cnt],
-                                 "Periodic face in non-forward space?");
+                     int i,cnt,f;
+                     Array<OneD, int> ElmtID,FaceID;
+                     GetBoundaryToElmtMap(ElmtID,FaceID);
 
-                        int offset2 = m_trace->GetPhys_Offset(
-                            elmtToTrace[it2->second.first][it2->second.second]->
-                                GetElmtId());
+                     for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                     {
+                         MultiRegions::ExpListSharedPtr locExpList;
+                         locExpList = m_bndCondExpansions[i];
+
+                         for(f = 0; f < locExpList->GetExpSize(); ++f)
+                         {
+                             LocalRegions::Expansion3DSharedPtr exp3d
+                                 = boost::dynamic_pointer_cast<
+                                     LocalRegions::Expansion3D>(
+                                         (*m_exp)[ElmtID[cnt+f]]);
+                             LocalRegions::Expansion2DSharedPtr exp2d
+                                 = boost::dynamic_pointer_cast<
+                                     LocalRegions::Expansion2D>(
+                                         locExpList->GetExp(f));
+
+                             exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
+                             exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
+                         }
+
+                         cnt += m_bndCondExpansions[i]->GetExpSize();
+                     }
+
+                     if(m_session->DefinesSolverInfo("PROJECTION"))
+                     {
+                         std::string ProjectStr = 
+                             m_session->GetSolverInfo("PROJECTION");
+                         if (ProjectStr == "MixedCGDG"           ||
+                             ProjectStr == "Mixed_CG_Discontinuous")
+                         {
+                             SetUpDG(variable);
+                         }
+                         else
+                         {
+                             SetUpPhysNormals();
+                         }
+                     }
+                     else
+                     {
+                         SetUpPhysNormals();
+                     }                       
+                 }
+             }
+         }
+
+         /**
+          *
+          */
+         DisContField3D::DisContField3D(const DisContField3D &In) :
+             ExpList3D(In),
+             m_bndCondExpansions   (In.m_bndCondExpansions),
+             m_bndConditions       (In.m_bndConditions),
+             m_globalBndMat        (In.m_globalBndMat),
+             m_trace               (In.m_trace),
+             m_traceMap            (In.m_traceMap)
+         {
+         }
+
+         /**
+          * @brief Destructor.
+          */
+         DisContField3D::~DisContField3D()
+         {
+         }
+
+         GlobalLinSysSharedPtr DisContField3D::GetGlobalBndLinSys(
+             const GlobalLinSysKey &mkey)
+         {
+             ASSERTL0(mkey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam,
+                      "Routine currently only tested for HybridDGHelmholtz");
+             ASSERTL1(mkey.GetGlobalSysSolnType() == 
+                      m_traceMap->GetGlobalSysSolnType(),
+                      "The local to global map is not set up for the requested "
+                      "solution type");
+
+             GlobalLinSysSharedPtr glo_matrix;
+             GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
+
+             if (matrixIter == m_globalBndMat->end())
+             {
+                 glo_matrix = GenGlobalBndLinSys(mkey,m_traceMap);
+                 (*m_globalBndMat)[mkey] = glo_matrix;
+             }
+             else
+             {
+                 glo_matrix = matrixIter->second;
+             }
+
+             return glo_matrix;
+         }
+
+         /**
+          * @brief Set up all DG member variables and maps.
+          */
+         void DisContField3D::SetUpDG(const std::string variable)
+         {
+             if (m_trace != NullExpListSharedPtr)
+             {
+                 return;
+             }
+
+             ExpList2DSharedPtr trace;
+
+             SpatialDomains::MeshGraph3DSharedPtr graph3D = 
+                 boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
+                     m_graph);
+
+             // Set up matrix map
+             m_globalBndMat = MemoryManager<GlobalLinSysMap>::
+                 AllocateSharedPtr();
+
+             // Set up Trace space
+             bool UseGenSegExp = true;
+             trace = MemoryManager<ExpList2D>::AllocateSharedPtr(
+                 m_session, m_bndCondExpansions, m_bndConditions,
+                 *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
+
+             m_trace    = trace;
+             m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
+                 m_session,graph3D,trace,*this,m_bndCondExpansions,
+                 m_bndConditions, m_periodicFaces,variable);
+
+             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                 &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+             // Scatter trace segments to 3D elements. For each element, we find
+             // the trace segment associated to each edge. The element then
+             // retains a pointer to the trace space segments, to ensure
+             // uniqueness of normals when retrieving from two adjoining elements
+             // which do not lie in a plane.
+             for (int i = 0; i < m_exp->size(); ++i)
+             {
+                 for (int j = 0; j < (*m_exp)[i]->GetNfaces(); ++j)
+                 {
+                     LocalRegions::Expansion3DSharedPtr exp3d =
+                         boost::dynamic_pointer_cast<
+                             LocalRegions::Expansion3D>((*m_exp)[i]);
+                     LocalRegions::Expansion2DSharedPtr exp2d =
+                         boost::dynamic_pointer_cast<
+                             LocalRegions::Expansion2D>(elmtToTrace[i][j]);
+                     exp3d->SetFaceExp           (j, exp2d);
+                     exp2d->SetAdjacentElementExp(j, exp3d);
+                 }
+             }
+
+             // Set up physical normals
+             SetUpPhysNormals();
+
+             // Set up information for parallel jobs.
+             for (int i = 0; i < m_trace->GetExpSize(); ++i)
+             {
+                 LocalRegions::Expansion2DSharedPtr traceEl = 
+                     boost::dynamic_pointer_cast<
+                         LocalRegions::Expansion2D>(m_trace->GetExp(i));
+
+                 int offset      = m_trace->GetPhys_Offset(i);
+                 int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
+                 PeriodicMap::iterator pIt = m_periodicFaces.find(
+                     traceGeomId);
+
+                 if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
+                 {
+                     if (traceGeomId != min(pIt->second[0].id, traceGeomId))
+                     {
+                         traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
+                             traceEl->GetLeftAdjacentElementFace());
+                     }
+                 }
+                 else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
+                 {
+                     traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
+                         traceEl->GetLeftAdjacentElementFace());
+                 }
+             }
+
+             int cnt, n, e;
+
+             // Identify boundary faces
+             for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+             {
+                 if (m_bndConditions[n]->GetBoundaryConditionType() != 
+                     SpatialDomains::ePeriodic)
+                 {
+                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                     {
+                         m_boundaryFaces.insert(
+                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                     }
+                 }
+                 cnt += m_bndCondExpansions[n]->GetExpSize();
+             }
+
+             // Set up information for periodic boundary conditions.
+             boost::unordered_map<int,pair<int,int> > perFaceToExpMap;
+             boost::unordered_map<int,pair<int,int> >::iterator it2;
+             cnt = 0;
+             LocalRegions::Expansion3DSharedPtr exp3d;
+             for (int n = 0; n < m_exp->size(); ++n)
+             {
+                 exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
+                 for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
+                 {
+                     PeriodicMap::iterator it = m_periodicFaces.find(
+                         exp3d->GetGeom3D()->GetFid(e));
+
+                     if (it != m_periodicFaces.end())
+                     {
+                         perFaceToExpMap[it->first] = make_pair(n, e);
+                     }
+                 }
+             }
+
+             // Set up left-adjacent face list.
+             m_leftAdjacentFaces.resize(cnt);
+             cnt = 0;
+             for (int i = 0; i < m_exp->size(); ++i)
+             {
+                 for (int j = 0; j < (*m_exp)[i]->GetNfaces(); ++j, ++cnt)
+                 {
+                     m_leftAdjacentFaces[cnt] = IsLeftAdjacentFace(i, j);
+                 }
+             }
+
+             // Set up mapping to copy Fwd of periodic bcs to Bwd of other edge.
+             cnt = 0;
+             for (int n = 0; n < m_exp->size(); ++n)
+             {
+                 exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
+                 for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
+                 {
+                     int faceGeomId = exp3d->GetGeom3D()->GetFid(e);
+                     int offset = m_trace->GetPhys_Offset(
+                         elmtToTrace[n][e]->GetElmtId());
+
+                     // Check to see if this face is periodic.
+                     PeriodicMap::iterator it = m_periodicFaces.find(faceGeomId);
+
+                     if (it != m_periodicFaces.end())
+                     {
+                         const PeriodicEntity &ent = it->second[0];
+                         it2 = perFaceToExpMap.find(ent.id);
+
+                         if (it2 == perFaceToExpMap.end())
+                         {
+                             if (m_session->GetComm()->GetSize() > 1 &&
+                                 !ent.isLocal)
+                             {
+                                 continue;
+                             }
+                             else
+                             {
+                                 ASSERTL1(false, "Periodic edge not found!");
+                             }
+                         }
+
+                         ASSERTL1(m_leftAdjacentFaces[cnt],
+                                  "Periodic face in non-forward space?");
+
+                         int offset2 = m_trace->GetPhys_Offset(
+                             elmtToTrace[it2->second.first][it2->second.second]->
+                                 GetElmtId());
 
                         // Calculate relative orientations between faces to
                         // calculate copying map.
@@ -677,7 +679,7 @@ namespace Nektar
             // composites (i.e. if composites 1 and 2 are periodic then this map
             // will contain either the pair (1,2) or (2,1) but not both).
             //
-            // The three maps allVerts, allCoord, allEdges and allOrient map a
+            // The four maps allVerts, allCoord, allEdges and allOrient map a
             // periodic face to a vector containing the vertex ids of the face;
             // their coordinates; the edge ids of the face; and their
             // orientation within that face respectively.
@@ -696,6 +698,22 @@ namespace Nektar
 
             int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
+
+            // Set up a set of all local verts and edges. 
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                for(j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
+                {
+                    int id = (*m_exp)[i]->GetGeom()->GetVid(j);
+                    locVerts.insert(id);
+                }
+
+                for(j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
+                {
+                    int id = (*m_exp)[i]->GetGeom()->GetEid(j);
+                    locEdges.insert(id);
+                }
+            }    
 
             // Begin by populating the perComps map. We loop over all periodic
             // boundary conditions and determine the composite associated with
@@ -970,7 +988,7 @@ namespace Nektar
                         eIdMap.insert(make_pair(
                             edgeIds[cnt],
                             make_pair(vertIds[tmp+j],
-                                      vertIds[tmp+(j+1) % faceVerts[i]])));
+                                      vertIds[tmp+((j+1) % faceVerts[i])])));
 
                     if (testIns.second == false)
                     {
@@ -1021,8 +1039,8 @@ namespace Nektar
             quadVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 1,0,3,2;
             quadVertMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
             quadVertMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 0,3,2,1;
-            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 3,0,1,2;
-            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 1,2,3,0;
+            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
+            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
             quadVertMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 2,1,0,3;
 
             map<StdRegions::Orientation, vector<int> > quadEdgeMap;
@@ -1031,8 +1049,8 @@ namespace Nektar
             quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 0,3,2,1;
             quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
             quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 3,2,1,0;
-            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 3,0,1,2;
-            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 1,2,3,0;
+            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
+            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
             quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 1,0,3,2;
 
             map<StdRegions::Orientation, vector<int> > triVertMap;
@@ -1048,6 +1066,8 @@ namespace Nektar
             emap[3] = triEdgeMap;
             emap[4] = quadEdgeMap;
 
+            map<int,int> allCompPairs;
+            
             // Finally we have enough information to populate the periodic
             // vertex, edge and face maps. Begin by looping over all pairs of
             // periodic composites to determine pairs of periodic faces.
@@ -1105,29 +1125,6 @@ namespace Nektar
                     compPairs[eId1] = eId2;
                 }
 
-                // Construct set of all periodic edges and vertices that we have
-                // locally on this processor.
-                for (i = 0; i < 2; ++i)
-                {
-                    if (!c[i])
-                    {
-                        continue;
-                    }
-
-                    if (c[i]->size() > 0)
-                    {
-                        for (j = 0; j < c[i]->size(); ++j)
-                        {
-                            int faceId = c[i]->at(j)->GetGlobalID();
-                            for (k = 0; k < vertMap[faceId].size(); ++k)
-                            {
-                                locVerts.insert(vertMap[faceId][k]);
-                                locEdges.insert(edgeMap[faceId][k]);
-                            }
-                        }
-                    }
-                }
-
                 // Now that we have all pairs of periodic faces, loop over the
                 // ones local to this process and populate face/edge/vertex
                 // maps.
@@ -1140,6 +1137,9 @@ namespace Nektar
                     ASSERTL0(coordMap.count(ids[0]) > 0 &&
                              coordMap.count(ids[1]) > 0,
                              "Unable to find face in coordinate map");
+
+                    allCompPairs[pIt->first ] = pIt->second;
+                    allCompPairs[pIt->second] = pIt->first;
 
                     // Loop up coordinates of the faces, check they have the
                     // same number of vertices.
@@ -1337,6 +1337,124 @@ namespace Nektar
                 }
             }
 
+            Array<OneD, int> pairSizes(n, 0);
+            pairSizes[p] = allCompPairs.size();
+            vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
+
+            int totPairSizes = Vmath::Vsum(n, pairSizes, 1);
+
+            Array<OneD, int> pairOffsets(n, 0);
+            pairOffsets[0] = 0;
+
+            for (i = 1; i < n; ++i)
+            {
+                pairOffsets[i] = pairOffsets[i-1] + pairSizes[i-1];
+            }
+
+            Array<OneD, int> first (totPairSizes, 0);
+            Array<OneD, int> second(totPairSizes, 0);
+
+            cnt = pairOffsets[p];
+
+            for (pIt = allCompPairs.begin(); pIt != allCompPairs.end(); ++pIt)
+            {
+                first [cnt  ] = pIt->first;
+                second[cnt++] = pIt->second;
+            }
+
+            vComm->AllReduce(first,  LibUtilities::ReduceSum);
+            vComm->AllReduce(second, LibUtilities::ReduceSum);
+
+            allCompPairs.clear();
+
+            for(cnt = 0; cnt < totPairSizes; ++cnt)
+            {
+                allCompPairs[first[cnt]] = second[cnt];
+            }
+
+            // Search for periodic vertices and edges which are not in
+            // a periodic composite but lie in this process. First,
+            // loop over all information we have from other
+            // processors.
+            for (cnt = i = 0; i < totFaces; ++i)
+            {
+                int faceId    = faceIds[i];
+
+                ASSERTL0(allCompPairs.count(faceId) > 0,
+                         "Unable to find matching periodic face.");
+
+                int perFaceId = allCompPairs[faceId];
+
+                for (j = 0; j < faceVerts[i]; ++j, ++cnt)
+                {
+                    int vId = vertIds[cnt];
+
+                    PeriodicMap::iterator perId = periodicVerts.find(vId);
+
+                    if (perId == periodicVerts.end())
+                    {
+
+                        // This vertex is not included in the map. Figure out which
+                        // vertex it is supposed to be periodic with. perFaceId is
+                        // the face ID which is periodic with faceId. The logic is
+                        // much the same as the loop above.
+                        SpatialDomains::PointGeomVector tmpVec[2]
+                            = { coordMap[faceId], coordMap[perFaceId] };
+                        
+                        int nFaceVerts = tmpVec[0].size();
+                        StdRegions::Orientation o = nFaceVerts == 3 ? 
+                            SpatialDomains::TriGeom::GetFaceOrientation(
+                                                                        tmpVec[0], tmpVec[1]) :
+                            SpatialDomains::QuadGeom::GetFaceOrientation(
+                                                                         tmpVec[0], tmpVec[1]);
+                        
+                        // Use vmap to determine which vertex of the other face
+                        // should be periodic with this one.
+                        int perVertexId = vertMap[perFaceId][vmap[nFaceVerts][o][j]];
+                        
+                        
+                        PeriodicEntity ent(perVertexId,
+                                           StdRegions::eNoOrientation,
+                                           locVerts.count(perVertexId) > 0);
+                        
+                        periodicVerts[vId].push_back(ent);
+                    }
+
+                    int eId = edgeIds[cnt];
+
+                    perId = periodicEdges.find(eId);
+                    
+                    if (perId == periodicEdges.end())
+                    {
+                        // This edge is not included in the map. Figure
+                        // out which edge it is supposed to be periodic
+                        // with. perFaceId is the face ID which is
+                        // periodic with faceId. The logic is much the
+                        // same as the loop above.
+                        SpatialDomains::PointGeomVector tmpVec[2]
+                            = { coordMap[faceId], coordMap[perFaceId] };
+                        
+                        int nFaceEdges = tmpVec[0].size();
+                        StdRegions::Orientation o = nFaceEdges == 3 ? 
+                            SpatialDomains::TriGeom::GetFaceOrientation(
+                            tmpVec[0], tmpVec[1]) :
+                        SpatialDomains::QuadGeom::GetFaceOrientation(
+                            tmpVec[0], tmpVec[1]);
+                        
+                        // Use emap to determine which edge of the other
+                        // face should be periodic with this one.
+                        int perEdgeId = edgeMap[perFaceId][emap[nFaceEdges][o][j]];
+                        
+                        
+                        PeriodicEntity ent(perEdgeId,
+                                           StdRegions::eForwards,
+                                           locEdges.count(perEdgeId) > 0);
+                        
+                        periodicEdges[eId].push_back(ent);
+                    }
+                }
+            }
+
             // Finally, we must loop over the periodicVerts and periodicEdges
             // map to complete connectivity information.
             PeriodicMap::iterator perIt, perIt2;
@@ -1450,7 +1568,7 @@ namespace Nektar
                             NekDouble z1 = w[k](2)-cz;
 
                             if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z))
-                                    < 1e-5)
+                                    < 1e-8)
                             {
                                 vMap[k] = j;
                                 break;
@@ -1754,7 +1872,7 @@ namespace Nektar
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-
+            
             for(n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);
@@ -1762,13 +1880,16 @@ namespace Nektar
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
                     t_offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,elmtToTrace[n][e],
+                    
+                    //cout << "BEFORE " << Fn.num_elements() << "  " << e_outarray.num_elements() << endl;
+                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,
+                                                        elmtToTrace[n][e],
                                                         Fn + t_offset,
                                                         e_outarray);
+                    //cout << "AFTER " << Fn.num_elements() << "  " << e_outarray.num_elements() << endl;
                 }
             }
         }
-
         /**
          * @brief Add trace contributions into elemental coefficient spaces.
          * 
@@ -2086,6 +2207,160 @@ namespace Nektar
             }
 
             return returnval;
+        }
+        
+        /**
+         * @brief Evaluate HDG post-processing to increase polynomial order of
+         * solution.
+         * 
+         * This function takes the solution (assumed to be one order lower) in
+         * physical space, and postprocesses at the current polynomial order by
+         * solving the system:
+         * 
+         * \f[
+         * \begin{aligned}
+         *   (\nabla w, \nabla u^*) &= (\nabla w, u), \\
+         *   \langle \nabla u^*, 1 \rangle &= \langle \nabla u, 1 \rangle
+         * \end{aligned}
+         * \f]
+         * 
+         * where \f$ u \f$ corresponds with the current solution as stored
+         * inside #m_coeffs.
+         * 
+         * @param outarray  The resulting field \f$ u^* \f$.
+         */
+        void  DisContField3D::EvaluateHDGPostProcessing(
+            Array<OneD, NekDouble> &outarray)
+        {
+            int    i,cnt,f,ncoeff_face;
+            Array<OneD, NekDouble> force, out_tmp,qrhs,qrhs1;
+            Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            int     eid,nq_elmt, nm_elmt;
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), face_lambda;
+            Array<OneD, NekDouble> tmp_coeffs;
+            m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
+
+            face_lambda = loc_lambda;
+
+            // Calculate Q using standard DG formulation.
+            for(i = cnt = 0; i < GetExpSize(); ++i)
+            {
+                LocalRegions::Expansion3DSharedPtr exp =
+                    boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion3D>((*m_exp)[i]);
+
+                eid     = m_offset_elmt_id[i];
+                nq_elmt = (*m_exp)[eid]->GetTotPoints();
+                nm_elmt = (*m_exp)[eid]->GetNcoeffs();
+                qrhs    = Array<OneD, NekDouble>(nq_elmt);
+                qrhs1   = Array<OneD, NekDouble>(nq_elmt);
+                force   = Array<OneD, NekDouble>(2*nm_elmt);
+                out_tmp = force + nm_elmt;
+                LocalRegions::ExpansionSharedPtr ppExp;
+
+                int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
+                int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
+                int num_points2 = (*m_exp)[eid]->GetBasis(2)->GetNumPoints();
+                int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
+                int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
+                int num_modes2 = (*m_exp)[eid]->GetBasis(2)->GetNumModes();
+
+                // Probably a better way of setting up lambda than this.  Note
+                // cannot use PutCoeffsInToElmts since lambda space is mapped
+                // during the solve.
+                int nFaces = (*m_exp)[eid]->GetNfaces();
+                Array<OneD, Array<OneD, NekDouble> > faceCoeffs(nFaces);
+                for(f = 0; f < nFaces; ++f)
+                {
+                    ncoeff_face = elmtToTrace[eid][f]->GetNcoeffs();
+                    faceCoeffs[f] = Array<OneD, NekDouble>(ncoeff_face);
+                    Vmath::Vcopy(ncoeff_face, face_lambda, 1, faceCoeffs[f], 1);
+                    exp->SetFaceToGeomOrientation(f, faceCoeffs[f]);
+                    face_lambda = face_lambda + ncoeff_face;
+                }
+
+                //creating orthogonal expansion (checking if we have quads or triangles)
+                LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
+                switch(shape)
+                {
+                    case LibUtilities::eHexahedron:
+                    {
+                        const LibUtilities::PointsKey PkeyH1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyH2(num_points1,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyH3(num_points2,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey  BkeyH1(LibUtilities::eOrtho_A, num_modes0, PkeyH1);
+                        LibUtilities::BasisKey  BkeyH2(LibUtilities::eOrtho_A, num_modes1, PkeyH2);
+                        LibUtilities::BasisKey  BkeyH3(LibUtilities::eOrtho_A, num_modes2, PkeyH3);
+                        SpatialDomains::HexGeomSharedPtr hGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(BkeyH1, BkeyH2, BkeyH3, hGeom);
+                    }
+                    break;
+                    case LibUtilities::eTetrahedron:
+                    {
+                        const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        const LibUtilities::PointsKey PkeyT3(num_points2,LibUtilities::eGaussRadauMAlpha2Beta0);
+                        LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
+                        LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
+                        LibUtilities::BasisKey  BkeyT3(LibUtilities::eOrtho_C, num_modes2, PkeyT3);
+                        SpatialDomains::TetGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(BkeyT1, BkeyT2, BkeyT3, tGeom);
+                    }
+                    break;
+                    default:
+                        ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
+                };
+
+
+                //DGDeriv	
+                // (d/dx w, q_0)
+                (*m_exp)[eid]->DGDeriv(
+                    0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                    elmtToTrace[eid], faceCoeffs, out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                ppExp->IProductWRTDerivBase(0,qrhs,force);
+
+
+                // + (d/dy w, q_1)
+                (*m_exp)[eid]->DGDeriv(
+                    1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                    elmtToTrace[eid], faceCoeffs, out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                ppExp->IProductWRTDerivBase(1,qrhs,out_tmp);
+
+                Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
+
+                // + (d/dz w, q_2)
+                (*m_exp)[eid]->DGDeriv(
+                    2,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                    elmtToTrace[eid], faceCoeffs, out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                ppExp->IProductWRTDerivBase(2,qrhs,out_tmp);
+
+                Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
+                // determine force[0] = (1,u)
+                (*m_exp)[eid]->BwdTrans(
+                    tmp_coeffs = m_coeffs + m_coeff_offset[eid],qrhs);
+                force[0] = (*m_exp)[eid]->Integral(qrhs);
+
+                // multiply by inverse Laplacian matrix
+                // get matrix inverse
+                LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, ppExp->DetShapeType(), *ppExp);
+                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
+
+                NekVector<NekDouble> in (nm_elmt, force, eWrapper);
+                NekVector<NekDouble> out(nm_elmt);
+
+                out = (*lapsys)*in;
+
+                // Transforming back to modified basis
+                Array<OneD, NekDouble> work(nq_elmt);
+                ppExp->BwdTrans(out.GetPtr(), work);
+                exp  ->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[eid]);
+            }
         }
 
         /**

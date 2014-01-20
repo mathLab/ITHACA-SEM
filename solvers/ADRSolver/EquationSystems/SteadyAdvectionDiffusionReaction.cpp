@@ -62,8 +62,8 @@ namespace Nektar
     }
 
 
-    void SteadyAdvectionDiffusionReaction::v_PrintSummary(std::ostream &out)
+    void SteadyAdvectionDiffusionReaction::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        SteadyAdvectionDiffusion::v_PrintSummary(out);
+        SteadyAdvectionDiffusion::v_GenerateSummary(s);
     }
 }

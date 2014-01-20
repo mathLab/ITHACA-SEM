@@ -85,8 +85,6 @@ namespace Nektar
 	    //Returns the local matrix associated with the system
             const inline boost::weak_ptr<ExpList> &GetLocMat(void) const;
 
-            const inline DNekMatSharedPtr &GetGmat(void) const;
-
 	    inline void InitObject();
 
             /// Solve the linear system for given input and output vectors
@@ -148,8 +146,7 @@ namespace Nektar
                 const AssemblyMapSharedPtr        &locToGloMap,
                 const int                          pNumDir) = 0;
 
-            virtual const DNekMatSharedPtr& v_GetGmat(void) const;
-	    virtual void v_InitObject();
+            virtual void v_InitObject();
 
             static std::string lookupIds[];
             static std::string def;
@@ -197,14 +194,6 @@ namespace Nektar
                 const int pNumDir)
         {
 	  v_SolveLinearSystem(pNumRows, pInput, pOutput, locToGloMap, pNumDir);
-        }
-
-        /**
-         *
-         */
-        inline const DNekMatSharedPtr& GlobalLinSys::GetGmat(void) const
-        {
-	  return v_GetGmat();
         }
 
         inline void GlobalLinSys::InitObject()

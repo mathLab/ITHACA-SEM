@@ -88,8 +88,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& wy,
                 const Array<OneD, const NekDouble>& wz);
 
-            STD_REGIONS_EXPORT void WriteCoeffsToFile(std::ofstream &outfile);
-
         protected:
             //---------------------------------------
             // Differentiation/integration Methods
@@ -168,8 +166,6 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& xi);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& xi,
@@ -200,13 +196,6 @@ namespace Nektar
                 int &modes_offset);
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(
                 const int i) const;
-            /*
-            STD_REGIONS_EXPORT virtual void v_WriteToFile(
-                std::ofstream &outfile,
-                OutputFormat format,
-                const bool dumpVar = true,
-                std::string var = "v");
-            */
 
             //---------------------------------------
             // Mappings
@@ -218,7 +207,8 @@ namespace Nektar
                 Array<OneD,          int> &signarray,
                 int                        nummodesA=-1,
                 int                        nummodesB=-1);
-            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId);
+            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
+                                                           bool useCoeffPacking = false);
             /*
             STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
                 const int eid,
@@ -322,8 +312,6 @@ namespace Nektar
             STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& xi, const Array<OneD, const NekDouble> & physvals);
        
             STD_REGIONS_EXPORT void GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z);
-            STD_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
-            STD_REGIONS_EXPORT void WriteCoeffsToFile(std::ofstream &outfile);
                     
             DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
             {
@@ -488,11 +476,6 @@ namespace Nektar
                 FwdTrans(inarray, outarray);
             }
 
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& Lcoords)
-            {
-                return PhysEvaluate(Lcoords);
-            }
-
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& Lcoords,  const Array<OneD, const NekDouble> & physvals)
             {
                 return PhysEvaluate(Lcoords, physvals);
@@ -503,15 +486,6 @@ namespace Nektar
                 return GetEdgeNcoeffs(i);
             }
                 
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
-            {
-                WriteToFile(outfile,format,dumpVar,var);
-            }
-
-            virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
-            {
-                WriteCoeffsToFile(outfile);
-            }
             */
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;

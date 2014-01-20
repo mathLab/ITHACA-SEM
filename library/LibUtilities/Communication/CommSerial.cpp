@@ -116,6 +116,22 @@ namespace Nektar
         /**
          *
          */
+        void CommSerial::v_Send(int pProc, std::vector<unsigned int>& pData)
+        {
+        }
+
+
+        /**
+         *
+         */
+        void CommSerial::v_Recv(int pProc, std::vector<unsigned int>& pData)
+        {
+        }
+
+
+        /**
+         *
+         */
         void CommSerial::v_SendRecv(int pSendProc,
                                 Array<OneD, NekDouble>& pSendData,
                                 int pRecvProc,
@@ -191,6 +207,15 @@ namespace Nektar
         }
 		
 		
+        /**
+         *
+         */
+        void CommSerial::v_AllReduce(std::vector<unsigned int>& pData, enum ReduceOperator pOp)
+        {
+
+        }
+
+
 		/**
          *
          */

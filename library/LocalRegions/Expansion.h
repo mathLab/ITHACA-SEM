@@ -100,7 +100,7 @@ namespace Nektar
 
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
                     const DNekScalMatSharedPtr &r_bnd);
-
+			
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
@@ -115,6 +115,10 @@ namespace Nektar
 
                 virtual void v_ComputeLaplacianMetric() {};
 
+                virtual void v_GetCoords(Array<OneD,NekDouble> &coords_1,
+                                         Array<OneD,NekDouble> &coords_2,
+                                         Array<OneD,NekDouble> &coords_3);
+
                 virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
 
                 virtual DNekMatSharedPtr v_BuildTransformationMatrix(
@@ -122,12 +126,11 @@ namespace Nektar
                     const StdRegions::MatrixType matrixType);
 
                 virtual DNekMatSharedPtr v_BuildVertexMatrix(
-                    const DNekScalMatSharedPtr &r_bnd);  
+                    const DNekScalMatSharedPtr &r_bnd); 
 
             private:
 
         };
-
     } //end of namespace
 } //end of namespace
 

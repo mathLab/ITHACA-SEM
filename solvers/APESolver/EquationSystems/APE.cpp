@@ -715,16 +715,9 @@ namespace Nektar
         }
     }
 
-    void APE::v_PrintSummary(std::ostream &out)
+    void APE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        EquationSystem::v_PrintSummary(out);
-	out << "\tUpwind Type     : " << UpwindTypeMap[m_upwindType] << endl;
-        out << "\tAdvection       : " << (m_explicitAdvection ? "explicit" : "implicit") << endl;
-	out << "\tIntegration Type: " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
-        out << "\tTime Step       : " << m_timestep << endl;
-        out << "\tNo. of Steps    : " << m_steps << endl;
-        out << "\tCheckpoints     : " << m_checksteps << " steps" << endl;
-
+        APESystem::v_GenerateSummary(s);
     }
 
 

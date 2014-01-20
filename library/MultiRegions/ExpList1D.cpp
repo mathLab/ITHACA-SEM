@@ -75,6 +75,7 @@ namespace Nektar
         ExpList1D::ExpList1D():
             ExpList()
         {
+            SetExpType(e1D);
         }
 
 
@@ -84,6 +85,7 @@ namespace Nektar
         ExpList1D::ExpList1D(const ExpList1D &In, const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
+            SetExpType(e1D);
         }
 
 
@@ -107,6 +109,8 @@ namespace Nektar
                              const SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpList(pSession,graph1D)
         {
+            SetExpType(e1D);
+
             int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
@@ -174,6 +178,8 @@ namespace Nektar
                 const bool DeclareCoeffPhysArrays):
             ExpList(pSession,graph1D)
         {
+            SetExpType(e1D);
+
             int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
@@ -246,6 +252,8 @@ namespace Nektar
                              const std::string variable):
             ExpList()
         {
+            SetExpType(e1D);
+
             int j, id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
@@ -319,6 +327,8 @@ namespace Nektar
                              const bool DeclareCoeffPhysArrays):
 		ExpList(pSession)
         {
+            SetExpType(e1D);
+
             int id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
@@ -427,6 +437,13 @@ namespace Nektar
             LocalRegions::Expansion1DSharedPtr  exp1D;
             LocalRegions::Expansion2DSharedPtr  exp2D;
             
+            SetExpType(e1D);
+
+            map<int,int> EdgeDone;
+            map<int,int> NormalSet;
+
+            LocalRegions::SegExpSharedPtr Seg;
+
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
             for(i = 0; i < bndCond.num_elements(); ++i)
@@ -1023,7 +1040,7 @@ namespace Nektar
             }
         }
 		
-
+/*
 	void ExpList1D::SetUpPhysTangents(
 		const LocalRegions::ExpansionVector &locexp)
 	{
@@ -1055,6 +1072,8 @@ namespace Nektar
 	       }
 	    }
 	}
+        
+*/
         
         /**
          * Upwind the left and right states given by the Arrays Fwd and Bwd
@@ -1381,18 +1400,6 @@ namespace Nektar
         /**
          *
          */
-//        void ExpList1D::v_SetUpPhysNormals(
-//                                const StdRegions::StdExpansionVector &locexp)
-//        {
-//            SetUpPhysNormals(locexp);
-//        }
-
-        void ExpList1D::v_SetUpPhysTangents(
-                    const LocalRegions::ExpansionVector &locexp)
-        {
-            SetUpPhysTangents(locexp);
-        }
-
         void ExpList1D::v_ReadGlobalOptimizationParameters()
         {
 //            Array<OneD, int> NumShape(1,0);

@@ -71,19 +71,18 @@ namespace Nektar
             inline void AddHDGHelmholtzFaceTerms(
                 const NekDouble                    tau,
                 const int                          edge,
-                StdRegions::StdExpansionSharedPtr  FaceExp,
+                Array<OneD, NekDouble>            &facePhys,
                 const StdRegions::VarCoeffMap     &dirForcing,
-                Array <OneD, NekDouble>           &outarray);
+                Array<OneD, NekDouble>            &outarray);
 
-            inline void AddHDGHelmholtzTraceTerms(
-                const NekDouble                                tau,
-                const Array<OneD, const NekDouble>            &inarray,
-                Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                const StdRegions::VarCoeffMap                 &dirForcing,
-                Array<OneD,NekDouble>                         &outarray);
-            
             inline void AddNormTraceInt(
-                const int dir,
+                const int                                      dir,
+                Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> >          &faceCoeffs,
+                Array<OneD,NekDouble>                         &outarray);
+
+            inline void AddNormTraceInt(
+                const int                                      dir,
                 Array<OneD, const NekDouble>                  &inarray,
                 Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
                 Array<OneD,NekDouble>                         &outarray,
@@ -92,7 +91,8 @@ namespace Nektar
             inline void AddFaceBoundaryInt(
                 const int                          face,
                 StdRegions::StdExpansionSharedPtr &FaceExp,
-                Array <OneD,NekDouble >           &outarray,
+                Array<OneD, NekDouble>            &facePhys,
+                Array<OneD, NekDouble>            &outarray,
                 const StdRegions::VarCoeffMap     &varcoeffs = StdRegions::NullVarCoeffMap);
             
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
@@ -103,6 +103,12 @@ namespace Nektar
             }
 
         protected:
+            virtual void v_DGDeriv(
+                const int                                       dir,
+                const Array<OneD, const NekDouble>             &incoeffs,
+                Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+                Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
+                Array<OneD, NekDouble>                         &out_d);
             virtual DNekMatSharedPtr v_GenMatrix(
                 const StdRegions::StdMatrixKey &mkey);
             virtual void v_AddFaceNormBoundaryInt(
@@ -115,6 +121,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &primCoeffs, 
                 DNekMatSharedPtr                   &inoutmat);
 
+            virtual NekDouble v_Integrate(
+                const Array<OneD, const NekDouble>& inarray);
+
             //-----------------------------
             // Low Energy Basis functions
             //-----------------------------
@@ -123,7 +132,7 @@ namespace Nektar
                 v_GetEdgeInverseBoundaryMap(int eid);
 
             LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int>
-                v_GetFaceInverseBoundaryMap(int fid);
+                v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient = StdRegions::eNoOrientation);
 
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildTransformationMatrix(
                 const DNekScalMatSharedPtr &r_bnd, 

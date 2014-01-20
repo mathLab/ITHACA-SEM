@@ -36,6 +36,8 @@
 #ifndef MULTIREGIONS_ASSEMBLYMAPCG_H
 #define MULTIREGIONS_ASSEMBLYMAPCG_H
 
+#include <boost/tuple/tuple.hpp>
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
@@ -43,7 +45,6 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-
         static map<int,int> NullIntIntMap;
         const static vector<map<int,int> > NullVecIntIntMap;
 
@@ -51,8 +52,13 @@ namespace Nektar
         class AssemblyMapCG;
         typedef boost::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
 
+        typedef boost::tuple<int, int, NekDouble> ExtraDirDof;
 
+        StdRegions::Orientation  DeterminePeriodicFaceOrient(
+                       StdRegions::Orientation   faceOrient1,
+                       StdRegions::Orientation   faceOrient2);
 
+  
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG: public AssemblyMap
         {
@@ -72,7 +78,7 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
-            MULTI_REGIONS_EXPORT map<int, vector<pair<int, int> > > 
+            MULTI_REGIONS_EXPORT map<int, vector<ExtraDirDof> >
                 &GetExtraDirDofs()
             {
                 return m_extraDirDofs;
@@ -103,14 +109,14 @@ namespace Nektar
             int m_numNonDirEdges;
             /// Number of Dirichlet faces
             int m_numNonDirFaces;
-            //Extra dirichlet edges in parallel
-            Array<OneD,int> m_extraDirEdges;
+            /// Extra dirichlet edges in parallel
+            Array<OneD, int> m_extraDirEdges;
 
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
             /// Map indicating degrees of freedom which are Dirichlet but whose
             /// value is stored on another processor.
-            map<int, vector<pair<int, int> > > m_extraDirDofs;
+            map<int, vector<ExtraDirDof> > m_extraDirDofs;
 
             void SetUpUniversalC0ContMap(
                 const ExpList     &locExp,

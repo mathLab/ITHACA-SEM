@@ -370,7 +370,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT bool DefinesCmdLineArgument(
                 const std::string& pName) const;
             /// Retrieves a command-line argument value.
-            LIB_UTILITIES_EXPORT std::string GetCmdLineArgument(
+            template <typename T>
+            LIB_UTILITIES_EXPORT T GetCmdLineArgument(
                 const std::string& pName) const;
             /// Registers a command-line argument with the session reader.
             LIB_UTILITIES_EXPORT inline static std::string 
@@ -395,6 +396,8 @@ namespace Nektar
 
             /// Communication object.
             CommSharedPtr                             m_comm;
+            /// Filenames
+            std::vector<std::string>                  m_filenames;
             /// Filename of the loaded XML document.
             std::string                               m_filename;
             /// Session name of the loaded XML document (filename minus ext).
@@ -466,8 +469,7 @@ namespace Nektar
             /// communication object.
             LIB_UTILITIES_EXPORT void CreateComm(
                 int               &argc, 
-                char*              argv[], 
-                const std::string &pFilename);
+                char*              argv[]);
             /// Partitions the mesh when running in parallel.
             LIB_UTILITIES_EXPORT void PartitionMesh();
             /// Partitions the comm object based on session parameters.

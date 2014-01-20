@@ -37,71 +37,89 @@
 using namespace std;
 
 #include "MeshElements.h"
+#include "InputNek.h"
 #include "ProcessTetSplit.h"
 
+#include <StdRegions/StdNodalPrismExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
+#include <boost/unordered_map.hpp>
 
 namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessTetSplit::className = 
+        typedef std::pair<int,int> ipair;
+
+        ModuleKey ProcessTetSplit::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "tetsplit"), ProcessTetSplit::create,
                 "Split prismatic elements to tetrahedra");
-        
+
         ProcessTetSplit::ProcessTetSplit(MeshSharedPtr m) : ProcessModule(m)
         {
-	    config["nq"]   = ConfigOption(false, "3",
+            config["nq"]   = ConfigOption(false, "3",
                 "Number of points in high order elements.");
         }
-      
+
         ProcessTetSplit::~ProcessTetSplit()
         {
-          
+
         }
-        
+
         void ProcessTetSplit::Process()
         {
             int nodeId = m->vertexSet.size();
-            
+
             // Set up map which identifies edges (as pairs of vertex ids)
             // including their vertices to the offset/stride in the 3d array of
             // collapsed co-ordinates. Note that this map also includes the
             // diagonal edges along quadrilateral faces which will be used to
             // add high-order information to the split tetrahedra.
-            map<pair<int,int>, pair<int,int> > edgeMap;
-            map<pair<int,int>, pair<int,int> >::iterator it;
-            
+            map<ipair, ipair> edgeMap;
+            map<ipair, ipair>::iterator it;
+
+            int nq  = config["nq"].as<int>();
+            int ne  = nq-2;        // Edge interior
+            int nft = (ne-1)*ne/2; // Face interior (triangle)
+            int nfq = ne*ne;       // Face interior (quad)
+            int o   = 6;
+
             // Standard prismatic edges (0->8)
-            int nq = config["nq"].as<int>();
-            edgeMap[pair<int,int>(0,1)] = pair<int,int>(0,            1);
-            edgeMap[pair<int,int>(3,2)] = pair<int,int>(nq*(nq-1),    1);
-            edgeMap[pair<int,int>(0,3)] = pair<int,int>(0,            nq);
-            edgeMap[pair<int,int>(1,2)] = pair<int,int>(nq-1,         nq);
-	    edgeMap[pair<int,int>(4,5)] = pair<int,int>((nq-1)*nq*nq, nq);
-            edgeMap[pair<int,int>(0,4)] = pair<int,int>(0,            nq*nq);
-            edgeMap[pair<int,int>(1,4)] = pair<int,int>(nq-1,         nq*nq);
-            edgeMap[pair<int,int>(2,5)] = pair<int,int>(nq*nq-1,      nq*nq);
-            edgeMap[pair<int,int>(3,5)] = pair<int,int>(nq*(nq-1),    nq*nq);
+            edgeMap[ipair(0,1)] = ipair(o,         1);
+            edgeMap[ipair(1,2)] = ipair(o + 1*ne,  1);
+            edgeMap[ipair(3,2)] = ipair(o + 2*ne,  1);
+            edgeMap[ipair(0,3)] = ipair(o + 3*ne,  1);
+            edgeMap[ipair(0,4)] = ipair(o + 4*ne,  1);
+            edgeMap[ipair(1,4)] = ipair(o + 5*ne,  1);
+            edgeMap[ipair(2,5)] = ipair(o + 6*ne,  1);
+            edgeMap[ipair(3,5)] = ipair(o + 7*ne,  1);
+            edgeMap[ipair(4,5)] = ipair(o + 8*ne,  1);
+
             // Face 0 diagonals
-            edgeMap[pair<int,int>(0,2)] = pair<int,int>(0,            nq+1);
-            edgeMap[pair<int,int>(1,3)] = pair<int,int>(nq-1,         nq-1);
+            o += 9 * ne;
+            edgeMap[ipair(0,2)] = ipair(o,       ne+1);
+            edgeMap[ipair(1,3)] = ipair(o+ne-1,  ne-1);
+
             // Face 2 diagonals
-            edgeMap[pair<int,int>(1,5)] = pair<int,int>(nq-1,         nq*nq+nq);
-            edgeMap[pair<int,int>(2,4)] = pair<int,int>(nq*nq-1,      nq*nq-nq);
+            o += nfq + nft;
+            edgeMap[ipair(1,5)] = ipair(o,       ne+1);
+            edgeMap[ipair(2,4)] = ipair(o+ne-1,  ne-1);
+
             // Face 4 diagonals
-            edgeMap[pair<int,int>(0,5)] = pair<int,int>(0,            nq*nq+nq);
-            edgeMap[pair<int,int>(3,4)] = pair<int,int>(nq*(nq-1),    nq*nq-nq);
+            o += nfq + nft;
+            edgeMap[ipair(0,5)] = ipair(o,       ne+1);
+            edgeMap[ipair(3,4)] = ipair(o+ne-1,  ne-1);
 
             // Default PointsType.
-            LibUtilities::PointsType pt = LibUtilities::eGaussLobattoLegendre;
-            
+            LibUtilities::PointsType pt = LibUtilities::ePolyEvenlySpaced;
+
             /*
              * Split all element types into tetrahedra. This is based on the
              * algorithm found in:
-             * 
+             *
              * "How to Subdivide Pyramids, Prisms and Hexahedra into
              * Tetrahedra", J. Dompierre et al.
              */
@@ -110,7 +128,7 @@ namespace Nektar
             // to be removed. These are precisely the quadrilateral boundary
             // faces which will be replaced by two triangular faces.
             set<int> toRemove;
-                
+
             // Represents table 2 of paper; each row i represents a rotation of
             // the prism nodes such that vertex i is placed at position 0.
             static int indir[6][6] = {
@@ -121,7 +139,7 @@ namespace Nektar
                 {4,3,5,1,0,2},
                 {5,4,3,2,1,0}
             };
-            
+
             // Represents table 3 of paper; the first three rows are the three
             // tetrahedra if the first condition is met; the latter three rows
             // are the three tetrahedra if the second condition is met.
@@ -133,31 +151,45 @@ namespace Nektar
                 {0,4,2,5},
                 {0,4,5,3}
             };
-                
+
             // Represents the order of tetrahedral edges (in Nektar++ ordering).
             static int tetEdges[6][2] = {
                 {0,1}, {1,2},
                 {0,2}, {0,3},
                 {1,3}, {2,3}};
-            
+
             // A tetrahedron nodes -> faces map.
             static int tetFaceNodes[4][3] = {
                 {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
-            
+
+            static NodeSharedPtr stdPrismNodes[6] = {
+                NodeSharedPtr(new Node(0,-1,-1,-1)),
+                NodeSharedPtr(new Node(1, 1,-1,-1)),
+                NodeSharedPtr(new Node(2, 1, 1,-1)),
+                NodeSharedPtr(new Node(3,-1, 1,-1)),
+                NodeSharedPtr(new Node(4,-1,-1, 1)),
+                NodeSharedPtr(new Node(5,-1, 1, 1))
+            };
+
+            // Generate equally spaced nodal points on triangle.
+            Array<OneD, NekDouble> rp(nq*(nq+1)/2), sp(nq*(nq+1)/2);
+            LibUtilities::PointsKey elec(nq, LibUtilities::eNodalTriEvenlySpaced);
+            LibUtilities::PointsManager()[elec]->GetPoints(rp,sp);
+
             // Make a copy of the element list.
             vector<ElementSharedPtr> el = m->element[m->expDim];
             m->element[m->expDim].clear();
-            
+
             for (int i = 0; i < el.size(); ++i)
             {
                 if (el[i]->GetConf().e != ePrism)
                 {
                     m->element[m->expDim].push_back(el[i]);
                     continue;
-                }                    
-                
+                }
+
                 vector<NodeSharedPtr> nodeList(6);
-                
+
                 // Map Nektar++ ordering (vertices 0,1,2,3 are base quad) to
                 // paper ordering (vertices 0,1,2 are first triangular face).
                 int mapPrism[6] = {0,1,4,3,2,5};
@@ -165,7 +197,7 @@ namespace Nektar
                 {
                     nodeList[j] = el[i]->GetVertex(mapPrism[j]);
                 }
-                    
+
                 // Determine minimum ID of the nodes in this prism.
                 int minElId = nodeList[0]->id;
                 int minId   = 0;
@@ -178,64 +210,110 @@ namespace Nektar
                         minId   = j;
                     }
                 }
-                
+
                 int offset;
-                
+
                 // Split prism using paper criterion.
-                if (min(nodeList[indir[minId][1]]->id, nodeList[indir[minId][5]]->id) <
-                    min(nodeList[indir[minId][2]]->id, nodeList[indir[minId][4]]->id))
+                int id1 = min(nodeList[indir[minId][1]]->id,
+                              nodeList[indir[minId][5]]->id);
+                int id2 = min(nodeList[indir[minId][2]]->id,
+                              nodeList[indir[minId][4]]->id);
+
+                if (id1 < id2)
                 {
                     offset = 0;
                 }
-                else if (min(nodeList[indir[minId][1]]->id, nodeList[indir[minId][5]]->id) >
-                         min(nodeList[indir[minId][2]]->id, nodeList[indir[minId][4]]->id))
+                else if (id1 > id2)
                 {
                     offset = 3;
                 }
                 else
                 {
-                    cerr << "Connectivity issue with prism->tet splitting." << endl;
+                    cerr << "Connectivity issue with prism->tet splitting."
+                         << endl;
                     abort();
                 }
-                
+
                 // Create local prismatic region so that co-ordinates of the
                 // mapped element can be read from.
-                SpatialDomains::PrismGeomSharedPtr geomLayer = 
+                SpatialDomains::PrismGeomSharedPtr geomLayer =
                     boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
                         el[i]->GetGeom(m->spaceDim));
-                LibUtilities::BasisKey B0(LibUtilities::eModified_A, nq,
-                                          LibUtilities::PointsKey(nq,pt));
-                LibUtilities::BasisKey B1(LibUtilities::eModified_B, nq,
-                                          LibUtilities::PointsKey(nq,pt));
-                LocalRegions::PrismExpSharedPtr qs = 
+                LibUtilities::BasisKey B0(
+                    LibUtilities::eOrtho_A, nq,
+                    LibUtilities::PointsKey(
+                        nq, LibUtilities::eGaussLobattoLegendre));
+                LibUtilities::BasisKey B1(
+                    LibUtilities::eOrtho_B, nq,
+                    LibUtilities::PointsKey(
+                        nq, LibUtilities::eGaussRadauMAlpha1Beta0));
+                LocalRegions::PrismExpSharedPtr qs =
                     MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
-                        B0,B0,B1,geomLayer);
-                    
-                // Get the coordiantes of the high order prismatic element.
-                Array<OneD, NekDouble> xs(nq*nq*nq);
-                Array<OneD, NekDouble> ys(nq*nq*nq);
-                Array<OneD, NekDouble> zs(nq*nq*nq);
-                qs->GetCoords(xs,ys,zs);
-                
+                        B0, B0, B1, geomLayer);
+
+                // Get the coordinates of the high order prismatic element.
+                Array<OneD, NekDouble> wsp(3*nq*nq*nq);
+                Array<OneD, Array<OneD, NekDouble> > x(3);
+                x[0] = wsp;
+                x[1] = wsp + 1*nq*nq*nq;
+                x[2] = wsp + 2*nq*nq*nq;
+                qs->GetCoords(x[0], x[1], x[2]);
+
+                LibUtilities::BasisKey NB0(LibUtilities::eModified_A, nq,
+                                           LibUtilities::PointsKey(nq,pt));
+                LibUtilities::BasisKey NB1(LibUtilities::eModified_B, nq,
+                                           LibUtilities::PointsKey(nq,pt));
+
+                // Process face data. Initially put coordinates into equally
+                // spaced nodal distribution.
+                StdRegions::StdNodalPrismExpSharedPtr nodalPrism =
+                    MemoryManager<StdRegions::StdNodalPrismExp>
+                    ::AllocateSharedPtr(
+                        B0, B0, B1, LibUtilities::eNodalPrismEvenlySpaced);
+
+                int nCoeffs = nodalPrism->GetNcoeffs();
+                Array<OneD, NekDouble> wsp2(3*nCoeffs);
+                Array<OneD, Array<OneD, NekDouble> > xn(3);
+                xn[0] = wsp2;
+                xn[1] = wsp2 + 1*nCoeffs;
+                xn[2] = wsp2 + 2*nCoeffs;
+
+                for (int j = 0; j < 3; ++j)
+                {
+                    Array<OneD, NekDouble> tmp(nodalPrism->GetNcoeffs());
+                    qs        ->FwdTrans    (x[j], tmp);
+                    nodalPrism->ModalToNodal(tmp, xn[j]);
+                }
+
+                // Store map of nodes.
+                map<int, int> prismVerts;
+                for (int j = 0; j < 6; ++j)
+                {
+                    prismVerts[el[i]->GetVertex(j)->id] = j;
+                }
+
                 for (int j = 0; j < 3; ++j)
                 {
                     vector<NodeSharedPtr> tetNodes(4);
-                    
+
+                    // Extract vertices for tetrahedron.
                     for (int k = 0; k < 4; ++k)
                     {
                         tetNodes[k] = nodeList[indir[minId][prismTet[j+offset][k]]];
                     }
-                    
+
                     // Add high order information to tetrahedral edges.
                     for (int k = 0; k < 6; ++k)
                     {
                         // Determine prismatic nodes which correspond with this
                         // edge. Apply prism map to this to get Nektar++
                         // ordering (this works since as a permutation,
-                        // prismMap^{-1} = prismMap).
-                        int n1 = mapPrism[indir[minId][prismTet[j+offset][tetEdges[k][0]]]];
-                        int n2 = mapPrism[indir[minId][prismTet[j+offset][tetEdges[k][1]]]];
-                        
+                        // prismMap^2 = id).
+                        int n1 = mapPrism[
+                            indir[minId][prismTet[j+offset][tetEdges[k][0]]]];
+                        int n2 = mapPrism[
+                            indir[minId][prismTet[j+offset][tetEdges[k][1]]]];
+
                         // Find offset/stride
                         it = edgeMap.find(pair<int,int>(n1,n2));
                         if (it == edgeMap.end())
@@ -243,42 +321,86 @@ namespace Nektar
                             it = edgeMap.find(pair<int,int>(n2,n1));
                             if (it == edgeMap.end())
                             {
-                                cerr << "Couldn't find prism edges " << n1 
+                                cerr << "Couldn't find prism edges " << n1
                                      << " " << n2 << endl;
                                 abort();
                             }
                             // Extract vertices -- reverse order.
-                            for (int l = nq-2; l >= 1; --l)
+                            for (int l = ne-1; l >= 0; --l)
                             {
                                 int pos = it->second.first + l*it->second.second;
                                 tetNodes.push_back(
                                     NodeSharedPtr(
-                                        new Node(nodeId++, xs[pos], ys[pos], zs[pos])));
+                                        new Node(nodeId++, xn[0][pos], xn[1][pos], xn[2][pos])));
                             }
                         }
                         else
                         {
                             // Extract vertices -- forwards order.
-                            for (int l = 1; l < nq-1; ++l)
+                            for (int l = 0; l < ne; ++l)
                             {
                                 int pos = it->second.first + l*it->second.second;
                                 tetNodes.push_back(
                                     NodeSharedPtr(
-                                        new Node(nodeId++, xs[pos], ys[pos], zs[pos])));
+                                        new Node(nodeId++, xn[0][pos], xn[1][pos], xn[2][pos])));
                             }
                         }
                     }
-                    
-                    // Create new tetrahedron with edge curvature. TODO: face
-                    // nodes.
+
+                    // Create new tetrahedron with edge curvature.
                     vector<int> tags = el[i]->GetTagList();
                     ElmtConfig conf(eTetrahedron, nq-1, false, false);
                     ElementSharedPtr elmt = GetElementFactory().
                         CreateInstance(eTetrahedron,conf,tetNodes,tags);
-                    
+
+                    // Extract interior face data.
+                    for (int k = 0; k < 4; ++k)
+                    {
+                        // First determine which nodes of prism are being used
+                        // for this face.
+                        FaceSharedPtr face = elmt->GetFace(k);
+                        vector<NodeSharedPtr> triNodes(3);
+
+                        for (int l = 0; l < 3; ++l)
+                        {
+                            NodeSharedPtr v = face->vertexList[l];
+                            triNodes[l] =
+                                stdPrismNodes[prismVerts[v->id]];
+                        }
+
+                        // Create a triangle with the standard nodes of the
+                        // prism.
+                        vector<int> tags;
+                        ElmtConfig conf(eTriangle, 1, false, false);
+                        ElementSharedPtr elmt = GetElementFactory().
+                            CreateInstance(eTriangle,conf,triNodes,tags);
+                        SpatialDomains::GeometrySharedPtr triGeom =
+                            elmt->GetGeom(3);
+                        triGeom->FillGeom();
+                        o = 3 + 3*ne;
+                        face->curveType = LibUtilities::eNodalTriEvenlySpaced;
+
+                        for (int l = 0; l < nft; ++l)
+                        {
+                            Array<OneD, NekDouble> tmp1(2), tmp2(3);
+                            tmp1[0] = rp[o + l];
+                            tmp1[1] = sp[o + l];
+                            tmp2[0] = triGeom->GetCoord(0, tmp1);
+                            tmp2[1] = triGeom->GetCoord(1, tmp1);
+                            tmp2[2] = triGeom->GetCoord(2, tmp1);
+
+                            // PhysEvaluate on prism geometry.
+                            NekDouble xc = geomLayer->GetCoord(0, tmp2);
+                            NekDouble yc = geomLayer->GetCoord(1, tmp2);
+                            NekDouble zc = geomLayer->GetCoord(2, tmp2);
+                            face->faceNodes.push_back(
+                                NodeSharedPtr(new Node(nodeId++, xc, yc, zc)));
+                        }
+                    }
+
                     m->element[m->expDim].push_back(elmt);
                 }
-                
+
                 // Now check to see if this one of the quadrilateral faces is
                 // associated with a boundary condition. If it is, we split the
                 // face into two triangles and mark the existing face for
@@ -290,42 +412,41 @@ namespace Nektar
                 for (int fid = 0; fid < 5; fid += 2)
                 {
                     int bl = el[i]->GetBoundaryLink(fid);
-                    
+
                     if (bl == -1)
                     {
                         continue;
                     }
-                    
+
                     vector<NodeSharedPtr> triNodeList(3);
                     vector<int>           faceNodes  (3);
                     vector<int>           tmp;
                     vector<int>           tagBE;
                     ElmtConfig            bconf(eTriangle, 1, true, true);
                     ElementSharedPtr      elmt;
-                    
+
                     // Mark existing boundary face for removal.
                     toRemove.insert(bl);
                     tagBE =  m->element[m->expDim-1][bl]->GetTagList();
-                    
+
                     // First loop over tets.
                     for (int j = 0; j < 3; ++j)
                     {
                         // Now loop over faces.
                         for (int k = 0; k < 4; ++k)
                         {
-                            // Finally determine Nektar++ local node
-                            // numbers for this face.
+                            // Finally determine Nektar++ local node numbers for
+                            // this face.
                             for (int l = 0; l < 3; ++l)
                             {
                                 faceNodes[l] = mapPrism[indir[minId][prismTet[j+offset][tetFaceNodes[k][l]]]];
                             }
-                            
+
                             tmp = faceNodes;
                             sort(faceNodes.begin(), faceNodes.end());
-                            
-                            // If this face matches a triple denoting a
-                            // split quad face, add the face to the
-                            // expansion list.
+
+                            // If this face matches a triple denoting a split
+                            // quad face, add the face to the expansion list.
                             if ((fid == 0 && (
                                      (faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 2)   ||
                                      (faceNodes[0] == 0 && faceNodes[1] == 2 && faceNodes[2] == 3)   ||
@@ -353,7 +474,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // Remove 2D elements.
             vector<ElementSharedPtr> tmp;
             for (int i = 0; i < m->element[m->expDim-1].size(); ++i)
@@ -364,9 +485,9 @@ namespace Nektar
                     tmp.push_back(m->element[m->expDim-1][i]);
                 }
             }
-            
+
             m->element[m->expDim-1] = tmp;
-            
+
             // Re-process mesh to eliminate duplicate vertices and edges.
             ProcessVertices();
             ProcessEdges();

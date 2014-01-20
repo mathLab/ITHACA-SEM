@@ -68,6 +68,7 @@ namespace Nektar
         ExpList2D::ExpList2D():
             ExpList()
         {
+            SetExpType(e2D);
         }
 
 
@@ -85,6 +86,7 @@ namespace Nektar
         ExpList2D::ExpList2D(const ExpList2D &In, const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
+            SetExpType(e2D);
         }
 
 
@@ -106,6 +108,8 @@ namespace Nektar
                 const std::string &var):
             ExpList(pSession,graph2D)
         {
+            SetExpType(e2D);
+
             int elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -222,6 +226,8 @@ namespace Nektar
                              const bool DeclareCoeffPhysArrays):
             ExpList(pSession)
         {
+            SetExpType(e2D);
+
             int elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -349,6 +355,8 @@ namespace Nektar
                                const LibUtilities::PointsType TriNb):
               ExpList(pSession,graph2D)
           {
+              SetExpType(e2D);
+
               int elmtid=0;
               LocalRegions::TriExpSharedPtr tri;
               LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -441,9 +449,12 @@ namespace Nektar
             const std::string variable):
             ExpList()
         {
+            SetExpType(e2D);
+
             int i, j, id, elmtid=0;
             set<int> facesDone;
-
+            bool var_p = false;
+            
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
             SpatialDomains::QuadGeomSharedPtr   FaceQuadGeom;
             SpatialDomains::TriGeomSharedPtr    FaceTriGeom;
@@ -533,6 +544,8 @@ namespace Nektar
                     }
                     else // variable modes/points
                     {
+                        var_p = true;
+                        
                         LibUtilities::BasisKey face0     =
                             locexp[i]->DetFaceBasisKey(j,0);
                         LibUtilities::BasisKey face1     =
@@ -541,7 +554,7 @@ namespace Nektar
                             it->second.second.first;
                         LibUtilities::BasisKey existing1 =
                             it->second.second.second;
-
+                    
                         int np11 = face0    .GetNumPoints();
                         int np12 = face1    .GetNumPoints();
                         int np21 = existing0.GetNumPoints();
@@ -550,7 +563,7 @@ namespace Nektar
                         int nm12 = face1    .GetNumModes ();
                         int nm21 = existing0.GetNumModes ();
                         int nm22 = existing1.GetNumModes ();
-
+                        
                         if ((np22 >= np12 || np21 >= np11) &&
                             (nm22 >= nm12 || nm21 >= nm11))
                         {
@@ -571,14 +584,14 @@ namespace Nektar
                     }
                 }
             }
-            
+        
             LibUtilities::CommSharedPtr vComm = pSession->GetComm();
             int nproc = vComm->GetSize(); // number of processors
             int edgepr = vComm->GetRank(); // ID processor
             
             m_parallel = false;
             
-            if (nproc > 1)
+            if (nproc > 1 && var_p == true)
             {
                 m_parallel = true;
                 
@@ -718,7 +731,7 @@ namespace Nektar
                             // determine the maximum nummodes
                             
                             if (numModes_ref0 > numModes_com0
-                                        && numModes_ref1 > numModes_com1)
+                                && numModes_ref1 > numModes_com1)
                             {
                                 numMods_max0 = numModes_ref0;
                                 numMods_max1 = numModes_ref1;
@@ -926,6 +939,9 @@ namespace Nektar
                                  const std::string variable):
              ExpList(pSession,graph3D)
          {
+
+             SetExpType(e2D);
+
              ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D),
                      "Expected a MeshGraph3D object.");
 
@@ -1102,13 +1118,15 @@ namespace Nektar
                 
                     // Get the number of points and normals for this expansion.
                     locnormals = loc_elmt->GetFaceNormal(faceNumber);
-
-                    if (e_npoints != locnormals[0].num_elements())
+                    int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                    int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
+                    //if (e_npoints != locnormals[0].num_elements())
+                    if (e_nmodes != loc_nmodes)
                     {
                         LocalRegions::Expansion3DSharedPtr loc_elmt =
                             loc_exp->GetRightAdjacentElementExp();
                         int faceNumber = loc_exp->GetRightAdjacentElementFace();
-
+                        
                         // Get the number of points and normals for this expansion.
                         locnormals = loc_elmt->GetFaceNormal(faceNumber);
 

@@ -203,7 +203,7 @@ namespace Nektar
                                 CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap,
                                 const NekDouble lambda_imag = NekConstants::kNekUnsetDouble);
         
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
         
         virtual void v_DoInitialise(void);
         

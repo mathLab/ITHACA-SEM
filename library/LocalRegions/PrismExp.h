@@ -110,21 +110,18 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
-                Array<OneD, NekDouble> &coords_0,
-                Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
-                Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray);
-            
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                 const Array<OneD, const NekDouble> &Lcoords, 
                       Array<OneD,       NekDouble> &coords);
 
+            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
+                      Array<OneD,       NekDouble> &coords_1,
+                      Array<OneD,       NekDouble> &coords_2,
+                      Array<OneD,       NekDouble> &coords_3);
+
             LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
                 const Array<OneD, const NekDouble> &Lcoord,
                 const Array<OneD, const NekDouble> &physvals);
-
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                const Array<OneD, const NekDouble> &coord);
 
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coord,
@@ -134,11 +131,6 @@ namespace Nektar
             //---------------------------------------
             // Helper functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT void v_WriteToFile(
-                std::ofstream &outfile, 
-                OutputFormat   format, 
-                const bool     dumpVar = true, 
-                std::string    var = "v");
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
                 const NekDouble *data,

@@ -72,8 +72,7 @@ namespace Nektar
             //-------------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                     const Array<OneD, const NekDouble> &inarray);
-
-
+			
             //----------------------------
             // Differentiation Methods
             //----------------------------
@@ -85,12 +84,10 @@ namespace Nektar
                           Array<OneD,       NekDouble> &out_d0,
                           Array<OneD,       NekDouble> &out_d1,
                           Array<OneD,       NekDouble> &out_d2 = NullNekDouble1DArray);
-
             LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(
                         const int dir,
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);
-
             LOCAL_REGIONS_EXPORT virtual void v_PhysDirectionalDeriv(
                         const Array<OneD, const NekDouble> &inarray,
                         const Array<OneD, const NekDouble> &direction,
@@ -140,18 +137,16 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
-                        Array<OneD,NekDouble> &coords_1,
-                        Array<OneD,NekDouble> &coords_2,
-                        Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                         const Array<OneD, const NekDouble> &Lcoords,
                               Array<OneD,       NekDouble> &coords);
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                        const Array<OneD, const NekDouble> &coord);
+            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
+                             Array<OneD,        NekDouble> &coords_1,
+                             Array<OneD,        NekDouble> &coords_2,
+                             Array<OneD,        NekDouble> &coords_3);
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                         const Array<OneD, const NekDouble> &coord,
-                        const Array<OneD, const NekDouble> & physvals);
+                        const Array<OneD, const NekDouble> &physvals);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgePhysVals(
                         const int edge,
                         const Array<OneD, const NekDouble> &inarray,
@@ -181,11 +176,6 @@ namespace Nektar
             //---------------------------------------
             // Helper functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT virtual void v_WriteToFile(
-                        std::ofstream &outfile,
-                        OutputFormat format,
-                        const bool dumpVar = true,
-                        std::string var = "v");
             LOCAL_REGIONS_EXPORT virtual const
                 SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
             LOCAL_REGIONS_EXPORT virtual  int v_GetCoordim();
@@ -286,8 +276,6 @@ namespace Nektar
         typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
         typedef std::vector< QuadExpSharedPtr > QuadExpVector;
         typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
-        
-        
     }
 }
 

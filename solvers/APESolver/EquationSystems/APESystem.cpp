@@ -302,15 +302,15 @@ namespace Nektar
     /**
      *
      */
-    void APESystem::v_PrintSummary(std::ostream &out)
+    void APESystem::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        EquationSystem::v_PrintSummary(out);
-	out << "\tUpwind Type     : " << UpwindTypeMap[m_upwindType] << endl;
-        out << "\tAdvection       : " << (m_explicitAdvection ? "explicit" : "implicit") << endl;
-	out << "\tIntegration Type: " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
-        out << "\tTime Step       : " << m_timestep << endl;
-        out << "\tNo. of Steps    : " << m_steps << endl;
-        out << "\tCheckpoints     : " << m_checksteps << " steps" << endl;
+        EquationSystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Upwind Type", UpwindTypeMap[m_upwindType]);
+        SolverUtils::AddSummaryItem(s, "Advection", (m_explicitAdvection ? "explicit" : "implicit"));
+        SolverUtils::AddSummaryItem(s, "Integration Type", LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]);
+        SolverUtils::AddSummaryItem(s, "Time Step", m_timestep);
+        SolverUtils::AddSummaryItem(s, "No. of Steps", m_steps);
+        SolverUtils::AddSummaryItem(s, "Checkpoints (steps)", m_checksteps);
     }
 
 

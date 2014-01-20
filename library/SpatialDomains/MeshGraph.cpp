@@ -1245,7 +1245,6 @@ namespace Nektar
 
                 ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
 
-
                 /// Parse out the element components corresponding to type of element.
                 if(face == "F")
                 {
@@ -1650,14 +1649,6 @@ namespace Nektar
                     expansionMap = m_expansionMapShPtrMap.find(field)->second;
                     LibUtilities::BasisKeyVector def;
                                 
-#if 0               // This version will not work in parallel  
-                    for(k = 0; k < fielddef[i]->m_elementIDs.size(); ++k)
-                    {
-                        ExpansionShPtr tmpexp =
-                            MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                        (*expansionMap)[fielddef[i]->m_elementIDs[k]] = tmpexp;
-                    }
-#else
                     CompositeMap::const_iterator compIter;
 
                     for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
@@ -1672,7 +1663,6 @@ namespace Nektar
                             
                         }
                     }
-#endif
                 }
             }
 
@@ -1863,9 +1853,10 @@ namespace Nektar
                             }
                             geom = m_tetGeoms[k];
 
+#if 0 //all gll
                             for(int b = 0; b < 3; ++b)
                             {
-                                LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b], LibUtilities::eGaussLobattoLegendre);
 
                                 if(numPointDef&&pointDef)
                                 {
@@ -1887,6 +1878,78 @@ namespace Nektar
 
                                 bkeyvec.push_back(bkey);
                             }
+#else
+                            {
+                                LibUtilities::PointsKey pkey(nmodes[cnt], LibUtilities::eGaussLobattoLegendre);
+                                
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt],points[0]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt]+1,points[0]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt],LibUtilities::eGaussLobattoLegendre);
+                                    pkey = pkey2;
+                                }
+
+                                LibUtilities::BasisKey bkey(basis[0],nmodes[cnt],pkey);
+
+                                bkeyvec.push_back(bkey);
+                            }
+                            {
+                                LibUtilities::PointsKey pkey(nmodes[cnt+1], LibUtilities::eGaussRadauMAlpha1Beta0);
+                                
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+1],points[1]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+1]+1,points[1]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+1],LibUtilities::eGaussRadauMAlpha1Beta0);
+                                    pkey = pkey2;
+                                }
+
+                                LibUtilities::BasisKey bkey(basis[1],nmodes[cnt+1],pkey);
+
+                                bkeyvec.push_back(bkey);
+                            }
+
+                            {
+                                LibUtilities::PointsKey pkey(nmodes[cnt+2], LibUtilities::eGaussRadauMAlpha2Beta0);
+                                
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+2],points[2]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+2]+1,points[2]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+2],LibUtilities::eGaussRadauMAlpha1Beta0);
+                                    pkey = pkey2;
+                                }
+
+                                LibUtilities::BasisKey bkey(basis[2],nmodes[cnt+2],pkey);
+
+                                bkeyvec.push_back(bkey);
+                            }
+#endif
 
                             if(!UniOrder)
                             {
@@ -1903,9 +1966,34 @@ namespace Nektar
                             }
                             geom = m_prismGeoms[k];
 
+#if 0  // all GLL
                             for(int b = 0; b < 3; ++b)
                             {
-                                LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b],LibUtilities::eGaussLobattoLegendre);
+
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+b]+1,points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
+                                    pkey = pkey2;
+                                }
+
+                                LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+                                bkeyvec.push_back(bkey);
+                            }
+#else
+                            for(int b = 0; b < 2; ++b)
+                            {
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b],LibUtilities::eGaussLobattoLegendre);
 
                                 if(numPointDef&&pointDef)
                                 {
@@ -1927,6 +2015,29 @@ namespace Nektar
                                 bkeyvec.push_back(bkey);
                             }
 
+                            {
+                                LibUtilities::PointsKey pkey(nmodes[cnt+2],LibUtilities::eGaussRadauMAlpha1Beta0);
+
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+2],points[2]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+2]+1,points[2]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+2],LibUtilities::eGaussLobattoLegendre);
+                                    pkey = pkey2;
+                                }
+
+                                LibUtilities::BasisKey bkey(basis[2],nmodes[cnt+2],pkey);
+                                bkeyvec.push_back(bkey);
+                            }
+#endif
                             if(!UniOrder)
                             {
                                 cnt += 3;
@@ -1945,7 +2056,7 @@ namespace Nektar
 
                             for(int b = 0; b < 3; ++b)
                             {
-                                LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b],LibUtilities::eGaussLobattoLegendre);
 
                                 if(numPointDef&&pointDef)
                                 {

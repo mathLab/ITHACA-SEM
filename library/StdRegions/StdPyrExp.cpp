@@ -146,22 +146,13 @@ namespace Nektar
                 m_rmap[cnt++] = i;
             }
 
-            // Face 0
+            // Face 0 - TODO check this
             for (int i = 2; i <= P; ++i)
             {
                 for (int j = 2; j <= Q; ++j)
                 {
                     m_map [cnt  ] = triple(i, j, 0);
-
-                    // TODO: check this
-                    //if (j > Q-i)
-                    //{
-                    //    m_rmap[cnt++] = GetTetMode(i, i + Q - j, 0);
-                    //}
-                    //else
-                    //{
-                    m_rmap[cnt++] = 0;//GetTetMode(i, j, 0);
-                        //}
+                    m_rmap[cnt++] = GetTetMode(i, 0, 0);
                 }
             }
 
@@ -212,11 +203,32 @@ namespace Nektar
             	{
                     for (int k = 1; k <= R-i-j; ++k)
                     {
+                        cout << cnt << endl;
                         m_map [cnt  ] = triple(i,j,k);
                         m_rmap[cnt++] = GetTetMode(i, j, k);
                     }
             	}
             }
+
+#if 0
+            int nPts = GetTotPoints();
+            Array<OneD, NekDouble> modei(nPts);
+            Array<OneD, NekDouble> modej(nPts);
+
+            for (int i = 0; i < m_ncoeffs; ++i)
+            {
+                v_FillMode(i, modei);
+                for (int j = i+1; j < m_ncoeffs; ++j)
+                {
+                    v_FillMode(j, modej);
+                    Vmath::Vsub(nPts, modei, 1, modej, 1, modej, 1);
+                    if (fabs(Vmath::Vmax(nPts, modej, 1)) < 1e-4)
+                    {
+                        cout << "wut" << i << " " << j << endl;
+                    }
+                }
+            }
+#endif
         }
 
         StdPyrExp::StdPyrExp(const StdPyrExp &T)
@@ -573,9 +585,14 @@ namespace Nektar
             Array<OneD, const NekDouble> by = m_base[1]->GetBdata();
             Array<OneD, const NekDouble> bz = m_base[2]->GetBdata();
 
-            for (int k = 0; k < Qz; ++k) {
-                for (int j = 0; j < Qy; ++j) {
-                    for (int i = 0; i < Qx; ++i) {
+            int Q = m_base[2]->GetNumModes();
+
+            for (int k = 0; k < Qz; ++k)
+            {
+                for (int j = 0; j < Qy; ++j)
+                {
+                    for (int i = 0; i < Qx; ++i)
+                    {
                         NekDouble sum = 0.0;
 
                         for (int cnt = 0; cnt < m_ncoeffs; ++cnt)
@@ -584,10 +601,16 @@ namespace Nektar
                             const int p = boost::get<0>(idx);
                             const int q = boost::get<1>(idx);
                             const int r = boost::get<2>(idx);
-                            sum += inarray[cnt]*
+                            NekDouble tmp = inarray[cnt]*
                                 bx[i + Qx*p]*
                                 by[j + Qy*q]*
                                 bz[k + Qz*m_rmap[cnt]];
+
+                            if (r == 0 && p >= 2 && q > Q-p)
+                            {
+                                tmp *= bz[k + Qz*GetTetMode(Q-q,0,0)];
+                            }
+                            sum += tmp;
                         }
 
                         // Add in contributions from singular vertices;
@@ -652,6 +675,29 @@ namespace Nektar
             StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
+#if 0
+            StdMatrixKey      masskey2(eMass,DetShapeType(),*this);
+            DNekMatSharedPtr  matsys2 = GetStdMatrix(masskey2);
+
+            ofstream blah("mass.txt");
+            for (int i = 0; i < m_ncoeffs; ++i)
+            {
+                for (int j = 0; j < m_ncoeffs; ++j)
+                {
+                    if (fabs((*matsys2)(i,j)) > 1e-6)
+                    {
+                        blah << 1 << " ";
+                    }
+                    else
+                    {
+                        blah << 0 << " ";
+                    }
+                }
+                blah << endl;
+            }
+            exit(0);
+#endif
+
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs, outarray);
             DNekVec out(m_ncoeffs, outarray, eWrapper);
@@ -690,6 +736,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &by = m_base[1]->GetBdata();
             const Array<OneD, const NekDouble> &bz = m_base[2]->GetBdata();
 
+            int Q = m_base[1]->GetNumModes();
+
             // Initial pyramid implementation. We need to iterate over vertices,
             // edge int, face int and then interior.
             for (int cnt = 0; cnt < m_ncoeffs; ++cnt)
@@ -709,11 +757,16 @@ namespace Nektar
                         for (int i = 0; i < Qx; ++i)
                         {
                             int s = i + Qx*(j + Qy*k);
-
-                            g_pqr[s] += inarray[s] * 
+                            NekDouble tmp = inarray[s] * 
                                 bx[i + Qx*p] * 
                                 by[j + Qy*q] * 
                                 bz[k + Qz*m_rmap[cnt]];
+
+                            if (r == 0 && p >= 2 && q > Q-p)
+                            {
+                                tmp *= bz[k + Qz*GetTetMode(Q-q,0,0)];
+                            }
+                            g_pqr[s] += tmp;
 
                             // Add missing contributions from top vertex mode.
                             if (p == 0 && q == 0 && r == 1)
@@ -789,58 +842,30 @@ namespace Nektar
 
         void StdPyrExp::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
+            Array<OneD, const NekDouble> bx = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> by = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> bz = m_base[2]->GetBdata();
+
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
-            int P  = m_base[0]->GetNumModes() - 1;
-            int Q  = m_base[1]->GetNumModes() - 1;
-            int R  = m_base[2]->GetNumModes() - 1;
 
-            // Create an index map from the hexahedron to the prymaid.
-            Array<OneD, int> mode_pqr = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
-            for( int p = 0, m = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q; ++q ) {
-                    for( int r = 0; r <= R - p - q ; ++r, ++m ) {
-                        mode_pqr[r + (R+1)*(q + (Q+1)*p)] = m;
-                    }
-                }
-            }
-
-            // Find the pqr matching the provided mode
-            int mode_p=0, mode_q=0, mode_r=0;
-            for( int p = 0, m = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q ; ++q ) {
-                    for( int r = 0; r <= R - p - q; ++r, ++m ) {
-                        if( m == mode ) {
-                            mode_p = p;
-                            mode_q = q;
-                            mode_r = r;
-                        }
-                    }
-                }
-            }
-
-            const Array<OneD, const NekDouble>& bx = m_base[0]->GetBdata();
-            const Array<OneD, const NekDouble>& by = m_base[1]->GetBdata();
-            const Array<OneD, const NekDouble>& bz = m_base[2]->GetBdata();
-
-            int p = mode_p, q = mode_q, r = mode_r;
-            
-            // Determine the index for specifying which mode to use in the basis
-            int sigma_p   = Qx*p;
-            int sigma_q   = Qy*q;  
-            int sigma_pqr = Qz*mode_pqr[r + (R+1)*(q + (Q+1)*p)];       
-
+            int p = boost::get<0>(m_map[mode]);
+            int q = boost::get<1>(m_map[mode]);
+            int r = m_rmap[mode];
 
             // Compute tensor product of inarray with the 3 basis functions
-            for( int k = 0; k < Qz; ++k ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    for( int i = 0; i < Qx; ++i ) {
-                        int s = i + Qx*(j + Qy*(k + Qz*mode));
-                        outarray[s] = 
-                            bx[i + sigma_p] * 
-                            by[j + sigma_q] * 
-                            bz[k + sigma_pqr];
+            for (int k = 0; k < Qz; ++k)
+            {
+                for (int j = 0; j < Qy; ++j)
+                {
+                    for (int i = 0; i < Qx; ++i)
+                    {
+                        int s = i + Qx*(j + Qy*k);
+                        outarray[s] =
+                            bx[i + Qx*p] * 
+                            by[j + Qy*q] * 
+                            bz[k + Qz*r];
                     }
                 }
             }
@@ -989,12 +1014,13 @@ namespace Nektar
         
         void StdPyrExp::v_GetFaceToElementMap(
             const int                  fid, 
-            const Orientation      faceOrient,
+            const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
             int                        nummodesA, 
             int                        nummodesB)
         {
+#if 0
             int i,j,P,Q;
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
@@ -1022,14 +1048,15 @@ namespace Nektar
                 Q = nummodesB-1;
                 nFaceCoeffs = nummodesA*nummodesB;
             }
-//             else if((fid == 2) || (fid == 4)) // front and back quad
-//             {
-//                 nummodesA = nummodes1;
-//                 nummodesB = nummodes2;
-//                 P = nummodesA-1;
-//                 Q = nummodesB-1;
-//                 nFaceCoeffs = nummodesA*nummodesB;
-//             }
+            else if((fid == 2) || (fid == 4))
+            {
+                nummodesA = nummodes1;
+                nummodesB = nummodes2;
+                P = nummodesA-1;
+                Q = nummodesB-1;
+                nFaceCoeffs = R+1 + (P*(1 + 2*R - P))/2;
+                isQuad = false;
+            }
             else  // left and right triangles
             {
                 nummodesA = nummodes0;
@@ -1055,8 +1082,6 @@ namespace Nektar
                 fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
             }
 
-
-
             Array<OneD, int> arrayindex(nFaceCoeffs,-1);
 
             for(int a = 0; a < nummodesA; ++a)
@@ -1079,14 +1104,13 @@ namespace Nektar
             
             switch(fid)
             {
-
-            // Base quad
-            case 0: 
-                for(int a = 0; a < nummodesA; ++a) {
-                    for(int b = 0; b < nummodesB; ++b) {
-                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
-                        maparray[ arrayindex[b + nummodesB*a] ] = b + nummodesB*a;
-                    }
+                // Base quad
+                case 0: 
+                    for(int a = 0; a < nummodesA; ++a) {
+                        for(int b = 0; b < nummodesB; ++b) {
+                            ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                            maparray[ arrayindex[b + nummodesB*a] ] = b + nummodesB*a;
+                        }
                 }
             break;
             
@@ -1216,7 +1240,7 @@ namespace Nektar
                     }
                 }
             }      
-
+#endif
         }
 
         int StdPyrExp::v_GetVertexMap(int vId, bool useCoeffPacking)
@@ -1225,59 +1249,9 @@ namespace Nektar
                      GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_B,
                      "Mapping not defined for this type of basis");
-            
-            int l = 0;
-            
-            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
-            {
-                switch (vId)
-                {
-                case 0:
-                    l = GetMode(0,0,0);
-                    break;
-                case 1:
-                    l = GetMode(0,0,1);
-                    break;
-                case 2:
-                    l = GetMode(0,1,0);
-                    break;
-                case 3:
-                    l = GetMode(1,0,0);
-                    break;
-                case 4:
-                    l = GetMode(1,1,0);
-                    break;
-                default:
-                    ASSERTL0(false, "local vertex id must be between 0 and 4");
-                }
-            }
-            else
-            {
-                switch (vId)
-                {
-                case 0:
-                    l = GetMode(0,0,0);
-                    break;
-                case 1:
-                    l = GetMode(1,0,0);
-                    break;
-                case 2:
-                    l = GetMode(1,1,0);
-                    break;
-                case 3:
-                    l = GetMode(0,1,0);
-                    break;
-                case 4:
-                    l = GetMode(0,0,1);
-                    break;
-                default:
-                    ASSERTL0(false, "local vertex id must be between 0 and 4");
-                }
-            }
-                
-            return l;
+            return vId;
         }
-        
+
 
         //---------------------------------------
         // Wrapper functions

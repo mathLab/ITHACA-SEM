@@ -338,9 +338,26 @@ int main(int argc, char *argv[]){
             // Define solution to be projected
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
-                //sol[i]  = Tet_sol(x[i],y[i],z[i],order1,order2,order3);
-                sol[i]  = Pyr_sol(x[i],y[i],z[i],pyrIdx);
+                sol[i]  = Tet_sol(x[i],y[i],z[i],order1,order2,order3);
+                //sol[i]  = Pyr_sol(x[i],y[i],z[i],pyrIdx);
             }
+
+            int nCoeffs = F->GetNcoeffs();
+            int nPts = F->GetTotPoints();
+            Array<OneD, NekDouble> blah(nCoeffs), blah2(nPts);
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                Vmath::Zero(nCoeffs, blah, 1);
+                blah[i] = 1.0;
+                F->BwdTrans(blah, sol);
+                F->FillMode(i, sol);
+                //Vmath::Vsub(nPts, sol, 1, blah2, 1, blah2, 1);
+                //cout << i << " " << Vmath::Vmax(nPts, blah2, 1) << endl;
+                F->FwdTrans(sol, blah);
+
+                cout << Vmath::Vmin(nCoeffs, blah, 1) << " " << Vmath::Vmax(nCoeffs, blah, 1) << endl;
+            }
+            exit(0);
             //----------------------------------------------
         }
         break;
@@ -435,8 +452,8 @@ int main(int argc, char *argv[]){
     }
     else if (regionshape == LibUtilities::ePyramid)
     {
-        //sol[0] = Tet_sol(t[0], t[1], t[2], order1, order2, order3);
-        sol[0] = Pyr_sol(t[0], t[1], t[2], pyrIdx);
+        sol[0] = Tet_sol(t[0], t[1], t[2], order1, order2, order3);
+        //sol[0] = Pyr_sol(t[0], t[1], t[2], pyrIdx);
     }
     else if (regionshape == LibUtilities::ePrism)
     {
@@ -478,7 +495,7 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
 
 NekDouble Pyr_sol(NekDouble x, NekDouble y, NekDouble z, std::vector<StdPyrExp::triple> idx)
 {
-    NekDouble sol = 1.0;
+    NekDouble sol = 0.0;
 #if 0
     for (int i = 0; i < idx.size(); ++i)
     {

@@ -1341,7 +1341,9 @@ namespace Nektar
                 
                 case StdRegions::eLaplacian:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
+                       (mkey.GetNVarCoeff() > 0)||
+                       (mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio)))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);

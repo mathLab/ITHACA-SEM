@@ -58,7 +58,7 @@
 
 namespace ptime = boost::posix_time;
 namespace ip = boost::asio::ip;
-namespace errc = boost::system::errc;
+namespace berrc = boost::system::errc;
 
 namespace Nektar
 {
@@ -1087,7 +1087,7 @@ namespace Nektar
             }
             catch (fs::filesystem_error& e)
             {
-                ASSERTL0(e.code().value() == errc::no_such_file_or_directory,
+                ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
                          "Filesystem error: " + string(e.what()));
             }
 

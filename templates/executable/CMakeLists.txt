@@ -19,13 +19,14 @@ SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 # as Boost and Loki.
 FIND_PACKAGE(Nektar++ REQUIRED)
 
-# TODO - Add an entry here for every source file in your project.
+# TODO - Add an entry here for every source file in your project. Must not be empty!
 SET(SourceFileNames
 	main.cpp
 )
 
-# TODO - Add an entry here for every header file in your project.
+# TODO - Add an entry here for every header file in your project. Must not be empty!
 SET(HeaderFileNames
+        main.cpp
 )
 
 IF( NEKTAR++_FOUND )

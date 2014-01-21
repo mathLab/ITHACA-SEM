@@ -7,7 +7,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 # TODO - Put the name of your project here.
-SET(ProjectName Sample)
+SET(ProjectName ExampleSolver)
 PROJECT(${ProjectName})
 
 # Setup where CMake will look for modules.  You probably
@@ -28,12 +28,13 @@ set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
 
 # TODO - Add an entry here for every source file in your project. Must not be empty!
 SET(SourceFileNames
-    main.cpp
+    ExampleSolver.cpp
+    EquationSystems/Laplace.cpp
 )
 
 # TODO - Add an entry here for every header file in your project. Must not be empty!
 SET(HeaderFileNames
-    main.cpp
+    EquationSystems/Laplace.h
 )
 
 ADD_EXECUTABLE(${ProjectName} ${SourceFileNames} ${HeaderFileNames})

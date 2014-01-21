@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cmath>
 
+#include <boost/format.hpp>
 #include <StdRegions/StdHexExp.h>
 #include <StdRegions/StdPrismExp.h>
 #include <StdRegions/StdNodalPrismExp.h>
@@ -342,6 +343,7 @@ int main(int argc, char *argv[]){
                 //sol[i]  = Pyr_sol(x[i],y[i],z[i],pyrIdx);
             }
 
+#if 0
             int nCoeffs = F->GetNcoeffs();
             int nPts = F->GetTotPoints();
             Array<OneD, NekDouble> blah(nCoeffs), blah2(nPts);
@@ -349,15 +351,80 @@ int main(int argc, char *argv[]){
             {
                 Vmath::Zero(nCoeffs, blah, 1);
                 blah[i] = 1.0;
-                F->BwdTrans(blah, sol);
-                F->FillMode(i, sol);
-                //Vmath::Vsub(nPts, sol, 1, blah2, 1, blah2, 1);
-                //cout << i << " " << Vmath::Vmax(nPts, blah2, 1) << endl;
-                F->FwdTrans(sol, blah);
+                F->BwdTrans(blah, blah2);
 
-                cout << Vmath::Vmin(nCoeffs, blah, 1) << " " << Vmath::Vmax(nCoeffs, blah, 1) << endl;
+                boost::format pad("mode-%03d.dat");
+                pad % i;
+                ofstream outf(pad.str());
+
+                int numBlocks = 1;
+                for (int j = 0; j < 3; ++j)
+                {
+                    numBlocks *= F->GetNumPoints(j)-1;
+                }
+
+                outf << "VARIABLES = x, y, z, m" << endl;
+                outf << "Zone, N=" << nPts << ", E="
+                     << numBlocks << ", F=FEBlock, ET=BRICK" << endl;
+
+                const int np0 = F->GetNumPoints(0);
+                const int np1 = F->GetNumPoints(1);
+                const int np2 = F->GetNumPoints(2);
+                const int np01 = np0*np1;
+
+                for (int j = 0; j < nPts; ++j)
+                {
+                    outf << x[j] << " ";
+                    if (j % 100 == 0 && j > 0)
+                        outf << endl;
+                }
+
+                for (int j = 0; j < nPts; ++j)
+                {
+                    outf << y[j] << " ";
+                    if (j % 100 == 0 && j > 0)
+                        outf << endl;
+                }
+
+                for (int j = 0; j < nPts; ++j)
+                {
+                    outf << z[j] << " ";
+                    if (j % 100 == 0 && j > 0)
+                        outf << endl;
+                }
+
+                for (int j = 0; j < nPts; ++j)
+                {
+                    outf << blah2[j] << " ";
+                    if (j % 100 == 0 && j > 0)
+                        outf << endl;
+                }
+
+                for(int j = 1; j < np2; ++j)
+                {
+                    for(int k = 1; k < np1; ++k)
+                    {
+                        for(int l = 1; l < np0; ++l)
+                        {
+                            outf << (j-1)*np01 + (k-1)*np0 + l   << " ";
+                            outf << (j-1)*np01 + (k-1)*np0 + l+1 << " ";
+                            outf << (j-1)*np01 +  k   *np0 + l+1 << " ";
+                            outf << (j-1)*np01 +  k   *np0 + l   << " ";
+                            outf <<  j   *np01 + (k-1)*np0 + l   << " ";
+                            outf <<  j   *np01 + (k-1)*np0 + l+1 << " ";
+                            outf <<  j   *np01 +  k   *np0 + l+1 << " ";
+                            outf <<  j   *np01 +  k   *np0 + l   << endl;
+                        }
+                    }
+                }
+                
+                outf.close();
+                
+                //F->FwdTrans(sol, blah);
+                //cout << Vmath::Vmin(nCoeffs, blah, 1) << " " << Vmath::Vmax(nCoeffs, blah, 1) << endl;
             }
             exit(0);
+#endif
             //----------------------------------------------
         }
         break;
@@ -478,7 +545,7 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
                   int order1, int order2, int order3)
 {
     int    l,k,m;
-    NekDouble sol = 0;
+    NekDouble sol = 0.0;
 
     for(k = 0; k < order1; ++k)
     {

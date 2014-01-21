@@ -203,8 +203,7 @@ namespace Nektar
             	{
                     for (int k = 1; k <= R-i-j; ++k)
                     {
-                        cout << cnt << endl;
-                        m_map [cnt  ] = triple(i,j,k);
+                        m_map [cnt  ] = triple(i, j+1, k);
                         m_rmap[cnt++] = GetTetMode(i, j, k);
                     }
             	}
@@ -675,29 +674,6 @@ namespace Nektar
             StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
-#if 0
-            StdMatrixKey      masskey2(eMass,DetShapeType(),*this);
-            DNekMatSharedPtr  matsys2 = GetStdMatrix(masskey2);
-
-            ofstream blah("mass.txt");
-            for (int i = 0; i < m_ncoeffs; ++i)
-            {
-                for (int j = 0; j < m_ncoeffs; ++j)
-                {
-                    if (fabs((*matsys2)(i,j)) > 1e-6)
-                    {
-                        blah << 1 << " ";
-                    }
-                    else
-                    {
-                        blah << 0 << " ";
-                    }
-                }
-                blah << endl;
-            }
-            exit(0);
-#endif
-
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs, outarray);
             DNekVec out(m_ncoeffs, outarray, eWrapper);
@@ -766,6 +742,7 @@ namespace Nektar
                             {
                                 tmp *= bz[k + Qz*GetTetMode(Q-q,0,0)];
                             }
+
                             g_pqr[s] += tmp;
 
                             // Add missing contributions from top vertex mode.

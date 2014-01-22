@@ -39,6 +39,7 @@
 
 namespace Nektar
 {
+    int m_advectioncalls = 0;
 
     AdvectionTermFactory& GetAdvectionTermFactory()
     {
@@ -155,6 +156,8 @@ namespace Nektar
         
 
         DoAdvection(pFields,velocity,pInarray,pOutarray,time,pWk);
+        
+        m_advectioncalls++;
     }
 
     void AdvectionTerm::DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr> &pFields, 

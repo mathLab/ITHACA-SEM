@@ -277,9 +277,9 @@ namespace Nektar
                             // points for each element (hence local).
                             for(int j = 0; j < dim; ++j)
                             {
-                                gradU[j] = Array<OneD, NekDouble>(nq);
-                                gradV[j] = Array<OneD, NekDouble>(nq);
-                                gradW[j] = Array<OneD, NekDouble>(nq);
+                                gradU[j] = Array<OneD, NekDouble>(nq,0.0);
+                                gradV[j] = Array<OneD, NekDouble>(nq,0.0);
+                                gradW[j] = Array<OneD, NekDouble>(nq,0.0);
                             }
 
                             // identify boundary of element
@@ -301,20 +301,20 @@ namespace Nektar
                             int nbc = bc->GetTotPoints();
 
                             // several vectors for computing the forces
-                            Array<OneD, NekDouble> Pb(nbc);
+                            Array<OneD, NekDouble> Pb(nbc,0.0);
 
                             for(int j = 0; j < dim; ++j)
                             {
-                                fgradU[j] = Array<OneD, NekDouble>(nbc);
-                                fgradV[j] = Array<OneD, NekDouble>(nbc);
+                                fgradU[j] = Array<OneD, NekDouble>(nbc,0.0);
+                                fgradV[j] = Array<OneD, NekDouble>(nbc,0.0);
                             }
 
-                            Array<OneD, NekDouble>  drag_t(nbc);
-                            Array<OneD, NekDouble>  lift_t(nbc);
-                            Array<OneD, NekDouble>  drag_p(nbc);
-                            Array<OneD, NekDouble>  lift_p(nbc);
-                            Array<OneD, NekDouble>  temp(nbc);
-                            Array<OneD, NekDouble>  temp2(nbc);
+                            Array<OneD, NekDouble>  drag_t(nbc,0.0);
+                            Array<OneD, NekDouble>  lift_t(nbc,0.0);
+                            Array<OneD, NekDouble>  drag_p(nbc,0.0);
+                            Array<OneD, NekDouble>  lift_p(nbc,0.0);
+                            Array<OneD, NekDouble>  temp(nbc,0.0);
+                            Array<OneD, NekDouble>  temp2(nbc,0.0);
 
                             // identify boundary of element .
                             boundary = BoundarytoTraceID[cnt];

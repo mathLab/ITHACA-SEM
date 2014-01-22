@@ -115,6 +115,18 @@ namespace Nektar
                 m_advection->SetFluxVector(&UnsteadyAdvectionDiffusion::
                                            GetFluxVectorAdv, this);
                 
+		if(advName.compare("WeakDG") == 0)
+		{
+		    string riemName; 
+		    m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
+		    m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
+                        CreateInstance(riemName);
+		    m_riemannSolver->AddScalar("Vn", &UnsteadyAdvectionDiffusion::
+                                           GetNormalVelocity, this);
+		    m_advection->SetRiemannSolver(m_riemannSolver);
+		    m_advection->InitObject      (m_session, m_fields);
+		}
+
                 // In case of Galerkin explicit diffusion gives an error
                 if (m_explicitDiffusion)
                 {

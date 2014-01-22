@@ -81,7 +81,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------    
 
     //read info from fldfile
-    const std::vector<std::string> variables  = fielddef[0]->m_fields; 
+   // const std::vector<std::string> variables  = fielddef[0]->m_fields; 
+    const std::vector<std::string> variables  = vSession->GetVariables(); 
     bool homo= (fielddef[0]->m_numHomogeneousDir > 0)? true: false;
     
     // Define Expansion    
@@ -342,14 +343,14 @@ void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
             else
             {    
                 i = 0;
-                MultiRegions::ContField2DSharedPtr firstfield;
-                firstfield = MemoryManager<MultiRegions::ContField2D>
+                MultiRegions::DisContField2DSharedPtr firstfield;
+                firstfield = MemoryManager<MultiRegions::DisContField2D>
                     ::AllocateSharedPtr(session,mesh,variables[i],DeclareCoeffPhysArrays);
                 
                 Exp[0] = firstfield;
                 for(i = 1 ; i < nvariables; i++)
                 {                        	
-                    Exp[i] = MemoryManager<MultiRegions::ContField2D>
+                    Exp[i] = MemoryManager<MultiRegions::DisContField2D>
                         ::AllocateSharedPtr(*firstfield,mesh,variables[i],DeclareCoeffPhysArrays);
                 }
             }

@@ -159,7 +159,8 @@ namespace Nektar
             // if m_exp defined presume we want to load all field  into expansions
             if(m_f->m_exp.size()) 
             {
-                int nfields = m_f->m_fielddef[0]->m_fields.size();
+                //int nfields = m_f->m_fielddef[0]->m_fields.size();
+                int nfields = m_f->m_session->GetVariables().size();
                 m_f->m_exp.resize(nfields);
                 
                 vector<string> vars = m_f->m_session->GetVariables();

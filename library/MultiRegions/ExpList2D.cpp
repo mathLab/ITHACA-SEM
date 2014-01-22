@@ -514,7 +514,7 @@ namespace Nektar
                         else
                         {
                             ASSERTL0(false,
-                                     "dynamic cast to a proper face geometry 
+                                     "dynamic cast to a proper face geometry "
                                      "failed"); 
                         }
                     }

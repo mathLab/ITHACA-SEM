@@ -34,6 +34,13 @@ IF( NEKTAR++_FOUND )
     LINK_DIRECTORIES(${NEKTAR++_LIBRARY_DIRS})
     ADD_DEFINITIONS(${NEKTAR++_DEFINITIONS})
 
+    # temporary workarounds:
+    ADD_DEFINITIONS("-DNEKTAR_USING_LAPACK -DNEKTAR_USING_BLAS")
+    # workaround for libLibUtilities: http://stackoverflow.com/questions/17150075/undefined-reference-to-clock-gettime-although-lrt-is-given
+    # to fix, add rt to TARGET_LINK_LIBRARIES(LibUtilities ... in library/LibUtilities/CMakeLists.txt:341, but i have no idea how non-Linux
+    # platforms handle this
+    SET(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
+
     ADD_NEKTAR_EXECUTABLE(${ProjectName} SourceFileNames HeaderFileNames)
 
     # TODO - If your executable needs to link to any other libraries,  

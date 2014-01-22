@@ -16,6 +16,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./AdvectionTerms/LinearisedAdvection.cpp
        ./AdvectionTerms/NavierStokesAdvection.cpp
        ./AdvectionTerms/SkewSymmetricAdvection.cpp
+       ./AdvectionTerms/AlternateSkewAdvection.cpp
        ./AdvectionTerms/NoAdvection.cpp
        ./Filters/FilterEnergy.cpp
        ./IncNavierStokesSolver.cpp 

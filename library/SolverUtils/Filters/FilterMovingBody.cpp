@@ -242,7 +242,6 @@ namespace Nektar
                 pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
                                      pFields[i]->UpdatePhys());
                 pFields[i]->SetPhysState(true);
-                pFields[i]->PutPhysInToElmtExp();
             }
 
             // Get the number of local planes on the process and their IDs 

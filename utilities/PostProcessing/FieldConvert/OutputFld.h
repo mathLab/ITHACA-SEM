@@ -51,7 +51,7 @@ namespace Nektar
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
                 return MemoryManager<OutputFld>::AllocateSharedPtr(f);
             }
-            static ModuleKey m_className;
+            static ModuleKey m_className[];
             
             OutputFld(FieldSharedPtr f);
             virtual ~OutputFld();

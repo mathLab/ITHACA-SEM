@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
     int nInput = inout.size()-1;
     
     InputModuleSharedPtr inputModule;
-
+        
     for (int i = 0; i < modcmds.size(); ++i)
     {
         // First split each command by the colon separator.
@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
-    // if any output module has to reset points then set intput modules to match 
+    // If any output module has to reset points then set intput modules to match 
     bool RequiresEquiSpaced = false;
     for (int i = 0; i < modules.size(); ++i)
     {
@@ -289,20 +289,18 @@ int main(int argc, char* argv[])
             RequiresEquiSpaced = true;
         }
     }
-    if(RequiresEquiSpaced)
+    if (RequiresEquiSpaced)
     {
         for (int i = 0; i < modules.size(); ++i)
         {
             modules[i]->SetRequireEquiSpaced(true);
         }
     }
-
     // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {
         modules[i]->Process(vm);
         cout.flush();
     }
-    
     return 0;
 }

@@ -1446,7 +1446,7 @@ namespace Nektar
         {
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
-            int n,e,offset,phys_offset;
+            int n, e, offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
@@ -1475,7 +1475,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fy,
                   Array<OneD,       NekDouble> &outarray)
         {
-            int e,n,offset, t_offset;
+            int e, n, offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
@@ -1518,7 +1518,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fn, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            int e,n,offset, t_offset;
+            int e, n, offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
@@ -1535,6 +1535,11 @@ namespace Nektar
                         e_outarray = outarray+offset);
                 }
             }
+        }
+        
+        void DisContField2D::v_FillBndCondFromField(void)
+        {            
+            
         }
 
 
@@ -1570,15 +1575,16 @@ namespace Nektar
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
-            for(n = 0; n < GetExpSize(); ++n)
+            for (n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);
-                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
-                    t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->
+                                                          GetElmtId());
                     
                     // Evaluate upwind flux less local edge 
-                    if(IsLeftAdjacentEdge(n,e))
+                    if (IsLeftAdjacentEdge(n, e))
                     {
                         (*m_exp)[n]->AddEdgeNormBoundaryInt(
                         e, elmtToTrace[n][e], Fwd+t_offset,
@@ -1637,17 +1643,19 @@ namespace Nektar
             }
 
             LocalRegions::Expansion1DSharedPtr exp1d;
-            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
+                for (i = 0; i < m_bndCondExpansions[n]->GetExpSize(); 
+                     ++i, ++cnt)
                 {
-                    exp1d = LocalRegions::Expansion1D::FromStdExp(m_bndCondExpansions[n]->GetExp(i));
+                    exp1d = LocalRegions::Expansion1D::FromStdExp(
+                        m_bndCondExpansions[n]->GetExp(i));
                     // Use edge to element map from MeshGraph2D.
                     SpatialDomains::ElementEdgeVectorSharedPtr tmp =
                         graph2D->GetElementsFromEdge(exp1d->GetGeom1D());
 
                     ElmtID[cnt] = globalIdMap[(*tmp)[0]->
-                                              m_Element->GetGlobalID()];
+                        m_Element->GetGlobalID()];
                     EdgeID[cnt] = (*tmp)[0]->m_EdgeIndx;
                 }
             }

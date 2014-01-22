@@ -176,6 +176,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
                       Array<OneD,       NekDouble> &outarray);
+            virtual void v_FillBndCondFromField();
             virtual void v_HelmSolve(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,

@@ -174,6 +174,7 @@ namespace Nektar
         
         Array<OneD, MultiRegions::ExpListSharedPtr>     vessel(2);
 
+	int offset = 0;
         // Loop over all vessesls and set boundary conditions
         for(omega = 0; omega < m_nDomains; ++omega)
         {
@@ -197,9 +198,8 @@ namespace Nektar
                         // Get the values of all variables needed for the Riemann problem
                         Q = (vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
 
-                        //Q=5.983*sin(2*3.14*time/10.0)*1./(1+exp(-2.0*100.0*(10.0/2-time)));
-                        A_r = vessel[0]->GetCoeffs()[0];
-                        u_r = vessel[1]->GetCoeffs()[0];
+                        A_r = inarray[0][offset];
+                        u_r = inarray[1][offset];
                         
                         // Call the Q-inflow Riemann solver
                         Q_inflowRiemannSolver(Q,A_r,u_r,m_A_0[omega][0],m_beta[omega][0],A_u,u_u);
@@ -227,8 +227,8 @@ namespace Nektar
                         int nq = vessel[0]->GetTotPoints(); 
                         
                         // Get the left values A_l and u_l needed for Eq. 37
-                        A_l = vessel[0]->GetCoeffs()[1];
-                        u_l = vessel[1]->GetCoeffs()[1];
+                        A_l = m_fields[0]->GetCoeffs()[1];
+                        u_l = m_fields[1]->GetCoeffs()[1];
                         
                         // Get the values at initial state u_0, c_0
                         u_0 = 0.0; //for all vessels start from initial condition 0
@@ -255,15 +255,13 @@ namespace Nektar
                         int nq = vessel[0]->GetTotPoints(); 
                         
                         // Get the values of all variables needed for the Riemann problem
-                        A_l = vessel[0]->GetCoeffs()[1];
-                        u_l = vessel[1]->GetCoeffs()[1];
-                        
-                        // Goes through the resistance			
-                        
+                        A_l = m_fields[0]->GetCoeffs()[1];
+                        u_l = m_fields[1]->GetCoeffs()[1];
+
                         // Call the R RiemannSolver
                         R_RiemannSolver(RT,A_l,u_l,m_A_0[omega][nq-1],
                                         m_beta[omega][nq-1],pout,A_u,u_u);
-                        
+			
                         // Calculates the new boundary conditions
                         A_r=A_l;
                         u_r=2*u_u-u_l;
@@ -287,8 +285,8 @@ namespace Nektar
                         int nq = vessel[0]->GetTotPoints(); 
                         
                         // Get the values of all variables needed for the Riemann problem
-                        A_l = vessel[0]->GetCoeffs()[1];
-                        u_l = vessel[1]->GetCoeffs()[1];
+                        A_l = m_fields[0]->GetCoeffs()[1];
+                        u_l = m_fields[1]->GetCoeffs()[1];
                         
                         // Call the CR Riemann solver
                         // This assumes last element is listed as last elements!!
@@ -313,9 +311,6 @@ namespace Nektar
                         /* Find the terminal RCR boundary condition and calculates
                            the updated velocity and area as well as the updated
                            boundary conditions */
-
-                        //m_session->LoadParameter("C", m_C);
-                        //NekDouble C = m_C;
                        
                         NekDouble RT=((vessel[0]->GetBndCondExpansions())[n])->GetCoeffs()[0];
                         NekDouble C=((vessel[1]->GetBndCondExpansions())[n])->GetCoeffs()[0];
@@ -330,8 +325,8 @@ namespace Nektar
                         int nq = vessel[0]->GetTotPoints(); 
                         
                         // Get the values of all variables needed for the Riemann problem
-                        A_l = vessel[0]->GetCoeffs()[1];
-                        u_l = vessel[1]->GetCoeffs()[1];
+                        A_l = m_fields[0]->GetCoeffs()[1];
+                        u_l = m_fields[1]->GetCoeffs()[1];
 
                         // Goes through the first resistance Calculate c_0
                         c_0 = sqrt(m_beta[omega][nq-1]/(2*m_rho))*sqrt(sqrt(m_A_0[omega][nq-1]));			
@@ -366,6 +361,9 @@ namespace Nektar
                     break;
                 }
             }
+
+
+	    offset += vessel[0]->GetTotPoints();
         }
 	
     }
@@ -648,7 +646,7 @@ namespace Nektar
         while ((proceed) && (iter < MAX_ITER))
         {	
             iter =iter+1;
-            
+	    
             fa = R*W1*A_calc-4*R*sqrt(beta/(2*rho))*A_calc*sqrt(sqrt(A_calc))-pext-beta*(sqrt(A_calc)-sqrt(A_0))+pout;
             dfa = R*W1-5*R*sqrt(beta/(2*rho))*sqrt(sqrt(A_calc))-beta/(2*sqrt(A_calc));
             delta_A_calc = fa/dfa;
@@ -658,8 +656,8 @@ namespace Nektar
                 proceed = 0;
         }
         
-		// Obtain u_u and A_u
-		//u_u = W1 - 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc))); 
+	// Obtain u_u and A_u
+	//u_u = W1 - 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc))); 
         u_u=(pext+beta*(sqrt(A_calc)-sqrt(A_0))-pout)/(R*A_calc);
         A_u = A_calc;
     }

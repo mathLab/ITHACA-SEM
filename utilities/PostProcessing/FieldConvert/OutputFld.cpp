@@ -43,10 +43,14 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey OutputFld::m_className =
+        ModuleKey OutputFld::m_className[2] = {
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eOutputModule, "fld"), OutputFld::create,
-                "Writes a FLD file.");
+                "Writes a Fld file."),
+            GetModuleFactory().RegisterCreatorFunction(
+                ModuleKey(eOutputModule, "chk"), OutputFld::create,
+                "Writes a Fld file."),
+        };
         
         OutputFld::OutputFld(FieldSharedPtr f) : OutputModule(f)
         {

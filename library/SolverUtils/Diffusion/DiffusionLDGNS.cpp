@@ -112,7 +112,7 @@ namespace Nektar
             int nPts      = fields[0]->GetTotPoints();
             int nCoeffs   = fields[0]->GetNcoeffs();
             int nTracePts = fields[0]->GetTrace()->GetTotPoints();
-            
+
             Array<OneD, NekDouble>               tmp1(nCoeffs);
             Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
             
@@ -185,11 +185,11 @@ namespace Nektar
             }
             
             m_fluxVectorNS(inarray, derivativesO1, m_viscTensor);
-            
+
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
             v_NumericalFluxO2(fields, inarray, m_viscTensor, viscousFlux);
-             
+
             for (i = 0; i < nConvectiveFields; ++i)
             {
                 tmp2[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);

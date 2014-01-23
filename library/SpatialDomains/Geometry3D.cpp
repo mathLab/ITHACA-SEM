@@ -117,12 +117,14 @@ namespace Nektar
           const Array<OneD, const NekDouble> &ptsz,
           Array<OneD,       NekDouble> &Lcoords,
           NekDouble &resid)
-{
-	
-	  static int MaxIterations   = 51;     // maximum iterations for convergence  
-	  static NekDouble Tol       = 1.e-8;  // |x-xp|^2 < EPSILON  error tolerance 
-	  static NekDouble LcoordDiv = 15.0;    // |r,s|    > LcoordDIV stop the search  
-	  
+    {
+        // maximum iterations for convergence
+        const int MaxIterations   = 51;
+        // |x-xp|^2 < EPSILON  error tolerance
+        const NekDouble Tol       = 1.e-8;
+        // |r,s|    > LcoordDIV stop the search
+        const NekDouble LcoordDiv = 15.0;
+
           Array<OneD, const NekDouble > Jac = m_geomFactors->GetJac(m_xmap->GetPointsKeys());
           
           NekDouble ScaledTol = Vmath::Vsum(Jac.num_elements(),Jac,1)/
@@ -159,12 +161,12 @@ namespace Nektar
           F1 = F2 = F3 = 2000; // Starting value of Function
           
           while(cnt++ < MaxIterations)
-	  {
-	      //  evaluate lagrange interpolant at Lcoords
+      {
+          //  evaluate lagrange interpolant at Lcoords
               m_xmap->LocCoordToLocCollapsed(Lcoords,eta);
-	      I[0] = m_xmap->GetBasis(0)->GetI(eta);
-	      I[1] = m_xmap->GetBasis(1)->GetI(eta+1);
-	      I[2] = m_xmap->GetBasis(2)->GetI(eta+2);
+          I[0] = m_xmap->GetBasis(0)->GetI(eta);
+          I[1] = m_xmap->GetBasis(1)->GetI(eta+1);
+          I[2] = m_xmap->GetBasis(2)->GetI(eta+2);
 
               //calculate the global point `corresponding to Lcoords
               xmap = m_xmap->PhysEvaluate(I, ptsx);

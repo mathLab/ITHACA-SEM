@@ -1220,7 +1220,7 @@ namespace Nektar
                                  NekDouble tol)
         {
             static int start = 0;
-            NekDouble resid, min_resid = 9999;
+            NekDouble resid, min_resid = NekConstants::kNekMinResidInit;
             int min_elmt;
             Array<OneD, NekDouble> min_locCoords(locCoords.num_elements());
             

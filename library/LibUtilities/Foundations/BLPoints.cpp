@@ -55,6 +55,14 @@ namespace Nektar
 
             if (fabs(r-1.0) < 1e-6)
             {
+                NekDouble tmp = 2.0/(npts-1.0);
+                for (unsigned int i = 0; i < npts; ++i)
+                {
+                    m_points[0][i] = -1.0 + i * tmp;
+                }
+            }
+            else
+            {
                 NekDouble a = 2.0 * (1.0-r) / (1.0 - pow(r,(double)npts));
                 m_points[0][0] = -1.0;
                 
@@ -64,14 +72,6 @@ namespace Nektar
                 }
 
                 m_points[0][npts-1] = 1.0;
-            }
-            else
-            {
-                NekDouble tmp = 2.0/(npts-1.0);
-                for (unsigned int i = 0; i < npts; ++i)
-                {
-                    m_points[0][i] = -1.0 + i * tmp;
-                }
             }
             
             if (m_pointsKey.GetPointsType() == eBoundaryLayerPointsRev)

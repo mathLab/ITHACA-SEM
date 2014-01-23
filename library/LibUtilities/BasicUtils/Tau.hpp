@@ -36,14 +36,22 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASICUTILS_TAU_HPP
 #define NEKTAR_LIB_UTILITIES_BASICUTILS_TAU_HPP
 
-
 namespace Tau
 {
     extern "C"
     {
-	void Tau_start(const char *name);
+        void Tau_start(const char *name);
         void Tau_stop(const char *name);
     }
 
+    Start(std::string name)
+    {
+        Tau_start(name.c_str());
+    }
+
+    Stop(std::string name)
+    {
+        Tau_stop(name.c_str());
+    }
 }
 #endif //NEKTAR_LIB_UTILITIES_BASICUTILS_TAU_HPP

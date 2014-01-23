@@ -234,7 +234,8 @@ namespace Nektar
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
 
-        const Array<OneD, const int> traceBndMap = m_fields[0]->GetTraceBndMap();
+        const Array<OneD, const int> &traceBndMap
+            = m_fields[0]->GetTraceBndMap();
 
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
@@ -258,9 +259,6 @@ namespace Nektar
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
-            //id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
-            //    m_fields[0]->GetTraceMap()
-            //        ->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
 
             // For 2D/3D, define: v* = v - 2(v.n)n
             Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
@@ -310,7 +308,8 @@ namespace Nektar
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
 
-        const Array<OneD, const int> traceBndMap = m_fields[0]->GetTraceBndMap();
+        const Array<OneD, const int> &traceBndMap
+            = m_fields[0]->GetTraceBndMap();
 
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
@@ -362,15 +361,8 @@ namespace Nektar
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
 
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-        {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            nPlanes = nSolutionPts/nSolutionPtsPlane;
-            nTracePts = nTracePts * nPlanes;
-        }
-
+        const Array<OneD, const int> &traceBndMap
+            = m_fields[0]->GetTraceBndMap();
 
         // Get physical values of the forward trace (from exp to phys)
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
@@ -391,31 +383,7 @@ namespace Nektar
                 GetExp(e)->GetTotPoints();
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
-
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-            {
-                int ePlane;
-                int cntPlane = cnt/nPlanes;
-                int eMaxPlane = eMax/nPlanes;
-                int nTracePts_plane = GetTraceTotPoints();
-
-                int planeID = floor((e + 0.5 )/ eMaxPlane );
-                ePlane = e - eMaxPlane*planeID;
-
-                id2Plane = m_fields[0]->GetTrace()->GetPhys_Offset(
-                                m_fields[0]->GetTraceMap()->
-                                    GetBndCondCoeffsToGlobalCoeffsMap(
-                                        cntPlane + ePlane));
-                id2 = id2Plane + planeID*nTracePts_plane;
-
-            }
-            else // For general case
-            {
-                id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
-                            m_fields[0]->GetTraceMap()->
-                                GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-            }
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
 
             // For 2D/3D, define: v* = v - 2(v.n)n
             Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
@@ -467,14 +435,8 @@ namespace Nektar
         int nVariables = physarray.num_elements();
         int nDimensions = m_spacedim;
 
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-        {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            nPlanes = nSolutionPts/nSolutionPtsPlane;
-            nTracePts = nTracePts * nPlanes;
-        }
+        const Array<OneD, const int> &traceBndMap
+            = m_fields[0]->GetTraceBndMap();
 
         NekDouble gamma            = m_gamma;
         NekDouble gammaInv         = 1.0 / gamma;
@@ -568,30 +530,7 @@ namespace Nektar
 
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
-
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-            {
-                int ePlane;
-                int cntPlane = cnt/nPlanes;
-                int eMaxPlane = eMax/nPlanes;
-                int nTracePts_plane = GetTraceTotPoints();
-
-                int planeID = floor((e + 0.5 ) / eMaxPlane );
-                ePlane = e - eMaxPlane*planeID;
-
-                id2Plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
-                    m_fields[0]->GetTraceMap()->
-                        GetBndCondCoeffsToGlobalCoeffsMap(cntPlane + ePlane));
-                id2 = id2Plane + planeID*nTracePts_plane;
-
-            }
-            else // For general case
-            {
-                id2 = m_fields[0]->GetTrace()->
-                GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                               GetBndCondTraceToGlobalTraceMap(cnt++));
-            }
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
 
             // Loop on the points of the bcRegion
             for (i = 0; i < nBCEdgePts; i++)
@@ -740,14 +679,8 @@ namespace Nektar
         int nVariables = physarray.num_elements();
         int nDimensions = m_spacedim;
 
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-        {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int nPlanes = nSolutionPts/nSolutionPtsPlane;
-            nTracePts = nTracePts * nPlanes;
-        }
+        const Array<OneD, const int> &traceBndMap
+            = m_fields[0]->GetTraceBndMap();
 
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
@@ -768,30 +701,7 @@ namespace Nektar
                 GetExp(e)->GetNumPoints(0);
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e) ;
-
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-            {
-                int ePlane;
-                int cntPlane = cnt/nPlanes;
-                int eMaxPlane = eMax/nPlanes;
-                int nTracePts_plane = GetTraceTotPoints();
-
-                int planeID = floor((e + 0.5 )/ eMaxPlane );
-                ePlane = e - eMaxPlane*planeID;
-
-                id2Plane = m_fields[0]->GetTrace()->GetPhys_Offset(
-                                m_fields[0]->GetTraceMap()->
-                                    GetBndCondCoeffsToGlobalCoeffsMap(
-                                        cntPlane + ePlane));
-                id2 = id2Plane + planeID*nTracePts_plane;
-            }
-            else // For general case
-            {
-                id2 = m_fields[0]->GetTrace()->
-                            GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                                GetBndCondTraceToGlobalTraceMap(cnt++));
-            }
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
 
             // Loop on points of bcRegion 'e'
             for (i = 0; i < nBCEdgePts; i++)
@@ -955,7 +865,6 @@ namespace Nektar
                         flux_interp[m_spacedim+1][j], 1);
 
             // Galerkin project solution back to origianl space
-            // For 3DHomogenoeus1D
             m_fields[0]->PhysGalerkinProjection1DScaled(
                 OneDptscale,
                 flux_interp[m_spacedim+1][j],

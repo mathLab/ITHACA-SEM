@@ -134,6 +134,7 @@ namespace Nektar
             m_fieldsPlane   = Array<OneD, MultiRegions::ExpListSharedPtr>
                                                             (nConvectiveFields);
             
+            
             if (m_fluxVectorNS)
             {
                 m_inarrayPlane  = Array<OneD, Array<OneD, NekDouble> >
@@ -189,11 +190,13 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
+            
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             Array<OneD, Array<OneD, NekDouble> > viscHComp;
             const int nPointsTot = fields[0]->GetNpoints();
             int i, j;
             NekDouble beta;
+            
 
             if (m_fluxVectorNS)
             {
@@ -204,6 +207,7 @@ namespace Nektar
                     viscHComp[i] = Array<OneD, NekDouble>(m_numPoints);
                 }
             }
+            
 
             for (i = 0; i < m_numPlanes; ++i)
             {
@@ -221,17 +225,20 @@ namespace Nektar
                     m_outarrayPlane[j] = Array<OneD, NekDouble>(
                         m_numPointsPlane, tmp2 = outarray[j] + m_planePos[i]);
                 }
+                
 
                 if (m_fluxVectorNS)
                 {
                     m_planeDiff->SetHomoDerivs(m_homoDerivPlane[i]);
                 }
 
+
+                
                 m_planeDiff->Diffuse(nConvectiveFields,
                                      m_fieldsPlane,
                                      m_inarrayPlane,
                                      m_outarrayPlane);
-
+                
                 if (m_fluxVectorNS)
                 {
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscTensor = m_planeDiff->GetFluxTensor();
@@ -245,6 +252,8 @@ namespace Nektar
                     }
                 }
             }
+            
+
 
             if (m_fluxVectorNS)
             {

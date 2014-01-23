@@ -191,6 +191,11 @@ namespace Nektar
             {
                 m_homoDerivs = deriv;
             }
+            
+            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
+            {
+                return m_viscTensor;
+            }
         };
         
         typedef boost::shared_ptr<DiffusionLFRNS> DiffusionLFRNSSharedPtr;

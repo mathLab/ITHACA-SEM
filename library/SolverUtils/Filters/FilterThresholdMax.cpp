@@ -86,12 +86,7 @@ namespace Nektar
         void FilterThresholdMax::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
             std::stringstream vOutputFilename;
-            vOutputFilename << m_outputFile;
-            if (m_session->GetComm()->GetSize() > 1)
-            {
-                vOutputFilename << "_P" << m_session->GetComm()->GetRank();
-            }
-            vOutputFilename << ".fld";
+            vOutputFilename << m_outputFile << ".fld";
 
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = pFields[0]->GetFieldDefinitions();

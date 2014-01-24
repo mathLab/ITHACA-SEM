@@ -11,7 +11,7 @@
             <value variable="u" tolerance="1e-08">3.71762e-08</value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="u" tolerance="1e-08">9.58979e-09</value>
+            <value variable="u" tolerance="1e-08">1.05767e-07</value>
         </metric>
     </metrics>
 </test>

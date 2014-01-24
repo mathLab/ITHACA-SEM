@@ -516,21 +516,21 @@ namespace Nektar
                             weight = StdTetData::getNumberOfCoefficients(na, nb, nc);
                             bndWeight = 2 * (na-2) * (na-1) + 6 * (na-1) + 4;
                             break;
-                        case 'R': 
+                        case 'R':
                             weight = StdPrismData::getNumberOfCoefficients(na, nb, nc);
                             bndWeight = (na-2)*(na-1) + 3*(na-1)*(na-1) + 9*(na-1) + 6;
                             break;
-                        case 'H': 
+                        case 'H':
                             weight = StdHexData::getNumberOfCoefficients(na, nb, nc);
                             bndWeight = 6*(na-1)*(na-1) + 12*(na-1) + 8;
                             break;
-                        case 'P': 
+                        case 'P':
                             weight = StdPyrData::getNumberOfCoefficients(na, nb, nc);
                             break;
-                        case 'Q': 
+                        case 'Q':
                             weight = StdQuadData::getNumberOfCoefficients(na, nb);
                             break;
-                        case 'T': 
+                        case 'T':
                             weight = StdTriData::getNumberOfCoefficients(na, nb);
                             break;
                         default:
@@ -662,24 +662,28 @@ namespace Nektar
                     }
 
                     int weight = 0;
+                    int bndWeight = 0;
                     switch (m_meshComposites[cId].type)
                     {
                         case 'A':
                             weight = StdTetData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = 2 * (na-2) * (na-1) + 6 * (na-1) + 4;
                             break;
-                        case 'R': 
+                        case 'R':
                             weight = StdPrismData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = (na-2)*(na-1) + 3*(na-1)*(na-1) + 9*(na-1) + 6;
                             break;
-                        case 'H': 
+                        case 'H':
                             weight = StdHexData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = 6*(na-1)*(na-1) + 12*(na-1) + 8;
                             break;
-                        case 'P': 
+                        case 'P':
                             weight = StdPyrData::getNumberOfCoefficients(na, nb, nc);
                             break;
-                        case 'Q': 
+                        case 'Q':
                             weight = StdQuadData::getNumberOfCoefficients(na, nb);
                             break;
-                        case 'T': 
+                        case 'T':
                             weight = StdTriData::getNumberOfCoefficients(na, nb);
                             break;
                         default:
@@ -689,7 +693,7 @@ namespace Nektar
                     for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
                     {
                         int elmtId = m_meshComposites[cId].list[j];
-                        m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] ] = weight;
+                        m_vertWeights[elmtId][ m_fieldNameToId[it->first]] = bndWeight;
                         //m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] * 2 + 1 ] = weight*weight;
                     }
                 }
@@ -748,8 +752,7 @@ namespace Nektar
             {
                 int acnt = 0;
                 int vcnt = 0;
-                int nWeight = m_weightingRequired ? 2*nGraphVerts*m_numFields
-                                                  :   nGraphVerts;
+                int nWeight = nGraphVerts;
                 BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
@@ -770,11 +773,7 @@ namespace Nektar
 
                     if (m_weightingRequired)
                     {
-                        // populate vertex multi-weights
-                        for (i = 0; i < 2*m_numFields; i++)
-                        {
-                            vwgt[pGraph[*vertit].id * m_numFields + i] = pGraph[*vertit].weight[i];
-                        }
+                        vwgt[pGraph[*vertit].id ] = pGraph[*vertit].weight[0];
                     }
                     else
                     {
@@ -794,7 +793,7 @@ namespace Nektar
                     if(m_comm->GetColumnComm()->GetRank() == 0)
                     {
                         // Attempt partitioning using METIS.
-                        int ncon = m_weightingRequired ? m_numFields : 1;
+                        int ncon = 1;
                         Metis::PartGraphVKway(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(part);

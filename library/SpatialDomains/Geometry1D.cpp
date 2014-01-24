@@ -53,12 +53,6 @@ namespace Nektar
         {
         }
 
-
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::GetXmap(const int i)
-        {
-            return v_GetXmap(i);
-        }
-
         PointGeomSharedPtr Geometry1D::GetVertex(const int i) const
         {
             return v_GetVertex(i);
@@ -67,11 +61,6 @@ namespace Nektar
         LibUtilities::ShapeType Geometry1D::DetShapeType() const
         {
             return v_DetShapeType();
-        }
-
-        void Geometry1D::WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            v_WriteToFile(outfile,dumpVar);
         }
 
         int Geometry1D::GetEid() const
@@ -91,15 +80,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
             return 0;
-        }
-
-
-        const StdRegions::StdExpansion1DSharedPtr& Geometry1D::v_GetXmap(const int i)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            static StdRegions::StdExpansion1DSharedPtr returnval;
-            return returnval; 
         }
 
         PointGeomSharedPtr Geometry1D::v_GetVertex(const int i) const
@@ -123,14 +103,5 @@ namespace Nektar
                      "This function is only valid for expansion type geometries");
             return LibUtilities::eNoShapeType;
         }
-
-        void Geometry1D::v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-        }
-
-
-
     }; //end of namespace
 }; //end of namespace

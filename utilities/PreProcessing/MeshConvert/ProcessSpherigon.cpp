@@ -440,6 +440,10 @@ namespace Nektar
             Array<OneD, NekDouble> x(nq*nq);
             Array<OneD, NekDouble> y(nq*nq);
             Array<OneD, NekDouble> z(nq*nq);
+
+            Array<OneD, NekDouble> xc(nq*nq);
+            Array<OneD, NekDouble> yc(nq*nq);
+            Array<OneD, NekDouble> zc(nq*nq);
             
             ASSERTL0(nq > 2, "Number of points must be greater than 2.");
 
@@ -504,31 +508,28 @@ namespace Nektar
                                 B0, B1, LibUtilities::eNodalTriElec, geom);
 
                     Array<OneD, NekDouble> coord(2);
-                    tri->GetCoords(x,y,z);
+                    tri->GetCoords(xc,yc,zc);
                     nquad = nq*(nq+1)/2;
-                    Vmath::Vcopy(nq*nq, x, 1, stdtri->UpdatePhys(), 1);
-
+                    
                     for (int j = 0; j < nquad; ++j)
                     {
                         coord[0] = xnodal[j];
                         coord[1] = ynodal[j];
-                        x[j] = stdtri->PhysEvaluate(coord);
+                        x[j] = stdtri->PhysEvaluate(coord, xc);
                     }
                     
-                    Vmath::Vcopy(nq*nq, y, 1, stdtri->UpdatePhys(), 1);
                     for (int j = 0; j < nquad; ++j)
                     {
                         coord[0] = xnodal[j];
                         coord[1] = ynodal[j];
-                        y[j] = stdtri->PhysEvaluate(coord);
+                        y[j] = stdtri->PhysEvaluate(coord, yc);
                     }
 
-                    Vmath::Vcopy(nq*nq, z, 1, stdtri->UpdatePhys(), 1);
                     for (int j = 0; j < nquad; ++j)
                     {
                         coord[0] = xnodal[j];
                         coord[1] = ynodal[j];
-                        z[j] = stdtri->PhysEvaluate(coord);
+                        z[j] = stdtri->PhysEvaluate(coord, zc);
                     }
                 }
                 else if (e->GetConf().e == eQuadrilateral)

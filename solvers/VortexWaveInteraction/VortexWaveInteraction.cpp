@@ -689,9 +689,9 @@ namespace Nektar
             {
                 // Determine normalisation of pressure so that |P|/A = 1
                 NekDouble l2;
-                l2    = m_wavePressure->GetPlane(0)->L2();
+                l2    = m_wavePressure->GetPlane(0)->L2(m_wavePressure->GetPlane(0)->GetPhys());
                 invnorm  = l2*l2;
-                l2    = m_wavePressure->GetPlane(1)->L2();
+                l2    = m_wavePressure->GetPlane(1)->L2(m_wavePressure->GetPlane(1)->GetPhys());
                 invnorm += l2*l2;
                 Vmath::Fill(2*npts,1.0,der1,1);
                 NekDouble area = m_waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);
@@ -984,9 +984,9 @@ namespace Nektar
         cout << "Linf: " << Linf << endl;
 
         NekDouble l2,norm;
-        l2    = m_wavePressure->GetPlane(0)->L2();
+        l2    = m_wavePressure->GetPlane(0)->L2(m_wavePressure->GetPlane(0)->GetPhys());
         norm  = l2*l2;
-        l2    = m_wavePressure->GetPlane(1)->L2();
+        l2    = m_wavePressure->GetPlane(1)->L2(m_wavePressure->GetPlane(1)->GetPhys());
         norm += l2*l2;
 
 
@@ -2036,8 +2036,10 @@ cout<<"cr="<<cr_str<<endl;
           string file = m_sessionName;
 
 
-          file += "_u_5.bc"; 
-          LibUtilities::Import(file,FieldDef_u, FieldData_u);
+          file += "_u_5.bc";
+          LibUtilities::FieldIOSharedPtr fld =
+              MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_sessionVWI->GetComm());
+          fld->Import(file,FieldDef_u, FieldData_u);
           Ilayer->ExtractDataToCoeffs(FieldDef_u[0], FieldData_u[0], FieldDef_u[0]->m_fields[0],Ilayer->UpdateCoeffs());
           Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
           
@@ -2069,7 +2071,7 @@ cout<<"cr="<<cr_str<<endl;
               std::vector<std::vector<NekDouble> > FieldData_1(FieldDef1.size());;
               FieldDef1[0]->m_fields.push_back("u");            	    
               Ilayer->AppendFieldData(FieldDef1[0], FieldData_1[0]);            	    
-              LibUtilities::Write(file,FieldDef1,FieldData_1); 
+              fld->Write(file,FieldDef1,FieldData_1);
               //save the bcs for the next iteration
               if(m_vwiRelaxation!=1.0)
               {
@@ -2089,7 +2091,7 @@ cout<<"cr="<<cr_str<<endl;
 
           std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef_v;
           std::vector<std::vector<NekDouble> > FieldData_v;
-          LibUtilities::Import(file,FieldDef_v, FieldData_v);
+          fld->Import(file,FieldDef_v, FieldData_v);
           Ilayer->ExtractDataToCoeffs(FieldDef_v[0], FieldData_v[0], FieldDef_v[0]->m_fields[0],Ilayer->UpdateCoeffs());
           Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
           if(cnt==0)
@@ -2115,7 +2117,7 @@ cout<<"cr="<<cr_str<<endl;
               std::vector<std::vector<NekDouble> > FieldData_2(FieldDef2.size());;      
               FieldDef2[0]->m_fields.push_back("v");            	    
               Ilayer->AppendFieldData(FieldDef2[0], FieldData_2[0]);            	             	
-              LibUtilities::Write(file,FieldDef2,FieldData_2); 
+              fld->Write(file,FieldDef2,FieldData_2);
               //save the bcs for the next iteration
               if(m_vwiRelaxation!=1.0)
               {

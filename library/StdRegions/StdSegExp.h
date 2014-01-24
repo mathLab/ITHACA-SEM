@@ -148,8 +148,6 @@ namespace Nektar
             //----------------------------
             // Evaluations Methods
             //---------------------------
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                    const Array<OneD, const NekDouble>& Lcoords);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                     const Array<OneD, const NekDouble>& Lcoords,
@@ -199,11 +197,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(
                     const std::vector<unsigned int> &nummodes,
                     int &modes_offset);
-            STD_REGIONS_EXPORT virtual void v_WriteToFile(
-                    std::ofstream &outfile,
-                    OutputFormat format,
-                    const bool dumpVar = true,
-                    std::string var = "v");
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType
                 v_DetShapeType() const;
 

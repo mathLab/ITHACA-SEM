@@ -280,8 +280,9 @@ namespace Nektar
 
                 for (int j = 0; j < 3; ++j)
                 {
-                    qs->FwdTrans(x[j], nodalPrism->UpdateCoeffs());
-                    nodalPrism->ModalToNodal(nodalPrism->GetCoeffs(), xn[j]);
+                    Array<OneD, NekDouble> tmp(nodalPrism->GetNcoeffs());
+                    qs        ->FwdTrans    (x[j], tmp);
+                    nodalPrism->ModalToNodal(tmp, xn[j]);
                 }
 
                 // Store map of nodes.

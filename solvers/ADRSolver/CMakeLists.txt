@@ -150,6 +150,13 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST(ImDiffusion_VarCoeff)
     ADD_NEKTAR_TEST(ImDiffusion_Quad_Periodic_m7)
     ADD_NEKTAR_TEST(ImDiffusion_Hex_Periodic_m5)
+#    ADD_NEKTAR_TEST(UnsteadyDiffusion_3D_SVV_Prism)
+#    ADD_NEKTAR_TEST(UnsteadyDiffusion_3D_SVV_Tet)
+    ADD_NEKTAR_TEST(SVV_Quad)
+    ADD_NEKTAR_TEST(SVV_Tri)
+    ADD_NEKTAR_TEST(SVV_Prism)
+    ADD_NEKTAR_TEST(SVV_Tet)
+
     
     IF (NEKTAR_USE_FFTW)
         ADD_NEKTAR_TEST(Helmholtz_3DHomo1D_FFT)

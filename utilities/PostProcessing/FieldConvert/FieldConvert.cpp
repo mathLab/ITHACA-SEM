@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
              "Print options for a module.")
         ("module,m",       po::value<vector<string> >(), 
              "Specify modules which are to be used.")
+        ("useSessionVariables", "Use variables defined in session for output")
         ("verbose,v",      "Enable verbose mode.");
     
     po::options_description hidden("Hidden options");

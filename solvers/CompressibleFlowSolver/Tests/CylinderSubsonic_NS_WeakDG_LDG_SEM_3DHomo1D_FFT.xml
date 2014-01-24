@@ -4060,7 +4060,7 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-     <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="rho,rhou,rhov,rhow,E" TYPE="GLL_LAGRANGE" />
+     <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="rho,rhou,rhov,rhow,E" TYPE="GLL_LAGRANGE_SEM" />
     </EXPANSIONS>
 
   <CONDITIONS>

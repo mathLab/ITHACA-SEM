@@ -99,7 +99,6 @@
             <I PROPERTY="UpwindType"            VALUE="HLLC"                    />
             <I PROPERTY="ProblemType"           VALUE="General"                 />
             <I PROPERTY="ViscosityType"         VALUE="Constant"                />
-            <I PROPERTY="SpectralHPDealiasing"  VALUE="True"                    />
             <I PROPERTY="USEFFT"                VALUE="MVM"                    />
         </SOLVERINFO>
         

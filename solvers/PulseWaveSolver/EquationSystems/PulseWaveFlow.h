@@ -62,10 +62,10 @@ PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
 
         virtual ~PulseWaveFlow();
 
-        inline void DoBoundary(int omega);
+        inline void DoBoundary(int omega, int n);
 
     protected:
-        virtual void v_DoBoundary(int omega) = 0;
+        virtual void v_DoBoundary(int omega, int n) = 0;
 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_vessels;
 	LibUtilities::SessionReaderSharedPtr m_session;
@@ -76,9 +76,9 @@ PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
     /**
      *
      */
-    inline void PulseWaveFlow::DoBoundary(int omega)
+    inline void PulseWaveFlow::DoBoundary(int omega, int n)
     {
-        v_DoBoundary(omega);
+        v_DoBoundary(omega, n);
     }
 
 

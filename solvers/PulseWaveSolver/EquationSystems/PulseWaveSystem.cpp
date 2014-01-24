@@ -308,6 +308,7 @@ namespace Nektar
                 {                    
                     // Get Vid of interface
                     int vid  = m_vessels[vesselID]->UpdateBndCondExpansion(i)->GetExp(0)->GetGeom()->GetVid(0);
+                    cout<<"Shared vertex id: "<<vid<<endl;
                     MultiRegions::ExpListSharedPtr trace = m_vessels[vesselID]->GetTrace(); 
                     InterfacePointShPtr Ipt; 
 
@@ -320,9 +321,17 @@ namespace Nektar
                             if(m_vessels[vesselID]->GetTraceMap()->GetElmtToTrace()[n][p]->GetGeom()->GetVid(0) == vid)
                             {
                                 int eid = m_vessels[vesselID]->GetTraceMap()->GetElmtToTrace()[n][p]->GetElmtId();
+
                                 int tid = m_vessels[vesselID]->GetTrace()->GetCoeff_Offset(eid);
-                                
                                 Ipt = MemoryManager<InterfacePoint>::AllocateSharedPtr(vid,omega,n,p,tid,i);
+
+                                cout<<"Global Vid of interface point: "<<vid<<endl;
+                                cout<<"Domain interface point belongs to: "<<omega<<endl;
+                                cout<<"Element id of vertex: "<<n<<endl;
+                                cout<<"Vertex id within local element: "<<p<<endl; 
+                                cout<<"Element id  within the trace: "<<tid<<endl; 
+                                cout<<"Position of boundary condition in region: "<<i<<endl;
+
                                 finish = true;
                                 break;
                             }
@@ -377,7 +386,7 @@ namespace Nektar
                 if(nbeg == 2)
                 {
                     // ensure first InterfacePoint is parent 
-                    if(iter->second[0]->m_elmtVert == 1)
+                    if(iter->second[0]->m_elmtVert == 1) //m_elmtVert: Vertex id in local element
                     {
                         m_bifurcations.push_back(iter->second);
                     }
@@ -623,6 +632,7 @@ namespace Nektar
         int dom, bcpos;
         Array<OneD, NekDouble>  Au(3),uu(3),beta(3),A_0(3);
         
+
         // Enfore Bifurcations;
         for(int n = 0; n < m_bifurcations.size(); ++n)
         {
@@ -645,7 +655,6 @@ namespace Nektar
                 m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdatePhys()[0] = uu[i];
             }
         }
-
 
         // Enfore Bifurcations;
         for(int n = 0; n < m_mergingJcts.size(); ++n)
@@ -732,7 +741,7 @@ namespace Nektar
             W[0] = uu[0] + 4*sqrt(beta[0]/(2*rho))*(sqrt(sqrt(Au[0])) - sqrt(sqrt(A_0[0])));
             W[1] = uu[1] - 4*sqrt(beta[1]/(2*rho))*(sqrt(sqrt(Au[1])) - sqrt(sqrt(A_0[1])));
             W[2] = uu[2] - 4*sqrt(beta[2]/(2*rho))*(sqrt(sqrt(Au[2])) - sqrt(sqrt(A_0[2])));
-            
+
             // Tolerances for the algorithm
             NekDouble Tol = 1.0e-10;
             
@@ -763,7 +772,7 @@ namespace Nektar
                     NekDouble c1 = sqrt(beta[0]/(2*rho))*sqrt(sqrt(Au[0]));
                     NekDouble c2 = sqrt(beta[1]/(2*rho))*sqrt(sqrt(Au[1]));
                     NekDouble c3 = sqrt(beta[2]/(2*rho))*sqrt(sqrt(Au[2]));
-                    
+
                     // Inverse Jacobian matrix J(x[n])^(-1), is
                     // already inverted here analytically
                     k = c1*Au[1]*c3+Au[0]*c3*c2+Au[2]*c1*c2;

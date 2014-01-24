@@ -105,8 +105,23 @@ namespace Nektar
 
         /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
-	PulseWaveFlowSharedPtr m_OutFlow;
+	
+        PulseWaveFlowSharedPtr m_OutFlow;
+        
         NekDouble pc;
+        
+        Array<OneD, NekDouble>   m_pc;
+        
+        int RCRcnt;
+
+        /// Id of element to which pressure  boundary condition belongs
+        Array<OneD, int> m_outflowBCtoElmtID;
+        /// Id of edge (2D) or face (3D) to which pressure boundary condition
+        /// belongs
+        Array<OneD, int> m_outflowBCtoVertexID;
+
+
+
     };
 }
 

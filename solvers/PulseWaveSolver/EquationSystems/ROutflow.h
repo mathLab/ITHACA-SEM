@@ -64,8 +64,11 @@ namespace Nektar
         Routflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, const LibUtilities::SessionReaderSharedPtr pSession);
         virtual ~Routflow();
     protected:
-        virtual void v_DoBoundary(int omega);
+        virtual void v_DoBoundary(int omega, int n);
     private:
+        void R_RiemannSolver(NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, 
+                             NekDouble beta, NekDouble pout,
+                             NekDouble &A_u,NekDouble &u_u);
     };
 }
 

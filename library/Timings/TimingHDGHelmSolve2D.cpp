@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 	NekDouble  lambda;
 	vector<string> vFilenames;
 
-	if(argc != 6)
+	if(argc < 6)//< allows to parse "verbose" option
 	{
 		fprintf(stderr,"Usage: TimingHDGHelmSolve2D Type MeshSize NumModes OptimisationLevel\n");
 		fprintf(stderr,"    where: - Type is one of the following:\n");

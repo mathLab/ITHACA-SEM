@@ -1419,6 +1419,11 @@ namespace Nektar
             m_traceMap->UniversalTraceAssemble(Fwd);
             m_traceMap->UniversalTraceAssemble(Bwd);
         }
+        
+        void DisContField2D::v_FillBndCondFromField(void)
+        {
+            
+        }        
 
         void DisContField2D::v_ExtractTracePhys(
             Array<OneD, NekDouble> &outarray)
@@ -1537,11 +1542,6 @@ namespace Nektar
             }
         }
         
-        void DisContField2D::v_FillBndCondFromField(void)
-        {            
-            
-        }
-
 
         /**
          * @brief Add trace contributions into elemental coefficient spaces.

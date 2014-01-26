@@ -10,6 +10,64 @@
 
 using namespace Nektar;
 
+void printSolution(StdRegions::StdExpansion *F,
+                   std::string name,
+                   Array<OneD, NekDouble> &x,
+                   Array<OneD, NekDouble> &y,
+                   Array<OneD, NekDouble> &phys)
+{
+    int nPts = F->GetTotPoints();
+    ofstream outf(name);
+    int numBlocks = 1;
+    for (int j = 0; j < 2; ++j)
+    {
+        numBlocks *= F->GetNumPoints(j)-1;
+    }
+
+    outf << "VARIABLES = x, y, m" << endl;
+    outf << "Zone, N=" << nPts << ", E="
+         << numBlocks << ", F=FEBlock, ET=QUADRILATERAL" << endl;
+    
+    const int np0 = F->GetNumPoints(0);
+    const int np1 = F->GetNumPoints(1);
+
+    for (int j = 0; j < nPts; ++j)
+    {
+        outf << x[j] << " ";
+        if (j % 100 == 0 && j > 0)
+            outf << endl;
+    }
+
+    for (int j = 0; j < nPts; ++j)
+    {
+        outf << y[j] << " ";
+        if (j % 100 == 0 && j > 0)
+            outf << endl;
+    }
+
+    for (int j = 0; j < nPts; ++j)
+    {
+        outf << phys[j] << " ";
+        if (j % 100 == 0 && j > 0)
+            outf << endl;
+    }
+
+    outf << endl;
+
+    for(int j = 1; j < np1; ++j)
+    {
+        for(int k = 1; k < np0; ++k)
+        {
+            outf << (j-1)*np0 + k   << " ";
+            outf << (j-1)*np0 + k+1 << " ";
+            outf <<  j   *np0 + k+1 << " ";
+            outf <<  j   *np0 + k   << endl;
+        }
+    }
+    
+    outf.close();
+}
+
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2);
 NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
                    LibUtilities::BasisType btype1, LibUtilities::BasisType btype2);
@@ -225,6 +283,13 @@ int main(int argc, char *argv[])
             {
                 sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
             }
+
+            int nCoeffs = E->GetNcoeffs();
+            Array<OneD, NekDouble> tmp(nCoeffs, 0.0);
+            tmp[24] = 1.0;
+            E->BwdTrans(tmp, sol);
+            printSolution(E, "blah.dat", x, y, sol);
+            
             //---------------------------------------------
         }
         break;

@@ -93,6 +93,12 @@ namespace Nektar
                 return m_map;
             }
 
+            STD_REGIONS_EXPORT vector<int> &GetRMap()
+            {
+                return m_rmap;
+            }
+            STD_REGIONS_EXPORT int GetTetMode(int I, int J, int K);
+
         protected:
             //---------------------------------------
             // Differentiation/integration Methods
@@ -242,7 +248,6 @@ namespace Nektar
             // Private helper functions
             //---------------------------------------
             STD_REGIONS_EXPORT int GetMode(int I, int J, int K);
-            STD_REGIONS_EXPORT int GetTetMode(int I, int J, int K);
             STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
                 const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> &outarray);

@@ -17,6 +17,79 @@ using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::StdRegions;
 
+void printSolution(StdRegions::StdExpansion *F,
+                   std::string name,
+                   Array<OneD, NekDouble> &x,
+                   Array<OneD, NekDouble> &y,
+                   Array<OneD, NekDouble> &z,
+                   Array<OneD, NekDouble> &phys)
+{
+    int nPts = F->GetTotPoints();
+    ofstream outf(name);
+    int numBlocks = 1;
+    for (int j = 0; j < 3; ++j)
+    {
+        numBlocks *= F->GetNumPoints(j)-1;
+    }
+
+    outf << "VARIABLES = x, y, z, m" << endl;
+    outf << "Zone, N=" << nPts << ", E="
+         << numBlocks << ", F=FEBlock, ET=BRICK" << endl;
+    
+    const int np0 = F->GetNumPoints(0);
+    const int np1 = F->GetNumPoints(1);
+    const int np2 = F->GetNumPoints(2);
+    const int np01 = np0*np1;
+
+    for (int j = 0; j < nPts; ++j)
+    {
+        outf << x[j] << " ";
+        if (j % 100 == 0 && j > 0)
+            outf << endl;
+    }
+
+    for (int j = 0; j < nPts; ++j)
+    {
+        outf << y[j] << " ";
+        if (j % 100 == 0 && j > 0)
+            outf << endl;
+    }
+
+    for (int j = 0; j < nPts; ++j)
+    {
+        outf << z[j] << " ";
+        if (j % 100 == 0 && j > 0)
+            outf << endl;
+    }
+
+    for (int j = 0; j < nPts; ++j)
+    {
+        outf << phys[j] << " ";
+        if (j % 100 == 0 && j > 0)
+            outf << endl;
+    }
+
+    for(int j = 1; j < np2; ++j)
+    {
+        for(int k = 1; k < np1; ++k)
+        {
+            for(int l = 1; l < np0; ++l)
+            {
+                outf << (j-1)*np01 + (k-1)*np0 + l   << " ";
+                outf << (j-1)*np01 + (k-1)*np0 + l+1 << " ";
+                outf << (j-1)*np01 +  k   *np0 + l+1 << " ";
+                outf << (j-1)*np01 +  k   *np0 + l   << " ";
+                outf <<  j   *np01 + (k-1)*np0 + l   << " ";
+                outf <<  j   *np01 + (k-1)*np0 + l+1 << " ";
+                outf <<  j   *np01 +  k   *np0 + l+1 << " ";
+                outf <<  j   *np01 +  k   *np0 + l   << endl;
+            }
+        }
+    }
+    
+    outf.close();
+}
+
 /// Defines a solution which excites all modes in a StdTet expansion.
 NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
                   int order1, int order2, int order3);
@@ -332,7 +405,7 @@ int main(int argc, char *argv[]){
             StdRegions::StdPyrExp *F = new StdRegions::StdPyrExp(Bkey1,Bkey2,Bkey3);
             E = F;
             pyrIdx = F->GetMap();
-
+            vector<int> &rmap = F->GetRMap();
             E->GetCoords(x,y,z);
 
             //----------------------------------------------
@@ -346,85 +419,98 @@ int main(int argc, char *argv[]){
 #if 0
             int nCoeffs = F->GetNcoeffs();
             int nPts = F->GetTotPoints();
+            const Array<OneD, const NekDouble> &bx = F->GetBase()[0]->GetBdata();
+            const Array<OneD, const NekDouble> &by = F->GetBase()[1]->GetBdata();
+            const Array<OneD, const NekDouble> &bz = F->GetBase()[2]->GetBdata();
+
+            for (int cnt = 0; cnt < nCoeffs; ++cnt)
+            {
+                StdPyrExp::triple &idx = pyrIdx[cnt];
+                const int p = boost::get<0>(idx);
+                const int q = boost::get<1>(idx);
+                const int r = boost::get<2>(idx);
+                if (r == 0 && p == 4 && q == 4)
+                {
+                    Array<OneD, NekDouble> asd(nPts);
+                    for (int k = 0; k < nq3; ++k)
+                    {
+                        cout << z[k*nq1*nq2] << " " << bz[k + nq3*F->GetTetMode(3,2,1)] << endl;
+                        /*
+                        for (int j = 0; j < nq2; ++j)
+                        {
+                            for (int i = 0; i < nq1; ++i)
+                            {
+                                int s = i + nq1*(j + nq2*k);
+                                asd[s] =
+                                    bx[i + nq1*p]*
+                                    by[j + nq2*q]*
+                                    bz[k + nq3*rmap[cnt]]*
+                                    bz[k + nq3*F->GetTetMode(q-1,0,0)];
+                            }
+                        }
+                        */
+                    }
+                    printSolution(F, "quadmode.dat", x, y, z, asd);
+                    exit(0);
+                }
+            }
+            
+#endif
+            
+#if 0
+            int nCoeffs = F->GetNcoeffs();
+            int nPts = F->GetTotPoints();
+            Array<OneD, NekDouble> blah(nCoeffs), blah2(nPts);
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                int p = boost::get<0>(pyrIdx[i]);
+                int q = boost::get<1>(pyrIdx[i]);
+                int r = boost::get<2>(pyrIdx[i]);
+
+                if (r == 0 && p >= 2 && q >= 2)
+                {
+                    Vmath::Zero(nCoeffs, blah, 1);
+                    blah[i] = 1.0;
+                    F->BwdTrans(blah, blah2);
+
+                    boost::format pad("mode-%03d.dat");
+                    pad % i;
+
+                    printSolution(F, pad.str(), x, y, z, blah2);
+                }
+            }
+            exit(0);
+#endif
+
+#if 0
+            int nCoeffs = F->GetNcoeffs();
+            int nPts = F->GetTotPoints();
             Array<OneD, NekDouble> blah(nCoeffs), blah2(nPts);
             for (i = 0; i < nCoeffs; ++i)
             {
                 Vmath::Zero(nCoeffs, blah, 1);
                 blah[i] = 1.0;
                 F->BwdTrans(blah, blah2);
-
-                boost::format pad("mode-%03d.dat");
-                pad % i;
-                ofstream outf(pad.str());
-
-                int numBlocks = 1;
-                for (int j = 0; j < 3; ++j)
+                F->FwdTrans(blah2, blah);
+                int zeroCount = 0;
+                int oneCount = 0;
+                for (int j = 0; j < nCoeffs; ++j)
                 {
-                    numBlocks *= F->GetNumPoints(j)-1;
-                }
-
-                outf << "VARIABLES = x, y, z, m" << endl;
-                outf << "Zone, N=" << nPts << ", E="
-                     << numBlocks << ", F=FEBlock, ET=BRICK" << endl;
-
-                const int np0 = F->GetNumPoints(0);
-                const int np1 = F->GetNumPoints(1);
-                const int np2 = F->GetNumPoints(2);
-                const int np01 = np0*np1;
-
-                for (int j = 0; j < nPts; ++j)
-                {
-                    outf << x[j] << " ";
-                    if (j % 100 == 0 && j > 0)
-                        outf << endl;
-                }
-
-                for (int j = 0; j < nPts; ++j)
-                {
-                    outf << y[j] << " ";
-                    if (j % 100 == 0 && j > 0)
-                        outf << endl;
-                }
-
-                for (int j = 0; j < nPts; ++j)
-                {
-                    outf << z[j] << " ";
-                    if (j % 100 == 0 && j > 0)
-                        outf << endl;
-                }
-
-                for (int j = 0; j < nPts; ++j)
-                {
-                    outf << blah2[j] << " ";
-                    if (j % 100 == 0 && j > 0)
-                        outf << endl;
-                }
-
-                for(int j = 1; j < np2; ++j)
-                {
-                    for(int k = 1; k < np1; ++k)
+                    if (fabs(blah[j]) < 1e-8)
                     {
-                        for(int l = 1; l < np0; ++l)
-                        {
-                            outf << (j-1)*np01 + (k-1)*np0 + l   << " ";
-                            outf << (j-1)*np01 + (k-1)*np0 + l+1 << " ";
-                            outf << (j-1)*np01 +  k   *np0 + l+1 << " ";
-                            outf << (j-1)*np01 +  k   *np0 + l   << " ";
-                            outf <<  j   *np01 + (k-1)*np0 + l   << " ";
-                            outf <<  j   *np01 + (k-1)*np0 + l+1 << " ";
-                            outf <<  j   *np01 +  k   *np0 + l+1 << " ";
-                            outf <<  j   *np01 +  k   *np0 + l   << endl;
-                        }
+                        zeroCount++;
+                    }
+                    if (fabs(blah[j]-1.0) < 1e-8)
+                    {
+                        oneCount++;
                     }
                 }
-                
-                outf.close();
-                
-                //F->FwdTrans(sol, blah);
-                //cout << Vmath::Vmin(nCoeffs, blah, 1) << " " << Vmath::Vmax(nCoeffs, blah, 1) << endl;
+
+                cout << i << " " << zeroCount << " " << oneCount << endl;
             }
             exit(0);
 #endif
+
             //----------------------------------------------
         }
         break;
@@ -500,6 +586,12 @@ int main(int argc, char *argv[]){
     E->BwdTrans(coeffs,phys);
     //-------------------------------------------
 
+    int nPts = E->GetTotPoints();
+    Array<OneD, NekDouble> errArr(nPts);
+    Vmath::Vsub(nPts, phys, 1, sol, 1, errArr, 1);
+    printSolution(E, "out.dat", x, y, z, errArr);
+    printSolution(E, "sol.dat", x, y, z, phys);
+    
     //--------------------------------------------
     // Calculate L_inf error
     cout << "L infinity error: " << E->Linf(phys,sol) << endl;
@@ -547,16 +639,20 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
     int    l,k,m;
     NekDouble sol = 0.0;
 
+    //return x*x*y*y;
+    return x*x*y*y;
+
     for(k = 0; k < order1; ++k)
     {
         for(l = 0; l < order2-k; ++l)
         {
             for(m = 0; m < order3-k-l; ++m)
             {
-                sol += pow(x,k)*pow(y,l)*pow(z,m);
+                sol += pow(x,k)*pow(y,max(0,l-1))*pow(z,m);
             }
         }
     }
+
     return sol;
 }
 
@@ -586,7 +682,7 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
         {
             for(m = 0; m < order3-k; ++m)
             {
-                sol += pow(x,k)*pow(y,l)*pow(z,m);
+                sol += pow(z,m);
             }
         }
     }

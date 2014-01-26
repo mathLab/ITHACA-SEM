@@ -93,28 +93,28 @@ namespace Nektar
             // Edge 0
             for (int i = 2; i <= P; ++i)
             {
-                m_map [cnt  ] = triple(i, 0, 0);
+                m_map [cnt  ] = triple    (i, 0, 0);
                 m_rmap[cnt++] = GetTetMode(i, 0, 0);
             }
 
             // Edge 1
             for (int i = 2; i <= Q; ++i)
             {
-                m_map [cnt  ] = triple(1, i, 0);
+                m_map [cnt  ] = triple    (1, i, 0);
                 m_rmap[cnt++] = GetTetMode(0, i, 0);
             }
 
             // Edge 2
             for (int i = 2; i <= P; ++i)
             {
-                m_map [cnt  ] = triple(i, 1, 0);
+                m_map [cnt  ] = triple    (i, 1, 0);
                 m_rmap[cnt++] = GetTetMode(i, 0, 0);
             }
 
             // Edge 3
             for (int i = 2; i <= Q; ++i)
             {
-                m_map [cnt  ] = triple(0, i, 0);
+                m_map [cnt  ] = triple    (0, i, 0);
                 m_rmap[cnt++] = GetTetMode(0, i, 0);
             }
 
@@ -147,11 +147,11 @@ namespace Nektar
             }
 
             // Face 0 - TODO check this
-            for (int i = 2; i <= P; ++i)
+            for (int j = 2; j <= Q; ++j)
             {
-                for (int j = 2; j <= Q; ++j)
+                for (int i = 2; i <= P; ++i)
                 {
-                    m_map [cnt  ] = triple(i, j, 0);
+                    m_map [cnt  ] = triple    (i, j, 0);
                     m_rmap[cnt++] = GetTetMode(i, 0, 0);
                 }
             }
@@ -161,7 +161,7 @@ namespace Nektar
             {
                 for (int j = 1; j <= R-i; ++j)
                 {
-                    m_map [cnt  ] = triple(i, 0, j);
+                    m_map [cnt  ] = triple    (i, 0, j);
                     m_rmap[cnt++] = GetTetMode(i, 0, j);
                 }
             }
@@ -171,7 +171,7 @@ namespace Nektar
             {
                 for (int j = 1; j <= R-i; ++j)
                 {
-                    m_map [cnt  ] = triple(1, i, j);
+                    m_map [cnt  ] = triple    (1, i, j);
                     m_rmap[cnt++] = GetTetMode(0, i, j);
                 }
             }
@@ -181,7 +181,7 @@ namespace Nektar
             {
                 for (int j = 1; j <= R-i; ++j)
                 {
-                    m_map [cnt  ] = triple(i, 1, j);
+                    m_map [cnt  ] = triple    (i, 1, j);
                     m_rmap[cnt++] = GetTetMode(i, 0, j);
                 }
             }
@@ -191,7 +191,7 @@ namespace Nektar
             {
                 for (int j = 1; j <= R-i; ++j)
                 {
-                    m_map [cnt  ] = triple(0, i, j);
+                    m_map [cnt  ] = triple    (0, i, j);
                     m_rmap[cnt++] = GetTetMode(0, i, j);
                 }
             }
@@ -203,31 +203,33 @@ namespace Nektar
             	{
                     for (int k = 1; k <= R-i-j; ++k)
                     {
-                        m_map [cnt  ] = triple(i, j+1, k);
-                        m_rmap[cnt++] = GetTetMode(i, j, k);
+                        // need to go to j+1-th mode in the 'b' direction to
+                        // select correct modified_a mode
+                        m_map [cnt  ] = triple    (i, j+1, k);
+                        m_rmap[cnt++] = GetTetMode(i, j,   k);
                     }
             	}
             }
 
-#if 0
-            int nPts = GetTotPoints();
-            Array<OneD, NekDouble> modei(nPts);
-            Array<OneD, NekDouble> modej(nPts);
+            // const int P2 = m_base[0]->GetNumModes();
+            // const int Q2 = m_base[1]->GetNumModes();
+            // const int R2 = m_base[2]->GetNumModes();
 
-            for (int i = 0; i < m_ncoeffs; ++i)
-            {
-                v_FillMode(i, modei);
-                for (int j = i+1; j < m_ncoeffs; ++j)
-                {
-                    v_FillMode(j, modej);
-                    Vmath::Vsub(nPts, modei, 1, modej, 1, modej, 1);
-                    if (fabs(Vmath::Vmax(nPts, modej, 1)) < 1e-4)
-                    {
-                        cout << "wut" << i << " " << j << endl;
-                    }
-                }
-            }
-#endif
+            // int idx = 0;
+            // for (int i = 2; i < P2-2; ++i)
+            // {
+            // 	for (int j = 1; j < Q2-i-1; ++j)
+            // 	{
+            //         for (int k = 1; k < R2-i-j; ++k)
+            //         {
+            //             idx++;
+            //         }
+            // 	}
+            // }
+
+            //cout << "IDX = " << idx << endl;
+            
+            cout << cnt << endl;
         }
 
         StdPyrExp::StdPyrExp(const StdPyrExp &T)
@@ -584,7 +586,7 @@ namespace Nektar
             Array<OneD, const NekDouble> by = m_base[1]->GetBdata();
             Array<OneD, const NekDouble> bz = m_base[2]->GetBdata();
 
-            int Q = m_base[2]->GetNumModes();
+            int Q = m_base[2]->GetNumModes()-1;
 
             for (int k = 0; k < Qz; ++k)
             {
@@ -605,10 +607,11 @@ namespace Nektar
                                 by[j + Qy*q]*
                                 bz[k + Qz*m_rmap[cnt]];
 
-                            if (r == 0 && p >= 2 && q > Q-p)
+                            if (r == 0 && p >= 2 && q >= 2 && q > Q-p)
                             {
-                                tmp *= bz[k + Qz*GetTetMode(Q-q,0,0)];
+                                tmp *= bz[k + Qz*GetTetMode(q-1,0,0)];
                             }
+
                             sum += tmp;
                         }
 
@@ -712,7 +715,7 @@ namespace Nektar
             const Array<OneD, const NekDouble> &by = m_base[1]->GetBdata();
             const Array<OneD, const NekDouble> &bz = m_base[2]->GetBdata();
 
-            int Q = m_base[1]->GetNumModes();
+            int Q = m_base[1]->GetNumModes()-1;
 
             // Initial pyramid implementation. We need to iterate over vertices,
             // edge int, face int and then interior.
@@ -738,9 +741,9 @@ namespace Nektar
                                 by[j + Qy*q] * 
                                 bz[k + Qz*m_rmap[cnt]];
 
-                            if (r == 0 && p >= 2 && q > Q-p)
+                            if (r == 0 && p >= 2 && q >= 2 && q > Q-p)
                             {
-                                tmp *= bz[k + Qz*GetTetMode(Q-q,0,0)];
+                                tmp *= bz[k + Qz*GetTetMode(q-1,0,0)];
                             }
 
                             g_pqr[s] += tmp;

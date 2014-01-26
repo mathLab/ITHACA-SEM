@@ -48,7 +48,7 @@ namespace Nektar
         class StdPyrExp : virtual public StdExpansion3D
         {
         public:
-            typedef boost::tuple<unsigned char, unsigned char, unsigned char> triple;
+            typedef boost::tuple<unsigned char, unsigned char, unsigned char, bool> triple;
     
             STD_REGIONS_EXPORT StdPyrExp();
 
@@ -98,6 +98,7 @@ namespace Nektar
                 return m_rmap;
             }
             STD_REGIONS_EXPORT int GetTetMode(int I, int J, int K);
+            STD_REGIONS_EXPORT int GetModTetMode(int I, int J, int K);
 
         protected:
             //---------------------------------------
@@ -254,6 +255,8 @@ namespace Nektar
 
             vector<triple> m_map;
             vector<int> m_rmap;
+            LibUtilities::BasisSharedPtr m_base_A;
+            LibUtilities::BasisSharedPtr m_base_C;
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

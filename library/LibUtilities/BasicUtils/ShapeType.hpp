@@ -168,7 +168,7 @@ namespace Nektar
                     Pi * Qi +                  // base quad
                     Pi * (2*Ri - Pi - 1) +     // p-r triangles;
                     Qi * (2*Ri - Qi - 1);      // q-r triangles;
-                return nCoeff + StdTetData::getNumberOfCoefficients(Pi-2, Qi-2, Ri-2);
+                return nCoeff + StdTetData::getNumberOfCoefficients(Pi-1, Qi-1, Ri-1);
             }
         }
 

@@ -32,7 +32,7 @@ void printSolution(StdRegions::StdExpansion *F,
         numBlocks *= F->GetNumPoints(j)-1;
     }
 
-    outf << "VARIABLES = x, y, z, m" << endl;
+    outf << "VARIABLES = x, y, z, mnpp" << endl;
     outf << "Zone, N=" << nPts << ", E="
          << numBlocks << ", F=FEBlock, ET=BRICK" << endl;
     
@@ -43,30 +43,22 @@ void printSolution(StdRegions::StdExpansion *F,
 
     for (int j = 0; j < nPts; ++j)
     {
-        outf << x[j] << " ";
-        if (j % 100 == 0 && j > 0)
-            outf << endl;
+        outf << x[j] << endl;
     }
 
     for (int j = 0; j < nPts; ++j)
     {
-        outf << y[j] << " ";
-        if (j % 100 == 0 && j > 0)
-            outf << endl;
+        outf << y[j] << endl;
     }
 
     for (int j = 0; j < nPts; ++j)
     {
-        outf << z[j] << " ";
-        if (j % 100 == 0 && j > 0)
-            outf << endl;
+        outf << z[j] << endl;
     }
 
     for (int j = 0; j < nPts; ++j)
     {
-        outf << phys[j] << " ";
-        if (j % 100 == 0 && j > 0)
-            outf << endl;
+        outf << phys[j] << endl;
     }
 
     for(int j = 1; j < np2; ++j)
@@ -463,21 +455,19 @@ int main(int argc, char *argv[]){
             Array<OneD, NekDouble> blah(nCoeffs), blah2(nPts);
             for (i = 0; i < nCoeffs; ++i)
             {
-                int p = boost::get<0>(pyrIdx[i]);
-                int q = boost::get<1>(pyrIdx[i]);
-                int r = boost::get<2>(pyrIdx[i]);
+                StdPyrExp::triple &idx = pyrIdx[i];
+                const int p = boost::get<0>(idx);
+                const int q = boost::get<1>(idx);
+                const int r = boost::get<2>(idx);
 
-                if (r == 0 && p >= 2 && q >= 2)
-                {
-                    Vmath::Zero(nCoeffs, blah, 1);
-                    blah[i] = 1.0;
-                    F->BwdTrans(blah, blah2);
+                Vmath::Zero(nCoeffs, blah, 1);
+                blah[i] = 1.0;
+                F->BwdTrans(blah, blah2);
 
-                    boost::format pad("mode-%03d.dat");
-                    pad % i;
+                boost::format pad("mode-%03d.dat");
+                pad % i;
 
-                    printSolution(F, pad.str(), x, y, z, blah2);
-                }
+                printSolution(F, pad.str(), x, y, z, blah2);
             }
             exit(0);
 #endif
@@ -639,8 +629,7 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
     int    l,k,m;
     NekDouble sol = 0.0;
 
-    //return x*x*y*y;
-    return x*x*y*y;
+    return cos(x)*cos(y)*cos(z);
 
     for(k = 0; k < order1; ++k)
     {
@@ -648,7 +637,7 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
         {
             for(m = 0; m < order3-k-l; ++m)
             {
-                sol += pow(x,k)*pow(y,max(0,l-1))*pow(z,m);
+                sol += pow(x,k)*pow(y,l)*pow(z,m);
             }
         }
     }
@@ -676,6 +665,7 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
     int    l,k,m;
     NekDouble sol = 0;
 
+    return cos(x)*cos(y)*cos(z);
     for(k = 0; k < order1; ++k)
     {
         for(l = 0; l < order2; ++l)

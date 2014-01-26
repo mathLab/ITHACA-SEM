@@ -110,17 +110,34 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = pFields[0]->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+            
 
+            Array<OneD, NekDouble>  fieldcoeffs;
+            int ncoeffs = pFields[0]->GetNcoeffs();
+            
             // copy Data into FieldData and set variable
             for(int j = 0; j < pFields.num_elements(); ++j)
             {
+                
+                // check to see if field is same order a zeroth field
+                if(m_avgFields[j].num_elements() == ncoeffs)
+                {
+                    fieldcoeffs = m_avgFields[j];
+                }
+                else
+                {
+                    fieldcoeffs = Array<OneD,NekDouble>(ncoeffs);
+                    pFields[0]->ExtractCoeffsToCoeffs(pFields[j],m_avgFields[j],fieldcoeffs);
+                }
+
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     // Could do a search here to find correct variable
                     FieldDef[i]->m_fields.push_back(m_session->GetVariable(j));
-                    pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], m_avgFields[j]);
+                    pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs);
                 }
             }
+
             m_avgFieldMetaData["NumberOfFieldDumps"] = boost::lexical_cast<std::string>(m_numAverages);
             m_fld->Write(m_outputFile,FieldDef,FieldData,m_avgFieldMetaData);
         }

@@ -65,9 +65,8 @@ namespace Nektar
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
             
-            if(vm.count("boundary-region"))
+            if (vm.count("boundary-region"))
             {
-
                 vector<string> tmp1;
                 ModuleKey      module;
                 
@@ -75,15 +74,16 @@ namespace Nektar
                 boost::split(tmp1, boptions, boost::is_any_of(":"));
                 
                 vector<unsigned int> values;
-                ASSERTL0(ParseUtils::GenerateOrderedVector(tmp1[0].c_str(),values),
+                ASSERTL0(ParseUtils::GenerateOrderedVector(
+                         tmp1[0].c_str(),values),
                          "Failed to interpret range string");
                 
-                if(tmp1.size() == 2)
+                if (tmp1.size() == 2)
                 {
                     // Extract data to boundaryconditions/ 
-                    if(tmp1[1].compare("FldToBoundary") <=0)
+                    if (tmp1[1].compare("FldToBoundary") <=0)
                     {
-                        for(int i = 0; i < m_f->m_exp.size(); ++i)
+                        for (int i = 0; i < m_f->m_exp.size(); ++i)
                         {
                             m_f->m_exp[i]->FillBndCondFromField();
                         }
@@ -106,40 +106,47 @@ namespace Nektar
                 }
                 
                 int nfields = m_f->m_exp.size();
-                Array<OneD, Array<OneD, const MultiRegions::ExpListSharedPtr> > BndExp(nfields);
-                for(int i = 0; i < nfields; ++i)
+                Array<OneD, Array<OneD, const MultiRegions::ExpListSharedPtr> > 
+                    BndExp(nfields);
+                for (int i = 0; i < nfields; ++i)
                 {
                     BndExp[i] = m_f->m_exp[i]->GetBndCondExpansions();
                 }
 
                 // find ending of output file and insert _b1, _b2
-                int    dot = filename.find_last_of('.') + 1;
-                string ext = filename.substr(dot, filename.length() - dot);
+                int    dot  = filename.find_last_of('.') + 1;
+                string ext  = filename.substr(dot, filename.length() - dot);
                 string name = filename.substr(0, dot-1);
 
                 for(int i = 0; i < values.size(); ++i)
                 {
-                    string outname = name  + "_b" + boost::lexical_cast<string>(i) + 
-                        "." + ext;
+                    string outname = name  + "_b" + 
+                        boost::lexical_cast<string>(i) + "." + ext;
                     
-                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                        = BndExp[0][values[i]]->GetFieldDefinitions();
-                    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> 
+                        FieldDef = BndExp[0][values[i]]->GetFieldDefinitions();
+                    std::vector<std::vector<NekDouble> > 
+                        FieldData(FieldDef.size());
 
-                    for(int j = 0; j < nfields; ++j)
+                    for (int j = 0; j < nfields; ++j)
                     {
-                        for(int k = 0; k < FieldDef.size(); ++k)
+                        for (int k = 0; k < FieldDef.size(); ++k)
                         {
 
-                            ASSERTL0(values[i] < BndExp[j].num_elements(),"Boundary region " + boost::lexical_cast<string>(values[i]) +" is not defined in input file");
+                            ASSERTL0(values[i] < BndExp[j].num_elements(),
+                                     "Boundary region " + boost::
+                                     lexical_cast<string>(values[i]) +
+                                     " is not defined in input file");
+                            
                             BndExp[j][values[i]]->AppendFieldData(FieldDef[k], 
                                                                   FieldData[k]);
+                            
                             FieldDef[k]->m_fields.push_back(m_f->m_fielddef[0]->
                                                             m_fields[j]);
                         }
                     }
                     
-                    m_f->m_fld->Write(outname,FieldDef,FieldData);
+                    m_f->m_fld->Write(outname, FieldDef, FieldData);
 
 
                     // output error for regression checking. 
@@ -149,14 +156,25 @@ namespace Nektar
                         
                         for (int j = 0; j < nfields; ++j)
                         {
-                            BndExp[j][values[i]]->BwdTrans(BndExp[j][values[i]]->GetCoeffs(),BndExp[j][values[i]]->UpdatePhys());
-                            NekDouble l2err   = BndExp[j][values[i]]->L2(BndExp[j][values[i]]->GetPhys());
-                            NekDouble linferr = BndExp[j][values[i]]->Linf(BndExp[j][values[i]]->GetPhys());
+                            BndExp[j][values[i]]->BwdTrans(
+                                BndExp[j][values[i]]->GetCoeffs(), 
+                                BndExp[j][values[i]]->UpdatePhys());
                             
-                            if(rank == 0)
+                            NekDouble l2err = BndExp[j][values[i]]->
+                                L2(BndExp[j][values[i]]->GetPhys());
+                            
+                            NekDouble linferr = BndExp[j][values[i]]->
+                                Linf(BndExp[j][values[i]]->GetPhys());
+                            
+                            if (rank == 0)
                             {
-                                cout << "L 2 error (variable "<< FieldDef[0]->m_fields[j] << ") : " << l2err  << endl;
-                                cout << "L inf error (variable "<< FieldDef[0]->m_fields[j] << ") : " << linferr << endl;
+                                cout << "L 2 error (variable "
+                                     << FieldDef[0]->m_fields[j] 
+                                     << ") : " << l2err  << endl;
+                                
+                                cout << "L inf error (variable "
+                                     << FieldDef[0]->m_fields[j] 
+                                     << ") : " << linferr << endl;
                             }
                         }
                     }
@@ -181,18 +199,27 @@ namespace Nektar
                     
                     for (int j = 0; j < m_f->m_exp.size(); ++j)
                     {
-                        if(m_f->m_exp[j]->GetPhysState() == false)
+                        if (m_f->m_exp[j]->GetPhysState() == false)
                         {
-                            m_f->m_exp[j]->BwdTrans(m_f->m_exp[j]->GetCoeffs(),
-                                                    m_f->m_exp[j]->UpdatePhys());
+                            m_f->m_exp[j]->BwdTrans(
+                                                m_f->m_exp[j]->GetCoeffs(),
+                                                m_f->m_exp[j]->UpdatePhys());
                         }
 
-                        NekDouble l2err   = m_f->m_exp[j]->L2(m_f->m_exp[j]->GetPhys());
-                        NekDouble linferr = m_f->m_exp[j]->Linf(m_f->m_exp[j]->GetPhys());
-                        if(rank == 0)
+                        NekDouble l2err = m_f->m_exp[j]->L2(
+                                                m_f->m_exp[j]->GetPhys());
+                        
+                        NekDouble linferr = m_f->m_exp[j]->Linf(
+                                                m_f->m_exp[j]->GetPhys());
+                        if (rank == 0)
                         {
-                            cout << "L 2 error (variable "<< m_f->m_fielddef[0]->m_fields[j] << ") : " << l2err  << endl;
-                            cout << "L inf error (variable "<< m_f->m_fielddef[0]->m_fields[j] << ") : " << linferr << endl;
+                            cout << "L 2 error (variable "
+                                 << m_f->m_fielddef[0]->m_fields[j] 
+                                 << ") : " << l2err  << endl;
+                            
+                            cout << "L inf error (variable "
+                                 << m_f->m_fielddef[0]->m_fields[j] 
+                                 << ") : " << linferr << endl;
                         }
                     }
                 }

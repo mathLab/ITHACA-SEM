@@ -576,12 +576,14 @@ int main(int argc, char *argv[]){
     E->BwdTrans(coeffs,phys);
     //-------------------------------------------
 
+#if 0
     int nPts = E->GetTotPoints();
     Array<OneD, NekDouble> errArr(nPts);
     Vmath::Vsub(nPts, phys, 1, sol, 1, errArr, 1);
     printSolution(E, "out.dat", x, y, z, errArr);
     printSolution(E, "sol.dat", x, y, z, phys);
-    
+#endif
+
     //--------------------------------------------
     // Calculate L_inf error
     cout << "L infinity error: " << E->Linf(phys,sol) << endl;
@@ -629,8 +631,6 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
     int    l,k,m;
     NekDouble sol = 0.0;
 
-    return cos(x)*cos(y)*cos(z);
-
     for(k = 0; k < order1; ++k)
     {
         for(l = 0; l < order2-k; ++l)
@@ -665,7 +665,6 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
     int    l,k,m;
     NekDouble sol = 0;
 
-    return cos(x)*cos(y)*cos(z);
     for(k = 0; k < order1; ++k)
     {
         for(l = 0; l < order2; ++l)

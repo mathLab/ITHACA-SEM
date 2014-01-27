@@ -66,28 +66,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT ~StdPyrExp();
 
-            //---------------------------------------
-            // Integration/public 3D methods
-            //---------------------------------------
-            STD_REGIONS_EXPORT void TripleTensorProduct(
-                const Array<OneD, const NekDouble>& fx, 
-                const Array<OneD, const NekDouble>& gy, 
-                const Array<OneD, const NekDouble>& hz, 
-                const Array<OneD, const NekDouble>& inarray, 
-                Array<OneD, NekDouble> & outarray);
-
-            STD_REGIONS_EXPORT NekDouble TripleInnerProduct(
-                const Array<OneD, const NekDouble>& fxyz,
-                const Array<OneD, const NekDouble>& wx,
-                const Array<OneD, const NekDouble>& wy,
-                const Array<OneD, const NekDouble>& wz);
-
-            STD_REGIONS_EXPORT NekDouble Integral3D(
-                const Array<OneD, const NekDouble>& inarray,
-                const Array<OneD, const NekDouble>& wx,
-                const Array<OneD, const NekDouble>& wy,
-                const Array<OneD, const NekDouble>& wz);
-
             STD_REGIONS_EXPORT std::vector<triple> &GetMap()
             {
                 return m_map;
@@ -118,8 +96,6 @@ namespace Nektar
                       Array<OneD,       NekDouble> &out_d0,
                       Array<OneD,       NekDouble> &out_d1,
                       Array<OneD,       NekDouble> &out_d2);
-            STD_REGIONS_EXPORT virtual NekDouble v_Integral(
-                const Array<OneD, const NekDouble>& inarray);
             STD_REGIONS_EXPORT void v_MultiplyByStdQuadratureMetric(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);

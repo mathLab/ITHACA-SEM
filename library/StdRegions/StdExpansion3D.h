@@ -182,6 +182,8 @@ namespace Nektar
                           Array<OneD,NekDouble> &outarray,
                     const StdRegions::StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual NekDouble v_Integral(
+                const Array<OneD, const NekDouble>& inarray);
 
             STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(
                 const int face);
@@ -208,88 +210,3 @@ namespace Nektar
 } //end of namespace
 
 #endif //STDEXP3D_H
-
-/**
- * $Log: StdExpansion3D.h,v $
- * Revision 1.19  2008/09/16 13:37:03  pvos
- * Restructured the LocalToGlobalMap classes
- *
- * Revision 1.18  2008/07/04 10:18:40  pvos
- * Some updates
- *
- * Revision 1.17  2008/06/06 23:21:13  ehan
- * Added doxygen documentation
- *
- * Revision 1.16  2008/05/30 00:33:49  delisi
- * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
- *
- * Revision 1.15  2008/05/15 22:39:34  ehan
- * Clean up the codes
- *
- * Revision 1.14  2008/04/06 06:04:15  bnelson
- * Changed ConstArray to Array<const>
- *
- * Revision 1.13  2008/02/12 02:46:33  jfrazier
- * Moved typedef to the top of the file.
- *
- * Revision 1.12  2008/02/12 01:30:07  ehan
- * Added typedef StdExpansion3DSharedPtr.
- *
- * Revision 1.11  2007/11/08 14:27:53  ehan
- * Fixed PhysTensorDerivative3D matrix and improved L1 error up to 1e-15.
- *
- * Revision 1.10  2007/10/29 20:31:04  ehan
- * Fixed floating point approximation up to 1-e15 for PhysEvaluate.
- *
- * Revision 1.9  2007/07/20 02:16:54  bnelson
- * Replaced boost::shared_ptr with Nektar::ptr
- *
- * Revision 1.8  2007/05/15 05:18:23  bnelson
- * Updated to use the new Array object.
- *
- * Revision 1.7  2007/04/10 14:00:45  sherwin
- * Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
- *
- * Revision 1.6  2007/03/29 19:35:09  bnelson
- * Replaced boost::shared_array with SharedArray
- *
- * Revision 1.5  2007/03/20 16:58:43  sherwin
- * Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
- *
- * Revision 1.4  2007/01/17 16:05:40  pvos
- * updated doxygen documentation
- *
- * Revision 1.3  2006/07/02 17:16:18  sherwin
- *
- * Modifications to make MultiRegions work for a connected domain in 2D (Tris)
- *
- * Revision 1.2  2006/06/13 18:05:02  sherwin
- * Modifications to make MultiRegions demo ProjectLoc2D execute properly.
- *
- * Revision 1.1  2006/05/04 18:58:31  kirby
- * *** empty log message ***
- *
- * Revision 1.12  2006/04/25 20:23:33  jfrazier
- * Various fixes to correct bugs, calls to ASSERT, etc.
- *
- * Revision 1.11  2006/03/12 14:20:44  sherwin
- *
- * First compiling version of SpatialDomains and associated modifications
- *
- * Revision 1.10  2006/03/06 17:12:45  sherwin
- *
- * Updated to properly execute all current StdRegions Demos.
- *
- * Revision 1.9  2006/03/04 20:26:54  bnelson
- * Added comments after #endif.
- *
- * Revision 1.8  2006/03/01 08:25:03  sherwin
- *
- * First compiling version of StdRegions
- *
- * Revision 1.7  2006/02/27 23:47:23  sherwin
- *
- * Standard coding update upto compilation of StdHexExp.cpp
- *
- **/
-

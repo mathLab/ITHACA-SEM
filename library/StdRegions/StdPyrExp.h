@@ -48,7 +48,8 @@ namespace Nektar
         class StdPyrExp : virtual public StdExpansion3D
         {
         public:
-            typedef boost::tuple<unsigned char, unsigned char, unsigned char, bool> triple;
+            typedef boost::tuple<
+                unsigned char, unsigned char, unsigned char> triple;
     
             STD_REGIONS_EXPORT StdPyrExp();
 
@@ -76,7 +77,6 @@ namespace Nektar
                 return m_rmap;
             }
             STD_REGIONS_EXPORT int GetTetMode(int I, int J, int K);
-            STD_REGIONS_EXPORT int GetModTetMode(int I, int J, int K);
 
         protected:
             //---------------------------------------
@@ -188,13 +188,14 @@ namespace Nektar
             //---------------------------------------
             STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(
                 const int                  fid,
-                const Orientation      faceOrient,
+                const Orientation          faceOrient,
                 Array<OneD, unsigned int> &maparray,
                 Array<OneD,          int> &signarray,
                 int                        nummodesA=-1,
                 int                        nummodesB=-1);
-            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId,
-                                                           bool useCoeffPacking = false);
+            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(
+                int                        localVertexId,
+                bool                       useCoeffPacking = false);
             /*
             STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(
                 const int eid,
@@ -224,8 +225,6 @@ namespace Nektar
             //---------------------------------------
             vector<triple> m_map;
             vector<int> m_rmap;
-            LibUtilities::BasisSharedPtr m_base_A;
-            LibUtilities::BasisSharedPtr m_base_C;
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

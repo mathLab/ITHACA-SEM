@@ -10,7 +10,7 @@
 //  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
-//  License for the specific language governing rights and limitations under
+//  License for the specific language governing rights and laimitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -161,6 +161,15 @@ int main(int argc, char* argv[])
         cerr << "ERROR: You must specify input(s) and and output file." << endl;
         return 1;
     }
+    else if(vm.count("boundary-region"))
+    {
+        if(inout.size() < 3)
+        {
+            cerr << "Error: You mush specify an .xml file a .fld fle as inputs and a .fld file as an output" << endl;
+            return 2;
+        }
+    }
+
     
     /*
      * Process list of modules. Each element of the vector of module strings can

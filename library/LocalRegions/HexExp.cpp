@@ -1598,9 +1598,10 @@ namespace Nektar
                 break;
             case StdRegions::eLaplacian:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
-                       mkey.GetNVarCoeff()||
-                       (mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio)))
+                    if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
+                        mkey.GetNVarCoeff()||
+                        mkey.ConstFactorExists(
+                                StdRegions::eFactorSVVCutoffRatio))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);

@@ -729,6 +729,10 @@ namespace Nektar
             int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
 
+            Array<OneD, NekDouble> tmp(Qx*Qy*Qz);
+
+            MultiplyByStdQuadratureMetric(inarray, tmp);
+
             const Array<OneD, const NekDouble> &bx  = m_base[0]->GetBdata();
             const Array<OneD, const NekDouble> &by  = m_base[1]->GetBdata();
             const Array<OneD, const NekDouble> &bz  = m_base[2]->GetBdata();
@@ -747,28 +751,26 @@ namespace Nektar
                 const int  q  = boost::get<1>(idx);
                 const int  r  = boost::get<2>(idx);
                 const bool in = boost::get<3>(idx);
-
-                Array<OneD, NekDouble> g_pqr(Qx*Qy*Qz, 0.0);
+                NekDouble tmp = 0.0;
+                int s = 0;
                 
                 for (int k = 0; k < Qz; ++k)
                 {
                     for (int j = 0; j < Qy; ++j)
                     {
-                        for (int i = 0; i < Qx; ++i)
+                        for (int i = 0; i < Qx; ++i, ++s)
                         {
-                            int s = i + Qx*(j + Qy*k);
-                            NekDouble tmp;
-
+                            NekDouble tmp2;
                             if (in)
                             {
-                                tmp = inarray[s]*
+                                tmp2 = inarray[s]*
                                     bxc[i + Qx*p]*
                                     bxc[j + Qy*q]*
                                     bzc[k + Qz*m_rmap[cnt]];
                             }
                             else
                             {
-                                tmp = inarray[s]*
+                                tmp2 = inarray[s]*
                                     bx[i + Qx*p]*
                                     by[j + Qy*q]*
                                     bz[k + Qz*m_rmap[cnt]];
@@ -780,16 +782,16 @@ namespace Nektar
 
                                 if (blah - 3 >= 0)
                                 {
-                                    tmp *= bz[k + Qz*GetTetMode(blah-2,0,0)];
+                                    tmp2 *= bz[k + Qz*GetTetMode(blah-2,0,0)];
                                 }
                             }
 
-                            g_pqr[s] += tmp;
+                            tmp += tmp2;
 
                             // Add missing contributions from top vertex mode.
                             if (p == 0 && q == 0 && r == 1)
                             {
-                                g_pqr[s] += inarray[s] * bz[k+Qz]*(
+                                tmp2 += inarray[s] * bz[k+Qz]*(
                                     bx[i+Qx]*by[j+Qy] + 
                                     bx[i+Qx]*by[j   ] + 
                                     bx[i   ]*by[j+Qy]);
@@ -798,7 +800,7 @@ namespace Nektar
                     }
                 }
 
-                outarray[cnt] = Integral(g_pqr);
+                outarray[cnt] = tmp;
             }
         }
 
@@ -1286,36 +1288,6 @@ namespace Nektar
         }
 
         /**
-         * @brief Compute the local mode number in the expansion for a
-         * particular tensorial combination.
-         *
-         * Modes are numbered with the r index travelling fastest, followed by
-         * q and then p, with each plane of size (Q+1)*[(Q+2)/2+R-Q-p]. For
-         * example, with P=3, Q=3, R=4, the indexing inside each q-r plane
-         * (with r increasing upwards and q to the right) is:
-         * 
-         * 4            *            *            *
-         * 3  8         17 21        *  *         *  *
-         * 2  7  11     16 20 24     29 32 35     *  *  *
-         * 1  6  10 13  15 19 23 26  28 31 34 37  39 41 43 45
-         * 0  5   9 12  14 18 22 25  27 30 33 36  38 40 42 44
-         * 
-         * Note that in the pyramid, then number of modes needed to perform
-         * the boundary-interior decomposition is larger than the space of
-         * polynomials used to represent it.
-         */
-        int StdPyrExp::GetMode(int p, int q, int r)
-        {
-            int Q = m_base[1]->GetNumModes() - 1;
-            int R = m_base[2]->GetNumModes() - 1;
-            
-            return p*(Q+1)*((Q+2)/2+(R-Q)) - (p-1)*p*(p+1)/6 + // skip to p-th plane
-                r+q*(2*(R+1)+1-q)/2 -                          // normal tri indexing
-                // account for offset (starred points)
-                (q > 0 ? p*(p+1)/2 - (q-1 < p ? (p-q+1)*(p-q)/2 : 0) : 0);
-        }
-
-        /**
          * 3
          * 2  6          12
          * 1  5  8       11 14      17
@@ -1360,9 +1332,9 @@ namespace Nektar
             return cnt + K;
         }
 
-        void StdPyrExp::MultiplyByQuadratureMetric(
+        void StdPyrExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
+                  Array<OneD,       NekDouble>& outarray)
         {
             int i, j;
             

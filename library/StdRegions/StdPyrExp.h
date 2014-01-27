@@ -104,27 +104,25 @@ namespace Nektar
             //---------------------------------------
             // Differentiation/integration Methods
             //---------------------------------------
-
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_d0,
-                Array<OneD, NekDouble> &out_d1,
-                Array<OneD, NekDouble> &out_d2);
-
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &out_d0,
+                      Array<OneD,       NekDouble> &out_d1,
+                      Array<OneD,       NekDouble> &out_d2);
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
-                const int dir,
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble>& outarray);
-
+                const int                           dir,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
             STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &out_d0,
-                Array<OneD, NekDouble> &out_d1,
-                Array<OneD, NekDouble> &out_d2);
-
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &out_d0,
+                      Array<OneD,       NekDouble> &out_d1,
+                      Array<OneD,       NekDouble> &out_d2);
             STD_REGIONS_EXPORT virtual NekDouble v_Integral(
                 const Array<OneD, const NekDouble>& inarray);
-
+            STD_REGIONS_EXPORT void v_MultiplyByStdQuadratureMetric(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
 
             //---------------------------------------
             // Transforms
@@ -248,11 +246,6 @@ namespace Nektar
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
-            STD_REGIONS_EXPORT int GetMode(int I, int J, int K);
-            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray);
-
             vector<triple> m_map;
             vector<int> m_rmap;
             LibUtilities::BasisSharedPtr m_base_A;

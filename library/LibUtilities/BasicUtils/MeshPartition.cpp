@@ -105,7 +105,6 @@ namespace Nektar
             TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
             vNew.LinkEndChild(decl);
 
-
             TiXmlElement* vElmtNektar;
             vElmtNektar = new TiXmlElement("NEKTAR");
 
@@ -114,7 +113,6 @@ namespace Nektar
 
             vNew.LinkEndChild(vElmtNektar);
 
-
             std::string  dirname = pSession->GetSessionName() + "_xml"; 
             fs::path    pdirname(dirname);
             
@@ -122,14 +120,10 @@ namespace Nektar
             pad % rank;
             fs::path    pFilename(pad.str());
             
-            if(rank == 0)
+            if(!fs::is_directory(dirname))
             {
-                if(!fs::is_directory(dirname))
-                {
-                    fs::create_directory(dirname);
-                }
+                fs::create_directory(dirname);
             }
-            m_comm->Block();
             
             fs::path fullpath = pdirname / pFilename; 
             vNew.SaveFile(PortablePath(fullpath));
@@ -153,8 +147,9 @@ namespace Nektar
                 std::string  dirname = pSession->GetSessionName() + "_xml"; 
                 fs::path    pdirname(dirname);
                 
-                std::string vFilename = "P" + boost::lexical_cast<std::string>(i) + ".xml";
-                fs::path    pFilename(vFilename);            
+                boost::format pad("P%1$07d.xml");
+                pad % i;
+                fs::path    pFilename(pad.str());
                 
                 fs::path fullpath = pdirname / pFilename; 
                 

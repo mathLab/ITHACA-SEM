@@ -90,9 +90,6 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
 NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
                     int order1, int order2, int order3);
 
-/// Defines a solution which excites all modes in a StdPyr expansion.
-NekDouble Pyr_sol(NekDouble x, NekDouble y, NekDouble z, std::vector<StdPyrExp::triple> idx);
-
 /// Defines a solution which excites all modes in a StdHex expansion.
 NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
                   int order1, int order2, int order3,
@@ -405,7 +402,6 @@ int main(int argc, char *argv[]){
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
                 sol[i]  = Tet_sol(x[i],y[i],z[i],order1,order2,order3);
-                //sol[i]  = Pyr_sol(x[i],y[i],z[i],pyrIdx);
             }
 
 #if 0
@@ -604,7 +600,6 @@ int main(int argc, char *argv[]){
     else if (regionshape == LibUtilities::ePyramid)
     {
         sol[0] = Tet_sol(t[0], t[1], t[2], order1, order2, order3);
-        //sol[0] = Pyr_sol(t[0], t[1], t[2], pyrIdx);
     }
     else if (regionshape == LibUtilities::ePrism)
     {
@@ -642,20 +637,6 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
         }
     }
 
-    return sol;
-}
-
-NekDouble Pyr_sol(NekDouble x, NekDouble y, NekDouble z, std::vector<StdPyrExp::triple> idx)
-{
-    NekDouble sol = 0.0;
-#if 0
-    for (int i = 0; i < idx.size(); ++i)
-    {
-        sol += pow(x, boost::get<0>(idx[i])) *
-               pow(y, boost::get<1>(idx[i])) *
-               pow(z, boost::get<2>(idx[i]));
-    }
-#endif
     return sol;
 }
 

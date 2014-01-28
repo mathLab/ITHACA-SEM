@@ -45,6 +45,40 @@ namespace Nektar
 {
     namespace StdRegions
     {
+        typedef boost::tuple<
+            unsigned int, unsigned int, unsigned int, unsigned int> Mode;
+
+        struct cmpop
+        {
+            bool operator()(Mode const &a, Mode const &b) const
+            {
+                if (a.get<0>() < b.get<0>())
+                {
+                    return true;
+                }
+                if (a.get<0>() > b.get<0>())
+                {
+                    return false;
+                }
+    
+                if (a.get<1>() < b.get<1>())
+                {
+                    return true;
+                }
+                if (a.get<1>() > b.get<1>())
+                {
+                    return false;
+                }
+    
+                if (a.get<2>() < b.get<2>())
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        };
+
         class StdPyrExp : virtual public StdExpansion3D
         {
         public:
@@ -225,6 +259,8 @@ namespace Nektar
             //---------------------------------------
             vector<triple> m_map;
             vector<int> m_rmap;
+            map<Mode, unsigned int, cmpop> m_map2;
+            map<int, map<int, map<int, pair<int, int> > > > m_idxMap;
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

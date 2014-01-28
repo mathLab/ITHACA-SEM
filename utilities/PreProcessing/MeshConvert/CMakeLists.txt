@@ -9,6 +9,8 @@ SET(MeshConvertHeaders
     OutputGmsh.h
     OutputNekpp.h
     ProcessBL.h
+    ProcessDetectSurf.h
+    ProcessExtractSurf.h
     ProcessJac.h
     ProcessPerAlign.h
     ProcessSpherigon.h
@@ -27,6 +29,8 @@ SET(MeshConvertSources
     OutputGmsh.cpp
     OutputNekpp.cpp
     ProcessBL.cpp
+    ProcessDetectSurf.cpp
+    ProcessExtractSurf.cpp
     ProcessJac.cpp
     ProcessPerAlign.cpp
     ProcessSpherigon.cpp
@@ -41,3 +45,5 @@ ENDIF (NEKTAR_USE_VTK)
 
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
 
+#ADD_NEKTAR_TEST(MeshConvert_CubePer)
+#ADD_NEKTAR_TEST_LENGTHY(MeshConvert_StraightRW)

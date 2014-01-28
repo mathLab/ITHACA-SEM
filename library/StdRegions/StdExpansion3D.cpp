@@ -146,6 +146,13 @@ namespace Nektar
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
             Array<OneD, DNekMatSharedPtr>  I(3);
 
+            WARNINGL2(coords[0] >= -1,"coord[0] < -1");
+            WARNINGL2(coords[0] <=  1,"coord[0] >  1");
+            WARNINGL2(coords[1] >= -1,"coord[1] < -1");
+            WARNINGL2(coords[1] <=  1,"coord[1] >  1");
+            WARNINGL2(coords[2] >= -1,"coord[2] < -1");
+            WARNINGL2(coords[2] <=  1,"coord[2] >  1");
+
             // Obtain local collapsed corodinate from 
             // cartesian coordinate. 
             LocCoordToLocCollapsed(coords,eta);
@@ -163,12 +170,6 @@ namespace Nektar
             const Array<OneD, const NekDouble> &physvals)
         {
             NekDouble  value;
-            WARNINGL2(coords[0] >= -1,"coord[0] < -1");
-            WARNINGL2(coords[0] <=  1,"coord[0] >  1");
-            WARNINGL2(coords[1] >= -1,"coord[1] < -1");
-            WARNINGL2(coords[1] <=  1,"coord[1] >  1");
-            WARNINGL2(coords[2] >= -1,"coord[2] < -1");
-            WARNINGL2(coords[2] <=  1,"coord[2] >  1");
             
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();

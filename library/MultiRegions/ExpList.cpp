@@ -1223,11 +1223,12 @@ namespace Nektar
             NekDouble resid, min_resid = NekConstants::kNekMinResidInit;
             int min_elmt;
             Array<OneD, NekDouble> min_locCoords(locCoords.num_elements());
-            
+
             // start search at previous element or 0 
             for (int i = start; i < (*m_exp).size(); ++i)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol,resid))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                                                          tol, resid))
                 {
                     start = i;
                     return i;
@@ -1238,14 +1239,16 @@ namespace Nektar
                     {
                         min_resid = resid;
                         min_elmt  = i;
-                        Vmath::Vcopy(locCoords.num_elements(),locCoords,1,min_locCoords,1);
+                        Vmath::Vcopy(locCoords.num_elements(), locCoords,    1,
+                                                               min_locCoords,1);
                     }
                 }
             }
 
             for (int i = 0; i < start; ++i)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol,resid))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                                                          tol,resid))
                 {
                     start = i;
                     return i;
@@ -1256,14 +1259,17 @@ namespace Nektar
                     {
                         min_resid = resid;
                         min_elmt  = i;
-                        Vmath::Vcopy(locCoords.num_elements(),locCoords,1,min_locCoords,1);
+                        Vmath::Vcopy(locCoords.num_elements(), locCoords,    1,
+                                                               min_locCoords,1);
                     }
                 }
             }
             
-            std::string outmsg = "Failed to find point in element to tolerance of " + boost::lexical_cast<std::string>(resid);
-            outmsg += " using nearest point found"; 
-            WARNINGL0(true,outmsg.c_str());
+            std::string msg = "Failed to find point in element to tolerance of "
+                                + boost::lexical_cast<std::string>(resid)
+                                + " using nearest point found";
+            WARNINGL0(true,msg.c_str());
+
             Vmath::Vcopy(locCoords.num_elements(),min_locCoords,1,locCoords,1);
 
             return min_elmt;

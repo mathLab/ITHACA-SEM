@@ -106,8 +106,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &coords,
             const Array<OneD, const NekDouble> &ptsx,
             const Array<OneD, const NekDouble> &ptsy,
-            Array<OneD,       NekDouble> &Lcoords,
-            NekDouble &resid)
+                  Array<OneD,       NekDouble> &Lcoords,
+            NekDouble                          &resid)
         {
             // Maximum iterations for convergence
             const int MaxIterations   = 51;
@@ -168,18 +168,18 @@ namespace Nektar
                 derx_1 = m_xmap->PhysEvaluate(I, DxD1);
                 derx_2 = m_xmap->PhysEvaluate(I, DxD2);
                 dery_1 = m_xmap->PhysEvaluate(I, DyD1);
-                dery_2 = m_xmap->PhysEvaluate(I, DyD2);                  
-              
+                dery_2 = m_xmap->PhysEvaluate(I, DyD2);
+
                 jac = dery_2*derx_1 - dery_1*derx_2;
-                
+
                 // use analytical inverse of derivitives which are
                 // also similar to those of metric factors.
                 Lcoords[0] = Lcoords[0] + (dery_2*(coords[0]-xmap) - 
                                            derx_2*(coords[1]-ymap))/jac;
-                
+
                 Lcoords[1] = Lcoords[1] + ( - dery_1*(coords[0]-xmap)
                                             + derx_1*(coords[1]-ymap))/jac;
-                    
+
                 if(fabs(Lcoords[0]) > LcoordDiv || fabs(Lcoords[1]) > LcoordDiv)
                 {
                     break; // lcoords have diverged so stop iteration
@@ -187,13 +187,13 @@ namespace Nektar
             }
             
             resid = sqrt(F1*F1 + F2*F2);
-	  
+
             if(cnt >= MaxIterations)
             {
                 Array<OneD, NekDouble> collCoords(2);
                 m_xmap->LocCoordToLocCollapsed(Lcoords,collCoords);
 
-                // if coordinate is inside element dump error! 
+                // if coordinate is inside element dump error!
                 if((collCoords[0] >=  -1.0 && collCoords[0] <= 1.0)&&
                    (collCoords[1] >=  -1.0 && collCoords[1] <= 1.0))
                 {

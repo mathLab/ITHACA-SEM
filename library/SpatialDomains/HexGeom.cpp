@@ -344,7 +344,8 @@ namespace Nektar
                 Lcoords[0] = za[min_i%qa];
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,resid);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,
+                                           resid);
             }
             return resid;
         }

@@ -154,15 +154,15 @@ namespace Nektar
                         NekDouble tol = 0.0);
 
                 SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
-                                             const Array<OneD, const NekDouble> &gloCoord, 
-                                             Array<OneD, NekDouble> &locCoord,
-                                             NekDouble  tol);
+                        const Array<OneD, const NekDouble> &gloCoord,
+                              Array<OneD, NekDouble>       &locCoord,
+                              NekDouble                     tol);
 
                 SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
-                                             const Array<OneD, const NekDouble> &gloCoord, 
-                                             Array<OneD, NekDouble> &locCoord,
-                                             NekDouble    tol,
-                                             NekDouble &resid);
+                        const Array<OneD, const NekDouble> &gloCoord,
+                        Array<OneD, NekDouble>             &locCoord,
+                        NekDouble                           tol,
+                        NekDouble                          &resid);
             private:
                 /// Boolean indicating whether object owns the data
                 bool                            m_ownData;

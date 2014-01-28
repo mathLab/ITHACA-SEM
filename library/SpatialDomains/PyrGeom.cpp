@@ -92,8 +92,8 @@ namespace Nektar
             const Array<OneD, const NekDouble> &coords,
                   Array<OneD,       NekDouble> &Lcoords)
         {
-            NekDouble resid = 0.0; 
-            
+            NekDouble resid = 0.0;
+
             v_FillGeom();
 
             // calculate local coordinate for coord

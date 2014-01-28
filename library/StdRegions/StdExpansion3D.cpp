@@ -142,21 +142,21 @@ namespace Nektar
         NekDouble StdExpansion3D::v_PhysEvaluate(
             const Array<OneD, const NekDouble> &coords, 
             const Array<OneD, const NekDouble> &physvals)
-	{
+        {
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
-	    Array<OneD, DNekMatSharedPtr>  I(3);
+            Array<OneD, DNekMatSharedPtr>  I(3);
 
             // Obtain local collapsed corodinate from 
             // cartesian coordinate. 
             LocCoordToLocCollapsed(coords,eta);
-            
+
             // Get Lagrange interpolants. 
-	    I[0] = m_base[0]->GetI(eta);
-	    I[1] = m_base[1]->GetI(eta+1);
+            I[0] = m_base[0]->GetI(eta);
+            I[1] = m_base[1]->GetI(eta+1);
             I[2] = m_base[2]->GetI(eta+2);
 
-	    return v_PhysEvaluate(I,physvals);
-	}
+            return v_PhysEvaluate(I,physvals);
+        }
 
         NekDouble StdExpansion3D::v_PhysEvaluate(
             const Array<OneD, DNekMatSharedPtr > &I, 
@@ -182,24 +182,14 @@ namespace Nektar
             
             // Interpolate first coordinate direction
             interpolatingNodes = &I[0]->GetPtr()[0];
-#if 1
-	    Blas::Dgemv('T',Qx,Qy*Qz,1.0,&physvals[0],Qx,&interpolatingNodes[0], 1, 0.0, &sumFactorization_qr[0], 1);
-#else
-            for(int i = 0; i < Qy*Qz;++i)
-            {
-                sumFactorization_qr[i] =  Blas::Ddot(Qx, interpolatingNodes, 1, &physvals[ i*Qx ], 1);
-            }
-#endif       
+
+            Blas::Dgemv('T',Qx,Qy*Qz,1.0,&physvals[0],Qx,&interpolatingNodes[0], 1, 0.0, &sumFactorization_qr[0], 1);
+
             // Interpolate in second coordinate direction
             interpolatingNodes = &I[1]->GetPtr()[0];
-#if 1
-	    Blas::Dgemv('T',Qy,Qz,1.0,&sumFactorization_qr[0],Qy,&interpolatingNodes[0],1,0.0,&sumFactorization_r[0], 1);
-#else
-            for(int j =0; j < Qz; ++j)
-            {
-                sumFactorization_r[j] = Blas::Ddot(Qy, interpolatingNodes, 1, &sumFactorization_qr[ j*Qy ], 1);
-            }
-#endif
+
+            Blas::Dgemv('T',Qy,Qz,1.0,&sumFactorization_qr[0],Qy,&interpolatingNodes[0],1,0.0,&sumFactorization_r[0], 1);
+
             // Interpolate in third coordinate direction
             interpolatingNodes = &I[2]->GetPtr()[0];
             value = Blas::Ddot(Qz, interpolatingNodes, 1, &sumFactorization_r[0], 1);

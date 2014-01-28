@@ -74,13 +74,13 @@ namespace Nektar
                       NekDouble                     tol = 0.0);
             virtual bool v_ContainsPoint(
                 const Array<OneD, const NekDouble> &gloCoord,
-                Array<OneD, NekDouble> &locCoord,
-                NekDouble                     tol);
+                      Array<OneD, NekDouble>       &locCoord,
+                      NekDouble                     tol);
             virtual bool v_ContainsPoint(
                 const Array<OneD, const NekDouble> &gloCoord,
-                Array<OneD, NekDouble> &locCoord,
-                NekDouble                     tol,
-                NekDouble &resid);
+                      Array<OneD, NekDouble>       &locCoord,
+                      NekDouble                     tol,
+                      NekDouble                    &resid);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
             virtual int v_GetNumFaces() const;

@@ -856,8 +856,8 @@ namespace Nektar
 
 
         void StdPrismExp::v_LocCoordToLocCollapsed(
-                                              const Array<OneD, const NekDouble>& xi,
-                                              Array<OneD, NekDouble>& eta)
+                const Array<OneD, const NekDouble>& xi,
+                Array<OneD, NekDouble>& eta)
         {
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)

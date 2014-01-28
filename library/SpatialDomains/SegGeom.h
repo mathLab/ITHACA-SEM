@@ -99,6 +99,7 @@ namespace Nektar
             protected:
                 int                                               m_eid;
                 std::list<CompToElmt>                             m_elmtMap;
+                StdRegions::StdExpansion1DSharedPtr               m_xmap;
                 SpatialDomains::PointGeomSharedPtr                m_verts[kNverts];
                 StdRegions::Orientation                           m_porient[kNverts];
 
@@ -111,10 +112,10 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetEid() const;
 
                 SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr
-                        v_GetBasis(const int i, const int j);
+                        v_GetBasis(const int i);
 
-                SPATIAL_DOMAINS_EXPORT virtual const
-                        StdRegions::StdExpansion1DSharedPtr v_GetXmap(const int i);
+                SPATIAL_DOMAINS_EXPORT virtual
+                        StdRegions::StdExpansionSharedPtr v_GetXmap() const;
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
 
@@ -125,9 +126,6 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT virtual bool
                         v_IsElmtConnected(int gvoId, int locId) const;
-
-                SPATIAL_DOMAINS_EXPORT virtual Array<OneD, NekDouble>&
-                        v_UpdatePhys(const int i);
 
                 SPATIAL_DOMAINS_EXPORT virtual LibUtilities::ShapeType
                         v_DetShapeType() const;
@@ -146,10 +144,6 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
                         const int i,
                         const Array<OneD,const NekDouble> &Lcoord);
-
-                SPATIAL_DOMAINS_EXPORT virtual void v_WriteToFile(
-                              std::ofstream &outfile,
-                        const int dumpVar);
 
                 SPATIAL_DOMAINS_EXPORT virtual int  v_GetNumVerts() const;
 

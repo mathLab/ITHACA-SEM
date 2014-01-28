@@ -118,8 +118,9 @@ namespace Nektar
 
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 
-            virtual NekDouble v_L2(void);
-            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
+            virtual NekDouble v_L2(
+                const Array<OneD, const NekDouble> &inarray,
+                const Array<OneD, const NekDouble> &soln = NullNekDouble1DArray);
 
         private:
         };

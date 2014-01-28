@@ -79,18 +79,20 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans( sol, E->UpdateCoeffs() );
+    Array<OneD, NekDouble> coeffs(E->GetNcoeffs());
+    Array<OneD, NekDouble> phys  (ntotquad);
+    E->FwdTrans( sol, coeffs );
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans( E->GetCoeffs(), E->UpdatePhys() );
+    E->BwdTrans( coeffs, phys );
     //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_p error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys, sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------
     return 0;
 }

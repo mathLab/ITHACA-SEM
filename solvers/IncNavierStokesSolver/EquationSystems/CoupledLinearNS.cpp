@@ -469,15 +469,17 @@ namespace Nektar
             
             
             int ncoeffs = m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs();
+            int nphys   = m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints();
             int nbmap = bmap.num_elements();
             int nimap = imap.num_elements(); 
             
-            Array<OneD, NekDouble> coeffs  = m_fields[m_velocity[0]]->GetExp(eid)->UpdateCoeffs();
-            Array<OneD, NekDouble> phys    = m_fields[m_velocity[0]]->GetExp(eid)->UpdatePhys();
+            Array<OneD, NekDouble> coeffs(ncoeffs);
+            Array<OneD, NekDouble> phys  (nphys);
             int psize   = m_pressure->GetExp(eid)->GetNcoeffs();
+            int pqsize  = m_pressure->GetExp(eid)->GetTotPoints();
             
-            Array<OneD, NekDouble> deriv   = m_pressure->GetExp(eid)->UpdatePhys();
-            Array<OneD, NekDouble> pcoeffs = m_pressure->GetExp(eid)->UpdateCoeffs();
+            Array<OneD, NekDouble> deriv  (pqsize);
+            Array<OneD, NekDouble> pcoeffs(psize);
             
             if(AddAdvectionTerms == false) // use static condensed managed matrices
             {

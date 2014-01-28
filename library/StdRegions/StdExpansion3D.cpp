@@ -140,12 +140,6 @@ namespace Nektar
         }
 
         NekDouble StdExpansion3D::v_PhysEvaluate(
-            const Array<OneD, const NekDouble> &coords)
-        {
-            return PhysEvaluate(coords,m_phys);
-        }
-        
-        NekDouble StdExpansion3D::v_PhysEvaluate(
             const Array<OneD, const NekDouble> &coords, 
             const Array<OneD, const NekDouble> &physvals)
         {
@@ -203,7 +197,8 @@ namespace Nektar
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNVarCoeff() == 0)
+            if ( mkey.GetNVarCoeff() == 0 &&
+                !mkey.ConstFactorExists(eFactorSVVCutoffRatio))
             {
                 // This implementation is only valid when there are no
                 // coefficients associated to the Laplacian operator

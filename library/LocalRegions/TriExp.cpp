@@ -542,85 +542,6 @@ namespace Nektar
             IProductWRTBase(Fn,outarray);
         }
 
-        void TriExp::v_GetCoords(Array<OneD,NekDouble> &coords_0,
-                               Array<OneD,NekDouble> &coords_1,
-                               Array<OneD,NekDouble> &coords_2)
-        {
-            LibUtilities::BasisSharedPtr CBasis0;
-            LibUtilities::BasisSharedPtr CBasis1;
-            Array<OneD,NekDouble>  x;
-
-            ASSERTL0(m_geom, "m_geom not define");
-
-            // get physical points defined in Geom
-            m_geom->FillGeom();
-
-            switch(m_geom->GetCoordim())
-            {
-            case 3:
-                ASSERTL0(coords_2.num_elements() != 0,"output coords_2 is not defined");
-
-                CBasis0 = m_geom->GetBasis(2,0);
-                CBasis1 = m_geom->GetBasis(2,1);
-
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(2);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints(),
-                                x, 1, coords_2, 1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(),&(m_geom->UpdatePhys(2))[0],
-                                           m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_2[0]);
-                }
-            case 2:
-                ASSERTL0(coords_1.num_elements(),
-                         "output coords_1 is not defined");
-
-                CBasis0 = m_geom->GetBasis(1,0);
-                CBasis1 = m_geom->GetBasis(1,1);
-
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(1);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints(),
-                                x, 1, coords_1, 1);
-                }
-                else // LibUtilities::Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), &(m_geom->UpdatePhys(1))[0],
-                                           m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_1[0]);
-                }
-            case 1:
-                ASSERTL0(coords_0.num_elements(),
-                         "output coords_0 is not defined");
-
-                CBasis0 = m_geom->GetBasis(0,0);
-                CBasis1 = m_geom->GetBasis(0,1);
-
-                if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                   (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
-                {
-                    x = m_geom->UpdatePhys(0);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints(),
-                                x, 1, coords_0, 1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), &(m_geom->UpdatePhys(0))[0],
-                                           m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_0[0]);
-                }
-                break;
-            default:
-                ASSERTL0(false,"Number of dimensions are greater than 2");
-                break;
-            }
-        }
-
-
         void TriExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords,
                               Array<OneD,NekDouble> &coords)
         {
@@ -638,6 +559,14 @@ namespace Nektar
             }
         }
 
+        void TriExp::v_GetCoords(
+            Array<OneD, NekDouble> &coords_0,
+            Array<OneD, NekDouble> &coords_1,
+            Array<OneD, NekDouble> &coords_2)
+        {
+            Expansion::v_GetCoords(coords_0, coords_1, coords_2);
+        }
+
 
         /** 
          * Given the local cartesian coordinate \a Lcoord evaluate the
@@ -651,12 +580,6 @@ namespace Nektar
             // Evaluate point in local (eta) coordinates.
             return StdTriExp::v_PhysEvaluate(Lcoord,physvals);
         }
-
-        NekDouble TriExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord)
-        {
-            return PhysEvaluate(coord,m_phys);
-        }
-
 
         NekDouble TriExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord, const Array<OneD, const NekDouble> & physvals)
         {
@@ -906,233 +829,6 @@ namespace Nektar
             }
         }
 
-
-        void TriExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
-        {
-            if(format==eTecplot)
-            {
-                int i,j;
-                int nquad0 = m_base[0]->GetNumPoints();
-                int nquad1 = m_base[1]->GetNumPoints();
-                Array<OneD,NekDouble> coords[3];
-
-                ASSERTL0(m_geom,"m_geom not defined");
-
-                int     coordim  = m_geom->GetCoordim();
-
-                coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-                coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-                coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-
-                GetCoords(coords[0],coords[1],coords[2]);
-
-                if(dumpVar)
-                {
-                    outfile << "Variables = x";
-
-                    if(coordim == 2)
-                    {
-                        outfile << ", y";
-                    }
-                    else if (coordim == 3)
-                    {
-                        outfile << ", y, z";
-                    }
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-
-                outfile << "Zone, I=" << nquad0 << ", J=" <<
-                    nquad1 <<", F=Point" << std::endl;
-
-                for(i = 0; i < nquad0*nquad1; ++i)
-                {
-                    for(j = 0; j < coordim; ++j)
-                    {
-                        outfile << coords[j][i] << " ";
-                    }
-                    outfile << m_phys[i] << std::endl;
-                }
-            }
-            else if(format==eGmsh)
-            {
-                if(dumpVar)
-                {
-                    outfile<<"View.MaxRecursionLevel = 4;"<<endl;
-                    outfile<<"View.TargetError = 0.00;"<<endl;
-                    outfile<<"View.AdaptVisualizationGrid = 1;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
-
-                outfile<<"ST("<<endl;
-                // write the coordinates of the vertices of the quadrilateral
-                unsigned int vCoordDim = m_geom->GetCoordim();
-                unsigned int nVertices = GetNverts();
-                Array<OneD, NekDouble> coordVert(vCoordDim);
-                for (unsigned int i = 0; i < nVertices; ++i)
-                {
-                    GetGeom2D()->GetVertex(i)->GetCoords(coordVert);
-                    for (unsigned int j = 0; j < vCoordDim; ++j)
-                    {
-                        outfile << coordVert[j];
-                        outfile << (j < 2 ? ", " : "");
-                    }
-                    for (unsigned int j = vCoordDim; j < 3; ++j)
-                    {
-                        outfile << " 0";
-                        outfile << (j < 2 ? ", " : "");
-                    }
-                    outfile << (i < nVertices - 1 ? "," : "") << endl;
-                }
-                outfile<<")"<<endl;
-
-                // calculate the coefficients (monomial format)
-                int i,j;
-                int maxnummodes = max(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-
-                const LibUtilities::PointsKey Pkey1Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
-                const LibUtilities::PointsKey Pkey2Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
-                const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),maxnummodes,Pkey1Gmsh);
-                const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),maxnummodes,Pkey2Gmsh);
-                LibUtilities::PointsType ptype = LibUtilities::eNodalTriElec;
-
-                StdRegions::StdNodalTriExpSharedPtr EGmsh;
-                EGmsh = MemoryManager<StdRegions::StdNodalTriExp>::
-                    AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh,ptype);
-
-                Array<OneD,NekDouble> xi1(EGmsh->GetNcoeffs());
-                Array<OneD,NekDouble> xi2(EGmsh->GetNcoeffs());
-                EGmsh->GetNodalPoints(xi1,xi2);
-
-                Array<OneD,NekDouble> x(EGmsh->GetNcoeffs());
-                Array<OneD,NekDouble> y(EGmsh->GetNcoeffs());
-
-                for(i=0;i<EGmsh->GetNcoeffs();i++)
-                {
-                    x[i] = 0.5*(1.0+xi1[i]);
-                    y[i] = 0.5*(1.0+xi2[i]);
-                }
-
-                int cnt  = 0;
-                int cnt2 = 0;
-                int nDumpCoeffs = maxnummodes*maxnummodes;
-                Array<TwoD, int> dumpExponentMap(nDumpCoeffs,3,0);
-                Array<OneD, int> indexMap(EGmsh->GetNcoeffs(),0);
-                Array<TwoD, int> exponentMap(EGmsh->GetNcoeffs(),3,0);
-                for(i = 0; i < maxnummodes; i++)
-                {
-                    for(j = 0; j < maxnummodes; j++)
-                    {
-                        if(j<maxnummodes-i)
-                        {
-                            exponentMap[cnt][0] = j;
-                            exponentMap[cnt][1] = i;
-                            indexMap[cnt++]  = cnt2;
-                        }
-
-                        dumpExponentMap[cnt2][0]   = j;
-                        dumpExponentMap[cnt2++][1] = i;
-                    }
-                }
-
-                NekMatrix<NekDouble> vdm(EGmsh->GetNcoeffs(),EGmsh->GetNcoeffs());
-                for(i = 0 ; i < EGmsh->GetNcoeffs(); i++)
-                {
-                    for(j = 0 ; j < EGmsh->GetNcoeffs(); j++)
-                    {
-                        vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
-                    }
-                }
-
-                vdm.Invert();
-
-                Array<OneD, NekDouble> tmp2(EGmsh->GetNcoeffs());
-                EGmsh->ModalToNodal(m_coeffs,tmp2);
-
-                NekVector<NekDouble> in(EGmsh->GetNcoeffs(),tmp2,eWrapper);
-                NekVector<NekDouble> out(EGmsh->GetNcoeffs());
-                out = vdm*in;
-
-                Array<OneD,NekDouble> dumpOut(nDumpCoeffs,0.0);
-                for(i = 0 ; i < EGmsh->GetNcoeffs(); i++)
-                {
-                    dumpOut[ indexMap[i]  ] = out[i];
-                }
-
-                //write the coefficients
-                outfile<<"{";
-                for(i = 0; i < nDumpCoeffs; i++)
-                {
-                    outfile<<dumpOut[i];
-                    if(i < nDumpCoeffs - 1)
-                    {
-                        outfile<<", ";
-                    }
-                }
-                outfile<<"};"<<endl;
-
-                if(dumpVar)
-                {
-                    outfile<<"INTERPOLATION_SCHEME"<<endl;
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nDumpCoeffs; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < nDumpCoeffs; j++)
-                        {
-                            if(i==j)
-                            {
-                                outfile<<"1.00";
-                            }
-                            else
-                            {
-                                outfile<<"0.00";
-                            }
-                            if(j < nDumpCoeffs - 1)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nDumpCoeffs - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"}"<<endl;
-                        }
-                    }
-
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nDumpCoeffs; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < 3; j++)
-                        {
-                            outfile<<dumpExponentMap[i][j];
-                            if(j < 2)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nDumpCoeffs  - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"};"<<endl;
-                        }
-                    }
-                    outfile<<"};"<<endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
-        }
-
-
         int TriExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
@@ -1210,6 +906,7 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
+            case StdRegions::eInvLaplacianWithUnityMean:
                 returnval = Expansion2D::v_GenMatrix(mkey);
                 break;
             default:
@@ -1370,22 +1067,8 @@ namespace Nektar
                 break;
             case StdRegions::eInvLaplacianWithUnityMean:
                 {
-                    NekDouble one = 1.0;
-                    MatrixKey lapkey(StdRegions::eLaplacian,mkey.GetShapeType(), *this);
-                    DNekMatSharedPtr lmat = GenMatrix(lapkey);
-
-                    // replace first column with inner product wrt 1
-                    int nq = GetTotPoints();
-                    Array<OneD, NekDouble> tmp(nq);
-                    Array<OneD, NekDouble> outarray(m_ncoeffs);
-                    Vmath::Fill(nq,one,tmp,1);
-                    v_IProductWRTBase(tmp, outarray);
-
-                    Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
-                                 &(lmat->GetPtr())[0],m_ncoeffs);
-
-                    lmat->Invert();
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,lmat); //Populate  matrix.
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,mat);
                 }
                 break;
             case StdRegions::eHelmholtz:

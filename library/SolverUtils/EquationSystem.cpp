@@ -52,6 +52,8 @@
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
+#include <iostream>
+
 #include <string>
 
 
@@ -107,6 +109,10 @@ namespace Nektar
 
             // Save the basename of input file name for output details
             m_sessionName = m_session->GetSessionName();
+
+            // Instantiate a field reader/writer
+            m_fld = MemoryManager<LibUtilities::FieldIO>
+                ::AllocateSharedPtr(m_session->GetComm());
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
@@ -765,7 +771,19 @@ namespace Nektar
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
                 
-                LibUtilities::Import(filename,FieldDef,FieldData);
+
+                int numexp = m_fields[0]->GetExpSize(); 
+                Array<OneD,int> ElementGIDs(numexp);
+                // Define list of global element ids 
+                for(int i = 0; i < numexp; ++i)
+                {
+                    ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
+                }
+
+
+                m_fld->Import(filename,FieldDef,FieldData,
+                                     LibUtilities::NullFieldMetaDataMap,
+                                     ElementGIDs);
                 
                 int idx = -1;
                 
@@ -870,7 +888,7 @@ namespace Nektar
 
                 if (exactsoln.num_elements())
                 {
-                    L2error = m_fields[field]->L2(exactsoln);
+                    L2error = m_fields[field]->L2(m_fields[field]->GetPhys(), exactsoln);
                 }
                 else if (m_session->DefinesFunction("ExactSolution"))
                 {
@@ -880,11 +898,11 @@ namespace Nektar
                     EvaluateFunction(m_session->GetVariable(field), exactsoln, 
                                      "ExactSolution", m_time);
 
-                    L2error = m_fields[field]->L2(exactsoln);
+                    L2error = m_fields[field]->L2(m_fields[field]->GetPhys(), exactsoln);
                 }
                 else
                 {
-                    L2error = m_fields[field]->L2();
+                    L2error = m_fields[field]->L2(m_fields[field]->GetPhys());
                 }
 
                 if (Normalised == true)
@@ -929,7 +947,7 @@ namespace Nektar
 
                 if (exactsoln.num_elements())
                 {
-                    Linferror = m_fields[field]->Linf(exactsoln);
+                    Linferror = m_fields[field]->Linf(m_fields[field]->GetPhys(), exactsoln);
                 }
                 else if (m_session->DefinesFunction("ExactSolution"))
                 {
@@ -939,7 +957,7 @@ namespace Nektar
                     EvaluateFunction(m_session->GetVariable(field), exactsoln,
                                      "ExactSolution", m_time);
 
-                    Linferror = m_fields[field]->Linf(exactsoln);
+                    Linferror = m_fields[field]->Linf(m_fields[field]->GetPhys(), exactsoln);
                 }
                 else
                 {
@@ -1021,8 +1039,8 @@ namespace Nektar
             ErrorExp->BwdTrans_IterPerExp(m_fields[field]->GetCoeffs(), 
                                           ErrorExp->UpdatePhys());
 
-            L2INF[0] = ErrorExp->L2  (ErrorSol);
-            L2INF[1] = ErrorExp->Linf(ErrorSol);
+            L2INF[0] = ErrorExp->L2  (ErrorExp->GetPhys(), ErrorSol);
+            L2INF[1] = ErrorExp->Linf(ErrorExp->GetPhys(), ErrorSol);
 
             return L2INF;
         }
@@ -1296,7 +1314,7 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
 
             //Get Homogeneous
-            LibUtilities::Import(pInfile,FieldDef,FieldData);
+            m_fld->Import(pInfile,FieldDef,FieldData);
 
             int nvar = m_session->GetVariables().size();
             if (m_session->DefinesSolverInfo("HOMOGENEOUS"))
@@ -1358,16 +1376,9 @@ namespace Nektar
          */
         void EquationSystem::v_Output(void)
         {
-            std::string outname = m_sessionName;
-            if (m_comm->GetSize() > 1)
-            {
-                outname += "_P"+boost::lexical_cast<std::string>
-                                                    (m_comm->GetRank());
-            }
-            outname += ".fld";
-            WriteFld(outname); 
+            WriteFld(m_sessionName + ".fld");
         }
-
+                
         /**
          * Zero the physical fields.
          */
@@ -1830,16 +1841,10 @@ namespace Nektar
          */
         void EquationSystem::Checkpoint_Output(const int n)
         {
-            std::stringstream outname;
-            outname << m_sessionName << "_" << n;
+            std::string outname =  m_sessionName +  "_" + 
+                boost::lexical_cast<std::string>(n);
 
-            if (m_comm->GetSize() > 1)
-            {
-                outname << "_P" << m_comm->GetRank();
-            }
-            outname << ".chk";
-
-            WriteFld(outname.str());
+            WriteFld(outname + ".chk");
         }
 
         /**
@@ -1926,8 +1931,7 @@ namespace Nektar
                 m_fieldMetaDataMap["Time"] = boost::lexical_cast<std::string>(m_time);
             }
 
-            LibUtilities::Write(outname, FieldDef, FieldData,
-                                m_fieldMetaDataMap);
+            m_fld->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
         }
 
         /**
@@ -1943,7 +1947,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            LibUtilities::Import(infile,FieldDef,FieldData);
+            m_fld->Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
@@ -1981,7 +1985,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            LibUtilities::Import(infile,FieldDef,FieldData);
+            m_fld->Import(infile,FieldDef,FieldData);
             int idx = -1;
 
             Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
@@ -2024,7 +2028,7 @@ namespace Nektar
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
         
-            LibUtilities::Import(infile,FieldDef,FieldData);
+            m_fld->Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)
@@ -2034,89 +2038,6 @@ namespace Nektar
                 {
                     m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                      fieldStr[j], coeffs[j]);
-                }
-            }
-        }
-    
-        /**
-         * Write data to file in Tecplot format?
-         * @param   n           Checkpoint index.
-         * @param   name        Additional name (appended to session name).
-         * @param   inarray     Field data to write out.
-         * @param   IsInPhysicalSpace   Indicates if field data is in phys space.
-         */
-//    void EquationSystem::Array_Output(const int n, std::string name,
-//                               const Array<OneD, const NekDouble>&inarray,
-//                               bool IsInPhysicalSpace)
-//    {
-//        int nq = m_fields[0]->GetTotPoints();
-//
-//        Array<OneD, NekDouble> tmp(nq);
-//
-//        // save values
-//        Vmath::Vcopy(nq, m_fields[0]->GetPhys(), 1, tmp, 1);
-//
-//        // put inarray in m_phys
-//        if (IsInPhysicalSpace == false)
-//        {
-//            m_fields[0]->BwdTrans(inarray,(m_fields[0]->UpdatePhys()));
-//        }
-//        else
-//        {
-//            Vmath::Vcopy(nq,inarray,1,(m_fields[0]->UpdatePhys()),1);
-//        }
-//
-//        char chkout[16] = "";
-//        sprintf(chkout, "%d", n);
-//        std::string outname = m_sessionName +"_" + name + "_" + chkout + ".chk";
-//        ofstream outfile(outname.c_str());
-//        m_fields[0]->WriteToFile(outfile,eTecplot);
-//
-//        // copy back the original values
-//        Vmath::Vcopy(nq,tmp,1,m_fields[0]->UpdatePhys(),1);
-//    }
-
-        /**
-         * Write data to file in Tecplot format.
-         * @param  n                 Checkpoint index.
-         * @param  name              Additional name (appended to session name).
-         * @param  IsInPhysicalSpace Indicates if field data is in phys space.
-         */
-        void EquationSystem::WriteTecplotFile(
-            const int n, 
-            const std::string &name, 
-            bool IsInPhysicalSpace)
-        {
-            std::string var = "";
-            for(int j = 0; j < m_fields.num_elements(); ++j)
-            {
-                var = var + ", " + m_boundaryConditions->GetVariable(j);
-            }
-
-            char chkout[16] = "";
-            sprintf(chkout, "%d", n);
-            std::string outname = m_sessionName +
-                                    "_" + name + "_" + chkout + ".dat";
-            ofstream outfile(outname.c_str());
-
-            // Put inarray in m_phys
-            if (IsInPhysicalSpace == false)
-            {
-                for(int i = 0; i < m_fields.num_elements(); ++i)
-                {
-                    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), 
-                                          m_fields[i]->UpdatePhys());
-                }
-            }
-
-            m_fields[0]->WriteTecplotHeader(outfile, var);
-
-            for(int i = 0; i < m_fields[0]->GetExpSize(); ++i)
-            {
-                m_fields[0]->WriteTecplotZone(outfile,i);
-                for(int j = 0; j < m_fields.num_elements(); ++j)
-                {
-                    m_fields[j]->WriteTecplotField(outfile, i);
                 }
             }
         }

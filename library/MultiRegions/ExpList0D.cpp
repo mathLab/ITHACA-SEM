@@ -221,14 +221,11 @@ namespace Nektar
         {
         }
 		
-        void ExpList0D::v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
+        void ExpList0D::v_GetCoords(Array<OneD,NekDouble> &coords_0,
+                                    Array<OneD,NekDouble> &coords_1,
+                                    Array<OneD,NekDouble> &coords_2)
         {
-            m_point->GetCoords(x,y,z);
-        }
-		
-        void ExpList0D::v_GetCoord(Array<OneD,NekDouble> &coords)
-        {
-            m_point->GetCoords(coords);
+            m_point->GetCoords(coords_0, coords_1, coords_2);
         }
 		
         void ExpList0D::v_SetCoeff(NekDouble val)
@@ -243,12 +240,14 @@ namespace Nektar
 		
         const SpatialDomains::PointGeomSharedPtr ExpList0D::v_GetGeom(void) const
         {
-            return m_point->GetGeom();
+            return boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(
+                m_point->GetGeom());
         }
 		
         const SpatialDomains::PointGeomSharedPtr ExpList0D::v_GetVertex(void) const
         {
-            return m_point->GetVertex();
+            return boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(
+                m_point->GetGeom());
         }
 		
         /**

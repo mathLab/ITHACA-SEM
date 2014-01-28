@@ -786,41 +786,6 @@ namespace Nektar
             }
         }
 
-        /**
-         * Write Tecplot Files Header
-         * @param   outfile Output file name.
-         * @param   var                 variables names
-         */
-        void ExpListHomogeneous1D::v_WriteTecplotHeader(std::ofstream &outfile, std::string var)
-        {
-            if(GetExp(0)->GetCoordim() == 1)
-            {
-                outfile << "Variables = x, y";
-            }
-            else
-            {
-                outfile << "Variables = x, y, z";
-            }
-            outfile << ", "<< var << std::endl << std::endl;
-        }
-
-        /**
-         * Write Tecplot Files Field
-         * @param   outfile    Output file name.
-         * @param   expansion  Expansion that is considered
-         */
-        void ExpListHomogeneous1D::v_WriteTecplotField(std::ofstream &outfile, int expansion)
-        {
-            int npoints_per_plane = m_planes[0]->GetTotPoints();
-
-            for(int n = 0; n < m_planes.num_elements(); ++n)
-            {
-                (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]+
-                                             n*npoints_per_plane);
-                (*m_exp)[expansion]->WriteTecplotField(outfile);
-            }
-        }
-
         void ExpListHomogeneous1D::v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                         std::string var)
         {
@@ -843,7 +808,7 @@ namespace Nektar
             outfile << endl;
             outfile << "        </DataArray>" << endl;
         }
-		
+        
         void ExpListHomogeneous1D::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             int cnt,cnt1;

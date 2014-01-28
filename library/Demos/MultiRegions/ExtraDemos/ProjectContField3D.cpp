@@ -96,13 +96,6 @@ int main(int argc, char *argv[])
     // Backward Transform Solution to get projected values
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //-------------------------------------------  
-
-    //----------------------------------------------
-    // Write solution 
-    ofstream outfile2("ProjectContFieldFile3D.dat");
-    Exp->WriteToFile(outfile2,eTecplot);
-    outfile2.close();
-    //----------------------------------------------
     
     //--------------------------------------------
     // Calculate L_inf error 

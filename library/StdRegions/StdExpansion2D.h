@@ -116,9 +116,6 @@ namespace Nektar
                     bool doCheckCollDir1 = true);
 
         protected:
-            std::map<int, NormalVector> m_edgeNormals;
-            std::map<int, bool> m_negatedNormals;
-            NormalVector m_surfaceNormal;
 
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
@@ -142,12 +139,8 @@ namespace Nektar
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
-
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 
-            STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
-            STD_REGIONS_EXPORT virtual bool v_EdgeNormalNegated(const int edge);
 
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFacKernel(
                     const Array<OneD, const NekDouble>& base0,
@@ -193,11 +186,6 @@ namespace Nektar
             {
                 return 2;
             }
-
-            STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
-
-            STD_REGIONS_EXPORT const NormalVector & v_GetEdgeNormal(const int edge) const;
-
     };
 
         typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;

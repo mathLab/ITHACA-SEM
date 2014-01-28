@@ -2153,7 +2153,7 @@ namespace Nektar
                                  0, filebcs.find_last_of("."));
                              int len = varString.length();
                              varString = varString.substr(len-1, len);
-                             int varInt = atoi(varString.c_str());
+                             int varInt = 0;
                              cout << "Boundary condition from file:" 
                                   << filebcs << endl;
 

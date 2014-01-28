@@ -87,21 +87,18 @@ namespace Nektar
             // Edge 0
             for (int i = 2; i <= P; ++i)
             {
-                ASSERTL0(m_map.count(Mode(i, 0, 0, 0)) == 0, "e0");
                 m_map[Mode(i, 0, 0, GetTetMode(i, 0, 0))] = cnt++;
             }
 
             // Edge 1
             for (int i = 2; i <= Q; ++i)
             {
-                ASSERTL0(m_map.count(Mode(1, i, 0, 0)) == 0, "e1");
                 m_map[Mode(1, i, 0, GetTetMode(0, i, 0))] = cnt++;
             }
 
             // Edge 2
             for (int i = 2; i <= P; ++i)
             {
-                ASSERTL0(m_map.count(Mode(i, 1, 0, 0)) == 0, "e2");
                 m_map[Mode(i, 1, 0, GetTetMode(i, 0, 0))] = cnt++;
             }
 
@@ -825,227 +822,6 @@ namespace Nektar
             int                        nummodesA, 
             int                        nummodesB)
         {
-#if 0
-            int i,j,P,Q;
-            const int nummodes0 = m_base[0]->GetNumModes();
-            const int nummodes1 = m_base[1]->GetNumModes();
-            const int nummodes2 = m_base[2]->GetNumModes();
-            //int nummodesA, nummodesB, P, Q;
-
-            ASSERTL1( GetEdgeBasisType(0) == GetEdgeBasisType(1),
-                      "Method only implemented if BasisType is indentical in "
-                      "x and y directions");
-            ASSERTL1( GetEdgeBasisType(0) == LibUtilities::eModified_A &&
-                      GetEdgeBasisType(1) == LibUtilities::eModified_A &&
-                      GetEdgeBasisType(4) == LibUtilities::eModified_C,
-                      "Method only implemented for Modified_A BasisType (x "
-                      "and y direction) and Modified_C BasisType (z "
-                      "direction)");
-
-            bool isQuad = true;
-
-            int nFaceCoeffs = 0;
-            if( fid == 0 ) // Base quad 
-            {
-                nummodesA = nummodes0;
-                nummodesB = nummodes1;
-                P = nummodesA-1;
-                Q = nummodesB-1;
-                nFaceCoeffs = nummodesA*nummodesB;
-            }
-            else if((fid == 2) || (fid == 4))
-            {
-                nummodesA = nummodes1;
-                nummodesB = nummodes2;
-                P = nummodesA-1;
-                Q = nummodesB-1;
-                nFaceCoeffs = R+1 + (P*(1 + 2*R - P))/2;
-                isQuad = false;
-            }
-            else  // left and right triangles
-            {
-                nummodesA = nummodes0;
-                nummodesB = nummodes2;
-                P = nummodesA-1;
-                Q = nummodesB-1;
-                nFaceCoeffs = Q+1 + (P*(1 + 2*Q - P))/2;
-                isQuad = false;
-            }
-
-            // Allocate the map array and sign array; set sign array to ones (+)
-            if(maparray.num_elements() != nFaceCoeffs)
-            {
-                maparray = Array<OneD, unsigned int>(nFaceCoeffs,1);
-            }
-            
-            if(signarray.num_elements() != nFaceCoeffs)
-            {
-                signarray = Array<OneD, int>(nFaceCoeffs,1);
-            }
-            else
-            {
-                fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
-            }
-
-            Array<OneD, int> arrayindex(nFaceCoeffs,-1);
-
-            for(int a = 0; a < nummodesA; ++a)
-            {
-                for(int b = 0; isQuad ? (b <  nummodesB) : (b < nummodesB - a); ++b)
-                {
-                    if( faceOrient < 9 ) // Not transposed
-                    {
-                        arrayindex[b + nummodesB*a] = b + nummodesB*a;
-                    }
-                    else // Transposed
-                    {
-                        arrayindex[b + nummodesB*a] = a + nummodesA*b;
-                    }
-                }
-            }
-
-
-            int baseCoefficient = 0;
-            
-            switch(fid)
-            {
-                // Base quad
-                case 0: 
-                    for(int a = 0; a < nummodesA; ++a) {
-                        for(int b = 0; b < nummodesB; ++b) {
-                            ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
-                            maparray[ arrayindex[b + nummodesB*a] ] = b + nummodesB*a;
-                        }
-                }
-            break;
-            
-            // Rear triangle
-            case 3:
-                baseCoefficient = (nummodes1 - 1) * nummodes2;
-                for(int a = 0; a < nummodesA; ++a) {
-                    for(int b = 0; b <  nummodesB - a; ++b) {
-                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
-                        maparray[ arrayindex[b + nummodesB*a] ] = baseCoefficient + b;
-                    }
-                    baseCoefficient += nummodes1*(nummodesB-1 - a)  +  1;
-                }
-            break;
-
-            // Front triangle
-            case 1: 
-                for(int a = 0; a < nummodesA; ++a) {
-                    for(int b = 0; b <  nummodesB - a; ++b) {
-                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
-                        maparray[ arrayindex[b + nummodesB*a] ] = baseCoefficient + b;
-                    }
-                    baseCoefficient += nummodes1 * (nummodes2 - a);
-                }
-            break;
-
-
-            // Vertical triangle
-            case 4: 
-                for(int a = 0, n = 0; a < nummodesA; ++a) {
-                    for(int b = 0; b < nummodesB - a; ++b, ++n) {
-                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
-                        maparray[ arrayindex[b + nummodesB*a] ] = n;   
-                    }
-                }
-            break;
-            
-
-            // Slanted triangle
-            case 2:
-                for(int b = nummodesB-1; b >= 0; --b) {
-                    for(int a = 0; a < nummodesA - b; ++a) {
-                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
-                        maparray[ arrayindex[b + nummodesB*a] ] = baseCoefficient + (a+1)*(b+1) - 1;
-                    }
-                    baseCoefficient += nummodesA*(b+1);
-                }
-            break;
-            
-            }
-
-            if( (faceOrient==6) || (faceOrient==8) ||
-                (faceOrient==11) || (faceOrient==12) )
-            {    
-
-                if(faceOrient<9)
-                {
-                    for(i = 3; i < nummodesB; i+=2)
-                    {
-                        for(j = 0; j < nummodesA; j++)
-                        {
-                            if( arrayindex[i*nummodesA+j] >= 0 )
-                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
-                        }
-                    }
-                        
-                    for(i = 0; i < nummodesA; i++)
-                    {
-                        swap( maparray[i] , maparray[i+nummodesA] );
-                        swap( signarray[i] , signarray[i+nummodesA] );
-                    }
-                }
-                else
-                {  
-                    for(i = 0; i < nummodesB; i++)
-                    {
-                        for(j = 3; j < nummodesA; j+=2)
-                        {
-                            if( arrayindex[i*nummodesA+j] >= 0 )
-                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
-                        }
-                    } 
-                        
-                    for(i = 0; i < nummodesB; i++)
-                    {
-                        swap( maparray[i] , maparray[i+nummodesB] );
-                        swap( signarray[i] , signarray[i+nummodesB] );
-                    }
-                }
-            }
-                
-            if( (faceOrient==7) || (faceOrient==8) ||
-                (faceOrient==10) || (faceOrient==12) )
-            {  
-                if(faceOrient<9)
-                {                                   
-                    for(i = 0; i < nummodesB; i++)
-                    {
-                        for(j = 3; j < nummodesA; j+=2)
-                        {
-                            if( arrayindex[i*nummodesA+j] >= 0 )
-                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
-                        }
-                    }                 
-                        
-                    for(i = 0; i < nummodesB; i++)
-                    {
-                        swap( maparray[i*nummodesA] , maparray[i*nummodesA+1] );
-                        swap( signarray[i*nummodesA] , signarray[i*nummodesA+1] );
-                    }
-                }
-                else
-                { 
-                    for(i = 3; i < nummodesB; i+=2)
-                    {
-                        for(j = 0; j < nummodesA; j++)
-                        {
-                            if( arrayindex[i*nummodesA+j] >= 0 )
-                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
-                        }
-                    }                
-                        
-                    for(i = 0; i < nummodesA; i++)
-                    {
-                        swap( maparray[i*nummodesB] , maparray[i*nummodesB+1] );
-                        swap( signarray[i*nummodesB] , signarray[i*nummodesB+1] );
-                    }
-                }
-            }      
-#endif
         }
 
         int StdPyrExp::v_GetVertexMap(int vId, bool useCoeffPacking)

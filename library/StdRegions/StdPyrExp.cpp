@@ -357,6 +357,22 @@ namespace Nektar
                 {
                     m_idxMap[p][q][r] = pair<int, int>(it->second, rp);
                 }
+
+                pair<int,int> rrp(r, rp);
+                if (m_invIdxMap.find(rrp) == m_invIdxMap.end())
+                {
+                    m_invIdxMap[rrp] = map<int, map<int, int> >();
+                }
+
+                if (m_invIdxMap[rrp].find(q) == m_invIdxMap[rrp].end())
+                {
+                    m_invIdxMap[rrp][q] = map<int, int>();
+                }
+
+                if (m_invIdxMap[rrp][q].find(p) == m_invIdxMap[rrp][q].end())
+                {
+                    m_invIdxMap[rrp][q][p] = it->second;
+                }
             }
         }
 
@@ -513,14 +529,84 @@ namespace Nektar
             const int Qx = m_base[0]->GetNumPoints();
             const int Qy = m_base[1]->GetNumPoints();
             const int Qz = m_base[2]->GetNumPoints();
-            int s = 0;
 
-            const Array<OneD, const NekDouble> &bx = m_base[0]->GetBdata();
-            const Array<OneD, const NekDouble> &by = m_base[1]->GetBdata();
-            const Array<OneD, const NekDouble> &bz = m_base[2]->GetBdata();
+            const NekDouble *bx = m_base[0]->GetBdata().get();
+            const NekDouble *by = m_base[1]->GetBdata().get();
+            const NekDouble *bz = m_base[2]->GetBdata().get();
 
             int Q = m_base[2]->GetNumModes()-1;
 
+#if 1
+            // Need to count coeffs for storage...
+            map<int, map<int, map<int, pair<int, int> > > >::iterator it_p;
+            map<int, map<int,          pair<int, int> > >  ::iterator it_q;
+            map<int,                   pair<int, int> >    ::iterator it_r;
+
+            int pqcnt = 0;
+            for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
+            {
+                for (it_q = it_p->second.begin(); it_q != it_p->second.end(); ++it_q)
+                {
+                    pqcnt++;
+                }
+            }
+
+            Array<OneD, NekDouble> fpq(pqcnt);
+            Array<OneD, NekDouble> fp (m_base[0]->GetNumModes());
+            int i ,j, k, s = 0, cnt = 0, cnt2 = 0;
+
+            for (k = 0; k < Qz; ++k)
+            {
+                NekDouble bz1 = bz[k+Qz];
+
+                cnt = 0;
+                for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
+                {
+                    for (it_q = it_p->second.begin(); it_q != it_p->second.end(); ++it_q)
+                    {
+                        NekDouble sum = 0.0;
+                        for (it_r = it_q->second.begin(); it_r != it_q->second.end(); ++it_r)
+                        {
+                            sum += inarray[it_r->second.first] * bz[k + Qz*it_r->second.second];
+                        }
+                        fpq[cnt++] = sum;
+                    }
+                }
+
+                for (j = 0; j < Qy; ++j)
+                {
+                    NekDouble by0 = bz1*by[j];
+                    NekDouble by1 = bz1*by[j+Qy];
+
+                    cnt = cnt2 = 0;
+                    for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
+                    {
+                        NekDouble sum = 0.0;
+                        for (it_q = it_p->second.begin(); it_q != it_p->second.end(); ++it_q)
+                        {
+                            sum += by[j + Qy*it_q->first] * fpq[cnt++];
+                        }
+                        fp[cnt2++] = sum;
+                    }
+
+                    for (i = 0; i < Qx; ++i, ++s)
+                    {
+                        cnt2 = 0;
+                        NekDouble sum = 0.0;
+                        for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
+                        {
+                            sum += bx[i + Qx*it_p->first] * fp[cnt2++];
+                        }
+                        sum += inarray[4]*(by1*(bx[i] + bx[i+Qx]) + by0*bx[i+Qx]);
+                        //sum += inarray[4]*bz[k+Qz]*(bx[i+Qx]*by[j+Qy]+
+                        //                            bx[i   ]*by[j+Qy]+
+                        //                            bx[i+Qx]*by[j   ]);
+                        outarray[s] = sum;
+                    }
+                }
+            }
+#else
+            int s = 0;
             for (int k = 0; k < Qz; ++k)
             {
                 for (int j = 0; j < Qy; ++j)
@@ -550,6 +636,7 @@ namespace Nektar
                     }
                 }
             }
+#endif
         }
 
         void StdPyrExp::v_BwdTrans_SumFacKernel(

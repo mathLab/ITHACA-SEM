@@ -261,6 +261,7 @@ namespace Nektar
             vector<int> m_rmap;
             map<Mode, unsigned int, cmpop> m_map2;
             map<int, map<int, map<int, pair<int, int> > > > m_idxMap;
+            map<pair<int, int>, map<int, map<int, int> > > m_invIdxMap;
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

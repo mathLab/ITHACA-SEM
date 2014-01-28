@@ -87,13 +87,7 @@ namespace Nektar
         }
 
         std::stringstream vOutputFilename;
-        vOutputFilename << m_outputFile << "_" << m_outputIndex;
-
-        if (m_session->GetComm()->GetSize() > 1)
-        {
-            vOutputFilename << "_P" << m_session->GetComm()->GetRank();
-        }
-        vOutputFilename << ".chk";
+        vOutputFilename << m_outputFile << "_" << m_outputIndex << ".chk";
 
         SpatialDomains::MeshGraphSharedPtr vGraph = pFields[0]->GetGraph();
 

@@ -500,9 +500,24 @@ namespace Nektar
 
         for (i = 0; i < nTracePts; i++)
         {
-            pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
-                            0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
-                            Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+            if (m_spacedim == 1)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[2][i] -
+                               0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i]));
+            }
+            else if (m_spacedim == 2)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
+                               0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                               Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+            }
+            else
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[4][i] -
+                               0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                               Fwd[2][i] * Fwd[2][i] / Fwd[0][i] +
+                               Fwd[3][i] * Fwd[3][i] / Fwd[0][i]));
+            }
 
             soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
         }

@@ -57,9 +57,7 @@ namespace Nektar
                                  Ba.GetNumModes(),
                                  Bb.GetNumModes(),
                                  Bc.GetNumModes()),
-                             Ba, Bb, Bc),
-              m_map (m_ncoeffs),
-              m_rmap(m_ncoeffs)
+                             Ba, Bb, Bc)
         {
             if (Ba.GetNumModes() > Bc.GetNumModes())
             {
@@ -80,71 +78,61 @@ namespace Nektar
             int cnt = 0;
 
             // Vertices
-            m_map [cnt  ] = triple(0, 0, 0);
-            m_rmap[cnt++] = 0;
-            m_map [cnt  ] = triple(1, 0, 0);
-            m_rmap[cnt++] = 0;
-            m_map [cnt  ] = triple(1, 1, 0);
-            m_rmap[cnt++] = 0;
-            m_map [cnt  ] = triple(0, 1, 0);
-            m_rmap[cnt++] = 0;
-            m_map [cnt  ] = triple(0, 0, 1);
-            m_rmap[cnt++] = 1;
+            m_map[Mode(0, 0, 0, 0)] = cnt++;
+            m_map[Mode(1, 0, 0, 0)] = cnt++;
+            m_map[Mode(1, 1, 0, 0)] = cnt++;
+            m_map[Mode(0, 1, 0, 0)] = cnt++;
+            m_map[Mode(0, 0, 1, 1)] = cnt++;
 
             // Edge 0
             for (int i = 2; i <= P; ++i)
             {
-                m_map [cnt  ] = triple    (i, 0, 0);
-                m_rmap[cnt++] = GetTetMode(i, 0, 0);
+                ASSERTL0(m_map.count(Mode(i, 0, 0, 0)) == 0, "e0");
+                m_map[Mode(i, 0, 0, GetTetMode(i, 0, 0))] = cnt++;
             }
 
             // Edge 1
             for (int i = 2; i <= Q; ++i)
             {
-                m_map [cnt  ] = triple    (1, i, 0);
-                m_rmap[cnt++] = GetTetMode(0, i, 0);
+                ASSERTL0(m_map.count(Mode(1, i, 0, 0)) == 0, "e1");
+                m_map[Mode(1, i, 0, GetTetMode(0, i, 0))] = cnt++;
             }
 
             // Edge 2
             for (int i = 2; i <= P; ++i)
             {
-                m_map [cnt  ] = triple    (i, 1, 0);
-                m_rmap[cnt++] = GetTetMode(i, 0, 0);
+                ASSERTL0(m_map.count(Mode(i, 1, 0, 0)) == 0, "e2");
+                m_map[Mode(i, 1, 0, GetTetMode(i, 0, 0))] = cnt++;
             }
 
             // Edge 3
             for (int i = 2; i <= Q; ++i)
             {
-                m_map [cnt  ] = triple    (0, i, 0);
-                m_rmap[cnt++] = GetTetMode(0, i, 0);
+                m_map[Mode(0, i, 0, GetTetMode(0, i, 0))] = cnt++;
             }
 
             // Edge 4
             for (int i = 2; i <= R; ++i)
             {
-                m_map [cnt  ] = triple(0, 0, i);
-                m_rmap[cnt++] = i;
+                m_map[Mode(0, 0, i, i)] = cnt++;
             }
 
             // Edge 5
             for (int i = 2; i <= R; ++i)
             {
-                m_map [cnt  ] = triple(1, 0, i);
-                m_rmap[cnt++] = i;
+                m_map[Mode(1, 0, i, i)] = cnt++;
             }
 
             // Edge 6
             for (int i = 2; i <= R; ++i)
             {
-                m_map [cnt  ] = triple(1, 1, i);
-                m_rmap[cnt++] = i;
+                m_map[Mode(1, 1, i, i)] = cnt++;
             }
 
             // Edge 7
             for (int i = 2; i <= R; ++i)
             {
-                m_map [cnt  ] = triple(0, 1, i);
-                m_rmap[cnt++] = i;
+                m_map[Mode(0, 1, i, i)] = cnt++;
             }
 
             // Face 0 - TODO check this
@@ -152,8 +140,7 @@ namespace Nektar
             {
                 for (int i = 2; i <= P; ++i)
                 {
-                    m_map [cnt  ] = triple    (i, j, 0);
-                    m_rmap[cnt++] = GetTetMode((i-2+j-2) % (Q-1) + 2, 0, 0);
+                    m_map[Mode(i, j, 0, GetTetMode((i-2+j-2) % (Q-1) + 2, 0, 0))] = cnt++;
                 }
             }
 
@@ -162,8 +149,7 @@ namespace Nektar
             {
                 for (int j = 1; j <= R-i; ++j)
                 {
-                    m_map [cnt  ] = triple    (i, 0, j);
-                    m_rmap[cnt++] = GetTetMode(i, 0, j);
+                    m_map[Mode(i, 0, j, GetTetMode(i, 0, j))] = cnt++;
                 }
             }
 
@@ -172,8 +158,7 @@ namespace Nektar
             {
                 for (int j = 1; j <= R-i; ++j)
                 {
-                    m_map [cnt  ] = triple    (1, i, j);
-                    m_rmap[cnt++] = GetTetMode(0, i, j);
+                    m_map[Mode(1, i, j, GetTetMode(0, i, j))] = cnt++;
                 }
             }
 
@@ -182,8 +167,7 @@ namespace Nektar
             {
                 for (int j = 1; j <= R-i; ++j)
                 {
-                    m_map [cnt  ] = triple    (i, 1, j);
-                    m_rmap[cnt++] = GetTetMode(i, 0, j);
+                    m_map[Mode(i, 1, j, GetTetMode(i, 0, j))] = cnt++;
                 }
             }
 
@@ -192,129 +176,7 @@ namespace Nektar
             {
                 for (int j = 1; j <= R-i; ++j)
                 {
-                    m_map [cnt  ] = triple    (0, i, j);
-                    m_rmap[cnt++] = GetTetMode(0, i, j);
-                }
-            }
-
-            // Interior (tetrahedral modes)
-            for (int i = 2; i <= P+1; ++i)
-            {
-            	for (int j = 1; j <= Q-i+1; ++j)
-            	{
-                    for (int k = 1; k <= R-i-j+1; ++k)
-                    {
-                        // need to go to j+1-th mode in the 'b' direction to
-                        // select correct modified_a mode
-                        m_map [cnt  ] = triple    (i,   j+1, k);
-                        m_rmap[cnt++] = GetTetMode(i-1, j,   k);
-                    }
-            	}
-            }
-
-            // -- New approach?
-            
-            cnt = 0;
-            // Vertices
-            m_map2[Mode(0, 0, 0, 0)] = cnt++;
-            m_map2[Mode(1, 0, 0, 0)] = cnt++;
-            m_map2[Mode(1, 1, 0, 0)] = cnt++;
-            m_map2[Mode(0, 1, 0, 0)] = cnt++;
-            m_map2[Mode(0, 0, 1, 1)] = cnt++;
-
-            // Edge 0
-            for (int i = 2; i <= P; ++i)
-            {
-                ASSERTL0(m_map2.count(Mode(i, 0, 0, 0)) == 0, "e0");
-                m_map2[Mode(i, 0, 0, GetTetMode(i, 0, 0))] = cnt++;
-            }
-
-            // Edge 1
-            for (int i = 2; i <= Q; ++i)
-            {
-                ASSERTL0(m_map2.count(Mode(1, i, 0, 0)) == 0, "e1");
-                m_map2[Mode(1, i, 0, GetTetMode(0, i, 0))] = cnt++;
-            }
-
-            // Edge 2
-            for (int i = 2; i <= P; ++i)
-            {
-                ASSERTL0(m_map2.count(Mode(i, 1, 0, 0)) == 0, "e2");
-                m_map2[Mode(i, 1, 0, GetTetMode(i, 0, 0))] = cnt++;
-            }
-
-            // Edge 3
-            for (int i = 2; i <= Q; ++i)
-            {
-                m_map2[Mode(0, i, 0, GetTetMode(0, i, 0))] = cnt++;
-            }
-
-            // Edge 4
-            for (int i = 2; i <= R; ++i)
-            {
-                m_map2[Mode(0, 0, i, i)] = cnt++;
-            }
-
-            // Edge 5
-            for (int i = 2; i <= R; ++i)
-            {
-                m_map2[Mode(1, 0, i, i)] = cnt++;
-            }
-
-            // Edge 6
-            for (int i = 2; i <= R; ++i)
-            {
-                m_map2[Mode(1, 1, i, i)] = cnt++;
-            }
-
-            // Edge 7
-            for (int i = 2; i <= R; ++i)
-            {
-                m_map2[Mode(0, 1, i, i)] = cnt++;
-            }
-
-            // Face 0 - TODO check this
-            for (int j = 2; j <= Q; ++j)
-            {
-                for (int i = 2; i <= P; ++i)
-                {
-                    m_map2[Mode(i, j, 0, GetTetMode((i-2+j-2) % (Q-1) + 2, 0, 0))] = cnt++;
-                }
-            }
-
-            // Face 1
-            for (int i = 2; i <= P; ++i)
-            {
-                for (int j = 1; j <= R-i; ++j)
-                {
-                    m_map2[Mode(i, 0, j, GetTetMode(i, 0, j))] = cnt++;
-                }
-            }
-
-            // Face 2
-            for (int i = 2; i <= Q; ++i)
-            {
-                for (int j = 1; j <= R-i; ++j)
-                {
-                    m_map2[Mode(1, i, j, GetTetMode(0, i, j))] = cnt++;
-                }
-            }
-
-            // Face 3
-            for (int i = 2; i <= P; ++i)
-            {
-                for (int j = 1; j <= R-i; ++j)
-                {
-                    m_map2[Mode(i, 1, j, GetTetMode(i, 0, j))] = cnt++;
-                }
-            }
-
-            // Face 4
-            for (int i = 2; i <= Q; ++i)
-            {
-                for (int j = 1; j <= R-i; ++j)
-                {
-                    m_map2[Mode(0, i, j, GetTetMode(0, i, j))] = cnt++;
+                    m_map[Mode(0, i, j, GetTetMode(0, i, j))] = cnt++;
                 }
             }
 
@@ -327,17 +189,16 @@ namespace Nektar
                     {
                         // need to go to j+1-th mode in the 'b' direction to
                         // select correct modified_a mode
-                        m_map2[Mode(i, j+1, k, GetTetMode(i-1, j, k))] = cnt++;
+                        m_map[Mode(i, j+1, k, GetTetMode(i-1, j, k))] = cnt++;
                     }
                 }
             }
 
-            cout << m_map2.size() << " " << m_ncoeffs << endl;
-            ASSERTL0(m_map2.size() == m_ncoeffs,
-                     "duplicate maps...");
+            ASSERTL0(m_map.size() == m_ncoeffs,
+                     "Duplicate coefficient entries in map");
 
             map<Mode, unsigned int, cmpop>::iterator it;
-            for (it = m_map2.begin(); it != m_map2.end(); ++it)
+            for (it = m_map.begin(); it != m_map.end(); ++it)
             {
                 const int p  = it->first.get<0>();
                 const int q  = it->first.get<1>();
@@ -356,22 +217,6 @@ namespace Nektar
                 if (m_idxMap[p][q].find(r) == m_idxMap[p][q].end())
                 {
                     m_idxMap[p][q][r] = pair<int, int>(it->second, rp);
-                }
-
-                pair<int,int> rrp(r, rp);
-                if (m_invIdxMap.find(rrp) == m_invIdxMap.end())
-                {
-                    m_invIdxMap[rrp] = map<int, map<int, int> >();
-                }
-
-                if (m_invIdxMap[rrp].find(q) == m_invIdxMap[rrp].end())
-                {
-                    m_invIdxMap[rrp][q] = map<int, int>();
-                }
-
-                if (m_invIdxMap[rrp][q].find(p) == m_invIdxMap[rrp][q].end())
-                {
-                    m_invIdxMap[rrp][q][p] = it->second;
                 }
             }
         }
@@ -534,9 +379,6 @@ namespace Nektar
             const NekDouble *by = m_base[1]->GetBdata().get();
             const NekDouble *bz = m_base[2]->GetBdata().get();
 
-            int Q = m_base[2]->GetNumModes()-1;
-
-#if 1
             // Need to count coeffs for storage...
             map<int, map<int, map<int, pair<int, int> > > >::iterator it_p;
             map<int, map<int,          pair<int, int> > >  ::iterator it_q;
@@ -605,38 +447,6 @@ namespace Nektar
                     }
                 }
             }
-#else
-            int s = 0;
-            for (int k = 0; k < Qz; ++k)
-            {
-                for (int j = 0; j < Qy; ++j)
-                {
-                    for (int i = 0; i < Qx; ++i, ++s)
-                    {
-                        NekDouble sum = 0.0;
-
-                        for (int cnt = 0; cnt < m_ncoeffs; ++cnt)
-                        {
-                            triple &idx = m_map[cnt];
-                            const int p = boost::get<0>(idx);
-                            const int q = boost::get<1>(idx);
-
-                            sum += inarray[cnt]*
-                                bx[i + Qx*p]*
-                                by[j + Qy*q]*
-                                bz[k + Qz*m_rmap[cnt]];
-                        }
-
-                        // Add in contributions from singular vertices;
-                        // i.e. (p,q,r) = (1,1,1),(0,1,1),(1,0,1)
-                        sum += inarray[4]*bz[k+Qz]*(bx[i+Qx]*by[j+Qy]+
-                                                    bx[i   ]*by[j+Qy]+
-                                                    bx[i+Qx]*by[j   ]);
-                        outarray[s] = sum;
-                    }
-                }
-            }
-#endif
         }
 
         void StdPyrExp::v_BwdTrans_SumFacKernel(
@@ -734,7 +544,6 @@ namespace Nektar
             
             int Q = m_base[1]->GetNumModes()-1;
 
-#if 1
             map<int, map<int, map<int, pair<int, int> > > >::iterator it_p;
             map<int, map<int,          pair<int, int> > >  ::iterator it_q;
             map<int,                   pair<int, int> >    ::iterator it_r;
@@ -775,7 +584,6 @@ namespace Nektar
 
                     for (it_r = it_q->second.begin(); it_r != it_q->second.end(); ++it_r)
                     {
-                        const int r    = it_r->first;
                         const int rpqr = it_r->second.second;
                         double sum = 0.0;
                         for (k = 0; k < Qz; ++k)
@@ -803,60 +611,6 @@ namespace Nektar
                     }
                 }
             }
-            // Initial pyramid implementation. We need to iterate over vertices,
-            // edge int, face int and then interior.
-#else
-            for (int cnt = 0; cnt < m_ncoeffs; ++cnt)
-            {
-                // Get triple (p,q,r) which corresponds to this coefficient.
-                triple &idx = m_map[cnt];
-                const int  p  = boost::get<0>(idx);
-                const int  q  = boost::get<1>(idx);
-                const int  r  = boost::get<2>(idx);
-                NekDouble tmp = 0.0;
-                int s = 0;
-                
-                for (int k = 0; k < Qz; ++k)
-                {
-                    for (int j = 0; j < Qy; ++j)
-                    {
-                        for (int i = 0; i < Qx; ++i, ++s)
-                        {
-                            NekDouble tmp2;
-                            tmp2 = inarray[s]*
-                                bx[i + Qx*p]*
-                                by[j + Qy*q]*
-                                bz[k + Qz*m_rmap[cnt]];
-
-                            /*
-                            if (r == 0 && p >= 2 && q >= 2)
-                            {
-                                int blah = (p-2+q-2) % (Q-1) + 2;
-
-                                if (blah - 3 >= 0)
-                                {
-                                    tmp2 *= bz[k + Qz*GetTetMode(blah-2,0,0)];
-                                }
-                            }
-                            */
-
-                            tmp += tmp2;
-
-                            // Add missing contributions from top vertex mode.
-                            if (p == 0 && q == 0 && r == 1)
-                            {
-                                tmp2 += inarray[s] * bz[k+Qz]*(
-                                    bx[i+Qx]*by[j+Qy] + 
-                                    bx[i+Qx]*by[j   ] + 
-                                    bx[i   ]*by[j+Qy]);
-                            }
-                        }
-                    }
-                }
-
-                outarray[cnt] = tmp;
-            }
-#endif
         }
 
         //---------------------------------------
@@ -917,33 +671,9 @@ namespace Nektar
 
         void StdPyrExp::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
-            Array<OneD, const NekDouble> bx = m_base[0]->GetBdata();
-            Array<OneD, const NekDouble> by = m_base[1]->GetBdata();
-            Array<OneD, const NekDouble> bz = m_base[2]->GetBdata();
-
-            int Qx = m_base[0]->GetNumPoints();
-            int Qy = m_base[1]->GetNumPoints();
-            int Qz = m_base[2]->GetNumPoints();
-
-            int p = boost::get<0>(m_map[mode]);
-            int q = boost::get<1>(m_map[mode]);
-            int r = m_rmap[mode];
-
-            // Compute tensor product of inarray with the 3 basis functions
-            for (int k = 0; k < Qz; ++k)
-            {
-                for (int j = 0; j < Qy; ++j)
-                {
-                    for (int i = 0; i < Qx; ++i)
-                    {
-                        int s = i + Qx*(j + Qy*k);
-                        outarray[s] =
-                            bx[i + Qx*p] * 
-                            by[j + Qy*q] * 
-                            bz[k + Qz*r];
-                    }
-                }
-            }
+            Array<OneD, NekDouble> tmp(m_ncoeffs, 0.0);
+            tmp[mode] = 1.0;
+            v_BwdTrans(tmp, outarray);
         }
         
         

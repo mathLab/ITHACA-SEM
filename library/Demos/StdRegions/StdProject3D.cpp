@@ -288,8 +288,6 @@ int main(int argc, char *argv[]){
             break;
     }
 
-    vector<StdPyrExp::triple> pyrIdx;
-    
     order1 =   atoi(argv[5]);
     order2 =   atoi(argv[6]);
     order3 =   atoi(argv[7]);
@@ -393,8 +391,6 @@ int main(int argc, char *argv[]){
 
             StdRegions::StdPyrExp *F = new StdRegions::StdPyrExp(Bkey1,Bkey2,Bkey3);
             E = F;
-            pyrIdx = F->GetMap();
-            vector<int> &rmap = F->GetRMap();
             E->GetCoords(x,y,z);
 
             //----------------------------------------------
@@ -407,55 +403,9 @@ int main(int argc, char *argv[]){
 #if 0
             int nCoeffs = F->GetNcoeffs();
             int nPts = F->GetTotPoints();
-            const Array<OneD, const NekDouble> &bx = F->GetBase()[0]->GetBdata();
-            const Array<OneD, const NekDouble> &by = F->GetBase()[1]->GetBdata();
-            const Array<OneD, const NekDouble> &bz = F->GetBase()[2]->GetBdata();
-
-            for (int cnt = 0; cnt < nCoeffs; ++cnt)
-            {
-                StdPyrExp::triple &idx = pyrIdx[cnt];
-                const int p = boost::get<0>(idx);
-                const int q = boost::get<1>(idx);
-                const int r = boost::get<2>(idx);
-                if (r == 0 && p == 4 && q == 4)
-                {
-                    Array<OneD, NekDouble> asd(nPts);
-                    for (int k = 0; k < nq3; ++k)
-                    {
-                        cout << z[k*nq1*nq2] << " " << bz[k + nq3*F->GetTetMode(3,2,1)] << endl;
-                        /*
-                        for (int j = 0; j < nq2; ++j)
-                        {
-                            for (int i = 0; i < nq1; ++i)
-                            {
-                                int s = i + nq1*(j + nq2*k);
-                                asd[s] =
-                                    bx[i + nq1*p]*
-                                    by[j + nq2*q]*
-                                    bz[k + nq3*rmap[cnt]]*
-                                    bz[k + nq3*F->GetTetMode(q-1,0,0)];
-                            }
-                        }
-                        */
-                    }
-                    printSolution(F, "quadmode.dat", x, y, z, asd);
-                    exit(0);
-                }
-            }
-            
-#endif
-            
-#if 0
-            int nCoeffs = F->GetNcoeffs();
-            int nPts = F->GetTotPoints();
             Array<OneD, NekDouble> blah(nCoeffs), blah2(nPts);
             for (i = 0; i < nCoeffs; ++i)
             {
-                StdPyrExp::triple &idx = pyrIdx[i];
-                const int p = boost::get<0>(idx);
-                const int q = boost::get<1>(idx);
-                const int r = boost::get<2>(idx);
-
                 Vmath::Zero(nCoeffs, blah, 1);
                 blah[i] = 1.0;
                 F->BwdTrans(blah, blah2);

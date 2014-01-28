@@ -101,15 +101,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT ~StdPyrExp();
 
-            STD_REGIONS_EXPORT std::vector<triple> &GetMap()
-            {
-                return m_map;
-            }
-
-            STD_REGIONS_EXPORT vector<int> &GetRMap()
-            {
-                return m_rmap;
-            }
             STD_REGIONS_EXPORT int GetTetMode(int I, int J, int K);
 
         protected:
@@ -257,11 +248,8 @@ namespace Nektar
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
-            vector<triple> m_map;
-            vector<int> m_rmap;
-            map<Mode, unsigned int, cmpop> m_map2;
+            map<Mode, unsigned int, cmpop> m_map;
             map<int, map<int, map<int, pair<int, int> > > > m_idxMap;
-            map<pair<int, int>, map<int, map<int, int> > > m_invIdxMap;
         };    
         typedef boost::shared_ptr<StdPyrExp> StdPyrExpSharedPtr;
     } //end of namespace

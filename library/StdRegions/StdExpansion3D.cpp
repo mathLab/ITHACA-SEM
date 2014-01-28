@@ -197,7 +197,8 @@ namespace Nektar
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNVarCoeff() == 0)
+            if ( mkey.GetNVarCoeff() == 0 &&
+                !mkey.ConstFactorExists(eFactorSVVCutoffRatio))
             {
                 // This implementation is only valid when there are no
                 // coefficients associated to the Laplacian operator

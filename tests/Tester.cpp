@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     hidden.add_options()
         ("input-file",   po::value<string>(), "Input filename");
     
-    po::options_description cmdline_options;
+    po::options_description cmdline_options("Command-line options");
     cmdline_options.add(hidden).add(desc);
     
     po::options_description visible("Allowed options");

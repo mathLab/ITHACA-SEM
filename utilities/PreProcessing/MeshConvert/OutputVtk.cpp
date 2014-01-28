@@ -66,7 +66,7 @@ namespace Nektar
         
         void OutputVtk::Process()
         {
-            if (m_mesh->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "OutputVtk: Writing file..." << endl;
             }
@@ -88,13 +88,14 @@ namespace Nektar
             }
 
             vtkIdType p[8];
-            vector<ElementSharedPtr> &elmt = m_mesh->element[m_mesh->expDim];
+            vector<ElementSharedPtr> &elmt = 
+                                    m_mesh->m_element[m_mesh->m_expDim];
             for(int i = 0; i < elmt.size(); ++i)
             {
                 int vertexCount = elmt[i]->GetVertexCount();
                 for (int j = 0; j < vertexCount; ++j)
                 {
-                    p[j] = elmt[i]->GetVertex(j)->id;
+                    p[j] = elmt[i]->GetVertex(j)->m_id;
                 }
                 vtkPolys->InsertNextCell(vertexCount, &p[0]);
             }

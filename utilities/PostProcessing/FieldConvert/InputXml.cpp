@@ -212,7 +212,7 @@ namespace Nektar
                 NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
 
                 //----------------------------------------------
-                // Set up Expansion information to use mode order from field
+               // Set up Expansion information to use mode order from field
                 m_f->m_graph->SetExpansions(m_f->m_fielddef);
             }
             else

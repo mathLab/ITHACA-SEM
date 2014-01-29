@@ -49,14 +49,14 @@ namespace Nektar
     {
         ModuleKey ProcessBoundaryExtract::className =
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eProcessModule, "Extract"), 
+                ModuleKey(eProcessModule, "extract"), 
                 ProcessBoundaryExtract::create, "Extract Boundary field");
 
         ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule(f)
         {
             // set up dafault values. 
-            m_config["Boundary"] = ConfigOption(false,"All","Boundary to be extracted");
-            m_config["FldToBoundary"] = ConfigOption(true,"1","Extract fld values to boundary");
+            m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
+            m_config["fldtoboundary"] = ConfigOption(true,"1","Extract fld values to boundary");
 
             f->m_writeBndFld = true;
 
@@ -74,7 +74,7 @@ namespace Nektar
             }
 
             // Set up Field options to output boundary fld
-            string bvalues =  m_config["Boundary"].as<string>();
+            string bvalues =  m_config["bnd"].as<string>();
 
             if(bvalues.compare("All") == 0)
             {
@@ -92,7 +92,7 @@ namespace Nektar
                                                            m_f->m_bndRegionsToWrite),"Failed to interpret range string");
             }
 
-            if(m_config["FldToBoundary"].as<bool>())
+            if(m_config["fldtoboundary"].as<bool>())
             {
                 m_f->m_fldToBnd = true;
             }

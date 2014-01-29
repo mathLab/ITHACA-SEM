@@ -289,6 +289,9 @@ namespace Nektar
                 case eTetrahedron: 
                     nNodes = Tetrahedron::  GetNumNodes(it->second);
                     break;
+                case ePyramid:
+                    nNodes = Pyramid::      GetNumNodes(it->second);
+                    break;
                 case ePrism: 
                     nNodes = Prism::        GetNumNodes(it->second);
                     break;
@@ -325,6 +328,7 @@ namespace Nektar
             tmp[  4] = ElmtConfig(eTetrahedron,    1,  true,  true);
             tmp[  5] = ElmtConfig(eHexahedron,     1,  true,  true);
             tmp[  6] = ElmtConfig(ePrism,          1,  true,  true);
+            tmp[  7] = ElmtConfig(ePyramid,        1,  true,  true);
             tmp[  8] = ElmtConfig(eLine,           2,  true,  true);
             tmp[  9] = ElmtConfig(eTriangle,       2,  true,  true);
             tmp[ 10] = ElmtConfig(eQuadrilateral,  2,  true,  true);

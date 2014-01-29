@@ -1199,6 +1199,139 @@ namespace Nektar
             }
         }
 
+        ElementType Pyramid::type = GetElementFactory().
+            RegisterCreatorFunction(ePyramid, Pyramid::create, "Pyramid");
+
+        /**
+         * @brief Create a pyramidic element.
+         */
+        Pyramid::Pyramid(ElmtConfig            pConf,
+                         vector<NodeSharedPtr> pNodeList,
+                         vector<int>           pTagList)
+            : Element(pConf, GetNumNodes(pConf), pNodeList.size())
+        {
+            m_tag     = "P";
+            m_dim     = 3;
+            m_taglist = pTagList;
+            int n     = m_conf.order-1;
+
+            // This edge-node map is based on Nektar++ ordering.
+            map<pair<int,int>, int> edgeNodeMap;
+            map<pair<int,int>, int>::iterator it;
+            edgeNodeMap[pair<int,int>(1,2)] = 6;
+            edgeNodeMap[pair<int,int>(2,3)] = 6 + n;
+            edgeNodeMap[pair<int,int>(4,3)] = 6 + 2*n;
+            edgeNodeMap[pair<int,int>(1,4)] = 6 + 3*n;
+            edgeNodeMap[pair<int,int>(1,5)] = 6 + 4*n;
+            edgeNodeMap[pair<int,int>(2,5)] = 6 + 5*n;
+            edgeNodeMap[pair<int,int>(3,5)] = 6 + 6*n;
+            edgeNodeMap[pair<int,int>(4,5)] = 6 + 7*n;
+            
+            // Add vertices
+            for (int i = 0; i < 5; ++i)
+            {
+                vertex.push_back(pNodeList[i]);
+            }
+
+            // Create edges (with corresponding set of edge points)
+            int eid = 0;
+            for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
+            {
+                vector<NodeSharedPtr> edgeNodes;
+                if (m_conf.order > 1)
+                {
+                    for (int j = it->second; j < it->second + n; ++j)
+                    {
+                        edgeNodes.push_back(pNodeList[j-1]);
+                    }
+                }
+                edge.push_back(
+                    EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
+                                           pNodeList[it->first.second-1],
+                                           edgeNodes,
+                                           m_conf.edgeCurveType)));
+                edge.back()->id = eid++;
+            }
+
+            // Create faces
+            int face_ids[5][4] = {
+                {0,1,2,3}, {0,1,4,-1}, {1,2,4,-1}, {3,2,4,-1}, {0,3,4,-1}
+            };
+            int face_edges[5][4];
+            int faceoffset = 0;
+            for (int j = 0; j < 5; ++j)
+            {
+                vector<NodeSharedPtr> faceVertices;
+                vector<EdgeSharedPtr> faceEdges;
+                vector<NodeSharedPtr> faceNodes;
+                int nEdge = j > 0 ? 3 : 4;
+
+                for (int k = 0; k < nEdge; ++k)
+                {
+                    faceVertices.push_back(vertex[face_ids[j][k]]);
+                    NodeSharedPtr a = vertex[face_ids[j][k]];
+                    NodeSharedPtr b = vertex[face_ids[j][(k+1) % nEdge]];
+                    for (unsigned int i = 0; i < edge.size(); ++i)
+                    {
+                        if ((edge[i]->n1 == a && edge[i]->n2 == b) ||
+                            (edge[i]->n1 == b && edge[i]->n2 == a))
+                        {
+                            faceEdges.push_back(edge[i]);
+                            face_edges[j][k] = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (m_conf.faceNodes)
+                {
+                    int facenodes = j == 0 ? n*n : n*(n-1)/2;
+                    faceoffset   += facenodes;
+                    int N = 6 + 9*n + faceoffset;
+                    for (int i = 0; i < facenodes; ++i)
+                    {
+                        faceNodes.push_back(pNodeList[N+i]);
+                    }
+                }
+                face.push_back(FaceSharedPtr(
+                    new Face(faceVertices, faceNodes, faceEdges, m_conf.faceCurveType)));
+            }
+
+            vector<EdgeSharedPtr> tmp(8);
+            tmp[0] = edge[face_edges[0][0]];
+            tmp[1] = edge[face_edges[0][1]];
+            tmp[2] = edge[face_edges[0][2]];
+            tmp[3] = edge[face_edges[0][3]];
+            tmp[4] = edge[face_edges[1][2]];
+            tmp[5] = edge[face_edges[1][1]];
+            tmp[6] = edge[face_edges[3][1]];
+            tmp[7] = edge[face_edges[3][2]];
+            edge = tmp;
+        }
+        
+        SpatialDomains::GeometrySharedPtr Pyramid::GetGeom(int coordDim)
+        {
+            SpatialDomains::Geometry2DSharedPtr faces[5];
+
+            for (int i = 0; i < 5; ++i)
+            {
+                faces[i] = face[i]->GetGeom(coordDim);
+            }
+
+            m_geom = MemoryManager<SpatialDomains::PyrGeom>::
+                AllocateSharedPtr(faces);
+
+            return m_geom;
+        }
+        
+        /**
+         * @brief Return the number of nodes defining a pyramid.
+         */
+        unsigned int Pyramid::GetNumNodes(ElmtConfig pConf)
+        {
+            int n = pConf.order;
+            return 5 + 8*(n-1);
+        }
 
         ElementType Prism::type = GetElementFactory().
             RegisterCreatorFunction(ePrism, Prism::create, "Prism");

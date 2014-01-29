@@ -756,11 +756,13 @@ namespace Nektar
             }
             else if (i == 1 || i == 3)
             {
-                return GetBasisNumModes(0)*GetBasisNumModes(2);
+                int P = GetBasisNumModes(0)-1, Q = GetBasisNumModes(2)-1;
+                return Q+1 + (P*(1 + 2*Q - P))/2;
             }
             else
             {
-                return GetBasisNumModes(1)*GetBasisNumModes(2);
+                int P = GetBasisNumModes(1)-1, Q = GetBasisNumModes(2)-1;
+                return Q+1 + (P*(1 + 2*Q - P))/2;
             }
         }
         
@@ -892,6 +894,8 @@ namespace Nektar
             // Set up an array indexing for quads, since the ordering may need
             // to be transposed.
             Array<OneD, int> arrayindx(nFaceCoeffs,-1);
+
+            cout << "faceOrient = " << faceOrient << endl;
             
             if (fid == 0)
             {
@@ -924,52 +928,55 @@ namespace Nektar
                     maparray[arrayindx[nummodesA+1]] = 2;
                     maparray[arrayindx[nummodesA]]   = 3;
 
-                    cnt = 5;
-
                     // Edge 0
+                    cnt = 5;
                     for (p = 2; p < nummodesA; ++p)
                     {
-                        maparray[arrayindx[p]] = p + cnt++;
+                        maparray[arrayindx[p]] = p-2 + cnt;
                     }
 
                     // Edge 1
+                    cnt += nummodesA-2;
                     for (q = 2; q < nummodesB; ++q)
                     {
-                        maparray[arrayindx[q*nummodesA+1]] = q + cnt++;
+                        maparray[arrayindx[q*nummodesA+1]] = q-2 + cnt;
                     }
 
                     // Edge 2
+                    cnt += nummodesB-2;
                     for (p = 2; p < nummodesA; ++p)
                     {
-                        maparray[arrayindx[nummodesA+p]] = p + cnt++;
+                        maparray[arrayindx[nummodesA+p]] = p-2 + cnt;
                     }
 
                     // Edge 3
+                    cnt += nummodesA-2;
                     for (q = 2; q < nummodesB; ++q)
                     {
-                        maparray[arrayindx[q*nummodesA]] = q + cnt++;
+                        maparray[arrayindx[q*nummodesA]] = q-2 + cnt;
                     }
 
                     // Interior
-                    for (q = 0; q < nummodesB-2; ++q)
+                    cnt += nummodesB-2 + 4*(nummodesA-2);
+                    for (q = 2; q < nummodesB; ++q)
                     {
-                        for (p = 0; p < nummodesA-2; ++p)
+                        for (p = 2; p < nummodesA; ++p)
                         {
-                            maparray[arrayindx[q*nummodesA+p]] = cnt + q*nummodesA+p;
+                            maparray[arrayindx[q*nummodesA+p]] = cnt + (q-2)*nummodesA+(p-2);
                         }
                     }
                     break;
 
                 case 1: // Left triangle
                     // Vertices
-                    maparray[0] = 0;
-                    maparray[1] = 4;
-                    maparray[2] = 1;
+                    maparray[0]         = 0;
+                    maparray[1]         = 4;
+                    maparray[nummodesB] = 1;
 
                     // Edge 0 (pyramid edge 0)
                     cnt = 5;
                     q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; ++p, q += nummodesB-p)
+                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -979,7 +986,7 @@ namespace Nektar
                     }
 
                     // Edge 1 (pyramid edge 5)
-                    cnt = 5 + 2*order0 + 2*order1 + order2;
+                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + (order2-2);
                     for (q = 2; q < nummodesB; ++q)
                     {
                         maparray[q] = cnt++;
@@ -990,7 +997,7 @@ namespace Nektar
                     }
                     
                     // Edge 2 (pyramid edge 4)
-                    cnt = 5 + 2*order0 + 2*order1;
+                    cnt = 5 + 2*(order0-2) + 2*(order1-2);
                     for (q = 2; q < nummodesB; ++q)
                     {
                         maparray[nummodesB+q-1] = cnt++;
@@ -1001,7 +1008,8 @@ namespace Nektar
                     }
 
                     // Interior
-                    cnt  = 5 + 2*order0 + 2*order1 + 4*order2 + order0*order1;
+                    cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
+                        + v_GetFaceIntNcoeffs(0);
                     cnt2 = 2*nummodesB + 1;
                     for (p = 2; p < nummodesA; ++p)
                     {
@@ -1019,14 +1027,14 @@ namespace Nektar
 
                 case 2:
                     // Vertices
-                    maparray[0] = 1;
-                    maparray[1] = 4;
-                    maparray[2] = 2;
+                    maparray[0]         = 1;
+                    maparray[1]         = 4;
+                    maparray[nummodesB] = 2;
 
                     // Edge 0 (pyramid edge 1)
-                    cnt = 5 + order0;
+                    cnt = 5 + (order0-2);
                     q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; ++p, q += nummodesB-p)
+                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1036,7 +1044,7 @@ namespace Nektar
                     }
 
                     // Edge 1 (pyramid edge 6)
-                    cnt = 5 + 2*order0 + 2*order1 + 2*order2;
+                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + 2*(order2-2);
                     for (q = 2; q < nummodesB; ++q)
                     {
                         maparray[q] = cnt++;
@@ -1047,7 +1055,7 @@ namespace Nektar
                     }
                     
                     // Edge 2 (pyramid edge 5)
-                    cnt = 5 + 2*order0 + 2*order1 + order2;
+                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + (order2-2);
                     for (q = 2; q < nummodesB; ++q)
                     {
                         maparray[nummodesB+q-1] = cnt++;
@@ -1058,8 +1066,8 @@ namespace Nektar
                     }
 
                     // Interior
-                    cnt  = 5 + 2*order0 + 2*order1 + 4*order2 + order0*order1
-                        + GetFaceNcoeffs(1);
+                    cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
+                        + v_GetFaceIntNcoeffs(0) + v_GetFaceIntNcoeffs(1);
                     cnt2 = 2*nummodesB + 1;
                     for (p = 2; p < nummodesA; ++p)
                     {
@@ -1077,14 +1085,14 @@ namespace Nektar
 
                 case 3: // Right triangle
                     // Vertices
-                    maparray[0] = 3;
-                    maparray[1] = 4;
-                    maparray[2] = 2;
+                    maparray[0]         = 3;
+                    maparray[1]         = 4;
+                    maparray[nummodesB] = 2;
 
                     // Edge 0 (pyramid edge 2)
-                    cnt = 5 + order0 + order1;
+                    cnt = 5 + (order0-2) + (order1-2);
                     q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; ++p, q += nummodesB-p)
+                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1094,7 +1102,7 @@ namespace Nektar
                     }
 
                     // Edge 1 (pyramid edge 6)
-                    cnt = 5 + 2*order0 + 2*order1 + 2*order2;
+                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + 2*(order2-2);
                     for (q = 2; q < nummodesB; ++q)
                     {
                         maparray[q] = cnt++;
@@ -1105,7 +1113,7 @@ namespace Nektar
                     }
                     
                     // Edge 2 (pyramid edge 7)
-                    cnt = 5 + 2*order0 + 2*order1 + 3*order2;
+                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + 3*(order2-2);
                     for (q = 2; q < nummodesB; ++q)
                     {
                         maparray[nummodesB+q-1] = cnt++;
@@ -1116,8 +1124,9 @@ namespace Nektar
                     }
 
                     // Interior
-                    cnt  = 5 + 2*order0 + 2*order1 + 4*order2 + order0*order1
-                        + GetFaceNcoeffs(1) + GetFaceNcoeffs(2);
+                    cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
+                        + v_GetFaceIntNcoeffs(0) + v_GetFaceIntNcoeffs(1)
+                        + v_GetFaceIntNcoeffs(2);
                     cnt2 = 2*nummodesB + 1;
                     for (p = 2; p < nummodesA; ++p)
                     {
@@ -1135,14 +1144,14 @@ namespace Nektar
 
                 case 4: // Rear quad
                     // Vertices
-                    maparray[0] = 0;
-                    maparray[1] = 4;
-                    maparray[2] = 3;
+                    maparray[0]         = 0;
+                    maparray[1]         = 4;
+                    maparray[nummodesB] = 3;
 
                     // Edge 0 (pyramid edge 3)
-                    cnt = 5 + 2*order0 + order1;
+                    cnt = 5 + 2*(order0-2) + (order1-2);
                     q   = 2*nummodesB-1;
-                    for (p = 2; p < nummodesA; ++p, q += nummodesB-p)
+                    for (p = 2; p < nummodesA; q += nummodesB-p, ++p)
                     {
                         maparray[q] = cnt++;
                         if ((int)faceOrient == 7)
@@ -1152,7 +1161,7 @@ namespace Nektar
                     }
 
                     // Edge 1 (pyramid edge 7)
-                    cnt = 5 + 2*order0 + 2*order1 + 3*order2;
+                    cnt = 5 + 2*(order0-2) + 2*(order1-2) + 3*(order2-2);
                     for (q = 2; q < nummodesB; ++q)
                     {
                         maparray[q] = cnt++;
@@ -1163,7 +1172,7 @@ namespace Nektar
                     }
                     
                     // Edge 2 (pyramid edge 4)
-                    cnt = 5 + 2*order0 + 2*order1;
+                    cnt = 5 + 2*(order0-2) + 2*(order1-2);
                     for (q = 2; q < nummodesB; ++q)
                     {
                         maparray[nummodesB+q-1] = cnt++;
@@ -1174,8 +1183,9 @@ namespace Nektar
                     }
 
                     // Interior
-                    cnt  = 5 + 2*order0 + 2*order1 + 4*order2 + order0*order1
-                        + GetFaceNcoeffs(1) + GetFaceNcoeffs(2) + GetFaceNcoeffs(3);
+                    cnt  = 5 + 2*(order0-2) + 2*(order1-2) + 4*(order2-2)
+                        + v_GetFaceIntNcoeffs(0) + v_GetFaceIntNcoeffs(1)
+                        + v_GetFaceIntNcoeffs(2) + v_GetFaceIntNcoeffs(3);
                     cnt2 = 2*nummodesB + 1;
                     for (p = 2; p < nummodesA; ++p)
                     {

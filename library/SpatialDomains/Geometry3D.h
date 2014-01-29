@@ -109,7 +109,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &ptsx,
                 const Array<OneD, const NekDouble> &ptsy,
                 const Array<OneD, const NekDouble> &ptsz,
-                      Array<OneD,       NekDouble> &Lcoords);
+                      Array<OneD,       NekDouble> &Lcoords,
+                NekDouble                          &resid);
 
             virtual void      v_FillGeom();
             virtual NekDouble v_GetCoord(const int i, 

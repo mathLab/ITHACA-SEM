@@ -117,15 +117,20 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                               Array<OneD, NekDouble> &locCoord,
-                              NekDouble tol = 0.0);
+                              NekDouble tol);
+                SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
+                        const Array<OneD, const NekDouble>& gloCoord,
+                        Array<OneD, NekDouble> &locCoord,
+                        NekDouble tol,
+                        NekDouble &resid);
                 SPATIAL_DOMAINS_EXPORT inline int GetVertexEdgeMap(int i, int j) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetVertexFaceMap(int i, int j) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetEdgeFaceMap(int i, int j) const;
 
                 SPATIAL_DOMAINS_EXPORT inline void FillGeom();
-                SPATIAL_DOMAINS_EXPORT inline void GetLocCoords(
+                SPATIAL_DOMAINS_EXPORT inline NekDouble GetLocCoords(
                         const Array<OneD, const NekDouble> &coords,
-                              Array<OneD,       NekDouble> &Lcoords);
+                        Array<OneD,       NekDouble> &Lcoords);
                 SPATIAL_DOMAINS_EXPORT inline NekDouble GetCoord(
                         const int i, const Array<OneD, const NekDouble> &Lcoord);
 
@@ -193,7 +198,12 @@ namespace Nektar
                 virtual bool v_ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                         Array<OneD, NekDouble>& locCoord,
-                        NekDouble tol = 0.0);
+                        NekDouble tol);
+                virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble>& gloCoord,
+                        Array<OneD, NekDouble>& locCoord,
+                        NekDouble tol,
+                        NekDouble &resid);
 
                 virtual int v_GetVertexEdgeMap(int i,int j) const;
                 virtual int v_GetVertexFaceMap(int i,int j) const;
@@ -203,9 +213,9 @@ namespace Nektar
                 virtual NekDouble v_GetCoord(
                             const int i,
                             const Array<OneD,const NekDouble>& Lcoord);
-                virtual void v_GetLocCoords(
+                virtual NekDouble v_GetLocCoords(
                             const Array<OneD,const NekDouble>& coords,
-                                  Array<OneD,NekDouble>& Lcoords);
+                            Array<OneD,NekDouble>& Lcoords);
 
                 virtual void v_SetOwnData();
                 virtual const LibUtilities::BasisSharedPtr
@@ -352,7 +362,15 @@ namespace Nektar
             return v_ContainsPoint(gloCoord,locCoord,tol);
         }
 
-        /// return the id of the \f$j^{th}\f$ edge attached to the \f$ i^{th}\f$ vertex
+        inline bool Geometry::ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                      Array<OneD, NekDouble> &locCoord,
+                NekDouble tol,
+                NekDouble &resid)
+        {
+            return v_ContainsPoint(gloCoord,locCoord,tol,resid);
+        }
+
         inline int Geometry::GetVertexEdgeMap(int i, int j) const
         {
             return v_GetVertexEdgeMap(i,j);
@@ -386,11 +404,11 @@ namespace Nektar
             v_FillGeom();
         }
 
-        inline void Geometry::GetLocCoords(
+        inline NekDouble Geometry::GetLocCoords(
             const Array<OneD, const NekDouble> &coords,
-                  Array<OneD,       NekDouble> &Lcoords)
+            Array<OneD,       NekDouble> &Lcoords)
         {
-            v_GetLocCoords(coords, Lcoords);
+            return v_GetLocCoords(coords, Lcoords);
         }
 
         /**

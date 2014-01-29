@@ -626,8 +626,10 @@ namespace Nektar
         /**
          *
          */
-        void TriGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        NekDouble TriGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, 
+                                          Array<OneD,NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
             TriGeom::v_FillGeom();
 
             // calculate local coordinate for coord
@@ -686,8 +688,9 @@ namespace Nektar
                 Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[1])/2 -1.0;
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords,resid);
             }
+            return resid;
         }
 
 
@@ -825,10 +828,19 @@ namespace Nektar
                                       Array<OneD, NekDouble> &stdCoord,
                                       NekDouble tol)
         {
+            NekDouble resid;
+            return v_ContainsPoint(gloCoord,stdCoord,tol,resid);
+        }
+
+        bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+                                      Array<OneD, NekDouble> &stdCoord,
+                                      NekDouble tol,
+                                      NekDouble &resid)
+        {
             ASSERTL1(gloCoord.num_elements() >= 2,
                     "Two dimensional geometry expects at least two coordinates.");
 
-            GetLocCoords(gloCoord, stdCoord);
+            resid = GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -(1+tol) && stdCoord[1] >= -(1+tol)
                     && stdCoord[0] + stdCoord[1] <= tol)
             {

@@ -50,8 +50,6 @@ int main(int argc, char* argv[])
         ("modules-list,l", "Print the list of available modules.")
         ("output-points,n",po::value<string>(),
          "Output at p equipspaced points (for .dat, .vtk).")
-        ("boundary-region,b",po::value<string>(), 
-         "exact boundary regions specified as -b 0,1:FldToBoundary")
         ("error,e",  "write error of fields for regression checking")
         ("range,r",po::value<string>(),
          "define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) in which any vertex is contained .")
@@ -161,6 +159,7 @@ int main(int argc, char* argv[])
         cerr << "ERROR: You must specify input(s) and and output file." << endl;
         return 1;
     }
+#if 0 
     else if(vm.count("boundary-region"))
     {
         if(inout.size() < 3)
@@ -169,7 +168,7 @@ int main(int argc, char* argv[])
             return 2;
         }
     }
-
+#endif
     
     /*
      * Process list of modules. Each element of the vector of module strings can

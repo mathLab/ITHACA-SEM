@@ -65,39 +65,26 @@ namespace Nektar
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
             
-            if (vm.count("boundary-region"))
+            if (m_f->m_writeBndFld)
             {
-                vector<string> tmp1;
                 ModuleKey      module;
                 
-                string boptions = vm["boundary-region"].as<string>().c_str();
-                boost::split(tmp1, boptions, boost::is_any_of(":"));
-                
-                vector<unsigned int> values;
-                ASSERTL0(ParseUtils::GenerateOrderedVector(
-                         tmp1[0].c_str(),values),
-                         "Failed to interpret range string");
-                
-                if (tmp1.size() == 2)
+                // Extract data to boundaryconditions/ 
+                if (m_f->m_fldToBnd)
                 {
-                    // Extract data to boundaryconditions/ 
-                    if (tmp1[1].compare("FldToBoundary") <=0)
+                    for (int i = 0; i < m_f->m_exp.size(); ++i)
                     {
-                        for (int i = 0; i < m_f->m_exp.size(); ++i)
-                        {
                             m_f->m_exp[i]->FillBndCondFromField();
-                        }
                     }
-                    
                 }
                 
                 if (m_f->m_verbose)
                 {
                     cout << "OutputFld: Writing boundary file(s): "; 
-                    for(int i = 0; i < values.size(); ++i)
+                    for(int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
                     {
-                        cout << values[i];
-                        if(i < values.size()-1) 
+                        cout << m_f->m_bndRegionsToWrite[i];
+                        if(i < m_f->m_bndRegionsToWrite.size()-1) 
                         {
                             cout << ",";
                         }
@@ -118,13 +105,13 @@ namespace Nektar
                 string ext  = filename.substr(dot, filename.length() - dot);
                 string name = filename.substr(0, dot-1);
 
-                for(int i = 0; i < values.size(); ++i)
+                for(int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
                 {
                     string outname = name  + "_b" + 
                         boost::lexical_cast<string>(i) + "." + ext;
                     
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> 
-                        FieldDef = BndExp[0][values[i]]->GetFieldDefinitions();
+                        FieldDef = BndExp[0][m_f->m_bndRegionsToWrite[i]]->GetFieldDefinitions();
                     std::vector<std::vector<NekDouble> > 
                         FieldData(FieldDef.size());
 
@@ -133,12 +120,12 @@ namespace Nektar
                         for (int k = 0; k < FieldDef.size(); ++k)
                         {
 
-                            ASSERTL0(values[i] < BndExp[j].num_elements(),
+                            ASSERTL0(m_f->m_bndRegionsToWrite[i] < BndExp[j].num_elements(),
                                      "Boundary region " + boost::
-                                     lexical_cast<string>(values[i]) +
+                                     lexical_cast<string>(m_f->m_bndRegionsToWrite[i]) +
                                      " is not defined in input file");
                             
-                            BndExp[j][values[i]]->AppendFieldData(FieldDef[k], 
+                            BndExp[j][m_f->m_bndRegionsToWrite[i]]->AppendFieldData(FieldDef[k], 
                                                                   FieldData[k]);
                             
                             FieldDef[k]->m_fields.push_back(m_f->m_fielddef[0]->
@@ -156,15 +143,15 @@ namespace Nektar
                         
                         for (int j = 0; j < nfields; ++j)
                         {
-                            BndExp[j][values[i]]->BwdTrans(
-                                BndExp[j][values[i]]->GetCoeffs(), 
-                                BndExp[j][values[i]]->UpdatePhys());
+                            BndExp[j][m_f->m_bndRegionsToWrite[i]]->BwdTrans(
+                                BndExp[j][m_f->m_bndRegionsToWrite[i]]->GetCoeffs(), 
+                                BndExp[j][m_f->m_bndRegionsToWrite[i]]->UpdatePhys());
                             
-                            NekDouble l2err = BndExp[j][values[i]]->
-                                L2(BndExp[j][values[i]]->GetPhys());
+                            NekDouble l2err = BndExp[j][m_f->m_bndRegionsToWrite[i]]->
+                                L2(BndExp[j][m_f->m_bndRegionsToWrite[i]]->GetPhys());
                             
-                            NekDouble linferr = BndExp[j][values[i]]->
-                                Linf(BndExp[j][values[i]]->GetPhys());
+                            NekDouble linferr = BndExp[j][m_f->m_bndRegionsToWrite[i]]->
+                                Linf(BndExp[j][m_f->m_bndRegionsToWrite[i]]->GetPhys());
                             
                             if (rank == 0)
                             {

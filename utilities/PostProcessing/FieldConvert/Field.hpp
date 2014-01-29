@@ -63,7 +63,8 @@ namespace Nektar
     {
         struct Field {
             Field() : m_verbose(false),m_declareExpansionAsContField(false),
-                      m_declareExpansionAsDisContField(false){}
+                      m_declareExpansionAsDisContField(false),
+                      m_writeBndFld(false){}
             
             bool m_verbose;
             vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
@@ -77,7 +78,12 @@ namespace Nektar
             SpatialDomains::MeshGraphSharedPtr   m_graph;
             LibUtilities::FieldIOSharedPtr       m_fld;
             map<string, vector<string> >         m_inputfiles;
-            
+
+            bool                 m_writeBndFld; 
+            vector<unsigned int> m_bndRegionsToWrite;
+            bool                 m_fldToBnd; 
+
+
             MultiRegions::ExpListSharedPtr AppendExpList(string var = "DefaultVar")
             {
                 MultiRegions::ExpListSharedPtr tmp;

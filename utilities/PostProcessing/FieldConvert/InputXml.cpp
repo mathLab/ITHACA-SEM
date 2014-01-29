@@ -110,7 +110,8 @@ namespace Nektar
             string xml_ending = "xml";
             string xml_gz_ending = "xml.gz";
 
-            if(vm.count("boundary-region"))
+            // Boundary output requires field file
+            if(m_f->m_writeBndFld)
             {
                 m_f->m_declareExpansionAsContField = true;
             }

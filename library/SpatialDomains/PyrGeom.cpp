@@ -397,23 +397,30 @@ namespace Nektar
             }
 
             // set up top vertex
-            if (m_edges[4]->GetVid(0) == m_edges[5]->GetVid(0) ||
-                m_edges[4]->GetVid(1) == m_edges[5]->GetVid(1))
-            {
-                m_verts.push_back(m_edges[4]->GetVertex(0));
-            }
-            else if (m_edges[4]->GetVid(1) == m_edges[5]->GetVid(0) ||
-                     m_edges[4]->GetVid(0) == m_edges[5]->GetVid(1))
+            if (m_edges[4]->GetVid(0) == m_verts[0]->GetVid())
             {
                 m_verts.push_back(m_edges[4]->GetVertex(1));
             }
             else
             {
-                std::ostringstream errstrm;
-                errstrm << "Connected edges " << m_edges[4]->GetEid()
-                        << " and "            << m_edges[5]->GetEid()
-                        << " do not share a common vertex.";
+                m_verts.push_back(m_edges[4]->GetVertex(0));
+            }
 
+            int check = 0;
+            for (int i = 5; i < 8; ++i)
+            {
+                if( (m_edges[i]->GetVid(0) == m_verts[i-4]->GetVid()
+                    && m_edges[i]->GetVid(1) == m_verts[4]->GetVid())
+                    ||(m_edges[i]->GetVid(1) == m_verts[i-4]->GetVid()
+                    && m_edges[i]->GetVid(0) == m_verts[4]->GetVid()))
+                {
+                    check++;
+                }
+            }
+            if (check != 3) {
+                std::ostringstream errstrm;
+                errstrm << "Connected edges do not share a vertex. Edges ";
+                errstrm << m_edges[3]->GetEid() << ", " << m_edges[2]->GetEid();
                 ASSERTL0(false, errstrm.str());
             }
         }

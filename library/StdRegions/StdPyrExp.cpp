@@ -576,7 +576,7 @@ namespace Nektar
 
                     for (k = 0; k < Qz; ++k)
                     {
-                        double sum = 0.0;
+                        NekDouble sum = 0.0;
                         for (j = 0; j < Qy; ++j)
                         {
                             sum += by[j + Qy*q]*f[j+Qy*k];
@@ -587,7 +587,7 @@ namespace Nektar
                     for (it_r = it_q->second.begin(); it_r != it_q->second.end(); ++it_r)
                     {
                         const int rpqr = it_r->second.second;
-                        double sum = 0.0;
+                        NekDouble sum = 0.0;
                         for (k = 0; k < Qz; ++k)
                         {
                             sum += bz[k + Qz*rpqr]*fb[k];
@@ -1200,7 +1200,7 @@ namespace Nektar
                 default:
                     ASSERTL0(false, "Face to element map unavailable.");
             }
-            
+
             if (fid > 0)
             {
                 // Triangles only have one possible orientation (base

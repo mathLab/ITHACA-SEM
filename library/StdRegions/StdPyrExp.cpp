@@ -1299,6 +1299,305 @@ namespace Nektar
             return vId;
         }
 
+        void StdPyrExp::v_GetEdgeInteriorMap(
+            const int                  eid,
+            const Orientation          edgeOrient,
+            Array<OneD, unsigned int> &maparray,
+            Array<OneD, int>          &signarray)
+        {
+            int       i;
+            bool      signChange;
+            const int P              = m_base[0]->GetNumModes();
+            const int Q              = m_base[1]->GetNumModes();
+            const int R              = m_base[2]->GetNumModes();
+            const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid) - 2;
+            
+            if (maparray.num_elements() != nEdgeIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
+            }
+            
+            if(signarray.num_elements() != nEdgeIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
+            }
+            else
+            {
+                fill(signarray.get(), signarray.get()+nEdgeIntCoeffs, 1);
+            }
+            
+            // If edge is oriented backwards, change sign of modes which have
+            // degree 2n+1, n >= 1.
+            signChange = edgeOrient == eBackwards;
+
+            int offset = 5;
+            
+            switch (eid)
+            {
+                case 0:
+                    break;
+                case 1:
+                    offset += P;
+                    break;
+                case 2:
+                    offset += P+Q;
+                    break;
+                case 3:
+                    offset += 2*P+Q;
+                    break;
+                case 4:
+                    offset += 2*(P+Q);
+                    break;
+                case 5:
+                    offset += 2*(P+Q)+R;
+                    break;
+                case 6:
+                    offset += 2*(P+Q+R);
+                    break;
+                case 7:
+                    offset += 2*(P+Q)+3*R;
+                    break;
+                default:
+                    ASSERTL0(false, "Edge not defined.");
+                    break;
+            }
+
+            for (i = 0; i < nEdgeIntCoeffs; ++i)
+            {
+                maparray[i] = offset + i;
+            }
+
+            if (signChange)
+            {
+                for (i = 1; i < nEdgeIntCoeffs; i += 2)
+                {
+                    signarray[i] = -1;
+                }
+            }
+        }
+        
+        void StdPyrExp::v_GetFaceInteriorMap(
+            const int                  fid,
+            const Orientation          faceOrient,
+            Array<OneD, unsigned int> &maparray,
+            Array<OneD, int>          &signarray)
+        {
+            const int P              = m_base[0]->GetNumModes() - 1;
+            const int Q              = m_base[1]->GetNumModes() - 1;
+            const int R              = m_base[2]->GetNumModes() - 1;
+            const int nFaceIntCoeffs = v_GetFaceIntNcoeffs(fid);
+            int       p, q, r, idx   = 0;
+            int       nummodesA;
+            int       nummodesB;
+            int       i, j;
+
+            if (maparray.num_elements() != nFaceIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
+            }
+            
+            if (signarray.num_elements() != nFaceIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nFaceIntCoeffs, 1);
+            }
+            else
+            {
+                fill(signarray.get(), signarray.get()+nFaceIntCoeffs, 1);
+            }
+            
+            // Set up an array indexing for quad faces, since the ordering may
+            // need to be transposed depending on orientation.
+            Array<OneD, int> arrayindx(nFaceIntCoeffs);
+            if (fid == 0) 
+            {
+                nummodesA = P-1;
+                nummodesB = Q-1;
+
+                for (i = 0; i < nummodesB; i++)
+                {
+                    for (j = 0; j < nummodesA; j++)
+                    {
+                        if (faceOrient < 9)
+                        {
+                            arrayindx[i*nummodesA+j] = i*nummodesA+j;
+                        }
+                        else
+                        {
+                            arrayindx[i*nummodesA+j] = j*nummodesB+i;
+                        }
+                    }
+                }
+            }
+
+            int offset = 5 + 2*(P+1) + 2*(Q+1) + 4*(R+1);
+
+            for (i = 0; i < fid-1; ++i)
+            {
+                offset += GetFaceNcoeffs(i);
+            }
+
+            switch (fid)
+            {
+                case 0:
+                    for (q = 2; q <= Q; ++q)
+                    {
+                        for (p = 2; p <= P; ++p)
+                        {
+                            maparray[arrayindx[(q-2)*nummodesA+(p-2)]]
+                                    = offset + (q-2)*nummodesA+(p-2);
+                        }
+                    }
+                    break;
+
+                case 1:
+                case 3:
+                    for (p = 2; p <= P; ++p)
+                    {
+                        for (r = 1; r <= R-p; ++r)
+                        {
+                            if ((int)faceOrient == 7)
+                            {
+                                signarray[idx] = p % 2 ? -1 : 1;
+                            }
+                            maparray[idx] = offset + idx++;
+                        }
+                    }
+                    break;
+
+                case 2:
+                case 4:
+                    for (q = 2; q <= P; ++q)
+                    {
+                        for (r = 1; r <= R-q; ++r)
+                        {
+                            if ((int)faceOrient == 7)
+                            {
+                                signarray[idx] = q % 2 ? -1 : 1;
+                            }
+                            maparray[idx] = offset + idx++;
+                        }
+                    }
+                    break;
+
+                default:
+                    ASSERTL0(false, "Face interior map not available.");
+            }
+
+            // Triangular faces are processed in the above switch loop; for
+            // remaining quad faces, set up orientation if necessary.
+            if (fid > 0)
+            {
+                return;
+            }
+
+            if (faceOrient == 6 || faceOrient == 8 ||
+                faceOrient == 11 || faceOrient == 12)
+            {
+                if (faceOrient < 9)
+                {
+                    for (i = 1; i < nummodesB; i += 2)
+                    {
+                        for (j = 0; j < nummodesA; j++)
+                        {
+                            signarray[arrayindx[i*nummodesA+j]] *= -1;
+                        }
+                    }
+                }
+                else
+                {
+                    for (i = 0; i < nummodesB; i++)
+                    {
+                        for (j = 1; j < nummodesA; j += 2)
+                        {
+                            signarray[arrayindx[i*nummodesA+j]] *= -1;
+                        }
+                    }
+                }
+            }
+
+            if (faceOrient == 7 || faceOrient == 8 ||
+                faceOrient == 10 || faceOrient == 12)
+            {
+                if (faceOrient < 9)
+                {
+                    for (i = 0; i < nummodesB; i++)
+                    {
+                        for (j = 1; j < nummodesA; j += 2)
+                        {
+                            signarray[arrayindx[i*nummodesA+j]] *= -1;
+                        }
+                    }
+                }
+                else
+                {
+                    for (i = 1; i < nummodesB; i += 2)
+                    {
+                        for (j = 0; j < nummodesA; j++)
+                        {
+                            signarray[arrayindx[i*nummodesA+j]] *= -1;
+                        }
+                    }
+                }
+            }
+        }
+
+        void StdPyrExp::v_GetInteriorMap(Array<OneD, unsigned int> &outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int P = m_base[0]->GetNumModes() - 1, p;
+            int Q = m_base[1]->GetNumModes() - 1, q;
+            int R = m_base[2]->GetNumModes() - 1, r;
+
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.num_elements()!=nIntCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+            }
+
+            int offset = 5 + 2*(P+1) + 2*(Q+1) + 4*(R+1);
+            int idx = 0;
+
+            for (p = 0; p < 5; ++p)
+            {
+                offset += GetFaceNcoeffs(p);
+            }
+
+            // Loop over all interior modes.
+            for (p = offset; p < m_ncoeffs; ++p)
+            {
+                outarray[idx++] = p;
+            }
+        }
+
+        void StdPyrExp::v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int idx = 0, nBndry = v_NumBndryCoeffs();
+
+            for (idx = 0; idx < nBndry; ++idx)
+            {
+                maparray[idx] = idx;
+            }
+        }
 
         //---------------------------------------
         // Wrapper functions

@@ -546,8 +546,6 @@ namespace Nektar
             const Array<OneD, const NekDouble> &by = m_base[1]->GetBdata();
             const Array<OneD, const NekDouble> &bz = m_base[2]->GetBdata();
             
-            int Q = m_base[1]->GetNumModes()-1;
-
             map<int, map<int, map<int, pair<int, int> > > >::iterator it_p;
             map<int, map<int,          pair<int, int> > >  ::iterator it_q;
             map<int,                   pair<int, int> >    ::iterator it_r;
@@ -840,7 +838,7 @@ namespace Nektar
                      "(x and y direction) and Modified_C BasisType (z "
                      "direction)");
 
-            int i, j, p, q, r, nFaceCoeffs, idx = 0;
+            int i, j, p, q, r, nFaceCoeffs;
 
             int order0 = m_base[0]->GetNumModes();
             int order1 = m_base[1]->GetNumModes();
@@ -1463,13 +1461,13 @@ namespace Nektar
                 case 3:
                     for (p = 2; p <= P; ++p)
                     {
-                        for (r = 1; r <= R-p; ++r)
+                        for (r = 1; r <= R-p; ++r, ++idx)
                         {
                             if ((int)faceOrient == 7)
                             {
                                 signarray[idx] = p % 2 ? -1 : 1;
                             }
-                            maparray[idx] = offset + idx++;
+                            maparray[idx] = offset + idx;
                         }
                     }
                     break;
@@ -1478,13 +1476,13 @@ namespace Nektar
                 case 4:
                     for (q = 2; q <= P; ++q)
                     {
-                        for (r = 1; r <= R-q; ++r)
+                        for (r = 1; r <= R-q; ++r, ++idx)
                         {
                             if ((int)faceOrient == 7)
                             {
                                 signarray[idx] = q % 2 ? -1 : 1;
                             }
-                            maparray[idx] = offset + idx++;
+                            maparray[idx] = offset + idx;
                         }
                     }
                     break;
@@ -1564,8 +1562,8 @@ namespace Nektar
                      "BasisType is not a boundary interior form");
 
             int P = m_base[0]->GetNumModes() - 1, p;
-            int Q = m_base[1]->GetNumModes() - 1, q;
-            int R = m_base[2]->GetNumModes() - 1, r;
+            int Q = m_base[1]->GetNumModes() - 1;
+            int R = m_base[2]->GetNumModes() - 1;
 
             int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
 
@@ -1579,7 +1577,7 @@ namespace Nektar
 
             for (p = 0; p < 5; ++p)
             {
-                offset += GetFaceNcoeffs(p);
+                offset += v_GetFaceIntNcoeffs(p);
             }
 
             // Loop over all interior modes.

@@ -893,8 +893,6 @@ namespace Nektar
             // to be transposed.
             Array<OneD, int> arrayindx(nFaceCoeffs,-1);
 
-            cout << "faceOrient = " << faceOrient << endl;
-            
             if (fid == 0)
             {
                 for (i = 0; i < nummodesB; i++)

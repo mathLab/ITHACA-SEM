@@ -251,7 +251,7 @@ namespace Nektar
                 v_FillGeom();
 
                 // check to see if expansions are linear
-                for(int i = 0; i < m_coordim; ++i)
+                for (int i = 0; i < m_coordim; ++i)
                 {
                     if (m_xmap->GetBasisNumModes(0) != 2 ||
                         m_xmap->GetBasisNumModes(1) != 2 ||

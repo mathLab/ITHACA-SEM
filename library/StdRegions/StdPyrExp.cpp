@@ -331,6 +331,13 @@ namespace Nektar
         {
             StdPyrExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
+
+        void StdPyrExp::v_StdPhysDeriv(const int dir,
+                                       const Array<OneD, const NekDouble>& inarray,
+                                             Array<OneD,       NekDouble>& outarray)
+        {
+            StdPyrExp::v_PhysDeriv(dir, inarray, outarray);
+        }
         
         //---------------------------------------
         // Transforms
@@ -822,6 +829,465 @@ namespace Nektar
             int                        nummodesA, 
             int                        nummodesB)
         {
+            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
+                     "Method only implemented if BasisType is identical"
+                     "in x and y directions");
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A && 
+                     GetEdgeBasisType(4) == LibUtilities::eModified_C,
+                     "Method only implemented for Modified_A BasisType"
+                     "(x and y direction) and Modified_C BasisType (z "
+                     "direction)");
+
+            int i, j, p, q, r, nFaceCoeffs, idx = 0;
+
+            int order0 = m_base[0]->GetNumModes();
+            int order1 = m_base[1]->GetNumModes();
+            int order2 = m_base[2]->GetNumModes();
+
+            if (nummodesA == -1)
+            {
+                switch (fid)
+                {
+                    case 0:
+                        nummodesA = m_base[0]->GetNumModes();
+                        nummodesB = m_base[1]->GetNumModes();
+                        break;
+                    case 1:
+                    case 3:
+                        nummodesA = m_base[0]->GetNumModes();
+                        nummodesB = m_base[2]->GetNumModes();
+                        break;
+                    case 2:
+                    case 4:
+                        nummodesA = m_base[1]->GetNumModes();
+                        nummodesB = m_base[2]->GetNumModes();
+                        break;
+                }
+                nFaceCoeffs = GetFaceNcoeffs(fid);
+            }
+            else if (fid > 0)
+            {
+                nFaceCoeffs = nummodesB + (nummodesA-1)*(1+2*(nummodesB-1)-(nummodesA-1))/2;
+            }
+            else
+            {
+                nFaceCoeffs = nummodesA*nummodesB;
+            }
+
+            // Allocate the map array and sign array; set sign array to ones (+)
+            if (maparray.num_elements() != nFaceCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nFaceCoeffs);
+            }
+            
+            if (signarray.num_elements() != nFaceCoeffs)
+            {
+                signarray = Array<OneD, int>(nFaceCoeffs,1);
+            }
+            else
+            {
+                fill(signarray.get(), signarray.get() + nFaceCoeffs, 1);
+            }
+
+            // Set up an array indexing for quads, since the ordering may need
+            // to be transposed.
+            Array<OneD, int> arrayindx(nFaceCoeffs,-1);
+            
+            if (fid == 0)
+            {
+                for (i = 0; i < nummodesB; i++)
+                {
+                    for (j = 0; j < nummodesA; j++)
+                    {
+                        if (faceOrient < 9)
+                        {
+                            arrayindx[i*nummodesA+j] = i*nummodesA+j;
+                        }
+                        else
+                        {
+                            arrayindx[i*nummodesA+j] = j*nummodesB+i;
+                        }
+                    }
+                }
+            }
+
+            // Set up ordering inside each 2D face. Also for triangular faces,
+            // populate signarray.
+            int cnt = 0, cnt2;
+            switch (fid) 
+            {
+                case 0: // Bottom quad
+
+                    // Fill in vertices
+                    maparray[arrayindx[0]]           = 0;
+                    maparray[arrayindx[1]]           = 1;
+                    maparray[arrayindx[nummodesA+1]] = 2;
+                    maparray[arrayindx[nummodesA]]   = 3;
+
+                    cnt = 5;
+
+                    // Edge 0
+                    for (p = 2; p < nummodesA; ++p)
+                    {
+                        maparray[arrayindx[p]] = p + cnt++;
+                    }
+
+                    // Edge 1
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[arrayindx[q*nummodesA+1]] = q + cnt++;
+                    }
+
+                    // Edge 2
+                    for (p = 2; p < nummodesA; ++p)
+                    {
+                        maparray[arrayindx[nummodesA+p]] = p + cnt++;
+                    }
+
+                    // Edge 3
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[arrayindx[q*nummodesA]] = q + cnt++;
+                    }
+
+                    // Interior
+                    for (q = 0; q < nummodesB-2; ++q)
+                    {
+                        for (p = 0; p < nummodesA-2; ++p)
+                        {
+                            maparray[arrayindx[q*nummodesA+p]] = cnt + q*nummodesA+p;
+                        }
+                    }
+                    break;
+
+                case 1: // Left triangle
+                    // Vertices
+                    maparray[0] = 0;
+                    maparray[1] = 4;
+                    maparray[2] = 1;
+
+                    // Edge 0 (pyramid edge 0)
+                    cnt = 5;
+                    q   = 2*nummodesB-1;
+                    for (p = 2; p < nummodesA; ++p, q += nummodesB-p)
+                    {
+                        maparray[q] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[q] = p % 2 ? -1 : 1;
+                        }
+                    }
+
+                    // Edge 1 (pyramid edge 5)
+                    cnt = 5 + 2*order0 + 2*order1 + order2;
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[q] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[q] = q % 2 ? -1 : 1;
+                        }
+                    }
+                    
+                    // Edge 2 (pyramid edge 4)
+                    cnt = 5 + 2*order0 + 2*order1;
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[nummodesB+q-1] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
+                        }
+                    }
+
+                    // Interior
+                    cnt  = 5 + 2*order0 + 2*order1 + 4*order2 + order0*order1;
+                    cnt2 = 2*nummodesB + 1;
+                    for (p = 2; p < nummodesA; ++p)
+                    {
+                        for (r = 2; r < nummodesB-p; ++r)
+                        {
+                            maparray[cnt2] = cnt++;
+                            if ((int)faceOrient == 7 && p > 1)
+                            {
+                                signarray[cnt2++] = p % 2 ? -1 : 1;
+                            }
+                        }
+                        cnt2++;
+                    }
+                    break;
+
+                case 2:
+                    // Vertices
+                    maparray[0] = 1;
+                    maparray[1] = 4;
+                    maparray[2] = 2;
+
+                    // Edge 0 (pyramid edge 1)
+                    cnt = 5 + order0;
+                    q   = 2*nummodesB-1;
+                    for (p = 2; p < nummodesA; ++p, q += nummodesB-p)
+                    {
+                        maparray[q] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[q] = p % 2 ? -1 : 1;
+                        }
+                    }
+
+                    // Edge 1 (pyramid edge 6)
+                    cnt = 5 + 2*order0 + 2*order1 + 2*order2;
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[q] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[q] = q % 2 ? -1 : 1;
+                        }
+                    }
+                    
+                    // Edge 2 (pyramid edge 5)
+                    cnt = 5 + 2*order0 + 2*order1 + order2;
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[nummodesB+q-1] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
+                        }
+                    }
+
+                    // Interior
+                    cnt  = 5 + 2*order0 + 2*order1 + 4*order2 + order0*order1
+                        + GetFaceNcoeffs(1);
+                    cnt2 = 2*nummodesB + 1;
+                    for (p = 2; p < nummodesA; ++p)
+                    {
+                        for (r = 2; r < nummodesB-p; ++r)
+                        {
+                            maparray[cnt2] = cnt++;
+                            if ((int)faceOrient == 7 && p > 1)
+                            {
+                                signarray[cnt2++] = p % 2 ? -1 : 1;
+                            }
+                        }
+                        cnt2++;
+                    }
+                    break;
+
+                case 3: // Right triangle
+                    // Vertices
+                    maparray[0] = 3;
+                    maparray[1] = 4;
+                    maparray[2] = 2;
+
+                    // Edge 0 (pyramid edge 2)
+                    cnt = 5 + order0 + order1;
+                    q   = 2*nummodesB-1;
+                    for (p = 2; p < nummodesA; ++p, q += nummodesB-p)
+                    {
+                        maparray[q] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[q] = p % 2 ? -1 : 1;
+                        }
+                    }
+
+                    // Edge 1 (pyramid edge 6)
+                    cnt = 5 + 2*order0 + 2*order1 + 2*order2;
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[q] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[q] = q % 2 ? -1 : 1;
+                        }
+                    }
+                    
+                    // Edge 2 (pyramid edge 7)
+                    cnt = 5 + 2*order0 + 2*order1 + 3*order2;
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[nummodesB+q-1] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
+                        }
+                    }
+
+                    // Interior
+                    cnt  = 5 + 2*order0 + 2*order1 + 4*order2 + order0*order1
+                        + GetFaceNcoeffs(1) + GetFaceNcoeffs(2);
+                    cnt2 = 2*nummodesB + 1;
+                    for (p = 2; p < nummodesA; ++p)
+                    {
+                        for (r = 2; r < nummodesB-p; ++r)
+                        {
+                            maparray[cnt2] = cnt++;
+                            if ((int)faceOrient == 7 && p > 1)
+                            {
+                                signarray[cnt2++] = p % 2 ? -1 : 1;
+                            }
+                        }
+                        cnt2++;
+                    }
+                    break;
+
+                case 4: // Rear quad
+                    // Vertices
+                    maparray[0] = 0;
+                    maparray[1] = 4;
+                    maparray[2] = 3;
+
+                    // Edge 0 (pyramid edge 3)
+                    cnt = 5 + 2*order0 + order1;
+                    q   = 2*nummodesB-1;
+                    for (p = 2; p < nummodesA; ++p, q += nummodesB-p)
+                    {
+                        maparray[q] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[q] = p % 2 ? -1 : 1;
+                        }
+                    }
+
+                    // Edge 1 (pyramid edge 7)
+                    cnt = 5 + 2*order0 + 2*order1 + 3*order2;
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[q] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[q] = q % 2 ? -1 : 1;
+                        }
+                    }
+                    
+                    // Edge 2 (pyramid edge 4)
+                    cnt = 5 + 2*order0 + 2*order1;
+                    for (q = 2; q < nummodesB; ++q)
+                    {
+                        maparray[nummodesB+q-1] = cnt++;
+                        if ((int)faceOrient == 7)
+                        {
+                            signarray[nummodesB+q-1] = q % 2 ? -1 : 1;
+                        }
+                    }
+
+                    // Interior
+                    cnt  = 5 + 2*order0 + 2*order1 + 4*order2 + order0*order1
+                        + GetFaceNcoeffs(1) + GetFaceNcoeffs(2) + GetFaceNcoeffs(3);
+                    cnt2 = 2*nummodesB + 1;
+                    for (p = 2; p < nummodesA; ++p)
+                    {
+                        for (r = 2; r < nummodesB-p; ++r)
+                        {
+                            maparray[cnt2] = cnt++;
+                            if ((int)faceOrient == 7 && p > 1)
+                            {
+                                signarray[cnt2++] = p % 2 ? -1 : 1;
+                            }
+                        }
+                        cnt2++;
+                    }
+                    break;
+                    
+                default:
+                    ASSERTL0(false, "Face to element map unavailable.");
+            }
+            
+            if (fid > 0)
+            {
+                // Triangles only have one possible orientation (base
+                // direction reversed); swap edge modes.
+                if ((int)faceOrient == 7)
+                {
+                    swap(maparray[0], maparray[nummodesA]);
+                    for (i = 1; i < nummodesA-1; ++i)
+                    {
+                        swap(maparray[i+1], maparray[nummodesA+i]);
+                    }
+                }
+            }
+            else
+            {
+                // The code below is exactly the same as that taken from
+                // StdHexExp and reverses the 'b' and 'a' directions as
+                // appropriate (1st and 2nd if statements respectively) in
+                // quadrilateral faces.
+                if (faceOrient == 6 || faceOrient == 8 ||
+                    faceOrient == 11 || faceOrient == 12)
+                {
+                    if (faceOrient < 9)
+                    {
+                        for (i = 3; i < nummodesB; i += 2)
+                        {
+                            for (j = 0; j < nummodesA; j++)
+                            {
+                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                            }
+                        }
+                        
+                        for (i = 0; i < nummodesA; i++)
+                        {
+                            swap(maparray [i], maparray [i+nummodesA]);
+                            swap(signarray[i], signarray[i+nummodesA]);
+                        }
+                    }
+                    else
+                    {
+                        for (i = 0; i < nummodesB; i++)
+                        {
+                            for (j = 3; j < nummodesA; j += 2)
+                            {
+                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                            }
+                        }
+
+                        for (i = 0; i < nummodesB; i++)
+                        {
+                            swap (maparray [i], maparray [i+nummodesB]);
+                            swap (signarray[i], signarray[i+nummodesB]);
+                        }
+                    }
+                }
+
+                if (faceOrient == 7 || faceOrient == 8 ||
+                    faceOrient == 10 || faceOrient == 12)
+                {
+                    if (faceOrient < 9)
+                    {
+                        for (i = 0; i < nummodesB; i++)
+                        {
+                            for (j = 3; j < nummodesA; j += 2)
+                            {
+                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                            }
+                        }
+
+                        for(i = 0; i < nummodesB; i++)
+                        {
+                            swap(maparray [i*nummodesA], maparray [i*nummodesA+1]);
+                            swap(signarray[i*nummodesA], signarray[i*nummodesA+1]);
+                        }
+                    }
+                    else
+                    {
+                        for (i = 3; i < nummodesB; i += 2)
+                        {
+                            for (j = 0; j < nummodesA; j++)
+                            {
+                                signarray[arrayindx[i*nummodesA+j]] *= -1;
+                            }
+                        }
+
+                        for (i = 0; i < nummodesA; i++)
+                        {
+                            swap(maparray [i*nummodesB], maparray [i*nummodesB+1]);
+                            swap(signarray[i*nummodesB], signarray[i*nummodesB+1]);
+                        }
+                    }
+                }
+            }
         }
 
         int StdPyrExp::v_GetVertexMap(int vId, bool useCoeffPacking)
@@ -849,12 +1315,10 @@ namespace Nektar
         }
 
         /**
-         * 3
-         * 2  6          12
-         * 1  5  8       11 14      17
-         * 0  4  7  9    10 13 15   16  18   19
+         * @brief Number tetrahedral modes in r-direction. Much the same as
+         * StdTetExp::GetTetMode but slightly simplified since we know that the
+         * polynomial order is the same in each direction.
          */
-
         int StdPyrExp::GetTetMode(const int I, const int J, const int K)
         {
             const int R = m_base[2]->GetNumModes();

@@ -11835,17 +11835,17 @@
     </GEOMETRY>
     <EXPANSIONS>
         <E COMPOSITE="C[1]" BASISTYPE="GLL_Lagrange,GLL_Lagrange" NUMMODES="4,4"
-        POINTSTYPE="GaussLobattoLegendre,GaussLobattoLegendre" NUMPOINTS="6,6" 
+        POINTSTYPE="GaussLobattoLegendre,GaussLobattoLegendre" NUMPOINTS="4,4" 
         FIELDS="rho,rhou,rhov,E" />
     </EXPANSIONS>
     <CONDITIONS>
         <!-- Airbus Test Case -->
         <PARAMETERS>
-            <P> TimeStep            = 0.00000025                         </P>
+            <P> TimeStep            = 0.0000025                         </P>
             <P> FinTime             = 0.0000025                               </P>
             <P> NumSteps            = FinTime/TimeStep                  </P>
             <P> IO_CheckSteps       = 10 <!--FinTime/(1000*TimeStep)--> </P>
-            <P> IO_InfoSteps        = 1                                 </P>
+            <P> IO_InfoSteps        = 10                                 </P>
             <P> GasConstant         = 287.058                           </P>
             <P> Gamma               = 1.4                               </P>
             <P> pInf                = 22600                             </P>
@@ -11871,8 +11871,8 @@
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
             <I PROPERTY="AdvectionType"         VALUE="FRHU"                />
             <I PROPERTY="DiffusionType"         VALUE="LDGNS"               />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-            <I PROPERTY="UpwindType"            VALUE="ExactToro"           />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"/>
+            <I PROPERTY="UpwindType"            VALUE="HLLC"           />
             <I PROPERTY="ProblemType"           VALUE="General"             />
             <I PROPERTY="ViscosityType"         VALUE="Constant"            />
         </SOLVERINFO>

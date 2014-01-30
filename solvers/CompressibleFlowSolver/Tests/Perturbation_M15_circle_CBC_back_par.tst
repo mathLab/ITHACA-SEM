@@ -12,13 +12,13 @@
         <metric type="L2" id="1">
             <value variable="rho" tolerance="1e-12">0.0805624</value>
             <value variable="rhou" tolerance="1e-12">35.6279</value>
-            <value variable="rhov" tolerance="1e-12">0.000126555</value>
+            <value variable="rhov" tolerance="1e-12">0.000129061</value>
             <value variable="E" tolerance="1e-12">20382.9</value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="rho" tolerance="1e-12">0.364329</value>
+            <value variable="rho" tolerance="1e-12">0.36433</value>
             <value variable="rhou" tolerance="1e-12">161.024</value>
-            <value variable="rhov" tolerance="1e-12">0.0140616</value>
+            <value variable="rhov" tolerance="1e-12">0.0142433</value>
             <value variable="E" tolerance="1e-12">92155.9</value>
         </metric>
     </metrics>

@@ -4093,7 +4093,7 @@
         <I PROPERTY="HOMOGENEOUS"           VALUE="1D"                      />
         <I PROPERTY="AdvectionType"         VALUE="WeakDG3DHomogeneous1D"   />
         <I PROPERTY="DiffusionType"         VALUE="LDGNS3DHomogeneous1D"    />
-        <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"    />
+        <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"    />
         <I PROPERTY="UpwindType"            VALUE="HLLC"                    />
         <I PROPERTY="ProblemType"           VALUE="General"                 />
         <I PROPERTY="ViscosityType"         VALUE="Constant"                />

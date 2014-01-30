@@ -52,7 +52,6 @@ namespace Nektar
                 return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
             }
             static ModuleKey m_className;
-            
             OutputTecplot(FieldSharedPtr f);
             virtual ~OutputTecplot();
             
@@ -60,6 +59,8 @@ namespace Nektar
             virtual void Process(po::variables_map &vm);
 
         private:
+            bool m_doFloor;
+
             void WriteTecplotHeader(std::ofstream &outfile,
                                std::string var);
 

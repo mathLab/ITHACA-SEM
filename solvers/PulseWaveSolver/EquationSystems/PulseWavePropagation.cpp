@@ -100,7 +100,7 @@ namespace Nektar
 
         // Set up Inflow and Outflow boundary conditions. 
         SetPulseWaveBoundaryConditions(inarray, outarray, time);
-
+    
         // Set up any interface conditions and write into boundary condition
         EnforceInterfaceConditions(inarray);
         
@@ -168,8 +168,7 @@ namespace Nektar
         
         Array<OneD, MultiRegions::ExpListSharedPtr>     vessel(2);
 
-        int elmtid, offset; 
-        StdRegions::StdExpansionSharedPtr elmt;
+        int offset=0; 
 
         //This will be moved to the RCR boundary condition once factory is setup
 	if (time == 0)
@@ -195,46 +194,24 @@ namespace Nektar
 
         //-> This should be set up as a factory
         int cnt=0;
-
+        SetBoundaryConditions(time);
         // Loop over all vessesls and set boundary conditions
         for(omega = 0; omega < m_nDomains; ++omega)
         {
-            SetBoundaryConditions(time);
-            
             vessel[0] = m_vessels[2*omega];
             vessel[1] = m_vessels[2*omega+1];
 
-            // Set up mapping from boundary condition to elements
-            vessel[0]->GetBoundaryToElmtMap(m_outflowBCtoElmtID,m_outflowBCtoVertexID);
-
-
-            /*for( int k=0; k<m_outflowBCtoElmtID.num_elements(); ++k)
-            {
-                cout<<"element-BC: "<<m_outflowBCtoElmtID[k]<<endl;
-            }
-
-            for( int k=0; k<m_outflowBCtoVertexID.num_elements(); ++k)
-            {
-                cout<<"vertex-BC: "<<m_outflowBCtoVertexID[k]<<endl;
-            }
-            */
-
             for(int n = 0; n < vessel[0]->GetBndConditions().num_elements(); ++n)
             {			
-	      //SpatialDomains::BndUserDefinedType type = vessel[0]->GetBndConditions()[n]->GetUserDefined()
-	      // m_OutFlow=GetFlowFactory().CreateInstance("Resistance",m_vessels,m_session);
-
-                elmtid = m_outflowBCtoElmtID[n];
-                elmt   = vessel[0]->GetExp(elmtid);
-                offset = vessel[0]->GetCoeff_Offset(elmtid);;
-
                 switch(vessel[0]->GetBndConditions()[n]->GetUserDefined())
                 {
-                case SpatialDomains::eQinflow: 
+                    case SpatialDomains::eQinflow: 
                     {
+                        vessel[0]->EvaluateBoundaryConditions(time);
+
                         // Note: The Q value is contained in A in the
                         // inputfile, the value in u has to be 1.0
-                        ASSERTL0((vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] == 1.0, "For the Q-inflow BC the value in u must be 1.0");
+                        //ASSERTL0((vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] == 1.0, "For the Q-inflow BC the value in u must be 1.0");
                     
                         // Get the values of all variables needed for the Riemann problem
                         Q = (vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
@@ -244,7 +221,7 @@ namespace Nektar
 
                         // Call the Q-inflow Riemann solver
                         Q_inflowRiemannSolver(Q,A_r,u_r,m_A_0[omega][0],m_beta[omega][0],A_u,u_u);
-                        
+
                         // Set the boundary conditions to  prescribe
                         A_l=A_r;
                         u_l=2*u_u-u_r;
@@ -268,8 +245,8 @@ namespace Nektar
                         int nq = vessel[0]->GetTotPoints(); 
                         
                         // Get the left values A_l and u_l needed for Eq. 37
-                        A_l = vessel[0]->GetCoeffs()[offset+1];
-                        u_l = vessel[1]->GetCoeffs()[offset+1];
+                        A_l = inarray[0][offset+nq-1];
+                        u_l = inarray[1][offset+nq-1];
                         
                         // Get the values at initial state u_0, c_0
                         u_0 = 0.0; //for all vessels start from initial condition 0
@@ -296,20 +273,8 @@ namespace Nektar
                         int nq = vessel[0]->GetTotPoints(); 
                         
                         // Get the values of all variables needed for the Riemann problem
-                        A_l = inarray[0][nq-1];
-                        u_l = inarray[1][nq-1];
-
-                        //A_l = vessel[0]->GetCoeffs()[offset+1];
-                        //u_l = vessel[1]->GetCoeffs()[offset+1];
-
-                        /*for(int k=0; k<140; ++k)
-                        {
-                            cout<<k<<" "<<vessel[0]->GetCoeffs()[k]<<endl;
-                        }
-                        cout<<endl;*/
-
-                        //A_l = m_fields[0]->GetCoeffs()[1];
-                        //u_l = m_fields[1]->GetCoeffs()[1];
+                        A_l = inarray[0][offset+nq-1];
+                        u_l = inarray[1][offset+nq-1];
 
                         // Call the R RiemannSolver
                         R_RiemannSolver(RT,A_l,u_l,m_A_0[omega][nq-1],
@@ -401,7 +366,6 @@ namespace Nektar
                         // Goes through the CR system, it consists in
                         // updating the pressure pc
                         m_pc[cnt] = m_pc[cnt] + m_timestep/C*(A_u*u_u-(m_pc[cnt]-pout)/R2);
-                        //cout<<"pc:"<<m_pc[cnt]<<" cnt: "<<cnt<<endl;
                         cnt++;
 
                         // Store the updated values in the boundary condition
@@ -413,18 +377,16 @@ namespace Nektar
                     {
                         for (int i = 0; i < m_nVariables; ++i)
                         {
-                            vessel[i]->EvaluateBoundaryConditions(time);
+                            //vessel[i]->EvaluateBoundaryConditions(time);
                         }
                     }
                     break;
                 }
-                //offset+=vessel[0]
-
             }
 
-
-	    //offset += vessel[0]->GetTotPoints();
+	    offset += vessel[0]->GetTotPoints();
         }
+
 	
     }
 

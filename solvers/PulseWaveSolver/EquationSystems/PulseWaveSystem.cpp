@@ -556,9 +556,8 @@ namespace Nektar
         {				
             Timer timer;
             timer.Start();
-            
             fields = IntScheme[0]->TimeIntegrate(m_timestep,u,m_ode);
-                
+            //cout<<"integration: "<<fields[0][fields[0].num_elements()-1]<<endl;                
             m_time += m_timestep;
             timer.Stop();
             IntegrationTime += timer.TimePerTest(1);
@@ -697,6 +696,9 @@ namespace Nektar
                 int bcpos = m_vesselJcts[n][i]->m_bcPosition;            
                 m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdatePhys()[0] = Au[i];
                 m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdatePhys()[0] = uu[i];
+                //cout<<"Au: "<<Au[i]<<endl;
+                //cout<<"uu: "<<uu[i]<<endl;
+                //cout<<endl;
             }
 
         }

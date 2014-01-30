@@ -807,12 +807,12 @@ namespace Nektar
             int id = 0;
             
             for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {				
+            {	
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
                 {
                     id  = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt));
-                    Bwd[id] = m_bndCondExpansions[n]->GetPhys()[0];
+                    Bwd[id] = m_bndCondExpansions[n]->GetPhys()[0]; //this is not getting the correct value?
                     cnt++;
                 }
                 else if (m_bndConditions[n]->GetBoundaryConditionType() == 
@@ -1156,13 +1156,12 @@ namespace Nektar
             Array<OneD, NekDouble> x1(1);
             Array<OneD, NekDouble> x2(1);
 
-	       	
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->GetUserDefined() ==
                     SpatialDomains::eTimeDependent || 
                     m_bndConditions[i]->GetUserDefined() ==
-                    SpatialDomains::eQinflow ||
+                    SpatialDomains::eQinflow  ||
                     m_bndConditions[i]->GetUserDefined() ==
                     SpatialDomains::eRCRterminal )
                 {

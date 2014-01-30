@@ -85,6 +85,32 @@ namespace Nektar
             eNoUserDefined
         };
 
+        const char* const BndUserDefinedTypeMap[] =
+        {
+            "I",
+            "MG",
+            "High",
+            "HighOutflow",
+            "Wall_Forces",
+            "Wall",
+            "WallViscous",
+            "Symmetry",
+            "RinglebFlow",
+            "TimeDependent",
+            "Radiation",
+            "IsentropicVortex",
+            "CalcBC",
+            "Qinflow",
+            "Terminal",
+            "Rterminal",
+            "CRterminal",
+            "RCRterminal",
+            "InflowCFS",
+            "OutflowCFS",
+            "ExtrapOrder0",
+            "NoUserDefined"
+        };
+
         struct BoundaryConditionBase
         {
             BoundaryConditionBase(
@@ -150,6 +176,11 @@ namespace Nektar
             BndUserDefinedType GetUserDefined() const
             {
                 return m_userDefined;
+            }
+
+            const std::string GetBndTypeAsString(BndUserDefinedType type)
+            {
+                return BndUserDefinedTypeMap[type];
             }
 
         protected:

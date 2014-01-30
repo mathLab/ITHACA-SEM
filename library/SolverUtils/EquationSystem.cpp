@@ -155,27 +155,27 @@ namespace Nektar
                         m_session->MatchSolverInfo("ModeType", "MultipleModes", 
                                                    m_MultipleModes, false);
                     }
-					
-					// Stability Analysis flags
-					if (m_session->DefinesSolverInfo("ModeType"))
-					{
-						if(m_SingleMode)
-						{
-							m_npointsZ = 2;
-						}
-						else if(m_HalfMode)
-						{
-							m_npointsZ = 1;
-						}
-						else if(m_MultipleModes)
-						{
-							m_npointsZ = m_session->GetParameter("HomModesZ");
-						}
-						else
-						{
-							ASSERTL0(false, "SolverInfo ModeType not valid");
-						}
-					}
+
+                    // Stability Analysis flags
+                    if (m_session->DefinesSolverInfo("ModeType"))
+                    {
+                        if(m_SingleMode)
+                        {
+                            m_npointsZ = 2;
+                        }
+                        else if(m_HalfMode)
+                        {
+                            m_npointsZ = 1;
+                        }
+                        else if(m_MultipleModes)
+                        {
+                            m_npointsZ = m_session->GetParameter("HomModesZ");
+                        }
+                        else
+                        {
+                            ASSERTL0(false, "SolverInfo ModeType not valid");
+                        }
+                    }
                     else 
                     {
                         m_npointsZ = m_session->GetParameter("HomModesZ");

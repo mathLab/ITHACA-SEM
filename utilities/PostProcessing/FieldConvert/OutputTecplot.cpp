@@ -59,6 +59,8 @@ namespace Nektar
         
         void OutputTecplot::Process(po::variables_map &vm)
         {
+            m_doFloor = (vm.count("error") == 1)?  true: false;
+
             if(!m_f->m_exp.size()) // do nothing if no expansion defined
             {
                 return; 
@@ -162,6 +164,20 @@ namespace Nektar
                 
                 m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
                 
+                if (m_doFloor)
+                {
+                    // restrict coores to six significant figure
+                    for(int i = 0; i < totpoints; ++i)
+                    {
+                        for(int j = 0; j < 3; ++j)
+                        {
+                            coords[j][i] *= 100000;
+                            coords[j][i] = floor(coords[j][i]);
+                            coords[j][i] /= 100000;
+                        }
+                    }
+                }
+
                 outfile << "Zone, N=" << totpoints << ", E="<<
                     GetNumTecplotBlocks() << ", F=FEBlock" ;
                 
@@ -252,12 +268,31 @@ namespace Nektar
                                                 m_f->m_exp[field]->UpdatePhys());
                 }
                 
-                for(int i = 0; i < totpoints; ++i)
+                if (m_doFloor)
                 {
-                    outfile << m_f->m_exp[field]->GetPhys()[i] << " ";
-                    if((!(i % 1000))&&i)
+                    for(int i = 0; i < totpoints; ++i)
                     {
-                        outfile << std::endl;
+                        NekDouble val = m_f->m_exp[field]->GetPhys()[i];
+                        val *= 100000;
+                        val = floor(val);
+                        val /= 100000;
+                        outfile << val << " ";
+                        if((!(i % 1000))&&i)
+                        {
+                            outfile << std::endl;
+                        }
+                    }
+                    
+                }
+                else
+                {
+                    for(int i = 0; i < totpoints; ++i)
+                    {
+                        outfile << m_f->m_exp[field]->GetPhys()[i] << " ";
+                        if((!(i % 1000))&&i)
+                        {
+                            outfile << std::endl;
+                        }
                     }
                 }
                 outfile << std::endl;

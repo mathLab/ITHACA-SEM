@@ -711,7 +711,7 @@ namespace Nektar
             ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
                      GetBasisType(1) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
-            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_B ||
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
             
@@ -1300,7 +1300,7 @@ namespace Nektar
         {
             ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
-                     GetEdgeBasisType(vId) == LibUtilities::eModified_B,
+                     GetEdgeBasisType(vId) == LibUtilities::eModified_C,
                      "Mapping not defined for this type of basis");
             return vId;
         }
@@ -1435,11 +1435,11 @@ namespace Nektar
                 }
             }
 
-            int offset = 5 + 2*(P+1) + 2*(Q+1) + 4*(R+1);
+            int offset = 5 + 2*(P-1) + 2*(Q-1) + 4*(R-1);
 
-            for (i = 0; i < fid-1; ++i)
+            for (i = 0; i < fid; ++i)
             {
-                offset += GetFaceNcoeffs(i);
+                offset += v_GetFaceIntNcoeffs(i);
             }
 
             switch (fid)
@@ -1472,7 +1472,7 @@ namespace Nektar
 
                 case 2:
                 case 4:
-                    for (q = 2; q <= P; ++q)
+                    for (q = 2; q <= Q; ++q)
                     {
                         for (r = 1; r <= R-q; ++r, ++idx)
                         {

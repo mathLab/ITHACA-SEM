@@ -131,15 +131,6 @@ namespace Nektar
 			
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
 
-            virtual void v_PhysInterp1DScaled(
-                const NekDouble               scale,
-                const Array<OneD, NekDouble> &inarray,
-                      Array<OneD, NekDouble> &outarray);
-            virtual void v_PhysGalerkinProjection1DScaled(
-                const NekDouble               scale,
-                const Array<OneD, NekDouble> &inarray,
-                      Array<OneD, NekDouble> &outarray);
-
             virtual void v_GetPeriodicEntities(
                 PeriodicMap &periodicVerts,
                 PeriodicMap &periodicEdges,

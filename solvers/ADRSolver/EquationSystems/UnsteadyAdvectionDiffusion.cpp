@@ -77,6 +77,9 @@ namespace Nektar
             // Discontinuous field 
             case MultiRegions::eDiscontinuous:
             {
+                // Do not forwards transform initial condition
+                m_homoInitialFwd = false;
+
                 // Advection term
                 string advName;
                 string riemName; 

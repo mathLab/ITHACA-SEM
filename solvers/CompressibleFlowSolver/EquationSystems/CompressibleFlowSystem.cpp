@@ -64,6 +64,9 @@ namespace Nektar
         ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
                  "No UPWINDTYPE defined in session.");
 
+        // Do not forwards transform initial condition
+        m_homoInitialFwd = false;
+
         // Set up locations of velocity vector.
         m_velLoc = Array<OneD, NekDouble>(m_spacedim);
         for (int i = 0; i < m_spacedim; ++i)
@@ -247,8 +250,7 @@ namespace Nektar
 
         // Adjust the physical values of the trace to take
         // user defined boundaries into account
-        int e, id1, id2, nBCEdgePts;
-        int id2Plane, eMax;
+        int e, id1, id2, nBCEdgePts, eMax;
 
         eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
 
@@ -304,7 +306,7 @@ namespace Nektar
         int                                   cnt,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
-        int i, nPlanes;
+        int i;
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
 
@@ -321,8 +323,7 @@ namespace Nektar
 
         // Adjust the physical values of the trace to
         // take user defined boundaries into account
-        int e, id1, id2, nBCEdgePts;
-        int id2Plane, eMax;
+        int e, id1, id2, nBCEdgePts, eMax;
 
         eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
 
@@ -357,7 +358,7 @@ namespace Nektar
         int                                      cnt,
         Array<OneD, Array<OneD, NekDouble> >    &physarray)
     {
-        int i, nPlanes;
+        int i;
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
 
@@ -372,8 +373,7 @@ namespace Nektar
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
 
-        int e, id1, id2, nBCEdgePts;
-        int id2Plane, eMax;
+        int e, id1, id2, nBCEdgePts, eMax;
 
         eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
 
@@ -430,7 +430,7 @@ namespace Nektar
         int                                   cnt,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
-        int i, j, nPlanes;
+        int i, j;
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
         int nDimensions = m_spacedim;
@@ -528,7 +528,7 @@ namespace Nektar
         Vmath::Vabs(nTracePts, Mach, 1, Mach, 1);
 
         // Auxiliary variables
-        int id2Plane, eMax;
+        int eMax;
         int e, id1, id2, nBCEdgePts, pnt;
         NekDouble cPlus, rPlus, cMinus, rMinus, VDBC, VNBC;
         Array<OneD, NekDouble> velBC(nDimensions, 0.0);
@@ -688,7 +688,6 @@ namespace Nektar
     {
         int i, j;
         int e, pnt;
-        int nPlanes;
         int id1, id2, nBCEdgePts;
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
@@ -705,7 +704,7 @@ namespace Nektar
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
 
-        int id2Plane, eMax;
+        int eMax;
 
         eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
 
@@ -994,14 +993,14 @@ namespace Nektar
         Array<OneD, NekDouble > STy(nPts, 0.0);
         Array<OneD, NekDouble > STz(nPts, 0.0);
         // Building the viscous flux vector
-        if (i == 0)
-        {
+        //if (i == 0)
+        //{
             // Viscous flux vector for the rho equation
             for (k = 0; k < m_spacedim; ++k)
             {
                 Vmath::Zero(nPts, viscousTensor[k][i], 1);
             }
-        }
+            //}
 
         if (m_spacedim == 1)
         {

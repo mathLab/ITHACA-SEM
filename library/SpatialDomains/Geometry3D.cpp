@@ -250,22 +250,6 @@ namespace SpatialDomains
         }
     }
 
-      /**
-       * @brief Return edge i in this element.
-       */
-      const Geometry1DSharedPtr Geometry3D::GetEdge(int i) const
-      {
-          return v_GetEdge(i);
-      }
-
-      /**
-       * @brief Return face i in this element.
-       */
-      Geometry2DSharedPtr Geometry3D::GetFace(int i)
-      {
-          return v_GetFace(i);
-      }
-
     /**
     * @brief Put all quadrature information into face/edge structure and
     * backward transform.

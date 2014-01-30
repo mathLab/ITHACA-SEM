@@ -99,6 +99,9 @@ namespace Nektar
             // Discontinuous field
             case MultiRegions::eDiscontinuous:
             {
+                // Do not forwards transform initial condition
+                m_homoInitialFwd = false;
+                
                 // Define the normal velocity fields
                 if (m_fields[0]->GetTrace())
                 {

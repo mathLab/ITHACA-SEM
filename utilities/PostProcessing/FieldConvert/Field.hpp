@@ -74,6 +74,7 @@ namespace Nektar
             bool m_declareExpansionAsContField;
             bool m_declareExpansionAsDisContField;
             
+            LibUtilities::CommSharedPtr          m_comm;
             LibUtilities::SessionReaderSharedPtr m_session;
             SpatialDomains::MeshGraphSharedPtr   m_graph;
             LibUtilities::FieldIOSharedPtr       m_fld;

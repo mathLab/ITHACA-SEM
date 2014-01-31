@@ -167,7 +167,7 @@ namespace Nektar
 
 
             m_f->m_session = LibUtilities::SessionReader::
-                CreateInstance(0, 0, files);
+                CreateInstance(0, 0, files, m_f->m_comm);
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
             m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                 ::AllocateSharedPtr(m_f->m_session->GetComm());

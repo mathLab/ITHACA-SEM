@@ -181,6 +181,17 @@ int main(int argc, char* argv[])
      */
     
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
+    if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
+    {
+        f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
+                                                    "ParallelMPI", argc, argv);
+    }
+    else
+    {
+        f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
+                                                    "Serial", argc, argv);
+    }
+
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
     

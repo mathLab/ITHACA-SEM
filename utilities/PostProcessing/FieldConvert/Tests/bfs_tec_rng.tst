@@ -8,11 +8,13 @@
 	<file description="Session File">bfs_tg.fld</file>
     </files>
      <metrics>
-        <metric type="file" id="1">
-            <file filename="bfs_tg.dat">
-                <sha1>7d8fb6d1df918e7218f8d5705742e67a69fd51bc</sha1>
-             </file>
-         </metric>
+        <metric type="L2" id="1">
+            <value variable="x" tolerance="1e-6">1.35354</value>
+            <value variable="y" tolerance="1e-6">1.09498</value>
+            <value variable="u" tolerance="1e-6">1.15931</value>
+            <value variable="v" tolerance="1e-6">0.0195245</value>
+            <value variable="p" tolerance="1e-6">0.119152</value>
+        </metric>
     </metrics>
 </test>
 

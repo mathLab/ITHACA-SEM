@@ -59,7 +59,7 @@ namespace Nektar
         
         void OutputTecplot::Process(po::variables_map &vm)
         {
-            m_doFloor = (vm.count("error") == 1)?  true: false;
+            m_doError = (vm.count("error") == 1)?  true: false;
 
             if(!m_f->m_exp.size()) // do nothing if no expansion defined
             {
@@ -164,16 +164,19 @@ namespace Nektar
                 
                 m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
                 
-                if (m_doFloor)
+                if (m_doError)
                 {
-                    // restrict coores to six significant figure
-                    for(int i = 0; i < totpoints; ++i)
+                    NekDouble l2err; 
+                    std::string coordval[] = {"x","y","z"};
+                    int rank = m_f->m_session->GetComm()->GetRank();
+                    
+                    for(int i = 0; i < coordim; ++i)
                     {
-                        for(int j = 0; j < 3; ++j)
+                        l2err = m_f->m_exp[0]->L2(coords[i]);
+                        if(rank == 0)
                         {
-                            coords[j][i] *= 100000;
-                            coords[j][i] = floor(coords[j][i]);
-                            coords[j][i] /= 100000;
+                            cout << "L 2 error (variable "
+                                 << coordval[i]  << ") : " << l2err  << endl;
                         }
                     }
                 }
@@ -268,21 +271,16 @@ namespace Nektar
                                                 m_f->m_exp[field]->UpdatePhys());
                 }
                 
-                if (m_doFloor)
+                if (m_doError)
                 {
-                    for(int i = 0; i < totpoints; ++i)
+                    NekDouble l2err = m_f->m_exp[0]->L2(m_f->m_exp[field]->UpdatePhys());
+
+                    if(m_f->m_session->GetComm()->GetRank() == 0)
                     {
-                        NekDouble val = m_f->m_exp[field]->GetPhys()[i];
-                        val *= 100000;
-                        val = floor(val);
-                        val /= 100000;
-                        outfile << val << " ";
-                        if((!(i % 1000))&&i)
-                        {
-                            outfile << std::endl;
-                        }
+                        cout << "L 2 error (variable "
+                             << m_f->m_fielddef[0]->m_fields[field]  << ") : " 
+                             << l2err  << endl;
                     }
-                    
                 }
                 else
                 {

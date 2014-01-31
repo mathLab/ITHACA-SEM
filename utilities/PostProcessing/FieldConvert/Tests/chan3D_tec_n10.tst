@@ -8,11 +8,15 @@
 	<file description="Session File">chan3D.fld</file>
     </files>
      <metrics>
-        <metric type="file" id="1">
-            <file filename="chan3D.dat">
-                <sha1>bafe913a59cdd16b5bc298d3379b14bbd6a8d387</sha1>
-             </file>
-         </metric>
+        <metric type="L2" id="1">
+            <value variable="x" tolerance="1e-6">1.63299</value>
+            <value variable="y" tolerance="1e-6">1.63299</value>
+            <value variable="z" tolerance="1e-6">1.63299</value>
+            <value variable="u" tolerance="1e-6">2.06559</value>
+            <value variable="v" tolerance="1e-6">0</value>
+            <value variable="w" tolerance="1e-6">0</value>
+            <value variable="p" tolerance="1e-6">6.53197</value>
+        </metric>
     </metrics>
 </test>
 

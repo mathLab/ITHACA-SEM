@@ -9,16 +9,15 @@
 	<file description="Session File">chan3D.fld</file>
     </files>
      <metrics>
-        <metric type="file" id="1">
-            <file filename="chan3D_P0.dat">
-                <sha1>9bfd6d3bc24137f77f32a3148ee69eafdcf811ab</sha1>
-             </file>
-         </metric>
-        <metric type="file" id="2">
-            <file filename="chan3D_P1.dat">
-                <sha1>7eb90cc0db9d011be2552d72a6c3c9e665a9d720</sha1>
-             </file>
-         </metric>
+        <metric type="L2" id="1">
+            <value variable="x" tolerance="1e-6">1.69239</value>
+            <value variable="y" tolerance="1e-6">1.69239</value>
+            <value variable="z" tolerance="1e-6">1.69239</value>
+            <value variable="u" tolerance="1e-6">2.0864</value>
+            <value variable="v" tolerance="1e-6">0</value>
+            <value variable="w" tolerance="1e-6">0</value>
+            <value variable="p" tolerance="1e-6">6.59218</value>
+        </metric>
     </metrics>
 </test>
 

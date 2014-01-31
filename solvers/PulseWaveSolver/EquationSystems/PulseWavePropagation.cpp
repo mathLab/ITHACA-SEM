@@ -240,6 +240,7 @@ namespace Nektar
                         
                         // Note: The R_t value is contained in A in the inputfile
                         R_t = (vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
+
                         ASSERTL0((-1<=R_t && R_t<=1),
                                  "R_t must be comprised between -1 and 1");
                         int nq = vessel[0]->GetTotPoints(); 
@@ -296,15 +297,15 @@ namespace Nektar
                            calculates the updated velocity and area as
                            well as the updated boundary conditions */
                         
-                        NekDouble R=(vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0]; //((vessel[0]->GetBndCondExpansions())[n])->GetCoeffs()[0];
+                        NekDouble R=(vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
                         NekDouble C=((vessel[1]->GetBndCondExpansions())[n])->GetCoeffs()[0];
 
                         NekDouble pout = m_pout;
                         int nq = vessel[0]->GetTotPoints(); 
                         
                         // Get the values of all variables needed for the Riemann problem
-                        A_l = m_fields[0]->GetCoeffs()[1];
-                        u_l = m_fields[1]->GetCoeffs()[1];
+                        A_l = inarray[0][offset+nq-1];
+                        u_l = inarray[1][offset+nq-1];
                         
                         // Call the CR Riemann solver
                         // This assumes last element is listed as last elements!!
@@ -342,13 +343,8 @@ namespace Nektar
                         NekDouble rho = m_rho;
                         int nq = vessel[0]->GetTotPoints(); 
                         
-                        // Get the values of all variables needed for the Riemann problem
-                        //A_l = inarray[0][nq-1]; //vessel[0]->GetCoeffs()[offset+1];
-                        //u_l = inarray[1][nq-1]; //vessel[1]->GetCoeffs()[offset+1];
-
-                        A_l = vessel[0]->GetCoeffs()[offset+1];
-                        u_l = vessel[1]->GetCoeffs()[offset+1];
-
+                        A_l = inarray[0][offset+nq-1];
+                        u_l = inarray[1][offset+nq-1];
 
                         // Goes through the first resistance Calculate c_0
                         c_0 = sqrt(m_beta[omega][nq-1]/(2*m_rho))*sqrt(sqrt(m_A_0[omega][nq-1]));			

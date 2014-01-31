@@ -896,7 +896,7 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        int i, j, k;
+        int j, k;
         int nVariables = m_fields.num_elements();
         int nPts       = physfield[0].num_elements();
 
@@ -992,15 +992,14 @@ namespace Nektar
         Array<OneD, NekDouble > STx(nPts, 0.0);
         Array<OneD, NekDouble > STy(nPts, 0.0);
         Array<OneD, NekDouble > STz(nPts, 0.0);
+
         // Building the viscous flux vector
-        //if (i == 0)
-        //{
-            // Viscous flux vector for the rho equation
-            for (k = 0; k < m_spacedim; ++k)
-            {
-                Vmath::Zero(nPts, viscousTensor[k][i], 1);
-            }
-            //}
+
+        // Viscous flux vector for the rho equation
+        for (k = 0; k < m_spacedim; ++k)
+        {
+            Vmath::Zero(nPts, viscousTensor[k][0], 1);
+        }
 
         if (m_spacedim == 1)
         {

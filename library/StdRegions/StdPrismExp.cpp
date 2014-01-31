@@ -1924,15 +1924,6 @@ namespace Nektar
             // GLL quadrature points.
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
-                
                 // (1,0) Jacobi inner product.
                 case LibUtilities::eGaussRadauMAlpha1Beta0:
                     for(i = 0; i < nquad2; ++i)
@@ -1943,7 +1934,11 @@ namespace Nektar
                     break;
                     
                 default:
-                    ASSERTL0(false, "Quadrature point type not supported for this element.");
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
                     break;
             }
         

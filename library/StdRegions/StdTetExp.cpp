@@ -2043,21 +2043,6 @@ namespace Nektar
             
             switch(m_base[1]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-
-                    for(j = 0; j < nquad2; ++j)
-                    {
-                        for(i = 0; i < nquad1; ++i)
-                        {
-                            Blas::Dscal(nquad0,
-                                        0.5*(1-z1[i])*w1[i],
-                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
-                                        1 );
-                        }
-                    }
-                    break;
-
                 // (1,0) Jacobi Inner product.
                 case LibUtilities::eGaussRadauMAlpha1Beta0:
                     for(j = 0; j < nquad2; ++j)
@@ -2069,22 +2054,23 @@ namespace Nektar
                         }
                     }
                     break;
-                
+
                 default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    for(j = 0; j < nquad2; ++j)
+                    {
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,
+                                        0.5*(1-z1[i])*w1[i],
+                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
+                                        1 );
+                        }
+                    }
                     break;
             }
 
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
                 // (2,0) Jacobi inner product.
                 case LibUtilities::eGaussRadauMAlpha2Beta0:
                     for(i = 0; i < nquad2; ++i)
@@ -2095,7 +2081,11 @@ namespace Nektar
                     break;
 
                 default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
                     break;
             }
         }

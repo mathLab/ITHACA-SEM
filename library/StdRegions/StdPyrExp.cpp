@@ -367,21 +367,54 @@ namespace Nektar
         void StdPyrExp::v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray)
         {
-            ASSERTL1(m_base[1]->GetBasisType() != LibUtilities::eOrtho_B   ||
-                     m_base[1]->GetBasisType() != LibUtilities::eModified_B,
-                     "Basis[1] is not a general tensor type");
+            if (m_base[0]->Collocation() && 
+                m_base[1]->Collocation() &&
+                m_base[2]->Collocation())
+            {
+                Vmath::Vcopy(m_base[0]->GetNumPoints()*
+                             m_base[1]->GetNumPoints()*
+                             m_base[2]->GetNumPoints(),
+                             inarray, 1, outarray, 1);
+            }
+            else
+            {
+                StdPyrExp::v_BwdTrans_SumFac(inarray,outarray);
+            }
+        }
 
-            ASSERTL1(m_base[2]->GetBasisType() != LibUtilities::eOrtho_C   ||
-                     m_base[2]->GetBasisType() != LibUtilities::eModified_C,
-                     "Basis[2] is not a general tensor type");
+        /**
+         * Sum-factorisation implementation of the BwdTrans operation.
+         */
+        void StdPyrExp::v_BwdTrans_SumFac(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            Array<OneD, NekDouble> wsp;
+            v_BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
+                                    m_base[1]->GetBdata(),
+                                    m_base[2]->GetBdata(),
+                                    inarray,outarray,wsp,
+                                    true,true,true);
+        }
 
+        void StdPyrExp::v_BwdTrans_SumFacKernel(
+            const Array<OneD, const NekDouble> &base0,
+            const Array<OneD, const NekDouble> &base1,
+            const Array<OneD, const NekDouble> &base2,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+                  Array<OneD,       NekDouble> &wsp,
+            bool                                doCheckCollDir0,
+            bool                                doCheckCollDir1,
+            bool                                doCheckCollDir2)
+        {
             const int Qx = m_base[0]->GetNumPoints();
             const int Qy = m_base[1]->GetNumPoints();
             const int Qz = m_base[2]->GetNumPoints();
 
-            const NekDouble *bx = m_base[0]->GetBdata().get();
-            const NekDouble *by = m_base[1]->GetBdata().get();
-            const NekDouble *bz = m_base[2]->GetBdata().get();
+            const NekDouble *bx = base0.get();
+            const NekDouble *by = base1.get();
+            const NekDouble *bz = base2.get();
 
             // Need to count coeffs for storage...
             map<int, map<int, map<int, pair<int, int> > > >::iterator it_p;
@@ -444,41 +477,10 @@ namespace Nektar
                             sum += bx[i + Qx*it_p->first] * fp[cnt2++];
                         }
                         sum += inarray[4]*(by1*(bx[i] + bx[i+Qx]) + by0*bx[i+Qx]);
-                        //sum += inarray[4]*bz[k+Qz]*(bx[i+Qx]*by[j+Qy]+
-                        //                            bx[i   ]*by[j+Qy]+
-                        //                            bx[i+Qx]*by[j   ]);
                         outarray[s] = sum;
                     }
                 }
             }
-        }
-
-        void StdPyrExp::v_BwdTrans_SumFacKernel(
-                    const Array<OneD, const NekDouble>& base0,
-                    const Array<OneD, const NekDouble>& base1,
-                    const Array<OneD, const NekDouble>& base2,
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray,
-                          Array<OneD, NekDouble> &wsp,
-                    bool doCheckCollDir0,
-                    bool doCheckCollDir1,
-                    bool doCheckCollDir2)
-        {
-            ASSERTL0(false, "BwdTrans_SumFacKernel not yet implemented.");
-        }
-
-        void StdPyrExp::v_IProductWRTBase_SumFacKernel(
-                const Array<OneD, const NekDouble>& base0,
-                const Array<OneD, const NekDouble>& base1,
-                const Array<OneD, const NekDouble>& base2,
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD, NekDouble> &outarray,
-                      Array<OneD, NekDouble> &wsp,
-                bool doCheckCollDir0,
-                bool doCheckCollDir1,
-                bool doCheckCollDir2)
-        {
-            ASSERTL0(false, "IProductWRTBase_SumFacKernel not yet implemented.");
         }
 
 	/** \brief Forward transform from physical quadrature space
@@ -533,25 +535,60 @@ namespace Nektar
             const Array<OneD, const NekDouble> &inarray, 
                   Array<OneD,       NekDouble> &outarray)
         {
+            if (m_base[0]->Collocation() &&
+                m_base[1]->Collocation() &&
+                m_base[2]->Collocation())
+            {
+                MultiplyByStdQuadratureMetric(inarray, outarray);
+            }
+            else
+            {
+                StdPyrExp::v_IProductWRTBase_SumFac(inarray,outarray);
+            }
+        }
+
+        void StdPyrExp::v_IProductWRTBase_SumFac(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            Array<OneD, NekDouble> tmp(inarray.num_elements());
+            Array<OneD, NekDouble> wsp;
+
+            v_MultiplyByStdQuadratureMetric(inarray, tmp);
+
+            v_IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                           m_base[1]->GetBdata(),
+                                           m_base[2]->GetBdata(),
+                                           tmp,outarray,wsp,
+                                           true,true,true);
+        }
+
+        void StdPyrExp::v_IProductWRTBase_SumFacKernel(
+            const Array<OneD, const NekDouble> &base0,
+            const Array<OneD, const NekDouble> &base1,
+            const Array<OneD, const NekDouble> &base2,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+                  Array<OneD,       NekDouble> &wsp,
+            bool                                doCheckCollDir0,
+            bool                                doCheckCollDir1,
+            bool                                doCheckCollDir2)
+        {
             int i, j, k, s;
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
 
-            Array<OneD, NekDouble> tmp(Qx*Qy*Qz);
-
-            MultiplyByStdQuadratureMetric(inarray, tmp);
-
-            const Array<OneD, const NekDouble> &bx = m_base[0]->GetBdata();
-            const Array<OneD, const NekDouble> &by = m_base[1]->GetBdata();
-            const Array<OneD, const NekDouble> &bz = m_base[2]->GetBdata();
+            const NekDouble *bx = base0.get();
+            const NekDouble *by = base1.get();
+            const NekDouble *bz = base2.get();
             
             map<int, map<int, map<int, pair<int, int> > > >::iterator it_p;
             map<int, map<int,          pair<int, int> > >  ::iterator it_q;
             map<int,                   pair<int, int> >    ::iterator it_r;
 
-            Array<OneD,NekDouble> f (Qy*Qz);
-            Array<OneD,NekDouble> fb(Qz);
+            Array<OneD, NekDouble> f (Qy*Qz);
+            Array<OneD, NekDouble> fb(Qz);
 
             for (it_p = m_idxMap.begin(); it_p != m_idxMap.end(); ++it_p)
             {
@@ -564,7 +601,7 @@ namespace Nektar
                         NekDouble sum = 0.0;
                         for (i = 0; i < Qx; ++i, ++s)
                         {
-                            sum += bx[i + Qx*p]*tmp[s];
+                            sum += bx[i + Qx*p]*inarray[s];
                         }
                         f[j+Qy*k] = sum;
                     }
@@ -606,11 +643,153 @@ namespace Nektar
                 {
                     for (i = 0; i < Qx; ++i, ++s)
                     {
-                        outarray[4] += tmp[s] * bz[k+Qz]*(
+                        outarray[4] += inarray[s] * bz[k+Qz]*(
                             bx[i+Qx]*by[j+Qy] + 
                             bx[i+Qx]*by[j   ] + 
                             bx[i   ]*by[j+Qy]);
                     }
+                }
+            }
+        }
+
+        void StdPyrExp::v_IProductWRTDerivBase(
+            const int                           dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            StdPyrExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+        }
+
+        /**
+         * @param   inarray     Function evaluated at physical collocation
+         *                      points.
+         * @param   outarray    Inner product with respect to each basis
+         *                      function over the element.
+         */
+        void StdPyrExp::v_IProductWRTDerivBase_SumFac(
+            const int dir,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            int i;
+            int nquad0  = m_base[0]->GetNumPoints();
+            int nquad1  = m_base[1]->GetNumPoints();
+            int nquad2  = m_base[2]->GetNumPoints();
+            int nqtot   = nquad0*nquad1*nquad2;
+
+            Array<OneD, NekDouble> gfac0(nquad0);
+            Array<OneD, NekDouble> gfac1(nquad1);
+            Array<OneD, NekDouble> gfac2(nquad2);
+            Array<OneD, NekDouble> tmp0 (nqtot);
+            Array<OneD, NekDouble> wsp;
+
+            const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
+
+            // set up geometric factor: (1+z0)/2
+            for(i = 0; i < nquad0; ++i)
+            {
+                gfac0[i] = 0.5*(1+z0[i]);
+            }
+
+            // set up geometric factor: (1+z1)/2
+            for(i = 0; i < nquad1; ++i)
+            {
+                gfac1[i] = 2.0/(1-z1[i]);
+            }
+
+            // Set up geometric factor: 2/(1-z2)
+            for(i = 0; i < nquad2; ++i)
+            {
+            	gfac2[i] = 2.0/(1-z2[i]);
+            }
+
+            // Derivative in first direction is always scaled as follows
+            const int nq01 = nquad0*nquad1;
+            for(i = 0; i < nquad2; ++i)
+            {
+                Vmath::Smul(nq01, gfac2[i],
+                            &inarray[0] + i*nq01, 1,
+                            &tmp0   [0] + i*nq01, 1);
+            }
+
+            MultiplyByQuadratureMetric(tmp0, tmp0);
+
+            switch(dir)
+            {
+                case 0:
+                {
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata (),
+                                                 m_base[2]->GetBdata (),
+                                                 tmp0, outarray, wsp,
+                                                 false, true, true);
+                    break;
+                }
+                case 1:
+                {
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata (),
+                                                 m_base[1]->GetDbdata(),
+                                                 m_base[2]->GetBdata (),
+                                                 tmp0, outarray, wsp,
+                                                 false, true, true);
+                    break;
+                }
+                case 2:
+                {
+                    Array<OneD, NekDouble> tmp3(m_ncoeffs);
+                    Array<OneD, NekDouble> tmp4(m_ncoeffs);
+
+                    // Scale eta_1 derivative by gfac0
+                    for(i = 0; i < nquad1*nquad2; ++i)
+                    {
+                        Vmath::Vmul(nquad0, tmp0 .get() + i*nquad0, 1,
+                                            gfac0.get(),            1,
+                                            tmp0 .get() + i*nquad0, 1);
+                    }
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp0,  tmp3, wsp,
+                                                 false, true, true);
+
+                    // Scale eta_2 derivative by gfac1
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Vmath::Smul(nq01, gfac2[i],
+                                    &inarray[0] + i*nq01, 1,
+                                    &tmp0   [0] + i*nq01, 1);
+                    }
+                    for(i = 0; i < nquad1*nquad2; ++i)
+                    {
+                        Vmath::Smul(nquad0, gfac1[i%nquad1],
+                                            &tmp0[0] + i*nquad0, 1,
+                                            &tmp0[0] + i*nquad0, 1);
+                    }
+
+                    MultiplyByQuadratureMetric(tmp0, tmp0);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetDbdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp0, tmp4,  wsp,
+                                                 true, false, true);
+
+                    MultiplyByQuadratureMetric(inarray,tmp0);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetDbdata(),
+                                                 tmp0,outarray,wsp,
+                                                 true, true, false);
+
+                    Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,&outarray[0],1);
+                    Vmath::Vadd(m_ncoeffs,&tmp4[0],1,&outarray[0],1,&outarray[0],1);
+                    break;
+                }
+                default:
+                {
+                    ASSERTL1(false, "input dir is out of range");
+                    break;
                 }
             }
         }

@@ -714,7 +714,7 @@ namespace Nektar
                             &tmp0   [0] + i*nq01, 1);
             }
 
-            MultiplyByQuadratureMetric(tmp0, tmp0);
+            MultiplyByStdQuadratureMetric(tmp0, tmp0);
 
             switch(dir)
             {
@@ -768,14 +768,14 @@ namespace Nektar
                                             &tmp0[0] + i*nquad0, 1);
                     }
 
-                    MultiplyByQuadratureMetric(tmp0, tmp0);
+                    MultiplyByStdQuadratureMetric(tmp0, tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                  m_base[1]->GetDbdata(),
                                                  m_base[2]->GetBdata(),
                                                  tmp0, tmp4,  wsp,
                                                  true, false, true);
 
-                    MultiplyByQuadratureMetric(inarray,tmp0);
+                    MultiplyByStdQuadratureMetric(inarray,tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                  m_base[1]->GetBdata(),
                                                  m_base[2]->GetDbdata(),
@@ -1492,9 +1492,9 @@ namespace Nektar
         {
             int       i;
             bool      signChange;
-            const int P              = m_base[0]->GetNumModes();
-            const int Q              = m_base[1]->GetNumModes();
-            const int R              = m_base[2]->GetNumModes();
+            const int P              = m_base[0]->GetNumModes() - 2;
+            const int Q              = m_base[1]->GetNumModes() - 2;
+            const int R              = m_base[2]->GetNumModes() - 2;
             const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid) - 2;
             
             if (maparray.num_elements() != nEdgeIntCoeffs)

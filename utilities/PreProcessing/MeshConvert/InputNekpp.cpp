@@ -239,7 +239,7 @@ namespace Nektar
                 }
                 else // quad face. 
                 {
-                    int N    = sqrt(Ntot);
+                    int N    = (int)sqrt((double)Ntot);
                     for(int j = 1; j < N-1; ++j)
                     {
                         for(int k = 1; k < N-1; ++k)

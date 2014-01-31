@@ -246,22 +246,17 @@ namespace Nektar
             switch(m_base[2]->GetPointsType())
             {
                 // Common case
-                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
-                    Vmath::Smul(Qz, 0.5, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
-                    break;
-                
-                // Corner cases
-                case LibUtilities::eGaussLobattoLegendre:
-                case LibUtilities::eGaussRadauMLegendre:
-                    for (int k = 0; k < Qz; ++k)
-                    {
-                        wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
-                    }
-                    break;
-                    
-                default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
-                    break;
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
+                Vmath::Smul(Qz, 0.5, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
+                break;
+                // Assume points are a Legenedre inner product and
+                // multiply by collapsed coordinate jacobian
+            default:
+                for (int k = 0; k < Qz; ++k)
+                {
+                    wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
+                }
+                break;
             }
 
 

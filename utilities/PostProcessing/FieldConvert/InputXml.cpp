@@ -116,21 +116,17 @@ namespace Nektar
                 m_f->m_declareExpansionAsContField = true;
             }
 
-            int   argc = m_f->m_inputfiles[xml_ending].size()+m_f->m_inputfiles[xml_gz_ending].size()+1;
-            char *argv[argc];
-            const char *instring = "ProcessField";
-            argv[0] = strdup(instring);
+            std::vector<std::string> files;
             // load .xml ending
-            int i;
-            for (i = 0; i < m_f->m_inputfiles[xml_ending].size(); ++i)
+            for (int i = 0; i < m_f->m_inputfiles[xml_ending].size(); ++i)
             {
-                argv[i+1] = strdup(m_f->m_inputfiles[xml_ending][i].c_str());
+                files.push_back(m_f->m_inputfiles[xml_ending][i]);
             }
 
             // load any .xml.gz endings
             for (int j =0; j < m_f->m_inputfiles[xml_gz_ending].size(); ++j)
             {
-                argv[i+j+1] = strdup(m_f->m_inputfiles[xml_gz_ending][j].c_str());
+                files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
             }
 
 
@@ -171,8 +167,7 @@ namespace Nektar
 
 
             m_f->m_session = LibUtilities::SessionReader::
-                CreateInstance(argc, argv);
-            m_f->m_session->GetComm();
+                CreateInstance(0, 0, files);
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
             m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                 ::AllocateSharedPtr(m_f->m_session->GetComm());

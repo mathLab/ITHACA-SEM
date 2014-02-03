@@ -39,8 +39,6 @@
 
 namespace Nektar
 {
-    int m_advectioncalls = 0;
-
     AdvectionTermFactory& GetAdvectionTermFactory()
     {
         typedef Loki::SingletonHolder<AdvectionTermFactory,
@@ -119,6 +117,8 @@ namespace Nektar
 
         m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
         m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
+        
+         m_advectioncalls = 0;
     }
     
     AdvectionTerm::~AdvectionTerm()

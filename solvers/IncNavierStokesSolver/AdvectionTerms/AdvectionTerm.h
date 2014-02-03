@@ -93,7 +93,7 @@ namespace Nektar
             m_specHP_dealiasing = value; 
         }
         
-        static int m_advectioncalls;
+        int m_advectioncalls;
         
 	protected:
         LibUtilities::SessionReaderSharedPtr        m_session;

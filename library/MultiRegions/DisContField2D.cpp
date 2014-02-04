@@ -49,30 +49,35 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        DisContField2D::DisContField2D(void):
-            ExpList2D          (),
-            m_bndCondExpansions(),
-            m_bndConditions    (),
-            m_trace            (NullExpListSharedPtr)
+        DisContField2D::DisContField2D(void)
+        : ExpList2D          (),
+          m_bndCondExpansions(),
+          m_bndConditions    (),
+          m_trace            (NullExpListSharedPtr)
         {
         }
 
         DisContField2D::DisContField2D(
             const DisContField2D &In, 
-            const bool            DeclareCoeffPhysArrays) :
-            ExpList2D            (In,DeclareCoeffPhysArrays),
-            m_bndCondExpansions  (In.m_bndCondExpansions),
-            m_bndConditions      (In.m_bndConditions),
-            m_globalBndMat       (In.m_globalBndMat),
-            m_trace              (In.m_trace),
-            m_traceMap           (In.m_traceMap),
-            m_boundaryEdges      (In.m_boundaryEdges),
-            m_periodicVerts      (In.m_periodicVerts),
-            m_periodicEdges      (In.m_periodicEdges),
-            m_periodicFwdCopy    (In.m_periodicFwdCopy),
-            m_periodicBwdCopy    (In.m_periodicBwdCopy),
-            m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
+            const bool            DeclareCoeffPhysArrays)
+            : ExpList2D            (In,DeclareCoeffPhysArrays),
+              m_bndCondExpansions  (In.m_bndCondExpansions),
+              m_bndConditions      (In.m_bndConditions),
+              m_globalBndMat       (In.m_globalBndMat),
+              m_traceMap           (In.m_traceMap),
+              m_boundaryEdges      (In.m_boundaryEdges),
+              m_periodicVerts      (In.m_periodicVerts),
+              m_periodicEdges      (In.m_periodicEdges),
+              m_periodicFwdCopy    (In.m_periodicFwdCopy),
+              m_periodicBwdCopy    (In.m_periodicBwdCopy),
+              m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
         {
+            if (In.m_trace)
+            {
+                m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
+                    *boost::dynamic_pointer_cast<ExpList1D>(In.m_trace),
+                    DeclareCoeffPhysArrays);
+            }
         }
 
         DisContField2D::DisContField2D(
@@ -81,7 +86,7 @@ namespace Nektar
             const std::string                          &variable,
             const bool                                  SetUpJustDG,
             const bool                                  DeclareCoeffPhysArrays)
-            : ExpList2D(pSession,graph2D,DeclareCoeffPhysArrays),
+            : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays),
               m_bndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
@@ -112,9 +117,9 @@ namespace Nektar
             else
             {
                 // Set element edges to point to Robin BC edges if required.
-                int i,cnt;
-                Array<OneD, int> ElmtID,EdgeID;
-                GetBoundaryToElmtMap(ElmtID,EdgeID);
+                int i, cnt;
+                Array<OneD, int> ElmtID, EdgeID;
+                GetBoundaryToElmtMap(ElmtID, EdgeID);
 
                 for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
                 {
@@ -124,26 +129,28 @@ namespace Nektar
                     
                     for(e = 0; e < locExpList->GetExpSize(); ++e)
                     {
-                        LocalRegions::Expansion2DSharedPtr exp2d
-                            = boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion2DSharedPtr exp2d =
+                            boost::dynamic_pointer_cast<
                                 LocalRegions::Expansion2D>((*m_exp)[ElmtID[cnt+e]]);
-                        LocalRegions::Expansion1DSharedPtr exp1d
-                            = boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion1DSharedPtr exp1d =
+                            boost::dynamic_pointer_cast<
                                 LocalRegions::Expansion1D>(locExpList->GetExp(e));
-                        LocalRegions::ExpansionSharedPtr   exp
-                            = boost::dynamic_pointer_cast<
+                        LocalRegions::ExpansionSharedPtr   exp =
+                            boost::dynamic_pointer_cast<
                                 LocalRegions::Expansion>  (locExpList->GetExp(e));
                         
-                        exp2d->SetEdgeExp(EdgeID[cnt+e],exp);
-                        exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
+                        exp2d->SetEdgeExp(EdgeID[cnt+e], exp);
+                        exp1d->SetAdjacentElementExp(EdgeID[cnt+e], exp2d);
                     }
                     cnt += m_bndCondExpansions[i]->GetExpSize();
                 }
                 
                 if(m_session->DefinesSolverInfo("PROJECTION"))
                 {
-                    std::string ProjectStr = m_session->GetSolverInfo("PROJECTION");
-                    if((ProjectStr == "MixedCGDG")||(ProjectStr == "Mixed_CG_Discontinuous"))
+                    std::string ProjectStr =
+                         m_session->GetSolverInfo("PROJECTION");
+                    if((ProjectStr == "MixedCGDG") ||
+                       (ProjectStr == "Mixed_CG_Discontinuous"))
                     {
                         SetUpDG();
                     }
@@ -167,13 +174,13 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr &graph2D,
             const std::string                        &variable,
             const bool                                SetUpJustDG,
-            const bool                                DeclareCoeffPhysArrays) :
-            ExpList2D(In,DeclareCoeffPhysArrays),
-            m_trace(NullExpListSharedPtr)
+            const bool                                DeclareCoeffPhysArrays)
+            : ExpList2D(In,DeclareCoeffPhysArrays),
+              m_trace(NullExpListSharedPtr)
         {
             // Set up boundary conditions for this variable.
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
-            GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
+            GenerateBoundaryConditionExpansion(graph2D, bcs, variable);
             
             if (DeclareCoeffPhysArrays)
             {
@@ -227,8 +234,11 @@ namespace Nektar
 
                     if(m_session->DefinesSolverInfo("PROJECTION"))
                     {
-                        std::string ProjectStr = m_session->GetSolverInfo("PROJECTION");
-                        if((ProjectStr == "MixedCGDG")||(ProjectStr == "Mixed_CG_Discontinuous"))
+                        std::string ProjectStr =
+                            m_session->GetSolverInfo("PROJECTION");
+                        
+                        if((ProjectStr == "MixedCGDG") ||
+                           (ProjectStr == "Mixed_CG_Discontinuous"))
                         {
                             SetUpDG();
                         }
@@ -271,8 +281,8 @@ namespace Nektar
                     
                     // set elmt edges to point to robin bc edges if required.
                     int i, cnt = 0;
-                    Array<OneD, int> ElmtID,EdgeID;
-                    GetBoundaryToElmtMap(ElmtID,EdgeID);
+                    Array<OneD, int> ElmtID, EdgeID;
+                    GetBoundaryToElmtMap(ElmtID, EdgeID);
 					
                     for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
                     {
@@ -312,7 +322,6 @@ namespace Nektar
          */
         DisContField2D::~DisContField2D()
         {
-            
         }
         
         GlobalLinSysSharedPtr DisContField2D::GetGlobalBndLinSys(
@@ -652,7 +661,7 @@ namespace Nektar
                     m_bndConditions[cnt]      = bc;
                     SpatialDomains::BndUserDefinedType type = 
                         m_bndConditions[cnt++]->GetUserDefined();
-                    if (type == SpatialDomains::eI    || 
+                    if (type == SpatialDomains::eI || 
                         type == SpatialDomains::eCalcBC)
                     {
                         SetUpPhysNormals();
@@ -953,7 +962,8 @@ namespace Nektar
                     c[1] = compMap[id2];
                 }
 
-                ASSERTL0(c[0] || c[1], "Both composites not found on this process!");
+                ASSERTL0(c[0] || c[1],
+                         "Both composites not found on this process!");
 
                 // Loop over composite ordering to construct list of all
                 // periodic edges regardless of whether they are on this
@@ -1575,7 +1585,8 @@ namespace Nektar
                 offset = GetCoeff_Offset(n);
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
-                    t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    t_offset = GetTrace()->GetPhys_Offset(
+                                            elmtToTrace[n][e]->GetElmtId());
                     
                     // Evaluate upwind flux less local edge 
                     if(IsLeftAdjacentEdge(n,e))
@@ -2148,7 +2159,8 @@ namespace Nektar
                              cout << "Boundary condition from file:" 
                                   << filebcs << endl;
 
-                             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+                             std::vector<LibUtilities::FieldDefinitionsSharedPtr>
+                                        FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
                              LibUtilities::FieldIO f(m_session->GetComm());
                              f.Import(filebcs,FieldDef, FieldData);
@@ -2156,7 +2168,8 @@ namespace Nektar
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
                                  FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0], locExpList->UpdateCoeffs());   
+                                 FieldDef[0]->m_fields[0],
+                                 locExpList->UpdateCoeffs());
                              locExpList->BwdTrans_IterPerExp(
                                  locExpList->GetCoeffs(), 
                                  locExpList->UpdatePhys());
@@ -2196,7 +2209,8 @@ namespace Nektar
                              cout << "Boundary condition from file: "
                                   << filebcs << endl;
 
-                             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+                             std::vector<LibUtilities::FieldDefinitionsSharedPtr>
+                                        FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
                              LibUtilities::FieldIO f(m_session->GetComm());
                              f.Import(filebcs,FieldDef, FieldData);
@@ -2204,7 +2218,8 @@ namespace Nektar
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
                                  FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0], locExpList->UpdateCoeffs());
+                                 FieldDef[0]->m_fields[0],
+                                 locExpList->UpdateCoeffs());
                              locExpList->BwdTrans_IterPerExp(
                                  locExpList->GetCoeffs(), 
                                  locExpList->UpdatePhys());
@@ -2250,7 +2265,8 @@ namespace Nektar
                             int len = var.length();
                             var = var.substr(len-1,len);
 
-                            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+                            std::vector<LibUtilities::FieldDefinitionsSharedPtr>
+                                        FieldDef;
                             std::vector<std::vector<NekDouble> >   FieldData;
                             LibUtilities::FieldIO f(m_session->GetComm());
                             f.Import(filebcs,FieldDef, FieldData);
@@ -2258,7 +2274,8 @@ namespace Nektar
                             // copy FieldData into locExpList
                             locExpList->ExtractDataToCoeffs(
                                 FieldDef[0], FieldData[0],
-                                FieldDef[0]->m_fields[0],locExpList->UpdateCoeffs());
+                                FieldDef[0]->m_fields[0],
+                                locExpList->UpdateCoeffs());
                             locExpList->BwdTrans_IterPerExp(
                                 locExpList->GetCoeffs(), 
                                 locExpList->UpdatePhys());

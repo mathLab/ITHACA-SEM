@@ -76,10 +76,19 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
             
+            SOLVER_UTILS_EXPORT void FluxVec(
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                &fluxvector);
+            
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
                 m_fluxVector = boost::bind(func, obj, _1, _2, _3, _4, _5);
+            }
+            
+            void SetFluxVectorVec(DiffusionFluxVecCB fluxVector)
+            {
+                m_fluxVector = fluxVector;
             }
             
             template<typename FuncPointerT, typename ObjectPointerT> 
@@ -87,10 +96,25 @@ namespace Nektar
             {
                 m_fluxVectorNS = boost::bind(func, obj, _1, _2, _3);
             }
+            
+            void SetFluxVectorNS(DiffusionFluxVecCBNS fluxVector)
+            {
+                m_fluxVectorNS = fluxVector;
+            }
                         
             inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
             {
                 m_riemann = riemann;
+            }
+
+            inline void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
+            {
+                v_SetHomoDerivs(deriv);
+            }
+
+            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &GetFluxTensor()
+            {
+                return v_GetFluxTensor();
             }
             
         protected:
@@ -106,7 +130,19 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;
-                        
+
+            virtual void v_SetHomoDerivs(
+                Array<OneD, Array<OneD, NekDouble> > &deriv)
+            {
+
+            }
+            
+            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
+            {
+                static Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmp;
+                return tmp;
+            }
+
             DiffusionFluxVecCB     m_fluxVector;
             DiffusionFluxVecCBNS   m_fluxVectorNS;
             RiemannSolverSharedPtr m_riemann;

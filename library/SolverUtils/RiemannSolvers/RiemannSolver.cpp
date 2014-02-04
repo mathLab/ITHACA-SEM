@@ -104,7 +104,7 @@ namespace Nektar
                 int nFields = Fwd   .num_elements();
                 int nPts    = Fwd[0].num_elements();
                 
-                if (m_rotStorage[0].num_elements() != nFields ||
+                if (m_rotStorage[0].num_elements()    != nFields ||
                     m_rotStorage[0][0].num_elements() != nPts)
                 {
                     for (int i = 0; i < 3; ++i)
@@ -118,11 +118,14 @@ namespace Nektar
                     }
                 }
                 
-                rotateToNormal  (Fwd, m_rotStorage[0]);
-                rotateToNormal  (Bwd, m_rotStorage[1]);
+                const Array<OneD, const Array<OneD, NekDouble> > normals =
+                    m_vectors["N"]();
+
+                rotateToNormal  (Fwd, normals, m_rotStorage[0]);
+                rotateToNormal  (Bwd, normals, m_rotStorage[1]);
                 v_Solve         (m_rotStorage[0], m_rotStorage[1],
                                  m_rotStorage[2]);
-                rotateFromNormal(m_rotStorage[2], flux);
+                rotateFromNormal(m_rotStorage[2], normals, flux);
             }
             else
             {
@@ -146,13 +149,12 @@ namespace Nektar
          */
         void RiemannSolver::rotateToNormal(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            const Array<OneD, const Array<OneD, NekDouble> > &normals =
-                m_vectors["N"]();
-            const Array<OneD, NekDouble> &velLoc = m_scalars["velLoc"]();
-            
-            switch(normals.num_elements())
+            const Array<OneD, NekDouble> &velLoc = m_auxiliary["velLoc"]();
+
+            switch(velLoc.num_elements())
             {
                 case 1:
                     ASSERTL0(false, "1D not implemented yet.");
@@ -162,8 +164,8 @@ namespace Nektar
                 {
                     const int vx = (int)velLoc[0];
                     const int vy = (int)velLoc[1];
-                    const int nq = normals[0].num_elements();
-                    
+                    const int nq = inarray[0].num_elements();
+
                     Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
                                      outarray[vx], 1);
                     Vmath::Vvtvp(nq, inarray [vy], 1, normals [1],  1,
@@ -191,12 +193,12 @@ namespace Nektar
                     const int vx = (int)velLoc[0];
                     const int vy = (int)velLoc[1];
                     const int vz = (int)velLoc[2];
-                    const int nq = normals[0].num_elements();
+                    const int nq = inarray[0].num_elements();
 
                     // Generate matrices if they don't already exist.
                     if (m_rotMat.num_elements() == 0)
                     {
-                        GenerateRotationMatrices();
+                        GenerateRotationMatrices(normals);
                     }
                     
                     // Apply rotation matrices.
@@ -245,11 +247,10 @@ namespace Nektar
          */
         void RiemannSolver::rotateFromNormal(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            const Array<OneD, const Array<OneD, NekDouble> > &normals,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = 
-                m_vectors["N"]();
-            const Array<OneD, NekDouble> &velLoc = m_scalars["velLoc"]();
+            const Array<OneD, NekDouble> &velLoc = m_auxiliary["velLoc"]();
             
             switch(normals.num_elements())
             {
@@ -307,7 +308,7 @@ namespace Nektar
                                        outarray[vz], 1);
                     Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[8],  1,
                                        outarray[vz], 1, outarray[vz], 1);
-
+                    
                     for (int i = 0; i < inarray.num_elements(); ++i)
                     {
                         if (i == vx || i == vy || i == vz)
@@ -369,11 +370,9 @@ namespace Nektar
         /**
          * @brief Generate rotation matrices for 3D expansions.
          */
-        void RiemannSolver::GenerateRotationMatrices()
+        void RiemannSolver::GenerateRotationMatrices(
+            const Array<OneD, const Array<OneD, NekDouble> > &normals)
         {
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = 
-                m_vectors["N"]();
-
             Array<OneD, NekDouble> xdir(3,0.0);
             Array<OneD, NekDouble> tn  (3);
             NekDouble tmp[9];

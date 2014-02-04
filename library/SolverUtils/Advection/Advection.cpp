@@ -46,7 +46,7 @@ namespace Nektar
             Loki::NoDestroy > Type;
             return Type::Instance();
         }
-        
+
         void Advection::InitObject(
             const LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
@@ -62,6 +62,27 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
             v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
+        }
+
+        void Advection::v_InitObject(
+            const LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+        {
+            m_spaceDim = pFields[0]->GetCoordim(0);
+
+            if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                std::string HomoStr = pSession->GetSolverInfo("HOMOGENEOUS");
+                if (HomoStr == "HOMOGENEOUS1D" || HomoStr == "Homogeneous1D" ||
+                    HomoStr == "1D"            || HomoStr == "Homo1D")
+                {
+                    m_spaceDim++;
+                }
+                else
+                {
+                    ASSERTL0(false, "Only 1D homogeneous dimension supported.");
+                }
+            }
         }
     }
 }

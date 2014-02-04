@@ -37,7 +37,7 @@
 #define NEKTAR_SOLVERS_PULSEWAVESOLVER_EQUATIONSYSTEMS_PULSEWAVEPROPAGATION_H
 
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
-#include <PulseWaveSolver/EquationSystems/PulseWaveFlow.h>
+#include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -105,9 +105,9 @@ namespace Nektar
 
         /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
+
+        Array<OneD, PulseWaveBoundarySharedPtr> m_Boundary;
 	
-        PulseWaveFlowSharedPtr m_OutFlow;
-        
         NekDouble pc;
         
         Array<OneD, NekDouble>   m_pc;

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File PulseWaveFlow.cpp
+// File PulseWaveBoundary.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: PulseWaveFlow definition
+// Description: PulseWaveBoundary definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <PulseWaveSolver/EquationSystems/PulseWaveFlow.h>
+#include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
 #include <loki/Singleton.h>
 
 namespace Nektar
@@ -43,13 +43,17 @@ namespace Nektar
      * @class PulseWaveFlow
      *
      */
-  PulseWaveFlow::PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, const LibUtilities::SessionReaderSharedPtr pSession)
+  PulseWaveBoundary::PulseWaveBoundary(Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel, 
+                                       const LibUtilities::SessionReaderSharedPtr &pSession)
     : m_vessels(pVessel),
       m_session(pSession)
     {
+        m_session->LoadParameter("pout", m_pout, 0.0);
+        m_session->LoadParameter("pext", m_pext, 0.0);
+        m_session->LoadParameter("rho", m_rho, 0.5);
     }
 
-    PulseWaveFlow::~PulseWaveFlow()
+    PulseWaveBoundary::~PulseWaveBoundary()
     {
     }
 
@@ -57,9 +61,9 @@ namespace Nektar
     /**
      *
      */
-    FlowFactory& GetFlowFactory()
+    BoundaryFactory& GetBoundaryFactory()
     {
-        typedef Loki::SingletonHolder<FlowFactory,
+        typedef Loki::SingletonHolder<BoundaryFactory,
                                       Loki::CreateUsingNew,
                                       Loki::NoDestroy > Type;
         return Type::Instance();

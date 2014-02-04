@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CommMpi.cpp
+// File RCROutflow.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,84 +29,101 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: ROuflow class
+// Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <PulseWaveSolver/EquationSystems/ROutflow.h>
+#include <PulseWaveSolver/EquationSystems/RCROutflow.h>
+#include <SpatialDomains/MeshGraph.h>
 
 namespace Nektar
 {
 
-    std::string ROutflow::className
+    std::string RCROutflow::className
     = GetBoundaryFactory().RegisterCreatorFunction(
-        "Rterminal",
-        ROutflow::create,
-        "Resistive outflow boundary condition");
+        "RCRterminal",
+        RCROutflow::create,
+        "RCR  outflow boundary condition");
 
     /**
      *
      */
-    ROutflow::ROutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
-                       const LibUtilities::SessionReaderSharedPtr pSession)
+    RCROutflow::RCROutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+                           const LibUtilities::SessionReaderSharedPtr pSession)
         : PulseWaveBoundary(pVessel,pSession)
     {
+        m_session->LoadParameter("TimeStep", m_timestep);
     }
 
     /**
      *
      */
-    ROutflow::~ROutflow()
+    RCROutflow::~RCROutflow()
     {
 
     }
 
-    void ROutflow::v_DoBoundary(
+    void RCROutflow::v_DoBoundary(
         const Array<OneD,const Array<OneD, NekDouble> > &inarray,
         Array<OneD, Array<OneD, NekDouble> > &A_0,
         Array<OneD, Array<OneD, NekDouble> > &beta,
         const NekDouble time,
         int omega,int offset,int n)
     { 
-	NekDouble A_r, u_r;
+	NekDouble Q, A_r, u_r;
 	NekDouble A_u, u_u;
-        NekDouble A_l, u_l;
+        NekDouble A_l, u_l, u_0, c_0;
 
         Array<OneD, MultiRegions::ExpListSharedPtr> vessel(2);
 
         vessel[0] = m_vessels[2*omega];
         vessel[1] = m_vessels[2*omega+1];
 
-        /* Find the terminal R boundary condition and
-           calculates the updated velocity and area as
-           well as the updated boundary conditions */
-                        
+        /* Find the terminal RCR boundary condition and calculates
+           the updated velocity and area as well as the updated
+           boundary conditions */
+
         NekDouble RT=((vessel[0]->GetBndCondExpansions())[n])->GetCoeffs()[0];
+        NekDouble C=((vessel[1]->GetBndCondExpansions())[n])->GetCoeffs()[0];
+
+        m_session->LoadParameter("pout", m_pout);
+
+        NekDouble R1;
+        NekDouble R2;
         NekDouble pout = m_pout;
+
+        NekDouble rho = m_rho;
         int nq = vessel[0]->GetTotPoints(); 
                         
-        // Get the values of all variables needed for the Riemann problem
         A_l = inarray[0][offset+nq-1];
         u_l = inarray[1][offset+nq-1];
 
+        // Goes through the first resistance Calculate c_0
+        c_0 = sqrt(beta[omega][nq-1]/(2*m_rho))*sqrt(sqrt(A_0[omega][nq-1]));			
+                        
+        // Calculate R1 and R2, R1 being calculated so as
+        // to eliminate reflections in the vessel
+        R1 = rho*c_0/A_0[omega][nq-1];
+        R2 = RT-R1;
+
         // Call the R RiemannSolver
-        R_RiemannSolver(RT,A_l,u_l,A_0[omega][nq-1],
-                        beta[omega][nq-1],pout,A_u,u_u);
-			
-        // Calculates the new boundary conditions
-        A_r=A_l;
-        u_r=2*u_u-u_l;
-                        
+        R_RiemannSolver(R1,A_l,u_l,A_0[omega][nq-1],beta[omega][nq-1],m_pc,A_u,u_u);
+        A_r = A_l;
+        u_r = 2*u_u-u_l;
+
+        // Goes through the CR system, it consists in
+        // updating the pressure pc
+        m_pc = m_pc + m_timestep/C*(A_u*u_u-(m_pc-pout)/R2);
+
         // Store the updated values in the boundary condition
-                        
         (vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = A_r;
         (vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = u_r;
     }
 
-    void ROutflow::R_RiemannSolver(NekDouble R,NekDouble A_l,NekDouble u_l,
-                                   NekDouble A_0, NekDouble beta, NekDouble pout,
-                                   NekDouble &A_u,NekDouble &u_u)
-    {		
+    void RCROutflow::R_RiemannSolver(NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, 
+                                               NekDouble beta, NekDouble pout,
+                                               NekDouble &A_u,NekDouble &u_u)
+   {		
         NekDouble W1 = 0.0;
         NekDouble c_l = 0.0;
         NekDouble pext = m_pext;
@@ -145,9 +162,12 @@ namespace Nektar
         }
         
 	// Obtain u_u and A_u
+	//u_u = W1 - 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc))); 
         u_u=(pext+beta*(sqrt(A_calc)-sqrt(A_0))-pout)/(R*A_calc);
         A_u = A_calc;
     }
+
+
 
 
 }

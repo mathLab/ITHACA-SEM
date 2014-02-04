@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ROutflow.h
+// File TerminalOutflow.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: ROutflow header
+// Description: TerminalOutflow header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_ROUTFLOW_H
-#define NEKTAR_ROUTFLOW_H
+#ifndef NEKTAR_TERMINALOUTFLOW_H
+#define NEKTAR_TERMINALOUTFLOW_H
 
 #include <string>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -42,40 +42,38 @@
 namespace Nektar
 {
     // Forward declarations
-    class ROutflow;
+    class TerminalOutflow;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<ROutflow> ROutflowSharedPtr;
+    typedef boost::shared_ptr<TerminalOutflow> TerminalOutflowSharedPtr;
     
     /// A global linear system.
-    class ROutflow : public PulseWaveBoundary
+    class TerminalOutflow : public PulseWaveBoundary
     {
     public:
         /// Creates an instance of this class
       static PulseWaveBoundarySharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel, 
                                                const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<ROutflow>::AllocateSharedPtr(pVessel,pSession);
+            return MemoryManager<TerminalOutflow>::AllocateSharedPtr(pVessel,pSession);
         }
 
         /// Name of class
         static std::string className;
         
-        ROutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+        TerminalOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
                  const LibUtilities::SessionReaderSharedPtr pSession); 
 
-        virtual ~ROutflow();
+        virtual ~TerminalOutflow();
     protected:
         virtual void v_DoBoundary(
             const Array<OneD,const Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> > &A_0,
             Array<OneD, Array<OneD, NekDouble> > &beta,
             const NekDouble time,
-            int omega,int offset,int n);
-        
-        void R_RiemannSolver(NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, 
-                             NekDouble beta, NekDouble pout,
-                             NekDouble &A_u,NekDouble &u_u);
+            int omega,
+            int offset, 
+            int n);
 
     private:
 

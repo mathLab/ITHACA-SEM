@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ROutflow.h
+// File TimeDependentInflow.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: ROutflow header
+// Description: TimeDependentInflow header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_ROUTFLOW_H
-#define NEKTAR_ROUTFLOW_H
+#ifndef NEKTAR_TIMEDEPENDENTINFLOW_H
+#define NEKTAR_TIMEDEPENDENTINFLOW_H
 
 #include <string>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -42,29 +42,30 @@
 namespace Nektar
 {
     // Forward declarations
-    class ROutflow;
+    class TimeDependentInflow;
 
     /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<ROutflow> ROutflowSharedPtr;
+    typedef boost::shared_ptr<TimeDependentInflow> TimeDependentInflowSharedPtr;
     
     /// A global linear system.
-    class ROutflow : public PulseWaveBoundary
+    class TimeDependentInflow : public PulseWaveBoundary
     {
     public:
         /// Creates an instance of this class
       static PulseWaveBoundarySharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel, 
                                                const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<ROutflow>::AllocateSharedPtr(pVessel,pSession);
+            return MemoryManager<TimeDependentInflow>::AllocateSharedPtr(pVessel,pSession);
         }
 
         /// Name of class
         static std::string className;
+        static std::string className2;
         
-        ROutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+        TimeDependentInflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
                  const LibUtilities::SessionReaderSharedPtr pSession); 
 
-        virtual ~ROutflow();
+        virtual ~TimeDependentInflow();
     protected:
         virtual void v_DoBoundary(
             const Array<OneD,const Array<OneD, NekDouble> > &inarray,
@@ -73,10 +74,6 @@ namespace Nektar
             const NekDouble time,
             int omega,int offset,int n);
         
-        void R_RiemannSolver(NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, 
-                             NekDouble beta, NekDouble pout,
-                             NekDouble &A_u,NekDouble &u_u);
-
     private:
 
     };

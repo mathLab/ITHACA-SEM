@@ -9,10 +9,18 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
        ./EquationSystems/PulseWaveSystem.cpp
        ./EquationSystems/PulseWavePropagation.h
        ./EquationSystems/PulseWavePropagation.cpp
-       ./EquationSystems/PulseWaveFlow.h
-       ./EquationSystems/PulseWaveFlow.cpp
+       ./EquationSystems/PulseWaveBoundary.h
+       ./EquationSystems/PulseWaveBoundary.cpp
+       ./EquationSystems/TimeDependentInflow.h
+       ./EquationSystems/TimeDependentInflow.cpp
+       ./EquationSystems/QInflow.h
+       ./EquationSystems/QInflow.cpp
+       ./EquationSystems/TerminalOutflow.h
+       ./EquationSystems/TerminalOutflow.cpp
        ./EquationSystems/ROutflow.h
-       ./EquationSystems/ROutflow.cpp)
+       ./EquationSystems/ROutflow.cpp
+       ./EquationSystems/RCROutflow.h
+       ./EquationSystems/RCROutflow.cpp)
 
     ADD_SOLVER_EXECUTABLE(PulseWaveSolver solvers 
 			${PulseWaveSolverSource})

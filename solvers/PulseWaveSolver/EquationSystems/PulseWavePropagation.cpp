@@ -190,12 +190,45 @@ namespace Nektar
                 }
             }
             m_pc = Array<OneD,NekDouble>(RCRcnt,0.0);
+
+            /*int nBndCond=0;
+            for(omega = 0; omega < m_nDomains; ++omega)
+            {
+                vessel[0] = m_vessels[2*omega];
+                nBndCond=nBndCond+vessel[0]->GetBndConditions().num_elements();
+                }*/
+
+            m_Boundary = Array<OneD,PulseWaveBoundarySharedPtr>(2*m_nDomains);
+
+
+            for(omega = 0; omega < m_nDomains; ++omega)
+            {
+                vessel[0] = m_vessels[2*omega];
+
+                for(int j = 0; j < 2; ++j)
+                {	
+                    std::string BCType = vessel[0]->GetBndConditions()[j]->
+                        GetBndTypeAsString(vessel[0]->GetBndConditions()[j]->GetUserDefined());
+                    m_Boundary[2*omega+j]=GetBoundaryFactory().CreateInstance(BCType,m_vessels,m_session);
+                }
+            }
+
         }
 
         //-> This should be set up as a factory
         int cnt=0;
         SetBoundaryConditions(time);
         // Loop over all vessesls and set boundary conditions
+        for(omega = 0; omega < m_nDomains; ++omega)
+        {
+            for(int n = 0; n < 2; ++n)
+            {	
+                m_Boundary[2*omega+n]->DoBoundary(inarray,m_A_0,m_beta,time,omega,offset,n);
+            }
+            offset += m_vessels[2*omega]->GetTotPoints();
+        }
+    }
+/*
         for(omega = 0; omega < m_nDomains; ++omega)
         {
             vessel[0] = m_vessels[2*omega];
@@ -237,7 +270,7 @@ namespace Nektar
                          * calculate the reflection. We assume A_r = A_l and
                          * apply the reflection in u_r after paper
                          * "Computational Modelling of 1D blood flow"*/
-                        
+    /*
                         // Note: The R_t value is contained in A in the inputfile
                         R_t = (vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
 
@@ -268,7 +301,7 @@ namespace Nektar
                         /* Find the terminal R boundary condition and
                            calculates the updated velocity and area as
                            well as the updated boundary conditions */
-                        
+    /*
                         NekDouble RT=((vessel[0]->GetBndCondExpansions())[n])->GetCoeffs()[0];
                         NekDouble pout = m_pout;
                         int nq = vessel[0]->GetTotPoints(); 
@@ -296,7 +329,7 @@ namespace Nektar
                         /* Find the terminal CR boundary condition and
                            calculates the updated velocity and area as
                            well as the updated boundary conditions */
-                        
+    /*                       
                         NekDouble R=(vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
                         NekDouble C=((vessel[1]->GetBndCondExpansions())[n])->GetCoeffs()[0];
 
@@ -330,7 +363,7 @@ namespace Nektar
                         /* Find the terminal RCR boundary condition and calculates
                            the updated velocity and area as well as the updated
                            boundary conditions */
-
+/*
                         NekDouble RT=((vessel[0]->GetBndCondExpansions())[n])->GetCoeffs()[0];
                         NekDouble C=((vessel[1]->GetBndCondExpansions())[n])->GetCoeffs()[0];
 

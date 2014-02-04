@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File PulseWaveFlow.h
+// File CommMpi.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,59 +29,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: PulseWaveFlow header
+// Description: TimeDependentInflow class
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_PULSEWAVEFLOW_H
-#define NEKTAR_PULSEWAVEFLOW_H
-
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <MultiRegions/ExpList.h>
+#include <PulseWaveSolver/EquationSystems/TimeDependentInflow.h>
 
 namespace Nektar
 {
-    class PulseWaveFlow;
-    typedef boost::shared_ptr<PulseWaveFlow>  PulseWaveFlowSharedPtr;
-    
-    static PulseWaveFlowSharedPtr NullPulseWaveFlowSharedPtr;
 
-    typedef LibUtilities::NekFactory< std::string, 
-        PulseWaveFlow, 
-      Array<OneD, MultiRegions::ExpListSharedPtr>&, 
-      const LibUtilities::SessionReaderSharedPtr& > FlowFactory;
-    FlowFactory& GetFlowFactory();
-    
-    class PulseWaveFlow
-    {
-    public:
-PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
-		const LibUtilities::SessionReaderSharedPtr pSession);
-
-        virtual ~PulseWaveFlow();
-
-        inline void DoBoundary(int omega, int n);
-
-    protected:
-        virtual void v_DoBoundary(int omega, int n) = 0;
-
-        Array<OneD, MultiRegions::ExpListSharedPtr> m_vessels;
-	LibUtilities::SessionReaderSharedPtr m_session;
-
-    private:
-    };
+    std::string TimeDependentInflow::className
+    = GetBoundaryFactory().RegisterCreatorFunction(
+        "TimeDependent",
+        TimeDependentInflow::create,
+        "TimeDependent inflow boundary condition");
+    std::string TimeDependentInflow::className2
+    = GetBoundaryFactory().RegisterCreatorFunction(
+        "NoUserDefined",
+        TimeDependentInflow::create,
+        "No boundary condition");
 
     /**
      *
      */
-    inline void PulseWaveFlow::DoBoundary(int omega, int n)
+    TimeDependentInflow::TimeDependentInflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+                       const LibUtilities::SessionReaderSharedPtr pSession)
+        : PulseWaveBoundary(pVessel,pSession)
     {
-        v_DoBoundary(omega, n);
     }
 
+    /**
+     *
+     */
+    TimeDependentInflow::~TimeDependentInflow()
+    {
 
+    }
+
+    void TimeDependentInflow::v_DoBoundary(
+        const Array<OneD,const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, NekDouble> > &A_0,
+        Array<OneD, Array<OneD, NekDouble> > &beta,
+        const NekDouble time,
+        int omega,int offset,int n)
+    {  
+    }
 
 }
-#endif

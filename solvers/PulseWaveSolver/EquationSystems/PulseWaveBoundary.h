@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ROutflow.h
+// File PulseWaveBoundary.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,57 +29,79 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: ROutflow header
+// Description: PulseWaveBoundary header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_ROUTFLOW_H
-#define NEKTAR_ROUTFLOW_H
 
-#include <string>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
+#ifndef NEKTAR_PULSEWAVEBOUNDARY_H
+#define NEKTAR_PULSEWAVEBOUNDARY_H
+
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
-    // Forward declarations
-    class ROutflow;
-
-    /// Pointer to a PulseWaveOutflow object.
-    typedef boost::shared_ptr<ROutflow> ROutflowSharedPtr;
+    class PulseWaveBoundary;
+    typedef boost::shared_ptr<PulseWaveBoundary>  PulseWaveBoundarySharedPtr;
     
-    /// A global linear system.
-    class ROutflow : public PulseWaveBoundary
+    static PulseWaveBoundarySharedPtr NullPulseWaveBoundarySharedPtr;
+
+    typedef LibUtilities::NekFactory< std::string, 
+        PulseWaveBoundary, 
+        Array<OneD, MultiRegions::ExpListSharedPtr>&, 
+        const LibUtilities::SessionReaderSharedPtr& > BoundaryFactory;
+    BoundaryFactory& GetBoundaryFactory();
+    
+    class PulseWaveBoundary
     {
     public:
-        /// Creates an instance of this class
-      static PulseWaveBoundarySharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel, 
-                                               const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            return MemoryManager<ROutflow>::AllocateSharedPtr(pVessel,pSession);
-        }
+        PulseWaveBoundary(Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
+                          const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        /// Name of class
-        static std::string className;
-        
-        ROutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
-                 const LibUtilities::SessionReaderSharedPtr pSession); 
+        virtual ~PulseWaveBoundary();
 
-        virtual ~ROutflow();
+        inline void DoBoundary(
+            const Array<OneD,const Array<OneD, NekDouble> > &inarray,
+            Array<OneD, Array<OneD, NekDouble> > &A_0,
+            Array<OneD, Array<OneD, NekDouble> > &beta,
+            const NekDouble time, 
+            int omega, int offset,int n);
+
     protected:
         virtual void v_DoBoundary(
             const Array<OneD,const Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> > &A_0,
             Array<OneD, Array<OneD, NekDouble> > &beta,
             const NekDouble time,
-            int omega,int offset,int n);
-        
-        void R_RiemannSolver(NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, 
-                             NekDouble beta, NekDouble pout,
-                             NekDouble &A_u,NekDouble &u_u);
+            int omega,int offset,int n) = 0;
+
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_vessels;
+	LibUtilities::SessionReaderSharedPtr m_session;
+
+        NekDouble m_pext;
+        NekDouble m_pout;
+        NekDouble m_rho;
+
 
     private:
-
     };
-}
 
+    /**
+     *
+     */
+    inline void PulseWaveBoundary::DoBoundary(
+        const Array<OneD,const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, Array<OneD, NekDouble> > &A_0,
+        Array<OneD, Array<OneD, NekDouble> > &beta,
+        const NekDouble time,
+        int omega,int offset,int n)
+    {
+        v_DoBoundary(inarray,A_0,beta,time,omega,offset,n);
+    }
+
+
+
+}
 #endif

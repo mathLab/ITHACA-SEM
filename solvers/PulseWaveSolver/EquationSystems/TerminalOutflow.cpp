@@ -33,21 +33,21 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <PulseWaveSolver/EquationSystems/ROutflow.h>
+#include <PulseWaveSolver/EquationSystems/TerminalOutflow.h>
 
 namespace Nektar
 {
 
-    std::string ROutflow::className
+    std::string TerminalOutflow::className
     = GetBoundaryFactory().RegisterCreatorFunction(
-        "Rterminal",
-        ROutflow::create,
-        "Resistive outflow boundary condition");
+        "Terminal",
+        TerminalOutflow::create,
+        "Terminal outflow boundary condition");
 
     /**
      *
      */
-    ROutflow::ROutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+    TerminalOutflow::TerminalOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
                        const LibUtilities::SessionReaderSharedPtr pSession)
         : PulseWaveBoundary(pVessel,pSession)
     {
@@ -56,12 +56,12 @@ namespace Nektar
     /**
      *
      */
-    ROutflow::~ROutflow()
+    TerminalOutflow::~TerminalOutflow()
     {
 
     }
 
-    void ROutflow::v_DoBoundary(
+    void TerminalOutflow::v_DoBoundary(
         const Array<OneD,const Array<OneD, NekDouble> > &inarray,
         Array<OneD, Array<OneD, NekDouble> > &A_0,
         Array<OneD, Array<OneD, NekDouble> > &beta,
@@ -70,84 +70,41 @@ namespace Nektar
     { 
 	NekDouble A_r, u_r;
 	NekDouble A_u, u_u;
-        NekDouble A_l, u_l;
+        NekDouble RT, A_l, u_l, u_0, c_0, c_l;
 
         Array<OneD, MultiRegions::ExpListSharedPtr> vessel(2);
 
         vessel[0] = m_vessels[2*omega];
         vessel[1] = m_vessels[2*omega+1];
 
-        /* Find the terminal R boundary condition and
-           calculates the updated velocity and area as
-           well as the updated boundary conditions */
+        /* Find the terminal resistance boundary condition and
+         * calculate the reflection. We assume A_r = A_l and
+         * apply the reflection in u_r after paper
+         * "Computational Modelling of 1D blood flow"*/
                         
-        NekDouble RT=((vessel[0]->GetBndCondExpansions())[n])->GetCoeffs()[0];
-        NekDouble pout = m_pout;
+        // Note: The R_t value is contained in A in the inputfile
+        RT = (vessel[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
+
+        ASSERTL0((-1<=RT && RT<=1),
+                 "RT must be comprised between -1 and 1");
         int nq = vessel[0]->GetTotPoints(); 
                         
-        // Get the values of all variables needed for the Riemann problem
+        // Get the left values A_l and u_l needed for Eq. 37
         A_l = inarray[0][offset+nq-1];
         u_l = inarray[1][offset+nq-1];
-
-        // Call the R RiemannSolver
-        R_RiemannSolver(RT,A_l,u_l,A_0[omega][nq-1],
-                        beta[omega][nq-1],pout,A_u,u_u);
-			
-        // Calculates the new boundary conditions
-        A_r=A_l;
-        u_r=2*u_u-u_l;
                         
-        // Store the updated values in the boundary condition
+        // Get the values at initial state u_0, c_0
+        u_0 = 0.0; //for all vessels start from initial condition 0
+        c_0 = sqrt(beta[omega][nq-1]/(2*m_rho))*sqrt(sqrt(A_0[omega][nq-1])); 	
                         
+        // Calculate the boundary values
+        A_r = A_l;
+        c_l = sqrt(beta[omega][nq-1]/(2*m_rho))*sqrt(sqrt(A_l));
+        u_r = (1-RT)*((u_l-u_0) + 4*(c_l-c_0)) - u_l;
+                        
+        // Store the new values in the boundary condition
         (vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = A_r;
         (vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = u_r;
     }
-
-    void ROutflow::R_RiemannSolver(NekDouble R,NekDouble A_l,NekDouble u_l,
-                                   NekDouble A_0, NekDouble beta, NekDouble pout,
-                                   NekDouble &A_u,NekDouble &u_u)
-    {		
-        NekDouble W1 = 0.0;
-        NekDouble c_l = 0.0;
-        NekDouble pext = m_pext;
-        NekDouble A_calc = 0.0;
-        NekDouble fa = 0.0;
-        NekDouble dfa = 0.0;
-        NekDouble delta_A_calc = 0.0;
-        NekDouble rho = m_rho;
-        
-        int proceed = 1;
-        int iter = 0;
-        int MAX_ITER = 200;
-        
-        // Tolerances for the algorithm
-        NekDouble Tol = 1.0e-10;
-        
-        // Calculate the wave speed
-        c_l = sqrt(beta/(2*rho))*sqrt(sqrt(A_l));
-	
-        // Riemann invariant \f$W_1(Al,ul)\f$
-        W1 = u_l + 4*c_l;
-        
-        // Newton Iteration (Area only)
-        A_calc = A_l;
-        while ((proceed) && (iter < MAX_ITER))
-        {	
-            iter =iter+1;
-	    
-            fa = R*W1*A_calc-4*R*sqrt(beta/(2*rho))*A_calc*sqrt(sqrt(A_calc))-pext-beta*(sqrt(A_calc)-sqrt(A_0))+pout;
-            dfa = R*W1-5*R*sqrt(beta/(2*rho))*sqrt(sqrt(A_calc))-beta/(2*sqrt(A_calc));
-            delta_A_calc = fa/dfa;
-            A_calc = A_calc - delta_A_calc;
-            
-            if (sqrt(delta_A_calc*delta_A_calc) < Tol)
-                proceed = 0;
-        }
-        
-	// Obtain u_u and A_u
-        u_u=(pext+beta*(sqrt(A_calc)-sqrt(A_0))-pout)/(R*A_calc);
-        A_u = A_calc;
-    }
-
 
 }

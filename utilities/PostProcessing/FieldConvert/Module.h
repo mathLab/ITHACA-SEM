@@ -132,7 +132,7 @@ namespace Nektar
         class Module
         {
         public:
-        Module(FieldSharedPtr p_f) : m_f(p_f) {}
+            Module(FieldSharedPtr p_f) : m_f(p_f), m_requireEquiSpaced(false) {}
             virtual void Process(po::variables_map &vm) = 0;
             
             void RegisterConfig(string key, string value);

@@ -453,7 +453,6 @@ namespace Nektar
             int id1  = m_fields[0]->
                 GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(bndTraceMap[cnt++]);
-            //cout << id1 << " -> " << id2 << endl;
 
             Array<OneD,NekDouble> x(npoints, 0.0);
             Array<OneD,NekDouble> y(npoints, 0.0);

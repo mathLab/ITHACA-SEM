@@ -82,6 +82,17 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(
                 Array<OneD, NekDouble> &outarray);
+            
+            virtual ExpListSharedPtr &v_GetTrace()
+            {
+                if(m_trace == NullExpListSharedPtr)
+                {
+                    SetUpDG();
+                }
+                
+                return m_trace;
+            }
+
 
         protected:
             /**
@@ -108,7 +119,7 @@ namespace Nektar
             
             Array<OneD, Array<OneD, unsigned int> >     m_mapEdgeToElmn;
             Array<OneD, Array<OneD, unsigned int> >     m_signEdgeToElmn;
-            Array<OneD,StdRegions::Orientation>    m_edgedir;
+            Array<OneD,StdRegions::Orientation>         m_edgedir;
 
             /**
              * @brief A set storing the global IDs of any boundary edges.
@@ -206,16 +217,7 @@ namespace Nektar
                 periodicEdges = m_periodicEdges;
             }
 
-            virtual ExpListSharedPtr &v_GetTrace()
-            {
-                if(m_trace == NullExpListSharedPtr)
-                {
-                    SetUpDG();
-                }
-
-                return m_trace;
-            }
-
+            
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
             {
                 return m_traceMap;

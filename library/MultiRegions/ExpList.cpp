@@ -41,6 +41,7 @@
 #include <LocalRegions/Expansion.h>     // for Expansion
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>  // for AssemblyMapCG, etc
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>  // for AssemblyMapCG, etc
 #include <MultiRegions/GlobalLinSysKey.h>  // for GlobalLinSysKey
 #include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
 #include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
@@ -1710,6 +1711,13 @@ namespace Nektar
             return trans;
         }
 
+        NekDouble ExpList::v_GetHomoLen(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            NekDouble len = 0.0;
+            return len;
+        }
 
         Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
         {
@@ -2103,6 +2111,11 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
             static boost::shared_ptr<AssemblyMapDG> result;
             return result;
+        }
+
+        const Array<OneD, const int> &ExpList::v_GetTraceBndMap()
+        {
+            return GetTraceMap()->GetBndCondTraceToGlobalTraceMap();
         }
 
         void ExpList::v_GetNormals(

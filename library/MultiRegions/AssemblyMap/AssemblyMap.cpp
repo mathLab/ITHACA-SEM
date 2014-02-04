@@ -868,6 +868,11 @@ namespace Nektar
             return m_bndCondTraceToGlobalTraceMap[i];
         }
 
+        const Array<OneD, const int> &AssemblyMap
+            ::GetBndCondTraceToGlobalTraceMap()
+        {
+            return m_bndCondTraceToGlobalTraceMap;
+        }
 
         NekDouble AssemblyMap::GetBndCondCoeffsToGlobalCoeffsSign(const int i)
         {

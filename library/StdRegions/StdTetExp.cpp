@@ -267,24 +267,19 @@ namespace Nektar
             // (1,0) since (1-eta_y) is aready factored into the weights.
             switch(m_base[1]->GetPointsType())
             {
-                // Legendre inner product (Falls-through to next case)
-                case LibUtilities::eGaussLobattoLegendre:
-                // (0,0) Jacobi Inner product
-                case LibUtilities::eGaussRadauMLegendre:
+                // (1,0) Jacobi Inner product
+            case LibUtilities::eGaussRadauMAlpha1Beta0: 
+                Vmath::Smul( Qy, 0.5, (NekDouble *)wy.get(), 1, wy_hat.get(), 1 );
+                break;
+                
+                // Assume points are a Legenedre inner product and
+                // multiply by collapsed coordinate jacobian
+            default:
                 for(int j = 0; j < Qy; ++j)
                 {
                     wy_hat[j] = 0.5*(1.0 - y[j]) * wy[j];
                 }
                 break;
-                
-                // (1,0) Jacobi Inner product
-                case LibUtilities::eGaussRadauMAlpha1Beta0: 
-                Vmath::Smul( Qy, 0.5, (NekDouble *)wy.get(), 1, wy_hat.get(), 1 );
-                break;
-                
-                default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
-                    break;
             }
 
             // Convert wz into wz_hat, which includes the 1/4 scale factor.
@@ -294,24 +289,19 @@ namespace Nektar
             // notation)
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product (Falls-through to next case)
-                case LibUtilities::eGaussLobattoLegendre:
-                // (0,0) Jacobi Inner product
-                case LibUtilities::eGaussRadauMLegendre:
-                    for(int k = 0; k < Qz; ++k)
-                    {
-                        wz_hat[k] = 0.25*(1.0 - z[k])*(1.0 - z[k]) * wz[k];
-                    }
-                    break;
                 // (2,0) Jacobi Inner product
-                case LibUtilities::eGaussRadauMAlpha2Beta0: 
-                    Vmath::Smul(Qz, 0.25, (NekDouble *)wz.get(), 1, 
-                                wz_hat.get(), 1 );
-                    break;
-                
-                default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
-                    break;
+            case LibUtilities::eGaussRadauMAlpha2Beta0: 
+                Vmath::Smul(Qz, 0.25, (NekDouble *)wz.get(), 1, 
+                            wz_hat.get(), 1 );
+                break;
+                // Assume points are a Legenedre inner product and
+                // multiply by collapsed coordinate jacobian
+            default:
+                for(int k = 0; k < Qz; ++k)
+                {
+                    wz_hat[k] = 0.25*(1.0 - z[k])*(1.0 - z[k]) * wz[k];
+                }
+                break;
             }
 
             return Integral3D(inarray, wx, wy_hat, wz_hat);
@@ -2053,21 +2043,6 @@ namespace Nektar
             
             switch(m_base[1]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-
-                    for(j = 0; j < nquad2; ++j)
-                    {
-                        for(i = 0; i < nquad1; ++i)
-                        {
-                            Blas::Dscal(nquad0,
-                                        0.5*(1-z1[i])*w1[i],
-                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
-                                        1 );
-                        }
-                    }
-                    break;
-
                 // (1,0) Jacobi Inner product.
                 case LibUtilities::eGaussRadauMAlpha1Beta0:
                     for(j = 0; j < nquad2; ++j)
@@ -2079,22 +2054,23 @@ namespace Nektar
                         }
                     }
                     break;
-                
+
                 default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    for(j = 0; j < nquad2; ++j)
+                    {
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,
+                                        0.5*(1-z1[i])*w1[i],
+                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
+                                        1 );
+                        }
+                    }
                     break;
             }
 
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
                 // (2,0) Jacobi inner product.
                 case LibUtilities::eGaussRadauMAlpha2Beta0:
                     for(i = 0; i < nquad2; ++i)
@@ -2105,7 +2081,11 @@ namespace Nektar
                     break;
 
                 default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
                     break;
             }
         }

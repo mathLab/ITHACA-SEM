@@ -60,13 +60,13 @@ namespace Nektar
          *
          */
         QuadGeom::QuadGeom(int id, const int coordim):
-                          Geometry2D(coordim), m_fid(id)
+            Geometry2D(coordim)
         {
 
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
             LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
-            m_fid = id;
+            m_globalID = m_fid = id;
 
             m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);
             SetUpCoeffs(m_xmap->GetNcoeffs());
@@ -82,6 +82,7 @@ namespace Nektar
             Geometry2D(verts[0]->GetCoordim()),
             m_fid(id)
         {
+            m_globalID = id;
             m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the vert shared pointers.
@@ -130,6 +131,8 @@ namespace Nektar
             m_fid(id)
         {
             int j;
+
+            m_globalID = m_fid;
 
             m_shapeType = LibUtilities::eQuadrilateral;
 
@@ -222,6 +225,7 @@ namespace Nektar
         {
             int j;
 
+            m_globalID = m_fid;
             m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the edge shared pointers.
@@ -277,8 +281,9 @@ namespace Nektar
 
             // From QuadFaceComponent
             m_fid = in.m_fid;
-			m_ownVerts = in.m_ownVerts;
-			std::list<CompToElmt>::const_iterator def;
+            m_globalID = m_fid;
+            m_ownVerts = in.m_ownVerts;
+            std::list<CompToElmt>::const_iterator def;
             for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
             {
                 m_elmtMap.push_back(*def);

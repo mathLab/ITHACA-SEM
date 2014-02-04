@@ -40,6 +40,7 @@
 #include <StdRegions/StdExpansion3D.h>  // for StdExpansion3DSharedPtr, etc
 
 #include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 namespace Nektar
@@ -79,6 +80,8 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT int GetEid(int i) const;
             SPATIAL_DOMAINS_EXPORT const PointGeomSharedPtr
                 GetVertex(int i) const;
+            SPATIAL_DOMAINS_EXPORT const Geometry1DSharedPtr
+                        GetEdge(int i) const;
             SPATIAL_DOMAINS_EXPORT Geometry2DSharedPtr 
                 GetFace(int i);
             SPATIAL_DOMAINS_EXPORT StdRegions::Orientation 

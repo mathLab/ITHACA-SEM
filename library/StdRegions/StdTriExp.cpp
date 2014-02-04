@@ -90,22 +90,18 @@ namespace Nektar
 
             switch(m_base[1]->GetPointsType())
             {
-                case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
-                {
-                    for(i = 0; i < nquad1; ++i)
-                    {
-                        w1_tmp[i] = 0.5*(1-z1[i])*w1[i];
-                    }
-                    break;
-                }
-                case LibUtilities::eGaussRadauMAlpha1Beta0: // (0,1) Jacobi Inner product 
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (0,1) Jacobi Inner product 
                 {
                     Vmath::Smul(nquad1, 0.5, w1, 1, w1_tmp,1);      
                     break;
                 }
-                default:
+            default:
                 {
-                    ASSERTL0(false, "populate swith for this point type");
+                    // include jacobian factor on whatever coordinates are defined. 
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        w1_tmp[i] = 0.5*(1-z1[i])*w1[i];
+                    }
                     break;
                 }
             }

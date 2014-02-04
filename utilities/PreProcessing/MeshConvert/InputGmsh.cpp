@@ -82,8 +82,8 @@ namespace Nektar
             // Open the file stream.
             OpenStream();
             
-            m->expDim = 0;
-            m->spaceDim = 0;
+            m_mesh->m_expDim = 0;
+            m_mesh->m_spaceDim = 0;
             string line;
             int nVertices = 0;
             int nEntities = 0;
@@ -91,7 +91,7 @@ namespace Nektar
             int prevId = -1;
             map<unsigned int, ElmtConfig>::iterator it;
 
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputGmsh: Start reading file..." << endl;
             }
@@ -117,17 +117,17 @@ namespace Nektar
                         double x = 0, y = 0, z = 0;
                         st >> id >> x >> y >> z;
 
-                        if ((x * x) > 0.000001 && m->spaceDim < 1)
+                        if ((x * x) > 0.000001 && m_mesh->m_spaceDim < 1)
                         {
-                            m->spaceDim = 1;
+                            m_mesh->m_spaceDim = 1;
                         }
-                        if ((y * y) > 0.000001 && m->spaceDim < 2)
+                        if ((y * y) > 0.000001 && m_mesh->m_spaceDim < 2)
                         {
-                            m->spaceDim = 2;
+                            m_mesh->m_spaceDim = 2;
                         }
-                        if ((z * z) > 0.000001 && m->spaceDim < 3)
+                        if ((z * z) > 0.000001 && m_mesh->m_spaceDim < 3)
                         {
-                            m->spaceDim = 3;
+                            m_mesh->m_spaceDim = 3;
                         }
                         
                         id -= 1; // counter starts at 0
@@ -138,7 +138,7 @@ namespace Nektar
                             abort();
                         }
                         prevId = id;
-                        m->node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
+                        m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
                     }
                 }
                 // Process elements
@@ -182,11 +182,11 @@ namespace Nektar
                             int node = 0;
                             st >> node;
                             node -= 1; // counter starts at 0
-                            nodeList.push_back(m->node[node]);
+                            nodeList.push_back(m_mesh->m_node[node]);
                         }
 
                         // Prism nodes need re-ordering for Nektar++.
-                        if (it->second.e == ePrism)
+                        if (it->second.m_e == LibUtilities::ePrism)
                         {
                             // Mirror first in uv plane to swap around
                             // triangular faces
@@ -197,7 +197,7 @@ namespace Nektar
                             // correctly.
                             swap(nodeList[4], nodeList[2]);
                             
-                            if (it->second.order == 2)
+                            if (it->second.m_order == 2)
                             {
                                 vector<NodeSharedPtr> nodemap(18);
                                 
@@ -226,7 +226,7 @@ namespace Nektar
                                 
                                 nodeList = nodemap;
                             }
-                            else if (it->second.order > 2)
+                            else if (it->second.m_order > 2)
                             {
                                 cerr << "Error: gmsh prisms only supported up "
                                      << "to second order." << endl;
@@ -236,13 +236,13 @@ namespace Nektar
                         
                         // Create element
                         ElementSharedPtr E = GetElementFactory().
-                            CreateInstance(it->second.e,it->second,nodeList,tags);
+                            CreateInstance(it->second.m_e,it->second,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m->expDim) {
-                            m->expDim = E->GetDim();
+                        if (E->GetDim() > m_mesh->m_expDim) {
+                            m_mesh->m_expDim = E->GetDim();
                         }
-                        m->element[E->GetDim()].push_back(E);
+                        m_mesh->m_element[E->GetDim()].push_back(E);
                     }
                 }
             }
@@ -272,33 +272,33 @@ namespace Nektar
                 abort();
             }
             
-            switch(it->second.e)
+            switch(it->second.m_e)
             {
-                case ePoint: 
-                    nNodes = Point::        GetNumNodes(it->second);
-                    break;
-                case eLine: 
-                    nNodes = Line::         GetNumNodes(it->second);
-                    break;
-                case eTriangle: 
-                    nNodes = Triangle::     GetNumNodes(it->second);
-                    break;
-                case eQuadrilateral: 
-                    nNodes = Quadrilateral::GetNumNodes(it->second);
-                    break;
-                case eTetrahedron: 
-                    nNodes = Tetrahedron::  GetNumNodes(it->second);
-                    break;
-                case ePrism: 
-                    nNodes = Prism::        GetNumNodes(it->second);
-                    break;
-                case eHexahedron:
-                    nNodes = Hexahedron::   GetNumNodes(it->second);
-                    break;
-                default:
-                    cerr << "Unknown element type!" << endl;
-                    abort();
-                    break;
+            case LibUtilities::ePoint: 
+                nNodes = Point::        GetNumNodes(it->second);
+                break;
+            case LibUtilities::eSegment: 
+                nNodes = Line::         GetNumNodes(it->second);
+                break;
+            case LibUtilities::eTriangle: 
+                nNodes = Triangle::     GetNumNodes(it->second);
+                break;
+            case LibUtilities::eQuadrilateral: 
+                nNodes = Quadrilateral::GetNumNodes(it->second);
+                break;
+            case LibUtilities::eTetrahedron: 
+                nNodes = Tetrahedron::  GetNumNodes(it->second);
+                break;
+            case LibUtilities::ePrism: 
+                nNodes = Prism::        GetNumNodes(it->second);
+                break;
+            case LibUtilities::eHexahedron:
+                nNodes = Hexahedron::   GetNumNodes(it->second);
+                break;
+            default:
+                cerr << "Unknown element type!" << endl;
+                abort();
+                break;
             }
             
             return nNodes;
@@ -319,105 +319,105 @@ namespace Nektar
             std::map<unsigned int, ElmtConfig> tmp;
             
             //                    Elmt type,   order,  face, volume
-            tmp[  1] = ElmtConfig(eLine,           1,  true,  true);
-            tmp[  2] = ElmtConfig(eTriangle,       1,  true,  true);
-            tmp[  3] = ElmtConfig(eQuadrilateral,  1,  true,  true);
-            tmp[  4] = ElmtConfig(eTetrahedron,    1,  true,  true);
-            tmp[  5] = ElmtConfig(eHexahedron,     1,  true,  true);
-            tmp[  6] = ElmtConfig(ePrism,          1,  true,  true);
-            tmp[  8] = ElmtConfig(eLine,           2,  true,  true);
-            tmp[  9] = ElmtConfig(eTriangle,       2,  true,  true);
-            tmp[ 10] = ElmtConfig(eQuadrilateral,  2,  true,  true);
-            tmp[ 11] = ElmtConfig(eTetrahedron,    2,  true,  true);
-            tmp[ 12] = ElmtConfig(eHexahedron,     2,  true,  true);
-            tmp[ 13] = ElmtConfig(ePrism,          2,  true,  true);
-            tmp[ 15] = ElmtConfig(ePoint,          1,  true, false);
-            tmp[ 16] = ElmtConfig(eQuadrilateral,  2, false, false);
-            tmp[ 17] = ElmtConfig(eHexahedron,     2, false, false);
-            tmp[ 18] = ElmtConfig(ePrism,          2, false, false);
-            tmp[ 20] = ElmtConfig(eTriangle,       3, false, false);
-            tmp[ 21] = ElmtConfig(eTriangle,       3,  true, false);
-            tmp[ 22] = ElmtConfig(eTriangle,       4, false, false);
-            tmp[ 23] = ElmtConfig(eTriangle,       4,  true, false);
-            tmp[ 24] = ElmtConfig(eTriangle,       5, false, false);
-            tmp[ 25] = ElmtConfig(eTriangle,       5,  true, false);
-            tmp[ 26] = ElmtConfig(eLine,           3,  true, false);
-            tmp[ 27] = ElmtConfig(eLine,           4,  true, false);
-            tmp[ 28] = ElmtConfig(eLine,           5,  true, false);
-            tmp[ 29] = ElmtConfig(eTetrahedron,    3,  true,  true);
-            tmp[ 30] = ElmtConfig(eTetrahedron,    4,  true,  true);
-            tmp[ 31] = ElmtConfig(eTetrahedron,    5,  true,  true);
-            tmp[ 32] = ElmtConfig(eTetrahedron,    4,  true, false);
-            tmp[ 33] = ElmtConfig(eTetrahedron,    5,  true, false);
-            tmp[ 36] = ElmtConfig(eQuadrilateral,  3,  true, false);
-            tmp[ 37] = ElmtConfig(eQuadrilateral,  4,  true, false);
-            tmp[ 38] = ElmtConfig(eQuadrilateral,  5,  true, false);
-            tmp[ 39] = ElmtConfig(eQuadrilateral,  3, false, false);
-            tmp[ 40] = ElmtConfig(eQuadrilateral,  4, false, false);
-            tmp[ 41] = ElmtConfig(eQuadrilateral,  5, false, false);
-            tmp[ 42] = ElmtConfig(eTriangle,       6,  true, false);
-            tmp[ 43] = ElmtConfig(eTriangle,       7,  true, false);
-            tmp[ 44] = ElmtConfig(eTriangle,       8,  true, false);
-            tmp[ 45] = ElmtConfig(eTriangle,       9,  true, false);
-            tmp[ 46] = ElmtConfig(eTriangle,      10,  true, false);
-            tmp[ 47] = ElmtConfig(eQuadrilateral,  6,  true, false);
-            tmp[ 48] = ElmtConfig(eQuadrilateral,  7,  true, false);
-            tmp[ 49] = ElmtConfig(eQuadrilateral,  8,  true, false);
-            tmp[ 50] = ElmtConfig(eQuadrilateral,  9,  true, false);
-            tmp[ 51] = ElmtConfig(eQuadrilateral, 10,  true, false);
-            tmp[ 52] = ElmtConfig(eTriangle,       6, false, false);
-            tmp[ 53] = ElmtConfig(eTriangle,       7, false, false);
-            tmp[ 54] = ElmtConfig(eTriangle,       8, false, false);
-            tmp[ 55] = ElmtConfig(eTriangle,       9, false, false);
-            tmp[ 56] = ElmtConfig(eTriangle,      10, false, false);
-            tmp[ 57] = ElmtConfig(eQuadrilateral,  6, false, false);
-            tmp[ 58] = ElmtConfig(eQuadrilateral,  7, false, false);
-            tmp[ 59] = ElmtConfig(eQuadrilateral,  8, false, false);
-            tmp[ 60] = ElmtConfig(eQuadrilateral,  9, false, false);
-            tmp[ 61] = ElmtConfig(eQuadrilateral, 10, false, false);
-            tmp[ 62] = ElmtConfig(eLine,           6,  true, false);
-            tmp[ 63] = ElmtConfig(eLine,           7,  true, false);
-            tmp[ 64] = ElmtConfig(eLine,           8,  true, false);
-            tmp[ 65] = ElmtConfig(eLine,           9,  true, false);
-            tmp[ 66] = ElmtConfig(eLine,          10,  true, false);
-            tmp[ 71] = ElmtConfig(eTetrahedron,    6,  true,  true);
-            tmp[ 72] = ElmtConfig(eTetrahedron,    7,  true,  true);
-            tmp[ 73] = ElmtConfig(eTetrahedron,    8,  true,  true);
-            tmp[ 74] = ElmtConfig(eTetrahedron,    9,  true,  true);
-            tmp[ 75] = ElmtConfig(eTetrahedron,   10,  true,  true);
-            tmp[ 79] = ElmtConfig(eTetrahedron,    6,  true, false);
-            tmp[ 80] = ElmtConfig(eTetrahedron,    7,  true, false);
-            tmp[ 81] = ElmtConfig(eTetrahedron,    8,  true, false);
-            tmp[ 82] = ElmtConfig(eTetrahedron,    9,  true, false);
-            tmp[ 83] = ElmtConfig(eTetrahedron,   10,  true, false);
-            tmp[ 90] = ElmtConfig(ePrism,          3,  true,  true);
-            tmp[ 91] = ElmtConfig(ePrism,          4,  true,  true);
-            tmp[ 92] = ElmtConfig(eHexahedron,     3,  true,  true);
-            tmp[ 93] = ElmtConfig(eHexahedron,     4,  true,  true);
-            tmp[ 94] = ElmtConfig(eHexahedron,     5,  true,  true);
-            tmp[ 95] = ElmtConfig(eHexahedron,     6,  true,  true);
-            tmp[ 96] = ElmtConfig(eHexahedron,     7,  true,  true);
-            tmp[ 97] = ElmtConfig(eHexahedron,     8,  true,  true);
-            tmp[ 98] = ElmtConfig(eHexahedron,     9,  true,  true);
-            tmp[ 99] = ElmtConfig(eHexahedron,     3,  true, false);
-            tmp[100] = ElmtConfig(eHexahedron,     4,  true, false);
-            tmp[101] = ElmtConfig(eHexahedron,     5,  true, false);
-            tmp[102] = ElmtConfig(eHexahedron,     6,  true, false);
-            tmp[103] = ElmtConfig(eHexahedron,     7,  true, false);
-            tmp[104] = ElmtConfig(eHexahedron,     8,  true, false);
-            tmp[105] = ElmtConfig(eHexahedron,     9,  true, false);
-            tmp[106] = ElmtConfig(ePrism,          5,  true,  true);
-            tmp[107] = ElmtConfig(ePrism,          6,  true,  true);
-            tmp[108] = ElmtConfig(ePrism,          7,  true,  true);
-            tmp[109] = ElmtConfig(ePrism,          8,  true,  true);
-            tmp[110] = ElmtConfig(ePrism,          9,  true,  true);
-            tmp[111] = ElmtConfig(ePrism,          3,  true, false);
-            tmp[112] = ElmtConfig(ePrism,          4,  true, false);
-            tmp[113] = ElmtConfig(ePrism,          5,  true, false);
-            tmp[114] = ElmtConfig(ePrism,          6,  true, false);
-            tmp[115] = ElmtConfig(ePrism,          7,  true, false);
-            tmp[116] = ElmtConfig(ePrism,          8,  true, false);
-            tmp[117] = ElmtConfig(ePrism,          9,  true, false);
+            tmp[  1] = ElmtConfig(LibUtilities::eSegment,        1,  true,  true);
+            tmp[  2] = ElmtConfig(LibUtilities::eTriangle,       1,  true,  true);
+            tmp[  3] = ElmtConfig(LibUtilities::eQuadrilateral,  1,  true,  true);
+            tmp[  4] = ElmtConfig(LibUtilities::eTetrahedron,    1,  true,  true);
+            tmp[  5] = ElmtConfig(LibUtilities::eHexahedron,     1,  true,  true);
+            tmp[  6] = ElmtConfig(LibUtilities::ePrism,          1,  true,  true);
+            tmp[  8] = ElmtConfig(LibUtilities::eSegment,        2,  true,  true);
+            tmp[  9] = ElmtConfig(LibUtilities::eTriangle,       2,  true,  true);
+            tmp[ 10] = ElmtConfig(LibUtilities::eQuadrilateral,  2,  true,  true);
+            tmp[ 11] = ElmtConfig(LibUtilities::eTetrahedron,    2,  true,  true);
+            tmp[ 12] = ElmtConfig(LibUtilities::eHexahedron,     2,  true,  true);
+            tmp[ 13] = ElmtConfig(LibUtilities::ePrism,          2,  true,  true);
+            tmp[ 15] = ElmtConfig(LibUtilities::ePoint,          1,  true, false);
+            tmp[ 16] = ElmtConfig(LibUtilities::eQuadrilateral,  2, false, false);
+            tmp[ 17] = ElmtConfig(LibUtilities::eHexahedron,     2, false, false);
+            tmp[ 18] = ElmtConfig(LibUtilities::ePrism,          2, false, false);
+            tmp[ 20] = ElmtConfig(LibUtilities::eTriangle,       3, false, false);
+            tmp[ 21] = ElmtConfig(LibUtilities::eTriangle,       3,  true, false);
+            tmp[ 22] = ElmtConfig(LibUtilities::eTriangle,       4, false, false);
+            tmp[ 23] = ElmtConfig(LibUtilities::eTriangle,       4,  true, false);
+            tmp[ 24] = ElmtConfig(LibUtilities::eTriangle,       5, false, false);
+            tmp[ 25] = ElmtConfig(LibUtilities::eTriangle,       5,  true, false);
+            tmp[ 26] = ElmtConfig(LibUtilities::eSegment,        3,  true, false);
+            tmp[ 27] = ElmtConfig(LibUtilities::eSegment,        4,  true, false);
+            tmp[ 28] = ElmtConfig(LibUtilities::eSegment,        5,  true, false);
+            tmp[ 29] = ElmtConfig(LibUtilities::eTetrahedron,    3,  true,  true);
+            tmp[ 30] = ElmtConfig(LibUtilities::eTetrahedron,    4,  true,  true);
+            tmp[ 31] = ElmtConfig(LibUtilities::eTetrahedron,    5,  true,  true);
+            tmp[ 32] = ElmtConfig(LibUtilities::eTetrahedron,    4,  true, false);
+            tmp[ 33] = ElmtConfig(LibUtilities::eTetrahedron,    5,  true, false);
+            tmp[ 36] = ElmtConfig(LibUtilities::eQuadrilateral,  3,  true, false);
+            tmp[ 37] = ElmtConfig(LibUtilities::eQuadrilateral,  4,  true, false);
+            tmp[ 38] = ElmtConfig(LibUtilities::eQuadrilateral,  5,  true, false);
+            tmp[ 39] = ElmtConfig(LibUtilities::eQuadrilateral,  3, false, false);
+            tmp[ 40] = ElmtConfig(LibUtilities::eQuadrilateral,  4, false, false);
+            tmp[ 41] = ElmtConfig(LibUtilities::eQuadrilateral,  5, false, false);
+            tmp[ 42] = ElmtConfig(LibUtilities::eTriangle,       6,  true, false);
+            tmp[ 43] = ElmtConfig(LibUtilities::eTriangle,       7,  true, false);
+            tmp[ 44] = ElmtConfig(LibUtilities::eTriangle,       8,  true, false);
+            tmp[ 45] = ElmtConfig(LibUtilities::eTriangle,       9,  true, false);
+            tmp[ 46] = ElmtConfig(LibUtilities::eTriangle,      10,  true, false);
+            tmp[ 47] = ElmtConfig(LibUtilities::eQuadrilateral,  6,  true, false);
+            tmp[ 48] = ElmtConfig(LibUtilities::eQuadrilateral,  7,  true, false);
+            tmp[ 49] = ElmtConfig(LibUtilities::eQuadrilateral,  8,  true, false);
+            tmp[ 50] = ElmtConfig(LibUtilities::eQuadrilateral,  9,  true, false);
+            tmp[ 51] = ElmtConfig(LibUtilities::eQuadrilateral, 10,  true, false);
+            tmp[ 52] = ElmtConfig(LibUtilities::eTriangle,       6, false, false);
+            tmp[ 53] = ElmtConfig(LibUtilities::eTriangle,       7, false, false);
+            tmp[ 54] = ElmtConfig(LibUtilities::eTriangle,       8, false, false);
+            tmp[ 55] = ElmtConfig(LibUtilities::eTriangle,       9, false, false);
+            tmp[ 56] = ElmtConfig(LibUtilities::eTriangle,      10, false, false);
+            tmp[ 57] = ElmtConfig(LibUtilities::eQuadrilateral,  6, false, false);
+            tmp[ 58] = ElmtConfig(LibUtilities::eQuadrilateral,  7, false, false);
+            tmp[ 59] = ElmtConfig(LibUtilities::eQuadrilateral,  8, false, false);
+            tmp[ 60] = ElmtConfig(LibUtilities::eQuadrilateral,  9, false, false);
+            tmp[ 61] = ElmtConfig(LibUtilities::eQuadrilateral, 10, false, false);
+            tmp[ 62] = ElmtConfig(LibUtilities::eSegment,           6,  true, false);
+            tmp[ 63] = ElmtConfig(LibUtilities::eSegment,           7,  true, false);
+            tmp[ 64] = ElmtConfig(LibUtilities::eSegment,           8,  true, false);
+            tmp[ 65] = ElmtConfig(LibUtilities::eSegment,           9,  true, false);
+            tmp[ 66] = ElmtConfig(LibUtilities::eSegment,          10,  true, false);
+            tmp[ 71] = ElmtConfig(LibUtilities::eTetrahedron,    6,  true,  true);
+            tmp[ 72] = ElmtConfig(LibUtilities::eTetrahedron,    7,  true,  true);
+            tmp[ 73] = ElmtConfig(LibUtilities::eTetrahedron,    8,  true,  true);
+            tmp[ 74] = ElmtConfig(LibUtilities::eTetrahedron,    9,  true,  true);
+            tmp[ 75] = ElmtConfig(LibUtilities::eTetrahedron,   10,  true,  true);
+            tmp[ 79] = ElmtConfig(LibUtilities::eTetrahedron,    6,  true, false);
+            tmp[ 80] = ElmtConfig(LibUtilities::eTetrahedron,    7,  true, false);
+            tmp[ 81] = ElmtConfig(LibUtilities::eTetrahedron,    8,  true, false);
+            tmp[ 82] = ElmtConfig(LibUtilities::eTetrahedron,    9,  true, false);
+            tmp[ 83] = ElmtConfig(LibUtilities::eTetrahedron,   10,  true, false);
+            tmp[ 90] = ElmtConfig(LibUtilities::ePrism,          3,  true,  true);
+            tmp[ 91] = ElmtConfig(LibUtilities::ePrism,          4,  true,  true);
+            tmp[ 92] = ElmtConfig(LibUtilities::eHexahedron,     3,  true,  true);
+            tmp[ 93] = ElmtConfig(LibUtilities::eHexahedron,     4,  true,  true);
+            tmp[ 94] = ElmtConfig(LibUtilities::eHexahedron,     5,  true,  true);
+            tmp[ 95] = ElmtConfig(LibUtilities::eHexahedron,     6,  true,  true);
+            tmp[ 96] = ElmtConfig(LibUtilities::eHexahedron,     7,  true,  true);
+            tmp[ 97] = ElmtConfig(LibUtilities::eHexahedron,     8,  true,  true);
+            tmp[ 98] = ElmtConfig(LibUtilities::eHexahedron,     9,  true,  true);
+            tmp[ 99] = ElmtConfig(LibUtilities::eHexahedron,     3,  true, false);
+            tmp[100] = ElmtConfig(LibUtilities::eHexahedron,     4,  true, false);
+            tmp[101] = ElmtConfig(LibUtilities::eHexahedron,     5,  true, false);
+            tmp[102] = ElmtConfig(LibUtilities::eHexahedron,     6,  true, false);
+            tmp[103] = ElmtConfig(LibUtilities::eHexahedron,     7,  true, false);
+            tmp[104] = ElmtConfig(LibUtilities::eHexahedron,     8,  true, false);
+            tmp[105] = ElmtConfig(LibUtilities::eHexahedron,     9,  true, false);
+            tmp[106] = ElmtConfig(LibUtilities::ePrism,          5,  true,  true);
+            tmp[107] = ElmtConfig(LibUtilities::ePrism,          6,  true,  true);
+            tmp[108] = ElmtConfig(LibUtilities::ePrism,          7,  true,  true);
+            tmp[109] = ElmtConfig(LibUtilities::ePrism,          8,  true,  true);
+            tmp[110] = ElmtConfig(LibUtilities::ePrism,          9,  true,  true);
+            tmp[111] = ElmtConfig(LibUtilities::ePrism,          3,  true, false);
+            tmp[112] = ElmtConfig(LibUtilities::ePrism,          4,  true, false);
+            tmp[113] = ElmtConfig(LibUtilities::ePrism,          5,  true, false);
+            tmp[114] = ElmtConfig(LibUtilities::ePrism,          6,  true, false);
+            tmp[115] = ElmtConfig(LibUtilities::ePrism,          7,  true, false);
+            tmp[116] = ElmtConfig(LibUtilities::ePrism,          8,  true, false);
+            tmp[117] = ElmtConfig(LibUtilities::ePrism,          9,  true, false);
             
             return tmp;
         }

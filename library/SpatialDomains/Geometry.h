@@ -376,6 +376,7 @@ namespace Nektar
             return v_GetVertexEdgeMap(i,j);
         }
 
+        /// return the id of the \f$j^{th}\f$ face attached to the \f$ i^{th}\f$ vertex
         inline int Geometry::GetVertexFaceMap(int i, int j) const
         {
             return v_GetVertexFaceMap(i,j);

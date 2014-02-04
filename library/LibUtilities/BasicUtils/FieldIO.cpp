@@ -76,8 +76,21 @@ namespace Nektar
         {
 #ifdef NEKTAR_USE_MPI
             int size;
-            MPI_Comm_size( MPI_COMM_WORLD, &size );
-            ASSERTL0(size == 1, "This function is not available in parallel.");
+            int init;
+            MPI_Initialized(&init);
+
+            // If MPI has been initialised we can check the number of processes
+            // and, if > 1, tell the user he should not be running this
+            // function in parallel. If it is not initialised, we do not
+            // initialise it here, and assume the user knows what they are
+            // doing.
+            if (init)
+            {
+                MPI_Comm_size( MPI_COMM_WORLD, &size );
+                ASSERTL0(size == 1,
+                     "This static function is not available in parallel. Please"
+                     "instantiate a FieldIO object for parallel use.");
+            }
 #endif
             CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
             FieldIO f(c);
@@ -99,8 +112,21 @@ namespace Nektar
         {
 #ifdef NEKTAR_USE_MPI
             int size;
-            MPI_Comm_size( MPI_COMM_WORLD, &size );
-            ASSERTL0(size == 1, "This function is not available in parallel.");
+            int init;
+            MPI_Initialized(&init);
+
+            // If MPI has been initialised we can check the number of processes
+            // and, if > 1, tell the user he should not be running this
+            // function in parallel. If it is not initialised, we do not
+            // initialise it here, and assume the user knows what they are
+            // doing.
+            if (init)
+            {
+                MPI_Comm_size( MPI_COMM_WORLD, &size );
+                ASSERTL0(size == 1,
+                     "This static function is not available in parallel. Please"
+                     "instantiate a FieldIO object for parallel use.");
+            }
 #endif
             CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
             FieldIO f(c);
@@ -396,7 +422,10 @@ namespace Nektar
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
-                        ImportFieldData(doc1, fielddefs, fielddata);
+                        if(fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
                     }
                     
                 }
@@ -438,7 +467,10 @@ namespace Nektar
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
-                        ImportFieldData(doc1, fielddefs, fielddata);
+                        if(fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
                     }
                 }
             }
@@ -457,7 +489,10 @@ namespace Nektar
                 
                 ImportFieldMetaData(doc,fieldmetadatamap);
                 ImportFieldDefs(doc, fielddefs, false);
-                ImportFieldData(doc, fielddefs, fielddata);
+                if(fielddata != NullVectorNekDoubleVector)
+                {
+                    ImportFieldData(doc, fielddefs, fielddata);
+                }
             }
         }
 

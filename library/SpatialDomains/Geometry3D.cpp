@@ -250,7 +250,6 @@ namespace SpatialDomains
         }
     }
 
-
     /**
     * @brief Put all quadrature information into face/edge structure and
     * backward transform.

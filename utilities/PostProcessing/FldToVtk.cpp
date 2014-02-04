@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    vSession->LoadParameter("OutputExtraPoints",nExtraPoints,0);
+    vSession->LoadParameter("OutputExtraPoints", nExtraPoints,0);
 
     //----------------------------------------------
     // Read in mesh from input file

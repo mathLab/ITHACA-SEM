@@ -355,22 +355,18 @@ namespace Nektar
             switch(m_base[2]->GetPointsType())
             {
                 // Common case
-                case LibUtilities::eGaussRadauMAlpha2Beta0: // (2,0) Jacobi Inner product
-                    Vmath::Smul(Qz, 0.25, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
-                    break;
+            case LibUtilities::eGaussRadauMAlpha2Beta0: // (2,0) Jacobi Inner product
+                Vmath::Smul(Qz, 0.25, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
+                break;
                 
-                // Corner cases
-                case LibUtilities::eGaussLobattoLegendre:
-                case LibUtilities::eGaussRadauMLegendre:
-                    for (int k = 0; k < Qz; ++k)
-                    {
-                        wz_hat[k] = 0.25*(1.0-z[k])*(1.0-z[k]) * wz[k];
-                    }
-                    break;
-                    
-                default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
-                    break;
+                // Assume points are a Legenedre inner product and
+                // multiply by collapsed coordinate jacobian
+            default:
+                for (int k = 0; k < Qz; ++k)
+                {
+                    wz_hat[k] = 0.25*(1.0-z[k])*(1.0-z[k]) * wz[k];
+                }
+                break;
             }
             
             return Integral3D(inarray, wx, wy, wz_hat);
@@ -1254,15 +1250,6 @@ namespace Nektar
             // using GLL quadrature points.
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.125*(1-z2[i])*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
-                
                 // (2,0) Jacobi inner product.
                 case LibUtilities::eGaussRadauMAlpha2Beta0:
                     for(i = 0; i < nquad2; ++i)
@@ -1273,7 +1260,11 @@ namespace Nektar
                     break;
                 
                 default:
-                    ASSERTL0(false, "Quadrature point type not supported for this element.");
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.125*(1-z2[i])*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
                     break;
             }
         }

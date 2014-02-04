@@ -124,7 +124,7 @@ namespace Nektar
                          space_p).full;
         }
 		
-		static bool GenerateUnOrderedVector(const char *const str, std::vector<NekDouble> &vec)
+        static bool GenerateUnOrderedVector(const char *const str, std::vector<NekDouble> &vec)
         {
             // Functors used to parse the sequence.
             fctor5 functor5(&vec);

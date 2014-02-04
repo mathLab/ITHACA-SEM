@@ -21,11 +21,6 @@ ADD_DEFINITIONS(${NEKTAR++_DEFINITIONS})
 INCLUDE_DIRECTORIES(${NEKTAR++_INCLUDE_DIRS} ${NEKTAR++_TP_INCLUDE_DIRS})
 LINK_DIRECTORIES(${NEKTAR++_LIBRARY_DIRS} ${NEKTAR++_TP_LIBRARY_DIRS})
 
-# workaround for libLibUtilities: http://stackoverflow.com/questions/17150075/undefined-reference-to-clock-gettime-although-lrt-is-given
-# to fix, add rt to TARGET_LINK_LIBRARIES(LibUtilities ... in library/LibUtilities/CMakeLists.txt:341, but i have no idea how non-Linux
-# platforms handle this
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
-
 # TODO - Add an entry here for every source file in your project. Must not be empty!
 SET(SourceFileNames
     ExampleSolver.cpp

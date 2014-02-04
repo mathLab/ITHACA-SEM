@@ -91,37 +91,10 @@ namespace Nektar
                                  NekDouble &uflux, NekDouble A_0, NekDouble beta,
                                  NekDouble n);
         
-        /// Q_inflow Riemann solver
-        void Q_inflowRiemannSolver(NekDouble Q, NekDouble A_r, NekDouble u_r, NekDouble A_0, NekDouble beta, 
-                                   NekDouble &A_u,NekDouble &u_u);
-        
-        /// R Riemann solver
-        void R_RiemannSolver(NekDouble R, NekDouble A_l, NekDouble u_l, NekDouble A_0, NekDouble beta, NekDouble pout,
-                             NekDouble &A_u,NekDouble &u_u);
-        
-        /// CR Riemann solver
-        void CR_RiemannSolver(NekDouble C, NekDouble R, NekDouble A_l, NekDouble u_l, NekDouble A_0, NekDouble beta, NekDouble pout,
-                              NekDouble &A_u,NekDouble &u_u);
-
         /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
 
         Array<OneD, PulseWaveBoundarySharedPtr> m_Boundary;
-	
-        NekDouble pc;
-        
-        Array<OneD, NekDouble>   m_pc;
-        
-        int RCRcnt;
-
-        /// Id of element to which pressure  boundary condition belongs
-        Array<OneD, int> m_outflowBCtoElmtID;
-        /// Id of edge (2D) or face (3D) to which pressure boundary condition
-        /// belongs
-        Array<OneD, int> m_outflowBCtoVertexID;
-
-
-
     };
 }
 

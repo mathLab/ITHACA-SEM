@@ -10,6 +10,7 @@ library/Demos/MultiRegions/ExtraDemos
 solvers/ImageWarpingSolver
 solvers/PulseWaveSolver
 solvers/VortexWaveInteraction
+solvers/CompressibleFlowSolver/Tests/Perturbation*
 docs/*.doc
 docs/arch
 docs/emacs

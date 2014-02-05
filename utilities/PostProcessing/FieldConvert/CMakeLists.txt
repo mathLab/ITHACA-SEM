@@ -7,6 +7,7 @@ SET(FieldConvertHeaders
     OutputVtk.h
     OutputFld.h
     ProcessBoundaryExtract.h
+    ProcessConcatenateFld.h
     ProcessVorticity.h
 )
 
@@ -19,6 +20,7 @@ SET(FieldConvertSources
     OutputVtk.cpp
     OutputFld.cpp
     ProcessBoundaryExtract.cpp
+    ProcessConcatenateFld.cpp
     ProcessVorticity.cpp
 )
   

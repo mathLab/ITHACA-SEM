@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessBoundaryExtract.cpp
+//  File: Concatenate field
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Set up boundary to be extracted when writing fld file.
+//  Description: Concatenate parallel field
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +37,7 @@
 #include <iostream>
 using namespace std;
 
-#include "ProcessBoundaryExtract.h"
+#include "ProcessConcatenateFld.h"
 
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -47,74 +47,58 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessBoundaryExtract::className =
+        ModuleKey ProcessConcatenateFld::className =
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eProcessModule, "extract"), 
-                ProcessBoundaryExtract::create, "Extract Boundary field");
+                ModuleKey(eProcessModule, "concatenate"), 
+                ProcessConcatenateFld::create, "Concatenate field file into single file");
 
-        ProcessBoundaryExtract::ProcessBoundaryExtract(FieldSharedPtr f) : ProcessModule(f)
+        ProcessConcatenateFld::ProcessConcatenateFld(FieldSharedPtr f) : ProcessModule(f)
         {
-            // set up dafault values. 
-            m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
-            m_config["fldtoboundary"] = ConfigOption(false,"1","Extract fld values to boundary");
-            
-            f->m_writeBndFld = true;
-            
             // check for correct input files
             if(f->m_inputfiles.count("xml") == 0)
             {
-                cout << "An xml input file must be specified for the boundary extraction module" << endl;
+                cout << "An xml input file must be specified for the concatenate module" << endl;
                 exit(3);
             }
 
-            if((f->m_inputfiles.count("fld") == 0)||(f->m_inputfiles.count("chk") == 0)||            (f->m_inputfiles.count("rst") == 0))
+            if((f->m_inputfiles.count("fld") == 0)||(f->m_inputfiles.count("chk") == 0)|| (f->m_inputfiles.count("rst") == 0))
             {
-                cout << "An fld or chk or rst input file must be specified for the boundary extraction module" << endl;
+                cout << "A fld or chk or rst input file must be specified for the concatenate module" << endl;
 
                 exit(3);
             }
 
         }
 
-        ProcessBoundaryExtract::~ProcessBoundaryExtract()
+        ProcessConcatenateFld::~ProcessConcatenateFld()
         {
         }
-
-        void ProcessBoundaryExtract::Process(po::variables_map &vm)
+        
+        void ProcessConcatenateFld::Process(po::variables_map &vm)
         {
             if (m_f->m_verbose)
             {
-                cout << "ProcessBoundaryExtract: Setting up boundary extraction..." << endl;
+                cout << "ProcessConcatenateFld: Concatenating field file" << endl;
             }
 
-            // Set up Field options to output boundary fld
-            string bvalues =  m_config["bnd"].as<string>();
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+                = m_f->m_exp[0]->GetFieldDefinitions();
+            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-            if(bvalues.compare("All") == 0)
+            // Copy Data into FieldData and set variable
+            for(int j = 0; j < m_f->m_exp.size(); ++j)
             {
-                Array<OneD, const MultiRegions::ExpListSharedPtr> 
-                    BndExp = m_f->m_exp[0]->GetBndCondExpansions();
-                
-                for(int i = 0; i < BndExp.num_elements(); ++i)
+                for(int i = 0; i < FieldDef.size(); ++i)
                 {
-                    m_f->m_bndRegionsToWrite.push_back(i);
+                    // Could do a search here to find correct variable
+                    FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
+                    m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i], 
+                                                   m_f->m_exp[j]->UpdateCoeffs());
                 }
             }
-            else
-            {
-                ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
-                                                           m_f->m_bndRegionsToWrite),"Failed to interpret range string");
-            }
-
-            if(m_config["fldtoboundary"].as<string>().compare("1") == 0)
-            {
-                m_f->m_fldToBnd = true;
-            }
-            else
-            {
-                m_f->m_fldToBnd = false;
-            }
             
+            m_f->m_fielddef  = FieldDef;
+            m_f->m_data = FieldData;
         }
     }
 }

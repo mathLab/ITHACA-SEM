@@ -24,6 +24,10 @@ int main(int argc, char *argv[])
 	Array<OneD,NekDouble>  xc0,xc1,xc2; 
 	NekDouble  lambda;
 	vector<string> vFilenames;
+	//defining timing variables
+	timeval timer1, timer2;
+	NekDouble time1, time2;
+	NekDouble exeTime, fullTime, ppTime = 0.0;
 
 	if(argc < 6)//< is added to be able to submit "verbose" option
 	{
@@ -197,6 +201,10 @@ int main(int argc, char *argv[])
 				ASSERTL0(false,"Unrecognised system solver");
 			}
 	}
+	
+	//timing the whole solve including mesh loading
+	gettimeofday(&timer1, NULL);
+	
 	//----------------------------------------------
 	// Read in mesh from input file
 	SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
@@ -264,6 +272,11 @@ int main(int argc, char *argv[])
 	Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
 			MultiRegions::eGlobal);
 	//----------------------------------------------
+	//end of full solve timing
+	gettimeofday(&timer2, NULL);
+	time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
+	time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
+	fullTime = (time2-time1);
 
 	//----------------------------------------------
 	// See if there is an exact solution, if so 
@@ -342,10 +355,6 @@ int main(int argc, char *argv[])
 	//----------------------------------------------       
 
 	//----------------------------------------------
-	// Do the timings
-	timeval timer1, timer2;
-	NekDouble time1, time2;
-	NekDouble exeTime;
 
 	// We first do a single run in order to estimate the number of calls 
 	// we are going to make
@@ -431,6 +440,9 @@ int main(int argc, char *argv[])
 	outfile << setw(10) << nGlobBndRank << " ";
 	outfile << setw(10) << nGlobBandwidth << " ";
 	outfile << setw(10) << nnz << " ";
+	outfile.precision(0);
+	outfile << setw(10) << fixed << noshowpoint << fullTime << " ";
+	outfile << setw(10) << fixed << noshowpoint << ppTime << " ";
 	outfile << endl;
 
 	outfile.close();

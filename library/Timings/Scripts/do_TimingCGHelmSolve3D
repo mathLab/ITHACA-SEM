@@ -11,7 +11,7 @@ MinTimeFile="./MinTimeCG3D.dat"
 
 MaxNumModesp1=10;
 
-echo "%     Solver  optlevel  Type  nElements     nModes    Time   nCalls   Time/Call    L2Error  ppL2Error L2Error(hi-res)   LinfError   ppLinfErr  LinfErr(hi-res)  nLocCoef  nGlobCoef  nLocBCoef nGlobBCoef  nLocDCoef nGlobDCoef   GlobRank  GlobBndwth   nnz" > $TimingResultsFile
+echo "%     Solver  optlevel  Type  nElements     nModes    Time   nCalls   Time/Call    L2Error  ppL2Error L2Error(hi-res)   LinfError   ppLinfErr  LinfErr(hi-res)  nLocCoef  nGlobCoef  nLocBCoef nGlobBCoef  nLocDCoef nGlobDCoef   GlobRank  GlobBndwth   nnz    FullSolveTime   ppTime" > $TimingResultsFile
 
 # Loop over the mesh-size
 for MeshSize in 1 2 3 4 5 6 7 8 9 10
@@ -37,7 +37,7 @@ do
 						TimingCGHelmSolve3D $Type $MeshSize $NumModes $OptimisationLevel $LinSysSolver
 						echo Nektar++ TimingCGHelmSolve3D $Type $MeshSize $NumModes $OptimisationLevel $LinSysSolver
 
-						read  LinSysSolverOut optLevelOut TypeOut NumElementsOut NumModesOut ElapsedTimeOut NumCallsOut TimepCallOut L2Out ppL2Out L2OutBis LinfOut ppLinfOut LinfOutBis nLocCoefOut  nGlobCoefOut nLocBCoefOut  nGlobBCoefOut  nLocDCoefOut nGlobDCoefOut GlobRankOut GlobBndwthOut nnzOut< $ExecutableDumpFile
+						read  LinSysSolverOut optLevelOut TypeOut NumElementsOut NumModesOut ElapsedTimeOut NumCallsOut TimepCallOut L2Out ppL2Out L2OutBis LinfOut ppLinfOut LinfOutBis nLocCoefOut  nGlobCoefOut nLocBCoefOut  nGlobBCoefOut  nLocDCoefOut nGlobDCoefOut GlobRankOut GlobBndwthOut nnzOut FullSolveTimeOut ppTimeOut< $ExecutableDumpFile
 						if [ $ElapsedTimeOut -lt $MinTime ]; 
 						then
 							MinTime=$ElapsedTimeOut

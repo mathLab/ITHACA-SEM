@@ -374,31 +374,6 @@ int main(int argc, char *argv[])
 	MultiRegions::DisContField3DSharedPtr PostProc = 
 		MemoryManager<MultiRegions::DisContField3D>::AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
 
-	int ppCoordim = PostProc->GetCoordim(0);
-	int ppNq      = PostProc->GetTotPoints();
-
-	Array<OneD,NekDouble> ppXc0(ppNq,0.0);
-	Array<OneD,NekDouble> ppXc1(ppNq,0.0);
-	Array<OneD,NekDouble> ppXc2(ppNq,0.0);
-
-	switch(ppCoordim)
-	{
-		case 1:
-			PostProc->GetCoords(ppXc0);
-			break;
-		case 2:
-			PostProc->GetCoords(ppXc0,ppXc1);
-			break;
-		case 3:
-			PostProc->GetCoords(ppXc0,ppXc1,ppXc2);
-			break;
-	}
-
-
-	// evaluate exact solution 
-	Array<OneD,NekDouble> ppSol(ppNq);
-	ex_sol->Evaluate(ppXc0,ppXc1,ppXc2,ppSol);
-
 	// calcualte spectral/hp approximation on the quad points of this new
 	// expansion basis
 	std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef 
@@ -433,6 +408,32 @@ int main(int argc, char *argv[])
 	time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
 	time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
 	ppTime = (time2-time1);
+
+	//computing postprocessing error
+	int ppCoordim = PostProc->GetCoordim(0);
+	int ppNq      = PostProc->GetTotPoints();
+
+	Array<OneD,NekDouble> ppXc0(ppNq,0.0);
+	Array<OneD,NekDouble> ppXc1(ppNq,0.0);
+	Array<OneD,NekDouble> ppXc2(ppNq,0.0);
+
+	switch(ppCoordim)
+	{
+		case 1:
+			PostProc->GetCoords(ppXc0);
+			break;
+		case 2:
+			PostProc->GetCoords(ppXc0,ppXc1);
+			break;
+		case 3:
+			PostProc->GetCoords(ppXc0,ppXc1,ppXc2);
+			break;
+	}
+
+
+	// evaluate exact solution 
+	Array<OneD,NekDouble> ppSol(ppNq);
+	ex_sol->Evaluate(ppXc0,ppXc1,ppXc2,ppSol);
 
 	NekDouble L2ErrorPostProc = PostProc->L2(PostProc->GetPhys(), ppSol);
 	NekDouble LinfErrorPostProc = PostProc->Linf(PostProc->GetPhys(), ppSol); 

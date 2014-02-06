@@ -205,9 +205,10 @@ namespace Nektar
                     ::AllocateSharedPtr(m_f->m_session->GetComm());
                 m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef);
                 NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
+                
 
                 //----------------------------------------------
-               // Set up Expansion information to use mode order from field
+                // Set up Expansion information to use mode order from field
                 m_f->m_graph->SetExpansions(m_f->m_fielddef);
             }
             else
@@ -215,7 +216,7 @@ namespace Nektar
                 if(m_f->m_session->DefinesSolverInfo("HOMOGENEOUS"))
                 {
                     std::string HomoStr = m_f->m_session->GetSolverInfo("HOMOGENEOUS");
-
+                    
                     if((HomoStr == "HOMOGENEOUS1D") || (HomoStr == "Homogeneous1D")
                        || (HomoStr == "1D") || (HomoStr == "Homo1D"))
                     {

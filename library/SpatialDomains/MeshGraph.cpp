@@ -1643,24 +1643,25 @@ namespace Nektar
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
-                    }
+                    
 
-                    // loop over all elements in partition and set expansion
-                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                    LibUtilities::BasisKeyVector def;
-                                
-                    CompositeMap::const_iterator compIter;
-
-                    for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
-                    {
-                        GeometryVector::const_iterator x;
-                        for (x = compIter->second->begin(); x != compIter->second->end(); ++x)
+                        // loop over all elements in partition and set expansion
+                        expansionMap = m_expansionMapShPtrMap.find(field)->second;
+                        LibUtilities::BasisKeyVector def;
+                        
+                        CompositeMap::const_iterator compIter;
+                        
+                        for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
                         {
-                            ExpansionShPtr expansionElementShPtr =
-                                MemoryManager<Expansion>::AllocateSharedPtr(*x, def);
-                            int id = (*x)->GetGlobalID();
-                            (*expansionMap)[id] = expansionElementShPtr;
-                            
+                            GeometryVector::const_iterator x;
+                            for (x = compIter->second->begin(); x != compIter->second->end(); ++x)
+                            {
+                                ExpansionShPtr expansionElementShPtr =
+                                    MemoryManager<Expansion>::AllocateSharedPtr(*x, def);
+                                int id = (*x)->GetGlobalID();
+                                (*expansionMap)[id] = expansionElementShPtr;
+                                
+                            }
                         }
                     }
                 }

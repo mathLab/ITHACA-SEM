@@ -144,8 +144,8 @@ namespace Nektar
                         for (int j = 0; j < nfields; ++j)
                         {
                             BndExp[j][m_f->m_bndRegionsToWrite[i]]->BwdTrans(
-                                BndExp[j][m_f->m_bndRegionsToWrite[i]]->GetCoeffs(), 
-                                BndExp[j][m_f->m_bndRegionsToWrite[i]]->UpdatePhys());
+                                                                             BndExp[j][m_f->m_bndRegionsToWrite[i]]->GetCoeffs(), 
+                                                                             BndExp[j][m_f->m_bndRegionsToWrite[i]]->UpdatePhys());
                             
                             NekDouble l2err = BndExp[j][m_f->m_bndRegionsToWrite[i]]->
                                 L2(BndExp[j][m_f->m_bndRegionsToWrite[i]]->GetPhys());
@@ -176,6 +176,7 @@ namespace Nektar
                 }
 
                 // Write the output file
+                cout << m_f->m_fielddef.size() << endl;
                 m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
 
 

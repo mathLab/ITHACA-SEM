@@ -761,7 +761,7 @@ namespace Nektar
             
             
             // Create element
-            if(nnodes != LibUtilities::ePyramid)
+            if(elType != LibUtilities::ePyramid)
             {
                 ElmtConfig conf(elType,1,false,false,DoOrient);
                 ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,

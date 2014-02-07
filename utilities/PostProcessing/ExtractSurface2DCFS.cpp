@@ -35,7 +35,8 @@ int main(int argc, char *argv[])
 {
     int cnt;
     int id1, id2;
-    int i, j, e, b;
+    int i, j, n, e, b;
+    Array<OneD, NekDouble> auxArray;
     
     int nBndEdgePts, nBndEdges, nBndRegions;
         
@@ -51,6 +52,68 @@ int main(int argc, char *argv[])
 
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(3, argv);
+    
+    std::string                         m_ViscosityType;
+    
+    NekDouble                           m_gamma;
+    NekDouble                           m_pInf;
+    NekDouble                           m_rhoInf;
+    NekDouble                           m_uInf;
+    NekDouble                           m_vInf;
+    NekDouble                           m_wInf;
+    NekDouble                           m_gasConstant;
+    NekDouble                           m_Twall;
+    NekDouble                           m_mu;
+    NekDouble                           m_thermalConductivity;
+    
+    int m_spacedim = 2;
+    int nDimensions = m_spacedim;
+    int phys_offset;
+    
+    // Get gamma parameter from session file.
+    ASSERTL0(vSession->DefinesParameter("Gamma"),
+             "Compressible flow sessions must define a Gamma parameter.");
+    vSession->LoadParameter("Gamma", m_gamma, 1.4);
+    
+    // Get E0 parameter from session file.
+    ASSERTL0(vSession->DefinesParameter("pInf"),
+             "Compressible flow sessions must define a pInf parameter.");
+    vSession->LoadParameter("pInf", m_pInf, 101325);
+    
+    // Get rhoInf parameter from session file.
+    ASSERTL0(vSession->DefinesParameter("rhoInf"),
+             "Compressible flow sessions must define a rhoInf parameter.");
+    vSession->LoadParameter("rhoInf", m_rhoInf, 1.225);
+    
+    // Get uInf parameter from session file.
+    ASSERTL0(vSession->DefinesParameter("uInf"),
+             "Compressible flow sessions must define a uInf parameter.");
+    vSession->LoadParameter("uInf", m_uInf, 0.1);
+    
+    // Get vInf parameter from session file.
+    if (m_spacedim == 2 || m_spacedim == 3)
+    {
+        ASSERTL0(vSession->DefinesParameter("vInf"),
+                 "Compressible flow sessions must define a vInf parameter"
+                 "for 2D/3D problems.");
+        vSession->LoadParameter("vInf", m_vInf, 0.0);
+    }
+    
+    // Get wInf parameter from session file.
+    if (m_spacedim == 3)
+    {
+        ASSERTL0(vSession->DefinesParameter("wInf"),
+                 "Compressible flow sessions must define a wInf parameter"
+                 "for 3D problems.");
+        vSession->LoadParameter("wInf", m_wInf, 0.0);
+    }
+    
+    vSession->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
+    vSession->LoadParameter ("Twall",         m_Twall,         300.15);
+    vSession->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
+    vSession->LoadParameter ("mu",            m_mu,            1.78e-05);
+    vSession->LoadParameter ("thermalConductivity",
+                              m_thermalConductivity, 0.0257);
 
     //--------------------------------------------------------------------------
     // Read in mesh from input file
@@ -112,6 +175,9 @@ int main(int argc, char *argv[])
     
     int nSolutionPts = pFields[0]->GetNpoints();
     int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
+    int nElements    = pFields[0]->GetExpSize();
+    
+    Array<OneD, NekDouble> tmp(nSolutionPts, 0.0);
 
     Array<OneD, NekDouble> x(nSolutionPts);
     Array<OneD, NekDouble> y(nSolutionPts); 
@@ -137,8 +203,7 @@ int main(int argc, char *argv[])
     Array<OneD, Array<OneD, NekDouble> > uFields(nfields);
     Array<OneD, Array<OneD, NekDouble> > traceFields(nfields);
     Array<OneD, Array<OneD, NekDouble> > surfaceFields(nfields);
-
-
+    
     // Extract the physical values of the solution at the boundaries
     for (j = 0; j < nfields; ++j)
     {
@@ -157,7 +222,222 @@ int main(int argc, char *argv[])
         Vmath::Vcopy(nSolutionPts, Exp[j]->GetPhys(), 1, uFields[j], 1);
         pFields[0]->ExtractTracePhys(uFields[j], traceFields[j]);
     }
-    //--------------------------------------------------------------------------
+    
+    //Fields to add in the output file
+    
+    int nfieldsAdded = 5;
+    Array<OneD, Array<OneD, NekDouble> > traceFieldsAdded(nfieldsAdded);
+    Array<OneD, Array<OneD, NekDouble> > surfaceFieldsAdded(nfieldsAdded);
+    
+    for (j = 0; j < nfieldsAdded; ++j)
+    {
+        traceFieldsAdded[j] = Array<OneD, NekDouble>(nTracePts, 0.0);
+        surfaceFieldsAdded[j] = Array<OneD, NekDouble>(nTracePts, 0.0);
+    }
+    
+    /******** Evaluation of normals and tangents on the trace *****************/
+     
+    Array<OneD, Array<OneD, NekDouble> > m_traceNormals (nDimensions);
+    for(i = 0; i < nDimensions; ++i)
+    {
+        m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
+    }
+    pFields[0]->GetTrace()->GetNormals(m_traceNormals);
+    
+    Array<OneD, Array<OneD, NekDouble> > m_traceTangents (nDimensions);
+    for(i = 0; i < nDimensions; ++i)
+    {
+        m_traceTangents[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
+    }
+    
+    // t_x = - n_y
+    Vmath::Vcopy(nTracePts,
+                 &m_traceNormals[1][0], 1,
+                 &m_traceTangents[0][0], 1);
+    Vmath::Neg(nTracePts, &m_traceTangents[0][0], 1);
+    
+    // t_y = n_x
+    Vmath::Vcopy(nTracePts,
+                 &m_traceNormals[0][0], 1,
+                 &m_traceTangents[1][0], 1);
+
+    /******** Evaluation of the pressure ***************************************
+    // P    = (E-1/2.*rho.*((rhou./rho).^2+(rhov./rho).^2))*(gamma - 1);
+    // P -> traceFieldsAdded[0];
+    ***************************************************************************/
+    
+    Array<OneD, NekDouble> pressure(nSolutionPts, 0.0);
+    NekDouble gammaMinusOne    = m_gamma - 1.0;
+    
+    for (i = 0; i < m_spacedim; i++)
+    {
+        Vmath::Vmul(nSolutionPts,
+                    &uFields[i][0], 1,
+                    &uFields[i][0], 1,
+                    &tmp[0],1);
+        
+        
+        Vmath::Smul(nSolutionPts, 0.5,
+                    &tmp[0], 1,
+                    &tmp[0], 1);
+
+        Vmath::Vadd(nSolutionPts,
+                    &pressure[0], 1,
+                    &tmp[0], 1,
+                    &pressure[0], 1);
+    }
+    
+
+    
+    Vmath::Vdiv(nSolutionPts,
+                &pressure[0], 1,
+                &uFields[0][0], 1,
+                &pressure[0],1);
+    
+    
+    Vmath::Vsub(nSolutionPts,
+                &uFields[nfields - 1][0], 1,
+                &pressure[0], 1,
+                &pressure[0],1);
+    
+    Vmath::Smul(nSolutionPts, gammaMinusOne,
+                &pressure[0], 1,
+                &pressure[0], 1);
+    
+    // Extract trace
+    pFields[0]->ExtractTracePhys(pressure, traceFieldsAdded[0]);
+    
+    /******** Evaluation of the temperature ************************************
+    // T = P/(R*rho);
+    // T -> traceFieldsAdded[1];
+    ***************************************************************************/
+    
+    Array<OneD, NekDouble> temperature(nSolutionPts, 0.0);
+    
+    Vmath::Vdiv(nSolutionPts,
+                &pressure[0], 1,
+                &uFields[0][0], 1,
+                &temperature[0],1);
+    
+    NekDouble GasConstantInv =  1.0/m_gasConstant;
+    Vmath::Smul(nSolutionPts, GasConstantInv,
+                &temperature[0], 1,
+                &temperature[0], 1);
+    
+    // Extract trace
+    pFields[0]->ExtractTracePhys(temperature, traceFieldsAdded[1]);
+    
+    /*** Evaluation of the temperature gradient in the normal direction ********
+    // DT_n -> traceFieldsAdded[2]
+    ***************************************************************************/
+
+    Array<OneD, Array<OneD, NekDouble> > Dtemperature(nDimensions);
+    Array<OneD, Array<OneD, NekDouble> > traceDtemperature(nDimensions);
+    
+    for (i = 0; i < nDimensions; ++ i)
+    {
+        Dtemperature[i]  = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+        traceDtemperature[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
+    }
+
+    for (i = 0; i < nDimensions; ++ i)
+    {
+        for (n = 0; n < nElements; n++)
+        {
+            phys_offset = pFields[0]->GetPhys_Offset(n);
+        
+            pFields[i]->GetExp(n)->PhysDeriv(
+                                    i, temperature + phys_offset,
+                                    auxArray = Dtemperature[i] + phys_offset);
+        }
+        // Extract trace
+        pFields[0]->ExtractTracePhys(Dtemperature[i], traceDtemperature[i]);
+    }
+    
+    for(i = 0; i < nDimensions; ++i)
+    {
+        Vmath::Vmul(nTracePts,
+                    &m_traceNormals[i][0], 1,
+                    &traceDtemperature[i][0], 1,
+                    &tmp[0],1);
+        
+        Vmath::Vadd(nTracePts,
+                    &traceFieldsAdded[2][0], 1,
+                    &tmp[0], 1,
+                    &traceFieldsAdded[2][0], 1);
+    }
+    
+    /*** Evaluation of the pressure gradient in the tangent direction **********
+    // DP_t -> traceFieldsAdded[3]
+    ***************************************************************************/
+    
+    Array<OneD, Array<OneD, NekDouble> > Dpressure(nDimensions);
+    Array<OneD, Array<OneD, NekDouble> > traceDpressure(nDimensions);
+    
+    for (i = 0; i < nDimensions; ++ i)
+    {
+        Dpressure[i]  = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+        traceDpressure[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
+    }
+    
+    for (i = 0; i < nDimensions; ++ i)
+    {
+        for (n = 0; n < nElements; n++)
+        {
+            phys_offset = pFields[0]->GetPhys_Offset(n);
+            
+            pFields[i]->GetExp(n)->PhysDeriv(
+                                             i, pressure + phys_offset,
+                                             auxArray = Dpressure[i] + phys_offset);
+        }
+        // Extract trace
+        pFields[0]->ExtractTracePhys(Dpressure[i], traceDpressure[i]);
+    }
+    
+    
+    for(i = 0; i < nDimensions; ++i)
+    {
+        Vmath::Vmul(nTracePts,
+                    &m_traceTangents[i][0], 1,
+                    &traceDpressure[i][0], 1,
+                    &tmp[0],1);
+        
+        Vmath::Vadd(nTracePts,
+                    &traceFieldsAdded[3][0], 1,
+                    &tmp[0], 1,
+                    &traceFieldsAdded[3][0], 1);
+    }
+    
+    /*** Evaluation of Mach number *********************************************
+    // M -> traceFieldsAdded[4]
+    ***************************************************************************/
+    NekDouble gamma    = m_gamma;
+    
+    // Speed of sound
+    Array<OneD, NekDouble> soundspeed(nSolutionPts, 0.0);
+    
+    Vmath::Vdiv (nSolutionPts, pressure, 1, uFields[0], 1, soundspeed, 1);
+    Vmath::Smul (nSolutionPts, gamma, soundspeed, 1, soundspeed, 1);
+    Vmath::Vsqrt(nSolutionPts, soundspeed, 1, soundspeed, 1);
+    
+    // Mach
+    Array<OneD, NekDouble> mach(nSolutionPts, 0.0);
+    
+    for (int i = 0; i < m_spacedim; ++i)
+    {
+        Vmath::Vvtvp(nSolutionPts, uFields[i + 1], 1, uFields[i + 1], 1,
+                     mach,           1, mach,           1);
+    }
+    
+    Vmath::Vdiv(nSolutionPts, mach, 1, uFields[0], 1, mach, 1);
+    Vmath::Vdiv(nSolutionPts, mach, 1, uFields[0], 1, mach, 1);
+    Vmath::Vsqrt(nSolutionPts, mach, 1, mach, 1);
+    Vmath::Vdiv(nSolutionPts, mach, 1, soundspeed,   1, mach, 1);
+    
+    pFields[0]->ExtractTracePhys(mach, traceFieldsAdded[4]);
+
+    /***************************************************************************/
+    // Extract coordinates
     
     if (pFields[0]->GetBndCondExpansions().num_elements())
     {
@@ -196,6 +476,7 @@ int main(int argc, char *argv[])
         }
     }
     
+    // Extract fields
     if (pFields[0]->GetBndCondExpansions().num_elements())
     {
         for (j = 0; j < nfields; ++j)
@@ -230,6 +511,41 @@ int main(int argc, char *argv[])
         }
     }
     
+    // Extract fields added
+    if (pFields[0]->GetBndCondExpansions().num_elements())
+    {
+        for (j = 0; j < nfieldsAdded; ++j)
+        {
+            id1 = 0;
+            cnt = 0;
+            nBndRegions = pFields[0]->GetBndCondExpansions().num_elements();
+            for (b = 0; b < nBndRegions; ++b)
+            {
+                nBndEdges = pFields[0]->GetBndCondExpansions()[b]->GetExpSize();
+                for (e = 0; e < nBndEdges; ++e)
+                {
+                    nBndEdgePts = pFields[0]->
+                    GetBndCondExpansions()[b]->GetExp(e)->GetNumPoints(0);
+                    
+                    id2 = pFields[0]->GetTrace()->
+                    GetPhys_Offset(pFields[0]->GetTraceMap()->
+                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                    
+                    if (pFields[0]->GetBndConditions()[b]->
+                        GetUserDefined() == SpatialDomains::eWallViscous ||
+                        pFields[0]->GetBndConditions()[b]->
+                        GetUserDefined() == SpatialDomains::eWall)
+                    {
+                        Vmath::Vcopy(nBndEdgePts, &traceFieldsAdded[j][id2], 1,
+                                     &surfaceFieldsAdded[j][id1], 1);
+                        
+                        id1 += nBndEdgePts;
+                    }
+                }
+            }
+        }
+    }
+    
     // Print the surface coordinates and the surface solution in a .txt file
     ofstream outfile;
     outfile.open("surfaceQuantities.txt");
@@ -245,6 +561,11 @@ int main(int argc, char *argv[])
         << surfaceFields[1][i] << " \t " 
         << surfaceFields[2][i] << " \t "
         << surfaceFields[3][i] << " \t "
+        << surfaceFieldsAdded[0][i] << " \t "
+        << surfaceFieldsAdded[1][i] << " \t "
+        << surfaceFieldsAdded[2][i] << " \t "
+        << surfaceFieldsAdded[3][i] << " \t "
+        << surfaceFieldsAdded[4][i] << " \t "
         << endl;
     }
     outfile << endl << endl;

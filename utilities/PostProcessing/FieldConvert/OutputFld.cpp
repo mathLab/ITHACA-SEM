@@ -83,7 +83,6 @@ namespace Nektar
                     cout << "OutputFld: Writing boundary file(s): "; 
                     for(int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
                     {
-                        cout << m_f->m_bndRegionsToWrite[i];
                         if(i < m_f->m_bndRegionsToWrite.size()-1) 
                         {
                             cout << ",";

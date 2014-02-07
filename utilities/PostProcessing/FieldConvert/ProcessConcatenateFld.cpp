@@ -61,7 +61,7 @@ namespace Nektar
                 exit(3);
             }
 
-            if((f->m_inputfiles.count("fld") == 0)||(f->m_inputfiles.count("chk") == 0)|| (f->m_inputfiles.count("rst") == 0))
+            if((f->m_inputfiles.count("fld") == 0)&&(f->m_inputfiles.count("chk") == 0)&& (f->m_inputfiles.count("rst") == 0))
             {
                 cout << "A fld or chk or rst input file must be specified for the concatenate module" << endl;
 

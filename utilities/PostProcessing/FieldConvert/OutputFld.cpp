@@ -175,7 +175,6 @@ namespace Nektar
                 }
 
                 // Write the output file
-                cout << m_f->m_fielddef.size() << endl;
                 m_f->m_fld->Write(filename, m_f->m_fielddef, m_f->m_data);
 
 

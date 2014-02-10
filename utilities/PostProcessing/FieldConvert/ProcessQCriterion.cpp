@@ -49,7 +49,7 @@ namespace Nektar
         ModuleKey ProcessQCriterion::className =
 		GetModuleFactory().RegisterCreatorFunction(
 												   ModuleKey(eProcessModule, "QCriterion"),
-												   ProcessQCriterion::create, "Computes Q Criterion (but now it's actually just a test).");
+												   ProcessQCriterion::create, "Computes Q-Criterion.");
 		
         ProcessQCriterion::ProcessQCriterion(FieldSharedPtr f) : ProcessModule(f)
         {
@@ -77,15 +77,11 @@ namespace Nektar
             int nfields = m_f->m_fielddef[0]->m_fields.size();
             if (spacedim == 1 || spacedim == 2)
             {
-                ASSERTL0(false, "Error: ProcessQCriterion must be computed for a 3D (or quasi-3D) case.")
+				cerr << "\n Error: ProcessQCriterion must be computed for a 3D (or quasi-3D) case. \n" << endl;
             }
-            //int addfields = (spacedim == 2)? 1:3;
 			int addfields = 1; //For calculating Q-Criterion only 1 field must be added
             
             int npoints = m_f->m_exp[0]->GetNpoints();
-			
-            //Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
-            //Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
 			
 			Array<OneD, Array<OneD, NekDouble> > grad(nfields * nfields);
 			
@@ -117,11 +113,6 @@ namespace Nektar
 				S[i] = Array<OneD, NekDouble>(npoints);
             }
             
-            // Calculate Gradient & Vorticity
-			//            if (spacedim == 2)
-			//            {
-			//                cerr << "Q-Criterion calculation needs a 3D mesh." << endl;
-			//            }
 			for (i = 0; i < nfields; ++i)
 			{
 				
@@ -130,20 +121,6 @@ namespace Nektar
 										 grad[i*nfields+1],
 										 grad[i*nfields+2]);
 			}
-			
-			// W_x = Wy - Vz
-			//Vmath::Vsub(npoints, grad[2*nfields+1], 1, grad[1*nfields+2], 1,
-			//            outfield[0],1);
-			// W_y = Uz - Wx
-			//Vmath::Vsub(npoints, grad[0*nfields+2], 1, grad[2*nfields+0], 1,
-			//            outfield[1], 1);
-			// W_z = Vx - Uy
-			//Vmath::Vsub(npoints, grad[1*nfields+0], 1, grad[0*nfields+1], 1,
-			//            outfield[2], 1);
-			
-			//=================================================================
-			//=================================================================
-			//=================================================================
 			
 			// W_x = Wy - Vz
 			Vmath::Vsub(npoints, grad[2 * nfields + 1], 1, grad[1 * nfields + 2], 1,
@@ -223,10 +200,6 @@ namespace Nektar
 			{
 				Vmath::Smul(npoints, fac, &outfield[k][0], 1, &outfield[k][0], 1);
 			}
-			
-			//=================================================================
-			//=================================================================
-			//=================================================================
             
 			
             for (i = 0; i < addfields; ++i)
@@ -236,18 +209,6 @@ namespace Nektar
                 m_f->m_exp[nfields + i]->FwdTrans(outfield[i],
 												  m_f->m_exp[nfields + i]->UpdateCoeffs());
             }
-            
-			//            vector<string > outname;
-			//            if (addfields == 1)
-			//            {
-			//                outname.push_back("W_z");
-			//            }
-			//            else
-			//            {
-			//                outname.push_back("Q_x");
-			//                outname.push_back("Q_y");
-			//                outname.push_back("Q_z");
-			//            }
 			
 			vector<string> outname;
 			outname.push_back("Q");

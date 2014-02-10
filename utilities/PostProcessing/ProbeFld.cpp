@@ -222,11 +222,20 @@ int main(int argc, char *argv[])
         gloCoord[2] = z0 + i*dz;
         cout << gloCoord[0] << "   " << gloCoord[1] << "   " << gloCoord[2];
         int ExpId =  Exp[0]->GetExpIndex(gloCoord,NekConstants::kGeomFactorsTol);
+
         for (int j = 0; j < nfields; ++j)
         {
-            Array<OneD, NekDouble> phys(Exp[j]->GetPhys() + Exp[j]->GetPhys_Offset(j));
-            cout << "   " << Exp[j]->GetExp(ExpId)->PhysEvaluate(gloCoord, phys);
+            if (ExpId == -1)
+            {
+                cout << "   -";
+            }
+            else
+            {
+                Array<OneD, NekDouble> phys(Exp[j]->GetPhys() + Exp[j]->GetPhys_Offset(ExpId));
+                cout << "   " << Exp[j]->GetExp(ExpId)->PhysEvaluate(gloCoord, phys);
+            }
         }
+
         cout << endl;
     }
 

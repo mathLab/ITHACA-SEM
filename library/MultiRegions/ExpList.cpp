@@ -1225,15 +1225,27 @@ namespace Nektar
             int min_elmt;
             Array<OneD, NekDouble> min_locCoords(locCoords.num_elements());
 
-            // start search at previous element or 0 
-/*            for (int i = start; i < (*m_exp).size(); ++i)
+            std::vector<std::pair<int,NekDouble> > elmtIdDist;
+            SpatialDomains::PointGeomSharedPtr v;
+            SpatialDomains::PointGeom w;
+            NekDouble x, y, z;
+
+            // start search at 0. In the case of a manifold, we need to scan
+            // all elements.
+            for (int i = 0; i < (*m_exp).size(); ++i)
             {
                 if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
                                                           tol, resid))
                 {
                     start = i;
-                    cout << "Found in element " << i << endl;
-                    //return i;
+                    v = m_graph->GetVertex((*m_exp)[i]->GetGeom()->GetVid(0));
+
+                    w.SetX(gloCoords[0]);
+                    w.SetY(gloCoords[1]);
+                    w.SetZ(gloCoords[2]);
+                    v->GetCoords(x,y,z);
+
+                    elmtIdDist.push_back(std::pair<int, NekDouble>(i, v->dist(w)));
                 }
                 else
                 {
@@ -1247,73 +1259,25 @@ namespace Nektar
                 }
             }
 
-            for (int i = 0; i < start; ++i)
+            // Find nearest element
+            if (!elmtIdDist.empty())
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
-                                                          tol,resid))
+                NekDouble   min_d  = elmtIdDist[0].first;
+                int         min_id = elmtIdDist[0].second;
+
+                for (int i = 1; i < elmtIdDist.size(); ++i)
                 {
-                    start = i;
-                    cout << "Found in element " << i << endl;
-                    //return i;
-                }
-                else
-                {
-                    if(resid < min_resid)
-                    {
-                        min_resid = resid;
-                        min_elmt  = i;
-                        Vmath::Vcopy(locCoords.num_elements(), locCoords,    1,
-                                                               min_locCoords,1);
+                    if (elmtIdDist[i].second < min_d) {
+                        min_d = elmtIdDist[i].second;
+                        min_id = elmtIdDist[i].first;
                     }
                 }
-            }
-            return -1;
-*/
-            std::vector<int> vFound;
-            for (int i = 0; i < (*m_exp).size(); ++i)
-            {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord,tol))
-                {
-                    vFound.push_back(i);
-                }
-            }
 
-            if (vFound.empty()) {
+                return min_id;
+            }
+            else {
                 return -1;
             }
-
-            std::vector<NekDouble> vAvgDist;
-            for (int i = 0; i < vFound.size(); ++i)
-            {
-                SpatialDomains::VertexComponent p;
-                p.SetX(gloCoord[0]);
-                p.SetY(gloCoord[1]);
-                p.SetZ(gloCoord[2]);
-                NekDouble d = 0.0;
-                const int nvert = (*m_exp)[vFound[i]]->GetGeom()->GetNumVerts();
-                for (int j = 0; j < nvert; ++j)
-                {
-                    SpatialDomains::VertexComponentSharedPtr v;
-                    switch ((*m_exp)[vFound[i]]->GetGeom()->GetShapeDim())
-                    {
-                        case 1:
-                            v = (*m_exp)[vFound[i]]->GetGeom1D()->GetVertex(j);
-                            break;
-                        case 2:
-                            v = (*m_exp)[vFound[i]]->GetGeom2D()->GetVertex(j);
-                            break;
-//                        case 3:
-//                            v = (*m_exp)[vFound[i]]->GetGeom3D()->GetVertex(j);
-//                            break;
-                    }
-
-                    d += v->dist(p);
-                }
-                vAvgDist.push_back(d / nvert);
-            }
-
-            int min_i = Vmath::Imin(vAvgDist.size(), &vAvgDist[0], 1);
-            return vFound[min_i];
         }
 
 

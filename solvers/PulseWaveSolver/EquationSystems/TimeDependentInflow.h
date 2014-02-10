@@ -60,7 +60,6 @@ namespace Nektar
 
         /// Name of class
         static std::string className;
-        static std::string className2;
         
         TimeDependentInflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
                  const LibUtilities::SessionReaderSharedPtr pSession); 

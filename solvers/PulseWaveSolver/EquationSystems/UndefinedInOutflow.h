@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CommMpi.cpp
+// File UndefinedInOutflow.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,53 +29,53 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: TimeDependentInflow class
+// Description: UndefinedInOutflow header
 //
 ///////////////////////////////////////////////////////////////////////////////
+#ifndef NEKTAR_UNDEFINEDINOUTFLOW_H
+#define NEKTAR_UNDEFINEDINOUTFLOW_H
 
-#include <PulseWaveSolver/EquationSystems/TimeDependentInflow.h>
+#include <string>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
 
 namespace Nektar
 {
-    std::string TimeDependentInflow::className
-    = GetBoundaryFactory().RegisterCreatorFunction(
-        "TimeDependent",
-        TimeDependentInflow::create,
-        "TimeDependent inflow boundary condition");
+    // Forward declarations
+    class UndefinedInOutflow;
 
-    /**
-     *
-     */
-    TimeDependentInflow::TimeDependentInflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
-                       const LibUtilities::SessionReaderSharedPtr pSession)
-        : PulseWaveBoundary(pVessel,pSession)
+    /// Pointer to a PulseWaveOutflow object.
+    typedef boost::shared_ptr<UndefinedInOutflow> UndefinedInOutflowSharedPtr;
+    
+    /// A global linear system.
+    class UndefinedInOutflow : public PulseWaveBoundary
     {
-    }
-
-    /**
-     *
-     */
-    TimeDependentInflow::~TimeDependentInflow()
-    {
-
-    }
-
-    void TimeDependentInflow::v_DoBoundary(
-        const Array<OneD,const Array<OneD, NekDouble> > &inarray,
-        Array<OneD, Array<OneD, NekDouble> > &A_0,
-        Array<OneD, Array<OneD, NekDouble> > &beta,
-        const NekDouble time,
-        int omega,int offset,int n)
-    { 
-        Array<OneD, MultiRegions::ExpListSharedPtr>     vessel(2);
-
-        vessel[0] = m_vessels[2*omega];
-        vessel[1] = m_vessels[2*omega+1];
-
-        for (int i = 0; i < 2; ++i)
+    public:
+        /// Creates an instance of this class
+      static PulseWaveBoundarySharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel, 
+                                               const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            vessel[i]->EvaluateBoundaryConditions(time);
+            return MemoryManager<UndefinedInOutflow>::AllocateSharedPtr(pVessel,pSession);
         }
-    }
 
+        /// Name of class
+        static std::string className;
+        
+        UndefinedInOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+                 const LibUtilities::SessionReaderSharedPtr pSession); 
+
+        virtual ~UndefinedInOutflow();
+    protected:
+        virtual void v_DoBoundary(
+            const Array<OneD,const Array<OneD, NekDouble> > &inarray,
+            Array<OneD, Array<OneD, NekDouble> > &A_0,
+            Array<OneD, Array<OneD, NekDouble> > &beta,
+            const NekDouble time,
+            int omega,int offset,int n);
+        
+    private:
+
+    };
 }
+
+#endif

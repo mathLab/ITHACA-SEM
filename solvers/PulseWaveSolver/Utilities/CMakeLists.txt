@@ -14,7 +14,10 @@ SET(Fld2TecplotSources  Fld2Tecplot.cpp
        ../EquationSystems/ROutflow.h
        ../EquationSystems/ROutflow.cpp
        ../EquationSystems/RCROutflow.h
-       ../EquationSystems/RCROutflow.cpp)
+       ../EquationSystems/RCROutflow.cpp
+       ../EquationSystems/UndefinedInOutflow.h
+       ../EquationSystems/UndefinedInOutflow.cpp)
+
 
 ADD_SOLVER_EXECUTABLE(Fld2Tecplot solvers ${Fld2TecplotSources})
 

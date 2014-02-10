@@ -29,24 +29,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: TimeDependentInflow class
+// Description: UndefinedInOutflow class
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <PulseWaveSolver/EquationSystems/TimeDependentInflow.h>
+#include <PulseWaveSolver/EquationSystems/UndefinedInOutflow.h>
 
 namespace Nektar
 {
-    std::string TimeDependentInflow::className
+    std::string UndefinedInOutflow::className
     = GetBoundaryFactory().RegisterCreatorFunction(
-        "TimeDependent",
-        TimeDependentInflow::create,
-        "TimeDependent inflow boundary condition");
+        "NoUserDefined",
+        UndefinedInOutflow::create,
+        "No boundary condition");
 
     /**
      *
      */
-    TimeDependentInflow::TimeDependentInflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
+    UndefinedInOutflow::UndefinedInOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
                        const LibUtilities::SessionReaderSharedPtr pSession)
         : PulseWaveBoundary(pVessel,pSession)
     {
@@ -55,27 +55,18 @@ namespace Nektar
     /**
      *
      */
-    TimeDependentInflow::~TimeDependentInflow()
+    UndefinedInOutflow::~UndefinedInOutflow()
     {
 
     }
 
-    void TimeDependentInflow::v_DoBoundary(
+    void UndefinedInOutflow::v_DoBoundary(
         const Array<OneD,const Array<OneD, NekDouble> > &inarray,
         Array<OneD, Array<OneD, NekDouble> > &A_0,
         Array<OneD, Array<OneD, NekDouble> > &beta,
         const NekDouble time,
         int omega,int offset,int n)
     { 
-        Array<OneD, MultiRegions::ExpListSharedPtr>     vessel(2);
-
-        vessel[0] = m_vessels[2*omega];
-        vessel[1] = m_vessels[2*omega+1];
-
-        for (int i = 0; i < 2; ++i)
-        {
-            vessel[i]->EvaluateBoundaryConditions(time);
-        }
     }
 
 }

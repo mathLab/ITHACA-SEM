@@ -20,7 +20,10 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
        ./EquationSystems/ROutflow.h
        ./EquationSystems/ROutflow.cpp
        ./EquationSystems/RCROutflow.h
-       ./EquationSystems/RCROutflow.cpp)
+       ./EquationSystems/RCROutflow.cpp
+       ./EquationSystems/UndefinedInOutflow.h
+       ./EquationSystems/UndefinedInOutflow.cpp)
+
 
     ADD_SOLVER_EXECUTABLE(PulseWaveSolver solvers 
 			${PulseWaveSolverSource})

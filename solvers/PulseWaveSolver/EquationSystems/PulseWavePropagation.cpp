@@ -190,6 +190,7 @@ namespace Nektar
         }
 
         SetBoundaryConditions(time);
+
         // Loop over all vessesls and set boundary conditions
         for(omega = 0; omega < m_nDomains; ++omega)
         {
@@ -199,6 +200,7 @@ namespace Nektar
             }
             offset += m_vessels[2*omega]->GetTotPoints();
         }
+
     }
 
 	

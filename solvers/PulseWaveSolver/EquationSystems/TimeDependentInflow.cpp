@@ -72,7 +72,16 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &beta,
         const NekDouble time,
         int omega,int offset,int n)
-    {  
+    { 
+        Array<OneD, MultiRegions::ExpListSharedPtr>     vessel(2);
+
+        vessel[0] = m_vessels[2*omega];
+        vessel[1] = m_vessels[2*omega+1];
+
+        for (int i = 0; i < 2; ++i)
+        {
+            vessel[i]->EvaluateBoundaryConditions(time);
+        }
     }
 
 }

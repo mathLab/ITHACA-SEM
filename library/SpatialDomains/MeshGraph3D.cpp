@@ -47,8 +47,9 @@ namespace Nektar
         {
         }
 
-        MeshGraph3D::MeshGraph3D(const LibUtilities::SessionReaderSharedPtr &pSession)
-            : MeshGraph(pSession)
+        MeshGraph3D::MeshGraph3D(const LibUtilities::SessionReaderSharedPtr &pSession, 
+                                 const DomainRangeShPtr &rng)
+            : MeshGraph(pSession,rng)
         {
             ReadGeometry(pSession->GetDocument());
             ReadExpansions(pSession->GetDocument());
@@ -156,7 +157,7 @@ namespace Nektar
                         // don't check here.
                         if (!edgeDataStrm.fail())
                         {
-                            VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                            PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
                             SegGeomSharedPtr edge;
 
                             if (edge_curved.count(indx) == 0)
@@ -843,7 +844,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(face);
+                            if(CheckRange(*face))
+                            {
+                                composite->push_back(face);
+                            }
                         }
                     }
                     break;
@@ -859,7 +863,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_triGeoms[*seqIter]);
+                            if(CheckRange(*m_triGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_triGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -875,7 +882,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_quadGeoms[*seqIter]);
+                            if(CheckRange(*m_quadGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_quadGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -892,7 +902,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_tetGeoms[*seqIter]);
+                            if(CheckRange(*m_tetGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_tetGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -909,7 +922,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_pyrGeoms[*seqIter]);
+                            if(CheckRange(*m_pyrGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_pyrGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -926,7 +942,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_prismGeoms[*seqIter]);
+                            if(CheckRange(*m_prismGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_prismGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -943,7 +962,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_hexGeoms[*seqIter]);
+                            if(CheckRange(*m_hexGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_hexGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -971,23 +993,52 @@ namespace Nektar
             return it->second;
         }
 
-        LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag, const std::string variable)
+        /**
+         * Retrieve the basis key for a given face direction.
+         */
+        LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(
+                    Geometry2DSharedPtr face,
+                    const int           facedir,
+                    const std::string   variable)
         {
+            // Retrieve the list of elements and the associated face index
+            // to which the face geometry belongs.
             ElementFaceVectorSharedPtr elements = GetElementsFromFace(face);
+
             ASSERTL0(elements->size() > 0, "No elements for the given face."
             		" Check all elements belong to the domain composite.");
+
             // Perhaps, a check should be done here to ensure that in case
-            // elements->size!=1, all elements to which the edge belongs have the same type
-            // and order of expansion such that no confusion can arise.
-            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element,variable);
+            // elements->size!=1, all elements to which the edge belongs have
+            // the same type and order of expansion such that no confusion can
+            // arise.
 
-            int nummodes = (int) expansion->m_basisKeyVector[0].GetNumModes();
+            // Get the Expansion structure detailing the basis keys used for
+            // this element.
+            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element,
+                                                    variable);
 
-            switch(expansion->m_basisKeyVector[0].GetBasisType())
+            // Retrieve the geometry object of the element as a Geometry3D.
+            Geometry3DSharedPtr geom3d =
+                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+                            expansion->m_geomShPtr);
+
+            // Use the geometry of the element to calculate the coordinate
+            // direction of the element which corresponds to the requested
+            // coordinate direction of the given face.
+            int dir = geom3d->GetDir((*elements)[0]->m_FaceIndx, facedir);
+
+            // Obtain the number of modes for the element basis key in this
+            // direction.
+            int nummodes = (int) expansion->m_basisKeyVector[dir].GetNumModes();
+
+            switch(expansion->m_basisKeyVector[dir].GetBasisType())
             {
             case LibUtilities::eModified_A:
+            case LibUtilities::eModified_B:
+            case LibUtilities::eModified_C:
                 {
-                    switch (flag)
+                    switch (facedir)
                     {
                     case 0:
                         {
@@ -997,8 +1048,16 @@ namespace Nektar
                         break;
                     case 1:
                         {
-                        	const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
+                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                            if (face->GetNumVerts() == 3)
+                            {
+                                // Triangle
+                                return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
+                            }
+                            else {
+                                // Quadrilateral
+                                return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
+                            }
                         }
                         break;
                     default:
@@ -1019,7 +1078,7 @@ namespace Nektar
                     }
                     else if(triangle)
                     {
-                        switch (flag)
+                        switch (facedir)
                         {
                         case 0:
                             {
@@ -1046,7 +1105,7 @@ namespace Nektar
                 break;
             case LibUtilities::eOrtho_A:
                 {
-                    switch (flag)
+                    switch (facedir)
                     {
                     case 0:
                         {

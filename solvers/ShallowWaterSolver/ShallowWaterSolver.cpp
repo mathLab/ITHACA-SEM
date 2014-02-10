@@ -83,6 +83,8 @@ int main(int argc, char *argv[])
     // regression tests to work.
     cout << "-------------------------------------------" << endl;
     cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+
+    
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
         cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,true) << endl;

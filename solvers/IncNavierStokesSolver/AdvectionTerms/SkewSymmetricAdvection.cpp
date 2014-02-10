@@ -116,7 +116,7 @@ namespace Nektar
 			
 			//pOutarray = 1/2(u*du/dx + v*du/dy + w*du/dz + duu/dx + duv/dy + duw/dz)
 				
-			if(m_dealiasing == true && pFields[0]->GetWaveSpace() == false) 
+			if(m_homogen_dealiasing == true && pFields[0]->GetWaveSpace() == false) 
 			{
 				pFields[0]->DealiasedProd(pV[0],gradV0,gradV0,m_CoeffState);
 				pFields[0]->DealiasedProd(pV[1],gradV1,gradV1,m_CoeffState);
@@ -134,7 +134,7 @@ namespace Nektar
 				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
 				Vmath::Smul(nPointsTot,0.5,pOutarray,1,pOutarray,1);
 			}
-			else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == false)
+			else if(pFields[0]->GetWaveSpace() == true && m_homogen_dealiasing == false)
 			{
 				Up = Array<OneD, NekDouble> (nPointsTot);
 				//vector reused to avoid even more memory requirements
@@ -163,7 +163,7 @@ namespace Nektar
 				Vmath::Smul(nPointsTot,0.5,pOutarray,1,tmp,1);
 				pFields[0]->HomogeneousFwdTrans(tmp,pOutarray);
 			}
-			else if(pFields[0]->GetWaveSpace() == false && m_dealiasing == false) 
+			else if(pFields[0]->GetWaveSpace() == false && m_homogen_dealiasing == false) 
 			{
 				Vmath::Vmul(nPointsTot,gradV0,1,pV[0],1,pOutarray,1);
 				Vmath::Vvtvp(nPointsTot,gradV1,1,pV[1],1,pOutarray,1,pOutarray,1);

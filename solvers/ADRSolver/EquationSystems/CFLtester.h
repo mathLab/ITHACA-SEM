@@ -112,7 +112,7 @@ namespace Nektar
 
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SummaryList& s);
     private:
 
 		virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, const Array<OneD,NekDouble> CFL, NekDouble timeCFL);

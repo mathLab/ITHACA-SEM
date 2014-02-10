@@ -35,6 +35,7 @@
 
 
 #include <LocalRegions/PrismExp.h>
+#include <SpatialDomains/SegGeom.h>
 #include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
@@ -53,10 +54,8 @@ namespace Nektar
                                Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), 
                            Ba, Bb, Bc),
             StdPrismExp   (Ba, Bb, Bc),
-            Expansion     (),
-            Expansion3D   (),
-            m_geom        (geom),
-            m_metricinfo  (m_geom->GetGeomFactors(m_base)),
+            Expansion     (geom),
+            Expansion3D   (geom),
             m_matrixManager(
                     boost::bind(&PrismExp::CreateMatrix, this, _1),
                     std::string("PrismExpMatrix")),
@@ -72,8 +71,6 @@ namespace Nektar
             StdRegions::StdPrismExp(T),
             Expansion(T),
             Expansion3D(T),
-            m_geom(T.m_geom),
-            m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
             m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
@@ -113,7 +110,7 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             Array<OneD,       NekDouble> tmp(nquad0*nquad1*nquad2);
 
             // Multiply inarray with Jacobian
@@ -141,7 +138,8 @@ namespace Nektar
         {
             int nqtot = GetTotPoints();
             
-            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> df =
+                            m_metricinfo->GetDerivFactors(GetPointsKeys());
             Array<OneD,       NekDouble> diff0(nqtot);
             Array<OneD,       NekDouble> diff1(nqtot);
             Array<OneD,       NekDouble> diff2(nqtot);
@@ -152,46 +150,46 @@ namespace Nektar
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Vmul  (nqtot,&gmat[0][0],1,&diff0[0],1,&out_d0[0],1);
-                    Vmath::Vvtvp (nqtot,&gmat[1][0],1,&diff1[0],1,&out_d0[0],1,&out_d0[0],1);
-                    Vmath::Vvtvp (nqtot,&gmat[2][0],1,&diff2[0],1,&out_d0[0],1,&out_d0[0],1);
+                    Vmath::Vmul  (nqtot,&df[0][0],1,&diff0[0],1,&out_d0[0],1);
+                    Vmath::Vvtvp (nqtot,&df[1][0],1,&diff1[0],1,&out_d0[0],1,&out_d0[0],1);
+                    Vmath::Vvtvp (nqtot,&df[2][0],1,&diff2[0],1,&out_d0[0],1,&out_d0[0],1);
                 }
                 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Vmul  (nqtot,&gmat[3][0],1,&diff0[0],1,&out_d1[0],1);
-                    Vmath::Vvtvp (nqtot,&gmat[4][0],1,&diff1[0],1,&out_d1[0],1,&out_d1[0],1);
-                    Vmath::Vvtvp (nqtot,&gmat[5][0],1,&diff2[0],1,&out_d1[0],1,&out_d1[0],1);
+                    Vmath::Vmul  (nqtot,&df[3][0],1,&diff0[0],1,&out_d1[0],1);
+                    Vmath::Vvtvp (nqtot,&df[4][0],1,&diff1[0],1,&out_d1[0],1,&out_d1[0],1);
+                    Vmath::Vvtvp (nqtot,&df[5][0],1,&diff2[0],1,&out_d1[0],1,&out_d1[0],1);
                 }
                 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Vmul  (nqtot,&gmat[6][0],1,&diff0[0],1,&out_d2[0],1);
-                    Vmath::Vvtvp (nqtot,&gmat[7][0],1,&diff1[0],1,&out_d2[0],1,&out_d2[0],1);
-                    Vmath::Vvtvp (nqtot,&gmat[8][0],1,&diff2[0],1,&out_d2[0],1,&out_d2[0],1);
+                    Vmath::Vmul  (nqtot,&df[6][0],1,&diff0[0],1,&out_d2[0],1);
+                    Vmath::Vvtvp (nqtot,&df[7][0],1,&diff1[0],1,&out_d2[0],1,&out_d2[0],1);
+                    Vmath::Vvtvp (nqtot,&df[8][0],1,&diff2[0],1,&out_d2[0],1,&out_d2[0],1);
                 }
             }
             else // regular geometry
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Smul (nqtot,gmat[0][0],&diff0[0],1,&out_d0[0],1);
-                    Blas::Daxpy (nqtot,gmat[1][0],&diff1[0],1,&out_d0[0],1);
-                    Blas::Daxpy (nqtot,gmat[2][0],&diff2[0],1,&out_d0[0],1);
+                    Vmath::Smul (nqtot,df[0][0],&diff0[0],1,&out_d0[0],1);
+                    Blas::Daxpy (nqtot,df[1][0],&diff1[0],1,&out_d0[0],1);
+                    Blas::Daxpy (nqtot,df[2][0],&diff2[0],1,&out_d0[0],1);
                 }
                 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Smul (nqtot,gmat[3][0],&diff0[0],1,&out_d1[0],1);
-                    Blas::Daxpy (nqtot,gmat[4][0],&diff1[0],1,&out_d1[0],1);
-                    Blas::Daxpy (nqtot,gmat[5][0],&diff2[0],1,&out_d1[0],1);
+                    Vmath::Smul (nqtot,df[3][0],&diff0[0],1,&out_d1[0],1);
+                    Blas::Daxpy (nqtot,df[4][0],&diff1[0],1,&out_d1[0],1);
+                    Blas::Daxpy (nqtot,df[5][0],&diff2[0],1,&out_d1[0],1);
                 }
                 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Smul (nqtot,gmat[6][0],&diff0[0],1,&out_d2[0],1);
-                    Blas::Daxpy (nqtot,gmat[7][0],&diff1[0],1,&out_d2[0],1);
-                    Blas::Daxpy (nqtot,gmat[8][0],&diff2[0],1,&out_d2[0],1);
+                    Vmath::Smul (nqtot,df[6][0],&diff0[0],1,&out_d2[0],1);
+                    Blas::Daxpy (nqtot,df[7][0],&diff1[0],1,&out_d2[0],1);
+                    Blas::Daxpy (nqtot,df[8][0],&diff2[0],1,&out_d2[0],1);
                 }
             }
         }
@@ -220,7 +218,7 @@ namespace Nektar
                m_base[1]->Collocation() && 
                m_base[2]->Collocation())
             {
-                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&m_coeffs[0],1);
+                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&outarray[0],1);
             }
             else
             {
@@ -361,21 +359,22 @@ namespace Nektar
             Array<OneD, NekDouble> tmp6 (m_ncoeffs);
             Array<OneD, NekDouble> wsp  (order0*nquad2*(nquad1+order1));
 
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& df =
+                            m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             MultiplyByQuadratureMetric(inarray, tmp1);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nqtot,&gmat[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
-                Vmath::Vmul(nqtot,&gmat[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
-                Vmath::Vmul(nqtot,&gmat[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
+                Vmath::Vmul(nqtot,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
             }
             else
             {
-                Vmath::Smul(nqtot, gmat[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
-                Vmath::Smul(nqtot, gmat[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
-                Vmath::Smul(nqtot, gmat[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
+                Vmath::Smul(nqtot, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
             }
             
             // set up geometric factor: (1+z0)/2
@@ -433,107 +432,6 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
-        void PrismExp::v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                                   Array<OneD, NekDouble> &coords_1,
-                                   Array<OneD, NekDouble> &coords_2)
-        {
-            LibUtilities::BasisSharedPtr CBasis0;
-            LibUtilities::BasisSharedPtr CBasis1;
-            LibUtilities::BasisSharedPtr CBasis2;
-            Array<OneD,NekDouble>  x;
-            
-            ASSERTL0(m_geom, "m_geom not defined");
-            
-            // get physical points defined in Geom
-            m_geom->FillGeom();  
-
-            switch(m_geom->GetCoordim())
-            {
-                case 3:
-                    ASSERTL0(coords_2.num_elements(), "output coords_2 is not defined");
-                    CBasis0 = m_geom->GetBasis(2,0); 
-                    CBasis1 = m_geom->GetBasis(2,1);
-                    CBasis2 = m_geom->GetBasis(2,2);
-                    
-                    if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                       (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                       (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                    {
-                        x = m_geom->UpdatePhys(2);
-                        //Blas::Dcopy(GetTotPoints(), x, 1, coords_2, 1);
-                        Blas::Dcopy(m_base[0]->GetNumPoints()*
-                                    m_base[1]->GetNumPoints()*
-                                    m_base[2]->GetNumPoints(),
-                                    x, 1, coords_2, 1);
-                    }
-                    else // LibUtilities::Interpolate to Expansion point distribution
-                    {
-                        LibUtilities::Interp3D(CBasis0->GetPointsKey(),
-                                               CBasis1->GetPointsKey(), 
-                                               CBasis2->GetPointsKey(), 
-                                               &(m_geom->UpdatePhys(2))[0],
-                                               m_base[0]->GetPointsKey(), 
-                                               m_base[1]->GetPointsKey(), 
-                                               m_base[2]->GetPointsKey(), 
-                                               &coords_2[0]);
-                    }
-                case 2:
-                    ASSERTL0(coords_1.num_elements(), "output coords_1 is not defined");
-                    
-                    CBasis0 = m_geom->GetBasis(1,0); 
-                    CBasis1 = m_geom->GetBasis(1,1);
-                    CBasis2 = m_geom->GetBasis(1,2);
-                    
-                    if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                       (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                       (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                    {
-                        x = m_geom->UpdatePhys(1);
-                        Blas::Dcopy(GetTotPoints(), x, 1, coords_1, 1);
-                    }
-                    else // Interpolate to Expansion point distribution
-                    {
-                        LibUtilities::Interp3D(CBasis0->GetPointsKey(), 
-                                               CBasis1->GetPointsKey(), 
-                                               CBasis2->GetPointsKey(), 
-                                               &(m_geom->UpdatePhys(1))[0],
-                                               m_base[0]->GetPointsKey(), 
-                                               m_base[1]->GetPointsKey(), 
-                                               m_base[2]->GetPointsKey(), 
-                                               &coords_1[0]);
-                    }
-                case 1:
-                    ASSERTL0(coords_0.num_elements(), "output coords_0 is not defined");
-                    
-                    CBasis0 = m_geom->GetBasis(0,0); 
-                    CBasis1 = m_geom->GetBasis(0,1);
-                    CBasis2 = m_geom->GetBasis(0,2);
-                    
-                    if((m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))&&
-                       (m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))&&
-                       (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-                    {
-                        x = m_geom->UpdatePhys(0);
-                        Blas::Dcopy(GetTotPoints(), x, 1, coords_0, 1);
-                    }
-                    else // Interpolate to Expansion point distribution
-                    {
-                        LibUtilities::Interp3D(CBasis0->GetPointsKey(), 
-                                               CBasis1->GetPointsKey(), 
-                                               CBasis2->GetPointsKey(), 
-                                               &(m_geom->UpdatePhys(0))[0],
-                                               m_base[0]->GetPointsKey(),
-                                               m_base[1]->GetPointsKey(),
-                                               m_base[2]->GetPointsKey(),
-                                               &coords_0[0]);
-                    }
-                    break;
-                default:
-                    ASSERTL0(false,"Number of dimensions are greater than 3");
-                    break;
-            }
-        }
-
         /**
          * @brief Get the coordinates #coords at the local coordinates
          * #Lcoords.
@@ -556,9 +454,25 @@ namespace Nektar
             }
         }
 
-        NekDouble PrismExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord)
+        void PrismExp::v_GetCoords(
+            Array<OneD, NekDouble> &coords_0,
+            Array<OneD, NekDouble> &coords_1,
+            Array<OneD, NekDouble> &coords_2)
         {
-            return PhysEvaluate(coord, m_phys);
+            Expansion::v_GetCoords(coords_0, coords_1, coords_2);
+        }
+
+        /**
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble PrismExp::v_StdPhysEvaluate(
+            const Array<OneD, const NekDouble> &Lcoord,
+            const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdPrismExp::v_PhysEvaluate(Lcoord,physvals);
         }
 
         NekDouble PrismExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord, 
@@ -578,32 +492,88 @@ namespace Nektar
         // Helper functions
         //---------------------------------------
 
-        const SpatialDomains::GeomFactorsSharedPtr& PrismExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-        const SpatialDomains::GeometrySharedPtr PrismExp::v_GetGeom() const
-        {
-            return m_geom;
-        }
-
-        const SpatialDomains::Geometry3DSharedPtr& PrismExp::v_GetGeom3D() const
-        {
-            return m_geom;
-        }
-        
         int PrismExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
         }
 
+        void PrismExp::v_ExtractDataToCoeffs(
+                const NekDouble*                  data,
+                const std::vector<unsigned int >& nummodes,
+                const int                         mode_offset,
+                NekDouble*                        coeffs)
+        {
+            int data_order0 = nummodes[mode_offset];
+            int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
+            int data_order1 = nummodes[mode_offset+1];
+            int order1      = m_base[1]->GetNumModes();
+            int fillorder1  = min(order1,data_order1);
+            int data_order2 = nummodes[mode_offset+2];
+            int order2      = m_base[2]->GetNumModes();
+            int fillorder2  = min(order2,data_order2);
+
+            switch(m_base[0]->GetBasisType())
+            {
+            case LibUtilities::eModified_A:
+                {
+                    int i,j;
+                    int cnt  = 0;
+                    int cnt1 = 0;
+
+                    ASSERTL1(m_base[1]->GetBasisType() ==
+                             LibUtilities::eModified_A,
+                             "Extraction routine not set up for this basis");
+                    ASSERTL1(m_base[2]->GetBasisType() ==
+                             LibUtilities::eModified_B,
+                             "Extraction routine not set up for this basis");
+
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    for(j = 0; j < fillorder0; ++j)
+                    {
+                        for(i = 0; i < fillorder1; ++i)
+                        {
+                            Vmath::Vcopy(fillorder2-j, &data[cnt],    1,
+                                                       &coeffs[cnt1], 1);
+                            cnt  += data_order2-j;
+                            cnt1 += order2-j;
+                        }
+
+                        // count out data for j iteration
+                        for(i = fillorder1; i < data_order1; ++i)
+                        {
+                            cnt += data_order2-j;
+                        }
+
+                        for(i = fillorder1; i < order1; ++i)
+                        {
+                            cnt1 += order2-j;
+                        }
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false, "basis is either not set up or not "
+                                "hierarchicial");
+            }
+        }
+
+
         StdRegions::Orientation PrismExp::v_GetFaceOrient(int face)
         {
-            return m_geom->GetFaceOrient(face);
+            return GetGeom3D()->GetFaceOrient(face);
         }
 
         ///Returns the physical values at the quadrature points of a face
+        void PrismExp::v_GetTracePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
+        }
+
         void PrismExp::v_GetFacePhysVals(
             const int                                face,
             const StdRegions::StdExpansionSharedPtr &FaceExp,
@@ -897,26 +867,27 @@ namespace Nektar
 
         void PrismExp::v_ComputeFaceNormal(const int face)
         {
-            const SpatialDomains::GeomFactorsSharedPtr &geomFactors = 
+            const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
             SpatialDomains::GeomType type            = geomFactors->GetGtype();
-            const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
-            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
-            
+            const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors(ptsKeys);
+            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(ptsKeys);
+
             // Number of quadrature points in face expansion.
             int nq        = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
             int i;
-            
+
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
             Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
             for (i = 0; i < vCoordDim; ++i)
             {
                 normal[i] = Array<OneD, NekDouble>(nq);
             }
-            
+
             // Regular geometry case
-            if (type == SpatialDomains::eRegular      || 
+            if (type == SpatialDomains::eRegular      ||
                 type == SpatialDomains::eMovingRegular)
             {
                 NekDouble fac;
@@ -927,7 +898,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,-gmat[3*i+2][0],normal[i],1);
+                            Vmath::Fill(nq,-df[3*i+2][0],normal[i],1);
                         }
                         break;
                     }
@@ -935,7 +906,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,-gmat[3*i+1][0],normal[i],1);
+                            Vmath::Fill(nq,-df[3*i+1][0],normal[i],1);
                         }
                         break;
                     }
@@ -943,7 +914,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,gmat[3*i][0]+gmat[3*i+2][0],normal[i],1);
+                            Vmath::Fill(nq,df[3*i][0]+df[3*i+2][0],normal[i],1);
                         }
                         break;
                     }
@@ -951,7 +922,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,gmat[3*i+1][0],normal[i],1);
+                            Vmath::Fill(nq,df[3*i+1][0],normal[i],1);
                         }
                         break;
                     }
@@ -959,7 +930,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,-gmat[3*i][0],normal[i],1);
+                            Vmath::Fill(nq,-df[3*i][0],normal[i],1);
                         }
                         break;
                     }
@@ -978,143 +949,152 @@ namespace Nektar
                 {
                     Vmath::Smul(nq,fac,normal[i],1,normal[i],1);
                 }
-	    }
+            }
             else
             {
                 // Set up deformed normals.
-	        int j, k;
+                int j, k;
 
-                int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
-                int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
-		int nquad2 = geomFactors->GetPointsKey(2).GetNumPoints();
-		int nqtot;
-                
+                int nq0  = ptsKeys[0].GetNumPoints();
+                int nq1  = ptsKeys[1].GetNumPoints();
+                int nq2  = ptsKeys[2].GetNumPoints();
+                int nq01 = nq0*nq1;
+                int nqtot;
+
                 // Determine number of quadrature points on the face.
                 if (face == 0)
                 {
-                    nqtot = nquad0*nquad1;
+                    nqtot = nq0*nq1;
                 }
                 else if (face == 1 || face == 3)
                 {
-                    nqtot = nquad0*nquad2;
+                    nqtot = nq0*nq2;
                 }
                 else
                 {
-                    nqtot = nquad1*nquad2;
+                    nqtot = nq1*nq2;
                 }
-                
+
                 LibUtilities::PointsKey points0;
-		LibUtilities::PointsKey points1;
-                
+                LibUtilities::PointsKey points1;
+
                 Array<OneD, NekDouble> work   (nq,             0.0);
                 Array<OneD, NekDouble> normals(vCoordDim*nqtot,0.0);
-                
+
                 // Extract Jacobian along face and recover local derivatives
                 // (dx/dr) for polynomial interpolation by multiplying m_gmat by
                 // jacobian
                 switch(face)
-	        {
+                {
                     case 0:
                     {
-                        for(j = 0; j < nquad0*nquad1; ++j)
+                        for(j = 0; j < nq01; ++j)
                         {
-                            normals[j]         = -gmat[2][j]*jac[j];
-                            normals[nqtot+j]   = -gmat[5][j]*jac[j];
-                            normals[2*nqtot+j] = -gmat[8][j]*jac[j];
+                            normals[j]         = -df[2][j]*jac[j];
+                            normals[nqtot+j]   = -df[5][j]*jac[j];
+                            normals[2*nqtot+j] = -df[8][j]*jac[j];
                         }
-                        
-                        points0 = geomFactors->GetPointsKey(0);
-                        points1 = geomFactors->GetPointsKey(1);
+
+                        points0 = ptsKeys[0];
+                        points1 = ptsKeys[1];
                         break;
                     }
-                    
+
                     case 1:
                     {
-                        int tmp = nquad0*nquad1;
-                        
-                        for (j = 0; j < nquad0; ++j)
+                        for (j = 0; j < nq0; ++j)
                         {
-                            for(k = 0; k < nquad2; ++k)
+                            for(k = 0; k < nq2; ++k)
                             {
-                                normals[j+k*nquad0]          = 
-                                    -gmat[1][j+tmp*k]*jac[j+tmp*k];
-                                normals[nqtot+j+k*nquad0]    = 
-                                    -gmat[4][j+tmp*k]*jac[j+tmp*k];
-                                normals[2*nqtot+j+k*nquad0]  = 
-                                    -gmat[7][j+tmp*k]*jac[j+tmp*k];
-                            } 
+                                int tmp = j+nq01*k;
+                                normals[j+k*nq0]          =
+                                    -df[1][tmp]*jac[tmp];
+                                normals[nqtot+j+k*nq0]    =
+                                    -df[4][tmp]*jac[tmp];
+                                normals[2*nqtot+j+k*nq0]  =
+                                    -df[7][tmp]*jac[tmp];
+                            }
                         }
 
-                        points0 = geomFactors->GetPointsKey(0);
-                        points1 = geomFactors->GetPointsKey(2);
+                        points0 = ptsKeys[0];
+                        points1 = ptsKeys[2];
                         break;
                     }
-                    
+
                     case 2:
                     {
-                        for (j = 0; j < nquad1; ++j)
+                        for (j = 0; j < nq1; ++j)
                         {
-                            for(k = 0; k < nquad2; ++k)
+                            for(k = 0; k < nq2; ++k)
                             {
-                                normals[j+k*nquad0]  = (gmat[0][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                                        +gmat[2][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                                normals[nqtot+j+k*nquad0]  = (gmat[3][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                                              +gmat[5][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                                normals[2*nqtot+j+k*nquad0]  = (gmat[6][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                                                +gmat[8][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                            } 
+                                int tmp = nq0-1+nq0*j+nq01*k;
+                                normals[j+k*nq1]         =
+                                    (df[0][tmp]+df[2][tmp])*jac[tmp];
+                                normals[nqtot+j+k*nq1]   =
+                                    (df[3][tmp]+df[5][tmp])*jac[tmp];
+                                normals[2*nqtot+j+k*nq1] =
+                                    (df[6][tmp]+df[8][tmp])*jac[tmp];
+                            }
                         }
-                        
-                        points0 = geomFactors->GetPointsKey(1);
-                        points1 = geomFactors->GetPointsKey(2);
+
+                        points0 = ptsKeys[1];
+                        points1 = ptsKeys[2];
                         break;
                     }
-                        
+
                     case 3:
                     {
-                        for (j=0; j< nquad0; ++j)
+                        for (j = 0; j < nq0; ++j)
                         {
-                            for(k=0; k<nquad2; ++k)
+                            for(k = 0; k < nq2; ++k)
                             {
-                                normals[j+k*nquad0]  = gmat[1][nquad0*(nquad1-1)+j+nquad0*nquad1*k]*jac[nquad0*(nquad1-1)+j+nquad0*nquad1*k];
-                                normals[nqtot+j+k*nquad0]  = gmat[4][nquad0*(nquad1-1)+j+nquad0*nquad1*k]*jac[nquad0*(nquad1-1)+j+nquad0*nquad1*k];
-                                normals[2*nqtot+j+k*nquad0]  = gmat[7][nquad0*(nquad1-1)+j+nquad0*nquad1*k]*jac[nquad0*(nquad1-1)+j+nquad0*nquad1*k];
-                            } 
+                                int tmp = nq0*(nq1-1) + j + nq01*k;
+                                normals[j+k*nq0]         =
+                                    df[1][tmp]*jac[tmp];
+                                normals[nqtot+j+k*nq0]   =
+                                    df[4][tmp]*jac[tmp];
+                                normals[2*nqtot+j+k*nq0] =
+                                    df[7][tmp]*jac[tmp];
+                            }
                         }
-                        
-                        points0 = geomFactors->GetPointsKey(0);
-                        points1 = geomFactors->GetPointsKey(2);
+
+                        points0 = ptsKeys[0];
+                        points1 = ptsKeys[2];
                         break;
                     }
-                    
+
                     case 4:
                     {
-                        for (j=0; j< nquad0; ++j)
+                        for (j = 0; j < nq1; ++j)
                         {
-                            for(k=0; k<nquad2; ++k)
+                            for(k = 0; k < nq2; ++k)
                             {
-                                normals[j+k*nquad0]  = -gmat[0][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                                normals[nqtot+j+k*nquad0]  = -gmat[3][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                                normals[2*nqtot+j+k*nquad0]  = -gmat[6][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                            } 
+                                int tmp = j*nq0+nq01*k;
+                                normals[j+k*nq1]         =
+                                    -df[0][tmp]*jac[tmp];
+                                normals[nqtot+j+k*nq1]   =
+                                    -df[3][tmp]*jac[tmp];
+                                normals[2*nqtot+j+k*nq1] =
+                                    -df[6][tmp]*jac[tmp];
+                            }
                         }
-                        
-                        points0 = geomFactors->GetPointsKey(1);
-                        points1 = geomFactors->GetPointsKey(2);
+
+                        points0 = ptsKeys[1];
+                        points1 = ptsKeys[2];
                         break;
                     }
-                        
+
                     default:
                         ASSERTL0(false,"face is out of range (face < 4)");
-		}
+                }
 
                 // Interpolate Jacobian and invert
-                LibUtilities::Interp2D(points0, points1, jac, 
+                LibUtilities::Interp2D(points0, points1, jac,
                                        m_base[0]->GetPointsKey(),
                                        m_base[0]->GetPointsKey(),
                                        work);
                 Vmath::Sdiv(nq, 1.0, &work[0], 1, &work[0], 1);
-                    
+
                 // Interpolate normal and multiply by inverse Jacobian.
                 for(i = 0; i < vCoordDim; ++i)
                 {
@@ -1132,70 +1112,14 @@ namespace Nektar
                 {
                     Vmath::Vvtvp(nq,normal[i],1,normal[i],1,work,1,work,1);
                 }
-                
+
                 Vmath::Vsqrt(nq,work,1,work,1);
                 Vmath::Sdiv (nq,1.0,work,1,work,1);
 
                 for(i = 0; i < GetCoordim(); ++i)
                 {
                     Vmath::Vmul(nq,normal[i],1,work,1,normal[i],1);
-		}
-            }
-        }
-
-
-        void PrismExp::v_WriteToFile(std::ofstream &outfile, 
-                                     OutputFormat   format, 
-                                     const bool     dumpVar, 
-                                     std::string    var)
-        {
-            if(format==eTecplot)
-            {
-                int i,j;
-                int nquad0 = m_base[0]->GetNumPoints();
-                int nquad1 = m_base[1]->GetNumPoints();
-                int nquad2 = m_base[2]->GetNumPoints();
-                Array<OneD,NekDouble> coords[3];
-                
-                ASSERTL0(m_geom,"m_geom not defined");
-                
-                int     coordim  = m_geom->GetCoordim();
-                
-                coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-                coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-                coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-                
-                GetCoords(coords[0],coords[1],coords[2]);
-                
-                if(dumpVar)
-                { 
-                    outfile << "Variables = x";
-
-                    if(coordim == 2)
-                    {
-                        outfile << ", y";
-                    }
-                    else if (coordim == 3)
-                    {
-                        outfile << ", y, z";
-                    }
-                    outfile << std::endl << std::endl;
                 }
-                
-                outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
-                
-                for(i = 0; i < nquad0*nquad1*nquad2; ++i)
-                {
-                    for(j = 0; j < coordim; ++j)
-                    {
-                        outfile << coords[j][i] << " ";
-                    }
-                    outfile << std::endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
 
@@ -1223,48 +1147,6 @@ namespace Nektar
             const StdRegions::StdMatrixKey     &mkey)
         {
             StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
-        }
-
-        void PrismExp::v_LaplacianMatrixOp_MatFree(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdRegions::StdMatrixKey     &mkey)
-        {
-            if(mkey.GetNVarCoeff() == 0)
-            {
-                // This implementation is only valid when there are no
-                // coefficients associated to the Laplacian operator
-                if(m_metricinfo->IsUsingLaplMetrics())
-                {
-                    ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
-                    // Get this from HexExp
-                }
-                else
-                {
-                    int nquad0  = m_base[0]->GetNumPoints();
-                    int nquad1  = m_base[1]->GetNumPoints();
-                    int nquad2  = m_base[2]->GetNumPoints();
-                    int nmodes0 = m_base[0]->GetNumModes ();
-                    int nmodes1 = m_base[1]->GetNumModes ();
-                    int nqtot   = nquad0*nquad1*nquad2;
-                    
-                    const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-
-                    Array<OneD,NekDouble> wsp (nquad2*nmodes0*(nquad1+nmodes1));
-                    Array<OneD,NekDouble> wsp1(nqtot);
-                    
-                    // Backwards transform to obtain u = B * u_hat.
-                    BwdTrans_SumFacKernel   (base0,base1,base2,inarray,wsp1,wsp,true,true,true);
-                    LaplacianMatrixOp_Kernel(wsp1, outarray, wsp);
-                }
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(
-                    inarray,outarray,mkey);
-            }
         }
 
         void PrismExp::v_HelmholtzMatrixOp(
@@ -1297,52 +1179,6 @@ namespace Nektar
             }
         }
         
-        void PrismExp::v_HelmholtzMatrixOp_MatFree(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdRegions::StdMatrixKey     &mkey)
-        {
-            if(m_metricinfo->IsUsingLaplMetrics())
-            {
-                ASSERTL0(false,"Finish implementing PrismExp Helmholtz for Lapl Metrics");
-            }
-            else
-            {
-                int nquad0  = m_base[0]->GetNumPoints();
-                int nquad1  = m_base[1]->GetNumPoints();
-                int nquad2  = m_base[2]->GetNumPoints();
-                int nmodes0 = m_base[0]->GetNumModes ();
-                int nmodes1 = m_base[1]->GetNumModes ();
-                int nqtot   = nquad0*nquad1*nquad2;
-                
-                const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-                
-                Array<OneD,NekDouble> wsp (nquad2*nmodes0*(nquad1+nmodes1));
-                Array<OneD,NekDouble> wsp0(nqtot);
-                Array<OneD,NekDouble> wsp1(nqtot);
-
-                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
-                
-                // MASS MATRIX OPERATION
-                // The following is being calculated:
-                // wsp0     = B   * u_hat = u
-                // wsp1     = W   * wsp0
-                // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
-                BwdTrans_SumFacKernel       (base0,base1,base2,inarray,
-                                             wsp0,wsp,true,true,true);
-                MultiplyByQuadratureMetric  (wsp0,wsp1);
-                IProductWRTBase_SumFacKernel(base0,base1,base2,wsp1,
-                                             outarray,wsp,true,true,true);
-                LaplacianMatrixOp_Kernel    (wsp0,wsp1,wsp);
-                
-                // outarray = lambda * outarray + wsp1
-                //          = (lambda * M + L ) * u_hat
-                Vmath::Svtvp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,
-                             &outarray[0],1); 
-           }
-        }    
         
         //---------------------------------------
         // Matrix creation functions
@@ -1399,6 +1235,7 @@ namespace Nektar
         DNekScalMatSharedPtr PrismExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
 
             ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,
                      "Geometric information is not set up");
@@ -1415,7 +1252,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
@@ -1435,7 +1272,7 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble fac = 1.0/(m_metricinfo->GetJac())[0];
+                        NekDouble fac = 1.0/(m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,mat);                        
                     }
@@ -1455,9 +1292,10 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
-                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
-                        int dir;
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
+                        Array<TwoD, const NekDouble> df =
+                                        m_metricinfo->GetDerivFactors(ptsKeys);
+                        int dir = 0;
 
                         switch(mkey.GetMatrixType())
                         {
@@ -1491,9 +1329,9 @@ namespace Nektar
                         DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>
                             ::AllocateSharedPtr(rows,cols);
 
-                        (*WeakDeriv) = gmat[3*dir  ][0]*deriv0
-                                     + gmat[3*dir+1][0]*deriv1
-                                     + gmat[3*dir+2][0]*deriv2;
+                        (*WeakDeriv) = df[3*dir  ][0]*deriv0
+                                     + df[3*dir+1][0]*deriv1
+                                     + df[3*dir+2][0]*deriv2;
 
                         returnval = MemoryManager<DNekScalMat>
                             ::AllocateSharedPtr(jac,WeakDeriv);
@@ -1503,7 +1341,10 @@ namespace Nektar
                 
                 case StdRegions::eLaplacian:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
+                        mkey.GetNVarCoeff() > 0 ||
+                        mkey.ConstFactorExists(
+                                StdRegions::eFactorSVVCutoffRatio))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1531,9 +1372,9 @@ namespace Nektar
                         DNekMat &lap12 = *GetStdMatrix(lap12key);
                         DNekMat &lap22 = *GetStdMatrix(lap22key);
 
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         Array<TwoD, const NekDouble> gmat
-                                                    = m_metricinfo->GetGmat();
+                                            = m_metricinfo->GetGmat(ptsKeys);
 
                         int rows = lap00.GetRows();
                         int cols = lap00.GetColumns();
@@ -1541,21 +1382,12 @@ namespace Nektar
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>
                                                 ::AllocateSharedPtr(rows,cols);
 
-                        (*lap) = (gmat[0][0]*gmat[0][0] + gmat[3][0]*gmat[3][0]
-                                        + gmat[6][0]*gmat[6][0])*lap00
-                               + (gmat[1][0]*gmat[1][0] + gmat[4][0]*gmat[4][0]
-                                        + gmat[7][0]*gmat[7][0])*lap11
-                               + (gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0]
-                                        + gmat[8][0]*gmat[8][0])*lap22
-                               + (gmat[0][0]*gmat[1][0] + gmat[3][0]*gmat[4][0]
-                                        + gmat[6][0]*gmat[7][0])
-                                 *(lap01 + Transpose(lap01))
-                               + (gmat[0][0]*gmat[2][0] + gmat[3][0]*gmat[5][0]
-                                        + gmat[6][0]*gmat[8][0])
-                                 *(lap02 + Transpose(lap02))
-                               + (gmat[1][0]*gmat[2][0] + gmat[4][0]*gmat[5][0]
-                                        + gmat[7][0]*gmat[8][0])
-                                 *(lap12 + Transpose(lap12));
+                        (*lap)  = gmat[0][0]*lap00
+                                + gmat[4][0]*lap11
+                                + gmat[8][0]*lap22
+                                + gmat[3][0]*(lap01 + Transpose(lap01))
+                                + gmat[6][0]*(lap02 + Transpose(lap02))
+                                + gmat[7][0]*(lap12 + Transpose(lap12));
 
                         returnval = MemoryManager<DNekScalMat>
                                                 ::AllocateSharedPtr(jac,lap);
@@ -1584,7 +1416,6 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                     break;
                 }
-
                 case StdRegions::eHybridDGHelmholtz:
                 case StdRegions::eHybridDGLamToU:
                 case StdRegions::eHybridDGLamToQ0:
@@ -1625,13 +1456,56 @@ namespace Nektar
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         DNekMatSharedPtr mat = GetStdMatrix(mkey);
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
                     break;
                 }
-                default:
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+                    
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconR:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
+                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
+                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRT:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
+                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
+                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            default:
                 {
                     NekDouble        one = 1.0;
                     DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1650,19 +1524,17 @@ namespace Nektar
             ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
             // set up block matrix system
-            int nbdry = NumBndryCoeffs();
-            int nint = m_ncoeffs - nbdry;
-
+            unsigned int nbdry = NumBndryCoeffs();
+            unsigned int nint = (unsigned int)(m_ncoeffs - nbdry);
             unsigned int exp_size[] = {nbdry, nint};
-            int nblks = 2;
-            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
+            unsigned int nblks=2;
+            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); 
             NekDouble factor = 1.0;
 
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
-
                 // use Deformed case for both regular and deformed geometries
                 factor = 1.0;
                 goto UseLocRegionsMatrix;
@@ -1753,43 +1625,11 @@ namespace Nektar
                     returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
 
                 }
+                break;
             }
             return returnval;
         }
         
-        void PrismExp::MultiplyByQuadratureMetric(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
-        {
-  
-            if(m_metricinfo->IsUsingQuadMetrics())
-            {
-                const Array<OneD, const NekDouble> &metric 
-                    = m_metricinfo->GetQuadratureMetrics();
-                    
-                Vmath::Vmul(metric.num_elements(), metric, 1, inarray, 1,
-                            outarray, 1);
-            }
-            else
-            {
-                const int nqtot = m_base[0]->GetNumPoints() *
-                                  m_base[1]->GetNumPoints() *
-                                  m_base[2]->GetNumPoints();
-                const Array<OneD, const NekDouble> &jac 
-                    = m_metricinfo->GetJac();
-                
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                {
-                    Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
-                }
-                else
-                {
-                    Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
-                }
-
-                StdPrismExp::MultiplyByQuadratureMetric(outarray, outarray);
-            }
-        }
         
         /**
          * @brief Calculate the Laplacian multiplication in a matrix-free
@@ -1809,7 +1649,7 @@ namespace Nektar
          * 
          * @see %TetExp::v_HelmholtzMatrixOp_MatFree
          */
-        void PrismExp::LaplacianMatrixOp_Kernel(
+        void PrismExp::v_LaplacianMatrixOp_MatFree_Kernel(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
                   Array<OneD,       NekDouble> &wsp)
@@ -1853,7 +1693,8 @@ namespace Nektar
             // wsp3 = du_dxi3 = D_xi3 * wsp0 = D_xi3 * u
             StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);
 
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& df =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             const Array<OneD, const NekDouble>& z0   = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z2   = m_base[2]->GetZ();
             
@@ -1875,67 +1716,67 @@ namespace Nektar
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 // wsp4 = d eta_1/d x_1
-                Vmath::Vvtvvtp(nqtot, &gmat[0][0], 1, &h0[0], 1, &gmat[2][0], 1, &h1[0], 1, &wsp4[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[0][0], 1, &h0[0], 1, &df[2][0], 1, &h1[0], 1, &wsp4[0], 1);
                 // wsp5 = d eta_2/d x_1
-                Vmath::Vvtvvtp(nqtot, &gmat[3][0], 1, &h0[0], 1, &gmat[5][0], 1, &h1[0], 1, &wsp5[0], 1);
-                // wsp6 = d eta_3/d x_1
-                Vmath::Vvtvvtp(nqtot, &gmat[6][0], 1, &h0[0], 1, &gmat[8][0], 1, &h1[0], 1, &wsp6[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[3][0], 1, &h0[0], 1, &df[5][0], 1, &h1[0], 1, &wsp5[0], 1);
+                // wsp6 = d eta_3/d x_1d
+                Vmath::Vvtvvtp(nqtot, &df[6][0], 1, &h0[0], 1, &df[8][0], 1, &h1[0], 1, &wsp6[0], 1);
                 
                 // g0 (overwrites h0)
                 Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
                 Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
                 
                 // g3 (overwrites h1)
-                Vmath::Vvtvvtp(nqtot, &gmat[1][0], 1, &wsp4[0], 1, &gmat[4][0], 1, &wsp5[0], 1, &g3[0], 1);
-                Vmath::Vvtvp  (nqtot, &gmat[7][0], 1, &wsp6[0], 1, &g3[0], 1, &g3[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[1][0], 1, &wsp4[0], 1, &df[4][0], 1, &wsp5[0], 1, &g3[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[7][0], 1, &wsp6[0], 1, &g3[0], 1, &g3[0], 1);
                 
                 // g4
-                Vmath::Vvtvvtp(nqtot, &gmat[2][0], 1, &wsp4[0], 1, &gmat[5][0], 1, &wsp5[0], 1, &g4[0], 1);
-                Vmath::Vvtvp  (nqtot, &gmat[8][0], 1, &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &wsp4[0], 1, &df[5][0], 1, &wsp5[0], 1, &g4[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
 
                 // Overwrite wsp4/5/6 with g1/2/5
                 // g1
-                Vmath::Vvtvvtp(nqtot, &gmat[1][0], 1, &gmat[1][0], 1, &gmat[4][0], 1, &gmat[4][0], 1, &g1[0], 1);
-                Vmath::Vvtvp  (nqtot, &gmat[7][0], 1, &gmat[7][0], 1, &g1[0], 1, &g1[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[1][0], 1, &df[1][0], 1, &df[4][0], 1, &df[4][0], 1, &g1[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[7][0], 1, &df[7][0], 1, &g1[0], 1, &g1[0], 1);
                 
                 // g2
-                Vmath::Vvtvvtp(nqtot, &gmat[2][0], 1, &gmat[2][0], 1, &gmat[5][0], 1, &gmat[5][0], 1, &g2[0], 1);
-                Vmath::Vvtvp  (nqtot, &gmat[8][0], 1, &gmat[8][0], 1, &g2[0], 1, &g2[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &df[2][0], 1, &df[5][0], 1, &df[5][0], 1, &g2[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &df[8][0], 1, &g2[0], 1, &g2[0], 1);
                 
                 // g5
-                Vmath::Vvtvvtp(nqtot, &gmat[1][0], 1, &gmat[2][0], 1, &gmat[4][0], 1, &gmat[5][0], 1, &g5[0], 1);
-                Vmath::Vvtvp  (nqtot, &gmat[7][0], 1, &gmat[8][0], 1, &g5[0], 1, &g5[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[1][0], 1, &df[2][0], 1, &df[4][0], 1, &df[5][0], 1, &g5[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[7][0], 1, &df[8][0], 1, &g5[0], 1, &g5[0], 1);
             }
             else
             {
                 // wsp4 = d eta_1/d x_1
-                Vmath::Svtsvtp(nqtot, gmat[0][0], &h0[0], 1, gmat[2][0], &h1[0], 1, &wsp4[0], 1);
+                Vmath::Svtsvtp(nqtot, df[0][0], &h0[0], 1, df[2][0], &h1[0], 1, &wsp4[0], 1);
                 // wsp5 = d eta_2/d x_1
-                Vmath::Svtsvtp(nqtot, gmat[3][0], &h0[0], 1, gmat[5][0], &h1[0], 1, &wsp5[0], 1);
+                Vmath::Svtsvtp(nqtot, df[3][0], &h0[0], 1, df[5][0], &h1[0], 1, &wsp5[0], 1);
                 // wsp6 = d eta_3/d x_1
-                Vmath::Svtsvtp(nqtot, gmat[6][0], &h0[0], 1, gmat[8][0], &h1[0], 1, &wsp6[0], 1);
+                Vmath::Svtsvtp(nqtot, df[6][0], &h0[0], 1, df[8][0], &h1[0], 1, &wsp6[0], 1);
                 
                 // g0 (overwrites h0)
                 Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
                 Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
                 
                 // g3 (overwrites h1)
-                Vmath::Svtsvtp(nqtot, gmat[1][0], &wsp4[0], 1, gmat[4][0], &wsp5[0], 1, &g3[0], 1);
-                Vmath::Svtvp  (nqtot, gmat[7][0], &wsp6[0], 1, &g3[0], 1, &g3[0], 1);
+                Vmath::Svtsvtp(nqtot, df[1][0], &wsp4[0], 1, df[4][0], &wsp5[0], 1, &g3[0], 1);
+                Vmath::Svtvp  (nqtot, df[7][0], &wsp6[0], 1, &g3[0], 1, &g3[0], 1);
                 
                 // g4
-                Vmath::Svtsvtp(nqtot, gmat[2][0], &wsp4[0], 1, gmat[5][0], &wsp5[0], 1, &g4[0], 1);
-                Vmath::Svtvp  (nqtot, gmat[8][0], &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
+                Vmath::Svtsvtp(nqtot, df[2][0], &wsp4[0], 1, df[5][0], &wsp5[0], 1, &g4[0], 1);
+                Vmath::Svtvp  (nqtot, df[8][0], &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
                 
                 // Overwrite wsp4/5/6 with g1/2/5
                 // g1
-                Vmath::Fill(nqtot, gmat[1][0]*gmat[1][0] + gmat[4][0]*gmat[4][0] + gmat[7][0]*gmat[7][0], &g1[0], 1);
+                Vmath::Fill(nqtot, df[1][0]*df[1][0] + df[4][0]*df[4][0] + df[7][0]*df[7][0], &g1[0], 1);
                         
                 // g2
-                Vmath::Fill(nqtot, gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0] + gmat[8][0]*gmat[8][0], &g2[0], 1);
+                Vmath::Fill(nqtot, df[2][0]*df[2][0] + df[5][0]*df[5][0] + df[8][0]*df[8][0], &g2[0], 1);
                 
                 // g5
-                Vmath::Fill(nqtot, gmat[1][0]*gmat[2][0] + gmat[4][0]*gmat[5][0] + gmat[7][0]*gmat[8][0], &g5[0], 1);
+                Vmath::Fill(nqtot, df[1][0]*df[2][0] + df[4][0]*df[5][0] + df[7][0]*df[8][0], &g5[0], 1);
             }
             // Compute component derivatives into wsp7, 8, 9 (wsp7 overwrites
             // g0).
@@ -1962,5 +1803,6 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
+
     }//end of namespace
 }//end of namespace

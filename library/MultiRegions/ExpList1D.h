@@ -64,76 +64,74 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1D();
 
             /// The copy constructor.
-            MULTI_REGIONS_EXPORT ExpList1D(const ExpList1D &In, const bool DeclareCoeffPhysArrays = true);
+            MULTI_REGIONS_EXPORT ExpList1D(
+                const ExpList1D &In,
+                const bool DeclareCoeffPhysArrays = true);
 
             /// Construct an ExpList1D from a given graph.
             MULTI_REGIONS_EXPORT ExpList1D(
-                      const LibUtilities::SessionReaderSharedPtr &pSession,
-                      const LibUtilities::BasisKey &Ba,
-                      const SpatialDomains::MeshGraphSharedPtr &graph1D);
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const LibUtilities::BasisKey &Ba,
+                const SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.
             MULTI_REGIONS_EXPORT ExpList1D(
-                      const LibUtilities::SessionReaderSharedPtr &pSession,
-                      const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                      const bool DeclareCoeffPhysArrays = true);
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
             MULTI_REGIONS_EXPORT ExpList1D(
-                      const SpatialDomains::CompositeMap &domain,
-                      const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                      const bool DeclareCoeffPhysArrays = true,
-                      const std::string variable = "DefaultVar");
+                const SpatialDomains::CompositeMap &domain,
+                const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                const bool DeclareCoeffPhysArrays = true,
+                const std::string variable = "DefaultVar");
 			
 			
-            MULTI_REGIONS_EXPORT ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                           const SpatialDomains::CompositeMap &domain,
-                                           const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                           int i,
-                                           const bool DeclareCoeffPhysArrays = true);
+            MULTI_REGIONS_EXPORT ExpList1D(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const SpatialDomains::CompositeMap &domain,
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                int i,
+                const bool DeclareCoeffPhysArrays = true);
             
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(
-                      const Array<OneD,const ExpListSharedPtr> &bndConstraint,
-                      const Array<OneD,const SpatialDomains
+                const Array<OneD,const ExpListSharedPtr> &bndConstraint,
+                const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,
-                      const StdRegions::StdExpansionVector &locexp,
-                      const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                      const map<int,int> &periodicEdges,
-                      const bool DeclareCoeffPhysArrays = true,
-                      const std::string variable = "DefaultVar");
-            
+                const LocalRegions::ExpansionVector &locexp,
+                const SpatialDomains::MeshGraphSharedPtr &graph2D,
+                const PeriodicMap &periodicEdges,
+                const bool DeclareCoeffPhysArrays = true,
+                const std::string variable = "DefaultVar");
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList1D();
 
             /// Performs the post-processing on a specified element.
-            MULTI_REGIONS_EXPORT void PostProcess(   LibUtilities::KernelSharedPtr kernel,
-                                Array<OneD,NekDouble> &inarray,
-                                Array<OneD,NekDouble> &outarray,
-                                NekDouble h,
-                                int elmId = 0);
+            MULTI_REGIONS_EXPORT void PostProcess(
+                LibUtilities::KernelSharedPtr kernel,
+                Array<OneD,NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray,
+                NekDouble h,
+                int elmId = 0);
 
             /// Evaluates the global spectral/hp expansion at some arbitray set
             /// of points.
-            MULTI_REGIONS_EXPORT void PeriodicEval(  Array<OneD,NekDouble> &inarray1,
-                                Array<OneD,NekDouble> &inarray2,
-                                NekDouble h, int nmodes,
-                                Array<OneD,NekDouble> &outarray);
+            MULTI_REGIONS_EXPORT void PeriodicEval(
+                Array<OneD,NekDouble> &inarray1,
+                Array<OneD,NekDouble> &inarray2,
+                NekDouble h, int nmodes,
+                Array<OneD,NekDouble> &outarray);
 
             /// Set up the normals on each expansion.
-            //MULTI_REGIONS_EXPORT void SetUpPhysNormals();//const StdRegions::StdExpansionVector &locexp);
+            //MULTI_REGIONS_EXPORT void SetUpPhysNormals();
+            //const StdRegions::StdExpansionVector &locexp);
 
-	    /// Set up the tangents on each expansion
-	    MULTI_REGIONS_EXPORT void SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
-	    
-            // direction =  1: Upwind
-            // direction = -1: Downwind
-
-
-            MULTI_REGIONS_EXPORT void ParNormalSign(Array<OneD, NekDouble> &normsign);
+        MULTI_REGIONS_EXPORT void ParNormalSign(Array<OneD, NekDouble> &normsign);
 
         protected:
             /// Upwind the \a Fwd and \a Bwd states based on the velocity
@@ -167,10 +165,6 @@ namespace Nektar
             virtual void v_SetUpPhysNormals();
             /// const StdRegions::StdExpansionVector &locexp);
 
-            /// Set up the tangents on each expansion.
-            virtual void v_SetUpPhysTangents(
-            	    		const StdRegions::StdExpansionVector &locexp);
-            
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 
             int m_firstIntEl;

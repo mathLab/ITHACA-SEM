@@ -73,6 +73,7 @@ namespace Nektar
         ExpList1D::ExpList1D():
             ExpList()
         {
+            SetExpType(e1D);
         }
 
 
@@ -82,6 +83,7 @@ namespace Nektar
         ExpList1D::ExpList1D(const ExpList1D &In, const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
+            SetExpType(e1D);
         }
 
 
@@ -105,6 +107,8 @@ namespace Nektar
                              const SpatialDomains::MeshGraphSharedPtr &graph1D):
             ExpList(pSession,graph1D)
         {
+            SetExpType(e1D);
+
             int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
@@ -172,6 +176,8 @@ namespace Nektar
                 const bool DeclareCoeffPhysArrays):
             ExpList(pSession,graph1D)
         {
+            SetExpType(e1D);
+
             int id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
@@ -244,6 +250,8 @@ namespace Nektar
                              const std::string variable):
             ExpList()
         {
+            SetExpType(e1D);
+
             int j, id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
@@ -317,6 +325,8 @@ namespace Nektar
                              const bool DeclareCoeffPhysArrays):
 		ExpList(pSession)
         {
+            SetExpType(e1D);
+
             int id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
@@ -408,19 +418,23 @@ namespace Nektar
                     const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
                     const Array<OneD, const SpatialDomains
                                            ::BoundaryConditionShPtr>  &bndCond,
-                    const StdRegions::StdExpansionVector &locexp,
+                    const LocalRegions::ExpansionVector &locexp,
                     const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                    const map<int,int> &periodicEdges,
+                    const PeriodicMap &periodicEdges,
                     const bool DeclareCoeffPhysArrays,
                     const std::string variable):
             ExpList()
         {
+            SetExpType(e1D);
+
             int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
             SpatialDomains::Geometry1DSharedPtr SegGeom;
             LocalRegions::SegExpSharedPtr Seg;
+            LocalRegions::Expansion1DSharedPtr exp1D;
+            LocalRegions::Expansion2DSharedPtr exp2D;
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
@@ -433,7 +447,8 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey bkey = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
-                        SegGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
+                        exp1D = LocalRegions::Expansion1D::FromStdExp(bndConstraint[i]->GetExp(j));
+                        SegGeom = exp1D->GetGeom1D();
 
                         Seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, SegGeom);
@@ -450,7 +465,8 @@ namespace Nektar
             {
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
-                    SegGeom = (locexp[i]->GetGeom2D())->GetEdge(j);
+                    exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
+                    SegGeom = (exp2D->GetGeom2D())->GetEdge(j);
 
                     id = SegGeom->GetEid();
 
@@ -784,34 +800,6 @@ namespace Nektar
         }
 		
 
-	void ExpList1D::SetUpPhysTangents(
-		const StdRegions::StdExpansionVector &locexp)
-	{
-	    map<int, int> EdgeGID;
-	    int i,cnt,n,id;
-	    
-	    //setup map of all global ids along booundary
-	    for(cnt = i=0; i< (*m_exp).size(); ++i)
-	    {
-	        id = (*m_exp)[i]->GetGeom1D()->GetEid();
-	        EdgeGID[id] = cnt++;
-	    }
-	    
-	    //loop over elements and find edges that match
-	    for(cnt = n =0; n< locexp.size(); ++n)
-	    {
-	       for(i=0; i < locexp[n]->GetNedges(); ++i)
-	       {
-	       	  id = locexp[n]->GetGeom2D()->GetEid(i);
-	       	  if(EdgeGID.count(id)> 0)
-	       	  {
-	       	      (*m_exp)[EdgeGID.find(id)->second]
-	       	      			->SetUpPhysTangents(locexp[n],i);
-	       	  }
-	       }
-	    }
-	}
-        
         /**
          * Upwind the left and right states given by the Arrays Fwd and Bwd
          * using the vector quantity Vec and ouput the upwinded value in the
@@ -833,7 +821,7 @@ namespace Nektar
             NekDouble Vn;
 
             // Assume whole array is of same coordimate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+            int coordim = GetCoordim(0);
 
             ASSERTL1(Vec.num_elements() >= coordim,
                     "Input vector does not have sufficient dimensions to "
@@ -932,7 +920,7 @@ namespace Nektar
             Array<OneD,Array<OneD,NekDouble> > locnormals;
 
             // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+            int coordim = GetCoordim(0);
 
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
@@ -954,7 +942,7 @@ namespace Nektar
 
                 // Get the physical data offset for this expansion.
                 offset = m_phys_offset[i];
-                
+
                 // Process each point in the expansion.
                 for(j = 0; j < e_npoints; ++j)
                 {
@@ -969,66 +957,10 @@ namespace Nektar
             }
         }
 
-/*        void ExpList1D::v_GetTangents(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents)
-        {
-            int i,j,k,e_npoints,offset;
-            Array<OneD,Array<OneD, NekDouble> > loctangent;
-
-            // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
-
-            ASSERTL1(normals.num_elements() >= coordim,
-                     "Output vector does not have sufficient dimensions to "
-                     "match coordim");
-
-            // Process each expansion.
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                // Get the number of points and normals for this expansion.
-                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                for (j = 0; j < 2; ++j)
-                {
-                    loctangent = (*m_exp)[i]->GetMetricInfo()->GetTangent(j);
-
-                    // Get the physical data offset for this expansion.
-                    offset = m_phys_offset[i];
-                    for (k = 0; k < coordim; ++k)
-                    {
-                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1,
-                                                &(tangents[j][k][offset]), 1);
-                    }
-                }
-            }
-*/                // Process each point in the expansion.
-/*                for(j = 0; j < e_npoints; ++j)
-                {
-                    // Process each spatial dimension and copy the values into
-                    // the output array.
-                    for(k = 0; k < coordim; ++k)
-                    {
-                        //normals[k][offset+j] = locnormals[k*e_npoints + j];
-                        normals[k][offset+j] = locnormals[k][j];
-                    }
-                }*/
-
-//        }
 
         /**
          *
          */
-//        void ExpList1D::v_SetUpPhysNormals(
-//                                const StdRegions::StdExpansionVector &locexp)
-//        {
-//            SetUpPhysNormals(locexp);
-//        }
-
-        void ExpList1D::v_SetUpPhysTangents(
-                    const StdRegions::StdExpansionVector &locexp)
-        {
-            SetUpPhysTangents(locexp);
-        }
-
         void ExpList1D::v_ReadGlobalOptimizationParameters()
         {
 //            Array<OneD, int> NumShape(1,0);
@@ -1111,118 +1043,3 @@ namespace Nektar
 
     } //end of namespace
 } //end of namespace
-
-/**
-* $Log: ExpList1D.cpp,v $
-* Revision 1.44  2009/12/18 18:53:14  bnelson
-* Fixed windows compiler warnings.
-*
-* Revision 1.43  2009/12/15 18:09:02  cantwell
-* Split GeomFactors into 1D, 2D and 3D
-* Added generation of tangential basis into GeomFactors
-* Updated ADR2DManifold solver to use GeomFactors for tangents
-* Added <GEOMINFO> XML session section support in MeshGraph
-* Fixed const-correctness in VmathArray
-* Cleaned up LocalRegions code to generate GeomFactors
-* Removed GenSegExp
-* Temporary fix to SubStructuredGraph
-* Documentation for GlobalLinSys and GlobalMatrix classes
-*
-* Revision 1.42  2009/11/19 23:30:36  cantwell
-* Documentation for ExpList2D and GlobalMatrixKey
-* Updated doxygen pages.
-*
-* Revision 1.41  2009/11/18 17:12:29  cantwell
-* Added documentation to ExpList1D.
-*
-* Revision 1.40  2009/11/04 20:30:15  cantwell
-* Added documentation to ExpList and ExpList1D and tidied up code.
-*
-* Revision 1.39  2009/11/04 12:33:38  cantwell
-* Fix for HDGHelmholtz2D solver.
-*
-* Revision 1.38  2009/11/02 19:15:43  cantwell
-* Moved ContField1D to inherit from DisContField1D.
-* Moved ContField3D to inherit from DisContField3D.
-* Incorporated GenExpList1D functionality into ExpList1D.
-* Tidied up and added documentation to various classes.
-* Moved Namespace documentation and introductions to separate files along with
-* doxygen configuration.
-* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
-* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
-* Updated Linux compiling instructions.
-* Updated regDemo to use Helmholtz2D-g when built as debug.
-*
-* Revision 1.37  2009/09/06 22:28:45  sherwin
-* Updates for Navier-Stokes solver
-*
-* Revision 1.36  2009/04/20 16:14:06  sherwin
-* Updates for optimising bandwidth of DG solver and allowing write import on explist
-*
-* Revision 1.35  2009/02/08 09:11:49  sherwin
-* General updates to introduce multiple matrix definitions based on different boundary types
-*
-* Revision 1.34  2009/01/13 02:50:10  mirzaee
-* Added definitions for the PostProcessing functions and PeriodicEval
-*
-* Revision 1.33  2008/09/09 15:06:03  sherwin
-* Modifications related to curved elements.
-*
-* Revision 1.32  2008/08/14 22:15:51  sherwin
-* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
-*
-* Revision 1.31  2008/07/31 11:17:13  sherwin
-* Changed GetEdgeBasis with DetEdgeBasisKey
-*
-* Revision 1.30  2008/07/29 22:27:33  sherwin
-* Updates for DG solvers, including using GenSegExp, fixed forcing function on UDG HelmSolve and started to tidy up the mapping arrays to be 1D rather than 2D
-*
-* Revision 1.29  2008/07/12 17:31:39  sherwin
-* Added m_phys_offset and rename m_exp_offset to m_coeff_offset
-*
-* Revision 1.28  2008/06/23 14:21:01  pvos
-* updates for 1D ExpLists
-*
-* Revision 1.27  2008/05/14 18:06:50  sherwin
-* mods to fix Seggeom to Geometry1D casting
-*
-* Revision 1.26  2008/05/13 22:06:58  sherwin
-* Changed SegGeom to Geometry1D
-*
-* Revision 1.25  2008/05/10 18:27:33  sherwin
-* Modifications necessary for QuadExp Unified DG Solver
-*
-* Revision 1.24  2008/03/18 14:14:13  pvos
-* Update for nodal triangular helmholtz solver
-*
-* Revision 1.23  2008/03/12 15:25:45  pvos
-* Clean up of the code
-*
-* Revision 1.22  2007/12/06 22:52:30  pvos
-* 2D Helmholtz solver updates
-*
-* Revision 1.21  2007/11/07 20:29:53  jfrazier
-* Modified to use new expansion list contained in meshgraph.
-*
-* Revision 1.20  2007/09/25 14:25:29  pvos
-* Update for helmholtz1D with different expansion orders
-*
-* Revision 1.19  2007/07/22 23:04:20  bnelson
-* Backed out Nektar::ptr.
-*
-* Revision 1.18  2007/07/20 02:04:12  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.17  2007/07/13 16:48:47  pvos
-* Another HelmHoltz update (homogeneous dir BC multi-elemental solver does work)
-*
-* Revision 1.16  2007/07/10 08:54:29  pvos
-* Updated ContField1D constructor
-*
-* Revision 1.15  2007/07/06 18:39:34  pvos
-* ContField1D constructor updates
-*
-* Revision 1.14  2007/06/05 16:36:55  pvos
-* Updated Explist2D ContExpList2D and corresponding demo-codes
-*
-**/

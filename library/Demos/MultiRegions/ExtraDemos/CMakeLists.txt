@@ -8,23 +8,7 @@ SET(LinkLibraries
     optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
     optimized ${ZLIB_LIBRARY_RELEASE} debug ${ZLIB_LIBRARY_DEBUG}
     optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
-    optimized sbtk    debug sbtk
 )
-
-SET(FldToTec2DSource  FldToTec2D.cpp)
-ADD_NEKTAR_EXECUTABLE(FldToTec2D extra-demos FldToTec2DSource)
-TARGET_LINK_LIBRARIES(FldToTec2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(FldToTec2D)
-
-SET(FldToGmsh2DSource  FldToGmsh.cpp)
-ADD_NEKTAR_EXECUTABLE(FldToGmsh2D extra-demos FldToGmsh2DSource)
-TARGET_LINK_LIBRARIES(FldToGmsh2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(FldToGmsh2D)
-
-SET(DatToFldSource  DatToFld.cpp)
-ADD_NEKTAR_EXECUTABLE(DatToFld extra-demos DatToFldSource)
-TARGET_LINK_LIBRARIES(DatToFld ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(DatToFld)
 
 SET(ProjectLoc1DSource  ProjectLoc1D.cpp)
 ADD_NEKTAR_EXECUTABLE(ProjectLoc1D extra-demos ProjectLoc1DSource)

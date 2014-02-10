@@ -70,8 +70,8 @@ namespace Nektar
         virtual ~APESystem();
 
     protected:
-	///< numerical upwind flux selector
-	UpwindType                                      m_upwindType;     
+        ///< numerical upwind flux selector
+        UpwindType                                      m_upwindType;
         /// Number of time steps between outputting status information.
         int                                             m_infosteps;
         /// The time integration method to use.
@@ -82,19 +82,19 @@ namespace Nektar
         bool                                            m_explicitDiffusion;
         /// Indicates if explicit or implicit treatment of advection is used.
         bool                                            m_explicitAdvection;
-	/// Indicates if variables are primitive or conservative
-	bool                                            m_primitive;
-	/// Acceleration of gravity 
-	NekDouble                                       m_g;
-	/// Constant incompressible density (APE) 
-	NekDouble                                       m_Rho0;
-	/// Isentropic coefficient, Ratio of specific heats (APE) 
-	NekDouble                                       m_gamma;
-	/// Still water depth
-	Array<OneD, NekDouble>                          m_depth;
-	/// Coriolis force     
-	Array<OneD, NekDouble>                          m_coriolis;
-	
+        /// Indicates if variables are primitive or conservative
+        bool                                            m_primitive;
+        /// Acceleration of gravity
+        NekDouble                                       m_g;
+        /// Constant incompressible density (APE)
+        NekDouble                                       m_Rho0;
+        /// Isentropic coefficient, Ratio of specific heats (APE)
+        NekDouble                                       m_gamma;
+        /// Still water depth
+        Array<OneD, NekDouble>                          m_depth;
+        /// Coriolis force
+        Array<OneD, NekDouble>                          m_coriolis;
+
         /// Initialises UnsteadySystem class members.
         APESystem(const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -107,7 +107,7 @@ namespace Nektar
         virtual void v_DoInitialise();
 
         /// Print a summary of time stepping parameters.
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         ///
         virtual void v_NumericalFlux(
@@ -127,25 +127,25 @@ namespace Nektar
                     Array<OneD, Array<OneD, NekDouble> > &physfield,
                     Array<OneD, Array<OneD, NekDouble> > &flux);
 	
-	void PrimitiveToConservative()
-	{
-	  v_PrimitiveToConservative();
-	}
-	virtual void v_PrimitiveToConservative();
+        void PrimitiveToConservative()
+        {
+          v_PrimitiveToConservative();
+        }
+        virtual void v_PrimitiveToConservative();
 
-	void ConservativeToPrimitive()
-	{
-	  v_ConservativeToPrimitive();
-	}
-	virtual void v_ConservativeToPrimitive();
-	
-	
-    private:
-	/// 
-	void EvaluateWaterDepth(void);
-	
-	///
-	void EvaluateCoriolis(void);
+        void ConservativeToPrimitive()
+        {
+          v_ConservativeToPrimitive();
+        }
+        virtual void v_ConservativeToPrimitive();
+
+
+        private:
+        ///
+        void EvaluateWaterDepth(void);
+
+        ///
+        void EvaluateCoriolis(void);
 
     };
 }

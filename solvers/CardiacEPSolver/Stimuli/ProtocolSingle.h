@@ -73,7 +73,7 @@ namespace Nektar
         
         virtual NekDouble v_GetAmplitude(const NekDouble time);
         
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
         
         virtual void v_SetInitialConditions();
     };

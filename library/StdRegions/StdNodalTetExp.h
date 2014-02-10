@@ -58,15 +58,12 @@ namespace Nektar
             //-------------------------------
             // Nodal basis specific routines
             //-------------------------------
-            STD_REGIONS_EXPORT void NodalToModal();
             STD_REGIONS_EXPORT void NodalToModal(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT void NodalToModalTranspose();
             STD_REGIONS_EXPORT void NodalToModalTranspose(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT void ModalToNodal();
             STD_REGIONS_EXPORT void ModalToNodal(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
@@ -125,7 +122,8 @@ namespace Nektar
             // Mapping functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual int  v_GetVertexMap(
-                const int localVertexId);
+                const int localVertexId,
+                bool useCoeffPacking = false);
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
                 Array<OneD, unsigned int>& outarray);
             STD_REGIONS_EXPORT virtual void v_GetInteriorMap(

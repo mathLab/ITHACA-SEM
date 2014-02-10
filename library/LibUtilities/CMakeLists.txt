@@ -1,7 +1,8 @@
 
 SET(BasicConstHeaders
-	./BasicConst/NektarUnivConsts.hpp
-	./BasicConst/NektarUnivTypeDefs.hpp
+    ./BasicConst/NektarUnivConsts.hpp
+    ./BasicConst/NektarUnivTypeDefs.hpp
+    ./BasicConst/GitRevision.h
 )
 
 SET(BasicUtilsHeaders
@@ -11,6 +12,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/Equation.h
     ./BasicUtils/FieldIO.h
+    ./BasicUtils/FileSystem.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
@@ -33,13 +35,13 @@ SET(BasicUtilsSources
     ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/Equation.cpp
     ./BasicUtils/FieldIO.cpp
+    ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
     ./BasicUtils/XmlUtil.cpp
 )
-
 
 SET(CommunicationHeaders
     ./Communication/Comm.h
@@ -105,7 +107,7 @@ SET(FoundationHeaders
 )
 
 SET(FoundationSources
-	./Foundations/Basis.cpp
+        ./Foundations/Basis.cpp
 	./Foundations/BLPoints.cpp
 	./Foundations/FourierPoints.cpp
 	./Foundations/FourierSingleModePoints.cpp
@@ -114,14 +116,14 @@ SET(FoundationSources
 	./Foundations/InterpCoeff.cpp
 	./Foundations/Interp.cpp
 	./Foundations/ManagerAccess.cpp
-    ./Foundations/NodalPrismEvenlySpaced.cpp
+        ./Foundations/NodalPrismEvenlySpaced.cpp
 	./Foundations/NodalTetElec.cpp
-    ./Foundations/NodalTetEvenlySpaced.cpp
+        ./Foundations/NodalTetEvenlySpaced.cpp
 	./Foundations/NodalTriElec.cpp
-    ./Foundations/NodalTriEvenlySpaced.cpp
+        ./Foundations/NodalTriEvenlySpaced.cpp
 	./Foundations/NodalTriFekete.cpp
 	./Foundations/NodalUtil.cpp
-    ./Foundations/PhysGalerkinProject.cpp       
+        ./Foundations/PhysGalerkinProject.cpp       
 	./Foundations/Points.cpp
 	./Foundations/PolyEPoints.cpp
 )
@@ -182,10 +184,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/StandardMatrix.hpp
     ./LinearAlgebra/TransF77.hpp
 
-    ./LinearAlgebra/NistSparseBlas.hpp
     ./LinearAlgebra/StorageSmvBsr.hpp
-    ./LinearAlgebra/StorageNistBsr.hpp
-    ./LinearAlgebra/StorageNistCsr.hpp
     ./LinearAlgebra/NistSparseDescriptors.hpp
     ./LinearAlgebra/SparseDiagBlkMatrix.hpp
     ./LinearAlgebra/SparseMatrix.hpp
@@ -209,8 +208,6 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/StandardMatrix.cpp
     ./LinearAlgebra/SparseUtils.cpp
     ./LinearAlgebra/StorageSmvBsr.cpp
-    ./LinearAlgebra/StorageNistBsr.cpp
-    ./LinearAlgebra/StorageNistCsr.cpp
     ./LinearAlgebra/SparseDiagBlkMatrix.cpp
     ./LinearAlgebra/SparseMatrix.cpp
 )
@@ -238,10 +235,12 @@ SET(PolylibSources
 
 SET(TimeIntegrationHeaders
         ./TimeIntegration/TimeIntegrationScheme.h
+        ./TimeIntegration/TimeIntegrationWrapper.h
 ) 
 
 SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationScheme.cpp
+        ./TimeIntegration/TimeIntegrationWrapper.cpp
 )
 
 SET(ExpressionTemplates
@@ -265,7 +264,7 @@ SET(ExpressionTemplates
 )
 
 SET(BaseHeaders
-	LibUtilitiesDeclspec.h
+    LibUtilitiesDeclspec.h
 )
 
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
@@ -278,7 +277,6 @@ SOURCE_GROUP("Linear Algebra Headers" FILES ${LinearAlgebraHeaders})
 SOURCE_GROUP("Linear Algebra Sources" FILES ${LinearAlgebraSources})
 SOURCE_GROUP("Memory Headers" FILES ${MemoryHeaders})
 SOURCE_GROUP("Memory Sources" FILES ${MemorySources})
-
 
 SOURCE_GROUP("Polylib Headers" FILES ${PolyLibHeaders})
 SOURCE_GROUP("Polylib Sources" FILES ${PolylibSources})
@@ -316,19 +314,26 @@ SET(LibUtilityHeaders
     ${BaseHeaders}
 )
 
+# Define the git branch and SHA1 hash if we are in a git repository. This is
+# stored in an automatically generated file so that the source tree is not built
+# on commit/update.
+SET(GitRevisionFile "${CMAKE_CURRENT_BINARY_DIR}/GitRevision.cpp")
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/BasicConst/GitRevision.cpp.in
+               ${GitRevisionFile})
+
 SET(LibUtilitySources
     ${BasicUtilsSources}
     ${FoundationSources}
     ${PolylibSources}
     ${CommunicationSources}
-	${LinearAlgebraSources}
-	${InterpreterSources}
-	${KernelSources}
+    ${LinearAlgebraSources}
+    ${InterpreterSources}
+    ${KernelSources}
     ${TimeIntegrationSources}
-  	${FFTSources}
+    ${FFTSources}
     ${MemorySources}
+    ${GitRevisionFile}
 )
-
 
 ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
@@ -338,22 +343,15 @@ TARGET_LINK_LIBRARIES(LibUtilities
     ${Boost_IOSTREAMS_LIBRARY}
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
-    ${Boost_ZLIB_LIBRARY}
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+    ${ZLIB_LIBRARY}
     ${TINYXML_LIB}
 )
+IF( UNIX AND NOT APPLE )
+    TARGET_LINK_LIBRARIES(LibUtilities rt)
+ENDIF( UNIX AND NOT APPLE )
 SET_LAPACK_LINK_LIBRARIES(LibUtilities)
 
-# This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.
-INSTALL(FILES ${BasicConstHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicConst COMPONENT dev)
-INSTALL(FILES ${LinearAlgebraHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/LinearAlgebra COMPONENT dev)
-INSTALL(FILES ${FoundationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Foundations COMPONENT dev)
-INSTALL(FILES ${InterpreterHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Interpreter COMPONENT dev)
-INSTALL(FILES ${PolyLibHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Polylib COMPONENT dev)
-INSTALL(FILES ${CommunicationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Communication COMPONENT dev)
 INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates COMPONENT dev)
-INSTALL(FILES ${BasicUtilsHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils COMPONENT dev)
-INSTALL(FILES ${MemoryHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory COMPONENT dev)
-INSTALL(FILES ${KernelHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Kernel COMPONENT dev)
-INSTALL(FILES ${TimeIntegrationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/TimeIntegration COMPONENT dev)
-INSTALL(FILES ${BaseHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities COMPONENT dev)
-INSTALL(FILES ${FFTHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/FFT COMPONENT dev)
+INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

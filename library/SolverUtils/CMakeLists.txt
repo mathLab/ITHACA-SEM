@@ -1,9 +1,12 @@
 SET(SOLVER_UTILS_SOURCES
+  Core/Misc.cpp
   Advection/Advection.cpp
+  Advection/Advection3DHomogeneous1D.cpp
   Advection/AdvectionFR.cpp
   Advection/AdvectionNonConservative.cpp
   Advection/AdvectionWeakDG.cpp
   Diffusion/Diffusion.cpp
+  Diffusion/Diffusion3DHomogeneous1D.cpp
   Diffusion/DiffusionLDG.cpp
   Diffusion/DiffusionLDGNS.cpp
   Diffusion/DiffusionLFR.cpp
@@ -15,21 +18,30 @@ SET(SOLVER_UTILS_SOURCES
   DriverSteadyState.cpp	
   EquationSystem.cpp
   Filters/Filter.cpp
+  Filters/FilterAeroForces.cpp
   Filters/FilterCheckpoint.cpp
   Filters/FilterHistoryPoints.cpp
+  Filters/FilterModalEnergy.cpp
   Filters/FilterThresholdMax.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
   UnsteadySystem.cpp
+  Forcing/Forcing.cpp
+  Forcing/ForcingSponge.cpp
+  Forcing/ForcingBody.cpp
+  Forcing/ForcingProgrammatic.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
+  Core/Misc.h
   Advection/Advection.h
   Advection/AdvectionFR.h
+  Advection/Advection3DHomogeneous1D.h
   Advection/AdvectionNonConservative.h
   Advection/AdvectionWeakDG.h
   Diffusion/Diffusion.h
+  Diffusion/Diffusion3DHomogeneous1D.h
   Diffusion/DiffusionLDG.h
   Diffusion/DiffusionLDGNS.h
   Diffusion/DiffusionLFR.h
@@ -41,8 +53,10 @@ SET(SOLVER_UTILS_HEADERS
   DriverSteadyState.h
   EquationSystem.h
   Filters/Filter.h
+  Filters/FilterAeroForces.h
   Filters/FilterCheckpoint.h
   Filters/FilterHistoryPoints.h
+  Filters/FilterModalEnergy.h
   Filters/FilterThresholdMax.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
@@ -50,6 +64,10 @@ SET(SOLVER_UTILS_HEADERS
   SolverUtils.hpp
   SolverUtilsDeclspec.h
   UnsteadySystem.h
+  Forcing/Forcing.h
+  Forcing/ForcingSponge.h
+  Forcing/ForcingBody.h
+  Forcing/ForcingProgrammatic.h
 )
 
 IF (NEKTAR_USE_ARPACK)
@@ -70,8 +88,12 @@ TARGET_LINK_LIBRARIES(SolverUtils
   optimized LocalRegions   debug LocalRegions-g
   optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
   ${Boost_THREAD_LIBRARY}
+  ${Boost_IOSTREAMS_LIBRARY}
   ${Boost_DATE_TIME_LIBRARY}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${Boost_SYSTEM_LIBRARY}
+  ${ZLIB_LIBRARY}
   )
 SET_LAPACK_LINK_LIBRARIES(SolverUtils)
 
-INSTALL(FILES ${SOLVER_UTILS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev)
+INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

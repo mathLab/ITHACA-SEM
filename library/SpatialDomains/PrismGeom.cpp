@@ -33,21 +33,24 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #include <SpatialDomains/PrismGeom.h>
 #include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <StdRegions/StdPrismExp.h>
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/QuadGeom.h>
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/GeomFactors3D.h>
-
+#include <SpatialDomains/GeomFactors.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        const unsigned int PrismGeom::VertexEdgeConnectivity[6][3] = {
+            {0,3,4},{0,1,5},{1,2,6},{2,3,7},{4,5,8},{6,7,8}};
+        const unsigned int PrismGeom::VertexFaceConnectivity[6][3] = {
+            {0,1,4},{0,1,2},{0,2,3},{0,3,4},{1,2,4},{2,3,4}};
+        const unsigned int PrismGeom::EdgeFaceConnectivity  [9][2] = {
+            {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},{2,4}};
         
         PrismGeom::PrismGeom()
         {
@@ -79,76 +82,76 @@ namespace Nektar
             
             if (m_forient[0] < 9)
             {
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(0));
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(2));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(0));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(2));
                 order0 = *max_element(tmp.begin(), tmp.end());
 
                 tmp.clear();
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(2));
                 points0 = *max_element(tmp.begin(), tmp.end());
             }
             else
             {
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(1));
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(3));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(1));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(3));
                 order0 = *max_element(tmp.begin(), tmp.end());
 
                 tmp.clear();
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(3));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(3));
                 points0 = *max_element(tmp.begin(), tmp.end());
             }
             
             if (m_forient[0] < 9)
             {
                 tmp.clear();
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(1));
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(3));
-                tmp.push_back(faces[2]->GetXmap(0)->GetEdgeNcoeffs(2));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(1));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(3));
+                tmp.push_back(faces[2]->GetXmap()->GetEdgeNcoeffs(2));
                 order1 = *max_element(tmp.begin(), tmp.end());
                 
                 tmp.clear();
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(1));
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(3));
-                tmp.push_back(faces[2]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(1));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(3));
+                tmp.push_back(faces[2]->GetXmap()->GetEdgeNumPoints(2));
                 points1 = *max_element(tmp.begin(), tmp.end());
             }
             else
             {
                 tmp.clear();
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(0));
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNcoeffs(2));
-                tmp.push_back(faces[2]->GetXmap(0)->GetEdgeNcoeffs(2));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(0));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNcoeffs(2));
+                tmp.push_back(faces[2]->GetXmap()->GetEdgeNcoeffs(2));
                 order1 = *max_element(tmp.begin(), tmp.end());
                 
                 tmp.clear();
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(0));
-                tmp.push_back(faces[0]->GetXmap(0)->GetEdgeNumPoints(2));
-                tmp.push_back(faces[2]->GetXmap(0)->GetEdgeNumPoints(2));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(0));
+                tmp.push_back(faces[0]->GetXmap()->GetEdgeNumPoints(2));
+                tmp.push_back(faces[2]->GetXmap()->GetEdgeNumPoints(2));
                 points1 = *max_element(tmp.begin(), tmp.end());
             }
             
             tmp.clear();
             tmp.push_back(order0);
             tmp.push_back(order1);
-            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs(1));
-            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNcoeffs(2));
-            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs(1));
-            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNcoeffs(2));
+            tmp.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs(1));
+            tmp.push_back(faces[1]->GetXmap()->GetEdgeNcoeffs(2));
+            tmp.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs(1));
+            tmp.push_back(faces[3]->GetXmap()->GetEdgeNcoeffs(2));
             int order2 = *max_element(tmp.begin(), tmp.end());
             
             tmp.clear();
             tmp.push_back(points0);
             tmp.push_back(points1);
-            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(1));
-            tmp.push_back(faces[1]->GetXmap(0)->GetEdgeNumPoints(2));
-            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(1));
-            tmp.push_back(faces[3]->GetXmap(0)->GetEdgeNumPoints(2));
-            tmp.push_back(faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumPoints());
-            tmp.push_back(faces[1]->GetEdge(2)->GetBasis(0,0)->GetNumPoints());
-            tmp.push_back(faces[3]->GetEdge(1)->GetBasis(0,0)->GetNumPoints());
-            tmp.push_back(faces[3]->GetEdge(2)->GetBasis(0,0)->GetNumPoints());
+            tmp.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(1));
+            tmp.push_back(faces[1]->GetXmap()->GetEdgeNumPoints(2));
+            tmp.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(1));
+            tmp.push_back(faces[3]->GetXmap()->GetEdgeNumPoints(2));
+            tmp.push_back(faces[1]->GetEdge(1)->GetBasis(0)->GetNumPoints());
+            tmp.push_back(faces[1]->GetEdge(2)->GetBasis(0)->GetNumPoints());
+            tmp.push_back(faces[3]->GetEdge(1)->GetBasis(0)->GetNumPoints());
+            tmp.push_back(faces[3]->GetEdge(2)->GetBasis(0)->GetNumPoints());
             int points2 = *max_element(tmp.begin(), tmp.end());
             
             const LibUtilities::BasisKey A(
@@ -161,12 +164,8 @@ namespace Nektar
                 LibUtilities::eModified_B, order2,
                 LibUtilities::PointsKey(points2,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(A,B,C);
-            }
+            m_xmap = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(A,B,C);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
         PrismGeom::~PrismGeom()
@@ -183,6 +182,26 @@ namespace Nektar
             return 9;
         }
 
+        int PrismGeom::v_GetNumFaces() const
+        {
+            return 5;
+        }
+
+        int PrismGeom::v_GetDir(const int faceidx, const int facedir) const
+        {
+            if (faceidx == 0)
+            {
+                return facedir;
+            }
+            else if (faceidx == 1 || faceidx == 3)
+            {
+                return 2 * facedir;
+            }
+            else
+            {
+                return 1 + facedir;
+            }
+        }
         
         /**
          * @brief Determines if a point specified in global coordinates is
@@ -191,13 +210,69 @@ namespace Nektar
         bool PrismGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);            
+        }
+
+        bool PrismGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, 
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol)
+        {
+            NekDouble resid;
+            return v_ContainsPoint(gloCoord,locCoord,tol,resid);
+        }
+
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
+        bool PrismGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, 
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol,
+            NekDouble &resid)
+        {
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
-            
+
+            // find min, max point and check if within twice this
+            // distance other false this is advisable since
+            // GetLocCoord is expensive for non regular elements.
+            if(GetMetricInfo()->GetGtype() !=  eRegular)
+            {
+                int i;
+                Array<OneD, NekDouble> mincoord(3), maxcoord(3);
+                NekDouble diff = 0.0;
+
+                v_FillGeom();
+
+                const int npts = m_xmap->GetTotPoints();
+                Array<OneD, NekDouble> pts(npts);
+
+                for(i = 0; i < 3; ++i)
+                {
+                    m_xmap->BwdTrans(m_coeffs[i], pts);
+
+                    mincoord[i] = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord[i] = Vmath::Vmax(pts.num_elements(),pts,1);
+                    
+                    diff = max(maxcoord[i] - mincoord[i],diff); 
+                }
+
+                for(i = 0; i < 3; ++i)
+                {
+                    if((gloCoord[i] < mincoord[i] - 0.2*diff)||
+                       (gloCoord[i] > maxcoord[i] + 0.2*diff))
+                    {
+                        return false;
+                    }
+                }
+            }
+
             // Convert to the local (eta) coordinates.
-            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
-            v_GetLocCoords(gloCoord, locCoord);
+            resid = v_GetLocCoords(gloCoord, locCoord);
             
             // Check local coordinate is within [-1,1]^3 bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
@@ -210,8 +285,7 @@ namespace Nektar
             return false;
         }
 
-        void PrismGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void PrismGeom::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -223,9 +297,9 @@ namespace Nektar
                 // check to see if expansions are linear
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                        m_xmap[i]->GetBasisNumModes(2) != 2 )
+                    if (m_xmap->GetBasisNumModes(0) != 2 ||
+                        m_xmap->GetBasisNumModes(1) != 2 ||
+                        m_xmap->GetBasisNumModes(2) != 2 )
                     {
                         Gtype = eDeformed;
                     }
@@ -263,26 +337,27 @@ namespace Nektar
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis, true);
-
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap, m_coeffs);
                 m_geomFactorsState = ePtsFilled;
             }
         }
 
 
-        void PrismGeom::v_GetLocCoords(
+        NekDouble PrismGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
+
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {
                 // Point inside tetrahedron
-                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+                PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
 
                 // Edges
-                VertexComponent er0, e10, e30, e40;
+                PointGeom er0, e10, e30, e40;
                 er0.Sub(r,*m_verts[0]);
                 e10.Sub(*m_verts[1],*m_verts[0]);
                 e30.Sub(*m_verts[3],*m_verts[0]);
@@ -290,7 +365,7 @@ namespace Nektar
 
 
                 // Cross products (Normal times area)
-                VertexComponent cp1030, cp3040, cp4010;
+                PointGeom cp1030, cp3040, cp4010;
                 cp1030.Mult(e10,e30);
                 cp3040.Mult(e30,e40);
                 cp4010.Mult(e40,e10);
@@ -306,21 +381,23 @@ namespace Nektar
                 Lcoords[0] = 2.0*beta  - 1.0;
                 Lcoords[1] = 2.0*gamma - 1.0;
                 Lcoords[2] = 2.0*delta - 1.0;
-
             }
             else
             {
                 v_FillGeom();
             
                 // Determine nearest point of coords  to values in m_xmap
-                Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
-                Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
-                Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
-                int npts = ptsx.num_elements();
+                int npts = m_xmap->GetTotPoints();
+                Array<OneD, NekDouble> ptsx(npts), ptsy(npts), ptsz(npts);
                 Array<OneD, NekDouble> tmp1(npts), tmp2(npts);
-                const Array<OneD, const NekDouble> za = m_xmap[0]->GetPoints(0);
-                const Array<OneD, const NekDouble> zb = m_xmap[0]->GetPoints(1);
-                const Array<OneD, const NekDouble> zc = m_xmap[0]->GetPoints(2);
+
+                m_xmap->BwdTrans(m_coeffs[0], ptsx);
+                m_xmap->BwdTrans(m_coeffs[1], ptsy);
+                m_xmap->BwdTrans(m_coeffs[2], ptsz);
+
+                const Array<OneD, const NekDouble> za = m_xmap->GetPoints(0);
+                const Array<OneD, const NekDouble> zb = m_xmap->GetPoints(1);
+                const Array<OneD, const NekDouble> zc = m_xmap->GetPoints(2);
                 
                 //guess the first local coords based on nearest point
                 Vmath::Sadd(npts, -coords[0], ptsx,1,tmp1,1);
@@ -340,14 +417,29 @@ namespace Nektar
                 Lcoords[0] = za[min_i%qa];
 
                 // recover cartesian coordinate from collapsed coordinate. 
-                Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 -1.0;            
-                Lcoords[1] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 -1.0;
-
+                Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 - 1.0;
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords,Lcoords);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,resid);
             }
+            return resid; 
         }
+        
+        int PrismGeom::v_GetVertexEdgeMap(const int i, const int j) const
+	{
+	    return VertexEdgeConnectivity[i][j];
+	}
+        
+        int PrismGeom::v_GetVertexFaceMap(const int i, const int j) const
+	{
+	    return VertexFaceConnectivity[i][j];
+	}
+        
+        int PrismGeom::v_GetEdgeFaceMap(const int i, const int j) const
+	{
+	    return EdgeFaceConnectivity[i][j];
+	}
+
 
         void PrismGeom::SetUpLocalEdges(){
             // find edge 0

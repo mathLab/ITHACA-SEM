@@ -91,10 +91,10 @@ namespace Nektar
 
     }
 
-    void EulerArtificialDiffusionCFE::v_PrintSummary(std::ostream &out)
+    void EulerArtificialDiffusionCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        CompressibleFlowSystem::v_PrintSummary(out);
-        out << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
+        CompressibleFlowSystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Problem Type", ProblemTypeMap[m_problemType]);
     }
 
     void EulerArtificialDiffusionCFE::v_SetInitialConditions(
@@ -168,7 +168,6 @@ namespace Nektar
         NekDouble                             time)
     {    
         int nvariables = m_fields.num_elements();
-        int nq         = inarray[0].num_elements();
         int cnt        = 0;
     
         // loop over Boundary Regions
@@ -178,7 +177,7 @@ namespace Nektar
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eWall)
             {
-                WallBoundary(n, cnt, inarray);
+                WallBC(n, cnt, inarray);
             }
             
             // Wall Boundary Condition
@@ -193,28 +192,21 @@ namespace Nektar
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eSymmetry)
             {
-                SymmetryBoundary(n, cnt, inarray);
+                SymmetryBC(n, cnt, inarray);
             }
             
-            // Inflow characteristic Boundary Condition
+            // Riemann invariant characteristic Boundary Condition (CBC)
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eInflowCFS)
+                SpatialDomains::eRiemannInvariant)
             {
-                InflowCFSBoundary(n, cnt, inarray);
-            }
-            
-            // Outflow characteristic Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eOutflowCFS)
-            {
-                OutflowCFSBoundary(n, cnt, inarray);
+                RiemannInvariantBC(n, cnt, inarray);
             }
             
             // Extrapolation of the data at the boundaries
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eExtrapOrder0)
             {
-                ExtrapOrder0Boundary(n, cnt, inarray);
+                ExtrapOrder0BC(n, cnt, inarray);
             }
     
             // Time Dependent Boundary Condition (specified in meshfile)

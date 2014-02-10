@@ -142,7 +142,8 @@ namespace Nektar
         
         TimeIntegrationSchemeSharedPtr TimeIntegrationScheme::Create(const TimeIntegrationSchemeKey &key)
         {
-            TimeIntegrationSchemeSharedPtr returnval(MemoryManager<TimeIntegrationScheme>::AllocateSharedPtr(key));
+            TimeIntegrationSchemeSharedPtr returnval(
+                MemoryManager<TimeIntegrationScheme>::AllocateSharedPtr(key));
             return returnval;
         }
 
@@ -1566,7 +1567,7 @@ namespace Nektar
                 {
                     // ensure solution is in correct space
                     op.DoProjection(m_Y,m_Y,m_T); 
-                    op.DoOdeRhs(m_Y, m_F[i], m_T);                   
+                    op.DoOdeRhs(m_Y, m_F[i], m_T);        
                 }
             }
             

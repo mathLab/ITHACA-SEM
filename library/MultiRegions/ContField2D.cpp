@@ -132,9 +132,10 @@ namespace Nektar
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
-                                    m_periodicVertices,
+                                    m_periodicVerts,
                                     m_periodicEdges,
-                                    CheckIfSingularSystem);
+                                    CheckIfSingularSystem,
+                                    variable);
 
         }
 
@@ -180,7 +181,7 @@ namespace Nektar
                     ::AllocateSharedPtr(m_session, m_ncoeffs,*this,
                                         m_bndCondExpansions,
                                         m_bndConditions,
-                                        m_periodicVertices,
+                                        m_periodicVerts,
                                         m_periodicEdges,
                                         CheckIfSingularSystem);
             }
@@ -637,18 +638,22 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(
                 m_locToGloMap->GetNumGlobalBndCoeffs(), 0.0);
 
-            // Fill in Dirichlet coefficients that are to be sent to other
-            // processors.
-            map<int, vector<pair<int, int> > > &extraDirDofs = 
+            // Fill in Dirichlet coefficients that are to be sent to
+            // other processors.  This code block uses a
+            // tuple<int,int.NekDouble> which stores the local id of
+            // coefficent the global id of the data location and the
+            // inverse of the values of the data (arising from
+            // periodic boundary conditiosn)
+            map<int, vector<ExtraDirDof> > &extraDirDofs =
                 m_locToGloMap->GetExtraDirDofs();
-            map<int, vector<pair<int, int> > >::iterator it;
+            map<int, vector<ExtraDirDof> >::iterator it;
             for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
             {
                 for (i = 0; i < it->second.size(); ++i)
                 {
-                    tmp[it->second.at(i).second] = 
+                    tmp[it->second.at(i).get<1>()] = 
                         m_bndCondExpansions[it->first]->GetCoeffs()[
-                            it->second.at(i).first];
+                            it->second.at(i).get<0>()]*it->second.at(i).get<2>(); 
                 }
             }
             m_locToGloMap->UniversalAssembleBnd(tmp);
@@ -677,6 +682,28 @@ namespace Nektar
             Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
         }
 
+        void ContField2D::v_FillBndCondFromField(void)
+        {
+            NekDouble sign;
+            int bndcnt = 0;
+            const Array<OneD,const int> &bndMap = 
+                m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+            
+            Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
+            LocalToGlobal(m_coeffs,tmp);
+            
+            // Now fill in all other Dirichlet coefficients.
+            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
+                
+                for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                {
+                    sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                    coeffs[j] = sign * tmp[bndMap[bndcnt++]];
+                }
+            }
+        }
 
         /**
          * This operation is evaluated as:

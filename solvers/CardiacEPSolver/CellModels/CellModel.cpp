@@ -181,6 +181,8 @@ namespace Nektar
             }
 
             // Move to nodal points
+            Array<OneD, NekDouble> tmpCoeffs(max(m_nodalTri->GetNcoeffs(), m_nodalTet->GetNcoeffs()));
+
             for (unsigned int k = 0; k < nvar; ++k)
             {
                 for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
@@ -189,13 +191,13 @@ namespace Nektar
                     coef_offset = m_field->GetCoeff_Offset(i);
                     if (m_field->GetExp(0)->DetShapeType() == LibUtilities::eTriangle)
                     {
-                        m_field->GetExp(0)->FwdTrans(inarray[k] + phys_offset, m_nodalTri->UpdateCoeffs());
-                        m_nodalTri->ModalToNodal(m_nodalTri->GetCoeffs(), tmp=m_nodalTmp[k]+coef_offset);
+                        m_field->GetExp(0)->FwdTrans(inarray[k] + phys_offset, tmpCoeffs);
+                        m_nodalTri->ModalToNodal(tmpCoeffs, tmp=m_nodalTmp[k]+coef_offset);
                     }
                     else
                     {
-                        m_field->GetExp(0)->FwdTrans(inarray[k] + phys_offset, m_nodalTet->UpdateCoeffs());
-                        m_nodalTet->ModalToNodal(m_nodalTet->GetCoeffs(), tmp=m_nodalTmp[k]+coef_offset);
+                        m_field->GetExp(0)->FwdTrans(inarray[k] + phys_offset, tmpCoeffs);
+                        m_nodalTet->ModalToNodal(tmpCoeffs, tmp=m_nodalTmp[k]+coef_offset);
                     }
                 }
             }
@@ -240,6 +242,8 @@ namespace Nektar
         // Transform cell model I_total from nodal to modal space
         if (m_useNodal)
         {
+            Array<OneD, NekDouble> tmpCoeffs(max(m_nodalTri->GetNcoeffs(), m_nodalTet->GetNcoeffs()));
+
             for (unsigned int k = 0; k < nvar; ++k)
             {
                 for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
@@ -248,13 +252,13 @@ namespace Nektar
                     int coef_offset = m_field->GetCoeff_Offset(i);
                     if (m_field->GetExp(0)->DetShapeType() == LibUtilities::eTriangle)
                     {
-                        m_nodalTri->NodalToModal(m_wsp[k]+coef_offset, m_nodalTri->UpdateCoeffs());
-                        m_field->GetExp(0)->BwdTrans(m_nodalTri->GetCoeffs(), tmp=outarray[k] + phys_offset);
+                        m_nodalTri->NodalToModal(m_wsp[k]+coef_offset, tmpCoeffs);
+                        m_field->GetExp(0)->BwdTrans(tmpCoeffs, tmp=outarray[k] + phys_offset);
                     }
                     else
                     {
-                        m_nodalTet->NodalToModal(m_wsp[k]+coef_offset, m_nodalTet->UpdateCoeffs());
-                        m_field->GetExp(0)->BwdTrans(m_nodalTet->GetCoeffs(), tmp=outarray[k] + phys_offset);
+                        m_nodalTet->NodalToModal(m_wsp[k]+coef_offset, tmpCoeffs);
+                        m_field->GetExp(0)->BwdTrans(tmpCoeffs, tmp=outarray[k] + phys_offset);
                     }
                 }
             }
@@ -312,6 +316,11 @@ namespace Nektar
         return outarray;
     }
 
+    Array<OneD, NekDouble> CellModel::GetCellSolution(unsigned int idx)
+    {
+        return m_cellSol[idx];
+    }
+
     void CellModel::LoadCellModel()
     {
         const bool root = (m_session->GetComm()->GetRank() == 0);
@@ -352,15 +361,17 @@ namespace Nektar
                 std::vector<std::vector<NekDouble> > FieldData;
 
                 // Read the restart file containing this variable
-                LibUtilities::Import(file, FieldDef, FieldData);
+                LibUtilities::FieldIOSharedPtr fld =
+                    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+                fld->Import(file, FieldDef, FieldData);
 
                 LibUtilities::FieldMetaDataMap fieldMetaDataMap;
                 LibUtilities::FieldMetaDataMap::iterator iter;
-                LibUtilities::ImportFieldMetaData(file,fieldMetaDataMap);
+                fld->ImportFieldMetaData(file,fieldMetaDataMap);
                 iter = fieldMetaDataMap.find("Time");
                 if(iter != fieldMetaDataMap.end())
                 {
-                    m_lastTime = iter->second;
+                    m_lastTime = boost::lexical_cast<NekDouble>(iter->second);
                 }
 
                 // Extract the data into the modal coefficients
@@ -418,6 +429,8 @@ namespace Nektar
                 if (m_useNodal)
                 {
                     Array<OneD, NekDouble> phys(nphys);
+                    Array<OneD, NekDouble> tmpCoeffs(max(m_nodalTri->GetNcoeffs(), m_nodalTet->GetNcoeffs()));
+
                     equ->Evaluate(x0, x1, x2, phys);
                     for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
                     {
@@ -427,19 +440,17 @@ namespace Nektar
                                 LibUtilities::eTriangle)
                         {
                             m_field->GetExp(0)->FwdTrans(
-                                            phys + phys_offset,
-                                            m_nodalTri->UpdateCoeffs());
+                                            phys + phys_offset, tmpCoeffs);
                             m_nodalTri->ModalToNodal(
-                                            m_nodalTri->GetCoeffs(),
+                                            tmpCoeffs,
                                             tmp = m_cellSol[j] + coef_offset);
                         }
                         else
                         {
                             m_field->GetExp(0)->FwdTrans(
-                                            phys + phys_offset,
-                                            m_nodalTet->UpdateCoeffs());
+                                            phys + phys_offset, tmpCoeffs);
                             m_nodalTet->ModalToNodal(
-                                            m_nodalTet->GetCoeffs(),
+                                            tmpCoeffs,
                                             tmp = m_cellSol[j] + coef_offset);
                         }
                     }

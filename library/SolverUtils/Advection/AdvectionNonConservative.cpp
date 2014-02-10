@@ -48,6 +48,20 @@ namespace Nektar
             
         }
         
+        /**
+         * @brief Initialise AdvectionNonConservative objects and store them
+         * before starting the time-stepping.
+         *
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         */
+        void AdvectionNonConservative::v_InitObject(
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {
+            Advection::v_InitObject(pSession, pFields);
+        }
+
         void AdvectionNonConservative::v_Advect(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -105,17 +119,23 @@ namespace Nektar
                       case 3:
                         fields[0]->PhysDeriv(inarray[i], grad0, grad1, grad2);
                         
-                        Vmath::Vmul   (nPointsTot, 
-                                       grad0, 1, 
-                                       advVel[0], 1, 
-                                       outarray[i], 1);
+                        // Calculate advection terms 
+                        Vmath::Vmul (nPointsTot, 
+                                     grad0, 1, 
+                                     advVel[0], 1, 
+                                     outarray[i], 1);
                         
-                        Vmath::Vvtvvtp(nPointsTot, 
-                                       grad1, 1, 
-                                       advVel[1], 1, 
-                                       grad2, 1, 
-                                       advVel[2], 1,
-                                       outarray[i], 1);
+                        Vmath::Vvtvp(nPointsTot, 
+                                     grad1, 1, 
+                                     advVel[1], 1, 
+                                     outarray[i], 1, 
+                                     outarray[i], 1);
+                        
+                        Vmath::Vvtvp(nPointsTot, 
+                                     grad2, 1, 
+                                     advVel[2], 1, 
+                                     outarray[i], 1, 
+                                     outarray[i], 1);
                         break;
                     default:
                         ASSERTL0(false,"dimension unknown");

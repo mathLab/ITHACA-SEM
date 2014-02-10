@@ -48,11 +48,11 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        // Forward declarations
         class AssemblyMap;
+        class ExpList;
         typedef boost::shared_ptr<AssemblyMap>  AssemblyMapSharedPtr;
         static AssemblyMapSharedPtr NullAssemblyMapSharedPtr;
-
-
 
         /// Base class for constructing local to global mapping of degrees of
         /// freedom.
@@ -62,7 +62,9 @@ namespace Nektar
         	/// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMap();
             /// Constructor with a communicator
-            MULTI_REGIONS_EXPORT AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession);
+            MULTI_REGIONS_EXPORT AssemblyMap(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::string variable = "DefaultVar");
 
             /// Constructor for next level in multi-level static condensation.
             MULTI_REGIONS_EXPORT AssemblyMap(AssemblyMap* oldLevelMap,
@@ -155,8 +157,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
 
             /// Returns the global index of the boundary trace giving the
-            /// index on the boundary  expansion
+            /// index on the boundary expansion
             MULTI_REGIONS_EXPORT int GetBndCondTraceToGlobalTraceMap(const int i);
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>
+                &GetBndCondTraceToGlobalTraceMap();
  
             /// Returns the number of global Dirichlet boundary coefficients.
             MULTI_REGIONS_EXPORT int GetNumGlobalDirBndCoeffs() const;
@@ -240,6 +244,19 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT int GetNumNonDirFaceModes() const;
 
+            MULTI_REGIONS_EXPORT int GetNumDirEdges() const;
+
+            MULTI_REGIONS_EXPORT int GetNumDirFaces() const;
+
+            MULTI_REGIONS_EXPORT int GetNumNonDirEdges() const;
+
+            MULTI_REGIONS_EXPORT int GetNumNonDirFaces() const;
+
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>& 
+                GetExtraDirEdges();
+
+            MULTI_REGIONS_EXPORT boost::shared_ptr<AssemblyMap> XxtLinearSpaceMap(const ExpList &locexp);
+
             /// Returns the bandwidth of the boundary system.
             MULTI_REGIONS_EXPORT int GetBndSystemBandWidth() const;
             /// Returns the level of static condensation for this map.
@@ -268,8 +285,10 @@ namespace Nektar
             /// static condensation.
             MULTI_REGIONS_EXPORT bool AtLastLevel() const;
             /// Returns the method of solving global systems.
-            MULTI_REGIONS_EXPORT GlobalSysSolnType  GetGlobalSysSolnType() const;
-            MULTI_REGIONS_EXPORT PreconditionerType  GetPreconType() const;
+            MULTI_REGIONS_EXPORT GlobalSysSolnType GetGlobalSysSolnType() const;
+            MULTI_REGIONS_EXPORT PreconditionerType GetPreconType() const;
+            MULTI_REGIONS_EXPORT NekDouble GetIterativeTolerance() const;
+            MULTI_REGIONS_EXPORT int GetSuccessiveRHS() const;
 
             MULTI_REGIONS_EXPORT int GetLowestStaticCondLevel() const
             {
@@ -342,7 +361,14 @@ namespace Nektar
             /// The bandwith of the global bnd system
             int m_bndSystemBandWidth;
 
+            /// Type type of preconditioner to use in iterative solver.
             PreconditionerType m_preconType;
+
+            /// Tolerance for iterative solver
+            NekDouble  m_iterativeTolerance;
+
+            /// sucessive RHS  for iterative solver
+            int  m_successiveRHS;
 
             Gs::gs_data * m_gsh;
             Gs::gs_data * m_bndGsh;
@@ -433,6 +459,20 @@ namespace Nektar
 
             virtual int v_GetNumNonDirFaceModes() const;
 
+            virtual int v_GetNumDirEdges() const;
+
+            virtual int v_GetNumDirFaces() const;
+
+            virtual int v_GetNumNonDirEdges() const;
+
+            virtual int v_GetNumNonDirFaces() const;
+            
+            virtual const Array<OneD, const int>& 
+                v_GetExtraDirEdges();
+            
+            /// Generate a linear space mapping from existing mapping 
+            virtual boost::shared_ptr<AssemblyMap> v_XxtLinearSpaceMap
+                (const ExpList &locexp);
         };
 
 

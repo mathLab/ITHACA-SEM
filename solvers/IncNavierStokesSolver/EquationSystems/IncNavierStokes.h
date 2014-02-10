@@ -36,9 +36,12 @@
 #ifndef NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
+#include <SolverUtils/Forcing/Forcing.h>
 
 namespace Nektar
 {     
@@ -55,9 +58,9 @@ namespace Nektar
         eSteadyNavierStokes,
         eEquationTypeSize
     };
-    
+
     // Keep this consistent with the enums in EquationType.
-    const std::string kEquationTypeStr[] = 
+    const std::string kEquationTypeStr[] =
     {
         "NoType",
         "SteadyStokes",
@@ -78,12 +81,12 @@ namespace Nektar
         eLinearised,
         eAdjoint,
         eSkewSymmetric,
-		eNoAdvection,
+        eNoAdvection,
         eAdvectionFormSize
     };
-    
+
     // Keep this consistent with the enums in EquationType.
-    const std::string kAdvectionFormStr[] = 
+    const std::string kAdvectionFormStr[] =
     {
         "NoType",
         "Convective",
@@ -91,104 +94,111 @@ namespace Nektar
         "Linearised",
         "Adjoint",
         "SkewSymmetric"
-		"NoAdvection"
+        "NoAdvection"
     };
-	
+
     /**
      * \brief This class is the base class for Navier Stokes problems
      *
      */
-    
-    //    class IncNavierStokes: public SolverUtils::EquationSystem
     class IncNavierStokes: public SolverUtils::UnsteadySystem
     {
-    public:           
+    public:
         // Destructor
         virtual ~IncNavierStokes();
 
         virtual void v_InitObject();
 
 
-        virtual void v_GetFluxVector(const int i, 
-                                     Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                     Array<OneD, Array<OneD, NekDouble> > &flux);
+        virtual void v_GetFluxVector(
+                const int i,
+                Array<OneD, Array<OneD, NekDouble> > &physfield,
+                Array<OneD, Array<OneD, NekDouble> > &flux);
+
+        virtual void v_NumericalFlux(
+                Array<OneD, Array<OneD, NekDouble> > &physfield,
+                Array<OneD, Array<OneD, NekDouble> > &numflux);
+
+        AdvectionTermSharedPtr GetAdvObject(void)
+        {
+            return m_advObject;
+        }
+
+
+        int GetNConvectiveFields(void)
+        {
+            return m_nConvectiveFields;  
+        }
+
+        Array<OneD, int> &GetVelocity(void)
+        {
+            return  m_velocity; 
+        }
+
         
-
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                     Array<OneD, Array<OneD, NekDouble> > &numflux);
-
-        NekDouble GetSubstepTimeStep();
-
+        Array<OneD, NekDouble> GetElmtCFLVals(void);
+        
         NekDouble GetCFLEstimate(int &elmtid);
+
+        void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
+
+    protected:
+		
+        // pointer to the extrapolation class for sub-stepping and HOPBS
         
-        // Mapping of the real convective field on the standard element.
-        // This function gives back the convective filed in the standard
-        // element to calculate the stability region of the problem in a
-        // unique way.
-        Array<OneD,NekDouble> GetStdVelocity(
-            const Array<OneD, Array<OneD,NekDouble> > inarray);
+        ExtrapolateSharedPtr m_extrapolation;
+		
+        /// modal energy file
+        std::ofstream m_mdlFile;
 
+        /// bool to identify if using a substepping scheme
+        bool m_subSteppingScheme;
+        /// bool to identify if advection term smoothing is requested
+        bool m_SmoothAdvection;
 
-        // Sub-stepping related methods
-        void SubStepAdvection (const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-							   Array<OneD, Array<OneD, NekDouble> > &outarray, 
-                               const NekDouble time);
-
-        void SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
-                               const NekDouble time);
-        
-        void SubStepExtrapoloteField(NekDouble toff, Array< OneD, Array<OneD, NekDouble> > &ExtVel);
-
-        void AddAdvectionPenaltyFlux(const Array<OneD, const Array<OneD, NekDouble> > &velfield, 
-                                     const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
-                                     Array<OneD, Array<OneD, NekDouble> > &outarray);
-        
-    protected: 
-        std::ofstream m_mdlFile;  // modal energy file 
-
-        LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
-
-        bool m_subSteppingScheme; // bool to identify if using a substepping scheme
-        bool m_SmoothAdvection; // bool to identify if advection term smoothing is requested 
-        LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
-        LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
-
-        Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
+        LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
 
         /// Advection term
         AdvectionTermSharedPtr m_advObject;
 
-        /// Number of fields to be convected; 
-        int   m_nConvectiveFields;  
+        /// Forcing terms
+        std::vector<SolverUtils::ForcingSharedPtr>               m_forcing;
 
-        /// int which identifies which components of m_fields contains the velocity (u,v,w);
-        Array<OneD, int> m_velocity; 
- 
+        /// Number of fields to be convected;
+        int   m_nConvectiveFields;
+
+        /// int which identifies which components of m_fields contains the
+        /// velocity (u,v,w);
+        Array<OneD, int> m_velocity;
+
         /// Pointer to field holding pressure field
-        MultiRegions::ExpListSharedPtr m_pressure;  
-        
-        NekDouble   m_kinvis;        ///< Kinematic viscosity
-        int         m_energysteps;   ///< dump energy to file at steps time
-        int         m_cflsteps;      ///< dump cfl estimate
-        int         m_steadyStateSteps; ///< Check for steady state at step interval
-        NekDouble   m_steadyStateTol; ///< Tolerance to which steady state should be evaluated at
+        MultiRegions::ExpListSharedPtr m_pressure;
+        /// Kinematic viscosity
+        NekDouble   m_kinvis;
+        /// dump energy to file at steps time
+        int         m_energysteps;
+        /// dump cfl estimate
+        int         m_cflsteps;
+        /// Check for steady state at step interval
+        int         m_steadyStateSteps;
+        /// Tolerance to which steady state should be evaluated at
+        NekDouble   m_steadyStateTol;
 
-        EquationType  m_equationType;  ///< equation type;
-        
-        
-        Array<OneD, Array<OneD, int> > m_fieldsBCToElmtID;  // Mapping from BCs to Elmt IDs
-        Array<OneD, Array<OneD, int> > m_fieldsBCToTraceID; // Mapping from BCs to Elmt Edge IDs
-        Array<OneD, Array<OneD, NekDouble> > m_fieldsRadiationFactor; // RHS Factor for Radiation Condition
+        /// equation type;
+        EquationType  m_equationType;
 
-        // Time integration classes
-        LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
-        Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> m_integrationScheme;
-        int m_intSteps;  ///< Number of time integration steps AND  Order of extrapolation for pressure boundary conditions.         
+        /// Mapping from BCs to Elmt IDs
+        Array<OneD, Array<OneD, int> > m_fieldsBCToElmtID;
+        /// Mapping from BCs to Elmt Edge IDs
+        Array<OneD, Array<OneD, int> > m_fieldsBCToTraceID;
+        /// RHS Factor for Radiation Condition
+        Array<OneD, Array<OneD, NekDouble> > m_fieldsRadiationFactor;
 
-        /**
-         * Constructor.
-         */
+        /// Number of time integration steps AND Order of extrapolation for
+        /// pressure boundary conditions.
+        int m_intSteps;
+
+        /// Constructor.
         IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         EquationType GetEquationType(void)
@@ -196,75 +206,47 @@ namespace Nektar
             return m_equationType;
         }
 
-        void AdvanceInTime(int nsteps);
-		
-        void SubStepAdvance   (const int nstep);
-        void SubStepSaveFields(const int nstep);
-
-        void EvaluateAdvectionTerms(const Array<OneD, 
-                                    const Array<OneD, NekDouble> > &inarray, 
-                                    Array<OneD, Array<OneD, NekDouble> > &outarray, 
-                                    Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
-		
+        void EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+									Array<OneD, Array<OneD, NekDouble> > &outarray,
+									Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
 
         void WriteModalEnergy(void);
 
-        //time dependent boundary conditions updating
-	
+        /// time dependent boundary conditions updating
         void SetBoundaryConditions(NekDouble time);
 
-        //Set Radiation forcing term 
+        /// Set Radiation forcing term
         void SetRadiationBoundaryForcing(int fieldid);
 
-        // evaluate steady state
+        /// evaluate steady state
         bool CalcSteadyState(void);
 
-        // Virtual functions
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {
-            return m_pressure; 
+            return m_pressure;
         }
 
-        virtual void v_PrintSummary(std::ostream &out)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
-        virtual void v_DoInitialise(void)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
-        virtual void v_DoSolve(void)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-		
         virtual void v_TransCoeffToPhys(void)
         {
             ASSERTL0(false,"This method is not defined in this class");
         }
-		
+
         virtual void v_TransPhysToCoeff(void)
         {
             ASSERTL0(false,"This method is not defined in this class");
         }
-		
-    private: 
+
+        virtual int v_GetForceDimension()=0;
+
+        virtual bool v_PreIntegrate(int step);
+        virtual bool v_PostIntegrate(int step);
+
+    private:
+
     };
-    
+
     typedef boost::shared_ptr<IncNavierStokes> IncNavierStokesSharedPtr;
-    
+
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H
-
-/**
-* $Log: IncNavierStokes.h,v $
-* Revision 1.2  2010/01/28 15:17:05  abolis
-* Time-Dependent boundary conditions
-*
-* Revision 1.1  2009/09/06 22:31:15  sherwin
-* First working version of Navier-Stokes solver and input files
-*
-**/

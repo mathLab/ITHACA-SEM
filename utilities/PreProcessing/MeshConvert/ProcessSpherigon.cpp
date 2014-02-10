@@ -39,8 +39,10 @@ using namespace std;
 #include "MeshElements.h"
 #include "ProcessSpherigon.h"
 
+#include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
+#include <LocalRegions/NodalTriExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #define TOL_BLEND 1.0e-8
@@ -70,7 +72,7 @@ namespace Nektar
          * 
          * No additional information needs to be supplied directly to the module
          * in order for it to work. However, 3D elements do rely on the mapping
-         * Mesh::spherigonFaces to be populated by the relevant input modules.
+         * Mesh::spherigonSurfs to be populated by the relevant input modules.
          * 
          * Additionally, since the algorithm assumes normals are supplied which
          * are perpendicular to the true surface defined at each vertex. If
@@ -85,8 +87,12 @@ namespace Nektar
          */
         ProcessSpherigon::ProcessSpherigon(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["N"] = ConfigOption(false, "8",
+            m_config["N"] = ConfigOption(false, "5",
                 "Number of points to add to face edges.");
+            m_config["surf"] = ConfigOption(false, "-1",
+                "Tag identifying surface to process.");
+            m_config["BothTriFacesOnPrism"] = ConfigOption(true, "-1",
+                "Curve both triangular faces of prism on boundary.");
         }
       
         /**
@@ -105,15 +111,15 @@ namespace Nektar
         {
             double inv_mag;
 
-            c.x = a.y*b.z - a.z*b.y;
-            c.y = a.z*b.x - a.x*b.z;
-            c.z = a.x*b.y - a.y*b.x;
+            c.m_x = a.m_y*b.m_z - a.m_z*b.m_y;
+            c.m_y = a.m_z*b.m_x - a.m_x*b.m_z;
+            c.m_z = a.m_x*b.m_y - a.m_y*b.m_x;
 
-            inv_mag = 1.0/sqrt(c.x*c.x + c.y*c.y + c.z*c.z);
+            inv_mag = 1.0/sqrt(c.m_x*c.m_x + c.m_y*c.m_y + c.m_z*c.m_z);
             
-            c.x = c.x*inv_mag;
-            c.y = c.y*inv_mag;
-            c.z = c.z*inv_mag;
+            c.m_x = c.m_x*inv_mag;
+            c.m_y = c.m_y*inv_mag;
+            c.m_z = c.m_z*inv_mag;
         }
         
         /**
@@ -122,9 +128,9 @@ namespace Nektar
          */
         double ProcessSpherigon::CrossProdMag(Node &a, Node &b)
         {
-            double tmp1 = a.y*b.z - a.z*b.y;
-            double tmp2 = a.z*b.x - a.x*b.z;
-            double tmp3 = a.x*b.y - a.y*b.x;
+            double tmp1 = a.m_y*b.m_z - a.m_z*b.m_y;
+            double tmp2 = a.m_z*b.m_x - a.m_x*b.m_z;
+            double tmp3 = a.m_x*b.m_y - a.m_y*b.m_x;
             return sqrt(tmp1*tmp1 + tmp2*tmp2 + tmp3*tmp3);
         }
 
@@ -195,7 +201,8 @@ namespace Nektar
 
         /**
          * @brief Generate a set of approximate vertex normals to a surface
-         * represented as a hybrid triangular/quadrilateral mesh.
+         * represented by line segments in 2D and a hybrid
+         * triangular/quadrilateral mesh in 3D.
          * 
          * This routine approximates the true vertex normals to a surface by
          * averaging the normals of all edges/faces which connect to the
@@ -210,36 +217,53 @@ namespace Nektar
         {
             boost::unordered_map<int, Node>::iterator nIt;
             
-            // First loop over elements and construct vertex normals.
             for (int i = 0; i < el.size(); ++i)
             {
                 ElementSharedPtr e = el[i];
                 
-                // Ensure that element is either a triangle or quad.
-                ASSERTL0(e->GetConf().e == eTriangle || 
-                         e->GetConf().e == eQuadrilateral,
-                         "Spherigon expansions must be either triangles or "
+                // Ensure that element is a line, triangle or quad.
+                ASSERTL0(e->GetConf().m_e == LibUtilities::eSegment      ||
+                         e->GetConf().m_e == LibUtilities::eTriangle     || 
+                         e->GetConf().m_e == LibUtilities::eQuadrilateral,
+                         "Spherigon expansions must be lines, triangles or "
                          "quadrilaterals.");
                 
                 // Calculate normal for this element.
-                NodeSharedPtr node[3] = {
-                    e->GetVertex(0), e->GetVertex(1), 
-                    e->GetVertex(e->GetConf().e == eQuadrilateral ? 3 : 2)
-                };
+                int nV = e->GetVertexCount();
+                vector<NodeSharedPtr> node(nV);
+
+                for (int j = 0; j < nV; ++j)
+                {
+                    node[j] = e->GetVertex(j);
+                }
                 
-                Node v1 = *(node[1]) - *(node[0]);
-                Node v2 = *(node[2]) - *(node[0]);
                 Node n;
-                UnitCrossProd(v1, v2, n);
+                
+                if (m_mesh->m_spaceDim == 3)
+                {
+                    // Create two tangent vectors and take unit cross product.
+                    Node v1 = *(node[1]) - *(node[0]);
+                    Node v2 = *(node[2]) - *(node[0]);
+                    UnitCrossProd(v1, v2, n);
+                }
+                else
+                {
+                    // Calculate gradient vector and invert.
+                    Node dx  = *(node[1]) - *(node[0]);
+                    dx      /= sqrt(dx.abs2());
+                    n.m_x      = -dx.m_y;
+                    n.m_y      = dx.m_x;
+                    n.m_z      = 0;
+                }
                 
                 // Insert face normal into vertex normal list or add to existing
                 // value.
-                for (int j = 0; j < e->GetVertexCount(); ++j)
+                for (int j = 0; j < nV; ++j)
                 {
-                    nIt = m->vertexNormals.find(e->GetVertex(j)->id);
-                    if (nIt == m->vertexNormals.end())
+                    nIt = m_mesh->m_vertexNormals.find(e->GetVertex(j)->m_id);
+                    if (nIt == m_mesh->m_vertexNormals.end())
                     {
-                        m->vertexNormals[e->GetVertex(j)->id] = n;
+                        m_mesh->m_vertexNormals[e->GetVertex(j)->m_id] = n;
                     }
                     else
                     {
@@ -249,9 +273,10 @@ namespace Nektar
             }
             
             // Normalize resulting vectors.
-            for (nIt = m->vertexNormals.begin(); nIt != m->vertexNormals.end(); ++nIt)
+            for (nIt  = m_mesh->m_vertexNormals.begin();
+                 nIt != m_mesh->m_vertexNormals.end  (); ++nIt)
             {
-                Node &n = m->vertexNormals[nIt->first];
+                Node &n = m_mesh->m_vertexNormals[nIt->first];
                 n /= sqrt(n.abs2());
             }
         }
@@ -261,8 +286,8 @@ namespace Nektar
          */
         void ProcessSpherigon::Process()
         {
-            ASSERTL0(m->spaceDim == 3,
-                     "Spherigon implementation only valid in 3D.");
+            ASSERTL0(m_mesh->m_spaceDim == 3 || m_mesh->m_spaceDim == 2,
+                     "Spherigon implementation only valid in 2D/3D.");
 
             boost::unordered_set<int>::iterator eIt;
             boost::unordered_set<int>           visitedEdges;
@@ -270,43 +295,129 @@ namespace Nektar
             // First construct vector of elements to process.
             vector<ElementSharedPtr> el;
 
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "ProcessSpherigon: Smoothing mesh..." << endl;
             }
 
-            if (m->expDim == 2)
+            if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
             {
                 // Manifold case - copy expansion dimension.
-                el = m->element[m->expDim];
+                el = m_mesh->m_element[m_mesh->m_expDim];
             }
-            else if (m->expDim == 3)
+            else if (m_mesh->m_spaceDim == m_mesh->m_expDim)
             {
-                // Full 3D case - iterate over stored faces and create
-                // triangular elements representing faces.
+                // Full 2D or 3D case - iterate over stored edges/faces and
+                // create segments/triangles representing those edges/faces.
                 set<pair<int,int> >::iterator it;
                 vector<int> t;
                 t.push_back(0);
                 
-                if (m->spherigonFaces.size() == 0)
+                // Construct list of spherigon edges/faces from a tag.
+                int surfTag = m_config["surf"].as<int>();
+                bool prismTag = m_config["BothTriFacesOnPrism"].beenSet;
+                if (surfTag != -1)
                 {
-                    cerr << "WARNING: Spherigon faces have not been defined -- "
-                         << "ignoring smoothing." << endl;
+                    m_mesh->m_spherigonSurfs.clear();
+                    for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+                    {
+                        ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+                        int nSurf = m_mesh->m_expDim == 3 ? el->GetFaceCount() : 
+                                                     el->GetEdgeCount();
+                        
+                        for (int j = 0; j < nSurf; ++j)
+                        {
+                            int bl = el->GetBoundaryLink(j);
+                            if (bl == -1)
+                            {
+                                continue;
+                            }
+
+                            ElementSharedPtr bEl  = m_mesh->m_element[m_mesh->m_expDim-1][bl];
+                            vector<int>      tags = bEl->GetTagList();
+
+                            if (find(tags.begin(), tags.end(), surfTag) !=
+                                tags.end())
+                            {
+                                m_mesh->m_spherigonSurfs.insert(make_pair(i, j));
+                                
+                                // Curve other tri face on Prism. Note
+                                // could be problem on pyramid when
+                                // implemented
+                                if((nSurf == 5)&&prismTag)
+                                {
+                                    // add other end of prism on boundary for smoothing
+                                    int triFace = (j == 1)? 3:1;
+                                    
+                                    m_mesh->m_spherigonSurfs.insert(make_pair(i, triFace));
+                                }
+                            }
+
+                        }
+                    }
                 }
                 
-                for (it  = m->spherigonFaces.begin();
-                     it != m->spherigonFaces.end(); ++it)
+                if (m_mesh->m_spherigonSurfs.size() == 0)
                 {
-                    FaceSharedPtr f = m->element[m->expDim][it->first]->GetFace(
-                        it->second);
-                    vector<NodeSharedPtr> nodes = f->vertexList;
-                    ElementType eType = 
-                        nodes.size() == 3 ? eTriangle : eQuadrilateral;
-                    ElmtConfig conf(eType, 1, false, false);
-                    
-                    // Create 2D element.
-                    el.push_back(
-                        GetElementFactory().CreateInstance(eType,conf,nodes,t));
+                    cerr << "WARNING: Spherigon surfaces have not been defined "
+                         << "-- ignoring smoothing." << endl;
+                    return;
+                }
+
+                if (m_mesh->m_expDim == 3)
+                {
+                    for (it  = m_mesh->m_spherigonSurfs.begin();
+                         it != m_mesh->m_spherigonSurfs.end  (); ++it)
+                    {
+                        FaceSharedPtr f = m_mesh->m_element[m_mesh->m_expDim][it->first]->
+                            GetFace(it->second);
+                        vector<NodeSharedPtr> nodes = f->m_vertexList;
+                        LibUtilities::ShapeType eType = (LibUtilities::ShapeType)(nodes.size()-1);
+                        ElmtConfig conf(eType, 1, false, false);
+                        
+                        // Create 2D element.
+                        ElementSharedPtr elmt = GetElementFactory().
+                            CreateInstance(eType,conf,nodes,t);
+                        
+                        // Copy vertices/edges from face.
+                        for (int i = 0; i < f->m_vertexList.size(); ++i)
+                        {
+                            elmt->SetVertex(i, f->m_vertexList[i]);
+                        }
+                        for (int i = 0; i < f->m_edgeList.size(); ++i)
+                        {
+                            elmt->SetEdge(i, f->m_edgeList[i]);
+                        }
+                        
+                        el.push_back(elmt);
+                    }
+                }
+                else
+                {
+                    for (it  = m_mesh->m_spherigonSurfs.begin();
+                         it != m_mesh->m_spherigonSurfs.end  (); ++it)
+                    {
+                        EdgeSharedPtr edge = m_mesh->m_element[m_mesh->m_expDim][it->first]->
+                            GetEdge(it->second);
+                        vector<NodeSharedPtr> nodes;
+                        LibUtilities::ShapeType eType = LibUtilities::eSegment;
+                        ElmtConfig conf(eType, 1, false, false);
+                        
+                        nodes.push_back(edge->m_n1);
+                        nodes.push_back(edge->m_n2);
+                        
+                        // Create 2D element.
+                        ElementSharedPtr elmt = GetElementFactory().
+                            CreateInstance(eType,conf,nodes,t);
+                        
+                        // Copy vertices/edges from original element.
+                        elmt->SetVertex(0, nodes[0]);
+                        elmt->SetVertex(1, nodes[1]);
+                        elmt->SetEdge(
+                            0, m_mesh->m_element[m_mesh->m_expDim][it->first]->
+                                GetEdge(it->second));
+                        el.push_back(elmt);
+                    }
                 }
             }
             else
@@ -316,21 +427,51 @@ namespace Nektar
             
             // See if vertex normals have been generated. If they have not,
             // approximate them by summing normals of surrounding elements.
-            if (m->vertexNormals.size() == 0)
+            bool normalsGenerated = false;
+            if (m_mesh->m_vertexNormals.size() == 0)
             {
                 GenerateNormals(el);
+                normalsGenerated = true;
             }
-            
-            int nq = config["N"].as<int>();
+
+            // Allocate storage for interior points.
+            int nq = m_config["N"].as<int>();
+            int nquad = m_mesh->m_spaceDim == 3 ? nq*nq : nq;
             Array<OneD, NekDouble> x(nq*nq);
             Array<OneD, NekDouble> y(nq*nq);
             Array<OneD, NekDouble> z(nq*nq);
+
+            Array<OneD, NekDouble> xc(nq*nq);
+            Array<OneD, NekDouble> yc(nq*nq);
+            Array<OneD, NekDouble> zc(nq*nq);
             
             ASSERTL0(nq > 2, "Number of points must be greater than 2.");
 
-            int edgeMap[2][4][2] = {
-                {{0, 1}, {nq-1, nq}, {nq*(nq-1), -nq}, {-1, -1}},        // tri
-                {{0, 1}, {nq-1, nq}, {nq*nq-1, -1},    {nq*(nq-1), -nq}} // quad
+            LibUtilities::BasisKey B0(
+                LibUtilities::eOrtho_A, nq,
+                LibUtilities::PointsKey(
+                    nq, LibUtilities::eGaussLobattoLegendre));
+            LibUtilities::BasisKey B1(
+                LibUtilities::eOrtho_B, nq,
+                LibUtilities::PointsKey(
+                    nq, LibUtilities::eGaussRadauMAlpha1Beta0));
+            StdRegions::StdNodalTriExpSharedPtr stdtri =
+                MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
+                    B0, B1, LibUtilities::eNodalTriElec);
+
+            Array<OneD, NekDouble> xnodal(nq*(nq+1)/2), ynodal(nq*(nq+1)/2);
+            stdtri->GetNodalPoints(xnodal, ynodal);
+            
+            int edgeMap[3][4][2] = {
+                {{0, 1}, {-1,   -1}, {-1,        -1 }, {-1,        -1}}, // seg
+                {{0, 1}, {nq-1, nq}, {nq*(nq-1), -nq}, {-1,        -1}}, // tri
+                {{0, 1}, {nq-1, nq}, {nq*nq-1,   -1 }, {nq*(nq-1), -nq}} // quad
+            };
+            
+            int vertMap[3][4][2] = {
+                {{0, 1}, {0, 0}, {0, 0}, {0, 0}}, // seg
+                {{0, 1}, {1, 2}, {2, 3}, {0, 0}}, // tri
+                {{0, 1}, {1, 2}, {2, 3}, {3, 0}}, // quad
             };
             
             for (int i = 0; i < el.size(); ++i)
@@ -339,31 +480,78 @@ namespace Nektar
                 // inside the element. TODO: Add options for various
                 // nodal/tensor point distributions + number of points to add.
                 ElementSharedPtr e = el[i];
-                
-                LibUtilities::BasisKey B0(
-                    LibUtilities::eModified_A, nq-1,
+
+                LibUtilities::BasisKey B2(
+                    LibUtilities::eModified_A, nq,
                     LibUtilities::PointsKey(
-                        nq, LibUtilities::ePolyEvenlySpaced));
+                        nq, LibUtilities::eGaussLobattoLegendre));
                 
-                if (e->GetConf().e == eTriangle)
+                if (e->GetConf().m_e == LibUtilities::eSegment)
+                {
+                    SpatialDomains::SegGeomSharedPtr geom =
+                        boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(
+                            e->GetGeom(m_mesh->m_spaceDim));
+                    LocalRegions::SegExpSharedPtr seg =
+                        MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(
+                            B2, geom);
+                    seg->GetCoords(x,y,z);
+                    nquad = nq;
+                }
+                else if (e->GetConf().m_e == LibUtilities::eTriangle)
                 {
                     SpatialDomains::TriGeomSharedPtr geom =
                         boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                             e->GetGeom(3));
-                    LocalRegions::TriExpSharedPtr tri =
-                        MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(
-                            B0, B0, geom);
-                    tri->GetCoords(x,y,z);
+                    LocalRegions::NodalTriExpSharedPtr tri =
+                        MemoryManager<LocalRegions::NodalTriExp>
+                            ::AllocateSharedPtr(
+                                B0, B1, LibUtilities::eNodalTriElec, geom);
+
+                    Array<OneD, NekDouble> coord(2);
+                    tri->GetCoords(xc,yc,zc);
+                    nquad = nq*(nq+1)/2;
+                    
+                    for (int j = 0; j < nquad; ++j)
+                    {
+                        coord[0] = xnodal[j];
+                        coord[1] = ynodal[j];
+                        x[j] = stdtri->PhysEvaluate(coord, xc);
+                    }
+                    
+                    for (int j = 0; j < nquad; ++j)
+                    {
+                        coord[0] = xnodal[j];
+                        coord[1] = ynodal[j];
+                        y[j] = stdtri->PhysEvaluate(coord, yc);
+                    }
+
+                    for (int j = 0; j < nquad; ++j)
+                    {
+                        coord[0] = xnodal[j];
+                        coord[1] = ynodal[j];
+                        z[j] = stdtri->PhysEvaluate(coord, zc);
+                    }
                 }
-                else
+                else if (e->GetConf().m_e == LibUtilities::eQuadrilateral)
                 {
                     SpatialDomains::QuadGeomSharedPtr geom =
                         boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
                             e->GetGeom(3));
                     LocalRegions::QuadExpSharedPtr quad =
                         MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(
-                            B0, B0, geom);
+                            B2, B2, geom);
                     quad->GetCoords(x,y,z);
+                    nquad = nq*nq;
+                }
+                else
+                {
+                    ASSERTL0(false, "Unknown expansion type.");
+                }
+                
+                // Zero z-coordinate in 2D.
+                if (m_mesh->m_spaceDim == 2)
+                {
+                    Vmath::Zero(nquad, z, 1);
                 }
                 
                 // Find vertex normals.
@@ -372,52 +560,72 @@ namespace Nektar
                 for (int j = 0; j < nV; ++j)
                 {
                     v.push_back(*(e->GetVertex(j)));
-                    vN.push_back(m->vertexNormals[v[j].id]);
+                    vN.push_back(m_mesh->m_vertexNormals[v[j].m_id]);
                 }
-                
-                // Calculate area of element.
-                Node ta  = v[1]    - v[0];
-                Node tb  = v[nV-1] - v[0];
-                
+
                 vector<Node>   tmp  (nV);
                 vector<double> r    (nV);
                 vector<Node>   K    (nV);
                 vector<Node>   Q    (nV);
                 vector<Node>   Qp   (nV);
                 vector<double> blend(nV);
+                vector<Node>   out  (nquad);
+
+                // Calculate segment length for 2D spherigon routine.
+                double segLength = sqrt((v[0] - v[1]).abs2());
                 
                 // Perform Spherigon method to smooth manifold.
-                for (int j = 0; j < nq*nq; ++j)
+                for (int j = 0; j < nquad; ++j)
                 {
                     Node P(0, x[j], y[j], z[j]);
-                    for (int k = 0; k < nV; ++k)
-                    {
-                        tmp[k] = P - v[k];
-                    }
-                    
-                    // Calculate generalized barycentric coordinate system (see
-                    // equation 6 of paper).
-                    double weight = 0.0;
-                    for (int k = 0; k < nV; ++k)
-                    {
-                        r[k] = 1.0;
-                        for (int l = 0; l < nV-2; ++l)
-                        {
-                            r[k] *= CrossProdMag(tmp[(k+l+1) % nV], 
-                                                 tmp[(k+l+2) % nV]);
-                        }
-                        weight += r[k];
-                    }
-                    
-                    // Calculate normalised Phong normals (equation 1).
                     Node N(0,0,0,0);
-                    for (int k = 0; k < nV; ++k)
-                    {
-                        r[k] /= weight;
-                        N    += vN[k]*r[k];
-                    }
-                    N /= sqrt(N.abs2());
 
+                    // Calculate generalised barycentric coordinates r[] and the
+                    // Phong normal N = vN . r for this point of the element.
+                    if (m_mesh->m_spaceDim == 2)
+                    {
+                        // In 2D the coordinates are given by a ratio of the
+                        // segment length to the distance from one of the
+                        // endpoints.
+                        r[0] = sqrt((P - v[0]).abs2()) / segLength;
+                        r[0] = max(min(1.0, r[0]), 0.0);
+                        r[1] = 1.0 - r[0];
+                        
+                        // Calculate Phong normal.
+                        N = vN[0]*r[0] + vN[1]*r[1];
+                    }
+                    else if (m_mesh->m_spaceDim == 3)
+                    {
+                        for (int k = 0; k < nV; ++k)
+                        {
+                            tmp[k] = P - v[k];
+                        }
+                        
+                        // Calculate generalized barycentric coordinate system
+                        // (see equation 6 of paper).
+                        double weight = 0.0;
+                        for (int k = 0; k < nV; ++k)
+                        {
+                            r[k] = 1.0;
+                            for (int l = 0; l < nV-2; ++l)
+                            {
+                                r[k] *= CrossProdMag(tmp[(k+l+1) % nV], 
+                                                     tmp[(k+l+2) % nV]);
+                            }
+                            weight += r[k];
+                        }
+                        
+                        // Calculate Phong normal (equation 1).
+                        for (int k = 0; k < nV; ++k)
+                        {
+                            r[k] /= weight;
+                            N    += vN[k]*r[k];
+                        }
+                    }
+                    
+                    // Normalise Phong normal.
+                    N /= sqrt(N.abs2());
+                    
                     for (int k = 0; k < nV; ++k)
                     {
                         // Perform steps denoted in equations 2, 3, 8 for C1
@@ -432,7 +640,7 @@ namespace Nektar
                     // Apply C1 blending function to the surface. TODO: Add
                     // option to do (more efficient) C0 blending function.
                     SuperBlend(r, Qp, P, blend);
-                    P.x = P.y = P.z = 0.0;
+                    P.m_x = P.m_y = P.m_z = 0.0;
                     
                     // Apply blending (equation 4).
                     for (int k = 0; k < nV; ++k)
@@ -440,67 +648,102 @@ namespace Nektar
                         P += Q[k]*blend[k];
                     }
                     
-                    x[j] = P.x;
-                    y[j] = P.y;
-                    z[j] = P.z;
+                    out[j] = P;
                 }
                 
-                int offset = (int)e->GetConf().e-2;
+                // Push nodes into lines - TODO: face interior nodes. 
+                // offset = 0 (seg), 1 (tri) or 2 (quad)
+                int offset = (int)e->GetConf().m_e-1;
                 
-                // Push new nodes into edges (TODO: face nodes).
                 for (int edge = 0; edge < e->GetEdgeCount(); ++edge)
                 {
-                    eIt = visitedEdges.find(e->GetEdge(edge)->id);
-                    if (eIt == visitedEdges.end() || m->expDim == 3)
+                    eIt = visitedEdges.find(e->GetEdge(edge)->m_id);
+                    if (eIt == visitedEdges.end())
                     {
-                        for (int j = 1; j < nq-1; ++j)
-                        {
-                            int v = edgeMap[offset][edge][0] + 
-                                  j*edgeMap[offset][edge][1];
-                            NodeSharedPtr tmp(new Node(0, x[v], y[v], z[v]));
-                            e->GetEdge(edge)->edgeNodes.push_back(tmp);
-                        }
-                        visitedEdges.insert(e->GetEdge(edge)->id);
-                    }
-                }
-            }
-            
-            // Full 3D only: Copy high-order edge nodes back into original
-            // elements.
-            if (m->expDim == 3)
-            {
-                set<pair<int,int> >::iterator       it;
-                boost::unordered_set<int>::iterator it2;
-                int elCount = 0;
-                
-                visitedEdges.clear();
-                
-                for (it  = m->spherigonFaces.begin();
-                     it != m->spherigonFaces.end(); ++it, ++elCount)
-                {
-                    FaceSharedPtr f = m->element[m->expDim][it->first]->GetFace(
-                        it->second);
-                    for (int edge = 0; edge < f->edgeList.size(); ++edge)
-                    {
-                        EdgeSharedPtr e = el[elCount]->GetEdge(edge);
-                        bool reverseEdge = e->n1 == f->edgeList[edge]->n2;
+                        bool reverseEdge = !(v[vertMap[offset][edge][0]] ==
+                                             *(e->GetEdge(edge)->m_n1));
                         
-                        if (visitedEdges.count(f->edgeList[edge]->id) != 0)
+                        if (e->GetConf().m_e == LibUtilities::eQuadrilateral)
                         {
-                            continue;
+                            for (int j = 1; j < nq-1; ++j)
+                            {
+                                int v = edgeMap[offset][edge][0] + 
+                                    j*edgeMap[offset][edge][1];
+                                e->GetEdge(edge)->m_edgeNodes.push_back(
+                                    NodeSharedPtr(new Node(out[v])));
+                            }
                         }
-                        
-                        f->edgeList[edge]->edgeNodes = e->edgeNodes;
+                        else
+                        {
+                            for (int j = 0; j < nq-2; ++j)
+                            {
+                                int v = 3 + edge*(nq-2) + j;
+                                e->GetEdge(edge)->m_edgeNodes.push_back(
+                                    NodeSharedPtr(new Node(out[v])));
+                            }
+                        }
                         
                         if (reverseEdge)
                         {
-                            reverse(f->edgeList[edge]->edgeNodes.begin(),
-                                    f->edgeList[edge]->edgeNodes.end());
+                            reverse(e->GetEdge(edge)->m_edgeNodes.begin(),
+                                    e->GetEdge(edge)->m_edgeNodes.end());
                         }
-                        
-                        visitedEdges.insert(f->edgeList[edge]->id);
+
+                        e->GetEdge(edge)->m_curveType =
+                            LibUtilities::eGaussLobattoLegendre;
+
+                        visitedEdges.insert(e->GetEdge(edge)->m_id);
                     }
                 }
+                
+                // Add face nodes in manifold and full 3D case, but not for 2D.
+                if (m_mesh->m_spaceDim == 3)
+                {
+                    vector<NodeSharedPtr> volNodes;
+                    
+                    if (e->GetConf().m_e == LibUtilities::eQuadrilateral)
+                    {
+                        volNodes.resize((nq-2)*(nq-2));
+                        for (int j = 1; j < nq-1; ++j)
+                        {
+                            for (int k = 1; k < nq-1; ++k)
+                            {
+                                int v = j*nq+k;
+                                volNodes[(j-1)*(nq-2)+(k-1)] =
+                                    NodeSharedPtr(new Node(out[v]));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int j = 3+3*(nq-2); j < nquad; ++j)
+                        {
+                            volNodes.push_back(NodeSharedPtr(new Node(out[j])));
+                        }
+                    }
+                    
+                    e->SetVolumeNodes(volNodes);
+                }
+            }
+
+            // Copy face nodes back into 3D element faces.
+            if (m_mesh->m_expDim == 3)
+            {
+                set<pair<int,int> >::iterator it;
+                int elmt = 0;
+                for (it  = m_mesh->m_spherigonSurfs.begin();
+                     it != m_mesh->m_spherigonSurfs.end  (); ++it, ++elmt)
+                {
+                    FaceSharedPtr f = m_mesh->m_element[m_mesh->m_expDim][it->first]->
+                        GetFace(it->second);
+                    f->m_faceNodes = el[elmt]->GetVolumeNodes();
+                    f->m_curveType = LibUtilities::eNodalTriElec;
+                }
+            }
+
+            if (normalsGenerated)
+            {
+                m_mesh->m_vertexNormals.clear();
             }
         }
     }

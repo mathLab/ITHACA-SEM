@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion3D *spe;
+    StdRegions::StdExpansion3D *spe = NULL;
     
     if( regionShape == LibUtilities::ePrism ) 
     { 
@@ -177,29 +177,32 @@ int main(int argc, char *argv[]) {
         //---------------------------------------------
         
     }
+
+    Array<OneD, NekDouble> phys (Qx*Qy*Qz);
+    Array<OneD, NekDouble> coeffs(xModes*yModes*zModes);
     
     //---------------------------------------------
     // Project onto Expansion 
-    spe->FwdTrans( solution, spe->UpdateCoeffs() );
+    spe->FwdTrans( solution, coeffs );
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    spe->BwdTrans( spe->GetCoeffs(), spe->UpdatePhys() );
+    spe->BwdTrans(coeffs, phys );
     //-------------------------------------------  
     
     //--------------------------------------------
     // Calculate L_p error 
     cout << "\n*****************************************************\n " << endl;
-    cout << "L infinity error: " << spe->Linf(solution) << endl;
-    cout << "L 2 error:        " << spe->L2  (solution) << endl;
+    cout << "L infinity error: " << spe->Linf(phys,solution) << endl;
+    cout << "L 2 error:        " << spe->L2  (phys,solution) << endl;
     cout << "\n*****************************************************\n " << endl;
     //--------------------------------------------
     
     
     //--------------------------------------------
     // Taking the physical derivative and putting them into dx, dy, dz.
-    spe->PhysDeriv( spe->GetPhys(), dx, dy, dz );        
+    spe->PhysDeriv(phys, dx, dy, dz );        
     //--------------------------------------------     
     
     

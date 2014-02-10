@@ -50,8 +50,12 @@ TARGET_LINK_LIBRARIES(LocalRegions
         optimized StdRegions     debug StdRegions-g
         optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
         ${Boost_THREAD_LIBRARY}
-		${Boost_DATE_TIME_LIBRARY}
+        ${Boost_IOSTREAMS_LIBRARY}
+        ${Boost_DATE_TIME_LIBRARY}
+        ${Boost_PROGRAM_OPTIONS_LIBRARY}
+        ${Boost_SYSTEM_LIBRARY}
+        ${ZLIB_LIBRARY}
 	)
 SET_LAPACK_LINK_LIBRARIES(LocalRegions)
 
-INSTALL(FILES ${LOCAL_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/LocalRegions COMPONENT dev)
+INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/LocalRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

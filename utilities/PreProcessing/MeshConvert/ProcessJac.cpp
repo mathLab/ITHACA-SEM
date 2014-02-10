@@ -63,18 +63,18 @@ namespace Nektar
         
         void ProcessJac::Process()
         {
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "ProcessJac: Calculating Jacobians..." << endl;
             }
 
-            vector<ElementSharedPtr> &el = m->element[m->expDim];
+            vector<ElementSharedPtr> &el = m_mesh->m_element[m_mesh->m_expDim];
             
             // Iterate over list of elements of expansion dimension.
             for (int i = 0; i < el.size(); ++i)
             {
                 // Create elemental geometry.
-                SpatialDomains::GeometrySharedPtr geom = el[i]->GetGeom(m->spaceDim);
+                SpatialDomains::GeometrySharedPtr geom = el[i]->GetGeom(m_mesh->m_spaceDim);
                 
                 // Define basis key using MeshGraph functions. Need a better
                 // way of determining the number of modes!
@@ -82,21 +82,23 @@ namespace Nektar
                     SpatialDomains::MeshGraph::DefineBasisKeyFromExpansionType(
                         geom, SpatialDomains::eModified, 5);
                 
-                Array<OneD, LibUtilities::BasisSharedPtr> basis(m->expDim);
+                Array<OneD, LibUtilities::BasisSharedPtr> basis(m_mesh->m_expDim);
+                LibUtilities::PointsKeyVector ptsKey(m_mesh->m_expDim);
 
                 // Generate basis functions.
-                for (int j = 0; j < m->expDim; ++j)
+                for (int j = 0; j < m_mesh->m_expDim; ++j)
                 {
                     basis[j] = LibUtilities::BasisManager()[b[j]];
+                    ptsKey[j] = basis[j]->GetPointsKey();
                 }
                 
                 // Generate geometric factors.
                 SpatialDomains::GeomFactorsSharedPtr gfac = 
-                    geom->GetGeomFactors(basis);
+                    geom->GetGeomFactors();
                 
                 // Get the Jacobian and, if it is negative, print a warning
                 // message.
-                Array<OneD, NekDouble> jac = gfac->GetJac();
+                Array<OneD, NekDouble> jac = gfac->GetJac(ptsKey);
                 NekDouble d = Vmath::Vmin(jac.num_elements(),&jac[0],1);
                 if (d <= 0)
                 {

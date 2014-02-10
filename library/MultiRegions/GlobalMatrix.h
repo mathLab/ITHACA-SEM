@@ -47,11 +47,7 @@ namespace Nektar
         class GlobalMatrix
         {
         public:
-            typedef NekSparseMatrix<StorageNistCsr<NekDouble> >     DNekCsrMat;
-            typedef NekSparseMatrix<StorageNistBsr<NekDouble> >     DNekBsrMat;
             typedef NekSparseMatrix<StorageSmvBsr<NekDouble> >      DNekSmvBsrMat;
-            typedef boost::shared_ptr<DNekCsrMat>                   DNekCsrMatSharedPtr;
-            typedef boost::shared_ptr<DNekBsrMat>                   DNekBsrMatSharedPtr;
             typedef boost::shared_ptr<DNekSmvBsrMat>                DNekSmvBsrMatSharedPtr;
 
             /// Construct a new matrix.
@@ -75,12 +71,9 @@ namespace Nektar
 
         private:
             /// Pointer to a double-precision Nektar++ sparse matrix.
-            DNekCsrMatSharedPtr          m_csrmatrix;
-            DNekBsrMatSharedPtr          m_bsrmatrix;
             DNekSmvBsrMatSharedPtr       m_smvbsrmatrix;
 
             unsigned int                 m_rows;
-            unsigned int                 m_cols;
             Array<OneD, NekDouble>       m_tmpin;
             Array<OneD, NekDouble>       m_tmpout;
 

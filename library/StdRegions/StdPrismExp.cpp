@@ -76,53 +76,6 @@ namespace Nektar
 
 
         //---------------------------------------
-        // Miscellaneous public 3D function
-        //---------------------------------------
-        
-        void StdPrismExp::WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            int order2 = m_base[2]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp(order0*order1*order2, 0.0);
-
-            NekDouble *mat = wsp.get(); 
-
-            // put coeffs into matrix and reverse order so that r index is
-            // fastest for Prism
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
-            {
-                for(int j = 0; j < order1-i; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
-                    {
-                        // mat[i+j*order1] = m_coeffs[cnt];
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
-                    }
-                }
-            }
-
-            outfile <<"Coeffs = [" << " "; 
-
-            for(int k = 0; k < order2; ++k)
-            {            
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        outfile << mat[i + order0*(j + order1*k)] << " ";
-                    }
-                    outfile << std::endl; 
-                }
-            }
-            outfile << "]"; 
-        }
-        
-        
-        //---------------------------------------
         // Integration Methods
         //---------------------------------------
         
@@ -293,22 +246,17 @@ namespace Nektar
             switch(m_base[2]->GetPointsType())
             {
                 // Common case
-                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
-                    Vmath::Smul(Qz, 0.5, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
-                    break;
-                
-                // Corner cases
-                case LibUtilities::eGaussLobattoLegendre:
-                case LibUtilities::eGaussRadauMLegendre:
-                    for (int k = 0; k < Qz; ++k)
-                    {
-                        wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
-                    }
-                    break;
-                    
-                default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
-                    break;
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
+                Vmath::Smul(Qz, 0.5, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
+                break;
+                // Assume points are a Legenedre inner product and
+                // multiply by collapsed coordinate jacobian
+            default:
+                for (int k = 0; k < Qz; ++k)
+                {
+                    wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
+                }
+                break;
             }
 
 
@@ -441,6 +389,12 @@ namespace Nektar
             StdPrismExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
         
+        void StdPrismExp::v_StdPhysDeriv(const int dir,
+                                      const Array<OneD, const NekDouble>& inarray,
+                                            Array<OneD,       NekDouble>& outarray)
+        {
+            StdPrismExp::v_PhysDeriv(dir, inarray, outarray);
+        }
         
         //---------------------------------------
         // Transforms
@@ -516,7 +470,7 @@ namespace Nektar
         }
 
 
-        void StdPrismExp::BwdTrans_SumFacKernel(
+        void StdPrismExp::v_BwdTrans_SumFacKernel(
             const Array<OneD, const NekDouble> &base0,
             const Array<OneD, const NekDouble> &base1,
             const Array<OneD, const NekDouble> &base2,
@@ -572,13 +526,13 @@ namespace Nektar
 	/** 
          * \brief Forward transform from physical quadrature space stored in
          * \a inarray and evaluate the expansion coefficients and store in \a
-         * (this)->m_coeffs
+         * outarray
          *  
          *  Inputs:\n
          *  - \a inarray: array of physical quadrature points to be transformed
          * 
          * Outputs:\n
-         *  - (this)->_coeffs: updated array of expansion coefficients. 
+         *  - \a outarray: updated array of expansion coefficients. 
          */
         void StdPrismExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD,       NekDouble>& outarray)
@@ -685,7 +639,7 @@ namespace Nektar
                                          true,true,true);
         }
         
-        void StdPrismExp::IProductWRTBase_SumFacKernel(
+        void StdPrismExp::v_IProductWRTBase_SumFacKernel(
             const Array<OneD, const NekDouble>& base0,
             const Array<OneD, const NekDouble>& base1,
             const Array<OneD, const NekDouble>& base2,
@@ -894,17 +848,12 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
-        NekDouble StdPrismExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi)
-        {
-            return StdPrismExp::v_PhysEvaluate(xi,m_phys);
-        }
 
-        NekDouble StdPrismExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
+
+        void StdPrismExp::v_LocCoordToLocCollapsed(
+                const Array<OneD, const NekDouble>& xi,
+                Array<OneD, NekDouble>& eta)
         {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
@@ -921,11 +870,8 @@ namespace Nektar
                 eta[1] = xi[1]; //eta_y = xi_y
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
             } 
-
-            return StdExpansion3D::v_PhysEvaluate(eta,physvals);
         }
-        
- 
+                                          
         void StdPrismExp::v_GetCoords(Array<OneD, NekDouble>& xi_x,
                                       Array<OneD, NekDouble>& xi_y,
                                       Array<OneD, NekDouble>& xi_z)
@@ -1046,6 +992,15 @@ namespace Nektar
                 return GetBasisNumModes(2);
             }
         }
+
+        int StdPrismExp::v_GetTotalEdgeIntNcoeffs() const
+        {
+            int P = GetBasisNumModes(0)-2;
+            int Q = GetBasisNumModes(1)-2;
+            int R = GetBasisNumModes(2)-2;
+
+            return 2*P+3*Q+3*R;
+	}
         
         int StdPrismExp::v_GetFaceNcoeffs(const int i) const
         {
@@ -1086,6 +1041,17 @@ namespace Nektar
                 return Qi * Ri;
             }
         }
+
+        int StdPrismExp::v_GetTotalFaceIntNcoeffs() const
+        {
+            int Pi = GetBasisNumModes(0) - 2;
+            int Qi = GetBasisNumModes(1) - 2;
+            int Ri = GetBasisNumModes(2) - 2;
+
+            return Pi * Qi +
+                Pi * (2*Ri - Pi - 1) +
+                2* Qi * Ri;
+	}
         
         int StdPrismExp::v_GetFaceNumPoints(const int i) const
         {
@@ -1155,73 +1121,6 @@ namespace Nektar
             {
                 return GetBasisType(2);
             }
-        }
-
-        void StdPrismExp::v_WriteToFile(std::ofstream &outfile, 
-                                        OutputFormat   format, 
-                                        const bool     dumpVar, 
-                                        std::string    var)
-        {
-            if (format == eTecplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-                
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-                
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2,  z3"; 
-                    outfile << ", "<< var << std::endl << std::endl;
-                }      
-                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
-                
-                for (int k = 0; k < Qz; ++k) 
-                {
-                    for (int j = 0; j < Qy; ++j)
-                    {
-                        for (int i = 0; i < Qx; ++i)
-                        {
-                            outfile << 0.5*(1.0+eta_x[i])*(1.0-eta_z[k])-1.0 << " "
-                                    << eta_y[j]                              << " "
-                                    << eta_z[k]                              << " "
-                                    << m_phys[i + Qx*(j + Qy*k)]             << std::endl;
-                        }
-                    }
-                }
-            }
-            else if (format == eGnuplot)
-            {
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-                eta_x   = m_base[0]->GetZ();
-                eta_y   = m_base[1]->GetZ();
-                eta_z   = m_base[2]->GetZ();
-                
-                for (int k = 0; k < Qz; ++k) 
-                {
-                    for (int j = 0; j < Qy; ++j)
-                    {
-                        for (int i = 0; i < Qx; ++i)
-                        {
-                            outfile << 0.5*(1.0+eta_x[i])*(1.0-eta_z[k])-1.0 << " "
-                                    << eta_y[j]                              << " "
-                                    << eta_z[k]                              << " "
-                                    << m_phys[i + Qx*(j + Qy*k)]             << std::endl;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }            
         }
 
         bool StdPrismExp::v_IsBoundaryInteriorExpansion()
@@ -1491,7 +1390,7 @@ namespace Nektar
             }
         }
         
-        int StdPrismExp::v_GetVertexMap(const int vId)
+        int StdPrismExp::v_GetVertexMap(const int vId, bool useCoeffPacking)
         {
             ASSERTL0(GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
                      GetEdgeBasisType(vId) == LibUtilities::eModified_A ||
@@ -1500,8 +1399,36 @@ namespace Nektar
             
             int l = 0;
             
-            switch (vId)
+            if(useCoeffPacking == true) // follow packing of coefficients i.e q,r,p
             {
+                switch (vId)
+                {
+                case 0:
+                    l = GetMode(0,0,0);
+                    break;
+                case 1:
+                    l = GetMode(0,0,1);
+                    break;
+                case 2:
+                    l = GetMode(0,1,0);
+                    break;
+                case 3:
+                    l = GetMode(0,1,1);
+                    break;
+                case 4:
+                    l = GetMode(1,0,0);
+                    break;
+                case 5:
+                    l = GetMode(1,1,0);
+                    break;
+                default:
+                    ASSERTL0(false, "local vertex id must be between 0 and 5");
+                }
+            }
+            else
+            {
+                switch (vId)
+                {
                 case 0:
                     l = GetMode(0,0,0);
                     break;
@@ -1522,6 +1449,7 @@ namespace Nektar
                     break;
                 default:
                     ASSERTL0(false, "local vertex id must be between 0 and 5");
+                }
             }
             
             return l;
@@ -1678,7 +1606,7 @@ namespace Nektar
                     nummodesA = P-1;
                     nummodesB = Q-1;
                 }
-                else if (fid == 2 || fid == 4) // front and back quad
+                else // front and back quad
                 {
                     nummodesA = Q-1;
                     nummodesB = R-1;
@@ -1959,7 +1887,7 @@ namespace Nektar
                 (Q+1)*(p*R + 1-(p-2)*(p-1)/2); // Skip along rows    (p-direction)
         }
 
-        void StdPrismExp::MultiplyByQuadratureMetric(
+        void StdPrismExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
@@ -1996,15 +1924,6 @@ namespace Nektar
             // GLL quadrature points.
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
-                
                 // (1,0) Jacobi inner product.
                 case LibUtilities::eGaussRadauMAlpha1Beta0:
                     for(i = 0; i < nquad2; ++i)
@@ -2015,9 +1934,76 @@ namespace Nektar
                     break;
                     
                 default:
-                    ASSERTL0(false, "Quadrature point type not supported for this element.");
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
                     break;
             }
+        
         }
+        
+        void StdPrismExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                               const StdMatrixKey &mkey)
+        {
+            // Generate an orthonogal expansion
+            int qa = m_base[0]->GetNumPoints();
+            int qb = m_base[1]->GetNumPoints();
+            int qc = m_base[2]->GetNumPoints();
+            int nmodes_a = m_base[0]->GetNumModes();
+            int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes_c = m_base[2]->GetNumModes();
+            // Declare orthogonal basis. 
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+            LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
+            
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
+            LibUtilities::BasisKey Bc(LibUtilities::eOrtho_B,nmodes_c,pc);
+            StdPrismExp OrthoExp(Ba,Bb,Bc);
+            
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
+            int i,j,k,cnt = 0;
+            
+            //SVV filter paramaters (how much added diffusion relative to physical one
+            // and fraction of modes from which you start applying this added diffusion)
+            //
+            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+            
+            //Defining the cut of mode
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            int cutoff_c = (int) (SVVCutOff*nmodes_c);
+            //To avoid the fac[j] from blowing up
+            NekDouble epsilon = 1;
+            
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
+            NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
+            
+            //------"New" Version August 22nd '13--------------------
+            for(i = 0; i < nmodes_a; ++i)//P
+            {
+                for(j = 0; j < nmodes_b; ++j) //Q
+                {
+                    for(k = 0; k < nmodes_c-i; ++k) //R
+                    {
+                        if(j >= cutoff ||  i + k >= cutoff)
+                        {
+                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
+                        }
+                        cnt++;
+                    }
+                }
+            }
+            
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }                        
+        
     }//end namespace
 }//end namespace

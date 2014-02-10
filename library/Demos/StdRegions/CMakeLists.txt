@@ -91,7 +91,7 @@ ENDFOREACH(dir ${dir_list})
 
 ADD_NEKTAR_TEST(StdProject1D_Seg_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject1D_Seg_Mod_P6_Q7)
-ADD_NEKTAR_TEST(StdProject1D_Single_Mode_Fourier_P2_Q8)
+ADD_NEKTAR_TEST(StdProject1D_Single_Mode_Fourier_P2_Q2)
 ADD_NEKTAR_TEST(StdProject_Diff1D_Seg_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff1D_Seg_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject2D_Tri_Orth_P6_Q7)

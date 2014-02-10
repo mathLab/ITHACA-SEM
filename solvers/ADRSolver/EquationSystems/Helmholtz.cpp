@@ -39,21 +39,20 @@ namespace Nektar
 {
     string Helmholtz::className1 = GetEquationSystemFactory().RegisterCreatorFunction("Helmholtz", Helmholtz::create);
     string Helmholtz::className2 = GetEquationSystemFactory().RegisterCreatorFunction("SteadyDiffusionReaction", Helmholtz::create);
-
+    
     Helmholtz::Helmholtz(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : Poisson(pSession)
     {
+        if (pSession->DefinesParameter("Lambda"))
+        {
+            m_factors[StdRegions::eFactorLambda] = m_session->GetParameter("Lambda");
+        }
     }
 
     void Helmholtz::v_InitObject()
     {
         Poisson::v_InitObject();
-
-        if (m_session->DefinesParameter("Lambda"))
-        {
-            m_factors[StdRegions::eFactorLambda] = m_session->GetParameter("Lambda");
-        }
     }
 
     Helmholtz::~Helmholtz()
@@ -61,14 +60,14 @@ namespace Nektar
 
     }
 
-    void Helmholtz::v_PrintSummary(std::ostream &out)
+    void Helmholtz::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        Poisson::v_PrintSummary(out);
+        Poisson::v_GenerateSummary(s);
     }
 
     Array<OneD, bool> Helmholtz::v_GetSystemSingularChecks()
     {
-        if (m_lambda == 0)
+        if (m_factors[StdRegions::eFactorLambda] == 0)
         {
             return Array<OneD, bool>(m_session->GetVariables().size(), true);
         }

@@ -36,6 +36,8 @@
 #ifndef MULTIREGIONS_ASSEMBLYMAPCG_H
 #define MULTIREGIONS_ASSEMBLYMAPCG_H
 
+#include <boost/tuple/tuple.hpp>
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
@@ -43,7 +45,6 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-
         static map<int,int> NullIntIntMap;
         const static vector<map<int,int> > NullVecIntIntMap;
 
@@ -51,16 +52,21 @@ namespace Nektar
         class AssemblyMapCG;
         typedef boost::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
 
+        typedef boost::tuple<int, int, NekDouble> ExtraDirDof;
 
+        StdRegions::Orientation  DeterminePeriodicFaceOrient(
+                       StdRegions::Orientation   faceOrient1,
+                       StdRegions::Orientation   faceOrient2);
 
+  
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG: public AssemblyMap
         {
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                    const LibUtilities::SessionReaderSharedPtr &pSession);
-
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::string variable = "DefaultVar");
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
@@ -72,7 +78,7 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
-            MULTI_REGIONS_EXPORT map<int, vector<pair<int, int> > > 
+            MULTI_REGIONS_EXPORT map<int, vector<ExtraDirDof> >
                 &GetExtraDirDofs()
             {
                 return m_extraDirDofs;
@@ -95,11 +101,28 @@ namespace Nektar
             int m_numNonDirEdgeModes;
             /// Number of non Dirichlet face modes
             int m_numNonDirFaceModes;
+            /// Number of Dirichlet edges
+            int m_numDirEdges;
+            /// Number of Dirichlet faces
+            int m_numDirFaces;
+            /// Number of Dirichlet edges
+            int m_numNonDirEdges;
+            /// Number of Dirichlet faces
+            int m_numNonDirFaces;
+            /// Extra dirichlet edges in parallel
+            Array<OneD, int> m_extraDirEdges;
+
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
-            map<int, vector<pair<int, int> > > m_extraDirDofs;
-            
-            void SetUpUniversalC0ContMap(const ExpList &locExp);
+            /// Map indicating degrees of freedom which are Dirichlet but whose
+            /// value is stored on another processor.
+            map<int, vector<ExtraDirDof> > m_extraDirDofs;
+
+            void SetUpUniversalC0ContMap(
+                const ExpList     &locExp,
+                const PeriodicMap &perVerts = NullPeriodicMap,
+                const PeriodicMap &perEdges = NullPeriodicMap,
+                const PeriodicMap &perFaces = NullPeriodicMap);
 
             /// Calculate the bandwith of the full matrix system.
             void CalculateFullSystemBandWidth();
@@ -162,6 +185,17 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaceModes() const;
 
+            MULTI_REGIONS_EXPORT virtual int v_GetNumDirEdges() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumDirFaces() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirEdges() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaces() const;
+
+            MULTI_REGIONS_EXPORT virtual const Array<OneD, const int>& v_GetExtraDirEdges();
+
+            MULTI_REGIONS_EXPORT virtual AssemblyMapSharedPtr v_XxtLinearSpaceMap(const ExpList &locexp);
         };
 
 

@@ -113,13 +113,27 @@ namespace Nektar
             }
         }
 
-        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
+        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
         {
-            return PhysEvaluate(coords,m_phys);
+            Array<OneD, NekDouble> coll(2);
+            Array<OneD, DNekMatSharedPtr>  I(2);
+
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
+
+            LocCoordToLocCollapsed(coords,coll);
+            
+            I[0] = m_base[0]->GetI(coll);
+            I[1] = m_base[1]->GetI(coll+1);
+
+            return v_PhysEvaluate(I,physvals);
         }
 
-
-        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+        NekDouble StdExpansion2D::v_PhysEvaluate(
+            const Array<OneD, DNekMatSharedPtr > &I, 
+            const Array<OneD, const NekDouble> &physvals)
         {
             NekDouble val;
             int i;
@@ -127,23 +141,15 @@ namespace Nektar
             int nq1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> wsp1(nq1);
 
-            DNekMatSharedPtr I = m_base[0]->GetI(coords);;
-
-            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
-            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
-            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
-            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
-
             // interpolate first coordinate direction
             for (i = 0; i < nq1;++i)
             {
-                wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1,
+                wsp1[i] = Blas::Ddot(nq0, &(I[0]->GetPtr())[0], 1,
                                      &physvals[i * nq0], 1);
             }
 
             // interpolate in second coordinate direction
-            I = m_base[1]->GetI(coords+1);
-            val = Blas::Ddot(nq1, I->GetPtr(), 1, wsp1, 1);
+            val = Blas::Ddot(nq1, I[1]->GetPtr(), 1, wsp1, 1);
 
             return val;
         }
@@ -179,33 +185,135 @@ namespace Nektar
             return Int;
         }
 
-        void StdExpansion2D::v_SetUpPhysNormals(const int edge)
+        void StdExpansion2D::BwdTrans_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp,
+                bool doCheckCollDir0,
+                bool doCheckCollDir1)
         {
-           ComputeEdgeNormal(edge);
+            v_BwdTrans_SumFacKernel(base0, base1, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1);
         }
 
-        const NormalVector & StdExpansion2D::v_GetEdgeNormal(const int edge) const
+        void StdExpansion2D::IProductWRTBase_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wsp,
+                bool doCheckCollDir0,
+                bool doCheckCollDir1)
         {
-            std::map<int, NormalVector>::const_iterator x;
-            x = m_edgeNormals.find(edge);
-            ASSERTL0 (x != m_edgeNormals.end(),
-                        "Edge normal not computed.");
-            return x->second;
+            v_IProductWRTBase_SumFacKernel(base0, base1, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1);
         }
-        
-        void StdExpansion2D::v_NegateEdgeNormal(const int edge)
+
+        void StdExpansion2D::v_LaplacianMatrixOp_MatFree(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray,
+            const StdRegions::StdMatrixKey &mkey)
         {
-            m_negatedNormals[edge] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
+            if (mkey.GetNVarCoeff() == 0
+                &&!mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
             {
-                Vmath::Neg(m_edgeNormals[edge][i].num_elements(), 
-                           m_edgeNormals[edge][i], 1);
+                // This implementation is only valid when there are no
+                // coefficients associated to the Laplacian operator
+                int       nquad0  = m_base[0]->GetNumPoints();
+                int       nquad1  = m_base[1]->GetNumPoints();
+                int       nqtot   = nquad0*nquad1;
+                int       nmodes0 = m_base[0]->GetNumModes();
+                int       nmodes1 = m_base[1]->GetNumModes();
+                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
+
+                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+
+                // Allocate temporary storage
+                Array<OneD,NekDouble> wsp0(4*wspsize);      // size wspsize
+                Array<OneD,NekDouble> wsp1(wsp0+wspsize);   // size 3*wspsize
+
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+                {
+                    // LAPLACIAN MATRIX OPERATION
+                    // wsp0 = u       = B   * u_hat
+                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                    BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1,true,true);
+                    LaplacianMatrixOp_MatFree_Kernel(wsp0, outarray, wsp1);
+                }
+                else
+                {
+                    LaplacianMatrixOp_MatFree_Kernel(inarray, outarray, wsp1);
+                }
+            }
+            else
+            {
+                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(
+                    inarray,outarray,mkey);
             }
         }
 
-        bool StdExpansion2D::v_EdgeNormalNegated(const int edge)
+
+
+        void StdExpansion2D::v_HelmholtzMatrixOp_MatFree(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray,
+            const StdRegions::StdMatrixKey &mkey)
         {
-            return m_negatedNormals[edge];
+            if (mkey.GetNVarCoeff() == 0
+                &&!mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
+            {
+                int       nquad0  = m_base[0]->GetNumPoints();
+                int       nquad1  = m_base[1]->GetNumPoints();
+                int       nqtot   = nquad0*nquad1;
+                int       nmodes0 = m_base[0]->GetNumModes();
+                int       nmodes1 = m_base[1]->GetNumModes();
+                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),
+                                        nquad0*nmodes1);
+                NekDouble lambda  =
+                    mkey.GetConstFactor(StdRegions::eFactorLambda);
+
+                const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata();
+
+                // Allocate temporary storage
+                Array<OneD,NekDouble> wsp0(5*wspsize);      // size wspsize
+                Array<OneD,NekDouble> wsp1(wsp0 + wspsize);  // size wspsize
+                Array<OneD,NekDouble> wsp2(wsp0 + 2*wspsize);// size 3*wspsize
+
+                if (!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+                {
+                    // MASS MATRIX OPERATION
+                    // The following is being calculated:
+                    // wsp0     = B   * u_hat = u
+                    // wsp1     = W   * wsp0
+                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
+                    BwdTrans_SumFacKernel       (base0, base1, inarray,
+                                                 wsp0, wsp2,true,true);
+                    MultiplyByQuadratureMetric  (wsp0, wsp1);
+                    IProductWRTBase_SumFacKernel(base0, base1, wsp1, outarray,
+                                                 wsp2, true, true);
+
+                    LaplacianMatrixOp_MatFree_Kernel(wsp0, wsp1, wsp2);
+                }
+                else
+                {
+                    MultiplyByQuadratureMetric(inarray,outarray);
+                    LaplacianMatrixOp_MatFree_Kernel(inarray, wsp1, wsp2);
+                }
+
+                // outarray = lambda * outarray + wsp1
+                //          = (lambda * M + L ) * u_hat
+                Vmath::Svtvp(m_ncoeffs, lambda, &outarray[0], 1,
+                              &wsp1[0], 1, &outarray[0], 1);
+            }
+            else
+            {
+                StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(
+                    inarray,outarray,mkey);
+            }
         }
+
     } //end namespace
 } //end namespace

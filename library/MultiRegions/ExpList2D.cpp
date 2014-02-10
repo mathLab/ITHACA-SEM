@@ -68,6 +68,7 @@ namespace Nektar
         ExpList2D::ExpList2D():
             ExpList()
         {
+            SetExpType(e2D);
         }
 
 
@@ -80,11 +81,14 @@ namespace Nektar
 
 
         /**
-         * @param   In          ExpList2D object to copy.
+         * @param   In   ExpList2D object to copy.
          */
-        ExpList2D::ExpList2D(const ExpList2D &In, const bool DeclareCoeffPhysArrays):
+        ExpList2D::ExpList2D(
+            const ExpList2D &In, 
+            const bool DeclareCoeffPhysArrays):
             ExpList(In,DeclareCoeffPhysArrays)
         {
+            SetExpType(e2D);
         }
 
 
@@ -100,12 +104,15 @@ namespace Nektar
          * @param   graph2D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          */
-        ExpList2D::ExpList2D(const LibUtilities::SessionReaderSharedPtr &pSession,
+        ExpList2D::ExpList2D(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const bool DeclareCoeffPhysArrays,
                 const std::string &var):
             ExpList(pSession,graph2D)
         {
+            SetExpType(e2D);
+
             int elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -122,7 +129,7 @@ namespace Nektar
                 SpatialDomains::TriGeomSharedPtr  TriangleGeom;
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
-                if((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains
+                if ((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains
                         ::TriGeom>(expIt->second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TriBa
@@ -131,7 +138,7 @@ namespace Nektar
                                         = expIt->second->m_basisKeyVector[1];
 
                     // This is not elegantly implemented needs re-thinking.
-                    if(TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if (TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
                     {
                         LibUtilities::BasisKey newBa(LibUtilities::eOrtho_A,
                                                      TriBa.GetNumModes(),
@@ -157,7 +164,7 @@ namespace Nektar
                                     -TriBa.GetNumModes());
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
-                else if((QuadrilateralGeom = boost::dynamic_pointer_cast<
+                else if ((QuadrilateralGeom = boost::dynamic_pointer_cast<
                          SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey QuadBa
@@ -176,8 +183,8 @@ namespace Nektar
                 }
                 else
                 {
-                    ASSERTL0(false,"dynamic cast to a proper Geometry2D "
-                                   "failed");
+                    ASSERTL0(false, "dynamic cast to a proper Geometry2D "
+                                    "failed");
                 }
 
             }
@@ -191,7 +198,7 @@ namespace Nektar
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
-            if(DeclareCoeffPhysArrays)
+            if (DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
@@ -217,11 +224,12 @@ namespace Nektar
          *                      expansion.
          */
         ExpList2D::ExpList2D(
-                             const LibUtilities::SessionReaderSharedPtr &pSession,
-                             const SpatialDomains::ExpansionMap &expansions,
-                             const bool DeclareCoeffPhysArrays):
-            ExpList(pSession)
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::ExpansionMap &expansions,
+            const bool DeclareCoeffPhysArrays):ExpList(pSession)
         {
+            SetExpType(e2D);
+
             int elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
@@ -230,12 +238,12 @@ namespace Nektar
             SpatialDomains::Composite          comp;
 
             SpatialDomains::ExpansionMapConstIter expIt;
-            for(expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
             {
                 SpatialDomains::TriGeomSharedPtr  TriangleGeom;
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
-                if((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains
+                if ((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains
                         ::TriGeom>(expIt->second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TriBa
@@ -244,7 +252,7 @@ namespace Nektar
                                         = expIt->second->m_basisKeyVector[1];
 
                     // This is not elegantly implemented needs re-thinking.
-                    if(TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if (TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
                     {
                         LibUtilities::BasisKey newBa(LibUtilities::eOrtho_A,
                                                      TriBa.GetNumModes(),
@@ -270,7 +278,7 @@ namespace Nektar
                                     -TriBa.GetNumModes());
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
-                else if((QuadrilateralGeom = boost::dynamic_pointer_cast<
+                else if ((QuadrilateralGeom = boost::dynamic_pointer_cast<
                          SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey QuadBa
@@ -289,8 +297,8 @@ namespace Nektar
                 }
                 else
                 {
-                    ASSERTL0(false,"dynamic cast to a proper Geometry2D "
-                                   "failed");
+                    ASSERTL0(false, "dynamic cast to a proper Geometry2D "
+                                    "failed");
                 }
 
             }
@@ -304,7 +312,7 @@ namespace Nektar
             // set up offset arrays.
             SetCoeffPhysOffsets();
 
-            if(DeclareCoeffPhysArrays)
+            if (DeclareCoeffPhysArrays)
             {
                 // Set up m_coeffs, m_phys.
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
@@ -312,134 +320,149 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
-         }
+        }
 
 
-         /**
-          * Given a mesh \a graph2D, containing information about the domain and
-          * the a list of basiskeys, this constructor fills the list
-          * of local expansions \texttt{m_exp} with the proper expansions,
-          * calculates the total number of quadrature points
-          * \f$\boldsymbol{x}_i\f$ and local expansion coefficients
-          * \f$\hat{u}^e_n\f$ and allocates memory for the arrays #m_coeffs
-          * and #m_phys.
-          *
-          * @param   TriBa       A BasisKey, containing the definition of the
-          *                      basis in the first coordinate direction for
-          *                      triangular elements
-          * @param   TriBb       A BasisKey, containing the definition of the
-          *                      basis in the second coordinate direction for
-          *                      triangular elements
-          * @param   QuadBa      A BasisKey, containing the definition of the
-          *                      basis in the first coordinate direction for
-          *                      quadrilateral elements
-          * @param   QuadBb      A BasisKey, containing the definition of the
-          *                      basis in the second coordinate direction for
-          *                      quadrilateral elements
-          * @param   graph2D     A mesh, containing information about the domain
-          *                      and the spectral/hp element expansion.
-          * @param   TriNb       The PointsType of possible nodal points
-          */
-          ExpList2D::ExpList2D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                               const LibUtilities::BasisKey &TriBa,
-                               const LibUtilities::BasisKey &TriBb,
-                               const LibUtilities::BasisKey &QuadBa,
-                               const LibUtilities::BasisKey &QuadBb,
-                               const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                               const LibUtilities::PointsType TriNb):
-              ExpList(pSession,graph2D)
-          {
-              int elmtid=0;
-              LocalRegions::TriExpSharedPtr tri;
-              LocalRegions::NodalTriExpSharedPtr Ntri;
-              LocalRegions::QuadExpSharedPtr quad;
-              SpatialDomains::Composite comp;
+        /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the a list of basiskeys, this constructor fills the list
+         * of local expansions \texttt{m_exp} with the proper expansions,
+         * calculates the total number of quadrature points
+         * \f$\boldsymbol{x}_i\f$ and local expansion coefficients
+         * \f$\hat{u}^e_n\f$ and allocates memory for the arrays #m_coeffs
+         * and #m_phys.
+         *
+         * @param   TriBa       A BasisKey, containing the definition of the
+         *                      basis in the first coordinate direction for
+         *                      triangular elements
+         * @param   TriBb       A BasisKey, containing the definition of the
+         *                      basis in the second coordinate direction for
+         *                      triangular elements
+         * @param   QuadBa      A BasisKey, containing the definition of the
+         *                      basis in the first coordinate direction for
+         *                      quadrilateral elements
+         * @param   QuadBb      A BasisKey, containing the definition of the
+         *                      basis in the second coordinate direction for
+         *                      quadrilateral elements
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.
+         * @param   TriNb       The PointsType of possible nodal points
+         */
+        ExpList2D::ExpList2D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::BasisKey &TriBa,
+            const LibUtilities::BasisKey &TriBb,
+            const LibUtilities::BasisKey &QuadBa,
+            const LibUtilities::BasisKey &QuadBb,
+            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+            const LibUtilities::PointsType TriNb):ExpList(pSession, graph2D)
+        {
+            SetExpType(e2D);
 
-              const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
-              m_ncoeffs = 0;
-              m_npoints = 0;
+            int elmtid=0;
+            LocalRegions::TriExpSharedPtr tri;
+            LocalRegions::NodalTriExpSharedPtr Ntri;
+            LocalRegions::QuadExpSharedPtr quad;
+            SpatialDomains::Composite comp;
 
-              m_physState  = false;
+            const SpatialDomains::ExpansionMap &expansions = 
+                graph2D->GetExpansions();
+            m_ncoeffs = 0;
+            m_npoints = 0;
 
-              SpatialDomains::ExpansionMap::const_iterator expIt;
-              for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
-              {
-                  SpatialDomains::TriGeomSharedPtr TriangleGeom;
-                  SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
+            m_physState = false;
 
-                  if((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(expIt->second->m_geomShPtr)))
-                  {
-                      if(TriNb < LibUtilities::SIZE_PointsType)
-                      {
-                          Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
-                          Ntri->SetElmtId(elmtid++);
-                          (*m_exp).push_back(Ntri);
-                      }
-                      else
-                      {
-                          tri = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(TriBa,TriBb,TriangleGeom);
-                          tri->SetElmtId(elmtid++);
-                          (*m_exp).push_back(tri);
-                      }
+            SpatialDomains::ExpansionMap::const_iterator expIt;
+            for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
+            {
+                SpatialDomains::TriGeomSharedPtr TriangleGeom;
+                SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
-                      m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2
-                          + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
-                      m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
-                  }
-                  else if((QuadrilateralGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
-                  {
-                      quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
-                      quad->SetElmtId(elmtid++);
-                      (*m_exp).push_back(quad);
+                if ((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::
+                        TriGeom>(expIt->second->m_geomShPtr)))
+                {
+                    if (TriNb < LibUtilities::SIZE_PointsType)
+                    {
+                        Ntri = MemoryManager<LocalRegions::NodalTriExp>::
+                            AllocateSharedPtr(TriBa, TriBb, TriNb, 
+                                              TriangleGeom);
+                        Ntri->SetElmtId(elmtid++);
+                        (*m_exp).push_back(Ntri);
+                    }
+                    else
+                    {
+                        tri = MemoryManager<LocalRegions::TriExp>::
+                            AllocateSharedPtr(TriBa, TriBb, TriangleGeom);
+                        tri->SetElmtId(elmtid++);
+                        (*m_exp).push_back(tri);
+                    }
 
-                      m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
-                      m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
-                  }
-                  else
-                  {
-                      ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
-                  }
+                    m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2
+                        + TriBa.GetNumModes() * (TriBb.GetNumModes() - 
+                                                 TriBa.GetNumModes());
+                    m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
+                }
+                else if ((QuadrilateralGeom = boost::dynamic_pointer_cast<
+                         SpatialDomains::QuadGeom>(expIt->second->m_geomShPtr)))
+                {
+                    quad = MemoryManager<LocalRegions::QuadExp>::
+                        AllocateSharedPtr(QuadBa, QuadBb, QuadrilateralGeom);
+                    quad->SetElmtId(elmtid++);
+                    (*m_exp).push_back(quad);
 
-              }
+                    m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
+                    m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
+                }
+                else
+                {
+                    ASSERTL0(false,
+                             "dynamic cast to a proper Geometry2D failed");
+                }
 
-              // Setup Default optimisation information.
-              int nel = GetExpSize();
-              m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                  ::AllocateSharedPtr(nel);
+            }
 
-             // Set up m_coeffs, m_phys and offset arrays.
-             SetCoeffPhysOffsets();
-             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-             m_phys   = Array<OneD, NekDouble>(m_npoints);
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
 
-             ReadGlobalOptimizationParameters();
-          }
+            // Set up m_coeffs, m_phys and offset arrays.
+            SetCoeffPhysOffsets();
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+
+            ReadGlobalOptimizationParameters();
+        }
 
         /**
          * Specialized constructor for trace expansions. Store 
          * expansions for the trace space used in DisContField3D
          *
-         * @param   bndConstraint   Array of ExpList2D objects each containing a
-         *                      2D spectral/hp element expansion on a single
-         *                      boundary region.
-         * @param   bndCond     Array of BoundaryCondition objects which contain
-         *                      information about the boundary conditions on the
-         *                      different boundary regions.
-         * @param   locexp      Complete domain expansion list.
-         * @param   graph3D     3D mesh corresponding to the expansion list.
+         * @param   bndConstraint  Array of ExpList2D objects each containing a
+         *                         2D spectral/hp element expansion on a single
+         *                         boundary region.
+         * @param   bndCond   Array of BoundaryCondition objects which contain
+         *                    information about the boundary conditions on the
+         *                    different boundary regions.
+         * @param   locexp   Complete domain expansion list.
+         * @param   graph3D   3D mesh corresponding to the expansion list.
          * @param   periodicFaces   List of periodic faces.
-         * @param   DeclareCoeffPhysArrays If true, set up m_coeffs, m_phys arrays
+         * @param   DeclareCoeffPhysArrays   If true, set up m_coeffs, 
+         *                                   m_phys arrays
          **/
         ExpList2D::ExpList2D(
-            const Array<OneD,const ExpListSharedPtr> &bndConstraint,
-            const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
-            const StdRegions::StdExpansionVector &locexp,
+            const Array<OneD, const ExpListSharedPtr> &bndConstraint,
+            const Array<OneD, const SpatialDomains::
+                              BoundaryConditionShPtr> &bndCond,
+            const LocalRegions::ExpansionVector &locexp,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
-            const map<int,PeriodicFace> &periodicFaces,
+            const PeriodicMap &periodicFaces,
             const bool DeclareCoeffPhysArrays, 
             const std::string variable):
             ExpList()
         {
+            SetExpType(e2D);
+
             int i, j, id, elmtid=0;
             map<int,int> FaceDone;
             map<int,int> NormalSet;
@@ -448,152 +471,177 @@ namespace Nektar
             SpatialDomains::TriGeomSharedPtr FaceTriGeom;
             LocalRegions::QuadExpSharedPtr FaceQuadExp;
             LocalRegions::TriExpSharedPtr FaceTriExp;
+            LocalRegions::Expansion2DSharedPtr exp2D;
+            LocalRegions::Expansion3DSharedPtr exp3D;
             
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            for(i = 0; i < bndCond.num_elements(); ++i)
+            for (i = 0; i < bndCond.num_elements(); ++i)
             {
-                if(bndCond[i]->GetBoundaryConditionType()
+                if (bndCond[i]->GetBoundaryConditionType()
                                             == SpatialDomains::eDirichlet)
                 {
-                    for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
+                    for (j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
                         LibUtilities::BasisKey bkey0 = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         LibUtilities::BasisKey bkey1 = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(1)->GetBasisKey();
-                        FaceGeom = bndConstraint[i]->GetExp(j)->GetGeom2D();
+                        exp2D = LocalRegions::Expansion2D::
+                            FromStdExp(bndConstraint[i]->GetExp(j));
+                        FaceGeom = exp2D->GetGeom2D();
 
                         //if face is a quad
-                        if((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
+                        if ((FaceQuadGeom = boost::dynamic_pointer_cast<
+                            SpatialDomains::QuadGeom>(FaceGeom)))
                         {
-                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
+                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::
+                                AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
                             FaceDone[FaceGeom->GetFid()] = elmtid;
                             FaceQuadExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceQuadExp);
                         }
                         //if face is a triangle
-                        else if((FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom)))
+                        else if ((FaceTriGeom = boost::dynamic_pointer_cast<
+                                 SpatialDomains::TriGeom>(FaceGeom)))
                         {
-                            FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
+                            FaceTriExp = MemoryManager<LocalRegions::TriExp>::
+                                AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
                             FaceDone[FaceGeom->GetFid()] = elmtid;
                             FaceTriExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceTriExp);
                         }
                         else
                         {
-                            ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
+                            ASSERTL0(false,
+                                     "dynamic cast to a proper face geometry "
+                                     "failed"); 
                         }
                     }
                 }
             }
             
             // loop over all other faces and fill out other connectivities
-            for(i = 0; i < locexp.size(); ++i)
+            for (i = 0; i < locexp.size(); ++i)
             {
-                for(j = 0; j < locexp[i]->GetNfaces(); ++j)
+                exp3D = LocalRegions::Expansion3D::FromStdExp(locexp[i]);
+                for (j = 0; j < exp3D->GetNfaces(); ++j)
                 {
-                    FaceGeom = (locexp[i]->GetGeom3D())->GetFace(j);
+                    FaceGeom = (exp3D->GetGeom3D())->GetFace(j);
 
                     id = FaceGeom->GetFid();
 
-                    if(FaceDone.count(id)==0)
+                    if (FaceDone.count(id)==0)
                     {
                         LibUtilities::BasisKey bkey0 = 
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0, variable); 
+                            boost::dynamic_pointer_cast<
+                                SpatialDomains::MeshGraph3D>(graph3D)->
+                                    GetFaceBasisKey(FaceGeom, 0, variable); 
                         LibUtilities::BasisKey bkey1 = 
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 1);
+                            boost::dynamic_pointer_cast<
+                                SpatialDomains::MeshGraph3D>(graph3D)->
+                                    GetFaceBasisKey(FaceGeom, 1);
                         
                         //if face is a quad
-                        if((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
+                        if ((FaceQuadGeom = boost::dynamic_pointer_cast<
+                             SpatialDomains::QuadGeom>(FaceGeom)))
                         {
-                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
+                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::
+                                AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
                             
                             FaceDone[id] = elmtid;
-                            /*
-                            if (periodicFaces.count(id) > 0)
-                            {
-                                FaceDone[periodicFaces.find(id)->second.first] = elmtid;
-                            }
-                            */
                             FaceQuadExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceQuadExp);
                         }
                         //if face is a triangle
-                        else if((FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom)))
+                        else if ((FaceTriGeom = boost::dynamic_pointer_cast<
+                                  SpatialDomains::TriGeom>(FaceGeom)))
                         {
-                            FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
+                            FaceTriExp = MemoryManager<LocalRegions::TriExp>::
+                                AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
                             
                             FaceDone[id] = elmtid;
-                            /*
-                            if (periodicFaces.count(id) > 0)
-                            {
-                                FaceDone[periodicFaces.find(id)->second.first] = elmtid;
-                            }
-                            */
                             FaceTriExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceTriExp);
                         }
                         else
                         {
-                            ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
+                            ASSERTL0(false,
+                                     "dynamic cast to a proper face geometry "
+                                     "failed"); 
                         }
                     }
-                    //variable modes/points
-                    //if for the current edge we have more modes/points at least in one direction
-                    //we replace the old edge in the trace expansion with the current one
+                    // variable modes/points
+                    // if for the current edge we have more modes/points at 
+                    // least in one direction we replace the old edge in the 
+                    // trace expansion with the current one
                     else
                     {
                         LibUtilities::BasisKey bkey0 = 
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0); 
+                            boost::dynamic_pointer_cast<SpatialDomains::
+                                MeshGraph3D>(graph3D)->
+                                    GetFaceBasisKey(FaceGeom, 0); 
                         LibUtilities::BasisKey bkey1 = 
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 1);
+                            boost::dynamic_pointer_cast<SpatialDomains::
+                                MeshGraph3D>(graph3D)->
+                                    GetFaceBasisKey(FaceGeom, 1);
                         
-                        if( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
+                        if ( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
                                 >= bkey0.GetNumPoints()
-                             || (*m_exp)[FaceDone[id]]->GetNumPoints(1)
+                                || (*m_exp)[FaceDone[id]]->GetNumPoints(1)
                                 >= bkey1.GetNumPoints())
-                            && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
+                                && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
                                 >= bkey0.GetNumModes()
                                 || (*m_exp)[FaceDone[id]]->GetBasisNumModes(1)
                                 >= bkey1.GetNumModes()) )
                         {
                         }
-                        else if( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
+                        else if ( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
                                 <= bkey0.GetNumPoints()
                                   || (*m_exp)[FaceDone[id]]->GetNumPoints(1)
                                 <= bkey1.GetNumPoints())
-                            && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
+                                && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
                                 <= bkey0.GetNumModes()
                                 || (*m_exp)[FaceDone[id]]->GetBasisNumModes(1)
                                 <= bkey1.GetNumModes()) )
                         {
                             //if face is a quad
-                            if((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
+                            if ((FaceQuadGeom = boost::dynamic_pointer_cast<
+                                 SpatialDomains::QuadGeom>(FaceGeom)))
                             {
-                                FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
+                                FaceQuadExp = MemoryManager<
+                                    LocalRegions::QuadExp>::
+                                        AllocateSharedPtr(bkey0, bkey1, 
+                                                          FaceQuadGeom);
                                 FaceQuadExp->SetElmtId(FaceDone[id]);
                                 (*m_exp)[FaceDone[id]] = FaceQuadExp;
                             }
                             //if face is a triangle
-                            else if((FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom)))
+                            else if ((FaceTriGeom = boost::dynamic_pointer_cast<
+                                      SpatialDomains::TriGeom>(FaceGeom)))
                             {
-                                FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
+                                FaceTriExp = MemoryManager<LocalRegions::
+                                    TriExp>::AllocateSharedPtr(bkey0, bkey1, 
+                                                               FaceTriGeom);
                                 FaceTriExp->SetElmtId(FaceDone[id]);
                                 (*m_exp)[FaceDone[id]] = FaceTriExp;
                             }
                             else
                             {
-                                ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
+                                ASSERTL0(
+                                    false,
+                                    "dynamic cast to a proper face geometry "
+                                    "failed"); 
                             }
                             
                             NormalSet.erase(id);
                         }
                         else
                         {
-                            ASSERTL0(false,
-                                     "inappropriate number of points/modes (max "
-                                     "num of points is not set with max order)");
+                            ASSERTL0(
+                                false,
+                                "inappropriate number of points/modes (max "
+                                "num of points is not set with max order)");
                         }
                     }
                 }
@@ -626,22 +674,26 @@ namespace Nektar
           * @param   graph3D     A mesh, containing information about the domain
           *                      and the spectral/hp element expansions.
           */
-         ExpList2D::ExpList2D(   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                 const SpatialDomains::CompositeMap &domain,
-                                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                 const std::string variable):
-             ExpList(pSession,graph3D)
+         ExpList2D::ExpList2D(   
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::CompositeMap &domain,
+            const SpatialDomains::MeshGraphSharedPtr &graph3D,
+            const std::string variable):ExpList(pSession, graph3D)
          {
-             ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D),
+
+             SetExpType(e2D);
+
+             ASSERTL0(boost::dynamic_pointer_cast<
+                      SpatialDomains::MeshGraph3D>(graph3D),
                      "Expected a MeshGraph3D object.");
 
-             int j,elmtid=0;
+             int j, elmtid=0;
              int nel = 0;
 
              SpatialDomains::Composite comp;
              SpatialDomains::TriGeomSharedPtr TriangleGeom;
              SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
-
+             
              LocalRegions::TriExpSharedPtr tri;
              LocalRegions::NodalTriExpSharedPtr Ntri;
              LibUtilities::PointsType TriNb;
@@ -655,18 +707,23 @@ namespace Nektar
 
              for (compIt = domain.begin(); compIt != domain.end(); ++compIt)
              {
-                 for(j = 0; j < compIt->second->size(); ++j)
+                 for (j = 0; j < compIt->second->size(); ++j)
                  {
-                     if((TriangleGeom = boost::dynamic_pointer_cast<
+                     if ((TriangleGeom = boost::dynamic_pointer_cast<
                              SpatialDomains::TriGeom>((*compIt->second)[j])))
                      {
                          LibUtilities::BasisKey TriBa
-                                     = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,0);
+                             = boost::dynamic_pointer_cast<
+                                SpatialDomains::MeshGraph3D>(graph3D)->
+                                    GetFaceBasisKey(TriangleGeom, 0, variable);
                          LibUtilities::BasisKey TriBb
-                                     = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,1);
+                             = boost::dynamic_pointer_cast<
+                                SpatialDomains::MeshGraph3D>(graph3D)->
+                                    GetFaceBasisKey(TriangleGeom,1,variable);
 
-                         if(graph3D->GetExpansions().begin()->second->m_basisKeyVector[0]
-                                 .GetBasisType() == LibUtilities::eGLL_Lagrange)
+                         if (graph3D->GetExpansions().begin()->second->
+                             m_basisKeyVector[0].GetBasisType() == 
+                             LibUtilities::eGLL_Lagrange)
                          {
                              ASSERTL0(false,"This method needs sorting");
                              TriNb = LibUtilities::eNodalTriElec;
@@ -680,7 +737,7 @@ namespace Nektar
                          else
                          {
                              tri = MemoryManager<LocalRegions::TriExp>
-                                 ::AllocateSharedPtr(TriBa,TriBb,
+                                 ::AllocateSharedPtr(TriBa, TriBb,
                                                      TriangleGeom);
                              tri->SetElmtId(elmtid++);
                              (*m_exp).push_back(tri);
@@ -692,16 +749,22 @@ namespace Nektar
                                  -TriBa.GetNumModes());
                          m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                      }
-                     else if((QuadrilateralGeom = boost::dynamic_pointer_cast<
+                     else if ((QuadrilateralGeom = boost::dynamic_pointer_cast<
                               SpatialDomains::QuadGeom>((*compIt->second)[j])))
                      {
                          LibUtilities::BasisKey QuadBa
-                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0);
+                             = boost::dynamic_pointer_cast<
+                                SpatialDomains::MeshGraph3D>(graph3D)->
+                                    GetFaceBasisKey(QuadrilateralGeom, 0, 
+                                                    variable);
                          LibUtilities::BasisKey QuadBb
-                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0);
+                             = boost::dynamic_pointer_cast<
+                                SpatialDomains::MeshGraph3D>(graph3D)->
+                                    GetFaceBasisKey(QuadrilateralGeom, 1, 
+                                                    variable);
 
                          quad = MemoryManager<LocalRegions::QuadExp>
-                             ::AllocateSharedPtr(QuadBa,QuadBb,
+                             ::AllocateSharedPtr(QuadBa, QuadBb,
                                                  QuadrilateralGeom);
                          quad->SetElmtId(elmtid++);
                          (*m_exp).push_back(quad);
@@ -712,8 +775,8 @@ namespace Nektar
                      }
                      else
                      {
-                         ASSERTL0(false,"dynamic cast to a proper Geometry2D "
-                                        "failed");
+                         ASSERTL0(false,
+                                  "dynamic cast to a proper Geometry2D failed");
                      }
                  }
 
@@ -729,9 +792,8 @@ namespace Nektar
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
-            ReadGlobalOptimizationParameters();
-            
-         }
+            ReadGlobalOptimizationParameters(); 
+        }
         
         /**
          * One-dimensional upwind.
@@ -786,7 +848,7 @@ namespace Nektar
             Array<OneD,Array<OneD,NekDouble> > locnormals;
             Array<OneD, NekDouble> tmp;
             // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom2D()->GetCoordim();
+            int coordim = GetCoordim(0);
             
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
@@ -905,7 +967,9 @@ namespace Nektar
                 ::AllocateSharedPtr(m_session,2,NumShape);
         }
 
-        void ExpList2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList2D::v_WriteVtkPieceHeader(
+            std::ofstream &outfile, 
+            int expansion)
         {
             int i,j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
@@ -974,7 +1038,10 @@ namespace Nektar
         }
 
 
-        void ExpList2D::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        void ExpList2D::v_PhysInterp1DScaled(
+            const NekDouble scale, 
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
         {
             int cnt,cnt1;
 
@@ -987,8 +1054,10 @@ namespace Nektar
                 int npt0 = (int) pt0*scale;
                 int npt1 = (int) pt1*scale;
                 
-                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
-                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
+                LibUtilities::PointsKey newPointsKey0(npt0,
+                                                (*m_exp)[i]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1, 
+                                                (*m_exp)[i]->GetPointsType(1));
 
                 // Interpolate points; 
                 LibUtilities::Interp2D((*m_exp)[i]->GetBasis(0)->GetPointsKey(),
@@ -1001,7 +1070,10 @@ namespace Nektar
             }
         }
         
-        void ExpList2D::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        void ExpList2D::v_PhysGalerkinProjection1DScaled(
+            const NekDouble scale, 
+            const Array<OneD, NekDouble> &inarray, 
+                  Array<OneD, NekDouble> &outarray)
         {
             int cnt,cnt1;
 
@@ -1014,12 +1086,15 @@ namespace Nektar
                 int npt0 = (int) pt0*scale;
                 int npt1 = (int) pt1*scale;
                 
-                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
-                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
+                LibUtilities::PointsKey newPointsKey0(npt0, 
+                                                (*m_exp)[i]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1, 
+                                                (*m_exp)[i]->GetPointsType(1));
 
                 // Project points; 
-                LibUtilities::PhysGalerkinProject2D(newPointsKey0, 
-                                                    newPointsKey1,
+                LibUtilities::PhysGalerkinProject2D(
+                                        newPointsKey0, 
+                                        newPointsKey1,
                                        &inarray[cnt],
                                        (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
                                        (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
@@ -1034,101 +1109,3 @@ namespace Nektar
 
     } //end of namespace
 } //end of namespace
-
-/**
-* $Log: ExpList2D.cpp,v $
-* Revision 1.36  2010/01/28 15:20:46  abolis
-* Time-Dependent boundary conditions
-*
-* Revision 1.35  2009/12/18 18:53:14  bnelson
-* Fixed windows compiler warnings.
-*
-* Revision 1.34  2009/12/15 18:09:03  cantwell
-* Split GeomFactors into 1D, 2D and 3D
-* Added generation of tangential basis into GeomFactors
-* Updated ADR2DManifold solver to use GeomFactors for tangents
-* Added <GEOMINFO> XML session section support in MeshGraph
-* Fixed const-correctness in VmathArray
-* Cleaned up LocalRegions code to generate GeomFactors
-* Removed GenSegExp
-* Temporary fix to SubStructuredGraph
-* Documentation for GlobalLinSys and GlobalMatrix classes
-*
-* Revision 1.33  2009/11/25 14:51:29  pvos
-* Updates for added Timings directory
-*
-* Revision 1.32  2009/11/23 22:11:07  cantwell
-* Documentation.
-*
-* Revision 1.31  2009/11/19 23:30:36  cantwell
-* Documentation for ExpList2D and GlobalMatrixKey
-* Updated doxygen pages.
-*
-* Revision 1.30  2009/11/02 19:15:43  cantwell
-* Moved ContField1D to inherit from DisContField1D.
-* Moved ContField3D to inherit from DisContField3D.
-* Incorporated GenExpList1D functionality into ExpList1D.
-* Tidied up and added documentation to various classes.
-* Moved Namespace documentation and introductions to separate files along with
-* doxygen configuration.
-* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
-* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
-* Updated Linux compiling instructions.
-* Updated regDemo to use Helmholtz2D-g when built as debug.
-*
-* Revision 1.29  2009/09/06 22:28:45  sherwin
-* Updates for Navier-Stokes solver
-*
-* Revision 1.28  2009/05/10 23:17:12  sherwin
-* Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
-*
-* Revision 1.27  2009/04/27 15:02:04  pvos
-* From h-to-p efficiently updates
-*
-* Revision 1.26  2009/04/20 16:14:06  sherwin
-* Updates for optimising bandwidth of DG solver and allowing write import on explist
-*
-* Revision 1.25  2009/03/04 14:17:38  pvos
-* Removed all methods that take and Expansion as argument
-*
-* Revision 1.24  2009/01/12 10:26:35  pvos
-* Added input tags for nodal expansions
-*
-* Revision 1.23  2009/01/06 21:05:57  sherwin
-* Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
-*
-* Revision 1.22  2008/09/23 18:21:00  pvos
-* Updates for working ProjectContField3D demo
-*
-* Revision 1.21  2008/08/14 22:15:51  sherwin
-* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
-*
-* Revision 1.20  2008/07/12 17:31:39  sherwin
-* Added m_phys_offset and rename m_exp_offset to m_coeff_offset
-*
-* Revision 1.19  2008/05/10 18:27:33  sherwin
-* Modifications necessary for QuadExp Unified DG Solver
-*
-* Revision 1.18  2008/04/02 22:19:54  pvos
-* Update for 2D local to global mapping
-*
-* Revision 1.17  2008/03/18 14:14:13  pvos
-* Update for nodal triangular helmholtz solver
-*
-* Revision 1.16  2008/03/12 15:25:45  pvos
-* Clean up of the code
-*
-* Revision 1.15  2007/12/06 22:52:30  pvos
-* 2D Helmholtz solver updates
-*
-* Revision 1.14  2007/07/20 02:04:12  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.13  2007/06/07 15:54:19  pvos
-* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
-* Also made corrections to various ASSERTL2 calls
-*
-* Revision 1.12  2007/06/05 16:36:55  pvos
-* Updated Explist2D ContExpList2D and corresponding demo-codes
-*
-**/

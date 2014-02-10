@@ -138,8 +138,8 @@ namespace Nektar
                 
                 if (!m_historyPointStream.fail())
                 {
-                    SpatialDomains::VertexComponentSharedPtr vert
-                        = MemoryManager<SpatialDomains::VertexComponent>
+                    SpatialDomains::PointGeomSharedPtr vert
+                        = MemoryManager<SpatialDomains::PointGeom>
                         ::AllocateSharedPtr(dim, i, gloCoord[0],
                                             gloCoord[1], gloCoord[2]);
 
@@ -153,15 +153,25 @@ namespace Nektar
             // For points on a partition boundary, must select a single process
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
             int vRank = vComm->GetRank();
-            Array<OneD, int>        idList(m_historyPoints.size());
-            Array<OneD, int>        procList(m_historyPoints.size(), -1);
+            Array<OneD, int>  procList(m_historyPoints.size(), -1);
+            Array<OneD, int> idList(m_historyPoints.size());
+            std::vector<Array<OneD, NekDouble> > LocCoords; 
+            
             for (i = 0; i < m_historyPoints.size(); ++i)
             {
+                Array<OneD, NekDouble>  locCoords(3);
+
                 m_historyPoints[i]->GetCoords(  gloCoord[0],
                                                 gloCoord[1],
                                                 gloCoord[2]);
 
-                idList[i] = pFields[0]->GetExpIndex(gloCoord);
+                idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords);
+            
+                // Save Local coordinates for later
+                LocCoords.push_back(locCoords);
+                // Set element id to Vid of m_historyPoints;
+                m_historyPoints[i]->SetVid(idList[i]);
+                
                 if (idList[i] != -1) 
                 {
                     if(m_isHomogeneous1D)
@@ -204,8 +214,9 @@ namespace Nektar
                 {
                     m_historyLocalPointMap[m_historyList.size()] = i;
                     m_historyList.push_back(
-                        std::pair<SpatialDomains::VertexComponentSharedPtr, int>(
-                            m_historyPoints[i], idList[i]));
+                                     std::pair<SpatialDomains::PointGeomSharedPtr,
+                                     Array<OneD, NekDouble> >
+                                     (m_historyPoints[i], LocCoords[i]));
                 }
             }
 
@@ -287,35 +298,54 @@ namespace Nektar
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
             Array<OneD, NekDouble> data(numPoints*numFields, 0.0);
             Array<OneD, NekDouble> gloCoord(3, 0.0);
-            std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >::iterator x;
+            std::list<std::pair<SpatialDomains::PointGeomSharedPtr, Array<OneD, NekDouble> > >::iterator x;
+            
+            Array<OneD, NekDouble> physvals;
+            Array<OneD, NekDouble> locCoord;
+            int expId;
 
             // Pull out data values field by field
             for (j = 0; j < numFields; ++j)
             {
                 if(m_isHomogeneous1D)
                 {
-                    if(pFields[j]->GetPhysState() == false)
+                    for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); 
+                         ++x, ++k)
                     {
-                        pFields[j]->GetPlane(m_outputPlane)->BwdTrans(pFields[j]->GetPlane(m_outputPlane)->GetCoeffs(),pFields[j]->GetPlane(m_outputPlane)->UpdatePhys());
-                    }
-                    pFields[j]->GetPlane(m_outputPlane)->PutPhysInToElmtExp();
-                    for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
-                    {
-                        (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-                        data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetPlane(m_outputPlane)->GetExp((*x).second)->PhysEvaluate(gloCoord);
+                        locCoord = (*x).second;
+                        expId    = (*x).first->GetVid();
+
+                        physvals = pFields[j]->GetPlane(m_outputPlane)->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
+                        
+                        // transform elemental data if required. 
+                        if(pFields[j]->GetPhysState() == false)
+                        {
+                            pFields[j]->GetPlane(m_outputPlane)->GetExp(expId)->BwdTrans(pFields[j]->GetPlane(m_outputPlane)->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);
+                        }
+
+                        // interpolate point can do with zero plane methods
+                        data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
+                        
                     }
                 }
                 else
                 {
-                    if(pFields[j]->GetPhysState() == false)
-                    {
-                        pFields[j]->BwdTrans(pFields[j]->GetCoeffs(),pFields[j]->UpdatePhys());
-                    }
-                    pFields[j]->PutPhysInToElmtExp();
                     for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
                     {
-                        (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-                        data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
+                        locCoord = (*x).second;
+                        expId    = (*x).first->GetVid();
+
+                        physvals = pFields[j]->UpdatePhys() + pFields[j]->GetPhys_Offset(expId);
+                        
+                        // transform elemental data if required. 
+                        if(pFields[j]->GetPhysState() == false)
+                        {
+                            pFields[j]->GetExp(expId)->BwdTrans(pFields[j]->GetCoeffs() + pFields[j]->GetCoeff_Offset(expId),physvals);
+                        }
+
+                        // interpolate point
+                        data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
+                        
                     }
                 }
             }

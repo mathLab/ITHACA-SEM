@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion *sPyrE;
+    StdRegions::StdExpansion *sPyrE = NULL;
     
     if(regionShape == LibUtilities::ePyramid ) 
     { 
@@ -129,40 +129,43 @@ int main(int argc, char *argv[]) {
         }
         //----------------------------------------------
     }
-             
+
+    Array<OneD, NekDouble> phys (Qx*Qy*Qz);
+    Array<OneD, NekDouble> coeffs(xModes*yModes*zModes);
+                 
     //---------------------------------------------
     // Project onto Expansion 
-   sPyrE->FwdTrans( solution, sPyrE->UpdateCoeffs() );
+    sPyrE->FwdTrans( solution, coeffs );
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-   // sPyrE->SetPhys( sPyrE->BwdTrans( sPyrE->GetCoeffs() ) );
-   sPyrE->BwdTrans( sPyrE->GetCoeffs(), sPyrE->UpdatePhys() );
+    // sPyrE->SetPhys( sPyrE->BwdTrans( sPyrE->GetCoeffs() ) );
+    sPyrE->BwdTrans( coeffs, phys);
     //-------------------------------------------  
     
     //--------------------------------------------
     // Calculate L_p error 
-   cout << "\n*****************************************************\n " << endl;
-   cout << "L infinity error: " << sPyrE->Linf(solution) << endl;
-   cout << "L 2 error:        " << sPyrE->L2  (solution) << endl;
-   cout << "\n*****************************************************\n " << endl;
+    cout << "\n*****************************************************\n " << endl;
+    cout << "L infinity error: " << sPyrE->Linf(phys,solution) << endl;
+    cout << "L 2 error:        " << sPyrE->L2  (phys,solution) << endl;
+    cout << "\n*****************************************************\n " << endl;
     //--------------------------------------------
         
     //-------------------------------------------
     // Evaulate solution at x = y = z = 0  and print error
     Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
-
-     t[0] = -0.39;
-     t[1] = -0.25;
-     t[2] = 0.5;
     
-     if(regionShape == LibUtilities::ePyramid ) {
+    t[0] = -0.39;
+    t[1] = -0.25;
+    t[2] = 0.5;
+    
+    if(regionShape == LibUtilities::ePyramid ) {
         solution[0] = Pyramid_sol( t[0], t[1], t[2], P, Q, R); 
     }
     
-
-    NekDouble numericSolution = sPyrE->PhysEvaluate(t);
+    
+    NekDouble numericSolution = sPyrE->PhysEvaluate(t,phys);
     cout << "\n*****************************************************\n " << endl;
     cout << "Interpolation difference from actual solution at x = ( " << 
         t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;
@@ -173,7 +176,6 @@ int main(int argc, char *argv[]) {
     
      // Testing the physical evaluate(u_phys): projection on to the polynomial space given by the prismatic basis function
     // The result of output should converge to the interpolation solution 
-    //Array<OneD, const NekDouble> const& u_phys = sPyrE->GetPhys();
     Array<OneD, NekDouble> pyramid_solution( Qx * Qy * Qz, 0.0 );
     cout << setprecision(4);
     for(int n = 0; n < Qx * Qy * Qz; ++n) {

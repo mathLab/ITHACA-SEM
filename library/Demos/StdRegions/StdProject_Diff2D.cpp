@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
     LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
     LibUtilities::ShapeType     regionshape;
-    StdRegions::StdExpansion          *E;
+    StdRegions::StdExpansion          *E = NULL;
     Array<OneD, NekDouble>  sol,dx,dy,x,y;
 
     if(argc != 8)
@@ -57,10 +57,11 @@ int main(int argc, char *argv[])
         fprintf(stderr,"\t Modified_B = 5\n");
         fprintf(stderr,"\t Fourier    = 7\n");
         fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Legendre   = 9\n");
-        fprintf(stderr,"\t Chebyshev  = 10\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 11\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 12\n");
+        fprintf(stderr,"\t Gauss Lagrange = 9\n");
+        fprintf(stderr,"\t Legendre   = 10\n");
+        fprintf(stderr,"\t Chebyshev  = 11\n");
+        fprintf(stderr,"\t Nodal tri (Electro) = 13\n");
+        fprintf(stderr,"\t Nodal tri (Fekete)  = 14\n");
 
         fprintf(stderr,"Note type = 3,6 are for three-dimensional basis\n");
 
@@ -78,17 +79,17 @@ int main(int argc, char *argv[])
     int btype1_val =  atoi(argv[2]);
     int btype2_val =  atoi(argv[3]);
 
-    if(( btype1_val <= 10)&&( btype2_val <= 10))
+    if(( btype1_val <= 11)&&( btype2_val <= 11))
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
     }
-    else if(( btype1_val >=11)&&(btype2_val <= 12))
+    else if(( btype1_val >=13)&&(btype2_val <= 14))
     {
         btype1 =   LibUtilities::eOrtho_A;
         btype2 =   LibUtilities::eOrtho_B;
 
-        if(btype1_val == 11)
+        if(btype1_val == 13)
         {
             NodalType = LibUtilities::eNodalTriElec;
         }
@@ -185,7 +186,7 @@ int main(int argc, char *argv[])
             const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
 
 
-            if(btype1_val >= 10)
+            if(btype1_val >= 11)
             {
                 E = new StdRegions::StdNodalTriExp(Bkey1,Bkey2,NodalType);
             }
@@ -229,6 +230,9 @@ int main(int argc, char *argv[])
             break;
     }
 
+    Array<OneD, NekDouble> phys (nq1*nq2);
+    Array<OneD, NekDouble> coeffs(order1*order2);
+
     //---------------------------------------------
     // Evaluate derivative of solution, add together and put in sol
     E->PhysDeriv(sol,dx,dy);
@@ -237,19 +241,19 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    E->FwdTrans(sol,coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs,phys);
     //-------------------------------------------
 
     //----------------------------------------------
     // Define exact solution of differential
     switch(regionshape)
     {
-        case LibUtilities::eTriangle:
+    case LibUtilities::eTriangle:
         {
             //----------------------------------------------
             // Define solution to be differentiated
@@ -260,7 +264,7 @@ int main(int argc, char *argv[])
             //----------------------------------------------
         }
         break;
-        case LibUtilities::eQuadrilateral:
+    case LibUtilities::eQuadrilateral:
         {
             for(i = 0; i < nq1*nq2; ++i)
             {
@@ -269,15 +273,15 @@ int main(int argc, char *argv[])
         }
         //---------------------------------------------
         break;
-        default:
-            ASSERTL0(false, "Not a 2D expansion.");
-            break;
+    default:
+        ASSERTL0(false, "Not a 2D expansion.");
+        break;
     }
 
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys,sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys,sol) << endl;
     //--------------------------------------------
     return 0;
 }

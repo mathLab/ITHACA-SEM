@@ -42,44 +42,16 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion3D::Expansion3D() : m_requireNeg() {}
-        
-        void Expansion3D::AddHDGHelmholtzTraceTerms(
-            const NekDouble                                tau,
-            const Array<OneD, const NekDouble>            &inarray, 
-            Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,  
-            const StdRegions::VarCoeffMap                 &dirForcing,
-            Array<OneD,NekDouble>                         &outarray)
-        {
-            
-            ASSERTL0(&inarray[0] != &outarray[0],
-                     "Input and output arrays use the same memory");
-            
-            int f,cnt;
-            int order_f;
-            int nfaces = GetNfaces();
-            Array<OneD, const NekDouble> tmp;
-            
-            cnt = 0;
-            for(f = 0; f < nfaces; ++f)
-            {
-                order_f = FaceExp[f]->GetNcoeffs();                    
-                Vmath::Vcopy(order_f,tmp = inarray + cnt, 1, FaceExp[f]->UpdateCoeffs(), 1);
-                FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(), FaceExp[f]->UpdatePhys());
-                AddHDGHelmholtzFaceTerms(tau, f, FaceExp[f], dirForcing, outarray);
-                cnt += order_f;
-            }
-        }
-        
         //  evaluate additional terms in HDG face. Note that this assumes that
         // edges are unpacked into local cartesian order. 
         void Expansion3D::AddHDGHelmholtzFaceTerms(
             const NekDouble                    tau,
             const int                          face,
-            StdRegions::StdExpansionSharedPtr  FaceExp,
+            Array<OneD, NekDouble>            &facePhys,
             const StdRegions::VarCoeffMap     &varcoeffs,
-            Array<OneD,NekDouble>             &outarray)
+            Array<OneD, NekDouble>            &outarray)
         {
+            ExpansionSharedPtr FaceExp = GetFaceExp(face);
             int i,j,n;
             int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1); 
             int order_f = FaceExp->GetNcoeffs();
@@ -127,16 +99,11 @@ namespace Nektar
             //================================================================
             // Add F = \tau <phi_i,in_phys>
             // Fill face and take inner product
-            FaceExp->IProductWRTBase(FaceExp->GetPhys(),
-                                     FaceExp->UpdateCoeffs());
-
-            // add data to out array
-            const Array<OneD, const NekDouble> &faceCoeffs = 
-                FaceExp->GetCoeffs();
+            FaceExp->IProductWRTBase(facePhys, outcoeff);
 
             for(i = 0; i < order_f; ++i)
             {
-                outarray[(*map)[i].index] += (*map)[i].sign*tau*faceCoeffs[i];
+                outarray[(*map)[i].index] += (*map)[i].sign*tau*outcoeff[i];
             }
             //================================================================
 
@@ -150,8 +117,8 @@ namespace Nektar
             // Three independent direction
             for(n = 0; n < coordim; ++n)
             {
-                Vmath::Vmul(nquad_f,normals[n],1,FaceExp->GetPhys(),1,inval,1);
-                
+                Vmath::Vmul(nquad_f, normals[n], 1, facePhys, 1, inval, 1);
+
                 if (m_negatedNormals[face])
                 {
                     Vmath::Neg(nquad_f, inval, 1);
@@ -168,8 +135,8 @@ namespace Nektar
                 }
                 */
                 
-                FaceExp->IProductWRTBase(inval,outcoeff);
-                
+                FaceExp->IProductWRTBase(inval, outcoeff);
+
                 // M^{-1} G
                 for(i = 0; i < ncoeffs; ++i)
                 {
@@ -179,10 +146,10 @@ namespace Nektar
                         tmpcoeff[i] += scale*data[i+(*map)[j].index*ncoeffs]*(*map)[j].sign*outcoeff[j];
                     }
                 }
-                
+
                 DNekScalMat &Dmat = *GetLocMatrix(DerivType[n]);
                 Coeffs = Coeffs  + Dmat*Tmpcoeff;       
-                
+
                 /*
                 if(varcoeffs.find(VarCoeff[n]) != varcoeffs.end())
                 {
@@ -204,11 +171,12 @@ namespace Nektar
          * Computes the C matrix entries due to the presence of the identity
          * matrix in Eqn. 32.
          */
-        void Expansion3D::AddNormTraceInt(const int dir,
-                                          Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-                                          Array<OneD,NekDouble> &outarray,
-                                          const StdRegions::VarCoeffMap &varcoeffs)
+        void Expansion3D::AddNormTraceInt(
+            const int                                      dir,
+            Array<OneD, const NekDouble>                  &inarray,
+            Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+            Array<OneD,NekDouble>                         &outarray,
+            const StdRegions::VarCoeffMap                 &varcoeffs)
         {
             int i,f,cnt;
             int order_f,nquad_f;
@@ -220,17 +188,18 @@ namespace Nektar
                 order_f = FaceExp[f]->GetNcoeffs();
                 nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);
 
-                const Array<OneD, const Array<OneD, NekDouble> > normals = GetFaceNormal(f);
-                
+                const Array<OneD, const Array<OneD, NekDouble> > &normals = GetFaceNormal(f);
+                Array<OneD, NekDouble> faceCoeffs(order_f);
+                Array<OneD, NekDouble> facePhys  (nquad_f);
+
                 for(i = 0; i < order_f; ++i)
                 {
-                    FaceExp[f]->SetCoeff(i,inarray[i+cnt]);
+                    faceCoeffs[i] = inarray[i+cnt];
                 }
                 cnt += order_f;
-                
-                FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
-                                     FaceExp[f]->UpdatePhys());
-                
+
+                FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
+
                 // Multiply by variable coefficient
                 /// @TODO: Document this
 //                StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
@@ -245,27 +214,61 @@ namespace Nektar
 //                    Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp[e]->GetPhys(),1,EdgeExp[e]->UpdatePhys(),1);
 //                }
 
-                Vmath::Vmul(nquad_f,normals[dir],1,
-                            FaceExp[f]->GetPhys(),1,
-                            FaceExp[f]->UpdatePhys(),1);
+                Vmath::Vmul(nquad_f, normals[dir], 1, facePhys, 1, facePhys, 1);
                 
                 if (m_negatedNormals[f])
                 {
-                    Vmath::Neg(nquad_f, FaceExp[f]->UpdatePhys(), 1);
+                    Vmath::Neg(nquad_f, facePhys, 1);
                 }
 
-                AddFaceBoundaryInt(f,FaceExp[f],outarray,varcoeffs);
+                AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray, varcoeffs);
             }
         }
 
+        //shorter version of the above (coefficients are already set for faces)
+        void Expansion3D::AddNormTraceInt(
+            const int                                       dir,
+            Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+            Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
+            Array<OneD, NekDouble>                         &outarray)
+        {
+            int f, cnt;
+            int order_f, nquad_f;
+            int nfaces = GetNfaces();
+
+            cnt = 0;
+            for(f = 0; f < nfaces; ++f)
+            {
+                order_f = FaceExp[f]->GetNcoeffs();
+                nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);
+
+                const Array<OneD, const Array<OneD, NekDouble> > &normals = GetFaceNormal(f);
+                Array<OneD, NekDouble> facePhys(nquad_f);
+                
+                cnt += order_f;
+                
+                FaceExp[f]->BwdTrans(faceCoeffs[f], facePhys);
+                
+                Vmath::Vmul(nquad_f, normals[dir], 1, facePhys, 1, facePhys, 1);
+                
+                if (m_negatedNormals[f])
+                {
+                    Vmath::Neg(nquad_f, facePhys, 1);
+                }
+
+                AddFaceBoundaryInt(f, FaceExp[f], facePhys, outarray);
+            }
+        }
 
         /**
          * For a given face add the \tilde{F}_1j contributions
          */
-        void Expansion3D::AddFaceBoundaryInt(const int face,
-                                             StdRegions::StdExpansionSharedPtr &FaceExp,
-                                             Array <OneD,NekDouble > &outarray,
-                                             const StdRegions::VarCoeffMap &varcoeffs)
+        void Expansion3D::AddFaceBoundaryInt(
+            const int                          face,
+            StdRegions::StdExpansionSharedPtr &FaceExp,
+            Array<OneD, NekDouble>            &facePhys,
+            Array<OneD, NekDouble>            &outarray,
+            const StdRegions::VarCoeffMap     &varcoeffs)
         {
             int i;
             int order_f = FaceExp->GetNcoeffs();
@@ -291,7 +294,7 @@ namespace Nektar
 //                Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp->GetPhys(),1,EdgeExp->UpdatePhys(),1);
 //            }
 
-            FaceExp->IProductWRTBase(FaceExp->GetPhys(),coeff);
+            FaceExp->IProductWRTBase(facePhys, coeff);
 
             // add data to out array
             for(i = 0; i < order_f; ++i)
@@ -527,12 +530,6 @@ namespace Nektar
                         const Array<OneD, const Array<OneD, NekDouble> > normals
                             = GetFaceNormal(i);
 
-                        //cout << endl << "face #" << i;
-                        //cout << endl << "nquad_f " << FaceExp[i]->GetNumPoints(0)*FaceExp[i]->GetNumPoints(1);
-                        //cout << endl << "normals[0] " <<  normals[0].num_elements();
-                        //cout << endl << "normals[1] " <<  normals[1].num_elements();
-                        //cout << endl << "normals[2] " <<  normals[2].num_elements();
-
                         for(j = 0; j < nface; ++j)
                         {
                             Vmath::Zero(nface,&face_lambda[0],1);
@@ -540,12 +537,10 @@ namespace Nektar
                             face_lambda[j] = 1.0;
 
                             SetFaceToGeomOrientation(i, face_lambda);
-							
-                            Vmath::Vcopy(nface, face_lambda, 1, FaceExp->UpdateCoeffs(), 1);
 
-                            FaceExp->BwdTrans(FaceExp->GetCoeffs(), FaceExp->UpdatePhys());
-
-                            AddHDGHelmholtzFaceTerms(tau, i, FaceExp, mkey.GetVarCoeffs(), f);
+                            Array<OneD, NekDouble> tmp(FaceExp->GetTotPoints());
+                            FaceExp->BwdTrans(face_lambda, tmp);
+                            AddHDGHelmholtzFaceTerms(tau, i, tmp, mkey.GetVarCoeffs(), f);
 							
                             Ulam = invHmat*F; // generate Ulam from lambda
 
@@ -766,13 +761,14 @@ namespace Nektar
                             */
 
                             // Q0 * n0 (BQ_0 terms)
+                            Array<OneD, NekDouble> faceCoeffs(order_f);
+                            Array<OneD, NekDouble> facePhys  (nquad_f);
                             for(j = 0; j < order_f; ++j)
                             {
-                                FaceExp[f]->SetCoeff(j,(*map)[j].sign*(*LamToQ[0])((*map)[j].index,i));
+                                faceCoeffs[j] = (*map)[j].sign*(*LamToQ[0])((*map)[j].index,i);
                             }
                             
-                            FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
-                                                 FaceExp[f]->UpdatePhys());
+                            FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
 
                             // @TODO Variable coefficients
                             // Multiply by variable coefficient
@@ -784,16 +780,15 @@ namespace Nektar
                             }
                             */
           
-                            Vmath::Vmul(nquad_f,normals[0],1,FaceExp[f]->GetPhys(),1,work,1);
+                            Vmath::Vmul(nquad_f, normals[0], 1, facePhys, 1, work, 1);
                             
                             // Q1 * n1 (BQ_1 terms)
                             for(j = 0; j < order_f; ++j)
                             {
-                                FaceExp[f]->SetCoeff(j,(*map)[j].sign*(*LamToQ[1])((*map)[j].index,i));
+                                faceCoeffs[j] = (*map)[j].sign*(*LamToQ[1])((*map)[j].index,i);
                             }
                             
-                            FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
-                                                 FaceExp[f]->UpdatePhys());
+                            FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
 
                             // @TODO Variable coefficients
                             // Multiply by variable coefficients
@@ -805,18 +800,15 @@ namespace Nektar
                             }
                             */
 
-                            Vmath::Vvtvp(nquad_f,normals[1],1,
-                                         FaceExp[f]->GetPhys(),1,
-                                         work,1,work,1);
+                            Vmath::Vvtvp(nquad_f, normals[1], 1, facePhys, 1, work, 1, work, 1);
                             
                             // Q2 * n2 (BQ_2 terms)
                             for(j = 0; j < order_f; ++j)
                             {
-                                FaceExp[f]->SetCoeff(j,(*map)[j].sign*(*LamToQ[2])((*map)[j].index,i));
+                                faceCoeffs[j] = (*map)[j].sign*(*LamToQ[2])((*map)[j].index,i);
                             }
                             
-                            FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
-                                                 FaceExp[f]->UpdatePhys());
+                            FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
 
                             // @TODO Variable coefficients
                             // Multiply by variable coefficients
@@ -828,10 +820,9 @@ namespace Nektar
                             }
                             */
 
-                            Vmath::Vvtvp(nquad_f,normals[2],1,
-                                         FaceExp[f]->GetPhys(),1,
-                                         work,1,work,1);
-                            
+                            Vmath::Vvtvp(nquad_f, normals[2], 1, facePhys, 1,
+                                                  work,       1, work,     1);
+
                             if (m_negatedNormals[f])
                             {
                                 Vmath::Neg(nquad_f, work, 1);
@@ -841,11 +832,10 @@ namespace Nektar
                             // Corresponds to the G and BU terms.
                             for(j = 0; j < order_f; ++j)
                             {
-                                FaceExp[f]->SetCoeff(j,(*map)[j].sign*LamToU((*map)[j].index,i) - lam[cnt+j]);
+                                faceCoeffs[j] = (*map)[j].sign*LamToU((*map)[j].index,i) - lam[cnt+j];
                             }
                             
-                            FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
-                                                 FaceExp[f]->UpdatePhys());
+                            FaceExp[f]->BwdTrans(faceCoeffs, facePhys);
 
                             // @TODO Variable coefficients
                             // Multiply by variable coefficients
@@ -857,22 +847,47 @@ namespace Nektar
                             }
                             */
 
-                            Vmath::Svtvp(nquad_f,-tau,FaceExp[f]->GetPhys(),1,
-                                         work,1,work,1);
+                            Vmath::Svtvp(nquad_f, -tau, facePhys, 1,
+                                         work, 1, work, 1);
 
                             // @TODO Add variable coefficients
-                            FaceExp[f]->IProductWRTBase(work,FaceExp[f]->UpdateCoeffs());
+                            FaceExp[f]->IProductWRTBase(work, faceCoeffs);
                             
-                            SetFaceToGeomOrientation(f, FaceExp[f]->UpdateCoeffs());
+                            SetFaceToGeomOrientation(f, faceCoeffs);
 
                             for(j = 0; j < order_f; ++j)
                             {
-                                BndMat(cnt+j,i) = FaceExp[f]->GetCoeff(j);
+                                BndMat(cnt+j,i) = faceCoeffs[j];
                             }
-                            
+
                             cnt += order_f;
                         }
                     }
+                }
+                break;
+            //HDG postprocessing
+            case StdRegions::eInvLaplacianWithUnityMean:
+                {
+                    MatrixKey lapkey(StdRegions::eLaplacian, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalMat  &LapMat = *GetLocMatrix(lapkey);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(LapMat.GetRows(),LapMat.GetColumns());
+                    DNekMatSharedPtr lmat = returnval;
+                    
+                    (*lmat) = LapMat;
+
+                    // replace first column with inner product wrt 1
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmp(nq);
+                    Array<OneD, NekDouble> outarray(m_ncoeffs);
+                    Vmath::Fill(nq,1.0,tmp,1);
+                    IProductWRTBase(tmp, outarray);
+
+                    Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
+                                 &(lmat->GetPtr())[0],1);
+
+                    //cout << endl << *lmat << endl;
+                    lmat->Invert();
                 }
                 break;
             default:
@@ -933,6 +948,7 @@ namespace Nektar
                     if (m_negatedNormals[i])
                     {
                         m_requireNeg[i] = true;
+                        continue;
                     }
                     
                     Expansion2DSharedPtr faceExp = m_faceExp[i].lock();
@@ -948,8 +964,10 @@ namespace Nektar
                 }
             }
 
-            int order_e = (*map).num_elements(); // Order of the element
-            int n_coeffs = FaceExp->GetCoeffs().num_elements(); // Order of the trace
+            int order_e  = (*map).num_elements(); // Order of the element
+            int n_coeffs = FaceExp->GetNcoeffs();
+
+            Array<OneD, NekDouble> faceCoeffs(n_coeffs);
 
             if(n_coeffs != order_e) // Going to orthogonal space
             {
@@ -957,23 +975,58 @@ namespace Nektar
             }
             else
             {
-                FaceExp->IProductWRTBase(Fn,FaceExp->UpdateCoeffs());
+                FaceExp->IProductWRTBase(Fn, faceCoeffs);
             }
             
             if (m_requireNeg[face])
             {
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[(*map)[i].index] -= (*map)[i].sign*FaceExp->GetCoeff(i);
+                    outarray[(*map)[i].index] -= (*map)[i].sign * faceCoeffs[i];
                 }
             }
             else
             {
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
+                    outarray[(*map)[i].index] += (*map)[i].sign * faceCoeffs[i];
                 }
             }
+        }
+
+        /**
+         * @brief Evaluate coefficients of weak deriviative in the direction dir
+         * given the input coefficicents incoeffs and the imposed boundary
+         * values in EdgeExp (which will have its phys space updated).
+         */
+        void Expansion3D::v_DGDeriv(
+            int                                             dir,
+            const Array<OneD, const NekDouble>             &incoeffs,
+            Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+            Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
+            Array<OneD, NekDouble>                         &out_d)
+        {
+            int ncoeffs = GetNcoeffs();
+            StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
+                                                   StdRegions::eWeakDeriv1,
+                                                   StdRegions::eWeakDeriv2};
+
+            DNekScalMat &InvMass = *GetLocMatrix(StdRegions::eInvMass);
+            DNekScalMat &Dmat    = *GetLocMatrix(DerivType[dir]);
+
+            Array<OneD, NekDouble> coeffs = incoeffs;
+            DNekVec     Coeffs  (ncoeffs,coeffs, eWrapper);
+
+            Coeffs = Transpose(Dmat)*Coeffs;
+            Vmath::Neg(ncoeffs, coeffs,1);
+
+            // Add the boundary integral including the relevant part of
+            // the normal
+            AddNormTraceInt(dir, FaceExp, faceCoeffs, coeffs);
+
+            DNekVec Out_d (ncoeffs,out_d,eWrapper);
+
+            Out_d  = InvMass*Coeffs;
         }
 
         void Expansion3D::v_AddRobinMassMatrix(
@@ -1108,6 +1161,682 @@ namespace Nektar
                     (*inoutmat)(id1,id2) += facemat(i,j)*sign[i]*sign[j];
                 }
             }
+        }
+
+        DNekMatSharedPtr Expansion3D::v_BuildVertexMatrix(
+            const DNekScalMatSharedPtr &r_bnd)
+        {
+            MatrixStorage storage = eFULL;
+            DNekMatSharedPtr m_vertexmatrix;
+
+            int nVerts, vid1, vid2, vMap1, vMap2;
+            NekDouble VertexValue;
+
+            nVerts = GetNverts();
+
+            m_vertexmatrix =
+                MemoryManager<DNekMat>::AllocateSharedPtr(
+                    nVerts, nVerts, 0.0, storage);
+            DNekMat &VertexMat = (*m_vertexmatrix);
+
+            for (vid1 = 0; vid1 < nVerts; ++vid1)
+            {
+                vMap1 = GetVertexMap(vid1,true);
+
+                for (vid2 = 0; vid2 < nVerts; ++vid2)
+                {
+                    vMap2 = GetVertexMap(vid2,true);
+                    VertexValue = (*r_bnd)(vMap1, vMap2);
+                    VertexMat.SetValue(vid1, vid2, VertexValue);
+                }
+            }
+
+            return m_vertexmatrix;
+        }
+
+        DNekMatSharedPtr Expansion3D::v_BuildTransformationMatrix(
+            const DNekScalMatSharedPtr &r_bnd, 
+            const StdRegions::MatrixType matrixType)
+        {
+            int nVerts, nEdges;
+            int eid, fid, vid, n, i;
+
+            int nBndCoeffs = NumBndryCoeffs();
+
+            const SpatialDomains::Geometry3DSharedPtr &geom = GetGeom3D();
+
+            // Get geometric information about this element
+            nVerts = GetNverts();
+            nEdges = GetNedges();
+
+            /*************************************/
+            /* Vetex-edge & vertex-face matrices */
+            /*************************************/
+
+            /**
+             * The matrix component of \f$\mathbf{R}\f$ is given by \f[
+             * \mathbf{R^{T}_{v}}=
+             * -\mathbf{S}^{-1}_{ef,ef}\mathbf{S}^{T}_{v,ef}\f]
+             *
+             * For every vertex mode we extract the submatrices from statically
+             * condensed matrix \f$\mathbf{S}\f$ corresponding to the coupling
+             * between the attached edges and faces of a vertex
+             * (\f$\mathbf{S_{ef,ef}}\f$). This matrix is then inverted and
+             * multiplied by the submatrix representing the coupling between a
+             * vertex and the attached edges and faces
+             * (\f$\mathbf{S_{v,ef}}\f$).
+             */
+
+            int nmodes;
+            int m;
+            NekDouble VertexEdgeFaceValue;
+
+            // The number of connected edges/faces is 3 (for all elements)
+            int nConnectedEdges = 3;
+            int nConnectedFaces = 3;
+
+            // Location in the matrix
+            Array<OneD, Array<OneD, unsigned int> >
+                MatEdgeLocation(nConnectedEdges);
+            Array<OneD, Array<OneD, unsigned int> >
+                MatFaceLocation(nConnectedFaces);
+
+            // Define storage for vertex transpose matrix and zero all entries
+            MatrixStorage storage = eFULL;
+            DNekMatSharedPtr m_transformationmatrix;
+            DNekMatSharedPtr m_transposedtransformationmatrix;
+
+            m_transformationmatrix =
+                MemoryManager<DNekMat>::AllocateSharedPtr(
+                    nBndCoeffs, nBndCoeffs, 0.0, storage);
+            m_transposedtransformationmatrix =
+                MemoryManager<DNekMat>::AllocateSharedPtr(
+                    nBndCoeffs, nBndCoeffs, 0.0, storage);
+
+            DNekMat &R  = (*m_transformationmatrix);
+            DNekMat &RT = (*m_transposedtransformationmatrix);
+
+            // Build the vertex-edge/face transform matrix: This matrix is
+            // constructed from the submatrices corresponding to the couping
+            // between each vertex and the attached edges/faces
+            for (vid = 0; vid < nVerts; ++vid)
+            {
+                // Row and column size of the vertex-edge/face matrix
+                int efRow =
+                    GetEdgeNcoeffs   (geom->GetVertexEdgeMap(vid, 0)) +
+                    GetEdgeNcoeffs   (geom->GetVertexEdgeMap(vid, 1)) +
+                    GetEdgeNcoeffs   (geom->GetVertexEdgeMap(vid, 2)) +
+                    GetFaceIntNcoeffs(geom->GetVertexFaceMap(vid, 0)) +
+                    GetFaceIntNcoeffs(geom->GetVertexFaceMap(vid, 1)) +
+                    GetFaceIntNcoeffs(geom->GetVertexFaceMap(vid, 2)) - 6;
+
+                int nedgemodesconnected =
+                    GetEdgeNcoeffs   (geom->GetVertexEdgeMap(vid, 0)) +
+                    GetEdgeNcoeffs   (geom->GetVertexEdgeMap(vid, 1)) +
+                    GetEdgeNcoeffs   (geom->GetVertexEdgeMap(vid, 2)) - 6;
+                Array<OneD, unsigned int> edgemodearray(nedgemodesconnected);
+
+                int nfacemodesconnected =
+                    GetFaceIntNcoeffs(geom->GetVertexFaceMap(vid, 0)) +
+                    GetFaceIntNcoeffs(geom->GetVertexFaceMap(vid, 1)) +
+                    GetFaceIntNcoeffs(geom->GetVertexFaceMap(vid, 2));
+                Array<OneD, unsigned int> facemodearray(nfacemodesconnected);
+
+                int offset = 0;
+
+                // Create array of edge modes
+                for (eid = 0; eid < nConnectedEdges; ++eid)
+                {
+                    MatEdgeLocation[eid] = GetEdgeInverseBoundaryMap(
+                        geom->GetVertexEdgeMap(vid, eid));
+                    nmodes = MatEdgeLocation[eid].num_elements();
+
+                    if (nmodes)
+                    {
+                        Vmath::Vcopy(nmodes, &MatEdgeLocation[eid][0],
+                                     1, &edgemodearray[offset], 1);
+                    }
+
+                    offset += nmodes;
+                }
+
+                offset = 0;
+
+                // Create array of face modes
+                for (fid = 0; fid < nConnectedFaces; ++fid)
+                {
+                    MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
+                        geom->GetVertexFaceMap(vid, fid));
+                    nmodes = MatFaceLocation[fid].num_elements();
+
+                    if (nmodes)
+                    {
+                        Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0],
+                                     1, &facemodearray[offset], 1);
+                    }
+                    offset += nmodes;
+                }
+
+                DNekMatSharedPtr m_vertexedgefacetransformmatrix =
+                    MemoryManager<DNekMat>::AllocateSharedPtr(
+                        1, efRow, 0.0, storage);
+                DNekMat &Sveft = (*m_vertexedgefacetransformmatrix);
+
+                DNekMatSharedPtr m_vertexedgefacecoupling =
+                    MemoryManager<DNekMat>::AllocateSharedPtr(
+                        1, efRow, 0.0, storage);
+                DNekMat &Svef = (*m_vertexedgefacecoupling);
+
+                // Vertex-edge coupling
+                for (n = 0; n < nedgemodesconnected; ++n)
+                {
+                    // Matrix value for each coefficient location
+                    VertexEdgeFaceValue = (*r_bnd)(GetVertexMap(vid),
+                                                   edgemodearray[n]);
+
+                    // Set the value in the vertex edge/face matrix
+                    Svef.SetValue(0, n, VertexEdgeFaceValue);
+                }
+
+                // Vertex-face coupling
+                for (n = 0; n < nfacemodesconnected; ++n)
+                {
+                    // Matrix value for each coefficient location
+                    VertexEdgeFaceValue = (*r_bnd)(GetVertexMap(vid),
+                                                   facemodearray[n]);
+
+                    // Set the value in the vertex edge/face matrix
+                    Svef.SetValue(0, n + nedgemodesconnected, VertexEdgeFaceValue);
+                }
+
+                /*
+                 * Build the edge-face transform matrix: This matrix is
+                 * constructed from the submatrices corresponding to the couping
+                 * between the edges and faces on the attached faces/edges of a
+                 * vertex.
+                 */
+
+                // Allocation of matrix to store edge/face-edge/face coupling
+                DNekMatSharedPtr m_edgefacecoupling =
+                    MemoryManager<DNekMat>::AllocateSharedPtr(
+                        efRow, efRow, 0.0, storage);
+                DNekMat &Sefef = (*m_edgefacecoupling);
+
+                NekDouble EdgeEdgeValue, FaceFaceValue;
+
+                // Edge-edge coupling (S_{ee})
+                for (m = 0; m < nedgemodesconnected; ++m)
+                {
+                    for (n = 0; n < nedgemodesconnected; ++n)
+                    {
+                        // Matrix value for each coefficient location
+                        EdgeEdgeValue = (*r_bnd)(edgemodearray[n],
+                                                 edgemodearray[m]);
+
+                        // Set the value in the vertex edge/face matrix
+                        Sefef.SetValue(n, m, EdgeEdgeValue);
+                    }
+                }
+
+                // Face-face coupling (S_{ff})
+                for (n = 0; n < nfacemodesconnected; ++n)
+                {
+                    for (m = 0; m < nfacemodesconnected; ++m)
+                    {
+                        // Matrix value for each coefficient location
+                        FaceFaceValue = (*r_bnd)(facemodearray[n],
+                                                 facemodearray[m]);
+                        // Set the value in the vertex edge/face matrix
+                        Sefef.SetValue(nedgemodesconnected + n,
+                                       nedgemodesconnected + m, FaceFaceValue);
+                    }
+                }
+
+                // Edge-face coupling (S_{ef} and trans(S_{ef}))
+                for (n = 0; n < nedgemodesconnected; ++n)
+                {
+                    for (m = 0; m < nfacemodesconnected; ++m)
+                    {
+                        // Matrix value for each coefficient location
+                        FaceFaceValue = (*r_bnd)(edgemodearray[n],
+                                                 facemodearray[m]);
+
+                        // Set the value in the vertex edge/face matrix
+                        Sefef.SetValue(
+                            n, nedgemodesconnected + m, FaceFaceValue);
+
+                        // and transpose
+                        Sefef.SetValue(
+                            nedgemodesconnected + m, n, FaceFaceValue);
+                    }
+                }
+
+
+                // Invert edge-face coupling matrix
+                if (efRow)
+                {
+                    Sefef.Invert();
+
+                    //R_{v}=-S_{v,ef}inv(S_{ef,ef})
+                    Sveft = -Svef * Sefef;
+                }
+
+                // Populate R with R_{ve} components
+                for (n = 0; n < edgemodearray.num_elements(); ++n)
+                {
+                    RT.SetValue(edgemodearray[n], GetVertexMap(vid),
+                                Sveft(0, n));
+                    R.SetValue(GetVertexMap(vid), edgemodearray[n],
+                               Sveft(0, n));
+                }
+
+                // Populate R with R_{vf} components
+                for (n = 0; n < facemodearray.num_elements(); ++n)
+                {
+                    RT.SetValue(facemodearray[n], GetVertexMap(vid),
+                                Sveft(0, n + nedgemodesconnected));
+                    R.SetValue(GetVertexMap(vid), facemodearray[n],
+                               Sveft(0, n + nedgemodesconnected));
+                }
+            }
+
+            /********************/
+            /* edge-face matrix */
+            /********************/
+
+            /* 
+             * The matrix component of \f$\mathbf{R}\f$ is given by \f[
+             * \mathbf{R^{T}_{ef}}=-\mathbf{S}^{-1}_{ff}\mathbf{S}^{T}_{ef}\f]
+             *
+             * For each edge extract the submatrices from statically condensed
+             * matrix \f$\mathbf{S}\f$ corresponding to inner products of modes
+             * on the two attached faces within themselves as well as the
+             * coupling matrix between the two faces
+             * (\f$\mathbf{S}_{ff}\f$). This matrix of face coupling is then
+             * inverted and multiplied by the submatrices of corresponding to
+             * the coupling between the edge and attached faces
+             * (\f$\mathbf{S}_{ef}\f$).
+             */
+
+            NekDouble EdgeFaceValue, FaceFaceValue;
+            int efCol, efRow, nedgemodes;
+
+            // Number of attached faces is always 2
+            nConnectedFaces = 2;
+
+            // Location in the matrix
+            MatEdgeLocation = Array<OneD, Array<OneD, unsigned int> >
+                (nEdges);
+            MatFaceLocation = Array<OneD, Array<OneD, unsigned int> >
+                (nConnectedFaces);
+
+            // Build the edge/face transform matrix: This matrix is constructed
+            // from the submatrices corresponding to the couping between a
+            // specific edge and the two attached faces.
+            for (eid = 0; eid < nEdges; ++eid)
+            {
+                // Row and column size of the vertex-edge/face matrix
+                efCol = GetFaceIntNcoeffs(geom->GetEdgeFaceMap(eid, 0)) +
+                    GetFaceIntNcoeffs(geom->GetEdgeFaceMap(eid, 1));
+                efRow = GetEdgeNcoeffs(eid) - 2;
+
+                // Edge-face coupling matrix
+                DNekMatSharedPtr m_efedgefacecoupling =
+                    MemoryManager<DNekMat>::AllocateSharedPtr(
+                        efRow, efCol, 0.0, storage);
+                DNekMat &Mef = (*m_efedgefacecoupling);
+
+                // Face-face coupling matrix
+                DNekMatSharedPtr m_effacefacecoupling =
+                    MemoryManager<DNekMat>::AllocateSharedPtr(
+                        efCol, efCol, 0.0, storage);
+                DNekMat &Meff = (*m_effacefacecoupling);
+
+                // Edge-face transformation matrix
+                DNekMatSharedPtr m_edgefacetransformmatrix =
+                    MemoryManager<DNekMat>::AllocateSharedPtr(
+                        efRow, efCol, 0.0, storage);
+                DNekMat &Meft = (*m_edgefacetransformmatrix);
+
+                int nfacemodesconnected =
+                    GetFaceIntNcoeffs(geom->GetEdgeFaceMap(eid, 0)) +
+                    GetFaceIntNcoeffs(geom->GetEdgeFaceMap(eid, 1));
+                Array<OneD, unsigned int>
+                    facemodearray(nfacemodesconnected);
+
+                // Create array of edge modes
+                Array<OneD, unsigned int> inedgearray
+                    = GetEdgeInverseBoundaryMap(eid);
+                nedgemodes = GetEdgeNcoeffs(eid) - 2;
+                Array<OneD, unsigned int> edgemodearray(nedgemodes);
+
+                if (nedgemodes)
+                {
+                    Vmath::Vcopy(nedgemodes, &inedgearray[0],
+                                 1, &edgemodearray[0], 1);
+                }
+
+                int offset = 0;
+
+                // Create array of face modes
+                for (fid = 0; fid < nConnectedFaces; ++fid)
+                {
+                    MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
+                        geom->GetEdgeFaceMap(eid, fid));
+                    nmodes = MatFaceLocation[fid].num_elements();
+
+                    if (nmodes)
+                    {
+                        Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0],
+                                     1, &facemodearray[offset], 1);
+                    }
+                    offset += nmodes;
+                }
+
+                // Edge-face coupling
+                for (n = 0; n < nedgemodes; ++n)
+                {
+                    for (m = 0; m < nfacemodesconnected; ++m)
+                    {
+                        // Matrix value for each coefficient location
+                        EdgeFaceValue = (*r_bnd)(edgemodearray[n],
+                                                 facemodearray[m]);
+
+                        // Set the value in the edge/face matrix
+                        Mef.SetValue(n, m, EdgeFaceValue);
+                    }
+                }
+
+                // Face-face coupling
+                for (n = 0; n < nfacemodesconnected; ++n)
+                {
+                    for (m = 0; m < nfacemodesconnected; ++m)
+                    {
+                        // Matrix value for each coefficient location
+                        FaceFaceValue = (*r_bnd)(facemodearray[n],
+                                                 facemodearray[m]);
+
+                        // Set the value in the vertex edge/face matrix
+                        Meff.SetValue(n, m, FaceFaceValue);
+                    }
+                }
+
+                if (efCol)
+                {
+                    // Invert edge-face coupling matrix
+                    Meff.Invert();
+
+                    // trans(R_{ef})=-S_{ef}*(inv(S_{ff})
+                    Meft = -Mef * Meff;
+                }
+
+                //Populate transformation matrix with Meft
+                for (n = 0; n < Meft.GetRows(); ++n)
+                {
+                    for (m = 0; m < Meft.GetColumns(); ++m)
+                    {
+                        R.SetValue(edgemodearray[n], facemodearray[m],
+                                   Meft(n, m));
+                        RT.SetValue(facemodearray[m], edgemodearray[n],
+                                    Meft(n, m));
+                    }
+                }
+            }
+
+            for (i = 0; i < R.GetRows(); ++i)
+            {
+                R.SetValue(i, i, 1.0);
+                RT.SetValue(i, i, 1.0);
+            }
+
+            if (matrixType == StdRegions::ePreconR)
+            {
+                return m_transformationmatrix;
+            }
+            else if (matrixType == StdRegions::ePreconRT)
+            {
+                return m_transposedtransformationmatrix;
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal, "unkown matrix type" );
+                return NullDNekMatSharedPtr;
+            }
+	}
+
+        /**
+	 * \brief Build inverse and inverse transposed transformation matrix:
+	 * \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
+	 *
+	 * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} &
+	 * -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
+	 *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
+	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
+	 */
+        DNekMatSharedPtr Expansion3D::v_BuildInverseTransformationMatrix(
+            const DNekScalMatSharedPtr & m_transformationmatrix)
+	{
+            int i, j, n, eid = 0, fid = 0;
+            int nCoeffs = NumBndryCoeffs();
+            NekDouble MatrixValue;
+            DNekScalMat &R = (*m_transformationmatrix);
+
+            // Define storage for vertex transpose matrix and zero all entries
+            MatrixStorage storage = eFULL;
+
+            // Inverse transformation matrix
+            DNekMatSharedPtr m_inversetransformationmatrix =
+                MemoryManager<DNekMat>::AllocateSharedPtr(
+                    nCoeffs, nCoeffs, 0.0, storage);
+            DNekMat &InvR = (*m_inversetransformationmatrix);
+
+            int nVerts = GetNverts();
+            int nEdges = GetNedges();
+            int nFaces = GetNfaces();
+
+            int nedgemodes = 0;
+            int nfacemodes = 0;
+            int nedgemodestotal = 0;
+            int nfacemodestotal = 0;
+
+            for (eid = 0; eid < nEdges; ++eid)
+            {
+                nedgemodes = GetEdgeNcoeffs(eid) - 2;
+                nedgemodestotal += nedgemodes;
+            }
+
+            for (fid = 0; fid < nFaces; ++fid)
+            {
+                nfacemodes = GetFaceIntNcoeffs(fid);
+                nfacemodestotal += nfacemodes;
+            }
+
+            Array<OneD, unsigned int>
+                edgemodearray(nedgemodestotal);
+            Array<OneD, unsigned int>
+                facemodearray(nfacemodestotal);
+
+            int offset = 0;
+
+            // Create array of edge modes
+            for (eid = 0; eid < nEdges; ++eid)
+            {
+                Array<OneD, unsigned int> edgearray
+                    = GetEdgeInverseBoundaryMap(eid);
+                nedgemodes = GetEdgeNcoeffs(eid) - 2;
+
+                // Only copy if there are edge modes
+                if (nedgemodes)
+                {
+                    Vmath::Vcopy(nedgemodes, &edgearray[0], 1,
+                                 &edgemodearray[offset], 1);
+                }
+
+                offset += nedgemodes;
+            }
+
+            offset = 0;
+
+            // Create array of face modes
+            for (fid = 0; fid < nFaces; ++fid)
+            {
+                Array<OneD, unsigned int> facearray
+                    = GetFaceInverseBoundaryMap(fid);
+                nfacemodes = GetFaceIntNcoeffs(fid);
+
+                // Only copy if there are face modes
+                if (nfacemodes)
+                {
+                    Vmath::Vcopy(nfacemodes, &facearray[0], 1,
+                                 &facemodearray[offset], 1);
+                }
+
+                offset += nfacemodes;
+            }
+
+            // Vertex-edge/face
+            for (i = 0; i < nVerts; ++i)
+            {
+                for (j = 0; j < nedgemodestotal; ++j)
+                {
+                    InvR.SetValue(
+                        GetVertexMap(i), edgemodearray[j],
+                        -R(GetVertexMap(i), edgemodearray[j]));
+                }
+                for (j = 0; j < nfacemodestotal; ++j)
+                {
+                    InvR.SetValue(
+                        GetVertexMap(i), facemodearray[j],
+                        -R(GetVertexMap(i), facemodearray[j]));
+                    for (n = 0; n < nedgemodestotal; ++n)
+                    {
+                        MatrixValue = InvR.GetValue(
+                            GetVertexMap(i), facemodearray[j])
+                            + R(GetVertexMap(i), edgemodearray[n])
+                            * R(edgemodearray[n], facemodearray[j]);
+                        InvR.SetValue(
+                            GetVertexMap(i), facemodearray[j], MatrixValue);
+                    }
+                }
+            }
+
+            // Edge-face contributions
+            for (i = 0; i < nedgemodestotal; ++i)
+            {
+                for (j = 0; j < nfacemodestotal; ++j)
+                {
+                    InvR.SetValue(
+                        edgemodearray[i], facemodearray[j],
+                        -R(edgemodearray[i], facemodearray[j]));
+                }
+            }
+
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                InvR.SetValue(i, i, 1.0);
+            }
+
+            return m_inversetransformationmatrix;
+	}
+
+        Array<OneD, unsigned int> Expansion3D::v_GetEdgeInverseBoundaryMap(
+            int eid)
+        {
+            int n, j;
+            int nEdgeCoeffs;
+            int nBndCoeffs = NumBndryCoeffs();
+
+            Array<OneD, unsigned int> bmap(nBndCoeffs);
+            GetBoundaryMap(bmap);
+
+            // Map from full system to statically condensed system (i.e reverse
+            // GetBoundaryMap)
+            map<int, int> invmap;
+            for (j = 0; j < nBndCoeffs; ++j)
+            {
+                invmap[bmap[j]] = j;
+            }
+
+            // Number of interior edge coefficients
+            nEdgeCoeffs = GetEdgeNcoeffs(eid) - 2;
+
+            const SpatialDomains::Geometry3DSharedPtr &geom = GetGeom3D();
+
+            Array<OneD, unsigned int> edgemaparray(nEdgeCoeffs);
+            StdRegions::Orientation   eOrient  =
+                geom->GetEorient(eid);
+            Array<OneD, unsigned int> maparray =
+                Array<OneD, unsigned int>(nEdgeCoeffs);
+            Array<OneD, int> signarray         =
+                Array<OneD, int>(nEdgeCoeffs, 1);
+
+            // maparray is the location of the edge within the matrix
+            GetEdgeInteriorMap(eid, eOrient, maparray, signarray);
+
+            for (n = 0; n < nEdgeCoeffs; ++n)
+            {
+                edgemaparray[n] = invmap[maparray[n]];
+            }
+
+            return edgemaparray;
+        }
+
+        Array<OneD, unsigned int>
+        Expansion3D::v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient)
+        {
+            int n, j;
+            int nFaceCoeffs;
+
+            int nBndCoeffs = NumBndryCoeffs();
+
+            Array<OneD, unsigned int> bmap(nBndCoeffs);
+            GetBoundaryMap(bmap);
+
+            // Map from full system to statically condensed system (i.e reverse
+            // GetBoundaryMap)
+            map<int, int> reversemap;
+            for (j = 0; j < bmap.num_elements(); ++j)
+            {
+                reversemap[bmap[j]] = j;
+            }
+
+            // Number of interior face coefficients
+            nFaceCoeffs = GetFaceIntNcoeffs(fid);
+
+            Array<OneD, unsigned int> facemaparray(nFaceCoeffs);
+            StdRegions::Orientation   fOrient; 
+            Array<OneD, unsigned int> maparray  =
+                Array<OneD, unsigned int>(nFaceCoeffs);
+            Array<OneD, int>          signarray =
+                Array<OneD, int>(nFaceCoeffs, 1);
+
+            if(faceOrient == StdRegions::eNoOrientation)
+            {
+                fOrient = GetFaceOrient(fid);
+            }
+            else
+            {
+                fOrient = faceOrient; 
+            }
+            
+            // maparray is the location of the face within the matrix
+            GetFaceInteriorMap(fid, fOrient, maparray, signarray);
+
+            for (n = 0; n < nFaceCoeffs; ++n)
+            {
+                facemaparray[n] = reversemap[maparray[n]];
+            }
+
+            return facemaparray;
+        }
+
+        NekDouble Expansion3D::v_Integrate(
+                const Array<OneD, const NekDouble>& inarray)
+        {
+            NEKERROR(ErrorUtil::efatal, 
+                     "This function is not implemented here. It is shape "
+                     "specific");
+            return 0.0;
         }
     } //end of namespace
 } //end of namespace

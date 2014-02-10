@@ -46,11 +46,8 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-
-
         class AssemblyMapDG;
         typedef boost::shared_ptr<AssemblyMapDG>  AssemblyMapDGSharedPtr;
-
 
         ///
         class AssemblyMapDG: public AssemblyMap
@@ -69,7 +66,8 @@ namespace Nektar
                                                                 &bndConstraint,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,int> &periodicVertices);
+                const map<int,int> &periodicVertices,
+                const std::string variable = "DefaultVar");
 
             /// Constructor for trace map for two-dimensional expansion.
             MULTI_REGIONS_EXPORT AssemblyMapDG(
@@ -81,7 +79,8 @@ namespace Nektar
                                                                 &bndContraint,
                 const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,int> &periodicEdges);
+                const PeriodicMap &periodicEdges,
+                const std::string variable = "DefaultVar");
 
             /// Constructor for trace map for three-dimensional expansion.
             MULTI_REGIONS_EXPORT AssemblyMapDG(
@@ -93,7 +92,8 @@ namespace Nektar
                                                                 &bndConstraint,
                 const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,PeriodicFace> &periodicFaces);
+                const PeriodicMap &periodicFaces,
+                const std::string variable = "DefaultVar");
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapDG();
@@ -133,8 +133,10 @@ namespace Nektar
 
             void SetUpUniversalDGMap(const ExpList &locExp);
 
-            void SetUpUniversalTraceMap(const ExpList &locExp,
-                                        const ExpListSharedPtr trace);
+            void SetUpUniversalTraceMap(
+                const ExpList         &locExp,
+                const ExpListSharedPtr trace,
+                const PeriodicMap     &perMap = NullPeriodicMap);
 
             virtual int v_GetLocalToGlobalMap(const int i) const;
 
@@ -182,6 +184,11 @@ namespace Nektar
 
             virtual int v_GetFullSystemBandWidth() const;
 
+            void RealignTraceElement(
+                Array<OneD, int>        &toAlign,
+                StdRegions::Orientation  orient,
+                int                      nquad1,
+                int                      nquad2 = 0);
         }; // class
 
 

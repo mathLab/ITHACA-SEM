@@ -48,7 +48,7 @@ namespace Nektar
     namespace LibUtilities
     {     
 
-        // Physical Space Interpolation methods
+        // Physical Space Galerkin projection methods
         
         LIB_UTILITIES_EXPORT void PhysGalerkinProject1D(const BasisKey &fbasis0, 
                       const Array<OneD, const NekDouble>& from,  
@@ -70,7 +70,7 @@ namespace Nektar
                       const PointsKey &tpoints0, 
                       NekDouble *to);
 
-        // 2D PhysGalkerinProjectolation
+        // 2D PhysGalerkinProjection
         LIB_UTILITIES_EXPORT void PhysGalerkinProject2D(const BasisKey &fbasis0, 
                       const BasisKey &fbasis1, 
                       const Array<OneD, const NekDouble>& from,  
@@ -92,6 +92,38 @@ namespace Nektar
                       const PointsKey &tpoints1,
                       NekDouble *to);
 
+
+
+        // 3D PhysGalkerinProjection
+        LIB_UTILITIES_EXPORT void PhysGalerkinProject3D(
+                      const BasisKey &fbasis0,
+                      const BasisKey &fbasis1,
+                      const BasisKey &fbasis2,
+                      const Array<OneD, const NekDouble>& from,
+                      const BasisKey &tbasis0,
+                      const BasisKey &tbasis1,
+                      const BasisKey &tbasis2,
+                      Array<OneD, NekDouble> &to);
+
+        LIB_UTILITIES_EXPORT void PhysGalerkinProject3D(
+                      const PointsKey &fpoints0,
+                      const PointsKey &fpoints1,
+                      const PointsKey &fpoints2,
+                      const Array<OneD, const NekDouble>& from,
+                      const PointsKey &tpoints0,
+                      const PointsKey &tpoints1,
+                      const PointsKey &tpoints2,
+                      Array<OneD, NekDouble> &to);
+
+        LIB_UTILITIES_EXPORT void PhysGalerkinProject3D(
+                      const PointsKey &fpoints0,
+                      const PointsKey &fpoints1,
+                      const PointsKey &fpoints2,
+                      const NekDouble *from,
+                      const PointsKey &tpoints0,
+                      const PointsKey &tpoints1,
+                      const PointsKey &tpoints2,
+                      NekDouble *to);
 
     } // end of namespace
 } // end of namespace

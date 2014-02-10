@@ -2,6 +2,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <LocalRegions/Expansion2D.h>
 
 #include <vtkPolyDataReader.h>
 #include <vtkPolyData.h>
@@ -10,26 +11,52 @@
 #include <vtkCellArray.h>
 #include <vtkCellDataToPointData.h>
 #include <vtkContourFilter.h>
-// Usage: VtkToFld session.xml input.vtk output.fld
 
 #include <boost/unordered_set.hpp>
+#include <boost/program_options.hpp>
 
+namespace po = boost::program_options;
+
+/**
+ * @brief Represents a vertex in the mesh.
+ *
+ * Each vertex has a 3-component coordinate and a scalar value associated with
+ * it. The factor provides a mechanism to specify precision of the coordinate
+ * comparison. Although coordinates are provided as floating-point numbers, they
+ * are stored as integers. The integer value is computed as
+ *    floor (x * factor)
+ * Therefore a factor of 100 would ensure a precision of 0.01 in the comparison.
+ */
 struct Vertex
 {
     Vertex(double pX, double pY, double pZ, double pScalar, double factor)
-        : x((int)floor(pX*factor)), y((int)floor(pY*factor)), z((int)floor(pZ*factor)), scalar(pScalar) {}
+        : x((int)floor(pX*factor)),
+          y((int)floor(pY*factor)),
+          z((int)floor(pZ*factor)),
+          scalar(pScalar) {}
+
     int x;
     int y;
     int z;
     double scalar;
 
-    bool operator=(const Vertex& v)
+    bool operator==(const Vertex& v)
     {
         return (x == v.x && y == v.y && z == v.z);
     }
 };
 typedef boost::shared_ptr<Vertex> VertexSharedPtr;
 
+/// Define comparison operator for the vertex struct
+bool operator==(const VertexSharedPtr& v1, const VertexSharedPtr& v2)
+{
+    return v1->operator==(*v2);
+}
+
+
+/**
+ * @brief Hash function for the Vertex struct used for defining sets.
+ */
 struct VertexHash : std::unary_function<VertexSharedPtr, std::size_t>
 {
     std::size_t operator()(VertexSharedPtr const& p) const
@@ -41,37 +68,91 @@ struct VertexHash : std::unary_function<VertexSharedPtr, std::size_t>
         return seed;
     }
 };
+
+/// Define a set of Vertices with associated hash function
 typedef boost::unordered_set<VertexSharedPtr, VertexHash> VertexSet;
 
-bool operator==(const VertexSharedPtr& v1, const VertexSharedPtr& v2)
-{
-    return v1->operator=(*v2);
-}
 
-
+/**
+ * Main function.
+ *
+ * Usage: VtkToFld session.xml input.vtk output.fld [options]
+ */
 int main(int argc, char* argv[])
 {
-    MultiRegions::ExpList2DSharedPtr Exp;
+    // Set up available options
+    po::options_description desc("Available options");
+    desc.add_options()
+        ("help,h",         "Produce this help message.")
+        ("name,n", po::value<string>()->default_value("Intensity"),
+                "Name of field in VTK file to use for intensity.")
+        ("outname,m", po::value<string>()->default_value("intensity"),
+                "Name of field in output FLD file.")
+        ("precision,p",  po::value<double>()->default_value(1),
+             "Precision of vertex matching.");
+
+    po::options_description hidden("Hidden options");
+    hidden.add_options()
+        ("file",   po::value<vector<string> >(), "Input filename");
+
+    po::options_description cmdline_options;
+    cmdline_options.add(desc).add(hidden);
+
+    po::positional_options_description p;
+    p.add("file", -1);
+
+    po::variables_map vm;
+
+    // Parse command-line options
+    try
+    {
+        po::store(po::command_line_parser(argc, argv).
+                  options(cmdline_options).positional(p).run(), vm);
+        po::notify(vm);
+    }
+    catch (const std::exception& e)
+    {
+        cerr << e.what() << endl;
+        cerr << desc;
+        return 1;
+    }
+
+    if ( vm.count("help") || vm.count("file") == 0 ||
+                             vm["file"].as<vector<string> >().size() != 3) {
+        cerr << "Usage: VtkToFld session.xml intensity.vtk output.fld [options]"
+             << endl;
+        cerr << desc;
+        return 1;
+    }
+
+    // Extract command-line argument values
+    std::vector<std::string> vFiles = vm["file"].as<vector<string> >();
+    const string infile  = vFiles[1];
+    const string outfile = vFiles[2];
+    const double factor  = vm["precision"].as<double>();
+    const string name    = vm["name"].as<string>();
+    const string outname = vm["outname"].as<string>();
 
     std::vector<std::string> vFilenames;
-    vFilenames.push_back(std::string(argv[1]));
+    LibUtilities::SessionReaderSharedPtr vSession;
+    SpatialDomains::MeshGraphSharedPtr graph2D;
+    MultiRegions::ExpList2DSharedPtr Exp;
 
-    LibUtilities::SessionReaderSharedPtr vSession
-            = LibUtilities::SessionReader::CreateInstance(2, argv, vFilenames);
+    vFilenames.push_back(vFiles[0]);
+    vSession = LibUtilities::SessionReader::CreateInstance(2, argv, vFilenames);
 
     try
     {
-        const double factor = atof(argv[4]);
-
         //----------------------------------------------
         // Read in mesh from input file
-        SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
+        graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::
+                    AllocateSharedPtr(vSession);
         //----------------------------------------------
 
         //----------------------------------------------
         // Define Expansion
         Exp = MemoryManager<MultiRegions::ExpList2D>::
-            AllocateSharedPtr(vSession,graph2D);
+                    AllocateSharedPtr(vSession,graph2D);
         //----------------------------------------------
 
         //----------------------------------------------
@@ -98,8 +179,9 @@ int main(int argc, char* argv[])
         //----------------------------------------------
 
         vtkPolyDataReader *vtkMeshReader = vtkPolyDataReader::New();
-        vtkMeshReader->SetFileName(argv[2]);
+        vtkMeshReader->SetFileName(infile.c_str());
         vtkMeshReader->Update();
+
         vtkPolyData *vtkMesh = vtkMeshReader->GetOutput();
         vtkCellDataToPointData* c2p = vtkCellDataToPointData::New();
         c2p->SetInput(vtkMesh);
@@ -108,10 +190,13 @@ int main(int argc, char* argv[])
         vtkPolyData *vtkDataAtPoints = c2p->GetPolyDataOutput();
 
         vtkPoints *vtkPoints = vtkMesh->GetPoints();
-        vtkCellArray *vtkPolys = vtkMesh->GetPolys();
-
         ASSERTL0(vtkPoints, "ERROR: cannot get points from mesh.");
+
+        vtkCellArray *vtkPolys = vtkMesh->GetPolys();
         ASSERTL0(vtkPolys,  "ERROR: cannot get polygons from mesh.");
+
+        vtkPointData *vtkPData = vtkDataAtPoints->GetPointData();
+        ASSERTL0(vtkPolys,  "ERROR: cannot get point data from file.");
 
         VertexSet points;
         VertexSet::iterator vIter;
@@ -119,20 +204,37 @@ int main(int argc, char* argv[])
         double val;
         double x, y, z;
         int coeff_idx;
-        int i,j;
+        int i,j,n;
+
+        if (!vtkDataAtPoints->GetPointData()->HasArray(name.c_str())) {
+            n = vtkDataAtPoints->GetPointData()->GetNumberOfArrays();
+            cerr << "Input file '" << infile
+                 << "' does not have a field named '"
+                 << name << "'" << endl;
+            cerr << "There are " << n << " arrays in this file." << endl;
+            for (int i = 0; i < n; ++i)
+            {
+                cerr << "  "
+                     << vtkDataAtPoints->GetPointData()->GetArray(i)->GetName()
+                     << endl;
+            }
+            return 1;
+        }
 
         // Build up an unordered set of vertices from the VTK file. For each
         // vertex a hashed value of the coordinates is generated to within a
         // given tolerance.
-        for (i = 0; i < vtkPoints->GetNumberOfPoints(); ++i)
+        n = vtkPoints->GetNumberOfPoints();
+        for (i = 0; i < n; ++i)
         {
             vtkPoints->GetPoint(i,p);
-            val = vtkDataAtPoints->GetPointData()->GetScalars("Image_Intensity")->GetTuple1(i);
+            val = vtkPData->GetScalars(name.c_str())->GetTuple1(i);
             boost::shared_ptr<Vertex> v(new Vertex(p[0],p[1],p[2],val,factor));
             points.insert(v);
         }
 
         // Now process each vertex of each element in the mesh
+        SpatialDomains::PointGeomSharedPtr vert;
         for (i = 0; i < Exp->GetNumElmts(); ++i)
         {
             StdRegions::StdExpansionSharedPtr e = Exp->GetExp(i);
@@ -142,7 +244,8 @@ int main(int argc, char* argv[])
                 coeff_idx = Exp->GetCoeff_Offset(i) + e->GetVertexMap(j);
 
                 // Get the coordinates of the vertex
-                SpatialDomains::VertexComponentSharedPtr vert = e->GetGeom2D()->GetVertex(j);
+                vert = LocalRegions::Expansion2D::FromStdExp(e)->GetGeom2D()->
+                                                                GetVertex(j);
                 vert->GetCoords(x,y,z);
 
                 // Look up the vertex in the VertexSet
@@ -154,9 +257,8 @@ int main(int argc, char* argv[])
                 // corresponding coefficient.
                 if (vIter == points.end())
                 {
-                    cerr << "Vertex " << i << " not found."
-                            << x << ", " << y << ", " << z << endl;
-                    cerr << v->x << ", " << v->y << ", " << v->z << endl;
+                    cerr << "Vertex " << i << " not found. Looking for ("
+                            << x << ", " << y << ", " << z << ")" << endl;
                 }
                 else
                 {
@@ -168,21 +270,18 @@ int main(int argc, char* argv[])
 
         //-----------------------------------------------
         // Write solution to file
-        string   out(argv[3]);
-        if (vSession->GetComm()->GetSize() > 1)
-        {
-            out += "." + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
-        }
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                                                    = Exp->GetFieldDefinitions();
+                                                = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
         for(i = 0; i < FieldDef.size(); ++i)
         {
-            FieldDef[i]->m_fields.push_back("intensity");
+            FieldDef[i]->m_fields.push_back(outname);
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        LibUtilities::Write(out, FieldDef, FieldData);
+
+        LibUtilities::FieldIO vFld(vSession->GetComm());
+        vFld.Write(outfile, FieldDef, FieldData);
         //-----------------------------------------------
     }
     catch (...) {

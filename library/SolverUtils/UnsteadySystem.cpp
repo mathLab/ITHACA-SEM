@@ -36,6 +36,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SolverUtils/UnsteadySystem.h>
@@ -84,31 +85,24 @@ namespace Nektar
             m_session->MatchSolverInfo("REACTIONADVANCEMENT", "Explicit",
                                        m_explicitReaction, true);
 
-            // Determine TimeIntegrationMethod to use
-            ASSERTL0(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"),
-                     "No TIMEINTEGRATIONMETHOD defined in session.");
-            int i;
-            for (i = 0; i < (int)LibUtilities::SIZE_TimeIntegrationMethod; ++i)
+            // For steady problems, we do not initialise the time integration
+            if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
             {
-                bool match;
-                m_session->MatchSolverInfo(
-                    "TIMEINTEGRATIONMETHOD",
-                    LibUtilities::TimeIntegrationMethodMap[i], match, false);
-                if (match)
-                {
-                    m_timeIntMethod = (LibUtilities::TimeIntegrationMethod) i;
-                    break;
-                }
+                m_intScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
+                    CreateInstance(m_session->GetSolverInfo(
+                                       "TIMEINTEGRATIONMETHOD"));
+
+                // Load generic input parameters
+                m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+                m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
+
+                // Set up time to be dumped in field information
+                m_fieldMetaDataMap["Time"] =
+                        boost::lexical_cast<std::string>(m_time);
             }
-            ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod,
-                     "Invalid time integration type.");
 
-            // Load generic input parameters
-            m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-            m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
-
-            // Set up time to be dumped in field information
-            m_fieldMetaDataMap["Time"] = m_time; 
+            // By default attempt to forward transform initial condition.
+            m_homoInitialFwd = true;
 
             // Set up filters
             LibUtilities::FilterMap::const_iterator x;
@@ -134,8 +128,8 @@ namespace Nektar
          */
         NekDouble UnsteadySystem::MaxTimeStepEstimator()
         {
-            NekDouble TimeStability;
-            switch(m_timeIntMethod)
+            NekDouble TimeStability = 0.0;
+            switch(m_intScheme->GetIntegrationMethod())
             {
                 case LibUtilities::eForwardEuler:
                 case LibUtilities::eClassicalRungeKutta4:
@@ -172,20 +166,35 @@ namespace Nektar
          */
         void UnsteadySystem::v_DoSolve()
         {
+            ASSERTL0(m_intScheme != 0, "No time integration scheme.");
+
             int i, nchk = 1;
             int nvariables = 0;
+            int nfields = m_fields.num_elements();
 
             if (m_intVariables.empty())
             {
-                for (i = 0; i < m_fields.num_elements(); ++i)
+                for (i = 0; i < nfields; ++i)
                 {
                     m_intVariables.push_back(i);
                 }
-                nvariables = m_fields.num_elements();
+                nvariables = nfields;
             }
             else
             {
                 nvariables = m_intVariables.size();
+            }
+
+            // Integrate in wave-space if using homogeneous1D
+            if(m_HomogeneousType == eHomogeneous1D && m_homoInitialFwd)
+            {
+                for(i = 0; i < nfields; ++i)
+                {
+                    m_fields[i]->HomogeneousFwdTrans(m_fields[i]->GetPhys(),
+                                                     m_fields[i]->UpdatePhys());
+                    m_fields[i]->SetWaveSpace(true);
+                    m_fields[i]->SetPhysState(false);
+                }
             }
 
             // Set up wrapper to fields data storage.
@@ -199,205 +208,11 @@ namespace Nektar
                 m_fields[m_intVariables[i]]->SetPhysState(false);
             }
             
-            // Declare an array of TimeIntegrationSchemes For multi-stage
-            // methods, this array will have just one entry containing the
-            // actual multi-stage method...
-            // For multi-steps method, this can have multiple entries
-            //  - the first scheme will used for the first timestep (this
-            //    is an initialization scheme)
-            //  - the second scheme will used for the second timestep
-            //    (this is an initialization scheme)
-            //  - ...
-            //  - the last scheme will be used for all other time-steps
-            //    (this will be the actual scheme)
-            
-            Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
-            LibUtilities::TimeIntegrationSolutionSharedPtr u;
-            int numMultiSteps;
-            
-            switch(m_timeIntMethod)
-            {
-                case LibUtilities::eIMEXdirk_1_1_1:
-                case LibUtilities::eIMEXdirk_1_2_1:
-                case LibUtilities::eIMEXdirk_1_2_2:
-                case LibUtilities::eIMEXdirk_4_4_3:	  
-                case LibUtilities::eIMEXdirk_2_2_2:
-                case LibUtilities::eIMEXdirk_2_3_3:
-                case LibUtilities::eIMEXdirk_2_3_2:
-                case LibUtilities::eIMEXdirk_3_4_3:	  
-                case LibUtilities::eDIRKOrder2:
-                case LibUtilities::eDIRKOrder3:
-                case LibUtilities::eBackwardEuler:
-                case LibUtilities::eForwardEuler:
-                case LibUtilities::eClassicalRungeKutta4:	  
-                case LibUtilities::eIMEXOrder1:	
-                case LibUtilities::eMidpoint:
-                case LibUtilities::eRungeKutta2_ModifiedEuler:
-                case LibUtilities::eRungeKutta2_ImprovedEuler:
-                {
-                    numMultiSteps = 1;
-                    
-                    IntScheme = Array<OneD, LibUtilities::
-                        TimeIntegrationSchemeSharedPtr>(numMultiSteps);
-                    
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey(m_timeIntMethod);
-                    IntScheme[0] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey];
-                    
-                    u = IntScheme[0]->InitializeScheme(
-                        m_timestep, fields, m_time, m_ode);
-                    
-                    break;
-                }
-                case LibUtilities::eAdamsBashforthOrder2:
-                case LibUtilities::eAdamsBashforthOrder3:	  
-                {
-                    numMultiSteps = 2;
+            // Initialise time integration scheme
+            m_intSoln = m_intScheme->InitializeScheme(
+                m_timestep, fields, m_time, m_ode);
 
-                    IntScheme = Array<OneD, LibUtilities::
-                        TimeIntegrationSchemeSharedPtr>(numMultiSteps);
-
-                    // Used in the first time step to initalize the scheme
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey0(
-                                                    LibUtilities::
-                                                    eForwardEuler);
-
-                    // Used for all other time steps
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey1(m_timeIntMethod);
-                    IntScheme[0] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey0];
-                    IntScheme[1] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey1];
-
-                    // Initialise the scheme for actual time integration scheme
-                    u = IntScheme[1]->InitializeScheme(
-                        m_timestep, fields, m_time, m_ode);
-
-                    break;
-                }
-                case LibUtilities::eBDFImplicitOrder2:
-                {
-                    numMultiSteps = 2;
-                    
-                    IntScheme = Array<OneD, LibUtilities::
-                        TimeIntegrationSchemeSharedPtr>(numMultiSteps);
-                    
-                    // Used in the first time step to initalize the scheme
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey0(
-                                                    LibUtilities::
-                                                    eBackwardEuler);
-
-                    // Used for all other time steps
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey1(m_timeIntMethod);
-                    IntScheme[0] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey0];
-                    IntScheme[1] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey1];
-                    
-                    // Initialise the scheme for actual time integration scheme
-                    u = IntScheme[1]->InitializeScheme(
-                        m_timestep, fields, m_time, m_ode);
-                    
-                    break;
-                }
-                case LibUtilities::eIMEXOrder2: 
-                case LibUtilities::eAdamsMoultonOrder2:
-                {
-                    numMultiSteps = 2;
-                    
-                    IntScheme = Array<OneD, LibUtilities::
-                        TimeIntegrationSchemeSharedPtr>(numMultiSteps);
-
-                    // Used in the first time step to initalize the scheme
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey0(LibUtilities::
-                                                         eIMEXOrder1);
-                    
-                    // Used for all other time steps
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey1(m_timeIntMethod);
-                    IntScheme[0] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey0];
-                    IntScheme[1] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey1];
-                    
-                    // Initialise the scheme for actual time integration scheme
-                    u = IntScheme[1]->InitializeScheme(
-                        m_timestep, fields, m_time, m_ode);
-                    
-                    break;
-                }    
-                case LibUtilities::eIMEXGear:	  
-                {
-                    numMultiSteps = 2;
-
-                    IntScheme = Array<OneD, LibUtilities::
-                        TimeIntegrationSchemeSharedPtr>(numMultiSteps);
-
-                    // Used in the first time step to initalize the scheme
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey0(LibUtilities::
-                                                         eIMEXdirk_2_2_2);
-
-                    // Used for all other time steps
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey1(m_timeIntMethod);
-                    IntScheme[0] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey0];
-                    IntScheme[1] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey1];
-
-                    // Initialise the scheme for actual time integration scheme
-                    u = IntScheme[1]->InitializeScheme(
-                        m_timestep, fields, m_time, m_ode);
-                    
-                    break;
-                } 
-                case LibUtilities::eIMEXOrder3:
-                case LibUtilities::eCNAB:
-                case LibUtilities::eMCNAB:                
-                {
-                    numMultiSteps = 3;
-                    
-                    IntScheme = Array<OneD, LibUtilities::
-                        TimeIntegrationSchemeSharedPtr>(numMultiSteps);
-
-                    // Used in the first time step to initalize the scheme
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey0(LibUtilities::
-                                                         eIMEXdirk_3_4_3);
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey1(LibUtilities::
-                                                         eIMEXdirk_3_4_3);
-
-                    // Used for all other time steps
-                    LibUtilities::
-                        TimeIntegrationSchemeKey IntKey2(m_timeIntMethod);
-                    IntScheme[0] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey0];
-                    IntScheme[1] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey1];
-                    IntScheme[2] = LibUtilities::
-                        TimeIntegrationSchemeManager()[IntKey2];
-
-                    // Initialise the scheme for actual time integration scheme
-                    u = IntScheme[2]->InitializeScheme(
-                        m_timestep, fields, m_time, m_ode);
-                    
-                    break;
-                }
-                default:
-                {
-                    ASSERTL0(false, "populate switch statement for "
-                                    "integration scheme");
-                }
-            }
-
+            // Initialise filters
             std::vector<FilterSharedPtr>::iterator x;
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
@@ -429,7 +244,9 @@ namespace Nektar
             int       step          = 0;
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
-            
+            NekDouble cpuTime       = 0.0;
+            NekDouble elapsed       = 0.0;
+
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
             {
@@ -452,33 +269,60 @@ namespace Nektar
                     }
                 }
                 
+                // Perform any solver-specific pre-integration steps
+                if (v_PreIntegrate(step))
+                {
+                    break;
+                }
+
                 timer.Start();
-                fields = IntScheme[min(step, numMultiSteps-1)]->TimeIntegrate(
-                    m_timestep, u, m_ode);
+                fields = m_intScheme->TimeIntegrate(
+                    step, m_timestep, m_intSoln, m_ode);
                 timer.Stop();
-                
+
                 m_time  += m_timestep;
-                intTime += timer.TimePerTest(1);
+                elapsed  = timer.TimePerTest(1);
+                intTime += elapsed;
+                cpuTime += elapsed;
 		
                 // Write out status information
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_infosteps))
                 {
-                    cout << "Steps: "     << setw(8)  << left << step+1 << " "
-                         << "Time: "      << setw(12) << left << m_time << " "
-                         << "Time-step: " << setw(12) << left << m_timestep;
-                    cout << endl;
+                    cout << "Steps: " << setw(8)  << left << step+1 << " "
+                         << "Time: "  << setw(12) << left << m_time;
+
+                    if (m_cflSafetyFactor)
+                    {
+                        cout << " Time-step: " << setw(12)
+                             << left << m_timestep;
+                    }
+
+                    stringstream ss;
+                    ss << cpuTime << "s";
+                    cout << " CPU Time: " << setw(8) << left
+                         << ss.str() << endl;
+
+                    cpuTime = 0.0;
                 }
                 
-                // Transform data into coefficient space
-                for (i = 0; i < m_intVariables.size(); ++i)
+                // Perform any solver-specific post-integration steps
+                if (v_PostIntegrate(step))
                 {
+                    break;
+                }
+
+                // Transform data into coefficient space
+                for (i = 0; i < nvariables; ++i)
+                {
+                    m_fields[m_intVariables[i]]->SetPhys(fields[i]);
                     m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
                         fields[i],
                         m_fields[m_intVariables[i]]->UpdateCoeffs());
                     m_fields[m_intVariables[i]]->SetPhysState(false);
                 }
                 
+                // Update filters
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
                 {
@@ -489,7 +333,37 @@ namespace Nektar
                 if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
                     doCheckTime)
                 {
-                    Checkpoint_Output(nchk++);
+                    if(m_HomogeneousType == eHomogeneous1D)
+                    {
+                        vector<bool> transformed(nfields, false);
+                        for(i = 0; i < nfields; i++)
+                        {
+                            if (m_fields[i]->GetWaveSpace())
+                            {
+                                m_fields[i]->SetWaveSpace(false);
+                                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                                      m_fields[i]->UpdatePhys());
+                                m_fields[i]->SetPhysState(true);
+                                transformed[i] = true;
+                            }
+                        }
+                        Checkpoint_Output(nchk++);
+                        for(i = 0; i < nfields; i++)
+                        {
+                            if (transformed[i])
+                            {
+                                m_fields[i]->SetWaveSpace(true);
+                                m_fields[i]->HomogeneousFwdTrans(
+                                    m_fields[i]->GetPhys(),
+                                    m_fields[i]->UpdatePhys());
+                                m_fields[i]->SetPhysState(false);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Checkpoint_Output(nchk++);
+                    }
                     doCheckTime = false;
                 }
                 
@@ -497,18 +371,7 @@ namespace Nektar
                 ++step;
             }
             
-            // Store final solution at the end of time integration
-            for(i = 0; i < m_intVariables.size(); ++i)
-            {
-                if(m_fields[m_intVariables[i]]->GetPhysState() == false)
-                {
-                    m_fields[m_intVariables[i]]->BwdTrans(
-                        m_fields[m_intVariables[i]]->GetCoeffs(),
-                        m_fields[m_intVariables[i]]->UpdatePhys());
-                }
-                m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
-            }
-            
+            // Print out summary statistics
             if (m_session->GetComm()->GetRank() == 0)
             {
                 if (m_cflSafetyFactor > 0.0)
@@ -519,6 +382,30 @@ namespace Nektar
                 cout << "Time-integration  : " << intTime  << "s"   << endl;
             }
             
+            // If homogeneous, transform back into physical space if necessary.
+            if(m_HomogeneousType == eHomogeneous1D)
+            {
+                for(i = 0; i < nfields; i++)
+                {
+                    if (m_fields[i]->GetWaveSpace())
+                    {
+                        m_fields[i]->SetWaveSpace(false);
+                        m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                              m_fields[i]->UpdatePhys());
+                        m_fields[i]->SetPhysState(true);
+                    }
+                }
+            }
+            else
+            {
+                for(i = 0; i < nvariables; ++i)
+                {
+                    m_fields[m_intVariables[i]]->SetPhys(fields[i]);
+                    m_fields[m_intVariables[i]]->SetPhysState(true);
+                }
+            }
+
+            // Finalise filters
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
                 (*x)->Finalise(m_fields, m_time);
@@ -545,29 +432,27 @@ namespace Nektar
          * @brief Prints a summary with some information regards the 
          * time-stepping.
          */
-        void UnsteadySystem::v_PrintSummary(std::ostream &out)
+        void UnsteadySystem::v_GenerateSummary(SummaryList& s)
         {
-            EquationSystem::v_PrintSummary(out);
-            out << "\tAdvection       : " 
-                << (m_explicitAdvection ? "explicit" : "implicit") << endl;
-            out << "\tDiffusion       : " 
-                << (m_explicitDiffusion ? "explicit" : "implicit") << endl;
-            
+            EquationSystem::v_GenerateSummary(s);
+            AddSummaryItem(s, "Advection",
+                           m_explicitAdvection ? "explicit" : "implicit");
+            AddSummaryItem(s, "Diffusion",
+                           m_explicitDiffusion ? "explicit" : "implicit");
+
             if (m_session->GetSolverInfo("EQTYPE") 
-                == "SteadyAdvectionDiffusionReaction")
+                    == "SteadyAdvectionDiffusionReaction")
             {
-                out << "\tReaction        : " 
-                    << (m_explicitReaction  ? "explicit" : "implicit") << endl;
+                AddSummaryItem(s, "Reaction",
+                               m_explicitReaction  ? "explicit" : "implicit");
             }
-            
-            out << "\tIntegration Type: " 
-            << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]<< endl;
-            out << "\tTime Step       : " 
-            << m_timestep                                             << endl;
-            out << "\tNo. of Steps    : " 
-            << m_steps                                                << endl;
-            out << "\tCheckpoints     : " 
-            << m_checksteps << " steps"                               << endl;
+
+            AddSummaryItem(s, "Time Step", m_timestep);
+            AddSummaryItem(s, "No. of Steps", m_steps);
+            AddSummaryItem(s, "Checkpoints (steps)", m_checksteps);
+            AddSummaryItem(s, "Integration Type",
+                           LibUtilities::TimeIntegrationMethodMap[
+                               m_intScheme->GetIntegrationMethod()]);
         }
         
         /**
@@ -772,32 +657,43 @@ namespace Nektar
 
         void UnsteadySystem::CheckForRestartTime(NekDouble &time)
         {
-            
             if (m_session->DefinesFunction("InitialConditions"))
             {
-                for(int i = 0; i < m_fields.num_elements(); ++i)
+                for (int i = 0; i < m_fields.num_elements(); ++i)
                 {
-                    
                     LibUtilities::FunctionType vType;
-                    
-                    vType = m_session->GetFunctionType("InitialConditions", m_session->GetVariable(i));
+
+                    vType = m_session->GetFunctionType(
+                        "InitialConditions", m_session->GetVariable(i));
+
                     if (vType == LibUtilities::eFunctionTypeFile)
                     {
                         std::string filename
-                            = m_session->GetFunctionFilename("InitialConditions", 
-                                                             m_session->GetVariable(i));
+                            = m_session->GetFunctionFilename(
+                                "InitialConditions", m_session->GetVariable(i));
 
-                        LibUtilities::ImportFieldMetaData(filename,m_fieldMetaDataMap);
-                        
+                        fs::path pfilename(filename);
+
+                        // redefine path for parallel file which is in directory
+                        if(fs::is_directory(pfilename))
+                        {
+                            fs::path metafile("Info.xml");
+                            fs::path fullpath = pfilename / metafile;
+                            filename = LibUtilities::PortablePath(fullpath);
+                        }
+                        m_fld->ImportFieldMetaData(filename, m_fieldMetaDataMap);
+
                         // check to see if time defined
-                        if(m_fieldMetaDataMap != LibUtilities::NullFieldMetaDataMap)
+                        if (m_fieldMetaDataMap !=
+                                LibUtilities::NullFieldMetaDataMap)
                         {
                             LibUtilities::FieldMetaDataMap::iterator iter; 
                             
                             iter = m_fieldMetaDataMap.find("Time");
-                            if(iter != m_fieldMetaDataMap.end())
+                            if (iter != m_fieldMetaDataMap.end())
                             {
-                                time = iter->second; 
+                                time = boost::lexical_cast<NekDouble>(
+                                    iter->second);
                             }
                         }
                         
@@ -983,6 +879,16 @@ namespace Nektar
         {
             ASSERTL0(false, "Not defined for this class");
             return 0.0;
+        }
+
+        bool UnsteadySystem::v_PreIntegrate(int step)
+        {
+            return false;
+        }
+
+        bool UnsteadySystem::v_PostIntegrate(int step)
+        {
+            return false;
         }
     }
 }

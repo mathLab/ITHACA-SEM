@@ -252,7 +252,7 @@
     </GEOMETRY>
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="9" FIELDS="eta,u,v" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="9" FIELDS="h,hu,hv" TYPE="MODIFIED" />
     </EXPANSIONS>
 
     <CONDITIONS>
@@ -275,9 +275,9 @@
         </PARAMETERS>
 
         <VARIABLES>
-            <V ID="0"> eta  </V>
-            <V ID="1"> u </V>
-            <V ID="2"> v </V>
+            <V ID="0"> h  </V>
+            <V ID="1"> hu </V>
+            <V ID="2"> hv </V>
         </VARIABLES>
 
         <BOUNDARYREGIONS>
@@ -286,9 +286,9 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="eta" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="u" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="v" USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="h" USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="hu" USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="hv" USERDEFINEDTYPE="Wall" VALUE="0" />
             </REGION>
         </BOUNDARYCONDITIONS>
 
@@ -299,22 +299,21 @@
             <E VAR="d" VALUE="1" />
         </FUNCTION>
 
-        <FUNCTION NAME="ExactSolution">
-            <E VAR="eta"
-                VALUE="(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
-            <E VAR="u"
-                VALUE=" ( (0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(-9.0+6.0*y*y)/(4.0)*exp(-0.5*y*y) )" />
-            <E VAR="v"
-                VALUE=" ( (-2.0*0.395*tanh(0.395*x))*(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(2.0*y)*exp(-0.5*y*y))" />
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="h"
+                VALUE="1+(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
+            <E VAR="hu"
+                VALUE=" ( (0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(-9.0+6.0*y*y)/(4.0)*exp(-0.5*y*y) ) *
+                (1+(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y))" />
+            <E VAR="hv"
+                VALUE=" ( (-2.0*0.395*tanh(0.395*x))*(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(2.0*y)*exp(-0.5*y*y)) *
+                (1+(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y))" />
         </FUNCTION>
 
-        <FUNCTION NAME="InitialConditions">
-            <E VAR="eta"
-                VALUE="(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
-            <E VAR="u"
-                VALUE=" ( (0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(-9.0+6.0*y*y)/(4.0)*exp(-0.5*y*y) )" />
-            <E VAR="v"
-                VALUE=" ( (-2.0*0.395*tanh(0.395*x))*(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(2.0*y)*exp(-0.5*y*y))" />
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="h" VALUE="0" />
+            <E VAR="hu" VALUE=" 0" />
+            <E VAR="hv" VALUE=" 0" />
         </FUNCTION>
 
     </CONDITIONS>

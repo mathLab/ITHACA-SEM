@@ -84,20 +84,13 @@ namespace Nektar
             // See if we have boundary regions defined.
             TiXmlElement *boundaryRegionsElement = boundaryRegions->FirstChildElement("B");
 
-            // Sequential counter for the composite numbers.
-            int nextBoundaryRegionNumber = -1;
-
             while (boundaryRegionsElement)
             {
                 /// All elements are of the form: "<B ID="#"> ... </B>", with
                 /// ? being the element type.
-
-                nextBoundaryRegionNumber++;
-
                 int indx;
                 int err = boundaryRegionsElement->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                ASSERTL0(indx == nextBoundaryRegionNumber, "Boundary region IDs must begin with zero and be sequential.");
 
                 TiXmlNode* boundaryRegionChild = boundaryRegionsElement->FirstChild();
                 // This is primarily to skip comments that may be present.
@@ -123,9 +116,13 @@ namespace Nektar
                 {
                     // Extract the composites from the string and return them in a list.
                     BoundaryRegionShPtr boundaryRegion(MemoryManager<BoundaryRegion>::AllocateSharedPtr());
-                    m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
 
-                    m_boundaryRegions.push_back(boundaryRegion);
+                    ASSERTL0(m_boundaryRegions.count(indx) == 0,
+                             "Boundary region "+indxStr+ " defined more than "
+                             "once!");
+                    
+                    m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
+                    m_boundaryRegions[indx] = boundaryRegion;
                 }
 
                 boundaryRegionsElement = boundaryRegionsElement->NextSiblingElement("B");
@@ -157,8 +154,10 @@ namespace Nektar
                 std::string boundaryRegionIDStr;
                 std::ostringstream boundaryRegionIDStrm(boundaryRegionIDStr);
                 boundaryRegionIDStrm << boundaryRegionID;
-                ASSERTL0(boundaryRegionID < m_boundaryRegions.size(),
-                (std::string("Boundary region ID not found: ") + boundaryRegionIDStr).c_str());
+
+                ASSERTL0(m_boundaryRegions.count(boundaryRegionID) == 1,
+                         "Boundary region " + boost::lexical_cast<
+                         string>(boundaryRegionID)+ " not found");
 
                 // Here is the boundary region.
                 // m_boundaryRegions[boundaryRegionID];
@@ -555,43 +554,43 @@ namespace Nektar
                         {
                             // Use the iterator from above, which must point to the variable.
                             attr = attr->Next();
-							
+                            
                             if (attr)
                             {
                                 int P = 0;
-								int D1 = 0;
-								int D2 = 0;
-								
-								std::string userDefined;
-								
+                                int D1 = 0;
+                                int D2 = 0;
+				
+                                std::string userDefined;
+				
                                 while(attr) {
-									
-									attrName = attr->Name();
+                                    
+                                    attrName = attr->Name();
 									
                                     if (attrName=="P") {
-										
+                                        
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();	
                                         m_session->SubstituteExpressions(attrData);
                                         P = atoi(attrData.c_str());
                                     }
-									else if (attrName=="D1") {
+                                    else if (attrName=="D1") {
+                                        
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();
+                                        m_session->SubstituteExpressions(attrData);
+                                        D1 = atoi(attrData.c_str());
+					
+                                    }
+                                    else if (attrName=="D2") {
+                                        
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();
+                                        m_session->SubstituteExpressions(attrData);
+                                        D2 = atoi(attrData.c_str());
 										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D1 = atoi(attrData.c_str());
-										
-									}
-									else if (attrName=="D2") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D2 = atoi(attrData.c_str());
-										
-									}
-									attr = attr->Next();
+                                    }
+                                    attr = attr->Next();
                                 }
 								
                                 BoundaryConditionShPtr bifurcationCondition(MemoryManager<BifurcationBoundaryCondition>::AllocateSharedPtr(P, D1, D2));
@@ -613,41 +612,41 @@ namespace Nektar
                             if (attr)
                             {
                                 int P = 0;
-								int D1 = 0;
-								int D2 = 0;
-								
-								std::string userDefined;
+                                int D1 = 0;
+                                int D2 = 0;
+				
+                                std::string userDefined;
 								
                                 while(attr) {
-									
-									attrName = attr->Name();
-									
+                                    
+                                    attrName = attr->Name();
+                                    
                                     if (attrName=="P") {
-										
+                                        
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();	
                                         m_session->SubstituteExpressions(attrData);
                                         P = atoi(attrData.c_str());
                                     }
-									else if (attrName=="D1") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D1 = atoi(attrData.c_str());
-										
-									}
-									else if (attrName=="D2") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D2 = atoi(attrData.c_str());
-										
-									}
-									attr = attr->Next();
+                                    else if (attrName=="D1") {
+                                        
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();
+                                        m_session->SubstituteExpressions(attrData);
+                                        D1 = atoi(attrData.c_str());
+					
+                                    }
+                                    else if (attrName=="D2") {
+                                        
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();
+                                        m_session->SubstituteExpressions(attrData);
+                                        D2 = atoi(attrData.c_str());
+					
+                                    }
+                                    attr = attr->Next();
                                 }
-								
+				
                                 BoundaryConditionShPtr mergingCondition(MemoryManager<MergingBoundaryCondition>::AllocateSharedPtr(P, D1, D2));
                                 (*boundaryConditions)[*iter]  = mergingCondition;
                             }

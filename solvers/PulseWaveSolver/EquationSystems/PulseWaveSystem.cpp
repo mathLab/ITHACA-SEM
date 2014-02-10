@@ -99,7 +99,7 @@ namespace Nektar
         // Setting parameteres for homogenous problems
         m_HomoDirec       = 0;
         m_useFFT          = false;
-        m_dealiasing      = false;
+        m_homogen_dealiasing      = false;
         m_HomogeneousType = eNotHomogeneous;
 	
         		
@@ -1468,7 +1468,7 @@ namespace Nektar
 					
 					if(exactsoln.num_elements())
 					{
-						L2error = m_fields[field]->L2(exactsoln);
+                                                L2error = m_fields[field]->L2(m_fields[field]->GetPhys(), exactsoln);
 					}
 					else if (m_session->DefinesFunction("ExactSolution"))
 					{
@@ -1478,11 +1478,11 @@ namespace Nektar
 						= m_session->GetFunction("ExactSolution",field);
 						EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",m_time);
 						
-						L2error = m_fields[field]->L2(exactsoln);
+						L2error = m_fields[field]->L2(m_fields[field]->GetPhys(), exactsoln);
 					}
 					else
 					{
-						L2error = m_fields[field]->L2();
+						L2error = m_fields[field]->L2(m_fields[field]->GetPhys());
 					}
 				}
 				else

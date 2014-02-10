@@ -131,7 +131,7 @@ namespace Nektar
             
             bool isFace_0354(int x, int y, int z, int npts)
             {
-                return y == 0;
+                return x == 0;
             }
 
             bool isFace(int x, int y, int z, int npts){

@@ -54,8 +54,8 @@ EXTRACT_STATIC         = YES
 EXTRACT_LOCAL_CLASSES  = YES
 EXTRACT_LOCAL_METHODS  = YES
 EXTRACT_ANON_NSPACES   = NO
-HIDE_UNDOC_MEMBERS     = YES
-HIDE_UNDOC_CLASSES     = YES
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
 HIDE_FRIEND_COMPOUNDS  = NO
 HIDE_IN_BODY_DOCS      = NO
 INTERNAL_DOCS          = NO
@@ -76,6 +76,7 @@ MAX_INITIALIZER_LINES  = 30
 SHOW_USED_FILES        = NO
 SHOW_DIRECTORIES       = YES
 FILE_VERSION_FILTER    = 
+CITE_BIB_FILES         = doxygen.bib
 #---------------------------------------------------------------------------
 # configuration options related to warning and progress messages
 #---------------------------------------------------------------------------
@@ -95,6 +96,7 @@ INPUT                  = ./ \
                          ../../../library/SpatialDomains/ \
                          ../../../library/LocalRegions/ \
                          ../../../library/MultiRegions/ \
+                         ../../../library/SolverUtils/ \
                          ../../../solvers/ \
                          ../../../utilities/
 INPUT_ENCODING         = UTF-8
@@ -144,7 +146,7 @@ FILTER_SOURCE_FILES    = NO
 #---------------------------------------------------------------------------
 # configuration options related to source browsing
 #---------------------------------------------------------------------------
-SOURCE_BROWSER         = NO
+SOURCE_BROWSER         = YES
 INLINE_SOURCES         = YES
 STRIP_CODE_COMMENTS    = NO
 REFERENCED_BY_RELATION = YES
@@ -166,7 +168,8 @@ HTML_OUTPUT            = ../code
 HTML_FILE_EXTENSION    = .html
 HTML_HEADER            = 
 HTML_FOOTER            = 
-HTML_STYLESHEET        = doxygen.css
+HTML_STYLESHEET        =
+HTML_EXTRA_STYLESHEET  = doxygen-fixed-width.css
 HTML_ALIGN_MEMBERS     = YES
 GENERATE_HTMLHELP      = NO
 GENERATE_DOCSET        = NO

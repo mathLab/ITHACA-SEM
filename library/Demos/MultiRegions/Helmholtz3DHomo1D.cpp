@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    LibUtilities::FieldIOSharedPtr fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+
     //----------------------------------------------
     // Read in mesh from input file
     SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
@@ -120,8 +122,8 @@ int main(int argc, char *argv[])
         Fce->SetPhys(fce);
         Fce->SetPhysState(true);
 
-        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "L infinity error: " << Exp->Linf(Exp->GetPhys(), Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Exp->GetPhys(), Fce->GetPhys()) << endl;
         //--------------------------------------------
     }
     //----------------------------------------------
@@ -144,7 +146,7 @@ int main(int argc, char *argv[])
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
 
-    LibUtilities::Write(out, FieldDef, FieldData);
+    fld->Write(out, FieldDef, FieldData);
     //-----------------------------------------------
 
     vSession->Finalise();

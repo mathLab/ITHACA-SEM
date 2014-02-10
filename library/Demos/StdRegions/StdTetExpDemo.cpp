@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion *ste;
+    StdRegions::StdExpansion *ste = NULL;
     
     if( regionShape == LibUtilities::eTetrahedron ) 
     {
@@ -121,20 +121,23 @@ int main(int argc, char *argv[])
         //----------------------------------------------
     }
     
+    Array<OneD, NekDouble> phys (Qx*Qy*Qz);
+    Array<OneD, NekDouble> coeffs(xModes*yModes*zModes);
+
     //---------------------------------------------
     // Project onto Expansion 
-    ste->FwdTrans( solution, ste->UpdateCoeffs() );
+    ste->FwdTrans( solution, coeffs );
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    ste->BwdTrans( ste->GetCoeffs(), ste->UpdatePhys() );
+    ste->BwdTrans(coeffs, phys);
     //-------------------------------------------  
     
     //--------------------------------------------
     // Calculate L_p error 
-    cout << "L infinity error: " << ste->Linf(solution) << endl;
-    cout << "L 2 error:        " << ste->L2  (solution) << endl;
+    cout << "L infinity error: " << ste->Linf(phys,solution) << endl;
+    cout << "L 2 error:        " << ste->L2  (phys,solution) << endl;
     //--------------------------------------------
     
     //-------------------------------------------
@@ -146,7 +149,7 @@ int main(int argc, char *argv[])
     
     solution[0] = Tet_sol( t[0], t[1], t[2], P, Q, R ); 
  
-    NekDouble numericSolution = ste->PhysEvaluate(t);
+    NekDouble numericSolution = ste->PhysEvaluate(t,phys);
     cout << "Interpolation error at x = (" << 
         t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;
     //-------------------------------------------

@@ -131,7 +131,8 @@ namespace Nektar
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
-                                    periodicVertices);
+                                    periodicVertices,
+                                    variable);
         }
 
 
@@ -557,7 +558,7 @@ namespace Nektar
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,
-                                m_locToGloMap,factors);
+                                m_locToGloMap,factors,varcoeff);
 
             if(flags.isSet(eUseGlobal))
             {

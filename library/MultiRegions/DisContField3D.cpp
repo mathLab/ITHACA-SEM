@@ -2424,22 +2424,23 @@
                         
                         if(filebcs != "")
                         {
-                             string var = filebcs.substr(
+                             string varString = filebcs.substr(
                                  0, filebcs.find_last_of("."));
-                             int len = var.length();
-                             var = var.substr(len-1,len);
-
+                             int len = varString.length();
+                             varString = varString.substr(len-1, len);
+                             int varInt = atoi(varString.c_str());
                              cout << "Boundary condition from file:" 
                                   << filebcs << endl;
 
                              std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
-                             Import(filebcs,FieldDef, FieldData);
-
+                             Import(filebcs, FieldDef, FieldData);
+                            
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
                                  FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0], locExpList->UpdateCoeffs());   
+                                 FieldDef[0]->m_fields[varInt], 
+                                 locExpList->UpdateCoeffs());   
                              locExpList->BwdTrans_IterPerExp(
                                  locExpList->GetCoeffs(), 
                                  locExpList->UpdatePhys());

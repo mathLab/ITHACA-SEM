@@ -9,6 +9,7 @@ SET(FieldConvertHeaders
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
     ProcessVorticity.h
+	ProcessC0Projection.h
 )
 
 SET(FieldConvertSources 
@@ -22,6 +23,7 @@ SET(FieldConvertSources
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
     ProcessVorticity.cpp
+	ProcessC0Projection.cpp
 )
   
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})

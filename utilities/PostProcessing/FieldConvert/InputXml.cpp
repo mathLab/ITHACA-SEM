@@ -110,11 +110,6 @@ namespace Nektar
             string xml_ending = "xml";
             string xml_gz_ending = "xml.gz";
 
-            // Boundary output requires field file
-            if(m_f->m_writeBndFld)
-            {
-                m_f->m_declareExpansionAsContField = true;
-            }
 
             std::vector<std::string> files;
             // load .xml ending

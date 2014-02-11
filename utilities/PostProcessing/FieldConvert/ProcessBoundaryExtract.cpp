@@ -59,6 +59,7 @@ namespace Nektar
             m_config["fldtoboundary"] = ConfigOption(false,"1","Extract fld values to boundary");
             
             f->m_writeBndFld = true;
+            f->m_declareExpansionAsContField = true;
             
             // check for correct input files
             if(f->m_inputfiles.count("xml") == 0)

@@ -1272,7 +1272,7 @@ namespace Nektar
                             {
                                 normal[0][j+k*nqe0] = df[1][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
                                 normal[1][j+k*nqe0] = df[4][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
-                                normal[1][j+k*nqe0] = df[7][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
+                                normal[2][j+k*nqe0] = df[7][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
                             }
                         }
                         break;

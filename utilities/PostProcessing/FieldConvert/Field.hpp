@@ -85,7 +85,8 @@ namespace Nektar
             bool                 m_fldToBnd; 
 
 
-            MultiRegions::ExpListSharedPtr AppendExpList(string var = "DefaultVar")
+            MultiRegions::ExpListSharedPtr AppendExpList(string var = "DefaultVar", 
+                                                         bool NewField = false)
             {
                 MultiRegions::ExpListSharedPtr tmp;
                 switch (m_graph->GetMeshDimension())
@@ -220,21 +221,38 @@ namespace Nektar
                         {
                             if(m_declareExpansionAsContField)
                             {
-                                MultiRegions::ContField2DSharedPtr tmp2 =
-                                    boost::dynamic_pointer_cast<MultiRegions::
-                                    ContField2D>(m_exp[0]);
-                                
-                                tmp = MemoryManager<MultiRegions::ContField2D>::
-                                    AllocateSharedPtr(*tmp2,m_graph,var);
+                                if(NewField)
+                                {
+                                    tmp = MemoryManager<MultiRegions::ContField2D>::
+                                        AllocateSharedPtr(m_session,m_graph,var);
+                                }
+                                else // call copy constructor
+                                {
+                                    
+                                    MultiRegions::ContField2DSharedPtr tmp2 =
+                                        boost::dynamic_pointer_cast<MultiRegions::
+                                        ContField2D>(m_exp[0]);
+                                    
+                                    tmp = MemoryManager<MultiRegions::ContField2D>::
+                                        AllocateSharedPtr(*tmp2,m_graph,var);
+                                }
                             }
                             else if(m_declareExpansionAsDisContField)
                             {
-                                MultiRegions::DisContField2DSharedPtr tmp2 =
-                                    boost::dynamic_pointer_cast<MultiRegions::
-                                    DisContField2D>(m_exp[0]);
-                                
-                                tmp = MemoryManager<MultiRegions::DisContField2D>::
-                                    AllocateSharedPtr(*tmp2,m_graph,var);
+                                if(NewField)
+                                {
+                                    tmp = MemoryManager<MultiRegions::DisContField2D>::
+                                        AllocateSharedPtr(m_session,m_graph,var);
+                                }
+                                else // call copy constructor
+                                {
+                                    MultiRegions::DisContField2DSharedPtr tmp2 =
+                                        boost::dynamic_pointer_cast<MultiRegions::
+                                        DisContField2D>(m_exp[0]);
+                                    
+                                    tmp = MemoryManager<MultiRegions::DisContField2D>::
+                                        AllocateSharedPtr(*tmp2,m_graph,var);
+                                }
                             }
                             else
                             {
@@ -252,21 +270,37 @@ namespace Nektar
                     {
                         if(m_declareExpansionAsContField)
                         {
-                            MultiRegions::ContField3DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<MultiRegions::
-                                ContField3D>(m_exp[0]);
-                            
-                            tmp = MemoryManager<MultiRegions::ContField3D>::
-                                AllocateSharedPtr(*tmp2,m_graph,var);
+                            if(NewField)
+                            {
+                                tmp = MemoryManager<MultiRegions::ContField3D>::
+                                    AllocateSharedPtr(m_session,m_graph,var);
+                            }
+                            else
+                            {
+                                MultiRegions::ContField3DSharedPtr tmp2 =
+                                    boost::dynamic_pointer_cast<MultiRegions::
+                                    ContField3D>(m_exp[0]);
+                                
+                                tmp = MemoryManager<MultiRegions::ContField3D>::
+                                    AllocateSharedPtr(*tmp2,m_graph,var);
+                            }
                         }
                         else if(m_declareExpansionAsDisContField)
                         {
-                            MultiRegions::DisContField3DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<MultiRegions::
-                                DisContField3D>(m_exp[0]);
-                            
-                            tmp = MemoryManager<MultiRegions::DisContField3D>::
-                                AllocateSharedPtr(*tmp2,m_graph,var);
+                            if(NewField)
+                            {
+                                tmp = MemoryManager<MultiRegions::DisContField3D>::
+                                    AllocateSharedPtr(m_session,m_graph,var);
+                            }
+                            else
+                            {
+                                MultiRegions::DisContField3DSharedPtr tmp2 =
+                                    boost::dynamic_pointer_cast<MultiRegions::
+                                    DisContField3D>(m_exp[0]);
+                                
+                                tmp = MemoryManager<MultiRegions::DisContField3D>::
+                                    AllocateSharedPtr(*tmp2,m_graph,var);
+                            }
                         }
                         else
                         {

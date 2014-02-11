@@ -50,7 +50,8 @@ namespace Nektar
         {
         public:
             /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
+            {
                 return MemoryManager<ProcessC0Projection>::AllocateSharedPtr(f);
             }
             static ModuleKey className;
@@ -60,6 +61,10 @@ namespace Nektar
             
             /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
+            
+        private:
+            MultiRegions::ExpListSharedPtr m_c0ProjectExp;
+            
         };
     }
 }

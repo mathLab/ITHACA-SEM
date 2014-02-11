@@ -228,8 +228,6 @@ namespace Nektar
             }
         }
         
-        
-        
         void DiffusionLDG::v_NumFluxforScalar(
             const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,
             const Array<OneD, Array<OneD, NekDouble> >               &ufield,

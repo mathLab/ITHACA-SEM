@@ -57,7 +57,7 @@ namespace Nektar
         public:
 
             SPATIAL_DOMAINS_EXPORT MeshGraph3D();
-            SPATIAL_DOMAINS_EXPORT MeshGraph3D(const LibUtilities::SessionReaderSharedPtr &pSession);
+            SPATIAL_DOMAINS_EXPORT MeshGraph3D(const LibUtilities::SessionReaderSharedPtr &pSession, const DomainRangeShPtr &rng = NullDomainRangeShPtr);
             SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph3D();
 
             SPATIAL_DOMAINS_EXPORT void ReadGeometry(const std::string &infilename);
@@ -151,15 +151,15 @@ namespace Nektar
                 if(shape == LibUtilities::eTriangle)
                 {
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
-                        "eid is out of range");
-
+                             "eid is out of range");
+                    
                     returnval = m_triGeoms.find(elmt)->second->GetEorient(edge);
                 }
                 else
                 {
                     ASSERTL2(m_quadGeoms.find(elmt) != m_quadGeoms.end(),
-                        "eid is out of range");
-
+                             "eid is out of range");
+                    
                     returnval =  m_quadGeoms.find(elmt)->second->GetEorient(edge);
                 }
 

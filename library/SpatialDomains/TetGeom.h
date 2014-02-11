@@ -44,6 +44,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+
         class TetGeom: public LibUtilities::GraphVertexObject, 
                        public Geometry3D
         {
@@ -60,26 +61,32 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
 
         protected:
-            virtual void v_GetLocCoords(
+            virtual NekDouble v_GetLocCoords(
                 const Array<OneD, const NekDouble> &coords,
                       Array<OneD,       NekDouble> &Lcoords);
             virtual bool v_ContainsPoint(
-                const Array<OneD, const NekDouble> &gloCoord, 
+                const Array<OneD, const NekDouble> &gloCoord,
                       NekDouble                     tol = 0.0);
             virtual bool v_ContainsPoint(
-                const Array<OneD, const NekDouble> &gloCoord, 
-                Array<OneD, NekDouble> &locCoord,
-                NekDouble                     tol = 0.0);
+                const Array<OneD, const NekDouble> &gloCoord,
+                      Array<OneD, NekDouble>       &locCoord,
+                      NekDouble                     tol);
+            virtual bool v_ContainsPoint(
+                const Array<OneD, const NekDouble> &gloCoord,
+                      Array<OneD, NekDouble>       &locCoord,
+                      NekDouble                     tol,
+                      NekDouble                    &resid);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
             virtual int v_GetNumFaces() const;
-	    virtual int v_GetVertexEdgeMap(
+            virtual int v_GetVertexEdgeMap(
                 const int i, const int j) const;
-	    virtual int v_GetVertexFaceMap(
+            virtual int v_GetVertexFaceMap(
                 const int i, const int j) const;
-	    virtual int v_GetEdgeFaceMap(
+            virtual int v_GetEdgeFaceMap(
                 const int i, const int j) const;
-	    virtual int v_GetDir(const int faceidx, const int facedir) const;
+            virtual int v_GetDir(
+                const int faceidx, const int facedir) const;
 
         private:
             void SetUpLocalEdges();

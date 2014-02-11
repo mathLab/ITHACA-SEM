@@ -145,7 +145,7 @@ namespace Nektar
         class Module
         {
         public:
-            Module(MeshSharedPtr p_m) : m(p_m) {}
+        Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
             virtual void Process() = 0;
             
             void RegisterConfig(string key, string value);
@@ -154,16 +154,16 @@ namespace Nektar
             
         protected:
             /// Mesh object
-            MeshSharedPtr m;
+            MeshSharedPtr m_mesh;
             /// List of configuration values.
-            map<string, ConfigOption> config;
+            map<string, ConfigOption> m_config;
             
             /// Extract element vertices
             virtual void ProcessVertices();
             /// Extract element edges
-            virtual void ProcessEdges();
+            virtual void ProcessEdges(bool ReprocessEdges = true);
             /// Extract element faces
-            virtual void ProcessFaces();
+            virtual void ProcessFaces(bool ReprocessFaces = true);
             /// Generate element IDs
             virtual void ProcessElements();
             /// Generate composites

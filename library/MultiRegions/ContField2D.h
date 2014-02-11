@@ -209,6 +209,7 @@ namespace Nektar
             /// Impose the Dirichlet Boundary Conditions on outarray 
             MULTI_REGIONS_EXPORT virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
+            MULTI_REGIONS_EXPORT virtual void v_FillBndCondFromField();
 
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.

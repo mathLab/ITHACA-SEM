@@ -135,30 +135,26 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-        void WallBoundary(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void WallBoundaryViscous(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void SymmetryBoundary(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void InflowCFSBoundary(
-            int                                               bcRegion, 
-            int                                               cnt, 
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void OutflowCFSBoundary(
-            int                                               bcRegion, 
-            int                                               cnt, 
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void ExtrapOrder0Boundary(
-            int                                               bcRegion, 
-            int                                               cnt, 
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void WallBC(
+            int                                                 bcRegion,
+            int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void WallViscousBC(
+            int                                                 bcRegion,
+            int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void SymmetryBC(
+            int                                                 bcRegion,
+            int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void RiemannInvariantBC(
+            int                                                 bcRegion, 
+            int                                                 cnt, 
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void ExtrapOrder0BC(
+            int                                                 bcRegion, 
+            int                                                 cnt, 
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void GetVelocityVector(
             const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
                   Array<OneD,       Array<OneD,       NekDouble> >&velocity);
@@ -204,6 +200,7 @@ namespace Nektar
         void SetVarPOrderElmt(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                    NekDouble  > &PolyOrder);
+
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
         
@@ -227,14 +224,11 @@ namespace Nektar
         {
             return m_velLoc;
         }
-      
+        
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()
         {
             return m_traceNormals;
         }
-      
-    private:
-
     };
 }
 #endif

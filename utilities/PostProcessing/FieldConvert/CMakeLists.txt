@@ -9,7 +9,7 @@ SET(FieldConvertHeaders
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
     ProcessVorticity.h
-	ProcessC0Projection.h
+    ProcessC0Projection.h
     ProcessQCriterion.h
 )
 
@@ -24,7 +24,7 @@ SET(FieldConvertSources
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
     ProcessVorticity.cpp
-	ProcessC0Projection.cpp
+    ProcessC0Projection.cpp
     ProcessQCriterion.cpp
 )
   

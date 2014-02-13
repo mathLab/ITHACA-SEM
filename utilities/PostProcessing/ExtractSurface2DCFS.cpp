@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
     
     //Fields to add in the output file
     
-    int nfieldsAdded = 5;
+    int nfieldsAdded = 12;
     Array<OneD, Array<OneD, NekDouble> > traceFieldsAdded(nfieldsAdded);
     Array<OneD, Array<OneD, NekDouble> > surfaceFieldsAdded(nfieldsAdded);
     
@@ -387,8 +387,8 @@ int main(int argc, char *argv[])
             phys_offset = pFields[0]->GetPhys_Offset(n);
             
             pFields[i]->GetExp(n)->PhysDeriv(
-                                             i, pressure + phys_offset,
-                                             auxArray = Dpressure[i] + phys_offset);
+                                        i, pressure + phys_offset,
+                                        auxArray = Dpressure[i] + phys_offset);
         }
         // Extract trace
         pFields[0]->ExtractTracePhys(Dpressure[i], traceDpressure[i]);
@@ -408,8 +408,143 @@ int main(int argc, char *argv[])
                     &traceFieldsAdded[3][0], 1);
     }
     
+    
+    /** Evaluation of the velocity gradient in the cartesian directions
+     * Du_x:    traceFieldsAdded[4]
+     * Du_y:    traceFieldsAdded[5]
+     * Dv_x:    traceFieldsAdded[6]
+     * Dv_y:    traceFieldsAdded[7]
+     **/
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Dvelocity(nDimensions);
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > traceDvelocity(nDimensions);
+    Array<OneD, Array<OneD, NekDouble> > velocity(nDimensions);
+
+    for (i = 0; i < nDimensions; ++ i)
+    {
+        Dvelocity[i]      = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
+        traceDvelocity[i] = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
+        velocity[i]       = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+
+        Vmath::Vdiv(nSolutionPts, uFields[i+1], 1, uFields[0], 1,
+                    velocity[i], 1);
+        
+        for (j = 0; j < nDimensions; ++j)
+        {
+            Dvelocity[i][j]      = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+            traceDvelocity[i][j] = Array<OneD, NekDouble>(nTracePts, 0.0);
+        }
+    }
+    
+    for (i = 0; i < nDimensions; ++i)
+    {
+        for (j = 0; j < nDimensions; ++j)
+        {
+            for (n = 0; n < nElements; n++)
+            {
+                phys_offset = pFields[0]->GetPhys_Offset(n);
+            
+                pFields[i]->GetExp(n)->PhysDeriv(
+                                    j, velocity[i] + phys_offset,
+                                    auxArray = Dvelocity[i][j] + phys_offset);
+            }
+            
+            // Extract trace
+            pFields[0]->ExtractTracePhys(Dvelocity[i][j], traceDvelocity[i][j]);
+        }
+    }
+    
+    Vmath::Vcopy(nTracePts,
+                 &traceDvelocity[0][0][0], 1,
+                 &traceFieldsAdded[4][0], 1);
+    Vmath::Vcopy(nTracePts,
+                 &traceDvelocity[0][1][0], 1,
+                 &traceFieldsAdded[5][0], 1);
+    Vmath::Vcopy(nTracePts,
+                 &traceDvelocity[1][0][0], 1,
+                 &traceFieldsAdded[6][0], 1);
+    Vmath::Vcopy(nTracePts,
+                 &traceDvelocity[1][1][0], 1,
+                 &traceFieldsAdded[7][0], 1);
+    
+    
+    /*** Evaluation of shear stresses ******************************************
+     // tau -> traceFieldsAdded[*]
+    ***************************************************************************/
+    
+    // Stokes hypotesis
+    const NekDouble lambda = -2.0/3.0;
+    
+    // Auxiliary variables
+    Array<OneD, NekDouble > mu    (nSolutionPts, 0.0);
+    Array<OneD, NekDouble > mu2   (nSolutionPts, 0.0);
+    Array<OneD, NekDouble > divVel(nSolutionPts, 0.0);
+    
+    // Variable viscosity through the Sutherland's law
+    if (m_ViscosityType == "Variable")
+    {
+        NekDouble mu_star = m_mu;
+        NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
+        NekDouble ratio;
+        
+        for (int i = 0; i < nSolutionPts; ++i)
+        {
+            ratio = temperature[i] / T_star;
+            mu[i] = mu_star * pow(ratio, 1.50) *
+            (T_star + 110.0) / (temperature[i] + 110.0);
+        }
+    }
+    else
+    {
+        Vmath::Fill(nSolutionPts, m_mu, &mu[0], 1);
+    }
+    
+    
+    // Computing diagonal terms of viscous stress tensor
+    Array<OneD, Array<OneD, NekDouble> > temp(m_spacedim);
+    Array<OneD, Array<OneD, NekDouble> > Sgg(m_spacedim);
+    
+    // mu2 = 2 * mu
+    Vmath::Smul(nSolutionPts, 2.0, &mu[0], 1, &mu2[0], 1);
+    
+    // Velocity divergence
+    Vmath::Vadd(nSolutionPts, &divVel[0], 1, &Dvelocity[0][0][0], 1, &divVel[0], 1);
+    Vmath::Vadd(nSolutionPts, &divVel[0], 1, &Dvelocity[1][1][0], 1, &divVel[0], 1);
+
+    // Velocity divergence scaled by lambda * mu
+    Vmath::Smul(nSolutionPts, lambda, &divVel[0], 1, &divVel[0], 1);
+    Vmath::Vmul(nSolutionPts, &mu[0], 1, &divVel[0], 1, &divVel[0], 1);
+    
+    // Diagonal terms of viscous stress tensor (Sxx, Syy)
+    // Sjj = 2 * mu * du_j/dx_j - (2 / 3) * mu * sum_j(du_j/dx_j)
+    for (j = 0; j < m_spacedim; ++j)
+    {
+        temp[j] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+        Sgg[j] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+        
+        Vmath::Vmul(nSolutionPts, &mu2[0], 1, &Dvelocity[j][j][0], 1,
+                    &temp[j][0], 1);
+        
+        Vmath::Vadd(nSolutionPts, &temp[j][0], 1, &divVel[0], 1, &Sgg[j][0], 1);
+    }
+    
+    // Extra diagonal terms of viscous stress tensor (Sxy, Sxz, Syz)
+    // Note: they exist for 2D and 3D problems only
+    Array<OneD, NekDouble > Sxy(nSolutionPts, 0.0);
+    Array<OneD, NekDouble > Sxz(nSolutionPts, 0.0);
+    
+    // Sxy = (du/dy + dv/dx)
+    Vmath::Vadd(nSolutionPts, &Dvelocity[0][1][0], 1,
+                &Dvelocity[1][0][0], 1, &Sxy[0], 1);
+        
+    // Sxy = mu * (du/dy + dv/dx)
+    Vmath::Vmul(nSolutionPts, &mu[0], 1, &Sxy[0], 1, &Sxy[0], 1);
+
+    pFields[0]->ExtractTracePhys(Sgg[0], traceFieldsAdded[8]);
+    pFields[0]->ExtractTracePhys(Sgg[1], traceFieldsAdded[9]);
+    pFields[0]->ExtractTracePhys(Sxy, traceFieldsAdded[10]);
+    
     /*** Evaluation of Mach number *********************************************
-    // M -> traceFieldsAdded[4]
+    // M -> traceFieldsAdded[*]
     ***************************************************************************/
     NekDouble gamma    = m_gamma;
     
@@ -434,9 +569,9 @@ int main(int argc, char *argv[])
     Vmath::Vsqrt(nSolutionPts, mach, 1, mach, 1);
     Vmath::Vdiv(nSolutionPts, mach, 1, soundspeed,   1, mach, 1);
     
-    pFields[0]->ExtractTracePhys(mach, traceFieldsAdded[4]);
-
-    /***************************************************************************/
+    pFields[0]->ExtractTracePhys(mach, traceFieldsAdded[11]);
+    
+    /**************************************************************************/
     // Extract coordinates
     
     if (pFields[0]->GetBndCondExpansions().num_elements())
@@ -566,6 +701,13 @@ int main(int argc, char *argv[])
         << surfaceFieldsAdded[2][i] << " \t "
         << surfaceFieldsAdded[3][i] << " \t "
         << surfaceFieldsAdded[4][i] << " \t "
+        << surfaceFieldsAdded[5][i] << " \t "
+        << surfaceFieldsAdded[6][i] << " \t "
+        << surfaceFieldsAdded[7][i] << " \t "
+        << surfaceFieldsAdded[8][i] << " \t "
+        << surfaceFieldsAdded[9][i] << " \t "
+        << surfaceFieldsAdded[10][i] << " \t "
+        << surfaceFieldsAdded[11][i] << " \t "
         << endl;
     }
     outfile << endl << endl;

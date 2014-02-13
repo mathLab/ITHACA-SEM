@@ -47,79 +47,79 @@ namespace Nektar
     namespace Utilities
     {
         ModuleKey ProcessC0Projection::className =
-		GetModuleFactory().RegisterCreatorFunction(
-												   ModuleKey(eProcessModule, "C0Projection"),
-												   ProcessC0Projection::create, "Computes C0 projection.");
-		
-        ProcessC0Projection::ProcessC0Projection(FieldSharedPtr f) : ProcessModule(f)
+        GetModuleFactory().RegisterCreatorFunction(
+            ModuleKey(eProcessModule, "C0Projection"),
+                      ProcessC0Projection::create, "Computes C0 projection.");
+            
+            ProcessC0Projection::ProcessC0Projection(FieldSharedPtr f) : ProcessModule(f)
+            {
+                m_config["fields"] = ConfigOption(false,"All","Start field to project");
+            }
+            
+            ProcessC0Projection::~ProcessC0Projection()
+            {
+            }
+            
+            void ProcessC0Projection::Process(po::variables_map &vm)
+            {
+                
+                // generate an C0 expansion field with no boundary conditions. 
+                bool savedef = m_f->m_declareExpansionAsContField;
+                m_f->m_declareExpansionAsContField = true;
+                m_c0ProjectExp = m_f->AppendExpList("DefaultVar",true);
+        m_f->m_declareExpansionAsContField = savedef;
+        
+        if (m_f->m_verbose)
         {
-            m_config["fields"] = ConfigOption(false,"All","Start field to project");
+            cout << "ProcessC0Projection: Projects fiels into C0 space..." << endl;
         }
-		
-        ProcessC0Projection::~ProcessC0Projection()
+        
+        int nfields = m_f->m_exp.size();
+        
+        string fields = m_config["fields"].as<string>();
+        vector<unsigned int> processFields; 
+        
+        if(fields.compare("All") == 0)
         {
+            for(int i = 0; i < nfields; ++i)
+            {
+                processFields.push_back(i);
+            }
         }
-		
-        void ProcessC0Projection::Process(po::variables_map &vm)
+        else
         {
-
-            // generate an C0 expansion field with no boundary conditions. 
-            bool savedef = m_f->m_declareExpansionAsContField;
-            m_f->m_declareExpansionAsContField = true;
-            m_c0ProjectExp = m_f->AppendExpList("DefaultVar",true);
-            m_f->m_declareExpansionAsContField = savedef;
-
+            ASSERTL0(ParseUtils::GenerateOrderedVector(fields.c_str(),
+                                                       processFields),
+                     "Failed to interpret field string in C0Projection");
+        }
+        
+        for (int i = 0; i < processFields.size(); ++i)
+        {
+            ASSERTL0(processFields[i] < nfields,"Attempt to process field that is larger than then number of fields available");
+            
             if (m_f->m_verbose)
             {
-                cout << "ProcessC0Projection: Projects fiels into C0 space..." << endl;
+                cout << "\t Processing field: " << processFields[i] << endl;
             }
-            
-            int nfields = m_f->m_exp.size();
-            
-            string fields = m_config["fields"].as<string>();
-            vector<unsigned int> processFields; 
-            
-            if(fields.compare("All") == 0)
-            {
-                for(int i = 0; i < nfields; ++i)
-                {
-                    processFields.push_back(i);
-                }
-            }
-            else
-            {
-                ASSERTL0(ParseUtils::GenerateOrderedVector(fields.c_str(),
-                                                           processFields),
-                         "Failed to interpret field string in C0Projection");
-            }
-            
-            for (int i = 0; i < processFields.size(); ++i)
-            {
-                ASSERTL0(processFields[i] < nfields,"Attempt to process field that is larger than then number of fields available");
-
-                if (m_f->m_verbose)
-                {
-                    cout << "\t Processing field: " << processFields[i] << endl;
-                }
-                m_c0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
-                                         m_f->m_exp[processFields[i]]->UpdatePhys());
-                m_c0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
-                                         m_f->m_exp[processFields[i]]->UpdateCoeffs());
-            }
-            
-            // reset up FieldData with new values before projecting 
-            std::vector<std::vector<NekDouble> > FieldData(m_f->m_fielddef.size());
-        
-           for(int i = 0; i < nfields; ++i)
-           {
-               for (int j = 0; j < m_f->m_fielddef.size(); ++j)
-               {   
-                   m_f->m_exp[i]->AppendFieldData(m_f->m_fielddef[j], FieldData[j]);
-               }
-           }
-        
-           m_f->m_data = FieldData;
-        
+            m_c0ProjectExp->BwdTrans(m_f->m_exp[processFields[i]]->GetCoeffs(),
+                                     m_f->m_exp[processFields[i]]->UpdatePhys());
+            m_c0ProjectExp->FwdTrans(m_f->m_exp[processFields[i]]->GetPhys(),
+                                     m_f->m_exp[processFields[i]]->UpdateCoeffs());
         }
-}
+        
+        // reset up FieldData with new values before projecting 
+        std::vector<std::vector<NekDouble> > FieldData(m_f->m_fielddef.size());
+        
+        for(int i = 0; i < nfields; ++i)
+        {
+            for (int j = 0; j < m_f->m_fielddef.size(); ++j)
+            {   
+                m_f->m_exp[i]->AppendFieldData(m_f->m_fielddef[j], FieldData[j]);
+            }
+        }
+        
+        m_f->m_data = FieldData;
+        
+            }
+    }
 }

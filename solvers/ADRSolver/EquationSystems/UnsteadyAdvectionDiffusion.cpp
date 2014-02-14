@@ -47,6 +47,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr& pSession)
     : UnsteadySystem(pSession)
     {
+        m_planeNumber = 0;
     }
     
     /**
@@ -76,6 +77,9 @@ namespace Nektar
             // Discontinuous field 
             case MultiRegions::eDiscontinuous:
             {
+                // Do not forwards transform initial condition
+                m_homoInitialFwd = false;
+
                 // Advection term
                 string advName;
                 string riemName; 
@@ -87,7 +91,7 @@ namespace Nektar
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
                     CreateInstance(riemName);
-                m_riemannSolver->AddScalar("Vn", &UnsteadyAdvectionDiffusion::
+                m_riemannSolver->SetScalar("Vn", &UnsteadyAdvectionDiffusion::
                                            GetNormalVelocity, this);
                 m_advection->SetRiemannSolver(m_riemannSolver);
                 m_advection->InitObject      (m_session, m_fields);
@@ -152,29 +156,34 @@ namespace Nektar
      * diffusion equation.
      */
     Array<OneD, NekDouble> &UnsteadyAdvectionDiffusion::GetNormalVelocity()
-    {
+    {   
         // Number of trace (interface) points
+        int i;
         int nTracePts = GetTraceNpoints();
-        
+
         // Auxiliary variable to compute the normal velocity
         Array<OneD, NekDouble> tmp(nTracePts);
-        
         m_traceVn = Array<OneD, NekDouble>(nTracePts, 0.0);
+
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
 
-        // Compute the normal velocity
-        for (int i = 0; i < m_velocity.num_elements(); ++i)
+        for (i = 0; i < m_velocity.num_elements(); ++i)
         {
             m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
-            
-            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, tmp, 1, m_traceVn, 1, 
+
+            Vmath::Vvtvp(nTracePts,
+                         m_traceNormals[i], 1,
+                         tmp, 1,
+                         m_traceVn, 1,
                          m_traceVn, 1);
         }
+        
         return m_traceVn;
     }
     
-    /* @brief Compute the right-hand side for the unsteady linear advection 
+    /**
+     * @brief Compute the right-hand side for the unsteady linear advection 
      * diffusion problem.
      * 
      * @param inarray    Given fields.
@@ -336,17 +345,19 @@ namespace Nektar
     {
         ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
-        
+
+        const int nq = m_fields[0]->GetNpoints();
+
         for (int i = 0; i < flux.num_elements(); ++i)
         {
             for (int j = 0; j < flux[0].num_elements(); ++j)
             {
-                Vmath::Vmul(GetNpoints(), physfield[i], 1, m_velocity[j], 1,
+                Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
                             flux[i][j], 1);
             }
         }
     }
-    
+
     /**
      * @brief Return the flux vector for the diffusion part.
      *      

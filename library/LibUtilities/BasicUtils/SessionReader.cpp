@@ -179,6 +179,14 @@ namespace Nektar
 
             // Create communicator
             CreateComm(argc, argv);
+
+            // If running in parallel change the default global sys solution
+            // type.
+            if (m_comm->GetSize() > 1)
+            {
+                m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                    "IterativeStaticCond";
+            }
         }
 
 
@@ -220,6 +228,14 @@ namespace Nektar
                     m_solverInfoDefaults["GLOBALSYSSOLN"] = 
                         "IterativeStaticCond";
                 }
+            }
+
+            // If running in parallel change the default global sys solution
+            // type.
+            if (m_comm->GetSize() > 1)
+            {
+                m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                    "IterativeStaticCond";
             }
         }
 
@@ -1327,14 +1343,6 @@ namespace Nektar
                 }
 
                 m_comm = GetCommFactory().CreateInstance(vCommModule,argc,argv);
-
-                // If running in parallel change the default global sys solution
-                // type.
-                if (m_comm->GetSize() > 1)
-                {
-                    m_solverInfoDefaults["GLOBALSYSSOLN"] = 
-                        "IterativeStaticCond";
-                }
             }
         }
 

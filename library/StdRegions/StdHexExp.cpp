@@ -749,15 +749,14 @@ namespace Nektar
             }
         }
 
-
-        NekDouble StdHexExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoords,
-                const Array<OneD, const NekDouble>& physvals)
+        void StdHexExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                      Array<OneD, NekDouble>& eta)
         {
-            return StdExpansion3D::v_PhysEvaluate(Lcoords, physvals);
+            eta[0] = xi[0];
+            eta[1] = xi[1];
+            eta[2] = xi[2];
         }
-
-
+                                          
         /**
          * @note for hexahedral expansions _base[0] (i.e. p) modes run fastest.
          */

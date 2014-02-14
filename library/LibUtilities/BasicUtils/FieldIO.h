@@ -51,6 +51,7 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
+#include <boost/assign/list_of.hpp>
 
 namespace Nektar
 {
@@ -63,7 +64,7 @@ namespace Nektar
 
         typedef std::map<std::string, std::string>  FieldMetaDataMap;
         static  FieldMetaDataMap  NullFieldMetaDataMap;
-        
+        static std::vector<std::vector< NekDouble> > NullVectorNekDoubleVector = boost::assign::list_of(NullNekDoubleVector);
 
         struct FieldDefinitions
         {
@@ -141,7 +142,7 @@ namespace Nektar
         LIB_UTILITIES_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata,
+                        std::vector<std::vector<NekDouble> > &fielddata = NullVectorNekDoubleVector,
                         FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap,
                         const Array<OneD, int> ElementiDs = NullInt1DArray);
 
@@ -165,7 +166,7 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata,
+                        std::vector<std::vector<NekDouble> > &fielddata = NullVectorNekDoubleVector,
                         FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap,
                         const Array<OneD, int> ElementiDs = NullInt1DArray);
 

@@ -1,10 +1,12 @@
 SET(SOLVER_UTILS_SOURCES
   Core/Misc.cpp
   Advection/Advection.cpp
+  Advection/Advection3DHomogeneous1D.cpp
   Advection/AdvectionFR.cpp
   Advection/AdvectionNonConservative.cpp
   Advection/AdvectionWeakDG.cpp
   Diffusion/Diffusion.cpp
+  Diffusion/Diffusion3DHomogeneous1D.cpp
   Diffusion/DiffusionLDG.cpp
   Diffusion/DiffusionLDGNS.cpp
   Diffusion/DiffusionLFR.cpp
@@ -35,9 +37,11 @@ SET(SOLVER_UTILS_HEADERS
   Core/Misc.h
   Advection/Advection.h
   Advection/AdvectionFR.h
+  Advection/Advection3DHomogeneous1D.h
   Advection/AdvectionNonConservative.h
   Advection/AdvectionWeakDG.h
   Diffusion/Diffusion.h
+  Diffusion/Diffusion3DHomogeneous1D.h
   Diffusion/DiffusionLDG.h
   Diffusion/DiffusionLDGNS.h
   Diffusion/DiffusionLFR.h
@@ -92,4 +96,4 @@ TARGET_LINK_LIBRARIES(SolverUtils
   )
 SET_LAPACK_LINK_LIBRARIES(SolverUtils)
 
-INSTALL(FILES ${SOLVER_UTILS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev)
+INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/SolverUtils COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")

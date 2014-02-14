@@ -89,7 +89,10 @@ namespace Nektar
             case MultiRegions::eDiscontinuous:
             {
                 std::string diffName;
-        
+
+                // Do not forwards transform initial condition
+                m_homoInitialFwd = false;
+
                 m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
                 m_diffusion = SolverUtils::GetDiffusionFactory().
                     CreateInstance(diffName, diffName);

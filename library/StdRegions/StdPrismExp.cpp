@@ -246,22 +246,17 @@ namespace Nektar
             switch(m_base[2]->GetPointsType())
             {
                 // Common case
-                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
-                    Vmath::Smul(Qz, 0.5, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
-                    break;
-                
-                // Corner cases
-                case LibUtilities::eGaussLobattoLegendre:
-                case LibUtilities::eGaussRadauMLegendre:
-                    for (int k = 0; k < Qz; ++k)
-                    {
-                        wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
-                    }
-                    break;
-                    
-                default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
-                    break;
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
+                Vmath::Smul(Qz, 0.5, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
+                break;
+                // Assume points are a Legenedre inner product and
+                // multiply by collapsed coordinate jacobian
+            default:
+                for (int k = 0; k < Qz; ++k)
+                {
+                    wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
+                }
+                break;
             }
 
 
@@ -853,11 +848,12 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
-        NekDouble StdPrismExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
+
+
+        void StdPrismExp::v_LocCoordToLocCollapsed(
+                const Array<OneD, const NekDouble>& xi,
+                Array<OneD, NekDouble>& eta)
         {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
@@ -874,11 +870,8 @@ namespace Nektar
                 eta[1] = xi[1]; //eta_y = xi_y
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
             } 
-
-            return StdExpansion3D::v_PhysEvaluate(eta,physvals);
         }
-        
- 
+                                          
         void StdPrismExp::v_GetCoords(Array<OneD, NekDouble>& xi_x,
                                       Array<OneD, NekDouble>& xi_y,
                                       Array<OneD, NekDouble>& xi_z)
@@ -1931,15 +1924,6 @@ namespace Nektar
             // GLL quadrature points.
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
-                
                 // (1,0) Jacobi inner product.
                 case LibUtilities::eGaussRadauMAlpha1Beta0:
                     for(i = 0; i < nquad2; ++i)
@@ -1950,7 +1934,11 @@ namespace Nektar
                     break;
                     
                 default:
-                    ASSERTL0(false, "Quadrature point type not supported for this element.");
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
                     break;
             }
         

@@ -1977,7 +1977,7 @@ namespace Nektar
 
             const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
             const unsigned int nqtot = GetTotPoints();
-            const unsigned int dim = 2;
+            const unsigned int dim = 3;
             const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
                                        {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
                                        {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}

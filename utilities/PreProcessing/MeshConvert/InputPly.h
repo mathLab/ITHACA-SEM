@@ -57,7 +57,12 @@ namespace Nektar
 
             /// Populate and validate required data structures.
             virtual void Process();
+
+            void ReadPly(std::ifstream &mshFile);
+        private:
         };
+
+        typedef boost::shared_ptr<InputPly> InputPlySharedPtr;
     }
 }
 

@@ -38,6 +38,7 @@
 
 
 #include "Module.h"
+#include "InputPly.h"
 
 namespace Nektar
 {
@@ -68,6 +69,8 @@ namespace Nektar
                                    vector<Node>   &Q, 
                                    Node           &P, 
                                    vector<double> &blend);
+
+            InputPlySharedPtr  m_plyfile;
         };
     }
 }

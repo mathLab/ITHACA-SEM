@@ -93,6 +93,8 @@ namespace Nektar
                 "Tag identifying surface to process.");
             m_config["BothTriFacesOnPrism"] = ConfigOption(true, "-1",
                 "Curve both triangular faces of prism on boundary.");
+            m_config["UseNormalFile"] = ConfigOption(false,"NoFile",
+                 "Use alternative file for Spherigon definition");
         }
       
         /**
@@ -313,6 +315,16 @@ namespace Nektar
                 vector<int> t;
                 t.push_back(0);
                 
+
+                // Read Normal file if one exists
+                std::string normalfile = m_config["UseNormalFile"].as<string>();
+                if(normalfile.compare("NoFile") != 0)
+                {
+                    ifstream inply;
+                    inply.open(normalfile.c_str());
+                    m_plyfile->ReadPly(inply);
+                }
+
                 // Construct list of spherigon edges/faces from a tag.
                 int surfTag = m_config["surf"].as<int>();
                 bool prismTag = m_config["BothTriFacesOnPrism"].beenSet;

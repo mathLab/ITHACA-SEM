@@ -96,9 +96,9 @@ namespace Nektar
                 cout << "InputGmsh: Start reading file..." << endl;
             }
 
-            while (!mshFile.eof())
+            while (!m_mshFile.eof())
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
                 stringstream s(line);
                 string word;
                 s >> word;
@@ -106,13 +106,13 @@ namespace Nektar
                 // Process nodes.
                 if (word == "$Nodes")
                 {
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     stringstream s(line);
                     s >> nVertices;
                     int id = 0;
                     for (int i = 0; i < nVertices; ++i)
                     {
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         stringstream st(line);
                         double x = 0, y = 0, z = 0;
                         st >> id >> x >> y >> z;
@@ -144,12 +144,12 @@ namespace Nektar
                 // Process elements
                 else if (word == "$Elements")
                 {
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     stringstream s(line);
                     s >> nEntities;
                     for (int i = 0; i < nEntities; ++i)
                     {
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         stringstream st(line);
                         int id = 0, num_tag = 0, num_nodes = 0;
 
@@ -246,7 +246,7 @@ namespace Nektar
                     }
                 }
             }
-            mshFile.close();
+            m_mshFile.close();
 
             // Process rest of mesh.
             ProcessVertices  ();

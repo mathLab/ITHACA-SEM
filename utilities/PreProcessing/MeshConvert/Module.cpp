@@ -77,8 +77,8 @@ namespace Nektar
         void InputModule::OpenStream()
         {
             string fname = m_config["infile"].as<string>();
-            mshFile.open(fname.c_str());
-            if (!mshFile.good())
+            m_mshFile.open(fname.c_str());
+            if (!m_mshFile.good())
             {
                 cerr << "Error opening file: " << fname << endl;
                 abort();
@@ -91,8 +91,8 @@ namespace Nektar
         void OutputModule::OpenStream()
         {
             string fname = m_config["outfile"].as<string>();
-            mshFile.open(fname.c_str());
-            if (!mshFile.good())
+            m_mshFile.open(fname.c_str());
+            if (!m_mshFile.good())
             {
                 cerr << "Error opening file: " << fname << endl;
                 abort();

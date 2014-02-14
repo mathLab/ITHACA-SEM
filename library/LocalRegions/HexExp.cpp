@@ -1958,12 +1958,9 @@ namespace Nektar
             // outarray = m = (D_xi1 * B)^T * k
             // wsp1     = n = (D_xi2 * B)^T * l
             IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp3,outarray,wsp0,false,true,true);
-            IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp4,wsp1,    wsp0,true,false,true);
+            IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp4,wsp2,    wsp0,true,false,true);
+            Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
             IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp5,wsp2,    wsp0,true,true,false);
-
-            // outarray = outarray + wsp1
-            //          = L * u_hat
-            Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
 
@@ -1988,8 +1985,8 @@ namespace Nektar
                 for (unsigned int j = i; j < dim; ++j)
                 {
                     m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
-                    const Array<TwoD, const NekDouble> gmat =
-                                        m_metricinfo->GetGmat(GetPointsKeys());
+                    const Array<TwoD, const NekDouble> &gmat =
+                                 m_metricinfo->GetGmat(GetPointsKeys());
                     if (type == SpatialDomains::eDeformed)
                     {
                         Vmath::Vcopy(nqtot, &gmat[i*dim+j][0], 1,

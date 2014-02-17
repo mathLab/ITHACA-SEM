@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: PartitionCheck.cpp
+// File: PartitionAnalyse.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 {
     if (argc < 3)
     {
-        cerr << "Usage: PartitionAnalyze <nproc> <xml file1> [xml file 2..n]"
+        cerr << "Usage: PartitionAnalyse <nproc> <xml file1> [xml file 2..n]"
              << endl;
         return 1;
     }
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
         new FauxComm(argc, argv, nParts));
 
     char **new_argv = new char*[argc];
-    new_argv[0] = strdup("PartitionAnalyze");
+    new_argv[0] = strdup("PartitionAnalyse");
     new_argv[1] = strdup("--part-info");
     for (int i = 0; i < argc-2; ++i)
     {

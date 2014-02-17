@@ -151,15 +151,20 @@ namespace Nektar
             void RegisterConfig(string key, string value);
             void PrintConfig();
             void SetDefaults();
-            
+            MeshSharedPtr GetMesh()
+            { 
+                return m_mesh;
+            }
+
+            /// Extract element vertices
+            virtual void ProcessVertices();
+
         protected:
             /// Mesh object
             MeshSharedPtr m_mesh;
             /// List of configuration values.
             map<string, ConfigOption> m_config;
             
-            /// Extract element vertices
-            virtual void ProcessVertices();
             /// Extract element edges
             virtual void ProcessEdges(bool ReprocessEdges = true);
             /// Extract element faces

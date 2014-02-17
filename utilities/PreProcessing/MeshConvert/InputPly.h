@@ -58,7 +58,7 @@ namespace Nektar
             /// Populate and validate required data structures.
             virtual void Process();
 
-            void ReadPly(std::ifstream &mshFile);
+            void ReadPly(std::ifstream &mshFile, NekDouble scale = 1.0);
         private:
         };
 

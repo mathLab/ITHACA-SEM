@@ -81,7 +81,7 @@ namespace Nektar
             ProcessComposites();
         }
 
-        void InputPly::ReadPly(std::ifstream &mshFile)
+        void InputPly::ReadPly(std::ifstream &mshFile, NekDouble scale)
         {
             m_mesh->m_expDim = 0;
             string line;
@@ -146,6 +146,12 @@ namespace Nektar
                         {
                             m_mesh->m_spaceDim = 3;
                         }
+                        
+                        x *= scale;
+                        y *= scale;
+                        z *= scale;
+
+
                         m_mesh->m_node.push_back(
                             boost::shared_ptr<Node>(new Node(i, x, y, z)));
                         

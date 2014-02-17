@@ -110,15 +110,16 @@ namespace Nektar
         void Module::ProcessVertices()
         {
             vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-
+            
             m_mesh->m_vertexSet.clear();
-
+            
             for (int i = 0, vid = 0; i < elmt.size(); ++i)
             {
                 for (int j = 0; j < elmt[i]->GetVertexCount(); ++j)
                 {
                     pair<NodeSet::iterator,bool> testIns =
                         m_mesh->m_vertexSet.insert(elmt[i]->GetVertex(j));
+                    
                     if (testIns.second)
                     {
                         (*(testIns.first))->m_id = vid++;

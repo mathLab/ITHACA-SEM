@@ -46,18 +46,18 @@ using namespace Nektar::LibUtilities;
 class FauxComm : public CommSerial
 {
 public:
-    LIB_UTILITIES_EXPORT FauxComm(int argc, char* argv[], int size)
+    FauxComm(int argc, char* argv[], int size)
         : CommSerial(argc, argv)
     {
         m_size = size;
         m_type = "Faux parallel";
     }
-    LIB_UTILITIES_EXPORT FauxComm(int size) : CommSerial(0, NULL)
+    FauxComm(int size) : CommSerial(0, NULL)
     {
         m_size = size;
         m_type = "Faux parallel";
     }
-    LIB_UTILITIES_EXPORT virtual ~FauxComm() {}
+    virtual ~FauxComm() {}
     void v_SplitComm(int pRows, int pColumns)
     {
         m_commRow    = boost::shared_ptr<FauxComm>(new FauxComm(pColumns));

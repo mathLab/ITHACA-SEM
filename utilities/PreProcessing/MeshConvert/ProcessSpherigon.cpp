@@ -480,6 +480,10 @@ namespace Nektar
                     }
                 }
 
+                //loop over all element in ply mesh and determine
+                //xmin,xmax,ymin,ymax as search criterion
+                
+
                 NekDouble mindiff,diff;
                 int       cntmin;
                 
@@ -505,6 +509,7 @@ namespace Nektar
                             tmpsav = tmp;
                         }
                     }
+#if 0 
                     if((cntmin ==  11239)&&(locnorm.count(cntmin) != 0))
                     {
                         cout << "Using cntmin = "<< cntmin << " For vertex " << locnorm[cntmin] << " and " << vIt->first << " mindiff: " << mindiff << " ( "<< tmpsav.m_x <<","<< tmpsav.m_y << "," << tmpsav.m_z << ")" << endl; 
@@ -526,7 +531,7 @@ namespace Nektar
                         exit(0);
 #endif
                     }
-
+#endif
                     locnorm[cntmin] = vIt->first;
                     
                     ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),"cntmin is out of range"); 

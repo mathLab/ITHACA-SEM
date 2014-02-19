@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
     
     //Fields to add in the output file
     
-    int nfieldsAdded = 12;
+    int nfieldsAdded = 14;
     Array<OneD, Array<OneD, NekDouble> > traceFieldsAdded(nfieldsAdded);
     Array<OneD, Array<OneD, NekDouble> > surfaceFieldsAdded(nfieldsAdded);
     
@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
         pFields[0]->ExtractTracePhys(Dpressure[i], traceDpressure[i]);
     }
     
-    
+    // Dp_t
     for(i = 0; i < nDimensions; ++i)
     {
         Vmath::Vmul(nTracePts,
@@ -408,6 +408,15 @@ int main(int argc, char *argv[])
                     &traceFieldsAdded[3][0], 1);
     }
     
+    // Dp_x
+    Vmath::Vcopy(nTracePts,
+                 &traceDpressure[0][0], 1,
+                 &traceFieldsAdded[4][0], 1);
+    
+    // Dp_y
+    Vmath::Vcopy(nTracePts,
+                 &traceDpressure[1][0], 1,
+                 &traceFieldsAdded[5][0], 1);
     
     /** Evaluation of the velocity gradient in the cartesian directions
      * Du_x:    traceFieldsAdded[4]
@@ -455,16 +464,16 @@ int main(int argc, char *argv[])
     
     Vmath::Vcopy(nTracePts,
                  &traceDvelocity[0][0][0], 1,
-                 &traceFieldsAdded[4][0], 1);
-    Vmath::Vcopy(nTracePts,
-                 &traceDvelocity[0][1][0], 1,
-                 &traceFieldsAdded[5][0], 1);
-    Vmath::Vcopy(nTracePts,
-                 &traceDvelocity[1][0][0], 1,
                  &traceFieldsAdded[6][0], 1);
     Vmath::Vcopy(nTracePts,
-                 &traceDvelocity[1][1][0], 1,
+                 &traceDvelocity[0][1][0], 1,
                  &traceFieldsAdded[7][0], 1);
+    Vmath::Vcopy(nTracePts,
+                 &traceDvelocity[1][0][0], 1,
+                 &traceFieldsAdded[8][0], 1);
+    Vmath::Vcopy(nTracePts,
+                 &traceDvelocity[1][1][0], 1,
+                 &traceFieldsAdded[9][0], 1);
     
     
     /*** Evaluation of shear stresses ******************************************
@@ -539,9 +548,9 @@ int main(int argc, char *argv[])
     // Sxy = mu * (du/dy + dv/dx)
     Vmath::Vmul(nSolutionPts, &mu[0], 1, &Sxy[0], 1, &Sxy[0], 1);
 
-    pFields[0]->ExtractTracePhys(Sgg[0], traceFieldsAdded[8]);
-    pFields[0]->ExtractTracePhys(Sgg[1], traceFieldsAdded[9]);
-    pFields[0]->ExtractTracePhys(Sxy, traceFieldsAdded[10]);
+    pFields[0]->ExtractTracePhys(Sgg[0], traceFieldsAdded[10]);
+    pFields[0]->ExtractTracePhys(Sgg[1], traceFieldsAdded[11]);
+    pFields[0]->ExtractTracePhys(Sxy,    traceFieldsAdded[12]);
     
     /*** Evaluation of Mach number *********************************************
     // M -> traceFieldsAdded[*]
@@ -564,12 +573,12 @@ int main(int argc, char *argv[])
                      mach,           1, mach,           1);
     }
     
-    Vmath::Vdiv(nSolutionPts, mach, 1, uFields[0], 1, mach, 1);
-    Vmath::Vdiv(nSolutionPts, mach, 1, uFields[0], 1, mach, 1);
+    Vmath::Vdiv(nSolutionPts,  mach, 1, uFields[0], 1, mach, 1);
+    Vmath::Vdiv(nSolutionPts,  mach, 1, uFields[0], 1, mach, 1);
     Vmath::Vsqrt(nSolutionPts, mach, 1, mach, 1);
-    Vmath::Vdiv(nSolutionPts, mach, 1, soundspeed,   1, mach, 1);
+    Vmath::Vdiv(nSolutionPts,  mach, 1, soundspeed, 1, mach, 1);
     
-    pFields[0]->ExtractTracePhys(mach, traceFieldsAdded[11]);
+    pFields[0]->ExtractTracePhys(mach, traceFieldsAdded[13]);
     
     /**************************************************************************/
     // Extract coordinates
@@ -708,6 +717,8 @@ int main(int argc, char *argv[])
         << surfaceFieldsAdded[9][i] << " \t "
         << surfaceFieldsAdded[10][i] << " \t "
         << surfaceFieldsAdded[11][i] << " \t "
+        << surfaceFieldsAdded[12][i] << " \t "
+        << surfaceFieldsAdded[13][i] << " \t "
         << endl;
     }
     outfile << endl << endl;

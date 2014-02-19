@@ -536,10 +536,8 @@ int main(int argc, char *argv[])
         Vmath::Vadd(nSolutionPts, &temp[j][0], 1, &divVel[0], 1, &Sgg[j][0], 1);
     }
     
-    // Extra diagonal terms of viscous stress tensor (Sxy, Sxz, Syz)
-    // Note: they exist for 2D and 3D problems only
+    // Extra diagonal terms of viscous stress tensor (Sxy =  Syx)
     Array<OneD, NekDouble > Sxy(nSolutionPts, 0.0);
-    Array<OneD, NekDouble > Sxz(nSolutionPts, 0.0);
     
     // Sxy = (du/dy + dv/dx)
     Vmath::Vadd(nSolutionPts, &Dvelocity[0][1][0], 1,
@@ -551,6 +549,38 @@ int main(int argc, char *argv[])
     pFields[0]->ExtractTracePhys(Sgg[0], traceFieldsAdded[10]);
     pFields[0]->ExtractTracePhys(Sgg[1], traceFieldsAdded[11]);
     pFields[0]->ExtractTracePhys(Sxy,    traceFieldsAdded[12]);
+    
+    /*** Evaluation of the skin friction ***************************************
+     // tau_t -> traceFieldsAdded[*]
+    ***************************************************************************/
+    Array<OneD, NekDouble > sigma_diff   (nSolutionPts, 0.0);
+    Array<OneD, NekDouble > cosTeta      (nSolutionPts, 0.0);
+    Array<OneD, NekDouble > sinTeta      (nSolutionPts, 0.0);
+    Array<OneD, NekDouble > cos2Teta     (nSolutionPts, 0.0);
+    Array<OneD, NekDouble > sin2Teta     (nSolutionPts, 0.0);
+    Array<OneD, NekDouble > tau_t   (nSolutionPts, 0.0);
+    
+    Array<OneD, NekDouble > tmpTeta      (nSolutionPts, 0.0);
+    
+    // sigma_diff = sigma_x - sigma_y
+    Vmath::Vsub(nSolutionPts, &Sgg[0][0], 1, &Sgg[1][0], 1, &sigma_diff[0], 1);
+    Vmath::Vsub(nSolutionPts, &Sgg[0][0], 1, &Sgg[1][0], 1, &sigma_diff[0], 1);
+    
+    // sin(2*teta)
+    Vmath::Vmul(nSolutionPts, &cosTeta[0], 1, &sinTeta[0], 1, &tmpTeta[0], 1);
+    Vmath::Smul(nSolutionPts, 2.0, &tmpTeta[0], 1, &sin2Teta[0], 1);
+    
+    // cos(2*teta)
+    Vmath::Vmul(nSolutionPts, &cosTeta[0], 1, &cosTeta[0], 1, &cos2Teta[0], 1);
+    Vmath::Vmul(nSolutionPts, &sinTeta[0], 1, &sinTeta[0], 1, &tmpTeta[0], 1);
+    Vmath::Vsub(nSolutionPts, &cos2Teta[0], 1, &tmpTeta[0], 1, &cos2Teta[0], 1);
+    
+    // tau_t = -0.5*sigma_diff * sin(2*teta) + tau_xy * cos(2*teta)
+    Vmath::Smul(nSolutionPts, -0.5, &sigma_diff[0], 1, &sigma_diff[0], 1);
+    Vmath::Vmul(nSolutionPts, &sigma_diff[0], 1, &sin2Teta[0], 1, &tau_t[0], 1);
+    Vmath::Vmul(nSolutionPts, &Sxy[0], 1, &cos2Teta[0], 1, &tmpTeta[0], 1);
+    Vmath::Vadd(nSolutionPts, &tau_t[0], 1, &tmpTeta[0], 1, &tau_t[0], 1);
+    
     
     /*** Evaluation of Mach number *********************************************
     // M -> traceFieldsAdded[*]

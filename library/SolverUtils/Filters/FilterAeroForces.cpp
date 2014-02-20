@@ -729,7 +729,7 @@ namespace Nektar
                             Fyp += bc->Integral(lift_p);
 
                             Fxv += bc->Integral(drag_t);
-                            Fyp += bc->Integral(lift_t);
+                            Fyv += bc->Integral(lift_t);
                         }
                     }
                     else

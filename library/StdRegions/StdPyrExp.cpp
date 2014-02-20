@@ -733,15 +733,12 @@ namespace Nektar
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
             
-            int P = m_base[0]->GetNumModes() - 1;
-            int Q = m_base[1]->GetNumModes() - 1;
-            int R = m_base[2]->GetNumModes() - 1;
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
             
-            return (P+1)*(Q+1)              // 1 rect. face in p-q plane
-                + 2*(R+1) + P*(1+2*R-P)     // 2 tri. faces in p-r plane
-                + 2*(R+1) + Q*(1+2*R-Q)     // 2 tri. faces in q-r plane
-                - 2*(P+1)-2*(Q+1)-4*(R+1)   // subtract double counted edges
-                + 5;                        // add vertices
+            return LibUtilities::StdPyrData::
+                                    getNumberOfBndCoefficients(P, Q, R);
         }
 
         int StdPyrExp::v_GetEdgeNcoeffs(const int i) const

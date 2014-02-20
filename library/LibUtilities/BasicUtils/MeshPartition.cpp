@@ -513,25 +513,32 @@ namespace Nektar
                     switch (m_meshComposites[cId].type)
                     {
                         case 'A':
-                            weight = StdTetData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = 2 * (na-2) * (na-1) + 6 * (na-1) + 4;
+                            weight    = StdTetData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = StdTetData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'R':
-                            weight = StdPrismData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = (na-2)*(na-1) + 3*(na-1)*(na-1) + 9*(na-1) + 6;
+                            weight    = StdPrismData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = StdPrismData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'H':
-                            weight = StdHexData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = 6*(na-1)*(na-1) + 12*(na-1) + 8;
+                            weight    = StdHexData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = StdHexData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'P':
-                            weight = StdPyrData::getNumberOfCoefficients(na, nb, nc);
+                            weight    = StdPyrData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = StdPyrData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'Q':
-                            weight = StdQuadData::getNumberOfCoefficients(na, nb);
+                            weight    = StdQuadData::getNumberOfCoefficients(na, nb);
+                            bndWeight = StdQuadData::getNumberOfBndCoefficients(na, nb);
                             break;
                         case 'T':
-                            weight = StdTriData::getNumberOfCoefficients(na, nb);
+                            weight    = StdTriData::getNumberOfCoefficients(na, nb);
+                            bndWeight = StdTriData::getNumberOfBndCoefficients(na, nb);
+                            break;
+                        case 'S':
+                            weight    = StdSegData::getNumberOfCoefficients(na);
+                            bndWeight = StdSegData::getNumberOfBndCoefficients(na);
                             break;
                         default:
                             break;
@@ -654,8 +661,12 @@ namespace Nektar
                         " does not correspond to mesh dimension");
 
                     int na = it->second[0];
-                    int nb = it->second[1];
+                    int nb = 0;
                     int nc = 0;
+                    if (m_dim >= 2)
+                    {
+                        nb = it->second[1];
+                    }
                     if (m_dim == 3)
                     {
                         nc = it->second[2];
@@ -666,25 +677,32 @@ namespace Nektar
                     switch (m_meshComposites[cId].type)
                     {
                         case 'A':
-                            weight = StdTetData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = 2 * (na-2) * (na-1) + 6 * (na-1) + 4;
+                            weight    = StdTetData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = StdTetData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'R':
-                            weight = StdPrismData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = (na-2)*(na-1) + 3*(na-1)*(na-1) + 9*(na-1) + 6;
+                            weight    = StdPrismData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = StdPrismData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'H':
-                            weight = StdHexData::getNumberOfCoefficients(na, nb, nc);
-                            bndWeight = 6*(na-1)*(na-1) + 12*(na-1) + 8;
+                            weight    = StdHexData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = StdHexData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'P':
-                            weight = StdPyrData::getNumberOfCoefficients(na, nb, nc);
+                            weight    = StdPyrData::getNumberOfCoefficients(na, nb, nc);
+                            bndWeight = StdPyrData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'Q':
-                            weight = StdQuadData::getNumberOfCoefficients(na, nb);
+                            weight    = StdQuadData::getNumberOfCoefficients(na, nb);
+                            bndWeight = StdQuadData::getNumberOfBndCoefficients(na, nb);
                             break;
                         case 'T':
-                            weight = StdTriData::getNumberOfCoefficients(na, nb);
+                            weight    = StdTriData::getNumberOfCoefficients(na, nb);
+                            bndWeight = StdTriData::getNumberOfBndCoefficients(na, nb);
+                            break;
+                        case 'S':
+                            weight    = StdSegData::getNumberOfCoefficients(na);
+                            bndWeight = StdSegData::getNumberOfBndCoefficients(na);
                             break;
                         default:
                             break;

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdPrismExp.h>
+#include <LibUtilities/BasicUtils/ShapeType.hpp>
 
 namespace Nektar
 {
@@ -944,14 +945,12 @@ namespace Nektar
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
             
-            int P = m_base[0]->GetNumModes() - 1;
-            int Q = m_base[1]->GetNumModes() - 1;
-            int R = m_base[2]->GetNumModes() - 1;
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
             
-            return (P+1)*(Q+1) + 2*(Q+1)*(R+1) // 3 rect. faces in p-q and q-r planes
-                + 2*(R+1) + P*(1 + 2*R - P)    // 2 tri.  faces in p-r plane
-                - 3*(Q+1) - 2*(P+1) - 4*(R+1)  // subtract double counted points on edge
-                + 6;                           // add vertices
+            return LibUtilities::StdPrismData::
+                                        getNumberOfBndCoefficients(P,Q,R);
         }
 
         int StdPrismExp::v_NumDGBndryCoeffs() const

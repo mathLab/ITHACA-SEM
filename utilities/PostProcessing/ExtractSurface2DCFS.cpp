@@ -287,13 +287,10 @@ int main(int argc, char *argv[])
                     &pressure[0], 1);
     }
     
-
-    
     Vmath::Vdiv(nSolutionPts,
                 &pressure[0], 1,
                 &uFields[0][0], 1,
                 &pressure[0],1);
-    
     
     Vmath::Vsub(nSolutionPts,
                 &uFields[nfields - 1][0], 1,
@@ -519,8 +516,10 @@ int main(int argc, char *argv[])
     Vmath::Smul(nSolutionPts, 2.0, &mu[0], 1, &mu2[0], 1);
     
     // Velocity divergence
-    Vmath::Vadd(nSolutionPts, &divVel[0], 1, &Dvelocity[0][0][0], 1, &divVel[0], 1);
-    Vmath::Vadd(nSolutionPts, &divVel[0], 1, &Dvelocity[1][1][0], 1, &divVel[0], 1);
+    Vmath::Vadd(nSolutionPts, &divVel[0], 1, 
+                &Dvelocity[0][0][0], 1, &divVel[0], 1);
+    Vmath::Vadd(nSolutionPts, &divVel[0], 1, 
+                &Dvelocity[1][1][0], 1, &divVel[0], 1);
 
     // Velocity divergence scaled by lambda * mu
     Vmath::Smul(nSolutionPts, lambda, &divVel[0], 1, &divVel[0], 1);
@@ -587,7 +586,8 @@ int main(int argc, char *argv[])
     // tau_t = -0.5*sigma_diff * sin(2*teta) + tau_xy * cos(2*teta)
     Vmath::Smul(nTracePts, -0.5, &sigma_diff[0], 1, &sigma_diff[0], 1);
     Vmath::Vmul(nTracePts, &sigma_diff[0], 1, &sin2Teta[0], 1, &tau_t[0], 1);
-    Vmath::Vmul(nTracePts, &traceFieldsAdded[12][0], 1, &cos2Teta[0], 1, &tmpTeta[0], 1);
+    Vmath::Vmul(nTracePts, &traceFieldsAdded[12][0], 1, &cos2Teta[0], 1, 
+                &tmpTeta[0], 1);
     Vmath::Vadd(nTracePts, &tau_t[0], 1, &tmpTeta[0], 1, &tau_t[0], 1);
     
     Vmath::Vcopy(nTracePts, &tau_t[0], 1, &traceFieldsAdded[13][0], 1);

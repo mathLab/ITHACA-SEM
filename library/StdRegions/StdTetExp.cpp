@@ -1160,20 +1160,8 @@ namespace Nektar
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
 
-            int p_hat, k;
-            // All modes in the first layer are boundary modes
-            int tot = P*(P+1)/2 + (Q-P)*P;
-            // Loop over each plane in the stack
-            for (int i = 1; i < R - 1; ++i)
-            {
-                p_hat = min(P, R-i);
-                k = min(Q-P, max(0, Q-i-1));
-                // First two columns and bottom row are boundary modes
-                tot += (p_hat + k) + (p_hat + k - 1) + p_hat - 2;
-            }
-
-            // Add on top vertex mode
-            return tot + 1;
+            return LibUtilities::StdTetData::
+                                        getNumberOfBndCoefficients(P, Q, R);
         }
 
         int StdTetExp::v_NumDGBndryCoeffs() const

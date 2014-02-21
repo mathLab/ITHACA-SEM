@@ -90,10 +90,11 @@ namespace Nektar
 
             vtkPoints *vtkPoints = vtkMesh->GetPoints();
 
-            const int numCellTypes = 2;
+            const int numCellTypes = 3;
             vtkCellArray* vtkCells[numCellTypes];
             vtkCells[0] = vtkMesh->GetPolys();
             vtkCells[1] = vtkMesh->GetStrips();
+            vtkCells[2] = vtkMesh->GetLines();
 
             vtkIdType npts;
             vtkIdType *pts = 0;
@@ -124,24 +125,24 @@ namespace Nektar
                 vtkCells[c]->InitTraversal();
                 for (int i = 0; vtkCells[c]->GetNextCell(npts, pts); ++i)
                 {
-                    for (int j = 0; j < npts - 2; ++j)
+                    for (int j = 0; j < npts - 1; ++j)
                     {
                         // Create element tags
                         vector<int> tags;
                         tags.push_back(0); // composite
-                        tags.push_back(LibUtilities::eTriangle); // element type
+                        tags.push_back(LibUtilities::eSegment); // element type
 
                         // Read element node list
                         vector<NodeSharedPtr> nodeList;
-                        for (int k = j; k < j + 3; ++k)
+                        for (int k = j; k < j + 2; ++k)
                         {
                             nodeList.push_back(m_mesh->m_node[pts[k]]);
                         }
 
                         // Create element
-                        ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
+                        ElmtConfig conf(LibUtilities::eSegment,1,false,false);
                         ElementSharedPtr E = GetElementFactory().
-                            CreateInstance(LibUtilities::eTriangle,
+                            CreateInstance(LibUtilities::eSegment,
                                             conf,nodeList,tags);
 
                         // Determine mesh expansion dimension

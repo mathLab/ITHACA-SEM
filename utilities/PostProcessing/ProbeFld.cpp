@@ -26,11 +26,11 @@ int main(int argc, char *argv[])
                 "  Probes N points along the line from (x0,y0,z0) to "
                 "(x0+dx, y0+dy, z0+dz)\n");
         fprintf(stderr,
-                "ProbeFld meshfile fieldfile points.txt");
+                "ProbeFld meshfile fieldfile points.txt\n");
         fprintf(stderr,
-                "  Probes the solution at the points in the points.txt file.");
+                "  Probes the solution at the points in the points.txt file.\n");
         fprintf(stderr,
-                "  Points are given as space-separated x y z on each line.");
+                "  Points are given as space-separated x y z on each line.\n");
         exit(1);
     }
 

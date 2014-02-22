@@ -220,7 +220,6 @@ int main(int argc, char *argv[])
     {
         string line;
         ifstream pts(argv[3]);
-        NekDouble x, y, z;
         while (getline(pts, line))
         {
             stringstream ss(line);

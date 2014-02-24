@@ -1407,53 +1407,34 @@ namespace Nektar
         
         hxmin = Vmath::Vmin(ElDim[0].num_elements(), &ElDim[0][0], 1);
         hymin = Vmath::Vmin(ElDim[1].num_elements(), &ElDim[1][0], 1);
+        
         int PointCount = 0.0;
         
-        if (m_spacedim == 2)
+        for (int e = 0; e < nElements; e++)
         {
+            int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
             
-        
-            for (int i = 0; i < nElements; ++i)
+            for (int n = 0; n < nQuadPointsElement; n++)
             {
-                h_mean_sumx += ElDim[0][i];
-                h_mean_sumy += ElDim[1][i];
+                h_av[0][n + PointCount] = ElDim[0][e];
+                h_av[1][n + PointCount] = ElDim[1][e];
             }
             
-            h_mean_x = h_mean_sumx/nElements;
-            h_mean_y = h_mean_sumy/nElements;
-            
-            h_mean = (h_mean_x+h_mean_y)/2;
+            PointCount += nQuadPointsElement;
         }
         
-        if (m_spacedim == 3)
+        PointCount = 0.0;
+        
+        for (int i = 0; i < nElements; ++i)
         {
-            for (int e = 0; e < nElements; e++)
-            {
-                int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-                
-                for (int n = 0; n < nQuadPointsElement; n++)
-                {
-                    h_av[0][n + PointCount] = ElDim[0][e];
-                    h_av[1][n + PointCount] = ElDim[1][e];
-                    h_av[2][n + PointCount] = ElDim[2][e];
-                }
-                
-                PointCount += nQuadPointsElement;
-            }
-            
-            for (int i = 0; i < nElements; ++i)
-            {
-                h_mean_sumx += h_av[0][i];
-                h_mean_sumy += h_av[1][i];
-                h_mean_sumz += h_av[2][i];
-            }
-            
-            h_mean_x = h_mean_sumx/nElements;
-            h_mean_y = h_mean_sumy/nElements;
-            h_mean_z = h_mean_sumy/nElements;
-            
-            h_mean = (h_mean_x+h_mean_y+h_mean_z)/3;
+            h_mean_sumx += ElDim[0][i];
+            h_mean_sumy += ElDim[1][i];
         }
+            
+        h_mean_x = h_mean_sumx/nElements;
+        h_mean_y = h_mean_sumy/nElements;
+            
+        h_mean = (h_mean_x+h_mean_y)/2;
         
         //
         

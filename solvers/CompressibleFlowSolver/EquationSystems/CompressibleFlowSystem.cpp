@@ -3246,44 +3246,11 @@ namespace Nektar
                     
                     L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
                 }
-                
-                if (boost::dynamic_pointer_cast<LocalRegions::TriExp>(
-                                                m_fields[0]->GetExp(e)))
+                else
                 {
-                    ElTriGeom = boost::dynamic_pointer_cast<
-                    SpatialDomains::TriGeom>(m_fields[0]->GetExp(e)->GetGeom());
-                    
-                    NekDouble x0 = 0.0;
-                    NekDouble y0 = 0.0;
-                    NekDouble z0 = 0.0;
-                    
-                    NekDouble x1 = 0.0;
-                    NekDouble y1 = 0.0;
-                    NekDouble z1 = 0.0;
-                    
-                    ElTriGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
-                    ElTriGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
-                    
-                    L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
+                  ASSERTL0(false, "This function is only implemented for Quadrilateral elements so far")
                 }
-                
-                if (boost::dynamic_pointer_cast<LocalRegions::HexExp>(
-                                                m_fields[0]->GetExp(e)))
-                {
-                    ElHexGeom = boost::dynamic_pointer_cast<
-                    SpatialDomains::HexGeom>(m_fields[0]->GetExp(e)->GetGeom());
-                    
-                    NekDouble x0 = 0.0;
-                    NekDouble y0 = 0.0;
-                    NekDouble z0 = 0.0;
-                    
-                    NekDouble x1 = 0.0;
-                    NekDouble y1 = 0.0;
-                    NekDouble z1 = 0.0;
-                    
-                    ElHexGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
-                    ElHexGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
-                }
+    
             }
             if(boost::dynamic_pointer_cast<LocalRegions::QuadExp>(
                                                 m_fields[0]->GetExp(e)));
@@ -3294,28 +3261,6 @@ namespace Nektar
                 outarray[0][e] = hx;
                 outarray[1][e] = hy;
             }
-            if (boost::dynamic_pointer_cast<LocalRegions::TriExp>(
-                                                m_fields[0]->GetExp(e)))
-            {
-                hx = Vmath::Vmin(nedges, &L1[0], 1);
-                hy = Vmath::Vmin(nedges, &L1[0], 1);
-                    
-                outarray[0][e] = hx;
-                outarray[1][e] = hy;
-            }
-            
-            if(boost::dynamic_pointer_cast<LocalRegions::HexExp>(
-                                                m_fields[0]->GetExp(e)));
-            {
-                hx = Vmath::Vmin(nedges, &L1[0], 1);
-                hy = Vmath::Vmin(nedges, &L1[0], 1);
-                hz = Vmath::Vmin(nedges, &L1[0], 1);
-                
-                outarray[0][e] = hx;
-                outarray[1][e] = hy;
-                outarray[2][e] = hy;
-            }
-            
         }
         
         if (m_spacedim == 2)

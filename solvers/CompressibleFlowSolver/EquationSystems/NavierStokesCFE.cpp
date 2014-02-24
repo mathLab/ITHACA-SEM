@@ -83,7 +83,6 @@ namespace Nektar
         
         m_checkpointFuncs["Sensor"] = boost::bind(&NavierStokesCFE::CPSensor, this, _1, _2);
         m_checkpointFuncs["SensorKappa"] = boost::bind(&NavierStokesCFE::CPSensorKappa, this, _1, _2);
-        m_checkpointFuncs["EpsSmooth"] = boost::bind(&NavierStokesCFE::CPSmoothArtificialViscosity, this, _1, _2);
 
     }
 
@@ -480,36 +479,5 @@ namespace Nektar
         Array<OneD, NekDouble> SensorKappa(npts,0.0);
         GetSensor(physfield, sensor, SensorKappa);
         m_fields[0]->FwdTrans(sensor, outarray);
-    }
-    
-    
-    void NavierStokesCFE::CPSmoothArtificialViscosity(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, NekDouble> &outarray)
-    {
-        const int npts = m_fields[0]->GetTotPoints();
-        int nvariables  = m_fields.num_elements();
-        
-        outarray = Array<OneD, NekDouble>(GetNcoeffs());
-        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+3);
-        
-        if (nvariables == m_spacedim+3)
-        {
-            for (int i = 0; i < nvariables; ++i)
-            {
-                physfield[i] = Array<OneD, NekDouble>(npts);
-                m_fields[i]->BwdTrans(inarray[i], physfield[i]);
-                
-                Array<OneD, NekDouble> eps_bar(npts,0.0);
-                GetSmoothArtificialViscosity(physfield, eps_bar);
-                m_fields[0]->FwdTrans(eps_bar, outarray);
-            }
-        }
-        else
-        {
-            Vmath::Zero(outarray.num_elements(), outarray, 1);
-        }
-        
-
     }
 }

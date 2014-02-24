@@ -87,12 +87,24 @@ namespace Nektar
             m_vertLocToGloMap = m_locToGloMap->XxtLinearSpaceMap(*expList);
 
             // Generate XXT system. 
-            GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpace,
-                                      m_vertLocToGloMap,
-                                      (m_linsys.lock())->GetKey().GetConstFactors());
+            if(m_linsys.lock()->GetKey().GetMatrixType() == StdRegions::eMass)
+            {
+                GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpaceMass, 
+                                          m_vertLocToGloMap);
+                m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
+                    AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+            }
+            else
+            {
+                GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpace, 
+                                          m_vertLocToGloMap,
+                                          (m_linsys.lock())->GetKey().GetConstFactors());
+                m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
+                    AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+            }
 
-            m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
-                AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+            
+
 
 	}
 

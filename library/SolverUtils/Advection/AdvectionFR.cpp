@@ -847,7 +847,7 @@ namespace Nektar
             }
 
             // Computing the interface flux at each trace point
-            m_riemann->Solve(Fwd, Bwd, numflux);
+            m_riemann->Solve(m_spaceDim, Fwd, Bwd, numflux);
 
             // Divergence of the flux (computing the RHS)  
             switch(nDimensions)

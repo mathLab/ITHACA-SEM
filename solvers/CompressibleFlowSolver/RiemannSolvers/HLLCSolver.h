@@ -46,7 +46,7 @@ namespace Nektar
         static RiemannSolverSharedPtr create()
         {
             return RiemannSolverSharedPtr(
-                new HLLCSolver());
+                                          new HLLCSolver());
         }
         
         static std::string solverName;
@@ -55,9 +55,14 @@ namespace Nektar
         HLLCSolver();
         
         virtual void v_PointSolve(
-            double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
-            double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
-            double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef);
+                                  double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
+                                  double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
+                                  double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef);
+        
+        virtual void v_PointSolveVisc(
+                                      double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL, double  EpsL,
+                                      double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER, double  EpsR,
+                                      double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef, double &Epsf);
     };
 }
 

@@ -93,7 +93,18 @@ namespace Nektar
     virtual void v_SetInitialConditions(
         NekDouble                               initialtime = 0.0,
         bool                                    dumpInitialConditions = true);
+      
+    void CPSensor(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD, NekDouble> &outarray);
     
+    void CPSensorKappa(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD, NekDouble> &outarray);
+    
+    void CPSmoothArtificialViscosity(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD, NekDouble> &outarray);
     private:
       void SetBoundaryConditions(
         Array<OneD, Array<OneD, NekDouble> >             &physarray, 

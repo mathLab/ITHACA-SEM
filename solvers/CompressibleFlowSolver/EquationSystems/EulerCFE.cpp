@@ -342,7 +342,8 @@ namespace Nektar
         }
 
         Array<OneD, NekDouble> sensor(npts,0.0);
-        GetSensor(physfield, sensor);
+        Array<OneD, NekDouble> SensorKappa(npts,0.0);
+        GetSensor(physfield, sensor, SensorKappa);
         m_fields[0]->FwdTrans(sensor, outarray);
     }
     

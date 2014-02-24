@@ -61,12 +61,12 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)> 
-                                                        DiffusionFluxVecCBNS;
+                                            DiffusionFluxVecCBNS;
         
         typedef boost::function<void (
             const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD,             NekDouble  >&)>
-                                                        DiffusionArtificialDiffusion;
+                                            DiffusionArtificialDiffusion;
         
         class Diffusion
         {

@@ -103,10 +103,14 @@ namespace Nektar
         NekDouble                           m_gasConstant;
         NekDouble                           m_Twall;
         std::string                         m_ViscosityType;
+        std::string                         m_shockCaptureType;
         NekDouble                           m_mu;
         NekDouble                           m_Skappa;
         NekDouble                           m_Kappa;
         NekDouble                           m_mu0;
+        NekDouble                           m_FacL;
+        NekDouble                           m_FacH;
+        NekDouble                           m_eps_max;
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
@@ -124,12 +128,19 @@ namespace Nektar
         void GetFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+        void GetFluxVectorPDESC(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         void GetFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         void GetViscousFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+        void GetViscousFluxVectorPDESC(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
         void GetViscousFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
@@ -143,6 +154,10 @@ namespace Nektar
             int                                                 bcRegion,
             int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void ArtificialViscosityBC(
+            int                                   bcRegion,
+            int                                   cnt,
+            Array<OneD, Array<OneD, NekDouble> > &physarray);
         void SymmetryBC(
             int                                                 bcRegion,
             int                                                 cnt,
@@ -177,11 +192,18 @@ namespace Nektar
             const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
             const Array<OneD, const Array<OneD,       NekDouble> >&velocity,
                   Array<OneD,                         NekDouble>  &pressure);
+        void GetEnthalpy(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &pressure,
+                  Array<OneD,                   NekDouble>   &enthalpy);
         void GetEntropy(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
             const Array<OneD, const NekDouble>               &pressure,
             const Array<OneD, const NekDouble>               &temperature,
                   Array<OneD,       NekDouble>               &entropy);
+        void GetSmoothArtificialViscosity(
+                    const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                          Array<OneD,             NekDouble  > &eps_bar);
         void GetDynamicViscosity(
             const Array<OneD,                   const NekDouble>  &temperature,
                   Array<OneD,                         NekDouble  >&mu);
@@ -190,7 +212,11 @@ namespace Nektar
                   Array<OneD,                         NekDouble>  &stdV);
         void GetSensor(
             const Array<OneD, const Array<OneD,       NekDouble> > &physarray,
-                  Array<OneD,                         NekDouble>   &Sensor);
+                  Array<OneD,                         NekDouble>   &Sensor,
+                  Array<OneD,                         NekDouble>   &SensorKappa);
+        void GetElementDimensions(
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+                  Array<OneD,       NekDouble > &hmin);
         void GetAbsoluteVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &Vtot);
@@ -200,7 +226,9 @@ namespace Nektar
         void SetVarPOrderElmt(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                    NekDouble  > &PolyOrder);
-
+        void GetForcingTerm(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > outarrayForcing);
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
         

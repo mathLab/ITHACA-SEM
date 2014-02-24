@@ -50,6 +50,7 @@ namespace Nektar
         LinearSWESolver();
         
         virtual void v_Solve(
+            int nDim,
             const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
             const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                   Array<OneD,       Array<OneD, NekDouble> > &flux);

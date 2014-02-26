@@ -245,16 +245,6 @@ namespace Nektar
             // Advection term in physical rhs form
             m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
             
-            /*cout << "ADVECTION = " << Vmath::Vmax(outarrayAdv[0].num_elements(), &outarrayAdv[0][0], 1) << endl;
-            cout << "ADVECTION = " << Vmath::Vmax(outarrayAdv[0].num_elements(), &outarrayAdv[1][0], 1) << endl;
-            cout << "ADVECTION = " << Vmath::Vmax(outarrayAdv[0].num_elements(), &outarrayAdv[2][0], 1) << endl;
-            cout << "ADVECTION = " << Vmath::Vmax(outarrayAdv[0].num_elements(), &outarrayAdv[3][0], 1) << endl;
-            cout << "ADVECTION = " << Vmath::Vmax(outarrayAdv[0].num_elements(), &outarrayAdv[4][0], 1) << endl;*/
-            /*cout << Vmath::Vmin(outarray[1].num_elements(), outarray[1], 1)<<
-            "  " << Vmath::Vmax(outarray[1].num_elements(), outarray[1], 1)  << endl;
-            cout << Vmath::Vmin(outarray[2].num_elements(), outarray[2], 1)  <<
-            "  " << Vmath::Vmax(outarray[2].num_elements(), outarray[2], 1)  << endl;*/
-            
             for (i = 0; i < nvariables; ++i)
             {
                 Vmath::Neg(npoints, outarrayAdv[i], 1);
@@ -304,19 +294,8 @@ namespace Nektar
             
             // Diffusion term in physical rhs form
             m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff);
-            
-            /*cout << "DIFFUSION = " << Vmath::Vmax(outarrayDiff[0].num_elements(), &outarrayDiff[0][0], 1) << endl;
-            cout << "DIFFUSION = " << Vmath::Vmax(outarrayDiff[0].num_elements(), &outarrayDiff[1][0], 1) << endl;
-            cout << "DIFFUSION = " << Vmath::Vmax(outarrayDiff[0].num_elements(), &outarrayDiff[2][0], 1) << endl;
-            cout << "DIFFUSION = " << Vmath::Vmax(outarrayDiff[0].num_elements(), &outarrayDiff[3][0], 1) << endl;
-            cout << "DIFFUSION = " << Vmath::Vmax(outarrayDiff[0].num_elements(), &outarrayDiff[4][0], 1) << endl;*/
 
             GetForcingTerm(inarray, outarrayForcing);
-            
-            //cout << "FORCING TERM?! " <<  Vmath::Vmin(outarrayForcing[0].num_elements(),
-            //                    outarrayForcing[nvariables-1], 1) <<
-            // "  " << Vmath::Vmax(outarrayForcing[0].num_elements(),
-            //            outarrayForcing[nvariables-1], 1) << endl;
             
             for (i = 0; i < nvariables; ++i)
             {

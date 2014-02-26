@@ -124,7 +124,7 @@ namespace Nektar
         m_session->LoadParameter ("mu0",           m_mu0,           1.0);
         m_session->LoadParameter ("FL",            m_FacL,           0.0);
         m_session->LoadParameter ("FH",            m_FacH,           0.0);
-        m_session->LoadParameter ("epsMax",            m_eps_max,           0.0);
+        m_session->LoadParameter ("epsMax",        m_eps_max,        0.0);
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
 
@@ -1450,6 +1450,8 @@ namespace Nektar
         
         GetSmoothArtificialViscosity(fields, eps_bar);
         
+        //cout << Vmath::Vmin(nPts, eps_bar, 1) << " " << Vmath::Vmax(nPts, eps_bar, 1) << endl;
+        
         for (int e = 0; e < nElements; e++)
         {
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
@@ -1499,7 +1501,7 @@ namespace Nektar
         for (i = 0; i < m_spacedim; ++i)
         {
             vel[i] = Array<OneD, NekDouble> (nPts, 0.0);
-            Vmath::Vdiv(nPts, physfield[i+1], 1, physfield[0], 1, vel[i], 1);
+            Vmath::Vdiv(nPts, physfield[i], 1, physfield[nvariables-2], 1, vel[i], 1);
         }
         
         // Apply chain rule to determine all mixed derivatives
@@ -1672,10 +1674,11 @@ namespace Nektar
             
             // tmp = h_x*eps_bar*d(rhov)/dx
             Vmath::Vmul(nPts,
-                        &eps_bar[0], 1,
+                        &tmpar2[0], 1,
                         &derivativesMix[0][1][0], 1,
                         &tmpar2[0], 1);
             
+            // tmp = h_y*eps_bar
             Vmath::Vmul(nPts,
                         &h_av[1][0], 1,
                         &eps_bar[0], 1,
@@ -1683,7 +1686,7 @@ namespace Nektar
             
             // tmp = h_y*eps_bar*d(rhou)/dy
             Vmath::Vmul(nPts,
-                        &eps_bar[0], 1,
+                        &tmpar20[0], 1,
                         &derivativesMix[1][0][0], 1,
                         &tmpar20[0], 1);
             
@@ -1825,7 +1828,7 @@ namespace Nektar
             // tmp = h_av*eps_bar
             Vmath::Vmul(nPts, &h_av[0][0], 1, &eps_bar[0], 1, &tmp3[0], 1);
             // tmp = h_av*eps_bar*d(rhoH)/dx
-            Vmath::Vmul(nPts, &eps_bar[0], 1,
+            Vmath::Vmul(nPts, &tmp3[0], 1,
                         &derivativesMix[0][m_spacedim][0], 1,
                         &tmp3[0], 1);
             
@@ -1857,7 +1860,7 @@ namespace Nektar
             Vmath::Vmul(nPts, &h_av[1][0], 1, &eps_bar[0], 1, &tmp3[0], 1);
             // tmp = h_av*eps_bar*d(rhoH)/dy
             Vmath::Vmul(nPts,
-                        &eps_bar[0], 1,
+                        &tmp3[0], 1,
                         &derivativesMix[1][m_spacedim][0], 1,
                         &tmp3[0], 1);
             
@@ -1895,7 +1898,7 @@ namespace Nektar
             // tmp = h_av*eps_bar
             Vmath::Vmul(nPts, &h_av[0][0], 1, &eps_bar[0], 1, &tmp4[0], 1);
             // tmp = h_av*eps_bar*d(rhoH)/dx
-            Vmath::Vmul(nPts, &eps_bar[0], 1, &derivativesMix[0][m_spacedim][0], 1,
+            Vmath::Vmul(nPts, &tmp4[0], 1, &derivativesMix[0][m_spacedim][0], 1,
                         &tmp4[0], 1);
             
             // STx = u * Sxx + v * Sxy + w * Sxz
@@ -1928,7 +1931,7 @@ namespace Nektar
             // tmp = h_av*eps_bar
             Vmath::Vmul(nPts, &h_av[1][0], 1, &eps_bar[0], 1, &tmp4[0], 1);
             // tmp = h_av*eps_bar*d(rhoH)/dy
-            Vmath::Vmul(nPts, &eps_bar[0], 1, &derivativesMix[1][m_spacedim][0], 1,
+            Vmath::Vmul(nPts, &tmp4[0], 1, &derivativesMix[1][m_spacedim][0], 1,
                         &tmp4[0], 1);
             
             // STy = v * Syy + u * Sxy + w * Syz + K * dT/dy
@@ -1960,7 +1963,7 @@ namespace Nektar
             // tmp = h_av*eps_bar
             Vmath::Vmul(nPts, &h_av[2][0], 1, &eps_bar[0], 1, &tmp4[0], 1);
             // tmp = h_av*eps_bar*d(rhoH)/dy
-            Vmath::Vmul(nPts, &eps_bar[0], 1, &derivativesMix[2][m_spacedim][0], 1,
+            Vmath::Vmul(nPts, &tmp4[0], 1, &derivativesMix[2][m_spacedim][0], 1,
                         &tmp4[0], 1);
             
             // STz = w * Szz + u * Sxz + v * Syz + K * dT/dz
@@ -2977,12 +2980,7 @@ namespace Nektar
         Array<OneD, NekDouble> SolNorm(nTotQuadPoints,0.0);
         
         Vmath::Vcopy(nTotQuadPoints,physarray[0],1,SolP,1);
-        
-        // Apply filtering procedure in 2D to obtain the solution at p = P - 1;
-        
-        // Getting the sensor for 2D elements. For now, this is only implemented for Quadrilateral elements
-        
-        // filtering procedure for Quadrilateral elements described by Biotto page 94-95
+
         int CoeffsCount = 0;
         
         for (e = 0; e < nElements; e++)
@@ -3189,11 +3187,7 @@ namespace Nektar
         const int nvariables = m_fields.num_elements();
         const int nElements = m_fields[0]->GetExpSize();
         
-        SpatialDomains::QuadGeomSharedPtr   ElQuadGeom;
-        SpatialDomains::TriGeomSharedPtr    ElTriGeom;
         SpatialDomains::HexGeomSharedPtr    ElHexGeom;
-        SpatialDomains::TetGeomSharedPtr    ElTetGeom;
-        SpatialDomains::PrismGeomSharedPtr  ElPrismGeom;
         
         NekDouble hx = 0.0;
         NekDouble hy = 0.0;
@@ -3208,37 +3202,84 @@ namespace Nektar
             
             for (int j = 0; j < nedges; ++j)
             {
-                if (boost::dynamic_pointer_cast<LocalRegions::QuadExp>(
-                                                m_fields[0]->GetExp(e)))
+                
+                NekDouble x0 = 0.0;
+                NekDouble y0 = 0.0;
+                NekDouble z0 = 0.0;
+                
+                NekDouble x1 = 0.0;
+                NekDouble y1 = 0.0;
+                NekDouble z1 = 0.0;
+                
+                if (boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom()))
                 {
-                    ElQuadGeom = boost::dynamic_pointer_cast<
-                    SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom());
-                    
-                    NekDouble x0 = 0.0;
-                    NekDouble y0 = 0.0;
-                    NekDouble z0 = 0.0;
-                    
-                    NekDouble x1 = 0.0;
-                    NekDouble y1 = 0.0;
-                    NekDouble z1 = 0.0;
+                    SpatialDomains::QuadGeomSharedPtr ElQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom());
                     
                     ElQuadGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
                     ElQuadGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
                     
                     L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
                 }
+                
+                else if (boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(m_fields[0]->GetExp(e)->GetGeom()))
+                {
+                    SpatialDomains::TriGeomSharedPtr ElTriGeom = boost::dynamic_pointer_cast<
+                    SpatialDomains::TriGeom>(m_fields[0]->GetExp(e)->GetGeom());
+                    
+                    ElTriGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
+                    ElTriGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
+                    
+                    L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
+                }
+                
+                else if (boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(m_fields[0]->GetExp(e)->GetGeom()))
+                {
+                    SpatialDomains::HexGeomSharedPtr ElHexGeom = boost::dynamic_pointer_cast<
+                    SpatialDomains::HexGeom>(m_fields[0]->GetExp(e)->GetGeom());
+                    
+                    ElHexGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
+                    ElHexGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
+                    
+                    L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
+                }
+                
+                else if (boost::dynamic_pointer_cast<SpatialDomains::TetGeom>(m_fields[0]->GetExp(e)->GetGeom()))
+                {
+                    SpatialDomains::TetGeomSharedPtr ElTetGeom = boost::dynamic_pointer_cast<
+                    SpatialDomains::TetGeom>(m_fields[0]->GetExp(e)->GetGeom());
+                    
+                    ElTetGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
+                    ElTetGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
+                }
+                
+                else if (boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(m_fields[0]->GetExp(e)->GetGeom()))
+                {
+                    SpatialDomains::PrismGeomSharedPtr ElPrismGeom = boost::dynamic_pointer_cast<
+                    SpatialDomains::PrismGeom>(m_fields[0]->GetExp(e)->GetGeom());
+                    
+                    ElPrismGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
+                    ElPrismGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
+                }
                 else
                 {
-                  ASSERTL0(false, "This function is only implemented for Quadrilateral elements so far")
+                  ASSERTL0(false, "CompressibleFlowSystem::GetElementDimensions() is only implemented for this element shape")
                 }
-    
             }
-            if(boost::dynamic_pointer_cast<LocalRegions::QuadExp>(
-                                                m_fields[0]->GetExp(e)));
+            // determine the minimum length in x and y direction
+            // still have to find a better estimate when dealing with unstructured meshes
+            if(boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom()));
             {
                 hx = min(L1[0], L1[2]);
                 hy = min(L1[1], L1[3]);
                     
+                outarray[0][e] = hx;
+                outarray[1][e] = hy;
+            }
+            if (boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(m_fields[0]->GetExp(e)->GetGeom()));
+            {
+                hx = Vmath::Vmin(L1.num_elements(), L1, 1);
+                hy = Vmath::Vmin(L1.num_elements(), L1, 1);
+                
                 outarray[0][e] = hx;
                 outarray[1][e] = hy;
             }
@@ -3361,6 +3402,9 @@ namespace Nektar
         
         int PointCount = 0.0;
         
+        cout << Vmath::Vmin(nPts, physfield[nvariables-1], 1) << " " << Vmath::Vmax(nPts, physfield[nvariables-1], 1) << " == " <<  (Phi0 - DeltaPhi) << "  " << (Phi0 + DeltaPhi) << endl;
+        
+        cout << endl;
         Vmath::Zero(eps_bar.num_elements(), eps_bar, 1);
         
         for (int e = 0; e < eps_bar.num_elements(); e++)
@@ -3371,11 +3415,11 @@ namespace Nektar
             }
             else if(physfield[nvariables-1][e] >= (Phi0 + DeltaPhi))
             {
-                eps_bar[e] = m_mu0;
+                eps_bar[e] = ThetaH;
             }
             else if(abs(physfield[nvariables-1][e]-Phi0) < DeltaPhi)
             {
-                eps_bar[e] = m_mu0/2*(1+sin(M_PI*
+                eps_bar[e] = ThetaH/2*(1+sin(M_PI*
                 (physfield[nvariables-1][e]-Phi0)/(2*DeltaPhi)));
             }
         }

@@ -122,9 +122,9 @@ namespace Nektar
         m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
         m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
         m_session->LoadParameter ("mu0",           m_mu0,           1.0);
-        m_session->LoadParameter ("FL",            m_FacL,           0.0);
-        m_session->LoadParameter ("FH",            m_FacH,           0.0);
-        m_session->LoadParameter ("epsMax",        m_eps_max,        0.0);
+        m_session->LoadParameter ("FL",            m_FacL,          0.0);
+        m_session->LoadParameter ("FH",            m_FacH,          0.0);
+        m_session->LoadParameter ("epsMax",        m_eps_max,       1.0);
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
 
@@ -1392,16 +1392,14 @@ namespace Nektar
         
         NekDouble hxmin = 0.0;
         NekDouble hymin = 0.0;
-        NekDouble hzmin = 0.0;
         
         NekDouble h_mean_sumx = 0.0;
         NekDouble h_mean_sumy = 0.0;
-        NekDouble h_mean_sumz = 0.0;
         
         NekDouble h_mean_x = 0.0;
         NekDouble h_mean_y = 0.0;
-        NekDouble h_mean_z = 0.0;
-        NekDouble h_mean   = 0.0;
+        
+        Array <OneD, NekDouble > h_mean_xy(m_spacedim, 0.0);
         
         NekDouble hminmin  = 0.0;
         
@@ -1431,11 +1429,14 @@ namespace Nektar
             h_mean_sumy += ElDim[1][i];
         }
             
-        h_mean_x = h_mean_sumx/nElements;
-        h_mean_y = h_mean_sumy/nElements;
+        h_mean_xy[0] = h_mean_sumx/nElements;
+        h_mean_xy[1] = h_mean_sumy/nElements;
             
-        h_mean = (h_mean_x+h_mean_y)/2;
+        NekDouble  h_mean = (h_mean_xy[0]+h_mean_xy[1])/2;
         
+        NekDouble hmean_inv = 0.0;
+        NekDouble hmeanx_inv = 0.0;
+        NekDouble hmeany_inv = 0.0;
         //
         
         Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
@@ -1445,12 +1446,13 @@ namespace Nektar
         PointCount = 0;
         
         Array<OneD, NekDouble> eps_bar(nPts, 0.0);
+        Array<OneD, NekDouble> eps_barH(nPts, 0.0);
         
         Vmath::Zero(nPts, eps_bar, 1);
         
         GetSmoothArtificialViscosity(fields, eps_bar);
         
-        //cout << Vmath::Vmin(nPts, eps_bar, 1) << " " << Vmath::Vmax(nPts, eps_bar, 1) << endl;
+        Vmath::Vcopy(nPts, eps_bar, 1, eps_barH, 1);
         
         for (int e = 0; e < nElements; e++)
         {
@@ -1581,9 +1583,15 @@ namespace Nektar
                         &eps_bar[0], 1,
                         &tmpar[j][0], 1);
             
+            hmean_inv = 1.0/h_mean_xy[j];
+            // tmp = h_av/hmean*eps_bar*d(rhou_i)/dx_i
+            Vmath::Smul(nPts, hmean_inv,
+                        &tmpar[j][0], 1,
+                        &tmpar[j][0], 1);
+            
             // tmp = h_av*eps_bar*d(rhou_i)/dx_i
             Vmath::Vmul(nPts,
-                        &eps_bar[0], 1,
+                        &tmpar[j][0], 1,
                         &derivativesMix[j][j][0], 1,
                         &tmpar[j][0], 1);
         }
@@ -1672,6 +1680,13 @@ namespace Nektar
                         &eps_bar[0], 1,
                         &tmpar2[0], 1);
             
+            hmeanx_inv = 1.0/h_mean_xy[0];
+            
+            // tmp = h_av/hmean*eps_bar*d(rhou_i)/dx_i
+            Vmath::Smul(nPts, hmeanx_inv,
+                        &tmpar2[0], 1,
+                        &tmpar2[0], 1);
+            
             // tmp = h_x*eps_bar*d(rhov)/dx
             Vmath::Vmul(nPts,
                         &tmpar2[0], 1,
@@ -1682,6 +1697,12 @@ namespace Nektar
             Vmath::Vmul(nPts,
                         &h_av[1][0], 1,
                         &eps_bar[0], 1,
+                        &tmpar20[0], 1);
+            
+            hmeany_inv = 1.0/h_mean_xy[1];
+            
+            Vmath::Smul(nPts, hmeany_inv,
+                        &tmpar20[0], 1,
                         &tmpar20[0], 1);
             
             // tmp = h_y*eps_bar*d(rhou)/dy
@@ -1827,11 +1848,19 @@ namespace Nektar
             
             // tmp = h_av*eps_bar
             Vmath::Vmul(nPts, &h_av[0][0], 1, &eps_bar[0], 1, &tmp3[0], 1);
-            // tmp = h_av*eps_bar*d(rhoH)/dx
+            
+            hmeanx_inv = 1.0/h_mean_xy[0];
+            
+            // tmp = h_av/hmean * eps_bar
+            Vmath::Smul(nPts, hmeanx_inv,
+                        &tmp3[0], 1,
+                        &tmp3[0], 1);
+            
+            // tmp = h_av/hmean*eps_bar*d(rhoH)/dx
             Vmath::Vmul(nPts, &tmp3[0], 1,
                         &derivativesMix[0][m_spacedim][0], 1,
                         &tmp3[0], 1);
-            
+        
             // STx = u * Sxx + v * Sxy + K * dT/dx + eps_bar*d(rhoH)/dx
             Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
 
@@ -1858,6 +1887,14 @@ namespace Nektar
             
             // tmp = h_av*eps_bar
             Vmath::Vmul(nPts, &h_av[1][0], 1, &eps_bar[0], 1, &tmp3[0], 1);
+            
+            hmeany_inv = 1.0/h_mean_xy[1];
+            
+            // tmp = h_av/hmean * eps_bar
+            Vmath::Smul(nPts, hmeany_inv,
+                        &tmp3[0], 1,
+                        &tmp3[0], 1);
+            
             // tmp = h_av*eps_bar*d(rhoH)/dy
             Vmath::Vmul(nPts,
                         &tmp3[0], 1,
@@ -2011,7 +2048,11 @@ namespace Nektar
                 // f_12v = f_rho2 = eps_bar*h_y drho/dy
                 Vmath::Zero(nPts, &tmpar3[0], 1);
                 
-                Vmath::Vmul(nPts, &h_av[1][0], 1, &eps_bar[0], 1, &tmpar3[0], 1);
+                Vmath::Vmul(nPts,
+                            &h_av[1][0], 1,
+                            &eps_bar[0], 1,
+                            &tmpar3[0], 1);
+                
                 Vmath::Vmul(nPts,
                             &tmpar3[0], 1,
                             &derivativesO1[1][nvariables-2][0], 1,
@@ -3182,7 +3223,7 @@ namespace Nektar
                           Array<OneD,       Array<OneD, NekDouble> > &outarray,
                           Array<OneD,       NekDouble > &hmin)
     {
-        
+        // So far, this function is only implemented for quads
         const int nPts = m_fields[0]->GetTotPoints();
         const int nvariables = m_fields.num_elements();
         const int nElements = m_fields[0]->GetExpSize();
@@ -3220,49 +3261,9 @@ namespace Nektar
                     
                     L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
                 }
-                
-                else if (boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(m_fields[0]->GetExp(e)->GetGeom()))
-                {
-                    SpatialDomains::TriGeomSharedPtr ElTriGeom = boost::dynamic_pointer_cast<
-                    SpatialDomains::TriGeom>(m_fields[0]->GetExp(e)->GetGeom());
-                    
-                    ElTriGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
-                    ElTriGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
-                    
-                    L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
-                }
-                
-                else if (boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(m_fields[0]->GetExp(e)->GetGeom()))
-                {
-                    SpatialDomains::HexGeomSharedPtr ElHexGeom = boost::dynamic_pointer_cast<
-                    SpatialDomains::HexGeom>(m_fields[0]->GetExp(e)->GetGeom());
-                    
-                    ElHexGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
-                    ElHexGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
-                    
-                    L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
-                }
-                
-                else if (boost::dynamic_pointer_cast<SpatialDomains::TetGeom>(m_fields[0]->GetExp(e)->GetGeom()))
-                {
-                    SpatialDomains::TetGeomSharedPtr ElTetGeom = boost::dynamic_pointer_cast<
-                    SpatialDomains::TetGeom>(m_fields[0]->GetExp(e)->GetGeom());
-                    
-                    ElTetGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
-                    ElTetGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
-                }
-                
-                else if (boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(m_fields[0]->GetExp(e)->GetGeom()))
-                {
-                    SpatialDomains::PrismGeomSharedPtr ElPrismGeom = boost::dynamic_pointer_cast<
-                    SpatialDomains::PrismGeom>(m_fields[0]->GetExp(e)->GetGeom());
-                    
-                    ElPrismGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
-                    ElPrismGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
-                }
                 else
                 {
-                  ASSERTL0(false, "CompressibleFlowSystem::GetElementDimensions() is only implemented for this element shape")
+                    ASSERTL0(false, "GetElementDimensions() is only implemented for quadrilateral elements");
                 }
             }
             // determine the minimum length in x and y direction
@@ -3275,28 +3276,10 @@ namespace Nektar
                 outarray[0][e] = hx;
                 outarray[1][e] = hy;
             }
-            if (boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(m_fields[0]->GetExp(e)->GetGeom()));
-            {
-                hx = Vmath::Vmin(L1.num_elements(), L1, 1);
-                hy = Vmath::Vmin(L1.num_elements(), L1, 1);
-                
-                outarray[0][e] = hx;
-                outarray[1][e] = hy;
-            }
         }
-        
-        if (m_spacedim == 2)
-        {
-            hmin[0] = Vmath::Vmin(outarray[0].num_elements(), outarray[0], 1);
-            hmin[1] = Vmath::Vmin(outarray[1].num_elements(), outarray[1], 1);
-        }
-        
-        if (m_spacedim == 3)
-        {
-            hmin[0] = Vmath::Vmin(outarray[0].num_elements(), outarray[0], 1);
-            hmin[1] = Vmath::Vmin(outarray[1].num_elements(), outarray[1], 1);
-            hmin[2] = Vmath::Vmin(outarray[2].num_elements(), outarray[2], 1);
-        }
+    
+        hmin[0] = Vmath::Vmin(outarray[0].num_elements(), outarray[0], 1);
+        hmin[1] = Vmath::Vmin(outarray[1].num_elements(), outarray[1], 1);
     }
     
     
@@ -3402,9 +3385,6 @@ namespace Nektar
         
         int PointCount = 0.0;
         
-        cout << Vmath::Vmin(nPts, physfield[nvariables-1], 1) << " " << Vmath::Vmax(nPts, physfield[nvariables-1], 1) << " == " <<  (Phi0 - DeltaPhi) << "  " << (Phi0 + DeltaPhi) << endl;
-        
-        cout << endl;
         Vmath::Zero(eps_bar.num_elements(), eps_bar, 1);
         
         for (int e = 0; e < eps_bar.num_elements(); e++)

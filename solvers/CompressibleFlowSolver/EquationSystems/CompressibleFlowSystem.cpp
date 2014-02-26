@@ -121,6 +121,12 @@ namespace Nektar
 
         m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
+        
+        // Forcing terms for the sponge region
+        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, 
+                                               m_fields.num_elements());
+        
+        cout << "m_fields.num_elements() = " << m_fields.num_elements() << endl;
 
         // Type of advection class to be used
         switch(m_projectionType)
@@ -672,6 +678,168 @@ namespace Nektar
                     }
                     (m_fields[nDimensions+1]->GetBndCondExpansions()[bcRegion]->
                      UpdatePhys())[id1+i] = EBC;
+                }
+            }
+        }
+    }
+    
+    /**
+     * @brief Pressure outflow boundary conditions for compressible flow 
+     * problems.
+     */
+    void CompressibleFlowSystem::PressureOutflowBC(
+        int                                   bcRegion,
+        int                                   cnt,
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    {
+        int i;
+        int nTracePts               = GetTraceTotPoints();
+        int nvariables              = physarray.num_elements();
+        int nvel                    = m_spacedim;
+        NekDouble gamma             = m_gamma;
+        NekDouble gammaInv          = 1.0 / gamma;
+        NekDouble gammaMinusOne     = gamma - 1.0;
+        NekDouble gammaMinusOneInv  = 1.0 / gammaMinusOne;
+        
+        Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
+        Array<OneD, NekDouble> tmp2 (nTracePts, 0.0);
+        Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
+        
+        // Computing the normal velocity for characteristics coming 
+        // from outside the computational domain
+        Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
+        
+        if (nvel == 2 || nvel == 3)
+        {
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
+        }
+        if (nvel == 3)
+        {
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
+            
+        }
+        
+        const Array<OneD, const int> &traceBndMap 
+        = m_fields[0]->GetTraceBndMap();
+        
+        // Get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+        
+        // Get normal velocity
+        Array<OneD, NekDouble > Vn(nTracePts, 0.0);
+        Array<OneD, NekDouble > Vel(nTracePts, 0.0);
+        for (i = 0; i < nvel; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
+        }
+        
+        // Get speed of sound
+        Array<OneD, NekDouble > SoundSpeed(nTracePts);
+        Array<OneD, NekDouble > pressure  (nTracePts);
+        for (i = 0; i < nTracePts; i++)
+        {
+            pressure[i] = (gammaMinusOne) 
+            * (Fwd[3][i] - 0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] + 
+                                  Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+            
+            SoundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
+        }
+        
+        // Get Mach
+        Array<OneD, NekDouble > Mach(nTracePts);
+        Vmath::Vdiv(nTracePts, Vn, 1, SoundSpeed, 1, Mach, 1);
+        
+        // Auxiliary variables 
+        int e, id1, id2, npts, pnt;
+        NekDouble cPlus, rPlus, cMinus, rMinus;
+        NekDouble VelNorm, VDelta;
+        NekDouble rhob, rhoub, rhovb, rhoeb;
+        NekDouble ub, vb, cb, sb, pb;
+        
+        // Loop on the bcRegions
+        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
+             GetExpSize(); ++e)
+        {
+            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetExp(e)->GetNumPoints(0);
+            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetPhys_Offset(e) ;
+            //id2  = m_fields[0]->GetTrace()->
+            //GetPhys_Offset(m_fields[0]->GetTraceMap()->
+            //               GetBndCondTraceToGlobalTraceMap(cnt++));
+            
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+            
+            // Loop on points of bcRegion 'e'
+            for (i = 0; i < npts; i++)
+            {
+                pnt = id2+i;
+                
+                // Subsonic flows
+                if (Mach[pnt] < 0.99)
+                {
+                    // + Characteristic from inside
+                    cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
+                    rPlus = Vn[pnt] + 2.0 * cPlus * gammaMinusOneInv;
+                    
+                    // - Characteristic from boundary
+                    cMinus = sqrt(gamma * m_pInf / m_rhoInf);
+                    rMinus = VnInf[pnt] - 2.0 * cMinus * gammaMinusOneInv;
+                    
+                    // Boundary Variables
+                    VelNorm = 0.5 * (rPlus + rMinus);
+                    cb      = 0.25 * gammaMinusOne * (rPlus - rMinus);
+                    sb      = pressure[pnt] / (pow(Fwd[0][pnt], gamma));
+                    rhob    = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
+                    pb      = rhob * cb * cb * gammaInv;
+                    
+                    VDelta  = VelNorm - Vn[pnt];
+                    
+                    // Boundary velocities
+                    ub      = Fwd[1][pnt] / Fwd[0][pnt] + 
+                    VDelta * m_traceNormals[0][pnt];
+                    vb      = Fwd[2][pnt] / Fwd[0][pnt] + 
+                    VDelta * m_traceNormals[1][pnt];
+                    
+                    // Boundary rhou/rhov
+                    rhoub   = rhob * ub;
+                    rhovb   = rhob * vb;
+                    
+                    // Partial extrapolation for subsonic cases
+                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = Fwd[0][pnt];//2.0 * rhob - Fwd[0][pnt];
+                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = Fwd[1][pnt];//2.0 * rhoub - Fwd[1][pnt];
+                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = Fwd[2][pnt];//2.0 * rhovb - Fwd[2][pnt];
+                    
+                    rhoeb = m_pInf * gammaMinusOneInv + 0.5 * 
+                    (Fwd[1][pnt] * Fwd[1][pnt] + 
+                     Fwd[2][pnt] * Fwd[2][pnt])/Fwd[0][pnt];
+                    
+                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[3][pnt];/*rhoeb;*/
+                }
+                // Supersonic flows
+                else
+                {
+                    // Extrapolation for supersonic cases
+                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = Fwd[0][pnt];
+                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = Fwd[1][pnt];
+                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = Fwd[2][pnt];
+                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = Fwd[3][pnt];
                 }
             }
         }

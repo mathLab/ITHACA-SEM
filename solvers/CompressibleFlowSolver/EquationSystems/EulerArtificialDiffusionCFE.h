@@ -101,7 +101,7 @@ namespace Nektar
     private:
 
     void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
-    
+
   };
 }
 #endif

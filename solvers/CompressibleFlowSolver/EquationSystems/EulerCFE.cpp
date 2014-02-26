@@ -172,6 +172,13 @@ namespace Nektar
         {
             Vmath::Neg(npoints, outarray[i], 1);
         }
+        
+        // Add sponge layer if defined in the session file
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            (*x)->Apply(m_fields, inarray, outarray);
+        }
     }
     
     /**
@@ -260,6 +267,13 @@ namespace Nektar
                 SpatialDomains::eRiemannInvariant)
             {
                 RiemannInvariantBC(n, cnt, inarray);
+            }
+            
+            // Pressure outflow Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::ePressureOutflow)
+            {
+                PressureOutflowBC(n, cnt, inarray);
             }
 
             // Extrapolation of the data at the boundaries

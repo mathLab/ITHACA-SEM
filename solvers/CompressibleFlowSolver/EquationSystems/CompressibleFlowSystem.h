@@ -40,7 +40,8 @@
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
-
+#include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
+#include <SolverUtils/Forcing/Forcing.h>
 
 #define EPSILON 0.000001
 
@@ -71,7 +72,8 @@ namespace Nektar
         static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<CompressibleFlowSystem>::AllocateSharedPtr(pSession);
+            return MemoryManager<CompressibleFlowSystem>::
+                AllocateSharedPtr(pSession);
         }
         /// Name of class
         static std::string className;
@@ -105,6 +107,9 @@ namespace Nektar
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
+        
+        // Forcing term
+        std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -141,6 +146,10 @@ namespace Nektar
             int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void RiemannInvariantBC(
+            int                                                 bcRegion, 
+            int                                                 cnt, 
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void PressureOutflowBC(
             int                                                 bcRegion, 
             int                                                 cnt, 
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
@@ -185,7 +194,7 @@ namespace Nektar
             bool dumpInitialConditions = true)
         {
         }
-
+        
         NekDouble GetGasConstant()
         {
             return m_gasConstant;

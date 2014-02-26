@@ -135,7 +135,7 @@ namespace Nektar
             int                                              bcRegion, 
             NekDouble                                        time, 
             int                                              cnt, 
-            Array<OneD, Array<OneD, NekDouble> >            &physarray);
+            Array<OneD, Array<OneD, NekDouble> >            &physarray);        
     };
 }
 #endif

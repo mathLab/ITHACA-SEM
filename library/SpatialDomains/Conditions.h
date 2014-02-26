@@ -81,6 +81,7 @@ namespace Nektar
             eCRterminal,
             eRCRterminal,
             eRiemannInvariant,
+            ePressureOutflow,
             eExtrapOrder0,
             eNoUserDefined
         };
@@ -111,6 +112,7 @@ namespace Nektar
                 known_type["Radiation"]        = eRadiation;
                 known_type["IsentropicVortex"] = eIsentropicVortex;
                 known_type["RiemannInvariant"] = eRiemannInvariant;
+                known_type["PressureOutflow"]  = ePressureOutflow;
                 known_type["ExtrapOrder0"]     = eExtrapOrder0;
                 known_type["NoUserDefined"]    = eNoUserDefined;
 

@@ -44,6 +44,7 @@ using namespace std;
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/NodalTriExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #define TOL_BLEND 1.0e-8
 
@@ -97,6 +98,8 @@ namespace Nektar
                  "Use alternative file for Spherigon definition"); 
             m_config["scalefile"] = ConfigOption(false,"1.0",
                  "Apply scaling factor to coordinates in file ");
+            m_config["normalnoise"] = ConfigOption(false,"NotSpecified",
+                       "Add randowm noise to normals of amplitude AMP in specified region. input string is Amp,xmin,xmax,ymin,ymax,zmin,zmax");
        }
       
         /**
@@ -509,56 +512,10 @@ namespace Nektar
                             tmpsav = tmp;
                         }
                     }
-#if 0 
-                    if((cntmin ==  11239)&&(locnorm.count(cntmin) != 0))
-                    {
-                        cout << "Using cntmin = "<< cntmin << " For vertex " << locnorm[cntmin] << " and " << vIt->first << " mindiff: " << mindiff << " ( "<< tmpsav.m_x <<","<< tmpsav.m_y << "," << tmpsav.m_z << ")" << endl; 
-#if 1
-                        mindiff = 1e12;
-                        for(j = 0, it = plymesh->m_vertexSet.begin(); it != plymesh->m_vertexSet.end(); ++it, ++j)
-                        {
-                            tmp = *(vIt->second)- *(*it);
-                            diff = tmp.abs2();
-                            cout << "id: " << (*it)->m_id << " diff " << diff  << " ( "<< tmp.m_x <<","<< tmp.m_y << "," << tmp.m_z << ")" << " (" <<  (vIt->second)->m_z <<"," <<(vIt->second)->m_y << "," << (vIt->second)->m_z << ")  (" << (*it)->m_x << ","<< (*it)->m_y << ","<< (*it)->m_z << " )" << endl; 
-                            if(diff < mindiff)
-                            {
-                                mindiff = diff;
-                                cntmin = (*it)->m_id;
-                                tmpsav = tmp;
-                            }
-                        }
-                        cout << mindiff << " " << cntmin << endl;
-                        exit(0);
-#endif
-                    }
-#endif
                     locnorm[cntmin] = vIt->first;
                     
                     ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),"cntmin is out of range"); 
                     m_mesh->m_vertexNormals[vIt->first] = plymesh->m_vertexNormals[cntmin];
-                    
-
-#if 0 
-                    if(cnt <= 10)
-                    {
-                        boost::unordered_map<int, Node>::iterator nIt;
-
-                        cout << "Id: " << vIt->first << "  Verts: "<< vIt->second->m_x << ","<< vIt->second->m_y << ","<< vIt->second->m_z <<endl;
-                        nIt = m_mesh->m_vertexNormals.find(vIt->first);
-                        cout << "\t Norm: " << nIt->second.m_x << ","<< nIt->second.m_y << ","<< nIt->second.m_z <<endl; 
-
-                        NodeSet::iterator nodeIt;
-                    
-                        for(nodeIt = plymesh->m_vertexSet.begin(); nodeIt != plymesh->m_vertexSet.end(); ++nodeIt)
-                        {
-                            if((*nodeIt)->m_id == cntmin)
-                            {
-                                cout << "  vert ply: " << (*nodeIt)->m_x <<"," << (*nodeIt)->m_y << "," << (*nodeIt)->m_z << endl;
-                            }
-                        
-                        }
-                    }
-#endif
 
                 }
                 if (m_mesh->m_verbose)
@@ -573,19 +530,105 @@ namespace Nektar
                 normalsGenerated = true;
             }
 
+
+            // See if we should add noise to normals
+            std::string normalnoise = m_config["normalnoise"].as<string>();
+            if(normalfile.compare("NotSpecified") != 0)
             {
-                boost::unordered_map<int, Node>::iterator nIt;
+                vector<NekDouble> values;
+                ASSERTL0(ParseUtils::GenerateUnOrderedVector(normalnoise.c_str(),values),"Failed to interpret normal noise string");
+
+                int nvalues = values.size()/2;
+                NekDouble amp = values[0];
+
+
+                if (m_mesh->m_verbose)
+                {
+                    cout << "\t adding noise to normals of amplitude "<< amp << " in range: ";
+                    for(int i = 0; i < nvalues; ++i)
+                    {
+                        cout << values[2*i+1] <<"," << values[2*i+2] << " "; 
+                    }
+                    cout << endl;
+                }
                 
-                int cnt = 0; 
-                for(nIt = m_mesh->m_vertexNormals.begin(); nIt != m_mesh->m_vertexNormals.end(); ++nIt,++cnt)
-                {                    
-                    cout << "Id :" << nIt->first << " norm: " << nIt->second.m_x << ","<< nIt->second.m_y << ","<< nIt->second.m_z <<endl;
+                map<int,NodeSharedPtr>::iterator vIt;
+                map<int,NodeSharedPtr> surfverts;
+                
+                // make a map of normal vertices to visit based on elements el
+                for (int i = 0; i < el.size(); ++i)
+                {
+                    ElementSharedPtr e = el[i];
+                    int nV = e->GetVertexCount();
+                    for (int j = 0; j < nV; ++j)
+                    {
+                        int id = e->GetVertex(j)->m_id;
+                        surfverts[id] = e->GetVertex(j);
+                    }
+                }
+
+                for(vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt)
+                {
+                    bool AddNoise = false;
                     
-                    if(cnt > 10)
-                        break;
+                    for(int i = 0; i < nvalues; ++i)
+                    {
+                        // check to see if point is in range 
+                        switch(nvalues)
+                        {
+                        case 1:
+                            {
+                                if(((vIt->second)->m_x > values[2*i+1])&&((vIt->second)->m_x < values[2*i+2]))
+                                {
+                                    AddNoise = true;
+                                }
+                            }
+                            break;
+                        case 2:
+                            {
+                                if(((vIt->second)->m_x > values[2*i+1])&&
+                                   ((vIt->second)->m_x < values[2*i+2])&&
+                                   ((vIt->second)->m_y > values[2*i+3])&&
+                                   ((vIt->second)->m_y < values[2*i+4]))
+                                {
+                                    AddNoise = true;
+                                }
+                            }
+                            break;
+                        case 3:
+                            {
+                                if(((vIt->second)->m_x > values[2*i+1])&&
+                                   ((vIt->second)->m_x < values[2*i+2])&&
+                                   ((vIt->second)->m_y > values[2*i+3])&&
+                                   ((vIt->second)->m_y < values[2*i+4])&&  
+                                   ((vIt->second)->m_z > values[2*i+5])&&
+                                   ((vIt->second)->m_z < values[2*i+6]))
+
+                                {
+                                    AddNoise = true;
+                                }
+                            }
+                            break;
+                        }
+                        
+                        if(AddNoise)
+                        {
+                            // generate random unit vector; 
+                            Node rvec(0,rand(),rand(),rand());
+                            rvec *= values[0]/sqrt(rvec.abs2());
+                            
+                            Node normal = m_mesh->m_vertexNormals[vIt->first];
+                            
+                            normal += rvec;
+                            normal /= sqrt(normal.abs2());
+
+                            m_mesh->m_vertexNormals[vIt->first] = normal;
+                        }
+                    }
                 }
             }
-            
+
+
             // Allocate storage for interior points.
             int nq = m_config["N"].as<int>();
             int nquad = m_mesh->m_spaceDim == 3 ? nq*nq : nq;

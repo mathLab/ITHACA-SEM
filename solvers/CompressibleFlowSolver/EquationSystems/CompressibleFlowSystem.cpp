@@ -1687,10 +1687,10 @@ namespace Nektar
                         &tmpar2[0], 1,
                         &tmpar2[0], 1);
             
-            // tmp = h_x*eps_bar*d(rhov)/dx
+            // tmp = h_x*eps_bar*d(rhou)/dy
             Vmath::Vmul(nPts,
                         &tmpar2[0], 1,
-                        &derivativesMix[0][1][0], 1,
+                        &derivativesMix[1][0][0], 1,
                         &tmpar2[0], 1);
             
             // tmp = h_y*eps_bar
@@ -1705,10 +1705,10 @@ namespace Nektar
                         &tmpar20[0], 1,
                         &tmpar20[0], 1);
             
-            // tmp = h_y*eps_bar*d(rhou)/dy
+            // tmp = h_y*eps_bar*d(rhov)/dx
             Vmath::Vmul(nPts,
                         &tmpar20[0], 1,
-                        &derivativesMix[1][0][0], 1,
+                        &derivativesMix[0][1][0], 1,
                         &tmpar20[0], 1);
             
             // Sxy = mu * (du/dy + dv/dx)

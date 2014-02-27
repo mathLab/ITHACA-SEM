@@ -126,8 +126,6 @@ namespace Nektar
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, 
                                                m_fields.num_elements());
         
-        cout << "m_fields.num_elements() = " << m_fields.num_elements() << endl;
-
         // Type of advection class to be used
         switch(m_projectionType)
         {

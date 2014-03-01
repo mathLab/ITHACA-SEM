@@ -1079,10 +1079,14 @@ namespace Nektar
         if (m_ViscosityType == "Variable")
         {
             GetDynamicViscosity(physfield[nVariables-2], mu);
+            NekDouble tRa = m_Cp / m_Prandtl;
+            Vmath::Smul(nPts, tRa, &mu[0], 1, &thermalConductivity[0], 1); 
         }
         else
         {
             Vmath::Fill(nPts, m_mu, &mu[0], 1);
+            Vmath::Fill(nPts, m_thermalConductivity, 
+                        &thermalConductivity[0], 1);
         }
 
         // Computing diagonal terms of viscous stress tensor
@@ -1176,8 +1180,8 @@ namespace Nektar
             Vmath::Vmul(nPts, &physfield[0][0], 1, &Sgg[0][0], 1, &STx[0], 1);
 
             // k * dT/dx
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[0][1][0], 1,
-                        &tmp1[0], 1);
+            Vmath::Vmul(nPts, &thermalConductivity[0], 1,
+                        &derivativesO1[0][1][0], 1, &tmp1[0], 1);
 
             // STx = u * Sxx + (K / mu) * dT/dx
             Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
@@ -1196,8 +1200,8 @@ namespace Nektar
             Vmath::Vmul(nPts, &physfield[1][0], 1, &Sxy[0], 1, &tmp1[0], 1);
 
             // k * dT/dx
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[0][2][0], 1,
-                        &tmp2[0], 1);
+            Vmath::Vmul(nPts, &thermalConductivity[0], 1, 
+                        &derivativesO1[0][2][0], 1, &tmp2[0], 1);
 
             // STx = u * Sxx + v * Sxy + K * dT/dx
             Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
@@ -1216,8 +1220,8 @@ namespace Nektar
             Vmath::Vmul(nPts, &physfield[0][0], 1, &Sxy[0], 1, &tmp1[0], 1);
 
             // k * dT/dy
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[1][2][0], 1,
-                        &tmp2[0], 1);
+            Vmath::Vmul(nPts, &thermalConductivity[0], 1, 
+                        &derivativesO1[1][2][0], 1, &tmp2[0], 1);
 
             // STy = v * Syy + u * Sxy + K * dT/dy
             Vmath::Vadd(nPts, &STy[0], 1, &tmp1[0], 1, &STy[0], 1);
@@ -1241,8 +1245,8 @@ namespace Nektar
             Vmath::Vmul(nPts, &physfield[2][0], 1, &Sxz[0], 1, &tmp2[0], 1);
 
             // k * dT/dx
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[0][3][0], 1,
-                        &tmp3[0], 1);
+            Vmath::Vmul(nPts, &thermalConductivity[0], 1, 
+                        &derivativesO1[0][3][0], 1, &tmp3[0], 1);
 
             // STx = u * Sxx + v * Sxy + w * Sxz + (K / mu) * dT/dx
             Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
@@ -1266,8 +1270,8 @@ namespace Nektar
             Vmath::Vmul(nPts, &physfield[2][0], 1, &Syz[0], 1, &tmp2[0], 1);
 
             // k * dT/dy
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[1][3][0], 1,
-                        &tmp3[0], 1);
+            Vmath::Vmul(nPts, &thermalConductivity[0], 1, 
+                        &derivativesO1[1][3][0], 1, &tmp3[0], 1);
 
             // STy = v * Syy + u * Sxy + w * Syz + K * dT/dy
             Vmath::Vadd(nPts, &STy[0], 1, &tmp1[0], 1, &STy[0], 1);
@@ -1291,8 +1295,8 @@ namespace Nektar
             Vmath::Vmul(nPts, &physfield[1][0], 1, &Syz[0], 1, &tmp2[0], 1);
 
             // k * dT/dz
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[2][3][0], 1,
-                        &tmp3[0], 1);
+            Vmath::Vmul(nPts, &thermalConductivity[0], 1, 
+                        &derivativesO1[2][3][0], 1, &tmp3[0], 1);
 
             // STz = w * Szz + u * Sxz + v * Syz + K * dT/dz
             Vmath::Vadd(nPts, &STz[0], 1, &tmp1[0], 1, &STz[0], 1);

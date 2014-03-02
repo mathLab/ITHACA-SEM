@@ -107,18 +107,23 @@ namespace Nektar
                                          m_f->m_exp[processFields[i]]->UpdateCoeffs());
             }
             
+            // reset FieldDef in case of serial input and parallel output
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+                = m_f->m_exp[0]->GetFieldDefinitions();
             // reset up FieldData with new values before projecting 
-            std::vector<std::vector<NekDouble> > FieldData(m_f->m_fielddef.size());
+            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
             
             for(int i = 0; i < nfields; ++i)
             {
-                for (int j = 0; j < m_f->m_fielddef.size(); ++j)
+                for (int j = 0; j < FieldDef.size(); ++j)
                 {   
-                    m_f->m_exp[i]->AppendFieldData(m_f->m_fielddef[j], FieldData[j]);
+                    FieldDef[j]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[i]);
+                    m_f->m_exp[i]->AppendFieldData(FieldDef[j], FieldData[j]);
                 }
             }
             
-            m_f->m_data = FieldData;
+            m_f->m_fielddef = FieldDef; 
+            m_f->m_data     = FieldData;
             
         }
     }

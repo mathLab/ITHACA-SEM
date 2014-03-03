@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> auxArray;
     
     int nBndEdgePts, nBndEdges, nBndRegions;
-        
+    
     if (argc < 3)
     {
         fprintf(stderr,
@@ -756,7 +756,11 @@ int main(int argc, char *argv[])
     
     // Print the surface coordinates and the surface solution in a .txt file
     ofstream outfile;
-    outfile.open("surfaceQuantities.txt");
+    
+    string fname = strtok(argv[2],".");
+    fname += ".txt";
+    
+    outfile.open(fname);
     outfile <<  "%  x[m] " << " \t"
     << "y[m] " << " \t"
     << "z[m] " << " \t"

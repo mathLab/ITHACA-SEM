@@ -2159,32 +2159,32 @@ namespace Nektar
                         
                         if (filebcs != "")
                         {
-                             string varString = filebcs.substr(
-                                 0, filebcs.find_last_of("."));
-                             int len = varString.length();
-                             varString = varString.substr(len-1, len);
-                             cout << "Boundary condition from file:" 
-                                  << filebcs << endl;
-
-                             std::vector<LibUtilities::
-                                    FieldDefinitionsSharedPtr> FieldDef;
-                             std::vector<std::vector<NekDouble> > FieldData;
-                             LibUtilities::FieldIO f(m_session->GetComm());
-                             f.Import(filebcs, FieldDef, FieldData);
-
-                             // copy FieldData into locExpList
-                             locExpList->ExtractDataToCoeffs(
-                                 FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0],
-                                 locExpList->UpdateCoeffs());
-
-                             locExpList->BwdTrans_IterPerExp(
-                                 locExpList->GetCoeffs(), 
-                                 locExpList->UpdatePhys());
+                            string varString = filebcs.substr(0, 
+                                filebcs.find_last_of("."));
+                            int len = varString.length();
+                            varString = varString.substr(len-1, len);
+                            int varInt = atoi(varString.c_str());
                             
-                             locExpList->FwdTrans_BndConstrained(
-                                 locExpList->GetPhys(),
-                                 locExpList->UpdateCoeffs());
+                            cout << "Boundary condition from file:" 
+                            << filebcs << endl;
+                            
+                            std::vector<LibUtilities::
+                                FieldDefinitionsSharedPtr> FieldDef;
+                            std::vector<std::vector<NekDouble> > FieldData;
+                            LibUtilities::FieldIO f(m_session->GetComm());
+                            f.Import(filebcs, FieldDef, FieldData);
+                            
+                            // Copy FieldData into locExpList
+                            locExpList->ExtractDataToCoeffs(
+                                FieldDef[0], FieldData[0],
+                                FieldDef[0]->m_fields[varInt],
+                                locExpList->UpdateCoeffs());
+                            locExpList->BwdTrans_IterPerExp(
+                                locExpList->GetCoeffs(), 
+                                locExpList->UpdatePhys());
+                            locExpList->FwdTrans_BndConstrained(
+                                locExpList->GetPhys(),
+                                locExpList->UpdateCoeffs());
                         }
                         else
                         {

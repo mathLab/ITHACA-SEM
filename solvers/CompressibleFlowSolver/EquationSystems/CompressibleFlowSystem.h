@@ -153,6 +153,10 @@ namespace Nektar
             int                                                 bcRegion, 
             int                                                 cnt, 
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void PressureOutflowFileBC(
+            int                                                 bcRegion, 
+            int                                                 cnt, 
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void ExtrapOrder0BC(
             int                                                 bcRegion, 
             int                                                 cnt, 

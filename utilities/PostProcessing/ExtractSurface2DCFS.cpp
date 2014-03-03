@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
     
     //Fields to add in the output file
     
-    int nfieldsAdded = 15;
+    int nfieldsAdded = 19;
     Array<OneD, Array<OneD, NekDouble> > traceFieldsAdded(nfieldsAdded);
     Array<OneD, Array<OneD, NekDouble> > surfaceFieldsAdded(nfieldsAdded);
     
@@ -235,8 +235,13 @@ int main(int argc, char *argv[])
         surfaceFieldsAdded[j] = Array<OneD, NekDouble>(nTracePts, 0.0);
     }
     
-    /******** Evaluation of normals and tangents on the trace *****************/
-     
+    /******** Evaluation of normals and tangents on the trace *****************
+    * nx -> traceFieldsAdded[0];
+    * ny -> traceFieldsAdded[1];
+    * tx -> traceFieldsAdded[2];
+    * ty -> traceFieldsAdded[3];
+    ***************************************************************************/
+    
     Array<OneD, Array<OneD, NekDouble> > m_traceNormals (nDimensions);
     for(i = 0; i < nDimensions; ++i)
     {
@@ -250,20 +255,39 @@ int main(int argc, char *argv[])
         m_traceTangents[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
     }
     
+    
+    // nx
+    Vmath::Vcopy(nTracePts,
+                 &m_traceNormals[0][0], 1,
+                 &traceFieldsAdded[0][0], 1);
+    
+    // ny
+    Vmath::Vcopy(nTracePts,
+                 &m_traceNormals[1][0], 1,
+                 &traceFieldsAdded[1][0], 1);
+
     // t_x = - n_y
     Vmath::Vcopy(nTracePts,
                  &m_traceNormals[1][0], 1,
                  &m_traceTangents[0][0], 1);
     Vmath::Neg(nTracePts, &m_traceTangents[0][0], 1);
     
+    Vmath::Vcopy(nTracePts,
+                 &m_traceTangents[0][0], 1,
+                 &traceFieldsAdded[2][0], 1);
+    
     // t_y = n_x
     Vmath::Vcopy(nTracePts,
                  &m_traceNormals[0][0], 1,
                  &m_traceTangents[1][0], 1);
+    
+    Vmath::Vcopy(nTracePts,
+                  &m_traceTangents[1][0], 1,
+                  &traceFieldsAdded[3][0], 1);
 
     /******** Evaluation of the pressure ***************************************
      * P    = (E-1/2.*rho.*((rhou./rho).^2+(rhov./rho).^2))*(gamma - 1);
-     * P -> traceFieldsAdded[0];
+     * P -> traceFieldsAdded[4];
     ***************************************************************************/
     
     Array<OneD, NekDouble> pressure(nSolutionPts, 0.0);
@@ -302,11 +326,11 @@ int main(int argc, char *argv[])
                 &pressure[0], 1);
     
     // Extract trace
-    pFields[0]->ExtractTracePhys(pressure, traceFieldsAdded[0]);
+    pFields[0]->ExtractTracePhys(pressure, traceFieldsAdded[4]);
     
     /******** Evaluation of the temperature ************************************
      * T = P/(R*rho);
-     * T -> traceFieldsAdded[1];
+     * T -> traceFieldsAdded[5];
     ***************************************************************************/
     
     Array<OneD, NekDouble> temperature(nSolutionPts, 0.0);
@@ -322,10 +346,10 @@ int main(int argc, char *argv[])
                 &temperature[0], 1);
     
     // Extract trace
-    pFields[0]->ExtractTracePhys(temperature, traceFieldsAdded[1]);
+    pFields[0]->ExtractTracePhys(temperature, traceFieldsAdded[5]);
     
     /*** Evaluation of the temperature gradient in the normal direction ********
-     * DT_n -> traceFieldsAdded[2]
+     * DT_n -> traceFieldsAdded[6]
     ***************************************************************************/
 
     Array<OneD, Array<OneD, NekDouble> > Dtemperature(nDimensions);
@@ -359,15 +383,15 @@ int main(int argc, char *argv[])
                     &tmp[0],1);
         
         Vmath::Vadd(nTracePts,
-                    &traceFieldsAdded[2][0], 1,
+                    &traceFieldsAdded[6][0], 1,
                     &tmp[0], 1,
-                    &traceFieldsAdded[2][0], 1);
+                    &traceFieldsAdded[6][0], 1);
     }
     
     /*** Evaluation of the pressure gradient ***********************************
-     * DP_t -> traceFieldsAdded[3]   tangent direction
-     * DP_x -> traceFieldsAdded[4]
-     * DP_y -> traceFieldsAdded[5]
+     * DP_t -> traceFieldsAdded[7]   tangent direction
+     * DP_x -> traceFieldsAdded[8]
+     * DP_y -> traceFieldsAdded[9]
     ***************************************************************************/
     
     Array<OneD, Array<OneD, NekDouble> > Dpressure(nDimensions);
@@ -402,26 +426,26 @@ int main(int argc, char *argv[])
                     &tmp[0],1);
         
         Vmath::Vadd(nTracePts,
-                    &traceFieldsAdded[3][0], 1,
+                    &traceFieldsAdded[7][0], 1,
                     &tmp[0], 1,
-                    &traceFieldsAdded[3][0], 1);
+                    &traceFieldsAdded[7][0], 1);
     }
     
     // Dp_x
     Vmath::Vcopy(nTracePts,
                  &traceDpressure[0][0], 1,
-                 &traceFieldsAdded[4][0], 1);
+                 &traceFieldsAdded[8][0], 1);
     
     // Dp_y
     Vmath::Vcopy(nTracePts,
                  &traceDpressure[1][0], 1,
-                 &traceFieldsAdded[5][0], 1);
+                 &traceFieldsAdded[9][0], 1);
     
     /** Evaluation of the velocity gradient in the cartesian directions
-     * Du_x:    traceFieldsAdded[6]
-     * Du_y:    traceFieldsAdded[7]
-     * Dv_x:    traceFieldsAdded[8]
-     * Dv_y:    traceFieldsAdded[9]
+     * Du_x:    traceFieldsAdded[10]
+     * Du_y:    traceFieldsAdded[11]
+     * Dv_x:    traceFieldsAdded[12]
+     * Dv_y:    traceFieldsAdded[13]
      **/
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > Dvelocity(nDimensions);
     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > traceDvelocity(nDimensions);
@@ -463,22 +487,22 @@ int main(int argc, char *argv[])
     
     Vmath::Vcopy(nTracePts,
                  &traceDvelocity[0][0][0], 1,
-                 &traceFieldsAdded[6][0], 1);
+                 &traceFieldsAdded[10][0], 1);
     Vmath::Vcopy(nTracePts,
                  &traceDvelocity[0][1][0], 1,
-                 &traceFieldsAdded[7][0], 1);
+                 &traceFieldsAdded[11][0], 1);
     Vmath::Vcopy(nTracePts,
                  &traceDvelocity[1][0][0], 1,
-                 &traceFieldsAdded[8][0], 1);
+                 &traceFieldsAdded[12][0], 1);
     Vmath::Vcopy(nTracePts,
                  &traceDvelocity[1][1][0], 1,
-                 &traceFieldsAdded[9][0], 1);
+                 &traceFieldsAdded[13][0], 1);
     
     
     /*** Evaluation of shear stresses ******************************************
-     * tau_xx -> traceFieldsAdded[10]
-     * tau_yy -> traceFieldsAdded[11]
-     * tau_xy -> traceFieldsAdded[12]
+     * tau_xx -> traceFieldsAdded[14]
+     * tau_yy -> traceFieldsAdded[15]
+     * tau_xy -> traceFieldsAdded[16]
     ***************************************************************************/
     
     // Stokes hypotesis
@@ -548,12 +572,12 @@ int main(int argc, char *argv[])
     // Sxy = mu * (du/dy + dv/dx)
     Vmath::Vmul(nSolutionPts, &mu[0], 1, &Sxy[0], 1, &Sxy[0], 1);
 
-    pFields[0]->ExtractTracePhys(Sgg[0], traceFieldsAdded[10]);
-    pFields[0]->ExtractTracePhys(Sgg[1], traceFieldsAdded[11]);
-    pFields[0]->ExtractTracePhys(Sxy,    traceFieldsAdded[12]);
+    pFields[0]->ExtractTracePhys(Sgg[0], traceFieldsAdded[14]);
+    pFields[0]->ExtractTracePhys(Sgg[1], traceFieldsAdded[15]);
+    pFields[0]->ExtractTracePhys(Sxy,    traceFieldsAdded[16]);
     
     /*** Evaluation of the shear stress in tangent direction *******************
-     * tau_t -> traceFieldsAdded[13]
+     * tau_t -> traceFieldsAdded[17]
     ***************************************************************************/
     Array<OneD, NekDouble > sigma_diff   (nTracePts, 0.0);
     Array<OneD, NekDouble > cosTeta      (nTracePts, 0.0);
@@ -590,10 +614,10 @@ int main(int argc, char *argv[])
                 &tmpTeta[0], 1);
     Vmath::Vadd(nTracePts, &tau_t[0], 1, &tmpTeta[0], 1, &tau_t[0], 1);
     
-    Vmath::Vcopy(nTracePts, &tau_t[0], 1, &traceFieldsAdded[13][0], 1);
+    Vmath::Vcopy(nTracePts, &tau_t[0], 1, &traceFieldsAdded[17][0], 1);
     
     /*** Evaluation of Mach number *********************************************
-     * M -> traceFieldsAdded[14]
+     * M -> traceFieldsAdded[18]
     ***************************************************************************/
     NekDouble gamma    = m_gamma;
     
@@ -618,7 +642,7 @@ int main(int argc, char *argv[])
     Vmath::Vsqrt(nSolutionPts, mach, 1, mach, 1);
     Vmath::Vdiv(nSolutionPts,  mach, 1, soundspeed, 1, mach, 1);
     
-    pFields[0]->ExtractTracePhys(mach, traceFieldsAdded[14]);
+    pFields[0]->ExtractTracePhys(mach, traceFieldsAdded[18]);
     
     /**************************************************************************/
     // Extract coordinates
@@ -736,6 +760,10 @@ int main(int argc, char *argv[])
     outfile <<  "%  x[m] " << " \t"
     << "y[m] " << " \t"
     << "z[m] " << " \t"
+    << "nx[]  " << " \t"
+    << "ny[]  " << " \t"
+    << "tx[]  " << " \t"
+    << "ty[]  " << " \t"
     << "rho[kg/m^3] " << " \t"
     << "rhou[kg/(m^2 s)] " << " \t"
     << "rhov[kg/(m^2 s)] " << " \t"
@@ -783,6 +811,10 @@ int main(int argc, char *argv[])
         << surfaceFieldsAdded[12][i] << " \t "
         << surfaceFieldsAdded[13][i] << " \t "
         << surfaceFieldsAdded[14][i] << " \t "
+        << surfaceFieldsAdded[15][i] << " \t "
+        << surfaceFieldsAdded[16][i] << " \t "
+        << surfaceFieldsAdded[17][i] << " \t "
+        << surfaceFieldsAdded[18][i] << " \t "
         << endl;
     }
     outfile << endl << endl;

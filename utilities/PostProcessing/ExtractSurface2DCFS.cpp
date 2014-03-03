@@ -733,9 +733,32 @@ int main(int argc, char *argv[])
     // Print the surface coordinates and the surface solution in a .txt file
     ofstream outfile;
     outfile.open("surfaceQuantities.txt");
+    outfile <<  "%  x[m] " << " \t"
+    << "y[m] " << " \t"
+    << "z[m] " << " \t"
+    << "rho[kg/m^3] " << " \t"
+    << "rhou[kg/(m^2 s)] " << " \t"
+    << "rhov[kg/(m^2 s)] " << " \t"
+    << "E[Pa] " << " \t"
+    << "p[Pa] " << " \t"
+    << "T[k]  " << " \t"
+    << "dT/dn[k/m]  "  << " \t"
+    << "dp/dT[Pa/m]  " << " \t"
+    << "dp/dx[Pa/m]  " << " \t"
+    << "dp/dy[Pa/m]  " << " \t"
+    << "du/dx[s^-1]  " << " \t"
+    << "du/dy[s^-1]  " << " \t"
+    << "dv/dx[s^-1]  " << " \t"
+    << "dv/dy[s^-1]  " << " \t"
+    << "tau_xx[Pa]  " << " \t"
+    << "tau_yy[Pa]  " << " \t"
+    << "tau_xy[Pa]  " << " \t"
+    << "tau_t[Pa]  " << " \t"
+    << "M[] " << " \t"
+    << endl;
     for (i = 0; i < id1; ++i)
     {
-        outfile << scientific 
+        outfile << scientific
         << setw (17) 
         << setprecision(16) 
         << surfaceX[i] << " \t " 

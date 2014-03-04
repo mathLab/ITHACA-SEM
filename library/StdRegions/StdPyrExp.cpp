@@ -1590,8 +1590,6 @@ namespace Nektar
                 fill(signarray.get(), signarray.get()+nFaceIntCoeffs, 1);
             }
 
-            cout << fid << " " << faceOrient << endl;
-            
             // Set up an array indexing for quad faces, since the ordering may
             // need to be transposed depending on orientation.
             Array<OneD, int> arrayindx(nFaceIntCoeffs);

@@ -705,7 +705,7 @@ namespace Nektar
             	gfac2[i] = 2.0/(1-z2[i]);
             }
 
-            // Derivative in first direction is always scaled as follows
+            // Derivative in first/second direction is always scaled as follows
             const int nq01 = nquad0*nquad1;
             for(i = 0; i < nquad2; ++i)
             {
@@ -733,7 +733,7 @@ namespace Nektar
                                                  m_base[1]->GetDbdata(),
                                                  m_base[2]->GetBdata (),
                                                  tmp0, outarray, wsp,
-                                                 false, true, true);
+                                                 true, false, true);
                     break;
                 }
                 case 2:
@@ -754,7 +754,7 @@ namespace Nektar
                                                  tmp0,  tmp3, wsp,
                                                  false, true, true);
 
-                    // Scale eta_2 derivative by gfac1
+                    // Scale eta_2 derivative by gfac1*gfac2
                     for(i = 0; i < nquad2; ++i)
                     {
                         Vmath::Smul(nq01, gfac2[i],
@@ -1589,6 +1589,8 @@ namespace Nektar
             {
                 fill(signarray.get(), signarray.get()+nFaceIntCoeffs, 1);
             }
+
+            cout << fid << " " << faceOrient << endl;
             
             // Set up an array indexing for quad faces, since the ordering may
             // need to be transposed depending on orientation.
@@ -1738,27 +1740,17 @@ namespace Nektar
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
 
-            int P = m_base[0]->GetNumModes() - 1, p;
-            int Q = m_base[1]->GetNumModes() - 1;
-            int R = m_base[2]->GetNumModes() - 1;
+            const int nBndCoeffs = v_NumBndryCoeffs();
+            const int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
 
-            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
-
-            if(outarray.num_elements()!=nIntCoeffs)
+            if (outarray.num_elements() != nIntCoeffs)
             {
                 outarray = Array<OneD, unsigned int>(nIntCoeffs);
             }
 
-            int offset = 5 + 2*(P+1) + 2*(Q+1) + 4*(R+1);
-            int idx = 0;
-
-            for (p = 0; p < 5; ++p)
-            {
-                offset += v_GetFaceIntNcoeffs(p);
-            }
-
             // Loop over all interior modes.
-            for (p = offset; p < m_ncoeffs; ++p)
+            int p, idx = 0;
+            for (p = nBndCoeffs; p < m_ncoeffs; ++p)
             {
                 outarray[idx++] = p;
             }

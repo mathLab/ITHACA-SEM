@@ -515,10 +515,9 @@ namespace Nektar
 
                     DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows, cols);
 
-                    NekDouble one = 1.0;
                     (*helm) = LapMat + factor*MassMat;
 
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0, helm);
                 }
                 break;
             default:

@@ -184,7 +184,7 @@ namespace Nektar
                     }
                     else
                     {
-                        m_f->m_exp[i] = m_f->AppendExpList();
+                        m_f->m_exp[i] = m_f->AppendExpList(vars[0]);
                     }                   
                 }
                 

@@ -696,7 +696,7 @@ namespace Nektar
             // set up geometric factor: (1+z1)/2
             for(i = 0; i < nquad1; ++i)
             {
-                gfac1[i] = 2.0/(1-z1[i]);
+                gfac1[i] = 0.5*(1+z1[i]);
             }
 
             // Set up geometric factor: 2/(1-z2)

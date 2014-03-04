@@ -171,6 +171,50 @@ namespace Nektar
             
         }
 
+        void PyrGeom::v_GenGeomFactors()
+        {
+            if (m_geomFactorsState != ePtsFilled)
+            {
+                int i,f;
+                GeomType Gtype = eRegular;
+
+                v_FillGeom();
+
+                // check to see if expansions are linear
+                for(i = 0; i < m_coordim; ++i)
+                {
+                    if (m_xmap->GetBasisNumModes(0) != 2 ||
+                        m_xmap->GetBasisNumModes(1) != 2 ||
+                        m_xmap->GetBasisNumModes(2) != 2 )
+                    {
+                        Gtype = eDeformed;
+                    }
+                }
+
+                // check to see if all quadrilateral faces are parallelograms
+                if(Gtype == eRegular)
+                {
+                    // Ensure each face is a parallelogram? Check this.
+                    for (i = 0; i < m_coordim; i++)
+                    {
+                        if( fabs( (*m_verts[0])(i) -
+                                  (*m_verts[1])(i) +
+                                  (*m_verts[2])(i) -
+                                  (*m_verts[3])(i) )
+                            > NekConstants::kNekZeroTol )
+                        {
+                            Gtype = eDeformed;
+                            break;
+                        }
+                    }
+                }
+
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap, m_coeffs);
+                m_geomFactorsState = ePtsFilled;
+            }
+        }
+
         void PyrGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords,
                   Array<OneD,       NekDouble> &Lcoords)

@@ -370,10 +370,10 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
-                returnval = Expansion3D::GenMatrix(mkey);
+                returnval = Expansion3D::v_GenMatrix(mkey);
                 break;
             default:
-                returnval = StdPyrExp::GenMatrix(mkey);
+                returnval = StdPyrExp::v_GenMatrix(mkey);
             }
             
             return returnval;            
@@ -479,7 +479,6 @@ namespace Nektar
                         DNekMat &lap11 = *GetStdMatrix(lap11key);
                         DNekMat &lap12 = *GetStdMatrix(lap12key);
                         DNekMat &lap22 = *GetStdMatrix(lap22key);
-
 
                         NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         Array<TwoD, const NekDouble> gmat =

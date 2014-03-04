@@ -107,7 +107,7 @@ namespace Nektar
                 for(int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
                 {
                     string outname = name  + "_b" + 
-                        boost::lexical_cast<string>(i) + "." + ext;
+                        boost::lexical_cast<string>(m_f->m_bndRegionsToWrite[i]) + "." + ext;
                     
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> 
                         FieldDef = BndExp[0][m_f->m_bndRegionsToWrite[i]]->GetFieldDefinitions();

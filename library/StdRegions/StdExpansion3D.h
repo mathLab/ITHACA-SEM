@@ -150,6 +150,11 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& coords,
                     const Array<OneD, const NekDouble>& physvals);
 
+
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
+                    const Array<OneD, DNekMatSharedPtr >& I,
+                    const Array<OneD, const NekDouble >& physvals);
+
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFacKernel(
                 const Array<OneD, const NekDouble>& base0,
                 const Array<OneD, const NekDouble>& base1,

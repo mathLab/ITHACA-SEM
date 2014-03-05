@@ -123,7 +123,7 @@ namespace Nektar
             
         private:
             void LoadHOSurfaces();
-            int  GetNnodes     (ElementType elType);
+            int  GetNnodes     (LibUtilities::ShapeType elType);
 
             /**
              * Maps a curve tag to a filename containing surface information.

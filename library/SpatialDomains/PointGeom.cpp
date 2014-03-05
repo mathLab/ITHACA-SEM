@@ -290,9 +290,9 @@ namespace Nektar
             return GetCoord(i,Lcoord);
         }
 
-        void PointGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        NekDouble PointGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
-            GetLocCoords(coords,Lcoords);
+            return GetLocCoords(coords,Lcoords);
         }
 
     }; //end of namespace

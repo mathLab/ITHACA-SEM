@@ -853,12 +853,11 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
 
-        NekDouble StdTetExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
-        {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
+        void StdTetExp::v_LocCoordToLocCollapsed(
+                                        const Array<OneD, const NekDouble>& xi,
+                                        Array<OneD, NekDouble>& eta)
+        {
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
                 // Very top point of the tetrahedron
@@ -885,10 +884,8 @@ namespace Nektar
                 eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0;
                 eta[2] = xi[2];
             }
-
-            return StdExpansion3D::v_PhysEvaluate(eta, physvals);
         }
-        
+
         void StdTetExp::v_FillMode(
             const int                     mode, 
                   Array<OneD, NekDouble> &outarray)
@@ -939,20 +936,8 @@ namespace Nektar
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
 
-            int p_hat, k;
-            // All modes in the first layer are boundary modes
-            int tot = P*(P+1)/2 + (Q-P)*P;
-            // Loop over each plane in the stack
-            for (int i = 1; i < R - 1; ++i)
-            {
-                p_hat = min(P, R-i);
-                k = min(Q-P, max(0, Q-i-1));
-                // First two columns and bottom row are boundary modes
-                tot += (p_hat + k) + (p_hat + k - 1) + p_hat - 2;
-            }
-
-            // Add on top vertex mode
-            return tot + 1;
+            return LibUtilities::StdTetData::
+                                        getNumberOfBndCoefficients(P, Q, R);
         }
 
         int StdTetExp::v_NumDGBndryCoeffs() const
@@ -1822,21 +1807,6 @@ namespace Nektar
             
             switch(m_base[1]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-
-                    for(j = 0; j < nquad2; ++j)
-                    {
-                        for(i = 0; i < nquad1; ++i)
-                        {
-                            Blas::Dscal(nquad0,
-                                        0.5*(1-z1[i])*w1[i],
-                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
-                                        1 );
-                        }
-                    }
-                    break;
-
                 // (1,0) Jacobi Inner product.
                 case LibUtilities::eGaussRadauMAlpha1Beta0:
                     for(j = 0; j < nquad2; ++j)
@@ -1848,22 +1818,23 @@ namespace Nektar
                         }
                     }
                     break;
-                
+
                 default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    for(j = 0; j < nquad2; ++j)
+                    {
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,
+                                        0.5*(1-z1[i])*w1[i],
+                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
+                                        1 );
+                        }
+                    }
                     break;
             }
 
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
                 // (2,0) Jacobi inner product.
                 case LibUtilities::eGaussRadauMAlpha2Beta0:
                     for(i = 0; i < nquad2; ++i)
@@ -1874,7 +1845,11 @@ namespace Nektar
                     break;
 
                 default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
                     break;
             }
         }

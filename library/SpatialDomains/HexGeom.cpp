@@ -263,10 +263,11 @@ namespace Nektar
             }
         }
 
-        void HexGeom::v_GetLocCoords(
+        NekDouble HexGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
             int i;
 
             v_FillGeom();
@@ -343,8 +344,10 @@ namespace Nektar
                 Lcoords[0] = za[min_i%qa];
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, ptsz, Lcoords,
+                                           resid);
             }
+            return resid;
         }
 
         /**
@@ -364,6 +367,16 @@ namespace Nektar
             Array<OneD, NekDouble> &locCoord,
             NekDouble tol)
         {
+            NekDouble resid;
+            return v_ContainsPoint(gloCoord,locCoord,tol,resid);
+        }
+
+        bool HexGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord,
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol,
+            NekDouble &resid)
+        {
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
 
@@ -373,8 +386,9 @@ namespace Nektar
             if(GetMetricInfo()->GetGtype() !=  eRegular)
             {
                 int i;
-                NekDouble mincoord, maxcoord,diff;
-                
+                Array<OneD, NekDouble> mincoord(3), maxcoord(3);
+                NekDouble diff = 0.0;
+
                 v_FillGeom();
 
                 const int npts = m_xmap->GetTotPoints();
@@ -384,12 +398,16 @@ namespace Nektar
                 {
                     m_xmap->BwdTrans(m_coeffs[i], pts);
 
-                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
-                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
-                    
-                    diff = maxcoord - mincoord; 
-                    
-                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    mincoord[i] = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord[i] = Vmath::Vmax(pts.num_elements(),pts,1);
+
+                    diff = max(maxcoord[i] - mincoord[i],diff); 
+                }
+
+                for(i = 0; i < 3; ++i)
+                {
+                    if((gloCoord[i] < mincoord[i] - 0.2*diff)||
+                       (gloCoord[i] > maxcoord[i] + 0.2*diff))
                     {
                         return false;
                     }

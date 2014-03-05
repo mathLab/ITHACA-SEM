@@ -92,14 +92,38 @@ namespace Nektar
         };
 
 
+        namespace StdSegData
+        {
+            inline int getNumberOfCoefficients(int Na)
+            {
+                return Na;
+            }
+
+            inline int getNumberOfBndCoefficients(int Na)
+            {
+                return 2;
+            }
+        }
+
         // Dimensions of coefficients for each space
         namespace StdTriData
         {
             inline int getNumberOfCoefficients(int Na, int Nb)
             {
-                ASSERTL0(Na <= Nb, "order in 'a' direction is higher "
+                ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL1(Na <= Nb, "order in 'a' direction is higher "
                          "than order in 'b' direction");
                 return Na*(Na+1)/2 + Na*(Nb-Na);
+            }
+
+            inline int getNumberOfBndCoefficients(int Na, int Nb)
+            {
+                ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL1(Na <= Nb, "order in 'a' direction is higher "
+                         "than order in 'b' direction");
+                return (Na-1) + 2*(Nb-1);
             }
         }
 
@@ -107,7 +131,16 @@ namespace Nektar
         {
             inline int getNumberOfCoefficients(int Na, int Nb)
             {
+                ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
                 return Na*Nb;
+            }
+
+            inline int getNumberOfBndCoefficients(int Na, int Nb)
+            {
+                ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
+                return 2*(Na-1) + 2*(Nb-1);
             }
         }
 
@@ -117,7 +150,19 @@ namespace Nektar
         {
             inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
             {
+                ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL2(Nc > 1, "Order in 'c' direction must be > 1.");
                 return Na*Nb*Nc;
+            }
+
+            inline int getNumberOfBndCoefficients(int Na, int Nb, int Nc)
+            {
+                ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL2(Nc > 1, "Order in 'c' direction must be > 1.");
+                return 2*Na*Nb + 2*Na*Nc + 2*Nb*Nc
+                        - 4*(Na + Nb + Nc) + 8;
             }
         }
 
@@ -140,6 +185,13 @@ namespace Nektar
              */
             inline int getNumberOfCoefficients(int Na, int Nb, int Nc)
             {
+                ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL2(Nc > 1, "Order in 'c' direction must be > 1.");
+                ASSERTL1(Na <= Nb, "order in 'a' direction is higher "
+                         "than order in 'b' direction");
+                ASSERTL1(Nb <= Nc, "order in 'b' direction is higher "
+                         "than order in 'c' direction");
                 int nCoef = 0;
                 for (int a = 0; a < Na; ++a)
                 {
@@ -153,6 +205,25 @@ namespace Nektar
                 }
                 return nCoef;
             }
+
+            inline int getNumberOfBndCoefficients(int Na, int Nb, int Nc)
+            {
+                ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL2(Nc > 1, "Order in 'c' direction must be > 1.");
+                ASSERTL1(Na <= Nb, "order in 'a' direction is higher "
+                         "than order in 'b' direction");
+                ASSERTL1(Nb <= Nc, "order in 'b' direction is higher "
+                         "than order in 'c' direction");
+
+                int nCoef =    Na*(Na+1)/2 + (Nb-Na)*Na // base
+                          +    Na*(Na+1)/2 + (Nc-Na)*Na // front
+                          + 2*(Nb*(Nb+1)/2 + (Nc-Nb)*Nb)// 2 other sides
+                          - Na - 2*Nb - 3*Nc            // less edges
+                          + 4;                          // plus vertices
+
+                return nCoef;
+            }
         }
 
 
@@ -160,6 +231,14 @@ namespace Nektar
         {
             inline int getNumberOfCoefficients(int Na, int Nb, int Nc)
             {
+                ASSERTL1(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL1(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL1(Nc > 1, "Order in 'c' direction must be > 1.");
+                ASSERTL1(Na <= Nc, "Order in 'a' direction is higher "
+                        "than order in 'c' direction.");
+                ASSERTL1(Nb <= Nc, "Order in 'b' direction is higher "
+                        "than order in 'c' direction.");
+
                 // Count number of coefficients explicitly.
                 const int Pi = Na - 2, Qi = Nb - 2, Ri = Nc - 2;
                 int nCoeff = 
@@ -170,16 +249,52 @@ namespace Nektar
                     Qi * (2*Ri - Qi - 1);      // q-r triangles;
                 return nCoeff + StdTetData::getNumberOfCoefficients(Pi-1, Qi-1, Ri-1);
             }
+
+            inline int getNumberOfBndCoefficients(int Na, int Nb, int Nc)
+            {
+                ASSERTL1(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL1(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL1(Nc > 1, "Order in 'c' direction must be > 1.");
+                ASSERTL1(Na <= Nc, "Order in 'a' direction is higher "
+                        "than order in 'c' direction.");
+                ASSERTL1(Nb <= Nc, "Order in 'b' direction is higher "
+                        "than order in 'c' direction.");
+
+                return Na*Nb                        // base
+                     + 2*(Na*(Na+1)/2 + (Nc-Na)*Na) // front and back
+                     + 2*(Nb*(Nb+1)/2 + (Nc-Nb)*Nb) // sides
+                     - 2*Na - 2*Nb - 4*Nc           // less edges
+                     + 5;                           // plus vertices
+            }
         }
 
         namespace StdPrismData
         {
             inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
             {
+                ASSERTL1(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL1(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL1(Nc > 1, "Order in 'c' direction must be > 1.");
+                ASSERTL1(Na <= Nc, "Order in 'a' direction is higher "
+                        "than order in 'c' direction.");
+
                 return Nb*StdTriData::getNumberOfCoefficients(Na,Nc);
             }
-        }
 
+            inline int getNumberOfBndCoefficients( int Na, int Nb, int Nc)
+            {
+                ASSERTL1(Na > 1, "Order in 'a' direction must be > 1.");
+                ASSERTL1(Nb > 1, "Order in 'b' direction must be > 1.");
+                ASSERTL1(Nc > 1, "Order in 'c' direction must be > 1.");
+                ASSERTL1(Na <= Nc, "Order in 'a' direction is higher "
+                        "than order in 'c' direction.");
+
+                return Na*Nb + 2*Nb*Nc              // rect faces
+                   + 2*( Na*(Na+1)/2 + (Nc-Na)*Na ) // tri faces
+                   - 2*Na - 3*Nb - 4*Nc             // less edges
+                   + 6;                             // plus vertices
+            }
+        }
 
         inline int GetNumberOfCoefficients(ShapeType shape, std::vector<unsigned int> &modes, int offset)
         {

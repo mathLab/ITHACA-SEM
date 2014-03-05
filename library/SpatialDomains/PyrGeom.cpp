@@ -215,10 +215,12 @@ namespace Nektar
             }
         }
 
-        void PyrGeom::v_GetLocCoords(
+        NekDouble PyrGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords,
                   Array<OneD,       NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
+
             v_FillGeom();
 
             // calculate local coordinate for coord
@@ -263,6 +265,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                          "inverse mapping must be set up to use this call");
             }
+            return resid;
         }
 
         int PyrGeom::v_GetNumVerts() const

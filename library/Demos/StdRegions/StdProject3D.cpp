@@ -17,71 +17,6 @@ using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::StdRegions;
 
-void printSolution(StdRegions::StdExpansion *F,
-                   std::string name,
-                   Array<OneD, NekDouble> &x,
-                   Array<OneD, NekDouble> &y,
-                   Array<OneD, NekDouble> &z,
-                   Array<OneD, NekDouble> &phys)
-{
-    int nPts = F->GetTotPoints();
-    ofstream outf(name);
-    int numBlocks = 1;
-    for (int j = 0; j < 3; ++j)
-    {
-        numBlocks *= F->GetNumPoints(j)-1;
-    }
-
-    outf << "VARIABLES = x, y, z, mnpp" << endl;
-    outf << "Zone, N=" << nPts << ", E="
-         << numBlocks << ", F=FEBlock, ET=BRICK" << endl;
-    
-    const int np0 = F->GetNumPoints(0);
-    const int np1 = F->GetNumPoints(1);
-    const int np2 = F->GetNumPoints(2);
-    const int np01 = np0*np1;
-
-    for (int j = 0; j < nPts; ++j)
-    {
-        outf << x[j] << endl;
-    }
-
-    for (int j = 0; j < nPts; ++j)
-    {
-        outf << y[j] << endl;
-    }
-
-    for (int j = 0; j < nPts; ++j)
-    {
-        outf << z[j] << endl;
-    }
-
-    for (int j = 0; j < nPts; ++j)
-    {
-        outf << phys[j] << endl;
-    }
-
-    for(int j = 1; j < np2; ++j)
-    {
-        for(int k = 1; k < np1; ++k)
-        {
-            for(int l = 1; l < np0; ++l)
-            {
-                outf << (j-1)*np01 + (k-1)*np0 + l   << " ";
-                outf << (j-1)*np01 + (k-1)*np0 + l+1 << " ";
-                outf << (j-1)*np01 +  k   *np0 + l+1 << " ";
-                outf << (j-1)*np01 +  k   *np0 + l   << " ";
-                outf <<  j   *np01 + (k-1)*np0 + l   << " ";
-                outf <<  j   *np01 + (k-1)*np0 + l+1 << " ";
-                outf <<  j   *np01 +  k   *np0 + l+1 << " ";
-                outf <<  j   *np01 +  k   *np0 + l   << endl;
-            }
-        }
-    }
-    
-    outf.close();
-}
-
 /// Defines a solution which excites all modes in a StdTet expansion.
 NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
                   int order1, int order2, int order3);
@@ -399,54 +334,6 @@ int main(int argc, char *argv[]){
             {
                 sol[i]  = Tet_sol(x[i],y[i],z[i],order1,order2,order3);
             }
-
-#if 0
-            int nCoeffs = F->GetNcoeffs();
-            int nPts = F->GetTotPoints();
-            Array<OneD, NekDouble> blah(nCoeffs), blah2(nPts);
-            for (i = 0; i < nCoeffs; ++i)
-            {
-                Vmath::Zero(nCoeffs, blah, 1);
-                blah[i] = 1.0;
-                F->BwdTrans(blah, blah2);
-
-                boost::format pad("mode-%03d.dat");
-                pad % i;
-
-                printSolution(F, pad.str(), x, y, z, blah2);
-            }
-            exit(0);
-#endif
-
-#if 0
-            int nCoeffs = F->GetNcoeffs();
-            int nPts = F->GetTotPoints();
-            Array<OneD, NekDouble> blah(nCoeffs), blah2(nPts);
-            for (i = 0; i < nCoeffs; ++i)
-            {
-                Vmath::Zero(nCoeffs, blah, 1);
-                blah[i] = 1.0;
-                F->BwdTrans(blah, blah2);
-                F->FwdTrans(blah2, blah);
-                int zeroCount = 0;
-                int oneCount = 0;
-                for (int j = 0; j < nCoeffs; ++j)
-                {
-                    if (fabs(blah[j]) < 1e-8)
-                    {
-                        zeroCount++;
-                    }
-                    if (fabs(blah[j]-1.0) < 1e-8)
-                    {
-                        oneCount++;
-                    }
-                }
-
-                cout << i << " " << zeroCount << " " << oneCount << endl;
-            }
-            exit(0);
-#endif
-
             //----------------------------------------------
         }
         break;
@@ -522,14 +409,6 @@ int main(int argc, char *argv[]){
     E->BwdTrans(coeffs,phys);
     //-------------------------------------------
 
-#if 0
-    int nPts = E->GetTotPoints();
-    Array<OneD, NekDouble> errArr(nPts);
-    Vmath::Vsub(nPts, phys, 1, sol, 1, errArr, 1);
-    printSolution(E, "out.dat", x, y, z, errArr);
-    printSolution(E, "sol.dat", x, y, z, phys);
-#endif
-
     //--------------------------------------------
     // Calculate L_inf error
     cout << "L infinity error: " << E->Linf(phys,sol) << endl;
@@ -543,11 +422,8 @@ int main(int argc, char *argv[]){
     t[1] = -0.25;
     t[2] = -0.3;
 
-    if(regionshape == LibUtilities::eTetrahedron)
-    {
-        sol[0] = Tet_sol(t[0], t[1], t[2], order1, order2, order3);
-    }
-    else if (regionshape == LibUtilities::ePyramid)
+    if(regionshape == LibUtilities::eTetrahedron ||
+       regionshape == LibUtilities::ePyramid)
     {
         sol[0] = Tet_sol(t[0], t[1], t[2], order1, order2, order3);
     }
@@ -602,7 +478,7 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
         {
             for(m = 0; m < order3-k; ++m)
             {
-                sol += pow(z,m);
+                sol += pow(x,k)*pow(y,l)*pow(z,m);;
             }
         }
     }

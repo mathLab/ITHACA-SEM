@@ -2392,110 +2392,130 @@
          * @param   bndCondExpansions   List of boundary conditions.
          * @param   bndConditions   Information about the boundary conditions.
          */
-        void DisContField3D::v_EvaluateBoundaryConditions(const NekDouble time,
-                                                          const NekDouble x2_in,
-                                                          const NekDouble x3_in)
+        void DisContField3D::v_EvaluateBoundaryConditions(
+            const NekDouble time,
+            int   var,
+            std::string varName,
+            const NekDouble x2_in,
+            const NekDouble x3_in)
         {
             int i;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
             MultiRegions::ExpListSharedPtr locExpList;
 
-            for(i = 0; i < nbnd; ++i)
+            for (i = 0; i < nbnd; ++i)
             {
-                if(time == 0.0 || m_bndConditions[i]->GetUserDefined() == 
-                   SpatialDomains::eTimeDependent)
+                if (time == 0.0 || m_bndConditions[i]->GetUserDefined() == 
+                    SpatialDomains::eTimeDependent)
                 {
                     locExpList = m_bndCondExpansions[i];
-                    npoints = locExpList->GetNpoints();
+                    npoints    = locExpList->GetNpoints();
                     
-                    Array<OneD,NekDouble> x0(npoints,0.0);
-                    Array<OneD,NekDouble> x1(npoints,0.0);
-                    Array<OneD,NekDouble> x2(npoints,0.0);
+                    Array<OneD, NekDouble> x0(npoints, 0.0);
+                    Array<OneD, NekDouble> x1(npoints, 0.0);
+                    Array<OneD, NekDouble> x2(npoints, 0.0);
                     
-                    locExpList->GetCoords(x0,x1,x2);
+                    locExpList->GetCoords(x0, x1, x2);
                     
-                    if(m_bndConditions[i]->GetBoundaryConditionType()
-                       == SpatialDomains::eDirichlet)
+                    if (m_bndConditions[i]->GetBoundaryConditionType()
+                        == SpatialDomains::eDirichlet)
                     {
                         string filebcs = boost::static_pointer_cast<
                             SpatialDomains::DirichletBoundaryCondition>(
                                 m_bndConditions[i])->m_filename;
                         
-                        if(filebcs != "")
+                        if (filebcs != "")
                         {
-                             string var = filebcs.substr(
-                                 0, filebcs.find_last_of("."));
-                             int len = var.length();
-                             var = var.substr(len-1,len);
-
                              cout << "Boundary condition from file:" 
                                   << filebcs << endl;
 
-                             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-                             std::vector<std::vector<NekDouble> > FieldData;
-                             Import(filebcs,FieldDef, FieldData);
+                            std::vector<LibUtilities::
+                                FieldDefinitionsSharedPtr> FieldDef;
+                            std::vector<std::vector<NekDouble> > FieldData;
+                            Import(filebcs, FieldDef, FieldData);
 
-                             // copy FieldData into locExpList
-                             locExpList->ExtractDataToCoeffs(
-                                 FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0], locExpList->UpdateCoeffs());   
-                             locExpList->BwdTrans_IterPerExp(
-                                 locExpList->GetCoeffs(), 
-                                 locExpList->UpdatePhys());
-                             locExpList->FwdTrans_BndConstrained(
-                                 locExpList->GetPhys(),
-                                 locExpList->UpdateCoeffs());
+                            const std::string varNameFld = FieldDef[0]->
+                                m_fields[var];
+                            
+                            if (varNameFld == varName)
+                            {
+                                // Copy FieldData into locExpList
+                                locExpList->ExtractDataToCoeffs(
+                                    FieldDef[0], FieldData[0],
+                                    FieldDef[0]->m_fields[var], 
+                                    locExpList->UpdateCoeffs());   
+                                locExpList->BwdTrans_IterPerExp(
+                                    locExpList->GetCoeffs(), 
+                                    locExpList->UpdatePhys());
+                                locExpList->FwdTrans_BndConstrained(
+                                    locExpList->GetPhys(),
+                                    locExpList->UpdateCoeffs());
+                            }
+                            else
+                            {
+                                ASSERTL0(
+                                    false, 
+                                    "BCs fields order in session file do not "
+                                    "match variable order in the fld file");
+                            }
                         }
                         else
                         {
-                            LibUtilities::Equation  condition = boost::static_pointer_cast<
-                                SpatialDomains::DirichletBoundaryCondition >(m_bndConditions[i])->m_dirichletCondition;
+                            LibUtilities::Equation  condition = boost::static_pointer_cast<SpatialDomains::
+                                    DirichletBoundaryCondition >(
+                                    m_bndConditions[i])->m_dirichletCondition;
                             
-                            condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
+                            condition.Evaluate(x0, x1, x2, time, 
+                                               locExpList->UpdatePhys());
                             
-                            locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
-                                                                locExpList->UpdateCoeffs());
+                            locExpList->FwdTrans_BndConstrained(
+                                                locExpList->GetPhys(),
+                                                locExpList->UpdateCoeffs());
                         }
                     }
-                    else if(m_bndConditions[i]->GetBoundaryConditionType()
-                            == SpatialDomains::eNeumann)
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                             == SpatialDomains::eNeumann)
                     {
-                        LibUtilities::Equation  condition = boost::static_pointer_cast<
-                        SpatialDomains::NeumannBoundaryCondition
-                            >(m_bndConditions[i])->m_neumannCondition;
+                        LibUtilities::Equation condition = boost::
+                            static_pointer_cast<SpatialDomains::
+                                NeumannBoundaryCondition>(
+                                    m_bndConditions[i])->m_neumannCondition;
                         
-                        condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
+                        condition.Evaluate(x0, x1, x2, time, 
+                                           locExpList->UpdatePhys());
                         
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
                     }
-                    else if(m_bndConditions[i]->GetBoundaryConditionType()
-                            == SpatialDomains::eRobin)
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                             == SpatialDomains::eRobin)
                     {
-                        LibUtilities::Equation  condition = boost::static_pointer_cast<
-                        SpatialDomains::RobinBoundaryCondition
-                            >(m_bndConditions[i])->m_robinFunction;
+                        LibUtilities::Equation condition = boost::
+                            static_pointer_cast<SpatialDomains::
+                                RobinBoundaryCondition>(
+                                    m_bndConditions[i])->m_robinFunction;
                         
-                        LibUtilities::Equation coeff     = 
-                            boost::static_pointer_cast<
-                        SpatialDomains::RobinBoundaryCondition
-                            >(m_bndConditions[i])->m_robinPrimitiveCoeff;
+                        LibUtilities::Equation coeff = boost::
+                            static_pointer_cast<SpatialDomains::
+                                RobinBoundaryCondition>(
+                                    m_bndConditions[i])->m_robinPrimitiveCoeff;
                         
-                        condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
+                        condition.Evaluate(x0, x1, x2, time, 
+                                           locExpList->UpdatePhys());
                         
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
                         
-                        // put primitive coefficient into the physical space
-                        // storage
-                        coeff.Evaluate(x0,x1,x2,time,
+                        // Put primitive coefficient into the physical 
+                        // space storage
+                        coeff.Evaluate(x0, x1, x2, time,
                                        locExpList->UpdatePhys());
                         
                     }
                     else
                     {
-                        ASSERTL0(false,"This type of BC not implemented yet");
+                        ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
             }

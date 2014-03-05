@@ -2484,7 +2484,7 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+            static Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                         result;
             return result;
         }
@@ -2495,14 +2495,18 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static Array<OneD,SpatialDomains::BoundaryConditionShPtr>
-                                                                        result;
+            static Array<OneD, SpatialDomains::BoundaryConditionShPtr> result;
             return result;
         }
 
         /**
          */
-        void ExpList::v_EvaluateBoundaryConditions(const NekDouble time, const NekDouble x2_in, const NekDouble x3_in)
+        void ExpList::v_EvaluateBoundaryConditions(
+            const NekDouble time,
+            int   var,
+            std::string varName,
+            const NekDouble x2_in, 
+            const NekDouble x3_in)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

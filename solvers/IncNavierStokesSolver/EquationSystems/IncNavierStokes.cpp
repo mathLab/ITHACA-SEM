@@ -370,7 +370,8 @@ namespace Nektar
     void IncNavierStokes::SetBoundaryConditions(NekDouble time)
     {
         int i, n;
-        int  nvariables = m_fields.num_elements();
+        std::string varName;
+        int nvariables = m_fields.num_elements();
         
         for (i = 0; i < nvariables; ++i)
         {
@@ -379,12 +380,13 @@ namespace Nektar
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
                    SpatialDomains::eTimeDependent)
                 {
-                    m_fields[i]->EvaluateBoundaryConditions(time);
+                    varName = m_session->GetVariable(i);
+                    m_fields[i]->EvaluateBoundaryConditions(time, i, varName);
                 }
 
             }
 
-            // Set Radiation conditions if required.
+            // Set Radiation conditions if required
             SetRadiationBoundaryForcing(i);
         }
     }

@@ -167,6 +167,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &inarray,
         NekDouble                             time)
     {    
+        std::string varName;
         int nvariables = m_fields.num_elements();
         int cnt        = 0;
     
@@ -215,7 +216,8 @@ namespace Nektar
             {
                 for (int i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->EvaluateBoundaryConditions(time);
+                    varName = m_session->GetVariable(i);
+                    m_fields[i]->EvaluateBoundaryConditions(time, i, varName);
                 }
             }
     

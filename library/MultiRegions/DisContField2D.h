@@ -250,6 +250,8 @@ namespace Nektar
 
             virtual void v_EvaluateBoundaryConditions(
                 const NekDouble time = 0.0,
+                int   var = 0,
+                std::string varName = "",
                 const NekDouble x2_in = NekConstants::kNekUnsetDouble,
                 const NekDouble x3_in = NekConstants::kNekUnsetDouble);
 

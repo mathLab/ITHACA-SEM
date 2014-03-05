@@ -706,6 +706,8 @@ namespace Nektar
 
             inline void EvaluateBoundaryConditions(
                 const NekDouble time = 0.0,
+                int   var = 0,
+                std::string varName = "",
                 const NekDouble = NekConstants::kNekUnsetDouble,
                 const NekDouble = NekConstants::kNekUnsetDouble);
 
@@ -1291,6 +1293,8 @@ namespace Nektar
 
             virtual void v_EvaluateBoundaryConditions(
                 const NekDouble time = 0.0,
+                int   var = 0,
+                std::string varName = "",
                 const NekDouble x2_in = NekConstants::kNekUnsetDouble,
                 const NekDouble x3_in = NekConstants::kNekUnsetDouble);
             
@@ -2047,11 +2051,14 @@ namespace Nektar
             return v_UpdateBndConditions();
         }
 
-        inline void ExpList::EvaluateBoundaryConditions(const NekDouble time,
-                                                        const NekDouble x2_in,
-                                                        const NekDouble x3_in)
+        inline void ExpList::EvaluateBoundaryConditions(
+            const NekDouble time,
+            int   var,
+            std::string varName,                                            
+            const NekDouble x2_in,
+            const NekDouble x3_in)
         {
-            v_EvaluateBoundaryConditions(time,x2_in,x3_in);
+            v_EvaluateBoundaryConditions(time, var, varName, x2_in, x3_in);
         }
 
         // Routines for continous matrix solution

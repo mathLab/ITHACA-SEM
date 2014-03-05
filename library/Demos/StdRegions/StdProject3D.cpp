@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cmath>
 
-#include <boost/format.hpp>
 #include <StdRegions/StdHexExp.h>
 #include <StdRegions/StdPrismExp.h>
 #include <StdRegions/StdNodalPrismExp.h>
@@ -478,7 +477,7 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
         {
             for(m = 0; m < order3-k; ++m)
             {
-                sol += pow(x,k)*pow(y,l)*pow(z,m);;
+                sol += pow(x,k)*pow(y,l)*pow(z,m);
             }
         }
     }

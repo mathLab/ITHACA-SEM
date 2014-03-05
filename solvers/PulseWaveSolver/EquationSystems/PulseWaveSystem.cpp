@@ -739,7 +739,7 @@ namespace Nektar
         std::string varName = m_session->GetVariable(i); 
 		for (int k = 0; k<m_vessels.num_elements(); k++)
 		{
-			m_vessels[k]->EvaluateBoundaryConditions(m_time, i, varName);
+			m_vessels[k]->EvaluateBoundaryConditions(m_time, varName);
 		}
 		
 		// Detect special network boundary conditions

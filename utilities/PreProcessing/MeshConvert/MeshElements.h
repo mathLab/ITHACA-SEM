@@ -1393,12 +1393,12 @@ namespace Nektar
                 vector<FaceSharedPtr> faces = e->GetFaceList();
                 for (int i = 0; i < faces.size(); ++i)
                 {
-                    faces[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                    faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
                 }
                 return e;
             }
             /// Element type
-            static ElementType type;
+            static LibUtilities::ShapeType type;
 
             Pyramid(ElmtConfig                 pConf,
                     std::vector<NodeSharedPtr> pNodeList,

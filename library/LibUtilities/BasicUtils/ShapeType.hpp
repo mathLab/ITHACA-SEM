@@ -188,8 +188,8 @@ namespace Nektar
                 ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
                 ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
                 ASSERTL2(Nc > 1, "Order in 'c' direction must be > 1.");
-                ASSERTL1(Na <= Nb, "order in 'a' direction is higher "
-                         "than order in 'b' direction");
+                ASSERTL1(Na <= Nc, "order in 'a' direction is higher "
+                         "than order in 'c' direction");
                 ASSERTL1(Nb <= Nc, "order in 'b' direction is higher "
                          "than order in 'c' direction");
                 int nCoef = 0;
@@ -211,8 +211,8 @@ namespace Nektar
                 ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
                 ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
                 ASSERTL2(Nc > 1, "Order in 'c' direction must be > 1.");
-                ASSERTL1(Na <= Nb, "order in 'a' direction is higher "
-                         "than order in 'b' direction");
+                ASSERTL1(Na <= Nc, "order in 'a' direction is higher "
+                         "than order in 'c' direction");
                 ASSERTL1(Nb <= Nc, "order in 'b' direction is higher "
                          "than order in 'c' direction");
 

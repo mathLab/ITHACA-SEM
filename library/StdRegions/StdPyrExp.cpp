@@ -798,7 +798,7 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
-        NekDouble StdPyrExp::v_LocCoordToLocCollapsed(
+        void StdPyrExp::v_LocCoordToLocCollapsed(
             const Array<OneD, const NekDouble>& xi,
                   Array<OneD,       NekDouble>& eta)
         {

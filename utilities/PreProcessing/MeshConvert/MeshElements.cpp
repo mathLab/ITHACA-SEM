@@ -1202,8 +1202,8 @@ namespace Nektar
             }
         }
 
-        ElementType Pyramid::type = GetElementFactory().
-            RegisterCreatorFunction(ePyramid, Pyramid::create, "Pyramid");
+        LibUtilities::ShapeType Pyramid::type = GetElementFactory().
+            RegisterCreatorFunction(LibUtilities::ePyramid, Pyramid::create, "Pyramid");
 
         /**
          * @brief Create a pyramidic element.
@@ -1216,7 +1216,7 @@ namespace Nektar
             m_tag     = "P";
             m_dim     = 3;
             m_taglist = pTagList;
-            int n     = m_conf.order-1;
+            int n     = m_conf.m_order-1;
 
             // This edge-node map is based on Nektar++ ordering.
             map<pair<int,int>, int> edgeNodeMap;
@@ -1233,7 +1233,7 @@ namespace Nektar
             // Add vertices
             for (int i = 0; i < 5; ++i)
             {
-                vertex.push_back(pNodeList[i]);
+                m_vertex.push_back(pNodeList[i]);
             }
 
             // Create edges (with corresponding set of edge points)
@@ -1241,19 +1241,19 @@ namespace Nektar
             for (it = edgeNodeMap.begin(); it != edgeNodeMap.end(); ++it)
             {
                 vector<NodeSharedPtr> edgeNodes;
-                if (m_conf.order > 1)
+                if (m_conf.m_order > 1)
                 {
                     for (int j = it->second; j < it->second + n; ++j)
                     {
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
                 }
-                edge.push_back(
+                m_edge.push_back(
                     EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
                                            pNodeList[it->first.second-1],
                                            edgeNodes,
-                                           m_conf.edgeCurveType)));
-                edge.back()->id = eid++;
+                                           m_conf.m_edgeCurveType)));
+                m_edge.back()->m_id = eid++;
             }
 
             // Create faces
@@ -1271,22 +1271,22 @@ namespace Nektar
 
                 for (int k = 0; k < nEdge; ++k)
                 {
-                    faceVertices.push_back(vertex[face_ids[j][k]]);
-                    NodeSharedPtr a = vertex[face_ids[j][k]];
-                    NodeSharedPtr b = vertex[face_ids[j][(k+1) % nEdge]];
-                    for (unsigned int i = 0; i < edge.size(); ++i)
+                    faceVertices.push_back(m_vertex[face_ids[j][k]]);
+                    NodeSharedPtr a = m_vertex[face_ids[j][k]];
+                    NodeSharedPtr b = m_vertex[face_ids[j][(k+1) % nEdge]];
+                    for (unsigned int i = 0; i < m_edge.size(); ++i)
                     {
-                        if ((edge[i]->n1 == a && edge[i]->n2 == b) ||
-                            (edge[i]->n1 == b && edge[i]->n2 == a))
+                        if ((m_edge[i]->m_n1 == a && m_edge[i]->m_n2 == b) ||
+                            (m_edge[i]->m_n1 == b && m_edge[i]->m_n2 == a))
                         {
-                            faceEdges.push_back(edge[i]);
+                            faceEdges.push_back(m_edge[i]);
                             face_edges[j][k] = i;
                             break;
                         }
                     }
                 }
 
-                if (m_conf.faceNodes)
+                if (m_conf.m_faceNodes)
                 {
                     int facenodes = j == 0 ? n*n : n*(n-1)/2;
                     faceoffset   += facenodes;
@@ -1296,20 +1296,20 @@ namespace Nektar
                         faceNodes.push_back(pNodeList[N+i]);
                     }
                 }
-                face.push_back(FaceSharedPtr(
-                    new Face(faceVertices, faceNodes, faceEdges, m_conf.faceCurveType)));
+                m_face.push_back(FaceSharedPtr(
+                    new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
             }
 
             vector<EdgeSharedPtr> tmp(8);
-            tmp[0] = edge[face_edges[0][0]];
-            tmp[1] = edge[face_edges[0][1]];
-            tmp[2] = edge[face_edges[0][2]];
-            tmp[3] = edge[face_edges[0][3]];
-            tmp[4] = edge[face_edges[1][2]];
-            tmp[5] = edge[face_edges[1][1]];
-            tmp[6] = edge[face_edges[3][1]];
-            tmp[7] = edge[face_edges[3][2]];
-            edge = tmp;
+            tmp[0] = m_edge[face_edges[0][0]];
+            tmp[1] = m_edge[face_edges[0][1]];
+            tmp[2] = m_edge[face_edges[0][2]];
+            tmp[3] = m_edge[face_edges[0][3]];
+            tmp[4] = m_edge[face_edges[1][2]];
+            tmp[5] = m_edge[face_edges[1][1]];
+            tmp[6] = m_edge[face_edges[3][1]];
+            tmp[7] = m_edge[face_edges[3][2]];
+            m_edge = tmp;
         }
         
         SpatialDomains::GeometrySharedPtr Pyramid::GetGeom(int coordDim)
@@ -1318,7 +1318,7 @@ namespace Nektar
 
             for (int i = 0; i < 5; ++i)
             {
-                faces[i] = face[i]->GetGeom(coordDim);
+                faces[i] = m_face[i]->GetGeom(coordDim);
             }
 
             m_geom = MemoryManager<SpatialDomains::PyrGeom>::
@@ -1332,7 +1332,7 @@ namespace Nektar
          */
         unsigned int Pyramid::GetNumNodes(ElmtConfig pConf)
         {
-            int n = pConf.order;
+            int n = pConf.m_order;
             return 5 + 8*(n-1);
         }
 

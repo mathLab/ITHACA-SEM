@@ -175,7 +175,7 @@ namespace Nektar
         {
             if (m_geomFactorsState != ePtsFilled)
             {
-                int i,f;
+                int i;
                 GeomType Gtype = eRegular;
 
                 v_FillGeom();

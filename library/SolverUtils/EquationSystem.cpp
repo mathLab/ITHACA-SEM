@@ -862,8 +862,7 @@ namespace Nektar
             for (int i = 0; i < nvariables; ++i)
             {
                 varName = m_session->GetVariable(i); 
-                m_fields[i]->EvaluateBoundaryConditions(
-                    time, i, varName);
+                m_fields[i]->EvaluateBoundaryConditions(time, varName);
             }
         }
 

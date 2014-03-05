@@ -84,7 +84,7 @@
              SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
 
              GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
-             EvaluateBoundaryConditions();
+             EvaluateBoundaryConditions(0.0, variable);
              ApplyGeomInfo();
 
              // Find periodic edges for this variable.
@@ -138,7 +138,7 @@
              SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
 
              GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
-             EvaluateBoundaryConditions();
+             EvaluateBoundaryConditions(0.0, variable);
              ApplyGeomInfo();
 
              if(!SameTypeOfBoundaryConditions(In))
@@ -2393,11 +2393,10 @@
          * @param   bndConditions   Information about the boundary conditions.
          */
         void DisContField3D::v_EvaluateBoundaryConditions(
-            const NekDouble time,
-            int   var,
-            std::string varName,
-            const NekDouble x2_in,
-            const NekDouble x3_in)
+            const NekDouble   time,
+            const std::string varName,
+            const NekDouble   x2_in,
+            const NekDouble   x3_in)
         {
             int i;
             int npoints;
@@ -2427,38 +2426,7 @@
                         
                         if (filebcs != "")
                         {
-                             cout << "Boundary condition from file:" 
-                                  << filebcs << endl;
-
-                            std::vector<LibUtilities::
-                                FieldDefinitionsSharedPtr> FieldDef;
-                            std::vector<std::vector<NekDouble> > FieldData;
-                            Import(filebcs, FieldDef, FieldData);
-
-                            const std::string varNameFld = FieldDef[0]->
-                                m_fields[var];
-                            
-                            if (varNameFld == varName)
-                            {
-                                // Copy FieldData into locExpList
-                                locExpList->ExtractDataToCoeffs(
-                                    FieldDef[0], FieldData[0],
-                                    FieldDef[0]->m_fields[var], 
-                                    locExpList->UpdateCoeffs());   
-                                locExpList->BwdTrans_IterPerExp(
-                                    locExpList->GetCoeffs(), 
-                                    locExpList->UpdatePhys());
-                                locExpList->FwdTrans_BndConstrained(
-                                    locExpList->GetPhys(),
-                                    locExpList->UpdateCoeffs());
-                            }
-                            else
-                            {
-                                ASSERTL0(
-                                    false, 
-                                    "BCs fields order in session file do not "
-                                    "match variable order in the fld file");
-                            }
+                            ExtractFileBCs(filebcs, varName, locExpList);
                         }
                         else
                         {

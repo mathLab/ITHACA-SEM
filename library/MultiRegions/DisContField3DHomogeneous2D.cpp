@@ -176,23 +176,19 @@ namespace Nektar
         }
 
         void DisContField3DHomogeneous2D::EvaluateBoundaryConditions(
-            const NekDouble time,
-            int   var,
-            std::string varName)
+            const NekDouble   time,
+            const std::string varName)
         {
             int n, m;
             const Array<OneD, const NekDouble> y = m_homogeneousBasis_y->GetZ();
             const Array<OneD, const NekDouble> z = m_homogeneousBasis_z->GetZ();
-			
+
             for (n = 0; n < m_nz; ++n)
             {
                 for (m = 0; m < m_ny; ++m)
                 {
                     m_lines[m+(n*m_ny)]->EvaluateBoundaryConditions(
-                        time, 
-                        var,
-                        varName,
-                        0.5*m_lhom_y*(1.0+y[m]), 
+                        time, varName, 0.5*m_lhom_y*(1.0+y[m]), 
                         0.5*m_lhom_z*(1.0+z[n]));
                 }
             }
@@ -259,15 +255,14 @@ namespace Nektar
 			}
         }
 		
-		void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(
-            const NekDouble time,
-            int   var,
-            std::string varName,
-            const NekDouble x2_in, 
-            const NekDouble x3_in)
-		{
-			EvaluateBoundaryConditions(time, var, varName);
-		}
+        void DisContField3DHomogeneous2D::v_EvaluateBoundaryConditions(
+            const NekDouble   time,
+            const std::string varName,
+            const NekDouble   x2_in, 
+            const NekDouble   x3_in)
+        {
+            EvaluateBoundaryConditions(time, varName);
+        }
 		
 		const Array<OneD,const boost::shared_ptr<ExpList> > &DisContField3DHomogeneous2D::v_GetBndCondExpansions(void)
 		{

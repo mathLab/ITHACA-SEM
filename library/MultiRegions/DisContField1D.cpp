@@ -83,7 +83,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
 
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
-            EvaluateBoundaryConditions();
+            EvaluateBoundaryConditions(0.0, variable);
             ApplyGeomInfo();
 
             map<int,int> periodicVertices;
@@ -172,7 +172,7 @@ namespace Nektar
                                                           i);
             
             //1. c) Evaluate the boundary conditions
-            EvaluateBoundaryConditions();
+            EvaluateBoundaryConditions(0.0, variable);
             //ApplyGeomInfo();
             
             //2. Set up trace information
@@ -1231,11 +1231,10 @@ namespace Nektar
          * @param   bndConditions   Information about the boundary conditions.
          */
         void DisContField1D::v_EvaluateBoundaryConditions(
-            const NekDouble time,
-            int   var,
-            std::string varName,
-            const NekDouble x2_in,
-            const NekDouble x3_in)
+            const NekDouble   time,
+            const std::string varName,
+            const NekDouble   x2_in,
+            const NekDouble   x3_in)
         {
             int i;
 

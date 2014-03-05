@@ -118,9 +118,8 @@ namespace Nektar
              * evaluated
              */
             MULTI_REGIONS_EXPORT void EvaluateBoundaryConditions(
-                const NekDouble time = 0.0,
-                int   var = 0,
-                std::string varName = "");
+                const NekDouble   time    = 0.0,
+                const std::string varName = "");
 
             inline const Array<OneD,const MultiRegions::ExpListSharedPtr>
                 &GetBndCondExpansions();
@@ -272,11 +271,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &dirForcing);
 
             virtual void v_EvaluateBoundaryConditions(
-                const NekDouble time  = 0.0,
-                int   var = 0,
-                std::string varName = "",
-                const NekDouble x2_in = NekConstants::kNekUnsetDouble,
-                const NekDouble x3_in = NekConstants::kNekUnsetDouble);
+                const NekDouble   time    = 0.0,
+                const std::string varName = "",
+                const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
+                const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
 
             virtual boost::shared_ptr<ExpList> &v_UpdateBndCondExpansion(int i);
 

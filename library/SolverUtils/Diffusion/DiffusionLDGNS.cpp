@@ -315,7 +315,7 @@ namespace Nektar
                     for (e = 0; e < nBndEdges; ++e)
                     {
                         nBndEdgePts = fields[i+1]->
-                        GetBndCondExpansions()[j]->GetExp(e)->GetNumPoints(0);
+                        GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
                         
                         id1 = fields[i+1]->
                         GetBndCondExpansions()[j]->GetPhys_Offset(e);
@@ -395,7 +395,7 @@ namespace Nektar
                 for (e = 0; e < nBndEdges; ++e)
                 {
                     nBndEdgePts = fields[nScalars]->
-                    GetBndCondExpansions()[j]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
                     
                     id1 = fields[nScalars]->
                     GetBndCondExpansions()[j]->GetPhys_Offset(e);
@@ -563,7 +563,7 @@ namespace Nektar
                 for (e = 0; e < nBndEdges; ++e)
                 {
                     nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
                     
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->

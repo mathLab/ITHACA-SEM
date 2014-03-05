@@ -138,10 +138,16 @@ namespace Nektar
                 const MatrixKey &mkey);
             LOCAL_REGIONS_EXPORT DNekScalBlkMatSharedPtr CreateStaticCondMatrix(
                 const MatrixKey &mkey);
-            
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
+
         private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+
+            virtual void v_LaplacianMatrixOp_MatFree_Kernel(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp);
         };
 
         // type defines for use of PyrExp in a boost vector

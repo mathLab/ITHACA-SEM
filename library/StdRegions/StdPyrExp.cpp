@@ -36,11 +36,11 @@
 #include <StdRegions/StdPyrExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <iomanip>
+
 namespace Nektar
 {
     namespace StdRegions
     {
-        
         StdPyrExp::StdPyrExp() // Deafult construct of standard expansion directly called. 
         {
         }

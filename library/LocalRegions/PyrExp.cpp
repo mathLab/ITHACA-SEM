@@ -861,8 +861,7 @@ namespace Nektar
                 break;
             case StdRegions::eLaplacian:
                 {
-                    if (true)
-                    //if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);

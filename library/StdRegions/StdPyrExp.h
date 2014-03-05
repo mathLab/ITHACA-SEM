@@ -82,9 +82,6 @@ namespace Nektar
         class StdPyrExp : virtual public StdExpansion3D
         {
         public:
-            typedef boost::tuple<
-                unsigned char, unsigned char, unsigned char> triple;
-    
             STD_REGIONS_EXPORT StdPyrExp();
 
             STD_REGIONS_EXPORT StdPyrExp(const LibUtilities::BasisKey &Ba, 

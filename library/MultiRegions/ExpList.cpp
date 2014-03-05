@@ -1220,60 +1220,92 @@ namespace Nektar
                                  Array<OneD, NekDouble> &locCoords,
                                  NekDouble tol)
         {
-            static int start = 0;
-            NekDouble resid, min_resid = NekConstants::kNekMinResidInit;
-            int min_elmt;
-            Array<OneD, NekDouble> min_locCoords(locCoords.num_elements());
+            NekDouble resid;
 
-            // start search at previous element or 0 
-            for (int i = start; i < (*m_exp).size(); ++i)
+            if (GetNumElmts() == 0)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
-                                                          tol, resid))
-                {
-                    start = i;
-                    return i;
-                }
-                else
-                {
-                    if(resid < min_resid)
-                    {
-                        min_resid = resid;
-                        min_elmt  = i;
-                        Vmath::Vcopy(locCoords.num_elements(), locCoords,    1,
-                                                               min_locCoords,1);
-                    }
-                }
+                return -1;
             }
 
-            for (int i = 0; i < start; ++i)
+            // Manifold case (point may match multiple elements)
+            if (GetExp(0)->GetCoordim() > GetExp(0)->GetShapeDimension())
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
-                                                          tol,resid))
+                std::vector<std::pair<int,NekDouble> > elmtIdDist;
+                SpatialDomains::PointGeomSharedPtr v;
+                SpatialDomains::PointGeom w;
+                NekDouble x, y, z;
+
+                // Scan all elements and store those which may contain the point
+                for (int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    start = i;
-                    return i;
-                }
-                else
-                {
-                    if(resid < min_resid)
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                                                              tol, resid))
                     {
-                        min_resid = resid;
-                        min_elmt  = i;
-                        Vmath::Vcopy(locCoords.num_elements(), locCoords,    1,
-                                                               min_locCoords,1);
+                        v = m_graph->GetVertex((*m_exp)[i]->GetGeom()->GetVid(0));
+
+                        w.SetX(gloCoords[0]);
+                        w.SetY(gloCoords[1]);
+                        w.SetZ(gloCoords[2]);
+                        v->GetCoords(x,y,z);
+
+                        elmtIdDist.push_back(std::pair<int, NekDouble>(i, v->dist(w)));
                     }
                 }
+
+                // Find nearest element
+                if (!elmtIdDist.empty())
+                {
+                    NekDouble   min_d  = elmtIdDist[0].first;
+                    int         min_id = elmtIdDist[0].second;
+
+                    for (int i = 1; i < elmtIdDist.size(); ++i)
+                    {
+                        if (elmtIdDist[i].second < min_d) {
+                            min_d = elmtIdDist[i].second;
+                            min_id = elmtIdDist[i].first;
+                        }
+                    }
+
+                    return min_id;
+                }
+                else {
+                    return -1;
+                }
             }
-            
-            std::string msg = "Failed to find point in element to tolerance of "
+            // non-embedded mesh (point can only match one element)
+            else
+            {
+                static int start = 0;
+
+                // restart search from last found value
+                for (int i = start; i < (*m_exp).size(); ++i)
+                {
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                                                              tol, resid))
+                    {
+                        start = i;
+                        return i;
+                    }
+                }
+
+                for (int i = 0; i < start; ++i)
+                {
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                                                              tol, resid))
+                    {
+                        start = i;
+                        return i;
+                    }
+                }
+
+                std::string msg = "Failed to find point in element to tolerance of "
                                 + boost::lexical_cast<std::string>(resid)
                                 + " using nearest point found";
-            WARNINGL0(true,msg.c_str());
+                WARNINGL0(true,msg.c_str());
 
-            Vmath::Vcopy(locCoords.num_elements(),min_locCoords,1,locCoords,1);
+                return -1;
 
-            return min_elmt;
+            }
         }
 
 

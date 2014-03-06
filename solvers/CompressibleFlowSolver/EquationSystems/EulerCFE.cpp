@@ -275,6 +275,13 @@ namespace Nektar
             {
                 PressureOutflowBC(n, cnt, inarray);
             }
+            
+            // Pressure outflow Boundary Condition from file
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::ePressureOutflowFile)
+            {
+                PressureOutflowFileBC(n, cnt, inarray);
+            }
 
             // Extrapolation of the data at the boundaries
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 

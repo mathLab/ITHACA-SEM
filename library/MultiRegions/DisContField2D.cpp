@@ -2116,9 +2116,10 @@ namespace Nektar
          * boundary conditions unless time == 0.0 which is the
          * case when the method is called from the constructor.
          */
-        void DisContField2D::v_EvaluateBoundaryConditions(const NekDouble time,
-                                                          const NekDouble x2_in,
-                                                          const NekDouble x3_in)
+        void DisContField2D::v_EvaluateBoundaryConditions(
+            const NekDouble time,
+            const NekDouble x2_in,
+            const NekDouble x3_in)
         {
             int i;
             int npoints;

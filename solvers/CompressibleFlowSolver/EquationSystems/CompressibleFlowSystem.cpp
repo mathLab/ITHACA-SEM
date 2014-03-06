@@ -126,6 +126,35 @@ namespace Nektar
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, 
                                                m_fields.num_elements());
         
+        // Loop over Boundary Regions for PressureOutflowFileBC
+        int nvariables = m_fields.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > tmpStorage(nvariables); 
+        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        {
+            // PressureOutflowFile Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureOutflowFile)
+            {
+                int numBCPts = m_fields[0]->
+                GetBndCondExpansions()[n]->GetNpoints();
+                m_pressureStorage = Array<OneD, NekDouble>(numBCPts, 0.0);
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    tmpStorage[i] = Array<OneD, NekDouble>(numBCPts, 0.0);
+                    
+                    Vmath::Vcopy(
+                        numBCPts,
+                        m_fields[i]->GetBndCondExpansions()[n]->GetPhys(), 1, 
+                        tmpStorage[i], 1);
+                }
+                GetPressure(tmpStorage, m_pressureStorage); 
+            }
+        }
+        
+        // Fill pressureOutflowFileBC bwd trace space from file 
+        // (operation not required at each t-step if no time-dependent)
+        //m_fields[i]->GetFwdBwdTracePhys(physarray[i], auxFwd[i], auxBwd[i]);
+        
         // Type of advection class to be used
         switch(m_projectionType)
         {
@@ -890,16 +919,11 @@ namespace Nektar
         
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
-        Array<OneD, Array<OneD, NekDouble> > auxFwd(nVariables);
-        Array<OneD, Array<OneD, NekDouble> > auxBwd(nVariables);
-
+        
         for (i = 0; i < nVariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
-            auxFwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
-            auxBwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-            m_fields[i]->GetFwdBwdTracePhys(physarray[i], auxFwd[i], auxBwd[i]);
         }
         
         // Computing the normal velocity for characteristics coming
@@ -926,7 +950,6 @@ namespace Nektar
         // Get speed of sound
         Array<OneD, NekDouble > soundSpeed (nTracePts, 0.0);
         Array<OneD, NekDouble > pressure   (nTracePts, 0.0);
-        Array<OneD, NekDouble > pressureBwd(nTracePts, 0.0);
         
         for (i = 0; i < nTracePts; i++)
         {
@@ -934,19 +957,12 @@ namespace Nektar
             {
                 pressure[i] = (gammaMinusOne) * (Fwd[2][i] -
                     0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i]));
-                
-                pressureBwd[i] = (gammaMinusOne) * (auxBwd[2][i] -
-                    0.5 * (auxBwd[1][i] * auxBwd[1][i] / auxBwd[0][i]));
             }
             else if (m_spacedim == 2)
             {
                 pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
                     0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
                            Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
-                
-                pressureBwd[i] = (gammaMinusOne) * (auxBwd[3][i] -
-                    0.5 * (auxBwd[1][i] * auxBwd[1][i] / auxBwd[0][i] +
-                           auxBwd[2][i] * auxBwd[2][i] / auxBwd[0][i]));
             }
             else
             {
@@ -954,11 +970,6 @@ namespace Nektar
                     0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
                            Fwd[2][i] * Fwd[2][i] / Fwd[0][i] +
                            Fwd[3][i] * Fwd[3][i] / Fwd[0][i]));
-                
-                pressureBwd[i] = (gammaMinusOne) * (auxBwd[4][i] -
-                    0.5 * (auxBwd[1][i] * auxBwd[1][i] / auxBwd[0][i] +
-                           auxBwd[2][i] * auxBwd[2][i] / auxBwd[0][i] +
-                           auxBwd[3][i] * auxBwd[3][i] / auxBwd[0][i]));
             }
             
             soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
@@ -976,13 +987,13 @@ namespace Nektar
         // Loop on the bcRegions
         for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
              GetExpSize(); ++e)
-        {   
+        {  
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                                                 GetExp(e)->GetNumPoints(0);
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                                                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
-            
+                        
             // Loop on points of bcRegion 'e'
             for (i = 0; i < npts; i++)
             {
@@ -998,8 +1009,8 @@ namespace Nektar
                         Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
                     }
                     
-                    rhoeb = pressureBwd[pnt] * gammaMinusOneInv + Ek;
-                    
+                    rhoeb = m_pressureStorage[id1+i] * gammaMinusOneInv + Ek;
+                                        
                     // Partial extrapolation for subsonic cases
                     for (j = 0; j < nVariables-1; ++j)
                     {
@@ -1008,8 +1019,7 @@ namespace Nektar
                     }
                     
                     (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = 
-                        2.0 * rhoeb - Fwd[nVariables-1][pnt];
+                     UpdatePhys())[id1+i] = rhoeb;
                 }
                 // Supersonic flows
                 else

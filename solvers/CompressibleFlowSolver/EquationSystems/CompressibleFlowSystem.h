@@ -111,6 +111,9 @@ namespace Nektar
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
+        // Pressure storage for PressureOutflowFileBC
+        Array<OneD, NekDouble> m_pressureStorage;
+        
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 

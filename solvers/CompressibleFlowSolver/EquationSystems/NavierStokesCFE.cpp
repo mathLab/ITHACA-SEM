@@ -56,8 +56,7 @@ namespace Nektar
         {
 
             std::string ProblemTypeStr = m_session->GetSolverInfo("PROBLEMTYPE");
-            int i;
-            for(i = 0; i < (int) SIZE_ProblemType; ++i)
+            for(int i = 0; i < (int) SIZE_ProblemType; ++i)
             {
                 if(NoCaseStringCompare(ProblemTypeMap[i],ProblemTypeStr) == 0)
                 {
@@ -80,7 +79,6 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit CFE not set up.");
         }
-
     }
 
     NavierStokesCFE::~NavierStokesCFE()
@@ -286,6 +284,13 @@ namespace Nektar
                 SpatialDomains::ePressureOutflow)
             {
                 PressureOutflowBC(n, cnt, inarray);
+            }
+            
+            // Pressure outflow Boundary Condition from file
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::ePressureOutflowFile)
+            {
+                PressureOutflowFileBC(n, cnt, inarray);
             }
             
             // Extrapolation of the data at the boundaries

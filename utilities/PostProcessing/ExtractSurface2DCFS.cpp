@@ -778,9 +778,8 @@ int main(int argc, char *argv[])
     }
     
     // Print the surface coordinates and the surface solution in a .txt file
-    ofstream outfile;
-    
-    outfile.open(fname);
+    ofstream outfile; 
+    outfile.open(fname.c_str());
     outfile <<  "%  x[m] " << " \t"
     << "y[m] " << " \t"
     << "z[m] " << " \t"

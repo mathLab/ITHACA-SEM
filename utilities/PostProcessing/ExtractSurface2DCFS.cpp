@@ -33,6 +33,23 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
+    string fname = std::string(argv[2]);
+    int fdot = fname.find_last_of('.');
+    if (fdot != std::string::npos)
+    {
+        string ending = fname.substr(fdot);
+        
+        // If .chk or .fld we exchange the extension in the output file.
+        // For all other files (e.g. .bse) we append the extension to avoid
+        // conflicts.
+        if (ending == ".chk" || ending == ".fld")
+        {
+            fname = fname.substr(0,fdot);
+        }
+    }
+    
+    fname = fname + ".txt";
+    
     int cnt;
     int id1, id2;
     int i, j, n, e, b;
@@ -762,9 +779,6 @@ int main(int argc, char *argv[])
     
     // Print the surface coordinates and the surface solution in a .txt file
     ofstream outfile;
-    
-    string fname = strtok(argv[2],".");
-    fname += ".txt";
     
     outfile.open(fname);
     outfile <<  "%  x[m] " << " \t"

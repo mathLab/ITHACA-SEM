@@ -840,6 +840,7 @@ int main(int argc, char *argv[])
         << surfaceFieldsAdded[16][i] << " \t "
         << surfaceFieldsAdded[17][i] << " \t "
         << surfaceFieldsAdded[18][i] << " \t "
+        << surfaceFieldsAdded[19][i] << " \t "
         << endl;
     }
     outfile << endl << endl;

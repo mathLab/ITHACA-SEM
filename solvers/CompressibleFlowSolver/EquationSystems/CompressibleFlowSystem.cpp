@@ -1807,7 +1807,7 @@ namespace Nektar
         for (int i = 0; i < nPts; ++i)
         {
             ratio = temperature[i] / T_star;
-            mu[i] = mu_star * pow(ratio, 1.50) *
+            mu[i] = mu_star * ratio * sqrt(ratio) * 
                     (T_star + 110.0) / (temperature[i] + 110.0);
         }
     }

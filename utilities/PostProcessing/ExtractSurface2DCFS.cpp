@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
     
     //Fields to add in the output file
     
-    int nfieldsAdded = 19;
+    int nfieldsAdded = 20;
     Array<OneD, Array<OneD, NekDouble> > traceFieldsAdded(nfieldsAdded);
     Array<OneD, Array<OneD, NekDouble> > surfaceFieldsAdded(nfieldsAdded);
     
@@ -523,7 +523,7 @@ int main(int argc, char *argv[])
         for (int i = 0; i < nSolutionPts; ++i)
         {
             ratio = temperature[i] / T_star;
-            mu[i] = mu_star * pow(ratio, 1.50) *
+            mu[i] = mu_star * ratio * sqrt(ratio) *
             (T_star + 110.0) / (temperature[i] + 110.0);
         }
     }
@@ -616,6 +616,12 @@ int main(int argc, char *argv[])
     
     Vmath::Vcopy(nTracePts, &tau_t[0], 1, &traceFieldsAdded[17][0], 1);
     
+    /*** Evaluation of dinamic viscosity ***************************************
+     * mu -> traceFieldsAdded[18]
+     ***************************************************************************/
+    
+    pFields[0]->ExtractTracePhys(mu, traceFieldsAdded[18]);
+    
     /*** Evaluation of Mach number *********************************************
      * M -> traceFieldsAdded[18]
     ***************************************************************************/
@@ -642,7 +648,7 @@ int main(int argc, char *argv[])
     Vmath::Vsqrt(nSolutionPts, mach, 1, mach, 1);
     Vmath::Vdiv(nSolutionPts,  mach, 1, soundspeed, 1, mach, 1);
     
-    pFields[0]->ExtractTracePhys(mach, traceFieldsAdded[18]);
+    pFields[0]->ExtractTracePhys(mach, traceFieldsAdded[19]);
     
     /**************************************************************************/
     // Extract coordinates
@@ -786,6 +792,7 @@ int main(int argc, char *argv[])
     << "tau_yy[Pa]  " << " \t"
     << "tau_xy[Pa]  " << " \t"
     << "tau_t[Pa]  " << " \t"
+    << "mu[Pa s]  " << " \t"
     << "M[] " << " \t"
     << endl;
     for (i = 0; i < id1; ++i)

@@ -247,7 +247,20 @@ namespace Nektar
                     Pi * Qi +                  // base quad
                     Pi * (2*Ri - Pi - 1) +     // p-r triangles;
                     Qi * (2*Ri - Qi - 1);      // q-r triangles;
-                return nCoeff + StdTetData::getNumberOfCoefficients(Pi-1, Qi-1, Ri-1);
+
+                // Count number of interior tet modes
+                for (int a = 0; a < Pi - 1; ++a)
+                {
+                    for (int b = 0; b < Qi - a - 1; ++b)
+                    {
+                        for (int c = 0; c < Ri - a - b -1; ++c)
+                        {
+                            ++nCoeff;
+                        }
+                    }
+                }
+
+                return nCoeff;
             }
 
             inline int getNumberOfBndCoefficients(int Na, int Nb, int Nc)

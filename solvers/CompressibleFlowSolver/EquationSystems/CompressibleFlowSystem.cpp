@@ -122,6 +122,10 @@ namespace Nektar
         m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
         
+        m_session->LoadParameter ("amplitude",  m_amplitude,   0.001);
+        m_session->LoadParameter ("omega",      m_omega,       1.0);
+
+        
         // Forcing terms for the sponge region
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, 
                                                m_fields.num_elements());
@@ -151,9 +155,27 @@ namespace Nektar
             }
         }
         
-        // Fill pressureOutflowFileBC bwd trace space from file 
-        // (operation not required at each t-step if no time-dependent)
-        //m_fields[i]->GetFwdBwdTracePhys(physarray[i], auxFwd[i], auxBwd[i]);
+        // Loop over Boundary Regions for PressureInflowFileBC
+        m_fieldStorage = Array<OneD, Array<OneD, NekDouble> > (nvariables); 
+        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        {
+            // PressureInflowFile Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::ePressureInflowFile)
+            {
+                int numBCPts = m_fields[0]->
+                    GetBndCondExpansions()[n]->GetNpoints();
+                //m_pressureStorage = Array<OneD, NekDouble>(numBCPts, 0.0);
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    m_fieldStorage[i] = Array<OneD, NekDouble>(numBCPts, 0.0);
+                    Vmath::Vcopy(
+                        numBCPts,
+                        m_fields[i]->GetBndCondExpansions()[n]->GetPhys(), 1, 
+                        m_fieldStorage[i], 1);
+                }
+            }
+        }
         
         // Type of advection class to be used
         switch(m_projectionType)
@@ -1035,6 +1057,173 @@ namespace Nektar
         }
     }
 
+    
+    /**
+     * @brief Pressure inflow boundary conditions for compressible flow 
+     * problems where the pressure at the boundary is assigned from a file.
+     */
+    void CompressibleFlowSystem::PressureInflowFileBC(
+        int                                   bcRegion,
+        int                                   cnt,
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    {
+        int i, j;
+        int nTracePts = GetTraceTotPoints();
+        int nVariables = physarray.num_elements();
+        int nDimensions = m_spacedim;
+        
+        const Array<OneD, const int> &traceBndMap
+            = m_fields[0]->GetTraceBndMap();
+        
+        NekDouble gamma            = m_gamma;
+        NekDouble gammaInv         = 1.0 / gamma;
+        NekDouble gammaMinusOne    = gamma - 1.0;
+        NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
+        
+        Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
+        Array<OneD, NekDouble> tmp2 (nTracePts, 0.0);
+        Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
+        Array<OneD, NekDouble> velInf(nDimensions, 0.0);
+        
+        // Computing the normal velocity for characteristics coming
+        // from outside the computational domain
+        velInf[0] = m_uInf;
+        Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
+        if (nDimensions == 2 || nDimensions == 3)
+        {
+            velInf[1] = m_vInf;
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
+        }
+        if (nDimensions == 3)
+        {
+            velInf[2] = m_wInf;
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
+            Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
+        }
+        
+        // Get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+        
+        for (i = 0; i < nVariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+        
+        // Computing the normal velocity for characteristics coming
+        // from inside the computational domain
+        Array<OneD, NekDouble > Vn (nTracePts, 0.0);
+        Array<OneD, NekDouble > Vel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
+        }
+        
+        // Computing the absolute value of the velocity in order to compute the
+        // Mach number to decide whether supersonic or subsonic
+        Array<OneD, NekDouble > absVel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
+            Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
+        }
+        Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
+        
+        // Get speed of sound
+        Array<OneD, NekDouble > soundSpeed (nTracePts, 0.0);
+        Array<OneD, NekDouble > pressure   (nTracePts, 0.0);
+        
+        for (i = 0; i < nTracePts; i++)
+        {
+            if (m_spacedim == 1)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[2][i] -
+                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i]));
+            }
+            else if (m_spacedim == 2)
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[3][i] -
+                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+            }
+            else
+            {
+                pressure[i] = (gammaMinusOne) * (Fwd[4][i] -
+                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] +
+                                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i] +
+                                       Fwd[3][i] * Fwd[3][i] / Fwd[0][i]));
+            }
+            
+            soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
+        }
+        
+        // Get Mach
+        Array<OneD, NekDouble > Mach(nTracePts, 0.0);
+        Vmath::Vdiv(nTracePts, Vn, 1, soundSpeed, 1, Mach, 1);
+        Vmath::Vabs(nTracePts, Mach, 1, Mach, 1);
+        
+        // Auxiliary variables 
+        int e, id1, id2, npts, pnt;
+        NekDouble rhoeb;
+        
+        // Loop on the bcRegions
+        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
+             GetExpSize(); ++e)
+        {  
+            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetExp(e)->GetNumPoints(0);
+            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetPhys_Offset(e);
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
+            
+            // Loop on points of bcRegion 'e'
+            for (i = 0; i < npts; i++)
+            {
+                pnt = id2+i;
+                
+                // Subsonic flows
+                if (Mach[pnt] < 0.99)
+                {   
+                    // Kinetic energy calculation
+                    //NekDouble Ek = 0.0;
+                    //for (j = 1; j < nVariables-1; ++j)
+                    //{
+                    //    Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
+                    //}
+                    
+                    //rhoeb = m_pressureStorage[id1+i] * gammaMinusOneInv + Ek;
+                    
+                    // Partial extrapolation for subsonic cases
+                    for (j = 0; j < nVariables-1; ++j)
+                    {
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = m_fieldStorage[j][id1+i];
+                    }
+                    
+                    rhoeb = m_fieldStorage[nVariables-1][id1+i] + 
+                        m_amplitude * m_pInf * sin(m_omega * m_time);
+                    
+                    (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = rhoeb;
+                }
+                // Supersonic flows
+                else
+                {
+                    for (j = 0; j < nVariables; ++j)
+                    {
+                        // Extrapolation for supersonic cases
+                        (m_fields[j]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = Fwd[j][pnt];
+                    }
+                }
+            }
+        }
+    }
+    
+    
     /**
      * @brief Extrapolation of order 0 for all the variables such that,
      * at the boundaries, a trivial Riemann problem is solved.

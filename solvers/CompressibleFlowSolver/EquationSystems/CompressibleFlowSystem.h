@@ -107,12 +107,17 @@ namespace Nektar
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
+        NekDouble                           m_amplitude;
+        NekDouble                           m_omega;
         
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
 
         // Pressure storage for PressureOutflowFileBC
         Array<OneD, NekDouble> m_pressureStorage;
+        
+        // Field storage for PressureInflowFileBC
+        Array<OneD, Array<OneD, NekDouble> > m_fieldStorage;
         
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -157,6 +162,10 @@ namespace Nektar
             int                                                 cnt, 
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureOutflowFileBC(
+            int                                                 bcRegion, 
+            int                                                 cnt, 
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void PressureInflowFileBC(
             int                                                 bcRegion, 
             int                                                 cnt, 
             Array<OneD, Array<OneD, NekDouble> >               &physarray);

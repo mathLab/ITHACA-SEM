@@ -83,6 +83,7 @@ namespace Nektar
             eRiemannInvariant,
             ePressureOutflow,
             ePressureOutflowFile,
+            ePressureInflowFile,
             eExtrapOrder0,
             eNoUserDefined
         };
@@ -115,6 +116,7 @@ namespace Nektar
                 known_type["RiemannInvariant"]    = eRiemannInvariant;
                 known_type["PressureOutflow"]     = ePressureOutflow;
                 known_type["PressureOutflowFile"] = ePressureOutflowFile;
+                known_type["PressureInflowFile"]  = ePressureInflowFile;
                 known_type["ExtrapOrder0"]        = eExtrapOrder0;
                 known_type["NoUserDefined"]       = eNoUserDefined;
 

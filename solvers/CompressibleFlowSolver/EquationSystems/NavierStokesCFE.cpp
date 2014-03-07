@@ -89,7 +89,8 @@ namespace Nektar
     void NavierStokesCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         CompressibleFlowSystem::v_GenerateSummary(s);
-        SolverUtils::AddSummaryItem(s, "Problem Type", ProblemTypeMap[m_problemType]);
+        SolverUtils::AddSummaryItem(s, "Problem Type", 
+                                    ProblemTypeMap[m_problemType]);
     }
 
     void NavierStokesCFE::v_SetInitialConditions(
@@ -106,13 +107,16 @@ namespace Nektar
         m_session->LoadParameter("Noise", Noise,0.0);
         int m_nConvectiveFields =  m_fields.num_elements(); 
         
-        if(Noise > 0.0)
+        if (Noise > 0.0)
         {
-            for(int i = 0; i < m_nConvectiveFields; i++)
+            for (int i = 0; i < m_nConvectiveFields; i++)
             {
-                Vmath::FillWhiteNoise(phystot,Noise,noise,1,m_comm->GetColumnComm()->GetRank()+1);
-                Vmath::Vadd(phystot,m_fields[i]->GetPhys(),1,noise,1,m_fields[i]->UpdatePhys(),1);
-                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                Vmath::FillWhiteNoise(phystot, Noise, noise, 1, 
+                                      m_comm->GetColumnComm()->GetRank()+1);
+                Vmath::Vadd(phystot, m_fields[i]->GetPhys(), 1, 
+                            noise, 1, m_fields[i]->UpdatePhys(), 1);
+                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(), 
+                                                 m_fields[i]->UpdateCoeffs());
             }
         }
 
@@ -291,6 +295,13 @@ namespace Nektar
                 SpatialDomains::ePressureOutflowFile)
             {
                 PressureOutflowFileBC(n, cnt, inarray);
+            }
+            
+            // Pressure inflow Boundary Condition from file
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::ePressureInflowFile)
+            {
+                PressureInflowFileBC(n, cnt, inarray);
             }
             
             // Extrapolation of the data at the boundaries

@@ -5,7 +5,8 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_APE
 IF( NEKTAR_SOLVER_APE )
     SET(APESolverSource 
        ./APESolver.cpp
-       ./EquationSystems/APE.cpp)
+       ./EquationSystems/APE.cpp
+       ./RiemannSolvers/APEUpwindSolver.cpp)
 
     ADD_SOLVER_EXECUTABLE(APESolver solvers 
 			${APESolverSource})

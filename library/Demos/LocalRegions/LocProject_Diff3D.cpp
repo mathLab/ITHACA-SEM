@@ -844,7 +844,7 @@ SpatialDomains::PyrGeomSharedPtr CreatePyrGeom(int argc, char *argv[])
     // /////////////////////////////////////////////////////////////////////
     // Set up Pyramid Edges
     // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
-    const int nEdges = 9;
+    const int nEdges = 8;
     const int vertexConnectivity[][2] = {
         {0,1}, {1,2}, {3,2}, {0,3},
         {0,4}, {1,4}, {2,4}, {3,4}
@@ -862,7 +862,7 @@ SpatialDomains::PyrGeomSharedPtr CreatePyrGeom(int argc, char *argv[])
     }
     
     // ////////////////////////////////////////////////////////////////////
-    // Set up Prism faces
+    // Set up Pyramid faces
     const int nFaces  = 5;
     const int edgeConnectivity[][4] = {
         {0,1,2,3}, 

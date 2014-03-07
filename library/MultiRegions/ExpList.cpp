@@ -1780,7 +1780,45 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-		
+
+        void ExpList::ExtractFileBCs(
+            const std::string               &fileName,
+            const std::string               &varName,
+            const boost::shared_ptr<ExpList> locExpList)
+        {
+            string varString = fileName.substr(0, fileName.find_last_of("."));
+            int j, k, len = varString.length();
+            varString = varString.substr(len-1, len);
+
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<std::vector<NekDouble> > FieldData;
+
+            LibUtilities::FieldIO f(m_session->GetComm());
+            f.Import(fileName, FieldDef, FieldData);
+
+            bool found = false;
+            for (j = 0; j < FieldDef.size(); ++j)
+            {
+                for (k = 0; k < FieldDef[j]->m_fields.size(); ++k)
+                {
+                    if (FieldDef[j]->m_fields[k] == varName)
+                    {
+                        // Copy FieldData into locExpList
+                        locExpList->ExtractDataToCoeffs(
+                            FieldDef[j], FieldData[j],
+                            FieldDef[j]->m_fields[k],
+                            locExpList->UpdateCoeffs());
+                        found = true;
+                    }
+                }
+            }
+
+            ASSERTL0(found, "Could not find variable '"+varName+
+                            "' in file boundary condition "+fileName);
+            locExpList->BwdTrans_IterPerExp(
+                locExpList->GetCoeffs(), 
+                locExpList->UpdatePhys());
+        }
 
         /**
          * Given a spectral/hp approximation
@@ -2484,7 +2522,7 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+            static Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                         result;
             return result;
         }
@@ -2495,14 +2533,17 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static Array<OneD,SpatialDomains::BoundaryConditionShPtr>
-                                                                        result;
+            static Array<OneD, SpatialDomains::BoundaryConditionShPtr> result;
             return result;
         }
 
         /**
          */
-        void ExpList::v_EvaluateBoundaryConditions(const NekDouble time, const NekDouble x2_in, const NekDouble x3_in)
+        void ExpList::v_EvaluateBoundaryConditions(
+            const NekDouble time,
+            const std::string varName,
+            const NekDouble x2_in, 
+            const NekDouble x3_in)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

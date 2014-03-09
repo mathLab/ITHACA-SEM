@@ -90,7 +90,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"Where RegionShape is an integer value which "
                        "dictates the region shape:\n");
         fprintf(stderr,"\t Tetrahedron   = 5\n");
-        fprintf(stderr,"\t Prism         = 6\n");
+        fprintf(stderr,"\t Pyramid       = 6\n");
         fprintf(stderr,"\t Prism         = 7\n");
         fprintf(stderr,"\t Hexahedron    = 8\n");
 

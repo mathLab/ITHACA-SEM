@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="7" TYPE="MODIFIED" FIELDS="u" />
+    </EXPANSIONS>
+    <CONDITIONS>
+        <PARAMETERS>
+            <P> Lambda    = 1 </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="sin(PI/2*x)*sin(PI/2*y)*sin(PI/2*z)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="-(Lambda+3*PI*PI/4)*sin(PI/2*x)*sin(PI/2*y)*sin(PI/2*z)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sin(PI/2*x)*sin(PI/2*y)*sin(PI/2*z)" />
+        </FUNCTION>
+    </CONDITIONS>
+    <GEOMETRY DIM="3" SPACE="3">
+        <VERTEX>
+            <V ID="0">  0.0  0.0  0.0  </V>
+            <V ID="1">  1.0  0.0  0.0  </V>
+            <V ID="2">  1.0  1.0  0.0  </V>
+            <V ID="3">  0.0  1.0  0.0  </V>
+            <V ID="4">  0.5  0.5  1.0  </V>
+        </VERTEX>
+        <EDGE>
+            <E ID="0">  0 1  </E>
+            <E ID="1">  1 2  </E>
+            <E ID="2">  3 2  </E>
+            <E ID="3">  0 3  </E>
+            <E ID="4">  0 4  </E>
+            <E ID="5">  1 4  </E>
+            <E ID="6">  2 4  </E>
+            <E ID="7">  3 4  </E>
+        </EDGE>
+        <FACE>
+            <Q ID="0">  0 1 2 3  </Q>
+            <T ID="1">  0 5 4    </T>
+            <T ID="2">  1 6 5    </T>
+            <T ID="3">  2 6 7    </T>
+            <T ID="4">  3 7 4    </T>
+        </FACE>
+        <ELEMENT>
+            <P ID="0"> 0 1 2 3 4 </P>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> P[0] </C>
+            <C ID="1"> F[0-4] </C>
+        </COMPOSITE>
+        <CURVED>
+            <E ID="0" EDGEID="0" TYPE="PolyEvenlySpaced" NUMPOINTS="3"> 0 0 0  0.5 -0.1 -0.3  1 0 0 </E>
+        </CURVED>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+</NEKTAR>

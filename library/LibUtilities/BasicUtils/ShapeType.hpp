@@ -188,8 +188,8 @@ namespace Nektar
                 ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
                 ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
                 ASSERTL2(Nc > 1, "Order in 'c' direction must be > 1.");
-                ASSERTL1(Na <= Nb, "order in 'a' direction is higher "
-                         "than order in 'b' direction");
+                ASSERTL1(Na <= Nc, "order in 'a' direction is higher "
+                         "than order in 'c' direction");
                 ASSERTL1(Nb <= Nc, "order in 'b' direction is higher "
                          "than order in 'c' direction");
                 int nCoef = 0;
@@ -211,8 +211,8 @@ namespace Nektar
                 ASSERTL2(Na > 1, "Order in 'a' direction must be > 1.");
                 ASSERTL2(Nb > 1, "Order in 'b' direction must be > 1.");
                 ASSERTL2(Nc > 1, "Order in 'c' direction must be > 1.");
-                ASSERTL1(Na <= Nb, "order in 'a' direction is higher "
-                         "than order in 'b' direction");
+                ASSERTL1(Na <= Nc, "order in 'a' direction is higher "
+                         "than order in 'c' direction");
                 ASSERTL1(Nb <= Nc, "order in 'b' direction is higher "
                          "than order in 'c' direction");
 
@@ -238,18 +238,29 @@ namespace Nektar
                         "than order in 'c' direction.");
                 ASSERTL1(Nb <= Nc, "Order in 'b' direction is higher "
                         "than order in 'c' direction.");
-                int nCoef = 0;
-                for (int c = 0; c < Nc; ++c)
+
+                // Count number of coefficients explicitly.
+                const int Pi = Na - 2, Qi = Nb - 2, Ri = Nc - 2;
+                int nCoeff = 
+                    5 +                        // vertices
+                    Pi * 2 + Qi * 2 + Ri * 4 + // base edges
+                    Pi * Qi +                  // base quad
+                    Pi * (2*Ri - Pi - 1) +     // p-r triangles;
+                    Qi * (2*Ri - Qi - 1);      // q-r triangles;
+
+                // Count number of interior tet modes
+                for (int a = 0; a < Pi - 1; ++a)
                 {
-                    for (int b = 0; b < std::min(Nc-c,Nb); ++b)
+                    for (int b = 0; b < Qi - a - 1; ++b)
                     {
-                        for (int a = 0 ; a < std::min(Nc-c,Na); ++a)
+                        for (int c = 0; c < Ri - a - b -1; ++c)
                         {
-                            ++nCoef;
+                            ++nCoeff;
                         }
                     }
                 }
-                return nCoef;
+
+                return nCoeff;
             }
 
             inline int getNumberOfBndCoefficients(int Na, int Nb, int Nc)

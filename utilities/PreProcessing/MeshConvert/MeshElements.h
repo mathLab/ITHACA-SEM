@@ -1378,6 +1378,44 @@ namespace Nektar
 
 
         /**
+         * @brief A 3-dimensional square-based pyramidic element
+         */
+        class Pyramid : public Element {
+        public:
+            /// Creates an instance of this class
+            static ElementSharedPtr create(
+                ElmtConfig                 pConf,
+                std::vector<NodeSharedPtr> pNodeList, 
+                std::vector<int>           pTagList)
+            {
+                ElementSharedPtr e = boost::shared_ptr<Element>(
+                    new Pyramid(pConf, pNodeList, pTagList));
+                vector<FaceSharedPtr> faces = e->GetFaceList();
+                for (int i = 0; i < faces.size(); ++i)
+                {
+                    faces[i]->m_elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                }
+                return e;
+            }
+            /// Element type
+            static LibUtilities::ShapeType type;
+
+            Pyramid(ElmtConfig                 pConf,
+                    std::vector<NodeSharedPtr> pNodeList,
+                    std::vector<int>           pTagList);
+            Pyramid(const Pyramid& pSrc);
+            virtual ~Pyramid() {}
+
+            virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim);
+            static unsigned int GetNumNodes(ElmtConfig pConf);
+
+            /**
+             * Orientation of pyramid.
+             */
+            int orientationMap[5];
+        };
+
+        /**
          * @brief A 3-dimensional five-faced element (2 triangles, 3
          * quadrilaterals).
          */

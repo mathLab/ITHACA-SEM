@@ -209,14 +209,20 @@ namespace Nektar
                 m_f->m_exp[0]->GetCoords(x1, y1, z1);
             }
                     
-            cout << "Interpolating [" << flush;
+            if(m_f->m_session->GetComm()->GetRank() == 0)
+            {
+                cout << "Interpolating [" << flush;
+            }
             
             NekDouble clamp_low = m_config["ClampToLowerValue"].as<NekDouble>();
             NekDouble clamp_up  = m_config["ClampToUpperValue"].as<NekDouble>();
             InterpolateField(m_fromField->m_exp, m_f->m_exp, 
                              x1, y1, z1, clamp_low, clamp_up);
             
-            cout << "]" << endl;
+            if(m_f->m_session->GetComm()->GetRank() == 0)
+            {
+                cout << "]" << endl;
+            }
             
             
             // put field into field data for output

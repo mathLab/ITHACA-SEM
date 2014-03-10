@@ -64,9 +64,9 @@ namespace Nektar
             ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
                      "Need to specify fromfld=file.fld ");
 
-            m_config["ClampToLowerValue"] = ConfigOption(false,"-10000",
+            m_config["ClampToLowerValue"] = ConfigOption(false,"-10000000",
                                                 "Lower bound for interpolation value");
-            m_config["ClampToUpperValue"] = ConfigOption(false,"10000",
+            m_config["ClampToUpperValue"] = ConfigOption(false,"10000000",
                                                 "Upper bound for interpolation value");
         }
 

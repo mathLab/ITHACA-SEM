@@ -153,13 +153,13 @@ namespace Nektar
                 ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
             }
             
-            m_fromField->m_fld->Import(m_config["fromfld"].as<string>(),
-                                       m_fromField->m_fielddef,
-                                       m_fromField->m_data,
-                                       LibUtilities::NullFieldMetaDataMap,
-                                       ElementGIDs);
+            string fromfld = m_config["fromfld"].as<string>();
+            m_f->m_fld->Import(fromfld,m_fromField->m_fielddef,
+                               m_fromField->m_data,
+                               LibUtilities::NullFieldMetaDataMap,
+                               ElementGIDs);
             
-            int NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
+            int NumHomogeneousDir = m_fromField->m_fielddef[0]->m_numHomogeneousDir;
             
             //----------------------------------------------
             // Set up Expansion information to use mode order from field
@@ -168,28 +168,30 @@ namespace Nektar
             int nfields = m_fromField->m_fielddef[0]->m_fields.size();
             
             m_fromField->m_exp.resize(nfields);
-            m_fromField->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,true);
+            m_fromField->m_exp[0] = m_fromField->SetUpFirstExpList(NumHomogeneousDir,true);
             
             m_f->m_exp.resize(nfields);
             
             // declare auxiliary fields. 
             for(i = 1; i < nfields; ++i)
             {
-                m_f->m_exp[i]         = m_f->AppendExpList();
-                m_fromField->m_exp[i] = m_fromField->AppendExpList();
+                m_f->m_exp[i]         = m_f->AppendExpList(NumHomogeneousDir);
+                m_fromField->m_exp[i] = m_fromField->AppendExpList(NumHomogeneousDir);
             }
         
             
             // load field into expansion in fromfield.
             for(int j = 0; j < nfields; ++j)
             {
-                for (i = 0; i < m_f->m_fielddef.size(); i++)
+                for (i = 0; i < m_fromField->m_fielddef.size(); i++)
                 {		     	     
                     m_fromField->m_exp[j]->ExtractDataToCoeffs(m_fromField->m_fielddef[i],
                                                                m_fromField->m_data[i],
                                                                m_fromField->m_fielddef[0]->m_fields[j],
                                                                m_fromField->m_exp[j]->UpdateCoeffs());
                 }
+                m_fromField->m_exp[j]->BwdTrans(m_fromField->m_exp[j]->GetCoeffs(),m_fromField->m_exp[j]->UpdatePhys());
+
             }
             
             int nq1 = m_f->m_exp[0]->GetTotPoints();

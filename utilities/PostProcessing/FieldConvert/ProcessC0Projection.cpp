@@ -66,7 +66,8 @@ namespace Nektar
             // generate an C0 expansion field with no boundary conditions. 
             bool savedef = m_f->m_declareExpansionAsContField;
             m_f->m_declareExpansionAsContField = true;
-            m_c0ProjectExp = m_f->AppendExpList("DefaultVar",true);
+            m_c0ProjectExp = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
+                                                "DefaultVar",true);
             m_f->m_declareExpansionAsContField = savedef;
             
             if (m_f->m_verbose)

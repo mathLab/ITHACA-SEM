@@ -180,17 +180,18 @@ namespace Nektar
                 {
                     if(i < vars.size())
                     {
-                        m_f->m_exp[i] = m_f->AppendExpList(vars[i]);
+                        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
+                                                           vars[i]);
                     }
                     else
                     {
                         if(vars.size())
                         {
-                            m_f->m_exp[i] = m_f->AppendExpList(vars[0]);
+                            m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,vars[0]);
                         }
                         else
                         {
-                            m_f->m_exp[i] = m_f->AppendExpList();
+                            m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
                         }
                     }                   
                 }

@@ -362,7 +362,8 @@ namespace Nektar
                 return exp;
             };
             
-            MultiRegions::ExpListSharedPtr AppendExpList(string var = "DefaultVar", 
+            MultiRegions::ExpListSharedPtr AppendExpList(int NumHomogeneousDir,
+                                                         string var = "DefaultVar", 
                                                          bool NewField = false)
             {
                 MultiRegions::ExpListSharedPtr tmp;
@@ -370,7 +371,7 @@ namespace Nektar
                 {
                 case 1:
                     {
-                        if (m_fielddef[0]->m_numHomogeneousDir == 1)
+                        if (NumHomogeneousDir == 1)
                         {
                             if(m_declareExpansionAsContField||
                                m_declareExpansionAsDisContField)
@@ -387,7 +388,7 @@ namespace Nektar
                                 AllocateSharedPtr(*tmp2);
                             
                         }
-                        else if (m_fielddef[0]->m_numHomogeneousDir == 2)
+                        else if (NumHomogeneousDir == 2)
                         {
                             if(m_declareExpansionAsContField)
                             {
@@ -457,7 +458,7 @@ namespace Nektar
                     break;
                 case 2:
                     {   
-                        if (m_fielddef[0]->m_numHomogeneousDir == 1)
+                        if (NumHomogeneousDir == 1)
                         {                            
                             if(m_declareExpansionAsContField)
                             {

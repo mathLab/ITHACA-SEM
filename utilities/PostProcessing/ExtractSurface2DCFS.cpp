@@ -313,8 +313,8 @@ int main(int argc, char *argv[])
     for (i = 0; i < m_spacedim; i++)
     {
         Vmath::Vmul(nSolutionPts,
-                    &uFields[i][0], 1,
-                    &uFields[i][0], 1,
+                    &uFields[i + 1][0], 1,
+                    &uFields[i + 1][0], 1,
                     &tmp[0],1);
         
         

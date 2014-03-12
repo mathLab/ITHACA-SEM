@@ -167,9 +167,10 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);
-            bool CheckScalars(std::string name);
-            bool CheckVectors(std::string name);
-            bool CheckParams (std::string name);
+            bool CheckScalars   (std::string name);
+            bool CheckVectors   (std::string name);
+            bool CheckParams    (std::string name);
+            bool CheckAuxiliary (std::string name);
         };
 
         /// A shared pointer to an EquationSystem object

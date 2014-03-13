@@ -180,11 +180,11 @@ void APE::v_GetFluxVector(const int i,
             Vmath::Zero(nq, flux[j], 1);
 
             // construct \gamma p_0 u'_j term
-            Vmath::Smul(nq, m_gamma, basefield[basefield.num_elements()-1], 1, tmp1, 1);
+            Vmath::Smul(nq, m_gamma, basefield[0], 1, tmp1, 1);
             Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
 
             // construct p' \bar{u}_j term
-            Vmath::Vmul(nq, physfield[0], 1, basefield[j], 1, tmp2, 1);
+            Vmath::Vmul(nq, physfield[0], 1, basefield[j+1], 1, tmp2, 1);
 
             // add both terms
             Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[j], 1);
@@ -207,7 +207,7 @@ void APE::v_GetFluxVector(const int i,
                 Vmath::Zero(nq, tmp1, 1);
                 for (int k = 0; k < flux.num_elements(); ++k)
                 {
-                    Vmath::Vmul(nq, physfield[k+1], 1, basefield[k], 1, tmp2, 1);
+                    Vmath::Vmul(nq, physfield[k+1], 1, basefield[k+1], 1, tmp2, 1);
                     Vmath::Vadd(nq, tmp1, 1, tmp2, 1, tmp1, 1);
                 }
 
@@ -543,9 +543,8 @@ void APE::NumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield,
         Bwd[2][i] = tmpY;
 
         //rotates the baseflow
-        tmpX =  rotbasefield[0][i]*m_traceNormals[0][i]+rotbasefield[1][i]*m_traceNormals[1][i];
-        tmpY = -rotbasefield[0][i]*m_traceNormals[1][i]+rotbasefield[1][i]*m_traceNormals[0][i];
-        rotbasefield[0][i] = rotbasefield[2][i];
+        tmpX =  rotbasefield[1][i]*m_traceNormals[0][i]+rotbasefield[2][i]*m_traceNormals[1][i];
+        tmpY = -rotbasefield[1][i]*m_traceNormals[1][i]+rotbasefield[2][i]*m_traceNormals[0][i];
         rotbasefield[1][i] = tmpX;
         rotbasefield[2][i] = tmpY;
     }
@@ -637,7 +636,7 @@ void APE::InitialiseBaseFlowAnalytical(Array<OneD, Array<OneD, NekDouble> > &bas
 {
     base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim+1);
     int nq = m_fields[0]->GetNpoints();
-    std::string velStr[3] = {"U0","V0","P0"};
+    std::string velStr[3] = {"P0","U0","V0"};
 
     for(int i = 0; i <= m_spacedim; ++i)
     {

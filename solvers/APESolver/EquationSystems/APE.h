@@ -103,9 +103,6 @@ class APE : public UnsteadySystem
 
         Array<OneD, Array<OneD, NekDouble> > basefield;
 
-        /// Solves an unsteady problem.
-        virtual void v_DoSolve();
-
         /// Sets up initial conditions.
         virtual void v_DoInitialise();
 

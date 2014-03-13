@@ -43,135 +43,132 @@ using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {     
-  
 
-  /**
-   * 
-   * 
-   **/
- 
-  class APE : public APESystem
-  {
-  public:
-	  friend class MemoryManager<APE>;
-    
-	/// Creates an instance of this class
-    static EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-    {
-		EquationSystemSharedPtr p = MemoryManager<APE>::AllocateSharedPtr(pSession);
-		p->InitObject();
-		return p;
-    }
-    /// Name of class
-    static std::string className;
-    
-    virtual ~APE();
-    
-  protected:
-	  
-	APE(const LibUtilities::SessionReaderSharedPtr& pSession);
-	  
-	virtual void v_InitObject();
-   
-	Array<OneD, Array<OneD, NekDouble> > basefield;
+/**
+*
+*
+**/
+class APE : public APESystem
+{
+    public:
 
-	  
-    void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-		  Array<OneD,  Array<OneD, NekDouble> > &outarray,
-		  const NekDouble time);
-    
-    void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-			 Array<OneD,  Array<OneD, NekDouble> > &outarray,
-			 const NekDouble time);
-    
-    virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
-				 Array<OneD, Array<OneD, NekDouble> > &flux) 
-    {
-      switch(m_expdim)
-	{
-	case 1:
-	  ASSERTL0(false,"1D not implemented for Acoustic perturbation equations");
-	  break;
-	case 2:
-	  GetFluxVector2D(i,physfield,flux);
-	  break;
-	case 3:
-	  ASSERTL0(false,"3D not implemented for Acoustic perturbation equations");
-	  break;
-	default:
-	  ASSERTL0(false,"Illegal dimension");
-	}
-    }
-    
-	  
-    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+        friend class MemoryManager<APE>;
 
-    virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
-				 Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-				 Array<OneD, Array<OneD, NekDouble> > &numfluxY)
-    {
-      switch(m_expdim)
-	{
-	case 1:
-	  ASSERTL0(false,"1D not implemented for Acoustic perturbation equations");
-	  break;
-	case 2:
-	  NumericalFlux2D(physfield,numfluxX,numfluxY);
-	  break;
-	case 3:
-	  ASSERTL0(false,"3D not implemented for Acoustic perturbation equations");
-	  break;
-	default:
-	  ASSERTL0(false,"Illegal dimension");
-	}
-      
-    }
-      
-    virtual void v_PrimitiveToConservative( );
-    
-    virtual void v_ConservativeToPrimitive( );
+        /// Creates an instance of this class
+        static EquationSystemSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession)
+        {
+            EquationSystemSharedPtr p = MemoryManager<APE>::AllocateSharedPtr(pSession);
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
 
-    void InitialiseBaseFlowAnalytical(Array<OneD, Array<OneD, NekDouble> > &base, const NekDouble time);
-	  
-    void GetSource(Array<OneD, NekDouble> &source, const NekDouble time);
+        virtual ~APE();
 
 
-    void AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray, Array< OneD, Array< OneD, NekDouble > > &outarray);
+    protected:
+
+        APE(const LibUtilities::SessionReaderSharedPtr& pSession);
+
+        virtual void v_InitObject();
+
+        Array<OneD, Array<OneD, NekDouble> > basefield;
+
+        void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
+                            Array<OneD,  Array<OneD, NekDouble> > &outarray,
+                      const NekDouble time);
+
+        void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
+                                   Array<OneD,  Array<OneD, NekDouble> > &outarray,
+                             const NekDouble time);
+
+        virtual void v_GetFluxVector(const int i,
+                                     Array<OneD, Array<OneD, NekDouble> > &physfield,
+                                     Array<OneD, Array<OneD, NekDouble> > &flux)
+        {
+            switch(m_expdim)
+            {
+                case 1:
+                    ASSERTL0(false,"1D not implemented for Acoustic perturbation equations");
+                    break;
+                case 2:
+                    GetFluxVector2D(i,physfield,flux);
+                    break;
+                case 3:
+                    ASSERTL0(false,"3D not implemented for Acoustic perturbation equations");
+                    break;
+                default:
+                    ASSERTL0(false,"Illegal dimension");
+            }
+        }
+
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+
+        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
+                                     Array<OneD, Array<OneD, NekDouble> > &numfluxX,
+                                     Array<OneD, Array<OneD, NekDouble> > &numfluxY)
+        {
+            switch(m_expdim)
+            {
+                case 1:
+                    ASSERTL0(false,"1D not implemented for Acoustic perturbation equations");
+                    break;
+                case 2:
+                    NumericalFlux2D(physfield,numfluxX,numfluxY);
+                    break;
+                case 3:
+                    ASSERTL0(false,"3D not implemented for Acoustic perturbation equations");
+                    break;
+                default:
+                    ASSERTL0(false,"Illegal dimension");
+            }
+        }
+
+        virtual void v_PrimitiveToConservative( );
+
+        virtual void v_ConservativeToPrimitive( );
+
+        void InitialiseBaseFlowAnalytical(Array<OneD, Array<OneD, NekDouble> > &base, const NekDouble time);
+
+        void GetSource(Array<OneD, NekDouble> &source, const NekDouble time);
+
+        void AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray, Array< OneD, Array< OneD, NekDouble > > &outarray);
 
 
     private:
 
-	void GetFluxVector1D(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
-			     Array<OneD, Array<OneD, NekDouble> > &flux);
-	
-	void GetFluxVector2D(const int i, const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
-			     Array<OneD, Array<OneD, NekDouble> > &flux);
+        void GetFluxVector1D(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
+                                          Array<OneD, Array<OneD, NekDouble> > &flux);
 
-	void NumericalFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-			     Array<OneD, Array<OneD, NekDouble> > &numfluxX);
-	
-	void NumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-			     Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
-			     Array<OneD, Array<OneD, NekDouble> > &numfluxY);
+        void GetFluxVector2D(const int i, const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                             Array<OneD, Array<OneD, NekDouble> > &flux);
+
+        void NumericalFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
+                             Array<OneD, Array<OneD, NekDouble> > &numfluxX);
+
+        void NumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield,
+                             Array<OneD, Array<OneD, NekDouble> > &numfluxX,
+                             Array<OneD, Array<OneD, NekDouble> > &numfluxY);
 
 
-	void RiemannSolverUpwind(NekDouble hL,NekDouble uL,NekDouble vL,NekDouble hR,NekDouble uR, NekDouble vR, NekDouble P0, NekDouble U0, NekDouble V0,
-			    NekDouble &hflux, NekDouble &huflux,NekDouble &hvflux );
+        void RiemannSolverUpwind(NekDouble hL, NekDouble uL, NekDouble vL,
+                                 NekDouble hR, NekDouble uR, NekDouble vR,
+                                 NekDouble P0, NekDouble U0, NekDouble V0,
+                                 NekDouble &hflux, NekDouble &huflux, NekDouble &hvflux);
 
-	void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
+        void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
 
-	void WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
+        void WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
 
-	void WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
+        void WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
 
-	void ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
-				     Array<OneD,       Array<OneD, NekDouble> >&physout);
-	void PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
-				     Array<OneD,       Array<OneD, NekDouble> >&physout);
-	
-
-  };
+        void ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+                                           Array<OneD,       Array<OneD, NekDouble> >&physout);
+        void PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+                                           Array<OneD,       Array<OneD, NekDouble> >&physout);
+};
 }
 
 #endif 

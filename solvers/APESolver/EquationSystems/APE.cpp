@@ -47,19 +47,19 @@ string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
 
 APE::APE(
         const LibUtilities::SessionReaderSharedPtr& pSession)
-    : EquationSystem(pSession)
+    : UnsteadySystem(pSession)
 {
 }
 
 void APE::v_InitObject()
 {
-    EquationSystem::v_InitObject();
+    UnsteadySystem::v_InitObject();
 
-    // Load SolverInfo parameters
-    m_session->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit",
-                               m_explicitDiffusion,true);
-    m_session->MatchSolverInfo("ADVECTIONADVANCEMENT","Explicit",
-                               m_explicitAdvection,true);
+    // Load constant incompressible density
+    m_session->LoadParameter("Rho0", m_Rho0, 1.204);
+
+    // Load isentropic coefficient, Ratio of specific heats
+    m_session->LoadParameter("Gamma", m_gamma, 1.4);
 
     // Determine TimeIntegrationMethod to use.
     ASSERTL0(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"),
@@ -105,25 +105,6 @@ void APE::v_InitObject()
     {
         m_upwindType = (UpwindType) 0;
     }
-
-
-    // Load generic input parameters
-    m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-
-    // Load acceleration of gravity
-    m_session->LoadParameter("Gravity", m_g, 9.81);
-
-    // Load constant incompressible density (APE)
-    m_session->LoadParameter("Rho0", m_Rho0, 1.204);
-
-    // Load isentropic coefficient, Ratio of specific heats (APE)
-    m_session->LoadParameter("Gamma", m_gamma, 1.4);
-
-
-    // input/output in primitive variables
-    m_primitive = true;
-
-
 
     if (m_explicitAdvection)
     {
@@ -300,7 +281,7 @@ void APE::v_DoInitialise()
      */
 void APE::v_GenerateSummary(SolverUtils::SummaryList& s)
 {
-    EquationSystem::v_GenerateSummary(s);
+    UnsteadySystem::v_GenerateSummary(s);
     SolverUtils::AddSummaryItem(s, "Upwind Type", UpwindTypeMap[m_upwindType]);
     SolverUtils::AddSummaryItem(s, "Advection", (m_explicitAdvection ? "explicit" : "implicit"));
     SolverUtils::AddSummaryItem(s, "Integration Type", LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]);
@@ -550,7 +531,7 @@ void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarr
         case MultiRegions::eMixed_CG_Discontinuous:
         {
             ConservativeToPrimitive(inarray,outarray);
-            EquationSystem::SetBoundaryConditions(time);
+            UnsteadySystem::SetBoundaryConditions(time);
             Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 
             for(i = 0; i < nvariables; ++i)

@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 #define NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 
-#include <SolverUtils/EquationSystem.h>
+#include <SolverUtils/UnsteadySystem.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -66,7 +66,7 @@ const char* const UpwindTypeMap[] =
 *
 *
 **/
-class APE : public EquationSystem
+class APE : public UnsteadySystem
 {
     public:
 
@@ -83,6 +83,7 @@ class APE : public EquationSystem
         /// Name of class
         static std::string className;
 
+    /// Destructor
         virtual ~APE();
 
 
@@ -90,20 +91,6 @@ class APE : public EquationSystem
 
         ///< numerical upwind flux selector
         UpwindType                                      m_upwindType;
-        /// Number of time steps between outputting status information.
-        int                                             m_infosteps;
-        /// The time integration method to use.
-        LibUtilities::TimeIntegrationMethod             m_timeIntMethod;
-        /// The time integration scheme operators to use.
-        LibUtilities::TimeIntegrationSchemeOperators    m_ode;
-        /// Indicates if explicit or implicit treatment of diffusion is used.
-        bool                                            m_explicitDiffusion;
-        /// Indicates if explicit or implicit treatment of advection is used.
-        bool                                            m_explicitAdvection;
-        /// Indicates if variables are primitive or conservative
-        bool                                            m_primitive;
-        /// Acceleration of gravity
-        NekDouble                                       m_g;
         /// Constant incompressible density (APE)
         NekDouble                                       m_Rho0;
         /// Isentropic coefficient, Ratio of specific heats (APE)

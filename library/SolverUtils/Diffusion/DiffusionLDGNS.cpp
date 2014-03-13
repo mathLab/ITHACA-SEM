@@ -184,7 +184,7 @@ namespace Nektar
                 viscousFlux[i] = Array<OneD, NekDouble>(nPts, 0.0);
             }
             
-            m_fluxVectorNS(inarray, derivativesO1, m_viscTensor);
+            m_fluxVectorPDESC(inarray, derivativesO1, m_viscTensor);
             
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes

@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables without artificial
+// Description: Euler equations in consƒervative variables without artificial
 // diffusion
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -88,10 +88,8 @@ namespace Nektar
             ASSERTL0(false, "Implicit CFE not set up.");
         }
         
-        m_checkpointFuncs["Mach"] = boost::bind(&EulerCFE::CPMach, this, _1, _2);
         m_checkpointFuncs["Sensor"] = boost::bind(&EulerCFE::CPSensor, this, _1, _2);
-        m_checkpointFuncs["Entropy"] = boost::bind(&EulerCFE::CPEntropy, this, _1, _2);
-        m_checkpointFuncs["VarP"] = boost::bind(&EulerCFE::CPVarP, this, _1, _2);
+        m_checkpointFuncs["SmoothVisc"] = boost::bind(&EulerCFE::CPSmoothArtVisc, this, _1, _2);
     }
     
     /**
@@ -164,18 +162,129 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        //cout<<setprecision(16);
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
-
-        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
         
-        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
-
-        for (i = 0; i < nvariables; ++i)
+        if (m_shockCaptureType == "Off")
         {
-            Vmath::Neg(npoints, outarray[i], 1);
+            Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+            
+            m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Neg(npoints, outarray[i], 1);
+            }
+            
+        }
+        
+        if(m_shockCaptureType == "Smooth")
+        {
+        
+            Array<OneD, Array<OneD, NekDouble> > advVel;
+            Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
+            Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
+            Array<OneD, Array<OneD, NekDouble> > outarrayForcing(nvariables);
+            
+            // contains u,v,w
+            Array<OneD, Array<OneD, NekDouble> > inarrayTemp(nvariables-1);
+            Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables+1);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
+                outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
+                outarrayForcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            }
+            
+            for (i = 0; i < nvariables-1; ++i)
+            {
+                inarrayTemp[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            }
+            
+            for (i = 0; i < nvariables+1; ++i)
+            {
+                inarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            }
+            
+            // Advection term in physical rhs form
+            m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Neg(npoints, outarrayAdv[i], 1);
+            }
+            
+            // Extract pressure and temperature
+            Array<OneD, NekDouble > pressure   (npoints, 0.0);
+            Array<OneD, NekDouble > temperature(npoints, 0.0);
+            Array<OneD, NekDouble > enthalpy   (npoints, 0.0);
+            Array<OneD, NekDouble > energy     (npoints, 0.0);
+            GetPressure(inarray, pressure);
+            GetTemperature(inarray, pressure, temperature);
+            GetEnthalpy(inarray, pressure, enthalpy);
+            // Extract velocities
+            for (i = 1; i < nvariables-2; ++i)
+            {
+                Vmath::Vdiv(npoints,
+                            inarray[i], 1,
+                            inarray[0], 1,
+                            inarrayTemp[i-1], 1);
+            }
+            
+            // Copy velocities into new inarrayDiff
+            for (i = 0; i < nvariables-3; ++i)
+            {
+                Vmath::Vcopy(npoints, inarrayTemp[i], 1, inarrayDiff[i], 1);
+            }
+            
+            // Copy temperature into new inarrayDiffusion
+            Vmath::Vcopy(npoints,
+                         temperature, 1,
+                         inarrayDiff[nvariables-3], 1);
+            
+            // Copy density into new inarrayDiffusion
+            Vmath::Vcopy(npoints,
+                         inarray[0], 1,
+                         inarrayDiff[nvariables-2], 1);
+            
+            // Copy artificial viscosity coefficient into new inarrayDiffusion
+            Vmath::Vcopy(npoints,
+                         inarray[nvariables-1], 1,
+                         inarrayDiff[nvariables-1], 1);
+            
+            Vmath::Vdiv(npoints,
+                        inarray[nvariables-2], 1,
+                        inarray[0], 1, energy, 1);
+            
+            // Copy enthalpy into new inarrayDiffusion
+            Vmath::Vcopy(npoints,
+                         enthalpy, 1,
+                         inarrayDiff[nvariables], 1);
+            
+            // Diffusion term in physical rhs form
+            m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff);
+            
+            GetForcingTerm(inarray, outarrayForcing);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints,
+                            outarrayAdv[i], 1,
+                            outarrayDiff[i], 1,
+                            outarray[i], 1);
+                
+                // Add Forcing Term
+                Vmath::Vadd(npoints,
+                            outarray[i], 1,
+                            outarrayForcing[i], 1,
+                            outarray[i], 1);
+            }
+        }
+        if (m_shockCaptureType == "NonSmooth")
+        {
+            ASSERTL0(false, "NS with non-smooth shock capturing not yet implemented");
         }
     }
     
@@ -389,6 +498,26 @@ namespace Nektar
         GetEntropy(physfield, pressure, temperature, entropy);
 
         m_fields[0]->FwdTrans(entropy, outarray);
+    }
+    
+    void EulerCFE::CPSmoothArtVisc(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD, NekDouble> &outarray)
+    {
+        const int npts = m_fields[0]->GetTotPoints();
+        outarray = Array<OneD, NekDouble>(GetNcoeffs());
+        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+3);
+        
+        for (int i = 0; i < m_spacedim+3; ++i)
+        {
+            physfield[i] = Array<OneD, NekDouble>(npts);
+            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
+        }
+        
+        Array<OneD, NekDouble> eps_bar(npts, 0.0);
+        GetSmoothArtificialViscosity(physfield, eps_bar);
+        
+        m_fields[0]->FwdTrans(eps_bar, outarray);
     }
     /**
      * @brief Get the exact solutions for isentropic vortex and Ringleb

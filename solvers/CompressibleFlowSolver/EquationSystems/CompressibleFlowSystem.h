@@ -102,6 +102,7 @@ namespace Nektar
         NekDouble                           m_wInf;
         NekDouble                           m_gasConstant;
         NekDouble                           m_Twall;
+        std::string                         m_EqTypeStr;
         std::string                         m_ViscosityType;
         std::string                         m_shockCaptureType;
         NekDouble                           m_mu;
@@ -137,6 +138,10 @@ namespace Nektar
         void GetViscousFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+        void GetArtViscFluxVectorPDESC(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
         void GetViscousFluxVectorPDESC(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,

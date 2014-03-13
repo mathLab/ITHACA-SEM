@@ -83,6 +83,7 @@ namespace Nektar
         
         m_checkpointFuncs["Sensor"] = boost::bind(&NavierStokesCFE::CPSensor, this, _1, _2);
         m_checkpointFuncs["SensorKappa"] = boost::bind(&NavierStokesCFE::CPSensorKappa, this, _1, _2);
+        m_checkpointFuncs["SmoothVisc"] = boost::bind(&NavierStokesCFE::CPSmoothArtVisc, this, _1, _2);
 
     }
 
@@ -140,10 +141,6 @@ namespace Nektar
         
         if(m_shockCaptureType == "Off")
         {
-            int i;
-            int nvariables = inarray.num_elements();
-            int npoints    = GetNpoints();
-            
             Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
             Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
             Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
@@ -165,12 +162,6 @@ namespace Nektar
             
             // Advection term in physical rhs form
             m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
-            /*
-            cout << "ADVECTION = " << Vmath::Vmax(outarrayAdv[0].num_elements(), &outarrayAdv[0][0], 1) << endl;
-            cout << "ADVECTION = " << Vmath::Vmax(outarrayAdv[0].num_elements(), &outarrayAdv[1][0], 1) << endl;
-            cout << "ADVECTION = " << Vmath::Vmax(outarrayAdv[0].num_elements(), &outarrayAdv[2][0], 1) << endl;
-            cout << "ADVECTION = " << Vmath::Vmax(outarrayAdv[0].num_elements(), &outarrayAdv[3][0], 1) << endl;
-            cout << endl;*/
 
             for (i = 0; i < nvariables; ++i)
             {
@@ -254,6 +245,7 @@ namespace Nektar
             Array<OneD, NekDouble > pressure   (npoints, 0.0);
             Array<OneD, NekDouble > temperature(npoints, 0.0);
             Array<OneD, NekDouble > enthalpy   (npoints, 0.0);
+            Array<OneD, NekDouble > energy     (npoints, 0.0);
             GetPressure(inarray, pressure);
             GetTemperature(inarray, pressure, temperature);
             GetEnthalpy(inarray, pressure, enthalpy);
@@ -287,9 +279,10 @@ namespace Nektar
                          inarray[nvariables-1], 1,
                          inarrayDiff[nvariables-1], 1);
             
+            Vmath::Vdiv(npoints, inarray[nvariables-2], 1, inarray[0], 1, energy, 1);
             // Copy enthalpy into new inarrayDiffusion
             Vmath::Vcopy(npoints,
-                         enthalpy, 1,
+                         energy, 1,
                          inarrayDiff[nvariables], 1);
             
             // Diffusion term in physical rhs form
@@ -315,7 +308,6 @@ namespace Nektar
         {
             ASSERTL0(false, "NS with non-smooth shock capturing not yet implemented");
         }
-        //cout << endl;
     }
 
     void NavierStokesCFE::DoOdeProjection(
@@ -458,5 +450,25 @@ namespace Nektar
         Array<OneD, NekDouble> SensorKappa(npts,0.0);
         GetSensor(physfield, sensor, SensorKappa);
         m_fields[0]->FwdTrans(sensor, outarray);
+    }
+    
+    void NavierStokesCFE::CPSmoothArtVisc(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+            Array<OneD, NekDouble> &outarray)
+    {
+        const int npts = m_fields[0]->GetTotPoints();
+        outarray = Array<OneD, NekDouble>(GetNcoeffs());
+        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+3);
+        
+        for (int i = 0; i < m_spacedim+3; ++i)
+        {
+            physfield[i] = Array<OneD, NekDouble>(npts);
+            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
+        }
+        
+        Array<OneD, NekDouble> eps_bar(npts, 0.0);
+        GetSmoothArtificialViscosity(physfield, eps_bar);
+        
+        m_fields[0]->FwdTrans(eps_bar, outarray);
     }
 }

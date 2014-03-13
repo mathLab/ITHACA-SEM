@@ -101,6 +101,10 @@ namespace Nektar
     void CPSensorKappa(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD, NekDouble> &outarray);
+      
+    void CPSmoothArtVisc(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                                          Array<OneD, NekDouble> &outarray);
     
     private:
       void SetBoundaryConditions(

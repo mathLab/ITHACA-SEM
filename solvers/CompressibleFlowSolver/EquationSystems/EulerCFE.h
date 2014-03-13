@@ -109,8 +109,10 @@ namespace Nektar
         void CPVarP(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                     Array<OneD, NekDouble> &outarray);
-        
         void CPEntropy(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD, NekDouble> &outarray);
+        void CPSmoothArtVisc(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &outarray);
         

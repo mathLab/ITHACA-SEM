@@ -65,6 +65,12 @@ namespace Nektar
         
         typedef boost::function<void (
             const Array<OneD, Array<OneD, NekDouble> >&,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)>
+                                            DiffusionFluxVecCBPDESC;
+        
+        typedef boost::function<void (
+            const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD,             NekDouble  >&)>
                                             DiffusionArtificialDiffusion;
         
@@ -96,6 +102,12 @@ namespace Nektar
                 m_fluxVector = fluxVector;
             }
             
+            template<typename FuncPointerT, typename ObjectPointerT>
+            void SetFluxVectorPDESC(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_fluxVectorPDESC = boost::bind(func, obj, _1, _2, _3);
+            }
+            
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVectorNS(FuncPointerT func, ObjectPointerT obj)
             {
@@ -106,6 +118,11 @@ namespace Nektar
             void SetArtificialDiffusionVector(FuncPointerT func, ObjectPointerT obj)
             {
                 m_ArtificialDiffusionVector = boost::bind(func, obj, _1, _2);
+            }
+            
+            void SetFluxVectorPDESC(DiffusionFluxVecCBPDESC fluxVector)
+            {
+                m_fluxVectorPDESC = fluxVector;
             }
                        
             void SetFluxVectorNS(DiffusionFluxVecCBNS fluxVector)
@@ -131,6 +148,7 @@ namespace Nektar
         protected:
             DiffusionFluxVecCB              m_fluxVector;
             DiffusionFluxVecCBNS            m_fluxVectorNS;
+            DiffusionFluxVecCBPDESC         m_fluxVectorPDESC;
             RiemannSolverSharedPtr          m_riemann;
             DiffusionArtificialDiffusion    m_ArtificialDiffusionVector;
 

@@ -360,20 +360,61 @@ void APE::v_GetFluxVector(const int i,
                              Array<OneD, Array<OneD, NekDouble> > &physfield,
                              Array<OneD, Array<OneD, NekDouble> > &flux)
 {
-    switch(m_expdim)
+    InitialiseBaseFlowAnalytical(basefield, m_time);
+
+    ASSERTL1(flux.num_elements() == basefield.num_elements() - 1,
+             "Dimension of flux array and velocity array do not match");
+
+    int nq = physfield[0].num_elements();
+    NekDouble tmp0 = 0.0;
+    Array<OneD, NekDouble> tmp1(nq);
+    Array<OneD, NekDouble> tmp2(nq);
+
+    if (i == 0)
     {
-    case 1:
-        ASSERTL0(false,"1D not implemented for Acoustic perturbation equations");
-        break;
-    case 2:
-        GetFluxVector2D(i,physfield,flux);
-        break;
-    case 3:
-        ASSERTL0(false,"3D not implemented for Acoustic perturbation equations");
-        break;
-    default:
-        ASSERTL0(false,"Illegal dimension");
+        // F_{adv,p',j} = \gamma p_0 u'_j + p' \bar{u}_j
+        for (int j = 0; j < flux.num_elements(); ++j)
+        {
+            Vmath::Zero(nq, flux[j], 1);
+
+            // construct \gamma p_0 u'_j term
+            Vmath::Smul(nq, m_gamma, basefield[basefield.num_elements()-1], 1, tmp1, 1);
+            Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
+
+            // construct p' \bar{u}_j term
+            Vmath::Vmul(nq, physfield[0], 1, basefield[j], 1, tmp2, 1);
+
+            // add both terms
+            Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[j], 1);
     }
+    }
+    else
+    {
+        // F_{adv,u'_i,j} = (p'/ rho + \bar{u}_k u'_k) \delta_{ij}
+        for (int j = 0; j < flux.num_elements(); ++j)
+        {
+            Vmath::Zero(nq, flux[j], 1);
+
+            if (i-1 == j)
+            {
+                // contruct p'/ rho term
+                tmp0 = 1 / m_Rho0;
+                Vmath::Smul(nq, tmp0, physfield[0], 1, flux[j], 1);
+
+                // construct \bar{u}_k u'_k term
+                Vmath::Zero(nq, tmp1, 1);
+                for (int k = 0; k < flux.num_elements(); ++k)
+                {
+                    Vmath::Vmul(nq, physfield[k+1], 1, basefield[k], 1, tmp2, 1);
+                    Vmath::Vadd(nq, tmp1, 1, tmp2, 1, tmp1, 1);
+                }
+
+                // add terms
+                Vmath::Vadd(nq, flux[j], 1, tmp1, 1, flux[j], 1);
+            }
+        }
+    }
+
 }
 
 
@@ -462,11 +503,15 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
             for(i = 0; i < nvariables; ++i)
             {
                 // Get the ith component of the  flux vector in (physical space)
-                APE::GetFluxVector2D(i, physarray, fluxvector);
+                APE::GetFluxVector(i, physarray, fluxvector);
 
-                m_fields[0]->PhysDeriv(0,fluxvector[0],tmp);
-                m_fields[0]->PhysDeriv(1,fluxvector[1],tmp1);
-                Vmath::Vadd(nq,tmp,1,tmp1,1,outarray[i],1);
+            Vmath::Zero(nq, outarray[i], 1);
+            for (int j = 0; j < ndim; ++j)
+            {
+                // Get the ith component of the  flux vector in (physical space)
+                m_fields[0]->PhysDeriv(j,fluxvector[j],tmp1);
+                Vmath::Vadd(nq, outarray[i], 1, tmp1, 1, outarray[i], 1);
+            }
                 Vmath::Neg(nq,outarray[i],1);
             }
 
@@ -639,64 +684,6 @@ void APE::WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &phy
 }
 
 
-void APE::GetFluxVector1D(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                          Array<OneD, Array<OneD, NekDouble> > &flux)
-{
-    ASSERTL0(false,"1D not yet working for APE");
-}
-
-void APE::GetFluxVector2D(const int i, const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                          Array<OneD, Array<OneD, NekDouble> > &flux)
-{
-    NekDouble Rho0 = m_Rho0;
-    NekDouble gamma = m_gamma;
-    
-    basefield =Array<OneD, Array<OneD, NekDouble> >(m_spacedim+1);
-
-    InitialiseBaseFlowAnalytical(basefield, m_time);
-
-    switch(i){
-
-        // flux function for the p' equation
-        case 0:
-        {
-            for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-            {
-                flux[0][j] = basefield[0][j]*physfield[0][j] + gamma*basefield[2][j]*physfield[1][j];
-                flux[1][j] = basefield[1][j]*physfield[0][j] + gamma*basefield[2][j]*physfield[2][j];
-            }
-            break;
-        }
-
-        // flux function for the u' equation
-        case 1:
-        {
-
-            for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-            {
-                flux[0][j] = basefield[0][j]*physfield[1][j] + basefield[1][j]*physfield[2][j] + physfield[0][j]/Rho0;
-                flux[1][j] = 0;
-            }
-            break;
-        }
-
-        // flux function for the v' equation
-        case 2:
-        {
-
-            for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-            {
-                flux[0][j] = 0;
-                flux[1][j] = basefield[0][j]*physfield[1][j] + basefield[1][j]*physfield[2][j] + physfield[0][j]/Rho0;
-            }
-            break;
-        }
-
-        default:
-            ASSERTL0(false,"GetFluxVector2D: illegal vector index");
-            break;
-    }
-}
 
 void APE::NumericalFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
                           Array<OneD, Array<OneD, NekDouble> > &numfluxX)

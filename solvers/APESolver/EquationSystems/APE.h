@@ -169,12 +169,6 @@ class APE : public EquationSystem
 
     private:
 
-        void GetFluxVector1D(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                          Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        void GetFluxVector2D(const int i, const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                             Array<OneD, Array<OneD, NekDouble> > &flux);
-
         void NumericalFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
                              Array<OneD, Array<OneD, NekDouble> > &numfluxX);
 

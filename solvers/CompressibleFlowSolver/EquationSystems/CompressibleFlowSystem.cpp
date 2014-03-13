@@ -181,7 +181,7 @@ namespace Nektar
                     m_advection->SetFluxVector(&CompressibleFlowSystem::
                                                GetFluxVectorPDESC, this);
                     
-                    m_diffusion->SetFluxVectorPDESC(&CompressibleFlowSystem::
+                    m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
                                                    GetArtViscFluxVectorPDESC, this);
                 }
                 

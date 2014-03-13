@@ -877,8 +877,7 @@ namespace Nektar
                     }
                     
                     (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = 
-                        2.0 * rhoeb - Fwd[nVariables-1][pnt];
+                     UpdatePhys())[id1+i] = rhoeb;
                 }
                 // Supersonic flows
                 else

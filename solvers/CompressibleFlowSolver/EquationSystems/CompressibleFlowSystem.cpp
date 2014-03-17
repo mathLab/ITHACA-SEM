@@ -875,9 +875,12 @@ namespace Nektar
                         (m_fields[j]->GetBndCondExpansions()[bcRegion]->
                          UpdatePhys())[id1+i] = Fwd[j][pnt];
                     }
-                    
+
                     (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhoeb;
+                     UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[nVariables-1][pnt];
+ 
+                    //(m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
+                    // UpdatePhys())[id1+i] = rhoeb;
                 }
                 // Supersonic flows
                 else
@@ -2322,19 +2325,21 @@ namespace Nektar
         Array<OneD,             NekDouble  > &soundspeed,
         Array<OneD,             NekDouble  > &mach)
     {
-        const int nBCEdgePts = m_fields[0]->GetTotPoints();
-
-        Vmath::Vmul(nBCEdgePts, physfield[1], 1, physfield[1], 1, mach, 1);
-
+        const int nq = m_fields[0]->GetTotPoints();
+        
+        Vmath::Vmul(nq, physfield[1], 1, physfield[1], 1, mach, 1);
+        
         for (int i = 1; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(nBCEdgePts, physfield[1+i], 1, physfield[1+i], 1,
-                               mach,           1, mach,           1);
+            Vmath::Vvtvp(nq, physfield[1+i], 1, physfield[1+i], 1,
+                         mach,           1, mach,           1);
         }
-
-        Vmath::Vdiv(nBCEdgePts, mach, 1, physfield[0], 1, mach, 1);
-        Vmath::Vdiv(nBCEdgePts, mach, 1, physfield[0], 1, mach, 1);
-        Vmath::Vdiv(nBCEdgePts, mach, 1, soundspeed,   1, mach, 1);
+        
+        Vmath::Vdiv(nq, mach, 1, physfield[0], 1, mach, 1);
+        Vmath::Vdiv(nq, mach, 1, physfield[0], 1, mach, 1);
+        Vmath::Vsqrt(nq, mach, 1, mach, 1);
+        
+        Vmath::Vdiv(nq, mach, 1, soundspeed,   1, mach, 1);
     }
 
     /**
@@ -2358,7 +2363,7 @@ namespace Nektar
         for (int i = 0; i < nPts; ++i)
         {
             ratio = temperature[i] / T_star;
-            mu[i] = mu_star * pow(ratio, 1.50) *
+            mu[i] = mu_star * ratio * sqrt(ratio) * 
                     (T_star + 110.0) / (temperature[i] + 110.0);
         }
     }

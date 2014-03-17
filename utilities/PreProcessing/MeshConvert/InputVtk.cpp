@@ -90,10 +90,19 @@ namespace Nektar
 
             vtkPoints *vtkPoints = vtkMesh->GetPoints();
 
-            const int numCellTypes = 2;
+            const int numCellTypes = 3;
             vtkCellArray* vtkCells[numCellTypes];
+            LibUtilities::ShapeType vtkCellTypes[numCellTypes];
+            int vtkNumPoints[numCellTypes];
             vtkCells[0] = vtkMesh->GetPolys();
             vtkCells[1] = vtkMesh->GetStrips();
+            vtkCells[2] = vtkMesh->GetLines();
+            vtkCellTypes[0] = LibUtilities::eTriangle;
+            vtkCellTypes[1] = LibUtilities::eTriangle;
+            vtkCellTypes[2] = LibUtilities::eSegment;
+            vtkNumPoints[0] = 3;
+            vtkNumPoints[1] = 3;
+            vtkNumPoints[2] = 2;
 
             vtkIdType npts;
             vtkIdType *pts = 0;
@@ -124,24 +133,24 @@ namespace Nektar
                 vtkCells[c]->InitTraversal();
                 for (int i = 0; vtkCells[c]->GetNextCell(npts, pts); ++i)
                 {
-                    for (int j = 0; j < npts - 2; ++j)
+                    for (int j = 0; j < npts - vtkNumPoints[c] + 1; ++j)
                     {
                         // Create element tags
                         vector<int> tags;
                         tags.push_back(0); // composite
-                        tags.push_back(LibUtilities::eTriangle); // element type
+                        tags.push_back(vtkCellTypes[c]); // element type
 
                         // Read element node list
                         vector<NodeSharedPtr> nodeList;
-                        for (int k = j; k < j + 3; ++k)
+                        for (int k = j; k < j + vtkNumPoints[c]; ++k)
                         {
                             nodeList.push_back(m_mesh->m_node[pts[k]]);
                         }
 
                         // Create element
-                        ElmtConfig conf(LibUtilities::eTriangle,1,false,false);
+                        ElmtConfig conf(vtkCellTypes[c],1,false,false);
                         ElementSharedPtr E = GetElementFactory().
-                            CreateInstance(LibUtilities::eTriangle,
+                            CreateInstance(vtkCellTypes[c],
                                             conf,nodeList,tags);
 
                         // Determine mesh expansion dimension

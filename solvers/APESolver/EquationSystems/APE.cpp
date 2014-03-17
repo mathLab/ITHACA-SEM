@@ -41,7 +41,9 @@
 
 namespace Nektar
 {
-  string APE::className = GetEquationSystemFactory().RegisterCreatorFunction("APE", APE::create, "Acoustic perturbation equations in conservative variables.");
+  string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
+    "APE", APE::create, 
+    "Acoustic perturbation equations in conservative variables.");
   
   APE::APE(
            const LibUtilities::SessionReaderSharedPtr& pSession)
@@ -224,44 +226,51 @@ namespace Nektar
   }
   
 
-   //----------------------------------------------------
-  void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray, NekDouble time)
+  //----------------------------------------------------
+  void APE::SetBoundaryConditions(
+    Array<OneD, Array<OneD, NekDouble> > &inarray, 
+    NekDouble time)
   {
-    
-    int nvariables = m_fields.num_elements();
-    int cnt = 0;
+      std::string varName; 
+      int nvariables = m_fields.num_elements();
+      int cnt = 0;
 
-    // loop over Boundary Regions
-    for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+      // Loop over Boundary Regions
+      for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
       {	
-	
-	// Wall Boundary Condition
-	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWall)
-	  {
-	    if (m_expdim == 1)
-	      {
-		WallBoundary1D(n,inarray);
-	      }
-	    else if (m_expdim == 2)
-	      {
-		WallBoundary2D(n,cnt,inarray);
-	      }
-	  }
-	
-	// Time Dependent Boundary Condition (specified in meshfile)
-	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eTimeDependent)
-	  {
-	    for (int i = 0; i < nvariables; ++i)
-	      {
-		m_fields[i]->EvaluateBoundaryConditions(time);
-	      }
-	  }
-	cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+          // Wall Boundary Condition
+          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+              SpatialDomains::eWall)
+          {
+              if (m_expdim == 1)
+              {
+                  WallBoundary1D(n, inarray);
+              }
+              else if (m_expdim == 2)
+              {
+                  WallBoundary2D(n, cnt, inarray);
+              }
+          }
+          
+          // Time Dependent Boundary Condition (specified in meshfile)
+          if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+              SpatialDomains::eTimeDependent)
+          {
+              for (int i = 0; i < nvariables; ++i)
+              {
+                  varName = m_session->GetVariable(i); 
+                  m_fields[i]->EvaluateBoundaryConditions(time, varName);
+              }
+          }
+          cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
       }
   }
   
   //----------------------------------------------------
-  void APE::WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray)
+  void APE::WallBoundary2D(
+    int bcRegion, 
+    int cnt, 
+    Array<OneD, Array<OneD, NekDouble> > &physarray)
   { 
 
     int i;

@@ -12,14 +12,25 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
     int i,j;
+    bool file = false;
 
-    if(argc != 10)
+    if(argc == 4)
+    {
+        file = true;
+    }
+    else if(argc != 10)
     {
         fprintf(stderr,
                 "Usage: ProbeFld meshfile fieldfile N x0 y0 z0 dx dy dz\n");
         fprintf(stderr,
                 "  Probes N points along the line from (x0,y0,z0) to "
                 "(x0+dx, y0+dy, z0+dz)\n");
+        fprintf(stderr,
+                "ProbeFld meshfile fieldfile points.txt\n");
+        fprintf(stderr,
+                "  Probes the solution at the points in the points.txt file.\n");
+        fprintf(stderr,
+                "  Points are given as space-separated x y z on each line.\n");
         exit(1);
     }
 
@@ -204,30 +215,71 @@ int main(int argc, char *argv[])
     }
     //----------------------------------------------
     
-    //----------------------------------------------
-    // Probe data fields
-    NekDouble N     = atoi(argv[3]);
-    NekDouble x0    = atof(argv[4]);
-    NekDouble y0    = atof(argv[5]);
-    NekDouble z0    = atof(argv[6]);
-    NekDouble dx    = atof(argv[7])/(N>1 ? (N-1) : 1);
-    NekDouble dy    = atof(argv[8])/(N>1 ? (N-1) : 1);
-    NekDouble dz    = atof(argv[9])/(N>1 ? (N-1) : 1);
     Array<OneD, NekDouble> gloCoord(3,0.0);
-
-    for (int i = 0; i < N; ++i)
+    if (file)
     {
-        gloCoord[0] = x0 + i*dx;
-        gloCoord[1] = y0 + i*dy;
-        gloCoord[2] = z0 + i*dz;
-        cout << gloCoord[0] << "   " << gloCoord[1] << "   " << gloCoord[2];
-        int ExpId =  Exp[0]->GetExpIndex(gloCoord,NekConstants::kGeomFactorsTol);
-        for (int j = 0; j < nfields; ++j)
+        string line;
+        ifstream pts(argv[3]);
+        while (getline(pts, line))
         {
-            Array<OneD, NekDouble> phys(Exp[j]->GetPhys() + Exp[j]->GetPhys_Offset(j));
-            cout << "   " << Exp[j]->GetExp(ExpId)->PhysEvaluate(gloCoord, phys);
+            stringstream ss(line);
+            ss >> gloCoord[0];
+            ss >> gloCoord[1];
+            ss >> gloCoord[2];
+            cout << gloCoord[0] << "   " << gloCoord[1] << "   " << gloCoord[2];
+            int ExpId =  Exp[0]->GetExpIndex(gloCoord,NekConstants::kGeomFactorsTol);
+
+            for (int j = 0; j < nfields; ++j)
+            {
+                if (ExpId == -1)
+                {
+                    cout << "   -";
+                }
+                else
+                {
+                    Array<OneD, NekDouble> phys(Exp[j]->GetPhys() + Exp[j]->GetPhys_Offset(ExpId));
+                    cout << "   " << Exp[j]->GetExp(ExpId)->PhysEvaluate(gloCoord, phys);
+                }
+            }
+
+            cout << endl;
         }
-        cout << endl;
+    }
+    else
+    {
+        //----------------------------------------------
+        // Probe data fields
+        NekDouble N     = atoi(argv[3]);
+        NekDouble x0    = atof(argv[4]);
+        NekDouble y0    = atof(argv[5]);
+        NekDouble z0    = atof(argv[6]);
+        NekDouble dx    = atof(argv[7])/(N>1 ? (N-1) : 1);
+        NekDouble dy    = atof(argv[8])/(N>1 ? (N-1) : 1);
+        NekDouble dz    = atof(argv[9])/(N>1 ? (N-1) : 1);
+
+        for (int i = 0; i < N; ++i)
+        {
+            gloCoord[0] = x0 + i*dx;
+            gloCoord[1] = y0 + i*dy;
+            gloCoord[2] = z0 + i*dz;
+            cout << gloCoord[0] << "   " << gloCoord[1] << "   " << gloCoord[2];
+            int ExpId =  Exp[0]->GetExpIndex(gloCoord,NekConstants::kGeomFactorsTol);
+
+            for (int j = 0; j < nfields; ++j)
+            {
+                if (ExpId == -1)
+                {
+                    cout << "   -";
+                }
+                else
+                {
+                    Array<OneD, NekDouble> phys(Exp[j]->GetPhys() + Exp[j]->GetPhys_Offset(ExpId));
+                    cout << "   " << Exp[j]->GetExp(ExpId)->PhysEvaluate(gloCoord, phys);
+                }
+            }
+
+            cout << endl;
+        }
     }
 
     //----------------------------------------------

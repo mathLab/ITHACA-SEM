@@ -428,12 +428,14 @@ namespace Nektar
                 {
                     case eDirectFullMatrix:
                     case eIterativeFull:
+                    case ePETScFullMatrix:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                         break;
                     }
                     case eDirectStaticCond:
                     case eIterativeStaticCond:
+                    case ePETScStaticCond:
                     {
                         CuthillMckeeReordering(boostGraphObj,perm,iperm);
                         break;
@@ -839,6 +841,8 @@ namespace Nektar
                     case eDirectFullMatrix:
                     case eIterativeFull:
                     case eIterativeStaticCond:
+                    case ePETScFullMatrix:
+                    case ePETScStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                         break;

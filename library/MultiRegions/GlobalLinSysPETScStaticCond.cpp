@@ -388,7 +388,14 @@ namespace Nektar
 
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
-                loc_lda = m_expList.lock()->GetExp(n)->NumBndryCoeffs();
+                if (m_linSysKey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
+                {
+                    loc_lda = m_expList.lock()->GetExp(n)->NumDGBndryCoeffs();
+                }
+                else
+                {
+                    loc_lda = m_expList.lock()->GetExp(n)->NumBndryCoeffs();
+                }
 
                 for(i = 0; i < loc_lda; ++i)
                 {

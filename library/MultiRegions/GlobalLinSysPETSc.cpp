@@ -80,7 +80,7 @@ namespace Nektar
             PetscErrorCode ierr = KSPSolve(m_ksp, m_b, m_x);
             PetscScalar   *avec;
             VecGetArray(m_x, &avec);
-            KSPView(m_ksp, PETSC_VIEWER_STDOUT_WORLD);
+            //KSPView(m_ksp, PETSC_VIEWER_STDOUT_WORLD);
 
             PetscInt its;
             KSPGetIterationNumber(m_ksp,&its);

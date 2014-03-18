@@ -27,6 +27,10 @@ MACRO(ADD_SOLVER_EXECUTABLE name component source)
         TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
     ENDIF(NEKTAR_USE_MPI)
 
+    IF(NEKTAR_USE_PETSC)
+        TARGET_LINK_LIBRARIES(${name} ${PETSC_LIBRARIES})
+    ENDIF(NEKTAR_USE_PETSC)
+
     IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
         TARGET_LINK_LIBRARIES(${name} optimized rt debug rt)
     ENDIF()

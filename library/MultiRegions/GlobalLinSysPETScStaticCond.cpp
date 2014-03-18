@@ -421,9 +421,15 @@ namespace Nektar
             ierr = MatAssemblyEnd(m_matrix,MAT_FINAL_ASSEMBLY);
 
             ierr = KSPCreate(PETSC_COMM_WORLD, &m_ksp);//CHKERRQ(ierr);
+
+            PC pc;
+            //KSPSetType(m_ksp, KSPCG);
+            KSPSetTolerances(m_ksp, pLocToGloMap->GetIterativeTolerance(), PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+            KSPGetPC(m_ksp, &pc);
+            PCSetType(pc, PCGAMG);
             ierr = KSPSetFromOptions(m_ksp);//CHKERRQ(ierr);
             ierr = KSPSetOperators(m_ksp, m_matrix, m_matrix, DIFFERENT_NONZERO_PATTERN);//CHKERRQ(ierr);
-
+            
             /*
             ierr = VecDestroy(&x);CHKERRQ(ierr);
             ierr = VecDestroy(&b);CHKERRQ(ierr);

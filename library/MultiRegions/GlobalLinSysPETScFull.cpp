@@ -88,7 +88,8 @@ namespace Nektar
 
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
-                loc_lda = m_expList.lock()->GetExp(n)->GetNcoeffs();
+                loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
+                loc_lda = loc_mat->GetRows();
 
                 for(i = 0; i < loc_lda; ++i)
                 {
@@ -150,10 +151,9 @@ namespace Nektar
             KSPSetTolerances(
                 m_ksp, pLocToGloMap->GetIterativeTolerance(),
                 PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
-            //KSPGetPC(m_ksp, &pc);
-            //PCSetType(pc, PCGAMG);
             KSPSetFromOptions(m_ksp);
-            KSPSetOperators(m_ksp, m_matrix, m_matrix, DIFFERENT_NONZERO_PATTERN);
+            KSPSetOperators(
+                m_ksp, m_matrix, m_matrix, DIFFERENT_NONZERO_PATTERN);
         }
 
 

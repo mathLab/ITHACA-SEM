@@ -376,7 +376,6 @@ namespace Nektar
 
             // fill global matrix
             DNekScalMatSharedPtr loc_mat;
-            PetscErrorCode ierr;
 
             MatCreate(PETSC_COMM_WORLD, &m_matrix);
             MatSetType(m_matrix, MATSEQAIJ);
@@ -410,11 +409,13 @@ namespace Nektar
                 cnt += loc_lda;
             }
 
-            MatSeqAIJSetPreallocation(m_matrix, 1000, NULL);
+            MatSeqAIJSetPreallocation(m_matrix, 0, nnz.get());
             MatGetVecs(m_matrix, &m_x, &m_b);
 
+            //cout << "setting up" << endl;
             for(n = cnt = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
             {
+                //cout << n << endl;
                 loc_mat = m_schurCompl->GetBlock(n,n);
                 loc_lda = loc_mat->GetRows();
 
@@ -432,28 +433,30 @@ namespace Nektar
                             if(gid2 >= 0)
                             {
                                 value = sign1*sign2*(*loc_mat)(i,j);
-                                ierr = MatSetValue(
-                                    m_matrix, gid1, gid2, value, ADD_VALUES);//CHKERRQ(ierr);
+                                MatSetValue(
+                                    m_matrix, gid1, gid2, value, ADD_VALUES);
                             }
                         }
                     }
                 }
                 cnt   += loc_lda;
             }
+            //cout << "finished" << endl;
 
-            ierr = MatAssemblyBegin(m_matrix,MAT_FINAL_ASSEMBLY);
-            ierr = MatAssemblyEnd(m_matrix,MAT_FINAL_ASSEMBLY);
+            MatAssemblyBegin(m_matrix,MAT_FINAL_ASSEMBLY);
+            MatAssemblyEnd(m_matrix,MAT_FINAL_ASSEMBLY);
 
-            ierr = KSPCreate(PETSC_COMM_WORLD, &m_ksp);//CHKERRQ(ierr);
+            KSPCreate(PETSC_COMM_WORLD, &m_ksp);
 
+            // Set up preconditioner
             PC pc;
-            //KSPSetType(m_ksp, KSPCG);
+            KSPSetType(m_ksp, KSPCG);
             KSPSetTolerances(m_ksp, pLocToGloMap->GetIterativeTolerance(), PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
             KSPGetPC(m_ksp, &pc);
-            PCSetType(pc, PCGAMG);
-            ierr = KSPSetFromOptions(m_ksp);//CHKERRQ(ierr);
-            ierr = KSPSetOperators(m_ksp, m_matrix, m_matrix, DIFFERENT_NONZERO_PATTERN);//CHKERRQ(ierr);
-            
+            PCSetType(pc, PCLU);
+            KSPSetFromOptions(m_ksp);
+            KSPSetOperators(m_ksp, m_matrix, m_matrix, DIFFERENT_NONZERO_PATTERN);
+
             /*
             ierr = VecDestroy(&x);CHKERRQ(ierr);
             ierr = VecDestroy(&b);CHKERRQ(ierr);

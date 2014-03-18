@@ -369,7 +369,7 @@ namespace Nektar
             // Get Default Map and turn off any searched values.
             returnval = MemoryManager<AssemblyMapCG>
                 ::AllocateSharedPtr(m_session);
-            returnval->m_solnType           = eXxtFullMatrix;
+            returnval->m_solnType           = ePETScFullMatrix; //XxtFullMatrix;
             returnval->m_preconType         = eNull;
             returnval->m_maxStaticCondLevel = 0;
             returnval->m_signChange         = false;

@@ -81,14 +81,39 @@ namespace Nektar
             MatSetType(m_matrix, MATSEQAIJ);
             MatSetSizes(m_matrix, rows, cols, PETSC_DETERMINE, PETSC_DETERMINE);
             MatSetFromOptions(m_matrix);
-            MatSeqAIJSetPreallocation(m_matrix, 2500, NULL);
-            //MatSetUp(m_matrix);
-            MatGetVecs(m_matrix, &m_x, &m_b);
 
+            // preallocate
             int loc_lda;
+            Array<OneD, int> nnz(nDofs-NumDirBCs, 0);
+
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
-                cout << n << endl;
+                loc_lda = m_expList.lock()->GetExp(n)->GetNcoeffs();
+
+                for(i = 0; i < loc_lda; ++i)
+                {
+                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt + i)-NumDirBCs;
+                    if(gid1 >= 0)
+                    {
+                        for(j = 0; j < loc_lda; ++j)
+                        {
+                            gid2 = pLocToGloMap->GetLocalToGlobalMap(cnt + j)
+                                                                    - NumDirBCs;
+                            if(gid2 >= 0)
+                            {
+                                nnz[gid1]++;
+                            }
+                        }
+                    }
+                }
+                cnt += loc_lda;
+            }
+
+            MatSeqAIJSetPreallocation(m_matrix, 0, nnz.get());
+            MatGetVecs(m_matrix, &m_x, &m_b);
+
+            for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
+            {
                 loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
                 loc_lda = loc_mat->GetRows();
 

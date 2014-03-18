@@ -382,12 +382,37 @@ namespace Nektar
             MatSetType(m_matrix, MATSEQAIJ);
             MatSetSizes(m_matrix, rows, cols, PETSC_DETERMINE, PETSC_DETERMINE);
             MatSetFromOptions(m_matrix);
-            //ierr = MatSetUp(m_matrix);
+
+            // preallocate
+            int loc_lda;
+            Array<OneD, int> nnz(nBndDofs-NumDirBCs, 0);
+
+            for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
+            {
+                loc_lda = m_expList.lock()->GetExp(n)->NumBndryCoeffs();
+
+                for(i = 0; i < loc_lda; ++i)
+                {
+                    gid1 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + i)-NumDirBCs;
+                    if(gid1 >= 0)
+                    {
+                        for(j = 0; j < loc_lda; ++j)
+                        {
+                            gid2 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + j)
+                                                                    - NumDirBCs;
+                            if(gid2 >= 0)
+                            {
+                                nnz[gid1]++;
+                            }
+                        }
+                    }
+                }
+                cnt += loc_lda;
+            }
+
             MatSeqAIJSetPreallocation(m_matrix, 1000, NULL);
-            //MatMPIAIJSetPreallocation(m_matrix, 100, NULL, 100, NULL);
             MatGetVecs(m_matrix, &m_x, &m_b);
 
-            int loc_lda;
             for(n = cnt = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
             {
                 loc_mat = m_schurCompl->GetBlock(n,n);

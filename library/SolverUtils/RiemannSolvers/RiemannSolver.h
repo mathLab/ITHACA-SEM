@@ -107,11 +107,19 @@ namespace Nektar
             }
             
             template<typename FuncPointerT, typename ObjectPointerT>
-            void SetAuxiliary(std::string    name,
+            void SetAuxScal(std::string    name,
                               FuncPointerT   func,
                               ObjectPointerT obj)
             {
-                m_auxiliary[name] = boost::bind(func, obj);
+                m_auxScal[name] = boost::bind(func, obj);
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT>
+            void SetAuxVec(std::string    name,
+                                 FuncPointerT   func,
+                                 ObjectPointerT obj)
+            {
+                m_auxVec[name] = boost::bind(func, obj);
             }
 
             std::map<std::string, RSScalarFuncType> &GetScalars()
@@ -139,8 +147,10 @@ namespace Nektar
             std::map<std::string, RSVecFuncType>    m_vectors;
             /// Map of parameter function types.
             std::map<std::string, RSParamFuncType > m_params;
-            /// Map of scalar function types.
-            std::map<std::string, RSScalarFuncType> m_auxiliary;
+            /// Map of auxiliary scalar function types.
+            std::map<std::string, RSScalarFuncType> m_auxScal;
+            /// Map of auxiliary vector function types.
+            std::map<std::string, RSVecFuncType>    m_auxVec;
             /// Rotation matrices for each trace quadrature point.
             Array<OneD, Array<OneD, NekDouble> >    m_rotMat;
             /// Rotation storage
@@ -162,15 +172,18 @@ namespace Nektar
             void rotateToNormal  (
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);
             void rotateFromNormal(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
+                const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);
-            bool CheckScalars   (std::string name);
-            bool CheckVectors   (std::string name);
-            bool CheckParams    (std::string name);
-            bool CheckAuxiliary (std::string name);
+            bool CheckScalars (std::string name);
+            bool CheckVectors (std::string name);
+            bool CheckParams  (std::string name);
+            bool CheckAuxScal (std::string name);
+            bool CheckAuxVec  (std::string name);
         };
 
         /// A shared pointer to an EquationSystem object

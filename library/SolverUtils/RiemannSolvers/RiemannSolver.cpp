@@ -89,7 +89,8 @@ namespace Nektar
          * velocity field is rotated to the normal direction to perform
          * dimensional splitting, and the resulting fluxes are rotated back to
          * the Cartesian directions before being returned. For the Rotation to
-         * work, the normal vectors "N" must be set via the SetVector() method.
+         * work, the normal vectors "N" and the location of the vector
+         * components in Fwd "vecLocs"must be set via the SetAuxVec() method.
          * 
          * @param Fwd   Forwards trace space.
          * @param Bwd   Backwards trace space.
@@ -102,7 +103,12 @@ namespace Nektar
         {
             if (m_requiresRotation)
             {
-                ASSERTL0(CheckVectors("N"), "N not defined.");
+                ASSERTL0(CheckVectors("N"), "N not defined.");                
+                ASSERTL0(CheckAuxVec("vecLocs"), "vecLocs not defined.");
+                const Array<OneD, const Array<OneD, NekDouble> > normals =
+                    m_vectors["N"]();
+                const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
+                    m_auxVec["vecLocs"]();
 
                 int nFields = Fwd   .num_elements();
                 int nPts    = Fwd[0].num_elements();
@@ -120,15 +126,11 @@ namespace Nektar
                         }
                     }
                 }
-                
-                const Array<OneD, const Array<OneD, NekDouble> > normals =
-                    m_vectors["N"]();
 
-                rotateToNormal  (Fwd, normals, m_rotStorage[0]);
-                rotateToNormal  (Bwd, normals, m_rotStorage[1]);
-                v_Solve         (m_rotStorage[0], m_rotStorage[1],
-                                 m_rotStorage[2]);
-                rotateFromNormal(m_rotStorage[2], normals, flux);
+                rotateToNormal(Fwd, normals, vecLocs, m_rotStorage[0]);
+                rotateToNormal(Bwd, normals, vecLocs, m_rotStorage[1]);
+                v_Solve(m_rotStorage[0], m_rotStorage[1], m_rotStorage[2]);
+                rotateFromNormal(m_rotStorage[2], normals, vecLocs, flux);
             }
             else
             {
@@ -142,12 +144,10 @@ namespace Nektar
          * This function performs a rotation of a vector so that the first
          * component aligns with the trace normal direction.
          *
-         * The vectors  components are stored in inarray. Their locations need
-         * to be specified in the "velLoc" auxiliary array. If the inarray holds
-         * multiple vectors, their locations must be concatenated, e.g.
-         * "0,1,4,5" for two 2D vectors with the first vectors component locations
-         * stored in inarray[0] and inarray[1] and the second vectors component
-         * locations in inarray[4] and inarray[5].
+         * The vectors  components are stored in inarray. Their locations must
+         * be specified in the "vecLocs" array. vecLocs[0] contains the locations
+         * of the first vectors components, vecLocs[1] those of the second and
+         * so on.
          * 
          * In 2D, this is accomplished through the transform:
          * 
@@ -160,26 +160,21 @@ namespace Nektar
         void RiemannSolver::rotateToNormal(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             const Array<OneD, const Array<OneD, NekDouble> > &normals,
+            const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-
-            ASSERTL0(CheckAuxiliary("velLoc"), "velLoc not defined.");
-            const Array<OneD, NekDouble> &velLoc = m_auxiliary["velLoc"]();
-
-            int vecCount = velLoc.num_elements() / normals.num_elements();
-            int vecSize = normals.num_elements();
-            ASSERTL0(velLoc.num_elements() % normals.num_elements() == 0,
-                     "velLoc and normals mismatch");
-
             for (int i = 0; i < inarray.num_elements(); ++i)
             {
                 Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1,
                              outarray[i], 1);
             }
 
-            for (int i = 0; i < vecCount; i++)
+            for (int i = 0; i < vecLocs.num_elements(); i++)
             {
-                switch(vecSize)
+                ASSERTL0(vecLocs[i].num_elements() == normals.num_elements(),
+                         "vecLocs[i] element count mismatch");
+
+                switch (normals.num_elements())
                 {
                     case 1:
                         // do nothing
@@ -187,9 +182,9 @@ namespace Nektar
 
                     case 2:
                     {
-                        const int vx = (int)velLoc[i*vecSize+0];
-                        const int vy = (int)velLoc[i*vecSize+1];
                         const int nq = inarray[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        const int vy = (int)vecLocs[i][1];
 
                         Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
                                          outarray[vx], 1);
@@ -204,10 +199,10 @@ namespace Nektar
 
                     case 3:
                     {
-                        const int vx = (int)velLoc[i*vecSize+0];
-                        const int vy = (int)velLoc[i*vecSize+1];
-                        const int vz = (int)velLoc[i*vecSize+2];
                         const int nq = inarray[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        const int vy = (int)vecLocs[i][1];
+                        const int vz = (int)vecLocs[i][2];
 
                         // Generate matrices if they don't already exist.
                         if (m_rotMat.num_elements() == 0)
@@ -233,6 +228,7 @@ namespace Nektar
                                            outarray[vz], 1, outarray[vz], 1);
                         break;
                     }
+
                     default:
                         ASSERTL0(false, "Invalid space dimension.");
                         break;
@@ -251,25 +247,21 @@ namespace Nektar
         void RiemannSolver::rotateFromNormal(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
             const Array<OneD, const Array<OneD, NekDouble> > &normals,
+            const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            ASSERTL0(CheckAuxiliary("velLoc"), "velLoc not defined.");
-            const Array<OneD, NekDouble> &velLoc = m_auxiliary["velLoc"]();
-
-            int vecCount = velLoc.num_elements() / normals.num_elements();
-            int vecSize  = normals.num_elements();
-            ASSERTL0(velLoc.num_elements() % normals.num_elements() == 0,
-                     "velLoc and normals mismatch");
-
             for (int i = 0; i < inarray.num_elements(); ++i)
             {
                 Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1,
                              outarray[i], 1);
             }
 
-            for (int i = 0; i < vecCount; i++)
+            for (int i = 0; i < vecLocs.num_elements(); i++)
             {
-                switch(vecSize)
+                ASSERTL0(vecLocs[i].num_elements() == normals.num_elements(),
+                         "vecLocs[i] element count mismatch");
+
+                switch (normals.num_elements())
                 {
                     case 1:
                         // do nothing
@@ -277,9 +269,9 @@ namespace Nektar
 
                     case 2:
                     {
-                        const int vx = (int)velLoc[i*vecSize+0];
-                        const int vy = (int)velLoc[i*vecSize+1];
                         const int nq = normals[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        const int vy = (int)vecLocs[i][1];
 
                         Vmath::Vmul (nq, inarray [vy], 1, normals [1],  1,
                                          outarray[vx], 1);
@@ -291,12 +283,13 @@ namespace Nektar
                                          outarray[vy], 1, outarray[vy], 1);
                         break;
                     }
+
                     case 3:
                     {
-                        const int vx = (int)velLoc[i*vecSize+0];
-                        const int vy = (int)velLoc[i*vecSize+1];
-                        const int vz = (int)velLoc[i*vecSize+2];
                         const int nq = normals[0].num_elements();
+                        const int vx = (int)vecLocs[i][0];
+                        const int vy = (int)vecLocs[i][1];
+                        const int vz = (int)vecLocs[i][2];
 
                         Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[0],  1,
                                            inarray [vy], 1, m_rotMat[3],  1,
@@ -315,11 +308,11 @@ namespace Nektar
                                            outarray[vz], 1, outarray[vz], 1);
                         break;
                     }
+
                     default:
                         ASSERTL0(false, "Invalid space dimension.");
                         break;
                 }
-
             }
         }
 
@@ -363,16 +356,29 @@ namespace Nektar
         }
 
         /**
-         * @brief Determine whether a scalar has been defined in #m_auxiliary.
+         * @brief Determine whether a scalar has been defined in #m_auxScal.
          *
          * @param name  Scalar name.
          */
-        bool RiemannSolver::CheckAuxiliary(std::string name)
+        bool RiemannSolver::CheckAuxScal(std::string name)
         {
             std::map<std::string, RSScalarFuncType>::iterator it =
-                m_auxiliary.find(name);
+                m_auxScal.find(name);
 
-            return it != m_auxiliary.end();
+            return it != m_auxScal.end();
+        }
+
+        /**
+         * @brief Determine whether a vector has been defined in #m_auxVec.
+         *
+         * @param name  Vector name.
+         */
+        bool RiemannSolver::CheckAuxVec(std::string name)
+        {
+            std::map<std::string, RSVecFuncType>::iterator it =
+                m_auxVec.find(name);
+
+            return it != m_auxVec.end();
         }
 
         /**
@@ -395,7 +401,6 @@ namespace Nektar
             {
                 m_rotMat[i] = Array<OneD, NekDouble>(nq);
             }
-
             for (i = 0; i < normals[0].num_elements(); ++i)
             {
                 // Generate matrix which takes us from (1,0,0) vector to trace

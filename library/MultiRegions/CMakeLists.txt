@@ -41,6 +41,7 @@ Preconditioner.cpp
 PreconditionerDiagonal.cpp
 PreconditionerLowEnergy.cpp
 PreconditionerBlock.cpp
+PreconditionerPETScLinear.cpp  
 SubStructuredGraph.cpp
 )
 
@@ -83,6 +84,7 @@ Preconditioner.h
 PreconditionerDiagonal.h
 PreconditionerLowEnergy.h
 PreconditionerBlock.h
+PreconditionerPETScLinear.h  
 SubStructuredGraph.h
 )
 

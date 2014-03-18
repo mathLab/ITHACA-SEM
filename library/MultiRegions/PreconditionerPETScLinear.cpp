@@ -38,6 +38,7 @@
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/GlobalLinSysPETScFull.h>
 #include <LocalRegions/MatrixKey.h>
 #include <math.h>
 

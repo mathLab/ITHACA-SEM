@@ -86,8 +86,8 @@ namespace Nektar
                                       m_vertLocToGloMap,
                                       (m_linsys.lock())->GetKey().GetConstFactors());
 
-            //m_vertLinsys = MemoryManager<GlobalLinSysPETScFull>::
-            //AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+            m_vertLinsys = MemoryManager<GlobalLinSysPETScFull>::
+                AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
 
 
 	}

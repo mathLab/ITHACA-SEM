@@ -163,6 +163,9 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
                 PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -DMKL_ILP64")
     ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
         
+    IF( NEKTAR_USE_PETSC )
+        TARGET_LINK_LIBRARIES(${name} ${PETSC_LIBRARIES} )
+    ENDIF( NEKTAR_USE_PETSC )
 
     TARGET_LINK_LIBRARIES(${name}
         optimized LibUtilities debug LibUtilities-g

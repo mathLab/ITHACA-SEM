@@ -119,10 +119,12 @@ ENDIF(NEKTAR_USE_MPI)
 IF(NEKTAR_USE_PETSC)
     SET(MULTI_REGIONS_HEADERS ${MULTI_REGIONS_HEADERS}
         GlobalLinSysPETSc.h
+        GlobalLinSysPETScFull.h
         GlobalLinSysPETScStaticCond.h
     )
     SET(MULTI_REGIONS_SOURCES ${MULTI_REGIONS_SOURCES}
         GlobalLinSysPETSc.cpp
+        GlobalLinSysPETScFull.cpp
         GlobalLinSysPETScStaticCond.cpp
     )
 ENDIF(NEKTAR_USE_PETSC)

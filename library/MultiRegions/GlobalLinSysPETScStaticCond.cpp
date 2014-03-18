@@ -351,7 +351,6 @@ namespace Nektar
 
             unsigned int rows = nBndDofs - NumDirBCs;
             unsigned int cols = nBndDofs - NumDirBCs;
-            NekDouble zero = 0.0;
 
             /*
             // Figure out size of universal matrix system excluding Dirichlet
@@ -379,14 +378,14 @@ namespace Nektar
             DNekScalMatSharedPtr loc_mat;
             PetscErrorCode ierr;
 
-            ierr = MatCreate(PETSC_COMM_WORLD, &m_matrix);//CHKERRQ(ierr);
-            ierr = MatSetType(m_matrix, MATSEQAIJ);
-            ierr = MatSetSizes(m_matrix, rows, cols, PETSC_DETERMINE, PETSC_DETERMINE);//CHKERRQ(ierr);
-            ierr = MatSetFromOptions(m_matrix);
-            ierr = MatSetUp(m_matrix);
-            //ierr = MatSeqAIJSetPreallocation(m_matrix, 0, NULL);//CHKERRQ(ierr);
-            //ierr = MatMPIAIJSetPreallocation(m_matrix, 0, NULL, 0, NULL);//CHKERRQ(ierr);
-            ierr = MatGetVecs(m_matrix, &m_x, &m_b);//CHKERRQ(ierr);
+            MatCreate(PETSC_COMM_WORLD, &m_matrix);
+            MatSetType(m_matrix, MATSEQAIJ);
+            MatSetSizes(m_matrix, rows, cols, PETSC_DETERMINE, PETSC_DETERMINE);
+            MatSetFromOptions(m_matrix);
+            //ierr = MatSetUp(m_matrix);
+            MatSeqAIJSetPreallocation(m_matrix, 1000, NULL);
+            //MatMPIAIJSetPreallocation(m_matrix, 100, NULL, 100, NULL);
+            MatGetVecs(m_matrix, &m_x, &m_b);
 
             int loc_lda;
             for(n = cnt = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)

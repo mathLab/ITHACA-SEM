@@ -1286,6 +1286,7 @@ namespace Nektar
                 case eIterativeStaticCond:
                 case eXxtFullMatrix:
                 case eXxtStaticCond:
+                case ePETScFullMatrix:
                 case ePETScStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);

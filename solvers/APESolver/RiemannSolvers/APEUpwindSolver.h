@@ -61,6 +61,13 @@ class APEUpwindSolver : public RiemannSolver
                 const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux);
+
+        void Solve1D(
+                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                      Array<OneD,       Array<OneD, NekDouble> > &flux);
+
+        Array<OneD, Array<OneD, NekDouble> >            m_rotBasefield;
 };
 
 }

@@ -79,20 +79,20 @@ void APE::v_InitObject()
         // Define the normal velocity fields
         if (m_fields[0]->GetTrace())
         {
-            m_traceVn = Array<OneD, NekDouble>(GetTraceNpoints());
+            m_traceBasefield = Array<OneD, Array<OneD, NekDouble> > (m_spacedim+1);
+            for (int i = 0; i < m_spacedim + 1; i++)
+            {
+                m_traceBasefield[i] = Array<OneD, NekDouble>(GetTraceNpoints());
+            }
         }
 
         // Set up locations of velocity and base velocity vectors.
-        int nvariables = m_spacedim + 1;
-        m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(2);
+        m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
         m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
-        m_vecLocs[1] = Array<OneD, NekDouble>(m_spacedim);
         for (int i = 0; i < m_spacedim; ++i)
         {
             // u', v', w'
             m_vecLocs[0][i] = 1 + i;
-            // u0, v0, w0
-            m_vecLocs[1][i] = nvariables + 1 + i;
         }
 
         string riemName;
@@ -100,6 +100,7 @@ void APE::v_InitObject()
         riemName = "APEUpwind";
         m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
         m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
+        m_riemannSolver->SetVector("basefield", &APE::GetBasefield, this);
         m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
         m_riemannSolver->SetParam ("Gamma",     &APE::GetGamma,     this);
         m_riemannSolver->SetParam ("Rho",       &APE::GetRho,       this);
@@ -142,31 +143,23 @@ void APE::v_NumericalFlux(
     int nvar = physfield.num_elements();
 
     // temporary arrays
-    Array<OneD, Array<OneD, NekDouble> >  Fwd(2*nvar);
-    Array<OneD, Array<OneD, NekDouble> >  Bwd(2*nvar);
-    Array<OneD, Array<OneD, NekDouble> > flux(2*nvar);
+    Array<OneD, Array<OneD, NekDouble> >  Fwd(nvar);
+    Array<OneD, Array<OneD, NekDouble> >  Bwd(nvar);
 
-    for (int i = 0; i < 2*nvar; ++i)
+    for (int i = 0; i < nvar; ++i)
     {
         Fwd[i]  = Array<OneD, NekDouble>(ntp);
         Bwd[i]  = Array<OneD, NekDouble>(ntp);
-        flux[i] = Array<OneD, NekDouble>(ntp);
     }
 
     // get the physical values at the trace
     for (int i = 0; i < nvar; ++i)
     {
         m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
-        m_fields[i]->GetFwdBwdTracePhys(m_basefield[i],Fwd[i+nvar],Bwd[i+nvar]);
     }
 
     // Solve the Riemann problem
-    m_riemannSolver->Solve(Fwd, Bwd, flux);
-
-    for (int i = 0; i < nvar; i++)
-    {
-        numflux[i] = flux[i];
-    }
+    m_riemannSolver->Solve(Fwd, Bwd, numflux);
 
 }
 
@@ -543,6 +536,15 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetNormals()
 const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
 {
     return m_vecLocs;
+}
+
+const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefield()
+{
+    for (int i = 0; i < m_spacedim +1; i++)
+    {
+        m_fields[0]->ExtractTracePhys(m_basefield[i], m_traceBasefield[i]);
+    }
+    return m_traceBasefield;
 }
 
 NekDouble APE::GetGamma()

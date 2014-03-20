@@ -68,7 +68,7 @@ class APE : public UnsteadySystem
     protected:
 
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
-        Array<OneD, NekDouble>                          m_traceVn;
+        Array<OneD, Array<OneD, NekDouble> >            m_traceBasefield;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Constant incompressible density (APE)
         NekDouble                                       m_Rho0;
@@ -115,6 +115,8 @@ class APE : public UnsteadySystem
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals();
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
+
+        const Array<OneD, const Array<OneD, NekDouble> > &GetBasefield();
 
         NekDouble GetGamma();
 

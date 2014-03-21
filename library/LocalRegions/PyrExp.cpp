@@ -354,6 +354,416 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
+        StdRegions::Orientation PyrExp::v_GetFaceOrient(int face)
+        {
+            return GetGeom3D()->GetFaceOrient(face);
+        }
+
+        void PyrExp::v_GetFacePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            int nq0 = m_base[0]->GetNumPoints();
+            int nq1 = m_base[1]->GetNumPoints();
+            int nq2 = m_base[2]->GetNumPoints();
+
+            Array<OneD,NekDouble> o_tmp(nq0*nq1*nq2);
+            
+            if (orient == StdRegions::eNoOrientation)
+            {
+                orient = GetFaceOrient(face);
+            }
+
+            switch(face)
+            {
+                case 0:
+                    if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                    {
+                        //Directions A and B positive
+                        Vmath::Vcopy(nq0*nq1,&(inarray[0]),1,&(o_tmp[0]),1);
+                    }
+                    else if(orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                    {
+                        //Direction A negative and B positive
+                        for (int j=0; j<nq1; j++)
+                        {
+                            Vmath::Vcopy(nq0,&(inarray[0])+(nq0-1)+j*nq0,-1,&(o_tmp[0])+(j*nq0),1);
+                        }
+                    }
+                    else if(orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2)
+                    {
+                        //Direction A positive and B negative
+                        for (int j=0; j<nq1; j++)
+                        {
+                            Vmath::Vcopy(nq0,&(inarray[0])+nq0*(nq1-1-j),1,&(o_tmp[0])+(j*nq0),1);
+                        }
+                    } 
+                    else if(orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)
+                    {
+                        //Direction A negative and B negative
+                        for(int j=0; j<nq1; j++)
+                        {
+                            Vmath::Vcopy(nq0,&(inarray[0])+(nq0*nq1-1-j*nq0),-1,&(o_tmp[0])+(j*nq0),1);
+                        }
+                    }
+                    else if(orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+                    {
+                        //Transposed, Direction A and B positive
+                        for (int i=0; i<nq0; i++)
+                        {
+                            Vmath::Vcopy(nq1,&(inarray[0])+i,nq0,&(o_tmp[0])+(i*nq1),1);
+                        }
+                    }
+                    else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
+                    {
+                        //Transposed, Direction A positive and B negative
+                        for (int i=0; i<nq0; i++)
+                        {
+                            Vmath::Vcopy(nq1,&(inarray[0])+(nq0-1-i),nq0,&(o_tmp[0])+(i*nq1),1);
+                        }
+                    } 
+                    else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+                    {
+                        //Transposed, Direction A negative and B positive
+                        for (int i=0; i<nq0; i++)
+                        {
+                            Vmath::Vcopy(nq1,&(inarray[0])+i+nq0*(nq1-1),-nq0,&(o_tmp[0])+(i*nq1),1);
+                        }
+                    } 
+                    else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
+                    {
+                        //Transposed, Direction A and B negative
+                        for (int i=0; i<nq0; i++)
+                        {
+                            Vmath::Vcopy(nq1,&(inarray[0])+(nq0*nq1-1-i),-nq0,&(o_tmp[0])+(i*nq1),1);
+                        }
+                    } 
+                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), o_tmp,
+                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),outarray);
+                    break;
+
+                case 1:
+                {
+                    for (int k = 0; k < nq2; k++)
+                    {
+                        Vmath::Vcopy(nq0,inarray.get()+nq0*nq1*k,1,outarray.get()+k*nq0,1);
+                    }
+                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), outarray.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp.get());
+                    break;
+                }
+
+                case 2:
+                {
+                    Vmath::Vcopy(nq1*nq2,inarray.get()+(nq0-1),nq0,outarray.get(),1);
+                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), outarray.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp.get());
+                    break;
+                }
+
+                case 3:
+                {
+                    for (int k = 0; k < nq2; k++)
+                    {
+                        Vmath::Vcopy(nq0,inarray.get()+nq0*(nq1-1)+nq0*nq1*k,1,outarray.get()+(k*nq0),1);
+                    }
+                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), outarray.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp.get());
+                }
+
+                case 4:
+                {
+                    Vmath::Vcopy(nq1*nq2,inarray.get(),nq0,outarray.get(),1);
+                    LibUtilities::Interp2D(m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), outarray.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp.get());
+                    break;
+                }
+
+                default:
+                    ASSERTL0(false,"face value (> 4) is out of range");
+                    break;
+	    }
+
+            if (face > 0)
+            {
+                int fnq1 = FaceExp->GetNumPoints(0);
+                int fnq2 = FaceExp->GetNumPoints(1);
+
+                if ((int)orient == 7)
+                {
+                    for (int j = 0; j < fnq2; ++j)
+                    {
+                        Vmath::Vcopy(fnq1, o_tmp.get()+((j+1)*fnq1-1), -1, outarray.get()+j*fnq1, 1);
+                    }
+                }
+                else
+                {
+                    Vmath::Vcopy(fnq1*fnq2, o_tmp.get(), 1, outarray.get(), 1);
+                }
+            }
+        }
+
+        void PyrExp::v_ComputeFaceNormal(const int face)
+        {
+            const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
+                GetGeom()->GetMetricInfo();
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
+            SpatialDomains::GeomType type            = geomFactors->GetGtype();
+            const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors(ptsKeys);
+            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(ptsKeys);
+
+            // Number of quadrature points in face expansion.
+            int nq        = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
+            int vCoordDim = GetCoordim();
+            int i;
+
+            m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
+            Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
+            for (i = 0; i < vCoordDim; ++i)
+            {
+                normal[i] = Array<OneD, NekDouble>(nq);
+            }
+
+            // Regular geometry case
+            if (type == SpatialDomains::eRegular      ||
+                type == SpatialDomains::eMovingRegular)
+            {
+                NekDouble fac;
+                // Set up normals
+                switch(face)
+                {
+                    case 0:
+                    {
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            Vmath::Fill(nq,-df[3*i+2][0],normal[i],1);
+                        }
+                        break;
+                    }
+                    case 1:
+                    {
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            Vmath::Fill(nq,-df[3*i+1][0],normal[i],1);
+                        }
+                        break;
+                    }
+                    case 2:
+                    {
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            Vmath::Fill(nq,df[3*i][0]+df[3*i+2][0],normal[i],1);
+                        }
+                        break;
+                    }
+                    case 3:
+                    {
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            Vmath::Fill(nq,df[3*i+1][0]+df[3*i+2][0],normal[i],1);
+                        }
+                        break;
+                    }
+                    case 4:
+                    {
+                        for(i = 0; i < vCoordDim; ++i)
+                        {
+                            Vmath::Fill(nq,-df[3*i][0],normal[i],1);
+                        }
+                        break;
+                    }
+                    default:
+                        ASSERTL0(false,"face is out of range (face < 4)");
+                }
+
+                // Normalise resulting vector.
+                fac = 0.0;
+                for(i = 0; i < vCoordDim; ++i)
+                {
+                    fac += normal[i][0]*normal[i][0];
+                }
+                fac = 1.0/sqrt(fac);
+                for (i = 0; i < vCoordDim; ++i)
+                {
+                    Vmath::Smul(nq,fac,normal[i],1,normal[i],1);
+                }
+            }
+            else
+            {
+                // Set up deformed normals.
+                int j, k;
+
+                int nq0  = ptsKeys[0].GetNumPoints();
+                int nq1  = ptsKeys[1].GetNumPoints();
+                int nq2  = ptsKeys[2].GetNumPoints();
+                int nq01 = nq0*nq1;
+                int nqtot;
+
+                // Determine number of quadrature points on the face.
+                if (face == 0)
+                {
+                    nqtot = nq0*nq1;
+                }
+                else if (face == 1 || face == 3)
+                {
+                    nqtot = nq0*nq2;
+                }
+                else
+                {
+                    nqtot = nq1*nq2;
+                }
+
+                LibUtilities::PointsKey points0;
+                LibUtilities::PointsKey points1;
+
+                Array<OneD, NekDouble> work   (nq,             0.0);
+                Array<OneD, NekDouble> normals(vCoordDim*nqtot,0.0);
+
+                // Extract Jacobian along face and recover local derivatives
+                // (dx/dr) for polynomial interpolation by multiplying m_gmat by
+                // jacobian
+                switch(face)
+                {
+                    case 0:
+                    {
+                        for(j = 0; j < nq01; ++j)
+                        {
+                            normals[j]         = -df[2][j]*jac[j];
+                            normals[nqtot+j]   = -df[5][j]*jac[j];
+                            normals[2*nqtot+j] = -df[8][j]*jac[j];
+                        }
+
+                        points0 = ptsKeys[0];
+                        points1 = ptsKeys[1];
+                        break;
+                    }
+
+                    case 1:
+                    {
+                        for (j = 0; j < nq0; ++j)
+                        {
+                            for(k = 0; k < nq2; ++k)
+                            {
+                                int tmp = j+nq01*k;
+                                normals[j+k*nq0]          =
+                                    -df[1][tmp]*jac[tmp];
+                                normals[nqtot+j+k*nq0]    =
+                                    -df[4][tmp]*jac[tmp];
+                                normals[2*nqtot+j+k*nq0]  =
+                                    -df[7][tmp]*jac[tmp];
+                            }
+                        }
+
+                        points0 = ptsKeys[0];
+                        points1 = ptsKeys[2];
+                        break;
+                    }
+
+                    case 2:
+                    {
+                        for (j = 0; j < nq1; ++j)
+                        {
+                            for(k = 0; k < nq2; ++k)
+                            {
+                                int tmp = nq0-1+nq0*j+nq01*k;
+                                normals[j+k*nq1]         =
+                                    (df[0][tmp]+df[2][tmp])*jac[tmp];
+                                normals[nqtot+j+k*nq1]   =
+                                    (df[3][tmp]+df[5][tmp])*jac[tmp];
+                                normals[2*nqtot+j+k*nq1] =
+                                    (df[6][tmp]+df[8][tmp])*jac[tmp];
+                            }
+                        }
+
+                        points0 = ptsKeys[1];
+                        points1 = ptsKeys[2];
+                        break;
+                    }
+
+                    case 3:
+                    {
+                        for (j = 0; j < nq0; ++j)
+                        {
+                            for(k = 0; k < nq2; ++k)
+                            {
+                                int tmp = nq0*(nq1-1) + j + nq01*k;
+                                normals[j+k*nq0]         =
+                                    (df[1][tmp]+df[2][tmp])*jac[tmp];
+                                normals[nqtot+j+k*nq0]   =
+                                    (df[4][tmp]+df[5][tmp])*jac[tmp];
+                                normals[2*nqtot+j+k*nq0] =
+                                    (df[7][tmp]+df[8][tmp])*jac[tmp];
+                            }
+                        }
+
+                        points0 = ptsKeys[0];
+                        points1 = ptsKeys[2];
+                        break;
+                    }
+
+                    case 4:
+                    {
+                        for (j = 0; j < nq1; ++j)
+                        {
+                            for(k = 0; k < nq2; ++k)
+                            {
+                                int tmp = j*nq0+nq01*k;
+                                normals[j+k*nq1]         =
+                                    -df[0][tmp]*jac[tmp];
+                                normals[nqtot+j+k*nq1]   =
+                                    -df[3][tmp]*jac[tmp];
+                                normals[2*nqtot+j+k*nq1] =
+                                    -df[6][tmp]*jac[tmp];
+                            }
+                        }
+
+                        points0 = ptsKeys[1];
+                        points1 = ptsKeys[2];
+                        break;
+                    }
+
+                    default:
+                        ASSERTL0(false,"face is out of range (face < 4)");
+                }
+
+                // Interpolate Jacobian and invert
+                LibUtilities::Interp2D(points0, points1, jac,
+                                       m_base[0]->GetPointsKey(),
+                                       m_base[0]->GetPointsKey(),
+                                       work);
+                Vmath::Sdiv(nq, 1.0, &work[0], 1, &work[0], 1);
+
+                // Interpolate normal and multiply by inverse Jacobian.
+                for(i = 0; i < vCoordDim; ++i)
+                {
+                    LibUtilities::Interp2D(points0, points1,
+                                           &normals[i*nqtot],
+                                           m_base[0]->GetPointsKey(),
+                                           m_base[0]->GetPointsKey(),
+                                           &normal[i][0]);
+                    Vmath::Vmul(nq,work,1,normal[i],1,normal[i],1);
+                }
+
+                // Normalise to obtain unit normals.
+                Vmath::Zero(nq,work,1);
+                for(i = 0; i < GetCoordim(); ++i)
+                {
+                    Vmath::Vvtvp(nq,normal[i],1,normal[i],1,work,1,work,1);
+                }
+
+                Vmath::Vsqrt(nq,work,1,work,1);
+                Vmath::Sdiv (nq,1.0,work,1,work,1);
+
+                for(i = 0; i < GetCoordim(); ++i)
+                {
+                    Vmath::Vmul(nq,normal[i],1,work,1,normal[i],1);
+                }
+            }
+        }
+
         //---------------------------------------
         // Matrix creation functions
         //---------------------------------------
@@ -370,10 +780,10 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
             case StdRegions::eHybridDGHelmBndLam:
-                returnval = Expansion3D::GenMatrix(mkey);
+                returnval = Expansion3D::v_GenMatrix(mkey);
                 break;
             default:
-                returnval = StdPyrExp::GenMatrix(mkey);
+                returnval = StdPyrExp::v_GenMatrix(mkey);
             }
             
             return returnval;            
@@ -483,7 +893,6 @@ namespace Nektar
                         DNekMat &lap12 = *GetStdMatrix(lap12key);
                         DNekMat &lap22 = *GetStdMatrix(lap22key);
 
-
                         NekDouble jac = (m_metricinfo->GetJac(ptsKeys))[0];
                         Array<TwoD, const NekDouble> gmat =
                                             m_metricinfo->GetGmat(ptsKeys);
@@ -519,10 +928,9 @@ namespace Nektar
 
                     DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows, cols);
 
-                    NekDouble one = 1.0;
                     (*helm) = LapMat + factor*MassMat;
 
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0, helm);
                 }
                 break;
             default:
@@ -646,5 +1054,227 @@ namespace Nektar
             return returnval;
         }
 
+        void PyrExp::v_ComputeLaplacianMetric()
+        {
+            if (m_metrics.count(MetricQuadrature) == 0)
+            {
+                ComputeQuadratureMetric();
+            }
+
+            int i, j;
+            const unsigned int nqtot = GetTotPoints();
+            const unsigned int dim = 3;
+            const MetricType m[3][3] = {
+                { MetricLaplacian00, MetricLaplacian01, MetricLaplacian02 },
+                { MetricLaplacian01, MetricLaplacian11, MetricLaplacian12 },
+                { MetricLaplacian02, MetricLaplacian12, MetricLaplacian22 }
+            };
+
+            for (unsigned int i = 0; i < dim; ++i)
+            {
+                for (unsigned int j = i; j < dim; ++j)
+                {
+                    m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
+                }
+            }
+
+            // Define shorthand synonyms for m_metrics storage
+            Array<OneD,NekDouble> g0   (m_metrics[m[0][0]]);
+            Array<OneD,NekDouble> g1   (m_metrics[m[1][1]]);
+            Array<OneD,NekDouble> g2   (m_metrics[m[2][2]]);
+            Array<OneD,NekDouble> g3   (m_metrics[m[0][1]]);
+            Array<OneD,NekDouble> g4   (m_metrics[m[0][2]]);
+            Array<OneD,NekDouble> g5   (m_metrics[m[1][2]]);
+
+            // Allocate temporary storage
+            Array<OneD,NekDouble> alloc(9*nqtot,0.0);
+            Array<OneD,NekDouble> h0   (nqtot, alloc);
+            Array<OneD,NekDouble> h1   (nqtot, alloc+ 1*nqtot);
+            Array<OneD,NekDouble> h2   (nqtot, alloc+ 2*nqtot);
+            Array<OneD,NekDouble> wsp1 (nqtot, alloc+ 3*nqtot);
+            Array<OneD,NekDouble> wsp2 (nqtot, alloc+ 4*nqtot);
+            Array<OneD,NekDouble> wsp3 (nqtot, alloc+ 5*nqtot);
+            Array<OneD,NekDouble> wsp4 (nqtot, alloc+ 6*nqtot);
+            Array<OneD,NekDouble> wsp5 (nqtot, alloc+ 7*nqtot);
+            Array<OneD,NekDouble> wsp6 (nqtot, alloc+ 8*nqtot);
+
+            const Array<TwoD, const NekDouble>& df =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
+            const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
+            const unsigned int nquad0 = m_base[0]->GetNumPoints();
+            const unsigned int nquad1 = m_base[1]->GetNumPoints();
+            const unsigned int nquad2 = m_base[2]->GetNumPoints();
+
+            // Populate collapsed coordinate arrays h0, h1 and h2.
+            for(j = 0; j < nquad2; ++j)
+            {
+                for(i = 0; i < nquad1; ++i)
+                {
+                    Vmath::Fill(nquad0, 2.0/(1.0-z2[j]),         &h0[0]+i*nquad0 + j*nquad0*nquad1,1);
+                    Vmath::Fill(nquad0, 1.0/(1.0-z2[j]),         &h1[0]+i*nquad0 + j*nquad0*nquad1,1);
+                    Vmath::Fill(nquad0, (1.0+z1[i])/(1.0-z2[j]), &h2[0]+i*nquad0 + j*nquad0*nquad1,1);
+                }
+            }
+            for(i = 0; i < nquad0; i++)
+            {
+                Blas::Dscal(nquad1*nquad2, 1+z0[i], &h1[0]+i, nquad0);
+            }
+
+            // Step 3. Construct combined metric terms for physical space to
+            // collapsed coordinate system.
+            // Order of construction optimised to minimise temporary storage
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                // f_{1k}
+                Vmath::Vvtvvtp(nqtot, &df[0][0], 1, &h0[0], 1, &df[2][0], 1, &h1[0], 1, &wsp1[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[3][0], 1, &h0[0], 1, &df[5][0], 1, &h1[0], 1, &wsp2[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[6][0], 1, &h0[0], 1, &df[8][0], 1, &h1[0], 1, &wsp3[0], 1);
+
+                // g0
+                Vmath::Vvtvvtp(nqtot, &wsp1[0], 1, &wsp1[0], 1, &wsp2[0], 1, &wsp2[0], 1, &g0[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp3[0], 1, &wsp3[0], 1, &g0[0],   1, &g0[0],   1);
+
+                // g4
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &wsp1[0], 1, &df[5][0], 1, &wsp2[0], 1, &g4[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &wsp3[0], 1, &g4[0], 1, &g4[0], 1);
+
+                // f_{2k}
+                Vmath::Vvtvvtp(nqtot, &df[1][0], 1, &h0[0], 1, &df[2][0], 1, &h2[0], 1, &wsp4[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[4][0], 1, &h0[0], 1, &df[5][0], 1, &h2[0], 1, &wsp5[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[7][0], 1, &h0[0], 1, &df[8][0], 1, &h2[0], 1, &wsp6[0], 1);
+
+                // g1
+                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g1[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g1[0],   1, &g1[0],   1);
+
+                // g3
+                Vmath::Vvtvvtp(nqtot, &wsp1[0], 1, &wsp4[0], 1, &wsp2[0], 1, &wsp5[0], 1, &g3[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp3[0], 1, &wsp6[0], 1, &g3[0],   1, &g3[0],   1);
+
+                // g5
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &wsp4[0], 1, &df[5][0], 1, &wsp5[0], 1, &g5[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &wsp6[0], 1, &g5[0], 1, &g5[0], 1);
+
+                // g2
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &df[2][0], 1, &df[5][0], 1, &df[5][0], 1, &g2[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &df[8][0], 1, &g2[0], 1, &g2[0], 1);
+            }
+            else
+            {
+                // f_{1k}
+                Vmath::Svtsvtp(nqtot, df[0][0], &h0[0], 1, df[2][0], &h1[0], 1, &wsp1[0], 1);
+                Vmath::Svtsvtp(nqtot, df[3][0], &h0[0], 1, df[5][0], &h1[0], 1, &wsp2[0], 1);
+                Vmath::Svtsvtp(nqtot, df[6][0], &h0[0], 1, df[8][0], &h1[0], 1, &wsp3[0], 1);
+
+                // g0
+                Vmath::Vvtvvtp(nqtot, &wsp1[0], 1, &wsp1[0], 1, &wsp2[0], 1, &wsp2[0], 1, &g0[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp3[0], 1, &wsp3[0], 1, &g0[0],   1, &g0[0],   1);
+
+                // g4
+                Vmath::Svtsvtp(nqtot, df[2][0], &wsp1[0], 1, df[5][0], &wsp2[0], 1, &g4[0], 1);
+                Vmath::Svtvp  (nqtot, df[8][0], &wsp3[0], 1, &g4[0], 1, &g4[0], 1);
+
+                // f_{2k}
+                Vmath::Svtsvtp(nqtot, df[1][0], &h0[0], 1, df[2][0], &h2[0], 1, &wsp4[0], 1);
+                Vmath::Svtsvtp(nqtot, df[4][0], &h0[0], 1, df[5][0], &h2[0], 1, &wsp5[0], 1);
+                Vmath::Svtsvtp(nqtot, df[7][0], &h0[0], 1, df[8][0], &h2[0], 1, &wsp6[0], 1);
+
+                // g1
+                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g1[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g1[0],   1, &g1[0],   1);
+
+                // g3
+                Vmath::Vvtvvtp(nqtot, &wsp1[0], 1, &wsp4[0], 1, &wsp2[0], 1, &wsp5[0], 1, &g3[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp3[0], 1, &wsp6[0], 1, &g3[0],   1, &g3[0],   1);
+
+                // g5
+                Vmath::Svtsvtp(nqtot, df[2][0], &wsp4[0], 1, df[5][0], &wsp5[0], 1, &g5[0], 1);
+                Vmath::Svtvp  (nqtot, df[8][0], &wsp6[0], 1, &g5[0], 1, &g5[0], 1);
+
+                // g2
+                Vmath::Fill(nqtot, df[2][0]*df[2][0] + df[5][0]*df[5][0] + df[8][0]*df[8][0], &g2[0], 1);
+            }
+
+            for (unsigned int i = 0; i < dim; ++i)
+            {
+                for (unsigned int j = i; j < dim; ++j)
+                {
+                    MultiplyByQuadratureMetric(m_metrics[m[i][j]],
+                                               m_metrics[m[i][j]]);
+
+                }
+            }
+        }
+
+        void PyrExp::v_LaplacianMatrixOp_MatFree_Kernel(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+                  Array<OneD,       NekDouble> &wsp)
+        {
+            // This implementation is only valid when there are no coefficients
+            // associated to the Laplacian operator
+            if (m_metrics.count(MetricLaplacian00) == 0)
+            {
+                ComputeLaplacianMetric();
+            }
+
+            int nquad0  = m_base[0]->GetNumPoints();
+            int nquad1  = m_base[1]->GetNumPoints();
+            int nq2  = m_base[2]->GetNumPoints();
+            int nqtot   = nquad0*nquad1*nq2;
+
+            ASSERTL1(wsp.num_elements() >= 6*nqtot,
+                     "Insufficient workspace size.");
+            ASSERTL1(m_ncoeffs <= nqtot,
+                     "Workspace not set up for ncoeffs > nqtot");
+
+            const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+            const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
+            const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+            const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
+            const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
+            const Array<OneD, const NekDouble>& metric00 = m_metrics[MetricLaplacian00];
+            const Array<OneD, const NekDouble>& metric01 = m_metrics[MetricLaplacian01];
+            const Array<OneD, const NekDouble>& metric02 = m_metrics[MetricLaplacian02];
+            const Array<OneD, const NekDouble>& metric11 = m_metrics[MetricLaplacian11];
+            const Array<OneD, const NekDouble>& metric12 = m_metrics[MetricLaplacian12];
+            const Array<OneD, const NekDouble>& metric22 = m_metrics[MetricLaplacian22];
+
+            // Allocate temporary storage
+            Array<OneD,NekDouble> wsp0 (2*nqtot, wsp);
+            Array<OneD,NekDouble> wsp1 (  nqtot, wsp+1*nqtot);
+            Array<OneD,NekDouble> wsp2 (  nqtot, wsp+2*nqtot);
+            Array<OneD,NekDouble> wsp3 (  nqtot, wsp+3*nqtot);
+            Array<OneD,NekDouble> wsp4 (  nqtot, wsp+4*nqtot);
+            Array<OneD,NekDouble> wsp5 (  nqtot, wsp+5*nqtot);
+
+            // LAPLACIAN MATRIX OPERATION
+            // wsp1 = du_dxi1 = D_xi1 * inarray = D_xi1 * u
+            // wsp2 = du_dxi2 = D_xi2 * inarray = D_xi2 * u
+            // wsp2 = du_dxi3 = D_xi3 * inarray = D_xi3 * u
+            StdExpansion3D::PhysTensorDeriv(inarray,wsp0,wsp1,wsp2);
+
+            // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+            // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+            // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
+            // especially for this purpose
+            Vmath::Vvtvvtp(nqtot,&metric00[0],1,&wsp0[0],1,&metric01[0],1,&wsp1[0],1,&wsp3[0],1);
+            Vmath::Vvtvp  (nqtot,&metric02[0],1,&wsp2[0],1,&wsp3[0],1,&wsp3[0],1);
+            Vmath::Vvtvvtp(nqtot,&metric01[0],1,&wsp0[0],1,&metric11[0],1,&wsp1[0],1,&wsp4[0],1);
+            Vmath::Vvtvp  (nqtot,&metric12[0],1,&wsp2[0],1,&wsp4[0],1,&wsp4[0],1);
+            Vmath::Vvtvvtp(nqtot,&metric02[0],1,&wsp0[0],1,&metric12[0],1,&wsp1[0],1,&wsp5[0],1);
+            Vmath::Vvtvp  (nqtot,&metric22[0],1,&wsp2[0],1,&wsp5[0],1,&wsp5[0],1);
+
+            // outarray = m = (D_xi1 * B)^T * k
+            // wsp1     = n = (D_xi2 * B)^T * l
+            IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp3,outarray,wsp0,false,true,true);
+            IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp4,wsp2,    wsp0,true,false,true);
+            Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
+            IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp5,wsp2,    wsp0,true,true,false);
+            Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
+        }
     }//end of namespace
 }//end of namespace

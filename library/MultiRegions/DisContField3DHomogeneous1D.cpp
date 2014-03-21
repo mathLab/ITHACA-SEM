@@ -216,11 +216,12 @@ namespace Nektar
                                               PlanesBndCondExp);
                 }
             }
-            EvaluateBoundaryConditions();
+            EvaluateBoundaryConditions(0.0, variable);
         }
 
         void DisContField3DHomogeneous1D::EvaluateBoundaryConditions(
-            const NekDouble time)
+            const NekDouble   time,
+            const std::string varName)
         {
             int n;
             const Array<OneD, const NekDouble> z = m_homogeneousBasis->GetZ();
@@ -234,7 +235,7 @@ namespace Nektar
             for (n = 0; n < m_planes.num_elements(); ++n)
             {
                 m_planes[n]->EvaluateBoundaryConditions(
-                    time,0.5*m_lhom*(1.0+local_z[n]));
+                    time, varName, 0.5*m_lhom*(1.0+local_z[n]));
             }
 
             // Fourier transform coefficient space boundary values
@@ -301,11 +302,12 @@ namespace Nektar
         }
 
         void DisContField3DHomogeneous1D::v_EvaluateBoundaryConditions(
-            const NekDouble time,
-            const NekDouble x2_in,
-            const NekDouble x3_in)
+            const NekDouble   time,
+            const std::string varName,
+            const NekDouble   x2_in,
+            const NekDouble   x3_in)
         {
-            EvaluateBoundaryConditions(time);
+            EvaluateBoundaryConditions(time, varName);
         }
 
         boost::shared_ptr<ExpList> &DisContField3DHomogeneous1D::

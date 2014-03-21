@@ -41,7 +41,6 @@ Preconditioner.cpp
 PreconditionerDiagonal.cpp
 PreconditionerLowEnergy.cpp
 PreconditionerBlock.cpp
-PreconditionerPETScLinear.cpp  
 SubStructuredGraph.cpp
 )
 
@@ -84,7 +83,6 @@ Preconditioner.h
 PreconditionerDiagonal.h
 PreconditionerLowEnergy.h
 PreconditionerBlock.h
-PreconditionerPETScLinear.h  
 SubStructuredGraph.h
 )
 
@@ -123,11 +121,13 @@ IF(NEKTAR_USE_PETSC)
         GlobalLinSysPETSc.h
         GlobalLinSysPETScFull.h
         GlobalLinSysPETScStaticCond.h
+        PreconditionerPETScLinear.h     
     )
     SET(MULTI_REGIONS_SOURCES ${MULTI_REGIONS_SOURCES}
         GlobalLinSysPETSc.cpp
         GlobalLinSysPETScFull.cpp
         GlobalLinSysPETScStaticCond.cpp
+        PreconditionerPETScLinear.cpp   
     )
 ENDIF(NEKTAR_USE_PETSC)
 

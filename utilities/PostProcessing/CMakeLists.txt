@@ -7,6 +7,8 @@ ADD_UTILITIES_EXECUTABLE(FldAddFalknerSkanBL   util-extra FldAddFalknerSkanBL.cp
 ADD_UTILITIES_EXECUTABLE(FldAddFld         util FldAddFld.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddVort        util FldAddVort.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddScalGrad    util FldAddScalGrad.cpp)
+ADD_UTILITIES_EXECUTABLE(FldAddWSS	   util FldAddWSS.cpp)
+ADD_UTILITIES_EXECUTABLE(FldAddMultiShear    util FldAddMultiShear.cpp)
 ADD_UTILITIES_EXECUTABLE(FldToTecplot      util FldToTecplot.cpp)
 ADD_UTILITIES_EXECUTABLE(FldQCriterion     util FldQCriterion.cpp)
 ADD_UTILITIES_EXECUTABLE(FldToVtk          util FldToVtk.cpp)

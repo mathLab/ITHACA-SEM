@@ -1128,6 +1128,7 @@ namespace Nektar
             // serial processing just add ending.
             if(nprocs == 1)
             {
+                cout << "Writing: " << specPath << endl;
                 return LibUtilities::PortablePath(specPath);
             }
 

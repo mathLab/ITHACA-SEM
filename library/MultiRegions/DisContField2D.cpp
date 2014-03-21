@@ -104,7 +104,7 @@ namespace Nektar
                 
                 if (DeclareCoeffPhysArrays)
                 {
-                    EvaluateBoundaryConditions();
+                    EvaluateBoundaryConditions(0.0, variable);
                 }
 
                 // Find periodic edges for this variable.
@@ -185,7 +185,7 @@ namespace Nektar
             
             if (DeclareCoeffPhysArrays)
             {
-                EvaluateBoundaryConditions();
+                EvaluateBoundaryConditions(0.0, variable);
             }
             
             if (!SameTypeOfBoundaryConditions(In))
@@ -2117,9 +2117,11 @@ namespace Nektar
          * boundary conditions unless time == 0.0 which is the
          * case when the method is called from the constructor.
          */
-        void DisContField2D::v_EvaluateBoundaryConditions(const NekDouble time,
-                                                          const NekDouble x2_in,
-                                                          const NekDouble x3_in)
+        void DisContField2D::v_EvaluateBoundaryConditions(
+            const NekDouble   time,
+            const std::string varName,
+            const NekDouble   x2_in,
+            const NekDouble   x3_in)
         {
             int i;
             int npoints;
@@ -2142,7 +2144,7 @@ namespace Nektar
                     // Homogeneous input case for x2.
                     if (x2_in == NekConstants::kNekUnsetDouble)
                     {
-                        locExpList->GetCoords(x0,x1,x2);
+                        locExpList->GetCoords(x0, x1, x2);
                     }
                     else
                     {
@@ -2153,39 +2155,13 @@ namespace Nektar
                     if (m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                     {
-
                         string filebcs = boost::static_pointer_cast<
                             SpatialDomains::DirichletBoundaryCondition>(
                                 m_bndConditions[i])->m_filename;
                         
                         if (filebcs != "")
                         {
-                             string varString = filebcs.substr(
-                                 0, filebcs.find_last_of("."));
-                             int len = varString.length();
-                             varString = varString.substr(len-1, len);
-                             cout << "Boundary condition from file:" 
-                                  << filebcs << endl;
-
-                             std::vector<LibUtilities::
-                                    FieldDefinitionsSharedPtr> FieldDef;
-                             std::vector<std::vector<NekDouble> > FieldData;
-                             LibUtilities::FieldIO f(m_session->GetComm());
-                             f.Import(filebcs, FieldDef, FieldData);
-
-                             // copy FieldData into locExpList
-                             locExpList->ExtractDataToCoeffs(
-                                 FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0],
-                                 locExpList->UpdateCoeffs());
-
-                             locExpList->BwdTrans_IterPerExp(
-                                 locExpList->GetCoeffs(), 
-                                 locExpList->UpdatePhys());
-                            
-                             locExpList->FwdTrans_BndConstrained(
-                                 locExpList->GetPhys(),
-                                 locExpList->UpdateCoeffs());
+                            ExtractFileBCs(filebcs, varName, locExpList);
                         }
                         else
                         {
@@ -2197,11 +2173,11 @@ namespace Nektar
                             
                             condition.Evaluate(x0, x1, x2, time, 
                                                locExpList->UpdatePhys());
-
-                            locExpList->FwdTrans_BndConstrained(
-                                locExpList->GetPhys(),
-                                locExpList->UpdateCoeffs());
                         }
+
+                        locExpList->FwdTrans_BndConstrained(
+                            locExpList->GetPhys(),
+                            locExpList->UpdateCoeffs());
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eNeumann)
@@ -2209,47 +2185,10 @@ namespace Nektar
                         string filebcs = boost::static_pointer_cast<
                             SpatialDomains::NeumannBoundaryCondition>(
                                 m_bndConditions[i])->m_filename;
-                        
+
                         if (filebcs != "")
                         {
-                             string var = filebcs.substr(
-                                 0, filebcs.find_last_of("."));
-                             int len=var.length();
-                             var = var.substr(len-1,len);
-
-                             cout << "Boundary condition from file: "
-                                  << filebcs << endl;
-
-                             std::vector<LibUtilities::
-                                FieldDefinitionsSharedPtr> FieldDef;
-                             std::vector<std::vector<NekDouble> > FieldData;
-                             LibUtilities::FieldIO f(m_session->GetComm());
-                             f.Import(filebcs, FieldDef, FieldData);
-
-                             // copy FieldData into locExpList
-                             locExpList->ExtractDataToCoeffs(
-                                 FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0],
-                                 locExpList->UpdateCoeffs());
-
-                             locExpList->BwdTrans_IterPerExp(
-                                 locExpList->GetCoeffs(), 
-                                 locExpList->UpdatePhys());
-                             
-                             /*
-                             Array<OneD, NekDouble> x(locExpList->GetTotPoints(),0.0);
-                             Array<OneD, NekDouble> y(locExpList->GetTotPoints(),0.0);
-                             locExpList->GetCoords(x,y);
-                             for(int i=0; i< locExpList->GetTotPoints(); i++)
-                             {
-                                 cout<<i<<"     "<<x[i]<<"    "<<y[i]<<"   "
-                                     <<locExpList->GetPhys()[i]<<endl;     
-                             } 
-                             */
-                             
-                             locExpList->IProductWRTBase(
-                                            locExpList->GetPhys(),
-                                            locExpList->UpdateCoeffs());
+                            ExtractFileBCs(filebcs, varName, locExpList);
                         }
                         else
                         {
@@ -2260,11 +2199,11 @@ namespace Nektar
                                             m_neumannCondition;
                             condition.Evaluate(x0, x1, x2, time, 
                                                locExpList->UpdatePhys());
-
-                            locExpList->IProductWRTBase(
-                                            locExpList->GetPhys(),
-                                            locExpList->UpdateCoeffs());
                         }
+
+                        locExpList->IProductWRTBase(
+                            locExpList->GetPhys(),
+                            locExpList->UpdateCoeffs());
                     }
                     else if (m_bndConditions[i]->GetBoundaryConditionType()
                              == SpatialDomains::eRobin)
@@ -2275,40 +2214,7 @@ namespace Nektar
                         
                         if (filebcs != "")
                         {
-                            //Never tested!!!
-                            string var = filebcs.substr(
-                                0, filebcs.find_last_of("."));
-                            int len = var.length();
-                            var = var.substr(len-1,len);
-
-                            std::vector<LibUtilities::
-                                FieldDefinitionsSharedPtr> FieldDef;
-                            std::vector<std::vector<NekDouble> > FieldData;
-                            LibUtilities::FieldIO f(m_session->GetComm());
-                            f.Import(filebcs, FieldDef, FieldData);
-
-                            // copy FieldData into locExpList
-                            locExpList->ExtractDataToCoeffs(
-                                FieldDef[0], FieldData[0],
-                                FieldDef[0]->m_fields[0],
-                                locExpList->UpdateCoeffs());
-                            locExpList->BwdTrans_IterPerExp(
-                                locExpList->GetCoeffs(), 
-                                locExpList->UpdatePhys());
-                            locExpList->IProductWRTBase(
-                                locExpList->GetPhys(),
-                                locExpList->UpdateCoeffs());
-
-                            LibUtilities::Equation coeff = 
-                                boost::static_pointer_cast<
-                                    SpatialDomains::RobinBoundaryCondition
-                                >(m_bndConditions[i])->m_robinPrimitiveCoeff;
-
-                            // Array<OneD,NekDouble> timeArray(npoints, time);
-                            // put primitive coefficient into the physical space
-                            // storage
-                            coeff.Evaluate(x0,x1,x2,time, 
-                                           locExpList->UpdatePhys());
+                            ExtractFileBCs(filebcs, varName, locExpList);
                         }
                         else
                         {
@@ -2317,22 +2223,22 @@ namespace Nektar
                                     SpatialDomains::RobinBoundaryCondition>
                                         (m_bndConditions[i])->
                                             m_robinFunction;
-                            LibUtilities::Equation coeff = 
-                                boost::static_pointer_cast<
-                                    SpatialDomains::RobinBoundaryCondition>
-                                        (m_bndConditions[i])->
-                                            m_robinPrimitiveCoeff;
                             condition.Evaluate(x0, x1, x2, time,
                                                locExpList->UpdatePhys());
-                            locExpList->IProductWRTBase(
-                                locExpList->GetPhys(),
-                                locExpList->UpdateCoeffs());
-
-                            // put primitive coefficient into the physical space
-                            // storage
-                            coeff.Evaluate(x0, x1, x2, time,
-                                           locExpList->UpdatePhys());
                         }
+
+                        LibUtilities::Equation coeff =
+                            boost::static_pointer_cast<
+                                SpatialDomains::RobinBoundaryCondition>(
+                                    m_bndConditions[i])->m_robinPrimitiveCoeff;
+                        locExpList->IProductWRTBase(
+                            locExpList->GetPhys(),
+                            locExpList->UpdateCoeffs());
+
+                        // put primitive coefficient into the physical 
+                        // space storage
+                        coeff.Evaluate(x0, x1, x2, time,
+                                       locExpList->UpdatePhys());
                     }    
                     else
                     {

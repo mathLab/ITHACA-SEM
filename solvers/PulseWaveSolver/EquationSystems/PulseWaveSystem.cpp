@@ -717,7 +717,8 @@ namespace Nektar
 	 *  subdomains by solving the appropriate Riemann problem. The solution satisfies conservation of 
 	 *  mass and continuity of the total pressure.
 	 */
-	void PulseWaveSystem::LinkSubdomains(Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &fields)
+	void PulseWaveSystem::LinkSubdomains(
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &fields)
     {		
 		Array<OneD, NekDouble> Au(3);
 		Array<OneD, NekDouble> uu(3);
@@ -734,16 +735,20 @@ namespace Nektar
 		int d2_BCExp = 0;
 		
 		// Set the values of all boundary conditions
+        int i = 0;
+        std::string varName = m_session->GetVariable(i); 
 		for (int k = 0; k<m_vessels.num_elements(); k++)
 		{
-			m_vessels[k]->EvaluateBoundaryConditions(m_time);
+			m_vessels[k]->EvaluateBoundaryConditions(m_time, varName);
 		}
 		
 		// Detect special network boundary conditions
 		for (int omega = 0; omega < m_domainsize; omega++)
 		{
-			// "Bifurcation": Check if the endpoint of the domain is a "Bifurcation" condition
-			if (m_vessels[2*omega]->GetBndConditions()[1]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
+			// "Bifurcation": Check if the endpoint of the domain is a 
+            // "Bifurcation" condition
+			if (m_vessels[2*omega]->GetBndConditions()[1]->
+                GetBoundaryConditionType() == SpatialDomains::eBifurcation)
 			{
 				// Parent vessel
 				nel_p = fields[omega][0].num_elements()-1;

@@ -1254,7 +1254,7 @@ namespace Nektar
                 {
                     // Number of points on the expansion
                     nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
                     
                     // Offset of the boundary expansion
                     id1 = fields[var]->
@@ -1415,7 +1415,7 @@ namespace Nektar
                 for (e = 0; e < nBndEdges ; ++e)
                 {
                     nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
                     
                     id1 = fields[var]->
                     GetBndCondExpansions()[i]->GetPhys_Offset(e);

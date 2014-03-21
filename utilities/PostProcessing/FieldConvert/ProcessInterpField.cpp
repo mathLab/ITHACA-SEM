@@ -40,7 +40,7 @@ using namespace std;
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-
+#include <boost/math/special_functions/fpclassify.hpp>
 namespace Nektar
 {
     namespace Utilities

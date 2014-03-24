@@ -61,10 +61,23 @@ namespace Nektar
 {
     namespace Utilities
     {
+        struct FieldPts
+        {
+            FieldPts(void):m_ptsDim(0) {}
+            
+            int m_ptsDim;
+            Array<OneD, Array<OneD, NekDouble> > m_pts;
+            vector<std::string> m_fields;
+        };
+        
+        typedef boost::shared_ptr<FieldPts> FieldPtsSharedPtr;
+        static FieldPtsSharedPtr NullFieldPts;
+
         struct Field {
             Field() : m_verbose(false),m_declareExpansionAsContField(false),
                       m_declareExpansionAsDisContField(false),
-                      m_writeBndFld(false){}
+                      m_writeBndFld(false),
+                      m_fieldPts(NullFieldPts){}
             
             bool m_verbose;
             vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
@@ -80,11 +93,13 @@ namespace Nektar
             LibUtilities::FieldIOSharedPtr       m_fld;
             map<string, vector<string> >         m_inputfiles;
 
-            bool                 m_writeBndFld; 
+                    bool                 m_writeBndFld; 
             vector<unsigned int> m_bndRegionsToWrite;
             bool                 m_fldToBnd; 
 
-            
+            FieldPtsSharedPtr m_fieldPts;
+
+    
             MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,
                                                              bool fldfilegiven = false)
             {

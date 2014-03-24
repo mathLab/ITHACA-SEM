@@ -52,7 +52,7 @@ namespace Nektar
         {
             m_requireEquiSpaced = true;
         }
-
+        
         OutputTecplot::~OutputTecplot()
         {
         }
@@ -60,53 +60,101 @@ namespace Nektar
         void OutputTecplot::Process(po::variables_map &vm)
         {
             m_doError = (vm.count("error") == 1)?  true: false;
-
-            if(!m_f->m_exp.size()) // do nothing if no expansion defined
-            {
-                return; 
-            }
-
+            
+            
             if (m_f->m_verbose)
             {
                 cout << "OutputTecplot: Writing file..." << endl;
             }
+
+            if(m_f->m_fieldPts == NullFieldPts &&!m_f->m_exp.size()) // do nothing if no expansion defined
+            {
+                return; 
+            }
             
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
+            
 
-            // amend for parallel output if required 
-            if(m_f->m_session->GetComm()->GetSize() != 1)
+            if(m_f->m_fieldPts != NullFieldPts)
             {
-                int    dot  = filename.find_last_of('.');
-                string ext = filename.substr(dot,filename.length()-dot);
-                string procId = "_P" + boost::lexical_cast<std::string>(m_f->m_session->GetComm()->GetRank());
-                string start = filename.substr(0,dot);
-                filename = start + procId + ext;
-            }
-            // Write solution.
-            ofstream outfile(filename.c_str());
-            std::string var;
-            if(m_f->m_fielddef.size())
-            {
-                var = m_f->m_fielddef[0]->m_fields[0];
+                int dim = m_f->m_fieldPts->m_ptsDim;
+                // Write solution.
+                ofstream outfile(filename.c_str());
                 
-                for (int j = 1; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
+                switch(dim)
                 {
-                    var = var + ", " + m_f->m_fielddef[0]->m_fields[j];
+                case 1:
+                    outfile << "VARIABLES = x";
+                    break;
+                case 2:
+                    outfile << "VARIABLES = x y";
+                    break;
+                case 3:
+                    outfile << "VARIABLES = x y z";
+                    break;
+                }
+                
+                for(int i = 0; i < m_f->m_fieldPts->m_fields.size(); ++i)
+                {
+                    outfile << " " << m_f->m_fieldPts->m_fields[i]; 
+                }
+                outfile << endl;
+                
+                outfile << " ZONE I=" << m_f->m_fieldPts->m_pts[0].num_elements() <<
+                    " F=POINT" << endl;
+                
+                for(int i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)
+                {
+                    for(int j = 0; j < dim; ++j)
+                    {
+                        outfile << m_f->m_fieldPts->m_pts[j][i] << " "; 
+                    }
+                    
+                    for(int j = 0; j < m_f->m_fieldPts->m_fields.size(); ++j)
+                    {
+                        outfile << m_f->m_data[j][i] << " ";
+                    }
+                    outfile << endl;
                 }
             }
-                
-            WriteTecplotHeader(outfile,var);
-            WriteTecplotZone(outfile);
-            if(var.length()) // see if any variables are defined
+            else
             {
-                for(int j = 0; j < m_f->m_exp.size(); ++j)
+                // Amend for parallel output if required 
+                if(m_f->m_session->GetComm()->GetSize() != 1)
                 {
-                    WriteTecplotField(j,outfile);
+                    int    dot = filename.find_last_of('.');
+                    string ext = filename.substr(dot,filename.length()-dot);
+                    string procId = "_P" + boost::lexical_cast<std::string>(m_f->m_session->GetComm()->GetRank());
+                    string start = filename.substr(0,dot);
+                    filename = start + procId + ext;
                 }
-            } 
-
-            WriteTecplotConnectivity(outfile);
+                
+                // Write solution.
+                ofstream outfile(filename.c_str());
+                std::string var;
+                if(m_f->m_fielddef.size())
+                {
+                    var = m_f->m_fielddef[0]->m_fields[0];
+                    
+                    for (int j = 1; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
+                    {
+                        var = var + ", " + m_f->m_fielddef[0]->m_fields[j];
+                    }
+                }
+                
+                WriteTecplotHeader(outfile,var);
+                WriteTecplotZone(outfile);
+                if(var.length()) // see if any variables are defined
+                {
+                    for(int j = 0; j < m_f->m_exp.size(); ++j)
+                    {
+                        WriteTecplotField(j,outfile);
+                    }
+                } 
+                
+                WriteTecplotConnectivity(outfile);
+            }
             
             cout << "Written file: " << filename << endl;
         }
@@ -150,6 +198,7 @@ namespace Nektar
         void OutputTecplot::WriteTecplotZone(std::ofstream &outfile, 
                                              int expansion)
         {
+
             if(expansion == -1) //write as full block zone
             {
                 int i,j;

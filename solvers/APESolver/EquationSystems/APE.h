@@ -37,35 +37,13 @@
 #define NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {     
 
-enum UpwindType
-{
-    eNotSet,             ///< flux not defined
-    eUpwind,			 ///< simple upwinding scheme
-    eAverage,            ///< averaged (or centred) flux
-    eHLL,                ///< Harten-Lax-Leer flux
-    eHLLC,               ///< Harten-Lax-Leer Contact wave flux
-    SIZE_UpwindType      ///< Length of enum list
-};
-
-const char* const UpwindTypeMap[] =
-{
-    "NoSet",
-    "Upwind",
-    "Average",
-    "HLL",
-    "HLLC",
-};
-
-/**
-*
-*
-**/
 class APE : public UnsteadySystem
 {
     public:
@@ -83,14 +61,15 @@ class APE : public UnsteadySystem
         /// Name of class
         static std::string className;
 
-    /// Destructor
+        /// Destructor
         virtual ~APE();
 
 
     protected:
 
-        ///< numerical upwind flux selector
-        UpwindType                                      m_upwindType;
+        SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
+        Array<OneD, NekDouble>                          m_traceVn;
+        Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
         /// Constant incompressible density (APE)
         NekDouble                                       m_Rho0;
         /// Isentropic coefficient, Ratio of specific heats (APE)
@@ -118,8 +97,7 @@ class APE : public UnsteadySystem
                                      Array<OneD, Array<OneD, NekDouble> > &physfield,
                                      Array<OneD, Array<OneD, NekDouble> > &flux);
 
-        /// Evaulate flux = m_fields*ivel for i th component of Vu for
-        /// direction j
+        /// Evaulate flux = m_fields*ivel for i th component of Vu for direction j
         virtual void v_GetFluxVector(const int i, const int j,
                                      Array<OneD, Array<OneD, NekDouble> > &physfield,
                                      Array<OneD, Array<OneD, NekDouble> > &flux);
@@ -132,25 +110,17 @@ class APE : public UnsteadySystem
                                      Array<OneD, Array<OneD, NekDouble> > &numfluxX,
                                      Array<OneD, Array<OneD, NekDouble> > &numfluxY);
 
-        void GetSource(Array<OneD, NekDouble> &source, const NekDouble time);
-
         void AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray, Array< OneD, Array< OneD, NekDouble > > &outarray);
 
+        const Array<OneD, const Array<OneD, NekDouble> > &GetNormals();
+
+        const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
+
+        NekDouble GetGamma();
+
+        NekDouble GetRho();
 
     private:
-
-        void NumericalFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
-                             Array<OneD, Array<OneD, NekDouble> > &numfluxX);
-
-        void NumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield,
-                             Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                             Array<OneD, Array<OneD, NekDouble> > &numfluxY);
-
-
-        void RiemannSolverUpwind(NekDouble hL, NekDouble uL, NekDouble vL,
-                                 NekDouble hR, NekDouble uR, NekDouble vR,
-                                 NekDouble P0, NekDouble U0, NekDouble V0,
-                                 NekDouble &hflux, NekDouble &huflux, NekDouble &hvflux);
 
         void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
 

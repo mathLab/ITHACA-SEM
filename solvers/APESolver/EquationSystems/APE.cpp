@@ -73,27 +73,36 @@ void APE::v_InitObject()
     // if discontinuous  determine numerical flux to use
     if (m_projectionType == MultiRegions::eDiscontinuous)
     {
-        ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
-                 "No UPWINDTYPE defined in session.");
+        // Do not forwards transform initial condition
+        m_homoInitialFwd = false;
 
-        int i;
-        for (i = 0; i < (int)SIZE_UpwindType; ++i)
+        // Define the normal velocity fields
+        if (m_fields[0]->GetTrace())
         {
-            bool match;
-            m_session->MatchSolverInfo("UPWINDTYPE",
-                                       UpwindTypeMap[i], match, false);
-            if (match)
-            {
-                m_upwindType = (UpwindType) i;
-                break;
-            }
+            m_traceVn = Array<OneD, NekDouble>(GetTraceNpoints());
         }
-        ASSERTL0(i != (int) SIZE_UpwindType,
-                 "Invalid upwind type.");
-    }
-    else
-    {
-        m_upwindType = (UpwindType) 0;
+
+        // Set up locations of velocity and base velocity vectors.
+        int nvariables = m_spacedim + 1;
+        m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(2);
+        m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
+        m_vecLocs[1] = Array<OneD, NekDouble>(m_spacedim);
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            // u', v', w'
+            m_vecLocs[0][i] = 1 + i;
+            // u0, v0, w0
+            m_vecLocs[1][i] = nvariables + 1 + i;
+        }
+
+        string riemName;
+        m_session->LoadSolverInfo("UpwindType", riemName, "APEUpwind");
+        riemName = "APEUpwind";
+        m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
+        m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
+        m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
+        m_riemannSolver->SetParam ("Gamma",     &APE::GetGamma,     this);
+        m_riemannSolver->SetParam ("Rho",       &APE::GetRho,       this);
     }
 
     if (m_explicitAdvection)
@@ -128,7 +137,37 @@ void APE::v_NumericalFlux(
         Array<OneD, Array<OneD, NekDouble> > &physfield,
         Array<OneD, Array<OneD, NekDouble> > &numflux)
 {
-    ASSERTL0(false, "This function is not implemented for this equation.");
+    //Number the points of the shared edges of the elements
+    int ntp  = GetTraceTotPoints();
+    int nvar = physfield.num_elements();
+
+    // temporary arrays
+    Array<OneD, Array<OneD, NekDouble> >  Fwd(2*nvar);
+    Array<OneD, Array<OneD, NekDouble> >  Bwd(2*nvar);
+    Array<OneD, Array<OneD, NekDouble> > flux(2*nvar);
+
+    for (int i = 0; i < 2*nvar; ++i)
+    {
+        Fwd[i]  = Array<OneD, NekDouble>(ntp);
+        Bwd[i]  = Array<OneD, NekDouble>(ntp);
+        flux[i] = Array<OneD, NekDouble>(ntp);
+    }
+
+    // get the physical values at the trace
+    for (int i = 0; i < nvar; ++i)
+    {
+        m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
+        m_fields[i]->GetFwdBwdTracePhys(m_basefield[i],Fwd[i+nvar],Bwd[i+nvar]);
+    }
+
+    // Solve the Riemann problem
+    m_riemannSolver->Solve(Fwd, Bwd, flux);
+
+    for (int i = 0; i < nvar; i++)
+    {
+        numflux[i] = flux[i];
+    }
+
 }
 
 
@@ -140,20 +179,7 @@ void APE::v_NumericalFlux(
         Array<OneD, Array<OneD, NekDouble> > &numfluxX,
         Array<OneD, Array<OneD, NekDouble> > &numfluxY )
 {
-    switch(m_expdim)
-    {
-    case 1:
-        ASSERTL0(false,"1D not implemented for Acoustic perturbation equations");
-        break;
-    case 2:
-        NumericalFlux2D(physfield,numfluxX,numfluxY);
-        break;
-    case 3:
-        ASSERTL0(false,"3D not implemented for Acoustic perturbation equations");
-        break;
-    default:
-        ASSERTL0(false,"Illegal dimension");
-    }
+    ASSERTL0(false, "This function is not implemented for this equation.");
 }
 
 
@@ -258,7 +284,7 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
             // output: modal space
 
             // straighforward DG
-            WeakDGAdvection(inarray, modarray, false, true);
+            WeakDGAdvection(inarray, modarray, true, true);
 
             // negate the outarray since moving terms to the rhs
             for(i = 0; i < nvariables; ++i)
@@ -492,196 +518,43 @@ void APE::WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &phy
     ASSERTL0(false,"1D not yet working for APE");
 }
 
-
-
-void APE::NumericalFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield,
-                          Array<OneD, Array<OneD, NekDouble> > &numfluxX)
-{
-    ASSERTL0(false,"1D DG not yet working for APE");
-}
-
-//Evaluation of the upwinded DG fluxes
-void APE::NumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield,
-                          Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                          Array<OneD, Array<OneD, NekDouble> > &numfluxY)
-{
-    int i;
-    //Number the points of the "shared" edges of the elements
-    int nTraceNumPoints = GetTraceTotPoints();
-    int nvariables      = 3; //p', u', v'
-
-    // get temporary arrays
-    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-    Array<OneD, Array<OneD, NekDouble> > Bwd(nvariables);
-    Array<OneD, Array<OneD, NekDouble> > rotbasefield(nvariables);
-    Array<OneD, Array<OneD, NekDouble> > rotbasefieldBwd(nvariables);
-
-    int nq = m_fields[0]->GetNpoints();
-    Array<OneD,NekDouble> x0(nq);
-    Array<OneD,NekDouble> x1(nq);
-    Array<OneD,NekDouble> x2(nq);
-
-    m_fields[0]->GetCoords(x0,x1,x2);
-
-    for (i = 0; i < nvariables; ++i)
-    {
-        Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-        Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-        rotbasefield[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-        rotbasefieldBwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-    }
-    
-    // get the physical values at the trace
-    for (i = 0; i < nvariables; ++i)
-    {
-        m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
-        m_fields[i]->GetFwdBwdTracePhys(m_basefield[i],rotbasefield[i],rotbasefieldBwd[i]);
-    }
-
-    // rotate the values to the normal direction
-    NekDouble tmpX, tmpY;
-    for (i = 0; i < nTraceNumPoints; ++i)
-    {
-        tmpX =  Fwd[1][i]*m_traceNormals[0][i]+Fwd[2][i]*m_traceNormals[1][i];
-        tmpY = -Fwd[1][i]*m_traceNormals[1][i]+Fwd[2][i]*m_traceNormals[0][i];
-        Fwd[1][i] = tmpX;
-        Fwd[2][i] = tmpY;
-
-        tmpX =  Bwd[1][i]*m_traceNormals[0][i]+Bwd[2][i]*m_traceNormals[1][i];
-        tmpY = -Bwd[1][i]*m_traceNormals[1][i]+Bwd[2][i]*m_traceNormals[0][i];
-        Bwd[1][i] = tmpX;
-        Bwd[2][i] = tmpY;
-
-        //rotates the baseflow
-        tmpX =  rotbasefield[1][i]*m_traceNormals[0][i]+rotbasefield[2][i]*m_traceNormals[1][i];
-        tmpY = -rotbasefield[1][i]*m_traceNormals[1][i]+rotbasefield[2][i]*m_traceNormals[0][i];
-        rotbasefield[1][i] = tmpX;
-        rotbasefield[2][i] = tmpY;
-    }
-
-    // Solve the Riemann problem
-    NekDouble pflux, uflux, vflux;
-
-    for (i = 0; i < nTraceNumPoints; ++i)
-    {
-        //cout << "Tracepoint: "<<i<<" of "<<nTraceNumPoints<<endl;
-
-        switch(m_upwindType)
-        {
-            case eUpwind:
-            {
-                RiemannSolverUpwind(Fwd[0][i],Fwd[1][i],Fwd[2][i],
-                        Bwd[0][i],Bwd[1][i],Bwd[2][i],
-                        rotbasefield[0][i],rotbasefield[1][i],rotbasefield[2][i],
-                        pflux, uflux, vflux );
-                break;
-            }
-
-            default:
-                ASSERTL0(false,"populate switch statement for upwind flux");
-                break;
-        }
-
-        // rotate back to Cartesian
-        numfluxX[0][i]  = pflux*m_traceNormals[0][i];
-        numfluxY[0][i]  = pflux*m_traceNormals[1][i];
-        numfluxX[1][i] = (uflux*m_traceNormals[0][i] - vflux*m_traceNormals[1][i]) * m_traceNormals[0][i];
-        numfluxY[1][i] = (uflux*m_traceNormals[0][i] - vflux*m_traceNormals[1][i]) * m_traceNormals[1][i];
-        numfluxX[2][i] = (uflux*m_traceNormals[1][i] + vflux*m_traceNormals[0][i]) * m_traceNormals[0][i];
-        numfluxY[2][i] = (uflux*m_traceNormals[1][i] + vflux*m_traceNormals[0][i]) * m_traceNormals[1][i];
-    }
-
-}
-
-void APE::RiemannSolverUpwind(NekDouble pL,     NekDouble uL,    NekDouble vL,
-                              NekDouble pR,     NekDouble uR,    NekDouble vR,
-                              NekDouble P0,     NekDouble U0 ,   NekDouble V0,
-                              NekDouble &pflux, NekDouble &uflux, NekDouble &vflux )
-{
-    int nvariables      = 2;
-    Array<OneD, NekDouble> characteristic(4);
-    Array<OneD, NekDouble> W(2);
-    Array<OneD, NekDouble> lambda(nvariables);
-    Array<OneD, NekDouble> upphysfield(3);
-
-    // compute the wave speeds
-    lambda[0]=U0 + sqrt(P0*m_gamma*m_Rho0)/m_Rho0;
-    lambda[1]=U0 - sqrt(P0*m_gamma*m_Rho0)/m_Rho0;
-
-    // calculate the caracteristic variables
-    //left characteristics
-    characteristic[0] = pL/2 + uL*sqrt(P0*m_gamma*m_Rho0)/2;
-    characteristic[1] = pL/2 - uL*sqrt(P0*m_gamma*m_Rho0)/2;
-    //right characteristics
-    characteristic[2] = pR/2 + uR*sqrt(P0*m_gamma*m_Rho0)/2;
-    characteristic[3] = pR/2 - uR*sqrt(P0*m_gamma*m_Rho0)/2;
-
-    //take left or right value of characteristic variable
-    for (int j=0; j<nvariables; j++)
-    {
-        if (lambda[j]>=0)
-        {
-            W[j]=characteristic[j];
-        }
-        if(lambda[j]<0)
-        {
-            W[j]=characteristic[j+2];
-        }
-    }
-
-    //calculate conservative variables from characteristics
-    upphysfield[0]= W[0]+W[1];
-    upphysfield[1]= (W[0]-W[1])/sqrt(P0*m_gamma*m_Rho0);
-    upphysfield[2]= vL;
-
-    // compute the fluxes
-    pflux = U0*upphysfield[0] + m_gamma*P0*upphysfield[1];
-    uflux = U0*upphysfield[1]+V0*upphysfield[2] + upphysfield[0]/m_Rho0;
-    vflux = 0.0;
-}
-
-// Get sourceterm for p' equation from the inputfile
-void APE::GetSource(Array<OneD, NekDouble> &source, const NekDouble time)
-{
-    EvaluateFunction("S", source, "Source", time);
-}
-
 // Add sourceterm for p' equation obtained from GetSource
 void APE::AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray,
-                          Array< OneD, Array< OneD, NekDouble > > &outarray)
+                    Array< OneD, Array< OneD, NekDouble > > &outarray)
 {
     int ncoeffs = outarray[0].num_elements();
     int nq      = inarray[0].num_elements();
-    
     Array<OneD, NekDouble> source(nq);
-    
-    switch(m_projectionType)
+
+    EvaluateFunction("S", source, "Source", m_time);
+    if ( m_projectionType == MultiRegions::eDiscontinuous )
     {
-        case MultiRegions::eDiscontinuous:
-        {
-            GetSource(source,m_time);
-
-            //Source term solely for the p' equation (outarray[0])
-            m_fields[0]->IProductWRTBase(source,source);
-            Vmath::Vadd(ncoeffs,source,1,outarray[0],1,outarray[0],1);
-            break;
-        }
-
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
-        {
-            GetSource(source,m_time);
-
-            //Source term solely for the p' equation (outarray[0])
-            Vmath::Vadd(ncoeffs,source,1,outarray[0],1,outarray[0],1);
-            break;
-        }
-
-        default:
-            ASSERTL0(false,"Unknown projection scheme for the APE");
-            break;
+        m_fields[0]->IProductWRTBase(source,source);
     }
+    Vmath::Vadd(ncoeffs,source,1,outarray[0],1,outarray[0],1);
+
 }
+
+const Array<OneD, const Array<OneD, NekDouble> > &APE::GetNormals()
+{
+    return m_traceNormals;
+}
+
+const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
+{
+    return m_vecLocs;
+}
+
+NekDouble APE::GetGamma()
+{
+    return m_gamma;
+}
+
+NekDouble APE::GetRho()
+{
+    return m_Rho0;
+}
+
 
 
 } //end of namespace

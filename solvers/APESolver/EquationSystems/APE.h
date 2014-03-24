@@ -37,18 +37,36 @@
 #define NEKTAR_SOLVERS_APESOLVER_EQUATIONSYSTEMS_APE_H
 
 #include <SolverUtils/EquationSystem.h>
-#include <APESolver/EquationSystems/APESystem.h>
 
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {     
 
+enum UpwindType
+{
+    eNotSet,             ///< flux not defined
+    eUpwind,			 ///< simple upwinding scheme
+    eAverage,            ///< averaged (or centred) flux
+    eHLL,                ///< Harten-Lax-Leer flux
+    eHLLC,               ///< Harten-Lax-Leer Contact wave flux
+    SIZE_UpwindType      ///< Length of enum list
+};
+
+const char* const UpwindTypeMap[] =
+{
+    "NoSet",
+    "Upwind",
+    "Average",
+    "HLL",
+    "HLLC",
+};
+
 /**
 *
 *
 **/
-class APE : public APESystem
+class APE : public EquationSystem
 {
     public:
 
@@ -70,11 +88,39 @@ class APE : public APESystem
 
     protected:
 
+        ///< numerical upwind flux selector
+        UpwindType                                      m_upwindType;
+        /// Number of time steps between outputting status information.
+        int                                             m_infosteps;
+        /// The time integration method to use.
+        LibUtilities::TimeIntegrationMethod             m_timeIntMethod;
+        /// The time integration scheme operators to use.
+        LibUtilities::TimeIntegrationSchemeOperators    m_ode;
+        /// Indicates if explicit or implicit treatment of diffusion is used.
+        bool                                            m_explicitDiffusion;
+        /// Indicates if explicit or implicit treatment of advection is used.
+        bool                                            m_explicitAdvection;
+        /// Indicates if variables are primitive or conservative
+        bool                                            m_primitive;
+        /// Acceleration of gravity
+        NekDouble                                       m_g;
+        /// Constant incompressible density (APE)
+        NekDouble                                       m_Rho0;
+        /// Isentropic coefficient, Ratio of specific heats (APE)
+        NekDouble                                       m_gamma;
+
+        /// Initialises UnsteadySystem class members.
         APE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
 
         Array<OneD, Array<OneD, NekDouble> > basefield;
+
+        /// Solves an unsteady problem.
+        virtual void v_DoSolve();
+
+        /// Sets up initial conditions.
+        virtual void v_DoInitialise();
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                             Array<OneD,  Array<OneD, NekDouble> > &outarray,
@@ -86,49 +132,33 @@ class APE : public APESystem
 
         virtual void v_GetFluxVector(const int i,
                                      Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                     Array<OneD, Array<OneD, NekDouble> > &flux)
-        {
-            switch(m_expdim)
-            {
-                case 1:
-                    ASSERTL0(false,"1D not implemented for Acoustic perturbation equations");
-                    break;
-                case 2:
-                    GetFluxVector2D(i,physfield,flux);
-                    break;
-                case 3:
-                    ASSERTL0(false,"3D not implemented for Acoustic perturbation equations");
-                    break;
-                default:
-                    ASSERTL0(false,"Illegal dimension");
-            }
-        }
+                                     Array<OneD, Array<OneD, NekDouble> > &flux);
 
+        /// Evaulate flux = m_fields*ivel for i th component of Vu for
+        /// direction j
+        virtual void v_GetFluxVector(const int i, const int j,
+                                     Array<OneD, Array<OneD, NekDouble> > &physfield,
+                                     Array<OneD, Array<OneD, NekDouble> > &flux);
+
+        /// Print a summary of time stepping parameters.
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+
+        ///
+        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
+                                     Array<OneD, Array<OneD, NekDouble> > &numflux);
 
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                                      Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                                     Array<OneD, Array<OneD, NekDouble> > &numfluxY)
-        {
-            switch(m_expdim)
-            {
-                case 1:
-                    ASSERTL0(false,"1D not implemented for Acoustic perturbation equations");
-                    break;
-                case 2:
-                    NumericalFlux2D(physfield,numfluxX,numfluxY);
-                    break;
-                case 3:
-                    ASSERTL0(false,"3D not implemented for Acoustic perturbation equations");
-                    break;
-                default:
-                    ASSERTL0(false,"Illegal dimension");
-            }
-        }
+                                     Array<OneD, Array<OneD, NekDouble> > &numfluxY);
 
         virtual void v_PrimitiveToConservative( );
 
         virtual void v_ConservativeToPrimitive( );
+
+        void PrimitiveToConservative()
+        {
+            v_PrimitiveToConservative();
+        }
 
         void InitialiseBaseFlowAnalytical(Array<OneD, Array<OneD, NekDouble> > &base, const NekDouble time);
 

@@ -109,22 +109,6 @@ APE::~APE()
 void APE::v_DoInitialise()
 {
     SetInitialConditions();
-
-    v_PrimitiveToConservative();
-}
-
-/**
-     *
-     */
-void APE::v_GenerateSummary(SolverUtils::SummaryList& s)
-{
-    UnsteadySystem::v_GenerateSummary(s);
-    SolverUtils::AddSummaryItem(s, "Upwind Type", UpwindTypeMap[m_upwindType]);
-    SolverUtils::AddSummaryItem(s, "Advection", (m_explicitAdvection ? "explicit" : "implicit"));
-    SolverUtils::AddSummaryItem(s, "Integration Type", LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]);
-    SolverUtils::AddSummaryItem(s, "Time Step", m_timestep);
-    SolverUtils::AddSummaryItem(s, "No. of Steps", m_steps);
-    SolverUtils::AddSummaryItem(s, "Checkpoints (steps)", m_checksteps);
 }
 
 /**
@@ -235,12 +219,6 @@ void APE::v_GetFluxVector(const int i,
 
 }
 
-
-void APE::v_PrimitiveToConservative()
-{
-
-}
-
 void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                          Array<OneD,       Array<OneD, NekDouble> >&outarray,
                    const NekDouble time)
@@ -258,23 +236,19 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
             //-------------------------------------------------------
             //inarray in physical space
 
-            Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
             Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
 
             for (i = 0; i < nvariables; ++i)
             {
-                physarray[i] = Array<OneD, NekDouble>(nq);
                 modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
             }
-
-            ConservativeToPrimitive(inarray,physarray);
 
             // get the advection part
             // input: physical space
             // output: modal space
 
             // straighforward DG
-            WeakDGAdvection(physarray, modarray, false, true);
+            WeakDGAdvection(inarray, modarray, false, true);
 
             // negate the outarray since moving terms to the rhs
             for(i = 0; i < nvariables; ++i)
@@ -285,7 +259,7 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
             // Add "source term"
             // input: physical space
             // output: modal space (JOSEF)
-            AddSource(physarray,modarray);
+            AddSource(inarray, modarray);
 
             for(i = 0; i < nvariables; ++i)
             {
@@ -307,7 +281,11 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                 modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
             }
 
-            ConservativeToPrimitive(inarray,physarray);
+            // deep copy
+            for(i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vcopy(nq,inarray[i],1,physarray[i],1);
+            }
 
             Array<OneD, Array<OneD, NekDouble> > fluxvector(ndim);
             for(i = 0; i < ndim; ++i)
@@ -353,21 +331,25 @@ void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarr
 {
     int i;
     int nvariables = inarray.num_elements();
+    int nq = m_fields[0]->GetNpoints();
+
+    // deep copy
+    for(int i = 0; i < nvariables; ++i)
+    {
+        Vmath::Vcopy(nq,inarray[i],1,outarray[i],1);
+    }
 
     switch(m_projectionType)
     {
         case MultiRegions::eDiscontinuous:
         {
-            ConservativeToPrimitive(inarray,outarray);
             SetBoundaryConditions(outarray,time);
-            PrimitiveToConservative(outarray,outarray);
             break;
         }
 
         case MultiRegions::eGalerkin:
         case MultiRegions::eMixed_CG_Discontinuous:
         {
-            ConservativeToPrimitive(inarray,outarray);
             UnsteadySystem::SetBoundaryConditions(time);
             Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 
@@ -376,7 +358,6 @@ void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarr
                 m_fields[i]->FwdTrans(outarray[i],coeffs);
                 m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
             }
-            PrimitiveToConservative(outarray,outarray);
             break;
         }
 
@@ -650,74 +631,6 @@ void APE::RiemannSolverUpwind(NekDouble pL,     NekDouble uL,    NekDouble vL,
     vflux = 0.0;
 }
 
-void APE::ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
-                                        Array<OneD,       Array<OneD, NekDouble> >&physout)
-{
-    int i;
-    int nq = GetTotPoints();
-    int nvariables = physin.num_elements();
-    
-    if(physin.get() == physout.get())
-    {
-        // copy indata and work with tmp array
-        Array<OneD, Array<OneD, NekDouble> >tmp(nvariables);
-        for(i = 0; i < nvariables; ++i)
-        {
-            // deep copy
-            tmp[i] = Array<OneD, NekDouble>(nq);
-            Vmath::Vcopy(nq,physin[i],1,tmp[i],1);
-        }
-        for(i = 0; i < nvariables; ++i)
-        {
-            Vmath::Vcopy(nq,tmp[i],1,physout[i],1);
-        }
-    }
-    else
-    {
-        for(i = 0; i < nvariables; ++i)
-        {
-            Vmath::Vcopy(nq,physin[i],1,physout[i],1);
-        }
-    }
-}
-
-
-void APE::v_ConservativeToPrimitive( )
-{
-    
-}
-
-void APE::PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
-                                        Array<OneD,       Array<OneD, NekDouble> >&physout)
-{  
-    int i;
-    int nq = GetTotPoints();
-    int nvariables = physin.num_elements();
-    
-    if(physin.get() == physout.get())
-    {
-        // copy indata and work with tmp array
-        Array<OneD, Array<OneD, NekDouble> >tmp(nvariables);
-        for(i = 0; i < nvariables; ++i)
-        {
-            // deep copy
-            tmp[i] = Array<OneD, NekDouble>(nq);
-            Vmath::Vcopy(nq,physin[i],1,tmp[i],1);
-        }
-        for(i = 0; i < nvariables; ++i)
-        {
-            Vmath::Vcopy(nq,tmp[i],1,physout[i],1);
-        }
-    }
-    else
-    {
-        for(i = 0; i < nvariables; ++i)
-        {
-            Vmath::Vcopy(nq,physin[i],1,physout[i],1);
-        }
-    }
-}
-
 // Initialise baseflow from the inputfile
 void APE::InitialiseBaseFlowAnalytical(Array<OneD, Array<OneD, NekDouble> > &base,
                                        const NekDouble time)
@@ -776,6 +689,7 @@ void APE::AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray,
             break;
     }
 }
+
 
 } //end of namespace
 

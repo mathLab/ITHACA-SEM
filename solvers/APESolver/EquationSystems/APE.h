@@ -124,9 +124,6 @@ class APE : public UnsteadySystem
                                      Array<OneD, Array<OneD, NekDouble> > &physfield,
                                      Array<OneD, Array<OneD, NekDouble> > &flux);
 
-        /// Print a summary of time stepping parameters.
-        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
-
         ///
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                                      Array<OneD, Array<OneD, NekDouble> > &numflux);
@@ -134,15 +131,6 @@ class APE : public UnsteadySystem
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                                      Array<OneD, Array<OneD, NekDouble> > &numfluxX,
                                      Array<OneD, Array<OneD, NekDouble> > &numfluxY);
-
-        virtual void v_PrimitiveToConservative( );
-
-        virtual void v_ConservativeToPrimitive( );
-
-        void PrimitiveToConservative()
-        {
-            v_PrimitiveToConservative();
-        }
 
         void InitialiseBaseFlowAnalytical(Array<OneD, Array<OneD, NekDouble> > &base, const NekDouble time);
 
@@ -171,11 +159,6 @@ class APE : public UnsteadySystem
         void WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
 
         void WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
-
-        void ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
-                                           Array<OneD,       Array<OneD, NekDouble> >&physout);
-        void PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
-                                           Array<OneD,       Array<OneD, NekDouble> >&physout);
 };
 }
 

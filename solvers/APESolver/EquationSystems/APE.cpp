@@ -60,6 +60,16 @@ void APE::v_InitObject()
     // Load isentropic coefficient, Ratio of specific heats
     m_session->LoadParameter("Gamma", m_gamma, 1.4);
 
+    // Define Baseflow fields
+    m_basefield = Array<OneD, Array<OneD, NekDouble> >(m_spacedim + 1);
+    m_basefield_names.push_back("P0");
+    m_basefield_names.push_back("U0");
+    m_basefield_names.push_back("V0");
+    m_basefield_names.push_back("W0");
+
+    // Resize the advection velocities vector to dimension of the problem
+    m_basefield_names.resize(m_spacedim + 1);
+
     // if discontinuous  determine numerical flux to use
     if (m_projectionType == MultiRegions::eDiscontinuous)
     {
@@ -162,9 +172,9 @@ void APE::v_GetFluxVector(const int i,
                              Array<OneD, Array<OneD, NekDouble> > &physfield,
                              Array<OneD, Array<OneD, NekDouble> > &flux)
 {
-    InitialiseBaseFlowAnalytical(basefield, m_time);
+    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
 
-    ASSERTL1(flux.num_elements() == basefield.num_elements() - 1,
+    ASSERTL1(flux.num_elements() == m_basefield.num_elements() - 1,
              "Dimension of flux array and velocity array do not match");
 
     int nq = physfield[0].num_elements();
@@ -180,11 +190,11 @@ void APE::v_GetFluxVector(const int i,
             Vmath::Zero(nq, flux[j], 1);
 
             // construct \gamma p_0 u'_j term
-            Vmath::Smul(nq, m_gamma, basefield[0], 1, tmp1, 1);
+            Vmath::Smul(nq, m_gamma, m_basefield[0], 1, tmp1, 1);
             Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
 
             // construct p' \bar{u}_j term
-            Vmath::Vmul(nq, physfield[0], 1, basefield[j+1], 1, tmp2, 1);
+            Vmath::Vmul(nq, physfield[0], 1, m_basefield[j+1], 1, tmp2, 1);
 
             // add both terms
             Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[j], 1);
@@ -207,7 +217,7 @@ void APE::v_GetFluxVector(const int i,
                 Vmath::Zero(nq, tmp1, 1);
                 for (int k = 0; k < flux.num_elements(); ++k)
                 {
-                    Vmath::Vmul(nq, physfield[k+1], 1, basefield[k+1], 1, tmp2, 1);
+                    Vmath::Vmul(nq, physfield[k+1], 1, m_basefield[k+1], 1, tmp2, 1);
                     Vmath::Vadd(nq, tmp1, 1, tmp2, 1, tmp1, 1);
                 }
 
@@ -525,7 +535,7 @@ void APE::NumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield,
     for (i = 0; i < nvariables; ++i)
     {
         m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
-        m_fields[i]->GetFwdBwdTracePhys(basefield[i],rotbasefield[i],rotbasefieldBwd[i]);
+        m_fields[i]->GetFwdBwdTracePhys(m_basefield[i],rotbasefield[i],rotbasefieldBwd[i]);
     }
 
     // rotate the values to the normal direction
@@ -629,22 +639,6 @@ void APE::RiemannSolverUpwind(NekDouble pL,     NekDouble uL,    NekDouble vL,
     uflux = U0*upphysfield[1]+V0*upphysfield[2] + upphysfield[0]/m_Rho0;
     vflux = 0.0;
 }
-
-// Initialise baseflow from the inputfile
-void APE::InitialiseBaseFlowAnalytical(Array<OneD, Array<OneD, NekDouble> > &base,
-                                       const NekDouble time)
-{
-    base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim+1);
-    int nq = m_fields[0]->GetNpoints();
-    std::string velStr[3] = {"P0","U0","V0"};
-
-    for(int i = 0; i <= m_spacedim; ++i)
-    {
-        base[i] = Array<OneD, NekDouble> (nq,0.0);
-        EvaluateFunction(velStr[i], base[i], "Baseflow", time);
-    }
-}
-
 
 // Get sourceterm for p' equation from the inputfile
 void APE::GetSource(Array<OneD, NekDouble> &source, const NekDouble time)

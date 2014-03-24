@@ -95,13 +95,13 @@ class APE : public UnsteadySystem
         NekDouble                                       m_Rho0;
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
+        Array<OneD, Array<OneD, NekDouble> >            m_basefield;
+        std::vector<std::string>                        m_basefield_names;
 
         /// Initialises UnsteadySystem class members.
         APE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
-
-        Array<OneD, Array<OneD, NekDouble> > basefield;
 
         /// Sets up initial conditions.
         virtual void v_DoInitialise();
@@ -131,8 +131,6 @@ class APE : public UnsteadySystem
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                                      Array<OneD, Array<OneD, NekDouble> > &numfluxX,
                                      Array<OneD, Array<OneD, NekDouble> > &numfluxY);
-
-        void InitialiseBaseFlowAnalytical(Array<OneD, Array<OneD, NekDouble> > &base, const NekDouble time);
 
         void GetSource(Array<OneD, NekDouble> &source, const NekDouble time);
 

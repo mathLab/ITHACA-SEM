@@ -101,8 +101,19 @@ namespace Nektar
                 }
                 outfile << endl;
                 
-                outfile << " ZONE I=" << m_f->m_fieldPts->m_pts[0].num_elements() <<
-                    " F=POINT" << endl;
+                switch(m_f->m_fieldPts->m_ptype)
+                {
+                case Utilities::ePtsFile:
+                case Utilities::ePtsLine:
+                    outfile << " ZONE I=" << m_f->m_fieldPts->m_pts[0].num_elements() <<
+                        " F=POINT" << endl;
+                    break;
+                case Utilities::ePtsPlane:
+                    outfile << " ZONE I=" << m_f->m_fieldPts->m_npts[0] 
+                            <<      " J=" << m_f->m_fieldPts->m_npts[1] 
+                            << " F=POINT" << endl;
+                    break;
+                }
                 
                 for(int i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)
                 {

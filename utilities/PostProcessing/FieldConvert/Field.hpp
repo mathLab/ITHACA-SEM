@@ -61,12 +61,21 @@ namespace Nektar
 {
     namespace Utilities
     {
+        enum PtsType{
+            ePtsFile,
+            ePtsLine,
+            ePtsPlane,
+            ePtsBlock
+        };
+
         struct FieldPts
         {
-            FieldPts(void):m_ptsDim(0) {}
+            FieldPts(void):m_ptsDim(0),m_ptype(ePtsFile) {}
             
             int m_ptsDim;
             Array<OneD, Array<OneD, NekDouble> > m_pts;
+            PtsType     m_ptype;
+            vector<int> m_npts;
             vector<std::string> m_fields;
         };
         

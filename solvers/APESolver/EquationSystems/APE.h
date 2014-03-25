@@ -126,9 +126,7 @@ class APE : public UnsteadySystem
 
         void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
 
-        void WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
-
-        void WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
+        void WallBC(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
 };
 }
 

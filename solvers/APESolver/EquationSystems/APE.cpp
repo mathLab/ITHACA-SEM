@@ -409,14 +409,7 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
         // Wall Boundary Condition
         if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWall)
         {
-            if (m_expdim == 1)
-            {
-                WallBoundary1D(n,inarray);
-            }
-            else if (m_expdim == 2)
-            {
-                WallBoundary2D(n,cnt,inarray);
-            }
+            WallBC(n, cnt, inarray);
         }
 
         // Time Dependent Boundary Condition (specified in meshfile)
@@ -432,83 +425,71 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
     }
 }
 
-void APE::WallBoundary2D(int bcRegion, int cnt,
-                         Array<OneD, Array<OneD, NekDouble> > &physarray)
+/**
+ * @brief Wall boundary conditions for the APE equations.
+ */
+void APE::WallBC(int bcRegion, int cnt,
+                 Array<OneD, Array<OneD, NekDouble> > &physarray)
 {
-    int i;
-    int nTraceNumPoints = GetTraceTotPoints();
-    int nvariables      = physarray.num_elements();
-    
-    // get physical values of the forward trace
-    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-    for (i = 0; i < nvariables; ++i)
+    int nTracePts = GetTraceTotPoints();
+    int nVariables = physarray.num_elements();
+
+    const Array<OneD, const int> &traceBndMap = m_fields[0]->GetTraceBndMap();
+
+    // Get physical values of the forward trace
+    Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+    for (int i = 0; i < nVariables; ++i)
     {
-        Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-        m_fields[i]->ExtractTracePhys(physarray[i],Fwd[i]);
+        Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+        m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
     }
-    
+
     // Adjust the physical values of the trace to take
     // user defined boundaries into account
-    int e, id1, id2, npts;
-    
-    for(e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+    int id1, id2, nBCEdgePts;
+    int eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+
+    for (int e = 0; e < eMax; ++e)
     {
-        npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
-        id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
-        id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+        nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                GetExp(e)->GetTotPoints();
+        id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
+        id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
 
-        switch(m_expdim)
+        // For 2D/3D, define: v* = v - 2(v.n)n
+        Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
+
+        // Calculate (v.n)
+        for (int i = 0; i < m_spacedim; ++i)
         {
-            case 1:
-            {
-                // negate the forward flux
-                Vmath::Neg(npts,&Fwd[1][id2],1);
-                break;
-            }
-
-            case 2:
-            {
-                Array<OneD, NekDouble> tmp_n(npts);
-                Array<OneD, NekDouble> tmp_t(npts);
-
-                Vmath::Vmul(npts,&Fwd[1][id2],1,&m_traceNormals[0][id2],1,&tmp_n[0],1);
-                Vmath::Vvtvp(npts,&Fwd[2][id2],1,&m_traceNormals[1][id2],1,&tmp_n[0],1,&tmp_n[0],1);
-
-                Vmath::Vmul(npts,&Fwd[1][id2],1,&m_traceNormals[1][id2],1,&tmp_t[0],1);
-                Vmath::Vvtvm(npts,&Fwd[2][id2],1,&m_traceNormals[0][id2],1,&tmp_t[0],1,&tmp_t[0],1);
-
-                // negate the normal flux
-                Vmath::Neg(npts,tmp_n,1);
-
-                // rotate back to Cartesian
-                Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[1][id2],1,&Fwd[1][id2],1);
-                Vmath::Vvtvm(npts,&tmp_n[0],1,&m_traceNormals[0][id2],1,&Fwd[1][id2],1,&Fwd[1][id2],1);
-
-                Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[0][id2],1,&Fwd[2][id2],1);
-                Vmath::Vvtvp(npts,&tmp_n[0],1,&m_traceNormals[1][id2],1,&Fwd[2][id2],1,&Fwd[2][id2],1);
-                break;
-            }
-
-            case 3:
-                ASSERTL0(false,"3D not implemented for Acoustic perturbation equations");
-                break;
-
-            default:
-                ASSERTL0(false,"Illegal expansion dimension");
-                break;
+            Vmath::Vvtvp(nBCEdgePts,
+                         &Fwd[1+i][id2], 1,
+                         &m_traceNormals[i][id2], 1,
+                         &tmp[0], 1,
+                         &tmp[0], 1);
         }
 
-        // copy boundary adjusted values into the boundary expansion
-        for (i = 0; i < nvariables; ++i)
+        // Calculate 2.0(v.n)
+        Vmath::Smul(nBCEdgePts, -2.0, &tmp[0], 1, &tmp[0], 1);
+
+        // Calculate v* = v - 2.0(v.n)n
+        for (int i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vcopy(npts,&Fwd[i][id2], 1,&(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
+            Vmath::Vvtvp(nBCEdgePts,
+                         &tmp[0], 1,
+                         &m_traceNormals[i][id2], 1,
+                         &Fwd[1+i][id2], 1,
+                         &Fwd[1+i][id2], 1);
+        }
+
+        // Copy boundary adjusted values into the boundary expansion
+        for (int i = 0; i < nVariables; ++i)
+        {
+            Vmath::Vcopy(nBCEdgePts,
+                         &Fwd[i][id2], 1,
+                         &(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1], 1);
         }
     }
-}
-
-void APE::WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray)
-{
-    ASSERTL0(false,"1D not yet working for APE");
 }
 
 // Add sourceterm for p' equation obtained from GetSource

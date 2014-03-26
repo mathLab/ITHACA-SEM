@@ -55,9 +55,9 @@ namespace Nektar
         ProcessConcatenateFld::ProcessConcatenateFld(FieldSharedPtr f) : ProcessModule(f)
         {
             // check for correct input files
-            if(f->m_inputfiles.count("xml") == 0)
+            if((f->m_inputfiles.count("xml") == 0)&&(f->m_inputfiles.count("xml.gz") == 0))
             {
-                cout << "An xml input file must be specified for the concatenate module" << endl;
+                cout << "An xml or xml.gz input file must be specified for the concatenate module" << endl;
                 exit(3);
             }
 

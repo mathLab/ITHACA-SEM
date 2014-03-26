@@ -11,6 +11,7 @@ SET(FieldConvertHeaders
     ProcessConcatenateFld.h
     ProcessInterpField.h
     ProcessInterpPoints.h
+    ProcessScaleInFld.h
     ProcessVorticity.h
     ProcessC0Projection.h
     ProcessQCriterion.h
@@ -29,6 +30,7 @@ SET(FieldConvertSources
     ProcessConcatenateFld.cpp
     ProcessInterpField.cpp
     ProcessInterpPoints.cpp
+    ProcessScaleInFld.cpp
     ProcessVorticity.cpp
     ProcessC0Projection.cpp
     ProcessQCriterion.cpp

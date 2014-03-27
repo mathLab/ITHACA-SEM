@@ -11,6 +11,8 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
        ./EquationSystems/PulseWavePropagation.cpp
        ./EquationSystems/PulseWaveBoundary.h
        ./EquationSystems/PulseWaveBoundary.cpp
+       ./EquationSystems/PulseWavePressureArea.h
+       ./EquationSystems/PulseWavePressureArea.cpp
        ./EquationSystems/TimeDependentInflow.h
        ./EquationSystems/TimeDependentInflow.cpp
        ./EquationSystems/QInflow.h
@@ -22,7 +24,11 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
        ./EquationSystems/RCROutflow.h
        ./EquationSystems/RCROutflow.cpp
        ./EquationSystems/UndefinedInOutflow.h
-       ./EquationSystems/UndefinedInOutflow.cpp)
+       ./EquationSystems/UndefinedInOutflow.cpp
+       ./EquationSystems/LymphaticPressureArea.h
+       ./EquationSystems/LymphaticPressureArea.cpp
+       ./EquationSystems/ArterialPressureArea.h
+       ./EquationSystems/ArterialPressureArea.cpp)
 
 
     ADD_SOLVER_EXECUTABLE(PulseWaveSolver solvers 

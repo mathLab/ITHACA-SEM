@@ -53,16 +53,18 @@ namespace Nektar
     public:
         /// Creates an instance of this class
       static PulseWaveBoundarySharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel, 
-                                               const LibUtilities::SessionReaderSharedPtr& pSession)
+                                               const LibUtilities::SessionReaderSharedPtr& pSession,
+                                               PulseWavePressureAreaSharedPtr& pressureArea)
         {
-            return MemoryManager<TerminalOutflow>::AllocateSharedPtr(pVessel,pSession);
+            return MemoryManager<TerminalOutflow>::AllocateSharedPtr(pVessel,pSession,pressureArea);
         }
 
         /// Name of class
         static std::string className;
         
         TerminalOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
-                 const LibUtilities::SessionReaderSharedPtr pSession); 
+                        const LibUtilities::SessionReaderSharedPtr pSession,
+                        PulseWavePressureAreaSharedPtr pressureArea); 
 
         virtual ~TerminalOutflow();
     protected:

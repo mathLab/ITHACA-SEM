@@ -60,7 +60,10 @@ namespace Nektar
     void PulseWavePropagation::v_InitObject()
     {
         PulseWaveSystem::v_InitObject();
-		
+	
+        m_pressureArea=GetPressureAreaFactory().CreateInstance("Lymphatic",m_vessels,m_session);
+        m_pressureArea->DoPressure();
+	
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs       (&PulseWavePropagation::DoOdeRhs, this);
@@ -183,7 +186,7 @@ namespace Nektar
                 {	
                     std::string BCType = vessel[0]->GetBndConditions()[j]->
                         GetBndTypeAsString(vessel[0]->GetBndConditions()[j]->GetUserDefined());
-                    m_Boundary[2*omega+j]=GetBoundaryFactory().CreateInstance(BCType,m_vessels,m_session);
+                    m_Boundary[2*omega+j]=GetBoundaryFactory().CreateInstance(BCType,m_vessels,m_session,m_pressureArea);
                 }
             }
 

@@ -48,8 +48,9 @@ namespace Nektar
      *
      */
     TerminalOutflow::TerminalOutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
-                       const LibUtilities::SessionReaderSharedPtr pSession)
-        : PulseWaveBoundary(pVessel,pSession)
+                                     const LibUtilities::SessionReaderSharedPtr pSession,
+                                     PulseWavePressureAreaSharedPtr pressureArea)
+        : PulseWaveBoundary(pVessel,pSession,pressureArea)
     {
     }
 

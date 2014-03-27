@@ -38,6 +38,7 @@
 
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
 #include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
+#include <PulseWaveSolver/EquationSystems/PulseWavePressureArea.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -95,6 +96,8 @@ namespace Nektar
         virtual void v_PrintSummary(std::ostream &out);
 
         Array<OneD, PulseWaveBoundarySharedPtr> m_Boundary;
+
+        PulseWavePressureAreaSharedPtr m_pressureArea;
     };
 }
 

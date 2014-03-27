@@ -49,8 +49,9 @@ namespace Nektar
      *
      */
     RCROutflow::RCROutflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, 
-                           const LibUtilities::SessionReaderSharedPtr pSession)
-        : PulseWaveBoundary(pVessel,pSession)
+                           const LibUtilities::SessionReaderSharedPtr pSession,
+                           PulseWavePressureAreaSharedPtr pressureArea)
+        : PulseWaveBoundary(pVessel,pSession,pressureArea)
     {
         m_session->LoadParameter("TimeStep", m_timestep);
     }

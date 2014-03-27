@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
+#include <PulseWaveSolver/EquationSystems/PulseWavePressureArea.h>
 
 namespace Nektar
 {
@@ -51,14 +52,16 @@ namespace Nektar
     typedef LibUtilities::NekFactory< std::string, 
         PulseWaveBoundary, 
         Array<OneD, MultiRegions::ExpListSharedPtr>&, 
-        const LibUtilities::SessionReaderSharedPtr& > BoundaryFactory;
+        const LibUtilities::SessionReaderSharedPtr&, 
+        PulseWavePressureAreaSharedPtr& > BoundaryFactory;
     BoundaryFactory& GetBoundaryFactory();
     
     class PulseWaveBoundary
     {
     public:
         PulseWaveBoundary(Array<OneD, MultiRegions::ExpListSharedPtr> &pVessel,
-                          const LibUtilities::SessionReaderSharedPtr &pSession);
+                          const LibUtilities::SessionReaderSharedPtr &pSession,
+                          PulseWavePressureAreaSharedPtr & pressureArea);
 
         virtual ~PulseWaveBoundary();
 
@@ -79,6 +82,7 @@ namespace Nektar
 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_vessels;
 	LibUtilities::SessionReaderSharedPtr m_session;
+        PulseWavePressureAreaSharedPtr m_pressureArea;
 
         NekDouble m_pext;
         NekDouble m_pout;

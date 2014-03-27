@@ -81,18 +81,20 @@
                m_bndConditions    (),
                m_trace(NullExpListSharedPtr)
          {
-             SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
+            if(variable.compare("DefaultVar") != 0) // do not set up BCs if default variable
+            {
+                SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
+                
+                GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
+                EvaluateBoundaryConditions(0.0, variable);
 
-             GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
-             EvaluateBoundaryConditions(0.0, variable);
-             ApplyGeomInfo();
-
-             // Find periodic edges for this variable.
-             FindPeriodicFaces(bcs, variable);
-
-             if(SetUpJustDG)
-             {
-                 SetUpDG();
+                // Find periodic edges for this variable.
+                FindPeriodicFaces(bcs, variable);
+            }
+            
+            if(SetUpJustDG)
+            {
+                SetUpDG();
              }
              else
              {

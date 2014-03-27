@@ -64,7 +64,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField2D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                        const std::string &variable,
+                        const std::string &variable  = "DefaultVar",
                         const bool DeclareCoeffPhysArrays = true,
                         const bool CheckIfSingularSystem = false);
 

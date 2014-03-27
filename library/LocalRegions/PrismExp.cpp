@@ -1473,16 +1473,24 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
                 }
                 break;
+            case StdRegions::ePreconLinearSpaceMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+                    
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
             case StdRegions::ePreconR:
                 {
                     NekDouble one = 1.0;
                     MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
                     DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
-                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
-                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
-                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
-
+                    
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
 
@@ -1495,9 +1503,32 @@ namespace Nektar
                     MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
                     DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
-                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
-                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
-                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
+                    
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRTMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
 
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());

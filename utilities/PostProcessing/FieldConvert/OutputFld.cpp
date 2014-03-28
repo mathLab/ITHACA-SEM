@@ -83,7 +83,6 @@ namespace Nektar
                     cout << "OutputFld: Writing boundary file(s): "; 
                     for(int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
                     {
-                        cout << m_f->m_bndRegionsToWrite[i];
                         if(i < m_f->m_bndRegionsToWrite.size()-1) 
                         {
                             cout << ",";
@@ -108,7 +107,7 @@ namespace Nektar
                 for(int i = 0; i < m_f->m_bndRegionsToWrite.size(); ++i)
                 {
                     string outname = name  + "_b" + 
-                        boost::lexical_cast<string>(i) + "." + ext;
+                        boost::lexical_cast<string>(m_f->m_bndRegionsToWrite[i]) + "." + ext;
                     
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> 
                         FieldDef = BndExp[0][m_f->m_bndRegionsToWrite[i]]->GetFieldDefinitions();
@@ -144,8 +143,8 @@ namespace Nektar
                         for (int j = 0; j < nfields; ++j)
                         {
                             BndExp[j][m_f->m_bndRegionsToWrite[i]]->BwdTrans(
-                                BndExp[j][m_f->m_bndRegionsToWrite[i]]->GetCoeffs(), 
-                                BndExp[j][m_f->m_bndRegionsToWrite[i]]->UpdatePhys());
+                                                                             BndExp[j][m_f->m_bndRegionsToWrite[i]]->GetCoeffs(), 
+                                                                             BndExp[j][m_f->m_bndRegionsToWrite[i]]->UpdatePhys());
                             
                             NekDouble l2err = BndExp[j][m_f->m_bndRegionsToWrite[i]]->
                                 L2(BndExp[j][m_f->m_bndRegionsToWrite[i]]->GetPhys());

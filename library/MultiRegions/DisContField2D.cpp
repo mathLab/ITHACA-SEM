@@ -95,20 +95,21 @@ namespace Nektar
               m_periodicFwdCopy(),
               m_periodicBwdCopy()
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
 
-            GenerateBoundaryConditionExpansion(graph2D,bcs,variable,
-                                               DeclareCoeffPhysArrays);
-
-            if (DeclareCoeffPhysArrays)
+            if(variable.compare("DefaultVar") != 0) // do not set up BCs if default variable
             {
-                EvaluateBoundaryConditions(0.0, variable);
-            }
+                SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
+                GenerateBoundaryConditionExpansion(graph2D,bcs,variable,
+                                                   DeclareCoeffPhysArrays);
+                
+                if (DeclareCoeffPhysArrays)
+                {
+                    EvaluateBoundaryConditions(0.0, variable);
+                }
 
-            ApplyGeomInfo();
-            
-            // Find periodic edges for this variable.
-            FindPeriodicEdges(bcs, variable);
+                // Find periodic edges for this variable.
+                FindPeriodicEdges(bcs, variable);
+            }
 
             if (SetUpJustDG)
             {

@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 //  File: ProcessSpherigon.cpp
 //
@@ -372,7 +372,7 @@ namespace Nektar
                         FaceSharedPtr f = m_mesh->m_element[m_mesh->m_expDim][it->first]->
                             GetFace(it->second);
                         vector<NodeSharedPtr> nodes = f->m_vertexList;
-                        LibUtilities::ShapeType eType = (LibUtilities::ShapeType)(nodes.size()-1);
+                        LibUtilities::ShapeType eType = (LibUtilities::ShapeType)(nodes.size());
                         ElmtConfig conf(eType, 1, false, false);
                         
                         // Create 2D element.

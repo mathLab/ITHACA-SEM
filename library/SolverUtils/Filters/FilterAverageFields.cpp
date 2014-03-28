@@ -48,8 +48,7 @@ namespace Nektar
         {
             if (pParams.find("OutputFile") == pParams.end())
             {
-                string outname = m_session->GetSessionName();
-                m_outputFile = outname;
+                m_outputFile = m_session->GetSessionName();
             }
             else
             {

@@ -2376,7 +2376,7 @@ namespace Nektar
     bool CompressibleFlowSystem::v_SteadyStateCheck(int step)
     {        
         NekDouble maxL2 = CalcSteadyState();
-        if (m_comm->GetRank() == 0 && !((step+1) % m_infosteps))
+        if (m_comm->GetRank() == 0)
         {
             cout << "max L2 = " << maxL2 << endl;
         }

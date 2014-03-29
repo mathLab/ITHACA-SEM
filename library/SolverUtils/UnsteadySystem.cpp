@@ -302,8 +302,15 @@ namespace Nektar
                     ss << cpuTime << "s";
                     cout << " CPU Time: " << setw(8) << left
                          << ss.str() << endl;
-
+                                        
                     cpuTime = 0.0;
+                }
+                if (!((step+1) % m_infosteps))
+                {
+                    if (v_SteadyStateCheck(step))
+                    {
+                        break;
+                    }
                 }
                 
                 // Perform any solver-specific post-integration steps
@@ -333,11 +340,6 @@ namespace Nektar
                 if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
                     doCheckTime)
                 {                
-                    if (v_SteadyStateCheck(step))
-                    {
-                        break;
-                    }
-                    
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
                         vector<bool> transformed(nfields, false);

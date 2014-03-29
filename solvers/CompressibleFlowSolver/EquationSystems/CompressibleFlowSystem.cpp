@@ -2409,7 +2409,6 @@ namespace Nektar
         }
                 
         NekDouble maxdL2 = Vmath::Vmax(m_fields.num_elements(), L2, 1);
-        m_comm->AllReduce(maxdL2, LibUtilities::ReduceMax);
         return maxdL2;
     }
 

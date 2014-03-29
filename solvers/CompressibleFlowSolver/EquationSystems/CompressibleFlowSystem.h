@@ -201,7 +201,10 @@ namespace Nektar
         void GetDynamicViscosity(
             const Array<OneD, const NekDouble>                    &temperature,
                   Array<OneD,       NekDouble>                    &mu);
-      
+        
+        virtual bool v_SteadyStateCheck(int step);
+        NekDouble CalcSteadyState(void);
+        
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 

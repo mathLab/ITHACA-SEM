@@ -332,7 +332,12 @@ namespace Nektar
                 // Write out checkpoint files
                 if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
                     doCheckTime)
-                {
+                {                
+                    if (v_SteadyStateCheck(step))
+                    {
+                        break;
+                    }
+                    
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
                         vector<bool> transformed(nfields, false);
@@ -887,6 +892,11 @@ namespace Nektar
         }
 
         bool UnsteadySystem::v_PostIntegrate(int step)
+        {
+            return false;
+        }
+        
+        bool UnsteadySystem::v_SteadyStateCheck(int step)
         {
             return false;
         }

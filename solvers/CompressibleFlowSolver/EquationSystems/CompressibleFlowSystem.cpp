@@ -32,6 +32,8 @@
 // Description: Auxiliary functions for the compressible flow system
 //
 ///////////////////////////////////////////////////////////////////////////////
+#include <iostream>
+#include <iomanip>
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <LocalRegions/TriExp.h>
@@ -2366,6 +2368,49 @@ namespace Nektar
             mu[i] = mu_star * ratio * sqrt(ratio) * 
                     (T_star + 110.0) / (temperature[i] + 110.0);
         }
+    }
+    
+    /**
+     * Perform steady-state check
+     */
+    bool CompressibleFlowSystem::v_SteadyStateCheck(int step)
+    {        
+        NekDouble maxL2 = CalcSteadyState();
+        if (m_comm->GetRank() == 0 && !((step+1) % m_infosteps))
+        {
+            cout << "max L2 = " << maxL2 << endl;
+        }
+        return false;
+    }
+    
+    // Calculate if the solution reached a steady state
+    NekDouble CompressibleFlowSystem::CalcSteadyState(void)
+    {                
+        int nPoints = GetTotPoints();
+        Array<OneD, NekDouble>        L2   (m_fields.num_elements());
+        Array<OneD, NekDouble>        U2np1(m_fields.num_elements());
+        static Array<OneD, NekDouble> U2n  (m_fields.num_elements());
+                
+        // Calculate L2 discrete summation 
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            U2np1[i]  = 0.0;
+            U2np1[i] += Vmath::Dot(nPoints, m_fields[i]->GetPhys(), 1, 
+                                   m_fields[i]->GetPhys(), 1);
+            
+            L2[i]  = sqrt(fabs(U2np1[i] - U2n[i]) / fabs(U2n[i]));
+            U2n[i] = U2np1[i];
+            
+            m_comm->AllReduce(L2[i], LibUtilities::ReduceMax);
+            if (m_comm->GetRank() == 0)
+            {
+                cout << "L2_" << i << " = " << L2[i] << endl;
+            }
+        }
+                
+        NekDouble maxdL2 = Vmath::Vmax(m_fields.num_elements(), L2, 1);
+        m_comm->AllReduce(maxdL2, LibUtilities::ReduceMax);
+        return maxdL2;
     }
 
     /**

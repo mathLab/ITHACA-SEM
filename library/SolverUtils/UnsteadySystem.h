@@ -133,7 +133,8 @@ namespace Nektar
 
             SOLVER_UTILS_EXPORT virtual bool v_PreIntegrate(int step);
             SOLVER_UTILS_EXPORT virtual bool v_PostIntegrate(int step);
-
+            SOLVER_UTILS_EXPORT virtual bool v_SteadyStateCheck(int step);
+            
             SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time);
 
 

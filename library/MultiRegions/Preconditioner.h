@@ -80,7 +80,9 @@ namespace Nektar
             inline void DoPreconditionerWithNonVertOutput(
                          const Array<OneD, NekDouble>& pInput,
                          Array<OneD, NekDouble>& pOutput,
-                         const Array<OneD, NekDouble>& pNonVertOutput);
+                         const Array<OneD, NekDouble>& pNonVertOutput,
+                         Array<OneD, NekDouble>& pVertForce = NullNekDouble1DArray);
+
 
 	    inline void DoTransformToLowEnergy(
                 Array<OneD, NekDouble>& pInOut,
@@ -152,7 +154,9 @@ namespace Nektar
             virtual void v_DoPreconditionerWithNonVertOutput(
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput,
-                const Array<OneD, NekDouble>& pNonVertOutput);
+                const Array<OneD, NekDouble>& pNonVertOutput,
+                Array<OneD, NekDouble>& pVertForce);
+
             
 	    virtual void v_DoTransformToLowEnergy(
                 Array<OneD, NekDouble>& pInOut,
@@ -214,9 +218,11 @@ namespace Nektar
         inline void Preconditioner::DoPreconditionerWithNonVertOutput(
             const Array<OneD, NekDouble>& pInput,
                   Array<OneD, NekDouble>& pOutput,
-            const Array<OneD, NekDouble>& pNonVertOutput)
+            const Array<OneD, NekDouble>& pNonVertOutput,
+                  Array<OneD, NekDouble>& pVertForce)
         {
-            v_DoPreconditionerWithNonVertOutput(pInput,pOutput,pNonVertOutput);
+            v_DoPreconditionerWithNonVertOutput(pInput,pOutput,pNonVertOutput,
+                                                pVertForce);
         }
 
         /**

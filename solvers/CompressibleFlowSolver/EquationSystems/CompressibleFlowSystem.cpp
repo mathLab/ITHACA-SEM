@@ -2398,7 +2398,7 @@ namespace Nektar
             U2np1[i] += Vmath::Dot(nPoints, m_fields[i]->GetPhys(), 1, 
                                    m_fields[i]->GetPhys(), 1);
             
-            L2[i]  = sqrt(fabs(U2np1[i] - U2n[i]) / fabs(U2n[i]));
+            L2[i]  = sqrt(fabs(U2np1[i] - U2n[i]) / fabs(U2np1[i]));
             U2n[i] = U2np1[i];
             
             m_comm->AllReduce(L2[i], LibUtilities::ReduceMax);

@@ -87,6 +87,23 @@ namespace Nektar
                 
                 Vmath::Smul(datalen,scale,&(m_f->m_data[i][0]),1,&(m_f->m_data[i][0]),1);
             }            
+            
+            if(m_f->m_exp.size())// expansiosn are defined reload field
+            {
+                int nfields = m_f->m_fielddef[0]->m_fields.size();
+                
+                // import basic field again in case of rescaling
+                for (int j = 0; j < nfields; ++j)
+                {
+                    for (int i = 0; i < m_f->m_data.size(); ++i)
+                    {
+                        m_f->m_exp[j]->ExtractDataToCoeffs(m_f->m_fielddef[i], 
+                                                           m_f->m_data[i],
+                                                           m_f->m_fielddef[i]->m_fields[j],
+                                                           m_f->m_exp[j]->UpdateCoeffs());
+                    }
+                }
+            }
         }
     }
 }

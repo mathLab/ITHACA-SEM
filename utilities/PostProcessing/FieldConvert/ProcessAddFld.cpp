@@ -88,17 +88,26 @@ namespace Nektar
             string fromfld = m_config["fromfld"].as<string>();
             m_fromField =  boost::shared_ptr<Field>(new Field());
 
-            // Set up ElementGIDs in case of parallel processing
-            Array<OneD,int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
-            for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+            if(m_f->m_exp.size())
             {
-                ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
+                // Set up ElementGIDs in case of parallel processing
+                Array<OneD,int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
+                for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+                {
+                    ElementGIDs[i] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
+                }
+                m_f->m_fld->Import(fromfld,m_fromField->m_fielddef,
+                                   m_fromField->m_data,
+                                   LibUtilities::NullFieldMetaDataMap,
+                                   ElementGIDs);
             }
-            m_f->m_fld->Import(fromfld,m_fromField->m_fielddef,
-                               m_fromField->m_data,
-                               LibUtilities::NullFieldMetaDataMap,
-                               ElementGIDs);
-            
+            else
+            {
+                m_f->m_fld->Import(fromfld,m_fromField->m_fielddef,
+                                   m_fromField->m_data,
+                                   LibUtilities::NullFieldMetaDataMap);
+            }
+
             bool samelength = true; 
             if(m_fromField->m_data.size() != m_f->m_data.size())
             {
@@ -140,16 +149,8 @@ namespace Nektar
                 int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
                 Array<OneD, NekDouble> SaveFld(ncoeffs); 
                 
-                // import basic field again in case of rescaling
                 for (int j = 0; j < nfields; ++j)
                 {
-                    for (int i = 0; i < m_f->m_data.size(); ++i)
-                    {
-                        m_f->m_exp[j]->ExtractDataToCoeffs(m_f->m_fielddef[i], 
-                                                           m_f->m_data[i],
-                                                           m_f->m_fielddef[i]->m_fields[j],
-                                                           m_f->m_exp[j]->UpdateCoeffs());
-                    }
                     Vmath::Vcopy(ncoeffs,m_f->m_exp[j]->GetCoeffs(),1, SaveFld,1);
 
                     // load new field 

@@ -87,9 +87,19 @@ namespace Nektar
 
             string fromfld = m_config["fromfld"].as<string>();
             m_fromField =  boost::shared_ptr<Field>(new Field());
+
+            // Set up ElementGIDs in case of parallel processing
+            Array<OneD,int> ElementGIDs(m_f->m_exp[0]->GetExpSize());
+            
+            for (int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+            {
+                ElementGIDs[i++] = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetGlobalID();
+            }
+            
             m_f->m_fld->Import(fromfld,m_fromField->m_fielddef,
                                m_fromField->m_data,
-                               LibUtilities::NullFieldMetaDataMap);
+                               LibUtilities::NullFieldMetaDataMap,
+                               ElementGIDs);
             
             bool samelength = true; 
             if(m_fromField->m_data.size() != m_f->m_data.size())

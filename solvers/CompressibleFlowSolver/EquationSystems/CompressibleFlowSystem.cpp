@@ -2373,18 +2373,14 @@ namespace Nektar
     /**
      * Perform steady-state check
      */
-    bool CompressibleFlowSystem::v_SteadyStateCheck(int step)
+    bool CompressibleFlowSystem::v_PostIntegrate(int step)
     {        
         NekDouble maxL2 = CalcSteadyState();
-        if (m_comm->GetRank() == 0)
-        {
-            cout << "max L2 = " << maxL2 << endl;
-        }
         return false;
     }
     
     // Calculate if the solution reached a steady state
-    NekDouble CompressibleFlowSystem::CalcSteadyState(void)
+    NekDouble CompressibleFlowSystem::CalcSteadyState()
     {                
         int nPoints = GetTotPoints();
         Array<OneD, NekDouble>        L2   (m_fields.num_elements());
@@ -2397,19 +2393,49 @@ namespace Nektar
             U2np1[i]  = 0.0;
             U2np1[i] += Vmath::Dot(nPoints, m_fields[i]->GetPhys(), 1, 
                                    m_fields[i]->GetPhys(), 1);
+            m_comm->AllReduce(U2np1[i], LibUtilities::ReduceSum);
             
             L2[i]  = sqrt(fabs(U2np1[i] - U2n[i]) / fabs(U2np1[i]));
             U2n[i] = U2np1[i];
-            
-            m_comm->AllReduce(L2[i], LibUtilities::ReduceMax);
+        }
+        
+        NekDouble maxL2 = Vmath::Vmax(m_fields.num_elements(), L2, 1);
+
+        if (m_fields.num_elements() == 3)
+        {
             if (m_comm->GetRank() == 0)
             {
-                cout << "L2_" << i << " = " << L2[i] << endl;
+                cout << "L2_rho = "  << L2[0] << "    "
+                     << "L2_rhou = " << L2[1] << "    "
+                     << "L2_E = "    << L2[2] << "    "
+                     << "L2_max = "  << maxL2 << endl;
             }
         }
-                
-        NekDouble maxdL2 = Vmath::Vmax(m_fields.num_elements(), L2, 1);
-        return maxdL2;
+        else if (m_fields.num_elements() == 4)
+        {
+            if (m_comm->GetRank() == 0)
+            {
+                cout << "L2_rho = "  << L2[0] << "    "
+                     << "L2_rhou = " << L2[1] << "    "
+                     << "L2_rhov = " << L2[2] << "    "
+                     << "L2_E = "    << L2[3] << "    "
+                     << "L2_max = "  << maxL2 << endl;
+            }
+        }
+        else if (m_fields.num_elements() == 5)
+        {
+            if (m_comm->GetRank() == 0)
+            {
+                cout << "L2_rho = "  << L2[0] << "    "
+                     << "L2_rhou = " << L2[1] << "    "
+                     << "L2_rhov = " << L2[2] << "    "
+                     << "L2_rhow = " << L2[3] << "    "
+                     << "L2_E = "    << L2[4] << "    "
+                     << "L2_max = "  << maxL2 << endl;
+            }
+        }
+            
+        return maxL2;
     }
 
     /**

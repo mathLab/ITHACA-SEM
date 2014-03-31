@@ -202,8 +202,8 @@ namespace Nektar
             const Array<OneD, const NekDouble>                    &temperature,
                   Array<OneD,       NekDouble>                    &mu);
         
-        virtual bool v_SteadyStateCheck(int step);
-        NekDouble CalcSteadyState(void);
+        virtual bool v_PostIntegrate(int step);
+        NekDouble CalcSteadyState();
         
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);

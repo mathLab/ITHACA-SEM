@@ -305,13 +305,6 @@ namespace Nektar
                                         
                     cpuTime = 0.0;
                 }
-                if (!((step+1) % m_infosteps))
-                {
-                    if (v_SteadyStateCheck(step))
-                    {
-                        break;
-                    }
-                }
                 
                 // Perform any solver-specific post-integration steps
                 if (v_PostIntegrate(step))

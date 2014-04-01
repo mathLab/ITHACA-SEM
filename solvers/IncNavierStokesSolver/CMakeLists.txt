@@ -18,6 +18,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./AdvectionTerms/SkewSymmetricAdvection.cpp
        ./AdvectionTerms/NoAdvection.cpp
        ./Filters/FilterEnergy.cpp
+       ./Filters/FilterReynoldsStresses.cpp
        ./IncNavierStokesSolver.cpp 
        )
 

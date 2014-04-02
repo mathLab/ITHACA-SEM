@@ -119,6 +119,9 @@ namespace Nektar
         // Field storage for PressureInflowFileBC
         Array<OneD, Array<OneD, NekDouble> > m_fieldStorage;
         
+        // Storage for L2 norm error
+        Array<OneD, Array<OneD, NekDouble> > m_un;
+        
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 

@@ -53,7 +53,7 @@ namespace Nektar
     CompressibleFlowSystem::CompressibleFlowSystem(
         const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession)
-    {
+    {   
     }
 
     /**
@@ -177,6 +177,14 @@ namespace Nektar
                         m_fieldStorage[i], 1);
                 }
             }
+        }
+        
+        const int nPoints = m_fields[0]->GetTotPoints();
+        m_un = Array<OneD, Array<OneD, NekDouble> > (m_fields.num_elements());
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            m_un[i] = Array<OneD, NekDouble> (nPoints, 0.0);
+            Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, m_un[i], 1);
         }
         
         // Type of advection class to be used
@@ -2381,7 +2389,8 @@ namespace Nektar
     
     // Calculate if the solution reached a steady state
     NekDouble CompressibleFlowSystem::CalcSteadyState()
-    {                
+    {     
+        /*
         int nPoints = GetTotPoints();
         Array<OneD, NekDouble>        L2   (m_fields.num_elements());
         Array<OneD, NekDouble>        U2np1(m_fields.num_elements());
@@ -2398,7 +2407,40 @@ namespace Nektar
             L2[i]  = sqrt(fabs(U2np1[i] - U2n[i]) / fabs(U2np1[i]));
             U2n[i] = U2np1[i];
         }
+        */
+
+        int nPoints = GetTotPoints();
+        Array<OneD, NekDouble> L2   (m_fields.num_elements());
+        Array<OneD, NekDouble> numer(m_fields.num_elements());
+        Array<OneD, NekDouble> denom(m_fields.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > unp1(m_fields.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > diff(m_fields.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > diff2(m_fields.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > u2np1(m_fields.num_elements());
+
         
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {            
+            unp1[i] = Array<OneD, NekDouble>(nPoints, 0.0);
+            diff[i] = Array<OneD, NekDouble>(nPoints, 0.0);
+            diff2[i] = Array<OneD, NekDouble>(nPoints, 0.0);
+            u2np1[i] = Array<OneD, NekDouble>(nPoints, 0.0);
+
+            Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, unp1[i], 1);
+            Vmath::Vsub(nPoints, unp1[i], 1, m_un[i], 1, diff[i], 1);
+            Vmath::Vmul(nPoints, diff[i], 1, diff[i], 1, diff2[i], 1);
+            numer[i] = Vmath::Vsum(nPoints, diff2[i], 1);
+            m_comm->AllReduce(numer[i], LibUtilities::ReduceSum);
+
+            Vmath::Vmul(nPoints, unp1[i], 1, unp1[i], 1, u2np1[i], 1);
+            denom[i] = Vmath::Vsum(nPoints, u2np1[i], 1);
+            m_comm->AllReduce(denom[i], LibUtilities::ReduceSum);
+            
+            L2[i] = sqrt(numer[i]/denom[i]);
+            
+            Vmath::Vcopy(nPoints, unp1[i], 1, m_un[i], 1);
+        }
+
         NekDouble maxL2 = Vmath::Vmax(m_fields.num_elements(), L2, 1);
 
         if (m_fields.num_elements() == 3)

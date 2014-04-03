@@ -55,6 +55,20 @@ namespace Nektar
                 ModuleKey(eProcessModule, "bl"), ProcessBL::create,
                 "Refines a prismatic boundary layer.");
 
+        struct SplitMapHelper
+        {
+            int *edge;
+            int *offset;
+            int *inc;
+        };
+
+        struct SplitEdgeHelper
+        {
+            int *edge;
+            int **edgeVert;
+            int *offset;
+        };
+
         ProcessBL::ProcessBL(MeshSharedPtr m) : ProcessModule(m)
         {
             // BL mesh configuration.
@@ -80,6 +94,10 @@ namespace Nektar
                 cout << "ProcessBL: Refining prismatic boundary layer..."
                      << endl;
             }
+
+            // A set containing all element types which are valid.
+            set<LibUtilities::ShapeType> validElTypes;
+            validElTypes.insert(LibUtilities::ePrism);
 
             int nodeId  = m_mesh->m_vertexSet.size();
             int nl      = m_config["layers"].as<int>();
@@ -118,29 +136,43 @@ namespace Nektar
             // points. Note that this map includes only the edges that are on
             // the triangular faces as the edges in the normal direction are
             // linear.
-            int splitMapEdge[6] = {0,2,4,5,6,7};
-            int splitMapOffset[6][2] = {
-                {0,       1        },
-                {nq,      1        },
-                {0,       nq*(nl+1)},
-                {nq-1,    nq*(nl+1)},
-                {nq+nq-1, nq*(nl+1)},
-                {nq,      nq*(nl+1)}
-            };
+            map<LibUtilities::ShapeType, map<int, SplitMapHelper> > splitMap;
+            int po = nq*(nl+1);
+
+            SplitMapHelper splitPrism;
+            int splitMapEdgePrism[6]   = {0, 2,  4,  5,    6,       7};
+            int splitMapOffsetPrism[6] = {0, nq, 0,  nq-1, nq+nq-1, nq};
+            int splitMapIncPrism   [6] = {1, 1,  po, po,   po,      po};
+            prism.edge   = splitMapEdgePrism;
+            prism.offset = splitMapOffsetPrism;
+            prism.inc    = splitMapIncPrism;
+            splitMap[LibUtilities::ePrism][1] = splitPrism;
+            splitMap[LibUtilities::ePrism][3] = splitPrism;
 
             // splitEdge enumerates the edges in the standard prism along which
             // new nodes should be generated. These edges are the three between
             // the two triangular faces.
-            int splitEdge[3] = {3,1,8};
-
+            //
             // edgeVertMap specifies the vertices which comprise those edges in
             // splitEdge; for example splitEdge[0] = 3 which connects vertices 0
             // and 3.
-            int edgeVertMap[3][2] = {{0,3}, {1,2}, {4,5}};
-
+            //
             // edgeOffset holds the offset of each of edges 3, 1 and 8
             // respectively inside the collapsed coordinate system.
-            int edgeOffset[3] = {0, nq-1, nq*(nl+1)*(nq-1)};
+            map<LibUtilities::ShapeType, map<int, SplitEdgeHelper> > splitEdge;
+            int splitPrismEdges   [3]    = {3,     1,     8};
+            int splitPrismEdgeVert[3][2] = {{0,3}, {1,2}, {4,5}};
+            int splitPrismOffset  [3]    = {0,     nq-1,  nq*(nl+1)*(nq-1)};
+            SplitEdgeHelper splitPrismEdge;
+            prism.edge = splitPrismEdges;
+            prism.edgeVert = splitPrismVMap;
+            prism.offset = splitPrismOffset;
+            splitEdge[LibUtilities::ePrism][1] = splitPrismEdge;
+            splitEdge[LibUtilities::ePrism][3] = splitPrismEdge;
+
+            map<LibUtilities::ShapeType, map<int, bool> > revPoints;
+            revPoints[LibUtilities::ePrism][1] = false;
+            revPoints[LibUtilities::ePrism][3] = true;
 
             // edgeMap associates geometry edge IDs to the (nl+1) vertices which
             // are generated along that edge when a prism is split, and is used
@@ -184,30 +216,32 @@ namespace Nektar
 
                         if (inter.size() == 1)
                         {
-                            if (el->GetConf().m_e != LibUtilities::ePrism)
+                            if (el->GetConf().m_e == LibUtilities::ePrism)
                             {
-                                cerr << "WARNING: Found non-prismatic element "
-                                     << "to split in surface " << surf
-                                     << "; ignoring" << endl;
-                                continue;
+                                if (j % 2 == 0)
+                                {
+                                    cerr << "WARNING: Found quadrilateral face "
+                                         << j << " on surface " << surf
+                                         << " connected to prism; ignoring."
+                                         << endl;
+                                    continue;
+                                }
+                                
+                                if (splitEls.count(el->GetId()) > 0)
+                                {
+                                    cerr << "WARNING: prism already found; "
+                                         << "ignoring" << endl;
+                                }
+                                
+                                splitEls[el->GetId()] = j;
                             }
-
-                            if (j % 2 == 0)
+                            else if (validElTypes.count(el->GetConf().m_e) == 0)
                             {
-                                cerr << "WARNING: Found quadrilateral face "
-                                     << j << " on surface " << surf
-                                     << " connected to prism; ignoring."
-                                     << endl;
-                                continue;
-                            }
-
-                            if (splitEls.count(el->GetId()) > 0)
-                            {
-                                cerr << "WARNING: prism already found; "
+                                cerr << "WARNING: Unsupported element type "
+                                     << "found in surface " << j << "; "
                                      << "ignoring" << endl;
+                                continue;
                             }
-
-                            splitEls[el->GetId()] = j;
                         }
                     }
                 }
@@ -220,12 +254,18 @@ namespace Nektar
                 {
                     ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
 
-                    if (el->GetConf().m_e != LibUtilities::ePrism)
+                    if (el->GetConf().m_e == LibUtilities::ePrism)
+                    {
+                        splitEls[el->GetId()] = 1;
+                    }
+                    else if (validElType.count(el->GetConf().m_e) > 0)
+                    {
+                        splitEls[el->GetId()] = 0;
+                    }
+                    else
                     {
                         continue;
                     }
-
-                    splitEls[el->GetId()] = 1;
                 }
             }
 
@@ -260,17 +300,21 @@ namespace Nektar
                     }
                 }
 
+                LibUtilities::ShapeType elType = el[i]->GetConf().m_e;
+
                 // Get elemental geometry object.
-                SpatialDomains::PrismGeomSharedPtr geom =
-                    boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
+                SpatialDomains::Geometry3DSharedPtr geom =
+                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
                         el[i]->GetGeom(m_mesh->m_spaceDim));
 
                 // Determine whether to use reverse points.
-                LibUtilities::PointsType t = splitEls[el[i]->GetId()] == 1 ?
+                LibUtilities::PointsType t =
+                    revPoints[elType][splitEls[el[i]->GetId()]] ?
                     LibUtilities::eBoundaryLayerPoints :
                     LibUtilities::eBoundaryLayerPointsRev;
 
-                if(ratioIsString) // determien value of r base on geom
+                // Determine value of r based on geometry.
+                if(ratioIsString)
                 {
                     NekDouble x,y,z;
                     NekDouble x1,y1,z1;
@@ -289,22 +333,25 @@ namespace Nektar
                     r = rEval.Evaluate(rExprId,x,y,z,0.0);
                 }
 
+                LocalRegions::ExpansionSharedPtr q;
 
-                // Create basis.
-                LibUtilities::BasisKey B0(
-                    LibUtilities::eModified_A, nq,
-                    LibUtilities::PointsKey(nq,pt));
-                LibUtilities::BasisKey B1(
-                    LibUtilities::eModified_A, 2,
-                    LibUtilities::PointsKey(nl+1, t, r));
-                LibUtilities::BasisKey B2(
-                    LibUtilities::eModified_B, nq,
-                    LibUtilities::PointsKey(nq,pt));
+                if (elType == LibUtilities::ePrism)
+                {
+                    // Create basis.
+                    LibUtilities::BasisKey B0(
+                        LibUtilities::eModified_A, nq,
+                        LibUtilities::PointsKey(nq,pt));
+                    LibUtilities::BasisKey B1(
+                        LibUtilities::eModified_A, 2,
+                        LibUtilities::PointsKey(nl+1, t, r));
+                    LibUtilities::BasisKey B2(
+                        LibUtilities::eModified_B, nq,
+                        LibUtilities::PointsKey(nq,pt));
 
-                // Create local region.
-                LocalRegions::PrismExpSharedPtr q =
-                    MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
+                    // Create local region.
+                    q = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
                         B0,B1,B2,geom);
+                }
 
                 // Grab co-ordinates.
                 Array<OneD, NekDouble> x(nq*nq*(nl+1));

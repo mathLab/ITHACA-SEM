@@ -160,6 +160,10 @@ namespace Nektar
             int                                                 bcRegion, 
             int                                                 cnt, 
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void PressureOutflowNonReflectiveBC(
+            int                                                 bcRegion, 
+            int                                                 cnt, 
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void PressureOutflowBC(
             int                                                 bcRegion, 
             int                                                 cnt, 

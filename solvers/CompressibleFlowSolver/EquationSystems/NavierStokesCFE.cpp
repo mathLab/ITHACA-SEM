@@ -284,6 +284,13 @@ namespace Nektar
                 RiemannInvariantBC(n, cnt, inarray);
             }
             
+            // Pressure outflow non-reflective Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::ePressureOutflowNonReflective)
+            {
+                PressureOutflowNonReflectiveBC(n, cnt, inarray);
+            }
+            
             // Pressure outflow Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::ePressureOutflow)

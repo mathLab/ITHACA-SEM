@@ -44,6 +44,10 @@ int main(int argc, char *argv[])
     for (int n = 1; n < argc; ++n)
     {
         string fname = std::string(argv[n]);
+        if (fname.substr(fname.length() - 1, 1) == "/")
+        {
+            fname = fname.substr(0, fname.length() - 1);
+        }
         int fdot = fname.find_last_of('.');
         if (fdot != std::string::npos)
         {

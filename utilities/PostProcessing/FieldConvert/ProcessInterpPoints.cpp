@@ -68,7 +68,7 @@ namespace Nektar
                                                          "Lower bound for interpolation value");
             m_config["clamptouppervalue"] = ConfigOption(false,"10000000",
                                                 "Upper bound for interpolation value");
-            m_config["def_value"] = ConfigOption(false,"0",
+            m_config["defaultvalue"] = ConfigOption(false,"0",
                                                 "Default value if point is outside domain");
             m_config["line"] = ConfigOption(false,"NotSet","specify a line of N points using line=N,x0,y0,z0,z1,y1,z1");             
 
@@ -180,9 +180,7 @@ namespace Nektar
                         }
                     }
                 }
-
             }
-
 
 
             m_fromField =  boost::shared_ptr<Field>(new Field());

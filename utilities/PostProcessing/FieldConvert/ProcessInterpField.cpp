@@ -64,9 +64,9 @@ namespace Nektar
             ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
                      "Need to specify fromfld=file.fld ");
 
-            m_config["ClampToLowerValue"] = ConfigOption(false,"-10000000",
+            m_config["clamptolowervalue"] = ConfigOption(false,"-10000000",
                                                 "Lower bound for interpolation value");
-            m_config["ClampToUpperValue"] = ConfigOption(false,"10000000",
+            m_config["clamptouppervalue"] = ConfigOption(false,"10000000",
                                                 "Upper bound for interpolation value");
         }
 
@@ -214,8 +214,8 @@ namespace Nektar
                 cout << "Interpolating [" << flush;
             }
             
-            NekDouble clamp_low = m_config["ClampToLowerValue"].as<NekDouble>();
-            NekDouble clamp_up  = m_config["ClampToUpperValue"].as<NekDouble>();
+            NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
+            NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
             InterpolateField(m_fromField->m_exp, m_f->m_exp, 
                              x1, y1, z1, clamp_low, clamp_up);
             

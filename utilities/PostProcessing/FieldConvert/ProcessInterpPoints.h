@@ -66,7 +66,8 @@ namespace Nektar
             void InterpolateFieldToPts(vector<MultiRegions::ExpListSharedPtr> &field0,
                                        Array<OneD, Array<OneD, NekDouble> >   &pts,
                                        NekDouble                               clamp_low,
-                                       NekDouble                               clamp_up);
+                                       NekDouble                               clamp_up,
+                                       NekDouble                               def_value);
         };
     }
 }

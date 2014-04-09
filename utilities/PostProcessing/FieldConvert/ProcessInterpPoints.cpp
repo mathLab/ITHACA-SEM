@@ -48,7 +48,7 @@ namespace Nektar
         ModuleKey ProcessInterpPoints::className =
             GetModuleFactory().RegisterCreatorFunction(
                ModuleKey(eProcessModule, "interppoints"), 
-               ProcessInterpPoints::create, "Interpolates a set of points to another, requires fromxml, fromfld to be defined");
+               ProcessInterpPoints::create, "Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined");
 
 
         ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
@@ -64,10 +64,12 @@ namespace Nektar
             ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
                      "Need to specify fromfld=file.fld ");
 
-            m_config["ClampToLowerValue"] = ConfigOption(false,"-10000000",
+            m_config["clamptolowervalue"] = ConfigOption(false,"-10000000",
                                                          "Lower bound for interpolation value");
-            m_config["ClampToUpperValue"] = ConfigOption(false,"10000000",
+            m_config["clamptouppervalue"] = ConfigOption(false,"10000000",
                                                 "Upper bound for interpolation value");
+            m_config["def_value"] = ConfigOption(false,"0",
+                                                "Default value if point is outside domain");
             m_config["line"] = ConfigOption(false,"NotSet","specify a line of N points using line=N,x0,y0,z0,z1,y1,z1");             
 
             m_config["plane"] = ConfigOption(false,"NotSet","specify a plane of N1 x N1 points using plane=N1,N2,x0,y0,z0,z1,y1,z1,x2,y2,z2,x3,y3,z3");             
@@ -240,7 +242,7 @@ namespace Nektar
             m_fromField->m_fld->Import(fromfld,m_fromField->m_fielddef,
                           m_fromField->m_data,
                           LibUtilities::NullFieldMetaDataMap,
-                          ElementGIDs);
+                                       ElementGIDs);
             
             int NumHomogeneousDir = m_fromField->m_fielddef[0]->m_numHomogeneousDir;
             
@@ -282,11 +284,12 @@ namespace Nektar
                 cout << "Interpolating [" << flush;
             }
             
-            NekDouble clamp_low = m_config["ClampToLowerValue"].as<NekDouble>();
-            NekDouble clamp_up  = m_config["ClampToUpperValue"].as<NekDouble>();
+            NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
+            NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
+            NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
 
             InterpolateFieldToPts(m_fromField->m_exp, m_f->m_fieldPts->m_pts, 
-                                  clamp_low, clamp_up);
+                                  clamp_low, clamp_up, def_value);
             
             if(m_fromField->m_session->GetComm()->GetRank() == 0)
             {
@@ -299,7 +302,8 @@ namespace Nektar
                                  vector<MultiRegions::ExpListSharedPtr> &field0,
                                  Array<OneD, Array<OneD, NekDouble> >    &pts,
                                  NekDouble                              clamp_low,
-                                 NekDouble                              clamp_up)
+                                 NekDouble                              clamp_up,
+                                 NekDouble                              def_value)
         {
             int expdim = field0[0]->GetCoordim(0);
             
@@ -351,7 +355,6 @@ namespace Nektar
                                  value);
                             
                             m_f->m_data[f][r] = value; 
-                            //field1[f]->UpdatePhys()[r] = value;
                         }
                     }
                 }
@@ -359,7 +362,7 @@ namespace Nektar
                 {
                     for (f = 0; f < field0.size(); ++f)
                     {
-                        m_f->m_data[f][r] = clamp_up;
+                        m_f->m_data[f][r] = def_value;
                     }
                 }
                 

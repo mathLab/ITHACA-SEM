@@ -1470,10 +1470,11 @@ namespace Nektar
             {
                 int nverts  = geom.GetNumVerts();
                 
-                int ncnt_low = 0;
-                int ncnt_up = 0;
                 if(m_domainRange->doXrange)
                 {
+                    int ncnt_low = 0;
+                    int ncnt_up = 0;
+
                     for(int i = 0; i < nverts; ++i)
                     {
                         NekDouble xval = (*geom.GetVertex(i))[0];
@@ -1499,6 +1500,8 @@ namespace Nektar
                 
                 if(m_domainRange->doYrange)
                 {
+                    int ncnt_low = 0;
+                    int ncnt_up = 0;
                     for(int i = 0; i < nverts; ++i)
                     {
                         NekDouble yval = (*geom.GetVertex(i))[1];

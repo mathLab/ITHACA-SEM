@@ -385,7 +385,8 @@ namespace Nektar
             // preallocate
             int loc_lda;
             Array<OneD, int> nnz(nBndDofs-NumDirBCs, 0);
-
+            vector<set<int> > hack(rows);
+            
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
                 if (m_linSysKey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
@@ -400,17 +401,27 @@ namespace Nektar
                 for(i = 0; i < loc_lda; ++i)
                 {
                     gid1 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + i)-NumDirBCs;
-                    if(gid1 >= 0)
+                    if(gid1 < 0)
                     {
-                        for(j = 0; j < loc_lda; ++j)
+                        continue;
+                    }
+
+                    for(j = 0; j < loc_lda; ++j)
+                    {
+                        gid2 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + j)
+                            - NumDirBCs;
+                        if(gid2 < 0)
                         {
-                            gid2 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + j)
-                                                                    - NumDirBCs;
-                            if(gid2 >= 0)
-                            {
-                                nnz[gid1]++;
-                            }
+                            continue;
                         }
+
+                        if (hack[gid1].count(gid2) > 0)
+                        {
+                            continue;
+                        }
+
+                        hack[gid1].insert(gid2);
+                        nnz[gid1]++;
                     }
                 }
                 cnt += loc_lda;

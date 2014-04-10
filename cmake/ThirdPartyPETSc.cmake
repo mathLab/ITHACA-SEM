@@ -2,7 +2,7 @@ OPTION(NEKTAR_USE_PETSC
     "Enable PETSc parallel matrix solver support." OFF)
 
 CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_PETSC
-    "Build PETSc if needed" ON
+    "Build PETSc if needed" OFF
     "NEKTAR_USE_PETSC" OFF)
 
 IF( NEKTAR_USE_PETSC )

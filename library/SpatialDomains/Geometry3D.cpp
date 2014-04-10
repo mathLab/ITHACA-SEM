@@ -75,7 +75,7 @@ namespace Nektar
       /**
        * @brief Return vertex i in this element.
        */
-      const PointGeomSharedPtr Geometry3D::GetVertex(int i) const
+      PointGeomSharedPtr Geometry3D::v_GetVertex(int i) const
       {
           return m_verts[i];
       }

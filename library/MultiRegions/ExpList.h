@@ -403,16 +403,6 @@ namespace Nektar
             /// Set the \a i th coefficiient in \a m_coeffs to value \a val
             inline void SetCoeff(int i, NekDouble val);
             
-            /// Set the coefficiient in \a m_coeffs to value \a val (0D Exapnsion)
-            inline void SetCoeff(NekDouble val);
-            
-            /// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
-            inline void SetPhys(NekDouble val);
-            
-            inline const SpatialDomains::PointGeomSharedPtr GetGeom(void) const;
-            
-            inline const SpatialDomains::PointGeomSharedPtr GetVertex(void) const;
-
             /// Set the \a i th coefficiient in  #m_coeffs to value \a val
             inline void SetCoeffs(int i, NekDouble val);
 
@@ -1099,18 +1089,6 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 			
-            virtual void v_GetCoords(NekDouble &x,NekDouble &y,NekDouble &z);
-            
-            virtual void v_GetCoord(Array<OneD, NekDouble> &coords);
-
-            virtual void v_SetCoeff(NekDouble val);
-            
-            virtual void v_SetPhys(NekDouble val);
-            
-            virtual const SpatialDomains::PointGeomSharedPtr v_GetGeom(void) const;
-            
-            virtual const SpatialDomains::PointGeomSharedPtr v_GetVertex(void) const;
-            
             virtual void v_PhysDeriv(
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
@@ -1541,54 +1519,6 @@ namespace Nektar
             v_GetCoords(coord_0,coord_1,coord_2);
         }
 		
-        /**
-         *
-         */
-        inline void ExpList::SetCoeff(NekDouble val)
-		
-        {
-            v_SetCoeff(val);
-        }
-		
-		/**
-         *
-         */
-        inline const SpatialDomains::PointGeomSharedPtr ExpList::GetGeom(void) const
-        {
-            return v_GetGeom();
-        }
-	
-        /**
-         *
-         */
-        inline const SpatialDomains::PointGeomSharedPtr ExpList::GetVertex(void) const
-        {
-            return v_GetVertex();
-        }
-	
-		
-        /**
-         *
-         */
-        inline void ExpList::SetPhys(NekDouble val)
-            
-        {
-            v_SetPhys(val);
-        }
-	
-        /**
-         *
-         */
-        inline void ExpList::GetCoords(NekDouble &x,NekDouble &y,NekDouble &z)
-        {
-            v_GetCoords(x,y,z);
-        }
-	
-        inline void ExpList::GetCoord(Array<OneD, NekDouble> &coords)
-        {
-            v_GetCoord(coords);
-        }
-        
         /**
          *
          */

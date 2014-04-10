@@ -1247,7 +1247,7 @@ namespace Nektar
             // setup map of all global ids along boundary
             for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                Vid =  m_bndCondExpansions[n]->GetVertex()->GetVid();
+                Vid =  m_bndCondExpansions[n]->GetExp(0)->GetGeom()->GetVertex(0)->GetVid();
                 VertGID[Vid] = cnt++;
             }
 

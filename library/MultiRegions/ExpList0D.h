@@ -89,9 +89,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~ExpList0D();
 			
         protected:
-            virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
-                                     Array<OneD, NekDouble> &coord_1,
-                                     Array<OneD, NekDouble> &coord_2);
             virtual void v_Upwind(
                 const Array<OneD, const NekDouble> &Vn,
                 const Array<OneD, const NekDouble> &Fwd,
@@ -101,18 +98,6 @@ namespace Nektar
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
-            virtual void v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
-            
-            virtual void v_GetCoord(Array<OneD,NekDouble> &coords);
-            
-            virtual void v_SetCoeff(NekDouble val);
-            
-            virtual void v_SetPhys(NekDouble val);
-            
-            virtual const SpatialDomains::PointGeomSharedPtr v_GetGeom(void) const;
-            
-            virtual const SpatialDomains::PointGeomSharedPtr v_GetVertex(void) const;
-            
         private:
             void SetCoeffPhysOffsets(void);
         };

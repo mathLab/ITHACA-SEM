@@ -108,7 +108,7 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetVid(int i) const;
 
-                SPATIAL_DOMAINS_EXPORT virtual const PointGeomSharedPtr
+                SPATIAL_DOMAINS_EXPORT virtual PointGeomSharedPtr
                         v_GetVertex(const int i) const;
 
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetEid() const;

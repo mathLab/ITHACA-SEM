@@ -202,9 +202,11 @@ namespace Nektar
             m_numGlobalDirBndCoeffs = 0;
             for(i = 0; i < nbnd; i++)
             {
+                ASSERTL0(bndCondExp[i]->GetNumElmts() > 0,
+                         "Boundary expansion contains no expansions.");
                 if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                 {
-                    meshVertId = bndCondExp[i]->GetVertex()->GetVid();
+                    meshVertId = bndCondExp[i]->GetExp(0)->GetGeom()->GetVertex(0)->GetVid();
                     vertReorderedGraphVertId[meshVertId] = graphVertId++;
                     m_numGlobalDirBndCoeffs++;
                     m_numLocalDirBndCoeffs++;
@@ -257,7 +259,7 @@ namespace Nektar
             // Set up the mapping for the boundary conditions
             for(i = 0; i < nbnd; i++)
             {
-                meshVertId = bndCondExp[i]->GetVertex()->GetVid();
+                meshVertId = bndCondExp[i]->GetExp(0)->GetGeom()->GetVertex(0)->GetVid();
                 m_bndCondCoeffsToGlobalCoeffsMap[i] = vertReorderedGraphVertId[meshVertId];
             }
 

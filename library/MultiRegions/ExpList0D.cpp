@@ -56,7 +56,7 @@ namespace Nektar
         {
         }
 		
-        ExpList0D::ExpList0D(const SpatialDomains::PointGeomSharedPtr &m_geom):
+        ExpList0D::ExpList0D(const SpatialDomains::PointGeomSharedPtr &geom):
             ExpList()
         {
             m_ncoeffs = 1;
@@ -68,6 +68,8 @@ namespace Nektar
 
             LocalRegions::PointExpSharedPtr Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(geom);
             (*m_exp).push_back(Point);
+
+            SetCoeffPhysOffsets();
         }
 
         /**
@@ -111,7 +113,7 @@ namespace Nektar
                 {
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
-                        PointGeom = bndConstraint[i]->GetVertex();
+                        PointGeom = bndConstraint[i]->GetExp(0)->GetGeom()->GetVertex(0);
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
 
                         EdgeDone[PointGeom->GetVid()] = elmtid;
@@ -216,35 +218,6 @@ namespace Nektar
         {
         }
 
-        void ExpList0D::v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
-        {
-            m_point->GetCoords(x,y,z);
-        }
-		
-        void ExpList0D::v_GetCoord(Array<OneD,NekDouble> &coords)
-        {
-            m_point->GetCoords(coords);
-        }
-		
-        void ExpList0D::v_SetCoeff(NekDouble val)
-        {
-            m_coeffs[0] = val;
-        }
-		
-        void ExpList0D::v_SetPhys(NekDouble val)
-        {
-            m_phys[0] = val;
-        }
-		
-        const SpatialDomains::PointGeomSharedPtr ExpList0D::v_GetGeom(void) const
-        {
-            return m_point->GetGeom();
-        }
-		
-        const SpatialDomains::PointGeomSharedPtr ExpList0D::v_GetVertex(void) const
-        {
-            (boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*m_exp)[0]->GetGeom()))->GetCoords(coord_0[0],coord_1[0],coord_2[0]);
-        }
         /* For each local element, copy the normals stored in the element list
          * into the array \a normals.
          * @param   normals     Multidimensional array in which to copy normals
@@ -297,6 +270,7 @@ namespace Nektar
             }
 #endif
         }
+            
         
         /**
          * One-dimensional upwind.

@@ -844,7 +844,7 @@ namespace Nektar
         /**
          *
          */
-        const PointGeomSharedPtr TriGeom::v_GetVertex(int i) const
+        PointGeomSharedPtr TriGeom::v_GetVertex(int i) const
         {
             ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
             return m_verts[i];

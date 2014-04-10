@@ -2745,58 +2745,6 @@ namespace Nektar
 		
 		/**
          */
-        void ExpList::v_GetCoords(NekDouble &x,NekDouble &y,NekDouble &z)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-        void ExpList::v_GetCoord(Array<OneD, NekDouble> &coords)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-		void ExpList::v_SetCoeff(NekDouble val)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-		void ExpList::v_SetPhys(NekDouble val)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-		const SpatialDomains::PointGeomSharedPtr ExpList::v_GetGeom(void) const
-		{
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-		}
-		
-		/**
-         */
-		const SpatialDomains::PointGeomSharedPtr ExpList::v_GetVertex(void) const
-		{
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-		}
-		
-		/**
-         */
         void ExpList::v_SetUpPhysNormals()
         {
             ASSERTL0(false,

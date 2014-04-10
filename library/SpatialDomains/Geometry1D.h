@@ -62,7 +62,7 @@ namespace Nektar
 
             SPATIAL_DOMAINS_EXPORT const StdRegions::StdExpansion1DSharedPtr&
                         GetXmap(const int i);
-            SPATIAL_DOMAINS_EXPORT const PointGeomSharedPtr
+            SPATIAL_DOMAINS_EXPORT PointGeomSharedPtr
                         GetVertex(const int i) const;
             SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType
                         DetShapeType() const;
@@ -80,7 +80,7 @@ namespace Nektar
 
             virtual const StdRegions::StdExpansion1DSharedPtr&
                          v_GetXmap(const int i);
-            virtual const PointGeomSharedPtr
+            virtual PointGeomSharedPtr
                          v_GetVertex(const int i) const;
             virtual LibUtilities::ShapeType
                          v_DetShapeType() const;

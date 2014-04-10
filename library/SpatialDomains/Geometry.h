@@ -57,8 +57,8 @@ namespace Nektar
         typedef boost::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
-        class VertexComponent;
-        typedef boost::shared_ptr< VertexComponent >  VertexComponentSharedPtr;
+        class PointGeom;
+        typedef boost::shared_ptr< PointGeom >  PointGeomSharedPtr;
 
         /// \brief Less than operator to sort Geometry objects by global id when sorting 
         /// STL containers.
@@ -79,12 +79,6 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT virtual ~Geometry();
 
-                //-----------------------------------------
-                // Member accessor functions
-                //----------------------------------------
-                SPATIAL_DOMAINS_EXPORT const VertexComponentSharedPtr
-                    GetVertex(const int i) const;
-
                 //---------------------------------------
                 // Element connection functions
                 //---------------------------------------
@@ -101,6 +95,10 @@ namespace Nektar
                 //---------------------------------------
 
                 SPATIAL_DOMAINS_EXPORT inline int GetCoordim() const;
+                SPATIAL_DOMAINS_EXPORT void SetCoordim(int coordim) 
+                {
+                    m_coordim = coordim;
+                }
                 SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
@@ -113,6 +111,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline int GetEid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetFid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumVerts() const;
+                SPATIAL_DOMAINS_EXPORT inline PointGeomSharedPtr GetVertex(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
                             GetEorient(const int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
@@ -164,10 +163,6 @@ namespace Nektar
                 void GenGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
 
-
-                virtual const VertexComponentSharedPtr
-                    v_GetVertex(const int i) const;
-
                 //---------------------------------------
                 // Element connection functions
                 //---------------------------------------
@@ -189,6 +184,7 @@ namespace Nektar
                 virtual void v_GenGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 virtual int  v_GetNumVerts() const;
+                virtual PointGeomSharedPtr v_GetVertex(int i) const = 0;
                 virtual StdRegions::Orientation
                              v_GetEorient(const int i) const;
                 virtual StdRegions::Orientation
@@ -311,6 +307,11 @@ namespace Nektar
         inline int Geometry::GetNumVerts() const
         {
             return v_GetNumVerts();
+        }
+
+        inline PointGeomSharedPtr Geometry::GetVertex(int i) const
+        {
+            return v_GetVertex(i);
         }
 
         inline StdRegions::Orientation Geometry::GetEorient(const int i) const

@@ -5,6 +5,7 @@ SET(Fld2TecplotSources  Fld2Tecplot.cpp
        ../EquationSystems/PulseWavePropagation.cpp
        ../EquationSystems/PulseWaveBoundary.h
        ../EquationSystems/PulseWaveBoundary.cpp
+       ../EquationSystems/PulseWavePressureArea.cpp
        ../EquationSystems/TimeDependentInflow.h
        ../EquationSystems/TimeDependentInflow.cpp
        ../EquationSystems/QInflow.h

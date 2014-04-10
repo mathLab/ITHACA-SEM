@@ -242,7 +242,7 @@ namespace Nektar
             // geometric information. 
             returnval->m_coordim = 1;
             NekDouble x0 = (*m_verts[0])[0];
-            VertexComponentSharedPtr vert0 = MemoryManager<VertexComponent>::AllocateSharedPtr(1,m_verts[0]->GetVid(),x0,0.0,0.0);
+            PointGeomSharedPtr vert0 = MemoryManager<PointGeom>::AllocateSharedPtr(1,m_verts[0]->GetVid(),x0,0.0,0.0);
             vert0->SetGlobalID(vert0->GetVid());
 
             returnval->m_verts[0] = vert0;
@@ -268,7 +268,7 @@ namespace Nektar
                 }
             }
             // Set up second vertex. 
-            VertexComponentSharedPtr vert1 = MemoryManager<VertexComponent>::AllocateSharedPtr(1,m_verts[1]->GetVid(),x0+len,0.0,0.0);
+            PointGeomSharedPtr vert1 = MemoryManager<PointGeom>::AllocateSharedPtr(1,m_verts[1]->GetVid(),x0+len,0.0,0.0);
             vert0->SetGlobalID(vert1->GetVid());
 
             returnval->m_verts[1] = vert1;
@@ -518,7 +518,7 @@ namespace Nektar
             return m_verts[i]->GetVid();
         }
 
-        const PointGeomSharedPtr SegGeom::v_GetVertex(const int i) const
+        PointGeomSharedPtr SegGeom::v_GetVertex(const int i) const
         {
             PointGeomSharedPtr returnval;
 

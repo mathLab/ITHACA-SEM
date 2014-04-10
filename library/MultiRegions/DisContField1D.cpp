@@ -107,7 +107,7 @@ namespace Nektar
                     m_bndConditions,
                     *m_exp,graph1D,
                     periodicVertices);
-            
+
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
@@ -123,12 +123,14 @@ namespace Nektar
             
             int ElmtPointGeom = 0;
             int TracePointGeom = 0;
+            LocalRegions::Expansion0DSharedPtr exp0d;
+            LocalRegions::Expansion1DSharedPtr exp1d;
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                for (int j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
+                exp1d = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
+                for (int j = 0; j < exp1d->GetNverts(); ++j)
                 {
-                    
-                    ElmtPointGeom  = (*m_exp)[i]->GetGeom1D()->GetVid(j);
+                    ElmtPointGeom  = (exp1d->GetGeom1D())->GetVid(j);
                     
                     for (int k = 0; k < m_trace->GetExpSize(); ++k)
                     {
@@ -136,14 +138,7 @@ namespace Nektar
                         
                         if (TracePointGeom == ElmtPointGeom)
                         {
-                            LocalRegions::Expansion1DSharedPtr exp1d
-                                = boost::dynamic_pointer_cast
-                                    <LocalRegions::Expansion1D>((*m_exp)[i]);
-                            LocalRegions::Expansion0DSharedPtr exp0d
-                                = boost::dynamic_pointer_cast
-                                    <LocalRegions::Expansion0D>
-                                        (m_trace->GetExp(k));
-                            
+                            exp0d = LocalRegions::Expansion0D::FromStdExp(m_trace->GetExp(k));
                             exp0d->SetAdjacentElementExp(j,exp1d);
                             break;
                         }
@@ -589,7 +584,7 @@ namespace Nektar
             
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
-            SpatialDomains::VertexComponentSharedPtr vert;
+            SpatialDomains::PointGeomSharedPtr vert;
 
             cnt = 0;
             // list Dirichlet boundaries first
@@ -609,7 +604,7 @@ namespace Nektar
                         for (k = 0; k < bregionIt->second->size(); k++)
                         {
                             if ((vert = boost::dynamic_pointer_cast
-                                    <SpatialDomains::VertexComponent>(
+                                    <SpatialDomains::PointGeom>(
                                          (*bregionIt->second)[k])))
                             {
                                 locPointExp
@@ -646,7 +641,7 @@ namespace Nektar
                             for (k = 0; k < bregionIt->second->size(); k++)
                             {
                                 if((vert = boost::dynamic_pointer_cast
-                                        <SpatialDomains::VertexComponent>(
+                                        <SpatialDomains::PointGeom>(
                                             (*bregionIt->second)[k])))
                                 {
                                     locPointExp
@@ -673,7 +668,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         /**
          *
          */
@@ -752,6 +747,11 @@ namespace Nektar
             Array<OneD,       NekDouble> &Fwd,
             Array<OneD,       NekDouble> &Bwd)
         {
+            // Expansion casts
+            LocalRegions::Expansion1DSharedPtr exp1D;
+            LocalRegions::Expansion1DSharedPtr exp1DFirst;
+            LocalRegions::Expansion1DSharedPtr exp1DLast;
+
             // Counter variables
             int  n, v;
             
@@ -778,6 +778,8 @@ namespace Nektar
             // Loop on the elements
             for (cnt = n = 0; n < nElements; ++n)
             {
+                exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[n]);
+
                 // Set the offset of each element
                 phys_offset = GetPhys_Offset(n);
                 
@@ -1245,16 +1247,18 @@ namespace Nektar
             // setup map of all global ids along boundary
             for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                Vid =  m_bndCondExpansions[n]->GetExp(0)->GetGeom()->GetVid(0);
+                Vid =  m_bndCondExpansions[n]->GetVertex()->GetVid();
                 VertGID[Vid] = cnt++;
             }
 
             // Loop over elements and find verts that match;
-            for (cnt = n = 0; n < GetExpSize(); ++n)
+            LocalRegions::ExpansionSharedPtr exp;
+            for(cnt = n = 0; n < GetExpSize(); ++n)
             {
-                for (i = 0; i < (*m_exp)[n]->GetNverts(); ++i)
+                exp = (*m_exp)[n];
+                for(i = 0; i < exp->GetNverts(); ++i)
                 {
-                    id = (*m_exp)[n]->GetGeom()->GetVid(i);
+                    id = exp->GetGeom()->GetVid(i);
 
                     if (VertGID.count(id) > 0)
                     {

@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
         TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
         
         // load up root processor's meta data
-        if(n == 0 && nektar->FirstChildElement("FIELDMETADATA"))
+        if(n == 0 && nektar->FirstChildElement("Metadata"))
         {
-            TiXmlElement *metadata = nektar->FirstChildElement("FIELDMETADATA");
+            TiXmlElement *metadata = nektar->FirstChildElement("Metadata");
             if(metadata)
             {
                 master->LinkEndChild(new TiXmlElement(*metadata));

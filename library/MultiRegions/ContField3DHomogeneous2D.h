@@ -68,7 +68,6 @@ namespace Nektar
         protected:
 
         private:
-            int m_contNcoeffs;
             Array<OneD, NekDouble> m_contCoeffs;
 
             // virtual functions

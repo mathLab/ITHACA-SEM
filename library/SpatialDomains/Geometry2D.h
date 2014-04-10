@@ -46,13 +46,15 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        class Geometry0D;
         class Geometry1D;
         class Geometry2D;
-        class VertexComponent;
+        class PointGeom;
         class SegGeom;
 
         // shorthand for boost pointer
-        typedef boost::shared_ptr<VertexComponent> VertexComponentSharedPtr;
+        typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;
+        typedef boost::shared_ptr<Geometry0D> Geometry0DSharedPtr;
         typedef boost::shared_ptr<Geometry1D> Geometry1DSharedPtr;
         typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
         typedef boost::shared_ptr<SegGeom>    SegGeomSharedPtr;
@@ -72,7 +74,7 @@ namespace Nektar
             //---------------------------------------
 
             SPATIAL_DOMAINS_EXPORT int GetFid() const;
-            SPATIAL_DOMAINS_EXPORT const VertexComponentSharedPtr
+            SPATIAL_DOMAINS_EXPORT const PointGeomSharedPtr
                         GetVertex(int i) const;
             SPATIAL_DOMAINS_EXPORT const Geometry1DSharedPtr
                         GetEdge(int i) const;
@@ -117,7 +119,7 @@ namespace Nektar
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetFid() const;
             virtual int                         v_GetEid(int i) const;
-            virtual const VertexComponentSharedPtr v_GetVertex(int i) const;
+            virtual const PointGeomSharedPtr    v_GetVertex(int i) const;
             virtual const Geometry1DSharedPtr   v_GetEdge(int i) const;
             virtual const Geometry2DSharedPtr   v_GetFace(int i) const;
             virtual StdRegions::Orientation v_GetFaceOrient(const int i) const;

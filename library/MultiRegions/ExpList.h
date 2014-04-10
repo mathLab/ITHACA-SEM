@@ -40,7 +40,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <StdRegions/StdExpansion.h>
+#include <LocalRegions/Expansion.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <SpatialDomains/MeshGraph.h>
@@ -403,6 +403,16 @@ namespace Nektar
             /// Set the \a i th coefficiient in \a m_coeffs to value \a val
             inline void SetCoeff(int i, NekDouble val);
             
+            /// Set the coefficiient in \a m_coeffs to value \a val (0D Exapnsion)
+            inline void SetCoeff(NekDouble val);
+            
+            /// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
+            inline void SetPhys(NekDouble val);
+            
+            inline const SpatialDomains::PointGeomSharedPtr GetGeom(void) const;
+            
+            inline const SpatialDomains::PointGeomSharedPtr GetVertex(void) const;
+
             /// Set the \a i th coefficiient in  #m_coeffs to value \a val
             inline void SetCoeffs(int i, NekDouble val);
 
@@ -539,15 +549,15 @@ namespace Nektar
             }
 
             /// This function returns the vector of elements in the expansion.
-            inline const boost::shared_ptr<StdRegions::StdExpansionVector> GetExp() const;
+            inline const boost::shared_ptr<LocalRegions::ExpansionVector> GetExp() const;
 
             /// This function returns (a shared pointer to) the local elemental
             /// expansion of the \f$n^{\mathrm{th}}\f$ element.
-            inline StdRegions::StdExpansionSharedPtr& GetExp(int n) const;
+            inline LocalRegions::ExpansionSharedPtr& GetExp(int n) const;
 
             /// This function returns (a shared pointer to) the local elemental
             /// expansion containing the arbitrary point given by \a gloCoord.
-            MULTI_REGIONS_EXPORT StdRegions::StdExpansionSharedPtr& GetExp(
+            MULTI_REGIONS_EXPORT LocalRegions::ExpansionSharedPtr& GetExp(
                                                                            const Array<OneD, const NekDouble> &gloCoord);
 
             /// This function returns the index of the local elemental
@@ -687,7 +697,7 @@ namespace Nektar
 
             inline void SetUpPhysNormals();
 
-            inline void SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
+            inline void SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
  	                
 
             inline void SetUpTangents();
@@ -890,7 +900,7 @@ namespace Nektar
              * where most of the routines for the derived classes are defined
              * in the #ExpList base class.
              */
-            boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
+            boost::shared_ptr<LocalRegions::ExpansionVector> m_exp;
 
             /// Offset of elemental data into the array #m_coeffs
             Array<OneD, int>  m_coeff_offset;
@@ -1077,7 +1087,7 @@ namespace Nektar
 			
             virtual void v_IProductWRTBase_IterPerExp(const Array<OneD,const NekDouble> &inarray,  Array<OneD,      NekDouble> &outarray);
 			
-            virtual void v_SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
+            virtual void v_SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
             
             virtual void v_GeneralMatrixOp(
                                            const GlobalMatrixKey             &gkey,
@@ -1089,6 +1099,18 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 			
+            virtual void v_GetCoords(NekDouble &x,NekDouble &y,NekDouble &z);
+            
+            virtual void v_GetCoord(Array<OneD, NekDouble> &coords);
+
+            virtual void v_SetCoeff(NekDouble val);
+            
+            virtual void v_SetPhys(NekDouble val);
+            
+            virtual const SpatialDomains::PointGeomSharedPtr v_GetGeom(void) const;
+            
+            virtual const SpatialDomains::PointGeomSharedPtr v_GetVertex(void) const;
+            
             virtual void v_PhysDeriv(
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
@@ -1519,6 +1541,53 @@ namespace Nektar
             v_GetCoords(coord_0,coord_1,coord_2);
         }
 		
+        /**
+         *
+         */
+        inline void ExpList::SetCoeff(NekDouble val)
+		
+        {
+            v_SetCoeff(val);
+        }
+		
+		/**
+         *
+         */
+        inline const SpatialDomains::PointGeomSharedPtr ExpList::GetGeom(void) const
+        {
+            return v_GetGeom();
+        }
+	
+        /**
+         *
+         */
+        inline const SpatialDomains::PointGeomSharedPtr ExpList::GetVertex(void) const
+        {
+            return v_GetVertex();
+        }
+	
+		
+        /**
+         *
+         */
+        inline void ExpList::SetPhys(NekDouble val)
+            
+        {
+            v_SetPhys(val);
+        }
+	
+        /**
+         *
+         */
+        inline void ExpList::GetCoords(NekDouble &x,NekDouble &y,NekDouble &z)
+        {
+            v_GetCoords(x,y,z);
+        }
+	
+        inline void ExpList::GetCoord(Array<OneD, NekDouble> &coords)
+        {
+            v_GetCoord(coords);
+        }
         
         /**
          *
@@ -1716,7 +1785,7 @@ namespace Nektar
          * @return  (A shared pointer to) the local expansion of the
          *          \f$n^{\mathrm{th}}\f$ element.
          */
-        inline StdRegions::StdExpansionSharedPtr& ExpList::GetExp(int n) const
+        inline LocalRegions::ExpansionSharedPtr& ExpList::GetExp(int n) const
         {
             return (*m_exp)[n];
         }
@@ -1724,7 +1793,7 @@ namespace Nektar
         /**
          * @return  (A const shared pointer to) the local expansion vector #m_exp
          */
-        inline const boost::shared_ptr<StdRegions::StdExpansionVector> ExpList::GetExp(void) const
+        inline const boost::shared_ptr<LocalRegions::ExpansionVector> ExpList::GetExp(void) const
         {
             return m_exp;
         }
@@ -1937,7 +2006,7 @@ namespace Nektar
         }
 
         inline void ExpList::SetUpPhysTangents(
-                                const StdRegions::StdExpansionVector &locexp)
+                                const LocalRegions::ExpansionVector &locexp)
         {
             v_SetUpPhysTangents(locexp);
         }

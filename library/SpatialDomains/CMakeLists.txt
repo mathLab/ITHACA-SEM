@@ -5,6 +5,7 @@ GeomFactors.cpp
 GeomFactors1D.cpp
 GeomFactors2D.cpp
 GeomFactors3D.cpp
+Geometry0D.cpp
 Geometry1D.cpp
 Geometry2D.cpp
 Geometry3D.cpp
@@ -36,6 +37,7 @@ GeomFactors.h
 GeomFactors1D.h
 GeomFactors2D.h
 GeomFactors3D.h
+Geometry0D.h
 Geometry1D.h
 Geometry2D.h
 Geometry3D.h

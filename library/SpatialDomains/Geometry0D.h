@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  MeshComponents.cpp
+//  File: Geometry1D.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,18 +29,39 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
+//  Description:  1D geometry information
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
+#ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY0D_H
+#define NEKTAR_SPATIALDOMAINS_GEOMETRY0D_H
 
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        class Geometry0D;
+
+        // shorthand for boost pointer
+        typedef boost::shared_ptr<Geometry0D> Geometry0DSharedPtr;
+        typedef std::vector< Geometry0DSharedPtr > Geometry0DVector;
+        typedef std::vector< Geometry0DSharedPtr >::iterator Geometry0DVectorIter;
+
+        /// 1D geometry information
+        class Geometry0D: public Geometry
+        {
+        public:
+            SPATIAL_DOMAINS_EXPORT Geometry0D();
+            SPATIAL_DOMAINS_EXPORT Geometry0D(const int coordim);
+            SPATIAL_DOMAINS_EXPORT virtual ~Geometry0D();
+
+        };
 
     }; //end of namespace
 }; //end of namespace
+
+#endif //NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
 

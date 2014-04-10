@@ -199,7 +199,7 @@ namespace Nektar
 
         inline int GetNumberOfCoefficients(ShapeType shape, std::vector<unsigned int> &modes, int offset)
         {
-            int returnval; 
+            int returnval = 0; 
             switch(shape)
             {
             case eSegment:

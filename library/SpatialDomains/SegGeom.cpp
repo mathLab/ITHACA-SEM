@@ -72,7 +72,7 @@ namespace Nektar
         SegGeom::SegGeom(
                 int id,
                 const int coordim,
-                const VertexComponentSharedPtr vertex[]):
+                const PointGeomSharedPtr vertex[]):
             Geometry1D(coordim)
         {
             m_shapeType = LibUtilities::eSegment;
@@ -103,7 +103,7 @@ namespace Nektar
         SegGeom::SegGeom(
                 int id,
                 const int coordim,
-                const VertexComponentSharedPtr vertex[],
+                const PointGeomSharedPtr vertex[],
                 const CurveSharedPtr& curve):
             Geometry1D(coordim)
         {
@@ -175,8 +175,8 @@ namespace Nektar
 
         SegGeom::SegGeom(
                 const int id,
-                const VertexComponentSharedPtr& vert1,
-                const VertexComponentSharedPtr& vert2):
+                const PointGeomSharedPtr& vert1,
+                const PointGeomSharedPtr& vert2):
             Geometry1D(vert1->GetCoordim()), m_xmap(vert1->GetCoordim())
         {
             m_shapeType = LibUtilities::eSegment;
@@ -385,8 +385,8 @@ namespace Nektar
                     gType = eDeformed;
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(gType,
-                                                             m_coordim, m_xmap, tbasis);
+                m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(
+                    gType, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -419,7 +419,7 @@ namespace Nektar
             SegGeom::v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {
                 Array<OneD, const NekDouble> pts;
                 NekDouble len = 0.0;
@@ -518,9 +518,9 @@ namespace Nektar
             return m_verts[i]->GetVid();
         }
 
-        const VertexComponentSharedPtr SegGeom::v_GetVertex(const int i) const
+        const PointGeomSharedPtr SegGeom::v_GetVertex(const int i) const
         {
-            VertexComponentSharedPtr returnval;
+            PointGeomSharedPtr returnval;
 
             if (i >= 0 && i < kNverts)
             {

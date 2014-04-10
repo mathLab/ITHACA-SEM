@@ -129,7 +129,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT void BwdTrans_SumFacKernel(
+            STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFacKernel(
                 const Array<OneD, const NekDouble>& base0,
                 const Array<OneD, const NekDouble>& base1,
                 const Array<OneD, const NekDouble>& base2,
@@ -155,7 +155,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel (
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFacKernel (
                 const Array<OneD, const NekDouble>& base0,
                 const Array<OneD, const NekDouble>& base1,
                 const Array<OneD, const NekDouble>& base2,
@@ -264,7 +264,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                 const StdMatrixKey &mkey);
 
-            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
+            STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
 

@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
 
 #include <SpatialDomains/Geometry.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <StdRegions/StdExpansion1D.h>  // for StdExpansion1DSharedPtr, etc
 
@@ -62,6 +62,8 @@ namespace Nektar
 
             SPATIAL_DOMAINS_EXPORT const StdRegions::StdExpansion1DSharedPtr&
                         GetXmap(const int i);
+            SPATIAL_DOMAINS_EXPORT const PointGeomSharedPtr
+                        GetVertex(const int i) const;
             SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType
                         DetShapeType() const;
             SPATIAL_DOMAINS_EXPORT void WriteToFile(
@@ -78,7 +80,7 @@ namespace Nektar
 
             virtual const StdRegions::StdExpansion1DSharedPtr&
                          v_GetXmap(const int i);
-            virtual const VertexComponentSharedPtr
+            virtual const PointGeomSharedPtr
                          v_GetVertex(const int i) const;
             virtual LibUtilities::ShapeType
                          v_DetShapeType() const;

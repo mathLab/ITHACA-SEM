@@ -35,6 +35,7 @@
 
 #include <set>
 #include <string>
+#include <iomanip>
 using namespace std;
 
 #include "OutputTecplot.h"
@@ -119,12 +120,12 @@ namespace Nektar
                 {
                     for(int j = 0; j < dim; ++j)
                     {
-                        outfile << m_f->m_fieldPts->m_pts[j][i] << " "; 
+                        outfile << std::setw(12) << m_f->m_fieldPts->m_pts[j][i] << " "; 
                     }
                     
                     for(int j = 0; j < m_f->m_fieldPts->m_fields.size(); ++j)
                     {
-                        outfile << m_f->m_data[j][i] << " ";
+                        outfile << std::setw(12) << m_f->m_data[j][i] << " ";
                     }
                     outfile << endl;
                 }

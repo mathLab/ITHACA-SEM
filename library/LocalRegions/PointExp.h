@@ -108,12 +108,6 @@ namespace Nektar
                 v->GetCoords(x,y,z);
             }
 
-            inline void GetCoords(Array<OneD,NekDouble> &coords)
-            {
-                SpatialDomains::PointGeomSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
-                v->GetCoords(coords);
-            }
-
             inline const SpatialDomains::PointGeomSharedPtr GetGeom() const
             {
                 return boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
@@ -122,6 +116,10 @@ namespace Nektar
         protected:
             Array<OneD, NekDouble > m_coeffs; //!< Array containing expansion coefficients
             Array<OneD, NekDouble > m_phys; //!< Array containing physical point which is likely to be the same as the coefficient but is defined for consistency (It is also used in Robin boundary conditions) 
+
+            virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
+                                  Array<OneD, NekDouble> &coords_1,
+                                  Array<OneD, NekDouble> &coords_2);
         };
         
         // type defines for use of PointExp in a boost vector

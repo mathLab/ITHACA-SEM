@@ -244,7 +244,7 @@ namespace Nektar
             ASSERTL0(i == 0, "Index other than 0 is meaningless.");
             // shared_this_ptr() returns const PointGeom, which cannot be
             // returned.
-            return PointGeomSharedPtr(this);
+            return PointGeomSharedPtr(new PointGeom(*this));
         }
 
         /// \brief Get the orientation of point1; to be used later 

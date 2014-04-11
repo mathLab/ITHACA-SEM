@@ -440,6 +440,7 @@ namespace Nektar
                         if (!vertexDataStrm.fail())
                         {
                             PointGeomSharedPtr vert(MemoryManager<PointGeom>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
+                            vert->SetGlobalID(indx);
                             m_vertSet[indx] = vert;
                         }
                     }

@@ -113,7 +113,7 @@ namespace Nektar
             {
                 return boost::dynamic_pointer_cast<Expansion2D>(pSrc);
             }
-
+			
         protected:
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
@@ -150,7 +150,7 @@ namespace Nektar
                     Array<OneD,NekDouble> &outarray);
 
             Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
-            
+			
         private:
             std::vector<ExpansionWeakPtr> m_edgeExp;
             std::vector<bool> m_requireNeg;

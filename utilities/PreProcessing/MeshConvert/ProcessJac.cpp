@@ -83,20 +83,22 @@ namespace Nektar
                         geom, SpatialDomains::eModified, 5);
                 
                 Array<OneD, LibUtilities::BasisSharedPtr> basis(m->expDim);
+                LibUtilities::PointsKeyVector ptsKey(m->expDim);
 
                 // Generate basis functions.
                 for (int j = 0; j < m->expDim; ++j)
                 {
                     basis[j] = LibUtilities::BasisManager()[b[j]];
+                    ptsKey[j] = basis[j]->GetPointsKey();
                 }
                 
                 // Generate geometric factors.
                 SpatialDomains::GeomFactorsSharedPtr gfac = 
-                    geom->GetGeomFactors(basis);
+                    geom->GetGeomFactors();
                 
                 // Get the Jacobian and, if it is negative, print a warning
                 // message.
-                Array<OneD, NekDouble> jac = gfac->GetJac();
+                Array<OneD, NekDouble> jac = gfac->GetJac(ptsKey);
                 NekDouble d = Vmath::Vmin(jac.num_elements(),&jac[0],1);
                 if (d <= 0)
                 {

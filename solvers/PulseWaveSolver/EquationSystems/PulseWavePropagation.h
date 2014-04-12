@@ -92,12 +92,10 @@ namespace Nektar
                                  NekDouble &uflux, NekDouble A_0, NekDouble beta,
                                  NekDouble n);
         
-        /// Print Summary
-        virtual void v_PrintSummary(std::ostream &out);
-
         Array<OneD, PulseWaveBoundarySharedPtr> m_Boundary;
 
         PulseWavePressureAreaSharedPtr m_pressureArea;
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
     };
 }
 

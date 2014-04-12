@@ -33,9 +33,13 @@ int main(int argc, char *argv[])
 
     try
     {
+        LibUtilities::FieldIOSharedPtr fld =
+            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
+
         //----------------------------------------------
         // Read in mesh from input file
-        SpatialDomains::MeshGraphSharedPtr graph1D = MemoryManager<SpatialDomains::MeshGraph1D>::AllocateSharedPtr(vSession);
+        SpatialDomains::MeshGraphSharedPtr graph1D =
+            SpatialDomains::MeshGraph::Read(vSession);
         //----------------------------------------------
 
         //----------------------------------------------
@@ -127,7 +131,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        LibUtilities::Write(out, FieldDef, FieldData);
+        fld->Write(out, FieldDef, FieldData);
         //----------------------------------------------
 
         //----------------------------------------------

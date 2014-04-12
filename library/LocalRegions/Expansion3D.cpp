@@ -255,7 +255,40 @@ namespace Nektar
                 AddFaceBoundaryInt(f,FaceExp[f],outarray,varcoeffs);
             }
         }
+		//shorter version of the above (coefficients are already set for faces)
+        void Expansion3D::AddNormTraceInt(const int dir,
+                                          Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+                                          Array<OneD,NekDouble> &outarray)
+        {
+            int i,f,cnt;
+            int order_f,nquad_f;
+            int nfaces = GetNfaces();
 
+            cnt = 0;
+            for(f = 0; f < nfaces; ++f)
+            {
+                order_f = FaceExp[f]->GetNcoeffs();
+                nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);
+
+                const Array<OneD, const Array<OneD, NekDouble> > normals = GetFaceNormal(f);
+                
+                cnt += order_f;
+                
+                FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
+                                     FaceExp[f]->UpdatePhys());
+                
+                Vmath::Vmul(nquad_f,normals[dir],1,
+                            FaceExp[f]->GetPhys(),1,
+                            FaceExp[f]->UpdatePhys(),1);
+                
+                if (m_negatedNormals[f])
+                {
+                    Vmath::Neg(nquad_f, FaceExp[f]->UpdatePhys(), 1);
+                }
+
+                AddFaceBoundaryInt(f,FaceExp[f],outarray);
+            }
+        }
 
         /**
          * For a given face add the \tilde{F}_1j contributions
@@ -874,6 +907,31 @@ namespace Nektar
                     }
                 }
                 break;
+            //HDG postprocessing
+            case StdRegions::eInvLaplacianWithUnityMean:
+                {
+                    MatrixKey lapkey(StdRegions::eLaplacian, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalMat  &LapMat = *GetLocMatrix(lapkey);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(LapMat.GetRows(),LapMat.GetColumns());
+                    DNekMatSharedPtr lmat = returnval;
+                    
+                    (*lmat) = LapMat;
+
+                    // replace first column with inner product wrt 1
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmp(nq);
+                    Array<OneD, NekDouble> outarray(m_ncoeffs);
+                    Vmath::Fill(nq,1.0,tmp,1);
+                    IProductWRTBase(tmp, outarray);
+
+                    Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
+                                 &(lmat->GetPtr())[0],1);
+
+                    //cout << endl << *lmat << endl;
+                    lmat->Invert();
+                }
+                break;
             default:
                 ASSERTL0(false,"This matrix type cannot be generated from this class");
                 break;
@@ -974,6 +1032,40 @@ namespace Nektar
                     outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
                 }
             }
+        }
+
+        /**
+         * @brief Evaluate coefficients of weak deriviative in the direction dir
+         * given the input coefficicents incoeffs and the imposed boundary
+         * values in EdgeExp (which will have its phys space updated).
+         */
+        void Expansion3D::v_DGDeriv(
+            int dir,
+            const Array<OneD, const NekDouble>&incoeffs,
+            Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
+            Array<OneD, NekDouble> &out_d)
+        {
+            int ncoeffs = GetNcoeffs();
+            StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
+                                                   StdRegions::eWeakDeriv1,
+                                                   StdRegions::eWeakDeriv2};
+
+            DNekScalMat &InvMass = *GetLocMatrix(StdRegions::eInvMass);
+            DNekScalMat &Dmat    = *GetLocMatrix(DerivType[dir]);
+
+            Array<OneD, NekDouble> coeffs = incoeffs;
+            DNekVec     Coeffs  (ncoeffs,coeffs, eWrapper);
+          
+            Coeffs = Transpose(Dmat)*Coeffs;
+            Vmath::Neg(ncoeffs, coeffs,1);
+
+            // Add the boundary integral including the relevant part of
+            // the normal
+            AddNormTraceInt(dir,FaceExp,coeffs);
+        
+            DNekVec Out_d (ncoeffs,out_d,eWrapper);
+
+            Out_d  = InvMass*Coeffs;
         }
 
         void Expansion3D::v_AddRobinMassMatrix(
@@ -1128,11 +1220,11 @@ namespace Nektar
 
             for (vid1 = 0; vid1 < nVerts; ++vid1)
             {
-                vMap1 = GetVertexMap(vid1);
+                vMap1 = GetVertexMap(vid1,true);
 
                 for (vid2 = 0; vid2 < nVerts; ++vid2)
                 {
-                    vMap2 = GetVertexMap(vid2);
+                    vMap2 = GetVertexMap(vid2,true);
                     VertexValue = (*r_bnd)(vMap1, vMap2);
                     VertexMat.SetValue(vid1, vid2, VertexValue);
                 }
@@ -1729,7 +1821,7 @@ namespace Nektar
         }
 
         Array<OneD, unsigned int>
-        Expansion3D::v_GetFaceInverseBoundaryMap(int fid)
+        Expansion3D::v_GetFaceInverseBoundaryMap(int fid, StdRegions::Orientation faceOrient)
         {
             int n, j;
             int nFaceCoeffs;
@@ -1751,13 +1843,21 @@ namespace Nektar
             nFaceCoeffs = GetFaceIntNcoeffs(fid);
 
             Array<OneD, unsigned int> facemaparray(nFaceCoeffs);
-            StdRegions::Orientation   fOrient   =
-                GetFaceOrient(fid);
+            StdRegions::Orientation   fOrient; 
             Array<OneD, unsigned int> maparray  =
                 Array<OneD, unsigned int>(nFaceCoeffs);
             Array<OneD, int>          signarray =
                 Array<OneD, int>(nFaceCoeffs, 1);
 
+            if(faceOrient == StdRegions::eNoOrientation)
+            {
+                fOrient = GetFaceOrient(fid);
+            }
+            else
+            {
+                fOrient = faceOrient; 
+            }
+            
             // maparray is the location of the face within the matrix
             GetFaceInteriorMap(fid, fOrient, maparray, signarray);
 
@@ -1767,6 +1867,15 @@ namespace Nektar
             }
 
             return facemaparray;
+        }
+
+        NekDouble Expansion3D::v_Integrate(
+                const Array<OneD, const NekDouble>& inarray)
+        {
+            NEKERROR(ErrorUtil::efatal, 
+                     "This function is not implemented here. It is shape "
+                     "specific");
+            return 0.0;
         }
     } //end of namespace
 } //end of namespace

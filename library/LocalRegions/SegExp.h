@@ -68,7 +68,7 @@ namespace Nektar
             //----------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                     const Array<OneD, const NekDouble>& inarray);
-
+			
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
@@ -194,10 +194,6 @@ namespace Nektar
                 const std::vector<unsigned int > &nummodes,
                 const int mode_offset,
                       NekDouble *coeffs);
-
-            LOCAL_REGIONS_EXPORT virtual void v_SetUpPhysTangents(
-                const boost::shared_ptr<Expansion> &exp2D,
-                const int edge);
 
             LOCAL_REGIONS_EXPORT virtual const
                     Array<OneD, const NekDouble>&  v_GetPhysNormals(void);

@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
-    string meshfile(vSession->GetFilename());
 
     MultiRegions::DisContField2DSharedPtr Exp,Fce;
     MultiRegions::ExpListSharedPtr DerExp1,DerExp2;
@@ -35,11 +34,13 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
 
-    if(argc != 2)
+    if(argc < 2)
     {
-        fprintf(stderr,"Usage: Helmholtz2D  meshfile\n");
+        fprintf(stderr,"Usage: HDGHelmholtz2D  meshfile [solntype]\n");
         exit(1);
     }
+
+    LibUtilities::FieldIOSharedPtr fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vComm);
 
     //----------------------------------------------
     // Read in mesh from input file
@@ -151,7 +152,7 @@ int main(int argc, char *argv[])
         FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
-    LibUtilities::Write(out, FieldDef, FieldData);
+    fld->Write(out, FieldDef, FieldData);
 
     //-----------------------------------------------
 

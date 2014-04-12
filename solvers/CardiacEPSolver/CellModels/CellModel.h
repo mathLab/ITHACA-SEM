@@ -43,11 +43,14 @@
 #include <MultiRegions/ExpList.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdNodalTetExp.h>
+#include <SolverUtils/Core/Misc.h>
 
 namespace Nektar
 {
     // Forward declaration
     class CellModel;
+
+    typedef std::vector<std::pair<std::string, std::string> > SummaryList;
 
     /// A shared pointer to an EquationSystem object
     typedef boost::shared_ptr<CellModel> CellModelSharedPtr;
@@ -86,9 +89,9 @@ namespace Nektar
         }
 
         /// Print a summary of the cell model
-        void PrintSummary(std::ostream &out)
+        void GenerateSummary(SummaryList& s)
         {
-            v_PrintSummary(out);
+            v_GenerateSummary(s);
         }
 
         unsigned int GetNumCellVariables()
@@ -144,7 +147,7 @@ namespace Nektar
                       Array<OneD,        Array<OneD, NekDouble> >&outarray,
                 const NekDouble time) = 0;
 
-        virtual void v_PrintSummary(std::ostream &out) = 0;
+        virtual void v_GenerateSummary(SummaryList& s) = 0;
 
         virtual std::string v_GetCellVarName(unsigned int idx)
         {

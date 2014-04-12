@@ -59,6 +59,8 @@ namespace Nektar
         m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
         m_outputIndex = 0;
         m_index = 0;
+        m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+
     }
 
     FilterCheckpointCellModel::~FilterCheckpointCellModel()
@@ -118,9 +120,9 @@ namespace Nektar
 
         // Update time in field info if required
         LibUtilities::FieldMetaDataMap fieldMetaDataMap;
-        fieldMetaDataMap["Time"] =  time;
+        fieldMetaDataMap["Time"] =  boost::lexical_cast<std::string>(time);
 
-        LibUtilities::Write(vOutputFilename.str(),FieldDef,FieldData,fieldMetaDataMap);
+        m_fld->Write(vOutputFilename.str(),FieldDef,FieldData,fieldMetaDataMap);
         m_outputIndex++;
     }
 

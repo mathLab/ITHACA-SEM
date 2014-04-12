@@ -83,15 +83,11 @@ namespace Nektar
      * 
      */
     void PulseWaveSystem::v_InitObject()
-    {       
-        m_filename = m_session->GetFilename();
-	
-        // Save the basename of input file name for output details.
-        m_sessionName = m_filename;
-        m_sessionName = m_sessionName.substr(0, m_sessionName.find_last_of("."));
-        
+    {
+        // Initialise base class
+        UnsteadySystem::v_InitObject();
+
         // Read the geometry and the expansion information
-        m_graph = SpatialDomains::MeshGraph::Read(m_session);
         m_nDomains = m_graph->GetDomain().size();
 		
         // Determine projectiontype
@@ -105,13 +101,8 @@ namespace Nektar
         m_fields  = Array<OneD, MultiRegions::ExpListSharedPtr> (m_nVariables);
         m_vessels = Array<OneD, MultiRegions::ExpListSharedPtr> (m_nVariables*m_nDomains);
 
-        m_spacedim = m_graph->GetSpaceDimension();
         m_expdim   = m_graph->GetMeshDimension();
-        m_HomoDirec			= 0;
-        m_useFFT			= false;
-        m_homogen_dealiasing	        = false;
         m_specHP_dealiasing             = false;
-        m_HomogeneousType   = eNotHomogeneous;
                         
         const std::vector<SpatialDomains::CompositeMap> domain = m_graph->GetDomain();
 			
@@ -123,7 +114,7 @@ namespace Nektar
 
         if(m_session->DefinesCmdLineArgument("SetToOneSpaceDimension"))
         {
-            std::string cmdline = m_session->GetCmdLineArgument("SetToOneSpaceDimension");
+            std::string cmdline = m_session->GetCmdLineArgument<std::string>("SetToOneSpaceDimension");
             if(boost::to_upper_copy(cmdline) == "FALSE")
             {
                 SetToOneSpaceDimension  = false;
@@ -194,20 +185,6 @@ namespace Nektar
         m_session->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit", m_explicitDiffusion,true);
         m_session->MatchSolverInfo("ADVECTIONADVANCEMENT","Explicit", m_explicitAdvection,true);
 		
-        // Determine TimeIntegrationMethod to use.
-        ASSERTL0(m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"), "No TIMEINTEGRATIONMETHOD defined in session.");
-        for (i = 0; i < (int)LibUtilities::SIZE_TimeIntegrationMethod; ++i)
-        {
-            bool match;
-            m_session->MatchSolverInfo("TIMEINTEGRATIONMETHOD", LibUtilities::TimeIntegrationMethodMap[i], match, false);
-            if (match)
-            {
-                m_timeIntMethod = (LibUtilities::TimeIntegrationMethod) i;
-                break;
-            }
-        }
-        ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
-	
         // If Discontinuous Galerkin determine upwinding method to use
         for (int i = 0; i < (int)SIZE_UpwindTypePulse; ++i)
         {
@@ -505,8 +482,6 @@ namespace Nektar
         int i,n,nchk = 1;
 	
         Array<OneD, Array<OneD,NekDouble> >  fields(m_nVariables);			
-        Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
-        LibUtilities::TimeIntegrationSolutionSharedPtr u;
 	
         for(int i = 0; i < m_nVariables; ++i)
         {
@@ -514,49 +489,15 @@ namespace Nektar
             m_fields[i]->SetPhysState(false);
         }
         
-        /* Declare an array of TimeIntegrationSchemes For multi-stage
-         * methods, this array will have just one entry containing the
-         * actual multi-stage method...
-         * For multi-steps method, this can have multiple entries
-         *  - the first scheme will used for the first timestep (this
-         *    is an initialization scheme)
-         *  - the second scheme will used for the second timestep
-         *    (this is an initialization scheme)
-         *  - ...
-         *  - the last scheme will be used for all other time-steps
-         *   (this will be the actual scheme)
-         */
-        switch(m_timeIntMethod)
-        {
-        case LibUtilities::eForwardEuler:
-        case LibUtilities::eClassicalRungeKutta4:
-        case LibUtilities::eRungeKutta2_ModifiedEuler:
-        case LibUtilities::eRungeKutta2_ImprovedEuler:
-        case LibUtilities::eAdamsBashforthOrder1:
-            {
-                int numMultiSteps = 1;
+        m_intSoln = m_intScheme->InitializeScheme(
+                m_timestep,fields,m_time,m_ode);
 
-                IntScheme = Array<OneD, LibUtilities::
-                    TimeIntegrationSchemeSharedPtr>(numMultiSteps);
-                    
-                LibUtilities::TimeIntegrationSchemeKey IntKey(m_timeIntMethod);
-                IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
-                
-                u = IntScheme[0]->InitializeScheme(m_timestep,fields,m_time,m_ode);
-                break;
-            }
-        default:
-            {
-                ASSERTL0(false,"populate switch statement for integration scheme");
-            }
-        }
-        
         // Time loop
         for(n = 0; n < m_steps; ++n)
         {				
             Timer timer;
             timer.Start();
-            fields = IntScheme[0]->TimeIntegrate(m_timestep,u,m_ode);
+            fields = m_intScheme->TimeIntegrate(n,m_timestep,m_intSoln,m_ode);
             //cout<<"integration: "<<fields[0][fields[0].num_elements()-1]<<endl;                
             m_time += m_timestep;
             timer.Stop();

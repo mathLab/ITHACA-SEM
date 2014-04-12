@@ -984,7 +984,8 @@ namespace Nektar
                 else if(expType == "ELEMENTS")  // Reading a file with the expansion definition
                 {
                     std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
-                    LibUtilities::ImportFieldDefs(doc, fielddefs, true);
+                    LibUtilities::FieldIO f(m_session->GetComm());
+                    f.ImportFieldDefs(doc, fielddefs, true);
                     cout << "    Number of elements: " << fielddefs.size() << endl;
                     SetExpansions(fielddefs);
                 }

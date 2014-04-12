@@ -91,7 +91,7 @@ namespace Nektar
                                 bool dumpInitialConditions); 
 
         /// Prints a summary of the model parameters.
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SummaryList& s);
 
     private:
         /// Cell model.

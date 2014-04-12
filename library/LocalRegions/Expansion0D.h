@@ -76,7 +76,7 @@ namespace Nektar
             {
                 return boost::dynamic_pointer_cast<Expansion0D>(pSrc);
             }
-
+			
         protected:
             
         private:
@@ -112,8 +112,8 @@ namespace Nektar
         {
             if (m_elementLeft.lock().get())
             {
-                ASSERTL1(!m_elementRight.lock().get(),
-                         "Both adjacent elements already set.");
+                //ASSERTL1(!m_elementRight.lock().get(),
+                //         "Both adjacent elements already set.");
                 m_elementRight = v;
                 m_elementVertexRight = vertex;
             }
@@ -127,8 +127,8 @@ namespace Nektar
         inline SpatialDomains::Geometry0DSharedPtr Expansion0D::GetGeom0D() const
         {
             return boost::dynamic_pointer_cast<SpatialDomains::Geometry0D>(m_geom);
+			
         }
-
     } //end of namespace
 } //end of namespace
 

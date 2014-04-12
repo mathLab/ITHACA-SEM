@@ -38,6 +38,8 @@
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <SpatialDomains/MeshGraph3D.h>
+#include <LocalRegions/HexExp.h>
+#include <LocalRegions/TetExp.h>
 
 #include <boost/assign/std/vector.hpp>
 
@@ -677,7 +679,7 @@ namespace Nektar
             // composites (i.e. if composites 1 and 2 are periodic then this map
             // will contain either the pair (1,2) or (2,1) but not both).
             //
-            // The three maps allVerts, allCoord, allEdges and allOrient map a
+            // The four maps allVerts, allCoord, allEdges and allOrient map a
             // periodic face to a vector containing the vertex ids of the face;
             // their coordinates; the edge ids of the face; and their
             // orientation within that face respectively.
@@ -696,6 +698,22 @@ namespace Nektar
 
             int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
+
+            // Set up a set of all local verts and edges. 
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                for(j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
+                {
+                    int id = (*m_exp)[i]->GetGeom()->GetVid(j);
+                    locVerts.insert(id);
+                }
+
+                for(j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
+                {
+                    int id = (*m_exp)[i]->GetGeom()->GetEid(j);
+                    locEdges.insert(id);
+                }
+            }    
 
             // Begin by populating the perComps map. We loop over all periodic
             // boundary conditions and determine the composite associated with
@@ -970,7 +988,7 @@ namespace Nektar
                         eIdMap.insert(make_pair(
                             edgeIds[cnt],
                             make_pair(vertIds[tmp+j],
-                                      vertIds[tmp+(j+1) % faceVerts[i]])));
+                                      vertIds[tmp+((j+1) % faceVerts[i])])));
 
                     if (testIns.second == false)
                     {
@@ -1021,8 +1039,8 @@ namespace Nektar
             quadVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 1,0,3,2;
             quadVertMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
             quadVertMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 0,3,2,1;
-            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 3,0,1,2;
-            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 1,2,3,0;
+            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
+            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
             quadVertMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 2,1,0,3;
 
             map<StdRegions::Orientation, vector<int> > quadEdgeMap;
@@ -1031,8 +1049,8 @@ namespace Nektar
             quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 0,3,2,1;
             quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
             quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 3,2,1,0;
-            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 3,0,1,2;
-            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 1,2,3,0;
+            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
+            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
             quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 1,0,3,2;
 
             map<StdRegions::Orientation, vector<int> > triVertMap;
@@ -1048,6 +1066,8 @@ namespace Nektar
             emap[3] = triEdgeMap;
             emap[4] = quadEdgeMap;
 
+            map<int,int> allCompPairs;
+            
             // Finally we have enough information to populate the periodic
             // vertex, edge and face maps. Begin by looping over all pairs of
             // periodic composites to determine pairs of periodic faces.
@@ -1105,29 +1125,6 @@ namespace Nektar
                     compPairs[eId1] = eId2;
                 }
 
-                // Construct set of all periodic edges and vertices that we have
-                // locally on this processor.
-                for (i = 0; i < 2; ++i)
-                {
-                    if (!c[i])
-                    {
-                        continue;
-                    }
-
-                    if (c[i]->size() > 0)
-                    {
-                        for (j = 0; j < c[i]->size(); ++j)
-                        {
-                            int faceId = c[i]->at(j)->GetGlobalID();
-                            for (k = 0; k < vertMap[faceId].size(); ++k)
-                            {
-                                locVerts.insert(vertMap[faceId][k]);
-                                locEdges.insert(edgeMap[faceId][k]);
-                            }
-                        }
-                    }
-                }
-
                 // Now that we have all pairs of periodic faces, loop over the
                 // ones local to this process and populate face/edge/vertex
                 // maps.
@@ -1140,6 +1137,9 @@ namespace Nektar
                     ASSERTL0(coordMap.count(ids[0]) > 0 &&
                              coordMap.count(ids[1]) > 0,
                              "Unable to find face in coordinate map");
+
+                    allCompPairs[pIt->first ] = pIt->second;
+                    allCompPairs[pIt->second] = pIt->first;
 
                     // Loop up coordinates of the faces, check they have the
                     // same number of vertices.
@@ -1337,6 +1337,124 @@ namespace Nektar
                 }
             }
 
+            Array<OneD, int> pairSizes(n, 0);
+            pairSizes[p] = allCompPairs.size();
+            vComm->AllReduce(pairSizes, LibUtilities::ReduceSum);
+
+            int totPairSizes = Vmath::Vsum(n, pairSizes, 1);
+
+            Array<OneD, int> pairOffsets(n, 0);
+            pairOffsets[0] = 0;
+
+            for (i = 1; i < n; ++i)
+            {
+                pairOffsets[i] = pairOffsets[i-1] + pairSizes[i-1];
+            }
+
+            Array<OneD, int> first (totPairSizes, 0);
+            Array<OneD, int> second(totPairSizes, 0);
+
+            cnt = pairOffsets[p];
+
+            for (pIt = allCompPairs.begin(); pIt != allCompPairs.end(); ++pIt)
+            {
+                first [cnt  ] = pIt->first;
+                second[cnt++] = pIt->second;
+            }
+
+            vComm->AllReduce(first,  LibUtilities::ReduceSum);
+            vComm->AllReduce(second, LibUtilities::ReduceSum);
+
+            allCompPairs.clear();
+
+            for(cnt = 0; cnt < totPairSizes; ++cnt)
+            {
+                allCompPairs[first[cnt]] = second[cnt];
+            }
+
+            // Search for periodic vertices and edges which are not in
+            // a periodic composite but lie in this process. First,
+            // loop over all information we have from other
+            // processors.
+            for (cnt = i = 0; i < totFaces; ++i)
+            {
+                int faceId    = faceIds[i];
+
+                ASSERTL0(allCompPairs.count(faceId) > 0,
+                         "Unable to find matching periodic face.");
+
+                int perFaceId = allCompPairs[faceId];
+
+                for (j = 0; j < faceVerts[i]; ++j, ++cnt)
+                {
+                    int vId = vertIds[cnt];
+
+                    PeriodicMap::iterator perId = periodicVerts.find(vId);
+
+                    if (perId == periodicVerts.end())
+                    {
+
+                        // This vertex is not included in the map. Figure out which
+                        // vertex it is supposed to be periodic with. perFaceId is
+                        // the face ID which is periodic with faceId. The logic is
+                        // much the same as the loop above.
+                        SpatialDomains::PointGeomVector tmpVec[2]
+                            = { coordMap[faceId], coordMap[perFaceId] };
+                        
+                        int nFaceVerts = tmpVec[0].size();
+                        StdRegions::Orientation o = nFaceVerts == 3 ? 
+                            SpatialDomains::TriGeom::GetFaceOrientation(
+                                                                        tmpVec[0], tmpVec[1]) :
+                            SpatialDomains::QuadGeom::GetFaceOrientation(
+                                                                         tmpVec[0], tmpVec[1]);
+                        
+                        // Use vmap to determine which vertex of the other face
+                        // should be periodic with this one.
+                        int perVertexId = vertMap[perFaceId][vmap[nFaceVerts][o][j]];
+                        
+                        
+                        PeriodicEntity ent(perVertexId,
+                                           StdRegions::eNoOrientation,
+                                           locVerts.count(perVertexId) > 0);
+                        
+                        periodicVerts[vId].push_back(ent);
+                    }
+
+                    int eId = edgeIds[cnt];
+
+                    perId = periodicEdges.find(eId);
+                    
+                    if (perId == periodicEdges.end())
+                    {
+                        // This edge is not included in the map. Figure
+                        // out which edge it is supposed to be periodic
+                        // with. perFaceId is the face ID which is
+                        // periodic with faceId. The logic is much the
+                        // same as the loop above.
+                        SpatialDomains::PointGeomVector tmpVec[2]
+                            = { coordMap[faceId], coordMap[perFaceId] };
+                        
+                        int nFaceEdges = tmpVec[0].size();
+                        StdRegions::Orientation o = nFaceEdges == 3 ? 
+                            SpatialDomains::TriGeom::GetFaceOrientation(
+                            tmpVec[0], tmpVec[1]) :
+                        SpatialDomains::QuadGeom::GetFaceOrientation(
+                            tmpVec[0], tmpVec[1]);
+                        
+                        // Use emap to determine which edge of the other
+                        // face should be periodic with this one.
+                        int perEdgeId = edgeMap[perFaceId][emap[nFaceEdges][o][j]];
+                        
+                        
+                        PeriodicEntity ent(perEdgeId,
+                                           StdRegions::eForwards,
+                                           locEdges.count(perEdgeId) > 0);
+                        
+                        periodicEdges[eId].push_back(ent);
+                    }
+                }
+            }
+
             // Finally, we must loop over the periodicVerts and periodicEdges
             // map to complete connectivity information.
             PeriodicMap::iterator perIt, perIt2;
@@ -1450,7 +1568,7 @@ namespace Nektar
                             NekDouble z1 = w[k](2)-cz;
 
                             if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z))
-                                    < 1e-5)
+                                    < 1e-8)
                             {
                                 vMap[k] = j;
                                 break;
@@ -2086,6 +2204,159 @@ namespace Nektar
             }
 
             return returnval;
+        }
+        
+		/**
+         * @brief Evaluate HDG post-processing to increase polynomial order of
+         * solution.
+         * 
+         * This function takes the solution (assumed to be one order lower) in
+         * physical space, and postprocesses at the current polynomial order by
+         * solving the system:
+         * 
+         * \f[
+         * \begin{aligned}
+         *   (\nabla w, \nabla u^*) &= (\nabla w, u), \\
+         *   \langle \nabla u^*, 1 \rangle &= \langle \nabla u, 1 \rangle
+         * \end{aligned}
+         * \f]
+         * 
+         * where \f$ u \f$ corresponds with the current solution as stored
+         * inside #m_coeffs.
+         * 
+         * @param outarray  The resulting field \f$ u^* \f$.
+         */
+        void  DisContField3D::EvaluateHDGPostProcessing(
+            Array<OneD, NekDouble> &outarray)
+        {
+            int    i,cnt,f,ncoeff_face;
+            Array<OneD, NekDouble> force, out_tmp,qrhs,qrhs1;
+            Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            //StdRegions::Orientation facedir;
+
+            int     eid,nq_elmt, nm_elmt;
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), face_lambda;
+            Array<OneD, NekDouble> tmp_coeffs;
+            m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
+
+            face_lambda = loc_lambda;
+
+            // Calculate Q using standard DG formulation.
+            for(i = cnt = 0; i < GetExpSize(); ++i)
+            {
+                eid = m_offset_elmt_id[i];
+
+                nq_elmt = (*m_exp)[eid]->GetTotPoints();
+                nm_elmt = (*m_exp)[eid]->GetNcoeffs();
+                qrhs  = Array<OneD, NekDouble>(nq_elmt);
+                qrhs1  = Array<OneD, NekDouble>(nq_elmt);
+                force = Array<OneD, NekDouble>(2*nm_elmt);
+                out_tmp = force + nm_elmt;
+                LocalRegions::ExpansionSharedPtr ppExp;
+
+                int num_points0 = (*m_exp)[eid]->GetBasis(0)->GetNumPoints();
+                int num_points1 = (*m_exp)[eid]->GetBasis(1)->GetNumPoints();
+                int num_points2 = (*m_exp)[eid]->GetBasis(2)->GetNumPoints();
+                int num_modes0 = (*m_exp)[eid]->GetBasis(0)->GetNumModes();
+                int num_modes1 = (*m_exp)[eid]->GetBasis(1)->GetNumModes();
+                int num_modes2 = (*m_exp)[eid]->GetBasis(2)->GetNumModes();
+                // Probably a better way of setting up lambda than this.  Note
+                // cannot use PutCoeffsInToElmts since lambda space is mapped
+                // during the solve.
+                for(f = 0; f < (*m_exp)[eid]->GetNfaces(); ++f)
+                {
+                    //facedir = (*m_exp)[eid]->GetFaceOrient(f);
+
+                    ncoeff_face = elmtToTrace[eid][f]->GetNcoeffs();
+                    boost::dynamic_pointer_cast<LocalRegions::Expansion3D>((*m_exp)[eid])->SetFaceToGeomOrientation(f,face_lambda);
+                    //elmtToTrace[eid][f]->SetCoeffsToOrientation(facedir,face_lambda,face_lambda);
+                    Vmath::Vcopy(ncoeff_face,face_lambda,1,
+                                 elmtToTrace[eid][f]->UpdateCoeffs(),1);
+                    face_lambda = face_lambda + ncoeff_face;
+                }
+
+                //creating orthogonal expansion (checking if we have quads or triangles)
+                LibUtilities::ShapeType shape = (*m_exp)[eid]->DetShapeType();
+                switch(shape)
+                {
+                    case LibUtilities::eHexahedron:
+                    {
+                        const LibUtilities::PointsKey PkeyH1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyH2(num_points1,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyH3(num_points2,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey  BkeyH1(LibUtilities::eOrtho_A, num_modes0, PkeyH1);
+                        LibUtilities::BasisKey  BkeyH2(LibUtilities::eOrtho_A, num_modes1, PkeyH2);
+                        LibUtilities::BasisKey  BkeyH3(LibUtilities::eOrtho_A, num_modes2, PkeyH3);
+                        SpatialDomains::HexGeomSharedPtr hGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(BkeyH1, BkeyH2, BkeyH3, hGeom);
+                    }
+                    break;
+                    case LibUtilities::eTetrahedron:
+                    {
+                        const LibUtilities::PointsKey PkeyT1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyT2(num_points1,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        const LibUtilities::PointsKey PkeyT3(num_points2,LibUtilities::eGaussRadauMAlpha2Beta0);
+                        LibUtilities::BasisKey  BkeyT1(LibUtilities::eOrtho_A, num_modes0, PkeyT1);
+                        LibUtilities::BasisKey  BkeyT2(LibUtilities::eOrtho_B, num_modes1, PkeyT2);
+                        LibUtilities::BasisKey  BkeyT3(LibUtilities::eOrtho_C, num_modes2, PkeyT3);
+                        SpatialDomains::TetGeomSharedPtr tGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(BkeyT1, BkeyT2, BkeyT3, tGeom);
+                    }
+                    break;
+                    default:
+                        ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
+                };
+
+
+                //DGDeriv	
+                // (d/dx w, q_0)
+                (*m_exp)[eid]->DGDeriv(
+                    0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                    elmtToTrace[eid], out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                ppExp->IProductWRTDerivBase(0,qrhs,force);
+
+
+                // + (d/dy w, q_1)
+                (*m_exp)[eid]->DGDeriv(
+                    1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                    elmtToTrace[eid], out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                ppExp->IProductWRTDerivBase(1,qrhs,out_tmp);
+
+                Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
+
+                // + (d/dz w, q_2)
+                (*m_exp)[eid]->DGDeriv(
+                    2,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                    elmtToTrace[eid], out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                ppExp->IProductWRTDerivBase(2,qrhs,out_tmp);
+
+                Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
+                // determine force[0] = (1,u)
+                (*m_exp)[eid]->BwdTrans(
+                    tmp_coeffs = m_coeffs + m_coeff_offset[eid],qrhs);
+                force[0] = (*m_exp)[eid]->Integral(qrhs);
+
+                // multiply by inverse Laplacian matrix
+                // get matrix inverse
+                LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean, ppExp->DetShapeType(), *ppExp);
+                DNekScalMatSharedPtr lapsys = ppExp->GetLocMatrix(lapkey); 
+                
+                NekVector<NekDouble> in (nm_elmt,force,eWrapper);
+                //NekVector<NekDouble> out(nm_elmt, tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
+                NekVector<NekDouble> out(nm_elmt, ppExp->UpdateCoeffs(), eWrapper);
+
+                out = (*lapsys)*in;
+				
+                //transforming back to modified basis
+                ppExp->BwdTrans(ppExp->GetCoeffs(), ppExp->UpdatePhys());
+                (*m_exp)[eid]->FwdTrans(ppExp->GetPhys(), tmp_coeffs = outarray + m_coeff_offset[eid]);
+            }
         }
 
         /**

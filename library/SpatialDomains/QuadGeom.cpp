@@ -40,7 +40,7 @@
 #include <StdRegions/StdQuadExp.h>
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/Curve.hpp>
-#include <SpatialDomains/GeomFactors2D.h>
+#include <SpatialDomains/GeomFactors.h>
 
 
 namespace Nektar
@@ -66,7 +66,7 @@ namespace Nektar
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
             LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             m_fid = id;
 
@@ -120,7 +120,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
                   LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -181,7 +181,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
                   LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -272,7 +272,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
                   LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
 
-            m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
+            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
@@ -336,6 +336,10 @@ namespace Nektar
             return GetFaceOrientation(face1.m_verts, face2.m_verts);
         }
 
+        /** 
+         * Calculate the orientation of face2 to face1 (note this is
+         * not face1 to face2!). 
+         */ 
         StdRegions::Orientation QuadGeom::GetFaceOrientation(
             const PointGeomVector &face1,
             const PointGeomVector &face2)
@@ -370,7 +374,7 @@ namespace Nektar
                     x1 = (*face2[j])(0)-cx;
                     y1 = (*face2[j])(1)-cy;
                     z1 = (*face2[j])(2)-cz;
-                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-5)
+                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-8)
                     {
                         vmap[j] = i;
                         break;
@@ -526,8 +530,7 @@ namespace Nektar
         /**
          * Set up GeoFac for this geometry using Coord quadrature distribution
          */
-        void QuadGeom::v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void QuadGeom::v_GenGeomFactors()
         {
             if (m_geomFactorsState != ePtsFilled)
             {
@@ -588,8 +591,8 @@ namespace Nektar
                     }
                 }
 
-                m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis);
+                m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap);
 
                 m_geomFactorsState = ePtsFilled;
             }

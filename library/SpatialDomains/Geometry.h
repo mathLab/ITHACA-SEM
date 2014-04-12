@@ -99,8 +99,7 @@ namespace Nektar
                 {
                     m_coordim = coordim;
                 }
-                SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetGeomFactors();
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetMetricInfo();
@@ -142,7 +141,8 @@ namespace Nektar
                             UpdatePhys(const int i);
                 SPATIAL_DOMAINS_EXPORT inline const LibUtilities::BasisSharedPtr
                             GetBasis(const int i, const int j);
-
+                SPATIAL_DOMAINS_EXPORT inline const LibUtilities::PointsKeyVector
+                            GetPointsKeys();
             protected:
 
                 SPATIAL_DOMAINS_EXPORT static GeomFactorsSharedPtr
@@ -153,6 +153,7 @@ namespace Nektar
                 int                  m_coordim;
                 GeomFactorsSharedPtr m_geomFactors;
                 GeomState            m_geomFactorsState;
+                Array<OneD, StdRegions::StdExpansionSharedPtr> m_xmap;
 
                 /// enum identifier to determine if quad points are filled
                 GeomState            m_state;
@@ -160,8 +161,7 @@ namespace Nektar
                 LibUtilities::ShapeType   m_shapeType;
                 int                  m_globalID;
 
-                void GenGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                void GenGeomFactors();
 
                 //---------------------------------------
                 // Element connection functions
@@ -181,8 +181,7 @@ namespace Nektar
                 virtual int  v_GetEid(int i) const;
                 virtual int  v_GetVid(int i) const;
                 virtual int  v_GetFid(int i) const;
-                virtual void v_GenGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                virtual void v_GenGeomFactors() = 0;
                 virtual int  v_GetNumVerts() const;
                 virtual PointGeomSharedPtr v_GetVertex(int i) const = 0;
                 virtual StdRegions::Orientation
@@ -262,10 +261,9 @@ namespace Nektar
             return v_GetCoordim();
         }
 
-        inline GeomFactorsSharedPtr Geometry::GetGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        inline GeomFactorsSharedPtr Geometry::GetGeomFactors()
         {
-            GenGeomFactors(tbasis);
+            GenGeomFactors();
             return ValidateRegGeomFactor(m_geomFactors);
         }
 
@@ -369,10 +367,9 @@ namespace Nektar
             return v_GetEdgeFaceMap(i,j);
         }
 
-        inline void Geometry::GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        inline void Geometry::GenGeomFactors()
         {
-            return v_GenGeomFactors(tbasis);
+            return v_GenGeomFactors();
         }
 
 
@@ -427,6 +424,10 @@ namespace Nektar
             return v_GetBasis(i, j);
         }
 
+        inline const LibUtilities::PointsKeyVector Geometry::GetPointsKeys()
+        {
+            return m_xmap[0]->GetPointsKeys();
+        }
     }; //end of namespace
 }; // end of namespace
 

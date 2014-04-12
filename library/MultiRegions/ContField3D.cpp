@@ -317,7 +317,7 @@ namespace Nektar
                                                   Array<OneD, NekDouble> &outarray)
       {
           int bndcnt=0;
-          const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+          const Array<OneD,const int>& map = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
           NekDouble sign;
           
           for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
@@ -465,6 +465,29 @@ namespace Nektar
           
           Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
       }          
+      
+      void ContField3D::v_FillBndCondFromField(void)
+      {
+          NekDouble sign;
+          int bndcnt = 0;
+          const Array<OneD,const int> &bndMap = 
+              m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+
+          Array<OneD, NekDouble> tmp(m_locToGloMap->GetNumGlobalCoeffs());
+          LocalToGlobal(m_coeffs,tmp);
+                    
+          // Now fill in all other Dirichlet coefficients.
+          for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          {
+              Array<OneD, NekDouble>& coeffs = m_bndCondExpansions[i]->UpdateCoeffs();
+
+              for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+              {
+                  sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                  coeffs[j] = sign * tmp[bndMap[bndcnt++]];
+              }
+          }
+      }
 
       void ContField3D::v_LocalToGlobal(void)
       {

@@ -355,22 +355,18 @@ namespace Nektar
             switch(m_base[2]->GetPointsType())
             {
                 // Common case
-                case LibUtilities::eGaussRadauMAlpha2Beta0: // (2,0) Jacobi Inner product
-                    Vmath::Smul(Qz, 0.25, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
-                    break;
+            case LibUtilities::eGaussRadauMAlpha2Beta0: // (2,0) Jacobi Inner product
+                Vmath::Smul(Qz, 0.25, (NekDouble *)wz.get(), 1, wz_hat.get(), 1);
+                break;
                 
-                // Corner cases
-                case LibUtilities::eGaussLobattoLegendre:
-                case LibUtilities::eGaussRadauMLegendre:
-                    for (int k = 0; k < Qz; ++k)
-                    {
-                        wz_hat[k] = 0.25*(1.0-z[k])*(1.0-z[k]) * wz[k];
-                    }
-                    break;
-                    
-                default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
-                    break;
+                // Assume points are a Legenedre inner product and
+                // multiply by collapsed coordinate jacobian
+            default:
+                for (int k = 0; k < Qz; ++k)
+                {
+                    wz_hat[k] = 0.25*(1.0-z[k])*(1.0-z[k]) * wz[k];
+                }
+                break;
             }
             
             return Integral3D(inarray, wx, wy, wz_hat);
@@ -594,12 +590,9 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
-        NekDouble StdPyrExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
+        void StdPyrExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                      Array<OneD, NekDouble>& eta)
         {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
-
             if (fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
                 // Very top point of the pyramid
@@ -614,8 +607,6 @@ namespace Nektar
                 eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0; 
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
             } 
-            
-            return StdExpansion3D::v_PhysEvaluate(eta, physvals);
         }
 
         void StdPyrExp::v_GetCoords(Array<OneD, NekDouble> &xi_x, 
@@ -742,15 +733,12 @@ namespace Nektar
                      GetBasisType(2) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
             
-            int P = m_base[0]->GetNumModes() - 1;
-            int Q = m_base[1]->GetNumModes() - 1;
-            int R = m_base[2]->GetNumModes() - 1;
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
             
-            return (P+1)*(Q+1)              // 1 rect. face in p-q plane
-                + 2*(R+1) + P*(1+2*R-P)     // 2 tri. faces in p-r plane
-                + 2*(R+1) + Q*(1+2*R-Q)     // 2 tri. faces in q-r plane
-                - 2*(P+1)-2*(Q+1)-4*(R+1)   // subtract double counted edges
-                + 5;                        // add vertices
+            return LibUtilities::StdPyrData::
+                                    getNumberOfBndCoefficients(P, Q, R);
         }
 
         int StdPyrExp::v_GetEdgeNcoeffs(const int i) const
@@ -1259,15 +1247,6 @@ namespace Nektar
             // using GLL quadrature points.
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.125*(1-z2[i])*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
-                
                 // (2,0) Jacobi inner product.
                 case LibUtilities::eGaussRadauMAlpha2Beta0:
                     for(i = 0; i < nquad2; ++i)
@@ -1278,7 +1257,11 @@ namespace Nektar
                     break;
                 
                 default:
-                    ASSERTL0(false, "Quadrature point type not supported for this element.");
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.125*(1-z2[i])*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
                     break;
             }
         }

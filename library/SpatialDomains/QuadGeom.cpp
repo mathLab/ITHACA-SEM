@@ -60,13 +60,13 @@ namespace Nektar
          *
          */
         QuadGeom::QuadGeom(int id, const int coordim):
-                          Geometry2D(coordim), m_fid(id)
+            Geometry2D(coordim)
         {
 
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
             LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
-            m_fid = id;
+            m_globalID = m_fid = id;
 
             m_xmap = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);
             SetUpCoeffs(m_xmap->GetNcoeffs());
@@ -82,6 +82,7 @@ namespace Nektar
             Geometry2D(verts[0]->GetCoordim()),
             m_fid(id)
         {
+            m_globalID = id;
             m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the vert shared pointers.
@@ -130,6 +131,8 @@ namespace Nektar
             m_fid(id)
         {
             int j;
+
+            m_globalID = m_fid;
 
             m_shapeType = LibUtilities::eQuadrilateral;
 
@@ -222,6 +225,7 @@ namespace Nektar
         {
             int j;
 
+            m_globalID = m_fid;
             m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the edge shared pointers.
@@ -277,8 +281,9 @@ namespace Nektar
 
             // From QuadFaceComponent
             m_fid = in.m_fid;
-			m_ownVerts = in.m_ownVerts;
-			std::list<CompToElmt>::const_iterator def;
+            m_globalID = m_fid;
+            m_ownVerts = in.m_ownVerts;
+            std::list<CompToElmt>::const_iterator def;
             for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
             {
                 m_elmtMap.push_back(*def);
@@ -628,9 +633,10 @@ namespace Nektar
         /**
          *
          */
-        void QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords, 
+        NekDouble QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords, 
                                       Array<OneD,NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
             if(GetMetricInfo()->GetGtype() == eRegular)
             { 
                 NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
@@ -685,8 +691,9 @@ namespace Nektar
                 Lcoords[1] = zb[min_i/za.num_elements()];
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords,resid);
             }
+            return resid;
         }
             
             
@@ -819,10 +826,19 @@ namespace Nektar
                                        Array<OneD, NekDouble> &stdCoord,
                                        NekDouble tol)
         {
-            ASSERTL1(gloCoord.num_elements() >= 2,
-                 "Two dimensional geometry expects at least two coordinates.");
+            NekDouble resid;
+            return v_ContainsPoint(gloCoord,stdCoord,tol,resid);
+        }
 
-            GetLocCoords(gloCoord, stdCoord);
+        bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                                       Array<OneD, NekDouble> &stdCoord,
+                                       NekDouble tol,
+                                       NekDouble &resid)
+        {
+            ASSERTL1(gloCoord.num_elements() >= 2,
+                     "Two dimensional geometry expects at least two coordinates.");
+            
+            resid = GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -(1+tol) && stdCoord[1] >= -(1+tol)
                 && stdCoord[0] <= (1+tol) && stdCoord[1] <= (1+tol))
             {

@@ -36,6 +36,8 @@
 #ifndef  NEKTARUNIVCONSTS_HPP
 #define  NEKTARUNIVCONSTS_HPP
 
+#include <limits>
+
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 namespace Nektar
@@ -43,6 +45,7 @@ namespace Nektar
     namespace NekConstants
     {
         static const NekDouble kNekUnsetDouble = -9999;
+        static const NekDouble kNekMinResidInit = 1e16;
         static const NekDouble kVertexTheSameDouble  = 1.0e-8;
         static const NekDouble kGeomFactorsTol = 1.0e-8;
         static const NekDouble kNekZeroTol = 1.0e-12;

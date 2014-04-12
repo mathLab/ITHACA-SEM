@@ -41,6 +41,7 @@
 #include <LocalRegions/Expansion.h>     // for Expansion
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>  // for AssemblyMapCG, etc
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>  // for AssemblyMapCG, etc
 #include <MultiRegions/GlobalLinSysKey.h>  // for GlobalLinSysKey
 #include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
 #include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
@@ -1220,25 +1221,59 @@ namespace Nektar
                                  NekDouble tol)
         {
             static int start = 0;
+            NekDouble resid, min_resid = NekConstants::kNekMinResidInit;
+            int min_elmt;
+            Array<OneD, NekDouble> min_locCoords(locCoords.num_elements());
+
             // start search at previous element or 0 
             for (int i = start; i < (*m_exp).size(); ++i)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                                                          tol, resid))
                 {
                     start = i;
                     return i;
+                }
+                else
+                {
+                    if(resid < min_resid)
+                    {
+                        min_resid = resid;
+                        min_elmt  = i;
+                        Vmath::Vcopy(locCoords.num_elements(), locCoords,    1,
+                                                               min_locCoords,1);
+                    }
                 }
             }
 
             for (int i = 0; i < start; ++i)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                                                          tol,resid))
                 {
                     start = i;
                     return i;
                 }
+                else
+                {
+                    if(resid < min_resid)
+                    {
+                        min_resid = resid;
+                        min_elmt  = i;
+                        Vmath::Vcopy(locCoords.num_elements(), locCoords,    1,
+                                                               min_locCoords,1);
+                    }
+                }
             }
-            return -1;
+            
+            std::string msg = "Failed to find point in element to tolerance of "
+                                + boost::lexical_cast<std::string>(resid)
+                                + " using nearest point found";
+            WARNINGL0(true,msg.c_str());
+
+            Vmath::Vcopy(locCoords.num_elements(),min_locCoords,1,locCoords,1);
+
+            return min_elmt;
         }
 
 
@@ -1676,6 +1711,13 @@ namespace Nektar
             return trans;
         }
 
+        NekDouble ExpList::v_GetHomoLen(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            NekDouble len = 0.0;
+            return len;
+        }
 
         Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
         {
@@ -2064,6 +2106,11 @@ namespace Nektar
             return result;
         }
 
+        const Array<OneD, const int> &ExpList::v_GetTraceBndMap()
+        {
+            return GetTraceMap()->GetBndCondTraceToGlobalTraceMap();
+        }
+
         void ExpList::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
@@ -2221,6 +2268,14 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        /**
+         */
+        void ExpList::v_FillBndCondFromField()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         void ExpList::v_LocalToGlobal(void)
         {
             ASSERTL0(false,
@@ -2322,7 +2377,7 @@ namespace Nektar
             }
         }
 		
-		/**
+        /**
          */
         void ExpList::v_SetUpPhysNormals()
         {
@@ -2330,7 +2385,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-		/**
+        /**
          */
         void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                             Array<OneD,int> &EdgeID)
@@ -2339,15 +2394,15 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-		/**
+        /**
          */
         void ExpList::v_ReadGlobalOptimizationParameters()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
-		/**
+        
+        /**
          */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                                             &ExpList::v_GetBndConditions(void)
@@ -2358,8 +2413,8 @@ namespace Nektar
                                                                         result;
             return result;
         }
-
-		/**
+        
+        /**
          */
         Array<OneD,SpatialDomains::BoundaryConditionShPtr> &ExpList::v_UpdateBndConditions()
         {
@@ -2370,7 +2425,7 @@ namespace Nektar
             return result;
         }
 
-		/**
+        /**
          */
         void ExpList::v_EvaluateBoundaryConditions(const NekDouble time, const NekDouble x2_in, const NekDouble x3_in)
         {
@@ -2378,7 +2433,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-		/**
+        /**
          */
         map<int, RobinBCInfoSharedPtr> ExpList::v_GetRobinBCInfo(void)
         {
@@ -2388,7 +2443,7 @@ namespace Nektar
             return result;
         }
 
-		/**
+        /**
          */
         void ExpList::v_GetPeriodicEntities(
             PeriodicMap &periodicVerts,

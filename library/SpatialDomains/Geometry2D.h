@@ -100,7 +100,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &coords,
                 const Array<OneD, const NekDouble> &ptsx,
                 const Array<OneD, const NekDouble> &ptsy,
-                      Array<OneD,       NekDouble> &Lcoords);
+                Array<OneD,       NekDouble> &Lcoords,
+                NekDouble &resid);
+
 
         private:
             //---------------------------------------

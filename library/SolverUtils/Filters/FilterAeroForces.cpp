@@ -175,9 +175,27 @@ namespace Nektar
             {
                 // Open output stream
                 m_outputStream.open(m_outputFile.c_str());
-                m_outputStream << "# Time\t Fx (press)\t Fx (visc)\t Fx (tot)\t"
-                    " Fy (press)\t Fy (visc)\t Fy (tot)\t" 
-                    " Fz (press)\t Fz (visc)\t Fz (tot)\t";
+                m_outputStream << "#";
+                m_outputStream.width(7);
+                m_outputStream << "Time";
+                m_outputStream.width(25);
+                m_outputStream << "Fx (press)";
+                m_outputStream.width(25);
+                m_outputStream << "Fx (visc)";
+                m_outputStream.width(25);
+                m_outputStream << "Fx (tot)";
+                m_outputStream.width(25);
+                m_outputStream << "Fy (press)";
+                m_outputStream.width(25);
+                m_outputStream << "Fy (visc)";
+                m_outputStream.width(25);
+                m_outputStream << "Fy (tot)";
+                m_outputStream.width(25);
+                m_outputStream << "Fz (press)";
+                m_outputStream.width(25);
+                m_outputStream << "Fz (visc)";
+                m_outputStream.width(25);
+                m_outputStream << "Fz (tot)";
                 m_outputStream << endl;
             }
 
@@ -280,9 +298,9 @@ namespace Nektar
                                 // points for each element (hence local).
                                 for(int j = 0; j < dim; ++j)
                                 {
-                                    gradU[j] = Array<OneD, NekDouble>(nq);
-                                    gradV[j] = Array<OneD, NekDouble>(nq);
-                                    gradW[j] = Array<OneD, NekDouble>(nq);
+                                    gradU[j] = Array<OneD, NekDouble>(nq,0.0);
+                                    gradV[j] = Array<OneD, NekDouble>(nq,0.0);
+                                    gradW[j] = Array<OneD, NekDouble>(nq,0.0);
                                 }
 
                                 // identify boundary of element
@@ -305,20 +323,20 @@ namespace Nektar
                                 int nbc = bc->GetTotPoints();
 
                                 // several vectors for computing the forces
-                                Array<OneD, NekDouble> Pb(nbc);
+                                Array<OneD, NekDouble> Pb(nbc,0.0);
 
                                 for(int j = 0; j < dim; ++j)
                                 {
-                                    fgradU[j] = Array<OneD, NekDouble>(nbc);
-                                    fgradV[j] = Array<OneD, NekDouble>(nbc);
+                                    fgradU[j] = Array<OneD, NekDouble>(nbc,0.0);
+                                    fgradV[j] = Array<OneD, NekDouble>(nbc,0.0);
                                 }
 
-                                Array<OneD, NekDouble>  drag_t(nbc);
-                                Array<OneD, NekDouble>  lift_t(nbc);
-                                Array<OneD, NekDouble>  drag_p(nbc);
-                                Array<OneD, NekDouble>  lift_p(nbc);
-                                Array<OneD, NekDouble>  temp(nbc);
-                                Array<OneD, NekDouble>  temp2(nbc);
+                                Array<OneD, NekDouble>  drag_t(nbc,0.0);
+                                Array<OneD, NekDouble>  lift_t(nbc,0.0);
+                                Array<OneD, NekDouble>  drag_p(nbc,0.0);
+                                Array<OneD, NekDouble>  lift_p(nbc,0.0);
+                                Array<OneD, NekDouble>  temp(nbc,0.0);
+                                Array<OneD, NekDouble>  temp2(nbc,0.0);
 
                                 // identify boundary of element .
                                 boundary = BoundarytoTraceID[cnt];
@@ -442,9 +460,9 @@ namespace Nektar
                             // points for each element (hence local).
                             for(int j = 0; j < dim; ++j)
                             {
-                                gradU[j] = Array<OneD, NekDouble>(nq);
-                                gradV[j] = Array<OneD, NekDouble>(nq);
-                                gradW[j] = Array<OneD, NekDouble>(nq);
+                                gradU[j] = Array<OneD, NekDouble>(nq,0.0);
+                                gradV[j] = Array<OneD, NekDouble>(nq,0.0);
+                                gradW[j] = Array<OneD, NekDouble>(nq,0.0);
                             }
 
                             //identify boundary of element
@@ -469,24 +487,24 @@ namespace Nektar
                             int nbc = bc->GetTotPoints();
 
                             //several vectors for computing the forces
-                            Array<OneD, NekDouble> Pb(nbc);
+                            Array<OneD, NekDouble> Pb(nbc,0.0);
 
                             for(int j = 0; j < dim; ++j)
                             {
-                                fgradU[j] = Array<OneD, NekDouble>(nbc);
-                                fgradV[j] = Array<OneD, NekDouble>(nbc);
-                                fgradW[j] = Array<OneD, NekDouble>(nbc);
+                                fgradU[j] = Array<OneD, NekDouble>(nbc,0.0);
+                                fgradV[j] = Array<OneD, NekDouble>(nbc,0.0);
+                                fgradW[j] = Array<OneD, NekDouble>(nbc,0.0);
 
                             }
 
-                            Array<OneD, NekDouble>  drag_t(nbc);
-                            Array<OneD, NekDouble>  lift_t(nbc);
-                            Array<OneD, NekDouble>  side_t(nbc);
-                            Array<OneD, NekDouble>  drag_p(nbc);
-                            Array<OneD, NekDouble>  lift_p(nbc);
-                            Array<OneD, NekDouble>  side_p(nbc);
-                            Array<OneD, NekDouble>  temp(nbc);
-                            Array<OneD, NekDouble>  temp2(nbc);
+                            Array<OneD, NekDouble>  drag_t(nbc,0.0);
+                            Array<OneD, NekDouble>  lift_t(nbc,0.0);
+                            Array<OneD, NekDouble>  side_t(nbc,0.0);
+                            Array<OneD, NekDouble>  drag_p(nbc,0.0);
+                            Array<OneD, NekDouble>  lift_p(nbc,0.0);
+                            Array<OneD, NekDouble>  side_p(nbc,0.0);
+                            Array<OneD, NekDouble>  temp(nbc,0.0);
+                            Array<OneD, NekDouble>  temp2(nbc,0.0);
 
                             // identify boundary of element .
                             boundary = BoundarytoTraceID[cnt];
@@ -638,8 +656,8 @@ namespace Nektar
 
                             for(int j = 0; j < dim; ++j)
                             {
-                                gradU[j] = Array<OneD, NekDouble>(nq);
-                                gradV[j] = Array<OneD, NekDouble>(nq);
+                                gradU[j] = Array<OneD, NekDouble>(nq,0.0);
+                                gradV[j] = Array<OneD, NekDouble>(nq,0.0);
                             }
 
                             boundary = BoundarytoTraceID[cnt];
@@ -655,13 +673,13 @@ namespace Nektar
                                 ::Expansion1D> (BndExp[n]->GetExp(i));
 
                             int nbc = bc->GetTotPoints();
-                            Array<OneD, NekDouble> Pb(nbc);
+                            Array<OneD, NekDouble> Pb(nbc,0.0);
 
-                            Array<OneD, NekDouble>  drag_t(nbc);
-                            Array<OneD, NekDouble>  lift_t(nbc);
-                            Array<OneD, NekDouble>  drag_p(nbc);
-                            Array<OneD, NekDouble>  lift_p(nbc);
-                            Array<OneD, NekDouble>  temp(nbc);
+                            Array<OneD, NekDouble>  drag_t(nbc,0.0);
+                            Array<OneD, NekDouble>  lift_t(nbc,0.0);
+                            Array<OneD, NekDouble>  drag_p(nbc,0.0);
+                            Array<OneD, NekDouble>  lift_p(nbc,0.0);
+                            Array<OneD, NekDouble>  temp(nbc,0.0);
 
                             boundary = BoundarytoTraceID[cnt];
 
@@ -669,8 +687,8 @@ namespace Nektar
 
                             for(int j = 0; j < dim; ++j)
                             {
-                                fgradU[j] = Array<OneD, NekDouble>(nbc);
-                                fgradV[j] = Array<OneD, NekDouble>(nbc);
+                                fgradU[j] = Array<OneD, NekDouble>(nbc,0.0);
+                                fgradV[j] = Array<OneD, NekDouble>(nbc,0.0);
 
                             }
 
@@ -711,7 +729,7 @@ namespace Nektar
                             Fyp += bc->Integral(lift_p);
 
                             Fxv += bc->Integral(drag_t);
-                            Fyp += bc->Integral(lift_t);
+                            Fyv += bc->Integral(lift_t);
                         }
                     }
                     else
@@ -746,7 +764,7 @@ namespace Nektar
                 m_outputStream.width(25);
                 m_outputStream << setprecision(8) << Fxv;
                 m_outputStream.width(25);
-                m_outputStream << setprecision(16) << Fx;
+                m_outputStream << setprecision(8) << Fx;
 
                 m_outputStream.width(25);
                 m_outputStream << setprecision(8) << Fyp;

@@ -554,11 +554,12 @@ namespace Nektar
         // Evaluation functions //
         //////////////////////////
 
-        NekDouble StdQuadExp::v_PhysEvaluate(
-                                 const Array<OneD, const NekDouble>& coords,
-                                 const Array<OneD, const NekDouble> & physvals)
+
+        void StdQuadExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                                 Array<OneD, NekDouble>& eta)
         {
-            return  StdExpansion2D::v_PhysEvaluate(coords, physvals);
+            eta[0] = xi[0];
+            eta[1] = xi[1];
         }
 
         /** \brief Fill outarray with mode \a mode of expansion
@@ -1459,9 +1460,12 @@ namespace Nektar
                 {
                    if(j + k >= cutoff) //to filter out only the "high-modes"
                    {
-                       orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon))))*exp(-(k-nmodes)*(k-nmodes)/((NekDouble)((k-cutoff+epsilon)*(k-cutoff+epsilon)))));
+                       orthocoeffs[j*nmodes_b+k] *=
+                           (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/
+                                                 ((NekDouble)((j+k-cutoff+1)*
+                                                     (j+k-cutoff+1)))));
                    }
-                    cnt++; 
+                    cnt++;
                 }
             }
 

@@ -51,8 +51,9 @@ namespace Nektar
         {
         }
 
-        MeshGraph2D::MeshGraph2D(const LibUtilities::SessionReaderSharedPtr &pSession)
-            : MeshGraph(pSession)
+        MeshGraph2D::MeshGraph2D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                 const DomainRangeShPtr &rng)
+            : MeshGraph(pSession,rng)
         {
             ReadGeometry(pSession->GetDocument());
             ReadExpansions(pSession->GetDocument());
@@ -519,16 +520,7 @@ namespace Nektar
                     break;
 
                 case 'T':   // Triangle
-#if 1
                     {
-                        // Set up inverse maps of tris which takes global id
-                        // back to local storage in m_triGeoms;
-//                        map<int, int> tri_id_map;
-//                        for(int i = 0; i < m_triGeoms.size(); ++i)
-//                        {
-//                            tri_id_map[m_triGeoms[i]->GetGlobalID()] = i;
-//                        }
-
                         for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                         {
                             if (m_triGeoms.count(*seqIter) == 0 )
@@ -539,38 +531,17 @@ namespace Nektar
                             }
                             else
                             {
-                                composite->push_back(m_triGeoms[*seqIter]);
+                                if(CheckRange(*m_triGeoms[*seqIter]))
+                                {
+                                    composite->push_back(m_triGeoms[*seqIter]);
+                                }
                             }
                         }
                     }
-#else
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                    {
-                        if (*seqIter >= m_triGeoms.size())
-                        {
-                            char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr+std::string(" in Composite section")).c_str());
-                        }
-                        else
-                        {
-                            composite->push_back(m_triGeoms[*seqIter]);
-                        }
-                    }
-#endif
                     break;
 
                 case 'Q':   // Quad
-#if 1
                     {
-                        // Set up inverse maps of tris which takes global id
-                        // back to local storage in m_triGeoms;
-//                        map<int, int> quad_id_map;
-//                        for(int i = 0; i < m_quadGeoms.size(); ++i)
-//                        {
-//                            quad_id_map[m_quadGeoms[i]->GetGlobalID()] = i;
-//                        }
-
                         for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                         {
                             if (m_quadGeoms.count(*seqIter) == 0)
@@ -581,25 +552,13 @@ namespace Nektar
                             }
                             else
                             {
-                                composite->push_back(m_quadGeoms[*seqIter]);
+                                if(CheckRange(*m_quadGeoms[*seqIter]))
+                                {
+                                    composite->push_back(m_quadGeoms[*seqIter]);
+                                }
                             }
                         }
                     }
-#else
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                    {
-                        if (*seqIter >= m_quadGeoms.size())
-                        {
-                            char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr).c_str());
-                        }
-                        else
-                        {
-                            composite->push_back(m_quadGeoms[*seqIter]);
-                        }
-                    }
-#endif
                     break;
 
                 case 'V':   // Vertex

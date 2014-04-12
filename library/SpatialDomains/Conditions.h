@@ -81,6 +81,7 @@ namespace Nektar
             eRCRterminal,
             eInflowCFS,
             eOutflowCFS,
+            eRiemannInvariant,
             eExtrapOrder0,
             eNoUserDefined
         };
@@ -107,6 +108,7 @@ namespace Nektar
             "RCRterminal",
             "InflowCFS",
             "OutflowCFS",
+            "RiemannInvariant",
             "ExtrapOrder0",
             "NoUserDefined"
         };
@@ -136,8 +138,7 @@ namespace Nektar
                 known_type["TimeDependent"] = eTimeDependent;
                 known_type["Radiation"] = eRadiation;
                 known_type["IsentropicVortex"] = eIsentropicVortex;
-                known_type["InflowCFS"]        = eInflowCFS;
-                known_type["OutflowCFS"]       = eOutflowCFS;
+                known_type["RiemannInvariant"] = eRiemannInvariant;
                 known_type["ExtrapOrder0"]     = eExtrapOrder0;
                 known_type["NoUserDefined"]    = eNoUserDefined;
 

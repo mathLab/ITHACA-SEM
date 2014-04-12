@@ -108,16 +108,16 @@ namespace Nektar
 	  //                                 .CreateInstance("UpwindLDG");
 	  
 	  // Setting up parameters for advection operator Riemann solver 
-	  m_riemannSolver->AddParam (
+	  m_riemannSolver->SetParam (
                                      "gravity",  
                                      &NonlinearSWE::GetGravity,   this);
-	  m_riemannSolver->AddScalar(
+	  m_riemannSolver->SetAuxiliary(
                                      "velLoc", 
                                      &NonlinearSWE::GetVelLoc,  this);
-	  m_riemannSolver->AddVector(
+	  m_riemannSolver->SetVector(
 				     "N",
 				     &NonlinearSWE::GetNormals, this);
-	  m_riemannSolver->AddScalar(
+	  m_riemannSolver->SetScalar(
 				     "depth",
 				     &NonlinearSWE::GetDepth, this);
 	  
@@ -125,7 +125,7 @@ namespace Nektar
 	  // m_riemannSolverLDG->AddParam (
 	  //                     "gravity",  
 	  //                     &NonlinearSWE::GetGravity,   this);
-	  // m_riemannSolverLDG->AddScalar(
+	  // m_riemannSolverLDG->AddAuxiliary(
 	  //                     "velLoc", 
 	  //                     &NonlinearSWE::GetVelLoc,  this);
 	  // m_riemannSolverLDG->AddVector(

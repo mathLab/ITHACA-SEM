@@ -1163,9 +1163,9 @@ cout<<"layer region="<<Ireg<<endl;
 
 
 
-             NekDouble tmp = pressure->GetPlane(0)->L2();             
+             NekDouble tmp = pressure->GetPlane(0)->L2(pressure->GetPlane(0)->GetPhys());             
              norm2D = tmp*tmp;
-             tmp = pressure->GetPlane(1)->L2();
+             tmp = pressure->GetPlane(1)->L2(pressure->GetPlane(1)->GetPhys());
              norm2D += tmp*tmp;
                           
              Array<OneD, NekDouble> I (2*np,1.0); 
@@ -1766,9 +1766,9 @@ cout<<"elmt id="<<Elmtid[a]<<"  edge id="<<Edgeid[a]<<endl;
 
             // Determine normalisation of pressure so that |P|/A = 1
             NekDouble norm = 0, l2;
-            l2    = wavePressure->GetPlane(0)->L2();
+            l2    = wavePressure->GetPlane(0)->L2(wavePressure->GetPlane(0)->GetPhys());
             norm  = l2*l2;
-            l2    = wavePressure->GetPlane(1)->L2();
+            l2    = wavePressure->GetPlane(1)->L2(wavePressure->GetPlane(0)->GetPhys());
             norm += l2*l2;
             Vmath::Fill(2*npts,1.0,der1,1);
             NekDouble area = waveVelocities[0]->GetPlane(0)->PhysIntegral(der1);

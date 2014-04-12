@@ -386,56 +386,29 @@ namespace Nektar
         }
 
 
-        NekDouble ExpList3DHomogeneous2D::v_L2(const Array<OneD, const NekDouble> &soln)
+        NekDouble ExpList3DHomogeneous2D::v_L2(
+            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &soln)
         {
             int cnt = 0;
             NekDouble errL2,err = 0.0;
             Array<OneD, const NekDouble> w_y = m_homogeneousBasis_y->GetW();
-			Array<OneD, const NekDouble> w_z = m_homogeneousBasis_z->GetW();
-			
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-
+            Array<OneD, const NekDouble> w_z = m_homogeneousBasis_z->GetW();
+            
+            int nylines = m_homogeneousBasis_y->GetNumPoints();
+            int nzlines = m_homogeneousBasis_z->GetNumPoints();
+            
             for(int m = 0; m < nzlines; ++m)
             {
-				for(int n = 0; n < nylines; ++n)
-				{
-					errL2 = m_lines[n+(m*nylines)]->L2(soln + cnt);
-					cnt  += m_lines[n+(m*nylines)]->GetTotPoints();
-					err  += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
-				}
+                for(int n = 0; n < nylines; ++n)
+                {
+                    errL2 = m_lines[n+(m*nylines)]->L2(inarray + cnt, soln + cnt);
+                    cnt  += m_lines[n+(m*nylines)]->GetTotPoints();
+                    err  += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
+                }
             }
-
-            return sqrt(err);
-        }
-
-
-        NekDouble ExpList3DHomogeneous2D::v_L2(void)
-        {
-            NekDouble errL2,err = 0;
-			Array<OneD, const NekDouble> w_y = m_homogeneousBasis_y->GetW();
-			Array<OneD, const NekDouble> w_z = m_homogeneousBasis_z->GetW();
-			
-			int nylines = m_homogeneousBasis_y->GetNumPoints();
-			int nzlines = m_homogeneousBasis_z->GetNumPoints();
-
-            for(int m = 0; m < nzlines; ++m)
-            {
-				for(int n = 0; n < nylines; ++n)
-				{
-					errL2 = m_lines[n+(m*nylines)]->L2();
-					err += errL2*errL2*w_y[n]*m_lhom_y*0.5*w_z[m]*m_lhom_z*0.5;
-				}
-			}
-
+            
             return sqrt(err);
         }
     } //end of namespace
 } //end of namespace
-
-
-/**
-* $Log: v $
-*
-**/
-

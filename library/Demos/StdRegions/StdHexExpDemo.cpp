@@ -141,20 +141,24 @@ int main(int argc, char *argv[]) {
     }
     //----------------------------------------------
 
+    Array<OneD, NekDouble> phys (Qx*Qy*Qz);
+    Array<OneD, NekDouble> coeffs(xModes*yModes*zModes);
+    
+
     //---------------------------------------------
     // Project onto Expansion
-    she->FwdTrans( solution, she->UpdateCoeffs() );
+    she->FwdTrans( solution, coeffs );
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    she->BwdTrans( she->GetCoeffs(), she->UpdatePhys() );
+    she->BwdTrans(coeffs, phys);
     //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_p error
-    cout << "L infinity error: " << she->Linf(solution) << endl;
-    cout << "L 2 error:        " << she->L2  (solution) << endl;
+    cout << "L infinity error: " << she->Linf(phys,solution) << endl;
+    cout << "L 2 error:        " << she->L2  (phys,solution) << endl;
     //--------------------------------------------
 
     //-------------------------------------------
@@ -170,7 +174,7 @@ int main(int argc, char *argv[]) {
                                bType_x, bType_y, bType_z );
     }
 
-    NekDouble numericSolution = she->PhysEvaluate(t);
+    NekDouble numericSolution = she->PhysEvaluate(t,phys);
     cout << "Interpolation difference from actual solution at x = ( "
          << t[0] << ", " << t[1] << ", " << t[2] << " ): "
          << numericSolution - solution[0] << endl;

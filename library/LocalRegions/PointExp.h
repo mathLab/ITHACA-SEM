@@ -117,9 +117,10 @@ namespace Nektar
             Array<OneD, NekDouble > m_coeffs; //!< Array containing expansion coefficients
             Array<OneD, NekDouble > m_phys; //!< Array containing physical point which is likely to be the same as the coefficient but is defined for consistency (It is also used in Robin boundary conditions) 
 
-            virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
-                                  Array<OneD, NekDouble> &coords_1,
-                                  Array<OneD, NekDouble> &coords_2);
+            virtual void v_GetCoords(
+                Array<OneD, NekDouble> &coords_0,
+                Array<OneD, NekDouble> &coords_1,
+                Array<OneD, NekDouble> &coords_2);
         };
         
         // type defines for use of PointExp in a boost vector

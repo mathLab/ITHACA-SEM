@@ -277,18 +277,6 @@ namespace Nektar
                 MultiRegions::ExpListSharedPtr &pField, 
                 std::string &pFieldName);
             
-            /// Output a field.
-            //        void Array_Output(
-            //                const int n,
-            //                std::string name,
-            //                const Array<OneD, const NekDouble>&inarray,
-            //                bool IsInPhysicalSpace);
-            
-            SOLVER_UTILS_EXPORT void WriteTecplotFile(
-                const int n, 
-                const std::string &name, 
-                bool IsInPhysicalSpace);
-            
             /// Builds map of which element holds each history point.
             SOLVER_UTILS_EXPORT void ScanForHistoryPoints();
             

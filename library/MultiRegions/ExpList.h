@@ -119,36 +119,7 @@ namespace Nektar
 
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList();
-			
-            ////
-            //virtual boost::shared_ptr<ExpList> do_clone(void);
             
-            /// Copy coefficients from concatenated list to expansion list.
-            MULTI_REGIONS_EXPORT void PutCoeffsInToElmtExp(void);
-
-            /// Copy coefficients from expansion list to concatenated list.
-            MULTI_REGIONS_EXPORT void PutElmtExpInToCoeffs(void);
-
-            /// Copy one elements coefficients from the concatenated list
-            /// to the expansion list.
-            MULTI_REGIONS_EXPORT void PutCoeffsInToElmtExp(int eid);
-
-            /// Copy one elements coefficients from the expansion list to
-            /// the concatenated list.
-            MULTI_REGIONS_EXPORT void PutElmtExpInToCoeffs(int eid);
-
-            /// Copy physical data from \a m_phys to expansion list.
-            MULTI_REGIONS_EXPORT void PutPhysInToElmtExp(void);
-
-            /// Copy physical data from given array to expansion list.
-            MULTI_REGIONS_EXPORT void PutPhysInToElmtExp(Array<OneD, const NekDouble> &in);
-
-            /// Copy expansion list physical data to given array.
-            MULTI_REGIONS_EXPORT void PutElmtExpInToPhys(Array<OneD,NekDouble> &out);
-
-            /// Copy expansion list physical data from one element to array.
-            MULTI_REGIONS_EXPORT void PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &out);
-
             /// Returns the total number of local degrees of freedom
             /// \f$N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_m\f$.
             inline int GetNcoeffs(void) const;
@@ -326,8 +297,8 @@ namespace Nektar
             inline void GetCoords(Array<OneD, NekDouble> &coord_0,
                                   Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
                                   Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
-            
-            // Homogeneous transforms
+			
+			// Homogeneous transforms
             inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray, 
                                             
@@ -363,30 +334,30 @@ namespace Nektar
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
-            /// This function writes the spectral/hp element solution to the
-            /// file \a out.
-            MULTI_REGIONS_EXPORT void WriteToFile(std::ofstream &out,
-                             OutputFormat format = eTecplot,
-                             std::string var = "v");
-
             void WriteTecplotHeader(std::ofstream &outfile,
-                                    std::string var = "v")
+                                    std::string var = "")
             {
-                v_WriteTecplotHeader(outfile,var);
+                v_WriteTecplotHeader(outfile, var);
             }
 
-            void WriteTecplotZone(std::ofstream &outfile, int expansion = -1)
+            void WriteTecplotZone(
+                std::ofstream &outfile,
+                int expansion = -1)
             {
-                v_WriteTecplotZone(outfile,expansion);
+                v_WriteTecplotZone(outfile, expansion);
             }
 
-            void WriteTecplotField(std::ofstream &outfile, int expansion = -1)
+            void WriteTecplotField(std::ofstream &outfile,
+                                   int expansion = -1)
             {
-                v_WriteTecplotField(outfile,expansion);
+                v_WriteTecplotField(outfile, expansion);
             }
 
-            MULTI_REGIONS_EXPORT void  WriteTecplotConnectivity(
-                                std::ofstream &outfile);
+            void WriteTecplotConnectivity(std::ofstream &outfile,
+                                          int expansion = -1)
+            {
+                v_WriteTecplotConnectivity(outfile, expansion);
+            }
 
             MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ofstream &outfile);
             MULTI_REGIONS_EXPORT void WriteVtkFooter(std::ofstream &outfile);
@@ -403,9 +374,6 @@ namespace Nektar
             {
                 v_WriteVtkPieceData(outfile, expansion, var);
             }
-
-            MULTI_REGIONS_EXPORT void ReadFromFile(std::ifstream &in,
-                              OutputFormat format = eTecplot);
 
             /// This function returns the dimension of the coordinates of the
             /// element \a eid.
@@ -450,29 +418,27 @@ namespace Nektar
 
             /// This function calculates the \f$L_\infty\f$ error of the global
             /// spectral/hp element approximation.
-            MULTI_REGIONS_EXPORT NekDouble Linf (const Array<OneD, const NekDouble> &soln);
-
-            /// This function calculates the \f$L_\infty\f$ error of the global
-            /// spectral/hp element approximation.
-            MULTI_REGIONS_EXPORT NekDouble Linf (void);
+            MULTI_REGIONS_EXPORT NekDouble Linf (
+                const Array<OneD, const NekDouble> &inarray,
+                const Array<OneD, const NekDouble> &soln = NullNekDouble1DArray);
 
             /// This function calculates the \f$L_2\f$ error with
             /// respect to soln of the global
             /// spectral/hp element approximation.
-            NekDouble L2 (const Array<OneD, const NekDouble> &soln)
+            NekDouble L2(
+                const Array<OneD, const NekDouble> &inarray,
+                const Array<OneD, const NekDouble> &soln = NullNekDouble1DArray)
             {
-                return v_L2(soln);
+                return v_L2(inarray, soln);
             }
 
-            /// This function calculates the \f$L_2\f$ measure of the global
-            /// spectral/hp element approximation.
-            NekDouble L2 (void)
-            {
-                return v_L2();
-            }
-
-            NekDouble Integral (const Array<OneD, const NekDouble> &inarray
-                                                        = NullNekDouble1DArray)
+            /// Calculates the \f$H^1\f$ error of the global spectral/hp
+            /// element approximation.
+            MULTI_REGIONS_EXPORT NekDouble H1 (
+                const Array<OneD, const NekDouble> &inarray,
+                const Array<OneD, const NekDouble> &soln = NullNekDouble1DArray);
+            
+            NekDouble Integral (const Array<OneD, const NekDouble> &inarray)
             {
                 return v_Integral(inarray);
             }
@@ -534,10 +500,6 @@ namespace Nektar
                 v_PhysGalerkinProjection1DScaled(scale, inarray, outarray);
             } 
 
-            /// Calculates the \f$H^1\f$ error of the global spectral/hp
-            /// element approximation.
-            MULTI_REGIONS_EXPORT NekDouble H1 (const Array<OneD, const NekDouble> &soln);
-            
             /// This function returns the number of elements in the expansion.
             inline int GetExpSize(void);
 
@@ -1161,23 +1123,25 @@ namespace Nektar
                                                Array<OneD, NekDouble> &coeffs);
 
             virtual void v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
-			
+
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
-                                              std::string var = "v");
+                                              std::string var = "");
             virtual void v_WriteTecplotZone(std::ofstream &outfile,
                                             int expansion);
             virtual void v_WriteTecplotField(std::ofstream &outfile,
                                              int expansion);
-
+            virtual void v_WriteTecplotConnectivity(std::ofstream &outfile,
+                                                    int expansion);
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                              std::string var);
 
-            virtual NekDouble v_L2(void);
-            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
+            virtual NekDouble v_L2(
+                const Array<OneD, const NekDouble> &phys,
+                const Array<OneD, const NekDouble> &soln = NullNekDouble1DArray);
+
             virtual NekDouble v_Integral (
-                    const Array<OneD, const NekDouble> &inarray
-                                                        = NullNekDouble1DArray);
+                const Array<OneD, const NekDouble> &inarray);
 
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
@@ -1196,8 +1160,6 @@ namespace Nektar
                                                                                    unsigned int index, const std::string& variable);
         
         private:
-            int   GetNumTecplotBlocks(void);
-            
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
             
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions();

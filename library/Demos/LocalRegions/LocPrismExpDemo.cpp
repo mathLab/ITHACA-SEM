@@ -228,19 +228,21 @@ int main(int argc, char *argv[])
     }
            
     //---------------------------------------------
-    // Project onto Expansion 
-    lpr->FwdTrans( solution, lpr->UpdateCoeffs() );
+    // Project onto Expansion
+    Array<OneD, NekDouble> phys  (Qx * Qy * Qz);
+    Array<OneD, NekDouble> coeffs(lpr->GetNcoeffs());
+    lpr->FwdTrans( solution, coeffs );
     //---------------------------------------------
-    
+
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    lpr->BwdTrans( lpr->GetCoeffs(), lpr->UpdatePhys() );
-    //-------------------------------------------  
+    lpr->BwdTrans( coeffs, phys );
+    //-------------------------------------------
     
     //--------------------------------------------
     // Calculate L_p error 
-    cout << "L infinity error: " << lpr->Linf(solution) << endl;
-    cout << "L 2 error:        " << lpr->L2  (solution) << endl;
+    cout << "L infinity error: " << lpr->Linf(phys, solution) << endl;
+    cout << "L 2 error:        " << lpr->L2  (phys, solution) << endl;
     //--------------------------------------------
     
     //-------------------------------------------
@@ -255,7 +257,7 @@ int main(int argc, char *argv[])
         solution[0] = Prism_sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z );
     }
     
-    NekDouble numericSolution = lpr->PhysEvaluate(t);
+    NekDouble numericSolution = lpr->PhysEvaluate(t, phys);
     cout << "Interpolation difference from actual solution at x = ( " << 
         t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;
     //-------------------------------------------

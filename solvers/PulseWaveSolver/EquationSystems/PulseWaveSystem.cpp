@@ -1085,13 +1085,7 @@ namespace Nektar
          * Write the field data to file. The file is named according to the session
          * name with the extension .fld appended.
          */
-        std::string outname = m_sessionName;
-        if (m_comm->GetSize() > 1)
-        {
-            outname += "_P"+boost::lexical_cast<std::string>(m_comm->GetRank());
-        }
-        outname += ".fld";
-
+        std::string outname = m_sessionName + ".fld";
 
         WriteVessels(outname);	
     }
@@ -1104,13 +1098,7 @@ namespace Nektar
     void PulseWaveSystem::CheckPoint_Output(const int n)
     {
         std::stringstream outname;
-        outname << m_sessionName << "_" << n;
-        
-        if (m_comm->GetSize() > 1)
-        {
-            outname << "_P" << m_comm->GetRank();
-        }
-        outname << ".chk";
+        outname << m_sessionName << "_" << n << ".chk";
 
         WriteVessels(outname.str());	
     }
@@ -1188,7 +1176,9 @@ namespace Nektar
                 
                 if(exactsoln.num_elements())
                 {
-                    L2error_dom = m_vessels[vesselid]->L2(exactsoln);
+                    L2error_dom = m_vessels[vesselid]->L2(
+                                        m_vessels[vesselid]->GetPhys(),
+                                        exactsoln);
                 }
                 else if (m_session->DefinesFunction("ExactSolution"))
                 {
@@ -1199,12 +1189,15 @@ namespace Nektar
                     EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",
                                      m_time);
                     
-                    L2error_dom = m_vessels[vesselid]->L2(exactsoln);
+                    L2error_dom = m_vessels[vesselid]->L2(
+                                        m_vessels[vesselid]->GetPhys(),
+                                        exactsoln);
                     
                 }
                 else
                 {
-                    L2error_dom = m_vessels[vesselid]->L2();
+                    L2error_dom = m_vessels[vesselid]->L2(
+                                        m_vessels[vesselid]->GetPhys());
                 }
 
                 L2error += L2error_dom*L2error_dom;
@@ -1234,7 +1227,7 @@ namespace Nektar
         {
             L2error = sqrt(L2error);
         }            
-
+        
         return L2error;
     }
     
@@ -1264,7 +1257,9 @@ namespace Nektar
 		
                 if(exactsoln.num_elements())
                 {
-                    LinferrorDom = m_vessels[vesselid]->Linf(exactsoln);
+                    LinferrorDom = m_vessels[vesselid]->Linf(
+                                        m_vessels[vesselid]->GetPhys(),
+                                        exactsoln);
                 }
                 else if (m_session->DefinesFunction("ExactSolution"))
                 {
@@ -1273,7 +1268,9 @@ namespace Nektar
                     EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",
                                      m_time);
                     
-                    LinferrorDom = m_vessels[vesselid]->Linf(exactsoln);
+                    LinferrorDom = m_vessels[vesselid]->Linf(
+                                        m_vessels[vesselid]->GetPhys(),
+                                        exactsoln);
                 }
                 else
                 {

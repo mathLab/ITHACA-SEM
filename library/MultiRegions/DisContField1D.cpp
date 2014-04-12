@@ -1167,7 +1167,7 @@ namespace Nektar
                     m_bndConditions[i]->GetUserDefined() ==
                     SpatialDomains::eRCRterminal )
                 {
-                    m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
+                    m_bndCondExpansions[i]->GetCoords(x0, x1, x2);
                     
                     if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
                         NekConstants::kNekUnsetDouble)

@@ -115,12 +115,6 @@ int main(int argc, char *argv[])
     //-------------------------------------------
 
     //--------------------------------------------
-    // Write solution
-    ofstream outfile("ProjectContFile1D.dat");
-    Exp->WriteToFile(outfile);
-    //-------------------------------------------
-
-    //--------------------------------------------
     // Calculate L_inf error
     cout << "L infinity error: " << Exp->Linf(Sol->GetPhys()) << endl;
     cout << "L 2 error:        " << Exp->L2  (Sol->GetPhys()) << endl;

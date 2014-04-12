@@ -45,9 +45,7 @@ namespace Nektar
             StdExpansion0D(),
             StdRegions::StdPointExp(),
             Expansion     (geom),
-            Expansion0D   (geom),
-            m_coeffs(1,0.0),
-            m_phys(1,0.0)
+            Expansion0D   (geom)
         {
             m_ncoeffs = 1;
         }

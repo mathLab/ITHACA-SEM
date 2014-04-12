@@ -182,43 +182,6 @@ namespace Nektar
             }
         }
         
-        
-        //boost::shared_ptr<ExpList> do_clone(void) const = 0; {}
-		
-        /**
-         * For each element, copy the coefficients from \a m_coeffs into their
-         * respective element expansion from \a m_exp.
-         */
-        void ExpList::PutCoeffsInToElmtExp()
-        {
-            int i;
-            int order_e;
-
-            for(i = 0; i < (*m_exp).size(); ++i)
-            {
-                order_e = (*m_exp)[i]->GetNcoeffs();
-                Vmath::Vcopy(order_e,&m_coeffs[m_coeff_offset[i]], 1,
-                                         &((*m_exp)[i]->UpdateCoeffs())[0],1);
-            }
-        }
-
-
-        /**
-         * Copy the coefficients associated with element \a eid from \a m_coeffs
-         * to the corresponding element expansion object from \a m_exp.
-         * @param   eid         Index of element for which copy is performed.
-         */
-        void ExpList::PutCoeffsInToElmtExp(int eid)
-        {
-            int order_e;
-            int cnt = 0;
-
-            order_e = (*m_exp)[eid]->GetNcoeffs();
-            cnt = m_coeff_offset[eid];
-            Vmath::Vcopy(order_e,&m_coeffs[cnt], 1,
-                         &((*m_exp)[eid]->UpdateCoeffs())[0],1);
-        }
-
 	/**
          * 
          */
@@ -235,111 +198,9 @@ namespace Nektar
             m_expType = Type;
         }
 
-        /**
-         * Coefficients from each local expansion are copied into the
-         * concatenated list of coefficients for all elements.
-         */
-        void ExpList::PutElmtExpInToCoeffs(void)
-        {
-            int i;
-            int order_e;
-
-            for(i = 0; i < (*m_exp).size(); ++i)
-            {
-                order_e = (*m_exp)[i]->GetNcoeffs();
-                Vmath::Vcopy(order_e, &((*m_exp)[i]->UpdateCoeffs())[0],1,
-                             &m_coeffs[m_coeff_offset[i]],1);
-            }
-        }
-
-
-        /**
-         * Coefficients for a single element are copied from the associated
-         * element expansion to the concatenated coefficient array.
-         * @param   eid         Index of element to copy.
-         */
-        void ExpList::PutElmtExpInToCoeffs(int eid)
-        {
-            int order_e;
-            int cnt = 0;
-
-            order_e = (*m_exp)[eid]->GetNcoeffs();
-            cnt = m_coeff_offset[eid];
-
-            Vmath::Vcopy(order_e, &((*m_exp)[eid]->UpdateCoeffs())[0],1,
-                             &m_coeffs[cnt],1);
-        }
-
-
-        /**
-         * The local expansion objects are populated with the physical
-         * evaluation at the quadrature points stored in the \a m_phys storage.
-         */
-        void ExpList::PutPhysInToElmtExp()
-        {
-            PutPhysInToElmtExp(m_phys);
-        }
-
-
-        /**
-         * The local expansion objects are populated with the supplied physical
-         * evaluations at the quadrature points. The layout and order of the
-         * supplied data is assumed to conform to the expansion list.
-         * @param   in          Physical quadrature data.
-         */
-        void ExpList::PutPhysInToElmtExp(Array<OneD,const NekDouble> &in)
-        {
-            int i;
-            int npoints_e;
-
-            for(i = 0; i < (*m_exp).size(); ++i)
-            {
-                npoints_e = (*m_exp)[i]->GetTotPoints();
-                Vmath::Vcopy(npoints_e, &in[m_phys_offset[i]],1,
-                                        &((*m_exp)[i]->UpdatePhys())[0],1);
-            }
-        }
-
-
-        /**
-         * The physical evaluations at the quadrature points from the expansion
-         * objects are concatenated and stored in \a out.
-         * @param   out         Storage for physical values.
-         */
-        void ExpList::PutElmtExpInToPhys(Array<OneD,NekDouble> &out)
-        {
-            int i;
-            int npoints_e;
-
-            for(i = 0; i < (*m_exp).size(); ++i)
-            {
-                npoints_e = (*m_exp)[i]->GetTotPoints();
-                Vmath::Vcopy(npoints_e, &((*m_exp)[i]->GetPhys())[0],1,
-                             &out[m_phys_offset[i]],1);
-            }
-        }
-
-
-        /**
-         * The physical evaluations at the quadrature points in the element
-         * expansion \a eid are copied to \a out.
-         * @param   out         Storage for physical values.
-         */
-        void ExpList::PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &out)
-        {
-            int npoints_e;
-            int cnt = m_phys_offset[eid];
-
-            npoints_e = (*m_exp)[eid]->GetTotPoints();
-            Vmath::Vcopy(npoints_e, &((*m_exp)[eid]->GetPhys())[0],1,
-                         &out[cnt],1);
-        }
-
-
         ExpList::~ExpList()
         {
         }
-
 
         /**
          * The integration is evaluated locally, that is
@@ -1409,235 +1270,39 @@ namespace Nektar
 
         }
 
-
-        /**
-         * The coordinates of the quadrature points, together with
-         * the content of the array #m_phys, are written to the
-         * file \a out.
-         *
-         * @param   out             The file to which the solution should be
-         *                          written.
-         */
-        void ExpList::WriteToFile(std::ofstream &out, OutputFormat format,
-                                std::string var)
-        {
-            switch(format)
-            {
-            case eTecplot:
-            case eTecplotZones:
-                {
-                    int i;
-                    
-                    Array<OneD, const NekDouble> phys = m_phys;
-                    
-                    if(m_physState == false)
-                    {
-                        BwdTrans(m_coeffs,m_phys);
-                    }
-                    
-                    (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
-                    (*m_exp)[0]->WriteToFile(out,eTecplot,true,var);
-                    
-                    for(i= 1; i < (*m_exp).size(); ++i)
-                    {
-                        (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
-                        (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
-                    }
-                }
-                break;
-            case eTecplotSingleBlock:
-                {
-                    if(m_physState == false)
-                    {
-                        BwdTrans(m_coeffs,m_phys);
-                    }
-                    WriteTecplotHeader(out,var);
-                    WriteTecplotZone(out);
-                    WriteTecplotField(out);
-                    WriteTecplotConnectivity(out);
-                }
-                break;
-            case eGnuplot:
-                {
-                    int i;
-                    
-                    Array<OneD, const NekDouble> phys = m_phys;
-                    
-                    if(m_physState == false)
-                    {
-                        BwdTrans(m_coeffs,m_phys);
-                    }
-                    
-                    (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
-                    (*m_exp)[0]->WriteToFile(out,eGnuplot,true,var);
-                    
-                    for(i= 1; i < (*m_exp).size(); ++i)
-                    {
-                    (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
-                    (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
-                    }
-                }
-                break;
-            case eGmsh:
-                {
-                    
-                    out<<"View.MaxRecursionLevel = 4;"<<endl;
-                    out<<"View.TargetError = 0.00;"<<endl;
-                    out<<"View.AdaptVisualizationGrid = 1;"<<endl;
-                    
-                    int i,j,k;
-                    int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
-                    int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
-                    Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
-                    int cnt = 0;
-                    for(i = 0; i < nElementalCoeffs; i++)
-                    {
-                        for(j = 0; j < nElementalCoeffs; j++)
-                        {
-                            exponentMap[cnt][0] = j;
-                            exponentMap[cnt++][1] = i;
-                        }
-                    }
-                    
-                    PutCoeffsInToElmtExp();
-                    bool dumpNewView = true;
-                    bool closeView = false;
-                    for(i= 0; i < (*m_exp).size(); ++i)
-                    {
-                        if(nElementalCoeffs != (*m_exp)[i]->GetBasisNumModes(0))
-                        {
-                            ASSERTL0(false,"Not all elements have the same number "
-                                     "of expansions, this will probably lead "
-                                     "to a corrupt Gmsh-output file.")
-                                }
-                        
-                        if(i>0)
-                        {
-                            if ( ((*m_exp)[i]->DetShapeType())
-                                 !=((*m_exp)[i-1]->DetShapeType()) )
-                            {
-                            dumpNewView = true;
-                            }
-                            else
-                            {
-                                dumpNewView = false;
-                            }
-                        }
-                        if(i<(*m_exp).size()-1)
-                        {
-                            if ( ((*m_exp)[i]->DetShapeType())
-                                 !=((*m_exp)[i+1]->DetShapeType()) )
-                            {
-                                closeView = true;
-                            }
-                            else
-                            {
-                                closeView = false;
-                            }
-                        }
-                        else
-                        {
-                            closeView = true;
-                        }
-                        
-                        if(dumpNewView)
-                        {
-                            out<<"View \" \" {"<<endl;
-                        }
-                        
-                        (*m_exp)[i]->WriteToFile(out,eGmsh,false);
-                        
-                        if(closeView)
-                        {
-                            out<<"INTERPOLATION_SCHEME"<<endl;
-                            out<<"{"<<endl;
-                            for(k=0; k < nDumpCoeffs; k++)
-                            {
-                                out<<"{";
-                                for(j = 0; j < nDumpCoeffs; j++)
-                                {
-                                    if(k==j)
-                                    {
-                                        out<<"1.00";
-                                    }
-                                    else
-                                    {
-                                        out<<"0.00";
-                                    }
-                                    if(j < nDumpCoeffs - 1)
-                                    {
-                                        out<<", ";
-                                    }
-                                }
-                                if(k < nDumpCoeffs - 1)
-                                {
-                                    out<<"},"<<endl;
-                                }
-                                else
-                                {
-                                    out<<"}"<<endl<<"}"<<endl;
-                                }
-                            }
-                            
-                            out<<"{"<<endl;
-                            for(k=0; k < nDumpCoeffs; k++)
-                            {
-                                out<<"{";
-                                for(j = 0; j < 3; j++)
-                                {
-                                    out<<exponentMap[k][j];
-                                    if(j < 2)
-                                    {
-                                        out<<", ";
-                                    }
-                                }
-                                if(k < nDumpCoeffs - 1)
-                                {
-                                    out<<"},"<<endl;
-                                }
-                                else
-                                {
-                                    out<<"}"<<endl<<"};"<<endl;
-                                }
-                            }
-                            out<<"};"<<endl;
-                        }
-                    }
-                    out<<"Combine ElementsFromAllViews;"<<endl;
-                    out<<"View.Name = \"\";"<<endl;
-                }
-                break;
-            default:
-                {
-                    ASSERTL0(false, "Output routine not implemented for requested "
-                             "type of output");
-                }
-            }
-        }
-
         /**
          * Write Tecplot Files Header
          * @param   outfile Output file name.
          * @param   var                 variables names
          */
         void ExpList::v_WriteTecplotHeader(std::ofstream &outfile,
-                                           std::string var)
+                                           std::string    var)
         {
-
             int coordim  = GetExp(0)->GetCoordim();
-            outfile << "Variables = x";
-            
-            if(coordim == 2)
-            {
-                outfile << ", y";
-            }
-            else if (coordim == 3)
-            {
-                outfile << ", y, z";
-            }
-            outfile << ", "<< var << std::endl << std::endl;
-        }
+            char vars[3] = { 'x', 'y', 'z' };
 
+            if (m_expType == e3DH1D)
+            {
+                coordim += 1;
+            }
+            else if (m_expType == e3DH2D)
+            {
+                coordim += 2;
+            }
+
+            outfile << "Variables = x";
+            for (int i = 1; i < coordim; ++i)
+            {
+                outfile << ", " << vars[i];
+            }
+
+            if (var.size() > 0)
+            {
+                outfile << ", " << var;
+            }
+
+            outfile << std::endl << std::endl;
+        }
 
         /**
          * Write Tecplot Files Zone
@@ -1646,157 +1311,169 @@ namespace Nektar
          */
         void ExpList::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
         {
-            if(expansion == -1) //write as full block zeon
+            int i, j;
+            int coordim = GetCoordim(0);
+            int nPoints = GetTotPoints();
+            int nBases  = (*m_exp)[0]->GetNumBases();
+            int numBlocks = 0;
+
+            Array<OneD, Array<OneD, NekDouble> > coords(3);
+
+            if (expansion == -1)
             {
-                int i,j;
-                int coordim   = GetCoordim(0);
-                int totpoints = GetTotPoints();
-                
-                Array<OneD,NekDouble> coords[3];
-                
-                coords[0] = Array<OneD,NekDouble>(totpoints);
-                coords[1] = Array<OneD,NekDouble>(totpoints);
-                coords[2] = Array<OneD,NekDouble>(totpoints);
-                
-                GetCoords(coords[0],coords[1],coords[2]);
-                
-                outfile << "Zone, N=" << GetTotPoints() << ", E="<<
-                    GetNumTecplotBlocks() << ", F=FEBlock" ;
-                
-                switch((*m_exp)[0]->GetNumBases())
+                nPoints = GetTotPoints();
+
+                coords[0] = Array<OneD, NekDouble>(nPoints);
+                coords[1] = Array<OneD, NekDouble>(nPoints);
+                coords[2] = Array<OneD, NekDouble>(nPoints);
+
+                GetCoords(coords[0], coords[1], coords[2]);
+
+                for (i = 0; i < m_exp->size(); ++i)
                 {
-                case 1:
-                    outfile << ", ET=LINESEG" << std::endl;
-                    break;
+                    int numInt = 1;
+
+                    for (j = 0; j < nBases; ++j)
+                    {
+                        numInt *= (*m_exp)[i]->GetNumPoints(j)-1;
+                    }
+
+                    numBlocks += numInt;
+                }
+            }
+            else
+            {
+                nPoints = (*m_exp)[expansion]->GetTotPoints();
+
+                coords[0] = Array<OneD, NekDouble>(nPoints);
+                coords[1] = Array<OneD, NekDouble>(nPoints);
+                coords[2] = Array<OneD, NekDouble>(nPoints);
+
+                (*m_exp)[expansion]->GetCoords(coords[0], coords[1], coords[2]);
+
+                numBlocks = 1;
+                for (j = 0; j < nBases; ++j)
+                {
+                    numBlocks *= (*m_exp)[expansion]->GetNumPoints(j)-1;
+                }
+            }
+
+            if (m_expType == e3DH1D)
+            {
+                nBases += 1;
+                coordim += 1;
+                int nPlanes = GetZIDs().num_elements();
+                NekDouble tmp = numBlocks * (nPlanes-1.0) / nPlanes;
+                numBlocks = (int)tmp;
+            }
+            else if (m_expType == e3DH2D)
+            {
+                nBases    += 2;
+                coordim += 1;
+            }
+
+            outfile << "Zone, N=" << nPoints << ", E="
+                    << numBlocks << ", F=FEBlock" ;
+
+            switch(nBases)
+            {
                 case 2:
                     outfile << ", ET=QUADRILATERAL" << std::endl;
                     break;
                 case 3:
                     outfile << ", ET=BRICK" << std::endl;
                     break;
-                }
-                
-                // write out coordinates in block format 
-                for(j = 0; j < coordim; ++j)
+                default:
+                    ASSERTL0(false,"Not set up for this type of output");
+                    break;
+            }
+
+            // Write out coordinates
+            for (j = 0; j < coordim; ++j)
+            {
+                for (i = 0; i < nPoints; ++i)
                 {
-                    for(i = 0; i < totpoints; ++i)
+                    outfile << coords[j][i] << " ";
+                    if (i % 1000 == 0 && i)
                     {
-                        outfile << coords[j][i] << " ";
-                        if((!(i % 1000))&&i)
-                        {
-                            outfile << std::endl;
-                        }
+                        outfile << std::endl;
                     }
-                    outfile << std::endl;
                 }
-                
-            }
-            else
-            {
-                (*m_exp)[expansion]->WriteTecplotZone(outfile);
+                outfile << std::endl;
             }
         }
 
-        int  ExpList::GetNumTecplotBlocks(void)
-        {
-            int returnval = 0;
-
-            if((*m_exp)[0]->GetNumBases() == 1)
-            {
-                for(int i = 0; i < (*m_exp).size(); ++i)
-                {
-                    returnval += (*m_exp)[i]->GetNumPoints(0)-1;
-                }
-            }
-            else if((*m_exp)[0]->GetNumBases() == 2)
-            {
-                for(int i = 0; i < (*m_exp).size(); ++i)
-                {
-                    returnval += ((*m_exp)[i]->GetNumPoints(0)-1)*((*m_exp)[i]->GetNumPoints(1)-1);
-                }
-            }
-            else
-            {
-                for(int i = 0; i < (*m_exp).size(); ++i)
-                {
-                    returnval += ((*m_exp)[i]->GetNumPoints(0)-1)*((*m_exp)[i]->GetNumPoints(1)-1)*((*m_exp)[i]->GetNumPoints(2)-1);
-                }
-            }
-
-            return returnval;
-        }
-
-        
-        void  ExpList::WriteTecplotConnectivity(std::ofstream &outfile)
+        void ExpList::v_WriteTecplotConnectivity(std::ofstream &outfile,
+                                                 int expansion)
         {
             int i,j,k,l;
             int nbase = (*m_exp)[0]->GetNumBases();
             int cnt = 0;
-            
-            for(i = 0; i < (*m_exp).size(); ++i)
+
+            boost::shared_ptr<LocalRegions::ExpansionVector> exp = m_exp;
+
+            if (expansion != -1)
             {
-                if(nbase == 1)
+                exp = boost::shared_ptr<LocalRegions::ExpansionVector>(
+                    new LocalRegions::ExpansionVector(1));
+                (*exp)[0] = (*m_exp)[expansion];
+            }
+
+            if (nbase == 2)
+            {
+                for(i = 0; i < (*exp).size(); ++i)
                 {
-                    int np0 = (*m_exp)[i]->GetNumPoints(0);
-                    for(k = 1; k < np0; ++k)
-                    {
-                        outfile << cnt + k  << " ";
-                        outfile << cnt + k + 1 << endl;
-                    }
-                    cnt += np0;
-                }
-                else if(nbase == 2)
-                {
-                    int np0 = (*m_exp)[i]->GetNumPoints(0);
-                    int np1 = (*m_exp)[i]->GetNumPoints(1);
+                    const int np0 = (*exp)[i]->GetNumPoints(0);
+                    const int np1 = (*exp)[i]->GetNumPoints(1);
                     
                     for(j = 1; j < np1; ++j)
                     {
                         for(k = 1; k < np0; ++k)
                         {
-                            outfile << cnt + (j-1)*np0 + k  << " ";
-                            outfile << cnt + (j-1)*np0 + k +1 << " ";
-                            outfile << cnt + j*np0 + k +1 << " ";
-                            outfile << cnt + j*np0 + k    << endl;
+                            outfile << cnt + (j-1)*np0 + k   << " ";
+                            outfile << cnt + (j-1)*np0 + k+1 << " ";
+                            outfile << cnt +  j   *np0 + k+1 << " ";
+                            outfile << cnt +  j   *np0 + k   << endl;
                         }
                     }
                     
                     cnt += np0*np1;
                 }
-                else if(nbase == 3)
+            }
+            else if (nbase == 3)
+            {
+                for(i = 0; i < (*exp).size(); ++i)
                 {
-                    int np0 = (*m_exp)[i]->GetNumPoints(0);
-                    int np1 = (*m_exp)[i]->GetNumPoints(1);
-                    int np2 = (*m_exp)[i]->GetNumPoints(2);
-                    
+                    const int np0 = (*exp)[i]->GetNumPoints(0);
+                    const int np1 = (*exp)[i]->GetNumPoints(1);
+                    const int np2 = (*exp)[i]->GetNumPoints(2);
+                    const int np01 = np0*np1;
+
                     for(j = 1; j < np2; ++j)
                     {
                         for(k = 1; k < np1; ++k)
                         {
                             for(l = 1; l < np0; ++l)
                             {
-                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l  << " ";
-                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l +1 << " ";
-                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l +1 << " ";
-                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l  << " ";
-
-                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l  << " ";
-                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l +1 << " ";
-                                outfile << cnt + j*np0*np1 +  k*np0 + l +1 << " ";
-                                outfile << cnt + j*np0*np1 +  k*np0 + l  << endl;
+                                outfile << cnt + (j-1)*np01 + (k-1)*np0 + l   << " ";
+                                outfile << cnt + (j-1)*np01 + (k-1)*np0 + l+1 << " ";
+                                outfile << cnt + (j-1)*np01 +  k   *np0 + l+1 << " ";
+                                outfile << cnt + (j-1)*np01 +  k   *np0 + l   << " ";
+                                outfile << cnt +  j   *np01 + (k-1)*np0 + l   << " ";
+                                outfile << cnt +  j   *np01 + (k-1)*np0 + l+1 << " ";
+                                outfile << cnt +  j   *np01 +  k   *np0 + l+1 << " ";
+                                outfile << cnt +  j   *np01 +  k   *np0 + l   << endl;
                             }
                         }
                     }
                     cnt += np0*np1*np2;
                 }
-                else
-                {
-                    ASSERTL0(false,"Not set up for this dimension");
-                }
-
+            }
+            else
+            {
+                ASSERTL0(false,"Not set up for this dimension");
             }
         }
-
 
         /**
          * Write Tecplot Files Field
@@ -1805,8 +1482,7 @@ namespace Nektar
          */
         void ExpList::v_WriteTecplotField(std::ofstream &outfile, int expansion)
         {
-
-            if(expansion == -1)
+            if (expansion == -1)
             {
                 int totpoints = GetTotPoints();
                 if(m_physState == false)
@@ -1817,7 +1493,7 @@ namespace Nektar
                 for(int i = 0; i < totpoints; ++i)
                 {
                     outfile << m_phys[i] << " ";
-                    if((!(i % 1000))&&i)
+                    if(i % 1000 == 0 && i)
                     {
                         outfile << std::endl;
                     }
@@ -1827,11 +1503,16 @@ namespace Nektar
             }
             else
             {
-                (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]);
-                (*m_exp)[expansion]->WriteTecplotField(outfile);
+                int nPoints = (*m_exp)[expansion]->GetTotPoints();
+
+                for (int i = 0; i < nPoints; ++i)
+                {
+                    outfile << m_phys[i + m_phys_offset[expansion]] << " ";
+                }
+
+                outfile << std::endl;
             }
         }
-
 
         void ExpList::WriteVtkHeader(std::ofstream &outfile)
         {
@@ -1877,33 +1558,6 @@ namespace Nektar
             outfile << "        </DataArray>" << endl;
         }
 
-        void ExpList::ReadFromFile(std::ifstream &in, OutputFormat format)
-        {
-            if(format==eTecplot)
-            {
-                int i,npts;
-                Array<OneD, NekDouble> phys = m_phys;
-
-                npts = (*m_exp)[0]->GetTotPoints();
-                (*m_exp)[0]->ReadFromFile(in,eTecplot,true);
-                Vmath::Vcopy(npts,&(*m_exp)[0]->GetPhys()[0],1,&phys[m_phys_offset[0]],1);
-
-                for(i= 1; i < (*m_exp).size(); ++i)
-                {
-                    npts = (*m_exp)[i]->GetTotPoints();
-                    (*m_exp)[i]->ReadFromFile(in,eTecplot,false);
-                    Vmath::Vcopy(npts,&((*m_exp)[i]->GetPhys())[0],1,
-                                 &phys[m_phys_offset[i]],1);
-                }
-                FwdTrans(m_phys,m_coeffs);
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested "
-                                "type of output");
-            }
-        }
-
         /**
          * Given a spectral/hp approximation
          * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the quadrature points
@@ -1922,53 +1576,28 @@ namespace Nektar
          *                          quadrature points in its array #m_phys.
          * @return  The \f$L_\infty\f$ error of the approximation.
          */
-        NekDouble  ExpList::Linf(const Array<OneD, const NekDouble> &soln)
+        NekDouble ExpList::Linf(
+            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &soln)
         {
             NekDouble err = 0.0;
-            int       i;
 
-            for(i= 0; i < (*m_exp).size(); ++i)
+            if (soln == NullNekDouble1DArray)
             {
-                // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
-                err  = std::max(err,(*m_exp)[i]->Linf(soln + m_phys_offset[i]));
+                err = Vmath::Vmax(m_npoints, inarray, 1);
             }
+            else
+            {
+                for (int i = 0; i < m_npoints; ++i)
+                {
+                    err = max(err, abs(inarray[i] - soln[i]));
+                }
+            }
+
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceMax);
 
             return err;
         }
-
-        /**
-         * Given a spectral/hp approximation
-         * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
-         * quadrature points (which should be contained in #m_phys),
-         * this function calculates the \f$L_\infty\f$ error of this
-         * approximation. The local distribution of the quadrature
-         * points allows an elemental evaluation of this operation
-         * through the functions StdRegions#StdExpansion#Linf.
-         *s
-         * The exact solution, also evaluated at the quadrature
-         * points, should be contained in the variable #m_phys of
-         * the ExpList object \a Sol.
-         *
-         * @return  The \f$L_\infty\f$ error of the approximation.
-         */
-        NekDouble  ExpList::Linf(void)
-        {
-            NekDouble err = 0.0;
-            int       i;
-
-            for(i= 0; i < (*m_exp).size(); ++i)
-            {
-                // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
-                err  = std::max(err,(*m_exp)[i]->Linf());
-            }
-
-            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceMax);
-            return err;
-        }
-
 
         /**
          * Given a spectral/hp approximation \f$u^{\delta}(\boldsymbol{x})\f$
@@ -1986,67 +1615,44 @@ namespace Nektar
          *                          quadrature points in its array #m_phys.
          * @return  The \f$L_2\f$ error of the approximation.
          */
-        NekDouble ExpList::v_L2(const Array<OneD, const NekDouble> &soln)
+        NekDouble ExpList::v_L2(
+            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &soln)
         {
-            NekDouble err = 0.0,errl2;
+            NekDouble err = 0.0, errl2;
             int    i;
 
-            for(i= 0; i < (*m_exp).size(); ++i)
-            {				
-                // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
-                errl2 = (*m_exp)[i]->L2(soln+m_phys_offset[i]);
-                err += errl2*errl2;
-            }
-            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
-
-            return sqrt(err);
-        }
-
-
-        /**
-         * Given a spectral/hp approximation
-         * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
-         * quadrature points (which should be contained in #m_phys),
-         * this function calculates the \f$L_2\f$ measure of this
-         * approximation. The local distribution of the quadrature
-         * points allows an elemental evaluation of this operation
-         * through the functions StdRegions#StdExpansion#L2.
-         *
-         * The exact solution, also evaluated at the quadrature points, should
-         * be contained in the variable #m_phys of the ExpList object \a Sol.
-         *
-         * @param   soln            A 1D array, containing the discrete
-         *                          evaluation of the exact solution at the
-         *                          quadrature points.
-         * @return  The \f$L_2\f$ error of the approximation.
-         */
-        NekDouble ExpList::v_L2(void)
-        {
-            NekDouble err = 0.0,errl2;
-            int    i;
-
-            for(i= 0; i < (*m_exp).size(); ++i)
+            if (soln == NullNekDouble1DArray)
             {
-                // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
-                errl2 = (*m_exp)[i]->L2();
-                err += errl2*errl2;
+                for (i = 0; i < (*m_exp).size(); ++i)
+                {
+                    errl2 = (*m_exp)[i]->L2(inarray + m_phys_offset[i]);
+                    err += errl2*errl2;
+                }
             }
+            else
+            {
+                for (i = 0; i < (*m_exp).size(); ++i)
+                {
+                    errl2 = (*m_exp)[i]->L2(inarray + m_phys_offset[i],
+                                            soln    + m_phys_offset[i]);
+                    err += errl2*errl2;
+                }
+            }
+
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
-            
+
             return sqrt(err);
         }
-		
 
         NekDouble ExpList::v_Integral(const Array<OneD, const NekDouble> &inarray)
         {
             NekDouble err = 0.0;
             int       i   = 0;
 
-            for(i = 0; i < (*m_exp).size(); ++i)
+            for (i = 0; i < (*m_exp).size(); ++i)
             {
-                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray+m_phys_offset[i]);
+                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray + m_phys_offset[i]);
             }
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
 
@@ -2119,20 +1725,22 @@ namespace Nektar
          *
          * @return  The \f$H^1_2\f$ error of the approximation.
          */
-        NekDouble ExpList::H1(const Array<OneD, const NekDouble> &soln)
+        NekDouble ExpList::H1(
+            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &soln)
         {
-
-            NekDouble err = 0.0,errh1;
+            NekDouble err = 0.0, errh1;
             int    i;
 
-            for(i= 0; i < (*m_exp).size(); ++i)
+            for (i = 0; i < (*m_exp).size(); ++i)
             {
-                // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
-                errh1 =  (*m_exp)[i]->H1(soln+m_phys_offset[i]);
-                err  += errh1*errh1;
+                errh1 = (*m_exp)[i]->H1(inarray + m_phys_offset[i],
+                                        soln    + m_phys_offset[i]);
+                err += errh1*errh1;
             }
-            m_comm->AllReduce(err, LibUtilities::ReduceSum);
+
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
+
             return sqrt(err);
         }
 

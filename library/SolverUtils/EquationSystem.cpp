@@ -794,7 +794,7 @@ namespace Nektar
 
                 if(exactsoln.num_elements())
                 {
-                    L2error = m_fields[field]->L2(exactsoln);
+                    L2error = m_fields[field]->L2(m_fields[field]->GetPhys(), exactsoln);
                 }
                 else if (m_session->DefinesFunction("ExactSolution"))
                 {
@@ -803,11 +803,11 @@ namespace Nektar
                     EvaluateFunction(m_session->GetVariable(field), exactsoln, 
                                      "ExactSolution", m_time);
 
-                    L2error = m_fields[field]->L2(exactsoln);
+                    L2error = m_fields[field]->L2(m_fields[field]->GetPhys(), exactsoln);
                 }
                 else
                 {
-                    L2error = m_fields[field]->L2();
+                    L2error = m_fields[field]->L2(m_fields[field]->GetPhys());
                 }
 
                 if(Normalised == true)
@@ -850,7 +850,7 @@ namespace Nektar
 
                 if(exactsoln.num_elements())
                 {
-                    Linferror = m_fields[field]->Linf(exactsoln);
+                    Linferror = m_fields[field]->Linf(m_fields[field]->GetPhys(), exactsoln);
                 }
                 else if (m_session->DefinesFunction("ExactSolution"))
                 {
@@ -858,7 +858,7 @@ namespace Nektar
 
                     EvaluateFunction(m_session->GetVariable(field), exactsoln, "ExactSolution", m_time);
 
-                    Linferror = m_fields[field]->Linf(exactsoln);
+                    Linferror = m_fields[field]->Linf(m_fields[field]->GetPhys(), exactsoln);
                 }
                 else
                 {
@@ -932,8 +932,8 @@ namespace Nektar
             ErrorExp->BwdTrans_IterPerExp(m_fields[field]->GetCoeffs(), 
                                           ErrorExp->UpdatePhys());
 
-            L2INF[0] = ErrorExp->L2  (ErrorSol);
-            L2INF[1] = ErrorExp->Linf(ErrorSol);
+            L2INF[0] = ErrorExp->L2  (ErrorExp->GetPhys(), ErrorSol);
+            L2INF[1] = ErrorExp->Linf(ErrorExp->GetPhys(), ErrorSol);
 
             return L2INF;
         }
@@ -1953,90 +1953,6 @@ namespace Nektar
                 {
                     m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                      fieldStr[j], coeffs[j]);
-                }
-            }
-        }
-    
-        /**
-         * Write data to file in Tecplot format?
-         * @param   n           Checkpoint index.
-         * @param   name        Additional name (appended to session name).
-         * @param   inarray     Field data to write out.
-         * @param   IsInPhysicalSpace   Indicates if field data is in phys space.
-         */
-//    void EquationSystem::Array_Output(const int n, std::string name,
-//                               const Array<OneD, const NekDouble>&inarray,
-//                               bool IsInPhysicalSpace)
-//    {
-//        int nq = m_fields[0]->GetTotPoints();
-//
-//        Array<OneD, NekDouble> tmp(nq);
-//
-//        // save values
-//        Vmath::Vcopy(nq, m_fields[0]->GetPhys(), 1, tmp, 1);
-//
-//        // put inarray in m_phys
-//        if (IsInPhysicalSpace == false)
-//        {
-//            m_fields[0]->BwdTrans(inarray,(m_fields[0]->UpdatePhys()));
-//        }
-//        else
-//        {
-//            Vmath::Vcopy(nq,inarray,1,(m_fields[0]->UpdatePhys()),1);
-//        }
-//
-//        char chkout[16] = "";
-//        sprintf(chkout, "%d", n);
-//        std::string outname = m_sessionName +"_" + name + "_" + chkout + ".chk";
-//        ofstream outfile(outname.c_str());
-//        m_fields[0]->WriteToFile(outfile,eTecplot);
-//
-//        // copy back the original values
-//        Vmath::Vcopy(nq,tmp,1,m_fields[0]->UpdatePhys(),1);
-//    }
-
-        /**
-         * Write data to file in Tecplot format.
-         * @param  n                 Checkpoint index.
-         * @param  name              Additional name (appended to session name).
-         * @param  IsInPhysicalSpace Indicates if field data is in phys space.
-         */
-        void EquationSystem::WriteTecplotFile(
-            const int n, 
-            const std::string &name, 
-            bool IsInPhysicalSpace)
-        {
-            std::string var = "";
-            int j;
-            for(j = 0; j < m_fields.num_elements()-1; ++j)
-            {
-                var += m_boundaryConditions->GetVariable(j) +  ", ";
-            }
-            var += m_boundaryConditions->GetVariable(j);
-
-            char chkout[16] = "";
-            sprintf(chkout, "%d", n);
-            std::string outname = m_sessionName + "_" + name + "_" + chkout + ".dat";
-            ofstream outfile(outname.c_str());
-
-            // Put inarray in m_phys
-            if (IsInPhysicalSpace == false)
-            {
-                for(int i = 0; i < m_fields.num_elements(); ++i)
-                {
-                    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), 
-                                          m_fields[i]->UpdatePhys());
-                }
-            }
-
-            m_fields[0]->WriteTecplotHeader(outfile, var);
-
-            for(int i = 0; i < m_fields[0]->GetExpSize(); ++i)
-            {
-                m_fields[0]->WriteTecplotZone(outfile,i);
-                for(int j = 0; j < m_fields.num_elements(); ++j)
-                {
-                    m_fields[j]->WriteTecplotField(outfile, i);
                 }
             }
         }

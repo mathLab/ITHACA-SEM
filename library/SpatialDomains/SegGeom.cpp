@@ -53,20 +53,15 @@ namespace Nektar
         SegGeom::SegGeom(int id, const int coordim):
             Geometry1D(coordim)
         {
-            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                                           LibUtilities::PointsKey(3,
-                                              LibUtilities::eGaussLobattoLegendre
-                                           )
-                                          );
+            const LibUtilities::BasisKey B(
+                LibUtilities::eModified_A, 2,
+                LibUtilities::PointsKey(3, LibUtilities::eGaussLobattoLegendre));
+
             m_shapeType = LibUtilities::eSegment;
             m_eid = id;
             m_globalID = id;
-            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
-            }
+            m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
         SegGeom::SegGeom(
@@ -88,12 +83,8 @@ namespace Nektar
                                                )
                                               );
 
-                m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
-
-                for(int i = 0; i < m_coordim; ++i)
-                {
-                    m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
-                }
+                m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+                SetUpCoeffs(m_xmap->GetNcoeffs());
             }
 
             m_verts[0] = vertex[0];
@@ -118,10 +109,7 @@ namespace Nektar
                 LibUtilities::PointsKey pkey(npts+1,LibUtilities::eGaussLobattoLegendre);
                 const LibUtilities::BasisKey B(LibUtilities::eModified_A, npts, pkey);
 
-                m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordim);
-
                 Array<OneD,NekDouble> tmp(npts);
-
 
                 if(vertex[0]->dist(*(curve->m_points[0])) > NekConstants::kVertexTheSameDouble)
                 { 
@@ -143,11 +131,11 @@ namespace Nektar
                     NEKERROR(ErrorUtil::ewarning, err.c_str());
                 }
 
+                m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+                SetUpCoeffs(m_xmap->GetNcoeffs());
 
                 for(int i = 0; i < m_coordim; ++i)
                 {
-                    m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
-
                     // Load up coordinate values into tmp
                     for(int j = 0; j < npts; ++j)
                     {
@@ -160,11 +148,11 @@ namespace Nektar
                     LibUtilities::PointsKey fkey(npts,curve->m_ptype);
                     I0 = LibUtilities::PointsManager()[fkey]->GetI(pkey);
 
-                    NekVector<NekDouble> in(npts,tmp,eWrapper);
-                    NekVector<NekDouble>       out(npts+1,m_xmap[i]->UpdatePhys(),eWrapper);
-                    out  = (*I0)*in;
+                    NekVector<NekDouble> in (npts, tmp, eWrapper);
+                    NekVector<NekDouble> out(npts+1);
+                    out = (*I0)*in;
 
-                    m_xmap[i]->FwdTrans(m_xmap[i]->GetPhys(),m_xmap[i]->UpdateCoeffs());
+                    m_xmap->FwdTrans(out.GetPtr(), m_coeffs[i]);
                 }
             }
 
@@ -193,13 +181,8 @@ namespace Nektar
                                           );
             m_eid = id;
             m_globalID = id;
-
-            m_xmap = Array<OneD, StdRegions::StdExpansionSharedPtr>(vert1->GetCoordim());
-
-            for(int i = 0; i < m_coordim; ++i)
-            {
-                m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
-            }
+            m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
         SegGeom::SegGeom(const SegGeom &in)
@@ -216,6 +199,8 @@ namespace Nektar
             {
                 m_elmtMap.push_back(*def);
             }
+            m_xmap = in.m_xmap;
+            SetUpCoeffs(m_xmap->GetNcoeffs());
 
             // info from SegGeom class
             m_coordim  = in.m_coordim;
@@ -250,7 +235,7 @@ namespace Nektar
             returnval->m_verts[0] = vert0;
             
             // Get information to calculate length. 
-            const Array<OneD, const LibUtilities::BasisSharedPtr> base =  m_xmap[0]->GetBase();
+            const Array<OneD, const LibUtilities::BasisSharedPtr> base =  m_xmap->GetBase();
             LibUtilities::PointsKeyVector v;
             v.push_back(base[0]->GetPointsKey());
             v_GenGeomFactors();
@@ -278,8 +263,8 @@ namespace Nektar
             returnval->m_verts[1] = vert1;
             
             // at present just use previous m_xmap[0]; 
-            returnval->m_xmap    = Array<OneD, StdRegions::StdExpansionSharedPtr>(1);
-            returnval->m_xmap[0] = m_xmap[0];
+            returnval->m_xmap    = m_xmap;
+            returnval->SetUpCoeffs(m_xmap->GetNcoeffs());
             returnval->m_state   = eNotFilled;
 
             return returnval;
@@ -290,19 +275,19 @@ namespace Nektar
         {
         }
 
-
-
-
         /** given local collapsed coordinate Lcoord return the value of
             physical coordinate in direction i **/
         NekDouble SegGeom::v_GetCoord(
                 const int i,
                 const Array<OneD, const NekDouble>& Lcoord)
         {
+            ASSERTL1(m_state == ePtsFilled,
+                "Geometry is not in physical space");
 
-            ASSERTL1(m_state == ePtsFilled, "Goemetry is not in physical space");
+            Array<OneD, NekDouble> tmp(m_xmap->GetTotPoints());
+            m_xmap->BwdTrans(m_coeffs[i], tmp);
 
-            return m_xmap[i]->PhysEvaluate(Lcoord);
+            return m_xmap->PhysEvaluate(Lcoord, tmp);
         }
 
         void SegGeom::v_AddElmtConnected(int gvo_id, int locid)
@@ -383,14 +368,13 @@ namespace Nektar
 
                 SegGeom::v_FillGeom();
 
-                if(m_xmap[0]->GetBasisNumModes(0)!=2)
+                if(m_xmap->GetBasisNumModes(0)!=2)
                 {
                     gType = eDeformed;
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors>::AllocateSharedPtr(
-                    gType, m_coordim, m_xmap);
-
+                    gType, m_coordim, m_xmap, m_coeffs);
                 m_geomFactorsState = ePtsFilled;
             }
         }
@@ -404,11 +388,12 @@ namespace Nektar
             {
                 int i;
 
-                for(i = 0; i < m_coordim; ++i){
-                    m_xmap[i]->SetCoeff(0,(*m_verts[0])[i]);
-                    m_xmap[i]->SetCoeff(1,(*m_verts[1])[i]);
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),m_xmap[i]->UpdatePhys());
+                for (i = 0; i < m_coordim; ++i)
+                {
+                    m_coeffs[i][0] = (*m_verts[0])[i];
+                    m_coeffs[i][1] = (*m_verts[1])[i];
                 }
+
                 m_state = ePtsFilled;
             }
         }
@@ -424,69 +409,28 @@ namespace Nektar
             // calculate local coordinate for coord
             if(GetMetricInfo()->GetGtype() == eRegular)
             {
-                Array<OneD, const NekDouble> pts;
                 NekDouble len = 0.0;
                 NekDouble xi  = 0.0;
-                int nq;
 
-                // get points;
-                //find end points
+                const int npts = m_xmap->GetTotPoints();
+                Array<OneD, NekDouble> pts(npts);
+
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    nq   = m_xmap[i]->GetNumPoints(0);
-                    pts  = m_xmap[i]->GetPhys();
-                    len  += (pts[nq-1]-pts[0])*(pts[nq-1]-pts[0]);
+                    m_xmap->BwdTrans(m_coeffs[i], pts);
+                    len  += (pts[npts-1]-pts[0])*(pts[npts-1]-pts[0]);
                     xi   += (coords[i]-pts[0])*(coords[i]-pts[0]);
                 }
 
                 len = sqrt(len);
                 xi  = sqrt(xi);
 
-                Lcoords[0] =  2*xi/len-1.0;
+                Lcoords[0] = 2*xi/len-1.0;
             }
             else
             {
                 NEKERROR(ErrorUtil::efatal,
                          "inverse mapping must be set up to use this call");
-            }
-        }
-
-        void SegGeom::v_WriteToFile(std::ofstream &outfile, const int dumpVar)
-        {
-
-            int i,j;
-            int  nquad = m_xmap[0]->GetNumPoints(0);
-            NekDouble *coords[3];
-
-            SegGeom::v_FillGeom();
-
-            for(i = 0; i < m_coordim; ++i)
-            {
-                coords[i] = &(m_xmap[i]->UpdatePhys())[0];
-            }
-
-            if(dumpVar)
-            {
-                outfile << "Variables = x";
-                if(m_coordim == 2)
-                {
-                    outfile << ", y";
-                }
-                else if (m_coordim == 3)
-                {
-                    outfile << ", y, z";
-                }
-                outfile << std::endl;
-            }
-
-            outfile << "Zone, I=" << nquad << ", F=Point\n";
-            for(i = 0; i < nquad; ++i)
-            {
-                for(j = 0; j < m_coordim; ++j)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << std::endl;
             }
         }
 
@@ -538,27 +482,14 @@ namespace Nektar
             return m_eid;
         }
 
-        const LibUtilities::BasisSharedPtr SegGeom::v_GetBasis(
-                const int i,
-                const int j)
+        const LibUtilities::BasisSharedPtr SegGeom::v_GetBasis(const int i)
         {
-            return m_xmap[i]->GetBasis(j);
+            return m_xmap->GetBasis(i);
         }
 
-        StdRegions::StdExpansion1DSharedPtr SegGeom::operator[](const int i) const
+        StdRegions::StdExpansionSharedPtr SegGeom::v_GetXmap() const
         {
-            if((i>=0)&& (i<m_coordim))
-            {
-                return boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(m_xmap[i]);
-            }
-
-            NEKERROR(ErrorUtil::efatal, "Invalid Index used in [] operator");
-            return boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(m_xmap[0]); //should never be reached
-        }
-
-        const StdRegions::StdExpansion1DSharedPtr SegGeom::v_GetXmap(const int i)
-        {
-            return boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(m_xmap[i]);
+            return m_xmap;
         }
 
         void SegGeom::v_SetOwnData()
@@ -566,17 +497,12 @@ namespace Nektar
             m_ownData = true;
         }
 
-        Nektar::Array<OneD, NekDouble>& SegGeom::v_UpdatePhys(const int i)
-        {
-            return m_xmap[i]->UpdatePhys();
-        }
-
         StdRegions::Orientation SegGeom::v_GetPorient(const int i) const
         {
             //cout << "StdRegions::PointOrientation GetPorient"<<endl;
             ASSERTL2((i >=0) && (i <= 1),"Point id must be between 0 and 1");
 
-            if (i%2==0)
+            if (i % 2 == 0)
             {
                 return StdRegions::eBwd;
             }
@@ -584,8 +510,6 @@ namespace Nektar
             {
                 return StdRegions::eFwd;
             }
-
-            //return m_porient[i];
         }
 
 

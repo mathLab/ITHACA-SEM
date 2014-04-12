@@ -139,17 +139,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     
     //----------------------------------------------
-    // Write solution 
-    ofstream outfile("LinearAdvectionFile2D.pos");
-    Exp->WriteToFile(outfile,eGmsh);
-    outfile.close();
-
-    ofstream outfile2("LinearAdvectionFile2D.dat");
-    Exp->WriteToFile(outfile2,eTecplot);
-    outfile2.close();
-    //----------------------------------------------
-    
-    //----------------------------------------------
     // See if there is an exact solution, if so 
     // evaluate and plot errors
     LibUtilities::EquationSharedPtr ex_sol
@@ -170,8 +159,8 @@ int main(int argc, char *argv[])
         Fce->SetPhysState(true);
 
 
-        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "L infinity error: " << Exp->Linf(Exp->GetPhys(), Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Exp->GetPhys(), Fce->GetPhys()) << endl;
         //--------------------------------------------        
     }
     //----------------------------------------------        

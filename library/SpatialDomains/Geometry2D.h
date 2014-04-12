@@ -82,13 +82,8 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT int WhichEdge(SegGeomSharedPtr edge);
             SPATIAL_DOMAINS_EXPORT int WhichFace(Geometry2DSharedPtr face);
 
-            SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion2DSharedPtr
-                        GetXmap(const int i);
-            SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion2DSharedPtr
-                        operator[](const int i) const;
-
             SPATIAL_DOMAINS_EXPORT const LibUtilities::BasisSharedPtr
-                    GetEdgeBasis(const int i, const int j);
+                    GetEdgeBasis(const int i);
 
             //---------------------------------------
             // Orientation functions
@@ -101,8 +96,11 @@ namespace Nektar
 
 
         protected:
-            void NewtonIterationForLocCoord(const Array<OneD, const NekDouble> &coords, 
-                                       Array<OneD,NekDouble> &Lcoords);
+            void NewtonIterationForLocCoord(
+                const Array<OneD, const NekDouble> &coords,
+                const Array<OneD, const NekDouble> &ptsx,
+                const Array<OneD, const NekDouble> &ptsy,
+                      Array<OneD,       NekDouble> &Lcoords);
 
         private:
             //---------------------------------------
@@ -124,7 +122,7 @@ namespace Nektar
             virtual int                         v_WhichFace(Geometry2DSharedPtr face);
 
             virtual const LibUtilities::BasisSharedPtr
-                            v_GetEdgeBasis(const int i, const int j);
+                            v_GetEdgeBasis(const int i);
             virtual bool    v_ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                         NekDouble tol = 0.0);

@@ -86,15 +86,17 @@ namespace Nektar
          *                      system.
          * @param   Coords      Coordinate maps of the element.
          */
-        GeomFactors::GeomFactors(const GeomType gtype,
-                const int coordim,
-                const Array<OneD, const StdRegions
-                    ::StdExpansionSharedPtr> &Coords) :
+        GeomFactors::GeomFactors(
+                const GeomType                              gtype,
+                const int                                   coordim,
+                const StdRegions::StdExpansionSharedPtr    &xmap,
+                const Array<OneD, Array<OneD, NekDouble> > &coords) :
             m_type(gtype),
-            m_expDim(Coords[0]->GetShapeDimension()),
+            m_expDim(xmap->GetShapeDimension()),
             m_coordDim(coordim),
             m_valid(true),
-            m_coords(Coords)
+            m_xmap(xmap),
+            m_coords(coords)
         {
             CheckIfValid();
         }
@@ -109,6 +111,7 @@ namespace Nektar
             m_expDim(S.m_expDim),
             m_coordDim(S.m_coordDim),
             m_valid(S.m_valid),
+            m_xmap(S.m_xmap),
             m_coords(S.m_coords)
         {
         }
@@ -144,9 +147,9 @@ namespace Nektar
             }
 
             const Array<OneD, const NekDouble> jac_lhs =
-                            lhs.ComputeJac(lhs.m_coords[0]->GetPointsKeys());
+                            lhs.ComputeJac(lhs.m_xmap->GetPointsKeys());
             const Array<OneD, const NekDouble> jac_rhs =
-                            rhs.ComputeJac(rhs.m_coords[0]->GetPointsKeys());
+                            rhs.ComputeJac(rhs.m_xmap->GetPointsKeys());
             if(!(jac_lhs == jac_rhs))
             {
                 return false;
@@ -181,7 +184,7 @@ namespace Nektar
             // Allocate storage and compute number of points
             for (i = 0; i < m_expDim; ++i)
             {
-                map_points[i]  = m_coords[0]->GetBasis(i)->GetPointsKey();
+                map_points[i]  = m_xmap->GetBasis(i)->GetPointsKey();
                 nqtot_map     *= map_points[i].GetNumPoints();
                 nqtot_tbasis  *= keyTgt[i].GetNumPoints();
                 deriv[i] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
@@ -191,9 +194,9 @@ namespace Nektar
             // Calculate local derivatives
             for(i = 0; i < m_coordDim; ++i)
             {
+                Array<OneD, NekDouble> tmp(nqtot_map);
                 // Transform from coefficient space to physical space
-                m_coords[i]->BwdTrans(m_coords[i]->GetCoeffs(),
-                                      m_coords[i]->UpdatePhys());
+                m_xmap->BwdTrans(m_coords[i], tmp);
 
                 // Allocate storage and take the derivative (calculated at the
                 // points as specified in 'Coords')
@@ -201,8 +204,7 @@ namespace Nektar
                 {
                     d_map[j][i] = Array<OneD,NekDouble>(nqtot_map);
                     deriv[j][i] = Array<OneD,NekDouble>(nqtot_tbasis);
-                    m_coords[i]->StdPhysDeriv(j, m_coords[i]->GetPhys(),
-                                                 d_map[j][i]);
+                    m_xmap->StdPhysDeriv(j, tmp, d_map[j][i]);
                 }
             }
 
@@ -490,7 +492,7 @@ namespace Nektar
             int nqtot = 1;
             for (int i = 0; i < m_expDim; ++i)
             {
-                p[i] = m_coords[0]->GetBasis(i)->GetPointsKey();
+                p[i] = m_xmap->GetBasis(i)->GetPointsKey();
                 nqtot *= p[i].GetNumPoints();
             }
             int pts = (m_type == eRegular || m_type == eMovingRegular)

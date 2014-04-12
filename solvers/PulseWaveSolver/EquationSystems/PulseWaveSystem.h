@@ -127,8 +127,6 @@ namespace Nektar
         std::vector<std::vector<InterfacePointShPtr> >  m_bifurcations;
         std::vector<std::vector<InterfacePointShPtr> >  m_mergingJcts;
     
-		LibUtilities::TimeIntegrationMethod             m_timeIntMethod;
-
         /// Initialises PulseWaveSystem class members.
         PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session);
         

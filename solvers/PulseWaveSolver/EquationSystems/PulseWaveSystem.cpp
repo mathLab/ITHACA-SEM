@@ -101,9 +101,6 @@ namespace Nektar
         m_fields  = Array<OneD, MultiRegions::ExpListSharedPtr> (m_nVariables);
         m_vessels = Array<OneD, MultiRegions::ExpListSharedPtr> (m_nVariables*m_nDomains);
 
-        m_expdim   = m_graph->GetMeshDimension();
-        m_specHP_dealiasing             = false;
-                        
         const std::vector<SpatialDomains::CompositeMap> domain = m_graph->GetDomain();
 			
         SpatialDomains::BoundaryConditions Allbcs(m_session, m_graph);
@@ -180,10 +177,6 @@ namespace Nektar
 	
         // Zero all physical fields initially.
         ZeroPhysFields();
-		
-        // Load SolverInfo parameters
-        m_session->MatchSolverInfo("DIFFUSIONADVANCEMENT","Explicit", m_explicitDiffusion,true);
-        m_session->MatchSolverInfo("ADVECTIONADVANCEMENT","Explicit", m_explicitAdvection,true);
 		
         // If Discontinuous Galerkin determine upwinding method to use
         for (int i = 0; i < (int)SIZE_UpwindTypePulse; ++i)

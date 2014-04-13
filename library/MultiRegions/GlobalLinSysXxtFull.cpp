@@ -205,7 +205,8 @@ namespace Nektar
             // and the number of matrix entries for each block
 
             // Dimension of matrix is just the linear vertex space
-            if(m_linSysKey.GetMatrixType() == StdRegions::ePreconLinearSpace)
+            if((m_linSysKey.GetMatrixType() == StdRegions::ePreconLinearSpace)
+               ||(m_linSysKey.GetMatrixType() == StdRegions::ePreconLinearSpaceMass))
             {
                 for (n = 0; n < nElmt; ++n)
                 {

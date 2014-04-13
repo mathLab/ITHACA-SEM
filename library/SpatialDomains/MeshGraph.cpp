@@ -1718,7 +1718,6 @@ namespace Nektar
                                                     AllocateSharedPtr(*x, def);
                                 int id = (*x)->GetGlobalID();
                                 (*expansionMap)[id] = expansionElementShPtr;
-                            
                             }
                         }
                     }
@@ -2103,6 +2102,43 @@ namespace Nektar
                             }
                         }
                         break;
+                        case LibUtilities::ePyramid:
+                        {
+                            k = fielddef[i]->m_elementIDs[j];
+                            ASSERTL0(m_pyrGeoms.find(k) != m_pyrGeoms.end(),
+                                    "Failed to find geometry with same global id");
+                            geom = m_pyrGeoms[k];
+
+                            for(int b = 0; b < 3; ++b)
+                            {
+                                LibUtilities::PointsKey pkey(nmodes[cnt+b],points[b]);
+
+                                if(numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(!numPointDef&&pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(nmodes[cnt+b]+1,points[b]);
+                                    pkey = pkey2;
+                                }
+                                else if(numPointDef&&!pointDef)
+                                {
+                                    const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
+                                    pkey = pkey2;
+                                }
+
+                                LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+                                bkeyvec.push_back(bkey);
+                            }
+
+                            if(!UniOrder)
+                            {
+                                cnt += 3;
+                            }
+                        }
+                        break;
                         case LibUtilities::eHexahedron:
                         {
                             k = fielddef[i]->m_elementIDs[j];
@@ -2300,6 +2336,26 @@ namespace Nektar
                         ASSERTL0(m_tetGeoms.find(k) != m_tetGeoms.end(),
                                 "Failed to find geometry with same global id");
                         geom = m_tetGeoms[k];
+
+                        for(int b = 0; b < 3; ++b)
+                        {
+                            const LibUtilities::PointsKey pkey(nmodes[cnt+b],pointstype[i][b]);
+                            LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+                            bkeyvec.push_back(bkey);
+                        }
+
+                        if(!UniOrder)
+                        {
+                            cnt += 2;
+                        }
+                    }
+                    break;
+                    case  LibUtilities::ePyramid:
+                    {
+                        k = fielddef[i]->m_elementIDs[j];
+                        ASSERTL0(m_pyrGeoms.find(k) != m_pyrGeoms.end(),
+                                "Failed to find geometry with same global id");
+                        geom = m_pyrGeoms[k];
 
                         for(int b = 0; b < 3; ++b)
                         {
@@ -2532,6 +2588,18 @@ namespace Nektar
                             const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
                             LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2);
                             returnval.push_back(bkey2);
+                        }
+                        break;
+                    case LibUtilities::ePyramid:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+
+                            const LibUtilities::PointsKey pkey1(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eModified_C, nummodes, pkey1);
+                            returnval.push_back(bkey1);
                         }
                         break;
                     case LibUtilities::ePrism:

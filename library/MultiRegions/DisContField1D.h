@@ -223,9 +223,10 @@ namespace Nektar
 			
             /// Evaluate all boundary conditions at a given time..
             virtual void v_EvaluateBoundaryConditions(
-                const NekDouble time = 0.0,
-                const NekDouble x2_in = NekConstants::kNekUnsetDouble,
-                const NekDouble x3_in = NekConstants::kNekUnsetDouble);
+                const NekDouble   time    = 0.0,
+                const std::string varName = "",
+                const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
+                const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
             
             /// Solve the Helmholtz equation.
             virtual void v_HelmSolve(

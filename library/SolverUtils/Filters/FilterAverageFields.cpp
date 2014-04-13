@@ -48,8 +48,7 @@ namespace Nektar
         {
             if (pParams.find("OutputFile") == pParams.end())
             {
-                string outname = m_session->GetSessionName() + "_avg.fld";
-                m_outputFile = outname;
+                m_outputFile = m_session->GetSessionName();
             }
             else
             {
@@ -57,12 +56,28 @@ namespace Nektar
                          "Missing parameter 'OutputFile'.");
                 m_outputFile = pParams.find("OutputFile")->second;
             }
-            ASSERTL0(pParams.find("OutputFrequency") != pParams.end(),
-                     "Missing parameter 'OutputFrequency'.");
-            m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
 
-            m_numAverages  = 0;
-            m_index = 0;
+            if(pParams.find("SampleFrequency") == pParams.end())
+            {
+                m_sampleFrequency = 1;
+            }
+            else
+            {
+                m_sampleFrequency = atoi(pParams.find("SampleFrequency")->second.c_str());
+            }
+
+            if(pParams.find("OutputFrequency") == pParams.end())
+            {
+                m_outputFrequency = m_session->GetParameter("NumSteps"); 
+            }
+            else
+            {
+                m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
+            }
+
+            m_numAverages = 0;
+            m_index       = 0;
+            m_outputIndex = 0;
             m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
 
         }
@@ -84,7 +99,7 @@ namespace Nektar
         void FilterAverageFields::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
             m_index++;
-            if (m_index % m_outputFrequency > 0)
+            if (m_index % m_sampleFrequency > 0)
             {
                 return;
             }
@@ -98,9 +113,20 @@ namespace Nektar
             m_numAverages += 1;
             // update FinalTime here since this is when last field will be added. 
             m_avgFieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);
+
+            if (m_index % m_outputFrequency == 0)
+            {
+                OutputAvgField(pFields,++m_outputIndex);
+            }
+            
         }
         
         void FilterAverageFields::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+        {
+            OutputAvgField(pFields);
+        }
+
+        void FilterAverageFields::OutputAvgField(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump)
         {
             for(int n = 0; n < m_avgFields.num_elements(); ++n)
             {
@@ -111,14 +137,12 @@ namespace Nektar
                 = pFields[0]->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
             
-
             Array<OneD, NekDouble>  fieldcoeffs;
             int ncoeffs = pFields[0]->GetNcoeffs();
             
             // copy Data into FieldData and set variable
             for(int j = 0; j < pFields.num_elements(); ++j)
-            {
-                
+            {                
                 // check to see if field is same order a zeroth field
                 if(m_avgFields[j].num_elements() == ncoeffs)
                 {
@@ -129,7 +153,7 @@ namespace Nektar
                     fieldcoeffs = Array<OneD,NekDouble>(ncoeffs);
                     pFields[0]->ExtractCoeffsToCoeffs(pFields[j],m_avgFields[j],fieldcoeffs);
                 }
-
+                
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     // Could do a search here to find correct variable
@@ -139,7 +163,27 @@ namespace Nektar
             }
 
             m_avgFieldMetaData["NumberOfFieldDumps"] = boost::lexical_cast<std::string>(m_numAverages);
-            m_fld->Write(m_outputFile,FieldDef,FieldData,m_avgFieldMetaData);
+
+            std::stringstream outname; 
+            if(dump == -1) // final dump
+            {
+                outname <<  m_outputFile << "_avg.fld";
+            }
+            else
+            {
+                outname << m_outputFile<< "_" << dump << "_avg.fld";
+            }
+            
+            m_fld->Write(outname.str(),FieldDef,FieldData,m_avgFieldMetaData);
+
+            if(dump != -1) // not final dump so rescale cummulative average
+            {
+                for(int n = 0; n < m_avgFields.num_elements(); ++n)
+                {
+                    Vmath::Smul(m_avgFields[n].num_elements(), (NekDouble) m_numAverages,
+                                m_avgFields[n],1,m_avgFields[n],1);
+                }
+            }
         }
 
         bool FilterAverageFields::v_IsTimeDependent()

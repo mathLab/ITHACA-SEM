@@ -289,6 +289,9 @@ namespace Nektar
             case LibUtilities::eTetrahedron: 
                 nNodes = Tetrahedron::  GetNumNodes(it->second);
                 break;
+            case LibUtilities::ePyramid:
+                nNodes = Pyramid::      GetNumNodes(it->second);
+                break;
             case LibUtilities::ePrism: 
                 nNodes = Prism::        GetNumNodes(it->second);
                 break;
@@ -325,6 +328,7 @@ namespace Nektar
             tmp[  4] = ElmtConfig(LibUtilities::eTetrahedron,    1,  true,  true);
             tmp[  5] = ElmtConfig(LibUtilities::eHexahedron,     1,  true,  true);
             tmp[  6] = ElmtConfig(LibUtilities::ePrism,          1,  true,  true);
+            tmp[  7] = ElmtConfig(LibUtilities::ePyramid,        1,  true,  true);
             tmp[  8] = ElmtConfig(LibUtilities::eSegment,        2,  true,  true);
             tmp[  9] = ElmtConfig(LibUtilities::eTriangle,       2,  true,  true);
             tmp[ 10] = ElmtConfig(LibUtilities::eQuadrilateral,  2,  true,  true);
@@ -375,11 +379,11 @@ namespace Nektar
             tmp[ 59] = ElmtConfig(LibUtilities::eQuadrilateral,  8, false, false);
             tmp[ 60] = ElmtConfig(LibUtilities::eQuadrilateral,  9, false, false);
             tmp[ 61] = ElmtConfig(LibUtilities::eQuadrilateral, 10, false, false);
-            tmp[ 62] = ElmtConfig(LibUtilities::eSegment,           6,  true, false);
-            tmp[ 63] = ElmtConfig(LibUtilities::eSegment,           7,  true, false);
-            tmp[ 64] = ElmtConfig(LibUtilities::eSegment,           8,  true, false);
-            tmp[ 65] = ElmtConfig(LibUtilities::eSegment,           9,  true, false);
-            tmp[ 66] = ElmtConfig(LibUtilities::eSegment,          10,  true, false);
+            tmp[ 62] = ElmtConfig(LibUtilities::eSegment,        6,  true, false);
+            tmp[ 63] = ElmtConfig(LibUtilities::eSegment,        7,  true, false);
+            tmp[ 64] = ElmtConfig(LibUtilities::eSegment,        8,  true, false);
+            tmp[ 65] = ElmtConfig(LibUtilities::eSegment,        9,  true, false);
+            tmp[ 66] = ElmtConfig(LibUtilities::eSegment,       10,  true, false);
             tmp[ 71] = ElmtConfig(LibUtilities::eTetrahedron,    6,  true,  true);
             tmp[ 72] = ElmtConfig(LibUtilities::eTetrahedron,    7,  true,  true);
             tmp[ 73] = ElmtConfig(LibUtilities::eTetrahedron,    8,  true,  true);
@@ -418,7 +422,7 @@ namespace Nektar
             tmp[115] = ElmtConfig(LibUtilities::ePrism,          7,  true, false);
             tmp[116] = ElmtConfig(LibUtilities::ePrism,          8,  true, false);
             tmp[117] = ElmtConfig(LibUtilities::ePrism,          9,  true, false);
-            
+
             return tmp;
         }
     }

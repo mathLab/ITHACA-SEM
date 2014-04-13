@@ -695,10 +695,10 @@ namespace Nektar
                 BoundaryConditionShPtr>& UpdateBndConditions();
 
             inline void EvaluateBoundaryConditions(
-                const NekDouble time = 0.0,
-                const NekDouble = NekConstants::kNekUnsetDouble,
-                const NekDouble = NekConstants::kNekUnsetDouble);
-
+                const NekDouble   time      = 0.0,
+                const std::string varName   = "",
+                const             NekDouble = NekConstants::kNekUnsetDouble,
+                const             NekDouble = NekConstants::kNekUnsetDouble);
 
             // Routines for continous matrix solution
             /// This function calculates the result of the multiplication of a
@@ -1252,7 +1252,11 @@ namespace Nektar
                 const NekDouble scale,
                 const Array<OneD, NekDouble> &inarray,
                       Array<OneD, NekDouble> &outarray);
-        
+
+            void ExtractFileBCs(const std::string                &fileName,
+                                const std::string                &varName,
+                                const boost::shared_ptr<ExpList>  locExpList);
+            
             // Utility function for a common case of retrieving a
             // BoundaryCondition from a boundary condition collection.
             MULTI_REGIONS_EXPORT
@@ -1268,9 +1272,10 @@ namespace Nektar
                 &v_UpdateBndConditions();
 
             virtual void v_EvaluateBoundaryConditions(
-                const NekDouble time = 0.0,
-                const NekDouble x2_in = NekConstants::kNekUnsetDouble,
-                const NekDouble x3_in = NekConstants::kNekUnsetDouble);
+                const NekDouble   time    = 0.0,
+                const std::string varName = "",
+                const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
+                const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
             
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
             
@@ -1988,11 +1993,13 @@ namespace Nektar
             return v_UpdateBndConditions();
         }
 
-        inline void ExpList::EvaluateBoundaryConditions(const NekDouble time,
-                                                        const NekDouble x2_in,
-                                                        const NekDouble x3_in)
+        inline void ExpList::EvaluateBoundaryConditions(
+            const NekDouble   time,
+            const std::string varName,
+            const NekDouble   x2_in,
+            const NekDouble   x3_in)
         {
-            v_EvaluateBoundaryConditions(time,x2_in,x3_in);
+            v_EvaluateBoundaryConditions(time, varName, x2_in, x3_in);
         }
 
         // Routines for continous matrix solution

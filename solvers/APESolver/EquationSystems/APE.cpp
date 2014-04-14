@@ -44,12 +44,17 @@ string APE::className = GetEquationSystemFactory().RegisterCreatorFunction(
             "APE", APE::create,
             "Acoustic perturbation equations in conservative variables.");
 
+
 APE::APE(
         const LibUtilities::SessionReaderSharedPtr& pSession)
     : UnsteadySystem(pSession)
 {
 }
 
+
+/**
+ * @brief Initialization object for the APE class.
+ */
 void APE::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
@@ -117,6 +122,10 @@ void APE::v_InitObject()
     }
 }
 
+
+/**
+ * @brief Destructor for APE class.
+ */
 APE::~APE()
 {
     
@@ -131,9 +140,11 @@ void APE::v_DoInitialise()
     SetInitialConditions();
 }
 
+
 /**
-     *
-     */
+ * @brief Compute the numerical flux through the element boundaries.
+ *
+ */
 void APE::v_NumericalFlux(
         Array<OneD, Array<OneD, NekDouble> > &physfield,
         Array<OneD, Array<OneD, NekDouble> > &numflux)
@@ -165,8 +176,8 @@ void APE::v_NumericalFlux(
 
 
 /**
-     *
-     */
+ *
+ */
 void APE::v_NumericalFlux(
         Array<OneD, Array<OneD, NekDouble> > &physfield,
         Array<OneD, Array<OneD, NekDouble> > &numfluxX,
@@ -177,8 +188,8 @@ void APE::v_NumericalFlux(
 
 
 /**
-     *
-     */
+ * @brief Compute the flux vectors.
+ */
 void APE::v_GetFluxVector(const int i, const int j,
                            Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &flux)
@@ -187,6 +198,9 @@ void APE::v_GetFluxVector(const int i, const int j,
 }
 
 
+/**
+ * @brief Compute the flux vectors.
+ */
 void APE::v_GetFluxVector(const int i,
                              Array<OneD, Array<OneD, NekDouble> > &physfield,
                              Array<OneD, Array<OneD, NekDouble> > &flux)
@@ -217,7 +231,7 @@ void APE::v_GetFluxVector(const int i,
 
             // add both terms
             Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[j], 1);
-    }
+        }
     }
     else
     {
@@ -248,6 +262,10 @@ void APE::v_GetFluxVector(const int i,
 
 }
 
+
+/**
+ * @brief Compute the right-hand side.
+ */
 void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                          Array<OneD,       Array<OneD, NekDouble> >&outarray,
                    const NekDouble time)
@@ -257,7 +275,7 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
     int nvariables = inarray.num_elements();
     int ncoeffs    = GetNcoeffs();
     int nq         = GetTotPoints();
-    
+
     switch(m_projectionType)
     {
         case MultiRegions::eDiscontinuous:
@@ -330,13 +348,13 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                 // Get the ith component of the  flux vector in (physical space)
                 APE::GetFluxVector(i, physarray, fluxvector);
 
-            Vmath::Zero(nq, outarray[i], 1);
-            for (int j = 0; j < ndim; ++j)
-            {
-                // Get the ith component of the  flux vector in (physical space)
-                m_fields[0]->PhysDeriv(j,fluxvector[j],tmp1);
-                Vmath::Vadd(nq, outarray[i], 1, tmp1, 1, outarray[i], 1);
-            }
+                Vmath::Zero(nq, outarray[i], 1);
+                for (int j = 0; j < ndim; ++j)
+                {
+                    // Get the ith component of the  flux vector in (physical space)
+                    m_fields[0]->PhysDeriv(j,fluxvector[j],tmp1);
+                    Vmath::Vadd(nq, outarray[i], 1, tmp1, 1, outarray[i], 1);
+                }
                 Vmath::Neg(nq,outarray[i],1);
             }
 
@@ -354,6 +372,10 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 }
 
 
+/**
+ * @brief Compute the projection and call the method for imposing the
+ * boundary conditions in case of discontinuous projection.
+ */
 void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                 Array<OneD,       Array<OneD, NekDouble> >&outarray,
                           const NekDouble time)
@@ -396,6 +418,10 @@ void APE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarr
     }
 }
 
+
+/**
+ * @brief Apply the Boundary Conditions to the APE equations.
+ */
 void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
                                 NekDouble time)
 {
@@ -424,6 +450,7 @@ void APE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
         cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
     }
 }
+
 
 /**
  * @brief Wall boundary conditions for the APE equations.
@@ -492,7 +519,10 @@ void APE::WallBC(int bcRegion, int cnt,
     }
 }
 
-// Add sourceterm for p' equation obtained from GetSource
+
+/**
+ * @brief sourceterm for p' equation obtained from GetSource
+ */
 void APE::AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray,
                     Array< OneD, Array< OneD, NekDouble > > &outarray)
 {
@@ -509,16 +539,28 @@ void APE::AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray,
 
 }
 
+
+/**
+ * @brief Get the normal vectors.
+ */
 const Array<OneD, const Array<OneD, NekDouble> > &APE::GetNormals()
 {
     return m_traceNormals;
 }
 
+
+/**
+ * @brief Get the locations of the components of the directed fields within the fields array.
+ */
 const Array<OneD, const Array<OneD, NekDouble> > &APE::GetVecLocs()
 {
     return m_vecLocs;
 }
 
+
+/**
+ * @brief Get the baseflow field.
+ */
 const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefield()
 {
     for (int i = 0; i < m_spacedim +1; i++)
@@ -528,17 +570,23 @@ const Array<OneD, const Array<OneD, NekDouble> > &APE::GetBasefield()
     return m_traceBasefield;
 }
 
+
+/**
+ * @brief Get the heat capacity ratio.
+ */
 NekDouble APE::GetGamma()
 {
     return m_gamma;
 }
 
+
+/**
+ * @brief Get the density.
+ */
 NekDouble APE::GetRho()
 {
     return m_Rho0;
 }
-
-
 
 } //end of namespace
 

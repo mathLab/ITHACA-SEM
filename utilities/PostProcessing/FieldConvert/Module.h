@@ -44,6 +44,7 @@
 #include <set>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <StdRegions/StdNodalTriExp.h>
 
 #include "Field.hpp"
 
@@ -148,6 +149,10 @@ namespace Nektar
             {
                 m_requireEquiSpaced = pVal;
             }
+
+            void EvaluateTriFieldAtEquiSpacedPts(LocalRegions::ExpansionSharedPtr &exp,
+                                         const Array<OneD, const NekDouble> &infield, 
+                                                 Array<OneD, NekDouble> &outfield);
 
         protected:
             /// Field object

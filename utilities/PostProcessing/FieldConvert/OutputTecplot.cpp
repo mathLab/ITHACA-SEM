@@ -150,7 +150,79 @@ namespace Nektar
         void OutputTecplot::WriteTecplotZone(std::ofstream &outfile, 
                                              int expansion)
         {
-            if(expansion == -1) //write as full block zone
+            if(expansion == -2) //write as full block on equispaced
+            {
+                int i,j;
+                int coordim   = m_f->m_exp[0]->GetCoordim(0);
+                int totpoints = m_f->m_exp[0]->GetTotPoints();
+
+                Array<OneD,NekDouble> coords[3];
+                
+                coords[0] = Array<OneD,NekDouble>(totpoints);
+                coords[1] = Array<OneD,NekDouble>(totpoints);
+                coords[2] = Array<OneD,NekDouble>(totpoints);
+                
+                m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
+
+                if (m_doError)
+                {
+                    NekDouble l2err; 
+                    std::string coordval[] = {"x","y","z"};
+                    int rank = m_f->m_session->GetComm()->GetRank();
+                    
+                    for(int i = 0; i < coordim; ++i)
+                    {
+                        l2err = m_f->m_exp[0]->L2(coords[i]);
+                        if(rank == 0)
+                        {
+                            cout << "L 2 error (variable "
+                                 << coordval[i]  << ") : " << l2err  << endl;
+                        }
+                    }
+                }
+                
+                int newtotpoints;
+                for(int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+                {
+                    switch(m_f->m_exp[0]->GetShapeType())
+                    {
+                    case LibUtilities::eTriangle:
+                        {
+                            int npoints0 = m_f->m_exp->GetExp(i)->GetBasis(0)->GetNumPoints();
+                            int npoints1 = m_f->m_exp->GetExp(i)->GetBasis(1)->GetNumPoints();
+                            
+                            newtotpoints += LibUtilities::StdTriData::GetNumberOfCoefficients(npoints0,npoints1);
+                        }
+                        break;
+                    case LibUtiltiies::eTetrahedron:
+                        ASSERTL0(false,"Needs defining");
+                        break;
+                    case LibUtiltiies::ePrism:
+                        ASSERTL0(false,"Needs defining");
+                        break;
+                    default:
+                        {
+                            newtotpoints += m_f->m_exp[0]->GetExp(i)->GetTotpoints();
+                        }
+                    }
+                }
+                
+                Array<OneD,NekDouble> newcoords[3];
+                
+                newcoords[0] = Array<OneD,NekDouble>(newtotpoints);
+                newcoords[1] = Array<OneD,NekDouble>(newtotpoints);
+                newcoords[2] = Array<OneD,NekDouble>(newtotpoints);
+                
+                for(int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+                {
+                    switch(m_f->m_exp[0]->GetShapeType())
+                    {
+                    case LibUtilities::eTriangle:
+                    }
+                }
+                
+            }
+            else if(expansion == -1) //write as full block zone on collapsed coords
             {
                 int i,j;
                 int coordim   = m_f->m_exp[0]->GetCoordim(0);

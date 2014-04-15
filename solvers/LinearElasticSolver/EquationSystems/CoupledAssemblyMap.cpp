@@ -179,9 +179,10 @@ namespace Nektar
             = fields[0]->GetBndCondExpansions();
 
         const int nLocalDirBndCoeffs = m_numLocalDirBndCoeffs / nVel;
+
         for (n = 0; n < nVel; ++n)
         {
-            const int offset = nVel * nGlobDirCoeffs;
+            const int offset = n * nLocalDirBndCoeffs;
 
             for (i = 0; i < nLocalDirBndCoeffs; ++i)
             {

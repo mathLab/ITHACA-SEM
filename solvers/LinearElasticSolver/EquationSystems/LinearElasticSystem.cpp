@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LinearElasticSolver/EquationSystems/LinearElasticSystem.h>
+#include <MultiRegions/ContField2D.h>
 
 namespace Nektar
 {
@@ -59,6 +60,12 @@ namespace Nektar
 
     void LinearElasticSystem::v_DoSolve()
     {
-        // zomg
+        MultiRegions::ContField2DSharedPtr u = boost::dynamic_pointer_cast<MultiRegions::ContField2D>(m_fields[0]);
+        m_assemblyMap = MemoryManager<CoupledAssemblyMap>
+            ::AllocateSharedPtr(m_session,
+                                m_graph,
+                                u->GetLocalToGlobalMap(),
+                                m_boundaryConditions,
+                                m_fields);
     }
 }

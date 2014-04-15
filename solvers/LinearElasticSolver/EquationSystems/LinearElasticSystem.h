@@ -66,6 +66,8 @@ namespace Nektar
         LinearElasticSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
+        CoupledAssemblyMapSharedPtr m_assemblyMap;
+
         virtual void v_InitObject();
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
         virtual void v_DoSolve();

@@ -1254,7 +1254,7 @@ namespace Nektar
                 {
                     // Number of points on the expansion
                     nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
                     
                     // Offset of the boundary expansion
                     id1 = fields[var]->
@@ -1415,7 +1415,7 @@ namespace Nektar
                 for (e = 0; e < nBndEdges ; ++e)
                 {
                     nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
                     
                     id1 = fields[var]->
                     GetBndCondExpansions()[i]->GetPhys_Offset(e);
@@ -1858,10 +1858,13 @@ namespace Nektar
                                        auxArray2 = fluxJumps, 1);
                     }
 
+                    NekDouble fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                    -1.0 : 1.0;
+
                     for (i = 0; i < nEdgePts; ++i)
                     {
-                        if (m_traceNormals[0][trace_offset+i] != normals[0][i] 
-                        || m_traceNormals[1][trace_offset+i] != normals[1][i])
+                        if (m_traceNormals[0][trace_offset+i] != fac*normals[0][i] 
+                        || m_traceNormals[1][trace_offset+i] != fac*normals[1][i])
                         {
                             fluxJumps[i] = -fluxJumps[i];
                         }

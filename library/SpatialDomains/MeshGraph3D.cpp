@@ -47,8 +47,9 @@ namespace Nektar
         {
         }
 
-        MeshGraph3D::MeshGraph3D(const LibUtilities::SessionReaderSharedPtr &pSession)
-            : MeshGraph(pSession)
+        MeshGraph3D::MeshGraph3D(const LibUtilities::SessionReaderSharedPtr &pSession, 
+                                 const DomainRangeShPtr &rng)
+            : MeshGraph(pSession,rng)
         {
             ReadGeometry(pSession->GetDocument());
             ReadExpansions(pSession->GetDocument());
@@ -843,7 +844,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(face);
+                            if(CheckRange(*face))
+                            {
+                                composite->push_back(face);
+                            }
                         }
                     }
                     break;
@@ -859,7 +863,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_triGeoms[*seqIter]);
+                            if(CheckRange(*m_triGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_triGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -875,7 +882,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_quadGeoms[*seqIter]);
+                            if(CheckRange(*m_quadGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_quadGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -892,7 +902,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_tetGeoms[*seqIter]);
+                            if(CheckRange(*m_tetGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_tetGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -909,7 +922,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_pyrGeoms[*seqIter]);
+                            if(CheckRange(*m_pyrGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_pyrGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -926,7 +942,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_prismGeoms[*seqIter]);
+                            if(CheckRange(*m_prismGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_prismGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -943,7 +962,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_hexGeoms[*seqIter]);
+                            if(CheckRange(*m_hexGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_hexGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;

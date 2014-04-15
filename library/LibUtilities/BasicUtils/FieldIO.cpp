@@ -58,6 +58,7 @@
 
 namespace ptime = boost::posix_time;
 namespace ip = boost::asio::ip;
+namespace berrc = boost::system::errc;
 
 namespace Nektar
 {
@@ -75,8 +76,21 @@ namespace Nektar
         {
 #ifdef NEKTAR_USE_MPI
             int size;
-            MPI_Comm_size( MPI_COMM_WORLD, &size );
-            ASSERTL0(size == 1, "This function is not available in parallel.");
+            int init;
+            MPI_Initialized(&init);
+
+            // If MPI has been initialised we can check the number of processes
+            // and, if > 1, tell the user he should not be running this
+            // function in parallel. If it is not initialised, we do not
+            // initialise it here, and assume the user knows what they are
+            // doing.
+            if (init)
+            {
+                MPI_Comm_size( MPI_COMM_WORLD, &size );
+                ASSERTL0(size == 1,
+                     "This static function is not available in parallel. Please"
+                     "instantiate a FieldIO object for parallel use.");
+            }
 #endif
             CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
             FieldIO f(c);
@@ -98,8 +112,21 @@ namespace Nektar
         {
 #ifdef NEKTAR_USE_MPI
             int size;
-            MPI_Comm_size( MPI_COMM_WORLD, &size );
-            ASSERTL0(size == 1, "This function is not available in parallel.");
+            int init;
+            MPI_Initialized(&init);
+
+            // If MPI has been initialised we can check the number of processes
+            // and, if > 1, tell the user he should not be running this
+            // function in parallel. If it is not initialised, we do not
+            // initialise it here, and assume the user knows what they are
+            // doing.
+            if (init)
+            {
+                MPI_Comm_size( MPI_COMM_WORLD, &size );
+                ASSERTL0(size == 1,
+                     "This static function is not available in parallel. Please"
+                     "instantiate a FieldIO object for parallel use.");
+            }
 #endif
             CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
             FieldIO f(c);
@@ -148,8 +175,6 @@ namespace Nektar
             TiXmlDocument doc;
             TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
             doc.LinkEndChild(decl);
-
-            cout << "Writing outfile: " << filename << endl;
 
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
@@ -397,7 +422,10 @@ namespace Nektar
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
-                        ImportFieldData(doc1, fielddefs, fielddata);
+                        if(fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
                     }
                     
                 }
@@ -417,10 +445,10 @@ namespace Nektar
                     
                     for(i = 0; i < ElementIDs.num_elements(); ++i)
                     {
-                        ASSERTL1(FileIDs.count(ElementIDs[i]) != 0,
-                                 "ElementIDs  not found in partitions");
-                        
-                        LoadFile.insert(FileIDs[ElementIDs[i]]);
+                        if(FileIDs.count(ElementIDs[i]))
+                        {
+                            LoadFile.insert(FileIDs[ElementIDs[i]]);
+                        }
                     }
                     
                     set<int>::iterator iter; 
@@ -439,7 +467,10 @@ namespace Nektar
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
-                        ImportFieldData(doc1, fielddefs, fielddata);
+                        if(fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
                     }
                 }
             }
@@ -458,7 +489,10 @@ namespace Nektar
                 
                 ImportFieldMetaData(doc,fieldmetadatamap);
                 ImportFieldDefs(doc, fielddefs, false);
-                ImportFieldData(doc, fielddefs, fielddata);
+                if(fielddata != NullVectorNekDoubleVector)
+                {
+                    ImportFieldData(doc, fielddefs, fielddata);
+                }
             }
         }
 
@@ -477,8 +511,6 @@ namespace Nektar
 
             ASSERTL0(fileNames.size() == elementList.size(),"Outfile names and list of elements ids does not match");
 
-            cout << "Writing multi-file data: " << outFile << endl;
-
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
 
@@ -486,20 +518,19 @@ namespace Nektar
 
             for (int t = 0; t < fileNames.size(); ++t)
             {
+                if(elementList[t].size())
+                {
+                    TiXmlElement * elemIDs = new TiXmlElement("Partition");
+                    root->LinkEndChild(elemIDs);
+                    
+                    elemIDs->SetAttribute("FileName",fileNames[t]);
+                    
+                    string IDstring;
+                    
+                    GenerateSeqString(elementList[t],IDstring);
 
-                ASSERTL1(elementList[t].size() > 0,
-                         "Element list must contain at least one value.");
-
-                TiXmlElement * elemIDs = new TiXmlElement("Partition");
-                root->LinkEndChild(elemIDs);
-
-                elemIDs->SetAttribute("FileName",fileNames[t]);
-
-                string IDstring;
-
-                GenerateSeqString(elementList[t],IDstring);
-
-                elemIDs->LinkEndChild(new TiXmlText(IDstring));
+                    elemIDs->LinkEndChild(new TiXmlText(IDstring));
+                }
             }
 
             doc.SaveFile(outFile);
@@ -1084,45 +1115,20 @@ namespace Nektar
             fs::path specPath (outname);
 
             // Remove any existing file which is in the way
-            int existCheck = fs::exists(specPath) ? 1 : 0;
-            m_comm->AllReduce(existCheck, ReduceMax);
-
-            if (existCheck)
+            try
             {
-                // First remove all files on the root process.
-                if (m_comm->GetRank() == 0)
-                {
-                    fs::remove_all(specPath);
-                }
-
-                m_comm->Block();
-
-                // Check to see if the files still exist on non-root processes.
-                int existCheck = rank > 0 && fs::exists(specPath) ? 1 : 0;
-                m_comm->AllReduce(existCheck, ReduceMax);
-
-                // If they do (i.e. a non-shared filesystem) then go through all
-                // other processors and try to perform removal there. Note this
-                // could be made quicker by the use of a per-node MPI
-                // communicator.
-                if (existCheck > 0)
-                {
-                    for (int i = 1; i < nprocs; ++i)
-                    {
-                        m_comm->Block();
-
-                        if (rank == i && fs::exists(specPath))
-                        {
-                            // Recursively remove directories
-                            fs::remove_all(specPath);
-                        }
-                    }
-                }
+                fs::remove_all(specPath);
+            }
+            catch (fs::filesystem_error& e)
+            {
+                ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                         "Filesystem error: " + string(e.what()));
             }
 
             // serial processing just add ending.
             if(nprocs == 1)
             {
+                cout << "Writing: " << specPath << endl;
                 return LibUtilities::PortablePath(specPath);
             }
 
@@ -1139,6 +1145,16 @@ namespace Nektar
                                             fielddefs[i]->m_elementIDs.end());
             }
             m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
+
+            // Create the destination directory
+            try
+            {
+                fs::create_directory(specPath);
+            }
+            catch (fs::filesystem_error& e)
+            {
+                ASSERTL0(false, "Filesystem error: " + string(e.what()));
+            }
 
             // Collate per-process element lists on root process to generate
             // the info file.
@@ -1164,11 +1180,11 @@ namespace Nektar
                     filenames.push_back(pad.str());
                 }
 
-                // Create the destination directory
-                fs::create_directory(specPath);
-
                 // Write the Info.xml file
-                string infofile = LibUtilities::PortablePath(specPath / fs::path("Info.xml"));
+                string infofile = LibUtilities::PortablePath(
+                                            specPath / fs::path("Info.xml"));
+
+                cout << "Writing: " << specPath << endl;
                 WriteMultiFldFileIDs(infofile, filenames, ElementIDs,
                                      fieldmetadatamap);
             }
@@ -1177,18 +1193,6 @@ namespace Nektar
                 // Send this process's ID list to the root process
                 m_comm->Send(0, idlist);
             }
-
-            // Ensure all processors are aligned for the write and ensure
-            // target directory has been created by the root process
-            m_comm->Block();
-
-            // Sit in a loop and make sure target directory has been created
-            int created = 0;
-            do
-            {
-                created = fs::is_directory(specPath) ? 1 : 0;
-                m_comm->AllReduce(created, ReduceMin);
-            } while (!created);
 
             // Pad rank to 8char filenames, e.g. P0000000.fld
             boost::format pad("P%1$07d.fld");
@@ -1324,7 +1328,12 @@ namespace Nektar
         int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
         {
             int i;
-            ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
+
+            if(fielddefs->m_elementIDs.size() == 0) // empty partition
+            {
+                return 0;
+            }
+            //ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
 
             unsigned int numbasis = 0;
 

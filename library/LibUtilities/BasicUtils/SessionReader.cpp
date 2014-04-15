@@ -179,6 +179,14 @@ namespace Nektar
 
             // Create communicator
             CreateComm(argc, argv);
+
+            // If running in parallel change the default global sys solution
+            // type.
+            if (m_comm->GetSize() > 1)
+            {
+                m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                    "IterativeStaticCond";
+            }
         }
 
 
@@ -214,6 +222,20 @@ namespace Nektar
             else
             {
                 m_comm = pComm;
+
+                if (m_comm->GetSize() > 1)
+                {
+                    m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                        "IterativeStaticCond";
+                }
+            }
+
+            // If running in parallel change the default global sys solution
+            // type.
+            if (m_comm->GetSize() > 1)
+            {
+                m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                    "IterativeStaticCond";
             }
         }
 
@@ -273,7 +295,7 @@ namespace Nektar
                                  "number of procs in Y-dir")
                 ("npz",          po::value<int>(),
                                  "number of procs in Z-dir")
-
+                ("part-info",    "Output partition information")
             ;
             
             CmdLineArgMap::const_iterator cmdIt;
@@ -1321,14 +1343,6 @@ namespace Nektar
                 }
 
                 m_comm = GetCommFactory().CreateInstance(vCommModule,argc,argv);
-
-                // If running in parallel change the default global sys solution
-                // type.
-                if (m_comm->GetSize() > 1)
-                {
-                    m_solverInfoDefaults["GLOBALSYSSOLN"] = 
-                        "IterativeStaticCond";
-                }
             }
         }
 
@@ -1359,6 +1373,11 @@ namespace Nektar
                         vPartitioner->WriteAllPartitions(vSession);
                         vPartitioner->GetCompositeOrdering(m_compOrder);
                         vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+
+                        if (DefinesCmdLineArgument("part-info"))
+                        {
+                            vPartitioner->PrintPartInfo(std::cout);
+                        }
                     }
                 }
                 else
@@ -1375,6 +1394,11 @@ namespace Nektar
                     vPartitioner->WriteLocalPartition(vSession);
                     vPartitioner->GetCompositeOrdering(m_compOrder);
                     vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+
+                    if (DefinesCmdLineArgument("part-info"))
+                    {
+                        vPartitioner->PrintPartInfo(std::cout);
+                    }
                 }
                 m_comm->Block();
 

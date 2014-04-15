@@ -138,7 +138,10 @@ namespace Nektar
             eFwdTrans,
             ePreconR,
             ePreconRT,
+            ePreconRMass,
+            ePreconRTMass,
             ePreconLinearSpace,
+            ePreconLinearSpaceMass,
             eInterpGauss,
             eGaussDG,
             SIZE_MatrixType

@@ -48,9 +48,9 @@ namespace Nektar
      * use in the linear elasticity solver.
      */
     CoupledAssemblyMap::CoupledAssemblyMap(
-        const LibUtilities::SessionReaderSharedPtr &pSession,
-        const SpatialDomains::MeshGraphSharedPtr &graph,
-        const MultiRegions::AssemblyMapCGSharedPtr &cgMap,
+        const LibUtilities::SessionReaderSharedPtr        &pSession,
+        const SpatialDomains::MeshGraphSharedPtr          &graph,
+        const MultiRegions::AssemblyMapCGSharedPtr        &cgMap,
         const SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
         const Array<OneD, MultiRegions::ExpListSharedPtr> &fields) :
         AssemblyMapCG(pSession)
@@ -58,29 +58,32 @@ namespace Nektar
         int nVel = fields[0]->GetCoordim(0);
 
         // Multi-level static condensation doesn't work yet.
-        ASSERTL0(m_solnType != eDirectMultiLevelStaticCond    &&
-                 m_solnType != eIterativeMultiLevelStaticCond &&
-                 m_solnType != eXxtMultiLevelStaticCond,
+        ASSERTL0(m_solnType != MultiRegions::eDirectMultiLevelStaticCond    &&
+                 m_solnType != MultiRegions::eIterativeMultiLevelStaticCond &&
+                 m_solnType != MultiRegions::eXxtMultiLevelStaticCond,
                  "Multi-level static condensation not supported.");
 
         // Copy various number of coefficient counts.
-        m_numLocalDirBndCoeffs      = cgMap->m_numLocalDirBndCoeffs  * nVel;
-        m_numLocalBndCoeffs         = cgMap->m_numLocalBndCoeffs     * nVel;
-        m_numLocalCoeffs            = cgMap->m_numLocalCoeffs        * nVel;
-        m_numGlobalDirBndCoeffs     = cgMap->m_numGlobalDirBndCoeffs * nVel;
-        m_signChange                = cgMap->m_signChange;
-        m_systemSingular            = cgMap->m_systemSingular;
+        m_numLocalDirBndCoeffs      = cgMap->GetNumLocalDirBndCoeffs()  * nVel;
+        m_numLocalBndCoeffs         = cgMap->GetNumLocalBndCoeffs()     * nVel;
+        m_numLocalCoeffs            = cgMap->GetNumLocalCoeffs()        * nVel;
+        m_numGlobalDirBndCoeffs     = cgMap->GetNumGlobalDirBndCoeffs() * nVel;
+        m_signChange                = cgMap->GetSignChange();
+        m_systemSingular            = cgMap->GetSingularSystem();
 
         // Copy static condensation information
-        m_staticCondLevel           = cgMap->m_staticCondLevel;
-        m_numPatches                = cgMap->m_numPatches;
-        m_numLocalBndCoeffsPerPatch = cgMap->m_numLocalBndCoeffsPerPatch;
-        m_numLocalIntCoeffsPerPatch = cgMap->m_numLocalIntCoeffsPerPatch;
+        m_staticCondLevel           = cgMap->GetStaticCondLevel();
+        m_numPatches                = cgMap->GetNumPatches();
+        m_numLocalBndCoeffsPerPatch = cgMap->GetNumLocalBndCoeffsPerPatch();
+        m_numLocalIntCoeffsPerPatch = cgMap->GetNumLocalIntCoeffsPerPatch();
 
         // Set up local to global and boundary condition maps.
         const int nLocBndCondDofs = cgMap->
-            m_bndCondCoeffsToGlobalCoeffsMap.num_elements() * nVel;
+            GetBndCondCoeffsToGlobalCoeffsMap().num_elements() * nVel;
 
+        ASSERTL0(nLocBndCondDofs == m_numLocalDirBndCoeffs,
+                 "Only Dirichlet boundary conditions are supported");
+        
         m_localToGlobalMap               =
             Array<OneD, int>(m_numLocalCoeffs,-1);
         m_localToGlobalBndMap            =
@@ -104,11 +107,11 @@ namespace Nektar
             m_bndCondCoeffsToGlobalCoeffsSign = NullNekDouble1DArray;
         }
 
-        const int nGlobBndCoeffs = cgMap->m_numGlobalBndCoeffs;
-        const int nGlobDirCoeffs = cgMap->m_numGlobalDirBndCoeffs;
+        const int nGlobBndCoeffs = m_numGlobalBndCoeffs    / nVel;
+        const int nGlobDirCoeffs = m_numGlobalDirBndCoeffs / nVel;
 
         // Set up local to global boundary mapping.
-        const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
+        const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
         int i, j, n, cnt1, cnt2;
 
         cnt1 = 0;
@@ -120,7 +123,7 @@ namespace Nektar
                 const int nBndCoeffs = locExpVector[i]->NumBndryCoeffs();
                 for (j = 0; j < nBndCoeffs; ++j, ++cnt1, ++cnt2)
                 {
-                    const int l2g = cgMap->m_localToGlobalBndMap[cnt2];
+                    const int l2g = cgMap->GetLocalToGlobalBndMap()[cnt2];
 
                     if (l2g < nGlobDirCoeffs)
                     {
@@ -135,20 +138,21 @@ namespace Nektar
                     if (m_signChange)
                     {
                         m_localToGlobalSign[cnt1] =
-                            cgMap->m_localToGlobalBndSign[cnt2];
+                            cgMap->GetLocalToGlobalBndSign()[cnt2];
                     }
                 }
             }
         }
 
         // Set up local to global mapping
-        const int nLocalCoeffs = cgMap->m_numLocalCoeffs;
+        const int nLocalCoeffs    = m_numLocalCoeffs    / nVel;
+        const int nLocalBndCoeffs = m_numLocalBndCoeffs / nVel;
         int globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
 
         for (n = 0; n < nVel; ++n)
         {
             const int off1 = n * nLocalCoeffs;
-            const int off2 = n * cgMap->m_numLocalBndCoeffs;
+            const int off2 = n * nLocalBndCoeffs;
             cnt1 = 0;
 
             for (i = 0; i < nLocalCoeffs; ++i)
@@ -169,8 +173,28 @@ namespace Nektar
             }
         }
 
-        // Set up boundary condition mapping
-        
+        // Set up boundary condition mapping: this is straightforward since we
+        // only consider Dirichlet boundary conditions.
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
+            = fields[0]->GetBndCondExpansions();
+
+        const int nLocalDirBndCoeffs = m_numLocalDirBndCoeffs / nVel;
+        for (n = 0; n < nVel; ++n)
+        {
+            const int offset = nVel * nGlobDirCoeffs;
+
+            for (i = 0; i < nLocalDirBndCoeffs; ++i)
+            {
+                m_bndCondCoeffsToGlobalCoeffsMap[offset+i] =
+                    cgMap->GetBndCondCoeffsToGlobalCoeffsMap()[i];
+
+                if (m_signChange)
+                {
+                    m_bndCondCoeffsToGlobalCoeffsSign[offset+i] =
+                        cgMap->GetBndCondCoeffsToGlobalCoeffsSign(i);
+                }
+            }
+        }
         
         m_hash = boost::hash_range(
             m_localToGlobalMap.begin(), m_localToGlobalMap.end());

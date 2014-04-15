@@ -46,10 +46,10 @@ namespace Nektar
     {
     public:
         CoupledAssemblyMap(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const SpatialDomains::MeshGraphSharedPtr &graph,
-            const MultiRegions::AssemblyMapCGSharedPtr &map,
-            const SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+            const LibUtilities::SessionReaderSharedPtr        &pSession,
+            const SpatialDomains::MeshGraphSharedPtr          &graph,
+            const MultiRegions::AssemblyMapCGSharedPtr        &cgMap,
+            const SpatialDomains::BoundaryConditionsSharedPtr &boundConds,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
     };
 

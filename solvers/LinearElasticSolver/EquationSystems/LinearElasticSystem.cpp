@@ -43,19 +43,13 @@ namespace Nektar
 
     LinearElasticSystem::LinearElasticSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession)
-        : EquationSystem(pSession),
-          m_factors()
+        : EquationSystem(pSession)
     {
     }
 
     void LinearElasticSystem::v_InitObject()
     {
         EquationSystem::v_InitObject();
-    }
-
-    LinearElasticSystem::~LinearElasticSystem()
-    {
-
     }
 
     void LinearElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)

@@ -47,7 +47,7 @@ namespace Nektar
     {
     public:
         /// Class may only be instantiated through the MemoryManager.
-        friend class MemoryManager<Laplace>;
+        friend class MemoryManager<LinearElasticSystem>;
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(

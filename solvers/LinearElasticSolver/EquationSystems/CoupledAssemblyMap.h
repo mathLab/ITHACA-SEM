@@ -55,7 +55,7 @@ namespace Nektar
             const bool CheeckForSingularSys=true);
     };
 
-    typedef boost::shared_ptr<CoupledLocalToGlobalC0ContMap> CoupledLocalToGlobalC0ContMapSharedPtr;
+    typedef boost::shared_ptr<CoupledAssemblyMap> CoupledAssemblyMapSharedPtr;
 }
 
 #endif

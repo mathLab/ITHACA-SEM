@@ -42,17 +42,15 @@
 
 namespace Nektar
 {
-    class CoupledAssemblyMap : public MultiRegions::AssemblyMapCG2D
+    class CoupledAssemblyMap : public MultiRegions::AssemblyMapCG
     {
     public:
         CoupledAssemblyMap(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::MeshGraphSharedPtr &graph,
+            const MultiRegions::AssemblyMapCGSharedPtr &map,
             const SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const MultiRegions::ExpListSharedPtr &pressure,
-            const int nz_loc,
-            const bool CheeckForSingularSys=true);
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
     };
 
     typedef boost::shared_ptr<CoupledAssemblyMap> CoupledAssemblyMapSharedPtr;

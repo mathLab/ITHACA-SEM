@@ -41,6 +41,8 @@
 #include <LocalRegions/Expansion2D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
+#include <iomanip>
+
 namespace Nektar
 {    
     /** 
@@ -124,8 +126,26 @@ namespace Nektar
             for (i = 0; i < locExpVector.size(); ++i)
             {
                 const int nBndCoeffs = locExpVector[i]->NumBndryCoeffs();
-                for (j = 0; j < nBndCoeffs; ++j, ++cnt1, ++cnt2)
+                const int nCoeffs    = locExpVector[i]->GetNcoeffs();
+
+                // Construct a set of boundary coefficients so that we only fill
+                // the local to global boundary map, and not full map.
+                Array<OneD, unsigned int> bmap(nBndCoeffs);
+                locExpVector[i]->GetBoundaryMap(bmap);
+                set<unsigned int> bcoeffs;
+
+                for (j = 0; j < nBndCoeffs; ++j)
                 {
+                    bcoeffs.insert(bmap[j]);
+                }
+
+                for (j = 0; j < nCoeffs; ++j, ++cnt1)
+                {
+                    if (bcoeffs.count(j) == 0)
+                    {
+                        continue;
+                    }
+
                     const int l2g = cgMap->GetLocalToGlobalBndMap()[cnt2];
 
                     if (l2g < nGlobDirCoeffs)
@@ -143,6 +163,8 @@ namespace Nektar
                         m_localToGlobalSign[cnt1] =
                             cgMap->GetLocalToGlobalBndSign()[cnt2];
                     }
+
+                    ++cnt2;
                 }
             }
         }
@@ -174,6 +196,20 @@ namespace Nektar
                 }
             }
         }
+
+#if 0
+        cout << "LOCAL TO GLOBAL BND MAP:" << endl;
+        for (n = 0; n < cgMap->GetNumLocalBndCoeffs(); ++n)
+        {
+            cout << setw(4) << n << setw(4) << cgMap->GetLocalToGlobalBndMap(n) << endl;
+        }
+
+        cout << "COUPLED LOCAL TO GLOBAL BND MAP:" << endl;
+        for (n = 0; n < m_numLocalBndCoeffs; ++n)
+        {
+            cout << setw(4) << n << setw(4) << m_localToGlobalBndMap[n] << endl;
+        }
+#endif
 
         // Set up boundary condition mapping: this is straightforward since we
         // only consider Dirichlet boundary conditions.

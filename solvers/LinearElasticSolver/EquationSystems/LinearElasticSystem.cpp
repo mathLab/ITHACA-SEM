@@ -62,7 +62,7 @@ namespace Nektar
 
     void LinearElasticSystem::v_DoSolve()
     {
-        int i, j, n;
+        int i, j, n, nv;
         const int nVel = m_fields[0]->GetCoordim(0);
 
         MultiRegions::ContField2DSharedPtr u = boost::dynamic_pointer_cast<
@@ -81,16 +81,18 @@ namespace Nektar
         const int nEl = m_fields[0]->GetExpSize();
         LocalRegions::ExpansionSharedPtr exp;
 
-        // Set up linear matrix problem.
+        Array<OneD,unsigned int> sizeBnd(nVel * nEl);
+        Array<OneD,unsigned int> sizeInt(nVel * nEl);
 
-        Array<OneD,unsigned int> sizeBnd(nEl);
-        Array<OneD,unsigned int> sizeInt(nEl);
-
-        for (n = 0; n < nEl; ++n)
+        int cnt = 0;
+        for (nv = 0; nv < nVel; ++nv)
         {
-            exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
-            sizeBnd[n] = nVel * exp->NumBndryCoeffs();
-            sizeInt[n] = nVel * exp->GetNcoeffs() - sizeBnd[n];
+            for (n = 0; n < nEl; ++n, ++cnt)
+            {
+                exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
+                sizeBnd[cnt] = exp->NumBndryCoeffs();
+                sizeInt[cnt] = exp->GetNcoeffs() - sizeBnd[cnt];
+            }
         }
 
         // Create block matrices.
@@ -108,84 +110,33 @@ namespace Nektar
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 1.0;
 
-        for (n = 0; n < nEl; ++n)
+        for (nv = cnt = 0; nv < nVel; ++nv)
         {
-            exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
-
-            LocalRegions::MatrixKey matkey(StdRegions::eHelmholtz,
-                                           exp->DetShapeType(),
-                                           *exp, factors);
-
-            const int nB   = exp->NumBndryCoeffs();
-            const int nI   = exp->GetNcoeffs() - nB;
-            const int nBnd = exp->NumBndryCoeffs() * nVel;
-            const int nInt = exp->GetNcoeffs() * nVel - nBnd;
-
-            // As a test, set up a Helmholtz matrix for each element.
-            DNekScalBlkMatSharedPtr loc_mat =
-                exp->GetLocStaticCondMatrix(matkey);
-            DNekMatSharedPtr        schurCompl =
-                MemoryManager<DNekMat>::AllocateSharedPtr(nBnd, nBnd, 0.0, s);
-            DNekMatSharedPtr        BinvD =
-                MemoryManager<DNekMat>::AllocateSharedPtr(nBnd, nInt, 0.0, s);
-            DNekMatSharedPtr        C =
-                MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nBnd, 0.0, s);
-            DNekMatSharedPtr        Dinv =
-                MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nInt, 0.0, s);
-
-            // Copy matrix parts into the correct location.
-            DNekScalMatSharedPtr tmp_mat = loc_mat->GetBlock(0,0);
-            for (i = 0; i < nB; ++i)
+            for (n = 0; n < nEl; ++n, ++cnt)
             {
-                for (j = 0; j < nB; ++j)
-                {
-                    (*schurCompl)(i,   j   ) = (*loc_mat)(i,j);
-                    (*schurCompl)(i+nB,j+nB) = (*loc_mat)(i,j);
-                }
-            }
+                exp = m_fields[nv]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
 
-            tmp_mat = loc_mat->GetBlock(0,1);
-            for (i = 0; i < nB; ++i)
-            {
-                for (j = 0; j < nI; ++j)
-                {
-                    (*BinvD)(i,   j   ) = (*loc_mat)(i,j);
-                    (*BinvD)(i+nB,j+nI) = (*loc_mat)(i,j);
-                }
-            }
+                LocalRegions::MatrixKey matkey(StdRegions::eHelmholtz,
+                                               exp->DetShapeType(),
+                                               *exp, factors);
 
-            tmp_mat = loc_mat->GetBlock(1,0);
-            for (i = 0; i < nI; ++i)
-            {
-                for (j = 0; j < nB; ++j)
-                {
-                    (*C)(i,   j   ) = (*loc_mat)(i,j);
-                    (*C)(i+nI,j+nB) = (*loc_mat)(i,j);
-                }
-            }
+                //const int nB = exp->NumBndryCoeffs();
+                //const int nI = exp->GetNcoeffs() - nB;
 
-            tmp_mat = loc_mat->GetBlock(1,1);
-            for (i = 0; i < nI; ++i)
-            {
-                for (j = 0; j < nI; ++j)
-                {
-                    (*Dinv)(i,   j   ) = (*loc_mat)(i,j);
-                    (*Dinv)(i+nI,j+nI) = (*loc_mat)(i,j);
-                }
-            }
+                // As a test, set up a Helmholtz matrix for each element.
+                DNekScalMatSharedPtr tmp_mat;
+                DNekScalBlkMatSharedPtr loc_mat =
+                    exp->GetLocStaticCondMatrix(matkey);
 
-            m_schurCompl->SetBlock(
-                n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                    1.0, schurCompl));
-            m_BinvD     ->SetBlock(
-                n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                    1.0, BinvD));
-            m_C         ->SetBlock(
-                n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                    1.0, C));
-            m_Dinv      ->SetBlock(
-                n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                    1.0, Dinv));
+                m_schurCompl->SetBlock(
+                    cnt, cnt, tmp_mat = loc_mat->GetBlock(0,0));
+                m_BinvD     ->SetBlock(
+                    cnt, cnt, tmp_mat = loc_mat->GetBlock(0,1));
+                m_C         ->SetBlock(
+                    cnt, cnt, tmp_mat = loc_mat->GetBlock(1,0));
+                m_Dinv      ->SetBlock(
+                    cnt, cnt, tmp_mat = loc_mat->GetBlock(1,1));
+            }
         }
 
         // Now we've got the matrix system set up, create a GlobalLinSys object.
@@ -195,35 +146,36 @@ namespace Nektar
             MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(
                 key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv, m_assemblyMap);
 
-        Array<OneD, Array<OneD, NekDouble> > forcing(nVel);
-        Array<OneD, Array<OneD, NekDouble> > coeffs (nVel);
-        Array<OneD, Array<OneD, NekDouble> > dir    (nVel);
-        EvaluateFunction(forcing, "Forcing");
-
+        const int nCoeffs = m_fields[0]->GetNcoeffs();
         const int nGlobDofs = boost::dynamic_pointer_cast<
             MultiRegions::ContField2D>(m_fields[0])->GetLocalToGlobalMap()
                                                    ->GetNumGlobalCoeffs();
 
-        for (int nv = 0; nv < nVel; ++nv)
+        Array<OneD, Array<OneD, NekDouble> > forcing(nVel*nCoeffs);
+        EvaluateFunction(forcing, "Forcing");
+
+        Array<OneD, NekDouble> forCoeffs(nVel * nCoeffs);
+        Array<OneD, NekDouble> inout(nVel * nGlobDofs, 0.0);
+        Array<OneD, NekDouble> rhs  (nVel * nGlobDofs, 0.0);
+
+        for (nv = 0; nv < nVel; ++nv)
         {
             MultiRegions::ContField2DSharedPtr field = boost
                 ::dynamic_pointer_cast<MultiRegions::ContField2D>(m_fields[nv]);
 
-            coeffs[nv] = Array<OneD, NekDouble>(nGlobDofs, 0.0);
-            dir   [nv] = Array<OneD, NekDouble>(nGlobDofs, 0.0);
-
             // Inner product of forcing
-            field->IProductWRTBase(
-                forcing[nv], coeffs[nv], MultiRegions::eGlobal);
+            Array<OneD, NekDouble> tmp(nCoeffs, forCoeffs + nv*nCoeffs);
+            field->IProductWRTBase(forcing[nv], tmp, MultiRegions::eLocal);
 
             // Impose Dirichlet boundary conditions
+            /*
             const Array<OneD,const MultiRegions::ExpListSharedPtr> &bndCondExp =
                 field->GetBndCondExpansions();
             const Array<OneD,const int> &bndMap =
-                field->GetLocalToGlobalMap()
-                     ->GetBndCondCoeffsToGlobalCoeffsMap();
+                m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsMap();
 
-            int bndcnt = 0;
+            int bndcnt = nv * m_assemblyMap->GetNumLocalDirBndCoeffs();
+
             for (i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 const Array<OneD,const NekDouble> &bndCoeffs = 
@@ -231,34 +183,27 @@ namespace Nektar
 
                 for (j = 0; j < bndCondExp[i]->GetNcoeffs(); ++j)
                 {
-                    NekDouble sign = field->GetLocalToGlobalMap()
-                                          ->GetBndCondCoeffsToGlobalCoeffsSign(
-                                              bndcnt);
-                    dir[nv][bndMap[bndcnt++]] = sign * bndCoeffs[j];
+                    NekDouble sign =
+                        m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsSign(
+                            bndcnt);
+                    inout[bndMap[bndcnt++]] = sign * bndCoeffs[j];
                 }
-            }
+                }*/
         }
 
-        Array<OneD, NekDouble> inout(nVel * nGlobDofs, 0.0);
-        Array<OneD, NekDouble> rhs  (nVel * nGlobDofs, 0.0);
+        m_assemblyMap->Assemble(forCoeffs, rhs);
 
-        for (int nv = 0; nv < nVel; ++nv)
-        {
-            Vmath::Vcopy(nGlobDofs, &coeffs[nv]         [0], 1,
-                                    &rhs   [nv * nGlobDofs], 1);
-            Vmath::Vcopy(nGlobDofs, &dir   [nv]         [0], 1,
-                                    &inout [nv * nGlobDofs], 1);
-        }
+        // Negate RHS to be consistent with matrix definition
+        Vmath::Neg(nVel * nGlobDofs, rhs, 1);
 
         // Solve
         linSys->Solve(rhs, inout, m_assemblyMap);
 
-        const int nCoeffs = m_fields[0]->GetNcoeffs();
         Array<OneD, NekDouble> tmp(nVel * nCoeffs);
 
         // Backward transform
         m_assemblyMap->GlobalToLocal(inout, tmp);
-        for (int nv = 0; nv < nVel; ++nv)
+        for (nv = 0; nv < nVel; ++nv)
         {
             Vmath::Vcopy(nCoeffs, &tmp[nv * nCoeffs], 1, &m_fields[nv]->UpdateCoeffs()[0], 1);
             m_fields[nv]->BwdTrans(m_fields[nv]->GetCoeffs(), m_fields[nv]->UpdatePhys());

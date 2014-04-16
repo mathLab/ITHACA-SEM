@@ -67,7 +67,9 @@ namespace Nektar
         m_numLocalDirBndCoeffs      = cgMap->GetNumLocalDirBndCoeffs()  * nVel;
         m_numLocalBndCoeffs         = cgMap->GetNumLocalBndCoeffs()     * nVel;
         m_numLocalCoeffs            = cgMap->GetNumLocalCoeffs()        * nVel;
+        m_numGlobalBndCoeffs        = cgMap->GetNumGlobalBndCoeffs()    * nVel;
         m_numGlobalDirBndCoeffs     = cgMap->GetNumGlobalDirBndCoeffs() * nVel;
+        m_numGlobalCoeffs           = cgMap->GetNumGlobalCoeffs()       * nVel;
         m_signChange                = cgMap->GetSignChange();
         m_systemSingular            = cgMap->GetSingularSystem();
 
@@ -107,8 +109,9 @@ namespace Nektar
             m_bndCondCoeffsToGlobalCoeffsSign = NullNekDouble1DArray;
         }
 
-        const int nGlobBndCoeffs = m_numGlobalBndCoeffs    / nVel;
-        const int nGlobDirCoeffs = m_numGlobalDirBndCoeffs / nVel;
+        const int nGlobBndCoeffs = cgMap->GetNumGlobalBndCoeffs();
+        const int nGlobDirCoeffs = cgMap->GetNumGlobalDirBndCoeffs();
+        const int nNonDirBndCoeffs = nGlobBndCoeffs - nGlobDirCoeffs;
 
         // Set up local to global boundary mapping.
         const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
@@ -132,7 +135,7 @@ namespace Nektar
                     else
                     {
                         m_localToGlobalMap[cnt1] =
-                            nVel * nGlobDirCoeffs + n * nGlobBndCoeffs + l2g;
+                            (nVel-1) * nGlobDirCoeffs + n * nNonDirBndCoeffs + l2g;
                     }
 
                     if (m_signChange)
@@ -149,11 +152,10 @@ namespace Nektar
         const int nLocalBndCoeffs = m_numLocalBndCoeffs / nVel;
         int globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
 
+        cnt1 = 0;
         for (n = 0; n < nVel; ++n)
         {
             const int off1 = n * nLocalCoeffs;
-            const int off2 = n * nLocalBndCoeffs;
-            cnt1 = 0;
 
             for (i = 0; i < nLocalCoeffs; ++i)
             {
@@ -165,7 +167,7 @@ namespace Nektar
                 {
                     if (m_signChange)
                     {
-                        m_localToGlobalBndSign[off2+cnt1] =
+                        m_localToGlobalBndSign[cnt1] =
                             m_localToGlobalSign[off1+i];
                     }
                     m_localToGlobalBndMap[cnt1++] = m_localToGlobalMap[off1+i];

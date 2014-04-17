@@ -227,6 +227,9 @@ namespace Nektar
             /// Returns the value of the specified solver info property.
             LIB_UTILITIES_EXPORT const std::string& GetSolverInfo(
                 const std::string &pProperty) const;
+            /// Sets the value of the specified solver info property.
+            LIB_UTILITIES_EXPORT void SetSolverInfo(
+                const std::string &pProperty, const std::string &pValue);
             /// Returns the value of the specified solver info property as enum
             template<typename T>
             inline const T GetSolverInfoAsEnum(const std::string &pName) const;

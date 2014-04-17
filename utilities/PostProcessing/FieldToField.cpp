@@ -279,8 +279,8 @@ int main(int argc, char *argv[])
         else if (expdim == 3)
         {
             NekDouble clamp_up, clamp_low;
-            vSession->LoadParameter("ClampToUpperValue", clamp_up,   10000);
-            vSession->LoadParameter("ClampToLowerValue", clamp_low, -10000);
+            vSession->LoadParameter("ClampToUpperValue", clamp_up,   10000000);
+            vSession->LoadParameter("ClampToLowerValue", clamp_low, -10000000);
             InterpolateField(fields, outfield, x1, y1, z1, clamp_low, clamp_up);
         }
         cout << "]" << endl;

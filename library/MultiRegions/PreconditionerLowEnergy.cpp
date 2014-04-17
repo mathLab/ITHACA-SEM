@@ -1704,58 +1704,62 @@ namespace Nektar
                 }
             }
 
+            StdRegions::MatrixType PreconR,PreconRT;
+
+            if(m_linSysKey.GetMatrixType() == StdRegions::eMass)
+            {
+                PreconR  = StdRegions::ePreconRMass;
+                PreconRT = StdRegions::ePreconRTMass;
+            }
+            else
+            {
+                PreconR  = StdRegions::ePreconR;
+                PreconRT = StdRegions::ePreconRT;
+            }
+            
+
+
             /*
              * Matrix keys - for each element type there are two matrix keys
              * corresponding to the transformation matrix R and its transpose
              */
 
+
             //Matrix keys for tetrahedral element transformation matrix
             LocalRegions::MatrixKey TetR
-                (StdRegions::ePreconR,
-                 LibUtilities::eTetrahedron,
-                 *TetExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconR, LibUtilities::eTetrahedron,
+                 *TetExp, m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for tetrahedral transposed transformation matrix
             LocalRegions::MatrixKey TetRT
-                (StdRegions::ePreconRT,
-                 LibUtilities::eTetrahedron,
-                 *TetExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconRT, LibUtilities::eTetrahedron,
+                 *TetExp,  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for prismatic element transformation matrix
             LocalRegions::MatrixKey PrismR
-                (StdRegions::ePreconR,
-                 LibUtilities::ePrism,
-                 *PrismExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconR,   LibUtilities::ePrism,
+                 *PrismExp, m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for prismatic element transposed transformation matrix
             LocalRegions::MatrixKey PrismRT
-                (StdRegions::ePreconRT,
-                 LibUtilities::ePrism,
-                 *PrismExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconRT,  LibUtilities::ePrism,
+                 *PrismExp, m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for hexahedral element transformation matrix
             LocalRegions::MatrixKey HexR
-                (StdRegions::ePreconR,
-                 LibUtilities::eHexahedron,
-                 *HexExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconR, LibUtilities::eHexahedron,
+                 *HexExp, m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for hexahedral element transposed transformation
             //matrix
             LocalRegions::MatrixKey HexRT
-                (StdRegions::ePreconRT,
-                 LibUtilities::eHexahedron,
-                 *HexExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconRT, LibUtilities::eHexahedron,
+                 *HexExp,  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             /*

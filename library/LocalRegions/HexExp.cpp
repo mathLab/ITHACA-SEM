@@ -1730,6 +1730,17 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
                 }
                 break;
+            case StdRegions::ePreconLinearSpaceMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
             case StdRegions::ePreconR:
                 {
                     NekDouble one = 1.0;
@@ -1749,6 +1760,32 @@ namespace Nektar
                     MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
                     DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,RT);
+                }
+                break;
+            case StdRegions::ePreconRMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRTMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
 
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
@@ -1958,12 +1995,9 @@ namespace Nektar
             // outarray = m = (D_xi1 * B)^T * k
             // wsp1     = n = (D_xi2 * B)^T * l
             IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp3,outarray,wsp0,false,true,true);
-            IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp4,wsp1,    wsp0,true,false,true);
+            IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp4,wsp2,    wsp0,true,false,true);
+            Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
             IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp5,wsp2,    wsp0,true,true,false);
-
-            // outarray = outarray + wsp1
-            //          = L * u_hat
-            Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
 
@@ -1977,7 +2011,7 @@ namespace Nektar
 
             const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
             const unsigned int nqtot = GetTotPoints();
-            const unsigned int dim = 2;
+            const unsigned int dim = 3;
             const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
                                        {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
                                        {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
@@ -1988,8 +2022,8 @@ namespace Nektar
                 for (unsigned int j = i; j < dim; ++j)
                 {
                     m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
-                    const Array<TwoD, const NekDouble> gmat =
-                                        m_metricinfo->GetGmat(GetPointsKeys());
+                    const Array<TwoD, const NekDouble> &gmat =
+                                 m_metricinfo->GetGmat(GetPointsKeys());
                     if (type == SpatialDomains::eDeformed)
                     {
                         Vmath::Vcopy(nqtot, &gmat[i*dim+j][0], 1,

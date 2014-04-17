@@ -2371,7 +2371,8 @@
                 // Transforming back to modified basis
                 Array<OneD, NekDouble> work(nq_elmt);
                 ppExp->BwdTrans(out.GetPtr(), work);
-                (*m_exp)[eid]->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[eid]);
+                (*m_exp)[eid]->FwdTrans(work,
+                                tmp_coeffs = outarray + m_coeff_offset[eid]);
             }
         }
 

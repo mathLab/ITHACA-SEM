@@ -66,9 +66,9 @@ void APEUpwindSolver::v_Solve(
               Array<OneD,       Array<OneD, NekDouble> > &flux)
 {
 
-    ASSERTL0(CheckVectors("N"),         "N not defined.");
-    ASSERTL0(CheckAuxVec ("vecLocs"),   "vecLoc not defined.");
-    ASSERTL0(CheckVectors("basefield"), "basefield not defined.");
+    ASSERTL1(CheckVectors("N"),         "N not defined.");
+    ASSERTL1(CheckAuxVec ("vecLocs"),   "vecLoc not defined.");
+    ASSERTL1(CheckVectors("basefield"), "basefield not defined.");
     const Array<OneD, const Array<OneD, NekDouble> > normals =
             m_vectors["N"]();
     const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
@@ -126,9 +126,9 @@ void APEUpwindSolver::Solve1D(
               Array<OneD,       Array<OneD, NekDouble> > &flux)
 {
     // fetch params
-    ASSERTL0(CheckParams("Gamma"), "Gamma not defined.");
-    ASSERTL0(CheckParams("Rho"), "Rho not defined.");
-    ASSERTL0(CheckVectors("N"), "N not defined.");
+    ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
+    ASSERTL1(CheckParams("Rho"), "Rho not defined.");
+    ASSERTL1(CheckVectors("N"), "N not defined.");
     const NekDouble &gamma= m_params["Gamma"]();
     const NekDouble &rho = m_params["Rho"]();
     const Array<OneD, const Array<OneD, NekDouble> > normals = m_vectors["N"]();
@@ -136,8 +136,8 @@ void APEUpwindSolver::Solve1D(
 
     int dim  = normals.num_elements();
     int nvar = dim +1;
-    ASSERTL0(Fwd.num_elements() == nvar, "Fwd malformed.");
-    ASSERTL0(Bwd.num_elements() == nvar, "Bwd malformed.");
+    ASSERTL1(Fwd.num_elements() == nvar, "Fwd malformed.");
+    ASSERTL1(Bwd.num_elements() == nvar, "Bwd malformed.");
 
     int nTracePts = Fwd[0].num_elements();
 

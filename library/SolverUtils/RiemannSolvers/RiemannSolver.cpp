@@ -103,8 +103,8 @@ namespace Nektar
         {
             if (m_requiresRotation)
             {
-                ASSERTL0(CheckVectors("N"), "N not defined.");                
-                ASSERTL0(CheckAuxVec("vecLocs"), "vecLocs not defined.");
+                ASSERTL1(CheckVectors("N"), "N not defined.");
+                ASSERTL1(CheckAuxVec("vecLocs"), "vecLocs not defined.");
                 const Array<OneD, const Array<OneD, NekDouble> > normals =
                     m_vectors["N"]();
                 const Array<OneD, const Array<OneD, NekDouble> > vecLocs =
@@ -171,7 +171,7 @@ namespace Nektar
 
             for (int i = 0; i < vecLocs.num_elements(); i++)
             {
-                ASSERTL0(vecLocs[i].num_elements() == normals.num_elements(),
+                ASSERTL1(vecLocs[i].num_elements() == normals.num_elements(),
                          "vecLocs[i] element count mismatch");
 
                 switch (normals.num_elements())
@@ -230,7 +230,7 @@ namespace Nektar
                     }
 
                     default:
-                        ASSERTL0(false, "Invalid space dimension.");
+                        ASSERTL1(false, "Invalid space dimension.");
                         break;
                 }
             }
@@ -258,7 +258,7 @@ namespace Nektar
 
             for (int i = 0; i < vecLocs.num_elements(); i++)
             {
-                ASSERTL0(vecLocs[i].num_elements() == normals.num_elements(),
+                ASSERTL1(vecLocs[i].num_elements() == normals.num_elements(),
                          "vecLocs[i] element count mismatch");
 
                 switch (normals.num_elements())
@@ -310,7 +310,7 @@ namespace Nektar
                     }
 
                     default:
-                        ASSERTL0(false, "Invalid space dimension.");
+                        ASSERTL1(false, "Invalid space dimension.");
                         break;
                 }
             }

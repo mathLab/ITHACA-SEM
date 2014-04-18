@@ -77,8 +77,8 @@ namespace Nektar
         void InputModule::OpenStream()
         {
             string fname = m_config["infile"].as<string>();
-            mshFile.open(fname.c_str());
-            if (!mshFile.good())
+            m_mshFile.open(fname.c_str());
+            if (!m_mshFile.good())
             {
                 cerr << "Error opening file: " << fname << endl;
                 abort();
@@ -91,8 +91,8 @@ namespace Nektar
         void OutputModule::OpenStream()
         {
             string fname = m_config["outfile"].as<string>();
-            mshFile.open(fname.c_str());
-            if (!mshFile.good())
+            m_mshFile.open(fname.c_str());
+            if (!m_mshFile.good())
             {
                 cerr << "Error opening file: " << fname << endl;
                 abort();
@@ -110,15 +110,16 @@ namespace Nektar
         void Module::ProcessVertices()
         {
             vector<ElementSharedPtr> &elmt = m_mesh->m_element[m_mesh->m_expDim];
-
+            
             m_mesh->m_vertexSet.clear();
-
+            
             for (int i = 0, vid = 0; i < elmt.size(); ++i)
             {
                 for (int j = 0; j < elmt[i]->GetVertexCount(); ++j)
                 {
                     pair<NodeSet::iterator,bool> testIns =
                         m_mesh->m_vertexSet.insert(elmt[i]->GetVertex(j));
+                    
                     if (testIns.second)
                     {
                         (*(testIns.first))->m_id = vid++;

@@ -74,7 +74,7 @@ namespace Nektar
         class Node {
         public:
             /// Create a new node at a specified coordinate.
-            Node(int pId, double pX, double pY, double pZ)
+            Node(int pId, NekDouble pX, NekDouble pY, NekDouble pZ)
         : m_id(pId), m_x(pX), m_y(pY), m_z(pZ), m_geom() {}
             /// Copy an existing node.
             Node(const Node& pSrc)
@@ -121,12 +121,12 @@ namespace Nektar
                 return Node(m_id, m_x*pSrc.m_x, m_y*pSrc.m_y, m_z*pSrc.m_z);
             }
             
-            Node operator*(const double &alpha) const
+            Node operator*(const NekDouble &alpha) const
             {
                 return Node(m_id, alpha*m_x, alpha*m_y, alpha*m_z);
             }
             
-            Node operator/(const double &alpha) const
+            Node operator/(const NekDouble &alpha) const
             {
                 return Node(m_id, m_x/alpha, m_y/alpha, m_z/alpha);
             }
@@ -138,26 +138,26 @@ namespace Nektar
                 m_z += pSrc.m_z;
             }
             
-            void operator*=(const double &alpha)
+            void operator*=(const NekDouble &alpha)
             {
                 m_x *= alpha;
                 m_y *= alpha;
                 m_z *= alpha;
             }
             
-            void operator/=(const double &alpha)
+            void operator/=(const NekDouble &alpha)
             {
                 m_x /= alpha;
                 m_y /= alpha;
                 m_z /= alpha;
             }
             
-            double abs2() const
+            NekDouble abs2() const
             {
                 return m_x*m_x+m_y*m_y+m_z*m_z;
             }
 
-            double dot(const Node &pSrc) const
+            NekDouble dot(const Node &pSrc) const
             {
                 return m_x*pSrc.m_x + m_y*pSrc.m_y + m_z*pSrc.m_z;
             }
@@ -185,11 +185,11 @@ namespace Nektar
             /// ID of node.
             int m_id;
             /// X-coordinate.
-            double m_x;
+            NekDouble m_x;
             /// Y-coordinate.
-            double m_y;
+            NekDouble m_y;
             /// Z-coordinate.
-            double m_z;
+            NekDouble m_z;
             
         private:
             SpatialDomains::PointGeomSharedPtr m_geom;
@@ -443,7 +443,7 @@ namespace Nektar
                              "Face nodes of tensor product only supported "
                              "for quadrilaterals.");
                     
-                    int n = (int)sqrt((double)GetNodeCount());
+                    int n = (int)sqrt((NekDouble)GetNodeCount());
                     vector<NodeSharedPtr> tmp(n*n);
                     
                     ASSERTL0(n*n == GetNodeCount(), "Wrong number of modes?");

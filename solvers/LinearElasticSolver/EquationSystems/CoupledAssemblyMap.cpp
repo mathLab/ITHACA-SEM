@@ -119,100 +119,87 @@ namespace Nektar
         const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
         int i, j, n, cnt1, cnt2;
 
-        cnt1 = 0;
-        for (n = 0; n < nVel; ++n)
+        // Order local boundary degrees of freedom. These are basically fine.
+        cnt1 = cnt2 = 0;
+        for (i = 0; i < locExpVector.size(); ++i)
         {
-            cnt2 = 0;
-            for (i = 0; i < locExpVector.size(); ++i)
+            const int nBndCoeffs = locExpVector[i]->NumBndryCoeffs();
+
+            for (n = 0; n < nVel; ++n)
             {
-                const int nBndCoeffs = locExpVector[i]->NumBndryCoeffs();
-                const int nCoeffs    = locExpVector[i]->GetNcoeffs();
-
-                // Construct a set of boundary coefficients so that we only fill
-                // the local to global boundary map, and not full map.
-                Array<OneD, unsigned int> bmap(nBndCoeffs);
-                locExpVector[i]->GetBoundaryMap(bmap);
-                set<unsigned int> bcoeffs;
-
-                for (j = 0; j < nBndCoeffs; ++j)
+                for (j = 0; j < nBndCoeffs; ++j, ++cnt1)
                 {
-                    bcoeffs.insert(bmap[j]);
-                }
+                    const int l2g = cgMap->GetLocalToGlobalBndMap()[cnt2+j];
+                    m_localToGlobalBndMap[cnt1] = nVel * l2g + n;
 
-                for (j = 0; j < nCoeffs; ++j, ++cnt1)
-                {
-                    if (bcoeffs.count(j) == 0)
-                    {
-                        continue;
-                    }
-
-                    const int l2g = cgMap->GetLocalToGlobalBndMap()[cnt2];
-
-                    if (l2g < nGlobDirCoeffs)
-                    {
-                        m_localToGlobalMap[cnt1] = n * nGlobDirCoeffs + l2g;
-                    }
-                    else
-                    {
-                        m_localToGlobalMap[cnt1] =
-                            (nVel-1) * nGlobDirCoeffs + n * nNonDirBndCoeffs + l2g;
-                    }
-
-                    if (m_signChange)
-                    {
-                        m_localToGlobalSign[cnt1] =
-                            cgMap->GetLocalToGlobalBndSign()[cnt2];
-                    }
-
-                    ++cnt2;
-                }
-            }
-        }
-
-        // Set up local to global mapping
-        const int nLocalCoeffs    = m_numLocalCoeffs    / nVel;
-        const int nLocalBndCoeffs = m_numLocalBndCoeffs / nVel;
-        int globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
-
-        cnt1 = 0;
-        for (n = 0; n < nVel; ++n)
-        {
-            const int off1 = n * nLocalCoeffs;
-
-            for (i = 0; i < nLocalCoeffs; ++i)
-            {
-                if (m_localToGlobalMap[off1+i] == -1)
-                {
-                    m_localToGlobalMap[off1+i] = globalId++;
-                }
-                else
-                {
                     if (m_signChange)
                     {
                         m_localToGlobalBndSign[cnt1] =
-                            m_localToGlobalSign[off1+i];
+                            cgMap->GetLocalToGlobalBndSign()[cnt2+j];
                     }
-                    m_localToGlobalBndMap[cnt1++] = m_localToGlobalMap[off1+i];
+                }
+            }
+
+            cnt2 += nBndCoeffs;
+        }
+
+        int globalId = m_numGlobalBndCoeffs;
+
+        // Interior degrees of freedom are a bit more tricky -- global linear
+        // system solve relies on them being in the same order as the BinvD, C
+        // and invD matrices.
+        cnt1 = cnt2 = 0;
+        for (i = 0; i < locExpVector.size(); ++i)
+        {
+            const int nCoeffs    = locExpVector[i]->GetNcoeffs();
+            const int nBndCoeffs = locExpVector[i]->NumBndryCoeffs();
+
+            for (n = 0; n < nVel; ++n)
+            {
+                for (j = 0; j < nBndCoeffs; ++j, ++cnt1, ++cnt2)
+                {
+                    const int l2g = m_localToGlobalBndMap[cnt2];
+                    m_localToGlobalMap[cnt1] = l2g;
+                    if (m_signChange)
+                    {
+                        m_localToGlobalSign[cnt1] = m_localToGlobalBndSign[cnt2];
+                    }
+                }
+            }
+
+            for (n = 0; n < nVel; ++n)
+            {
+                for (j = 0; j < nCoeffs - nBndCoeffs; ++j, ++cnt1)
+                {
+                    m_localToGlobalMap[cnt1] = globalId++;
                 }
             }
         }
 
-#if 0
-        cout << "LOCAL TO GLOBAL BND MAP:" << endl;
-        for (n = 0; n < cgMap->GetNumLocalBndCoeffs(); ++n)
+        for (i = 0; i < m_localToGlobalMap.num_elements(); ++i)
         {
-            cout << setw(4) << n << setw(4) << cgMap->GetLocalToGlobalBndMap(n) << endl;
+            ASSERTL0(m_localToGlobalMap[i] != -1, "asd");
         }
 
-        cout << "COUPLED LOCAL TO GLOBAL BND MAP:" << endl;
-        for (n = 0; n < m_numLocalBndCoeffs; ++n)
+        ASSERTL0(globalId == m_numGlobalCoeffs, "asd3");
+
+#if 0
+        cout << "LOCAL TO GLOBAL MAP:" << endl;
+        for (n = 0; n < cgMap->GetNumLocalCoeffs(); ++n)
         {
-            cout << setw(4) << n << setw(4) << m_localToGlobalBndMap[n] << endl;
+            cout << setw(4) << n << setw(4) << cgMap->GetLocalToGlobalMap(n) << endl;
+        }
+
+        cout << "COUPLED LOCAL TO GLOBAL MAP:" << endl;
+        for (n = 0; n < m_numLocalCoeffs; ++n)
+        {
+            cout << setw(4) << n << setw(4) << m_localToGlobalMap[n] << endl;
         }
 #endif
 
         // Set up boundary condition mapping: this is straightforward since we
         // only consider Dirichlet boundary conditions.
+#if 0
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
             = fields[0]->GetBndCondExpansions();
 
@@ -234,7 +221,7 @@ namespace Nektar
                 }
             }
         }
-        
+#endif   
         m_hash = boost::hash_range(
             m_localToGlobalMap.begin(), m_localToGlobalMap.end());
     }

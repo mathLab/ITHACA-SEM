@@ -171,8 +171,7 @@ namespace Nektar
             int nDirBndDofs        = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
             int nLocBndDofs        = pLocToGloMap->GetNumLocalBndCoeffs();
-            int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
-                                                                - nGlobBndDofs;
+            int nIntDofs           = nGlobDofs - nGlobBndDofs;
 
             Array<OneD, NekDouble> F(nGlobDofs);
             Array<OneD, NekDouble> tmp;

@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/DriverSteadyState.h>
 
 
@@ -76,26 +75,17 @@ namespace Nektar
             //With a loop over "DoSolve", this Driver implements the "encaplulated" Selective Frequency Damping method
             //to find the steady state of a flow above the critical Reynolds number.
             
-            //Read the graph to define the dimension of the problem
-            SpatialDomains::MeshGraphSharedPtr          graph;
-            graph = SpatialDomains::MeshGraph::Read(m_session);
-            
             m_equ[0]->PrintSummary(out);
             m_equ[0]->DoInitialise();
             
             // - SFD Routine -
-            
-            if (m_session->GetSolverInfo("EqType") == "EulerCFE" || m_session->GetSolverInfo("EqType") == "NavierStokesCFE") //Compressible case
+            // Compressible case
+            NumVar_SFD = m_equ[0]->UpdateFields()[0]->GetCoordim(0);            
+            if (m_session->GetSolverInfo("EqType") == "EulerCFE" || 
+                m_session->GetSolverInfo("EqType") == "NavierStokesCFE")
             {
-                cout << "Compressible case!!!" << endl;
-                NumVar_SFD = graph->GetSpaceDimension() + 2; //Number of variables for the compressible equations
+                NumVar_SFD += 2; //Number of variables for the compressible equations
             }
-            else //Incompressible case 
-            {
-                cout << "InCompressible case!!!" << endl;
-                NumVar_SFD = graph->GetSpaceDimension(); //Number of velocity components for the incompressible equations
-            }
-            
                 
             Array<OneD, Array<OneD, NekDouble> > q0(NumVar_SFD);
             Array<OneD, Array<OneD, NekDouble> > q1(NumVar_SFD);

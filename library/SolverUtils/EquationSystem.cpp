@@ -963,7 +963,7 @@ namespace Nektar
                 }
                 else
                 {
-                    Linferror = 0.0;
+                    Linferror = m_fields[field]->Linf(m_fields[field]->GetPhys());
                 }
             }
             else
@@ -1109,13 +1109,14 @@ namespace Nektar
             Array<OneD, NekDouble> &outfield,
             const NekDouble time)
         {
-            ASSERTL0 (m_session->DefinesFunction("ExactSolution"),
-                      "No ExactSolution provided in session file.");
             ASSERTL0 (outfield.num_elements() == m_fields[field]->GetNpoints(),
                       "ExactSolution array size mismatch.");
-
-            EvaluateFunction(m_session->GetVariable(field), outfield, 
-                             "ExactSolution", time);
+            Vmath::Zero(outfield.num_elements(), outfield, 1);
+            if (m_session->DefinesFunction("ExactSolution"))
+            {
+                EvaluateFunction(m_session->GetVariable(field), outfield, 
+                                 "ExactSolution", time);
+            }
         }
 
 

@@ -156,7 +156,7 @@ INCLUDE (NektarCommon)
 
 # Find Libraries
 SET(TPURL http://www.nektar.info/thirdparty)
-SET(TPSRC ${CMAKE_SOURCE_DIR}/ThirdParty)
+SET(TPSRC ${CMAKE_BINARY_DIR}/ThirdParty)
 IF (NOT EXISTS ${TPSRC})
     FILE(MAKE_DIRECTORY ${TPSRC})
 ENDIF ()

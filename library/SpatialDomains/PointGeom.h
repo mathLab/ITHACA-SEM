@@ -75,11 +75,6 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords);
                 SPATIAL_DOMAINS_EXPORT void UpdatePosition(NekDouble x, NekDouble y, NekDouble z);
 
-                inline int GetCoordim() const
-                {
-                    return m_coordim;
-                }
-
                 inline int GetVid() const
                 {
                     return m_vid;
@@ -110,7 +105,6 @@ namespace Nektar
 
             protected:
                 int m_vid;
-                int m_coordim;
                 std::list<CompToElmt> m_elmtMap;
 
                 virtual void v_GenGeomFactors();

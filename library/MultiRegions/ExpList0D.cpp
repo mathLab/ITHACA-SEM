@@ -96,9 +96,9 @@ namespace Nektar
             const Array<OneD, const ExpListSharedPtr> &bndConstraint,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> 
                                                       &bndCond,
-            const LocalRegions::ExpansionVector      &locexp,
+            const LocalRegions::ExpansionVector       &locexp,
             const SpatialDomains::MeshGraphSharedPtr  &graph1D,
-            const map<int,int>                        &periodicVertices,
+            const PeriodicMap                         &periodicVerts,
             const bool                                 DeclareCoeffPhysArrays)
             : ExpList()
         {
@@ -143,9 +143,10 @@ namespace Nektar
                     {						
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
                         EdgeDone[id] = elmtid;
+                        
                         //if (periodicVertices.count(id) > 0)
                         //{
-						//   EdgeDone[periodicVertices.find(id)->second] = elmtid;
+                        //   EdgeDone[periodicVertices.find(id)->second] = elmtid;
                         //}
 						
                         Point->SetElmtId(elmtid++);

@@ -37,6 +37,7 @@
 #include <MultiRegions/DisContField1D.h>
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <SpatialDomains/MeshGraph1D.h>
 
 namespace Nektar
 {
@@ -75,29 +76,37 @@ namespace Nektar
         DisContField1D::DisContField1D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::MeshGraphSharedPtr &graph1D,
-            const std::string &variable)
+            const std::string &variable,
+            const bool         SetUpJustDG)
             : ExpList1D(pSession,graph1D),
               m_bndCondExpansions(),
               m_bndConditions()
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
 
-            SetupBCsTrace(pSession,graph1D,bcs,variable);
-        }
-
-        void  DisContField1D::SetupBCsTrace(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const SpatialDomains::MeshGraphSharedPtr   &graph1D,
-            const SpatialDomains::BoundaryConditions   &bcs,
-            const std::string &variable)
-        {
-            
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions(0.0, variable);
             ApplyGeomInfo();
+            FindPeriodicVertices(bcs,variable);
 
-            map<int,int> periodicVertices;
-            GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
+            if(SetUpJustDG)
+            {
+                SetUpDG(variable);
+            }
+
+        }
+
+        void  DisContField1D::SetUpDG(const std::string &variable)
+        {
+            // Check for multiple calls
+            if (m_trace != NullExpListSharedPtr)
+            {
+                return;
+            }
+            
+            SpatialDomains::MeshGraph1DSharedPtr graph1D = 
+                boost::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(
+                    m_graph);
 
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
 
@@ -106,14 +115,14 @@ namespace Nektar
                     m_bndCondExpansions,
                     m_bndConditions,
                     *m_exp,graph1D,
-                    periodicVertices);
+                    m_periodicVerts);
 
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(pSession, graph1D, trace, *this,
+                AllocateSharedPtr(m_session, graph1D, trace, *this,
                                   m_bndCondExpansions, m_bndConditions, 
-                                  periodicVertices, variable);
+                                  m_periodicVerts, variable);
 
             // Scatter trace points to 1D elements. For each element, we find
             // the trace point associated to each vertex. The element then
@@ -121,7 +130,7 @@ namespace Nektar
             // uniqueness of normals when retrieving from two adjoining
             // elements which do not lie in a plane.
             
-            int ElmtPointGeom = 0;
+            int ElmtPointGeom  = 0;
             int TracePointGeom = 0;
             LocalRegions::Expansion0DSharedPtr exp0d;
             LocalRegions::Expansion1DSharedPtr exp1d;
@@ -172,13 +181,70 @@ namespace Nektar
             // Set up left-adjacent edge list.
             m_leftAdjacentVerts.resize(2*((*m_exp).size()));
             
-            cnt = 0;
             // count size of trace
             for (cnt = n = 0; n < m_exp->size(); ++n)
             {
-                for (e = 0; e < (*m_exp)[n]->GetNverts(); ++e, ++cnt)
+                for (int v = 0; v < (*m_exp)[n]->GetNverts(); ++v, ++cnt)
                 {
-                    m_leftAdjacentVerts[cnt] = IsLeftAdjacentVertex(n, e);
+                    m_leftAdjacentVerts[cnt] = IsLeftAdjacentVertex(n, v);
+                }
+            }
+
+
+            boost::unordered_map<int,pair<int,int> > perVertToExpMap;
+            boost::unordered_map<int,pair<int,int> >::iterator it2;
+            for (n = 0; n < m_exp->size(); ++n)
+            {
+                for (int v = 0; v < (*m_exp)[n]->GetNverts(); ++v)
+                {
+                    PeriodicMap::iterator it = m_periodicVerts.find(
+                                         (*m_exp)[n]->GetGeom()->GetVid(v));
+
+                    if (it != m_periodicVerts.end())
+                    {
+                        perVertToExpMap[it->first] = make_pair(n,v);
+                    }
+                }
+            }
+
+
+            // Set up mapping to copy Fwd of periodic bcs to Bwd of other edge.
+            for (n = 0; n < m_exp->size(); ++n)
+            {
+                for (int v = 0; v < (*m_exp)[n]->GetNverts(); ++v)
+                {
+                    int vertGeomId = (*m_exp)[n]->GetGeom()->GetVid(v);
+
+                    // Check to see if this face is periodic.
+                    PeriodicMap::iterator it = m_periodicVerts.find(vertGeomId);
+
+                    if (it != m_periodicVerts.end())
+                    {
+                        const PeriodicEntity &ent = it->second[0];
+                        it2 = perVertToExpMap.find(ent.id);
+
+                        if (it2 == perVertToExpMap.end())
+                        {
+                            if (m_session->GetComm()->GetRowComm()->GetSize() > 1 &&
+                                !ent.isLocal)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                ASSERTL1(false, "Periodic vert not found!");
+                            }
+                        }
+
+                        int offset  = m_trace->GetPhys_Offset((m_traceMap->GetElmtToTrace())
+                                                              [n][v]->GetElmtId());
+                        m_periodicFwdCopy.push_back(offset);
+
+                        int offset2 = m_trace->GetPhys_Offset((m_traceMap->GetElmtToTrace())
+                                                              [it2->second.first]
+                                                              [it2->second.second]->GetElmtId());
+                        m_periodicBwdCopy.push_back(offset2);
+                    }
                 }
             }
         }
@@ -190,6 +256,7 @@ namespace Nektar
             LocalRegions::Expansion0DSharedPtr traceEl = 
                 boost::dynamic_pointer_cast<LocalRegions::Expansion0D>(
                     (m_traceMap->GetElmtToTrace())[n][e]);
+
             
             bool fwd = true;
             if (traceEl->GetLeftAdjacentElementVertex () == -1 ||
@@ -200,12 +267,10 @@ namespace Nektar
                 it = m_boundaryVerts.find(traceEl->GetElmtId());
                 
                 // If the edge does not have a boundary condition set on
-                // it, then assume it is a partition edge.
+                // it, then assume it is a partition edge or periodic.
                 if (it == m_boundaryVerts.end())
                 {
-                    //ASSERTL0(false,"Parallel method not set up");
-#if 0 
-                    int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
+                    int traceGeomId = traceEl->GetGeom0D()->GetGlobalID();
                     PeriodicMap::iterator pIt = m_periodicVerts.find(
                         traceGeomId);
 
@@ -215,10 +280,10 @@ namespace Nektar
                     }
                     else
                     {
+                        int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
                         fwd = m_traceMap->
                             GetTraceToUniversalMapUnique(offset) >= 0;
                     }
-#endif
                 }
             }
             else if (traceEl->GetLeftAdjacentElementVertex () != -1 &&
@@ -268,7 +333,7 @@ namespace Nektar
                      bregionIt != it->second->end(); bregionIt++)
                 {
                     // can assume that all regions only contain one point in 1D
-                    // Really do not need lopp above
+                    // Really do not need loop above
                     int id = (*(bregionIt->second))[0]->GetGlobalID();
                     GeometryToRegionsMap[id] = it->first;
                 }
@@ -364,7 +429,12 @@ namespace Nektar
         {			
             SpatialDomains::BoundaryConditionsSharedPtr DomBCs = GetDomainBCs(domain,Allbcs,variable); 
             
-            SetupBCsTrace(pSession,graph1D,*DomBCs,variable);
+            GenerateBoundaryConditionExpansion(graph1D,*DomBCs,variable);
+            EvaluateBoundaryConditions(0.0, variable);
+            ApplyGeomInfo();
+            FindPeriodicVertices(*DomBCs,variable);
+
+            SetUpDG(variable);
         }
         
         /**
@@ -379,6 +449,9 @@ namespace Nektar
             m_trace(In.m_trace),
             m_traceMap(In.m_traceMap),
             m_boundaryVerts(In.m_boundaryVerts),
+            m_periodicVerts(In.m_periodicVerts),
+            m_periodicFwdCopy(In.m_periodicFwdCopy),
+            m_periodicBwdCopy(In.m_periodicBwdCopy),
             m_leftAdjacentVerts(In.m_leftAdjacentVerts)
         {
         }
@@ -460,97 +533,119 @@ namespace Nektar
          * @param   periodicVertices    Map into which the list of periodic
          *                      vertices is placed.
          */
-        void DisContField1D::GetPeriodicVertices(
-            const SpatialDomains::MeshGraphSharedPtr &graph1D,
+        void DisContField1D::FindPeriodicVertices(
             const SpatialDomains::BoundaryConditions &bcs,
-            const std::string variable,
-            map<int,int>& periodicVertices)
+            const std::string variable)
         {
-            /*
-            int i,k;
-
             const SpatialDomains::BoundaryRegionCollection &bregions
                     = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                     = bcs.GetBoundaryConditions();
 
+            SpatialDomains::MeshGraph1DSharedPtr graph1D
+                = boost::dynamic_pointer_cast<
+                    SpatialDomains::MeshGraph1D>(m_graph);
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
+
+            LibUtilities::CommSharedPtr     vComm       =
+                m_session->GetComm()->GetRowComm();
+
             int region1ID;
             int region2ID;
 
-            SpatialDomains::Composite comp1;
-            SpatialDomains::Composite comp2;
-
-            SpatialDomains::VertexComponentSharedPtr vert1;
-            SpatialDomains::VertexComponentSharedPtr vert2;
-
             SpatialDomains::BoundaryConditionShPtr locBCond;
+            
+            map<int,int>                     BregionToVertMap;
 
-            // This std::map is a check so that the periodic pairs
-            // are not treated twice
-            map<int, int> doneBndRegions;
-
-            int nbnd = bregions.size();
-
-            for(i = 0; i < nbnd; ++i)
+            // Construct list of all periodic Region and their global vertex on 
+            //  this  process.
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
-                if(locBCond->GetBoundaryConditionType()
-                        == SpatialDomains::ePeriodic)
+                locBCond = GetBoundaryCondition(bconditions, it->first, variable);
+                
+                if (locBCond->GetBoundaryConditionType()
+                        != SpatialDomains::ePeriodic)
                 {
-                    region1ID = i;
-                    region2ID = (boost::static_pointer_cast<SpatialDomains::
-                                    PeriodicBoundaryCondition>(locBCond))
-                                        ->m_connectedBoundaryRegion;
+                    continue;
+                }
+                                
+                int id = (*(it->second->begin()->second))[0]->GetGlobalID();
 
-                    if(doneBndRegions.count(region1ID)==0)
+                BregionToVertMap[it->first] = id;
+            }
+
+            map<int,int>::iterator iit;
+            set<int> islocal;
+            
+            if(vComm->GetSize() != 1) // share map between all processors
+            {
+                // number of bregions
+                int nregions = 0; 
+                for(iit = BregionToVertMap.begin(); iit != BregionToVertMap.end(); ++iit)
+                {
+                    nregions = (nregions > iit->first)? nregions:iit->first;
+                }
+                vComm->AllReduce(nregions, LibUtilities::ReduceMax);
+
+                Array<OneD, int> bregmap(nregions,-1);
+                
+                for(iit = BregionToVertMap.begin(); iit != BregionToVertMap.end(); ++iit)
+                {
+                    bregmap[iit->first] = iit->second;
+                    islocal.insert(iit->first);
+                }
+
+                vComm->AllReduce(bregmap, LibUtilities::ReduceSum);
+
+                for(int i = 0; i < nregions; ++i)
+                {
+                    if(bregmap[i] >=0 )
                     {
-                        ASSERTL0(bregions[region1ID]->size()
-                                    == bregions[region2ID]->size(),
-                                 "Size of the 2 periodic boundary regions "
-                                 "should be equal");
-
-                        SpatialDomains::BoundaryRegion::iterator bnd1It, bnd2It;
-                        for(bnd1It =  bregions[region1ID]->begin(),
-                            bnd2It =  bregions[region2ID]->begin();
-                            bnd1It != bregions[region1ID]->end();
-                            ++bnd1It, ++bnd2It)
-                        {
-                            comp1 = bnd1It->second;
-                            comp2 = bnd2It->second;
-
-                            ASSERTL0(comp1->size() == comp2->size(),
-                                     "Size of the 2 periodic composites should "
-                                     "be equal");
-
-                            for(k = 0; k < comp1->size(); k++)
-                            {
-                                if(!(vert1 = boost::dynamic_pointer_cast
-                                        <SpatialDomains::VertexComponent>(
-                                            (*comp1)[k]))||
-                                   !(vert2 = boost::dynamic_pointer_cast
-                                        <SpatialDomains::VertexComponent>(
-                                            (*comp2)[k])))
-                                {
-                                    ASSERTL0(false,"dynamic cast to a "
-                                                   "VertexComponent failed");
-                                }
-
-                                // Extract the periodic vertices
-                                periodicVertices[vert1->GetVid()]
-                                    = vert2->GetVid();
-                            }
-                        }
+                        BregionToVertMap[i] = bregmap[i];
                     }
-                    else
-                    {
-                        ASSERTL0(doneBndRegions[region1ID]==region2ID,
-                                 "Boundary regions are not mutually periodic");
-                    }
-                    doneBndRegions[region2ID] = region1ID;
                 }
             }
-            */
+            else
+            {
+                // in serial case set all verties on boundary as being local
+                for(iit = BregionToVertMap.begin(); iit != BregionToVertMap.end(); ++iit)
+                {
+                    islocal.insert(iit->first);
+                }                
+            }
+            
+
+            // Construct list of all periodic pairs local to this process.
+            for (it = bregions.begin(); it != bregions.end(); ++it)
+            {
+                locBCond = GetBoundaryCondition(bconditions, it->first, variable);
+                
+                if (locBCond->GetBoundaryConditionType()
+                        != SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
+                // Identify periodic boundary region IDs.
+                region1ID = it->first;
+                region2ID = boost::static_pointer_cast<
+                    SpatialDomains::PeriodicBoundaryCondition>(
+                        locBCond)->m_connectedBoundaryRegion;
+
+                ASSERTL0(BregionToVertMap.count(region1ID) != 0, 
+                         "Cannot determine vertex of region1ID");
+
+                ASSERTL0(BregionToVertMap.count(region2ID) != 0, 
+                         "Cannot determine vertex of region2ID");
+
+                PeriodicEntity ent(BregionToVertMap[region2ID],
+                                   StdRegions::eNoOrientation,
+                                   islocal.count(region2ID) != 0);
+                
+                m_periodicVerts[BregionToVertMap[region1ID]].push_back(ent);
+            }
         }
+
 
         /**
          * @param   graph1D     A mesh containing information about the domain
@@ -704,6 +799,41 @@ namespace Nektar
         }
 
 
+        vector<bool> &DisContField1D::GetNegatedFluxNormal(void)
+        {
+            if(m_negatedFluxNormal.size() == 0)
+            {
+                Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                    &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+                m_negatedFluxNormal.resize(2*GetExpSize());
+                
+                for(int i = 0; i < GetExpSize(); ++i)
+                {
+
+                    for(int v = 0; v < 2; ++v)
+                    {
+                        
+                        LocalRegions::Expansion0DSharedPtr vertExp =
+                            boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion0D>(elmtToTrace[i][v]);
+
+                        if(vertExp->GetLeftAdjacentElementExp()->GetGeom()->GetGlobalID() != (*m_exp)[i]->GetGeom()->GetGlobalID())
+                        {
+                            m_negatedFluxNormal[2*i+v] = true;
+                        }
+                        else
+                        {
+                            m_negatedFluxNormal[2*i+v] = false;
+                        }
+                    }
+                }
+
+            }
+
+            return m_negatedFluxNormal;
+        }
+
         /**
          * Generate the forward or backward state for each trace point.
          * @param   Fwd     Forward state.
@@ -843,13 +973,11 @@ namespace Nektar
                 }
             }
             
-#if 0 
             // Copy any periodic boundary conditions.
             for (n = 0; n < m_periodicFwdCopy.size(); ++n)
             {
                 Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }
-#endif
 
             // Do parallel exchange for forwards/backwards spaces.
             m_traceMap->UniversalTraceAssemble(Fwd);
@@ -907,15 +1035,15 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fn, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            int p,n,offset, t_offset;
-            double vertnorm =0.0;
-
+            int n,offset, t_offset;
 
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
             
             // Basis shared pointer
             LibUtilities::BasisSharedPtr Basis;
+            
+            vector<bool> negatedFluxNormal = GetNegatedFluxNormal();
             
             for (n = 0; n < GetExpSize(); ++n)
             {
@@ -930,44 +1058,32 @@ namespace Nektar
                 // Implementation for every points except Gauss points
                 if (Basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
                 {
-#if 0 // Currently assume p=1 normal is always positive and p=1 is
-      // negative since this is the sign-convention of the local
-      // segment. Note that we do not put sign in Fn in 1D since there is only one component
-                    for(p = 0; p < 2; ++p)
-                    {
-                       
-                        vertnorm = 0.0;
-                        for (int i=0; i<((*m_exp)[n]->
-                                         GetVertexNormal(p)).num_elements(); i++)
-                        {
-                            vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
-                        }
-                        
-                        t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][p]->GetElmtId());
-                        
-                        if (vertnorm >= 0.0)
-                        {
-                            outarray[offset+(*m_exp)[n]->GetVertexMap(1)] +=
-                            Fn[t_offset];
-                        }
-                        
-                        if (vertnorm < 0.0)
-                        {
-                            outarray[offset] -= Fn[t_offset];
-                        }
-                    }
-#else
                     t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][0]->GetElmtId());
-                    outarray[offset] -= Fn[t_offset];
+                    if(negatedFluxNormal[2*n])
+                    {
+                        outarray[offset] -= Fn[t_offset];
+                    }
+                    else
+                    {
+                        outarray[offset] += Fn[t_offset];
+                    }
                     
                     t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][1]->GetElmtId());
-                    outarray[offset+(*m_exp)[n]->GetVertexMap(1)] += Fn[t_offset];
-#endif
+
+                    if(negatedFluxNormal[2*n+1])
+                    {
+                        outarray[offset+(*m_exp)[n]->GetVertexMap(1)] -= Fn[t_offset];
+                    }
+                    else
+                    {
+                        outarray[offset+(*m_exp)[n]->GetVertexMap(1)] += Fn[t_offset];
+                    }
 
                 }
                 else
                 {
-                    DNekMatSharedPtr                     m_Ixm;
+#if 0           
+                    DNekMatSharedPtr             m_Ixm;
                     LibUtilities::BasisSharedPtr BASE;
                     const LibUtilities::PointsKey
                             BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
@@ -982,7 +1098,7 @@ namespace Nektar
                     
                     for(p = 0; p < 2; ++p)
                     {
-                        vertnorm = 0.0;
+                        NekDouble vertnorm = 0.0;
                         for (int i=0; i<((*m_exp)[n]->
                              GetVertexNormal(p)).num_elements(); i++)
                         {
@@ -1015,6 +1131,67 @@ namespace Nektar
                             }
                         }
                     }
+#else
+                    int j;
+                    static DNekMatSharedPtr   m_Ixm, m_Ixp;
+                    static int sav_ncoeffs = 0;
+                    if(!m_Ixm.get() || e_ncoeffs != sav_ncoeffs)
+                    {
+                        LibUtilities::BasisSharedPtr BASE;
+                        const LibUtilities::PointsKey
+                            BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
+                        const LibUtilities::BasisKey
+                            BS_k(LibUtilities::eGauss_Lagrange,e_ncoeffs,BS_p);
+                        
+                        BASE  = LibUtilities::BasisManager()[BS_k];
+                        
+                        Array<OneD, NekDouble> coords(1, 0.0);
+                    
+                        coords[0] = -1.0;
+                        m_Ixm = BASE->GetI(coords); 
+
+                        coords[0] = 1.0;
+                        m_Ixp = BASE->GetI(coords); 
+
+                        sav_ncoeffs = e_ncoeffs; 
+                    }
+                    
+                    t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][0]->GetElmtId());
+                    if(negatedFluxNormal[2*n])
+                    {
+                        for (j = 0; j < e_ncoeffs; j++)
+                        {
+                            outarray[offset + j]  -=
+                                (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                        }
+                    }
+                    else
+                    {
+                        for (j = 0; j < e_ncoeffs; j++)
+                        {
+                            outarray[offset + j]  +=
+                                (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                        }
+                    }
+                        
+                    t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][1]->GetElmtId());
+                    if (negatedFluxNormal[2*n+1])
+                    {
+                        for (j = 0; j < e_ncoeffs; j++)
+                        {
+                            outarray[offset + j] -=
+                                (m_Ixp->GetPtr())[j] * Fn[t_offset];
+                        }
+                    }
+                    else
+                    {
+                        for (j = 0; j < e_ncoeffs; j++)
+                        {
+                            outarray[offset + j] +=
+                                (m_Ixp->GetPtr())[j] * Fn[t_offset];
+                        }
+                    }
+#endif
                 }
             }
         }

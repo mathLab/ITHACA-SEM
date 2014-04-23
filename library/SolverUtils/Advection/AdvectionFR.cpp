@@ -40,6 +40,7 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <StdRegions/StdSegExp.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/DisContField1D.h>
 #include <boost/math/special_functions/gamma.hpp>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion2D.h>
@@ -1018,6 +1019,9 @@ namespace Nektar
             int nElements       = fields[0]->GetExpSize();            
             int nSolutionPts    = fields[0]->GetTotPoints();
             
+            
+            vector<bool> negatedFluxNormal = (boost::static_pointer_cast<MultiRegions::DisContField1D>(fields[0]))->GetNegatedFluxNormal();
+
             // Arrays to store the derivatives of the correction flux
             Array<OneD, NekDouble> DCL(nSolutionPts/nElements, 0.0); 
             Array<OneD, NekDouble> DCR(nSolutionPts/nElements, 0.0);
@@ -1039,11 +1043,25 @@ namespace Nektar
                 
                 fields[0]->GetExp(n)->GetVertexPhysVals(0, tmparrayX1,
                                                         tmpFluxVertex);
-                JumpL[n] =  numericalFlux[n] - tmpFluxVertex;
+                if(negatedFluxNormal[2*n])
+                {
+                    JumpL[n] =  numericalFlux[n] - tmpFluxVertex;
+                }
+                else
+                {
+                    JumpL[n] =  -numericalFlux[n] - tmpFluxVertex;
+                }
                 
                 fields[0]->GetExp(n)->GetVertexPhysVals(1, tmparrayX1,
                                                         tmpFluxVertex);
-                JumpR[n] =  numericalFlux[n+1] - tmpFluxVertex;
+                if(negatedFluxNormal[2*n+1])
+                {
+                    JumpR[n] =  -numericalFlux[n+1] - tmpFluxVertex;
+                }
+                else
+                {
+                    JumpR[n] =  numericalFlux[n+1] - tmpFluxVertex;
+                }
             }
             
             for (n = 0; n < nElements; ++n)

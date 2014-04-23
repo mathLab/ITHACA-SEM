@@ -63,7 +63,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField1D(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const std::string &variable);
+                const std::string &variable,
+                const bool SetUpJustDG  = true);
             
             /// Constructor for a DisContField1D from a List of subdomains
             /// New Constructor for arterial network 
@@ -88,6 +89,12 @@ namespace Nektar
             /// For a given key, returns the associated global linear system.
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                 const GlobalLinSysKey &mkey);
+
+
+            // Return the internal vector which directs whether the normal flux
+            // at the trace defined by Left and Right Adjacent elements
+            // is negated with respect to the segment normal
+            MULTI_REGIONS_EXPORT vector<bool> &GetNegatedFluxNormal(void);
 
         protected:
             /// The number of boundary segments on which Dirichlet boundary
@@ -120,6 +127,22 @@ namespace Nektar
              */
             std::set<int> m_boundaryVerts;
 
+            
+            /**
+             * @brief A map which identifies groups of periodic vertices.
+             */
+            PeriodicMap m_periodicVerts;
+
+            
+            /**
+             * @brief A vector indicating degress of freedom which need to be
+             * copied from forwards to backwards space in case of a periodic
+             * boundary condition.
+             */
+            vector<int> m_periodicFwdCopy;
+            vector<int> m_periodicBwdCopy;
+
+
             /*
              * @brief A map identifying which verts are left- and right-adjacent
              * for DG.
@@ -135,12 +158,9 @@ namespace Nektar
             
             
             /// Generate a associative map of periodic vertices in a mesh.
-            void GetPeriodicVertices(
-                const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const SpatialDomains::BoundaryConditions &bcs,
-                const std::string variable,
-                      map<int,int>& periodicVertices);
-
+            void FindPeriodicVertices(const SpatialDomains::BoundaryConditions &bcs,
+                                      const std::string variable);
+            
             virtual ExpListSharedPtr &v_GetTrace()
             {
                 return m_trace;
@@ -238,12 +258,11 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &dirForcing);
 
         private:
-            void SetupBCsTrace(const LibUtilities::SessionReaderSharedPtr &pSession,
-                               const SpatialDomains::MeshGraphSharedPtr   &graph1D,
-                               const SpatialDomains::BoundaryConditions   &bcs,
-                               const std::string &variable);
+            void SetUpDG(const std::string &variable);
             
             bool IsLeftAdjacentVertex(const int n, const int e);
+
+            vector<bool> m_negatedFluxNormal;
 
             SpatialDomains::BoundaryConditionsSharedPtr GetDomainBCs(const SpatialDomains::CompositeMap &domain,
                                                                      const SpatialDomains::BoundaryConditions &Allbcs,

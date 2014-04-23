@@ -82,7 +82,7 @@ namespace Nektar
                             ::BoundaryConditionShPtr>  &bndCond,
                 const LocalRegions::ExpansionVector &locexp,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const map<int,int> &periodicVertices,
+                const PeriodicMap                  &periodicVerts,
                 const bool DeclareCoeffPhysArrays = true);
             
             /// Destructor.

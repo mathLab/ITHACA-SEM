@@ -77,7 +77,7 @@ namespace Nektar
             const ExpList &locExp,
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
-            const map<int,int> &periodicVertices,
+            const PeriodicMap &periodicVerts,
             const std::string variable)
             : AssemblyMap(pSession,variable)
         {
@@ -120,7 +120,7 @@ namespace Nektar
                         ASSERTL0(false,"Failed to find edge map");
                     }
                 }
-                        cnt += 2;
+                cnt += 2;
             }
 
             // set up Local to Continuous mapping
@@ -220,7 +220,7 @@ namespace Nektar
             }
 
             // Now set up mapping from global coefficients to universal.
-#if 0  // Routines need debugging 
+#if 1       // Routines need debugging -> Currently causing crash when turned on
             ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr, periodicVerts);
@@ -1082,7 +1082,7 @@ namespace Nektar
             m_globalToUniversalBndMap = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
             m_globalToUniversalBndMapUnique = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
 
-            // Loop over all the elements in the domain and compute max edge
+            // Loop over all the elements in the domain and compute max 
             // DOF. Reduce across all processes to get universal maximum.
             for(i = 0; i < locExpVector.size(); ++i)
             {
@@ -1122,14 +1122,15 @@ namespace Nektar
                     StdRegions::StdExpansion>(locExpVector[i]);
                 nDim = locExpansion->GetShapeDimension();
 
-                // Order list according to m_offset_elmt_id details in Exp2D
+                // Order list according to m_offset_elmt_id details in Exp
                 // so that triangules are listed first and then quads
                 eid = locExp.GetOffset_Elmt_Id(i);
 
                 // Populate mapping for each edge of the element.
                 if (nDim == 1)
                 {
-                    for(j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
+                    int nverts = locExpansion->GetNverts();
+                    for(j = 0; j < nverts; ++j)
                     {
                         LocalRegions::PointExpSharedPtr locPointExp = 
                             boost::dynamic_pointer_cast<
@@ -1139,6 +1140,7 @@ namespace Nektar
                         m_globalToUniversalBndMap[vGlobalId]
                             = id * maxDof + j + 1;
                     }
+                    cnt += nverts;
                 } 
                 else if (nDim == 2)
                 {
@@ -1293,6 +1295,21 @@ namespace Nektar
                 {
                     eid = trace->GetExp(i)->GetGeom()->GetGlobalID();
                     offset = trace->GetPhys_Offset(i);
+
+#if 1
+                    // Check to see if this vert is periodic. If it is, then we
+                    // need use the unique eid of the two points 
+                    PeriodicMap::const_iterator it = perMap.find(eid);
+                    if (perMap.count(eid) > 0)
+                    {
+                        PeriodicEntity ent = it->second[0];
+                        if (ent.isLocal == false) // Not sure if true in 1D
+                        {
+                            eid = min(eid, ent.id);
+                        }
+                    }
+#endif
+
                     m_traceToUniversalMap[offset] = eid*maxQuad+1;
                 }
             }

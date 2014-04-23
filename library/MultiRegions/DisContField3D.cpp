@@ -40,6 +40,7 @@
  #include <SpatialDomains/MeshGraph3D.h>
  #include <LocalRegions/HexExp.h>
  #include <LocalRegions/TetExp.h>
+ #include <LocalRegions/PrismExp.h>
 
  #include <boost/assign/std/vector.hpp>
 
@@ -2309,6 +2310,18 @@
                         ppExp = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(BkeyT1, BkeyT2, BkeyT3, tGeom);
                     }
                     break;
+                    case LibUtilities::ePrism:
+                    {
+                        const LibUtilities::PointsKey PkeyP1(num_points0,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyP2(num_points1,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey PkeyP3(num_points2,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey  BkeyP1(LibUtilities::eOrtho_A, num_modes0, PkeyP1);
+                        LibUtilities::BasisKey  BkeyP2(LibUtilities::eOrtho_A, num_modes1, PkeyP2);
+                        LibUtilities::BasisKey  BkeyP3(LibUtilities::eOrtho_B, num_modes2, PkeyP3);
+                        SpatialDomains::PrismGeomSharedPtr pGeom = boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>((*m_exp)[eid]->GetGeom());
+                        ppExp = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(BkeyP1, BkeyP2, BkeyP3, pGeom);
+                    }
+                    break;
                     default:
                         ASSERTL0(false, "Wrong shape type, HDG postprocessing is not implemented");
                 };
@@ -2358,7 +2371,8 @@
                 // Transforming back to modified basis
                 Array<OneD, NekDouble> work(nq_elmt);
                 ppExp->BwdTrans(out.GetPtr(), work);
-                exp  ->FwdTrans(work, tmp_coeffs = outarray + m_coeff_offset[eid]);
+                (*m_exp)[eid]->FwdTrans(work,
+                                tmp_coeffs = outarray + m_coeff_offset[eid]);
             }
         }
 

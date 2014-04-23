@@ -68,10 +68,11 @@ namespace Nektar
         m_homoInitialFwd = false;
 
         // Set up locations of velocity vector.
-        m_velLoc = Array<OneD, NekDouble>(m_spacedim);
+        m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
+        m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
         for (int i = 0; i < m_spacedim; ++i)
         {
-            m_velLoc[i] = i+1;
+            m_vecLocs[0][i] = 1 + i;
         }
 
         // Get gamma parameter from session file.
@@ -180,19 +181,19 @@ namespace Nektar
 
                 // Setting up parameters for advection operator Riemann solver
                 m_riemannSolver->SetParam (
-                    "gamma",  &CompressibleFlowSystem::GetGamma,   this);
-                m_riemannSolver->SetAuxiliary(
-                    "velLoc", &CompressibleFlowSystem::GetVelLoc,  this);
+                    "gamma",   &CompressibleFlowSystem::GetGamma,   this);
+                m_riemannSolver->SetAuxVec(
+                    "vecLocs", &CompressibleFlowSystem::GetVecLocs, this);
                 m_riemannSolver->SetVector(
-                    "N",      &CompressibleFlowSystem::GetNormals, this);
+                    "N",       &CompressibleFlowSystem::GetNormals, this);
 
                 // Setting up parameters for diffusion operator Riemann solver
                 m_riemannSolverLDG->SetParam (
-                    "gamma",  &CompressibleFlowSystem::GetGamma,   this);
-                m_riemannSolverLDG->SetAuxiliary(
-                    "velLoc", &CompressibleFlowSystem::GetVelLoc,  this);
+                    "gamma",   &CompressibleFlowSystem::GetGamma,   this);
                 m_riemannSolverLDG->SetVector(
-                    "N",      &CompressibleFlowSystem::GetNormals, this);
+                    "vecLocs", &CompressibleFlowSystem::GetVecLocs, this);
+                m_riemannSolverLDG->SetVector(
+                    "N",       &CompressibleFlowSystem::GetNormals, this);
 
                 // Concluding initialisation of advection / diffusion operators
                 m_advection->SetRiemannSolver   (m_riemannSolver);

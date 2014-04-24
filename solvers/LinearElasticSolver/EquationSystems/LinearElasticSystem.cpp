@@ -53,17 +53,12 @@ namespace Nektar
     void LinearElasticSystem::v_InitObject()
     {
         EquationSystem::v_InitObject();
-    }
 
-    void LinearElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
-    {
-        EquationSystem::SessionSummary(s);
-    }
-
-    void LinearElasticSystem::v_DoSolve()
-    {
-        int i, j, n, nv;
         const int nVel = m_fields[0]->GetCoordim(0);
+        int n;
+
+        ASSERTL0(nVel == 2, "Linear elastic solver not set up for"
+                            " this dimension (only 2D supported).");
 
         MultiRegions::ContField2DSharedPtr u = boost::dynamic_pointer_cast<
             MultiRegions::ContField2D>(m_fields[0]);
@@ -73,9 +68,6 @@ namespace Nektar
                                 u->GetLocalToGlobalMap(),
                                 m_boundaryConditions,
                                 m_fields);
-
-        ASSERTL0(nVel == 2, "Linear elastic solver not set up for"
-                            " this dimension (only 2D supported).");
 
         // Figure out size of matrices by looping over expansion.
         const int nEl = m_fields[0]->GetExpSize();
@@ -102,89 +94,43 @@ namespace Nektar
         m_Dinv       = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(
             sizeInt, sizeInt, blkmatStorage);
 
-        MatrixStorage s = eFULL;
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 1.0;
 
+        // Loop over each element and construct matrices.
         for (n = 0; n < nEl; ++n)
         {
             exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
+            int nCoeffs = exp->GetNcoeffs();
 
             LocalRegions::MatrixKey matkey(StdRegions::eHelmholtz,
                                            exp->DetShapeType(),
                                            *exp, factors);
 
-            const int nB   = exp->NumBndryCoeffs();
-            const int nI   = exp->GetNcoeffs() - nB;
-            const int nBnd = exp->NumBndryCoeffs() * nVel;
-            const int nInt = exp->GetNcoeffs() * nVel - nBnd;
-
             // As a test, set up a Helmholtz matrix for each element.
-            DNekScalBlkMatSharedPtr loc_mat =
-                exp->GetLocStaticCondMatrix(matkey);
-            DNekMatSharedPtr        schurCompl =
-                MemoryManager<DNekMat>::AllocateSharedPtr(nBnd, nBnd, 0.0, s);
-            DNekMatSharedPtr        BinvD =
-                MemoryManager<DNekMat>::AllocateSharedPtr(nBnd, nInt, 0.0, s);
-            DNekMatSharedPtr        C =
-                MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nBnd, 0.0, s);
-            DNekMatSharedPtr        Dinv =
-                MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nInt, 0.0, s);
+            DNekMatSharedPtr loc_mat = exp->GenMatrix(matkey);
+            DNekMatSharedPtr zero = MemoryManager<DNekMat>::AllocateSharedPtr(
+                nCoeffs, nCoeffs, 0.0, eFULL);
 
-            // Copy matrix parts into the correct location.
-            DNekScalMatSharedPtr tmp_mat = loc_mat->GetBlock(0,0);
-            for (i = 0; i < nB; ++i)
-            {
-                for (j = 0; j < nB; ++j)
-                {
-                    (*schurCompl)(i,   j   ) = (*tmp_mat)(i,j);
-                    (*schurCompl)(i+nB,j+nB) = (*tmp_mat)(i,j);
-                }
-            }
+            Array<TwoD, DNekMatSharedPtr> mat(2,2);
+            mat[0][0] = loc_mat;
+            mat[0][1] = zero;
+            mat[1][0] = zero;
+            mat[1][1] = loc_mat;
 
-            tmp_mat = loc_mat->GetBlock(0,1);
-            for (i = 0; i < nB; ++i)
-            {
-                for (j = 0; j < nI; ++j)
-                {
-                    (*BinvD)(i,   j   ) = (*tmp_mat)(i,j);
-                    (*BinvD)(i+nB,j+nI) = (*tmp_mat)(i,j);
-                }
-            }
-
-            tmp_mat = loc_mat->GetBlock(1,0);
-            for (i = 0; i < nI; ++i)
-            {
-                for (j = 0; j < nB; ++j)
-                {
-                    (*C)(i,   j   ) = (*tmp_mat)(i,j);
-                    (*C)(i+nI,j+nB) = (*tmp_mat)(i,j);
-                }
-            }
-
-            tmp_mat = loc_mat->GetBlock(1,1);
-            for (i = 0; i < nI; ++i)
-            {
-                for (j = 0; j < nI; ++j)
-                {
-                    (*Dinv)(i,   j   ) = (*tmp_mat)(i,j);
-                    (*Dinv)(i+nI,j+nI) = (*tmp_mat)(i,j);
-                }
-            }
-
-            m_schurCompl->SetBlock(
-                n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                    1.0, schurCompl));
-            m_BinvD     ->SetBlock(
-                n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                    1.0, BinvD));
-            m_C         ->SetBlock(
-                n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                    1.0, C));
-            m_Dinv      ->SetBlock(
-                n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
-                    1.0, Dinv));
+            SetStaticCondBlock(n, exp, mat);
         }
+    }
+
+    void LinearElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
+    {
+        EquationSystem::SessionSummary(s);
+    }
+
+    void LinearElasticSystem::v_DoSolve()
+    {
+        int i, j, n, nv;
+        const int nVel = m_fields[0]->GetCoordim(0);
 
         // Now we've got the matrix system set up, create a GlobalLinSys object.
         MultiRegions::GlobalLinSysKey key(
@@ -299,5 +245,85 @@ namespace Nektar
             m_fields[nv]->BwdTrans(m_fields[nv]->GetCoeffs(),
                                    m_fields[nv]->UpdatePhys());
         }
+    }
+
+    void LinearElasticSystem::SetStaticCondBlock(
+        const int                              n,
+        const LocalRegions::ExpansionSharedPtr exp,
+        Array<TwoD, DNekMatSharedPtr>         &mat)
+    {
+        int i, j, k, l;
+        const int nVel = mat.GetRows();
+        const int nB   = exp->NumBndryCoeffs();
+        const int nI   = exp->GetNcoeffs() - nB;
+        const int nBnd = exp->NumBndryCoeffs() * nVel;
+        const int nInt = exp->GetNcoeffs() * nVel - nBnd;
+        const MatrixStorage s = eFULL;
+
+        // Get boundary and interior maps.
+        Array<OneD, unsigned int> bmap, imap;
+        exp->GetBoundaryMap(bmap);
+        exp->GetInteriorMap(imap);
+
+        DNekMatSharedPtr A =
+            MemoryManager<DNekMat>::AllocateSharedPtr(nBnd, nBnd, 0.0, s);
+        DNekMatSharedPtr B =
+            MemoryManager<DNekMat>::AllocateSharedPtr(nBnd, nInt, 0.0, s);
+        DNekMatSharedPtr C =
+            MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nBnd, 0.0, s);
+        DNekMatSharedPtr D =
+            MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nInt, 0.0, s);
+
+        for (i = 0; i < nVel; ++i)
+        {
+            for (j = 0; j < nVel; ++j)
+            {
+                // Boundary-boundary and boundary-interior
+                for (k = 0; k < nB; ++k)
+                {
+                    for (l = 0; l < nB; ++l)
+                    {
+                        (*A)(k + i*nB, l + j*nB) = (*mat[i][j])(bmap[k], bmap[l]);
+                    }
+
+                    for (l = 0; l < nI; ++l)
+                    {
+                        (*B)(k + i*nB, l + j*nI) = (*mat[i][j])(bmap[k], imap[l]);
+                    }
+                }
+
+                // Interior-boundary / interior-interior
+                for (k = 0; k < nI; ++k)
+                {
+                    for (l = 0; l < nB; ++l)
+                    {
+                        (*C)(k + i*nI, l + j*nB) = (*mat[i][j])(imap[k], bmap[l]);
+                    }
+
+                    for (l = 0; l < nI; ++l)
+                    {
+                        (*D)(k + i*nI, l + j*nI) = (*mat[i][j])(imap[k], imap[l]);
+                    }
+                }
+            }
+        }
+
+        D->Invert();
+        (*B) = (*B)*(*D);
+        (*A) = (*A) - (*B)*(*C);
+
+        DNekScalMatSharedPtr tmp_mat;
+        m_schurCompl->SetBlock(
+            n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                1.0, A));
+        m_BinvD     ->SetBlock(
+            n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                1.0, B));
+        m_C         ->SetBlock(
+            n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                1.0, C));
+        m_Dinv      ->SetBlock(
+            n, n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                1.0, D));
     }
 }

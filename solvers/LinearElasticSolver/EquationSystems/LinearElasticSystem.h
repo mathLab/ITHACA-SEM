@@ -62,6 +62,11 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
+        void SetStaticCondBlock(
+            const int                              n,
+            const LocalRegions::ExpansionSharedPtr exp,
+            Array<TwoD, DNekMatSharedPtr>         &mat);
+
     protected:
         LinearElasticSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);

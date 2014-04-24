@@ -46,8 +46,16 @@
 namespace Nektar
 {    
     /** 
-     * Take an existing assembly map and create a coupled version suitable for
-     * use in the linear elasticity solver.
+     * @brief Take an existing assembly map and create a coupled version
+     * suitable for use in the linear elasticity solver.
+     * 
+     * The linear elasticity solver requires a slight reordering of local and
+     * global coefficients to support problems of the form
+     *
+     * [ A B ] [ u ] = [ f_u ]
+     * [ C D ] [ v ]   [ f_v ]
+     *
+     * In order to support static condensation, we store everything as
      */
     CoupledAssemblyMap::CoupledAssemblyMap(
         const LibUtilities::SessionReaderSharedPtr        &pSession,
@@ -65,7 +73,8 @@ namespace Nektar
                  m_solnType != MultiRegions::eXxtMultiLevelStaticCond,
                  "Multi-level static condensation not supported.");
 
-        // Copy various number of coefficient counts.
+        // Copy various coefficient counts, and multiply by the dimension of the
+        // problem to obtain our new values.
         m_numLocalDirBndCoeffs      = cgMap->GetNumLocalDirBndCoeffs()  * nVel;
         m_numLocalBndCoeffs         = cgMap->GetNumLocalBndCoeffs()     * nVel;
         m_numLocalCoeffs            = cgMap->GetNumLocalCoeffs()        * nVel;
@@ -75,7 +84,9 @@ namespace Nektar
         m_signChange                = cgMap->GetSignChange();
         m_systemSingular            = cgMap->GetSingularSystem();
 
-        // Copy static condensation information
+        // Copy static condensation information. TODO: boundary and interior
+        // patches need to be re-ordered in order for multi-level static
+        // condensation support.
         m_staticCondLevel           = cgMap->GetStaticCondLevel();
         m_numPatches                = cgMap->GetNumPatches();
         m_numLocalBndCoeffsPerPatch = cgMap->GetNumLocalBndCoeffsPerPatch();
@@ -87,7 +98,9 @@ namespace Nektar
 
         ASSERTL0(nLocBndCondDofs == m_numLocalDirBndCoeffs,
                  "Only Dirichlet boundary conditions are supported");
-        
+
+        // Allocate storage for local to global maps. TODO: Set up global to
+        // universal map to support parallel execution.
         m_localToGlobalMap               =
             Array<OneD, int>(m_numLocalCoeffs,-1);
         m_localToGlobalBndMap            =
@@ -95,6 +108,8 @@ namespace Nektar
         m_bndCondCoeffsToGlobalCoeffsMap =
             Array<OneD, int>(nLocBndCondDofs,-1);
 
+        // Only require a sign map if we are using modal polynomials in the
+        // expansion and the order is >= 3.
         if(m_signChange)
         {
             m_localToGlobalSign               =
@@ -115,11 +130,12 @@ namespace Nektar
         const int nGlobDirCoeffs = cgMap->GetNumGlobalDirBndCoeffs();
         const int nNonDirBndCoeffs = nGlobBndCoeffs - nGlobDirCoeffs;
 
-        // Set up local to global boundary mapping.
         const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
         int i, j, n, cnt1, cnt2;
 
-        // Order local boundary degrees of freedom. These are basically fine.
+        // Order local boundary degrees of freedom. These are basically fine; we
+        // reorder storage so that we loop over each element and then each
+        // component of velocity.
         cnt1 = cnt2 = 0;
         for (i = 0; i < locExpVector.size(); ++i)
         {
@@ -181,29 +197,15 @@ namespace Nektar
             ASSERTL0(m_localToGlobalMap[i] != -1, "asd");
         }
 
-        ASSERTL0(globalId == m_numGlobalCoeffs, "asd3");
+        ASSERTL0(globalId == m_numGlobalCoeffs, "Consistency error");
 
 #if 0
-        cout << "LOCAL TO GLOBAL MAP:" << endl;
-        for (n = 0; n < cgMap->GetNumLocalCoeffs(); ++n)
-        {
-            cout << setw(4) << n << setw(4) << cgMap->GetLocalToGlobalMap(n) << endl;
-        }
-
-        cout << "COUPLED LOCAL TO GLOBAL MAP:" << endl;
-        for (n = 0; n < m_numLocalCoeffs; ++n)
-        {
-            cout << setw(4) << n << setw(4) << m_localToGlobalMap[n] << endl;
-        }
-#endif
-
         // Set up boundary condition mapping: this is straightforward since we
         // only consider Dirichlet boundary conditions.
-#if 0
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
             = fields[0]->GetBndCondExpansions();
 
-        const int nLocalDirBndCoeffs = m_numLocalDirBndCoeffs / nVel;
+        const int nLocalDirBndCoeffs = cgMap->GetNumLocalDirBndCoeffs();
 
         for (n = 0; n < nVel; ++n)
         {
@@ -221,7 +223,8 @@ namespace Nektar
                 }
             }
         }
-#endif   
+#endif
+
         m_hash = boost::hash_range(
             m_localToGlobalMap.begin(), m_localToGlobalMap.end());
     }

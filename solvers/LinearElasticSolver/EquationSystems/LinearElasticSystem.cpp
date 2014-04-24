@@ -57,9 +57,14 @@ namespace Nektar
         const int nVel = m_fields[0]->GetCoordim(0);
         int n;
 
+        // For now only two dimensions are supported. The code below and in the
+        // assembly map should be readily extendible to three dimensions
+        // however.
         ASSERTL0(nVel == 2, "Linear elastic solver not set up for"
                             " this dimension (only 2D supported).");
 
+        // Create a coupled assembly map which allows us to tie u and v fields
+        // together.
         MultiRegions::ContField2DSharedPtr u = boost::dynamic_pointer_cast<
             MultiRegions::ContField2D>(m_fields[0]);
         m_assemblyMap = MemoryManager<CoupledAssemblyMap>
@@ -69,7 +74,9 @@ namespace Nektar
                                 m_boundaryConditions,
                                 m_fields);
 
-        // Figure out size of matrices by looping over expansion.
+        // Figure out size of our new matrix systems by looping over all
+        // expansions and multiply number of coefficients by velocity
+        // components.
         const int nEl = m_fields[0]->GetExpSize();
         LocalRegions::ExpansionSharedPtr exp;
 
@@ -83,7 +90,7 @@ namespace Nektar
             sizeInt[n] = nVel * exp->GetNcoeffs() - sizeBnd[n];
         }
 
-        // Create block matrices.
+        // Create block matrix storage for the statically condensed system.
         MatrixStorage blkmatStorage = eDIAGONAL;
         m_schurCompl = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(
             sizeBnd, sizeBnd, blkmatStorage);
@@ -94,6 +101,7 @@ namespace Nektar
         m_Dinv       = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(
             sizeInt, sizeInt, blkmatStorage);
 
+        // Factors map for matrix keys.
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 1.0;
 
@@ -116,12 +124,21 @@ namespace Nektar
                 nCoeffs, nCoeffs, 0.0, eFULL);
             //DNekMatSharedPtr loc_mat2 = exp->GenMatrix(matkey2);
 
+            /*
+             * mat holds the linear operator [ A B ] acting on [ u ].
+             *                               [ C D ]           [ v ]
+             *
+             * In this case it is just a diagonal matrix with each component
+             * being a Helmholtz matrix, so that the u and v fields are not
+             * coupled at all.
+             */
             Array<TwoD, DNekMatSharedPtr> mat(2,2);
             mat[0][0] = loc_mat;
             mat[0][1] = zero;
             mat[1][0] = zero;
             mat[1][1] = loc_mat;
 
+            // Set up the statically condensed block for this element.
             SetStaticCondBlock(n, exp, mat);
         }
     }
@@ -148,22 +165,35 @@ namespace Nektar
             MultiRegions::ContField2D>(m_fields[0])->GetLocalToGlobalMap()
                                                    ->GetNumGlobalCoeffs();
 
+        // Evaluate the forcing function from the XML file.
         Array<OneD, Array<OneD, NekDouble> > forcing(nVel);
         EvaluateFunction(forcing, "Forcing");
 
+        // Set up some temporary storage.
+        //
+        // - forCoeffs holds the forcing coefficients in a local ordering;
+        //   however note that the ordering is different and dictated by the
+        //   assembly map. We loop over each element, then the boundary degrees
+        //   of freedom for u, boundary for v, followed by the interior for u
+        //   and then interior for v.
+        // - rhs is the global assembly of forCoeffs.
+        // - inout holds the Dirichlet degrees of freedom in the global
+        //   ordering, which have been assembled from the boundary expansion.
         Array<OneD, NekDouble> forCoeffs(nVel * nCoeffs, 0.0);
         Array<OneD, NekDouble> inout    (nVel * nGlobDofs, 0.0);
         Array<OneD, NekDouble> rhs      (nVel * nGlobDofs, 0.0);
 
+        // Counter for the local Dirichlet boundary to global ordering.
         int bndcnt = 0;
 
         for (nv = 0; nv < nVel; ++nv)
         {
-            // Inner product of forcing
+            // Take the inner product of the forcing function.
             Array<OneD, NekDouble> tmp(nCoeffs);
             m_fields[nv]->IProductWRTBase_IterPerExp(forcing[nv], tmp);
 
-            // Scatter forcing into RHS vector
+            // Scatter forcing into RHS vector according to the ordering
+            // dictated in the comment above.
             for (i = 0; i < m_fields[nv]->GetExpSize(); ++i)
             {
                 Array<OneD, unsigned int> bmap;
@@ -187,10 +217,10 @@ namespace Nektar
             }
 
             // Impose Dirichlet boundary conditions
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
-                m_fields[nv]->GetBndCondExpansions();
-            const Array<OneD, const int> &bndMap =
-                m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsMap();
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
+                = m_fields[nv]->GetBndCondExpansions();
+            const Array<OneD, const int> &bndMap
+                = m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsMap();
 
             for (i = 0; i < bndCondExp.num_elements(); ++i)
             {
@@ -207,22 +237,22 @@ namespace Nektar
             }
         }
 
+        // Assemble forcing into the RHS.
         m_assemblyMap->Assemble(forCoeffs, rhs);
 
-        // Negate RHS to be consistent with matrix definition
+        // Negate RHS to be consistent with matrix definition.
         Vmath::Neg(rhs.num_elements(), rhs, 1);
 
-        // Solve
+        // Solve.
         linSys->Solve(rhs, inout, m_assemblyMap);
 
+        // Scatter the global ordering back to the alternate local ordering.
         Array<OneD, NekDouble> tmp(nVel * nCoeffs);
-
-        // Backward transform
         m_assemblyMap->GlobalToLocal(inout, tmp);
 
+        // Finally, scatter back to field degrees of freedom
         for (nv = 0; nv < nVel; ++nv)
         {
-            // Scatter back to field degrees of freedom
             for (i = 0; i < m_fields[nv]->GetExpSize(); ++i)
             {
                 Array<OneD, unsigned int> bmap;
@@ -237,11 +267,13 @@ namespace Nektar
 
                 for (j = 0; j < nBnd; ++j)
                 {
-                    m_fields[nv]->UpdateCoeffs()[offset+bmap[j]] = tmp[nVel*offset + nv*nBnd + j];
+                    m_fields[nv]->UpdateCoeffs()[offset+bmap[j]] =
+                        tmp[nVel*offset + nv*nBnd + j];
                 }
                 for (j = 0; j < nInt; ++j)
                 {
-                    m_fields[nv]->UpdateCoeffs()[offset+imap[j]] = tmp[nVel*(offset + nBnd) + nv*nInt + j];
+                    m_fields[nv]->UpdateCoeffs()[offset+imap[j]] =
+                        tmp[nVel*(offset + nBnd) + nv*nInt + j];
                 }
             }
             m_fields[nv]->BwdTrans(m_fields[nv]->GetCoeffs(),

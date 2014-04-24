@@ -81,8 +81,8 @@ namespace Nektar
         const int nEl = m_fields[0]->GetExpSize();
         LocalRegions::ExpansionSharedPtr exp;
 
-        Array<OneD,unsigned int> sizeBnd(nEl);
-        Array<OneD,unsigned int> sizeInt(nEl);
+        Array<OneD, unsigned int> sizeBnd(nEl);
+        Array<OneD, unsigned int> sizeInt(nEl);
 
         for (n = 0; n < nEl; ++n)
         {
@@ -137,8 +137,8 @@ namespace Nektar
             {
                 for (j = 0; j < nB; ++j)
                 {
-                    (*schurCompl)(i,   j   ) = (*loc_mat)(i,j);
-                    (*schurCompl)(i+nB,j+nB) = (*loc_mat)(i,j);
+                    (*schurCompl)(i,   j   ) = (*tmp_mat)(i,j);
+                    (*schurCompl)(i+nB,j+nB) = (*tmp_mat)(i,j);
                 }
             }
 
@@ -147,8 +147,8 @@ namespace Nektar
             {
                 for (j = 0; j < nI; ++j)
                 {
-                    (*BinvD)(i,   j   ) = (*loc_mat)(i,j);
-                    (*BinvD)(i+nB,j+nI) = (*loc_mat)(i,j);
+                    (*BinvD)(i,   j   ) = (*tmp_mat)(i,j);
+                    (*BinvD)(i+nB,j+nI) = (*tmp_mat)(i,j);
                 }
             }
 
@@ -157,8 +157,8 @@ namespace Nektar
             {
                 for (j = 0; j < nB; ++j)
                 {
-                    (*C)(i,   j   ) = (*loc_mat)(i,j);
-                    (*C)(i+nI,j+nB) = (*loc_mat)(i,j);
+                    (*C)(i,   j   ) = (*tmp_mat)(i,j);
+                    (*C)(i+nI,j+nB) = (*tmp_mat)(i,j);
                 }
             }
 
@@ -167,8 +167,8 @@ namespace Nektar
             {
                 for (j = 0; j < nI; ++j)
                 {
-                    (*Dinv)(i,   j   ) = (*loc_mat)(i,j);
-                    (*Dinv)(i+nI,j+nI) = (*loc_mat)(i,j);
+                    (*Dinv)(i,   j   ) = (*tmp_mat)(i,j);
+                    (*Dinv)(i+nI,j+nI) = (*tmp_mat)(i,j);
                 }
             }
 
@@ -266,13 +266,12 @@ namespace Nektar
 
         // Solve
         linSys->Solve(rhs, inout, m_assemblyMap);
-\
+
         Array<OneD, NekDouble> tmp(nVel * nCoeffs);
 
         // Backward transform
         m_assemblyMap->GlobalToLocal(inout, tmp);
 
-#if 1
         for (nv = 0; nv < nVel; ++nv)
         {
             // Scatter back to field degrees of freedom
@@ -300,6 +299,5 @@ namespace Nektar
             m_fields[nv]->BwdTrans(m_fields[nv]->GetCoeffs(),
                                    m_fields[nv]->UpdatePhys());
         }
-#endif
     }
 }

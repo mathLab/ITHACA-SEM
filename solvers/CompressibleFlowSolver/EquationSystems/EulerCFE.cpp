@@ -110,7 +110,8 @@ namespace Nektar
      */
     void EulerCFE::v_SetInitialConditions(
         NekDouble   initialtime, 
-        bool        dumpInitialConditions)
+        bool        dumpInitialConditions,
+        const int   domain)
     {
         switch (m_problemType)
         {

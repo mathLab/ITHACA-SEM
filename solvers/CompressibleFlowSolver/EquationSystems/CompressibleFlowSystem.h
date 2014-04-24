@@ -180,11 +180,6 @@ namespace Nektar
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
-        virtual void v_SetInitialConditions(
-            NekDouble initialtime = 0.0,
-            bool dumpInitialConditions = true)
-        {
-        }
 
         NekDouble GetGasConstant()
         {

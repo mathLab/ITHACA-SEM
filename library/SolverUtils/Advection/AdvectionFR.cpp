@@ -1011,7 +1011,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>                &divCFlux)
         {
             int n;
-            int nLocalSolutionPts, phys_offset;
+            int nLocalSolutionPts, phys_offset, t_offset;
                         
             LibUtilities::BasisSharedPtr Basis;
             Basis = fields[0]->GetExp(0)->GetBasis(0);
@@ -1030,6 +1030,9 @@ namespace Nektar
             Array<OneD, NekDouble>  JumpL(nElements);
             Array<OneD, NekDouble>  JumpR(nElements);
             
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
+
             for (n = 0; n < nElements; ++n)
             {
                 nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
@@ -1043,24 +1046,32 @@ namespace Nektar
                 
                 fields[0]->GetExp(n)->GetVertexPhysVals(0, tmparrayX1,
                                                         tmpFluxVertex);
+
+                t_offset = fields[0]->GetTrace()
+                    ->GetPhys_Offset(elmtToTrace[n][0]->GetElmtId());
+
                 if(negatedFluxNormal[2*n])
                 {
-                    JumpL[n] =  numericalFlux[n] - tmpFluxVertex;
+                    JumpL[n] =  numericalFlux[t_offset] - tmpFluxVertex;
                 }
                 else
                 {
-                    JumpL[n] =  -numericalFlux[n] - tmpFluxVertex;
+                    JumpL[n] =  -numericalFlux[t_offset] - tmpFluxVertex;
                 }
                 
                 fields[0]->GetExp(n)->GetVertexPhysVals(1, tmparrayX1,
                                                         tmpFluxVertex);
+
+                t_offset = fields[0]->GetTrace()
+                    ->GetPhys_Offset(elmtToTrace[n][1]->GetElmtId());
+
                 if(negatedFluxNormal[2*n+1])
                 {
-                    JumpR[n] =  -numericalFlux[n+1] - tmpFluxVertex;
+                    JumpR[n] =  -numericalFlux[t_offset] - tmpFluxVertex;
                 }
                 else
                 {
-                    JumpR[n] =  numericalFlux[n+1] - tmpFluxVertex;
+                    JumpR[n] =  numericalFlux[t_offset] - tmpFluxVertex;
                 }
             }
             

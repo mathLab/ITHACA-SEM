@@ -131,6 +131,7 @@ namespace Nektar
         const int nNonDirBndCoeffs = nGlobBndCoeffs - nGlobDirCoeffs;
 
         const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
+        map<int, int > newGlobalIds;
         int i, j, n, cnt1, cnt2;
 
         // Order local boundary degrees of freedom. These are basically fine; we
@@ -152,6 +153,17 @@ namespace Nektar
                     {
                         m_localToGlobalBndSign[cnt1] =
                             cgMap->GetLocalToGlobalBndSign()[cnt2+j];
+                    }
+
+                    if (n == 0)
+                    {
+                        const int l2gnew = m_localToGlobalBndMap[cnt1];
+                        if (newGlobalIds.count(l2g))
+                        {
+                            ASSERTL0(newGlobalIds[l2g] == l2gnew,
+                                     "Consistency error");
+                        }
+                        newGlobalIds[l2g] = l2gnew;
                     }
                 }
             }
@@ -176,6 +188,7 @@ namespace Nektar
                 {
                     const int l2g = m_localToGlobalBndMap[cnt2];
                     m_localToGlobalMap[cnt1] = l2g;
+
                     if (m_signChange)
                     {
                         m_localToGlobalSign[cnt1] = m_localToGlobalBndSign[cnt2];
@@ -199,31 +212,34 @@ namespace Nektar
 
         ASSERTL0(globalId == m_numGlobalCoeffs, "Consistency error");
 
-#if 0
         // Set up boundary condition mapping: this is straightforward since we
         // only consider Dirichlet boundary conditions.
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
             = fields[0]->GetBndCondExpansions();
 
         const int nLocalDirBndCoeffs = cgMap->GetNumLocalDirBndCoeffs();
+        set<int> tester;
 
+        cnt1 = 0;
         for (n = 0; n < nVel; ++n)
         {
-            const int offset = n * nLocalDirBndCoeffs;
-
-            for (i = 0; i < nLocalDirBndCoeffs; ++i)
+            for (i = 0; i < nLocalDirBndCoeffs; ++i, ++cnt1)
             {
-                m_bndCondCoeffsToGlobalCoeffsMap[offset+i] =
-                    cgMap->GetBndCondCoeffsToGlobalCoeffsMap()[i];
+                const int l2g = cgMap->GetBndCondCoeffsToGlobalCoeffsMap()[i];
+                ASSERTL0(newGlobalIds.count(l2g) > 0, "Another consistency error");
+                int newId = newGlobalIds[l2g];
+                m_bndCondCoeffsToGlobalCoeffsMap[cnt1] = newId + n;
+                tester.insert(newId + n);
+                ASSERTL0(m_bndCondCoeffsToGlobalCoeffsMap[cnt1] < m_numGlobalDirBndCoeffs, "asdasd");
 
                 if (m_signChange)
                 {
-                    m_bndCondCoeffsToGlobalCoeffsSign[offset+i] =
-                        cgMap->GetBndCondCoeffsToGlobalCoeffsSign(i);
+                    m_bndCondCoeffsToGlobalCoeffsSign[cnt1] = cgMap->GetBndCondCoeffsToGlobalCoeffsSign(i);
                 }
             }
         }
-#endif
+
+        ASSERTL0(tester.size() == m_numGlobalDirBndCoeffs, "asdasdasdads");
 
         m_hash = boost::hash_range(
             m_localToGlobalMap.begin(), m_localToGlobalMap.end());

@@ -107,10 +107,14 @@ namespace Nektar
                                            exp->DetShapeType(),
                                            *exp, factors);
 
+            //LocalRegions::MatrixKey matkey2(StdRegions::eLaplacian01e,
+            //                                exp->DetShapeType(), *exp);
+
             // As a test, set up a Helmholtz matrix for each element.
             DNekMatSharedPtr loc_mat = exp->GenMatrix(matkey);
             DNekMatSharedPtr zero = MemoryManager<DNekMat>::AllocateSharedPtr(
                 nCoeffs, nCoeffs, 0.0, eFULL);
+            //DNekMatSharedPtr loc_mat2 = exp->GenMatrix(matkey2);
 
             Array<TwoD, DNekMatSharedPtr> mat(2,2);
             mat[0][0] = loc_mat;
@@ -151,6 +155,8 @@ namespace Nektar
         Array<OneD, NekDouble> inout    (nVel * nGlobDofs, 0.0);
         Array<OneD, NekDouble> rhs      (nVel * nGlobDofs, 0.0);
 
+        int bndcnt = 0;
+
         for (nv = 0; nv < nVel; ++nv)
         {
             // Inner product of forcing
@@ -181,19 +187,16 @@ namespace Nektar
             }
 
             // Impose Dirichlet boundary conditions
-            /*
-            const Array<OneD,const MultiRegions::ExpListSharedPtr> &bndCondExp =
-                field->GetBndCondExpansions();
-            const Array<OneD,const int> &bndMap =
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
+                m_fields[nv]->GetBndCondExpansions();
+            const Array<OneD, const int> &bndMap =
                 m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsMap();
-
-            int bndcnt = nv * m_assemblyMap->GetNumLocalDirBndCoeffs();
 
             for (i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 const Array<OneD,const NekDouble> &bndCoeffs = 
                     bndCondExp[i]->GetCoeffs();
-
+                
                 for (j = 0; j < bndCondExp[i]->GetNcoeffs(); ++j)
                 {
                     NekDouble sign =
@@ -202,7 +205,6 @@ namespace Nektar
                     inout[bndMap[bndcnt++]] = sign * bndCoeffs[j];
                 }
             }
-            */
         }
 
         m_assemblyMap->Assemble(forCoeffs, rhs);

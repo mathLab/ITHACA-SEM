@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CoupledLcoalToGlobalC0ContMap.cpp
+// File: CoupledAssemblyMap.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,9 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Wrapper class around the library
-// LocalToGlobalC0ContMap class for use in the Couplied Linearised NS
-// solver.
+// Description: Coupled assembly map for linear elasticity solver.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LinearElasticSolver/EquationSystems/CoupledAssemblyMap.h>
@@ -85,8 +84,8 @@ namespace Nektar
         m_systemSingular            = cgMap->GetSingularSystem();
 
         // Copy static condensation information. TODO: boundary and interior
-        // patches need to be re-ordered in order for multi-level static
-        // condensation support.
+        // patches need to be re-ordered in order to allow for multi-level
+        // static condensation support.
         m_staticCondLevel           = cgMap->GetStaticCondLevel();
         m_numPatches                = cgMap->GetNumPatches();
         m_numLocalBndCoeffsPerPatch = cgMap->GetNumLocalBndCoeffsPerPatch();
@@ -110,7 +109,7 @@ namespace Nektar
 
         // Only require a sign map if we are using modal polynomials in the
         // expansion and the order is >= 3.
-        if(m_signChange)
+        if (m_signChange)
         {
             m_localToGlobalSign               =
                 Array<OneD, NekDouble>(m_numLocalCoeffs,1.0);
@@ -160,7 +159,7 @@ namespace Nektar
                         const int l2gnew = m_localToGlobalBndMap[cnt1];
                         if (newGlobalIds.count(l2g))
                         {
-                            ASSERTL0(newGlobalIds[l2g] == l2gnew,
+                            ASSERTL1(newGlobalIds[l2g] == l2gnew,
                                      "Consistency error");
                         }
                         newGlobalIds[l2g] = l2gnew;
@@ -207,10 +206,10 @@ namespace Nektar
 
         for (i = 0; i < m_localToGlobalMap.num_elements(); ++i)
         {
-            ASSERTL0(m_localToGlobalMap[i] != -1, "asd");
+            ASSERTL1(m_localToGlobalMap[i] != -1, "Consistency error");
         }
 
-        ASSERTL0(globalId == m_numGlobalCoeffs, "Consistency error");
+        ASSERTL1(globalId == m_numGlobalCoeffs, "Consistency error");
 
         // Set up boundary condition mapping: this is straightforward since we
         // only consider Dirichlet boundary conditions.
@@ -218,7 +217,6 @@ namespace Nektar
             = fields[0]->GetBndCondExpansions();
 
         const int nLocalDirBndCoeffs = cgMap->GetNumLocalDirBndCoeffs();
-        set<int> tester;
 
         cnt1 = 0;
         for (n = 0; n < nVel; ++n)
@@ -226,20 +224,16 @@ namespace Nektar
             for (i = 0; i < nLocalDirBndCoeffs; ++i, ++cnt1)
             {
                 const int l2g = cgMap->GetBndCondCoeffsToGlobalCoeffsMap()[i];
-                ASSERTL0(newGlobalIds.count(l2g) > 0, "Another consistency error");
                 int newId = newGlobalIds[l2g];
                 m_bndCondCoeffsToGlobalCoeffsMap[cnt1] = newId + n;
-                tester.insert(newId + n);
-                ASSERTL0(m_bndCondCoeffsToGlobalCoeffsMap[cnt1] < m_numGlobalDirBndCoeffs, "asdasd");
 
                 if (m_signChange)
                 {
-                    m_bndCondCoeffsToGlobalCoeffsSign[cnt1] = cgMap->GetBndCondCoeffsToGlobalCoeffsSign(i);
+                    m_bndCondCoeffsToGlobalCoeffsSign[cnt1] =
+                        cgMap->GetBndCondCoeffsToGlobalCoeffsSign(i);
                 }
             }
         }
-
-        ASSERTL0(tester.size() == m_numGlobalDirBndCoeffs, "asdasdasdads");
 
         m_hash = boost::hash_range(
             m_localToGlobalMap.begin(), m_localToGlobalMap.end());

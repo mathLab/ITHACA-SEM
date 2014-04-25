@@ -81,10 +81,12 @@ namespace Nektar
 	
 	
     /**
-     *  Computes the right hand side of (1). The RHS is everything except the term that contains
-     *  the time derivative \f$\frac{\partial \mathbf{U}}{\partial t}\f$. In case of a Discontinuous
-     *  Galerkin projection, the routine WeakDGAdvection will be called which then calls 
-     *  v_GetFluxVector and v_NumericalFlux implemented in the PulseWavePropagation class. 
+     *  Computes the right hand side of (1). The RHS is everything
+     *  except the term that contains the time derivative
+     *  \f$\frac{\partial \mathbf{U}}{\partial t}\f$. In case of a
+     *  Discontinuous Galerkin projection, the routine WeakDGAdvection
+     *  will be called which then calls v_GetFluxVector and
+     *  v_NumericalFlux implemented in the PulseWavePropagation class.
      *
      */
     void PulseWavePropagation::DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
@@ -256,10 +258,11 @@ namespace Nektar
     
     
     /**
-     *  Calculates the third term of the weak form (1): numerical flux at boundary
-     *  \f$ \left[ \mathbf{\psi}^{\delta} \cdot \{ \mathbf{F}^u - \mathbf{F}(\mathbf{U}^{\delta})
-	 *  \} \right]_{x_e^l}^{x_eû} \f$
-	 */
+     *  Calculates the third term of the weak form (1): numerical flux
+     *  at boundary \f$ \left[ \mathbf{\psi}^{\delta} \cdot \{
+     *  \mathbf{F}^u - \mathbf{F}(\mathbf{U}^{\delta}) \}
+     *  \right]_{x_e^l}^{x_eû} \f$
+     */
     void PulseWavePropagation::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                                Array<OneD, Array<OneD, NekDouble> > &numflux)
     {		
@@ -337,45 +340,13 @@ namespace Nektar
         NekDouble p = 0.0;
         NekDouble p_t = 0.0;
         
-#if 0
-        // Compute the wave speeds in the normal direction according
-        // to the definition of Fwd and Bwd and indicated by n 
-        cL = sqrt(beta*sqrt(AL)/(2*rho));
-        cR = sqrt(beta*sqrt(AR)/(2*rho));
-
-        NekDouble c_Roe = 0.0;
-        NekDouble u_Roe =0.0;
-        Array<OneD, NekDouble> lambda(2);
-        Array<OneD, NekDouble> characteristic(4);
-        
-        c_Roe = (cL+cR)/2;		
-        u_Roe = (uL+uR)/2;
-        lambda[0]= u_Roe + c_Roe*n;
-        lambda[1]= u_Roe - c_Roe*n;
-        
-        // Calculate the caracteristic variables 
-        // Left characteristics \f$W_1^l, W_2^l\f$
-        characteristic[0] = uL + 4*cL;
-        characteristic[1] = uL - 4*cL;
-        // Right characteristics \f$W_1^r, W_2^r\f$
-        characteristic[2] = uR + 4*cR; 
-        characteristic[3] = uR - 4*cR; 
-        
-        // Take left or right value of characteristic variable
-        for (int j=0; j<2; j++)
-        {
-            if (lambda[j]>=0.0)
-            {	 
-                W[j]=characteristic[j];
-            }
-            else 
-            {
-                W[j]=characteristic[j+2];
-            }
-        }
-#else
-        // Compute the wave speeds in the normal direction according
-        // to the definition of Fwd and Bwd and indicated by n 
+        // Compute the wave speeds. The use of the normal here allows
+        // for the definition of the characteristics to be inverted
+        // (and hence the left and right state) if n is in the -ve
+        // x-direction. This means we end up with the positive
+        // defintion of the flux which has to therefore be multiplied
+        // by the normal at the end of the methods This is a bit of a
+        // mind twister but is efficient from a coding perspective.
         cL = sqrt(beta*sqrt(AL)/(2*rho))*n;
         cR = sqrt(beta*sqrt(AR)/(2*rho))*n;
 
@@ -385,7 +356,6 @@ namespace Nektar
         // then know characteristics immediately
         W[0] = uL + 4*cL;
         W[1] = uR - 4*cR;
-#endif
 
         // Calculate conservative variables from characteristics
         NekDouble w0mw1 = 0.25*(W[0]-W[1]);
@@ -396,14 +366,11 @@ namespace Nektar
         upwindedphysfield[0]= w0mw1*fac;
         upwindedphysfield[1]= 0.5*(W[0] + W[1]);
 
-        //fprintf(stdout," Upwind A: %16.14lf\n",upwindedphysfield[0]);
-        //fprintf(stdout," Upwind u: %16.14lf\n",upwindedphysfield[1]);
-        
-        // Compute the fluxes
-        Aflux = upwindedphysfield[0] * upwindedphysfield[1];
+        // Compute the fluxes multipled by the normal. 
+        Aflux = upwindedphysfield[0] * upwindedphysfield[1]*n;
         p = pext + beta*(sqrt(upwindedphysfield[0]) - sqrt(A_0));
         p_t = 0.5*(upwindedphysfield[1]*upwindedphysfield[1]) + p/rho;				
-        uflux =  p_t;
+        uflux =  p_t*n;
     }    
     
     /**

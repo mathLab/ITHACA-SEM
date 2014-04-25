@@ -268,14 +268,6 @@ namespace Nektar
                     }
                 }
             }
-
-#if 0       // Not sure why this is here? 
-            //negate first normal inwards facing into domain
-            for (k=0; k<coordim; k++)
-            {
-                normals[k][0] = locnormals[k][0];
-            }
-#endif
         }
             
         

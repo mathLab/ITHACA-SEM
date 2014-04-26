@@ -383,7 +383,7 @@ namespace Nektar
                 const std::string& pName) const;
             /// Retrieves a command-line argument value.
             template <typename T>
-            LIB_UTILITIES_EXPORT T GetCmdLineArgument(
+            T GetCmdLineArgument(
                 const std::string& pName) const
             {
                 return m_cmdLineOptions.find(pName)->second.as<T>();

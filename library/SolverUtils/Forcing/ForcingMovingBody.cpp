@@ -36,7 +36,6 @@
 
 #include <SolverUtils/Forcing/ForcingMovingBody.h>
 #include <MultiRegions/ExpList.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 namespace Nektar
 {

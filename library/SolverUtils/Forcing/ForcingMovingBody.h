@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingBody.h
+// File: ForcingMovingBody.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -91,6 +91,10 @@ namespace SolverUtils
                               NekDouble time);
 		
             void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+
+            void EvaluateAccelaration(const Array<OneD, NekDouble> &input, Array<OneD, NekDouble> &output, int npoints);       
+
+            void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
         
             Array<OneD, Array<OneD, NekDouble> >    m_zeta;
             Array<OneD, Array<OneD, NekDouble> >    m_eta;
@@ -99,7 +103,15 @@ namespace SolverUtils
             Array<OneD, std::string> m_motion;       // motion direction: [0] is 'x' and [1] is 'y'
             Array<OneD, bool>        m_IsFromFile;   // do determine if the the body motion come from an extern file
             
+            int m_intSteps;                                        //
+            int m_movingBodyCalls;                                 //
+                          
+            Array<OneD, NekDouble>  m_StifflyStable_Gamma0_Coeffs;
+            Array<OneD, Array<OneD, NekDouble> > m_StifflyStable_Alpha_Coeffs; 
+            Array<OneD, Array<OneD, NekDouble> > m_acceleration;   //       
+
             NekDouble m_kinvis;
+            NekDouble m_timestep; 
     };
 
 }

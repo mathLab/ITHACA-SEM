@@ -286,12 +286,12 @@ namespace Nektar
                 m_pressure->SmoothField(outarray[i]);
             }
         }
-
+        
         // Add forcing terms
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            (*x)->Apply(m_fields, inarray, outarray);
+            (*x)->Apply(m_fields, inarray, outarray, time);
         }
 		
 		// Calculate High-Order pressure boundary conditions

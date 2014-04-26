@@ -55,13 +55,17 @@ namespace Nektar
         EquationSystem::v_InitObject();
 
         const int nVel = m_fields[0]->GetCoordim(0);
-        int n;
+        int i, j, n;
 
         // For now only two dimensions are supported. The code below and in the
         // assembly map should be readily extendible to three dimensions
         // however.
         ASSERTL0(nVel == 2, "Linear elastic solver not set up for"
                             " this dimension (only 2D supported).");
+
+        // Make sure that we have Young's modulus and Poisson ratio set.
+        m_session->LoadParameter("E", m_E, 1.0);
+        m_session->LoadParameter("nu", m_nu, 0.25);
 
         // Create a coupled assembly map which allows us to tie u and v fields
         // together.
@@ -103,26 +107,47 @@ namespace Nektar
 
         // Factors map for matrix keys.
         StdRegions::ConstFactorMap factors;
-        factors[StdRegions::eFactorLambda] = 1.0;
+        //factors[StdRegions::eFactorLambda] = 1.0;
+
+        // Calculate various constants
+        NekDouble a = m_E*(1.0 - m_nu*m_nu)/(1 - 2.0*m_nu);
+        NekDouble b = 0.5 / (1.0 - m_nu);
+        NekDouble c = 0.5 * (1.0 - 2.0*m_nu) / (1.0 - m_nu);
 
         // Loop over each element and construct matrices.
         for (n = 0; n < nEl; ++n)
         {
             exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
             int nCoeffs = exp->GetNcoeffs();
+            int nPhys   = exp->GetTotPoints();
 
-            LocalRegions::MatrixKey matkey(StdRegions::eHelmholtz,
-                                           exp->DetShapeType(),
-                                           *exp, factors);
+            StdRegions::VarCoeffMap varcoeffA;
+            StdRegions::VarCoeffMap varcoeffBC;
+            StdRegions::VarCoeffMap varcoeffD;
+            varcoeffA [StdRegions::eVarCoeffD00] =
+                Array<OneD, NekDouble>(nPhys, a);
+            varcoeffA [StdRegions::eVarCoeffD11] =
+                Array<OneD, NekDouble>(nPhys, a*c);
+            varcoeffBC[StdRegions::eVarCoeffD00] =
+                Array<OneD, NekDouble>(nPhys, 0.0);
+            varcoeffBC[StdRegions::eVarCoeffD11] =
+                Array<OneD, NekDouble>(nPhys, 0.0);
+            varcoeffBC[StdRegions::eVarCoeffD01] =
+                Array<OneD, NekDouble>(nPhys, b);
+            varcoeffD [StdRegions::eVarCoeffD00] =
+                Array<OneD, NekDouble>(nPhys, a*c);
+            varcoeffD [StdRegions::eVarCoeffD11] =
+                Array<OneD, NekDouble>(nPhys, a);
 
-            //LocalRegions::MatrixKey matkey2(StdRegions::eLaplacian01e,
-            //                                exp->DetShapeType(), *exp);
-
-            // As a test, set up a Helmholtz matrix for each element.
-            DNekMatSharedPtr loc_mat = exp->GenMatrix(matkey);
-            DNekMatSharedPtr zero = MemoryManager<DNekMat>::AllocateSharedPtr(
-                nCoeffs, nCoeffs, 0.0, eFULL);
-            //DNekMatSharedPtr loc_mat2 = exp->GenMatrix(matkey2);
+            LocalRegions::MatrixKey matkeyA (StdRegions::eLaplacian,
+                                             exp->DetShapeType(),
+                                             *exp, factors, varcoeffA);
+            LocalRegions::MatrixKey matkeyD (StdRegions::eLaplacian,
+                                             exp->DetShapeType(),
+                                             *exp, factors, varcoeffD);
+            LocalRegions::MatrixKey matkeyBC(StdRegions::eLaplacian,
+                                             exp->DetShapeType(),
+                                             *exp, factors, varcoeffBC);
 
             /*
              * mat holds the linear operator [ A B ] acting on [ u ].
@@ -133,10 +158,10 @@ namespace Nektar
              * coupled at all.
              */
             Array<TwoD, DNekMatSharedPtr> mat(2,2);
-            mat[0][0] = loc_mat;
-            mat[0][1] = zero;
-            mat[1][0] = zero;
-            mat[1][1] = loc_mat;
+            mat[0][0] = exp->GenMatrix(matkeyA);
+            mat[0][1] = exp->GenMatrix(matkeyBC);
+            mat[1][0] = mat[0][1];
+            mat[1][1] = exp->GenMatrix(matkeyD);
 
             // Set up the statically condensed block for this element.
             SetStaticCondBlock(n, exp, mat);
@@ -150,7 +175,7 @@ namespace Nektar
 
     void LinearElasticSystem::v_DoSolve()
     {
-        int i, j, n, nv;
+        int i, j, nv;
         const int nVel = m_fields[0]->GetCoordim(0);
 
         // Now we've got the matrix system set up, create a GlobalLinSys object.
@@ -204,7 +229,6 @@ namespace Nektar
                 int nInt = imap.num_elements();
 
                 int offset     = m_fields[nv]->GetCoeff_Offset(i);
-                int nLocCoeffs = m_fields[nv]->GetExp(i)->GetNcoeffs();
 
                 for (j = 0; j < nBnd; ++j)
                 {

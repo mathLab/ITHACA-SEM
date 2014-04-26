@@ -71,6 +71,9 @@ namespace Nektar
         LinearElasticSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
+        NekDouble m_nu;
+        NekDouble m_E;
+
         CoupledAssemblyMapSharedPtr m_assemblyMap;
 
         DNekScalBlkMatSharedPtr m_schurCompl;

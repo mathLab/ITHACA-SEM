@@ -95,25 +95,9 @@ namespace Nektar
                 SpatialDomains::GeometrySharedPtr geom =
                     el[i]->GetGeom(m_mesh->m_spaceDim);
 
-                // Define basis key using MeshGraph functions. Need a better
-                // way of determining the number of modes!
-                LibUtilities::BasisKeyVector b =
-                    SpatialDomains::MeshGraph::DefineBasisKeyFromExpansionType(
-                        geom, SpatialDomains::eModified, 5);
-
-                Array<OneD, LibUtilities::BasisSharedPtr> basis(m_mesh->m_expDim);
-                LibUtilities::PointsKeyVector ptsKey(m_mesh->m_expDim);
-
-                // Generate/get cached basis functions.
-                for (int j = 0; j < m_mesh->m_expDim; ++j)
-                {
-                    basis[j] = LibUtilities::BasisManager()[b[j]];
-                    ptsKey[j] = basis[j]->GetPointsKey();
-                }
-
                 // Generate geometric factors.
                 SpatialDomains::GeomFactorsSharedPtr gfac =
-                    geom->GetGeomFactors(basis);
+                    geom->GetGeomFactors();
 
                 // Get the Jacobian and, if it is negative, print a warning
                 // message.
@@ -124,8 +108,8 @@ namespace Nektar
                     if (printList)
                     {
                         cout << "  - " << el[i]->GetId() << " ("
-                             << ElementTypeMap[el[i]->GetConf().m_e] << ")"
-                             << endl;
+                             << StdRegions::ElementTypeMap[el[i]->GetConf().m_e]
+                             << ")" << endl;
                     }
 
                     if (extract)

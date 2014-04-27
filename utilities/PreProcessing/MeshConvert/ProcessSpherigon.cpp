@@ -544,7 +544,7 @@ namespace Nektar
 
             // See if we should add noise to normals
             std::string normalnoise = m_config["normalnoise"].as<string>();
-            if(normalfile.compare("NotSpecified") != 0)
+            if(normalnoise.compare("NotSpecified") != 0)
             {
                 vector<NekDouble> values;
                 ASSERTL0(ParseUtils::GenerateUnOrderedVector(normalnoise.c_str(),values),"Failed to interpret normal noise string");

@@ -117,7 +117,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>&  inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             NekDouble  ival;
             Array<OneD,NekDouble> tmp(nquad0);
 
@@ -168,7 +168,8 @@ namespace Nektar
                       Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             Array<OneD,NekDouble> diff(nquad0);
 
             //StdExpansion1D::PhysTensorDeriv(inarray,diff);
@@ -235,24 +236,13 @@ namespace Nektar
             switch(coordim)
             {
                 case 2:
-
-                    Array<OneD, Array<OneD, NekDouble> > tangents;
-                    tangents = Array<OneD, Array<OneD, NekDouble> >(coordim);
-                    for(int k=0; k<coordim; ++k)
-                    {
-                        tangents[k]= Array<OneD, NekDouble>(nquad0); 
-                    }
-                    tangents = GetMetricInfo()->GetEdgeTangent();
-                    ASSERTL0(tangents!=NullNekDoubleArrayofArray, 
-                        "tangent vectors do not exist:" 
-                        "check if a boundary region is defined as I ");
                     //diff= dU/de
                     Array<OneD,NekDouble> diff(nquad0);
 
                     PhysTensorDeriv(inarray,diff);
 
                     //get dS/de= (Jac)^-1
-                    Array<OneD, NekDouble> Jac = m_metricinfo->GetJac();
+                    Array<OneD, NekDouble> Jac = m_metricinfo->GetJac(GetPointsKeys());
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                          //calculate the derivative as (dU/de)*(Jac)^-1
@@ -279,7 +269,8 @@ namespace Nektar
                       Array<OneD, NekDouble>& out_dn)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
-            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
+            Array<TwoD, const NekDouble> gmat =
+                            m_metricinfo->GetDerivFactors(GetPointsKeys());
             int     coordim  = m_geom->GetCoordim();
             Array<OneD, NekDouble> out_dn_tmp(nquad0,0.0);
             switch(coordim)
@@ -549,7 +540,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                       int coll_check)
         {
             int   nquad0 = m_base[0]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac(GetPointsKeys());
             Array<OneD,NekDouble> tmp(nquad0);
 
 
@@ -572,7 +563,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                       Array<OneD, NekDouble> & outarray)
         {
             int    nquad = m_base[0]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD, NekDouble> tmp1(nquad);
 
@@ -663,12 +655,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         }
 
         NekDouble SegExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& coord)
-        {
-            return PhysEvaluate(coord,m_phys);
-        }
-
-        NekDouble SegExp::v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coord,
                 const Array<OneD, const NekDouble> &physvals)
         {
@@ -678,80 +664,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             m_geom->GetLocCoords(coord,Lcoord);
 
             return StdSegExp::v_PhysEvaluate(Lcoord, physvals);
-        }
-
-
-        /// Returns the locations of the quadrature points in up to
-        /// three-dimensions.
-        void SegExp::v_GetCoords(
-                    Array<OneD, NekDouble> &coords_0,
-                    Array<OneD, NekDouble> &coords_1,
-                    Array<OneD, NekDouble> &coords_2)
-        {
-            Array<OneD,NekDouble>  x;
-
-            LibUtilities::BasisSharedPtr CBasis; 
-            ASSERTL0(m_geom, "m_geom not defined");
-
-            // get physical points defined in Geom
-            m_geom->FillGeom();
-
-            switch(m_geom->GetCoordim())
-            {
-            case 3:
-                ASSERTL0(coords_2.num_elements() != 0,
-                         "output coords_2 is not defined");
-                CBasis = m_geom->GetBasis(2,0);
-
-                if(m_base[0]->GetBasisKey().
-                   SamePoints(CBasis->GetBasisKey()))
-                {
-                    x = m_geom->UpdatePhys(2);
-                    Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_2, 1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp1D(
-                        CBasis->GetBasisKey(), &(m_geom->UpdatePhys(2))[0],
-                        m_base[0]->GetBasisKey(), &coords_2[0]);
-                }
-            case 2:
-                ASSERTL0(coords_1.num_elements() != 0, 
-                         "output coords_1 is not defined");
-                CBasis = m_geom->GetBasis(1,0);
-
-                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
-                {
-                    x = m_geom->UpdatePhys(1);
-                    Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_1, 1);
-                }
-                else // LibUtilities::Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp1D(
-                        CBasis->GetBasisKey(), &(m_geom->UpdatePhys(1))[0],
-                        m_base[0]->GetBasisKey(), &coords_1[0]);
-                }
-            case 1:
-                ASSERTL0(coords_0.num_elements() != 0, 
-                         "output coords_2 is not defined");
-                CBasis = m_geom->GetBasis(0,0);
-
-                if(m_base[0]->GetBasisKey().SamePoints(CBasis->GetBasisKey()))
-                {
-                    x = m_geom->UpdatePhys(0);
-                    Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_0, 1);
-                }
-                else // Interpolate to Expansion point distribution
-                {
-                    LibUtilities::Interp1D(
-                        CBasis->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
-                        m_base[0]->GetBasisKey(), &coords_0[0]);
-                }
-                break;
-            default:
-                ASSERTL0(false,"Number of dimensions are greater than 2");
-                break;
-            }
         }
 
 
@@ -771,6 +683,14 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             }
         }
         
+        void SegExp::v_GetCoords(
+            Array<OneD, NekDouble> &coords_0,
+            Array<OneD, NekDouble> &coords_1,
+            Array<OneD, NekDouble> &coords_2)
+        {
+            Expansion::v_GetCoords(coords_0, coords_1, coords_2);
+        }
+
         // Get vertex value from the 1D Phys space.
         void SegExp::v_GetVertexPhysVals(
             const int vertex,
@@ -812,98 +732,11 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         // Helper functions
         //-----------------------------
 
-        /// Writes out the physical space data to file.
-        void SegExp::v_WriteToFile(
-                    std::ofstream &outfile,
-                    OutputFormat format,
-                    const bool dumpVar,
-                    std::string var)
+        void SegExp::v_SetCoeffsToOrientation(
+            Array<OneD, NekDouble> &coeffs,
+            StdRegions::Orientation dir)
         {
-            if (format==eTecplot)
-            {
-                int i,j;
-                int     nquad = m_base[0]->GetNumPoints();
-
-                Array<OneD,NekDouble> coords[3];
-
-                ASSERTL0(m_geom,"m_geom not defined");
-
-                int     coordim  = m_geom->GetCoordim();
-
-                coords[0] = Array<OneD,NekDouble>(nquad);
-                coords[1] = Array<OneD,NekDouble>(nquad);
-                coords[2] = Array<OneD,NekDouble>(nquad);
-
-                GetCoords(coords[0],coords[1],coords[2]);
-
-                if (dumpVar)
-                {
-                    outfile << "Variables = x";
-
-                    if(coordim == 2)
-                    {
-                        outfile << ", y";
-                    }
-                    else if (coordim == 3)
-                    {
-                        outfile << ", y, z";
-                    }
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-
-                outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
-
-                for (i = 0; i < nquad; ++i)
-                {
-                    for(j = 0; j < coordim; ++j)
-                    {
-                        outfile << coords[j][i] << " ";
-                    }
-                    outfile << m_phys[i] << std::endl;
-                }
-            }
-            else if (format==eGmsh)
-            {  
-                int i;
-                int     nquad = m_base[0]->GetNumPoints();
-
-                Array<OneD,NekDouble> coords[3];
-
-                ASSERTL0(m_geom,"m_geom not defined");
-                coords[0] = Array<OneD,NekDouble>(nquad,0.0);
-                coords[1] = Array<OneD,NekDouble>(nquad,0.0);
-                coords[2] = Array<OneD,NekDouble>(nquad,0.0);
-
-                GetCoords(coords[0],coords[1],coords[2]);
-
-                if (dumpVar)
-                {
-                    outfile<<"View.Type = 2;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
- 
-                for (i = 0; i < nquad; ++i)
-                {
-                    outfile << "SP(" << coords[0][i] << ", ";
-                    outfile << coords[1][i] << ", " << coords[2][i] << ")";
-                    outfile << "{" << m_phys[i] << "};" << endl;
-                }
-
-                if (dumpVar)
-                { 
-                    outfile << "};" << endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented"
-                                "for requested type of output");
-            }
-        }
-
-        void SegExp::v_SetCoeffsToOrientation(StdRegions::Orientation dir)
-        {
-            v_SetCoeffsToOrientation(dir,m_coeffs,m_coeffs);
+            v_SetCoeffsToOrientation(dir,coeffs,coeffs);
         }
 
         void SegExp::v_SetCoeffsToOrientation(
@@ -948,95 +781,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             return m_metricinfo->GetGtype();
         }
 
-        /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$
-            error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
-            u_{exact}\f$ is given by the array \a sol.
-
-            The full function is defined in StdExpansion::Linf
-
-            Input:
-
-            - \a _phys: takes the physical value space array as
-            approximate solution
-
-            - \a sol: array of solution function  at physical quadrature points
-
-            output:
-
-            - returns the \f$ L_\infty \f$ error as a NekDouble.
-        */
-        NekDouble SegExp::v_Linf(const Array<OneD, const NekDouble>& sol)
-        {
-            return Linf(sol);
-        }
-
-        /** \brief Virtual function to evaluate the \f$ L_\infty \f$ norm of
-            the function defined at the physical points \a (this)->_phys.
-
-            The full function is defined in StdExpansion::Linf
-
-            Input:
-
-            - \a _phys: uses the physical value space array as discrete
-            function to be evaulated.
-
-            output:
-
-            - returns the \f$ L_\infty \f$  as a NekDouble.
-        */
-        NekDouble SegExp::v_Linf()
-        {
-            return Linf();
-        }
-
-        /** \brief Virtual function to evaluate the \f$ L_2\f$, \f$ |
-            \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2 dx
-            \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by the
-            array sol.
-
-            The full function is defined in StdExpansion::L2
-
-            Input:
-
-            - \a _phys: takes the physical value space array as
-            approximate solution
-            - \a sol: array of solution function  at physical quadrature points
-
-            output:
-
-            - returns the \f$ L_2 \f$ error as a NekDouble.
-        */
-        NekDouble SegExp::v_L2(const Array<OneD, const NekDouble>& sol)
-        {
-            return StdExpansion::L2(sol);
-        }
-
-        /** \brief Virtual function to evaluate the \f$ L_2\f$ norm of the
-            function defined at the physical points \a (this)->_phys.
-
-            The full function is defined in StdExpansion::L2
-
-            Input:
-
-            - \a _phys: uses the physical value space array as discrete
-            function to be evaulated.
-
-            output:
-
-            - returns the \f$ L_2 \f$  as a NekDouble.
-        */
-        NekDouble SegExp::v_L2()
-        {
-            return StdExpansion::L2();
-        }
-
-
-
         int SegExp::v_GetNumPoints(const int dir) const
         {
             return GetNumPoints(dir);
         }
-
 
         int SegExp::v_GetNcoeffs(void) const
         {
@@ -1058,15 +806,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         int SegExp::v_NumDGBndryCoeffs() const
         {
             return 2;
-        }
-
-
-        void SegExp::v_SetUpPhysTangents(
-                const ExpansionSharedPtr &exp2D,
-                const int edge)
-        {
-             GetMetricInfo()->ComputeEdgeTangents(exp2D->GetGeom(),
-                                edge, GetBasis(0)->GetPointsKey());
         }
 
 
@@ -1122,7 +861,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type = geomFactors->GetGtype();
-            const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
+            const Array<TwoD, const NekDouble> &gmat =
+                                geomFactors->GetDerivFactors(GetPointsKeys());
             int nqe = m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
 
@@ -1185,7 +925,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
 
             Array<OneD,NekDouble> physValues(nquad);
             Array<OneD,NekDouble> dPhysValuesdx(nquad);
@@ -1290,7 +1031,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& gmat =
+                                m_metricinfo->GetDerivFactors(GetPointsKeys());
             const NekDouble lambda =
                 mkey.GetConstFactor(StdRegions::eFactorLambda);
 
@@ -1430,6 +1172,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         {
             DNekScalMatSharedPtr returnval;
             NekDouble fac;
+            LibUtilities::PointsKeyVector ptsKeys = GetPointsKeys();
 
             ASSERTL2(m_metricinfo->GetGtype() != 
                      SpatialDomains::eNoGeomType,
@@ -1447,7 +1190,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     }
                     else
                     {
-                        fac = (m_metricinfo->GetJac())[0];
+                        fac = (m_metricinfo->GetJac(ptsKeys))[0];
                         goto UseStdRegionsMatrix;
                     }
                 }
@@ -1468,7 +1211,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     }
                     else
                     {
-                        fac = 1.0/(m_metricinfo->GetJac())[0];
+                        fac = 1.0/(m_metricinfo->GetJac(ptsKeys))[0];
                         goto UseStdRegionsMatrix;
                     }
                 }
@@ -1513,8 +1256,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                                             mkey.GetShapeType(), *this);  
 
                         DNekMatSharedPtr WeakDerivStd = GetStdMatrix(deriv0key);
-                        fac = m_metricinfo->GetGmat()[dir][0]*
-                            m_metricinfo->GetJac()[0];
+                        fac = m_metricinfo->GetDerivFactors(ptsKeys)[dir][0]*
+                            m_metricinfo->GetJac(ptsKeys)[0];
 
                         returnval = MemoryManager<DNekScalMat>::
                                             AllocateSharedPtr(fac,WeakDerivStd);
@@ -1534,10 +1277,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         fac = 0.0;
                         for (int i = 0; i < coordim; ++i)
                         {
-                            fac += m_metricinfo->GetGmat()[i][0]*
-                                   m_metricinfo->GetGmat()[i][0];
+                            fac += m_metricinfo->GetDerivFactors(ptsKeys)[i][0]*
+                                   m_metricinfo->GetDerivFactors(ptsKeys)[i][0];
                         }
-                        fac *= m_metricinfo->GetJac()[0];
+                        fac *= m_metricinfo->GetJac(ptsKeys)[0];
                         goto UseStdRegionsMatrix;
                     }
                 }

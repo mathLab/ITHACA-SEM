@@ -100,9 +100,9 @@ namespace Nektar
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
-            virtual void v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
-            
-            virtual void v_GetCoord(Array<OneD,NekDouble> &coords);
+            virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
+                                     Array<OneD,NekDouble> &coords_1,
+                                     Array<OneD,NekDouble> &coords_2);
             
             virtual void v_SetCoeff(NekDouble val);
             

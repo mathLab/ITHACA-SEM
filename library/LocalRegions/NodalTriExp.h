@@ -71,8 +71,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
-            LOCAL_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
-            
             //----------------------------
             // Integration Methods
             //----------------------------
@@ -114,7 +112,9 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble> &inarray, 
                           Array<OneD, NekDouble> &outarray);
             
-            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
+            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(
+                            const Array<OneD, const NekDouble> &coord,
+                            const Array<OneD, const NekDouble> & physvals);
 
             void MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
                               Array<OneD,NekDouble> &outarray,
@@ -212,11 +212,6 @@ namespace Nektar
                 return StdNodalTriExp::GetNodalPoints(x,y);
             }
             
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
-            {
-                WriteToFile(outfile,format,dumpVar,var);
-            }
-            
             /** \brief Virtual call to integrate the physical point list \a inarray
                 over region (see SegExp::Integral) */
             virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
@@ -288,33 +283,14 @@ namespace Nektar
             }
             
             /// Virtual call to TriExp::Evaluate
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
-            {
-                return PhysEvaluate(coords);
-            }
-            
-            virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
-            {
-                return Linf(sol);
-            }
-            
-            
-            virtual NekDouble v_Linf()
-            {
-                return Linf();
-            }
-            
-            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
-            {
-                return StdExpansion::L2(sol);
-            }
-            
-            
-            virtual NekDouble v_L2()
-            {
-                return StdExpansion::L2();
-            }
+            virtual NekDouble v_PhysEvaluate(
+                const Array<OneD, const NekDouble> &coord,
+                const Array<OneD, const NekDouble> &physvals)
 
+            {
+                return PhysEvaluate(coord, physvals);
+            }
+            
             virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
             {
                 return CreateStdMatrix(mkey);

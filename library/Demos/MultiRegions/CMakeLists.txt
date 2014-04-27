@@ -50,10 +50,20 @@ ADD_NEKTAR_EXECUTABLE(HDGHelmholtz2D demos HDGHelmholtz2DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz2D)
 
+SET(PostProcHDG2DSource  PostProcHDG2D.cpp)
+ADD_NEKTAR_EXECUTABLE(PostProcHDG2D demos PostProcHDG2DSource)
+TARGET_LINK_LIBRARIES(PostProcHDG2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(PostProcHDG2D)
+
 SET(HDGHelmholtz3DSource  HDGHelmholtz3D.cpp)
 ADD_NEKTAR_EXECUTABLE(HDGHelmholtz3D demos HDGHelmholtz3DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz3D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz3D)
+
+SET(PostProcHDG3DSource  PostProcHDG3D.cpp)
+ADD_NEKTAR_EXECUTABLE(PostProcHDG3D demos PostProcHDG3DSource)
+TARGET_LINK_LIBRARIES(PostProcHDG3D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(PostProcHDG3D)
 
 SET(HDGHelmholtz3DHomo1DSource  HDGHelmholtz3DHomo1D.cpp)
 ADD_NEKTAR_EXECUTABLE(HDGHelmholtz3DHomo1D demos HDGHelmholtz3DHomo1DSource)
@@ -106,6 +116,7 @@ ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_curved_tri)
 ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes)
 ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes_AllBCs)
 
+
 ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_CG_Hex)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml)
@@ -114,6 +125,8 @@ ADD_NEKTAR_TEST(Helmholtz3D_CG_Tet)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_Deformed)
+ADD_NEKTAR_TEST(Helmholtz3D_CG_Pyr)
+ADD_NEKTAR_TEST(Helmholtz3D_CG_Pyr_Deformed)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Homo1D)
 ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_HDG_Homo1D)
 ADD_NEKTAR_TEST(Helmholtz3D_HDG_Prism)
@@ -132,6 +145,7 @@ IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml_par3)
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml_par3)
     ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_CG_Hex_AllBCs_xxt_sc_par3)
+    ADD_NEKTAR_TEST(Helmholtz2D_CG_P14_xxt_per)
 #
 # TODO: This test fails due to a bug with Dirichlet bnd conditions.
 #       To be resolved in a separate branch.

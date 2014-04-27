@@ -42,7 +42,7 @@
 #include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>
 
-#include <SpatialDomains/GeomFactors2D.h>
+#include <SpatialDomains/GeomFactors.h>
 #include <StdRegions/StdTriExp.h>
 
 namespace Nektar
@@ -130,29 +130,25 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetCoordim() const;
 
                 SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr
-                            v_GetBasis(const int i, const int j);
+                            v_GetBasis(const int i);
 
                 SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr
-                            v_GetEdgeBasis(const int i, const int j);
-
-                SPATIAL_DOMAINS_EXPORT virtual Array<OneD,NekDouble> &
-                            v_UpdatePhys(const int i);
+                            v_GetEdgeBasis(const int i);
 
                 SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
                         const int i,
                         const Array<OneD,const NekDouble> &Lcoord);
 
-                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+                SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors();
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_SetOwnData();
 
                 /// Put all quadrature information into edge structure
                 SPATIAL_DOMAINS_EXPORT virtual void v_FillGeom();
 
-                SPATIAL_DOMAINS_EXPORT virtual void v_GetLocCoords(
+                SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetLocCoords(
                         const Array<OneD,const NekDouble> &coords,
-                              Array<OneD,      NekDouble> &Lcoords);
+                        Array<OneD,      NekDouble> &Lcoords);
 
                 SPATIAL_DOMAINS_EXPORT virtual int v_GetEid(int i) const;
 
@@ -183,9 +179,16 @@ namespace Nektar
                               NekDouble tol = 0.0);
 
                 SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
-                                             const Array<OneD, const NekDouble> &gloCoord, 
-                                             Array<OneD, NekDouble> &locCoord,
-                                             NekDouble                     tol = 0.0);
+                        const Array<OneD, const NekDouble> &gloCoord,
+                              Array<OneD, NekDouble>       &locCoord,
+                              NekDouble                     tol);
+                
+                SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble> &gloCoord,
+                              Array<OneD, NekDouble>       &locCoord,
+                              NekDouble                     tol,
+                              NekDouble                    &resid);
+
             private:
                 bool                            m_ownData;
         };

@@ -43,6 +43,9 @@ int main(int argc, char *argv[])
 
     try
     {
+        LibUtilities::FieldIOSharedPtr fld =
+            MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(vSession->GetComm());
+
         //----------------------------------------------
         // Read in mesh from input file
         SpatialDomains::MeshGraphSharedPtr graph2D = 
@@ -152,12 +155,7 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------------
         // Write solution to file
-        string out = vSession->GetSessionName();
-        if (vSession->GetComm()->GetSize() > 1)
-        {
-            out += "_P" + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
-        }
-        out += ".fld";
+        string out = vSession->GetSessionName() + ".fld";
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
@@ -168,7 +166,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        LibUtilities::Write(out, FieldDef, FieldData);
+        fld->Write(out, FieldDef, FieldData);
         //-----------------------------------------------
 
         //----------------------------------------------
@@ -188,9 +186,9 @@ int main(int argc, char *argv[])
 
             //--------------------------------------------
             // Calculate errors
-            NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
-            NekDouble vL2Error   = Exp->L2(Fce->GetPhys());
-            NekDouble vH1Error   = Exp->H1(Fce->GetPhys());
+            NekDouble vLinfError = Exp->Linf(Exp->GetPhys(), Fce->GetPhys());
+            NekDouble vL2Error   = Exp->L2(Exp->GetPhys(), Fce->GetPhys());
+            NekDouble vH1Error   = Exp->H1(Exp->GetPhys(), Fce->GetPhys());
             if (vSession->GetComm()->GetRank() == 0)
             {
                 cout << "L infinity error: " << vLinfError << endl;

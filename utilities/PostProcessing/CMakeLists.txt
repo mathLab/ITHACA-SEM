@@ -7,14 +7,16 @@ ADD_UTILITIES_EXECUTABLE(FldAddFalknerSkanBL   util-extra FldAddFalknerSkanBL.cp
 ADD_UTILITIES_EXECUTABLE(FldAddFld         util FldAddFld.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddVort        util FldAddVort.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddScalGrad    util FldAddScalGrad.cpp)
+ADD_UTILITIES_EXECUTABLE(FldAddWSS	   util FldAddWSS.cpp)
+ADD_UTILITIES_EXECUTABLE(FldAddMultiShear    util FldAddMultiShear.cpp)
 ADD_UTILITIES_EXECUTABLE(FldToTecplot      util FldToTecplot.cpp)
 ADD_UTILITIES_EXECUTABLE(FldQCriterion     util FldQCriterion.cpp)
-ADD_UTILITIES_EXECUTABLE(FldToGmsh         util FldToGmsh.cpp)
 ADD_UTILITIES_EXECUTABLE(FldToVtk          util FldToVtk.cpp)
 ADD_UTILITIES_EXECUTABLE(ProbeFld          util-extra ProbeFld.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToTecplot      util XmlToTecplot.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToTecplotWireFrame  util XmlToTecplotWireFrame.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToVtk          util XmlToVtk.cpp)
+ADD_UTILITIES_EXECUTABLE(Fld2DTo2D5        util Fld2DTo2D5.cpp)
 
 # Generate list of available solvers
 FILE(GLOB dir_list "*")

@@ -48,6 +48,20 @@ namespace Nektar
             
         }
         
+        /**
+         * @brief Initialise AdvectionNonConservative objects and store them
+         * before starting the time-stepping.
+         *
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         */
+        void AdvectionNonConservative::v_InitObject(
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {
+            Advection::v_InitObject(pSession, pFields);
+        }
+
         void AdvectionNonConservative::v_Advect(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

@@ -207,16 +207,16 @@ namespace Nektar
 
             m_signChange = false;
             //m_systemSingular = false;
-
+            
             map<int,int> vertReorderedGraphVertId;
             map<int,int> edgeReorderedGraphVertId;
             map<int,int> faceReorderedGraphVertId;
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
             map<int,pair<int, StdRegions::Orientation> >::const_iterator mapFaceIt;
-
+            
             bool systemSingular = (checkIfSystemSingular)? true: false;
-
+            
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
              */
@@ -564,8 +564,6 @@ namespace Nektar
              */
             typedef boost::adjacency_list<
                 boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-            typedef boost::graph_traits<
-                BoostGraph>::vertex_descriptor BoostVertex;
             BoostGraph boostGraphObj;
 
             map<int, int>    vertTempGraphVertId;
@@ -833,11 +831,7 @@ namespace Nektar
                     edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                     nEdgeInteriorCoeffs = EdgeSize[meshEdgeId];
                     m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
-                    
-                    if(nEdgeInteriorCoeffs > 0)
-                    {
-                        m_numNonDirEdges++;
-                    }
+                    m_numNonDirEdges++;
                 }
                 else
                 {
@@ -866,10 +860,7 @@ namespace Nektar
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                                 m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
 
-                                if(nEdgeInteriorCoeffs > 0)
-                                {
-                                    m_numNonDirEdges++;
-                                }
+                                m_numNonDirEdges++;
                             }
                             localEdges[localEdgeOffset+edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
                             vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = nEdgeInteriorCoeffs;
@@ -895,11 +886,7 @@ namespace Nektar
                     faceTempGraphVertId[meshFaceId]  = tempGraphVertId++;
                     nFaceInteriorCoeffs  = FaceSize[meshFaceId];
                     m_numNonDirFaceModes+=nFaceInteriorCoeffs;
-                    
-                    if(nFaceInteriorCoeffs > 0)
-                    {
-                        m_numNonDirFaces++;
-                    }                
+                    m_numNonDirFaces++;
                 }
                 else if (pIt->first < pIt->second[0].id)
                 {
@@ -912,11 +899,7 @@ namespace Nektar
                     faceTempGraphVertId[pIt->second[0].id] = tempGraphVertId++;
                     nFaceInteriorCoeffs  = FaceSize[pIt->first]; 
                     m_numNonDirFaceModes+=nFaceInteriorCoeffs;
-                    
-                    if(nFaceInteriorCoeffs > 0)
-                    {
-                        m_numNonDirFaces++;
-                    }
+                    m_numNonDirFaces++;
                 }
             }
 
@@ -940,10 +923,7 @@ namespace Nektar
                                 faceTempGraphVertId[meshFaceId] = tempGraphVertId++;
                                 m_numNonDirFaceModes+=nFaceInteriorCoeffs;
 
-                                if(nFaceInteriorCoeffs > 0)
-                                {
-                                    m_numNonDirFaces++;
-                                }
+                                m_numNonDirFaces++;
                             }
                             localFaces[localFaceOffset+faceCnt++] = faceTempGraphVertId[meshFaceId];
                             vwgts_map[ faceTempGraphVertId[meshFaceId] ] = nFaceInteriorCoeffs;
@@ -1432,13 +1412,16 @@ namespace Nektar
                             }
                         }
 
-                        if (pIt->second[minIdK].orient == StdRegions::eBackwards &&
-                            meshEdgeId != min(minId, meshEdgeId))
+                        if( meshEdgeId != min(minId, meshEdgeId))
                         {
-                            edgeOrient = edgeOrient == StdRegions::eForwards ?
-                                StdRegions::eBackwards :
-                                StdRegions::eForwards;
+                            if (pIt->second[minIdK].orient == StdRegions::eBackwards)
+                            {
+                                // Swap edge orientation 
+                                edgeOrient = (edgeOrient == StdRegions::eForwards) ? 
+                                    StdRegions::eBackwards : StdRegions::eForwards;
+                            }
                         }
+                        
                     }
 
                     locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
@@ -1468,37 +1451,10 @@ namespace Nektar
                     
                     pIt = periodicFaces.find(meshFaceId);
                     
-                    // See if this face is periodic.
                     if (pIt != periodicFaces.end() &&
-                        pIt->second[0].orient != StdRegions::eDir1FwdDir1_Dir2FwdDir2 &&
                         meshFaceId == min(meshFaceId, pIt->second[0].id))
                     {
-                        int tmp1 = (int)faceOrient            - 5;
-                        int tmp2 = (int)pIt->second[0].orient - 5;
-                        
-                        int flipDir1Map[8]  = {2,3,0,1,6,7,4,5};
-                        int flipDir2Map[8]  = {1,0,3,2,5,4,7,6};
-                        int transposeMap[8] = {4,5,6,7,0,1,2,3};
-                        
-                        // Reverse orientation in direction 1.
-                        if (tmp2 == 2 || tmp2 == 3 || tmp2 == 6 || tmp2 == 7)
-                        {
-                            tmp1 = flipDir1Map[tmp1];
-                        }
-
-                        // Reverse orientation in direction 2
-                        if (tmp2 % 2 == 1)
-                        {
-                            tmp1 = flipDir2Map[tmp1];
-                        }
-
-                        // Transpose orientation
-                        if (tmp2 > 3)
-                        {
-                            tmp1 = transposeMap[tmp1];
-                        }
-
-                        faceOrient = (StdRegions::Orientation)(tmp1+5);
+                        faceOrient = DeterminePeriodicFaceOrient(faceOrient,pIt->second[0].orient);
                     }
 
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
@@ -1546,7 +1502,7 @@ namespace Nektar
                         if (iter != extraDirVerts.end() && 
                             foundExtraVerts.count(meshVertId) == 0)
                         {
-                            int loc = bndCondExp[i]->GetCoeff_Offset(j) + 
+                            int loc = bndCondExp[i]->GetCoeff_Offset(j) +
                                 bndCondFaceExp->GetVertexMap(k);
                             int gid = graphVertOffset[
                                                       vertReorderedGraphVertId[meshVertId]];
@@ -1583,9 +1539,7 @@ namespace Nektar
                             if (pIt->second[minIdL].orient == StdRegions::eBackwards &&
                                 meshEdgeId != min(minId, meshEdgeId))
                             {
-                                edgeOrient = edgeOrient == StdRegions::eForwards ?
-                                    StdRegions::eBackwards :
-                                    StdRegions::eForwards;
+                                edgeOrient = (edgeOrient == StdRegions::eForwards) ?  StdRegions::eBackwards : StdRegions::eForwards;
                             }
                         }
                         
@@ -1620,11 +1574,11 @@ namespace Nektar
                         {
                             for(l = 0; l < nEdgeInteriorCoeffs; ++l)
                             {
-                                int loc = bndCondExp[i]->GetCoeff_Offset(j) + 
+                                int loc = bndCondExp[i]->GetCoeff_Offset(j) +
                                     edgeInteriorMap[l];
                                 int gid = graphVertOffset[
                                     edgeReorderedGraphVertId[meshEdgeId]]+l;
-                                ExtraDirDof t(loc, gid, 1.0);
+                                ExtraDirDof t(loc, gid, edgeInteriorSign[l]);
                                 m_extraDirDofs[i].push_back(t);
                             }
                             foundExtraEdges.insert(meshEdgeId);
@@ -1701,7 +1655,7 @@ namespace Nektar
             {
                 for (i = 0; i < Tit->second.size(); ++i)
                 {
-                    boost::get<2>(Tit->second.at(i)) = 1.0/valence[Tit->second.at(i).get<1>()];
+                    boost::get<2>(Tit->second.at(i)) /= valence[Tit->second.at(i).get<1>()];
                 }
             }
 

@@ -113,13 +113,27 @@ namespace Nektar
             }
         }
 
-        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
+        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
         {
-            return PhysEvaluate(coords,m_phys);
+            Array<OneD, NekDouble> coll(2);
+            Array<OneD, DNekMatSharedPtr>  I(2);
+
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
+
+            LocCoordToLocCollapsed(coords,coll);
+            
+            I[0] = m_base[0]->GetI(coll);
+            I[1] = m_base[1]->GetI(coll+1);
+
+            return v_PhysEvaluate(I,physvals);
         }
 
-
-        NekDouble StdExpansion2D::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals)
+        NekDouble StdExpansion2D::v_PhysEvaluate(
+            const Array<OneD, DNekMatSharedPtr > &I, 
+            const Array<OneD, const NekDouble> &physvals)
         {
             NekDouble val;
             int i;
@@ -127,23 +141,15 @@ namespace Nektar
             int nq1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> wsp1(nq1);
 
-            DNekMatSharedPtr I = m_base[0]->GetI(coords);
-
-            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
-            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
-            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
-            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
-
             // interpolate first coordinate direction
             for (i = 0; i < nq1;++i)
             {
-                wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1,
+                wsp1[i] = Blas::Ddot(nq0, &(I[0]->GetPtr())[0], 1,
                                      &physvals[i * nq0], 1);
             }
 
             // interpolate in second coordinate direction
-            I = m_base[1]->GetI(coords+1);
-            val = Blas::Ddot(nq1, I->GetPtr(), 1, wsp1, 1);
+            val = Blas::Ddot(nq1, I[1]->GetPtr(), 1, wsp1, 1);
 
             return val;
         }
@@ -201,35 +207,6 @@ namespace Nektar
                 bool doCheckCollDir1)
         {
             v_IProductWRTBase_SumFacKernel(base0, base1, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1);
-        }
-
-        void StdExpansion2D::v_SetUpPhysNormals(const int edge)
-        {
-           ComputeEdgeNormal(edge);
-        }
-
-        const NormalVector & StdExpansion2D::v_GetEdgeNormal(const int edge) const
-        {
-            std::map<int, NormalVector>::const_iterator x;
-            x = m_edgeNormals.find(edge);
-            ASSERTL0 (x != m_edgeNormals.end(),
-                        "Edge normal not computed.");
-            return x->second;
-        }
-        
-        void StdExpansion2D::v_NegateEdgeNormal(const int edge)
-        {
-            m_negatedNormals[edge] = true;
-            for (int i = 0; i < GetCoordim(); ++i)
-            {
-                Vmath::Neg(m_edgeNormals[edge][i].num_elements(), 
-                           m_edgeNormals[edge][i], 1);
-            }
-        }
-
-        bool StdExpansion2D::v_EdgeNormalNegated(const int edge)
-        {
-            return m_negatedNormals[edge];
         }
 
         void StdExpansion2D::v_LaplacianMatrixOp_MatFree(

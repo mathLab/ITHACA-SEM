@@ -140,22 +140,36 @@ namespace Nektar
         }
 
         NekDouble StdExpansion3D::v_PhysEvaluate(
-            const Array<OneD, const NekDouble> &coords)
-        {
-            return PhysEvaluate(coords,m_phys);
-        }
-        
-        NekDouble StdExpansion3D::v_PhysEvaluate(
             const Array<OneD, const NekDouble> &coords, 
             const Array<OneD, const NekDouble> &physvals)
         {
+            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
+            Array<OneD, DNekMatSharedPtr>  I(3);
+
+            WARNINGL2(coords[0] >= -1,"coord[0] < -1");
+            WARNINGL2(coords[0] <=  1,"coord[0] >  1");
+            WARNINGL2(coords[1] >= -1,"coord[1] < -1");
+            WARNINGL2(coords[1] <=  1,"coord[1] >  1");
+            WARNINGL2(coords[2] >= -1,"coord[2] < -1");
+            WARNINGL2(coords[2] <=  1,"coord[2] >  1");
+
+            // Obtain local collapsed corodinate from 
+            // cartesian coordinate. 
+            LocCoordToLocCollapsed(coords,eta);
+
+            // Get Lagrange interpolants. 
+            I[0] = m_base[0]->GetI(eta);
+            I[1] = m_base[1]->GetI(eta+1);
+            I[2] = m_base[2]->GetI(eta+2);
+
+            return v_PhysEvaluate(I,physvals);
+        }
+
+        NekDouble StdExpansion3D::v_PhysEvaluate(
+            const Array<OneD, DNekMatSharedPtr > &I, 
+            const Array<OneD, const NekDouble> &physvals)
+        {
             NekDouble  value;
-            ASSERTL2(coords[0] >= -1,"coord[0] < -1");
-            ASSERTL2(coords[0] <=  1,"coord[0] >  1");
-            ASSERTL2(coords[1] >= -1,"coord[1] < -1");
-            ASSERTL2(coords[1] <=  1,"coord[1] >  1");
-            ASSERTL2(coords[2] >= -1,"coord[2] < -1");
-            ASSERTL2(coords[2] <=  1,"coord[2] >  1");
             
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();
@@ -165,28 +179,20 @@ namespace Nektar
             Array<OneD, NekDouble> sumFactorization_r  = Array<OneD, NekDouble>(Qz);
             
             // Lagrangian interpolation matrix
-            DNekMatSharedPtr I;
             NekDouble *interpolatingNodes = 0;
             
             // Interpolate first coordinate direction
-            I = m_base[0]->GetI(coords);
-            interpolatingNodes = &I->GetPtr()[0];
-            for(int i = 0; i < Qy*Qz;++i)
-            {
-                sumFactorization_qr[i] =  Blas::Ddot(Qx, interpolatingNodes, 1, &physvals[ i*Qx ], 1);
-            }
-            
+            interpolatingNodes = &I[0]->GetPtr()[0];
+
+            Blas::Dgemv('T',Qx,Qy*Qz,1.0,&physvals[0],Qx,&interpolatingNodes[0], 1, 0.0, &sumFactorization_qr[0], 1);
+
             // Interpolate in second coordinate direction
-            I = m_base[1]->GetI(coords+1);
-            interpolatingNodes = &I->GetPtr()[0];
-            for(int j =0; j < Qz; ++j)
-            {
-                sumFactorization_r[j] = Blas::Ddot(Qy, interpolatingNodes, 1, &sumFactorization_qr[ j*Qy ], 1);
-            }
-            
+            interpolatingNodes = &I[1]->GetPtr()[0];
+
+            Blas::Dgemv('T',Qy,Qz,1.0,&sumFactorization_qr[0],Qy,&interpolatingNodes[0],1,0.0,&sumFactorization_r[0], 1);
+
             // Interpolate in third coordinate direction
-            I = m_base[2]->GetI(coords+2);
-            interpolatingNodes = &I->GetPtr()[0];
+            interpolatingNodes = &I[2]->GetPtr()[0];
             value = Blas::Ddot(Qz, interpolatingNodes, 1, &sumFactorization_r[0], 1);
             
             return value;
@@ -203,7 +209,8 @@ namespace Nektar
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNVarCoeff() == 0)
+            if ( mkey.GetNVarCoeff() == 0 &&
+                !mkey.ConstFactorExists(eFactorSVVCutoffRatio))
             {
                 // This implementation is only valid when there are no
                 // coefficients associated to the Laplacian operator
@@ -314,6 +321,16 @@ namespace Nektar
             return x->second;
         }
 
+        NekDouble StdExpansion3D::v_Integral(
+            const Array<OneD, const NekDouble>& inarray)
+        {
+            const int nqtot = GetTotPoints();
+            Array<OneD, NekDouble> tmp(GetTotPoints());
+            MultiplyByStdQuadratureMetric(inarray, tmp);
+            return Vmath::Vsum(nqtot, tmp, 1);
+        }
+        
+        
         void StdExpansion3D::v_NegateFaceNormal(const int face)
         {
             m_negatedNormals[face] = true;

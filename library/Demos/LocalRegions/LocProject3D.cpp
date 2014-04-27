@@ -4,6 +4,7 @@
 #include <StdRegions/StdExpansion3D.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/PrismExp.h>
+#include <LocalRegions/PyrExp.h>
 #include <LocalRegions/TetExp.h>
 
 #include <LibUtilities/Foundations/Foundations.hpp>
@@ -39,6 +40,9 @@ SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[]);
 /// Generates a Hex geometry based on the command-line parameters.
 SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[]);
 
+/// Generates a Pyramid geometry based on the command-line parameters.
+SpatialDomains::PyrGeomSharedPtr CreatePyrGeom(int argc, char *argv[]);
+
 /// Generates a Tet geometry based on the command-line parameters.
 SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[]);
 
@@ -47,7 +51,6 @@ static double  pow_loc(const double val, const int i)
 {
     return (i < 0)? 1.0: pow(val,i);
 }
-
 
 /// This routine projects a polynomial or trigonmetric functions which
 /// has energy in all modes of the expansions and reports and error
@@ -70,6 +73,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"Where RegionShape is an integer value which "
                        "dictates the region shape:\n");
         fprintf(stderr,"\t Tetrahedron   = 5\n");
+        fprintf(stderr,"\t Pyramid       = 6\n");
         fprintf(stderr,"\t Prism         = 7\n");
         fprintf(stderr,"\t Hexahedron    = 8\n");
 
@@ -95,6 +99,7 @@ int main(int argc, char *argv[]){
 
     // Check to see if 3D region
     if (regionshape != LibUtilities::eTetrahedron &&
+        regionshape != LibUtilities::ePyramid     &&
         regionshape != LibUtilities::ePrism       &&
         regionshape != LibUtilities::eHexahedron)
     {
@@ -124,6 +129,29 @@ int main(int argc, char *argv[]){
             {
                 NEKERROR(ErrorUtil::efatal,
                          "Basis 2 cannot be of type Ortho_A, Ortho_C, Modified_A "
+                         "or Modified_C");
+            }
+            if((btype3 == eOrtho_A) || (btype3 == eOrtho_B)
+               || (btype3 == eModified_A) || (btype3 == eModified_B))
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "Basis 3 cannot be of type Ortho_A, Ortho_B, Modified_A "
+                         "or Modified_B");
+            }
+            break;
+        case LibUtilities::ePyramid:
+            if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
+               || (btype1 == eModified_B) || (btype1 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "Basis 1 cannot be of type Ortho_B, Ortho_C, Modified_B "
+                         "or Modified_C");
+            }
+            if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
+               || (btype2 == eModified_B) || (btype2 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "Basis 2 cannot be of type Ortho_B, Ortho_C, Modified_B "
                          "or Modified_C");
             }
             if((btype3 == eOrtho_A) || (btype3 == eOrtho_B)
@@ -219,7 +247,8 @@ int main(int argc, char *argv[]){
 
     if(btype3 != LibUtilities::eFourier)
     {
-        if (regionshape == LibUtilities::eTetrahedron) 
+        if (regionshape == LibUtilities::eTetrahedron ||
+            regionshape == LibUtilities::ePyramid)
         {
             Qtype3 = LibUtilities::eGaussRadauMAlpha2Beta0;
         }
@@ -267,6 +296,21 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
+    case LibUtilities::ePyramid:
+        {
+            SpatialDomains::PyrGeomSharedPtr geom = CreatePyrGeom(argc, argv);
+            E = new LocalRegions::PyrExp(Bkey1, Bkey2, Bkey3, geom);
+            E->GetCoords(x,y,z);
+
+            //----------------------------------------------
+            // Define solution to be projected (same as tetrahedron space)
+            for(i = 0; i < nq1*nq2*nq3; ++i)
+            {
+                sol[i]  = Tet_sol(x[i],y[i],z[i],order1,order2,order3);
+            }
+            //----------------------------------------------
+        }
+        break;
     case LibUtilities::ePrism:
         {
             SpatialDomains::PrismGeomSharedPtr geom = CreatePrismGeom(argc, argv);
@@ -305,18 +349,20 @@ int main(int argc, char *argv[]){
 
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    Array<OneD, NekDouble> coeffs(E->GetNcoeffs());
+    Array<OneD, NekDouble> phys  (nq1*nq2*nq3);
+    E->FwdTrans(sol, coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs, phys);
     //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys, sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys, sol) << endl;
     //--------------------------------------------
 
     return 0;
@@ -585,6 +631,112 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
 
     SpatialDomains::PrismGeomSharedPtr geom =
         MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
+    geom->SetOwnData();
+
+    return geom;
+}
+
+SpatialDomains::PyrGeomSharedPtr CreatePyrGeom(int argc, char *argv[])
+{
+    if (argc != 26)
+    {
+        cout << "Insufficient points for a pyramid!" << endl;
+    }
+    
+    // /////////////////////////////////////////////////////////////////////
+    // Set up Pyramid vertex coordinates
+    // PointGeom (const int coordim, const int vid, double x,
+    //   double y, double z)
+    const int nVerts = 6;
+    const double point[][3] = {
+        {atof(argv[11]),atof(argv[12]),atof(argv[13])},
+        {atof(argv[14]),atof(argv[15]),atof(argv[16])},
+        {atof(argv[17]),atof(argv[18]),atof(argv[19])},
+        {atof(argv[20]),atof(argv[21]),atof(argv[22])},
+        {atof(argv[23]),atof(argv[24]),atof(argv[25])}
+    };
+
+    // Populate the list of verts
+    PointGeomSharedPtr verts[nVerts];
+    const int three = 3;
+    
+    for( int i = 0; i < nVerts; ++i ) {
+        verts[i] = MemoryManager<PointGeom>
+            ::AllocateSharedPtr( three,  i,   point[i][0],
+                                 point[i][1], point[i][2] );
+    }
+
+    // /////////////////////////////////////////////////////////////////////
+    // Set up Pyramid Edges
+    // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
+    const int nEdges = 8;
+    const int vertexConnectivity[][2] = {
+        {0,1}, {1,2}, {3,2}, {0,3},
+        {0,4}, {1,4}, {2,4}, {3,4}
+    };
+
+    // Populate the list of edges
+    SegGeomSharedPtr edges[nEdges];
+    for( int i = 0; i < nEdges; ++i ) {
+        PointGeomSharedPtr vertsArray[2];
+        for( int j = 0; j < 2; ++j ) {
+            vertsArray[j] = verts[vertexConnectivity[i][j]];
+        }
+        edges[i] = MemoryManager<SegGeom>
+            ::AllocateSharedPtr( i, three, vertsArray);
+    }
+    
+    // ////////////////////////////////////////////////////////////////////
+    // Set up Pyramid faces
+    const int nFaces  = 5;
+    const int edgeConnectivity[][4] = {
+        {0,1,2,3}, 
+        {0,5,4,-1}, // Triangular face
+        {1,6,5,-1}, // Triangular face
+        {2,6,7,-1}, // Triangular face 
+        {3,7,4,-1}  // Triangular face
+    };
+    const bool   isEdgeFlipped[][4] = {
+        {0,0,1,1}, 
+        {0,0,1,0}, 
+        {0,0,1,0},
+        {0,0,1,0}, 
+        {0,0,1,0}
+    };
+    
+    // Populate the list of faces
+    Geometry2DSharedPtr faces[5];
+
+    for (int i = 0; i < nFaces; ++i) {
+        if (i > 0)
+        {
+            SegGeomSharedPtr edgeArray[3];
+            Orientation eorientArray[3];
+            
+            for (int j = 0; j < 3; ++j) {
+                edgeArray[j]    = edges[edgeConnectivity[i][j]];
+                eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
+            }
+            
+            faces[i] = MemoryManager<TriGeom>
+                ::AllocateSharedPtr( i, edgeArray, eorientArray);
+        }
+        else
+        {
+            SegGeomSharedPtr edgeArray[4];
+            Orientation eorientArray[4];
+            
+            for (int j = 0; j < 4; ++j) {
+                edgeArray[j]    = edges[edgeConnectivity[i][j]];
+                eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
+            }
+            faces[i] = MemoryManager<QuadGeom>
+                ::AllocateSharedPtr( i, edgeArray, eorientArray);
+        }
+    }
+
+    SpatialDomains::PyrGeomSharedPtr geom =
+        MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(faces);
     geom->SetOwnData();
 
     return geom;

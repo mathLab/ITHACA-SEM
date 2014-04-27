@@ -130,17 +130,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     
     //----------------------------------------------
-    // Write solution 
-    ofstream outfile("LinearAdvectionFile2D.pos");
-    Exp->WriteToFile(outfile,eGmsh);
-    outfile.close();
-
-    ofstream outfile2("LinearAdvectionFile2D.dat");
-    Exp->WriteToFile(outfile2,eTecplot);
-    outfile2.close();
-    //----------------------------------------------
-    
-    //----------------------------------------------
     // See if there is an exact solution, if so 
     // evaluate and plot errors
     LibUtilities::EquationSharedPtr ex_sol = vSession->GetFunction("ExactSolution",0);

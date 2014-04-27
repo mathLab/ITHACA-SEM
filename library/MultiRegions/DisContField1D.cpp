@@ -83,7 +83,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
 
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
-            EvaluateBoundaryConditions();
+            EvaluateBoundaryConditions(0.0, variable);
             ApplyGeomInfo();
 
             map<int,int> periodicVertices;
@@ -102,9 +102,9 @@ namespace Nektar
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(pSession,graph1D,trace,*this,
-                                  m_bndCondExpansions,m_bndConditions,periodicVertices,
-                                  variable);
+                AllocateSharedPtr(pSession, graph1D, trace, *this,
+                                  m_bndCondExpansions, m_bndConditions, 
+                                  periodicVertices, variable);
 
             tmpBndSol = Array<OneD,NekDouble>
                 (m_traceMap->GetNumLocalBndCoeffs());
@@ -172,7 +172,7 @@ namespace Nektar
                                                           i);
             
             //1. c) Evaluate the boundary conditions
-            EvaluateBoundaryConditions();
+            EvaluateBoundaryConditions(0.0, variable);
             //ApplyGeomInfo();
             
             //2. Set up trace information
@@ -1230,22 +1230,23 @@ namespace Nektar
          * @param   bndCondExpansions   List of boundary expansions.
          * @param   bndConditions   Information about the boundary conditions.
          */
-        void DisContField1D::v_EvaluateBoundaryConditions(const NekDouble time,
-                                                          const NekDouble x2_in,
-                                                          const NekDouble x3_in)
+        void DisContField1D::v_EvaluateBoundaryConditions(
+            const NekDouble   time,
+            const std::string varName,
+            const NekDouble   x2_in,
+            const NekDouble   x3_in)
         {
             int i;
 
-            NekDouble x0;
-            NekDouble x1;
-            NekDouble x2;
+            Array<OneD, NekDouble> x(1), y(1), z(1);
 			
             for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if (time == 0.0 || m_bndConditions[i]->GetUserDefined() ==
                     SpatialDomains::eTimeDependent)
                 {
-                    m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
+                    m_bndCondExpansions[i]->GetCoords(x, y, z);
+                    NekDouble x0 = x[0], x1 = y[0], x2 = z[0];
                     
                     if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
                         NekConstants::kNekUnsetDouble)
@@ -1296,7 +1297,7 @@ namespace Nektar
                     }
                     else
                     {
-                        ASSERTL0(false,"This type of BC not implemented yet");
+                        ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
             }

@@ -102,6 +102,9 @@ namespace Nektar
                         atoi(pParams.find("OutputPlane")->second.c_str());
                 }
             }
+
+            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
+
         }
 
         /**
@@ -283,7 +286,7 @@ namespace Nektar
                 }
             }
 
-            L2error = pFields[field]->L2();
+            L2error = pFields[field]->L2(pFields[field]->GetPhys());
             return L2error;
         }
 
@@ -512,7 +515,7 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
 
             //Get Homogeneous
-            LibUtilities::Import(pInfile,FieldDef,FieldData);
+            m_fld->Import(pInfile,FieldDef,FieldData);
 
             int nvar = m_session->GetVariables().size();
             if(m_session->DefinesSolverInfo("HOMOGENEOUS"))

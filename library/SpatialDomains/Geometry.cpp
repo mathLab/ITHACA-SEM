@@ -151,13 +151,6 @@ namespace Nektar
             return 0;
         }
 
-        void Geometry::v_GenGeomFactors(
-                    const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                "This function is only valid for shape type geometries");
-        }
-
         int Geometry::v_GetNumVerts() const
         {
             NEKERROR(ErrorUtil::efatal,
@@ -200,6 +193,11 @@ namespace Nektar
             return 0;
         }
 
+        StdRegions::StdExpansionSharedPtr Geometry::v_GetXmap() const
+        {
+            return m_xmap;
+        }
+
         bool Geometry::v_ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
                       NekDouble tol)
@@ -213,6 +211,17 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& gloCoord,
                 Array<OneD, NekDouble>& locCoord,
                 NekDouble tol)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return false;
+        }
+
+        bool Geometry::v_ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                Array<OneD, NekDouble>& locCoord,
+                NekDouble tol,
+                NekDouble &resid)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function has not been defined for this geometry");
@@ -249,12 +258,13 @@ namespace Nektar
             return 0.0;
         }
 
-        void Geometry::v_GetLocCoords(
+        NekDouble Geometry::v_GetLocCoords(
                 const Array<OneD,const NekDouble> &coords,
                       Array<OneD,NekDouble> &Lcoords)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
+            return 0.0;
         }
 
         void Geometry::v_FillGeom()
@@ -269,16 +279,7 @@ namespace Nektar
                      "This function is only valid for expansion type geometries");
         }
 
-        Array<OneD,NekDouble>& Geometry::v_UpdatePhys(const int i)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            return NullNekDouble1DArray;
-        }
-
-        const LibUtilities::BasisSharedPtr Geometry::v_GetBasis(
-                    const int i,
-                    const int j)
+        const LibUtilities::BasisSharedPtr Geometry::v_GetBasis(const int i)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for shape type geometries");

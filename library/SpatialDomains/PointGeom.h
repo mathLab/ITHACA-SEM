@@ -111,8 +111,7 @@ namespace Nektar
                 int m_coordim;
                 std::list<CompToElmt> m_elmtMap;
 
-                virtual void v_GenGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                virtual void v_GenGeomFactors();
                 virtual int v_GetVid(int id) const;
 
             private:
@@ -120,9 +119,9 @@ namespace Nektar
                 virtual NekDouble v_GetCoord(
                             const int i,
                             const Array<OneD,const NekDouble>& Lcoord);
-                virtual void v_GetLocCoords(
+                virtual NekDouble v_GetLocCoords(
                             const Array<OneD,const NekDouble>& coords,
-                                  Array<OneD,NekDouble>& Lcoords);
+                            Array<OneD,NekDouble>& Lcoords);
         };
 
 

@@ -86,11 +86,12 @@ namespace Nektar
         // Differentiation Methods //
         /////////////////////////////
 
-        /** \brief Calculate the derivative of the physical points 
+        /** \brief Calculate the derivative of the physical points
          *
          *  For quadrilateral region can use the Tensor_Deriv function
          *  defined under StdExpansion.
          */
+
         void StdQuadExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                             Array<OneD, NekDouble> &out_d0,
                             Array<OneD, NekDouble> &out_d1,
@@ -138,6 +139,7 @@ namespace Nektar
         {
             //PhysTensorDeriv(inarray, outarray);            
             StdQuadExp::v_PhysDeriv(dir,inarray,outarray);
+
         }
 
 
@@ -552,17 +554,12 @@ namespace Nektar
         // Evaluation functions //
         //////////////////////////
 
-        NekDouble StdQuadExp::v_PhysEvaluate(
-                                 const Array<OneD, const NekDouble>& coords)
-        {
-            return  StdExpansion2D::v_PhysEvaluate(coords, m_phys);
-        }
 
-        NekDouble StdQuadExp::v_PhysEvaluate(
-                                 const Array<OneD, const NekDouble>& coords,
-                                 const Array<OneD, const NekDouble> & physvals)
+        void StdQuadExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                                 Array<OneD, NekDouble>& eta)
         {
-            return  StdExpansion2D::v_PhysEvaluate(coords, physvals);
+            eta[0] = xi[0];
+            eta[1] = xi[1];
         }
 
         /** \brief Fill outarray with mode \a mode of expansion
@@ -890,57 +887,111 @@ namespace Nektar
             }
         }
 
-        int StdQuadExp::v_GetVertexMap(int localVertexId)
+        int StdQuadExp::v_GetVertexMap(int localVertexId, bool useCoeffPacking)
         {
             int localDOF = 0;
-            switch(localVertexId)
-            {
-            case 0:
-                { 
-                    localDOF = 0;    
-                }
-                break;
-            case 1:
-                {              
-                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                    {
-                        localDOF = m_base[0]->GetNumModes()-1;
-                    }
-                    else
-                    {
-                        localDOF = 1;
-                    }
-                }
-                break;
-            case 2:
-                {   
-                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                    {
-                        localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
-                    }
-                    else
-                    {
-                        localDOF = m_base[0]->GetNumModes()+1;
-                    }                    
-                }
-                break;
-            case 3:
-                { 
-                    if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
-                    {
-                        localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
-                    }
-                    else
-                    {
-                        localDOF = m_base[0]->GetNumModes();
-                    }
-                }
-                break;
-            default:
-                ASSERTL0(false,"eid must be between 0 and 3");
-                break;
-            }
 
+            if(useCoeffPacking == true)
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                    }
+                    break;
+                case 1:
+                    {              
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    { 
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes();
+                        }
+                    }
+                    break;
+                case 3:
+                    {   
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes()+1;
+                        }                    
+                    }
+                break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                }
+                
+            }
+            else
+            {
+                switch(localVertexId)
+                {
+                case 0:
+                    { 
+                        localDOF = 0;    
+                    }
+                    break;
+                case 1:
+                    {              
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = 1;
+                        }
+                    }
+                    break;
+                case 2:
+                    {   
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes()+1;
+                        }                    
+                    }
+                break;
+                case 3:
+                    { 
+                        if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
+                        {
+                            localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
+                        }
+                        else
+                        {
+                            localDOF = m_base[0]->GetNumModes();
+                        }
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"eid must be between 0 and 3");
+                    break;
+                }
+            }                
             return localDOF;
         }
  
@@ -1349,6 +1400,7 @@ namespace Nektar
                              Array<OneD,NekDouble> &outarray,
                              const StdMatrixKey &mkey)
         {
+            
             DNekMatSharedPtr mat = m_stdMatrixManager[mkey];
             
             if(inarray.get() == outarray.get())
@@ -1367,7 +1419,6 @@ namespace Nektar
         }
         
         
-
         void StdQuadExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                               const StdMatrixKey &mkey)
         {
@@ -1384,55 +1435,40 @@ namespace Nektar
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
             StdQuadExp OrthoExp(Ba,Bb);
             
-            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
-            int j,k;
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
             
+            //for the "old" implementation
             int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+
+            //SVV parameters loaded from the .xml case file
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
+            //To avoid the exponential from blowing up
+            NekDouble epsilon = 1;
 
-#if 0      //  Filter just linear space
+            //counters for scanning through orthocoeffs array
+            int j, k, cnt = 0;
             int nmodes = min(nmodes_a,nmodes_b);
-            // apply SVV filter. 
-            for(j = 0; j < nmodes_a; ++j)
-            {
-                for(k = 0; k < nmodes_b; ++k)
-                {
-                    if(j + k >= cutoff)
-                    {
-                        orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+1)*(j+k-cutoff+1)))));
-                    }
-                }
-            }
-#else   //  Filter just bilinear space
-            int nmodes = max(nmodes_a,nmodes_b);
-
-            Array<OneD, NekDouble> fac(nmodes,0.0);
-            for(j = cutoff; j < nmodes; ++j)
-            {
-                fac[j] = exp(-(j-nmodes)*(j-nmodes)/((NekDouble) (j-cutoff+1.0)*(j-cutoff+1.0)));
-            }
-
-
-            for(j = 0; j < nmodes_a; ++j)
-            {
-                for(k = 0; k < nmodes_b; ++k)
-                {
-                    if(j >= cutoff)
-                    {
-                        if((j >= cutoff)||(k >= cutoff))
-                        {
-                            orthocoeffs[j*nmodes_b + k] *= (1.0+SvvDiffCoeff*exp(-fac[j]*fac[k]));
-                            
-                        }
-                    }
-                }
-            }
-#endif
             
+            //------"New" Version August 22nd '13--------------------            
+            for(j = 0; j < nmodes_a; ++j)
+            {
+                for(k = 0; k < nmodes_b; ++k)
+                {
+                   if(j + k >= cutoff) //to filter out only the "high-modes"
+                   {
+                       orthocoeffs[j*nmodes_b+k] *=
+                           (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/
+                                                 ((NekDouble)((j+k-cutoff+1)*
+                                                     (j+k-cutoff+1)))));
+                   }
+                    cnt++;
+                }
+            }
+
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        
@@ -1501,252 +1537,6 @@ namespace Nektar
                 Vmath::Vmul(nquad1,outarray.get()+i,nquad0,w1.get(),1,
                             outarray.get()+i,nquad0);
             }
-        }
-
-
-        void StdQuadExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
-        {
-            if(format==eTecplot)
-            {
-                int  i,j;
-                int  nquad0 = m_base[0]->GetNumPoints();
-                int  nquad1 = m_base[1]->GetNumPoints();
-                Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
-                Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
-                
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2" ;      
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-                outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
-                
-                for(j = 0; j < nquad1; ++j)
-                {
-                    for(i = 0; i < nquad0; ++i)
-                    {
-                        outfile << z0[i] <<  " " << 
-                            z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
-                    }
-                }
-            } 
-            else if(format==eGmsh)
-            {             
-                if(dumpVar)
-                {
-                    outfile<<"View.MaxRecursionLevel = 4;"<<endl;
-                    outfile<<"View.TargetError = 0.00;"<<endl;
-                    outfile<<"View.AdaptVisualizationGrid = 1;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
-                outfile<<"SQ("<<endl;                
-                // write the coordinates of the vertices of the quadrilateral
-                outfile<<"-1.0, -1.0, 0.0,"<<endl;
-                outfile<<" 1.0, -1.0, 0.0,"<<endl;
-                outfile<<" 1.0, 1.0, 0.0,"<<endl;
-                outfile<<"-1.0,  1.0, 0.0" <<endl;
-                outfile<<")"<<endl;
-
-                // calculate the coefficients (monomial format)
-                int i,j;
-
-                int nModes0 = m_base[0]->GetNumModes();
-                int nModes1 = m_base[1]->GetNumModes();
-
-                const LibUtilities::PointsKey Pkey1Gmsh(nModes0,LibUtilities::eGaussLobattoLegendre);
-                const LibUtilities::PointsKey Pkey2Gmsh(nModes1,LibUtilities::eGaussLobattoLegendre);
-                const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),nModes0,Pkey1Gmsh);
-                const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),nModes1,Pkey2Gmsh);
-
-                StdRegions::StdQuadExpSharedPtr EGmsh;
-                EGmsh = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh);
-
-                int nMonomialPolynomials = EGmsh->GetNcoeffs();
-              
-                Array<OneD,NekDouble> xi1(nMonomialPolynomials);
-                Array<OneD,NekDouble> xi2(nMonomialPolynomials);
-              
-                Array<OneD,NekDouble> x(nMonomialPolynomials);
-                Array<OneD,NekDouble> y(nMonomialPolynomials);
-
-                EGmsh->GetCoords(xi1,xi2);
-              
-                for(i=0;i<nMonomialPolynomials;i++)
-                {
-                    x[i] = xi1[i];
-                    y[i] = xi2[i];
-                }
-
-                int cnt  = 0;
-                Array<TwoD, int> exponentMap(nMonomialPolynomials,3,0);
-                for(i = 0; i < nModes1; i++)
-                {
-                    for(j = 0; j < nModes0; j++)
-                    {
-                        exponentMap[cnt][0] = j;
-                        exponentMap[cnt++][1] = i;
-                    }         
-                }
-              
-                NekMatrix<NekDouble> vdm(nMonomialPolynomials,nMonomialPolynomials);
-                for(i = 0 ; i < nMonomialPolynomials; i++)
-                {
-                    for(j = 0 ; j < nMonomialPolynomials; j++)
-                    {
-                        vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
-                    }
-                }
-
-                vdm.Invert();
-
-                Array<OneD,NekDouble> rhs(nMonomialPolynomials);
-                EGmsh->BwdTrans(m_coeffs,rhs);
-
-                NekVector<NekDouble> in(nMonomialPolynomials,rhs,eWrapper);
-                NekVector<NekDouble> out(nMonomialPolynomials);
-                out = vdm*in;
-
-                //write the coefficients
-                outfile<<"{";
-                for(i = 0; i < nMonomialPolynomials; i++)
-                {
-                    outfile<<out[i];
-                    if(i < nMonomialPolynomials - 1)
-                    {
-                        outfile<<", ";
-                    }
-                }
-                outfile<<"};"<<endl;
-              
-                if(dumpVar)
-                {   
-                    outfile<<"INTERPOLATION_SCHEME"<<endl;
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nMonomialPolynomials; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < nMonomialPolynomials; j++)
-                        {
-                            if(i==j)
-                            {
-                                outfile<<"1.00";
-                            }
-                            else
-                            {
-                                outfile<<"0.00";
-                            }
-                            if(j < nMonomialPolynomials - 1)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nMonomialPolynomials - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"}"<<endl;
-                        }
-                    }
-                    
-                    outfile<<"{"<<endl;
-                    for(i=0; i < nMonomialPolynomials; i++)
-                    {
-                        outfile<<"{";
-                        for(j = 0; j < 3; j++)
-                        {
-                            outfile<<exponentMap[i][j];
-                            if(j < 2)
-                            {
-                                outfile<<", ";
-                            }
-                        }
-                        if(i < nMonomialPolynomials - 1)
-                        {
-                            outfile<<"},"<<endl;
-                        }
-                        else
-                        {
-                            outfile<<"}"<<endl<<"};"<<endl;
-                        }
-                    }
-                    outfile<<"};"<<endl;
-                }                    
-            } 
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
-        }
-
-
-        void StdQuadExp::v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar)
-        {
-            if(format==eTecplot)
-            {
-                int  i,j;
-                int  nq0,nq1;
-                int  nquad0 = m_base[0]->GetNumPoints();
-                int  nquad1 = m_base[1]->GetNumPoints();
-                char str[256];
-
-                if(dumpVar)
-                {
-                    infile.getline(str,sizeof(str));
-                    infile.getline(str,sizeof(str));
-                }
-                infile.getline(str,sizeof(str));
-                sscanf(str,"Zone, I=%d, J=%d",&nq0,&nq1);
-                ASSERTL1(nq0 == nquad0,"nquad0 does not match");
-                ASSERTL1(nq1 == nquad1,"nquad0 does not match");
-                
-                for(j = 0; j < nquad1; ++j)
-                {
-                    for(i = 0; i < nquad0; ++i)
-                    {
-                        infile.getline(str,sizeof(str));
-                        sscanf(str,"%*f %*f %lf",&m_phys[0]+j*nquad0+i);
-                    }
-                }
-            } 
-            else
-            {
-                ASSERTL0(false, "Input routine not implemented for requested type of output");
-            }
-        }
-
-        //   I/O routine
-        void StdQuadExp::v_WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int  i,j;
-            int  order0 = m_base[0]->GetNumModes();
-            int  order1 = m_base[1]->GetNumModes();
-            int  cnt = 0;
-            Array<OneD, NekDouble> wsp(order0*order1,0.0);
-
-            // put coeffs into matrix and reverse order so that p index is fastest
-            // recall q is fastest for tri's
-
-            for(i = 0; i < order0; ++i)
-            {
-                for(j = 0; j < order1-i; ++j,cnt++)
-                {
-                    wsp[i+j*order1] = m_coeffs[cnt];
-                }
-            }
-
-            outfile <<"Coeffs = [" << " "; 
-
-            for(j = 0; j < order1; ++j)
-            {
-                for(i = 0; i < order0; ++i)
-                {
-                    outfile << wsp[j*order0+i] <<" ";
-                }
-                outfile << std::endl; 
-            }
-            outfile << "]" ; 
         }
 
     } //end namespace            

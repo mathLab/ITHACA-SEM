@@ -58,9 +58,13 @@ namespace Nektar
             LIB_UTILITIES_EXPORT MeshPartition(const SessionReaderSharedPtr& pSession);
             LIB_UTILITIES_EXPORT ~MeshPartition();
 
-            LIB_UTILITIES_EXPORT void PartitionMesh();
+            LIB_UTILITIES_EXPORT void PartitionMesh(bool shared = false);
             LIB_UTILITIES_EXPORT void WriteLocalPartition(
                     SessionReaderSharedPtr& pSession);
+            LIB_UTILITIES_EXPORT void WriteAllPartitions(
+                    SessionReaderSharedPtr& pSession);
+
+            LIB_UTILITIES_EXPORT void PrintPartInfo(std::ostream &out);
             LIB_UTILITIES_EXPORT void GetCompositeOrdering(
                     CompositeOrdering &composites);
             LIB_UTILITIES_EXPORT void GetBndRegionOrdering(
@@ -196,11 +200,12 @@ namespace Nektar
             BndRegionOrdering                   m_bndRegOrder;
 
             BoostSubGraph                       m_mesh;
-            BoostSubGraph                       m_localPartition;
+            std::vector<BoostSubGraph>          m_localPartition;
 
             CommSharedPtr                       m_comm;
 
             bool                                m_weightingRequired;
+            bool                                m_shared;
 
             void ReadExpansions(const SessionReaderSharedPtr& pSession);
             void ReadGeometry(const SessionReaderSharedPtr& pSession);
@@ -208,7 +213,7 @@ namespace Nektar
             void WeightElements();
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,
-                                BoostSubGraph& pLocalPartition);
+                                std::vector<BoostSubGraph>& pLocalPartition);
             void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
             void CheckPartitions(Array<OneD, int> &pPart);
         };

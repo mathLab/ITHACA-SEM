@@ -83,11 +83,6 @@ namespace Nektar
         // Nodal basis specific routines
         //-------------------------------
         
-        void StdNodalPrismExp::NodalToModal()
-        {
-            NodalToModal(m_coeffs,m_coeffs); 
-        }
-
         void StdNodalPrismExp::NodalToModal(
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
@@ -100,11 +95,6 @@ namespace Nektar
             NekVector<NekDouble> nodal(m_ncoeffs,inarray,eWrapper);
             NekVector<NekDouble> modal(m_ncoeffs,outarray,eWrapper);
             modal = (*inv_vdm) * nodal;
-        }
-
-        void StdNodalPrismExp::NodalToModalTranspose()
-        {
-            NodalToModalTranspose(m_coeffs,m_coeffs); 
         }
 
         // Operate with transpose of NodalToModal transformation
@@ -120,11 +110,6 @@ namespace Nektar
             NekVector<NekDouble> nodal(m_ncoeffs,inarray,eCopy);
             NekVector<NekDouble> modal(m_ncoeffs,outarray,eWrapper);
             modal = Transpose(*inv_vdm) * nodal;
-        }
-
-        void StdNodalPrismExp::ModalToNodal()
-        {
-            ModalToNodal(m_coeffs,m_coeffs);
         }
 
         void StdNodalPrismExp::ModalToNodal(
@@ -352,10 +337,10 @@ namespace Nektar
         }
         */
 
-        int StdNodalPrismExp::v_GetVertexMap(const int localVertexId)
+        int StdNodalPrismExp::v_GetVertexMap(const int localVertexId,
+                                             bool useCoeffPacking)
         {
-            ASSERTL0(localVertexId >= 0 && localVertexId <= 3,
-                     "Local Vertex ID must be between 0 and 3");                
+            ASSERTL0(false,"Needs setting up");
             return localVertexId;
         }
 

@@ -221,15 +221,8 @@ namespace Nektar
             virtual void v_ExtractCoeffsToCoeffs(
                                                  const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 
-            virtual void v_WriteTecplotHeader(std::ofstream &outfile,
-                                              std::string var = "v");
-            
-            virtual void v_WriteTecplotField(std::ofstream &outfile,
-                                             int expansion = -1);
-            
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                              std::string var);
-			
 
             virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 
@@ -270,6 +263,8 @@ namespace Nektar
             {
                 return GetPlane(n);
             }
+            
+            virtual NekDouble v_GetHomoLen(void);
             
         private:
             

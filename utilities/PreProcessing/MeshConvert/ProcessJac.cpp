@@ -53,9 +53,9 @@ namespace Nektar
 
         ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["extract"] = ConfigOption(
+            m_config["extract"] = ConfigOption(
                 true, "0", "Extract non-valid elements from mesh.");
-            config["list"]    = ConfigOption(
+            m_config["list"]    = ConfigOption(
                 true, "0", "Print list of elements having negative Jacobian.");
         }
 
@@ -66,19 +66,19 @@ namespace Nektar
 
         void ProcessJac::Process()
         {
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "ProcessJac: Calculating Jacobians... " << endl;
             }
 
-            bool extract = config["extract"].as<bool>();
-            bool printList = config["list"].as<bool>();
+            bool extract = m_config["extract"].as<bool>();
+            bool printList = m_config["list"].as<bool>();
 
-            vector<ElementSharedPtr> el = m->element[m->expDim];
+            vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
 
             if (extract)
             {
-                m->element[m->expDim].clear();
+                m_mesh->m_element[m_mesh->m_expDim].clear();
             }
 
             if (printList)
@@ -93,7 +93,7 @@ namespace Nektar
             {
                 // Create elemental geometry.
                 SpatialDomains::GeometrySharedPtr geom =
-                    el[i]->GetGeom(m->spaceDim);
+                    el[i]->GetGeom(m_mesh->m_spaceDim);
 
                 // Define basis key using MeshGraph functions. Need a better
                 // way of determining the number of modes!
@@ -101,12 +101,14 @@ namespace Nektar
                     SpatialDomains::MeshGraph::DefineBasisKeyFromExpansionType(
                         geom, SpatialDomains::eModified, 5);
 
-                Array<OneD, LibUtilities::BasisSharedPtr> basis(m->expDim);
+                Array<OneD, LibUtilities::BasisSharedPtr> basis(m_mesh->m_expDim);
+                LibUtilities::PointsKeyVector ptsKey(m_mesh->m_expDim);
 
                 // Generate/get cached basis functions.
-                for (int j = 0; j < m->expDim; ++j)
+                for (int j = 0; j < m_mesh->m_expDim; ++j)
                 {
                     basis[j] = LibUtilities::BasisManager()[b[j]];
+                    ptsKey[j] = basis[j]->GetPointsKey();
                 }
 
                 // Generate geometric factors.
@@ -122,20 +124,20 @@ namespace Nektar
                     if (printList)
                     {
                         cout << "  - " << el[i]->GetId() << " ("
-                             << ElementTypeMap[el[i]->GetConf().e] << ")"
+                             << ElementTypeMap[el[i]->GetConf().m_e] << ")"
                              << endl;
                     }
 
                     if (extract)
                     {
-                        m->element[m->expDim].push_back(el[i]);
+                        m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
                     }
                 }
             }
 
             if (extract)
             {
-                m->element[m->expDim-1].clear();
+                m_mesh->m_element[m_mesh->m_expDim-1].clear();
                 ProcessVertices();
                 ProcessEdges();
                 ProcessFaces();
@@ -143,7 +145,7 @@ namespace Nektar
                 ProcessComposites();
             }
             
-            if (printList || m->verbose)
+            if (printList || m_mesh->m_verbose)
             {
                 cout << "Total negative Jacobians: " << nNeg << endl;
             }

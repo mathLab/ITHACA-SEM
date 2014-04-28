@@ -106,9 +106,17 @@ namespace Nektar
             int nSolutionPts = pFields[0]->GetTotPoints();
             int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
             
-            m_traceVel = Array<OneD, Array<OneD, NekDouble> >(nDim);
+            m_spaceDim = nDim;
+            if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                m_spaceDim = 3;
+            }
             
-            for (i = 0; i < nDim; ++i)
+            m_diffDim = m_spaceDim - nDim;
+
+            m_traceVel = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
+            
+            for (i = 0; i < m_spaceDim; ++i)
             {
                 m_traceVel[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
             }
@@ -136,12 +144,13 @@ namespace Nektar
             m_divFD = Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
             m_divFC = Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
             
-            m_D1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  (nDim);
-            m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
-                                                                        nDim);
+            m_D1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                (m_spaceDim);
+            m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                (m_spaceDim);
             for (i = 0; i < nScalars; ++i)
             {
-                m_IF1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_IF1[i]  = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
                 m_DU1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);
                 m_DFC1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
                 m_tmp1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
@@ -174,7 +183,7 @@ namespace Nektar
                 }
             }
             
-            for (i = 0; i < nDim; ++i)
+            for (i = 0; i < m_spaceDim; ++i)
             {
                 m_D1[i] = Array<OneD, Array<OneD, NekDouble> >(nScalars);
 
@@ -184,7 +193,7 @@ namespace Nektar
                 }
             }
             
-            for (i = 0; i < nDim; ++i)
+            for (i = 0; i < m_spaceDim; ++i)
             {
                 m_viscTensor[i] = Array<OneD, Array<OneD, NekDouble> >(nScalars+1);
                 
@@ -227,7 +236,7 @@ namespace Nektar
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
             for (i = 0; i < nDimensions; ++i)
             {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
             }
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
             
@@ -1115,6 +1124,16 @@ namespace Nektar
                                         &m_D1[j][i][0], 1);
                         }
                     }// Close loop on nScalars
+                    
+                    // For 3D Homogeneous 1D only take derivatives in 3rd direction
+                    if (m_diffDim == 1)
+                    {
+                        for (i = 0; i < nScalars; ++i)
+                        {
+                            m_D1[2][i] = m_homoDerivs[i];
+                        }
+                        
+                    }
                                         
                     // Computing the viscous tensor
                     m_fluxVectorNS(inarray, m_D1, m_viscTensor); 
@@ -1311,7 +1330,7 @@ namespace Nektar
                     for (e = 0; e < nBndEdges; ++e)
                     {
                         nBndEdgePts = fields[i+1]->
-                        GetBndCondExpansions()[j]->GetExp(e)->GetNumPoints(0);
+                        GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
                         
                         id1 = fields[i+1]->
                         GetBndCondExpansions()[j]->GetPhys_Offset(e);
@@ -1393,7 +1412,7 @@ namespace Nektar
                 for (e = 0; e < nBndEdges; ++e)
                 {
                     nBndEdgePts = fields[nScalars]->
-                    GetBndCondExpansions()[j]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
                     
                     id1 = fields[nScalars]->
                     GetBndCondExpansions()[j]->GetPhys_Offset(e);
@@ -1427,13 +1446,11 @@ namespace Nektar
                                       GetPhys())[id1], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
                         
-                        /*
-                         // Subtract kinetic energy to E/rho
-                         Vmath::Vsub(nBndEdgePts, 
-                         &scalarVariables[nScalars-1][id2], 1,
-                         &tmp2[id2], 1,
-                         &scalarVariables[nScalars-1][id2], 1);
-                         */
+                        // Subtract kinetic energy to E/rho
+                        Vmath::Vsub(nBndEdgePts, 
+                                    &scalarVariables[nScalars-1][id2], 1,
+                                    &tmp2[id2], 1,
+                                    &scalarVariables[nScalars-1][id2], 1);
                         
                         // Multiply by constant factor (gamma-1)/R 
                         Vmath::Smul(nBndEdgePts, (m_gamma - 1)/m_gasConstant,
@@ -1563,7 +1580,7 @@ namespace Nektar
                 for (e = 0; e < nBndEdges; ++e)
                 {
                     nBndEdgePts = fields[var]->
-                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
                     
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
@@ -2018,10 +2035,13 @@ namespace Nektar
                                        auxArray2 = fluxJumps, 1);
                     }
                     
+                    NekDouble fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                    -1.0 : 1.0;
+
                     for (i = 0; i < nEdgePts; ++i)
                     {
-                        if (m_traceNormals[0][trace_offset+i] != normals[0][i] 
-                            || m_traceNormals[1][trace_offset+i] != normals[1][i])
+                        if (m_traceNormals[0][trace_offset+i] != fac*normals[0][i] 
+                            || m_traceNormals[1][trace_offset+i] != fac*normals[1][i])
                         {
                             fluxJumps[i] = -fluxJumps[i];
                         }

@@ -76,8 +76,21 @@ namespace Nektar
         {
 #ifdef NEKTAR_USE_MPI
             int size;
-            MPI_Comm_size( MPI_COMM_WORLD, &size );
-            ASSERTL0(size == 1, "This function is not available in parallel.");
+            int init;
+            MPI_Initialized(&init);
+
+            // If MPI has been initialised we can check the number of processes
+            // and, if > 1, tell the user he should not be running this
+            // function in parallel. If it is not initialised, we do not
+            // initialise it here, and assume the user knows what they are
+            // doing.
+            if (init)
+            {
+                MPI_Comm_size( MPI_COMM_WORLD, &size );
+                ASSERTL0(size == 1,
+                     "This static function is not available in parallel. Please"
+                     "instantiate a FieldIO object for parallel use.");
+            }
 #endif
             CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
             FieldIO f(c);
@@ -99,8 +112,21 @@ namespace Nektar
         {
 #ifdef NEKTAR_USE_MPI
             int size;
-            MPI_Comm_size( MPI_COMM_WORLD, &size );
-            ASSERTL0(size == 1, "This function is not available in parallel.");
+            int init;
+            MPI_Initialized(&init);
+
+            // If MPI has been initialised we can check the number of processes
+            // and, if > 1, tell the user he should not be running this
+            // function in parallel. If it is not initialised, we do not
+            // initialise it here, and assume the user knows what they are
+            // doing.
+            if (init)
+            {
+                MPI_Comm_size( MPI_COMM_WORLD, &size );
+                ASSERTL0(size == 1,
+                     "This static function is not available in parallel. Please"
+                     "instantiate a FieldIO object for parallel use.");
+            }
 #endif
             CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
             FieldIO f(c);
@@ -396,7 +422,10 @@ namespace Nektar
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
-                        ImportFieldData(doc1, fielddefs, fielddata);
+                        if(fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
                     }
                     
                 }
@@ -416,10 +445,10 @@ namespace Nektar
                     
                     for(i = 0; i < ElementIDs.num_elements(); ++i)
                     {
-                        ASSERTL1(FileIDs.count(ElementIDs[i]) != 0,
-                                 "ElementIDs  not found in partitions");
-                        
-                        LoadFile.insert(FileIDs[ElementIDs[i]]);
+                        if(FileIDs.count(ElementIDs[i]))
+                        {
+                            LoadFile.insert(FileIDs[ElementIDs[i]]);
+                        }
                     }
                     
                     set<int>::iterator iter; 
@@ -438,7 +467,10 @@ namespace Nektar
                         ASSERTL0(loadOkay1, errstr.str());
                         
                         ImportFieldDefs(doc1, fielddefs, false);
-                        ImportFieldData(doc1, fielddefs, fielddata);
+                        if(fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
                     }
                 }
             }
@@ -457,7 +489,10 @@ namespace Nektar
                 
                 ImportFieldMetaData(doc,fieldmetadatamap);
                 ImportFieldDefs(doc, fielddefs, false);
-                ImportFieldData(doc, fielddefs, fielddata);
+                if(fielddata != NullVectorNekDoubleVector)
+                {
+                    ImportFieldData(doc, fielddefs, fielddata);
+                }
             }
         }
 
@@ -483,20 +518,19 @@ namespace Nektar
 
             for (int t = 0; t < fileNames.size(); ++t)
             {
+                if(elementList[t].size())
+                {
+                    TiXmlElement * elemIDs = new TiXmlElement("Partition");
+                    root->LinkEndChild(elemIDs);
+                    
+                    elemIDs->SetAttribute("FileName",fileNames[t]);
+                    
+                    string IDstring;
+                    
+                    GenerateSeqString(elementList[t],IDstring);
 
-                ASSERTL1(elementList[t].size() > 0,
-                         "Element list must contain at least one value.");
-
-                TiXmlElement * elemIDs = new TiXmlElement("Partition");
-                root->LinkEndChild(elemIDs);
-
-                elemIDs->SetAttribute("FileName",fileNames[t]);
-
-                string IDstring;
-
-                GenerateSeqString(elementList[t],IDstring);
-
-                elemIDs->LinkEndChild(new TiXmlText(IDstring));
+                    elemIDs->LinkEndChild(new TiXmlText(IDstring));
+                }
             }
 
             doc.SaveFile(outFile);
@@ -1094,6 +1128,7 @@ namespace Nektar
             // serial processing just add ending.
             if(nprocs == 1)
             {
+                cout << "Writing: " << specPath << endl;
                 return LibUtilities::PortablePath(specPath);
             }
 
@@ -1293,7 +1328,12 @@ namespace Nektar
         int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
         {
             int i;
-            ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
+
+            if(fielddefs->m_elementIDs.size() == 0) // empty partition
+            {
+                return 0;
+            }
+            //ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
 
             unsigned int numbasis = 0;
 

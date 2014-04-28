@@ -87,12 +87,24 @@ namespace Nektar
             m_vertLocToGloMap = m_locToGloMap->XxtLinearSpaceMap(*expList);
 
             // Generate XXT system. 
-            GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpace,
-                                      m_vertLocToGloMap,
-                                      (m_linsys.lock())->GetKey().GetConstFactors());
+            if(m_linsys.lock()->GetKey().GetMatrixType() == StdRegions::eMass)
+            {
+                GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpaceMass, 
+                                          m_vertLocToGloMap);
+                m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
+                    AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+            }
+            else
+            {
+                GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpace, 
+                                          m_vertLocToGloMap,
+                                          (m_linsys.lock())->GetKey().GetConstFactors());
+                m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
+                    AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+            }
 
-            m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
-                AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+            
+
 
 	}
 
@@ -103,7 +115,8 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput)
         {
-            v_DoPreconditionerWithNonVertOutput(pInput,pOutput,NullNekDouble1DArray);
+            v_DoPreconditionerWithNonVertOutput(pInput,pOutput,NullNekDouble1DArray,
+                                                NullNekDouble1DArray);
         }
 
         /**
@@ -112,8 +125,9 @@ namespace Nektar
         void PreconditionerLinear::v_DoPreconditionerWithNonVertOutput(
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput,
-            const Array<OneD, NekDouble>& pNonVertOutput)
-        {
+            const Array<OneD, NekDouble>& pNonVertOutput,
+            Array<OneD, NekDouble>& pVertForce)
+            {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
             switch(solvertype)
             {
@@ -160,17 +174,34 @@ namespace Nektar
                         //any other value
                         Vmath::Vcopy(pInput.num_elements(),pInput,1,pOutput,1);
                     }
-
-                    // Scatter back soln from linear solve
-                    for(i = 0; i < nloc; ++i)
+                    
+                    if(pVertForce != NullNekDouble1DArray)
                     {
-                        val = LocToGloBnd[i];
-                        if(val >= nDirFull)
+                        Vmath::Zero(pVertForce.num_elements(),pVertForce,1);
+                        // Scatter back soln from linear solve
+                        for(i = 0; i < nloc; ++i)
                         {
-                            pOutput[val-nDirFull] = Out[LocToGlo[i]];
+                            val = LocToGloBnd[i];
+                            if(val >= nDirFull)
+                            {
+                                pOutput[val-nDirFull] = Out[LocToGlo[i]];
+                                // copy vertex forcing into this vector
+                                pVertForce[val-nDirFull] = In[LocToGlo[i]];
+                            }
                         }
                     }
-
+                    else
+                    {
+                        // Scatter back soln from linear solve
+                        for(i = 0; i < nloc; ++i)
+                        {
+                            val = LocToGloBnd[i];
+                            if(val >= nDirFull)
+                            {
+                                pOutput[val-nDirFull] = Out[LocToGlo[i]];
+                            }
+                        }
+                    }
                 }
                 break;
             default:

@@ -59,9 +59,11 @@ int main(int argc, char *argv[])
 
     if (vComm->GetRank() == 0)
     {
-        cout << "Solving 2D Helmholtz:"  << endl;
-        cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
-        cout << "         No. modes  : " << num_modes << endl;
+        cout << "Solving 2D Helmholtz: " << endl;
+        cout << "         Communication: " << vSession->GetComm()->GetType() << endl;
+        cout << "         Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
+        cout << "         Lambda       : " << factors[StdRegions::eFactorLambda] << endl;
+        cout << "         No. modes    : " << bkey0.GetNumModes() << endl;
         cout << endl;
     }
 
@@ -129,12 +131,7 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------------
     // Write solution to file
-    //string out = vSession->GetSessionName();
-    //if (vComm->GetSize() > 1)
-    //{
-    //    out += "_P" + boost::lexical_cast<string>(vComm->GetRank());
-    //}
-    //out += ".fld";
+    //string out = vSession->GetSessionName() + ".fld";
     //std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
     //    = Exp->GetFieldDefinitions();
     //std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
@@ -219,7 +216,7 @@ int main(int argc, char *argv[])
 	// Interpolation of trace 
 	std::vector<LibUtilities::FieldDefinitionsSharedPtr> TraceDef 
 		= Exp->GetTrace()->GetFieldDefinitions();
-	std::vector<std::vector<NekDouble> > TraceData(FieldDef.size());
+	std::vector<std::vector<NekDouble> > TraceData(TraceDef.size());
 	for(i = 0; i < TraceDef.size(); ++i)
 	{
 		TraceDef[i]->m_fields.push_back(fieldstr);
@@ -232,10 +229,10 @@ int main(int argc, char *argv[])
 	PostProc->EvaluateHDGPostProcessing(PostProc->UpdateCoeffs());
 	PostProc->BwdTrans_IterPerExp(PostProc->GetCoeffs(),PostProc->UpdatePhys());
 	
-	NekDouble vLinfError = Exp->Linf(fce);
-	NekDouble vL2Error   = Exp->L2  (fce);
-	NekDouble L2ErrorPostProc = PostProc->L2(ppSol);
-	NekDouble LinfErrorPostProc = PostProc->Linf(ppSol); 
+	NekDouble vLinfError = Exp->Linf(Exp->GetPhys(), fce);
+	NekDouble vL2Error   = Exp->L2  (Exp->GetPhys(), fce);
+	NekDouble L2ErrorPostProc = PostProc->L2(PostProc->GetPhys(), ppSol);
+	NekDouble LinfErrorPostProc = PostProc->Linf(PostProc->GetPhys(), ppSol); 
 
 	if (vSession->GetComm()->GetRank() == 0)
 	{

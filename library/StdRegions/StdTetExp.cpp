@@ -83,240 +83,6 @@ namespace Nektar
         {
         }
 
-        //-------------------------------
-        // Integration Methods
-        //-------------------------------
-        void StdTetExp::TripleTensorProduct(
-                                const Array<OneD, const NekDouble>& fx,
-                                const Array<OneD, const NekDouble>& gy,
-                                const Array<OneD, const NekDouble>& hz,
-                                const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> & outarray )
-        {
-            // Using matrix operation, not sum-factorization.
-            // Regarding the 3D array, inarray[k][j][i], x is changing the
-            // fastest and z the slowest. Thus, the first x-vector of points
-            // refers to the first row of the first stack. The first y-vector
-            // refers to the first column of the first stack. The first z-
-            // vector refers to the vector of stacks intersecting the first row
-            // and first column. So in C++, i refers to column, j to row, and k
-            // to stack. Contrasting this with the usual C++ matrix convention,
-            // note that i does not refer to a C++ row, nor j to C++ column.
-
-            int nx = fx.num_elements();
-            int ny = gy.num_elements();
-            int nz = hz.num_elements();
-            
-            // Multiply by integration constants...
-            // Hadamard multiplication refers to elementwise multiplication of
-            // two vectors.
-
-            // Hadamard each row with the first vector (x-vector); the index i
-            // is changing the fastest.
-            // For each j and k, iterate over each row in all of the stacks at
-            // once
-            for (int jk = 0; jk < ny*nz; ++jk)
-            {
-                Vmath::Vmul(
-                        nx,                 // Size of first weight vector
-                        &inarray[0] + jk*nx, 1, // Offset and stride of each
-                                            //  row-vector (x is changing
-                                            //  fastest)
-                        fx.get(), 1,        // First weight vector (with stride
-                                            //  of 1)
-                        &outarray[0] + jk*nx, 1     // Output has same offset
-                                            //  and stride as input
-                        );
-            }
-
-            // Hadamard each column with the second vector (y-vector)
-            // For each stack   in the 3D-array, do the following...
-            for (int k = 0; k < nz; ++k)
-            {
-                // Iterate over each column in the current stack
-                for (int i = 0; i < nx; ++i)
-                {
-                    Vmath::Vmul(
-                        ny,                 // Size of second weight vector
-                        &outarray[0] + i + nx*ny*k, nx, // Offset and stride of
-                                            //  each column-vector
-                        gy.get(), 1,        // second weight vector (with
-                                            //  stride of 1)
-                        &outarray[0] + i + nx*ny*k, nx  // Output has same
-                                            //  offset and stride as input
-                        );
-                }
-            }
-
-            // Hadamard each stack-vector with the third vector (z-vector)
-            // Iterate over each element in the topmost stack
-            for (int ij = 0; ij < nx*ny; ++ij)
-            {
-                Vmath::Vmul(
-                        nz,                 // Size of third weight vector
-                        &outarray[0] + ij, nx*ny,   // Offset and stride of
-                                            //  each stack-vector
-                        hz.get(), 1,        // Third weight vector (with stride
-                                            //  of 1)
-                        &outarray[0] + ij, nx*ny    // Output has same offset
-                                            //  and stride as input
-                        );
-            }
-
-        }
-
-
-        /**
-         * Inner-Product with respect to the weights: i.e., this is the triple
-         * sum of the product of the four inputs over the Hexahedron.
-         * x-dimension is the row, it is the index that changes the fastest
-         * y-dimension is the column
-         * z-dimension is the stack, it is the index that changes the slowest
-         */
-        NekDouble StdTetExp::TripleInnerProduct(
-                                const Array<OneD, const NekDouble>& fxyz,
-                                const Array<OneD, const NekDouble>& wx,
-                                const Array<OneD, const NekDouble>& wy,
-                                const Array<OneD, const NekDouble>& wz)
-        {
-            int Qx = wx.num_elements();
-            int Qy = wy.num_elements();
-            int Qz = wz.num_elements();
-            
-            if( fxyz.num_elements() != Qx*Qy*Qz ) {
-                cerr << "TripleTetrahedralInnerProduct expected "
-                     << fxyz.num_elements()
-                     << " quadrature points from the discretized input "
-                        "function but got "
-                     << Qx*Qy*Qz << " instead." << endl;
-            }
-
-            // Sum-factorizing over the stacks
-            Array<OneD, NekDouble> A(Qx*Qy, 0.0);
-            for( int i = 0; i < Qx; ++i ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    for( int k = 0; k < Qz; ++k ) {
-                        A[i + Qx*j] +=  fxyz[i + Qx*(j + Qy*k)] * wz[k];
-                    }
-                }
-            }
-
-            // Sum-factorizing over the columns
-            Array<OneD, NekDouble> b(Qx, 0.0);
-            for( int i = 0; i < Qx; ++i ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    b[i] +=  A[i + Qx*j] * wy[j];
-                }
-            }
-
-            // Sum-factorizing over the rows
-            NekDouble c = 0;
-            for( int i = 0; i < Qx; ++i ) {
-                c +=  b[i] * wx[i];
-            }
-
-            return c;
-        }
-
-
-        NekDouble StdTetExp::Integral3D(
-            const Array<OneD, const NekDouble>& inarray,
-            const Array<OneD, const NekDouble>& wx,
-            const Array<OneD, const NekDouble>& wy,
-            const Array<OneD, const NekDouble>& wz)
-        {
-            return TripleInnerProduct(inarray, wx, wy, wz);
-        }
-
-
-
-        /**
-         * @param   inarray     definition of function to be returned at
-         *                      quadrature point of expansion.
-         * @returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1}
-         * u(\eta_1, \eta_2, \eta_3) J[i,j,k] d \eta_1 d \eta_2 d \eta_3 \f$ \n
-         * = \f$\sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1}
-         *   u(\eta_{1i}^{0,0}, \eta_{2j}^{1,0},\eta_{3k}^{2,0})w_{i}^{1,0}
-         *   \hat w_{j}^{1,0} \hat w_{k}^{2,0}    \f$ \n
-         * where
-         * \f$inarray[i,j, k]  = u(\eta_{1i},\eta_{2j}, \eta_{3k}) \f$, \n
-         * \f$\hat w_{j}^{1,0} = \frac {w_{j}^{1,0}} {2}, \hat w_{k}^{2,0}
-         *                     = \frac{w_{k}^{2,0}} {4} \f$ \n
-         * and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature
-         * point.
-         */
-        NekDouble StdTetExp::v_Integral(
-            const Array<OneD, const NekDouble>& inarray)
-        {
-            // Using implementation from page 145 of Spencer Sherwin's book
-            int Qy = m_base[1]->GetNumPoints();
-            int Qz = m_base[2]->GetNumPoints();
-
-            // Get the point distributions:
-            // x is assumed to be Gauss-Lobatto-Legendre (includes -1 and +1)
-            Array<OneD, const NekDouble> y,z,wx,wy,wz;
-            wx = m_base[0]->GetW();
-            m_base[1]->GetZW(y,wy);
-            m_base[2]->GetZW(z,wz);
-
-            Array<OneD, NekDouble> wy_hat = Array<OneD, NekDouble>(Qy, 0.0);
-            Array<OneD, NekDouble> wz_hat = Array<OneD, NekDouble>(Qz, 0.0);
-
-            // Convert wy into wy_hat, which includes the 1/2 scale factor.
-            // Nothing else need be done if the point distribution is Jacobi
-            // (1,0) since (1-eta_y) is aready factored into the weights.
-            switch(m_base[1]->GetPointsType())
-            {
-                // Legendre inner product (Falls-through to next case)
-                case LibUtilities::eGaussLobattoLegendre:
-                // (0,0) Jacobi Inner product
-                case LibUtilities::eGaussRadauMLegendre:
-                for(int j = 0; j < Qy; ++j)
-                {
-                    wy_hat[j] = 0.5*(1.0 - y[j]) * wy[j];
-                }
-                break;
-                
-                // (1,0) Jacobi Inner product
-                case LibUtilities::eGaussRadauMAlpha1Beta0: 
-                Vmath::Smul( Qy, 0.5, (NekDouble *)wy.get(), 1, wy_hat.get(), 1 );
-                break;
-                
-                default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
-                    break;
-            }
-
-            // Convert wz into wz_hat, which includes the 1/4 scale factor.
-            // Nothing else need be done if the point distribution is Jacobi
-            // (2,0) since (1-eta_z)^2 is aready factored into the weights.
-            // Note by coincidence, xi_z = eta_z (xi_z = z according to our
-            // notation)
-            switch(m_base[2]->GetPointsType())
-            {
-                // Legendre inner product (Falls-through to next case)
-                case LibUtilities::eGaussLobattoLegendre:
-                // (0,0) Jacobi Inner product
-                case LibUtilities::eGaussRadauMLegendre:
-                    for(int k = 0; k < Qz; ++k)
-                    {
-                        wz_hat[k] = 0.25*(1.0 - z[k])*(1.0 - z[k]) * wz[k];
-                    }
-                    break;
-                // (2,0) Jacobi Inner product
-                case LibUtilities::eGaussRadauMAlpha2Beta0: 
-                    Vmath::Smul(Qz, 0.25, (NekDouble *)wz.get(), 1, 
-                                wz_hat.get(), 1 );
-                    break;
-                
-                default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
-                    break;
-            }
-
-            return Integral3D(inarray, wx, wy_hat, wz_hat);
-        }
-        
         //----------------------------
         // Differentiation Methods
         //----------------------------
@@ -1087,12 +853,11 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
 
-        NekDouble StdTetExp::v_PhysEvaluate(
-            const Array<OneD, const NekDouble>& xi,
-            const Array<OneD, const NekDouble>& physvals)
-        {
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
+        void StdTetExp::v_LocCoordToLocCollapsed(
+                                        const Array<OneD, const NekDouble>& xi,
+                                        Array<OneD, NekDouble>& eta)
+        {
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
                 // Very top point of the tetrahedron
@@ -1119,10 +884,8 @@ namespace Nektar
                 eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0;
                 eta[2] = xi[2];
             }
-
-            return StdExpansion3D::v_PhysEvaluate(eta, physvals);
         }
-        
+
         void StdTetExp::v_FillMode(
             const int                     mode, 
                   Array<OneD, NekDouble> &outarray)
@@ -1173,20 +936,8 @@ namespace Nektar
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
 
-            int p_hat, k;
-            // All modes in the first layer are boundary modes
-            int tot = P*(P+1)/2 + (Q-P)*P;
-            // Loop over each plane in the stack
-            for (int i = 1; i < R - 1; ++i)
-            {
-                p_hat = min(P, R-i);
-                k = min(Q-P, max(0, Q-i-1));
-                // First two columns and bottom row are boundary modes
-                tot += (p_hat + k) + (p_hat + k - 1) + p_hat - 2;
-            }
-
-            // Add on top vertex mode
-            return tot + 1;
+            return LibUtilities::StdTetData::
+                                        getNumberOfBndCoefficients(P, Q, R);
         }
 
         int StdTetExp::v_NumDGBndryCoeffs() const
@@ -2056,21 +1807,6 @@ namespace Nektar
             
             switch(m_base[1]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-
-                    for(j = 0; j < nquad2; ++j)
-                    {
-                        for(i = 0; i < nquad1; ++i)
-                        {
-                            Blas::Dscal(nquad0,
-                                        0.5*(1-z1[i])*w1[i],
-                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
-                                        1 );
-                        }
-                    }
-                    break;
-
                 // (1,0) Jacobi Inner product.
                 case LibUtilities::eGaussRadauMAlpha1Beta0:
                     for(j = 0; j < nquad2; ++j)
@@ -2082,22 +1818,23 @@ namespace Nektar
                         }
                     }
                     break;
-                
+
                 default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    for(j = 0; j < nquad2; ++j)
+                    {
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,
+                                        0.5*(1-z1[i])*w1[i],
+                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
+                                        1 );
+                        }
+                    }
                     break;
             }
 
             switch(m_base[2]->GetPointsType())
             {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
                 // (2,0) Jacobi inner product.
                 case LibUtilities::eGaussRadauMAlpha2Beta0:
                     for(i = 0; i < nquad2; ++i)
@@ -2108,7 +1845,11 @@ namespace Nektar
                     break;
 
                 default:
-                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
                     break;
             }
         }

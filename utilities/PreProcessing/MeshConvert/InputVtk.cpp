@@ -78,22 +78,31 @@ namespace Nektar
          */
         void InputVtk::Process()
         {
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputVtk: Start reading file..." << endl;
             }
 
             vtkPolyDataReader *vtkMeshReader = vtkPolyDataReader::New();
-            vtkMeshReader->SetFileName(config["infile"].as<string>().c_str());
+            vtkMeshReader->SetFileName(m_config["infile"].as<string>().c_str());
             vtkMeshReader->Update();
             vtkPolyData *vtkMesh = vtkMeshReader->GetOutput();
 
             vtkPoints *vtkPoints = vtkMesh->GetPoints();
 
-            const int numCellTypes = 2;
+            const int numCellTypes = 3;
             vtkCellArray* vtkCells[numCellTypes];
+            LibUtilities::ShapeType vtkCellTypes[numCellTypes];
+            int vtkNumPoints[numCellTypes];
             vtkCells[0] = vtkMesh->GetPolys();
             vtkCells[1] = vtkMesh->GetStrips();
+            vtkCells[2] = vtkMesh->GetLines();
+            vtkCellTypes[0] = LibUtilities::eTriangle;
+            vtkCellTypes[1] = LibUtilities::eTriangle;
+            vtkCellTypes[2] = LibUtilities::eSegment;
+            vtkNumPoints[0] = 3;
+            vtkNumPoints[1] = 3;
+            vtkNumPoints[2] = 2;
 
             vtkIdType npts;
             vtkIdType *pts = 0;
@@ -103,20 +112,20 @@ namespace Nektar
             {
                 vtkPoints->GetPoint(i, p);
 
-                if ((p[0] * p[0]) > 0.000001 && m->spaceDim < 1)
+                if ((p[0] * p[0]) > 0.000001 && m_mesh->m_spaceDim < 1)
                 {
-                    m->spaceDim = 1;
+                    m_mesh->m_spaceDim = 1;
                 }
-                if ((p[1] * p[1]) > 0.000001 && m->spaceDim < 2)
+                if ((p[1] * p[1]) > 0.000001 && m_mesh->m_spaceDim < 2)
                 {
-                    m->spaceDim = 2;
+                    m_mesh->m_spaceDim = 2;
                 }
-                if ((p[2] * p[2]) > 0.000001 && m->spaceDim < 3)
+                if ((p[2] * p[2]) > 0.000001 && m_mesh->m_spaceDim < 3)
                 {
-                    m->spaceDim = 3;
+                    m_mesh->m_spaceDim = 3;
                 }
 
-                m->node.push_back(boost::shared_ptr<Node>(new Node(i, p[0], p[1], p[2])));
+                m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(i, p[0], p[1], p[2])));
             }
 
             for (int c = 0; c < numCellTypes; ++c)
@@ -124,30 +133,31 @@ namespace Nektar
                 vtkCells[c]->InitTraversal();
                 for (int i = 0; vtkCells[c]->GetNextCell(npts, pts); ++i)
                 {
-                    for (int j = 0; j < npts - 2; ++j)
+                    for (int j = 0; j < npts - vtkNumPoints[c] + 1; ++j)
                     {
                         // Create element tags
                         vector<int> tags;
                         tags.push_back(0); // composite
-                        tags.push_back(eTriangle); // element type
+                        tags.push_back(vtkCellTypes[c]); // element type
 
                         // Read element node list
                         vector<NodeSharedPtr> nodeList;
-                        for (int k = j; k < j + 3; ++k)
+                        for (int k = j; k < j + vtkNumPoints[c]; ++k)
                         {
-                            nodeList.push_back(m->node[pts[k]]);
+                            nodeList.push_back(m_mesh->m_node[pts[k]]);
                         }
 
                         // Create element
-                        ElmtConfig conf(eTriangle,1,false,false);
+                        ElmtConfig conf(vtkCellTypes[c],1,false,false);
                         ElementSharedPtr E = GetElementFactory().
-                            CreateInstance(eTriangle,conf,nodeList,tags);
+                            CreateInstance(vtkCellTypes[c],
+                                            conf,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m->expDim) {
-                            m->expDim = E->GetDim();
+                        if (E->GetDim() > m_mesh->m_expDim) {
+                            m_mesh->m_expDim = E->GetDim();
                         }
-                        m->element[E->GetDim()].push_back(E);
+                        m_mesh->m_element[E->GetDim()].push_back(E);
                     }
                 }
             }

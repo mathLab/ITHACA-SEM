@@ -136,10 +136,8 @@ namespace Nektar
 
             //Apply linear space preconditioner
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear, tmp);
-            //m_linSpacePrecon->DoPreconditioner(InputLinear, OutputLinear);
 
             m_lowEnergyPrecon->DoMultiplybyInverseTransposedTransformationMatrix(OutputLinear,pOutput);
-            //m_lowEnergyPrecon->DoTransformToLowEnergy(OutputLinear,pOutput);
 
             Vmath::Vadd(nGlobal,pOutput,1,OutputLowEnergy,1,pOutput,1);
         }

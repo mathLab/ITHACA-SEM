@@ -38,6 +38,7 @@
 
 
 #include "Module.h"
+#include "InputPly.h"
 
 namespace Nektar
 {
@@ -60,7 +61,8 @@ namespace Nektar
             virtual void Process();
             
         protected:
-            void   GenerateNormals(vector<ElementSharedPtr> &el);
+            void   GenerateNormals(vector<ElementSharedPtr> &el,
+                                   MeshSharedPtr &mesh);
             double CrossProdMag   (Node &a, Node &b);
             void   UnitCrossProd  (Node &a, Node &b, Node &c);
             double Blend          (double r);

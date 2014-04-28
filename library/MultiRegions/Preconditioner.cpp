@@ -115,8 +115,8 @@ namespace Nektar
         void Preconditioner::v_DoPreconditionerWithNonVertOutput(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput,
-            const Array<OneD, NekDouble> &pNonVertOutput)
-
+            const Array<OneD, NekDouble> &pNonVertOutput,
+                  Array<OneD, NekDouble>& pVertForce)
         {
             NEKERROR(ErrorUtil::efatal, "Method does not exist");
 	}

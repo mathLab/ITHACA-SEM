@@ -80,194 +80,6 @@ namespace Nektar
         {
         }
 
-
-        //////////////////////////////
-        // Integration Methods
-        //////////////////////////////
-        /**
-         * @param   fx          ?
-         * @param   gy          ?
-         * @param   hz          ?
-         * @param   inarray     ?
-         * @param   outarray    ?
-         */
-        void StdHexExp::TripleTensorProduct(
-                                const Array<OneD, const NekDouble>& fx,
-                                const Array<OneD, const NekDouble>& gy,
-                                const Array<OneD, const NekDouble>& hz,
-                                const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> & outarray )
-        {
-
-            // Using matrix operation, not sum-factorization.
-            // Regarding the 3D array, inarray[k][j][i], x is changing the
-            // fastest and z the slowest. Thus, the first x-vector of points
-            // refers to the first row of the first stack. The first y-vector
-            // refers to the first column of the first stack. The first z-
-            // vector refers to the vector of stacks intersecting the first row
-            // and first column. So in C++, i refers to column, j to row, and k
-            // to stack. Contrasting this with the usual C++ matrix convention,
-            // note that i does not refer to a C++ row, nor j to C++ column.
-
-            int nx = fx.num_elements();
-            int ny = gy.num_elements();
-            int nz = hz.num_elements();
-
-            // Multiply by integration constants...
-            // Hadamard multiplication refers to elementwise multiplication of
-            // two vectors.
-
-            // Hadamard each row with the first vector (x-vector); the index i
-            // is changing the fastest.
-            // For each j and k, iterate over each row in all of the stacks at
-            // once.
-            for (int jk = 0; jk < ny*nz; ++jk)
-            {
-                Vmath::Vmul(
-                    nx,                     // Size of first weight vector
-                    &inarray[0] + jk*nx, 1, // Offset and stride of each row-
-                                            //  vector (x is changing fastest)
-                    fx.get(), 1,            // First weight vector (with stride
-                                            //  of 1)
-                    &outarray[0] + jk*nx, 1 // Output has same offset and
-                                            //  stride as input
-                    );
-            }
-
-            // Hadamard each column with the second vector (y-vector)
-            // For each stack in the 3D-array,  do the following...
-            for (int k = 0; k < nz; ++k)
-            {
-                // Iterate over each column in the current stack
-                for (int i = 0; i < nx; ++i)
-                {
-                    Vmath::Vmul(
-                        ny,                     // Size of second weight vector
-                        &outarray[0] + i + nx*ny*k, nx,     // Offset and
-                                                //  stride of each column-vector
-                        gy.get(), 1,            // second weight vector (with
-                                                //  stride of 1)
-                        &outarray[0] + i + nx*ny*k, nx      // Output has same
-                                                //  offset and stride as input
-                        );
-                }
-            }
-
-            // Hadamard each stack-vector with the third vector (z-vector)
-            // Iterate over each element in the topmost stack
-            for (int ij = 0; ij < nx*ny; ++ij)
-            {
-                Vmath::Vmul(
-                    nz,                         // Size of third weight vector
-                    &outarray[0] + ij, nx*ny,   // Offset and stride of each
-                                                //  stack-vector
-                    hz.get(), 1,                // Third weight vector (with
-                                                //  stride of 1)
-                    &outarray[0] + ij, nx*ny    // Output has same offset and
-                                                //  stride as input
-                    );
-            }
-
-        }
-
-
-        /**
-         * Inner-Product with respect to the weights: i.e., this is the triple
-         * sum of the product of the four inputs over the Hexahedron
-         * x-dimension is the row, it is the index that changes the fastest
-         * y-dimension is the column
-         * z-dimension is the stack, it is the index that changes the slowest
-         */
-        NekDouble StdHexExp::TripleInnerProduct(
-                                     const Array<OneD, const NekDouble>& fxyz,
-                                     const Array<OneD, const NekDouble>& wx,
-                                     const Array<OneD, const NekDouble>& wy,
-                                     const Array<OneD, const NekDouble>& wz
-                                      )
-        {
-            int Qx = wx.num_elements();
-            int Qy = wy.num_elements();
-            int Qz = wz.num_elements();
-
-            if( fxyz.num_elements() != Qx*Qy*Qz ) {
-                cerr << "TripleTetrahedralInnerProduct expected "
-                     << fxyz.num_elements()
-                     << " quadrature points from the discretized input "
-                        "function but got "
-                     << Qx*Qy*Qz << " instead." << endl;
-            }
-
-            // Sum-factorizing over the stacks
-            Array<OneD, NekDouble> A(Qx*Qy, 0.0);
-            for( int i = 0; i < Qx; ++i ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    for( int k = 0; k < Qz; ++k ) {
-                        A[i + Qx*j] +=  fxyz[i + Qx*(j + Qy*k)] * wz[k];
-                    }
-                }
-            }
-
-            // Sum-factorizing over the columns
-            Array<OneD, NekDouble> b(Qx, 0.0);
-            for( int i = 0; i < Qx; ++i ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    b[i] +=  A[i + Qx*j] * wy[j];
-                }
-            }
-
-            // Sum-factorizing over the rows
-            NekDouble c = 0;
-            for( int i = 0; i < Qx; ++i ) {
-                c +=  b[i] * wx[i];
-            }
-
-            return c;
-        }
-
-
-        /**
-         * @param   inarray     ?
-         * @param   wx          ?
-         * @param   wy          ?
-         * @param   wz          ?
-         */
-        NekDouble StdHexExp::Integral3D(
-                                const Array<OneD, const NekDouble>& inarray,
-                                const Array<OneD, const NekDouble>& wx,
-                                const Array<OneD, const NekDouble>& wy,
-                                const Array<OneD, const NekDouble>& wz)
-        {
-            return TripleInnerProduct( inarray, wx, wy, wz );
-
-        }
-
-
-        /**
-         * @param   inarray     Definition of function to be returned at
-         *                      quadrature point of expansion.
-         * @returns
-         *  \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\xi_1, \xi_2, \xi_3)
-         *                      J[i,j,k] d  \xi_1 d \xi_2 d \xi_3 \f$ \n
-         *  \f$ = \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1}
-         *          \sum_{k=0}^{Q_3 - 1} u(\xi_{1i}, \xi_{2j},\xi_{3k})
-         *          w_{i} w_{j}  w_{k}   \f$ \n
-         *  where \f$inarray[i,j, k] = u(\xi_{1i},\xi_{2j}, \xi_{3k}) \f$ \n
-         *  and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature
-         *  point.
-         */
-        NekDouble StdHexExp::v_Integral(
-                                const Array<OneD, const NekDouble>& inarray)
-        {
-            Array<OneD, const NekDouble> w0, w1, w2;
-
-            w0 = m_base[0]->GetW();
-            w1 = m_base[1]->GetW();
-            w2 = m_base[2]->GetW();
-
-            return Integral3D(inarray, w0, w1, w2);
-        }
-
-
         bool StdHexExp::v_IsBoundaryInteriorExpansion()
         {
             return (m_base[0]->GetBasisType() == LibUtilities::eModified_A) &&
@@ -749,15 +561,14 @@ namespace Nektar
             }
         }
 
-
-        NekDouble StdHexExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoords,
-                const Array<OneD, const NekDouble>& physvals)
+        void StdHexExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                      Array<OneD, NekDouble>& eta)
         {
-            return StdExpansion3D::v_PhysEvaluate(Lcoords, physvals);
+            eta[0] = xi[0];
+            eta[1] = xi[1];
+            eta[2] = xi[2];
         }
-
-
+                                          
         /**
          * @note for hexahedral expansions _base[0] (i.e. p) modes run fastest.
          */

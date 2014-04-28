@@ -137,7 +137,7 @@ namespace Nektar
             NekDouble m_MaxNormDiff_q_qBar;
             NekDouble m_First_MinNormDiff_q_qBar;
             
-            int NumElmVelocity;
+            int NumVar_SFD;
             
             int MPIrank;
             

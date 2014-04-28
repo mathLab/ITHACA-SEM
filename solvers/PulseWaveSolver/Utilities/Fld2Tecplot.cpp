@@ -33,11 +33,12 @@ int main(int argc, char *argv[])
     
         // Define new input with extra argument to intialisae -OneD=false
         int newargc = argc+1;
-        char *newargv[newargc];
-        char NewArgv[]= "--SetToOneSpaceDimension=false";
+        char **newargv = new char*[newargc];
 
         newargv[0] = argv[0];
-        newargv[1] = NewArgv; 
+        newargv[1] = new char[30];
+        strcpy(newargv[1], "--SetToOneSpaceDimension=false");
+
         for(int i = 1; i < argc; ++i)
         {
             newargv[i+1] = argv[i];
@@ -45,7 +46,7 @@ int main(int argc, char *argv[])
         
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(newargc, newargv);
-
+        delete[] newargv;
         
         bool CalcCharacteristicVariables = false;
 

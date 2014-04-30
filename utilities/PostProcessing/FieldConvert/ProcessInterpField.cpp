@@ -68,6 +68,8 @@ namespace Nektar
                                                 "Lower bound for interpolation value");
             m_config["clamptouppervalue"] = ConfigOption(false,"10000000",
                                                 "Upper bound for interpolation value");
+            m_config["defaultvalue"] = ConfigOption(false,"0",
+                                                "Default value if point is outside domain");
         }
 
         ProcessInterpField::~ProcessInterpField()
@@ -216,8 +218,10 @@ namespace Nektar
             
             NekDouble clamp_low = m_config["clamptolowervalue"].as<NekDouble>();
             NekDouble clamp_up  = m_config["clamptouppervalue"].as<NekDouble>();
+            NekDouble def_value = m_config["defaultvalue"].as<NekDouble>();
+
             InterpolateField(m_fromField->m_exp, m_f->m_exp, 
-                             x1, y1, z1, clamp_low, clamp_up);
+                             x1, y1, z1, clamp_low, clamp_up,def_value);
             
             if(m_f->m_session->GetComm()->GetRank() == 0)
             {
@@ -251,7 +255,8 @@ namespace Nektar
                                  Array<OneD, NekDouble>                      y,
                                  Array<OneD, NekDouble>                      z,
                                  NekDouble                                   clamp_low,
-                                 NekDouble                                   clamp_up)
+                                 NekDouble                                   clamp_up,
+                                 NekDouble                                   def_value)
         {
             int expdim = field0[0]->GetCoordim(0);
             
@@ -276,29 +281,39 @@ namespace Nektar
                 // Obtain Element and LocalCoordinate to interpolate
                 elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-3);
                 
-                offset = field0[0]->GetPhys_Offset(field0[0]->
-                                                   GetOffset_Elmt_Id(elmtid));
-                
-                for (f = 0; f < field1.size(); ++f)
+                if(elmtid >= 0)
                 {
-                    NekDouble value;
-                    value = field0[f]->GetExp(elmtid)->
-                        StdPhysEvaluate(Lcoords, field0[f]->GetPhys() +offset);    
+                    offset = field0[0]->GetPhys_Offset(field0[0]->
+                                                       GetOffset_Elmt_Id(elmtid));
                     
-                    if ((boost::math::isnan)(value))
-                    {            
-                        ASSERTL0(false, "new value is not a number");
-                    }
-                    else
+                    for (f = 0; f < field1.size(); ++f)
                     {
-                        value = (value > clamp_up)? clamp_up : 
-                            ((value < clamp_low)? clamp_low :
-                             value);
+                        NekDouble value;
+                        value = field0[f]->GetExp(elmtid)->
+                            StdPhysEvaluate(Lcoords, field0[f]->GetPhys() +offset);    
                         
-                        field1[f]->UpdatePhys()[r] = value;
+                        if ((boost::math::isnan)(value))
+                        {            
+                            ASSERTL0(false, "new value is not a number");
+                        }
+                        else
+                        {
+                            value = (value > clamp_up)? clamp_up : 
+                                ((value < clamp_low)? clamp_low :
+                                 value);
+                            
+                            field1[f]->UpdatePhys()[r] = value;
+                        }
                     }
                 }
-                
+                else
+                {
+                    for (f = 0; f < field0.size(); ++f)
+                    {
+                        m_f->m_data[f][r] = def_value;
+                    }
+                }
+
                 if (intpts%1000 == 0)
                 {
                     cout <<"." << flush;

@@ -65,11 +65,12 @@ namespace Nektar
 
             void InterpolateField(vector<MultiRegions::ExpListSharedPtr> &field0,
                                   vector<MultiRegions::ExpListSharedPtr> &field1,
-                                  Array<OneD, NekDouble>                      x,
-                                  Array<OneD, NekDouble>                      y,
-                                  Array<OneD, NekDouble>                      z,
-                                  NekDouble                                   clamp_low,
-                                  NekDouble                                   clamp_up);
+                                  Array<OneD, NekDouble>                  x,
+                                  Array<OneD, NekDouble>                  y,
+                                  Array<OneD, NekDouble>                  z,
+                                  NekDouble                               clamp_low,
+                                  NekDouble                               clamp_up,
+                                  NekDouble                               def_value);
         };
     }
 }

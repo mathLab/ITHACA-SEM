@@ -278,8 +278,8 @@ namespace Nektar
                     coords[2] = z[r];
                 }
                 
-                // Obtain Element and LocalCoordinate to interpolate
-                elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-3);
+                // Obtain nearest Element and LocalCoordinate to interpolate
+                elmtid = field0[0]->GetExpIndex(coords, Lcoords, 1e-3,true);
                 
                 if(elmtid >= 0)
                 {
@@ -308,9 +308,9 @@ namespace Nektar
                 }
                 else
                 {
-                    for (f = 0; f < field0.size(); ++f)
+                    for (f = 0; f < field1.size(); ++f)
                     {
-                        m_f->m_data[f][r] = def_value;
+                        field1[f]->UpdatePhys()[r] = def_value;
                     }
                 }
 

@@ -6,8 +6,10 @@ SET(FieldConvertHeaders
     OutputTecplot.h
     OutputVtk.h
     OutputFld.h
+    OutputXml.h
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
+    ProcessDeform.h
     ProcessInterpField.h
     ProcessVorticity.h
     ProcessC0Projection.h
@@ -22,8 +24,10 @@ SET(FieldConvertSources
     OutputTecplot.cpp
     OutputVtk.cpp
     OutputFld.cpp
+    OutputXml.cpp
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
+    ProcessDeform.cpp
     ProcessInterpField.cpp
     ProcessVorticity.cpp
     ProcessC0Projection.cpp

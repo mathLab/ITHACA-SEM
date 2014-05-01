@@ -237,6 +237,9 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void ReadCurves(
                         std::string &infilename);
 
+                SPATIAL_DOMAINS_EXPORT void WriteGeometry(
+                        std::string &outfilename);
+            
                 /* ---- Helper functions ---- */
                 /// Dimension of the mesh (can be a 1D curve in 3D space).
                 inline int GetMeshDimension() const;
@@ -362,7 +365,9 @@ namespace Nektar
                     QuadGeomSharedPtr qfaces[PrismGeom::kNqfaces]);
                 SPATIAL_DOMAINS_EXPORT HexGeomSharedPtr AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces]);
 
-                SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedEdges() const { return m_curvedEdges; }
+                SPATIAL_DOMAINS_EXPORT const PointGeomMap& GetVertSet() const { return m_vertSet; }
+
+                SPATIAL_DOMAINS_EXPORT CurveVector& GetCurvedEdges() { return m_curvedEdges; }
 
                 SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedFaces() const { return m_curvedFaces; }
                 // void AddExpansion(ExpansionShPtr expansion) { m_expansions[expansion->m_geomShPtr->GetGlobalID()] = expansion; }

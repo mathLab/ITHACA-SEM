@@ -50,6 +50,7 @@
 #include <tinyxml/tinyxml.h>
 #include <cstring>
 #include <sstream>
+#include <iomanip>
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
@@ -1324,6 +1325,146 @@ namespace Nektar
             ReadCurves(doc);
         }
 
+        void MeshGraph::WriteGeometry(std::string &outfilename)
+        {
+            TiXmlDocument doc;
+            TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "utf-8", "");
+            doc.LinkEndChild(decl);
+
+            TiXmlElement *root = new TiXmlElement("NEKTAR");
+            doc.LinkEndChild(root);
+
+            // Begin <GEOMETRY> section
+            TiXmlElement *geomTag = new TiXmlElement("GEOMETRY");
+            geomTag->SetAttribute("DIM", m_meshDimension);
+            geomTag->SetAttribute("SPACE", m_spaceDimension);
+            root->LinkEndChild(geomTag);
+
+            // Construct <VERTEX> block
+            TiXmlElement *vertTag = new TiXmlElement("VERTEX");
+            PointGeomMap::iterator pIt;
+
+            for (pIt = m_vertSet.begin(); pIt != m_vertSet.end(); ++pIt)
+            {
+                stringstream s;
+                s << scientific << setprecision(8)
+                  << (*pIt->second)(0) << " " << (*pIt->second)(1) << " "
+                  << (*pIt->second)(2);
+                TiXmlElement * v = new TiXmlElement("V");
+                v->SetAttribute("ID", pIt->second->GetVid());
+                v->LinkEndChild(new TiXmlText(s.str()));
+                vertTag->LinkEndChild(v);
+            }
+            
+            geomTag->LinkEndChild(vertTag);
+
+            // Construct <EDGE> or <ELEMENT> block
+            TiXmlElement *edgeTag = new TiXmlElement(
+                m_meshDimension == 1 ? "ELEMENT" : "EDGE");
+            SegGeomMap::iterator sIt;
+            string tag = m_meshDimension == 1 ? "S" : "E";
+
+            for (sIt = m_segGeoms.begin(); sIt != m_segGeoms.end(); ++sIt)
+            {
+                stringstream s;
+                SegGeomSharedPtr seg = sIt->second;
+                s << seg->GetVid(0) << " " << seg->GetVid(1);
+                TiXmlElement *e = new TiXmlElement(tag);
+                e->SetAttribute("ID", sIt->first);
+                e->LinkEndChild(new TiXmlText(s.str()));
+                edgeTag->LinkEndChild(e);
+            }
+
+            geomTag->LinkEndChild(edgeTag);
+
+            // Construct <FACE> or <ELEMENT> block
+            TiXmlElement *faceTag = new TiXmlElement(
+                m_meshDimension == 2 ? "ELEMENT" : "FACE");
+
+            TriGeomMap::iterator tIt;
+            tag = m_meshDimension == 2 ? "T" : "F";
+
+            for (tIt = m_triGeoms.begin(); tIt != m_triGeoms.end(); ++tIt)
+            {
+                stringstream s;
+                TriGeomSharedPtr tri = tIt->second;
+                s << tri->GetEid(0) << " " << tri->GetEid(1) << " "
+                  << tri->GetEid(2);
+                TiXmlElement *t = new TiXmlElement(tag);
+                t->SetAttribute("ID", tIt->first);
+                t->LinkEndChild(new TiXmlText(s.str()));
+                faceTag->LinkEndChild(t);
+            }
+
+            QuadGeomMap::iterator qIt;
+            tag = m_meshDimension == 2 ? "Q" : "F";
+
+            for (qIt = m_quadGeoms.begin(); qIt != m_quadGeoms.end(); ++qIt)
+            {
+                stringstream s;
+                QuadGeomSharedPtr quad = qIt->second;
+                s << quad->GetEid(0) << " " << quad->GetEid(1) << " "
+                  << quad->GetEid(2) << " " << quad->GetEid(3);
+                TiXmlElement *q = new TiXmlElement(tag);
+                q->SetAttribute("ID", qIt->first);
+                q->LinkEndChild(new TiXmlText(s.str()));
+                faceTag->LinkEndChild(q);
+            }
+
+            geomTag->LinkEndChild(faceTag);
+
+            // TODO: 3D
+
+            // Construct <COMPOSITE> blocks
+            /*
+            TiXmlElement *compTag = new TiXmlElement("COMPOSITE");
+            CompositeMap::iterator cIt;
+            for (cIt = m_meshComposites.begin(); cIt != m_meshComposites.end(); ++cIt)
+            {
+                stringstream s;
+                TiXmlElement *c = new TiXmlElement("C");
+
+                for (int i = 0; i < cIt->second->size(); ++i)
+                {
+                    
+                }
+
+                c->SetAttribute("ID", cIt->first);
+                c->LinkEndChild(new TiXmlText(s.str()));
+                faceTag->LinkEndChild(q);
+                
+            }
+            */
+
+            // Construct <CURVED> block
+            TiXmlElement *curveTag = new TiXmlElement("CURVED");
+
+            for (int i = 0; i < m_curvedEdges.size(); ++i)
+            {
+                CurveSharedPtr curve = m_curvedEdges[i];
+                TiXmlElement *c = new TiXmlElement("E");
+                stringstream s;
+                s.precision(8);
+
+                for (int j = 0; j < curve->m_points.size(); ++j)
+                {
+                    SpatialDomains::PointGeomSharedPtr p = curve->m_points[j];
+                    s << scientific << (*p)(0) << " " << (*p)(1) << " " << (*p)(2) << "   ";
+                }
+
+                c->SetAttribute("ID", i);
+                c->SetAttribute("EDGEID", curve->m_curveID);
+                c->SetAttribute("NUMPOINTS", curve->m_points.size());
+                c->SetAttribute("TYPE", LibUtilities::kPointsTypeStr[curve->m_ptype]);
+                c->LinkEndChild(new TiXmlText(s.str()));
+                curveTag->LinkEndChild(c);
+            }
+
+            geomTag->LinkEndChild(curveTag);
+
+            doc.SaveFile(outfilename);
+        }
+        
         void MeshGraph::SetDomainRange (NekDouble xmin, NekDouble xmax, NekDouble ymin, 
                              NekDouble ymax, NekDouble zmin, NekDouble zmax)
         {
@@ -3244,7 +3385,6 @@ namespace Nektar
             m_vertSet[nextId] = vert;
             return vert;
         }
-
 
         /**
          *

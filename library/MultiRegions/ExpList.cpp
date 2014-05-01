@@ -1279,7 +1279,7 @@ namespace Nektar
             else
             {
                 static int start = 0;
-                int min_id;
+                int min_id  = 0;
                 NekDouble resid_min = 1e6;
                 Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
                 
@@ -1294,7 +1294,7 @@ namespace Nektar
                     }
                     else
                     {
-                        if(resid_min < resid)
+                        if(resid < resid_min)
                         {
                             min_id    = i;
                             resid_min = resid;
@@ -1313,7 +1313,7 @@ namespace Nektar
                     }
                     else
                     {
-                        if(resid_min < resid)
+                        if(resid < resid_min)
                         {
                             min_id    = i;
                             resid_min = resid;

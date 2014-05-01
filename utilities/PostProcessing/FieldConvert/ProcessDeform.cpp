@@ -70,6 +70,7 @@ namespace Nektar
             // Maybe create a new copy of MeshGraph to work on?
             SpatialDomains::MeshGraphSharedPtr graph = m_f->m_graph;
             SpatialDomains::CurveVector &curvedEdges = m_f->m_graph->GetCurvedEdges();
+            curvedEdges.clear();
 
             int i, j, k, dim;
             set<int> updatedVerts, updatedEdges;

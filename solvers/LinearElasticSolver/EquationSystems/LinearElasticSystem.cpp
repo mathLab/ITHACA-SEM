@@ -110,6 +110,7 @@ namespace Nektar
         //factors[StdRegions::eFactorLambda] = 1.0;
 
         // Calculate various constants
+#if 0
         NekDouble a = m_E*(1.0 - m_nu*m_nu)/(1 - 2.0*m_nu);
         NekDouble b = 0.5 / (1.0 - m_nu);
         NekDouble c = 0.5 * (1.0 - 2.0*m_nu) / (1.0 - m_nu);
@@ -166,6 +167,106 @@ namespace Nektar
             // Set up the statically condensed block for this element.
             SetStaticCondBlock(n, exp, mat);
         }
+#else
+        NekDouble a = m_E * (1.0 - m_nu) / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
+        NekDouble b = m_E * 0.5 / (1.0 + m_nu);
+        NekDouble c = m_E * m_nu / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
+
+        // Loop over each element and construct matrices.
+        for (n = 0; n < nEl; ++n)
+        {
+            exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
+            int nCoeffs = exp->GetNcoeffs();
+            int nPhys   = exp->GetTotPoints();
+
+            StdRegions::VarCoeffMap varcoeffA;
+            StdRegions::VarCoeffMap varcoeffD;
+            varcoeffA [StdRegions::eVarCoeffD00] =
+                Array<OneD, NekDouble>(nPhys, a);
+            varcoeffA [StdRegions::eVarCoeffD11] =
+                Array<OneD, NekDouble>(nPhys, b);
+            varcoeffD [StdRegions::eVarCoeffD00] =
+                Array<OneD, NekDouble>(nPhys, b);
+            varcoeffD [StdRegions::eVarCoeffD11] =
+                Array<OneD, NekDouble>(nPhys, a);
+
+            LocalRegions::MatrixKey matkeyA (StdRegions::eLaplacian,
+                                             exp->DetShapeType(),
+                                             *exp, factors, varcoeffA);
+            LocalRegions::MatrixKey matkeyD (StdRegions::eLaplacian,
+                                             exp->DetShapeType(),
+                                             *exp, factors, varcoeffD);
+
+            DNekMatSharedPtr matB = MemoryManager<DNekMat>::AllocateSharedPtr(
+                nCoeffs, nCoeffs, 0.0, eFULL);
+
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                Array<OneD, NekDouble> tmp1(nCoeffs, 0.0);
+                Array<OneD, NekDouble> tmp2(nPhys, 0.0);
+                Array<OneD, NekDouble> tmp3(nPhys, 0.0);
+                tmp1[i] = 1.0;
+                exp->BwdTrans(tmp1, tmp2);
+                exp->PhysDeriv(1, tmp2, tmp3);
+                exp->IProductWRTDerivBase(0, tmp3, tmp1);
+                for (j = 0; j < nCoeffs; ++j)
+                {
+                    Vmath::Vcopy(nCoeffs, &tmp1[0], 1, &(matB->GetPtr())[0]+i*nCoeffs,1);
+                }
+            }
+
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                for (j = 0; j < nCoeffs; ++j)
+                {
+                    (*matB)(i,j) *= c;
+                }
+            }
+            
+            DNekMatSharedPtr matC = MemoryManager<DNekMat>::AllocateSharedPtr(
+                nCoeffs, nCoeffs, 0.0, eFULL);
+
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                Array<OneD, NekDouble> tmp1(nCoeffs, 0.0);
+                Array<OneD, NekDouble> tmp2(nPhys, 0.0);
+                Array<OneD, NekDouble> tmp3(nPhys, 0.0);
+                tmp1[i] = 1.0;
+                exp->BwdTrans(tmp1, tmp2);
+                exp->PhysDeriv(0, tmp2, tmp3);
+                exp->IProductWRTDerivBase(1, tmp3, tmp1);
+                for (j = 0; j < nCoeffs; ++j)
+                {
+                    Vmath::Vcopy(nCoeffs, &tmp1[0], 1, &(matC->GetPtr())[0]+i*nCoeffs,1);
+                }
+            }
+
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                for (j = 0; j < nCoeffs; ++j)
+                {
+                    (*matC)(i,j) *= c;
+                }
+            }
+            
+            /*
+             * mat holds the linear operator [ A B ] acting on [ u ].
+             *                               [ C D ]           [ v ]
+             *
+             * In this case it is just a diagonal matrix with each component
+             * being a Helmholtz matrix, so that the u and v fields are not
+             * coupled at all.
+             */
+            Array<TwoD, DNekMatSharedPtr> mat(2,2);
+            mat[0][0] = exp->GenMatrix(matkeyA);
+            mat[0][1] = matB;
+            mat[1][0] = matC;
+            mat[1][1] = exp->GenMatrix(matkeyD);
+
+            // Set up the statically condensed block for this element.
+            SetStaticCondBlock(n, exp, mat);
+        }
+#endif
     }
 
     void LinearElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)

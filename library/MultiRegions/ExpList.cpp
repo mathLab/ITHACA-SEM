@@ -1296,7 +1296,7 @@ namespace Nektar
                     {
                         if(resid_min < resid)
                         {
-                            min_id = i;
+                            min_id    = i;
                             resid_min = resid;
                             Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
                         }
@@ -1315,7 +1315,7 @@ namespace Nektar
                     {
                         if(resid_min < resid)
                         {
-                            min_id = i;
+                            min_id    = i;
                             resid_min = resid;
                             Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
                         }
@@ -1330,7 +1330,7 @@ namespace Nektar
                 if(returnNearestElmt)
                 {
                     Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
-                    return resid_min;
+                    return min_id;
                 }
                 else
                 {

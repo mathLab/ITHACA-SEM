@@ -25,25 +25,29 @@ IF (THIRDPARTY_BUILD_BOOST)
         ENDIF(APPLE)
         EXTERNALPROJECT_ADD(
             boost
-            PREFIX ${TPSRC}
             URL ${TPURL}/boost_1_49_0.tar.bz2
             URL_MD5 "0d202cb811f934282dea64856a175698"
+            STAMP_DIR ${TPSRC}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ./bootstrap.sh --prefix=${TPSRC}/dist
+            SOURCE_DIR ${TPSRC}/boost
+            BINARY_DIR ${TPBUILD}/boost
+            TMP_DIR ${TPBUILD}/boost-tmp
+            INSTALL_DIR ${TPDIST}
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ./bootstrap.sh --prefix=${TPDIST}
             BUILD_COMMAND NO_BZIP2=1 ./b2
                             variant=release
                             link=shared 
-                            include=${TPSRC}/dist/include
-                            linkflags="-L${TPSRC}/dist/lib"
+                            include=${TPDIST}/include
+                            linkflags="-L${TPDIST}/lib"
                             ${BOOST_FLAGS} ${BOOST_LIB_LIST} 
                             --layout=system toolset=${TOOLSET} install
             INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1
+            #BUILD_IN_SOURCE 1
         )
     
         IF (APPLE)
             EXTERNALPROJECT_ADD_STEP(boost patch-install-path
-                COMMAND sed -i ".bak" "s|-install_name \"|&${TPSRC}/dist/lib/|" ${TPSRC}/src/boost/tools/build/v2/tools/darwin.jam
+                COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|" ${TPSRC}/boost/tools/build/v2/tools/darwin.jam
                 DEPENDERS build
                 DEPENDEES download)
         ENDIF (APPLE)
@@ -82,14 +86,18 @@ IF (THIRDPARTY_BUILD_BOOST)
     ELSE ()
         EXTERNALPROJECT_ADD(
             boost
-            PREFIX ${TPSRC}
             URL ${TPURL}/boost_1_49_0.tar.bz2
             URL_MD5 "0d202cb811f934282dea64856a175698"
+            STAMP_DIR ${TPSRC}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            CONFIGURE_COMMAND bootstrap.bat --prefix=${TPSRC}/boost
+            SOURCE_DIR ${TPSRC}/boost
+            BINARY_DIR ${TPBUILD}/boost
+            TMP_DIR ${TPBUILD}/boost-tmp
+            INSTALL_DIR ${TPDIST}
+            CONFIGURE_COMMAND bootstrap.bat --prefix=${TPDIST}/boost
             BUILD_COMMAND b2 --layout=system install
             INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1
+            #BUILD_IN_SOURCE 1
         )
     ENDIF ()
 ELSE (THIRDPARTY_BUILD_BOOST)
@@ -108,11 +116,11 @@ ELSE (THIRDPARTY_BUILD_BOOST)
             FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time
                 filesystem system program_options regex )
         ELSE ()
-            SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
-            SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
-            SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/dist)
+            #SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
+            #FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
+            #SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
+            #FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
+            SET(BOOST_ROOT ${TPDIST})
             FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
         ENDIF()
     ELSE()

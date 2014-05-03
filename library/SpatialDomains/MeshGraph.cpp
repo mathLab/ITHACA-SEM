@@ -1415,27 +1415,6 @@ namespace Nektar
 
             // TODO: 3D
 
-            // Construct <COMPOSITE> blocks
-            /*
-            TiXmlElement *compTag = new TiXmlElement("COMPOSITE");
-            CompositeMap::iterator cIt;
-            for (cIt = m_meshComposites.begin(); cIt != m_meshComposites.end(); ++cIt)
-            {
-                stringstream s;
-                TiXmlElement *c = new TiXmlElement("C");
-
-                for (int i = 0; i < cIt->second->size(); ++i)
-                {
-                    
-                }
-
-                c->SetAttribute("ID", cIt->first);
-                c->LinkEndChild(new TiXmlText(s.str()));
-                faceTag->LinkEndChild(q);
-                
-            }
-            */
-
             // Construct <CURVED> block
             TiXmlElement *curveTag = new TiXmlElement("CURVED");
 
@@ -1461,6 +1440,96 @@ namespace Nektar
             }
 
             geomTag->LinkEndChild(curveTag);
+
+            // Construct <COMPOSITE> blocks
+            TiXmlElement *compTag = new TiXmlElement("COMPOSITE");
+            CompositeMap::iterator cIt;
+
+            map<LibUtilities::ShapeType, pair<string, string> > compMap;
+            compMap[LibUtilities::eSegment]       = make_pair("S", "E");
+            compMap[LibUtilities::eQuadrilateral] = make_pair("Q", "F");
+            compMap[LibUtilities::eTriangle]      = make_pair("T", "F");
+            compMap[LibUtilities::eTetrahedron]   = make_pair("A", "A");
+            compMap[LibUtilities::ePyramid]       = make_pair("P", "P");
+            compMap[LibUtilities::ePrism]         = make_pair("R", "R");
+            compMap[LibUtilities::eHexahedron]    = make_pair("H", "H");
+
+            for (cIt = m_meshComposites.begin(); cIt != m_meshComposites.end(); ++cIt)
+            {
+                stringstream s;
+                TiXmlElement *c = new TiXmlElement("C");
+                bool range = false;
+                GeometrySharedPtr firstGeom = cIt->second->at(0);
+                int shapeDim = firstGeom->GetShapeDim();
+                string tag = (shapeDim < m_meshDimension) ?
+                    compMap[firstGeom->GetShapeType()].second :
+                    compMap[firstGeom->GetShapeType()].first;
+
+                int vId = firstGeom->GetGlobalID();
+                int prevId = vId;
+                s << " " << tag << "[" << vId;
+
+                for (int i = 1; i < cIt->second->size(); ++i)
+                {
+                    // store previous element ID and get current one
+                    prevId = vId;
+                    vId = (*cIt->second)[i]->GetGlobalID();
+
+                    // continue an already started range
+                    if (prevId > -1 && vId == prevId + 1)
+                    {
+                        range = true;
+                        // if this is the last element, it's the end of a range,
+                        // so write
+                        if (i == cIt->second->size() - 1)
+                        {
+                            s << "-" << vId;
+                        }
+                        continue;
+                    }
+
+                    // terminate a range, if present
+                    if (range)
+                    {
+                        s << "-" << prevId;
+                        range = false;
+                    }
+
+                    // write what will be either a single entry or start of new
+                    // range
+                    s << "," << vId;
+                }
+
+                // terminate
+                s << "] ";
+
+                c->SetAttribute("ID", cIt->first);
+                c->LinkEndChild(new TiXmlText(s.str()));
+                compTag->LinkEndChild(c);
+            }
+
+            geomTag->LinkEndChild(compTag);
+
+            // Construct <DOMAIN> block
+            TiXmlElement *domTag = new TiXmlElement("DOMAIN");
+            stringstream domString;
+
+            domString << " C[";
+            CompositeMap::iterator cIt2 = m_domain.end();
+            --cIt2;
+
+            for (cIt = m_domain.begin(); cIt != m_domain.end(); ++cIt)
+            {
+                domString << cIt->first;
+                if (cIt != cIt2)
+                {
+                    domString << ",";
+                }
+            }
+
+            domString << "] ";
+            domTag->LinkEndChild(new TiXmlText(domString.str()));
+            geomTag->LinkEndChild(domTag);
 
             doc.SaveFile(outfilename);
         }

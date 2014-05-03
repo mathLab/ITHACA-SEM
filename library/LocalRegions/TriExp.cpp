@@ -602,6 +602,58 @@ namespace Nektar
             v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
         }
 
+        void TriExp::v_GetEdgePhysVals(
+            const int edge,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,NekDouble> &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+
+            StdRegions::Orientation edgedir = GetEorient(edge);
+            switch(edge)
+            {
+                case 0:
+                    if (edgedir == StdRegions::eForwards)
+                    {
+                        Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(nquad0,&(inarray[0])+(nquad0-1),-1,
+                                     &(outarray[0]),1);
+                    }
+                    break;
+                case 1:
+                    if (edgedir == StdRegions::eForwards)
+                    {
+                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,
+                                     &(outarray[0]),1);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1),
+                                     -nquad0, &(outarray[0]),1);
+                    }
+                    break;
+                case 2:
+                    if (edgedir == StdRegions::eForwards)
+                    {
+                        Vmath::Vcopy(nquad1,&(inarray[0]) + nquad0*(nquad1-1),
+                                     -nquad0,&(outarray[0]),1);
+                    }
+                    else
+                    {
+                        Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,
+                                     &(outarray[0]),1);
+                    }
+                break;
+            default:
+                ASSERTL0(false,"edge value (< 3) is out of range");
+                break;
+            }
+        }
+
         void TriExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansionSharedPtr &EdgeExp,
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,NekDouble> &outarray)

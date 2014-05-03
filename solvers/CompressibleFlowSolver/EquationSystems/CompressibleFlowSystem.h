@@ -91,7 +91,7 @@ namespace Nektar
         SolverUtils::RiemannSolverSharedPtr m_riemannSolverLDG;
         SolverUtils::AdvectionSharedPtr     m_advection;
         SolverUtils::DiffusionSharedPtr     m_diffusion;
-        Array<OneD, NekDouble>              m_velLoc;
+        Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
         NekDouble                           m_gamma;
         NekDouble                           m_pInf;
         NekDouble                           m_rhoInf;
@@ -191,9 +191,9 @@ namespace Nektar
             return m_gamma;
         }
       
-        const Array<OneD, NekDouble> &GetVelLoc()
+        const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs()
         {
-            return m_velLoc;
+            return m_vecLocs;
         }
         
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()

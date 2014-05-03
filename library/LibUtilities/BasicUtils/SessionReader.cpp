@@ -669,6 +669,20 @@ namespace Nektar
             return iter->second;
         }
 
+        /**
+         *
+         */
+        void SessionReader::SetSolverInfo(
+            const std::string &pProperty, const std::string &pValue) 
+        {
+            std::string vProperty = boost::to_upper_copy(pProperty);
+            SolverInfoMap::iterator iter = m_solverInfo.find(vProperty);
+
+            ASSERTL1(iter != m_solverInfo.end(),
+                     "Unable to find requested property: " + pProperty);
+
+            iter->second = pValue;
+        }
 
         /**
          *

@@ -115,9 +115,9 @@ namespace Nektar
 	  m_riemannSolver->SetParam (
                                      "gravity",  
                                      &LinearSWE::GetGravity,   this);
-	  m_riemannSolver->SetAuxiliary(
-                                     "velLoc", 
-                                     &LinearSWE::GetVelLoc,  this);
+      m_riemannSolver->SetAuxVec(
+                                     "vecLocs",
+                                     &LinearSWE::GetVecLocs,  this);
 	  m_riemannSolver->SetVector(
 				     "N",
 				     &LinearSWE::GetNormals, this);
@@ -139,9 +139,9 @@ namespace Nektar
 	  // m_riemannSolverLDG->AddParam (
 	  //                     "gravity",  
 	  //                     &NonlinearSWE::GetGravity,   this);
-	  // m_riemannSolverLDG->AddAuxiliary(
-	  //                     "velLoc", 
-	  //                     &NonlinearSWE::GetVelLoc,  this);
+      // m_riemannSolverLDG->SetAuxVec(
+      //                     "vecLocs",
+      //                     &NonlinearSWE::GetVecLocs,  this);
 	  // m_riemannSolverLDG->AddVector(
 	  //                     "N",
 	  //                     &NonlinearSWE::GetNormals, this);

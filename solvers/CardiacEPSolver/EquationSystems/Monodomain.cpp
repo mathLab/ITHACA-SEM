@@ -213,7 +213,8 @@ namespace Nektar
             // If the d_min and d_max parameters are defined, then we need to
             // rescale the isotropic conductivity to convert from the source
             // domain (e.g. late-gad intensity) to conductivity
-            if (m_session->DefinesParameter("d_min")) {
+            if ( m_session->DefinesParameter("d_min") ||
+                 m_session->DefinesParameter("d_max") ) {
                 const NekDouble   f_min    = m_session->GetParameter("d_min");
                 const NekDouble   f_max    = m_session->GetParameter("d_max");
                 const NekDouble   scar_min = 0.0;

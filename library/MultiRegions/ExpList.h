@@ -354,6 +354,9 @@ namespace Nektar
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
+            /// Reset geometry information and reset matrices
+            MULTI_REGIONS_EXPORT void Reset();
+
             void WriteTecplotHeader(std::ofstream &outfile,
                                     std::string var = "")
             {

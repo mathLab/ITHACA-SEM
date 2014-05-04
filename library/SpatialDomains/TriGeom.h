@@ -189,6 +189,8 @@ namespace Nektar
                               NekDouble                     tol,
                               NekDouble                    &resid);
 
+                SPATIAL_DOMAINS_EXPORT virtual void v_Reset();
+
             private:
                 bool                            m_ownData;
         };

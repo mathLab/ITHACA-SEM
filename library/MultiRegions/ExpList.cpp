@@ -1338,6 +1338,24 @@ namespace Nektar
         }
 
         /**
+         * @brief Reset geometry information and reset matrix managers.
+         */
+        void ExpList::Reset()
+        {
+            // Loop over all elements and reset geometry information.
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                (*m_exp)[i]->GetGeom()->Reset();
+            }
+
+            // Reset matrix managers.
+            LibUtilities::NekManager<LocalRegions::MatrixKey,
+                DNekScalMat, LocalRegions::MatrixKey::opLess>::ClearManager();
+            LibUtilities::NekManager<LocalRegions::MatrixKey,
+                DNekScalBlkMat, LocalRegions::MatrixKey::opLess>::ClearManager();
+        }
+        
+        /**
          * Write Tecplot Files Header
          * @param   outfile Output file name.
          * @param   var                 variables names

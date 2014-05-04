@@ -139,6 +139,7 @@ namespace Nektar
                             GetBasis(const int i);
                 SPATIAL_DOMAINS_EXPORT inline const LibUtilities::PointsKeyVector
                             GetPointsKeys();
+                SPATIAL_DOMAINS_EXPORT inline void Reset();
 
             protected:
 
@@ -220,7 +221,8 @@ namespace Nektar
                 virtual void v_SetOwnData();
                 virtual const LibUtilities::BasisSharedPtr
                              v_GetBasis(const int i);
-
+                virtual void v_Reset();
+            
                 inline void SetUpCoeffs(const int nCoeffs);
         }; // class Geometry
 
@@ -448,6 +450,11 @@ namespace Nektar
         inline const LibUtilities::PointsKeyVector Geometry::GetPointsKeys()
         {
             return m_xmap->GetPointsKeys();
+        }
+
+        inline void Geometry::Reset()
+        {
+            v_Reset();
         }
     }; //end of namespace
 }; // end of namespace

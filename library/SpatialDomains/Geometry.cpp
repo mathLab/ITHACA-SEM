@@ -292,6 +292,11 @@ namespace Nektar
             return m_coordim;
         }
 
+        void Geometry::v_Reset()
+        {
+            m_state = eNotFilled;
+            m_geomFactorsState = eNotFilled;
+        }
     }; //end of namespace
 }; //end of namespace
 

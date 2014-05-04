@@ -184,6 +184,9 @@ namespace Nektar
                           Array<OneD, NekDouble>       &locCoord,
                           NekDouble                     tol,
                           NekDouble                    &resid);
+
+            SPATIAL_DOMAINS_EXPORT virtual void v_Reset();
+
         private:
             /// Boolean indicating whether object owns the data
             bool                                m_ownData;

@@ -846,5 +846,13 @@ namespace Nektar
             }
             return false;
         }
+
+        void QuadGeom::v_Reset()
+        {
+            for (int i = 0; i < 4; ++i)
+            {
+                m_edges[i]->Reset();
+            }
+        }
     }; //end of namespace
 }; //end of namespace

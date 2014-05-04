@@ -848,5 +848,13 @@ namespace Nektar
             }
             return false;
         }
+
+        void TriGeom::v_Reset()
+        {
+            for (int i = 0; i < 3; ++i)
+            {
+                m_edges[i]->Reset();
+            }
+        }
     }; //end of namespace
 }; //end of namespace

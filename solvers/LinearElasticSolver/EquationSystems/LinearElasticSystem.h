@@ -62,10 +62,18 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
+        void BuildMatrixSystem();
+
         void SetStaticCondBlock(
             const int                              n,
             const LocalRegions::ExpansionSharedPtr exp,
             Array<TwoD, DNekMatSharedPtr>         &mat);
+
+        DNekMatSharedPtr BuildLaplacianIJMatrix(
+            const int                        k1,
+            const int                        k2,
+            const NekDouble                  scale,
+            LocalRegions::ExpansionSharedPtr exp);
 
     protected:
         LinearElasticSystem(

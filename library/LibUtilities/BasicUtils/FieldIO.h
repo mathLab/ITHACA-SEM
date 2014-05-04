@@ -192,6 +192,13 @@ namespace Nektar
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         std::vector<std::vector<NekDouble> > &fielddata);
 
+                LIB_UTILITIES_EXPORT void WriteMultiFldFileIDs(
+                        const std::string &outfile,
+                        const std::vector<std::string> fileNames,
+                        std::vector<std::vector<unsigned int> > &elementList,
+                        const FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
+
+
             private:
                 /// Communicator to use when writing parallel format
                 LibUtilities::CommSharedPtr    m_comm;
@@ -208,12 +215,6 @@ namespace Nektar
                         const std::string outname,
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                         const FieldMetaDataMap &fieldmetadatamap);
-
-                LIB_UTILITIES_EXPORT void WriteMultiFldFileIDs(
-                        const std::string &outfile,
-                        const std::vector<std::string> fileNames,
-                        std::vector<std::vector<unsigned int> > &elementList,
-                        const FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
 
                 LIB_UTILITIES_EXPORT void ImportMultiFldFileIDs(
                         const std::string &inFile,

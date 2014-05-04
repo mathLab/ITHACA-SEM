@@ -39,7 +39,6 @@ using namespace std;
 
 #include "InputXml.h"
 
-
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
 
@@ -224,9 +223,7 @@ namespace Nektar
                 
                 if(vm.count("output-points"))
                 {
-                    LibUtilities::Equation expession(m_f->m_session, 
-                                                     vm["output-points"].as<string>());
-                    nPointsNew = expession.Evaluate();
+                    nPointsNew = vm["output-points"].as<int>();
                 }
                 
 

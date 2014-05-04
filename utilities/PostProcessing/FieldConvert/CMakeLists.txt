@@ -4,6 +4,7 @@ SET(FieldConvertHeaders
     InputFld.h
     InputXml.h
     InputPts.h
+    OutputInfo.h
     OutputTecplot.h
     OutputVtk.h
     OutputFld.h
@@ -24,6 +25,7 @@ SET(FieldConvertSources
     InputFld.cpp
     InputXml.cpp
     InputPts.cpp
+    OutputInfo.cpp
     OutputTecplot.cpp
     OutputVtk.cpp
     OutputFld.cpp

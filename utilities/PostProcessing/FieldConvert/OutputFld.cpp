@@ -74,7 +74,7 @@ namespace Nektar
                 {
                     for (int i = 0; i < m_f->m_exp.size(); ++i)
                     {
-                            m_f->m_exp[i]->FillBndCondFromField();
+                        m_f->m_exp[i]->FillBndCondFromField();
                     }
                 }
                 

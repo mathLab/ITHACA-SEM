@@ -2285,5 +2285,10 @@ namespace Nektar
                 }
             }
         }
+
+        void SessionReader::SetUpXmlDoc(void)
+        {
+            m_xmlDoc = MergeDoc(m_filenames);
+        }
     }
 }

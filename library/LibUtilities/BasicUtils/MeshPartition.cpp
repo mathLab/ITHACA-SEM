@@ -1296,5 +1296,19 @@ namespace Nektar
             }
         }
 
+        void MeshPartition::GetElementIDs(const int procid, std::vector<unsigned int> &elmtid)
+        {
+            BoostVertexIterator    vertit, vertit_end;
+
+            ASSERTL0(procid < m_localPartition.size(),"procid is less than the number of partitions");
+            
+            // Populate lists of elements, edges and vertices required.
+            for ( boost::tie(vertit, vertit_end) = boost::vertices(m_localPartition[procid]);
+                  vertit != vertit_end;
+                  ++vertit)
+            {
+                elmtid.push_back(m_meshElements[m_localPartition[procid][*vertit].id].id);
+            }
+        }
     }
 }

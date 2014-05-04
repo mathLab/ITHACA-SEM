@@ -1533,7 +1533,5 @@ namespace Nektar
             
             return datasize;
         }
-        
-
     }
 }

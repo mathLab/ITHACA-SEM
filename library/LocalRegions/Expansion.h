@@ -86,6 +86,8 @@ namespace Nektar
 
                 LOCAL_REGIONS_EXPORT SpatialDomains::GeometrySharedPtr GetGeom() const;
 
+                LOCAL_REGIONS_EXPORT void Reset();
+
                 LOCAL_REGIONS_EXPORT virtual const
                     SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
 

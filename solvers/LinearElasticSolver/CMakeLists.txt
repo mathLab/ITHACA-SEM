@@ -6,6 +6,7 @@ IF (NEKTAR_SOLVER_ELASTICITY)
     SET(LinearElasticSolverSource
       ./LinearElasticSolver.cpp 
       ./EquationSystems/LinearElasticSystem.cpp
+      ./EquationSystems/IterativeElasticSystem.cpp
       ./EquationSystems/CoupledAssemblyMap.cpp)
 
     ADD_SOLVER_EXECUTABLE(LinearElasticSolver solvers 

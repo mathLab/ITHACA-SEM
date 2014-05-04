@@ -165,6 +165,7 @@ namespace Nektar
             private:
                 /// Boolean indicating whether object owns the data
                 bool                            m_ownData;
+                CurveSharedPtr                  m_curve;
         };
 
 

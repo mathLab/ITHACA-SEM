@@ -1342,17 +1342,23 @@ namespace Nektar
          */
         void ExpList::Reset()
         {
+            // Reset matrix managers.
+            LibUtilities::NekManager<LocalRegions::MatrixKey,
+                DNekScalMat, LocalRegions::MatrixKey::opLess>::ClearManager();
+            LibUtilities::NekManager<LocalRegions::MatrixKey,
+                DNekScalBlkMat, LocalRegions::MatrixKey::opLess>::ClearManager();
+
             // Loop over all elements and reset geometry information.
             for (int i = 0; i < m_exp->size(); ++i)
             {
                 (*m_exp)[i]->GetGeom()->Reset();
             }
 
-            // Reset matrix managers.
-            LibUtilities::NekManager<LocalRegions::MatrixKey,
-                DNekScalMat, LocalRegions::MatrixKey::opLess>::ClearManager();
-            LibUtilities::NekManager<LocalRegions::MatrixKey,
-                DNekScalBlkMat, LocalRegions::MatrixKey::opLess>::ClearManager();
+            // Loop over all elements and rebuild geometric factors.
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                (*m_exp)[i]->Reset();
+            }
         }
         
         /**

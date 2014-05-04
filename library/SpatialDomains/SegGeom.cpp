@@ -99,59 +99,13 @@ namespace Nektar
             m_shapeType = LibUtilities::eSegment;
             m_globalID =  m_eid = id;
             m_state = eNotFilled;
+            m_curve = curve;
 
-            if (coordim > 0)
-            {
-                int npts = curve->m_points.size();
-                LibUtilities::PointsKey pkey(npts+1,LibUtilities::eGaussLobattoLegendre);
-                const LibUtilities::BasisKey B(LibUtilities::eModified_A, npts, pkey);
-
-                Array<OneD,NekDouble> tmp(npts);
-
-                if(vertex[0]->dist(*(curve->m_points[0])) > NekConstants::kVertexTheSameDouble)
-                { 
-                    cout<<"edge="<<id<<endl;                    
-                    std::string err = "Vertex 0 is separated from first point by more than ";
-                    std::stringstream strstrm;
-                    strstrm << NekConstants::kVertexTheSameDouble;
-                    err += strstrm.str();
-                    NEKERROR(ErrorUtil::ewarning, err.c_str());
-                }
-
-                if(vertex[1]->dist(*(curve->m_points[npts-1])) > NekConstants::kVertexTheSameDouble)
-                {
-                    cout<<"edge="<<id<<endl;      
-                    std::string err = "Vertex 1 is separated from last point by more than ";
-                    std::stringstream strstrm;
-                    strstrm << NekConstants::kVertexTheSameDouble;
-                    err += strstrm.str();
-                    NEKERROR(ErrorUtil::ewarning, err.c_str());
-                }
-
-                m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
-                SetUpCoeffs(m_xmap->GetNcoeffs());
-
-                for(int i = 0; i < m_coordim; ++i)
-                {
-                    // Load up coordinate values into tmp
-                    for(int j = 0; j < npts; ++j)
-                    {
-                        tmp[j] = (curve->m_points[j]->GetPtr())[i];
-                    }
-
-                    // Interpolate to GLL points
-                    DNekMatSharedPtr I0;
-
-                    LibUtilities::PointsKey fkey(npts,curve->m_ptype);
-                    I0 = LibUtilities::PointsManager()[fkey]->GetI(pkey);
-
-                    NekVector<NekDouble> in (npts, tmp, eWrapper);
-                    NekVector<NekDouble> out(npts+1);
-                    out = (*I0)*in;
-
-                    m_xmap->FwdTrans(out.GetPtr(), m_coeffs[i]);
-                }
-            }
+            int npts = curve->m_points.size();
+            LibUtilities::PointsKey pkey(npts+1,LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, npts, pkey);
+            m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+            SetUpCoeffs(m_xmap->GetNcoeffs());
 
             m_verts[0] = vertex[0];
             m_verts[1] = vertex[1];
@@ -320,6 +274,54 @@ namespace Nektar
             if(m_state != ePtsFilled)
             {
                 int i;
+
+                if (m_coordim > 0 && m_curve)
+                {
+                    int npts = m_curve->m_points.size();
+                    LibUtilities::PointsKey pkey(npts+1,LibUtilities::eGaussLobattoLegendre);
+                    Array<OneD,NekDouble> tmp(npts);
+
+                    if(m_verts[0]->dist(*(m_curve->m_points[0])) > NekConstants::kVertexTheSameDouble)
+                    { 
+                        cout<<"edge="<<m_globalID<<endl;
+                        std::string err = "Vertex 0 is separated from first point by more than ";
+                        std::stringstream strstrm;
+                        strstrm << NekConstants::kVertexTheSameDouble;
+                        err += strstrm.str();
+                        NEKERROR(ErrorUtil::ewarning, err.c_str());
+                    }
+
+                    if(m_verts[1]->dist(*(m_curve->m_points[npts-1])) > NekConstants::kVertexTheSameDouble)
+                    {
+                        cout<<"edge="<<m_globalID<<endl;
+                        std::string err = "Vertex 1 is separated from last point by more than ";
+                        std::stringstream strstrm;
+                        strstrm << NekConstants::kVertexTheSameDouble;
+                        err += strstrm.str();
+                        NEKERROR(ErrorUtil::ewarning, err.c_str());
+                    }
+
+                    for(int i = 0; i < m_coordim; ++i)
+                    {
+                        // Load up coordinate values into tmp
+                        for(int j = 0; j < npts; ++j)
+                        {
+                            tmp[j] = (m_curve->m_points[j]->GetPtr())[i];
+                        }
+
+                        // Interpolate to GLL points
+                        DNekMatSharedPtr I0;
+
+                        LibUtilities::PointsKey fkey(npts,m_curve->m_ptype);
+                        I0 = LibUtilities::PointsManager()[fkey]->GetI(pkey);
+
+                        NekVector<NekDouble> in (npts, tmp, eWrapper);
+                        NekVector<NekDouble> out(npts+1);
+                        out = (*I0)*in;
+
+                        m_xmap->FwdTrans(out.GetPtr(), m_coeffs[i]);
+                    }
+                }
 
                 for (i = 0; i < m_coordim; ++i)
                 {

@@ -53,6 +53,8 @@ int main(int argc, char* argv[])
         ("error,e",  "write error of fields for regression checking")
         ("range,r",po::value<string>(),
          "define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) in which any vertex is contained .")
+        ("singleproc,s",po::value<string>(),
+         "process as single procid of a partition of size nproc i.e. (-s nproc,procid).")
         ("modules-opt,p",  po::value<string>(),
              "Print options for a module.")
         ("module,m",       po::value<vector<string> >(), 
@@ -183,13 +185,35 @@ int main(int argc, char* argv[])
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
     if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
     {
-        f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
-                                                    "ParallelMPI", argc, argv);
+        if(vm.count("singleproc"))
+        {
+            vector<NekDouble> values;
+            
+            ASSERTL0(ParseUtils::GenerateUnOrderedVector(vm["singleproc"].as<string>().c_str(),values),"Failed to interpret singleproc string");
+            
+            ASSERTL0(values.size() > 1,
+                     "Need to specify nproc and procid");
+            
+            ASSERTL0(values[0] > values[1], 
+                     "Expected nprocs to be specified before procid");
+
+            int nprocs = values[0]; 
+            int rank   = values[1];
+            
+            LibUtilities::CommSharedPtr vComm = boost::shared_ptr<FieldConvertComm>(new FieldConvertComm(argc, argv, nprocs,rank));
+            
+            f->m_comm = vComm;
+        }
+        else
+        {
+            f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
+                                                     "ParallelMPI", argc, argv);
+        }
     }
     else
     {
-        f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
-                                                    "Serial", argc, argv);
+        f->m_comm = LibUtilities::GetCommFactory().CreateInstance("Serial", argc, argv);
+
     }
 
     vector<ModuleSharedPtr> modules;

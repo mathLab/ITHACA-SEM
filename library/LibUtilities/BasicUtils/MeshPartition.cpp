@@ -766,7 +766,7 @@ namespace Nektar
             BoostVertexIterator    vertit, vertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
-            if (m_comm->GetRowComm()->GetRank() == 0)
+            if ((m_comm->GetRowComm()->GetRank() == 0)||(m_comm->GetRowComm()->DoMeshPartition()))
             {
                 int acnt = 0;
                 int vcnt = 0;

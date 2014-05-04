@@ -55,6 +55,12 @@ namespace Nektar
 
         }
 
+        // Method to allo all processors to perform mesh partition on all processors
+        bool Comm::v_DoMeshPartition(void)
+        {
+            return false;
+        }
+
         CommFactory& GetCommFactory()
         {
             typedef Loki::SingletonHolder<CommFactory,

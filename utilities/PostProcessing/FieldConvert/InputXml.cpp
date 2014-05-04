@@ -134,6 +134,7 @@ namespace Nektar
                 
                 ASSERTL0(values.size() > 1,"Do not have minimum values of xmin,xmax");
                 ASSERTL0(values.size()%2 == 0,"Do not have an even number of range values");
+
                 int nvalues = values.size()/2;
                 rng = MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
 
@@ -162,6 +163,7 @@ namespace Nektar
 
             m_f->m_session = LibUtilities::SessionReader::
                 CreateInstance(0, 0, files, m_f->m_comm);
+
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
             m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                 ::AllocateSharedPtr(m_f->m_session->GetComm());

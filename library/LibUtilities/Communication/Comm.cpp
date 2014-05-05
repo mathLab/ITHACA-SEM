@@ -55,10 +55,16 @@ namespace Nektar
 
         }
 
-        // Method to allo all processors to perform mesh partition on all processors
+        // Method to allow all processors to perform mesh partition on all processors
         bool Comm::v_DoMeshPartition(void)
         {
             return false;
+        }
+
+        // Method to enforce that all existing files are removed
+        bool Comm::v_RemoveExistingFiles(void)
+        {
+            return true;
         }
 
         CommFactory& GetCommFactory()

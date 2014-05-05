@@ -253,6 +253,11 @@ namespace Nektar
             {
                 return true;
             }
+            
+            bool v_RemoveExistingFiles(void)
+            {
+                return false;
+            }
         private:
             int m_rank;
         };

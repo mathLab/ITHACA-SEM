@@ -136,6 +136,7 @@ namespace Nektar
 
 
                 LIB_UTILITIES_EXPORT inline bool DoMeshPartition(void);
+                LIB_UTILITIES_EXPORT inline bool RemoveExistingFiles(void);
 
             protected:
                 int m_size;                 ///< Number of processes
@@ -196,6 +197,7 @@ namespace Nektar
 										Array<OneD, int>& pRecvDataOffsetMap) = 0;
                 virtual void v_SplitComm(int pRows, int pColumns) = 0;
                 virtual bool v_DoMeshPartition(void);
+                virtual bool v_RemoveExistingFiles(void);
         };
 
 
@@ -469,6 +471,11 @@ namespace Nektar
         inline bool Comm::DoMeshPartition(void)
         {
             return v_DoMeshPartition();
+        }
+
+        inline bool Comm::RemoveExistingFiles(void)
+        {
+            return v_RemoveExistingFiles();
         }
 
 

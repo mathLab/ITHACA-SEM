@@ -163,16 +163,6 @@ int main(int argc, char* argv[])
         cerr << "ERROR: You must specify input(s) and/or output file." << endl;
         return 1;
     }
-#if 0 
-    else if(vm.count("boundary-region"))
-    {
-        if(inout.size() < 3)
-        {
-            cerr << "Error: You mush specify an .xml file a .fld fle as inputs and a .fld file as an output" << endl;
-            return 2;
-        }
-    }
-#endif
     
     /*
      * Process list of modules. Each element of the vector of module strings can

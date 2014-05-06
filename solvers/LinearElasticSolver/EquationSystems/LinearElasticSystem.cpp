@@ -254,13 +254,40 @@ namespace Nektar
                     forCoeffs[nVel*(offset + nBnd) + nv*nInt + j] = tmp[offset+m_imap[i][j]];
                 }
             }
+        }
 
-            // Impose Dirichlet boundary conditions
+        // Impose Dirichlet boundary conditions
+        map<int, vector<MultiRegions::ExtraDirDof> > &extraDirDofs =
+            m_assemblyMap->GetExtraDirDofs();
+        map<int, vector<MultiRegions::ExtraDirDof> >::iterator it;
+
+        for (nv = 0; nv < nVel; ++nv)
+        {
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
+                = m_fields[nv]->GetBndCondExpansions();
+
+            // First try to do parallel stuff
+            for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
+            {
+                for (i = 0; i < it->second.size(); ++i)
+                {
+                    inout[it->second.at(i).get<1>()*nVel + nv] =
+                        bndCondExp[it->first]->GetCoeffs()[
+                            it->second.at(i).get<0>()]*it->second.at(i).get<2>();
+                }
+            }
+        }
+
+        m_assemblyMap->UniversalAssemble(inout);
+
+        for (nv = 0; nv < nVel; ++nv)
+        {
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
                 = m_fields[nv]->GetBndCondExpansions();
             const Array<OneD, const int> &bndMap
                 = m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsMap();
 
+            // Now impose local boundary conditions
             for (i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 const Array<OneD,const NekDouble> &bndCoeffs = 

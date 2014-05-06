@@ -51,10 +51,9 @@ namespace Nektar
      * The linear elasticity solver requires a slight reordering of local and
      * global coefficients to support problems of the form
      *
-     * [ A B ] [ u ] = [ f_u ]
-     * [ C D ] [ v ]   [ f_v ]
-     *
-     * In order to support static condensation, we store everything as
+     * [ A B C ] [ u ] = [ f_u ]
+     * [ D E F ] [ v ]   [ f_v ]
+     * [ G H I ] [ w ]   [ f_w ]
      */
     CoupledAssemblyMap::CoupledAssemblyMap(
         const LibUtilities::SessionReaderSharedPtr        &pSession,
@@ -170,6 +169,11 @@ namespace Nektar
             cnt2 += nBndCoeffs;
         }
 
+        // Grab map of extra Dirichlet degrees of freedom for parallel runs
+        // (particularly in 3D).
+        m_extraDirDofs = cgMap->GetExtraDirDofs();
+
+        // Counter for remaining interior degrees of freedom.
         int globalId = m_numGlobalBndCoeffs;
 
         // Interior degrees of freedom are a bit more tricky -- global linear
@@ -235,7 +239,7 @@ namespace Nektar
             }
         }
 
-        // Finally, set up global to universal maps. hack for now
+        // Finally, set up global to universal maps.
         m_globalToUniversalMap = Array<OneD, int>(
             m_numGlobalCoeffs);
         m_globalToUniversalMapUnique = Array<OneD, int>(

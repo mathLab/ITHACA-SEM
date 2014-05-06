@@ -235,6 +235,9 @@ namespace Nektar
             }
         }
 
+        // Finally, set up global to universal maps. hack for now
+        m_globalToUniversalBndMapUnique = Array<OneD, int>(m_numGlobalBndCoeffs, 1);
+
         m_hash = boost::hash_range(
             m_localToGlobalMap.begin(), m_localToGlobalMap.end());
     }

@@ -145,6 +145,10 @@ namespace Nektar
               m_locToGloMap( pLocToGloMap ),
               m_precon     ( pPrecon )
         {
+            // Assume this matrix is supposed to be the same as the Schur
+            // complement.
+            m_S1Blk = m_schurCompl;
+
             // Construct this level
             Initialise(pLocToGloMap);
         }
@@ -268,7 +272,7 @@ namespace Nektar
                 
                 //transform from original basis to low energy
                 Array<OneD, NekDouble> tmp;
-                m_precon->DoTransformToLowEnergy(F,nDirBndDofs);
+                //m_precon->DoTransformToLowEnergy(F,nDirBndDofs);
 
                 // For parallel multi-level static condensation some
                 // processors may have different levels to others. This
@@ -305,7 +309,7 @@ namespace Nektar
                         nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
 
                     //transform back to original basis
-                    m_precon->DoTransformFromLowEnergy(pert);
+                    //m_precon->DoTransformFromLowEnergy(pert);
 
                     // Add back initial conditions onto difference
                     Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,

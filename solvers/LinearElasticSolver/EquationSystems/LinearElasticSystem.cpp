@@ -36,6 +36,8 @@
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
+#include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
+#include <MultiRegions/Preconditioner.h>
 #include <LinearElasticSolver/EquationSystems/LinearElasticSystem.h>
 
 namespace Nektar
@@ -87,11 +89,17 @@ namespace Nektar
         Array<OneD, unsigned int> sizeBnd(nEl);
         Array<OneD, unsigned int> sizeInt(nEl);
 
+        // Allocate storage for boundary and interior map caches.
+        m_bmap = Array<OneD, Array<OneD, unsigned int> >(nEl);
+        m_imap = Array<OneD, Array<OneD, unsigned int> >(nEl);
+
         for (n = 0; n < nEl; ++n)
         {
             exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
             sizeBnd[n] = nVel * exp->NumBndryCoeffs();
             sizeInt[n] = nVel * exp->GetNcoeffs() - sizeBnd[n];
+            exp->GetBoundaryMap(m_bmap[n]);
+            exp->GetInteriorMap(m_imap[n]);
         }
 
         // Create block matrix storage for the statically condensed system.
@@ -178,10 +186,24 @@ namespace Nektar
 
         // Now we've got the matrix system set up, create a GlobalLinSys object.
         MultiRegions::GlobalLinSysKey key(
-            StdRegions::eLinearAdvectionReaction, m_assemblyMap);
-        MultiRegions::GlobalLinSysSharedPtr linSys = MemoryManager<
-            MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(
-                key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv, m_assemblyMap);
+            StdRegions::eLinearAdvectionReaction, m_assemblyMap);        
+        MultiRegions::GlobalLinSysSharedPtr linSys;
+
+        if (m_assemblyMap->GetGlobalSysSolnType() == MultiRegions::eDirectStaticCond)
+        {
+            linSys = MemoryManager<
+                MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(
+                    key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv,
+                    m_assemblyMap);
+        }
+        else if (m_assemblyMap->GetGlobalSysSolnType() ==
+                     MultiRegions::eIterativeStaticCond)
+        {
+            linSys = MemoryManager<
+                MultiRegions::GlobalLinSysIterativeStaticCond>::AllocateSharedPtr(
+                    key, m_fields[0], m_schurCompl, m_BinvD, m_C, m_Dinv,
+                    m_assemblyMap, MultiRegions::NullPreconditionerSharedPtr);
+        }
 
         const int nCoeffs = m_fields[0]->GetNcoeffs();
         const int nGlobDofs = boost::dynamic_pointer_cast<
@@ -219,22 +241,17 @@ namespace Nektar
             // dictated in the comment above.
             for (i = 0; i < m_fields[nv]->GetExpSize(); ++i)
             {
-                Array<OneD, unsigned int> bmap;
-                Array<OneD, unsigned int> imap;
-                m_fields[nv]->GetExp(i)->GetBoundaryMap(bmap);
-                m_fields[nv]->GetExp(i)->GetInteriorMap(imap);
-                int nBnd = bmap.num_elements();
-                int nInt = imap.num_elements();
-
-                int offset     = m_fields[nv]->GetCoeff_Offset(i);
+                int nBnd   = m_bmap[i].num_elements();
+                int nInt   = m_imap[i].num_elements();
+                int offset = m_fields[nv]->GetCoeff_Offset(i);
 
                 for (j = 0; j < nBnd; ++j)
                 {
-                    forCoeffs[nVel*offset + nv*nBnd + j] = tmp[offset+bmap[j]];
+                    forCoeffs[nVel*offset + nv*nBnd + j] = tmp[offset+m_bmap[i][j]];
                 }
                 for (j = 0; j < nInt; ++j)
                 {
-                    forCoeffs[nVel*(offset + nBnd) + nv*nInt + j] = tmp[offset+imap[j]];
+                    forCoeffs[nVel*(offset + nBnd) + nv*nInt + j] = tmp[offset+m_imap[i][j]];
                 }
             }
 
@@ -277,22 +294,18 @@ namespace Nektar
         {
             for (i = 0; i < m_fields[nv]->GetExpSize(); ++i)
             {
-                Array<OneD, unsigned int> bmap;
-                Array<OneD, unsigned int> imap;
-                m_fields[nv]->GetExp(i)->GetBoundaryMap(bmap);
-                m_fields[nv]->GetExp(i)->GetInteriorMap(imap);
-                int nBnd   = bmap.num_elements();
-                int nInt   = imap.num_elements();
+                int nBnd   = m_bmap[i].num_elements();
+                int nInt   = m_imap[i].num_elements();
                 int offset = m_fields[nv]->GetCoeff_Offset(i);
 
                 for (j = 0; j < nBnd; ++j)
                 {
-                    m_fields[nv]->UpdateCoeffs()[offset+bmap[j]] =
+                    m_fields[nv]->UpdateCoeffs()[offset+m_bmap[i][j]] =
                         tmp[nVel*offset + nv*nBnd + j];
                 }
                 for (j = 0; j < nInt; ++j)
                 {
-                    m_fields[nv]->UpdateCoeffs()[offset+imap[j]] =
+                    m_fields[nv]->UpdateCoeffs()[offset+m_imap[i][j]] =
                         tmp[nVel*(offset + nBnd) + nv*nInt + j];
                 }
             }
@@ -314,11 +327,6 @@ namespace Nektar
         const int nInt = exp->GetNcoeffs() * nVel - nBnd;
         const MatrixStorage s = eFULL;
 
-        // Get boundary and interior maps.
-        Array<OneD, unsigned int> bmap, imap;
-        exp->GetBoundaryMap(bmap);
-        exp->GetInteriorMap(imap);
-
         DNekMatSharedPtr A =
             MemoryManager<DNekMat>::AllocateSharedPtr(nBnd, nBnd, 0.0, s);
         DNekMatSharedPtr B =
@@ -337,12 +345,14 @@ namespace Nektar
                 {
                     for (l = 0; l < nB; ++l)
                     {
-                        (*A)(k + i*nB, l + j*nB) = (*mat[i][j])(bmap[k], bmap[l]);
+                        (*A)(k + i*nB, l + j*nB) =
+                            (*mat[i][j])(m_bmap[n][k], m_bmap[n][l]);
                     }
 
                     for (l = 0; l < nI; ++l)
                     {
-                        (*B)(k + i*nB, l + j*nI) = (*mat[i][j])(bmap[k], imap[l]);
+                        (*B)(k + i*nB, l + j*nI) =
+                            (*mat[i][j])(m_bmap[n][k], m_imap[n][l]);
                     }
                 }
 
@@ -351,12 +361,14 @@ namespace Nektar
                 {
                     for (l = 0; l < nB; ++l)
                     {
-                        (*C)(k + i*nI, l + j*nB) = (*mat[i][j])(imap[k], bmap[l]);
+                        (*C)(k + i*nI, l + j*nB) =
+                            (*mat[i][j])(m_imap[n][k], m_bmap[n][l]);
                     }
 
                     for (l = 0; l < nI; ++l)
                     {
-                        (*D)(k + i*nI, l + j*nI) = (*mat[i][j])(imap[k], imap[l]);
+                        (*D)(k + i*nI, l + j*nI) =
+                            (*mat[i][j])(m_imap[n][k], m_imap[n][l]);
                     }
                 }
             }

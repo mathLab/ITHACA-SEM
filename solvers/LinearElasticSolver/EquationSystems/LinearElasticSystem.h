@@ -89,6 +89,9 @@ namespace Nektar
         DNekScalBlkMatSharedPtr m_C;
         DNekScalBlkMatSharedPtr m_Dinv;
 
+        Array<OneD, Array<OneD, unsigned int> > m_bmap;
+        Array<OneD, Array<OneD, unsigned int> > m_imap;
+
         virtual void v_InitObject();
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
         virtual void v_DoSolve();

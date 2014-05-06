@@ -130,7 +130,7 @@ namespace Nektar
         const int nNonDirBndCoeffs = nGlobBndCoeffs - nGlobDirCoeffs;
 
         const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
-        map<int, int > newGlobalIds;
+        map<int, int> newGlobalIds;
         int i, j, n, cnt1, cnt2;
 
         // Order local boundary degrees of freedom. These are basically fine; we
@@ -236,7 +236,46 @@ namespace Nektar
         }
 
         // Finally, set up global to universal maps. hack for now
-        m_globalToUniversalBndMapUnique = Array<OneD, int>(m_numGlobalBndCoeffs, 1);
+        m_globalToUniversalMap = Array<OneD, int>(
+            m_numGlobalCoeffs);
+        m_globalToUniversalMapUnique = Array<OneD, int>(
+            m_numGlobalCoeffs);
+        m_globalToUniversalBndMap = Array<OneD, int>(
+            m_numGlobalBndCoeffs);
+        m_globalToUniversalBndMapUnique = Array<OneD, int>(
+            m_numGlobalBndCoeffs);
+
+        for (i = 0; i < cgMap->GetNumGlobalBndCoeffs(); ++i)
+        {
+            for (n = 0; n < nVel; ++n)
+            {
+                m_globalToUniversalBndMap[i*nVel + n] =
+                    cgMap->GetGlobalToUniversalBndMap()[i]*nVel + n;
+                m_globalToUniversalMap[i*nVel + n] =
+                    cgMap->GetGlobalToUniversalBndMap()[i]*nVel + n;
+            }
+        }
+
+        Array<OneD, long> tmp(m_numGlobalCoeffs);
+        Vmath::Zero(m_numGlobalCoeffs, tmp, 1);
+        Array<OneD, long> tmp2(m_numGlobalBndCoeffs, tmp);
+        for (unsigned int i = 0; i < m_numGlobalBndCoeffs; ++i)
+        {
+            tmp[i] = m_globalToUniversalBndMap[i];
+        }
+
+        LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
+        m_gsh    = Gs::Init(tmp,  vCommRow);
+        m_bndGsh = Gs::Init(tmp2, vCommRow);
+        Gs::Unique(tmp, vCommRow);
+        for (unsigned int i = 0; i < m_numGlobalCoeffs; ++i)
+        {
+            m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
+        }
+        for (unsigned int i = 0; i < m_numGlobalBndCoeffs; ++i)
+        {
+            m_globalToUniversalBndMapUnique[i] = (tmp2[i] >= 0 ? 1 : 0);
+        }
 
         m_hash = boost::hash_range(
             m_localToGlobalMap.begin(), m_localToGlobalMap.end());

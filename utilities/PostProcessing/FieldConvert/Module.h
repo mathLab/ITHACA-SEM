@@ -249,7 +249,7 @@ namespace Nektar
                 return m_rank;
             }
 
-            bool v_DoMeshPartition(void)
+            bool v_TreatAsRankZero(void)
             {
                 return true;
             }

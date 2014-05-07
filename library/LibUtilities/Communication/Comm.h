@@ -135,7 +135,7 @@ namespace Nektar
                 LIB_UTILITIES_EXPORT inline CommSharedPtr GetColumnComm();
 
 
-                LIB_UTILITIES_EXPORT inline bool DoMeshPartition(void);
+                LIB_UTILITIES_EXPORT inline bool TreatAsRankZero(void);
                 LIB_UTILITIES_EXPORT inline bool RemoveExistingFiles(void);
 
             protected:
@@ -196,7 +196,7 @@ namespace Nektar
 										Array<OneD, int>& pRecvDataSizeMap,
 										Array<OneD, int>& pRecvDataOffsetMap) = 0;
                 virtual void v_SplitComm(int pRows, int pColumns) = 0;
-                virtual bool v_DoMeshPartition(void);
+                virtual bool v_TreatAsRankZero(void) = 0;
                 virtual bool v_RemoveExistingFiles(void);
         };
 
@@ -468,9 +468,9 @@ namespace Nektar
             }
         }
 
-        inline bool Comm::DoMeshPartition(void)
+        inline bool Comm::TreatAsRankZero(void)
         {
-            return v_DoMeshPartition();
+            return v_TreatAsRankZero();
         }
 
         inline bool Comm::RemoveExistingFiles(void)

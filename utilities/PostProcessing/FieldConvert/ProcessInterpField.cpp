@@ -211,7 +211,7 @@ namespace Nektar
                 m_f->m_exp[0]->GetCoords(x1, y1, z1);
             }
                     
-            if(m_f->m_session->GetComm()->GetRank() == 0)
+            if(m_f->m_session->GetComm()->TreatAsRankZero())
             {
                 cout << "Interpolating [" << flush;
             }
@@ -223,7 +223,7 @@ namespace Nektar
             InterpolateField(m_fromField->m_exp, m_f->m_exp, 
                              x1, y1, z1, clamp_low, clamp_up,def_value);
             
-            if(m_f->m_session->GetComm()->GetRank() == 0)
+            if(m_f->m_session->GetComm()->TreatAsRankZero())
             {
                 cout << "]" << endl;
             }

@@ -166,7 +166,7 @@ namespace Nektar
             Array<TwoD, DNekMatSharedPtr> mat(2,2);
             mat[0][0] = exp->GenMatrix(matkeyA);
             mat[0][1] = BuildLaplacianIJMatrix(1, 0, c, exp);
-            mat[1][0] = BuildLaplacianIJMatrix(0, 1, c, exp);
+            mat[1][0] = mat[0][1];
             mat[1][1] = exp->GenMatrix(matkeyD);
 
             // Set up the statically condensed block for this element.
@@ -210,6 +210,10 @@ namespace Nektar
             MultiRegions::ContField2D>(m_fields[0])->GetLocalToGlobalMap()
                                                    ->GetNumGlobalCoeffs();
 
+        //
+        // -- Evaluate forcing functions
+        //
+
         // Evaluate the forcing function from the XML file.
         Array<OneD, Array<OneD, NekDouble> > forcing(nVel);
         EvaluateFunction(forcing, "Forcing");
@@ -227,9 +231,6 @@ namespace Nektar
         Array<OneD, NekDouble> forCoeffs(nVel * nCoeffs, 0.0);
         Array<OneD, NekDouble> inout    (nVel * nGlobDofs, 0.0);
         Array<OneD, NekDouble> rhs      (nVel * nGlobDofs, 0.0);
-
-        // Counter for the local Dirichlet boundary to global ordering.
-        int bndcnt = 0;
 
         for (nv = 0; nv < nVel; ++nv)
         {
@@ -256,7 +257,12 @@ namespace Nektar
             }
         }
 
-        // Impose Dirichlet boundary conditions
+        // -- Impose Dirichlet boundary conditions.
+
+        // First try to do parallel assembly: the intention here is that
+        // Dirichlet values at some edges/vertices need to be communicated to
+        // processes which don't contain the entire boundary region. See
+        // ContField2D::v_ImposeDirichletConditions for more detail.
         map<int, vector<MultiRegions::ExtraDirDof> > &extraDirDofs =
             m_assemblyMap->GetExtraDirDofs();
         map<int, vector<MultiRegions::ExtraDirDof> >::iterator it;
@@ -280,6 +286,10 @@ namespace Nektar
 
         m_assemblyMap->UniversalAssemble(inout);
 
+        // Counter for the local Dirichlet boundary to global ordering.
+        int bndcnt = 0;
+
+        // Now assemble local boundary contributions.
         for (nv = 0; nv < nVel; ++nv)
         {
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp
@@ -287,12 +297,11 @@ namespace Nektar
             const Array<OneD, const int> &bndMap
                 = m_assemblyMap->GetBndCondCoeffsToGlobalCoeffsMap();
 
-            // Now impose local boundary conditions
             for (i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 const Array<OneD,const NekDouble> &bndCoeffs = 
                     bndCondExp[i]->GetCoeffs();
-                
+
                 for (j = 0; j < bndCondExp[i]->GetNcoeffs(); ++j)
                 {
                     NekDouble sign =
@@ -302,6 +311,10 @@ namespace Nektar
                 }
             }
         }
+
+        //
+        // -- Perform solve
+        //
 
         // Assemble forcing into the RHS.
         m_assemblyMap->Assemble(forCoeffs, rhs);
@@ -316,7 +329,11 @@ namespace Nektar
         Array<OneD, NekDouble> tmp(nVel * nCoeffs);
         m_assemblyMap->GlobalToLocal(inout, tmp);
 
-        // Finally, scatter back to field degrees of freedom
+        //
+        // -- Postprocess
+        //
+
+        // Scatter back to field degrees of freedom
         for (nv = 0; nv < nVel; ++nv)
         {
             for (i = 0; i < m_fields[nv]->GetExpSize(); ++i)

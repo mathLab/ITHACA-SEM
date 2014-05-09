@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     vector<string> vFilenames;
     //defining timing variables
-	Timer timer;
+    Timer timer;
     NekDouble exeTime, fullTime, ppTime = 0.0;
 
     if(argc < 6)//< is added to be able to submit "verbose" option
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
     }
     
     //timing the whole solve including mesh loading
-	timer.Start();
+    timer.Start();
     
     //----------------------------------------------
     // Read in mesh from input file
@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
             MultiRegions::eGlobal);
     //----------------------------------------------
     //end of full solve timing
-	timer.Stop();
+    timer.Stop();
     fullTime = timer.TimePerTest(1);
 
     //----------------------------------------------

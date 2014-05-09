@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     vector<string> vFilenames;
     //defining timing variables
-	Timer timer;
+    Timer timer;
     NekDouble exeTime, fullTime, ppTime;
 
     if(argc < 6)//< is used to be able to submit "verbose" option
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
     }
 
     //timing the whole solve including mesh loading
-	timer.Start();
+    timer.Start();
     //----------------------------------------------
     // Read in mesh from input file
     SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //----------------------------------------------
     //end of full solve timing
-	timer.Stop();
+    timer.Stop();
     fullTime = timer.TimePerTest(1);
 
     //----------------------------------------------
@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
     // postprocessing and error computation
     //////////////////////////////////////////////////////////////////////////////////////
     //timing postprocessing
-	timer.Start();
+    timer.Start();
 
     int num_points = NumModes + 1;
     //Tetrahedron
@@ -399,7 +399,7 @@ int main(int argc, char *argv[])
     PostProc->EvaluateHDGPostProcessing(PostProc->UpdateCoeffs());
     PostProc->BwdTrans_IterPerExp(PostProc->GetCoeffs(),PostProc->UpdatePhys());
     //end postprocessing timing
-   	timer.Stop();
+    timer.Stop();
     ppTime = timer.TimePerTest(1);
 
     //computing postprocessing error
@@ -443,10 +443,10 @@ int main(int argc, char *argv[])
 
     // We first do a single run in order to estimate the number of calls 
     // we are going to make
-	timer.Start();
+    timer.Start();
     Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
     Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys());
-	timer.Stop();
+    timer.Stop();
     exeTime = timer.TimePerTest(1);
 
     int NumCalls = (int) ceil(1.0/exeTime);
@@ -465,13 +465,14 @@ int main(int argc, char *argv[])
     chudStartRemotePerfMonitor("TimingHDGHelmSolve3D");
 #endif
 
-	timer.Start();
+    timer.Start();
     for(i = 0; i < NumCalls; ++i)
     {
         Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
         Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys());
     }
-	timer.Stop();
+    timer.Stop();
+    exeTime = timer.TimePerTest(1);
 
 #ifdef SHARK
     chudStopRemotePerfMonitor();
@@ -479,7 +480,6 @@ int main(int argc, char *argv[])
     chudCleanup();
 #endif
 
-    exeTime = timer.TimePerTest(1);
 
     int nLocCoeffs     = Exp->GetTraceMap()->GetNumLocalCoeffs();
     int nGlobCoeffs    = Exp->GetTraceMap()->GetNumGlobalCoeffs();

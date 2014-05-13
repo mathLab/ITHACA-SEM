@@ -860,7 +860,7 @@ namespace Nektar
                 
                 // Push nodes into lines - TODO: face interior nodes. 
                 // offset = 0 (seg), 1 (tri) or 2 (quad)
-                int offset = (int)e->GetConf().m_e-1;
+                int offset = (int)e->GetConf().m_e-2;
                 
                 for (int edge = 0; edge < e->GetEdgeCount(); ++edge)
                 {
@@ -873,7 +873,7 @@ namespace Nektar
                         // Clear existing curvature.
                         e->GetEdge(edge)->m_edgeNodes.clear();
 
-                        if (e->GetConf().m_e == LibUtilities::eQuadrilateral)
+                        if (e->GetConf().m_e != LibUtilities::eTriangle)
                         {
                             for (int j = 1; j < nq-1; ++j)
                             {

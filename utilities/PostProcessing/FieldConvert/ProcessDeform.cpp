@@ -39,6 +39,7 @@ using namespace std;
 
 #include "ProcessDeform.h"
 
+#include <StdRegions/StdSegExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
@@ -73,7 +74,7 @@ namespace Nektar
             curvedEdges.clear();
 
             int i, j, k, dim;
-            set<int> updatedVerts, updatedEdges;
+            set<int> updatedVerts, updatedEdges, updatedFaces;
 
             dim = graph->GetSpaceDimension();
             Array<OneD, Array<OneD, NekDouble> > phys(dim);
@@ -116,12 +117,19 @@ namespace Nektar
                         Array<OneD, Array<OneD, NekDouble> > edgePhys(dim);
                         Array<OneD, Array<OneD, NekDouble> > edgeCoord(dim);
 
+                        const LibUtilities::BasisKey B(
+                            LibUtilities::eModified_A, nEdgePts,
+                            LibUtilities::PointsKey(
+                                nEdgePts, LibUtilities::eGaussLobattoLegendre));
+                        StdRegions::StdExpansion1DSharedPtr seg = MemoryManager<
+                            StdRegions::StdSegExp>::AllocateSharedPtr(B);
+
                         for (k = 0; k < dim; ++k)
                         {
                             edgePhys [k] = Array<OneD, NekDouble>(nEdgePts);
                             edgeCoord[k] = Array<OneD, NekDouble>(nEdgePts);
-                            exp->GetEdgePhysVals(j, phys [k], edgePhys [k]);
-                            exp->GetEdgePhysVals(j, coord[k], edgeCoord[k]);
+                            exp->GetEdgePhysVals(j, seg, phys [k], edgePhys [k]);
+                            exp->GetEdgePhysVals(j, seg, coord[k], edgeCoord[k]);
                         }
 
                         // Update verts
@@ -139,6 +147,81 @@ namespace Nektar
                             pt->UpdatePosition(
                                 (*pt)(0) + edgePhys[0][k*(nEdgePts-1)],
                                 (*pt)(1) + edgePhys[1][k*(nEdgePts-1)],
+                                (*pt)(2));
+
+                            updatedVerts.insert(id);
+                        }
+
+                        // Update curve
+                        SpatialDomains::CurveSharedPtr curve = MemoryManager<
+                            SpatialDomains::Curve>::AllocateSharedPtr(
+                                edge->GetGlobalID(),
+                                LibUtilities::eGaussLobattoLegendre);
+
+                        for (k = 0; k < nEdgePts; ++k)
+                        {
+                            SpatialDomains::PointGeomSharedPtr vert =
+                                MemoryManager<SpatialDomains::PointGeom>
+                                ::AllocateSharedPtr(
+                                    dim, edge->GetGlobalID(),
+                                    edgeCoord[0][k] + edgePhys[0][k],
+                                    edgeCoord[1][k] + edgePhys[1][k], 0.0);
+
+                            curve->m_points.push_back(vert);
+                        }
+
+                        curvedEdges.push_back(curve);
+
+                        updatedEdges.insert(edge->GetGlobalID());
+                    }
+                }
+#if 0
+                else if (dim == 3)
+                {
+                    SpatialDomains::Geometry3DSharedPtr geom =
+                        boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+                            exp->GetGeom());
+
+                    for (j = 0; j < exp->GetNfaces(); ++j)
+                    {
+                        SpatialDomains::Geometry2DSharedPtr face = geom->GetFace(j);
+
+                        // This edge has already been processed.
+                        if (updatedFaces.find(face->GetGlobalID()) != updatedFaces.end())
+                        {
+                            continue;
+                        }
+
+                        // Extract face displacement.
+                        int nFacePts = exp->GetFaceNumPoints(j);
+                        Array<OneD, Array<OneD, NekDouble> > facePhys(dim);
+                        Array<OneD, Array<OneD, NekDouble> > faceCoord(dim);
+
+                        for (k = 0; k < dim; ++k)
+                        {
+                            facePhys [k] = Array<OneD, NekDouble>(nFacePts);
+                            faceCoord[k] = Array<OneD, NekDouble>(nFacePts);
+                            exp->GetFacePhysVals(j, StdRegions::StdExpansionSharedPtr(), phys [k], facePhys [k], exp->GetFaceOrient(j));
+                            exp->GetFacePhysVals(j, StdRegions::StdExpansionSharedPtr(), coord[k], faceCoord[k], exp->GetFaceOrient(j));
+                        }
+
+                        // Update edges
+
+                        // Update verts
+                        for (k = 0; k < geom->GetNverts(); ++k)
+                        {
+                            int id = face->GetVid(k);
+                            if (updatedVerts.find(id) != updatedVerts.end())
+                            {
+                                continue;
+                            }
+
+                            SpatialDomains::PointGeomSharedPtr pt =
+                                face->GetVertex(k);
+
+                            pt->UpdatePosition(
+                                (*pt)(0) + facePhys[0][k*(nFacePts-1)],
+                                (*pt)(1) + facePhys[1][k*(nFacePts-1)],
                                 (*pt)(2));
 
                             updatedVerts.insert(id);
@@ -177,6 +260,7 @@ namespace Nektar
                         updatedEdges.insert(edge->GetGlobalID());
                     }
                 }
+#endif
             }
         }
     }

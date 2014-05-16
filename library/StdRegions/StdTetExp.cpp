@@ -1679,6 +1679,13 @@ namespace Nektar
             int i,j,k;
             int idx = 0;
 
+            int nBnd = NumBndryCoeffs();
+
+            if (outarray.num_elements() != nBnd)
+            {
+                outarray = Array<OneD, unsigned int>(nBnd);
+            }
+
             for (i = 0; i < P; ++i)
             {
             	// First two Q-R planes are entirely boundary modes

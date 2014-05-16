@@ -1436,6 +1436,53 @@ namespace Nektar
                     elmtTag->LinkEndChild(h);
                 }
 
+                PrismGeomMap::iterator rIt;
+                tag = "R";
+
+                for (rIt = m_prismGeoms.begin(); rIt != m_prismGeoms.end(); ++rIt)
+                {
+                    stringstream s;
+                    PrismGeomSharedPtr prism = rIt->second;
+                    s << prism->GetFid(0) << " " << prism->GetFid(1) << " "
+                      << prism->GetFid(2) << " " << prism->GetFid(3) << " "
+                      << prism->GetFid(4) << " ";
+                    TiXmlElement *p = new TiXmlElement(tag);
+                    p->SetAttribute("ID", rIt->first);
+                    p->LinkEndChild(new TiXmlText(s.str()));
+                    elmtTag->LinkEndChild(p);
+                }
+
+                PyrGeomMap::iterator pIt;
+                tag = "P";
+
+                for (pIt = m_pyrGeoms.begin(); pIt != m_pyrGeoms.end(); ++pIt)
+                {
+                    stringstream s;
+                    PyrGeomSharedPtr pyr = pIt->second;
+                    s << pyr->GetFid(0) << " " << pyr->GetFid(1) << " "
+                      << pyr->GetFid(2) << " " << pyr->GetFid(3) << " "
+                      << pyr->GetFid(4) << " ";
+                    TiXmlElement *p = new TiXmlElement(tag);
+                    p->SetAttribute("ID", pIt->first);
+                    p->LinkEndChild(new TiXmlText(s.str()));
+                    elmtTag->LinkEndChild(p);
+                }
+
+                TetGeomMap::iterator tIt;
+                tag = "A";
+
+                for (tIt = m_tetGeoms.begin(); tIt != m_tetGeoms.end(); ++tIt)
+                {
+                    stringstream s;
+                    TetGeomSharedPtr tet = tIt->second;
+                    s << tet->GetFid(0) << " " << tet->GetFid(1) << " "
+                      << tet->GetFid(2) << " " << tet->GetFid(3) << " ";
+                    TiXmlElement *t = new TiXmlElement(tag);
+                    t->SetAttribute("ID", tIt->first);
+                    t->LinkEndChild(new TiXmlText(s.str()));
+                    elmtTag->LinkEndChild(t);
+                }
+
                 geomTag->LinkEndChild(elmtTag);
             }
 

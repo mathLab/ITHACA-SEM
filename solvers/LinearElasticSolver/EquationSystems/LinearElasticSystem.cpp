@@ -218,6 +218,27 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > forcing(nVel);
         EvaluateFunction(forcing, "Forcing");
 
+        // Add temperature term
+        string tempEval;
+        m_session->LoadSolverInfo("Temperature", tempEval, "None");
+        if (tempEval != "None")
+        {
+            for (nv = 0; nv < nVel; ++nv)
+            {
+                Array<OneD, NekDouble> temp(m_fields[nv]->GetNpoints()), tmp;
+                for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
+                {
+                    // Calculate element area
+                    LocalRegions::ExpansionSharedPtr exp =
+                        m_fields[0]->GetExp(i);
+                    LibUtilities::PointsKeyVector pkey = exp->GetPointsKeys();
+                    Array<OneD, NekDouble> jac = exp->GetMetricInfo()->GetJac(pkey);
+                    Vmath::Sdiv(exp->GetTotPoints(), 1e-4, jac, 1, tmp = temp + m_fields[0]->GetPhys_Offset(i), 1);
+                }
+                m_fields[nv]->PhysDeriv(nv, temp, forcing[nv]);
+            }
+        }
+
         // Set up some temporary storage.
         //
         // - forCoeffs holds the forcing coefficients in a local ordering;

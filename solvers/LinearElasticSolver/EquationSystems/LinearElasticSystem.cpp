@@ -53,6 +53,13 @@ namespace Nektar
     {
     }
 
+    /**
+     * @brief Set up the linear elasticity system.
+     *
+     * This routine loads the E and nu variables from the session file, creates
+     * a coupled assembly map and creates containers for the statically
+     * condensed block matrix system.
+     */
     void LinearElasticSystem::v_InitObject()
     {
         EquationSystem::v_InitObject();
@@ -60,42 +67,37 @@ namespace Nektar
         const int nVel = m_fields[0]->GetCoordim(0);
         int n;
 
-        // For now only two dimensions are supported. The code below and in the
-        // assembly map should be readily extendible to three dimensions
-        // however.
-        
-        //ASSERTL0(nVel == 2, "Linear elastic solver not set up for"
-        //                   " this dimension (only 2D supported).");
+        ASSERTL0(nVel > 1, "Linear elastic solver not set up for"
+                           " this dimension (only 2D/3D supported).");
 
         // Make sure that we have Young's modulus and Poisson ratio set.
         m_session->LoadParameter("E", m_E, 1.0);
         m_session->LoadParameter("nu", m_nu, 0.25);
 
-        // Create a coupled assembly map which allows us to tie u and v fields
-        // together.
-        
+        // Create a coupled assembly map which allows us to tie u, v and w
+        // fields together.
         if (nVel == 2)
         {
             MultiRegions::ContField2DSharedPtr u = boost::dynamic_pointer_cast<
-            MultiRegions::ContField2D>(m_fields[0]);
+                MultiRegions::ContField2D>(m_fields[0]);
             m_assemblyMap = MemoryManager<CoupledAssemblyMap>
-            ::AllocateSharedPtr(m_session,
-                                m_graph,
-                                u->GetLocalToGlobalMap(),
-                                m_boundaryConditions,
-                                m_fields);
+                ::AllocateSharedPtr(m_session,
+                                    m_graph,
+                                    u->GetLocalToGlobalMap(),
+                                    m_boundaryConditions,
+                                    m_fields);
         }
         
         if (nVel == 3)
         {
             MultiRegions::ContField3DSharedPtr u = boost::dynamic_pointer_cast<
-            MultiRegions::ContField3D>(m_fields[0]);
+                MultiRegions::ContField3D>(m_fields[0]);
             m_assemblyMap = MemoryManager<CoupledAssemblyMap>
-            ::AllocateSharedPtr(m_session,
-                                m_graph,
-                                u->GetLocalToGlobalMap(),
-                                m_boundaryConditions,
-                                m_fields);
+                ::AllocateSharedPtr(m_session,
+                                    m_graph,
+                                    u->GetLocalToGlobalMap(),
+                                    m_boundaryConditions,
+                                    m_fields);
         }
         
         // Figure out size of our new matrix systems by looping over all
@@ -111,6 +113,9 @@ namespace Nektar
         m_bmap = Array<OneD, Array<OneD, unsigned int> >(nEl);
         m_imap = Array<OneD, Array<OneD, unsigned int> >(nEl);
 
+        // Cache interior and boundary maps to avoid recalculating
+        // constantly. Should really be handled by manager in StdRegions but not
+        // really working yet.
         for (n = 0; n < nEl; ++n)
         {
             exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
@@ -135,6 +140,29 @@ namespace Nektar
         BuildMatrixSystem();
     }
 
+    /**
+     * @brief Build matrix system for linear elasticity equations.
+     *
+     * This routine constructs the matrix discretisation arising from the weak
+     * formulation of the linear elasticity equations. The resulting matrix
+     * system is then passed to LinearElasticSystem::SetStaticCondBlock in order
+     * to construct the statically condensed system.
+     *
+     * All of the matrices involved in the construction of the divergence of the
+     * stress tensor are Laplacian-like. We use the variable coefficient
+     * functionality within the library to multiply the Laplacian by the
+     * appropriate constants for all diagonal terms, and off-diagonal terms use
+     * LinearElasticSystem::BuildLaplacianIJMatrix to construct matrices
+     * containing
+     *
+     * \f[ \int \partial_{x_i} \phi_k \partial_{x_j} \phi_l \f]
+     *
+     * where mixed derivative terms are present. Symmetry (in terms of k,l) is
+     * exploited to avoid constructing this matrix repeatedly.
+     *
+     * @todo Make static condensation optional and construct full system
+     *       instead.
+     */
     void LinearElasticSystem::BuildMatrixSystem()
     {
         const int nEl = m_fields[0]->GetExpSize();
@@ -147,9 +175,13 @@ namespace Nektar
         StdRegions::ConstFactorMap factors;
 
         // Calculate various constants
-        NekDouble a = m_E * (1.0 - m_nu) / (1.0 + m_nu) / (1.0 - 2.0*m_nu);// mu
-        NekDouble b = m_E * 0.5 / (1.0 + m_nu); // lambda
-        NekDouble c = m_E * m_nu / (1.0 + m_nu) / (1.0 - 2.0*m_nu); // lambda + mu
+
+        // mu
+        NekDouble a = m_E * (1.0 - m_nu) / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
+        // lambda
+        NekDouble b = m_E * 0.5 / (1.0 + m_nu);
+        // lambda + mu?
+        NekDouble c = m_E * m_nu / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
 
         // Loop over each element and construct matrices.
         if (nVel == 2)
@@ -160,70 +192,54 @@ namespace Nektar
                 const int nPhys = exp->GetTotPoints();
                 
                 StdRegions::VarCoeffMap varcoeffA, varcoeffD;
-                varcoeffA[StdRegions::eVarCoeffD00] =
-                Array<OneD, NekDouble>(nPhys, a);
-                varcoeffA[StdRegions::eVarCoeffD11] =
-                Array<OneD, NekDouble>(nPhys, b);
-                varcoeffD[StdRegions::eVarCoeffD00] =
-                Array<OneD, NekDouble>(nPhys, b);
-                varcoeffD[StdRegions::eVarCoeffD11] =
-                Array<OneD, NekDouble>(nPhys, a);
-                
+                Array<OneD, NekDouble> aArr(nPhys, a);
+                Array<OneD, NekDouble> bArr(nPhys, b);
+                varcoeffA[StdRegions::eVarCoeffD00] = aArr;
+                varcoeffA[StdRegions::eVarCoeffD11] = bArr;
+                varcoeffD[StdRegions::eVarCoeffD00] = bArr;
+                varcoeffD[StdRegions::eVarCoeffD11] = aArr;
+
                 LocalRegions::MatrixKey matkeyA(StdRegions::eLaplacian,
                                                 exp->DetShapeType(),
                                                 *exp, factors, varcoeffA);
                 LocalRegions::MatrixKey matkeyD(StdRegions::eLaplacian,
                                                 exp->DetShapeType(),
                                                 *exp, factors, varcoeffD);
-                
+
                 /*
                  * mat holds the linear operator [ A B ] acting on [ u ].
                  *                               [ C D ]           [ v ]
-                 *
-                 * In this case it is just a diagonal matrix with each component
-                 * being a Helmholtz matrix, so that the u and v fields are not
-                 * coupled at all.
                  */
                 Array<TwoD, DNekMatSharedPtr> mat(2,2);
                 mat[0][0] = exp->GenMatrix(matkeyA);
                 mat[0][1] = BuildLaplacianIJMatrix(1, 0, c, exp);
                 mat[1][0] = mat[0][1];
                 mat[1][1] = exp->GenMatrix(matkeyD);
-                
+
                 // Set up the statically condensed block for this element.
                 SetStaticCondBlock(n, exp, mat);
             }
         }
-        
-        if (nVel == 3)
+        else if (nVel == 3)
         {
             for (n = 0; n < nEl; ++n)
             {
                 exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
                 const int nPhys = exp->GetTotPoints();
-                
                 StdRegions::VarCoeffMap varcoeffA, varcoeffE, varcoeffI;
-                varcoeffA[StdRegions::eVarCoeffD00] =
-                    Array<OneD, NekDouble>(nPhys, a);
-                varcoeffA[StdRegions::eVarCoeffD11] =
-                    Array<OneD, NekDouble>(nPhys, b);
-                varcoeffA[StdRegions::eVarCoeffD22] =
-                    Array<OneD, NekDouble>(nPhys, b);
-                
-                varcoeffE[StdRegions::eVarCoeffD00] =
-                    Array<OneD, NekDouble>(nPhys, b);
-                varcoeffE[StdRegions::eVarCoeffD11] =
-                    Array<OneD, NekDouble>(nPhys, a);
-                varcoeffE[StdRegions::eVarCoeffD22] =
-                    Array<OneD, NekDouble>(nPhys, b);
-                
-                varcoeffI[StdRegions::eVarCoeffD00] =
-                    Array<OneD, NekDouble>(nPhys, b);
-                varcoeffI[StdRegions::eVarCoeffD11] =
-                    Array<OneD, NekDouble>(nPhys, b);
-                varcoeffI[StdRegions::eVarCoeffD22] =
-                    Array<OneD, NekDouble>(nPhys, a);
-                
+                Array<OneD, NekDouble> aArr(nPhys, a);
+                Array<OneD, NekDouble> bArr(nPhys, b);
+
+                varcoeffA[StdRegions::eVarCoeffD00] = aArr;
+                varcoeffA[StdRegions::eVarCoeffD11] = bArr;
+                varcoeffA[StdRegions::eVarCoeffD22] = bArr;
+                varcoeffE[StdRegions::eVarCoeffD00] = bArr;
+                varcoeffE[StdRegions::eVarCoeffD11] = aArr;
+                varcoeffE[StdRegions::eVarCoeffD22] = bArr;
+                varcoeffI[StdRegions::eVarCoeffD00] = bArr;
+                varcoeffI[StdRegions::eVarCoeffD11] = bArr;
+                varcoeffI[StdRegions::eVarCoeffD22] = aArr;
+
                 LocalRegions::MatrixKey matkeyA(StdRegions::eLaplacian,
                                                 exp->DetShapeType(),
                                                 *exp, factors, varcoeffA);
@@ -233,16 +249,11 @@ namespace Nektar
                 LocalRegions::MatrixKey matkeyI(StdRegions::eLaplacian,
                                                 exp->DetShapeType(),
                                                 *exp, factors, varcoeffI);
-                
-                
+
                 /*
-                 * mat holds the linear operator [ A B C] acting on [ u ].
-                 *                               [ D E F]           [ v ]
-                 *                               [ G H I]           [ w ]
-                 *
-                 * In this case it is just a diagonal matrix with each component
-                 * being a Helmholtz matrix, so that the u and v fields are not
-                 * coupled at all.
+                 * mat holds the linear operator [ A B C ] acting on [ u ].
+                 *                               [ D E F ]           [ v ]
+                 *                               [ G H I ]           [ w ]
                  */
                 Array<TwoD, DNekMatSharedPtr> mat(3,3);
                 mat[0][0] = exp->GenMatrix(matkeyA);
@@ -264,11 +275,29 @@ namespace Nektar
         
     }
 
+    /**
+     * @brief Generate summary at runtime.
+     */
     void LinearElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         EquationSystem::SessionSummary(s);
     }
 
+    /**
+     * @brief Solve elliptic linear elastic system.
+     *
+     * The solve proceeds as follows:
+     *
+     * - Create a MultiRegions::GlobalLinSys object.
+     * - Evaluate a forcing function from the session file.
+     * - If the temperature term is enabled, evaluate this and add to forcing.
+     * - Apply Dirichlet boundary conditions.
+     * - Scatter forcing into the correct ordering according to the coupled
+     *   assembly map.
+     * - Do the solve.
+     * - Scatter solution back to fields and backwards transform to physical
+     *   space.
+     */
     void LinearElasticSystem::v_DoSolve()
     {
         int i, j, nv;
@@ -279,6 +308,8 @@ namespace Nektar
             StdRegions::eLinearAdvectionReaction, m_assemblyMap);        
         MultiRegions::GlobalLinSysSharedPtr linSys;
 
+        // Currently either direct or iterative static condensation is
+        // supported.
         if (m_assemblyMap->GetGlobalSysSolnType() == MultiRegions::eDirectStaticCond)
         {
             linSys = MemoryManager<
@@ -296,7 +327,7 @@ namespace Nektar
         }
 
         const int nCoeffs = m_fields[0]->GetNcoeffs();
-        const int nGlobDofs = m_assemblyMap->GetNumGlobalCoeffs() / nVel;
+        const int nGlobDofs = m_assemblyMap->GetNumGlobalCoeffs();
 
         //
         // -- Evaluate forcing functions
@@ -338,8 +369,8 @@ namespace Nektar
         // - inout holds the Dirichlet degrees of freedom in the global
         //   ordering, which have been assembled from the boundary expansion.
         Array<OneD, NekDouble> forCoeffs(nVel * nCoeffs, 0.0);
-        Array<OneD, NekDouble> inout    (nVel * nGlobDofs, 0.0);
-        Array<OneD, NekDouble> rhs      (nVel * nGlobDofs, 0.0);
+        Array<OneD, NekDouble> inout    (nGlobDofs, 0.0);
+        Array<OneD, NekDouble> rhs      (nGlobDofs, 0.0);
 
         for (nv = 0; nv < nVel; ++nv)
         {
@@ -467,6 +498,18 @@ namespace Nektar
         }
     }
 
+    /**
+     * @brief Given a block matrix for an element, construct its static
+     * condensation matrices.
+     *
+     * This routine essentially duplicates the logic present in many of the
+     * LocalRegions matrix generation routines to construct the statically
+     * condensed equivalent of mat to pass to the GlobalLinSys solver.
+     *
+     * @param n    Element/block number.
+     * @param exp  Pointer to expansion.
+     * @param mat  Block matrix containing matrix operator.
+     */
     void LinearElasticSystem::SetStaticCondBlock(
         const int                              n,
         const LocalRegions::ExpansionSharedPtr exp,
@@ -527,6 +570,7 @@ namespace Nektar
             }
         }
 
+        // Construct static condensation matrices.
         D->Invert();
         (*B) = (*B)*(*D);
         (*A) = (*A) - (*B)*(*C);
@@ -546,6 +590,13 @@ namespace Nektar
                 1.0, D));
     }
 
+    /**
+     * @brief Construct a LaplacianIJ matrix for a given expansion.
+     *
+     * This routine constructs matrices whose entries contain the evaluation of
+     *
+     * \f[ \partial_{\tt k1} \phi_i \partial_{\tt k2} \phi_j \,dx  \f]
+     */
     DNekMatSharedPtr LinearElasticSystem::BuildLaplacianIJMatrix(
         const int                        k1,
         const int                        k2,

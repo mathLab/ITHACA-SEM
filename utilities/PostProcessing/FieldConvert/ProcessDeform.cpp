@@ -73,7 +73,9 @@ namespace Nektar
             // Maybe create a new copy of MeshGraph to work on?
             SpatialDomains::MeshGraphSharedPtr graph = m_f->m_graph;
             SpatialDomains::CurveVector &curvedEdges = m_f->m_graph->GetCurvedEdges();
+            SpatialDomains::CurveVector &curvedFaces = m_f->m_graph->GetCurvedFaces();
             curvedEdges.clear();
+            curvedFaces.clear();
 
             int i, j, k, l, dim;
             set<int> updatedVerts, updatedEdges, updatedFaces;
@@ -320,10 +322,30 @@ namespace Nektar
                                 }
 
                                 curvedEdges.push_back(curve);
-
                                 updatedEdges.insert(edge->GetGlobalID());
                             }
                         }
+
+                        // Update face-interior curvature
+                        SpatialDomains::CurveSharedPtr curve = MemoryManager<
+                            SpatialDomains::Curve>::AllocateSharedPtr(
+                                face->GetGlobalID(),
+                                LibUtilities::eGaussLobattoLegendre);
+
+                        for (l = 0; l < nFacePts; ++l)
+                        {
+                            SpatialDomains::PointGeomSharedPtr vert =
+                                MemoryManager<SpatialDomains::PointGeom>
+                                ::AllocateSharedPtr(
+                                    dim, face->GetGlobalID(),
+                                    faceCoord[0][l] + facePhys[0][l],
+                                    faceCoord[1][l] + facePhys[1][l],
+                                    faceCoord[2][l] + facePhys[2][l]);
+                            curve->m_points.push_back(vert);
+                        }
+
+                        curvedFaces.push_back(curve);
+                        updatedFaces.insert(face->GetGlobalID());
                     }
                 }
             }

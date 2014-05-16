@@ -1463,6 +1463,27 @@ namespace Nektar
                 curveTag->LinkEndChild(c);
             }
 
+            for (int i = 0; i < m_curvedFaces.size(); ++i)
+            {
+                CurveSharedPtr curve = m_curvedFaces[i];
+                TiXmlElement *c = new TiXmlElement("F");
+                stringstream s;
+                s.precision(8);
+
+                for (int j = 0; j < curve->m_points.size(); ++j)
+                {
+                    SpatialDomains::PointGeomSharedPtr p = curve->m_points[j];
+                    s << scientific << (*p)(0) << " " << (*p)(1) << " " << (*p)(2) << "   ";
+                }
+
+                c->SetAttribute("ID", i);
+                c->SetAttribute("FACEID", curve->m_curveID);
+                c->SetAttribute("NUMPOINTS", curve->m_points.size());
+                c->SetAttribute("TYPE", LibUtilities::kPointsTypeStr[curve->m_ptype]);
+                c->LinkEndChild(new TiXmlText(s.str()));
+                curveTag->LinkEndChild(c);
+            }
+
             geomTag->LinkEndChild(curveTag);
 
             // Construct <COMPOSITE> blocks

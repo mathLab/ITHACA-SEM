@@ -35,6 +35,7 @@
 
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField3D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/Preconditioner.h>
@@ -62,8 +63,9 @@ namespace Nektar
         // For now only two dimensions are supported. The code below and in the
         // assembly map should be readily extendible to three dimensions
         // however.
-        ASSERTL0(nVel == 2, "Linear elastic solver not set up for"
-                            " this dimension (only 2D supported).");
+        
+        //ASSERTL0(nVel == 2, "Linear elastic solver not set up for"
+        //                   " this dimension (only 2D supported).");
 
         // Make sure that we have Young's modulus and Poisson ratio set.
         m_session->LoadParameter("E", m_E, 1.0);
@@ -71,15 +73,31 @@ namespace Nektar
 
         // Create a coupled assembly map which allows us to tie u and v fields
         // together.
-        MultiRegions::ContField2DSharedPtr u = boost::dynamic_pointer_cast<
+        
+        if (nVel == 2)
+        {
+            MultiRegions::ContField2DSharedPtr u = boost::dynamic_pointer_cast<
             MultiRegions::ContField2D>(m_fields[0]);
-        m_assemblyMap = MemoryManager<CoupledAssemblyMap>
+            m_assemblyMap = MemoryManager<CoupledAssemblyMap>
             ::AllocateSharedPtr(m_session,
                                 m_graph,
                                 u->GetLocalToGlobalMap(),
                                 m_boundaryConditions,
                                 m_fields);
-
+        }
+        
+        if (nVel == 3)
+        {
+            MultiRegions::ContField3DSharedPtr u = boost::dynamic_pointer_cast<
+            MultiRegions::ContField3D>(m_fields[0]);
+            m_assemblyMap = MemoryManager<CoupledAssemblyMap>
+            ::AllocateSharedPtr(m_session,
+                                m_graph,
+                                u->GetLocalToGlobalMap(),
+                                m_boundaryConditions,
+                                m_fields);
+        }
+        
         // Figure out size of our new matrix systems by looping over all
         // expansions and multiply number of coefficients by velocity
         // components.
@@ -120,7 +138,8 @@ namespace Nektar
     void LinearElasticSystem::BuildMatrixSystem()
     {
         const int nEl = m_fields[0]->GetExpSize();
-
+        const int nVel = m_fields[0]->GetCoordim(0);
+        
         LocalRegions::ExpansionSharedPtr exp;
         int n;
 
@@ -128,50 +147,121 @@ namespace Nektar
         StdRegions::ConstFactorMap factors;
 
         // Calculate various constants
-        NekDouble a = m_E * (1.0 - m_nu) / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
-        NekDouble b = m_E * 0.5 / (1.0 + m_nu);
-        NekDouble c = m_E * m_nu / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
+        NekDouble a = m_E * (1.0 - m_nu) / (1.0 + m_nu) / (1.0 - 2.0*m_nu);// mu
+        NekDouble b = m_E * 0.5 / (1.0 + m_nu); // lambda
+        NekDouble c = m_E * m_nu / (1.0 + m_nu) / (1.0 - 2.0*m_nu); // lambda + mu
 
         // Loop over each element and construct matrices.
-        for (n = 0; n < nEl; ++n)
+        if (nVel == 2)
         {
-            exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
-            const int nPhys = exp->GetTotPoints();
-
-            StdRegions::VarCoeffMap varcoeffA, varcoeffD;
-            varcoeffA[StdRegions::eVarCoeffD00] =
+            for (n = 0; n < nEl; ++n)
+            {
+                exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
+                const int nPhys = exp->GetTotPoints();
+                
+                StdRegions::VarCoeffMap varcoeffA, varcoeffD;
+                varcoeffA[StdRegions::eVarCoeffD00] =
                 Array<OneD, NekDouble>(nPhys, a);
-            varcoeffA[StdRegions::eVarCoeffD11] =
+                varcoeffA[StdRegions::eVarCoeffD11] =
                 Array<OneD, NekDouble>(nPhys, b);
-            varcoeffD[StdRegions::eVarCoeffD00] =
+                varcoeffD[StdRegions::eVarCoeffD00] =
                 Array<OneD, NekDouble>(nPhys, b);
-            varcoeffD[StdRegions::eVarCoeffD11] =
+                varcoeffD[StdRegions::eVarCoeffD11] =
                 Array<OneD, NekDouble>(nPhys, a);
-
-            LocalRegions::MatrixKey matkeyA(StdRegions::eLaplacian,
-                                            exp->DetShapeType(),
-                                            *exp, factors, varcoeffA);
-            LocalRegions::MatrixKey matkeyD(StdRegions::eLaplacian,
-                                            exp->DetShapeType(),
-                                            *exp, factors, varcoeffD);
-
-            /*
-             * mat holds the linear operator [ A B ] acting on [ u ].
-             *                               [ C D ]           [ v ]
-             *
-             * In this case it is just a diagonal matrix with each component
-             * being a Helmholtz matrix, so that the u and v fields are not
-             * coupled at all.
-             */
-            Array<TwoD, DNekMatSharedPtr> mat(2,2);
-            mat[0][0] = exp->GenMatrix(matkeyA);
-            mat[0][1] = BuildLaplacianIJMatrix(1, 0, c, exp);
-            mat[1][0] = mat[0][1];
-            mat[1][1] = exp->GenMatrix(matkeyD);
-
-            // Set up the statically condensed block for this element.
-            SetStaticCondBlock(n, exp, mat);
+                
+                LocalRegions::MatrixKey matkeyA(StdRegions::eLaplacian,
+                                                exp->DetShapeType(),
+                                                *exp, factors, varcoeffA);
+                LocalRegions::MatrixKey matkeyD(StdRegions::eLaplacian,
+                                                exp->DetShapeType(),
+                                                *exp, factors, varcoeffD);
+                
+                /*
+                 * mat holds the linear operator [ A B ] acting on [ u ].
+                 *                               [ C D ]           [ v ]
+                 *
+                 * In this case it is just a diagonal matrix with each component
+                 * being a Helmholtz matrix, so that the u and v fields are not
+                 * coupled at all.
+                 */
+                Array<TwoD, DNekMatSharedPtr> mat(2,2);
+                mat[0][0] = exp->GenMatrix(matkeyA);
+                mat[0][1] = BuildLaplacianIJMatrix(1, 0, c, exp);
+                mat[1][0] = mat[0][1];
+                mat[1][1] = exp->GenMatrix(matkeyD);
+                
+                // Set up the statically condensed block for this element.
+                SetStaticCondBlock(n, exp, mat);
+            }
         }
+        
+        if (nVel == 3)
+        {
+            for (n = 0; n < nEl; ++n)
+            {
+                exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
+                const int nPhys = exp->GetTotPoints();
+                
+                StdRegions::VarCoeffMap varcoeffA, varcoeffE, varcoeffI;
+                varcoeffA[StdRegions::eVarCoeffD00] =
+                    Array<OneD, NekDouble>(nPhys, a);
+                varcoeffA[StdRegions::eVarCoeffD11] =
+                    Array<OneD, NekDouble>(nPhys, b);
+                varcoeffA[StdRegions::eVarCoeffD22] =
+                    Array<OneD, NekDouble>(nPhys, b);
+                
+                varcoeffE[StdRegions::eVarCoeffD00] =
+                    Array<OneD, NekDouble>(nPhys, b);
+                varcoeffE[StdRegions::eVarCoeffD11] =
+                    Array<OneD, NekDouble>(nPhys, a);
+                varcoeffE[StdRegions::eVarCoeffD22] =
+                    Array<OneD, NekDouble>(nPhys, b);
+                
+                varcoeffI[StdRegions::eVarCoeffD00] =
+                    Array<OneD, NekDouble>(nPhys, b);
+                varcoeffI[StdRegions::eVarCoeffD11] =
+                    Array<OneD, NekDouble>(nPhys, b);
+                varcoeffI[StdRegions::eVarCoeffD22] =
+                    Array<OneD, NekDouble>(nPhys, a);
+                
+                LocalRegions::MatrixKey matkeyA(StdRegions::eLaplacian,
+                                                exp->DetShapeType(),
+                                                *exp, factors, varcoeffA);
+                LocalRegions::MatrixKey matkeyD(StdRegions::eLaplacian,
+                                                exp->DetShapeType(),
+                                                *exp, factors, varcoeffE);
+                LocalRegions::MatrixKey matkeyI(StdRegions::eLaplacian,
+                                                exp->DetShapeType(),
+                                                *exp, factors, varcoeffI);
+                
+                
+                /*
+                 * mat holds the linear operator [ A B C] acting on [ u ].
+                 *                               [ D E F]           [ v ]
+                 *                               [ G H I]           [ w ]
+                 *
+                 * In this case it is just a diagonal matrix with each component
+                 * being a Helmholtz matrix, so that the u and v fields are not
+                 * coupled at all.
+                 */
+                Array<TwoD, DNekMatSharedPtr> mat(3,3);
+                mat[0][0] = exp->GenMatrix(matkeyA);
+                mat[0][1] = BuildLaplacianIJMatrix(1, 0, c, exp);
+                mat[0][2] = BuildLaplacianIJMatrix(2, 0, c, exp);
+                
+                mat[1][0] = mat[0][1];
+                mat[1][1] = exp->GenMatrix(matkeyD);
+                mat[1][2] = BuildLaplacianIJMatrix(2, 1, c, exp);
+                
+                mat[2][0] = mat[0][2];
+                mat[2][1] = mat[1][2];
+                mat[2][2] = exp->GenMatrix(matkeyI);
+                
+                // Set up the statically condensed block for this element.
+                SetStaticCondBlock(n, exp, mat);
+            }
+        }
+        
     }
 
     void LinearElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
@@ -206,9 +296,7 @@ namespace Nektar
         }
 
         const int nCoeffs = m_fields[0]->GetNcoeffs();
-        const int nGlobDofs = boost::dynamic_pointer_cast<
-            MultiRegions::ContField2D>(m_fields[0])->GetLocalToGlobalMap()
-                                                   ->GetNumGlobalCoeffs();
+        const int nGlobDofs = m_assemblyMap->GetNumGlobalCoeffs() / nVel;
 
         //
         // -- Evaluate forcing functions

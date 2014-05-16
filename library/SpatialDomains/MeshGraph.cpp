@@ -1378,42 +1378,66 @@ namespace Nektar
             geomTag->LinkEndChild(edgeTag);
 
             // Construct <FACE> or <ELEMENT> block
-            TiXmlElement *faceTag = new TiXmlElement(
-                m_meshDimension == 2 ? "ELEMENT" : "FACE");
-
-            TriGeomMap::iterator tIt;
-            tag = m_meshDimension == 2 ? "T" : "F";
-
-            for (tIt = m_triGeoms.begin(); tIt != m_triGeoms.end(); ++tIt)
+            if (m_meshDimension > 1)
             {
-                stringstream s;
-                TriGeomSharedPtr tri = tIt->second;
-                s << tri->GetEid(0) << " " << tri->GetEid(1) << " "
-                  << tri->GetEid(2);
-                TiXmlElement *t = new TiXmlElement(tag);
-                t->SetAttribute("ID", tIt->first);
-                t->LinkEndChild(new TiXmlText(s.str()));
-                faceTag->LinkEndChild(t);
+                TiXmlElement *faceTag = new TiXmlElement(
+                    m_meshDimension == 2 ? "ELEMENT" : "FACE");
+
+                TriGeomMap::iterator tIt;
+                tag = "T";
+
+                for (tIt = m_triGeoms.begin(); tIt != m_triGeoms.end(); ++tIt)
+                {
+                    stringstream s;
+                    TriGeomSharedPtr tri = tIt->second;
+                    s << tri->GetEid(0) << " " << tri->GetEid(1) << " "
+                      << tri->GetEid(2);
+                    TiXmlElement *t = new TiXmlElement(tag);
+                    t->SetAttribute("ID", tIt->first);
+                    t->LinkEndChild(new TiXmlText(s.str()));
+                    faceTag->LinkEndChild(t);
+                }
+
+                QuadGeomMap::iterator qIt;
+                tag = "Q";
+
+                for (qIt = m_quadGeoms.begin(); qIt != m_quadGeoms.end(); ++qIt)
+                {
+                    stringstream s;
+                    QuadGeomSharedPtr quad = qIt->second;
+                    s << quad->GetEid(0) << " " << quad->GetEid(1) << " "
+                      << quad->GetEid(2) << " " << quad->GetEid(3);
+                    TiXmlElement *q = new TiXmlElement(tag);
+                    q->SetAttribute("ID", qIt->first);
+                    q->LinkEndChild(new TiXmlText(s.str()));
+                    faceTag->LinkEndChild(q);
+                }
+
+                geomTag->LinkEndChild(faceTag);
             }
 
-            QuadGeomMap::iterator qIt;
-            tag = m_meshDimension == 2 ? "Q" : "F";
-
-            for (qIt = m_quadGeoms.begin(); qIt != m_quadGeoms.end(); ++qIt)
+            if (m_meshDimension > 2)
             {
-                stringstream s;
-                QuadGeomSharedPtr quad = qIt->second;
-                s << quad->GetEid(0) << " " << quad->GetEid(1) << " "
-                  << quad->GetEid(2) << " " << quad->GetEid(3);
-                TiXmlElement *q = new TiXmlElement(tag);
-                q->SetAttribute("ID", qIt->first);
-                q->LinkEndChild(new TiXmlText(s.str()));
-                faceTag->LinkEndChild(q);
+                TiXmlElement *elmtTag = new TiXmlElement("ELEMENT");
+
+                HexGeomMap::iterator hIt;
+                tag = "H";
+
+                for (hIt = m_hexGeoms.begin(); hIt != m_hexGeoms.end(); ++hIt)
+                {
+                    stringstream s;
+                    HexGeomSharedPtr hex = hIt->second;
+                    s << hex->GetFid(0) << " " << hex->GetFid(1) << " "
+                      << hex->GetFid(2) << " " << hex->GetFid(3) << " "
+                      << hex->GetFid(4) << " " << hex->GetFid(5) << " ";
+                    TiXmlElement *h = new TiXmlElement(tag);
+                    h->SetAttribute("ID", hIt->first);
+                    h->LinkEndChild(new TiXmlText(s.str()));
+                    elmtTag->LinkEndChild(h);
+                }
+
+                geomTag->LinkEndChild(elmtTag);
             }
-
-            geomTag->LinkEndChild(faceTag);
-
-            // TODO: 3D
 
             // Construct <CURVED> block
             TiXmlElement *curveTag = new TiXmlElement("CURVED");

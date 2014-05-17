@@ -121,7 +121,7 @@ namespace Nektar
             LocalRegions::Expansion1DSharedPtr exp1d;
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                exp1d = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
+                exp1d = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>((*m_exp)[i]);
                 for (int j = 0; j < exp1d->GetNverts(); ++j)
                 {
                     ElmtPointGeom  = (exp1d->GetGeom1D())->GetVid(j);
@@ -132,7 +132,7 @@ namespace Nektar
                         
                         if (TracePointGeom == ElmtPointGeom)
                         {
-                            exp0d = LocalRegions::Expansion0D::FromStdExp(m_trace->GetExp(k));
+                            exp0d = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion0D>(m_trace->GetExp(k));
                             exp0d->SetAdjacentElementExp(j,exp1d);
                             break;
                         }
@@ -214,7 +214,7 @@ namespace Nektar
             LocalRegions::Expansion1DSharedPtr exp1d;
             for (int l = 0; l < m_exp->size(); ++l)
             {
-                exp1d = LocalRegions::Expansion1D::FromStdExp((*m_exp)[l]);
+                exp1d = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>((*m_exp)[l]);
                 for (int j = 0; j < exp1d->GetNverts(); ++j)
                 {
                     ElmtPointGeom  = (exp1d->GetGeom1D())->GetVid(j);
@@ -225,7 +225,7 @@ namespace Nektar
 			
                         if (TracePointGeom == ElmtPointGeom)
                         {
-                            exp0d = LocalRegions::Expansion0D::FromStdExp(m_traces[i]->GetExp(k));
+                            exp0d = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion0D>(m_traces[i]->GetExp(k));
                             exp0d->SetAdjacentElementExp(j,exp1d);
                             break;
                         }
@@ -825,14 +825,14 @@ namespace Nektar
 			
             if (nElements > 0)
             {
-                exp1DFirst = LocalRegions::Expansion1D::FromStdExp((*m_exp)[0]);
-                exp1DLast  = LocalRegions::Expansion1D::FromStdExp((*m_exp)[nElements - 1]);
+                exp1DFirst = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>((*m_exp)[0]);
+                exp1DLast  = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>((*m_exp)[nElements - 1]);
             }
 
             // Loop on the elements
             for (n = 0; n < nElements; ++n)
             {
-                exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[n]);
+                exp1D = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>((*m_exp)[n]);
 
                 // Set the offset of each element
                 phys_offset = GetPhys_Offset(n);

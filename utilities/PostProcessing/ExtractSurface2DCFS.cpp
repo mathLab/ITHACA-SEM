@@ -797,7 +797,7 @@
 	
 	for(int i = 0; i <  BndExp[0]->GetExpSize(); ++i)
 	{
-		bc =  boost::dynamic_pointer_cast<LocalRegions
+		bc =  StdRegions::StdExpansion::CastTo<LocalRegions
 		::Expansion1D> (BndExp[0]->GetExp(i));
 		
 		int nbc = bc->GetTotPoints();

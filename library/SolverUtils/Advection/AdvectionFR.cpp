@@ -141,7 +141,7 @@ namespace Nektar
                         ptsKeys = pFields[0]->GetExp(n)->GetPointsKeys();
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
-                        jac = LocalRegions::Expansion1D::FromStdExp(
+                        jac = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>(
                             pFields[0]->GetExp(n))->GetGeom1D()
                                 ->GetMetricInfo()->GetJac(ptsKeys);
                         for (i = 0; i < nLocalSolutionPts; ++i)
@@ -191,14 +191,14 @@ namespace Nektar
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
                         
-                        jac  = LocalRegions::Expansion2D::FromStdExp(
+                        jac  = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(
                             pFields[0]->GetExp(n))->GetGeom2D()->
                                 GetMetricInfo()->GetJac(ptsKeys);
-                        gmat = LocalRegions::Expansion2D::FromStdExp(
+                        gmat = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(
                             pFields[0]->GetExp(n))->GetGeom2D()->
                                 GetMetricInfo()->GetDerivFactors(ptsKeys);
                         
-                        if (LocalRegions::Expansion2D::FromStdExp(
+                        if (StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(
                                 pFields[0]->GetExp(n))->GetGeom2D()
                                     ->GetMetricInfo()->GetGtype()
                             == SpatialDomains::eDeformed)

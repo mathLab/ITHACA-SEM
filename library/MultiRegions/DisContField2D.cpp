@@ -131,13 +131,13 @@ namespace Nektar
                     for(e = 0; e < locExpList->GetExpSize(); ++e)
                     {
                         LocalRegions::Expansion2DSharedPtr exp2d =
-                            boost::dynamic_pointer_cast<
+                            StdRegions::StdExpansion::CastTo<
                                 LocalRegions::Expansion2D>((*m_exp)[ElmtID[cnt+e]]);
                         LocalRegions::Expansion1DSharedPtr exp1d =
-                            boost::dynamic_pointer_cast<
+                            StdRegions::StdExpansion::CastTo<
                                 LocalRegions::Expansion1D>(locExpList->GetExp(e));
                         LocalRegions::ExpansionSharedPtr   exp =
-                            boost::dynamic_pointer_cast<
+                            StdRegions::StdExpansion::CastTo<
                                 LocalRegions::Expansion>  (locExpList->GetExp(e));
                         
                         exp2d->SetEdgeExp(EdgeID[cnt+e], exp);
@@ -214,15 +214,15 @@ namespace Nektar
                         for(e = 0; e < locExpList->GetExpSize(); ++e)
                         {
                             LocalRegions::Expansion2DSharedPtr exp2d
-                                = boost::dynamic_pointer_cast<
+                                = StdRegions::StdExpansion::CastTo<
                                     LocalRegions::Expansion2D>(
                                         (*m_exp)[ElmtID[cnt+e]]);
                             LocalRegions::Expansion1DSharedPtr exp1d
-                                = boost::dynamic_pointer_cast<
+                                = StdRegions::StdExpansion::CastTo<
                                     LocalRegions::Expansion1D>(
                                         locExpList->GetExp(e));
                             LocalRegions::ExpansionSharedPtr   exp
-                                = boost::dynamic_pointer_cast<
+                                = StdRegions::StdExpansion::CastTo<
                                     LocalRegions::Expansion>  (
                                         locExpList->GetExp(e));
                             
@@ -295,15 +295,15 @@ namespace Nektar
                         for(e = 0; e < locExpList->GetExpSize(); ++e)
                         {
                             LocalRegions::Expansion2DSharedPtr exp2d
-                                = boost::dynamic_pointer_cast<
+                                = StdRegions::StdExpansion::CastTo<
                                     LocalRegions::Expansion2D>(
                                         (*m_exp)[ElmtID[cnt+e]]);
                             LocalRegions::Expansion1DSharedPtr exp1d
-                                = boost::dynamic_pointer_cast<
+                                = StdRegions::StdExpansion::CastTo<
                                     LocalRegions::Expansion1D>(
                                         locExpList->GetExp(e));
                             LocalRegions::ExpansionSharedPtr   exp
-                                = boost::dynamic_pointer_cast<
+                                = StdRegions::StdExpansion::CastTo<
                                     LocalRegions::Expansion>  (
                                         locExpList->GetExp(e));
                             
@@ -396,13 +396,13 @@ namespace Nektar
                 for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
                 {
                     LocalRegions::Expansion2DSharedPtr exp2d =
-                        boost::dynamic_pointer_cast<
+                        StdRegions::StdExpansion::CastTo<
                             LocalRegions::Expansion2D>((*m_exp)[i]);
                     LocalRegions::Expansion1DSharedPtr exp1d =
-                        boost::dynamic_pointer_cast<
+                        StdRegions::StdExpansion::CastTo<
                             LocalRegions::Expansion1D>(elmtToTrace[i][j]);
                     LocalRegions::ExpansionSharedPtr exp =
-                        boost::dynamic_pointer_cast<
+                        StdRegions::StdExpansion::CastTo<
                             LocalRegions::Expansion>  (elmtToTrace[i][j]);
                     exp2d->SetEdgeExp           (j, exp  );
                     exp1d->SetAdjacentElementExp(j, exp2d);
@@ -416,7 +416,7 @@ namespace Nektar
             for (int i = 0; i < m_trace->GetExpSize(); ++i)
             {
                 LocalRegions::Expansion1DSharedPtr traceEl = 
-                    boost::dynamic_pointer_cast<
+                    StdRegions::StdExpansion::CastTo<
                         LocalRegions::Expansion1D>(m_trace->GetExp(i));
                     
                 int offset      = m_trace->GetPhys_Offset(i);
@@ -1243,7 +1243,7 @@ namespace Nektar
         {
             set<int>::iterator it;
             LocalRegions::Expansion1DSharedPtr traceEl = 
-                boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(
+                StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>(
                     (m_traceMap->GetElmtToTrace())[n][e]);
             
             int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
@@ -1349,7 +1349,7 @@ namespace Nektar
 
             for(cnt = n = 0; n < nexp; ++n)
             {
-                exp2d = LocalRegions::Expansion2D::FromStdExp((*m_exp)[n]);
+                exp2d = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>((*m_exp)[n]);
                 phys_offset = GetPhys_Offset(n);
 
                 for(e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
@@ -1659,7 +1659,7 @@ namespace Nektar
                 for (i = 0; i < m_bndCondExpansions[n]->GetExpSize(); 
                      ++i, ++cnt)
                 {
-                    exp1d = LocalRegions::Expansion1D::FromStdExp(
+                    exp1d = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>(
                         m_bndCondExpansions[n]->GetExp(i));
                     // Use edge to element map from MeshGraph2D.
                     SpatialDomains::ElementEdgeVectorSharedPtr tmp =

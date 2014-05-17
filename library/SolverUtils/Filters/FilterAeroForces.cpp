@@ -316,7 +316,7 @@ namespace Nektar
                                 elmt->PhysDeriv(V,gradV[0],gradV[1]);
 
                                 // Get face 1D expansion from element expansion
-                                bc =  boost::dynamic_pointer_cast<LocalRegions
+                                bc =  StdRegions::StdExpansion::CastTo<LocalRegions
                                             ::Expansion1D> (BndExp[n]->GetExp(i));
 
                                 // number of points on the boundary
@@ -480,7 +480,7 @@ namespace Nektar
                             elmt->PhysDeriv(W,gradW[0],gradW[1],gradW[2]);
 
                             // Get face 2D expansion from element expansion
-                            bc =  boost::dynamic_pointer_cast<LocalRegions
+                            bc =  StdRegions::StdExpansion::CastTo<LocalRegions
                                         ::Expansion2D> (BndExp[n]->GetExp(i));
 
                             //number of points on the boundary
@@ -669,7 +669,7 @@ namespace Nektar
                             elmt->PhysDeriv(U,gradU[0],gradU[1]);
                             elmt->PhysDeriv(V,gradV[0],gradV[1]);
 
-                            bc =  boost::dynamic_pointer_cast<LocalRegions
+                            bc =  StdRegions::StdExpansion::CastTo<LocalRegions
                                 ::Expansion1D> (BndExp[n]->GetExp(i));
 
                             int nbc = bc->GetTotPoints();

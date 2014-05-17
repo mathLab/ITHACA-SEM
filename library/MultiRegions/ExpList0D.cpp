@@ -132,7 +132,7 @@ namespace Nektar
             {
                 for(j = 0; j < 2; ++j)
                 {
-                    exp = LocalRegions::Expansion1D::FromStdExp(locexp[i]);
+                    exp = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>(locexp[i]);
                     PointGeom = (exp->GetGeom1D())->GetVertex(j);
 					id = PointGeom->GetVid();
 					
@@ -272,7 +272,7 @@ namespace Nektar
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
-                LocalRegions::Expansion0DSharedPtr loc_exp = boost::dynamic_pointer_cast<LocalRegions::Expansion0D>((*m_exp)[i]);
+                LocalRegions::Expansion0DSharedPtr loc_exp = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion0D>((*m_exp)[i]);
 
                 LocalRegions::Expansion1DSharedPtr loc_elmt = loc_exp->GetLeftAdjacentElementExp();
                 

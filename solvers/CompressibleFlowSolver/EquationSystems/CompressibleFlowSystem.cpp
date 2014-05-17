@@ -1843,18 +1843,18 @@ namespace Nektar
             Array<OneD, NekDouble> one2D(npoints, 1.0);
             NekDouble Area = m_fields[0]->GetExp(n)->Integral(one2D);
 
-            if (boost::dynamic_pointer_cast<LocalRegions::TriExp>(
+            if (StdRegions::StdExpansion::CastTo<LocalRegions::TriExp>(
                     m_fields[0]->GetExp(n)))
             {
                 minLength = 2.0 * sqrt(Area);
             }
 
-            else if (boost::dynamic_pointer_cast<LocalRegions::QuadExp>(
+            else if (StdRegions::StdExpansion::CastTo<LocalRegions::QuadExp>(
                          m_fields[0]->GetExp(n)))
             {
                 minLength = sqrt(Area);
             }
-            else if (boost::dynamic_pointer_cast<LocalRegions::HexExp>(
+            else if (StdRegions::StdExpansion::CastTo<LocalRegions::HexExp>(
                          m_fields[0]->GetExp(n)))
             {
                 minLength = sqrt(Area);

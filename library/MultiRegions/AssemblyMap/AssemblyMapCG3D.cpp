@@ -226,7 +226,7 @@ namespace Nektar
                 cnt = 0;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
-                    bndCondFaceExp = boost::dynamic_pointer_cast<
+                    bndCondFaceExp = StdRegions::StdExpansion::CastTo<
                         LocalRegions::Expansion2D>(bndCondExp[i]->GetExp(j));
 
                     if (bndConditions[i]->GetBoundaryConditionType() == 
@@ -342,7 +342,7 @@ namespace Nektar
                 
                 for(j = 0; j < locExpVector.size(); j++)
                 {
-                    locExpansion = boost::dynamic_pointer_cast<
+                    locExpansion = StdRegions::StdExpansion::CastTo<
                         LocalRegions::Expansion3D>(
                             locExpVector[locExp.GetOffset_Elmt_Id(j)]);
                     
@@ -497,19 +497,19 @@ namespace Nektar
                     ASSERTL1(s_eid < locExpVector.size(),
                              "SingularElement Parameter is too large");
                     
-                    meshVertId = LocalRegions::Expansion2D::FromStdExp(
+                    meshVertId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(
                         locExpVector[s_eid])->GetGeom2D()->GetVid(0);
                 }
                 else if (bndCondExp.num_elements() == 0)
                 {
                     // All boundaries are periodic.
-                    meshVertId = LocalRegions::Expansion2D::FromStdExp(
+                    meshVertId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(
                         locExpVector[0])->GetGeom2D()->GetVid(0);
                 }
                 else
                 {
                     // Last region i and j = 0 edge
-                    bndCondFaceExp = boost::dynamic_pointer_cast<
+                    bndCondFaceExp = StdRegions::StdExpansion::CastTo<
                         LocalRegions::Expansion2D>(
                             bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
                     
@@ -602,7 +602,7 @@ namespace Nektar
             /// -  Count verts, edges, face and add up edges and face sizes
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if((locExpansion = boost::dynamic_pointer_cast<
+                if((locExpansion = StdRegions::StdExpansion::CastTo<
                     LocalRegions::Expansion3D>(
                         locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
@@ -724,7 +724,7 @@ namespace Nektar
             // Set up vertex numbering 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if((locExpansion = boost::dynamic_pointer_cast<
+                if((locExpansion = StdRegions::StdExpansion::CastTo<
                     LocalRegions::Expansion3D>(
                         locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
@@ -842,7 +842,7 @@ namespace Nektar
             // Set up edge numbering 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
+                if((locExpansion = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(
                         locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     edgeCnt = 0;
@@ -906,7 +906,7 @@ namespace Nektar
             // setup face numbering 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
+                if((locExpansion = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(
                         locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     nFaces = locExpansion->GetNfaces();
@@ -943,7 +943,7 @@ namespace Nektar
             localFaceOffset=0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if((locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(
+                if((locExpansion = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(
                         locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     nVerts = locExpansion->GetNverts();
@@ -1104,7 +1104,7 @@ namespace Nektar
                 for(i = cnt = 0; i < locExpVector.size(); ++i)
                 {
                     int elmtid = locExp.GetOffset_Elmt_Id(i);
-                    if((locExpansion = boost::dynamic_pointer_cast<
+                    if((locExpansion = StdRegions::StdExpansion::CastTo<
                         LocalRegions::Expansion3D>(locExpVector[elmtid])))
                     {
                         for (j = 0; j < locExpansion->GetNverts(); ++j)
@@ -1299,7 +1299,7 @@ namespace Nektar
 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]);
+                locExpansion = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]);
 
                 for(j = 0; j < locExpansion->GetNverts(); ++j)
                 {
@@ -1377,7 +1377,7 @@ namespace Nektar
             // Loop over all the elements in the domain
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>(locExpVector[i]);
+                locExpansion = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(locExpVector[i]);
                 cnt = locExp.GetCoeff_Offset(i);
                 for(j = 0; j < locExpansion->GetNverts(); ++j)
                 {
@@ -1484,7 +1484,7 @@ namespace Nektar
                 set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
-                    bndCondFaceExp  = boost::dynamic_pointer_cast<
+                    bndCondFaceExp  = StdRegions::StdExpansion::CastTo<
                         LocalRegions::Expansion2D>(bndCondExp[i]->GetExp(j));
                     cnt = offset + bndCondExp[i]->GetCoeff_Offset(j);
                     for(k = 0; k < bndCondFaceExp->GetNverts(); k++)

@@ -76,8 +76,9 @@ namespace Nektar
                         continue;
                     }
                     
-                    Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
-                        Expansion1D>(m_edgeExp[i].lock());
+                    Expansion1DSharedPtr edgeExp =
+                        StdRegions::StdExpansion::CastTo<Expansion1D>(
+                                m_edgeExp[i].lock());
 
                     if (edgeExp->GetRightAdjacentElementExp())
                     {
@@ -102,9 +103,8 @@ namespace Nektar
             Vmath::Vvtvp(nquad_e, normals[1], 1, Fy, 1, edgePhys, 1,
                                   edgePhys,   1);
 
-            LocalRegions::Expansion1DSharedPtr locExp = 
-                boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion1D>(EdgeExp);
+            Expansion1DSharedPtr locExp = 
+                StdRegions::StdExpansion::CastTo<Expansion1D>(EdgeExp);
 
             if (m_negatedNormals[edge])
             {
@@ -144,8 +144,9 @@ namespace Nektar
                         continue;
                     }
                     
-                    Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
-                        Expansion1D>(m_edgeExp[i].lock());
+                    Expansion1DSharedPtr edgeExp = 
+                        StdRegions::StdExpansion::CastTo<Expansion1D>(
+                                m_edgeExp[i].lock());
 
                     if (edgeExp->GetRightAdjacentElementExp())
                     {
@@ -177,9 +178,8 @@ namespace Nektar
             if(n_coeffs!=order_e) // Going to orthogonal space
             {
                 EdgeExp->FwdTrans(Fn, edgeCoeffs);
-                LocalRegions::Expansion1DSharedPtr locExp =
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion1D>(EdgeExp);
+                Expansion1DSharedPtr locExp =
+                    StdRegions::StdExpansion::CastTo<Expansion1D>(EdgeExp);
                 
                 if (m_requireNeg[edge])
                 {
@@ -205,9 +205,8 @@ namespace Nektar
             {
                 EdgeExp->IProductWRTBase(Fn, edgeCoeffs);
 
-                LocalRegions::Expansion1DSharedPtr locExp = 
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion1D>(EdgeExp);
+                Expansion1DSharedPtr locExp = 
+                    StdRegions::StdExpansion::CastTo<Expansion1D>(EdgeExp);
                 
                 if (m_requireNeg[edge])
                 {

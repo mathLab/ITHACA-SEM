@@ -1286,6 +1286,20 @@ namespace Nektar
                     m_transformationmatrix);
             }
 
+            template<class T>
+            static boost::shared_ptr<T> CastTo(
+                    boost::shared_ptr<StdExpansion> S)
+            {
+#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
+                typedef typename boost::shared_ptr<T>::element_type E;
+                E * p = dynamic_cast< E* >( S.get() );
+                ASSERTL1(p, "Cannot perform cast");
+                return boost::shared_ptr<T>( S, p );
+#else
+                return boost::dynamic_pointer_cast<T>( S );
+#endif
+            }
+
         protected:
             Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
             int m_elmt_id;

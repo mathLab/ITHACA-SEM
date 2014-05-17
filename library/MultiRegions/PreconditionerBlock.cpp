@@ -179,7 +179,7 @@ namespace Nektar
                 cnt = 0;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
-                    bndSegExp = boost::dynamic_pointer_cast<
+                    bndSegExp = StdRegions::StdExpansion::CastTo<
                         LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
                     if (bndConditions[i]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
@@ -209,7 +209,7 @@ namespace Nektar
                 {
                     dof    = locExpansion->GetEdgeNcoeffs(j)-2;
                     maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
-                    meshEdgeId = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetEid(j);
+                    meshEdgeId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(locExpansion)->GetGeom2D()->GetEid(j);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
@@ -256,7 +256,7 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
                     //get mesh edge id
-                    meshEdgeId = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetEid(j);
+                    meshEdgeId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(locExpansion)->GetGeom2D()->GetEid(j);
 
                     nedgemodes=locExpansion->GetEdgeNcoeffs(j)-2;
 
@@ -329,7 +329,7 @@ namespace Nektar
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
-                                meshVertId = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetVid(v);
+                                meshVertId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(locExpansion)->GetGeom2D()->GetVid(v);
 
                                 //modal connectivity between elements
                                 sign1 = m_locToGloMap->
@@ -356,7 +356,7 @@ namespace Nektar
                         MemoryManager<DNekMat>::AllocateSharedPtr
                         (nedgemodes,nedgemodes,zero,storage);
                     
-                    meshEdgeId = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetEid(eid);
+                    meshEdgeId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(locExpansion)->GetGeom2D()->GetEid(eid);
                     Array<OneD, unsigned int> edgemodearray = 
                         locExpansion->GetEdgeInverseBoundaryMap(eid);
 
@@ -537,7 +537,7 @@ namespace Nektar
                 cnt = 0;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
-                    bndCondFaceExp = boost::dynamic_pointer_cast<
+                    bndCondFaceExp = StdRegions::StdExpansion::CastTo<
                         StdRegions::StdExpansion2D>(
                             bndCondExp[i]->GetExp(j));
                     if (bndConditions[i]->GetBoundaryConditionType() == 
@@ -545,13 +545,13 @@ namespace Nektar
                     {
                         for(k = 0; k < bndCondFaceExp->GetNedges(); k++)
                         {
-                            meshEdgeId = (LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D())->GetEid(k);
+                            meshEdgeId = (StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(bndCondFaceExp)->GetGeom2D())->GetEid(k);
                             if(edgeDirMap.count(meshEdgeId) == 0)
                             {
                                 edgeDirMap[meshEdgeId] = 1;
                             }
                         }
-                        meshFaceId = (LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D())->GetFid();
+                        meshFaceId = (StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(bndCondFaceExp)->GetGeom2D())->GetFid();
                         faceDirMap[meshFaceId] = 1;
                     }
                 }
@@ -578,7 +578,7 @@ namespace Nektar
                 {
                     dof    = locExpansion->GetEdgeNcoeffs(j)-2;
                     maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
-                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
+                    meshEdgeId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(locExpansion)->GetGeom3D()->GetEid(j);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
@@ -616,7 +616,7 @@ namespace Nektar
                     dof    = locExpansion->GetFaceIntNcoeffs(j);
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
 
-                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
+                    meshFaceId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(locExpansion)->GetGeom3D()->GetFid(j);
 
                     if(faceDirMap.count(meshFaceId)==0)
                     {
@@ -667,7 +667,7 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
                     //get mesh edge id
-                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
+                    meshEdgeId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(locExpansion)->GetGeom3D()->GetEid(j);
 
                     nedgemodes=locExpansion->GetEdgeNcoeffs(j)-2;
 
@@ -691,7 +691,7 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
                     //get mesh face id
-                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
+                    meshFaceId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(locExpansion)->GetGeom3D()->GetFid(j);
 
                     nfacemodes = locExpansion->GetFaceIntNcoeffs(j);
 
@@ -767,7 +767,7 @@ namespace Nektar
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
-                                meshVertId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetVid(v);
+                                meshVertId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(locExpansion)->GetGeom3D()->GetVid(v);
 
                                 //modal connectivity between elements
                                 sign1 = m_locToGloMap->
@@ -794,7 +794,7 @@ namespace Nektar
                         MemoryManager<DNekMat>::AllocateSharedPtr
                         (nedgemodes,nedgemodes,zero,storage);
                     
-                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(eid);
+                    meshEdgeId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(locExpansion)->GetGeom3D()->GetEid(eid);
                     Array<OneD, unsigned int> edgemodearray = locExpansion->GetEdgeInverseBoundaryMap(eid);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
@@ -831,7 +831,7 @@ namespace Nektar
                         MemoryManager<DNekMat>::AllocateSharedPtr
                         (nfacemodes,nfacemodes,zero,storage);
 
-                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(fid);
+                    meshFaceId = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(locExpansion)->GetGeom3D()->GetFid(fid);
                     
                     Array<OneD, unsigned int> facemodearray = locExpansion->GetFaceInverseBoundaryMap(fid);
 

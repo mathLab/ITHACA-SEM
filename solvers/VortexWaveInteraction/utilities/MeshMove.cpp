@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
     SpatialDomains::PointGeomSharedPtr vertex0 =
        graphShPt->GetVertex
         (
-         ( (boost::dynamic_pointer_cast<LocalRegions
+         ( (StdRegions::StdExpansion::CastTo<LocalRegions
             ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
             )->GetGeom1D()
            )
@@ -327,7 +327,7 @@ int main(int argc, char *argv[])
     vertex0 =
         graphShPt->GetVertex
         (
-         ( (boost::dynamic_pointer_cast<LocalRegions
+         ( (StdRegions::StdExpansion::CastTo<LocalRegions
             ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
             )->GetGeom1D()
            )
@@ -369,7 +369,7 @@ int main(int argc, char *argv[])
     //first point for x_connect=0(or-1.6)
     x_connect=0;
     vertex0 =
-        graphShPt->GetVertex(((boost::dynamic_pointer_cast<LocalRegions
+        graphShPt->GetVertex(((StdRegions::StdExpansion::CastTo<LocalRegions
                                ::SegExp>(bndfieldx[lastIregion]->GetExp(0)))->GetGeom1D()
                               )->GetVid(0));
     vertex0->GetCoords(x0,y0,z0);
@@ -502,7 +502,7 @@ int main(int argc, char *argv[])
     for(int r=0; r<nedges; r++)
     {
     	    
-         bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfieldx[lastIregion]->GetExp(r));   
+         bndSegExp = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(bndfieldx[lastIregion]->GetExp(r));   
          Eid = (bndSegExp->GetGeom1D())->GetEid();
          id1 = (bndSegExp->GetGeom1D())->GetVid(0);
          id2 = (bndSegExp->GetGeom1D())->GetVid(1);  
@@ -850,7 +850,7 @@ cout<<"nlays="<<nlays<<endl;
 cout<<"nquad per edge="<<nqedge<<endl;
        for(int l=0; l<2; l++)
        {
-           Edge_newcoords[l] = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>
+           Edge_newcoords[l] = StdRegions::StdExpansion::CastTo<StdRegions::StdExpansion1D>
                 (bndfieldx[lastIregion]->GetExp(0));
        }   
        Array<OneD, NekDouble> xnull(nqedge);
@@ -1944,7 +1944,7 @@ void OrderVertices (int nedges, SpatialDomains::MeshGraphSharedPtr graphShPt,
       for(int j=0; j<nedges; j++)
       {
           LocalRegions::SegExpSharedPtr  bndSegExplow = 
-          boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfield->GetExp(j)) ;   	
+          StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(bndfield->GetExp(j)) ;   	
           edge = (bndSegExplow->GetGeom1D())->GetEid();
 //cout<<" edge="<<edge<<endl;   	   
           for(int k=0; k<2; k++)
@@ -2230,7 +2230,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
       Array<OneD, int> V2tmp(4*nel, 10000);
       for(int i=0; i<nel; i++)
       { 
-           if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i])))
+           if((locQuadExp = StdRegions::StdExpansion::CastTo<LocalRegions::QuadExp>((*exp2D)[i])))
            {
                 for(int j = 0; j < locQuadExp->GetNedges(); ++j)
                 {
@@ -2246,7 +2246,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
            }
            //in the future the tri edges may be not necessary (if the nedges is known)
 
-           else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i])))
+           else if((locTriExp = StdRegions::StdExpansion::CastTo<LocalRegions::TriExp>((*exp2D)[i])))
            {
                 for(int j = 0; j < locTriExp->GetNedges(); ++j)
                 {
@@ -3639,7 +3639,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
       Array<OneD, int> locEids(4);
       for(int i=0; i<nel; i++)
       { 
-           if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i])))
+           if((locQuadExp = StdRegions::StdExpansion::CastTo<LocalRegions::QuadExp>((*exp2D)[i])))
            {
                 SegGeom = (locQuadExp->GetGeom2D())->GetEdge(0);
                 idbef = SegGeom->GetEid();

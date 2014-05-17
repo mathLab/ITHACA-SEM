@@ -72,11 +72,6 @@ namespace Nektar
             
             inline SpatialDomains::Geometry0DSharedPtr GetGeom0D() const;
 
-            static Expansion0DSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
-            {
-                return boost::dynamic_pointer_cast<Expansion0D>(pSrc);
-            }
-			
         protected:
             
         private:

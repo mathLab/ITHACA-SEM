@@ -447,7 +447,9 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey bkey = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
-                        exp1D = LocalRegions::Expansion1D::FromStdExp(bndConstraint[i]->GetExp(j));
+                        exp1D = StdRegions::StdExpansion::
+                                    CastTo<LocalRegions::Expansion1D>(
+                                            bndConstraint[i]->GetExp(j));
                         SegGeom = exp1D->GetGeom1D();
 
                         Seg = MemoryManager<LocalRegions::SegExp>
@@ -465,7 +467,8 @@ namespace Nektar
             {
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
-                    exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
+                    exp2D = StdRegions::StdExpansion::
+                                CastTo<LocalRegions::Expansion2D>(locexp[i]);
                     SegGeom = (exp2D->GetGeom2D())->GetEdge(j);
 
                     id = SegGeom->GetEid();
@@ -930,7 +933,7 @@ namespace Nektar
             for(i = 0; i < m_exp->size(); ++i)
             {
                 LocalRegions::Expansion1DSharedPtr loc_exp = 
-                    boost::dynamic_pointer_cast<
+                    StdRegions::StdExpansion::CastTo<
                         LocalRegions::Expansion1D>((*m_exp)[i]);
                 LocalRegions::Expansion2DSharedPtr loc_elmt = 
                     loc_exp->GetLeftAdjacentElementExp();

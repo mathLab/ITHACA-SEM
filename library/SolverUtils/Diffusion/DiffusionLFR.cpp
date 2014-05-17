@@ -37,6 +37,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <SolverUtils/Diffusion/DiffusionLFR.h>
 #include <LibUtilities/Polylib/Polylib.h>
+#include <MultiRegions/DisContField1D.h>
 #include <boost/math/special_functions/gamma.hpp>
 #include <iostream>
 #include <iomanip>
@@ -1462,7 +1463,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>                &derCFlux)
         {
             int n;
-            int nLocalSolutionPts, phys_offset;
+            int nLocalSolutionPts, phys_offset, t_offset;
             
             Array<OneD,       NekDouble> auxArray1, auxArray2;
             Array<TwoD, const NekDouble> gmat;
@@ -1475,6 +1476,8 @@ namespace Nektar
             int nElements    = fields[0]->GetExpSize();            
             int nSolutionPts = fields[0]->GetTotPoints();
             
+            vector<bool> negatedFluxNormal = (boost::static_pointer_cast<MultiRegions::DisContField1D>(fields[0]))->GetNegatedFluxNormal();
+
             // Arrays to store the derivatives of the correction flux
             Array<OneD, NekDouble> DCL(nSolutionPts/nElements, 0.0); 
             Array<OneD, NekDouble> DCR(nSolutionPts/nElements, 0.0);
@@ -1483,6 +1486,9 @@ namespace Nektar
             Array<OneD, NekDouble>  JumpL(nElements);
             Array<OneD, NekDouble>  JumpR(nElements);
             
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
+
             for (n = 0; n < nElements; ++n)
             {
                 nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
@@ -1496,11 +1502,32 @@ namespace Nektar
                 
                 fields[0]->GetExp(n)->GetVertexPhysVals(0, tmparrayX1,
                                                         tmpFluxVertex);
-                JumpL[n] =  iFlux[n] - tmpFluxVertex;
                 
+                t_offset = fields[0]->GetTrace()
+                    ->GetPhys_Offset(elmtToTrace[n][0]->GetElmtId());
+
+                if(negatedFluxNormal[2*n])
+                {
+                    JumpL[n] =  iFlux[t_offset] - tmpFluxVertex;
+                }
+                else
+                {
+                    JumpL[n] =  -iFlux[t_offset] - tmpFluxVertex;
+                }
+                
+                t_offset = fields[0]->GetTrace()
+                    ->GetPhys_Offset(elmtToTrace[n][1]->GetElmtId());
+
                 fields[0]->GetExp(n)->GetVertexPhysVals(1, tmparrayX1,
                                                         tmpFluxVertex);
-                JumpR[n] =  iFlux[n+1] - tmpFluxVertex;
+                if(negatedFluxNormal[2*n+1])
+                {
+                    JumpR[n] =  -iFlux[t_offset] - tmpFluxVertex;
+                }
+                else
+                {
+                    JumpR[n] =  iFlux[t_offset] - tmpFluxVertex;
+                }
             }
             
             for (n = 0; n < nElements; ++n)

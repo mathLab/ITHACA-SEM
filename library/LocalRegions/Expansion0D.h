@@ -112,8 +112,8 @@ namespace Nektar
         {
             if (m_elementLeft.lock().get())
             {
-                ASSERTL1(!m_elementRight.lock().get(),
-                         "Both adjacent elements already set.");
+                //ASSERTL1(!m_elementRight.lock().get(),
+                //         "Both adjacent elements already set.");
                 m_elementRight = v;
                 m_elementVertexRight = vertex;
             }

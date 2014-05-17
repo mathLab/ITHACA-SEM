@@ -75,11 +75,23 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
-            /// input mesh.
+            /// input graph1D.
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                 const bool DeclareCoeffPhysArrays = true);
+
+
+            /// This constructor sets up a list of local expansions based on an
+            /// input compositeMap
+            MULTI_REGIONS_EXPORT ExpList1D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                      const SpatialDomains::CompositeMap &domain,
+                      const bool DeclareCoeffPhysArrays = true,
+                      const std::string var = "DefaultVar",
+                      bool SetToOneSpaceDimension = false);
+
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.

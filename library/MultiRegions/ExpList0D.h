@@ -82,14 +82,12 @@ namespace Nektar
                             ::BoundaryConditionShPtr>  &bndCond,
                 const LocalRegions::ExpansionVector &locexp,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const map<int,int> &periodicVertices,
+                const PeriodicMap                  &periodicVerts,
                 const bool DeclareCoeffPhysArrays = true);
             
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList0D();
 			
-            LocalRegions::PointExpSharedPtr m_point;
-
         protected:
             virtual void v_Upwind(
                 const Array<OneD, const NekDouble> &Vn,
@@ -100,18 +98,6 @@ namespace Nektar
             virtual void v_GetNormals(
                 Array<OneD, Array<OneD, NekDouble> > &normals);
 
-            virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
-                                     Array<OneD,NekDouble> &coords_1,
-                                     Array<OneD,NekDouble> &coords_2);
-            
-            virtual void v_SetCoeff(NekDouble val);
-            
-            virtual void v_SetPhys(NekDouble val);
-            
-            virtual const SpatialDomains::PointGeomSharedPtr v_GetGeom(void) const;
-            
-            virtual const SpatialDomains::PointGeomSharedPtr v_GetVertex(void) const;
-            
         private:
             void SetCoeffPhysOffsets(void);
         };

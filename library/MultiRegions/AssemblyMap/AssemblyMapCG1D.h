@@ -68,7 +68,7 @@ namespace Nektar
                     const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                     const Array<OneD, const SpatialDomains::
                                     BoundaryConditionShPtr> &bndConditions,
-                    const map<int,int>& periodicVerticesId,
+                    const PeriodicMap &periodicVerts,
                     const std::string variable = "DefaultVar");
 
             /// General constructor for expansions of all dimensions without
@@ -91,7 +91,7 @@ namespace Nektar
                                            NullExpListSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                            SpatialDomains::NullBoundaryConditionShPtrArray,
-                                           const map<int,int>& periodicVerticesId = NullIntIntMap);
+                                           const PeriodicMap  &periodicVerts = NullPeriodicMap);
 
         };
 

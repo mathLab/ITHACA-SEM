@@ -257,7 +257,7 @@ namespace Nektar
             }
 
             int facecnt = 0;
-            /*
+
             // 2D elements in 3-space, output face curvature information
             if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
             {
@@ -300,7 +300,6 @@ namespace Nektar
                     }
                 }
             }
-            */
 
             pRoot->LinkEndChild( curved );
         }

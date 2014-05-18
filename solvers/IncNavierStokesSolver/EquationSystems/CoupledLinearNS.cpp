@@ -637,7 +637,8 @@ namespace Nektar
                 // the same time resusing differential of velocity
                 // space
                 
-                DNekScalMat &HelmMat = *(StdRegions::StdExpansion::CastTo<LocalRegions::Expansion>(locExp)->GetLocMatrix(helmkey));
+                DNekScalMat &HelmMat = *(locExp->as<LocalRegions::Expansion>()
+                                               ->GetLocMatrix(helmkey));
                 DNekScalMatSharedPtr MassMat;
                 
                 Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
@@ -649,7 +650,8 @@ namespace Nektar
                     LocalRegions::MatrixKey masskey(StdRegions::eMass,
                                                     locExp->DetShapeType(),
                                                     *locExp);
-                    MassMat = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion>(locExp)->GetLocMatrix(masskey);
+                    MassMat = locExp->as<LocalRegions::Expansion>()
+                                    ->GetLocMatrix(masskey);
                 }
                 
                 Array<OneD, NekDouble> Advtmp;

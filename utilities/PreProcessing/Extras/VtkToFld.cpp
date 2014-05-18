@@ -244,8 +244,8 @@ int main(int argc, char* argv[])
                 coeff_idx = Exp->GetCoeff_Offset(i) + e->GetVertexMap(j);
 
                 // Get the coordinates of the vertex
-                vert = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(e)->GetGeom2D()->
-                                                                GetVertex(j);
+                vert = e->as<LocalRegions::Expansion2D>()->GetGeom2D()
+                                                         ->GetVertex(j);
                 vert->GetCoords(x,y,z);
 
                 // Look up the vertex in the VertexSet

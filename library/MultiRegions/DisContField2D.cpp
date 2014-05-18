@@ -131,14 +131,14 @@ namespace Nektar
                     for(e = 0; e < locExpList->GetExpSize(); ++e)
                     {
                         LocalRegions::Expansion2DSharedPtr exp2d =
-                            StdRegions::StdExpansion::CastTo<
-                                LocalRegions::Expansion2D>((*m_exp)[ElmtID[cnt+e]]);
+                                (*m_exp)[ElmtID[cnt+e]]->
+                                        as<LocalRegions::Expansion2D>();
                         LocalRegions::Expansion1DSharedPtr exp1d =
-                            StdRegions::StdExpansion::CastTo<
-                                LocalRegions::Expansion1D>(locExpList->GetExp(e));
+                                locExpList->GetExp(e)->
+                                        as<LocalRegions::Expansion1D>();
                         LocalRegions::ExpansionSharedPtr   exp =
-                            StdRegions::StdExpansion::CastTo<
-                                LocalRegions::Expansion>  (locExpList->GetExp(e));
+                                locExpList->GetExp(e)->
+                                        as<LocalRegions::Expansion>  ();
                         
                         exp2d->SetEdgeExp(EdgeID[cnt+e], exp);
                         exp1d->SetAdjacentElementExp(EdgeID[cnt+e], exp2d);
@@ -214,17 +214,14 @@ namespace Nektar
                         for(e = 0; e < locExpList->GetExpSize(); ++e)
                         {
                             LocalRegions::Expansion2DSharedPtr exp2d
-                                = StdRegions::StdExpansion::CastTo<
-                                    LocalRegions::Expansion2D>(
-                                        (*m_exp)[ElmtID[cnt+e]]);
+                                = (*m_exp)[ElmtID[cnt+e]]->
+                                    as<LocalRegions::Expansion2D>();
                             LocalRegions::Expansion1DSharedPtr exp1d
-                                = StdRegions::StdExpansion::CastTo<
-                                    LocalRegions::Expansion1D>(
-                                        locExpList->GetExp(e));
+                                = locExpList->GetExp(e)->
+                                    as<LocalRegions::Expansion1D>();
                             LocalRegions::ExpansionSharedPtr   exp
-                                = StdRegions::StdExpansion::CastTo<
-                                    LocalRegions::Expansion>  (
-                                        locExpList->GetExp(e));
+                                = locExpList->GetExp(e)->
+                                    as<LocalRegions::Expansion>  ();
                             
                             exp2d->SetEdgeExp(EdgeID[cnt+e],exp);
                             exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
@@ -295,17 +292,14 @@ namespace Nektar
                         for(e = 0; e < locExpList->GetExpSize(); ++e)
                         {
                             LocalRegions::Expansion2DSharedPtr exp2d
-                                = StdRegions::StdExpansion::CastTo<
-                                    LocalRegions::Expansion2D>(
-                                        (*m_exp)[ElmtID[cnt+e]]);
+                                = (*m_exp)[ElmtID[cnt+e]]->
+                                    as<LocalRegions::Expansion2D>();
                             LocalRegions::Expansion1DSharedPtr exp1d
-                                = StdRegions::StdExpansion::CastTo<
-                                    LocalRegions::Expansion1D>(
-                                        locExpList->GetExp(e));
+                                = locExpList->GetExp(e)->
+                                    as<LocalRegions::Expansion1D>();
                             LocalRegions::ExpansionSharedPtr   exp
-                                = StdRegions::StdExpansion::CastTo<
-                                    LocalRegions::Expansion>  (
-                                        locExpList->GetExp(e));
+                                = locExpList->GetExp(e)->
+                                    as<LocalRegions::Expansion>  ();
                             
                             exp2d->SetEdgeExp(EdgeID[cnt+e],exp);
                             exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
@@ -396,14 +390,11 @@ namespace Nektar
                 for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
                 {
                     LocalRegions::Expansion2DSharedPtr exp2d =
-                        StdRegions::StdExpansion::CastTo<
-                            LocalRegions::Expansion2D>((*m_exp)[i]);
+                            (*m_exp)[i]->as<LocalRegions::Expansion2D>();
                     LocalRegions::Expansion1DSharedPtr exp1d =
-                        StdRegions::StdExpansion::CastTo<
-                            LocalRegions::Expansion1D>(elmtToTrace[i][j]);
+                            elmtToTrace[i][j]->as<LocalRegions::Expansion1D>();
                     LocalRegions::ExpansionSharedPtr exp =
-                        StdRegions::StdExpansion::CastTo<
-                            LocalRegions::Expansion>  (elmtToTrace[i][j]);
+                            elmtToTrace[i][j]->as<LocalRegions::Expansion>  ();
                     exp2d->SetEdgeExp           (j, exp  );
                     exp1d->SetAdjacentElementExp(j, exp2d);
                 }
@@ -416,8 +407,7 @@ namespace Nektar
             for (int i = 0; i < m_trace->GetExpSize(); ++i)
             {
                 LocalRegions::Expansion1DSharedPtr traceEl = 
-                    StdRegions::StdExpansion::CastTo<
-                        LocalRegions::Expansion1D>(m_trace->GetExp(i));
+                        m_trace->GetExp(i)->as<LocalRegions::Expansion1D>();
                     
                 int offset      = m_trace->GetPhys_Offset(i);
                 int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
@@ -1243,8 +1233,8 @@ namespace Nektar
         {
             set<int>::iterator it;
             LocalRegions::Expansion1DSharedPtr traceEl = 
-                StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>(
-                    (m_traceMap->GetElmtToTrace())[n][e]);
+                    m_traceMap->GetElmtToTrace()[n][e]->
+                            as<LocalRegions::Expansion1D>();
             
             int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
             
@@ -1349,7 +1339,7 @@ namespace Nektar
 
             for(cnt = n = 0; n < nexp; ++n)
             {
-                exp2d = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>((*m_exp)[n]);
+                exp2d = (*m_exp)[n]->as<LocalRegions::Expansion2D>();
                 phys_offset = GetPhys_Offset(n);
 
                 for(e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
@@ -1659,8 +1649,8 @@ namespace Nektar
                 for (i = 0; i < m_bndCondExpansions[n]->GetExpSize(); 
                      ++i, ++cnt)
                 {
-                    exp1d = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion1D>(
-                        m_bndCondExpansions[n]->GetExp(i));
+                    exp1d = m_bndCondExpansions[n]->GetExp(i)->
+                                        as<LocalRegions::Expansion1D>();
                     // Use edge to element map from MeshGraph2D.
                     SpatialDomains::ElementEdgeVectorSharedPtr tmp =
                         graph2D->GetElementsFromEdge(exp1d->GetGeom1D());

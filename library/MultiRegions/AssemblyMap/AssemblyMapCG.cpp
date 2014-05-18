@@ -278,8 +278,7 @@ namespace Nektar
                 // Loop over all faces of element i
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    faceOrient = StdRegions::StdExpansion::
-                        CastTo<LocalRegions::Expansion3D>(locExpansion)
+                    faceOrient = locExpansion->as<LocalRegions::Expansion3D>()
                             ->GetGeom3D()->GetFaceOrient(j);
 
                     meshFaceId = locExpansion->GetGeom()->GetFid(j);

@@ -127,7 +127,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < exp1D->size(); ++i)
             {
-                if((locSegExp = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>((*exp1D)[i])))
+                if((locSegExp = (*exp1D)[i]->as<LocalRegions::SegExp>()))
                 {
                     locSegExp->GetBoundaryMap(vmap);
 
@@ -215,7 +215,7 @@ namespace Nektar
             // determine mapping from geometry edges to trace
             for(i = 0; i < ntrace_exp; ++i)
             {
-                if((locSegExp = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(trace->GetExp(i))))
+                if((locSegExp = trace->GetExp(i)->as<LocalRegions::SegExp>()))
                 {
                     id = (locSegExp->GetGeom1D())->GetEid();
                     MeshEdgeId[id] = i;
@@ -242,7 +242,7 @@ namespace Nektar
             {
                 m_elmtToTrace[i] = edgemap + cnt;
 
-                if((locQuadExp = StdRegions::StdExpansion::CastTo<LocalRegions::QuadExp>((*exp2D)[i])))
+                if((locQuadExp = (*exp2D)[i]->as<LocalRegions::QuadExp>()))
                 {
                     for(j = 0; j < locQuadExp->GetNedges(); ++j)
                     {
@@ -252,7 +252,8 @@ namespace Nektar
 
                         if(MeshEdgeId.count(id) > 0)
                         {
-                            m_elmtToTrace[i][j] = StdRegions::StdExpansion::CastTo< LocalRegions::SegExp> ((*trace).GetExp(MeshEdgeId.find(id)->second));
+                            m_elmtToTrace[i][j] = (*trace).GetExp(MeshEdgeId
+                                .find(id)->second)->as<LocalRegions::SegExp>();
 
                         }
                         else
@@ -261,7 +262,7 @@ namespace Nektar
                         }
                     }
                 }
-                else if((locTriExp = StdRegions::StdExpansion::CastTo<LocalRegions::TriExp>((*exp2D)[i])))
+                else if((locTriExp = (*exp2D)[i]->as<LocalRegions::TriExp>()))
                 {
                     for(j = 0; j < locTriExp->GetNedges(); ++j)
                     {
@@ -271,7 +272,8 @@ namespace Nektar
 
                         if(MeshEdgeId.count(id) > 0)
                         {
-                            m_elmtToTrace[i][j] = StdRegions::StdExpansion::CastTo< LocalRegions::SegExp> ((*trace).GetExp((MeshEdgeId.find(id))->second));
+                            m_elmtToTrace[i][j] = (*trace).GetExp((MeshEdgeId
+                                .find(id))->second)->as<LocalRegions::SegExp>();
 
                         }
                         else
@@ -303,7 +305,8 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    if((locSegExp = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j))))
+                    if((locSegExp = bndCondExp[i]->GetExp(j)
+                                            ->as<LocalRegions::SegExp>()))
                     {
                         SegGeom = locSegExp->GetGeom1D();
                         id = SegGeom->GetEid();
@@ -386,7 +389,7 @@ namespace Nektar
 
                 for(j = 0; j < (*exp2D)[eid]->GetNedges(); ++j)
                 {
-                    locSegExp = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(m_elmtToTrace[eid][j]);
+                    locSegExp = m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
                     SegGeom = locSegExp->GetGeom1D();
 
                     // Add edge to boost graph for non-Dirichlet Boundary
@@ -396,7 +399,7 @@ namespace Nektar
                     {
                         for(k = j+1; k < (*exp2D)[eid]->GetNedges(); ++k)
                         {
-                            locSegExp1 = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(m_elmtToTrace[eid][k]);
+                            locSegExp1 = m_elmtToTrace[eid][k]->as<LocalRegions::SegExp>();
                             SegGeom = locSegExp1->GetGeom1D();
 
                             id1  = SegGeom->GetEid();
@@ -473,7 +476,7 @@ namespace Nektar
 
                 for(j = 0; j < (*exp2D)[eid]->GetNedges(); ++j)
                 {
-                    locSegExp = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(m_elmtToTrace[eid][j]);
+                    locSegExp = m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
                     SegGeom = locSegExp->GetGeom1D();
 
                     id  = SegGeom->GetEid();
@@ -554,7 +557,8 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    if((locSegExp = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j))))
+                    if((locSegExp = bndCondExp[i]->GetExp(j)
+                                        ->as<LocalRegions::SegExp>()))
                     {
                         nbndexp++;
                         SegGeom = locSegExp->GetGeom1D();
@@ -604,7 +608,8 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    if((locSegExp = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j))))
+                    if((locSegExp = bndCondExp[i]->GetExp(j)
+                                        ->as<LocalRegions::SegExp>()))
                     {
                         SegGeom = locSegExp->GetGeom1D();
                         id = SegGeom->GetEid();
@@ -660,9 +665,8 @@ namespace Nektar
             // determine mapping from geometry edges to trace
             for(i = 0; i < ntrace_exp; ++i)
             {
-                id = StdRegions::StdExpansion::
-                        CastTo<LocalRegions::Expansion2D>(
-                            trace->GetExp(i))->GetGeom2D()->GetFid();
+                id = trace->GetExp(i)->as<LocalRegions::Expansion2D>()
+                                        ->GetGeom2D()->GetFid();
                 MeshFaceId[id] = i;
             }
 
@@ -685,9 +689,8 @@ namespace Nektar
                 
                 for(j = 0; j < (*exp3D)[i]->GetNfaces(); ++j)
                 {
-                    id = StdRegions::StdExpansion::
-                            CastTo<LocalRegions::Expansion3D>(
-                                    (*exp3D)[i])->GetGeom3D()->GetFid(j);
+                    id = (*exp3D)[i]->as<LocalRegions::Expansion3D>()
+                                            ->GetGeom3D()->GetFid(j);
                     
                     if(MeshFaceId.count(id) > 0)
                     {
@@ -721,9 +724,8 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     locBndExp = bndCondExp[i]->GetExp(j);
-                    FaceGeom  = StdRegions::StdExpansion::
-                                    CastTo<LocalRegions::Expansion2D>(
-                                            locBndExp)->GetGeom2D();
+                    FaceGeom  = locBndExp->as<LocalRegions::Expansion2D>()
+                                                    ->GetGeom2D();
                     id        = FaceGeom->GetFid();
                     
                     if(bndCond[i]->GetBoundaryConditionType() == 
@@ -779,7 +781,8 @@ namespace Nektar
             // face starts at 0 so we can set up graph.
             for(i = 0; i < ntrace_exp; ++i)
             {
-                id = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(trace->GetExp(i))->GetGeom2D()->GetFid();
+                id = trace->GetExp(i)->as<LocalRegions::Expansion2D>()
+                                                ->GetGeom2D()->GetFid();
                 
                 if (dirFaces.count(id) == 0)
                 {
@@ -805,7 +808,8 @@ namespace Nektar
                 for(j = 0; j < (*exp3D)[eid]->GetNfaces(); ++j)
                 {
                     // Add face to boost graph for non-Dirichlet Boundary
-                    FaceGeom = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(m_elmtToTrace[eid][j])->GetGeom2D();
+                    FaceGeom = m_elmtToTrace[eid][j]
+                              ->as<LocalRegions::Expansion2D>()->GetGeom2D();
                     id       = FaceGeom->GetFid();
                     face_id  = MeshFaceId.find(id)->second;
 
@@ -813,7 +817,8 @@ namespace Nektar
                     {
                         for(k = j+1; k < (*exp3D)[eid]->GetNfaces(); ++k)
                         {
-                            FaceGeom = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(m_elmtToTrace[eid][k])->GetGeom2D();
+                            FaceGeom = m_elmtToTrace[eid][k]
+                                ->as<LocalRegions::Expansion2D>()->GetGeom2D();
                             id1      = FaceGeom->GetFid();
                             face_id1 = MeshFaceId.find(id1)->second;
                             
@@ -887,7 +892,8 @@ namespace Nektar
 
                 for(j = 0; j < (*exp3D)[eid]->GetNfaces(); ++j)
                 {
-                    FaceGeom = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(m_elmtToTrace[eid][j])->GetGeom2D();
+                    FaceGeom = m_elmtToTrace[eid][j]
+                              ->as<LocalRegions::Expansion2D>()->GetGeom2D();
                     id       = FaceGeom->GetFid();
                     gid      = FaceElmtGid[MeshFaceId.find(id)->second];
                     order_e  = (*exp3D)[eid]->GetFaceNcoeffs(j);
@@ -951,7 +957,8 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     locBndExp = bndCondExp[i]->GetExp(j);
-                    id        = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(locBndExp)->GetGeom2D()->GetFid();
+                    id        = locBndExp->as<LocalRegions::Expansion2D>()
+                                                    ->GetGeom2D()->GetFid();
                     gid       = FaceElmtGid[MeshFaceId.find(id)->second];
                     bndOffset = bndCondExp[i]->GetCoeff_Offset(j) + bndTotal;
                         
@@ -998,7 +1005,8 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     locBndExp = bndCondExp[i]->GetExp(j);
-                    FaceGeom  = StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(locBndExp)->GetGeom2D();
+                    FaceGeom  = locBndExp->as<LocalRegions::Expansion2D>()
+                                                    ->GetGeom2D();
                     id        = FaceGeom->GetFid();
                     m_bndCondTraceToGlobalTraceMap[cnt++] = 
                         MeshFaceId.find(id)->second;
@@ -1091,8 +1099,7 @@ namespace Nektar
                     for(j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
                     {
                         LocalRegions::PointExpSharedPtr locPointExp = 
-                            StdRegions::StdExpansion::CastTo<
-                                LocalRegions::PointExp>(m_elmtToTrace[eid][j]);
+                            m_elmtToTrace[eid][j]->as<LocalRegions::PointExp>();
                         id = locPointExp->GetGeom()->GetGlobalID();
                         vGlobalId = m_localToGlobalBndMap[cnt+j];
                         m_globalToUniversalBndMap[vGlobalId]
@@ -1104,8 +1111,7 @@ namespace Nektar
                     for(j = 0; j < locExpansion->GetNedges(); ++j)
                     {
                         LocalRegions::SegExpSharedPtr locSegExp = 
-                            StdRegions::StdExpansion::CastTo<
-                                LocalRegions::SegExp>(m_elmtToTrace[eid][j]);
+                            m_elmtToTrace[eid][j]->as<LocalRegions::SegExp>();
 
                         id  = locSegExp->GetGeom1D()->GetEid();
                         order_e = locExpVector[eid]->GetEdgeNcoeffs(j);
@@ -1149,9 +1155,8 @@ namespace Nektar
                     for(j = 0; j < locExpansion->GetNfaces(); ++j)
                     {
                         LocalRegions::Expansion2DSharedPtr locFaceExp = 
-                            StdRegions::StdExpansion::
-                                CastTo<LocalRegions::Expansion2D>(
-                                    m_elmtToTrace[eid][j]);
+                                m_elmtToTrace[eid][j]
+                                           ->as<LocalRegions::Expansion2D>();
 
                         id  = locFaceExp->GetGeom2D()->GetFid();
                         order_e = locExpVector[eid]->GetFaceNcoeffs(j);

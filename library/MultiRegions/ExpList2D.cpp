@@ -487,9 +487,8 @@ namespace Nektar
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         LibUtilities::BasisKey bkey1 = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(1)->GetBasisKey();
-                        exp2D = StdRegions::StdExpansion::
-                                    CastTo<LocalRegions::Expansion2D>(
-                                            bndConstraint[i]->GetExp(j));
+                        exp2D = bndConstraint[i]->GetExp(j)
+                                    ->as<LocalRegions::Expansion2D>();
                         FaceGeom = exp2D->GetGeom2D();
 
                         //if face is a quad
@@ -525,8 +524,7 @@ namespace Nektar
             // loop over all other faces and fill out other connectivities
             for (i = 0; i < locexp.size(); ++i)
             {
-                exp3D = StdRegions::StdExpansion::
-                            CastTo<LocalRegions::Expansion3D>(locexp[i]);
+                exp3D = locexp[i]->as<LocalRegions::Expansion3D>();
                 for (j = 0; j < exp3D->GetNfaces(); ++j)
                 {
                     FaceGeom = (exp3D->GetGeom3D())->GetFace(j);
@@ -860,8 +858,7 @@ namespace Nektar
             for(i = 0; i < m_exp->size(); ++i)
             {
                 LocalRegions::Expansion2DSharedPtr loc_exp = 
-                    StdRegions::StdExpansion::CastTo<
-                        LocalRegions::Expansion2D>((*m_exp)[i]);
+                        (*m_exp)[i]->as<LocalRegions::Expansion2D>();
                 LocalRegions::Expansion3DSharedPtr loc_elmt = 
                     loc_exp->GetLeftAdjacentElementExp();
                 int faceNumber = loc_exp->GetLeftAdjacentElementFace();

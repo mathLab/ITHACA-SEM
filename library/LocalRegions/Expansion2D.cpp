@@ -77,8 +77,7 @@ namespace Nektar
                     }
                     
                     Expansion1DSharedPtr edgeExp =
-                        StdRegions::StdExpansion::CastTo<Expansion1D>(
-                                m_edgeExp[i].lock());
+                                    m_edgeExp[i].lock()->as<Expansion1D>();
 
                     if (edgeExp->GetRightAdjacentElementExp())
                     {
@@ -103,8 +102,7 @@ namespace Nektar
             Vmath::Vvtvp(nquad_e, normals[1], 1, Fy, 1, edgePhys, 1,
                                   edgePhys,   1);
 
-            Expansion1DSharedPtr locExp = 
-                StdRegions::StdExpansion::CastTo<Expansion1D>(EdgeExp);
+            Expansion1DSharedPtr locExp = EdgeExp->as<Expansion1D>();
 
             if (m_negatedNormals[edge])
             {
@@ -145,8 +143,7 @@ namespace Nektar
                     }
                     
                     Expansion1DSharedPtr edgeExp = 
-                        StdRegions::StdExpansion::CastTo<Expansion1D>(
-                                m_edgeExp[i].lock());
+                                m_edgeExp[i].lock()->as<Expansion1D>();
 
                     if (edgeExp->GetRightAdjacentElementExp())
                     {
@@ -178,8 +175,7 @@ namespace Nektar
             if(n_coeffs!=order_e) // Going to orthogonal space
             {
                 EdgeExp->FwdTrans(Fn, edgeCoeffs);
-                Expansion1DSharedPtr locExp =
-                    StdRegions::StdExpansion::CastTo<Expansion1D>(EdgeExp);
+                Expansion1DSharedPtr locExp = EdgeExp->as<Expansion1D>();
                 
                 if (m_requireNeg[edge])
                 {
@@ -205,8 +201,7 @@ namespace Nektar
             {
                 EdgeExp->IProductWRTBase(Fn, edgeCoeffs);
 
-                Expansion1DSharedPtr locExp = 
-                    StdRegions::StdExpansion::CastTo<Expansion1D>(EdgeExp);
+                Expansion1DSharedPtr locExp = EdgeExp->as<Expansion1D>();
                 
                 if (m_requireNeg[edge])
                 {

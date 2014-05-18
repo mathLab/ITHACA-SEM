@@ -797,8 +797,7 @@
 	
 	for(int i = 0; i <  BndExp[0]->GetExpSize(); ++i)
 	{
-		bc =  StdRegions::StdExpansion::CastTo<LocalRegions
-		::Expansion1D> (BndExp[0]->GetExp(i));
+		bc =  BndExp[0]->GetExp(i)->as<LocalRegions::Expansion1D> ();
 		
 		int nbc = bc->GetTotPoints();
 		

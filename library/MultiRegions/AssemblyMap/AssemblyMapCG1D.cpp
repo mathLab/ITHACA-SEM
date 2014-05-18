@@ -234,7 +234,7 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 cnt = locExp.GetCoeff_Offset(i);
-                if((locSegExp = StdRegions::StdExpansion::CastTo<LocalRegions::SegExp>(locExpVector[i])))
+                if((locSegExp = locExpVector[i]->as<LocalRegions::SegExp>()))
                 {
                     for(j = 0; j < locSegExp->GetNverts(); ++j)
                     {

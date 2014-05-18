@@ -352,7 +352,7 @@ namespace Nektar
             for (int el = 0; el < n_element; ++el)
             { 
                 LocalRegions::Expansion2DSharedPtr el2D =
-                        LocalRegions::Expansion2D::FromStdExp(
+                        StdRegions::StdExpansion::CastTo<LocalRegions::Expansion2D>(
                                 m_fields[0]->GetExp(el));
                 int n_points = el2D->GetTotPoints();
                 
@@ -403,7 +403,7 @@ namespace Nektar
             for (int el = 0; el < n_element; ++el)
             { 
                 LocalRegions::Expansion3DSharedPtr el3D =
-                        LocalRegions::Expansion3D::FromStdExp(
+                        StdRegions::StdExpansion::CastTo<LocalRegions::Expansion3D>(
                                 m_fields[0]->GetExp(el));
 
                 int n_points = el3D->GetTotPoints();

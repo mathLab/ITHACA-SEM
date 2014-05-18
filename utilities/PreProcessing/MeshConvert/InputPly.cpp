@@ -66,9 +66,23 @@ namespace Nektar
          */
         void InputPly::Process()
         {
+
             // Open the file stream.
             OpenStream();
-            
+           
+            ReadPly(m_mshFile);
+
+            m_mshFile.close();
+
+            ProcessVertices();
+            ProcessEdges();
+            ProcessFaces();
+            ProcessElements();
+            ProcessComposites();
+        }
+
+        void InputPly::ReadPly(std::ifstream &mshFile, NekDouble scale)
+        {
             m_mesh->m_expDim = 0;
             string line;
             int nVertices = 0;
@@ -132,6 +146,12 @@ namespace Nektar
                         {
                             m_mesh->m_spaceDim = 3;
                         }
+                        
+                        x *= scale;
+                        y *= scale;
+                        z *= scale;
+
+
                         m_mesh->m_node.push_back(
                             boost::shared_ptr<Node>(new Node(i, x, y, z)));
                         
@@ -180,13 +200,7 @@ namespace Nektar
                     }
                 }
             }
-            mshFile.close();
+    }
 
-            ProcessVertices();
-            ProcessEdges();
-            ProcessFaces();
-            ProcessElements();
-            ProcessComposites();
-        }
     }
 }

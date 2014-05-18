@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 //  File: ProcessSpherigon.cpp
 //
@@ -44,6 +44,7 @@ using namespace std;
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/NodalTriExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 #define TOL_BLEND 1.0e-8
 
@@ -93,7 +94,13 @@ namespace Nektar
                 "Tag identifying surface to process.");
             m_config["BothTriFacesOnPrism"] = ConfigOption(true, "-1",
                 "Curve both triangular faces of prism on boundary.");
-        }
+            m_config["usenormalfile"] = ConfigOption(false,"NoFile",
+                 "Use alternative file for Spherigon definition"); 
+            m_config["scalefile"] = ConfigOption(false,"1.0",
+                 "Apply scaling factor to coordinates in file ");
+            m_config["normalnoise"] = ConfigOption(false,"NotSpecified",
+                       "Add randowm noise to normals of amplitude AMP in specified region. input string is Amp,xmin,xmax,ymin,ymax,zmin,zmax");
+       }
       
         /**
          * @brief Destructor.
@@ -212,11 +219,13 @@ namespace Nektar
          * 
          * @param el  Vector of elements denoting the surface mesh.
          */
-        void ProcessSpherigon::GenerateNormals(
-            std::vector<ElementSharedPtr> &el)
+        void ProcessSpherigon::GenerateNormals(std::vector<ElementSharedPtr> &el, 
+                                               MeshSharedPtr &mesh)
         {
             boost::unordered_map<int, Node>::iterator nIt;
+         
             
+   
             for (int i = 0; i < el.size(); ++i)
             {
                 ElementSharedPtr e = el[i];
@@ -231,7 +240,7 @@ namespace Nektar
                 // Calculate normal for this element.
                 int nV = e->GetVertexCount();
                 vector<NodeSharedPtr> node(nV);
-
+ 
                 for (int j = 0; j < nV; ++j)
                 {
                     node[j] = e->GetVertex(j);
@@ -239,7 +248,7 @@ namespace Nektar
                 
                 Node n;
                 
-                if (m_mesh->m_spaceDim == 3)
+                if (mesh->m_spaceDim == 3)
                 {
                     // Create two tangent vectors and take unit cross product.
                     Node v1 = *(node[1]) - *(node[0]);
@@ -260,10 +269,10 @@ namespace Nektar
                 // value.
                 for (int j = 0; j < nV; ++j)
                 {
-                    nIt = m_mesh->m_vertexNormals.find(e->GetVertex(j)->m_id);
-                    if (nIt == m_mesh->m_vertexNormals.end())
+                    nIt = mesh->m_vertexNormals.find(e->GetVertex(j)->m_id);
+                    if (nIt == mesh->m_vertexNormals.end())
                     {
-                        m_mesh->m_vertexNormals[e->GetVertex(j)->m_id] = n;
+                        mesh->m_vertexNormals[e->GetVertex(j)->m_id] = n;
                     }
                     else
                     {
@@ -273,10 +282,10 @@ namespace Nektar
             }
             
             // Normalize resulting vectors.
-            for (nIt  = m_mesh->m_vertexNormals.begin();
-                 nIt != m_mesh->m_vertexNormals.end  (); ++nIt)
+            for (nIt  = mesh->m_vertexNormals.begin();
+                 nIt != mesh->m_vertexNormals.end  (); ++nIt)
             {
-                Node &n = m_mesh->m_vertexNormals[nIt->first];
+                Node &n = mesh->m_vertexNormals[nIt->first];
                 n /= sqrt(n.abs2());
             }
         }
@@ -313,6 +322,7 @@ namespace Nektar
                 vector<int> t;
                 t.push_back(0);
                 
+
                 // Construct list of spherigon edges/faces from a tag.
                 int surfTag = m_config["surf"].as<int>();
                 bool prismTag = m_config["BothTriFacesOnPrism"].beenSet;
@@ -352,7 +362,6 @@ namespace Nektar
                                     m_mesh->m_spherigonSurfs.insert(make_pair(i, triFace));
                                 }
                             }
-
                         }
                     }
                 }
@@ -372,7 +381,7 @@ namespace Nektar
                         FaceSharedPtr f = m_mesh->m_element[m_mesh->m_expDim][it->first]->
                             GetFace(it->second);
                         vector<NodeSharedPtr> nodes = f->m_vertexList;
-                        LibUtilities::ShapeType eType = (LibUtilities::ShapeType)(nodes.size()-1);
+                        LibUtilities::ShapeType eType = (LibUtilities::ShapeType)(nodes.size());
                         ElmtConfig conf(eType, 1, false, false);
                         
                         // Create 2D element.
@@ -413,9 +422,8 @@ namespace Nektar
                         // Copy vertices/edges from original element.
                         elmt->SetVertex(0, nodes[0]);
                         elmt->SetVertex(1, nodes[1]);
-                        elmt->SetEdge(
-                            0, m_mesh->m_element[m_mesh->m_expDim][it->first]->
-                                GetEdge(it->second));
+                        elmt->SetEdge(0, m_mesh->m_element[m_mesh->m_expDim][it->first]->
+                                      GetEdge(it->second));
                         el.push_back(elmt);
                     }
                 }
@@ -425,14 +433,201 @@ namespace Nektar
                 ASSERTL0(false, "Spherigon expansions must be 2/3 dimensional");
             }
             
+            
             // See if vertex normals have been generated. If they have not,
             // approximate them by summing normals of surrounding elements.
             bool normalsGenerated = false;
-            if (m_mesh->m_vertexNormals.size() == 0)
+
+            // Read Normal file if one exists
+            std::string normalfile = m_config["usenormalfile"].as<string>();
+            if(normalfile.compare("NoFile") != 0)
             {
-                GenerateNormals(el);
+                NekDouble scale = m_config["scalefile"].as<NekDouble>();
+
+                if (m_mesh->m_verbose)
+                {
+                    cout << "Inputing normal file: " << normalfile << " with scaling of " << scale << endl;
+                }
+
+                ifstream inply;
+                InputPlySharedPtr  plyfile;
+                
+                inply.open(normalfile.c_str());
+                
+                int j;
+                MeshSharedPtr m = boost::shared_ptr<Mesh>(new Mesh());
+                plyfile = boost::shared_ptr<InputPly>(new InputPly(m));
+                plyfile->ReadPly(inply,scale);
+                plyfile->ProcessVertices();
+                
+                MeshSharedPtr plymesh = plyfile->GetMesh();
+                GenerateNormals(plymesh->m_element[plymesh->m_expDim],plymesh);
+                
+                // finaly find nearest vertex and set normal to mesh surface file normal. 
+                // probably should have a hex tree search ? 
+                Array<OneD, NekDouble> len2(plymesh->m_vertexSet.size());
+                Node minx(0,0.0,0.0,0.0), tmp,tmpsav;
+                NodeSet::iterator it; 
+                map<int,NodeSharedPtr>::iterator vIt;
+                map<int,NodeSharedPtr> surfverts;
+                
+                // make a map of normal vertices to visit based on elements el
+                for (int i = 0; i < el.size(); ++i)
+                {
+                    ElementSharedPtr e = el[i];
+                    int nV = e->GetVertexCount();
+                    for (int j = 0; j < nV; ++j)
+                    {
+                        int id = e->GetVertex(j)->m_id;
+                        surfverts[id] = e->GetVertex(j);
+                    }
+                }
+
+                //loop over all element in ply mesh and determine
+                //xmin,xmax,ymin,ymax as search criterion
+                
+
+                NekDouble mindiff,diff;
+                int       cntmin;
+                
+                if (m_mesh->m_verbose)
+                {
+                    cout << "\t Processing surface normals "  << endl;
+                }
+                int cnt = 0;
+                map<int,int> locnorm;
+                for(vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt,++cnt)
+                {
+                    mindiff  = 1e12;
+                    
+                    for(j = 0, it = plymesh->m_vertexSet.begin(); it != plymesh->m_vertexSet.end(); ++it, ++j)
+                    {
+                        tmp = *(vIt->second)- *(*it);
+                        diff = tmp.abs2();
+                        
+                        if(diff < mindiff)
+                        {
+                            mindiff = diff;
+                            cntmin = (*it)->m_id;
+                            tmpsav = tmp;
+                        }
+                    }
+                    locnorm[cntmin] = vIt->first;
+                    
+                    ASSERTL1(cntmin < plymesh->m_vertexNormals.size(),"cntmin is out of range"); 
+                    m_mesh->m_vertexNormals[vIt->first] = plymesh->m_vertexNormals[cntmin];
+
+                }
+                if (m_mesh->m_verbose)
+                {
+                    cout << "\t end of processing surface normals "  << endl;
+                }
                 normalsGenerated = true;
             }
+            else if (m_mesh->m_vertexNormals.size() == 0)
+            {
+                GenerateNormals(el,m_mesh);
+                normalsGenerated = true;
+            }
+
+
+            // See if we should add noise to normals
+            std::string normalnoise = m_config["normalnoise"].as<string>();
+            if(normalfile.compare("NotSpecified") != 0)
+            {
+                vector<NekDouble> values;
+                ASSERTL0(ParseUtils::GenerateUnOrderedVector(normalnoise.c_str(),values),"Failed to interpret normal noise string");
+
+                int nvalues = values.size()/2;
+                NekDouble amp = values[0];
+
+
+                if (m_mesh->m_verbose)
+                {
+                    cout << "\t adding noise to normals of amplitude "<< amp << " in range: ";
+                    for(int i = 0; i < nvalues; ++i)
+                    {
+                        cout << values[2*i+1] <<"," << values[2*i+2] << " "; 
+                    }
+                    cout << endl;
+                }
+                
+                map<int,NodeSharedPtr>::iterator vIt;
+                map<int,NodeSharedPtr> surfverts;
+                
+                // make a map of normal vertices to visit based on elements el
+                for (int i = 0; i < el.size(); ++i)
+                {
+                    ElementSharedPtr e = el[i];
+                    int nV = e->GetVertexCount();
+                    for (int j = 0; j < nV; ++j)
+                    {
+                        int id = e->GetVertex(j)->m_id;
+                        surfverts[id] = e->GetVertex(j);
+                    }
+                }
+
+                for(vIt = surfverts.begin(); vIt != surfverts.end(); ++vIt)
+                {
+                    bool AddNoise = false;
+                    
+                    for(int i = 0; i < nvalues; ++i)
+                    {
+                        // check to see if point is in range 
+                        switch(nvalues)
+                        {
+                        case 1:
+                            {
+                                if(((vIt->second)->m_x > values[2*i+1])&&((vIt->second)->m_x < values[2*i+2]))
+                                {
+                                    AddNoise = true;
+                                }
+                            }
+                            break;
+                        case 2:
+                            {
+                                if(((vIt->second)->m_x > values[2*i+1])&&
+                                   ((vIt->second)->m_x < values[2*i+2])&&
+                                   ((vIt->second)->m_y > values[2*i+3])&&
+                                   ((vIt->second)->m_y < values[2*i+4]))
+                                {
+                                    AddNoise = true;
+                                }
+                            }
+                            break;
+                        case 3:
+                            {
+                                if(((vIt->second)->m_x > values[2*i+1])&&
+                                   ((vIt->second)->m_x < values[2*i+2])&&
+                                   ((vIt->second)->m_y > values[2*i+3])&&
+                                   ((vIt->second)->m_y < values[2*i+4])&&  
+                                   ((vIt->second)->m_z > values[2*i+5])&&
+                                   ((vIt->second)->m_z < values[2*i+6]))
+
+                                {
+                                    AddNoise = true;
+                                }
+                            }
+                            break;
+                        }
+                        
+                        if(AddNoise)
+                        {
+                            // generate random unit vector; 
+                            Node rvec(0,rand(),rand(),rand());
+                            rvec *= values[0]/sqrt(rvec.abs2());
+                            
+                            Node normal = m_mesh->m_vertexNormals[vIt->first];
+                            
+                            normal += rvec;
+                            normal /= sqrt(normal.abs2());
+
+                            m_mesh->m_vertexNormals[vIt->first] = normal;
+                        }
+                    }
+                }
+            }
+
 
             // Allocate storage for interior points.
             int nq = m_config["N"].as<int>();
@@ -560,6 +755,7 @@ namespace Nektar
                 for (int j = 0; j < nV; ++j)
                 {
                     v.push_back(*(e->GetVertex(j)));
+                    ASSERTL1(m_mesh->m_vertexNormals.count(v[j].m_id) != 0,"Normal has not been defined");
                     vN.push_back(m_mesh->m_vertexNormals[v[j].m_id]);
                 }
 

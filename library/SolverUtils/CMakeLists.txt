@@ -19,6 +19,7 @@ SET(SOLVER_UTILS_SOURCES
   EquationSystem.cpp
   Filters/Filter.cpp
   Filters/FilterAeroForces.cpp
+  Filters/FilterAverageFields.cpp
   Filters/FilterCheckpoint.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
@@ -30,6 +31,7 @@ SET(SOLVER_UTILS_SOURCES
   Forcing/Forcing.cpp
   Forcing/ForcingSponge.cpp
   Forcing/ForcingBody.cpp
+  Forcing/ForcingNoise.cpp
   Forcing/ForcingProgrammatic.cpp
 )
 
@@ -54,6 +56,7 @@ SET(SOLVER_UTILS_HEADERS
   EquationSystem.h
   Filters/Filter.h
   Filters/FilterAeroForces.h
+  Filters/FilterAverageFields.h
   Filters/FilterCheckpoint.h
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
@@ -67,6 +70,7 @@ SET(SOLVER_UTILS_HEADERS
   Forcing/Forcing.h
   Forcing/ForcingSponge.h
   Forcing/ForcingBody.h
+  Forcing/ForcingNoise.h
   Forcing/ForcingProgrammatic.h
 )
 

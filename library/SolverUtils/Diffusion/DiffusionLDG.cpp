@@ -331,21 +331,8 @@ namespace Nektar
                 // Weakly impose boundary conditions by modifying flux values
                 for (e = 0; e < nBndEdges ; ++e)
                 {
-                    // Number of points on the expansion
-                    if (nDim == 2)
-                    {
-                        nBndEdgePts = fields[var]->
-                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
-                    }
-                    if (nDim == 3)
-                    {
-                        int nBndEdgePts1 = fields[var]->
-                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
-                        int nBndEdgePts2 = fields[var]->
-                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(1);
-                        
-                        nBndEdgePts = nBndEdgePts1*nBndEdgePts2;
-                    }
+                    nBndEdgePts = fields[var]->
+                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
                     
                     id1 = fields[var]->
                     GetBndCondExpansions()[i]->GetPhys_Offset(e);
@@ -529,20 +516,8 @@ namespace Nektar
                 // Weakly impose boundary conditions by modifying flux values
                 for (e = 0; e < nBndEdges ; ++e)
                 {
-                    if (nDim == 2)
-                    {
-                        nBndEdgePts = fields[var]->
-                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
-                    }
-                    if (nDim == 3)
-                    {
-                        int nBndEdgePts1 = fields[var]->
-                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
-                        int nBndEdgePts2 = fields[var]->
-                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(1);
-                        
-                        nBndEdgePts = nBndEdgePts1*nBndEdgePts2;
-                    }
+                    nBndEdgePts = fields[var]->
+                    GetBndCondExpansions()[i]->GetExp(e)->GetTotPoints();
                     
                     id1 = fields[var]->
                     GetBndCondExpansions()[i]->GetPhys_Offset(e);

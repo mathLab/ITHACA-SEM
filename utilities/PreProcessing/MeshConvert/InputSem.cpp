@@ -99,10 +99,10 @@ namespace Nektar
             sectionMap["BCS"]      = -1;
             sectionMap["FIELDS"]   = -1;
             
-            while (!mshFile.eof())
+            while (!m_mshFile.eof())
             {
-                linePos = mshFile.tellg();
-                getline(mshFile, line);
+                linePos = m_mshFile.tellg();
+                getline(m_mshFile, line);
                 ss.clear();
                 ss.str(line);
                 ss >> word;
@@ -119,8 +119,8 @@ namespace Nektar
             }
             
             // Clear eofbit and go back to the beginning of the file.
-            mshFile.clear();
-            mshFile.seekg(0);
+            m_mshFile.clear();
+            m_mshFile.seekg(0);
 
             // Check that required sections exist in the file.
             if (sectionMap["NODES"] == std::streampos(-1))
@@ -171,8 +171,8 @@ namespace Nektar
 
             // Begin by reading in list of nodes which define the linear
             // elements.
-            mshFile.seekg(sectionMap["NODES"]);
-            getline(mshFile, line);
+            m_mshFile.seekg(sectionMap["NODES"]);
+            getline(m_mshFile, line);
             ss.clear(); ss.str(line);
             ss >> word;
             
@@ -184,7 +184,7 @@ namespace Nektar
             i = id = 0;
             while (i < nVertices)
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
                 if (line.length() < 7) continue;
                 ss.clear(); ss.str(line);
                 double x = 0, y = 0, z = 0;
@@ -204,8 +204,8 @@ namespace Nektar
             }
 
             // Now read in elements
-            mshFile.seekg(sectionMap["ELEMENTS"]);
-            getline(mshFile, line);
+            m_mshFile.seekg(sectionMap["ELEMENTS"]);
+            getline(m_mshFile, line);
             ss.clear(); ss.str(line);
             ss >> word;
 
@@ -217,7 +217,7 @@ namespace Nektar
             i = id = 0;
             while (i < nEntities)
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
                 if (line.length() < 18)
                 {
                     continue;
@@ -256,8 +256,8 @@ namespace Nektar
             {
                 int np, nel, nodeId = m_mesh->m_node.size();
                 
-                mshFile.seekg(sectionMap["CURVES"]);
-                getline(mshFile, line);
+                m_mshFile.seekg(sectionMap["CURVES"]);
+                getline(m_mshFile, line);
                 ss.clear(); ss.str(line);
                 ss >> word;
                 
@@ -314,7 +314,7 @@ namespace Nektar
                 i = id = 0;
                 while (i < nCurves)
                 {
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     if (line.length() < 18)
                     {
                         continue;
@@ -416,9 +416,9 @@ namespace Nektar
             // Process field names
             if (sectionMap["FIELDS"] != std::streampos(-1))
             {
-                mshFile.seekg(sectionMap["FIELDS"]);
-                getline(mshFile, line);
-                getline(mshFile, line);
+                m_mshFile.seekg(sectionMap["FIELDS"]);
+                getline(m_mshFile, line);
+                getline(m_mshFile, line);
                 ss.clear(); ss.str(line);
                 
                 while (ss >> tag)
@@ -435,8 +435,8 @@ namespace Nektar
                 int             maxTag = -1;
                 
                 // First read in list of groups, which defines each condition tag.
-                mshFile.seekg(sectionMap["GROUPS"]);
-                getline(mshFile, line);
+                m_mshFile.seekg(sectionMap["GROUPS"]);
+                getline(m_mshFile, line);
                 ss.clear(); ss.str(line);
                 ss >> word;
                 
@@ -448,7 +448,7 @@ namespace Nektar
                 i = id = 0;
                 while (i < nGroups)
                 {
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     ss.clear(); ss.str(line);
                     ss >> id >> tag;
                     conditionMap[tag] = i++;
@@ -458,8 +458,8 @@ namespace Nektar
 
                 // Now read in actual values for boundary conditions from BCS
                 // section.
-                mshFile.seekg(sectionMap["BCS"]);
-                getline(mshFile, line);
+                m_mshFile.seekg(sectionMap["BCS"]);
+                getline(m_mshFile, line);
                 ss.clear(); ss.str(line);
                 ss >> word;
                 
@@ -474,7 +474,7 @@ namespace Nektar
                     int                nF;
                     string             tmp;
                     ConditionSharedPtr p;
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     ss.clear(); ss.str(line);
                     ss >> id >> tag >> nF;
 
@@ -485,7 +485,7 @@ namespace Nektar
                     j = 0;
                     while (j < nF)
                     {
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         ss.clear(); ss.str(line);
                         ss >> tmp;
                         
@@ -541,8 +541,8 @@ namespace Nektar
                 }
                 
                 // Finally read surface information.
-                mshFile.seekg(sectionMap["SURFACES"]);
-                getline(mshFile, line);
+                m_mshFile.seekg(sectionMap["SURFACES"]);
+                getline(m_mshFile, line);
                 ss.clear(); ss.str(line);
                 ss >> word;
                 
@@ -559,7 +559,7 @@ namespace Nektar
                 
                 while (i < nSurf)
                 {
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     ss.clear(); ss.str(line);
                     ss >> id >> elmt >> side >> word;
                     elmt--;
@@ -627,7 +627,7 @@ namespace Nektar
             }
 
             PrintSummary();
-            mshFile.close();
+            m_mshFile.close();
 
             // Process rest of mesh.
             ProcessVertices();

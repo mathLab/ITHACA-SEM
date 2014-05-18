@@ -110,11 +110,6 @@ namespace Nektar
             string xml_ending = "xml";
             string xml_gz_ending = "xml.gz";
 
-            // Boundary output requires field file
-            if(m_f->m_writeBndFld)
-            {
-                m_f->m_declareExpansionAsContField = true;
-            }
 
             std::vector<std::string> files;
             // load .xml ending
@@ -165,25 +160,16 @@ namespace Nektar
                 }    
             }
 
-
             m_f->m_session = LibUtilities::SessionReader::
                 CreateInstance(0, 0, files, m_f->m_comm);
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
             m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
                 ::AllocateSharedPtr(m_f->m_session->GetComm());
             
-
-            // Set up expansion list
-            int expdim  = m_f->m_graph->GetMeshDimension();
-                        
-            bool useFFT     = false;
-            bool dealiasing = false;
             
-            // currently load all field (possibly could read data from expansion list
-            // but it is re-arranged in expansion) 
-            
+            // currently load all field (possibly could read data from
+            // expansion list but it is re-arranged in expansion)
             const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
- 
             
             // if Range has been speficied it is possible to have a
             // partition which is empty so ccheck this and return if
@@ -195,7 +181,6 @@ namespace Nektar
 
             m_f->m_exp.resize(1);
 
-
             // load fielddef if fld file is defined This gives
             // precedence to Homogeneous definition in fld file
             int NumHomogeneousDir = 0;
@@ -205,9 +190,10 @@ namespace Nektar
                     ::AllocateSharedPtr(m_f->m_session->GetComm());
                 m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef);
                 NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
+                
 
                 //----------------------------------------------
-               // Set up Expansion information to use mode order from field
+                // Set up Expansion information to use mode order from field
                 m_f->m_graph->SetExpansions(m_f->m_fielddef);
             }
             else
@@ -215,7 +201,7 @@ namespace Nektar
                 if(m_f->m_session->DefinesSolverInfo("HOMOGENEOUS"))
                 {
                     std::string HomoStr = m_f->m_session->GetSolverInfo("HOMOGENEOUS");
-
+                    
                     if((HomoStr == "HOMOGENEOUS1D") || (HomoStr == "Homogeneous1D")
                        || (HomoStr == "1D") || (HomoStr == "Homo1D"))
                     {
@@ -245,267 +231,7 @@ namespace Nektar
                 m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
             }
 
-            switch (expdim)
-            {
-            case 1:
-                {
-                    ASSERTL0(NumHomogeneousDir <= 2,
-                             "Quasi-3D approach is only set up for 1 or 2 "
-                             "homogeneous directions");
-                    
-                    if (NumHomogeneousDir == 1)
-                    {
-                        MultiRegions::ExpList2DHomogeneous1DSharedPtr Exp2DH1;
-                        
-                        // Define Homogeneous expansion
-                        int nplanes;
-                        NekDouble ly;
-                        LibUtilities::BasisType btype;
-
-                        if(fldfilegiven)
-                        {
-                            nplanes =  m_f->m_fielddef[0]->m_numModes[1];
-                            ly      = m_f->m_fielddef[0]->m_homogeneousLengths[0];
-                            btype   = m_f->m_fielddef[0]->m_basis[1];
-                        }
-                        else
-                        {
-                            m_f->m_session->LoadParameter("HomModesZ", nplanes);
-                            m_f->m_session->LoadParameter("LY",ly);
-                            btype = LibUtilities::eFourier;
-                        }
-                                                          
-                        // Choose points to be at evenly spaced points at
-                        // nplanes points
-                        const LibUtilities::PointsKey 
-                        Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
-
-                        const LibUtilities::BasisKey Bkey(btype, nplanes, Pkey);
-
-                        
-                        
-                        if(m_f->m_declareExpansionAsContField||
-                            m_f->m_declareExpansionAsDisContField)
-                        {
-                            ASSERTL0(false,"ContField2DHomogeneous1D or "
-                                     "DisContField2DHomogenenous1D has "
-                                     "not been implemented");
-                        }
-
-                        Exp2DH1 = MemoryManager<MultiRegions::
-                        ExpList2DHomogeneous1D>::
-                            AllocateSharedPtr(m_f->m_session, Bkey, ly, useFFT, 
-                                              dealiasing, m_f->m_graph);
-                        m_f->m_exp[0] = Exp2DH1;
-                    }
-                    else if (NumHomogeneousDir == 2)
-                    {
-                        MultiRegions::ExpList3DHomogeneous2DSharedPtr Exp3DH2;
-                        
-                        int nylines,nzlines;
-                        NekDouble ly,lz;
-                        LibUtilities::BasisType btype1,btype2;
-
-                        if(fldfilegiven)
-                        {
-                            nylines=  m_f->m_fielddef[0]->m_numModes[1];
-                            nzlines=  m_f->m_fielddef[0]->m_numModes[2];
-                            ly      = m_f->m_fielddef[0]->m_homogeneousLengths[0];
-                            lz      = m_f->m_fielddef[0]->m_homogeneousLengths[1];
-                            btype1   = m_f->m_fielddef[0]->m_basis[1];
-                            btype2   = m_f->m_fielddef[0]->m_basis[2];
-                        }
-                        else
-                        {
-                            m_f->m_session->LoadParameter("HomModesY", nylines);
-                            m_f->m_session->LoadParameter("HomModesZ", nzlines);
-                            m_f->m_session->LoadParameter("LY",ly);
-                            m_f->m_session->LoadParameter("LZ",lz);
-                            btype1 = LibUtilities::eFourier;
-                            btype2 = LibUtilities::eFourier;
-                        }
-
-                        // Choose points to be at evenly spaced points at
-                        // nplanes points
-                        const LibUtilities::PointsKey 
-                        PkeyY(nylines, LibUtilities::ePolyEvenlySpaced);
-                        const LibUtilities::BasisKey BkeyY(btype1, nylines, PkeyY);
-                        
-                        const LibUtilities::PointsKey 
-                        PkeyZ(nzlines, LibUtilities::ePolyEvenlySpaced);
-                        const LibUtilities::BasisKey BkeyZ(btype2, nzlines, PkeyZ);
-                        
-                        if(m_f->m_declareExpansionAsContField)
-                        {
-                            Exp3DH2 = MemoryManager<MultiRegions::
-                                ContField3DHomogeneous2D>::
-                                AllocateSharedPtr(m_f->m_session, BkeyY, BkeyZ, 
-                                                  ly, lz, useFFT, dealiasing, 
-                                                  m_f->m_graph,
-                                                  m_f->m_session->GetVariable(0));
-                        }
-                        else if(m_f->m_declareExpansionAsContField)
-                        {
-                            Exp3DH2 = MemoryManager<MultiRegions::
-                                DisContField3DHomogeneous2D>::
-                                AllocateSharedPtr(m_f->m_session, BkeyY, BkeyZ, 
-                                                  ly, lz, useFFT, dealiasing, 
-                                                  m_f->m_graph,
-                                                  m_f->m_session->GetVariable(0));
-                        }
-                        else
-                        {
-                            Exp3DH2 = MemoryManager<MultiRegions::
-                                ExpList3DHomogeneous2D>::
-                                AllocateSharedPtr(m_f->m_session, BkeyY, BkeyZ, 
-                                                  ly, lz, useFFT, dealiasing, 
-                                                  m_f->m_graph);
-                        }
-
-                        m_f->m_exp[0] = Exp3DH2;
-                    }
-                    else
-                    {
-                        MultiRegions::ExpList1DSharedPtr Exp1D;
-
-                        if(m_f->m_declareExpansionAsContField)
-                        {
-                            Exp1D = MemoryManager<MultiRegions::ContField1D>
-                                ::AllocateSharedPtr(m_f->m_session, m_f->m_graph,
-                                                    m_f->m_session->GetVariable(0));
-                        }
-                        else if(m_f->m_declareExpansionAsContField)
-                        {
-                            Exp1D = MemoryManager<MultiRegions::DisContField1D>
-                                ::AllocateSharedPtr(m_f->m_session, m_f->m_graph,
-                                                  m_f->m_session->GetVariable(0));
-                        }
-                        else 
-                        {
-                            Exp1D = MemoryManager<MultiRegions::ExpList1D>
-                                ::AllocateSharedPtr(m_f->m_session, m_f->m_graph);
-                        }
-
-
-                        m_f->m_exp[0] = Exp1D;
-                    }
-                }
-                break;
-            case 2:
-                {
-                    ASSERTL0(NumHomogeneousDir <= 1, 
-                             "NumHomogeneousDir is only set up for 1");
-                    
-                    if (NumHomogeneousDir == 1)
-                    {
-                        MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
-                        
-                        // Define Homogeneous expansion
-                        int nplanes;
-                        NekDouble lz;
-                        LibUtilities::BasisType btype;
-
-                        if(fldfilegiven)
-                        {
-                            nplanes =  m_f->m_fielddef[0]->m_numModes[2];
-                            lz      = m_f->m_fielddef[0]->m_homogeneousLengths[0];
-                            btype   = m_f->m_fielddef[0]->m_basis[1];
-                        }
-                        else
-                        {
-                            m_f->m_session->LoadParameter("HomModesZ", nplanes);
-                            m_f->m_session->LoadParameter("LZ",lz);
-                            btype = LibUtilities::eFourier;
-                        }
-                        
-                        // Choose points to be at evenly spaced points at
-                        // nplanes points
-                        const LibUtilities::PointsKey 
-                            Pkey(nplanes, LibUtilities::ePolyEvenlySpaced);
-                        
-                        const LibUtilities::BasisKey  Bkey(btype, nplanes, Pkey);
-                        
-                        if(m_f->m_declareExpansionAsContField)
-                        {
-                            Exp3DH1 = MemoryManager<MultiRegions::
-                                ContField3DHomogeneous1D>::
-                                AllocateSharedPtr(m_f->m_session, Bkey, lz, useFFT, 
-                                                  dealiasing, m_f->m_graph,
-                                                  m_f->m_session->GetVariable(0));
-                        }
-                        else if (m_f->m_declareExpansionAsContField)
-                        {
-                            Exp3DH1 = MemoryManager<MultiRegions::
-                                DisContField3DHomogeneous1D>::
-                                AllocateSharedPtr(m_f->m_session,
-                                                  Bkey, lz, useFFT, 
-                                                  dealiasing, m_f->m_graph,
-                                                  m_f->m_session->GetVariable(0));
-                        }
-                        else
-                        {
-                            Exp3DH1 = MemoryManager<MultiRegions::
-                                ExpList3DHomogeneous1D>::
-                                AllocateSharedPtr(m_f->m_session, Bkey, lz, useFFT, 
-                                                  dealiasing, m_f->m_graph);
-                        }
-                        m_f->m_exp[0] = Exp3DH1;
-                    }
-                    else
-                    {
-                        MultiRegions::ExpList2DSharedPtr Exp2D;
-
-                        if(m_f->m_declareExpansionAsContField)
-                        {
-                            Exp2D = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,
-                                                    m_f->m_session->GetVariable(0));
-                        }
-                        else if(m_f->m_declareExpansionAsDisContField)
-                        {
-                            Exp2D = MemoryManager<MultiRegions::DisContField2D>
-                                ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,
-                                                    m_f->m_session->GetVariable(0));
-                        }
-                        else
-                        {
-                            Exp2D = MemoryManager<MultiRegions::ExpList2D>
-                                ::AllocateSharedPtr(m_f->m_session,m_f->m_graph);
-                        }
-                        m_f->m_exp[0] = Exp2D;
-                        
-                    }
-                }
-                break;
-            case 3:
-                {
-                    MultiRegions::ExpList3DSharedPtr Exp3D;
-
-                    if(m_f->m_declareExpansionAsContField)
-                    {
-                        Exp3D = MemoryManager<MultiRegions::ContField3D>
-                            ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,
-                                                m_f->m_session->GetVariable(0));
-                    }
-                    else if(m_f->m_declareExpansionAsDisContField)
-                    {
-                        Exp3D = MemoryManager<MultiRegions::DisContField3D>
-                            ::AllocateSharedPtr(m_f->m_session,m_f->m_graph,
-                                                m_f->m_session->GetVariable(0));
-                    }
-                    else
-                    {
-                        Exp3D = MemoryManager<MultiRegions::ExpList3D>
-                            ::AllocateSharedPtr(m_f->m_session, m_f->m_graph);
-                    }
-                    m_f->m_exp[0] = Exp3D;
-                }
-                break;
-            default:
-                ASSERTL0(false, "Expansion dimension not recognised");
-                break;
-            }
-            
+            m_f->m_exp[0] = m_f->SetUpFirstExpList(NumHomogeneousDir,fldfilegiven);
         }
     }
 }

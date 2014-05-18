@@ -1661,11 +1661,13 @@ namespace Nektar
                 RT.SetValue(i, i, 1.0);
             }
 
-            if (matrixType == StdRegions::ePreconR)
+            if ((matrixType == StdRegions::ePreconR)||
+                (matrixType == StdRegions::ePreconRMass))
             {
                 return m_transformationmatrix;
             }
-            else if (matrixType == StdRegions::ePreconRT)
+            else if ((matrixType == StdRegions::ePreconRT)||
+                     (matrixType == StdRegions::ePreconRTMass))
             {
                 return m_transposedtransformationmatrix;
             }

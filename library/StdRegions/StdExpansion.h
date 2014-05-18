@@ -1252,7 +1252,7 @@ namespace Nektar
                 return v_GetFaceNormal(face); 
             }
 			
-			const NormalVector & GetVertexNormal(const int vertex) const
+            const NormalVector & GetVertexNormal(const int vertex) const
             {
                 return v_GetVertexNormal(vertex); 
             }

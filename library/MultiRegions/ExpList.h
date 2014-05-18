@@ -170,6 +170,8 @@ namespace Nektar
             ///Set Modified Basis for the stability analysis
             inline void SetModifiedBasis(const bool modbasis);
             
+            /// Set the \a i th value of \a m_phys to value \a val
+            inline void SetPhys(int i, NekDouble val);
             
             /// This function returns the third direction expansion condition,
             /// which can be in wave space (coefficient) or not
@@ -407,16 +409,6 @@ namespace Nektar
             /// Set the \a i th coefficiient in \a m_coeffs to value \a val
             inline void SetCoeff(int i, NekDouble val);
             
-            /// Set the coefficiient in \a m_coeffs to value \a val (0D Exapnsion)
-            inline void SetCoeff(NekDouble val);
-            
-            /// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
-            inline void SetPhys(NekDouble val);
-            
-            inline const SpatialDomains::PointGeomSharedPtr GetGeom(void) const;
-            
-            inline const SpatialDomains::PointGeomSharedPtr GetVertex(void) const;
-
             /// Set the \a i th coefficiient in  #m_coeffs to value \a val
             inline void SetCoeffs(int i, NekDouble val);
 
@@ -661,8 +653,6 @@ namespace Nektar
              */
             inline boost::shared_ptr<ExpList> &GetTrace();
             
-            inline boost::shared_ptr<ExpList> &GetTrace(int i);
-            
             inline boost::shared_ptr<AssemblyMapDG> &GetTraceMap(void);
             
             inline const Array<OneD, const int> &GetTraceBndMap(void);
@@ -705,10 +695,10 @@ namespace Nektar
                 BoundaryConditionShPtr>& UpdateBndConditions();
 
             inline void EvaluateBoundaryConditions(
-                const NekDouble time = 0.0,
-                const NekDouble = NekConstants::kNekUnsetDouble,
-                const NekDouble = NekConstants::kNekUnsetDouble);
-
+                const NekDouble   time      = 0.0,
+                const std::string varName   = "",
+                const             NekDouble = NekConstants::kNekUnsetDouble,
+                const             NekDouble = NekConstants::kNekUnsetDouble);
 
             // Routines for continous matrix solution
             /// This function calculates the result of the multiplication of a
@@ -1034,8 +1024,6 @@ namespace Nektar
 
             virtual boost::shared_ptr<ExpList> &v_GetTrace();
 			
-            virtual boost::shared_ptr<ExpList> &v_GetTrace(int i);
-
             virtual boost::shared_ptr<AssemblyMapDG> &v_GetTraceMap();
 
             virtual const Array<OneD, const int> &v_GetTraceBndMap();
@@ -1154,16 +1142,6 @@ namespace Nektar
                 Array<OneD, NekDouble> &coord_1,
                 Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 			
-            virtual void v_SetCoeff(NekDouble val);
-            
-            virtual void v_SetPhys(NekDouble val);
-            
-            virtual const SpatialDomains::PointGeomSharedPtr
-                v_GetGeom(void) const;
-
-            virtual const SpatialDomains::PointGeomSharedPtr
-                v_GetVertex(void) const;
-            
             virtual void v_PhysDeriv(
                 const Array<OneD, const NekDouble> &inarray,
                 Array<OneD, NekDouble> &out_d0,
@@ -1274,7 +1252,11 @@ namespace Nektar
                 const NekDouble scale,
                 const Array<OneD, NekDouble> &inarray,
                       Array<OneD, NekDouble> &outarray);
-        
+
+            void ExtractFileBCs(const std::string                &fileName,
+                                const std::string                &varName,
+                                const boost::shared_ptr<ExpList>  locExpList);
+            
             // Utility function for a common case of retrieving a
             // BoundaryCondition from a boundary condition collection.
             MULTI_REGIONS_EXPORT
@@ -1290,9 +1272,10 @@ namespace Nektar
                 &v_UpdateBndConditions();
 
             virtual void v_EvaluateBoundaryConditions(
-                const NekDouble time = 0.0,
-                const NekDouble x2_in = NekConstants::kNekUnsetDouble,
-                const NekDouble x3_in = NekConstants::kNekUnsetDouble);
+                const NekDouble   time    = 0.0,
+                const std::string varName = "",
+                const NekDouble   x2_in   = NekConstants::kNekUnsetDouble,
+                const NekDouble   x3_in   = NekConstants::kNekUnsetDouble);
             
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
             
@@ -1437,6 +1420,13 @@ namespace Nektar
         {
             return m_WaveSpace;
         }
+
+        /// Set the \a i th value of\a m_phys to value \a val
+        inline void ExpList::SetPhys(int i, NekDouble val)
+        {
+            m_phys[i] = val;
+        }
+
 
         /**
          * This function fills the array \f$\boldsymbol{u}_l\f$, the evaluation
@@ -1619,49 +1609,10 @@ namespace Nektar
         /**
          *
          */
-        inline void ExpList::SetCoeff(NekDouble val)
-		
-        {
-            v_SetCoeff(val);
-        }
-		
-        /**
-         *
-         */
-        inline const SpatialDomains::PointGeomSharedPtr
-            ExpList::GetGeom(void) const
-        {
-            return v_GetGeom();
-        }
-	
-        /**
-         *
-         */
-        inline const SpatialDomains::PointGeomSharedPtr
-            ExpList::GetVertex(void) const
-        {
-            return v_GetVertex();
-        }
-	
-		
-        /**
-         *
-         */
-        inline void ExpList::SetPhys(NekDouble val)
-            
-        {
-            v_SetPhys(val);
-        }
-	
-	
-        /**
-         *
-         */
-        inline void ExpList::PhysDeriv(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD, NekDouble> &out_d0,
-                  Array<OneD, NekDouble> &out_d1,
-                  Array<OneD, NekDouble> &out_d2)
+        inline void ExpList::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD, NekDouble> &out_d0,
+                                       Array<OneD, NekDouble> &out_d1, 
+                                       Array<OneD, NekDouble> &out_d2)
         {
             v_PhysDeriv(inarray,out_d0,out_d1,out_d2);
         }
@@ -1962,11 +1913,6 @@ namespace Nektar
             return v_GetTrace();
         }
 
-        inline boost::shared_ptr<ExpList> &ExpList::GetTrace(int i)
-        {
-            return v_GetTrace(i);
-        }
-		
         inline boost::shared_ptr<AssemblyMapDG> &ExpList::GetTraceMap()
         {
             return v_GetTraceMap();
@@ -2047,11 +1993,13 @@ namespace Nektar
             return v_UpdateBndConditions();
         }
 
-        inline void ExpList::EvaluateBoundaryConditions(const NekDouble time,
-                                                        const NekDouble x2_in,
-                                                        const NekDouble x3_in)
+        inline void ExpList::EvaluateBoundaryConditions(
+            const NekDouble   time,
+            const std::string varName,
+            const NekDouble   x2_in,
+            const NekDouble   x3_in)
         {
-            v_EvaluateBoundaryConditions(time,x2_in,x3_in);
+            v_EvaluateBoundaryConditions(time, varName, x2_in, x3_in);
         }
 
         // Routines for continous matrix solution

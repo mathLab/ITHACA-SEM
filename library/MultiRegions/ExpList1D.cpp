@@ -233,6 +233,118 @@ namespace Nektar
         }
 
 
+
+        /**
+         * Given a mesh \a graph1D, and the spectral/hp element
+         * expansion as well as and separate information about a \a
+         * domain, this constructor fills the list of local
+         * expansions \texttt{m_exp} with the proper expansions,
+         * calculates the total number of quadrature points \f$x_i\f$
+         * and local expansion coefficients \f$\hat{u}^e_n\f$ and
+         * allocates memory for the arrays #m_coeffs and #m_phys.
+         *
+         * For each element its corresponding LibUtilities#BasisKey is
+         * retrieved and this is used to construct either a standard segment
+         * (LocalRegions#SegExp) or a generalised segment
+         * (LocalRegions#GenSegExp) which is stored in the list #m_exp.
+         * Finally, ExpList#SetCoeffPhys is called to initialise the data
+         * storage areas and set up the offset arrays.
+         *
+         * @param   graph1D     A mesh, containing information about the
+         *                      domain and the spectral/hp element expansion.
+         * @param   UseGenSegExp If true, create general segment expansions
+         *                      instead of just normal segment expansions.
+         */
+        ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                             const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                             const SpatialDomains::CompositeMap &domain,
+                             const bool DeclareCoeffPhysArrays,
+                             const std::string var,
+                             bool SetToOneSpaceDimension):
+            ExpList(pSession,graph1D)
+        {
+            int j,id=0;
+            LocalRegions::SegExpSharedPtr seg;
+            SpatialDomains::SegGeomSharedPtr SegmentGeom;
+            SpatialDomains::Composite comp;
+            SpatialDomains::CompositeMap::const_iterator compIt;
+
+            // Retrieve the list of expansions
+            const SpatialDomains::ExpansionMap &expansions
+                = graph1D->GetExpansions(var);
+
+            // Process each composite region in domain
+            for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
+            {
+                comp = compIt->second;
+
+                // Process each expansion in the graph
+                for(j = 0; j < compIt->second->size(); ++j)
+                {
+                    SpatialDomains::ExpansionMap::const_iterator expIt;
+
+                    if((SegmentGeom = boost::dynamic_pointer_cast<
+                            SpatialDomains::SegGeom>(
+                                (*compIt->second)[j])))
+                    {
+                        // Retrieve basis key from expansion and define expansion
+                        if((expIt = expansions.find(SegmentGeom->GetGlobalID())) != expansions.end())
+                        {
+                            LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
+                            
+                            if(SetToOneSpaceDimension)
+                            {
+                                SpatialDomains::SegGeomSharedPtr OneDSegmentGeom = 
+                                    SegmentGeom->GenerateOneSpaceDimGeom();
+
+                                seg = MemoryManager<LocalRegions::SegExp>
+                                    ::AllocateSharedPtr(bkey, OneDSegmentGeom);
+                            }
+                            else
+                            {
+                                seg = MemoryManager<LocalRegions::SegExp>
+                                    ::AllocateSharedPtr(bkey, SegmentGeom);
+                            }
+                        }
+                        else
+                        {
+                            ASSERTL0(false,"Failed to find basis key");
+                        }
+
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"Failed to dynamic cast geometry to SegGeom");
+                    }
+                    
+                    
+                    // Assign next ID
+                    seg->SetElmtId(id++);
+
+                    // Add the expansion
+                    (*m_exp).push_back(seg);
+                }
+            }
+
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            // set up offset arrays.
+            SetCoeffPhysOffsets();
+
+            if(DeclareCoeffPhysArrays)
+            {
+                // Set up m_coeffs, m_phys.
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+            }
+
+            ReadGlobalOptimizationParameters();
+        }
+
+
         /**
          * Fills the list of local expansions with the segments from the 2D
          * mesh specified by \a domain. This CompositeMap contains a list of
@@ -264,7 +376,6 @@ namespace Nektar
             for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
             {
                 comp = compIt->second;
-
                 // Process each expansion in the region.
                 for(j = 0; j < compIt->second->size(); ++j)
                 {
@@ -306,99 +417,6 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
         }
-
-        /**
-         * Fills the list of local expansions with the segments in one
-         * subdomain specified in an inputfile by \a domain. This 
-         * CompositeMap contains a list of Composites which define the 
-         * subdomains.
-         * @param   domain      A domain, comprising of one or more composite
-         *                      regions.
-         * @param   i           Index of currently processed subdomain
-         * @param   graph1D     A mesh, containing information about the
-         *                      domain and the spectral/hp element expansion.
-         * @param   DeclareCoeffPhysArrays If true, create general segment expansions
-         *                      instead of just normal segment expansions.
-         */
-        ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-							 const SpatialDomains::CompositeMap &domain,
-                             const SpatialDomains::MeshGraphSharedPtr &graph1D,
-							 int i,
-                             const bool DeclareCoeffPhysArrays):
-		ExpList(pSession)
-        {
-            SetExpType(e1D);
-
-            int id=0;
-            SpatialDomains::Composite comp;
-            SpatialDomains::CompositeMap::const_iterator compIt;
-            SpatialDomains::SegGeomSharedPtr SegmentGeom;
-            LocalRegions::SegExpSharedPtr seg;
-			
-            int offset = 0;
-            const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-			
-			
-            // Find the correct composite region to process
-            compIt = domain.begin();
-            for(int k = 0; k < i; ++k)
-            {
-                offset += compIt->second->size();
-                ++compIt;
-            }	
-            comp = compIt->second;
-			
-            //Find the correct expansion start point for the current composite
-            expIt = expansions.begin();
-            for(int k = 0; k < offset; ++k)
-            {
-                ++expIt;
-            }
-			
-            // Process each expansion in the region.
-            for(int j = 0; j < compIt->second->size(); ++j)
-            {
-                if ((SegmentGeom = boost::dynamic_pointer_cast<
-                         SpatialDomains::SegGeom>(
-                             (*compIt->second)[j])))
-                {					
-                    // Retrieve the basis key from the expansion.
-                    LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
-																				
-                    seg = MemoryManager<LocalRegions::SegExp>
-                        ::AllocateSharedPtr(bkey, SegmentGeom);
-					
-                    // Add the segment to the expansion list.
-                    seg->SetElmtId(id++);
-                    (*m_exp).push_back(seg);
-					
-                    expIt++;
-                }
-                else
-                {
-                    ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                }
-            }
-			
-			
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-			::AllocateSharedPtr(nel);
-			
-            // Allocate storage for data and populate element offset lists.
-            SetCoeffPhysOffsets();
-			
-            // Set up m_coeffs, m_phys.
-            if(DeclareCoeffPhysArrays)
-            {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
-            }
-        }
-		
-		
 
         /**
          * Store expansions for the trace space expansions used in

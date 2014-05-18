@@ -222,6 +222,12 @@ namespace Nektar
             else
             {
                 m_comm = pComm;
+
+                if (m_comm->GetSize() > 1)
+                {
+                    m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                        "IterativeStaticCond";
+                }
             }
 
             // If running in parallel change the default global sys solution
@@ -289,7 +295,7 @@ namespace Nektar
                                  "number of procs in Y-dir")
                 ("npz",          po::value<int>(),
                                  "number of procs in Z-dir")
-
+                ("part-info",    "Output partition information")
             ;
             
             CmdLineArgMap::const_iterator cmdIt;
@@ -663,6 +669,20 @@ namespace Nektar
             return iter->second;
         }
 
+        /**
+         *
+         */
+        void SessionReader::SetSolverInfo(
+            const std::string &pProperty, const std::string &pValue) 
+        {
+            std::string vProperty = boost::to_upper_copy(pProperty);
+            SolverInfoMap::iterator iter = m_solverInfo.find(vProperty);
+
+            ASSERTL1(iter != m_solverInfo.end(),
+                     "Unable to find requested property: " + pProperty);
+
+            iter->second = pValue;
+        }
 
         /**
          *
@@ -927,7 +947,8 @@ namespace Nektar
          */
         bool SessionReader::DefinesFunction(
             const std::string &pName,
-            const std::string &pVariable) const
+            const std::string &pVariable,
+            const int pDomain) const
         {
             FunctionMap::const_iterator it1;
             FunctionVariableMap::const_iterator it2;
@@ -936,9 +957,11 @@ namespace Nektar
             // Check function exists
             if ((it1 = m_functions.find(vName))     != m_functions.end())
             {
+                pair<std::string, int> key(pVariable,pDomain);
+                pair<std::string, int> defkey("*",pDomain);
                 bool varExists =
-                    (it2 = it1->second.find(pVariable)) != it1->second.end() ||
-                    (it2 = it1->second.find("*")) != it1->second.end();
+                    (it2 = it1->second.find(key)) != it1->second.end() ||
+                    (it2 = it1->second.find(defkey)) != it1->second.end();
                 return varExists;
             }
             return false;
@@ -950,7 +973,8 @@ namespace Nektar
          */
         EquationSharedPtr SessionReader::GetFunction(
             const std::string &pName,
-            const std::string &pVariable) const
+            const std::string &pVariable,
+            const int pDomain) const
         {
             FunctionMap::const_iterator it1;
             FunctionVariableMap::const_iterator it2, it3;
@@ -961,16 +985,19 @@ namespace Nektar
                      + std::string("' has been defined in the session file."));
 
             // Check for specific and wildcard definitions
-            bool specific = (it2 = it1->second.find(pVariable)) !=
-                            it1->second.end();
-            bool wildcard = (it3 = it1->second.find("*")) !=
-                            it1->second.end();
+            pair<std::string,int> key(pVariable,pDomain);
+            pair<std::string,int> defkey("*",pDomain);
+            bool specific = (it2 = it1->second.find(key)) !=
+                it1->second.end();
+            bool wildcard = (it3 = it1->second.find(defkey)) !=
+                it1->second.end();
 
             // Check function is defined somewhere
             ASSERTL0(specific || wildcard,
-                     std::string("No such variable '") + pVariable
-                     + std::string("' defined for function '") + pName
-                     + std::string("' in session file."));
+                     "No such variable " + pVariable
+                     + " in domain " + boost::lexical_cast<string>(pDomain) 
+                     + " defined for function " + pName
+                     + " in session file.");
 
             // If not specific, must be wildcard
             if (!specific)
@@ -989,10 +1016,11 @@ namespace Nektar
          */
         EquationSharedPtr SessionReader::GetFunction(
             const std::string  &pName,
-            const unsigned int &pVar) const
+            const unsigned int &pVar,
+            const int pDomain) const
         {
             ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
-            return GetFunction(pName, m_variables[pVar]);
+            return GetFunction(pName, m_variables[pVar],pDomain);
         }
 
 
@@ -1001,7 +1029,8 @@ namespace Nektar
          */
         enum FunctionType SessionReader::GetFunctionType(
             const std::string &pName,
-            const std::string &pVariable) const
+            const std::string &pVariable,
+            const int pDomain) const
         {
             FunctionMap::const_iterator it1;
             FunctionVariableMap::const_iterator it2, it3;
@@ -1013,16 +1042,19 @@ namespace Nektar
                       + std::string("' not found."));
 
             // Check for specific and wildcard definitions
-            bool specific = (it2 = it1->second.find(pVariable)) !=
+            pair<std::string,int> key(pVariable,pDomain);
+            pair<std::string,int> defkey("*",pDomain);
+            bool specific = (it2 = it1->second.find(key)) !=
                             it1->second.end();
-            bool wildcard = (it3 = it1->second.find("*")) !=
+            bool wildcard = (it3 = it1->second.find(defkey)) !=
                             it1->second.end();
 
             // Check function is defined somewhere
             ASSERTL0(specific || wildcard,
-                     std::string("No such variable '") + pVariable
-                     + std::string("' defined for function '") + pName
-                     + std::string("' in session file."));
+                     "No such variable " + pVariable
+                     + " in domain " + boost::lexical_cast<string>(pDomain) 
+                     + " defined for function " + pName
+                     + " in session file.");
 
             // If not specific, must be wildcard
             if (!specific)
@@ -1039,10 +1071,11 @@ namespace Nektar
          */
         enum FunctionType SessionReader::GetFunctionType(
             const std::string  &pName,
-            const unsigned int &pVar) const
+            const unsigned int &pVar,
+            const int pDomain) const
         {
             ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
-            return GetFunctionType(pName, m_variables[pVar]);
+            return GetFunctionType(pName, m_variables[pVar],pDomain);
         }
 
 
@@ -1051,7 +1084,8 @@ namespace Nektar
          */
         std::string SessionReader::GetFunctionFilename(
             const std::string &pName, 
-            const std::string &pVariable) const
+            const std::string &pVariable,
+            const int pDomain) const
         {
             FunctionMap::const_iterator it1;
             FunctionVariableMap::const_iterator it2, it3;
@@ -1063,17 +1097,20 @@ namespace Nektar
                       + std::string("' not found."));
 
             // Check for specific and wildcard definitions
-            bool specific = (it2 = it1->second.find(pVariable)) !=
+            pair<std::string,int> key(pVariable,pDomain);
+            pair<std::string,int> defkey("*",pDomain);
+            bool specific = (it2 = it1->second.find(key)) !=
                             it1->second.end();
-            bool wildcard = (it3 = it1->second.find("*")) !=
+            bool wildcard = (it3 = it1->second.find(defkey)) !=
                             it1->second.end();
 
             // Check function is defined somewhere
             ASSERTL0(specific || wildcard,
-                     std::string("No such variable '") + pVariable
-                     + std::string("' defined for function '") + pName
-                     + std::string("' in session file."));
-
+                     "No such variable " + pVariable
+                     + " in domain " + boost::lexical_cast<string>(pDomain) 
+                     + " defined for function " + pName
+                     + " in session file.");
+            
             // If not specific, must be wildcard
             if (!specific)
             {
@@ -1089,10 +1126,11 @@ namespace Nektar
          */
         std::string SessionReader::GetFunctionFilename(
             const std::string  &pName, 
-            const unsigned int &pVar) const
+            const unsigned int &pVar,
+            const int pDomain) const
         {
             ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
-            return GetFunctionFilename(pName, m_variables[pVar]);
+            return GetFunctionFilename(pName, m_variables[pVar],pDomain);
         }
 
 
@@ -1157,17 +1195,6 @@ namespace Nektar
             const std::string& pName) const
         {
             return (m_cmdLineOptions.find(pName) != m_cmdLineOptions.end());
-        }
-
-
-        /**
-         *
-         */
-        template <typename T>
-        T SessionReader::GetCmdLineArgument(
-            const std::string& pName) const
-        {
-            return m_cmdLineOptions.find(pName)->second.as<T>();
         }
 
 
@@ -1367,6 +1394,11 @@ namespace Nektar
                         vPartitioner->WriteAllPartitions(vSession);
                         vPartitioner->GetCompositeOrdering(m_compOrder);
                         vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+
+                        if (DefinesCmdLineArgument("part-info"))
+                        {
+                            vPartitioner->PrintPartInfo(std::cout);
+                        }
                     }
                 }
                 else
@@ -1383,6 +1415,11 @@ namespace Nektar
                     vPartitioner->WriteLocalPartition(vSession);
                     vPartitioner->GetCompositeOrdering(m_compOrder);
                     vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+
+                    if (DefinesCmdLineArgument("part-info"))
+                    {
+                        vPartitioner->PrintPartInfo(std::cout);
+                    }
                 }
                 m_comm->Block();
 
@@ -1787,7 +1824,6 @@ namespace Nektar
             }
         }
 
-
         /**
          *
          */
@@ -2059,6 +2095,21 @@ namespace Nektar
                     ParseUtils::GenerateOrderedStringVector(variableStr.c_str(),
                                                             variableList);
 
+                    // If no domain string put to 0
+                    std::string domainStr;
+                    if (!variable->Attribute("DOMAIN"))
+                    {
+                        domainStr = "0";
+                    }
+                    else
+                    {
+                        domainStr = variable->Attribute("DOMAIN");
+                    }
+
+                    // Parse list of variables
+                    std::vector<unsigned int> domainList;
+                    ParseUtils::GenerateSeqVector(domainStr.c_str(), domainList);
+
                     // Expressions are denoted by E
                     if (conditionType == "E")
                     {
@@ -2113,20 +2164,28 @@ namespace Nektar
                                 + boost::lexical_cast<string>(variable->Row()));
                     }
 
+
+                    
                     // Add variables to function
                     for (unsigned int i = 0; i < variableList.size(); ++i)
                     {
-                        // Check it has not already been defined
-                        FunctionVariableMap::iterator fcnsIter
-                                = functionVarMap.find(variableList[i]);
-                        ASSERTL0(fcnsIter == functionVarMap.end(),
-                                "Error setting expression '" + variableList[i]
-                                + "' in function '" + functionStr + "'. "
-                                "Expression has already been defined.");
-
-                        functionVarMap[variableList[i]] = funcDef;
+                        for(unsigned int j = 0; j < domainList.size(); ++j)
+                        {
+                            // Check it has not already been defined
+                            pair<std::string,int> key(variableList[i],domainList[j]);
+                            FunctionVariableMap::iterator fcnsIter
+                                = functionVarMap.find(key);
+                            ASSERTL0(fcnsIter == functionVarMap.end(),
+                                     "Error setting expression '" + variableList[i]
+                                     + " in domain " 
+                                     + boost::lexical_cast<std::string>(domainList[j]) 
+                                     + "' in function '" + functionStr + "'. "
+                                     "Expression has already been defined.");
+                            
+                            functionVarMap[key] = funcDef;
+                        }
                     }
-
+                    
                     variable = variable->NextSiblingElement();
                 }
                 // Add function definition to map

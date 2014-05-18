@@ -599,7 +599,7 @@ namespace Nektar
         
             LibUtilities::CommSharedPtr vComm = pSession->GetComm();
             int nproc = vComm->GetSize(); // number of processors
-            int edgepr = vComm->GetRank(); // ID processor
+            int facepr = vComm->GetRank(); // ID processor
             
             m_parallel = false;
             
@@ -607,41 +607,21 @@ namespace Nektar
             {
                 m_parallel = true;
                 
-                int numModes_ref0,
-                numModes_ref1,
-                numModes_com0,
-                numModes_com1,
-                numMods_max0,
-                numMods_max1,
-                pnts_com0,
-                pnts_com1,
-                pnts_ref0,
-                pnts_ref1,
-                pnts_max0,
-                pnts_max1;
-                
                 int fCnt = 0;
                 
-                //count the number of face on each partition
-                
+                // Count the number of faces on each partition
                 for(i = 0; i < locexp.size(); ++i)
                 {
-                    for(j = 0; j < locexp[i]->GetNfaces(); ++j)
-                    {
-                        fCnt = fCnt + 1;
-                    }
+                    fCnt += locexp[i]->GetNfaces();
                 }
                 
-                // set-up the offset and the array that will contain the list of
-                // edge ID's
-                
+                // Set up the offset and the array that will contain the list of
+                // face IDs, then reduce this across processors.
                 Array<OneD, int> faceCnt(nproc,0);
-                faceCnt[edgepr] = fCnt;
-                
+                faceCnt[facepr] = fCnt;
                 vComm->AllReduce(faceCnt, LibUtilities::ReduceSum);
                 
                 int totFaceCnt = Vmath::Vsum(nproc, faceCnt, 1);
-                
                 Array<OneD, int> fTotOffsets(nproc,0);
                 
                 for (i = 1; i < nproc; ++i)
@@ -651,179 +631,13 @@ namespace Nektar
                 
                 // Local list of the edges per element
                 
-                Array<OneD, int> faceID(fCnt,0);
-                Array<OneD, int> faceNm0(fCnt,0);
-                Array<OneD, int> faceNm1(fCnt,0);
-                Array<OneD, int> facePnts0(fCnt,0);
-                Array<OneD, int> facePnts1(fCnt,0);
-                
-                int cntr = 0;
-                
-                for(i = 0; i < locexp.size(); ++i)
-                {
-                    exp3D = LocalRegions::Expansion3D::FromStdExp(locexp[i]);
-                    
-                    int nfaces = locexp[i]->GetNfaces();
-                    
-                    for(j = 0; j < nfaces; ++j)
-                    {
-                        LibUtilities::BasisKey face_dir0
-                        = locexp[i]->DetFaceBasisKey(j,0);
-                        LibUtilities::BasisKey face_dir1
-                        = locexp[i]->DetFaceBasisKey(j,1);
-                        
-                        int nm_ref0         = face_dir0.GetNumModes();
-                        int nm_ref1         = face_dir1.GetNumModes();
-                        
-                        int pnts_ref0       = face_dir0.GetNumPoints();
-                        int pnts_ref1       = face_dir1.GetNumPoints();
-                        
-                        FaceGeom            = exp3D->GetGeom3D()->GetFace(j);
-                        
-                        faceID[cntr]      = FaceGeom->GetFid();
-                        faceNm0[cntr]      = nm_ref0;
-                        faceNm1[cntr]      = nm_ref1;
-                        facePnts0[cntr]    = pnts_ref0;
-                        facePnts1[cntr]    = pnts_ref1;
-                        
-                        cntr = cntr + 1;
-                    }
-                }
-                
-                // Make a list of the edges per element. In this case double edge
-                // ID's can be identified which are the trace edges
-                
-                Array<OneD, int> FacesTotID(totFaceCnt, 0);
-                Array<OneD, int> FacesTotNm0(totFaceCnt, 0);
-                Array<OneD, int> FacesTotNm1(totFaceCnt, 0);
+                Array<OneD, int> FacesTotID   (totFaceCnt, 0);
+                Array<OneD, int> FacesTotNm0  (totFaceCnt, 0);
+                Array<OneD, int> FacesTotNm1  (totFaceCnt, 0);
                 Array<OneD, int> FacesTotPnts0(totFaceCnt, 0);
                 Array<OneD, int> FacesTotPnts1(totFaceCnt, 0);
                 
-                for (i = 0; i < fCnt; ++i)
-                {
-                    FacesTotID[fTotOffsets[edgepr] + i]   = faceID[i];
-                    FacesTotNm0[fTotOffsets[edgepr] + i]   = faceNm0[i];
-                    FacesTotNm1[fTotOffsets[edgepr] + i]   = faceNm1[i];
-                    FacesTotPnts0[fTotOffsets[edgepr] + i] = facePnts0[i];
-                    FacesTotPnts1[fTotOffsets[edgepr] + i] = facePnts1[i];
-                }
-                
-                vComm->AllReduce(FacesTotID, LibUtilities::ReduceSum);
-                vComm->AllReduce(FacesTotNm0, LibUtilities::ReduceSum);
-                vComm->AllReduce(FacesTotNm1, LibUtilities::ReduceSum);
-                vComm->AllReduce(FacesTotPnts0, LibUtilities::ReduceSum);
-                vComm->AllReduce(FacesTotPnts1, LibUtilities::ReduceSum);
-                
-                Array<OneD, int> tmp_traceGlobalID(totFaceCnt, 0);
-                Array<OneD, int> tmp_traceGlobalNm0(totFaceCnt, 0);
-                Array<OneD, int> tmp_traceGlobalNm1(totFaceCnt, 0);
-                Array<OneD, int> tmp_traceGlobalPnts0(totFaceCnt, 0);
-                Array<OneD, int> tmp_traceGlobalPnts1(totFaceCnt, 0);
-                
-                int cnt = 0;
-                
-                for (int u = 0; u < totFaceCnt; ++u)
-                {
-                    for (int k = 0; k < totFaceCnt; ++k)
-                    {
-                        if (FacesTotID[k] == FacesTotID[u] && u != k)
-                        {
-                            numModes_ref0 = FacesTotNm0[u];
-                            numModes_com0 = FacesTotNm0[k];
-                            
-                            numModes_ref1 = FacesTotNm1[u];
-                            numModes_com1 = FacesTotNm1[k];
-                            
-                            pnts_ref0 = FacesTotPnts0[u];
-                            pnts_com0 = FacesTotPnts0[k];
-                            
-                            pnts_ref1 = FacesTotPnts1[u];
-                            pnts_com1 = FacesTotPnts1[k];
-                            
-                            // determine the maximum nummodes
-                            
-                            if (numModes_ref0 > numModes_com0
-                                && numModes_ref1 > numModes_com1)
-                            {
-                                numMods_max0 = numModes_ref0;
-                                numMods_max1 = numModes_ref1;
-                                
-                                pnts_max0    = pnts_ref0;
-                                pnts_max1    = pnts_ref1;
-                            }
-                            else
-                            {
-                                numMods_max0 = numModes_com0;
-                                numMods_max1 = numModes_com1;
-                                
-                                pnts_max0    = pnts_com0;
-                                pnts_max1    = pnts_com1;
-                            }
-                            
-                            tmp_traceGlobalID[cnt]       = FacesTotID[k];
-                            tmp_traceGlobalNm0[cnt]      = numMods_max0;
-                            tmp_traceGlobalNm1[cnt]      = numMods_max1;
-                            tmp_traceGlobalPnts0[cnt]    = pnts_max0;
-                            tmp_traceGlobalPnts1[cnt]    = pnts_max1;
-                            
-                            cnt++;
-                        }
-                    }
-                }
-                
-                int nTraceGlobal = cnt;
-                
-                for (int i = 0; i < nTraceGlobal; ++i)
-                {
-                    for (int j = i+1; j < nTraceGlobal;)
-                    {
-                        if (tmp_traceGlobalID[j] == tmp_traceGlobalID[i])
-                        {
-                            for (int k = j; k < nTraceGlobal; ++k)
-                            {
-                                tmp_traceGlobalID[k]    = tmp_traceGlobalID[k+1];
-                                tmp_traceGlobalNm0[k]   = tmp_traceGlobalNm0[k+1];
-                                tmp_traceGlobalNm1[k]   = tmp_traceGlobalNm1[k+1];
-                                tmp_traceGlobalPnts0[k] = tmp_traceGlobalPnts0[k+1];
-                                tmp_traceGlobalPnts1[k] = tmp_traceGlobalPnts1[k+1];
-                            }
-                            nTraceGlobal--;
-                        }
-                        else
-                        {
-                            j++;
-                        }
-                    }
-                }
-                
-                Array<OneD, int> traceGlobalID(nTraceGlobal, 0);
-                Array<OneD, int> traceGlobalNm0(nTraceGlobal, 0);
-                Array<OneD, int> traceGlobalNm1(nTraceGlobal, 0);
-                Array<OneD, int> traceGlobalPnts0(nTraceGlobal, 0);
-                Array<OneD, int> traceGlobalPnts1(nTraceGlobal, 0);
-                
-                Vmath::Vcopy(nTraceGlobal,
-                             tmp_traceGlobalID, 1,
-                             traceGlobalID, 1);
-                
-                Vmath::Vcopy(nTraceGlobal,
-                             tmp_traceGlobalNm0, 1,
-                             traceGlobalNm0, 1);
-                
-                Vmath::Vcopy(nTraceGlobal,
-                             tmp_traceGlobalNm1, 1,
-                             traceGlobalNm1, 1);
-                
-                Vmath::Vcopy(nTraceGlobal,
-                             tmp_traceGlobalPnts0, 1,
-                             traceGlobalPnts0, 1);
-                
-                Vmath::Vcopy(nTraceGlobal,
-                             tmp_traceGlobalPnts1, 1,
-                             traceGlobalPnts1, 1);
-                
-                // Loop to set up the correct trace expansions
-                // locexp.size() gives the number of elements on this node
+                int cntr = fTotOffsets[facepr];
                 
                 for(i = 0; i < locexp.size(); ++i)
                 {
@@ -831,62 +645,74 @@ namespace Nektar
                     
                     int nfaces = locexp[i]->GetNfaces();
                     
-                    for(j = 0; j < nfaces; ++j)
+                    for(j = 0; j < nfaces; ++j, ++cntr)
                     {
-                        FaceGeom = exp3D->GetGeom3D()->GetFace(j);
-                        id       = FaceGeom->GetFid();
-                        
                         LibUtilities::BasisKey face_dir0
-                        = locexp[i]->DetFaceBasisKey(j,0);
+                            = locexp[i]->DetFaceBasisKey(j,0);
                         LibUtilities::BasisKey face_dir1
-                        = locexp[i]->DetFaceBasisKey(j,1);
-                        
-                        int nm_ref0 = face_dir0.GetNumModes();
-                        int nm_ref1 = face_dir1.GetNumModes();
-                        
-                        if (facesDone.count(id) != 0)
-                        {
-                            continue;
-                        }
-                        
-                        it = faceOrders.find(id);
-                        
-                        for (int u = 0; u < nTraceGlobal; ++u)
-                        {
-                            if(id == traceGlobalID[u]
-                               && nm_ref0 != traceGlobalNm0[u]
-                               && nm_ref1 != traceGlobalNm1[u])
-                            {
-                                // set-up the correct PointsKey for the newly
-                                // defined basiskey for the incorrect defined trace edges
-                                
-                                const LibUtilities::PointsKey newPkey0(
-                                        traceGlobalPnts0[u],
-                                        face_dir0.GetPointsType());
-                                
-                                const LibUtilities::PointsKey newPkey1(
-                                        traceGlobalPnts1[u],
-                                        face_dir1.GetPointsType());
-                                
-                                // set-up the correct basiskey for the trace edges
-                                LibUtilities::BasisKey traceGlobalBkey0(
-                                        face_dir0.GetBasisType(),
-                                        traceGlobalNm0[u],
-                                        newPkey0);
-                                
-                                LibUtilities::BasisKey traceGlobalBkey1(
-                                        face_dir1.GetBasisType(),
-                                        traceGlobalNm1[u],
-                                        newPkey1);
-                                
-                                faceOrders.insert(std::make_pair(id,
-                                        std::make_pair(FaceGeom,std::make_pair(
-                                        traceGlobalBkey0, traceGlobalBkey1))));
-                                
-                                it->second.second.first  = traceGlobalBkey0;
-                                it->second.second.second = traceGlobalBkey1;
-                            }
-                        }
+                            = locexp[i]->DetFaceBasisKey(j,1);
+
+                        FacesTotID[cntr]    = exp3D->GetGeom3D()->GetFid(j);
+                        FacesTotNm0[cntr]   = face_dir0.GetNumModes ();
+                        FacesTotNm1[cntr]   = face_dir1.GetNumModes ();
+                        FacesTotPnts0[cntr] = face_dir0.GetNumPoints();
+                        FacesTotPnts1[cntr] = face_dir1.GetNumPoints();
+                    }
+                }
+                
+                vComm->AllReduce(FacesTotID,    LibUtilities::ReduceSum);
+                vComm->AllReduce(FacesTotNm0,   LibUtilities::ReduceSum);
+                vComm->AllReduce(FacesTotNm1,   LibUtilities::ReduceSum);
+                vComm->AllReduce(FacesTotPnts0, LibUtilities::ReduceSum);
+                vComm->AllReduce(FacesTotPnts1, LibUtilities::ReduceSum);
+
+                for (i = 0; i < totFaceCnt; ++i)
+                {
+                    it = faceOrders.find(FacesTotID[i]);
+
+                    if (it == faceOrders.end())
+                    {
+                        continue;
+                    }
+
+                    LibUtilities::BasisKey existing0 =
+                        it->second.second.first;
+                    LibUtilities::BasisKey existing1 =
+                        it->second.second.second;
+                    LibUtilities::BasisKey face0(
+                        existing0.GetBasisType(), FacesTotNm0[i],
+                        LibUtilities::PointsKey(FacesTotPnts0[i],
+                                                existing0.GetPointsType()));
+                    LibUtilities::BasisKey face1(
+                        existing1.GetBasisType(), FacesTotNm1[i],
+                        LibUtilities::PointsKey(FacesTotPnts1[i],
+                                                existing1.GetPointsType()));
+
+                    int np11 = face0    .GetNumPoints();
+                    int np12 = face1    .GetNumPoints();
+                    int np21 = existing0.GetNumPoints();
+                    int np22 = existing1.GetNumPoints();
+                    int nm11 = face0    .GetNumModes ();
+                    int nm12 = face1    .GetNumModes ();
+                    int nm21 = existing0.GetNumModes ();
+                    int nm22 = existing1.GetNumModes ();
+
+                    if ((np22 >= np12 || np21 >= np11) &&
+                        (nm22 >= nm12 || nm21 >= nm11))
+                    {
+                        continue;
+                    }
+                    else if((np22 < np12 || np21 < np11) &&
+                            (nm22 < nm12 || nm21 < nm11))
+                    {
+                        it->second.second.first  = face0;
+                        it->second.second.second = face1;
+                    }
+                    else
+                    {
+                        ASSERTL0(false,
+                                 "inappropriate number of points/modes (max "
+                                 "num of points is not set with max order)");
                     }
                 }
             }

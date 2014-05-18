@@ -533,173 +533,34 @@ namespace Nektar
             {
                 m_parallel = true;
                 
-                int numModes_ref,
-                numModes_com,
-                numMods_max,
-                pnts_com,
-                pnts_ref,
-                pnts_max;
-                
                 int eCnt = 0;
                 
-                //count the number of edges on each partition
-                
+                // Count the number of edges on each partition
                 for(i = 0; i < locexp.size(); ++i)
                 {
-                    for(j = 0; j < locexp[i]->GetNedges(); ++j)
-                    {
-                        eCnt = eCnt + 1;
-                    }
+                    eCnt += locexp[i]->GetNedges();
                 }
                 
-                // set-up the offset and the array that will contain the list of
-                // edge ID's
-                
-                Array<OneD, int> edgesCnt(nproc,0);
+                // Set up the offset and the array that will contain the list of
+                // edge IDs, then reduce this across processors.
+                Array<OneD, int> edgesCnt(nproc, 0);
                 edgesCnt[edgepr] = eCnt;
-                
                 vComm->AllReduce(edgesCnt, LibUtilities::ReduceSum);
-                
+
+                // Set up offset array.
                 int totEdgeCnt = Vmath::Vsum(nproc, edgesCnt, 1);
-                
                 Array<OneD, int> eTotOffsets(nproc,0);
-                
                 for (i = 1; i < nproc; ++i)
                 {
                     eTotOffsets[i] = eTotOffsets[i-1] + edgesCnt[i-1];
                 }
                 
                 // Local list of the edges per element
-                
-                Array<OneD, int> edgeID(eCnt,0);
-                Array<OneD, int> edgeNm(eCnt,0);
-                Array<OneD, int> edgePnts(eCnt,0);
-                
-                int cntr = 0;
-                
-                for(i = 0; i < locexp.size(); ++i)
-                {
-                    exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
-                    
-                    int nedges = locexp[i]->GetNedges();
-                    
-                    for(j = 0; j < nedges; ++j)
-                    {
-                        LibUtilities::BasisKey bkeyEdge =
-                                              locexp[i]->DetEdgeBasisKey(j);
-                        
-                        int nm_ref         = bkeyEdge.GetNumModes();
-                        int pnts_ref       = bkeyEdge.GetNumPoints();
-                        
-                        segGeom            = exp2D->GetGeom2D()->GetEdge(j);
-                        
-                        edgeID[cntr]      = segGeom->GetEid();
-                        edgeNm[cntr]      = nm_ref;
-                        edgePnts[cntr]    = pnts_ref;
-                        
-                        cntr = cntr + 1;
-                    }
-                }
-                
-                // Make a list of the edges per element. In this case double edge
-                // ID's can be identified which are the trace edges
-                
                 Array<OneD, int> EdgesTotID(totEdgeCnt, 0);
                 Array<OneD, int> EdgesTotNm(totEdgeCnt, 0);
                 Array<OneD, int> EdgesTotPnts(totEdgeCnt, 0);
                 
-                for (i = 0; i < eCnt; ++i)
-                {
-                    EdgesTotID[eTotOffsets[edgepr] + i]   = edgeID[i];
-                    EdgesTotNm[eTotOffsets[edgepr] + i]   = edgeNm[i];
-                    EdgesTotPnts[eTotOffsets[edgepr] + i] = edgePnts[i];
-                }
-                
-                vComm->AllReduce(EdgesTotID, LibUtilities::ReduceSum);
-                vComm->AllReduce(EdgesTotNm, LibUtilities::ReduceSum);
-                vComm->AllReduce(EdgesTotPnts, LibUtilities::ReduceSum);
-
-                Array<OneD, int> tmp_traceGlobalID(totEdgeCnt, 0);
-                Array<OneD, int> tmp_traceGlobalNm(totEdgeCnt, 0);
-                Array<OneD, int> tmp_traceGlobalPnts(totEdgeCnt, 0);
-                
-                int cnt = 0;
-                
-                for (int u = 0; u < totEdgeCnt; ++u)
-                {
-                    for (int k = 0; k < totEdgeCnt; ++k)
-                    {
-                        if (EdgesTotID[k] == EdgesTotID[u] && u != k)
-                        {
-                            numModes_ref = EdgesTotNm[u];
-                            numModes_com = EdgesTotNm[k];
-                        
-                            pnts_ref = EdgesTotPnts[u];
-                            pnts_com = EdgesTotPnts[k];
-                            
-                            // determine the maximum nummodes
-                            
-                            if (numModes_ref > numModes_com)
-                            {
-                                numMods_max = numModes_ref;
-                                pnts_max    = pnts_ref;
-                            }
-                            else
-                            {
-                                numMods_max = numModes_com;
-                                pnts_max    = pnts_com;
-                            }
-                            
-                            tmp_traceGlobalID[cnt]      = EdgesTotID[k];
-                            tmp_traceGlobalNm[cnt]      = numMods_max;
-                            tmp_traceGlobalPnts[cnt]    = pnts_max;
-                            
-                            cnt++;
-                        }
-                    }
-                }
-
-                int nTraceGlobal = cnt;
-               
-                for (int i = 0; i < nTraceGlobal; ++i)
-                {
-                    for (int j = i+1; j < nTraceGlobal;)
-                    {
-                        if (tmp_traceGlobalID[j] == tmp_traceGlobalID[i])
-                        {
-                            for (int k = j; k < nTraceGlobal; ++k)
-                            {
-                                tmp_traceGlobalID[k]    = tmp_traceGlobalID[k+1];
-                                tmp_traceGlobalNm[k]    = tmp_traceGlobalNm[k+1];
-                                tmp_traceGlobalPnts[k]  = tmp_traceGlobalPnts[k+1];
-                            }
-                            nTraceGlobal--;
-                        }
-                        else
-                        {
-                            j++;
-                        }
-                    }
-                }
-                
-                Array<OneD, int> traceGlobalPnts(nTraceGlobal, 0);
-                Array<OneD, int> traceGlobalID(nTraceGlobal, 0);
-                Array<OneD, int> traceGlobalNm(nTraceGlobal, 0);
-                
-                Vmath::Vcopy(nTraceGlobal,
-                             tmp_traceGlobalID, 1,
-                             traceGlobalID, 1);
-                
-                Vmath::Vcopy(nTraceGlobal,
-                             tmp_traceGlobalNm, 1,
-                             traceGlobalNm, 1);
-                
-                Vmath::Vcopy(nTraceGlobal,
-                             tmp_traceGlobalPnts, 1,
-                             traceGlobalPnts, 1);
-                
-                // Loop to set up the correct trace expansions
-                // locexp.size() gives the number of elements on this node
+                int cntr = eTotOffsets[edgepr];
                 
                 for(i = 0; i < locexp.size(); ++i)
                 {
@@ -707,49 +568,55 @@ namespace Nektar
                     
                     int nedges = locexp[i]->GetNedges();
                     
-                    for(j = 0; j < nedges; ++j)
+                    for(j = 0; j < nedges; ++j, ++cntr)
                     {
-                        segGeom = exp2D->GetGeom2D()->GetEdge(j);
-                        LibUtilities::BasisKey bkeyEdge = locexp[i]->DetEdgeBasisKey(j);
-                        
-                        int nm_ref = bkeyEdge.GetNumModes();
-                        
-                        seg_tmp = MemoryManager<LocalRegions::SegExp>
-                        ::AllocateSharedPtr(bkeyEdge, segGeom);
-                        
-                        id      = segGeom->GetEid();
+                        LibUtilities::BasisKey bkeyEdge =
+                                              locexp[i]->DetEdgeBasisKey(j);
+                        EdgesTotID  [cntr] = exp2D->GetGeom2D()->GetEid(j);
+                        EdgesTotNm  [cntr] = bkeyEdge.GetNumModes();
+                        EdgesTotPnts[cntr] = bkeyEdge.GetNumPoints();
+                    }
+                }
 
-                        if (edgesDone.count(id) != 0)
-                        {
-                            continue;
-                        }
-                        
-                        it = edgeOrders.find(id);
-                        
-                        for (int u = 0; u < nTraceGlobal; ++u)
-                        {
-                            if(id == traceGlobalID[u] && nm_ref != traceGlobalNm[u])
-                            {
-                                // set-up the correct PointsKey for the newly defined
-                                // basiskey for the incorrect defined trace edges
-                                
-                                const LibUtilities::PointsKey newPkey(
-                                            traceGlobalPnts[u],
-                                            bkeyEdge.GetPointsType());
-                                
-                                // set-up the correct basiskey for the trace edges
-                                
-                                LibUtilities::BasisKey traceGlobalBkey(
-                                            bkeyEdge.GetBasisType(),
-                                            traceGlobalNm[u],
-                                            newPkey);
-                                
-                                edgeOrders.insert(std::make_pair(id,
-                                    std::make_pair(segGeom, traceGlobalBkey)));
-                                
-                                it->second.second = traceGlobalBkey;
-                            }
-                        }
+                vComm->AllReduce(EdgesTotID, LibUtilities::ReduceSum);
+                vComm->AllReduce(EdgesTotNm, LibUtilities::ReduceSum);
+                vComm->AllReduce(EdgesTotPnts, LibUtilities::ReduceSum);
+
+                for (i = 0; i < totEdgeCnt; ++i)
+                {
+                    it = edgeOrders.find(EdgesTotID[i]);
+
+                    if (it == edgeOrders.end())
+                    {
+                        continue;
+                    }
+
+                    LibUtilities::BasisKey existing
+                        = it->second.second;
+                    LibUtilities::BasisKey edge(
+                        existing.GetBasisType(), EdgesTotNm[i],
+                        LibUtilities::PointsKey(EdgesTotPnts[i],
+                                                existing.GetPointsType()));
+
+
+                    int np1 = edge    .GetNumPoints();
+                    int np2 = existing.GetNumPoints();
+                    int nm1 = edge    .GetNumModes ();
+                    int nm2 = existing.GetNumModes ();
+
+                    if (np2 >= np1 && nm2 >= nm1)
+                    {
+                        continue;
+                    }
+                    else if (np2 < np1 && nm2 < nm1)
+                    {
+                        it->second.second = edge;
+                    }
+                    else
+                    {
+                        ASSERTL0(false,
+                                 "inappropriate number of points/modes (max "
+                                 "num of points is not set with max order)");
                     }
                 }
             }

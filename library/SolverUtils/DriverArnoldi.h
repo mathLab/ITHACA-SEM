@@ -84,7 +84,7 @@ namespace Nektar
             void CopyFwdToAdj();
 
             // write coefficients to file. 
-            void WriteFld(std::string file, Array<OneD, Array<OneD, NekDouble> > coeffs);
+            void WriteFld(std::string file, std::vector<Array<OneD, NekDouble> > coeffs);
 
             void WriteFld(std::string file, Array<OneD, NekDouble> coeffs);
 

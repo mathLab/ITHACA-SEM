@@ -91,10 +91,14 @@ namespace Nektar
 
         Array<OneD, Array<OneD, unsigned int> > m_bmap;
         Array<OneD, Array<OneD, unsigned int> > m_imap;
+        Array<OneD, Array<OneD, NekDouble> > m_temperature;
 
         virtual void v_InitObject();
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
         virtual void v_DoSolve();
+        virtual void v_ExtraFldOutput(
+            std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+            std::vector<std::string>             &variables);
     };
 }
 

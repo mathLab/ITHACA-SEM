@@ -360,9 +360,14 @@ namespace Nektar
         m_session->LoadSolverInfo("Temperature", tempEval, "None");
         if (tempEval != "None")
         {
+            // Allocate storage
+            m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
+
             for (nv = 0; nv < nVel; ++nv)
             {
-                Array<OneD, NekDouble> temp(m_fields[nv]->GetNpoints()), tmp;
+                Array<OneD, NekDouble> tmp;
+                m_temperature[nv] = Array<OneD, NekDouble>(m_fields[nv]->GetNpoints());
+                
                 for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
                 {
                     // Calculate element area
@@ -370,9 +375,9 @@ namespace Nektar
                         m_fields[0]->GetExp(i);
                     LibUtilities::PointsKeyVector pkey = exp->GetPointsKeys();
                     Array<OneD, NekDouble> jac = exp->GetMetricInfo()->GetJac(pkey);
-                    Vmath::Sdiv(exp->GetTotPoints(), 1e-4, jac, 1, tmp = temp + m_fields[0]->GetPhys_Offset(i), 1);
+                    Vmath::Sdiv(exp->GetTotPoints(), 1e-4, jac, 1, tmp = m_temperature[nv] + m_fields[0]->GetPhys_Offset(i), 1);
                 }
-                m_fields[nv]->PhysDeriv(nv, temp, forcing[nv]);
+                m_fields[nv]->PhysDeriv(nv, m_temperature[nv], forcing[nv]);
             }
         }
 
@@ -645,5 +650,22 @@ namespace Nektar
         }
 
         return ret;
+    }
+
+    void LinearElasticSystem::v_ExtraFldOutput(
+        std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+        std::vector<std::string>             &variables)
+    {
+        const int nVel    = m_fields[0]->GetCoordim(0);
+        const int nCoeffs = m_fields[0]->GetNcoeffs();
+        static char *dimStr[] = { "X", "Y", "Z" };
+        
+        for (int i = 0; i < nVel; ++i)
+        {
+            Array<OneD, NekDouble> tFwd(nCoeffs);
+            m_fields[i]->FwdTrans_IterPerExp(m_temperature[i], tFwd);
+            fieldcoeffs.push_back(tFwd);
+            variables.push_back("Temp" + boost::lexical_cast<std::string>(dimStr[i]));
+        }
     }
 }

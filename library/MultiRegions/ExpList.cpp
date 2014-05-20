@@ -1881,11 +1881,11 @@ namespace Nektar
         }
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
-												  int NumHomoDir, 
-												  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
-												  std::vector<NekDouble> &HomoLen,
-												  std::vector<unsigned int> &HomoZIDs,
-												  std::vector<unsigned int> &HomoYIDs)
+                                                  int NumHomoDir, 
+                                                  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
+                                                  std::vector<NekDouble> &HomoLen,
+                                                  std::vector<unsigned int> &HomoZIDs,
+                                                  std::vector<unsigned int> &HomoYIDs)
         {
             int startenum, endenum, s;
 
@@ -1973,6 +1973,7 @@ namespace Nektar
                 }
             }
         }
+
 
         //
         // Virtual functions
@@ -2184,14 +2185,6 @@ namespace Nektar
         }
         
         boost::shared_ptr<ExpList> &ExpList::v_GetTrace()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList> returnVal;
-            return returnVal;
-        }
-
-        boost::shared_ptr<ExpList> &ExpList::v_GetTrace(int i)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2478,42 +2471,6 @@ namespace Nektar
             }
         }
 		
-        /**
-         */
-        void ExpList::v_SetCoeff(NekDouble val)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-	
-        /**
-         */
-        void ExpList::v_SetPhys(NekDouble val)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-	
-        /**
-         */
-        const SpatialDomains::PointGeomSharedPtr ExpList::v_GetGeom(void) const
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-        }
-		
-        /**
-         */
-        const SpatialDomains::PointGeomSharedPtr ExpList::v_GetVertex(void) const
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-        }
-	
         /**
          */
         void ExpList::v_SetUpPhysNormals()

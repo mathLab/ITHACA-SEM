@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Print summary of solution details
         factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
-        const SpatialDomains::CompositeMap domain = (graph1D->GetDomain());
         const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
         cout << "Solving 1D Helmholtz: "  << endl;

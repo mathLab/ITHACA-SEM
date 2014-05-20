@@ -86,7 +86,7 @@ namespace Nektar
             const std::string                          &variable,
             const bool                                  SetUpJustDG,
             const bool                                  DeclareCoeffPhysArrays)
-            : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays),
+            : ExpList2D(pSession,graph2D,DeclareCoeffPhysArrays,variable),
               m_bndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
@@ -412,7 +412,7 @@ namespace Nektar
             // Set up physical normals
             SetUpPhysNormals();
             
-            // Set up information for parallel jobs.
+            // Set up information for parallel and periodic problems. 
             for (int i = 0; i < m_trace->GetExpSize(); ++i)
             {
                 LocalRegions::Expansion1DSharedPtr traceEl = 
@@ -1246,7 +1246,6 @@ namespace Nektar
                 boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(
                     (m_traceMap->GetElmtToTrace())[n][e]);
             
-            int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
             
             bool fwd = true;
             if (traceEl->GetLeftAdjacentElementEdge () == -1 ||
@@ -1270,6 +1269,8 @@ namespace Nektar
                     }
                     else
                     {
+                        int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
+
                         fwd = m_traceMap->
                             GetTraceToUniversalMapUnique(offset) >= 0;
                     }

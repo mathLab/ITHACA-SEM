@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="1" SPACE="1">
+        <VERTEX>
+            <V ID="0"> 0.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="1"> 1.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="2"> 2.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="3"> 3.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="4"> 4.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="5"> 5.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="6"> 6.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="7"> 7.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="8"> 8.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="9"> 9.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="10">10.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="11">11.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="12">12.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="13">13.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="14">14.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="15">15.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="16">16.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="17">17.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="18">18.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="19">19.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="20">20.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="21">21.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="22">22.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="23">23.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="24">24.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="25">25.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="26">26.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="27">27.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="28">28.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="29">29.000e+00 0.000e+00 0.000e+00</V>
+            <V ID="30">30.000e+00 0.000e+00 0.000e+00</V>
+        </VERTEX>
+        <ELEMENT>
+            <S ID="0">    0     1 </S>
+            <S ID="1">    1     2 </S>
+            <S ID="2">    2     3 </S>
+            <S ID="3">    3     4 </S>
+            <S ID="4">    4     5 </S>
+            <S ID="5">    5     6 </S>
+            <S ID="6">    6     7 </S>
+            <S ID="7">    7     8 </S>
+            <S ID="8">    8     9 </S>
+            <S ID="9">    9    10 </S>
+            <S ID="10">   10    11 </S>
+            <S ID="11">   11    12 </S>
+            <S ID="12">   12    13 </S>
+            <S ID="13">   13    14 </S>
+            <S ID="14">   14    15 </S>
+            <S ID="15">   15    16 </S>
+            <S ID="16">   16    17 </S>
+            <S ID="17">   17    18 </S>
+            <S ID="18">   18    19 </S>
+            <S ID="19">   19    20 </S>
+            <S ID="20">   20    21 </S>
+            <S ID="21">   21    22 </S>
+            <S ID="22">   22    23 </S>
+            <S ID="23">   23    24 </S>
+            <S ID="24">   24    25 </S>
+            <S ID="25">   25    26 </S>
+            <S ID="26">   26    27 </S>
+            <S ID="27">   27    28 </S>
+            <S ID="28">   28    29 </S>
+            <S ID="29">   29    30 </S>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> S[0-29] </C>
+            <C ID="1"> V[0] </C>
+            <C ID="2"> V[30] </C>
+        </COMPOSITE>
+
+        <DOMAIN> 
+      	    <D ID="0"> C[0] </D>
+        </DOMAIN>
+    </GEOMETRY>
+
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="A,u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+	    <P> TimeStep       = 2e-6               </P> 
+            <P> FinTime        = 1e-3               </P>
+            <P> NumSteps       = FinTime/TimeStep   </P>
+            <P> IO_CheckSteps  = NumSteps           </P>
+            <P> IO_InfoSteps   = 100                </P>
+            <P> T              = 0.33               </P>
+            <P> h0             = 1.0                </P>
+            <P> rho            = 1.0                </P>
+            <P> nue            = 0.5                </P>
+            <P> pext           = 0.0                </P> 
+            <P> a1             = 10.0              </P> 
+            <P> a2             = 20.0                </P> 
+            <P> kappa          = 100.0              </P> 
+            <P> Y0             = 1.9099e+5          </P> 
+            <P> k              = 2                  </P> 
+            <P> k1             = 200                  </P> 
+        </PARAMETERS>
+        
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="PulseWavePropagation" />
+            <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler" />
+            <I PROPERTY="UpwindTypePulse"  VALUE="UpwindPulse"/> 
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> A </V>
+            <V ID="1"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="A" USERDEFINEDTYPE="TimeDependent" VALUE="(2000*sin(2*PI*t/T)*1./(1+exp(-2*k1*(T/2-t))-pext)/451352 + 1)^2" />
+                <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="1.0" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="A" VALUE="1.0" />
+                <D VAR="u" VALUE="1.0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="A" VALUE="1.0" />
+            <E VAR="u" VALUE="1.0" />
+        </FUNCTION>
+        
+        <FUNCTION NAME="A_0">
+            <E VAR="A_0" DOMAIN="0" VALUE="1.0" />
+        </FUNCTION>
+        
+        <FUNCTION NAME="MaterialProperties"> 
+            <E VAR="beta" DOMAIN="0" VALUE="451352*(1.0-kappa/(1+exp(-2*k*(a1-x)))+kappa/(1+exp(-2*k*(a2-x))))" />     	
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="A" DOMAIN="0" VALUE="0" />
+            <E VAR="u" DOMAIN="0" VALUE="0" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>
+

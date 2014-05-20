@@ -66,7 +66,7 @@ namespace Nektar
                                                                 &bndConstraint,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,int> &periodicVertices,
+                const PeriodicMap &periodicVerts,
                 const std::string variable = "DefaultVar");
 
             /// Constructor for trace map for two-dimensional expansion.

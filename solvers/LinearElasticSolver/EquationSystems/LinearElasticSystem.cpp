@@ -135,9 +135,6 @@ namespace Nektar
             sizeInt, sizeBnd, blkmatStorage);
         m_Dinv       = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(
             sizeInt, sizeInt, blkmatStorage);
-
-        // Build initial matrix system.
-        BuildMatrixSystem();
     }
 
     /**
@@ -183,6 +180,8 @@ namespace Nektar
         // lambda + mu?
         NekDouble c = m_E * m_nu / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
 
+        bool verbose = m_session->DefinesCmdLineArgument("verbose");
+
         // Loop over each element and construct matrices.
         if (nVel == 2)
         {
@@ -218,6 +217,12 @@ namespace Nektar
 
                 // Set up the statically condensed block for this element.
                 SetStaticCondBlock(n, exp, mat);
+
+                if (verbose)
+                {
+                    cout << "\rBuilding matrix system: "
+                         << (int)(100.0 * n / nEl) << "%" << flush;
+                }
             }
         }
         else if (nVel == 3)
@@ -270,9 +275,19 @@ namespace Nektar
                 
                 // Set up the statically condensed block for this element.
                 SetStaticCondBlock(n, exp, mat);
+
+                if (verbose)
+                {
+                    cout << "\rBuilding matrix system: "
+                         << (int)(100.0 * n / nEl) << "%" << flush;
+                }
             }
         }
         
+        if (verbose)
+        {
+            cout << "\rBuilding matrix system: done." << endl;
+        }
     }
 
     /**
@@ -302,6 +317,9 @@ namespace Nektar
     {
         int i, j, nv;
         const int nVel = m_fields[0]->GetCoordim(0);
+
+        // Build initial matrix system.
+        BuildMatrixSystem();
 
         // Now we've got the matrix system set up, create a GlobalLinSys object.
         MultiRegions::GlobalLinSysKey key(
@@ -521,7 +539,8 @@ namespace Nektar
         const int nI   = exp->GetNcoeffs() - nB;
         const int nBnd = exp->NumBndryCoeffs() * nVel;
         const int nInt = exp->GetNcoeffs() * nVel - nBnd;
-        const MatrixStorage s = eFULL;
+        const MatrixStorage s = eFULL; // Maybe look into doing symmetric
+                                       // version of this?
 
         DNekMatSharedPtr A =
             MemoryManager<DNekMat>::AllocateSharedPtr(nBnd, nBnd, 0.0, s);

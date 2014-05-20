@@ -478,14 +478,6 @@ namespace Nektar
                         Seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(EdgeBkey, SegGeom);
                         EdgeDone[id] = elmtid;
-
-                        /*
-                        if (periodicEdges.count(id) > 0)
-                        {
-                            EdgeDone[abs(periodicEdges.find(id)->second)] = elmtid;
-                        }
-                        */
-
                         Seg->SetElmtId(elmtid++);
                         (*m_exp).push_back(Seg);
                     }

@@ -1660,10 +1660,11 @@ namespace Nektar
             stringstream domString;
 
             domString << " C[";
-            CompositeMap::iterator cIt2 = m_domain.end();
+            // TODO: Fix this
+            CompositeMap::iterator cIt2 = m_domain[0].end();
             --cIt2;
 
-            for (cIt = m_domain.begin(); cIt != m_domain.end(); ++cIt)
+            for (cIt = m_domain[0].begin(); cIt != m_domain[0].end(); ++cIt)
             {
                 domString << cIt->first;
                 if (cIt != cIt2)

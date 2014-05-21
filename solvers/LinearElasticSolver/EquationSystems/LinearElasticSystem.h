@@ -81,7 +81,8 @@ namespace Nektar
 
         NekDouble m_nu;
         NekDouble m_E;
-
+        NekDouble m_beta;
+        
         CoupledAssemblyMapSharedPtr m_assemblyMap;
 
         DNekScalBlkMatSharedPtr m_schurCompl;

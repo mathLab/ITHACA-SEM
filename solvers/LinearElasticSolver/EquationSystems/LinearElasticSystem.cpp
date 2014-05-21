@@ -73,6 +73,7 @@ namespace Nektar
         // Make sure that we have Young's modulus and Poisson ratio set.
         m_session->LoadParameter("E", m_E, 1.0);
         m_session->LoadParameter("nu", m_nu, 0.25);
+        m_session->LoadParameter("Beta", m_beta, 1.0e-04);
 
         // Create a coupled assembly map which allows us to tie u, v and w
         // fields together.
@@ -375,10 +376,15 @@ namespace Nektar
                         m_fields[0]->GetExp(i);
                     LibUtilities::PointsKeyVector pkey = exp->GetPointsKeys();
                     Array<OneD, NekDouble> jac = exp->GetMetricInfo()->GetJac(pkey);
-                    Vmath::Sdiv(exp->GetTotPoints(), 1e-4, jac, 1, tmp = m_temperature[nv] + m_fields[0]->GetPhys_Offset(i), 1);
+                    
+                    NekDouble jac_min = Vmath::Vmin(jac.num_elements(), jac, 1);
+                    NekDouble jac_max = Vmath::Vmax(jac.num_elements(), jac, 1);
+                    
+                    Vmath::Smul(exp->GetTotPoints(), m_beta, jac, 1, tmp = m_temperature[nv] + m_fields[0]->GetPhys_Offset(i), 1);
                 }
                 m_fields[nv]->PhysDeriv(nv, m_temperature[nv], forcing[nv]);
             }
+            cout << endl;
         }
 
         // Set up some temporary storage.

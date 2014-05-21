@@ -365,10 +365,12 @@ namespace Nektar
      *
      */
     void Monodomain::v_SetInitialConditions(NekDouble initialtime,
-                        bool dumpInitialConditions)
+                        bool dumpInitialConditions,
+                        const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime,
-                                               dumpInitialConditions);
+                                               dumpInitialConditions,
+                                               domain);
         m_cell->Initialise();
     }
 

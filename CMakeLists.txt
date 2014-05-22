@@ -45,6 +45,7 @@ SET(NEKTAR_BIN_DIR bin)
 SET(NEKTAR_LIB_DIR ${LIB_DIR})
 SET(NEKTAR_INCLUDE_DIR include/nektar++)
 SET(NEKTAR_SHARE_DIR share/nektar++)
+SET(NEKTAR_DOC_DIR share/doc/nektar++)
 SET(NEKTAR_LIBRARY_TYPE "SHARED")
 
 # Set up RPATH
@@ -83,33 +84,6 @@ SET(ExpressionTemplateDefault OFF)
 OPTION(NEKTAR_USE_EXPRESSION_TEMPLATES 
     "Use Expression templates." ${ExpressionTemplateDefault})
 MARK_AS_ADVANCED(NEKTAR_USE_EXPRESSION_TEMPLATES)
-
-# Doxygen support
-# adapted from http://www.bluequartz.net/projects/EIM_Segmentation/SoftwareDocumentation/html/usewithcmakeproject.html
-OPTION(NEKTAR_BUILD_DOC_QHP "Use Doxygen to create documentation for Qt Creator" OFF)
-OPTION(NEKTAR_BUILD_DOC_XCODE "Use Doxygen to create documentation for Apple Xcode" OFF)
-OPTION(NEKTAR_BUILD_DOC_ECLIPSE "Use Doxygen to create documentation for Eclipse" OFF)
-
-FIND_PACKAGE(Doxygen)
-IF(NOT DOXYGEN_FOUND)
-    MESSAGE(WARNING "Doxygen not found. Building the documentation will fail.")
-ENDIF()
-
-IF(NEKTAR_BUILD_DOC_QHP)
-    SET(DOXYGEN_GENERATE_QHP "YES")
-ENDIF()
-IF(NEKTAR_BUILD_DOC_XCODE)
-    SET(DOXYGEN_GENERATE_DOCSET "YES")
-ENDIF()
-IF(NEKTAR_BUILD_DOC_ECLIPSE)
-    SET(DOXYGEN_GENERATE_ECLIPSEHELP "YES")
-ENDIF()
-INSTALL(DIRECTORY ${PROJECT_BINARY_DIR}/doxygen/ DESTINATION share/doc/)
-
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/docs/doxygen/Doxyfile.in ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
-ADD_CUSTOM_TARGET(doc
-    COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
-    SOURCES ${PROJECT_BINARY_DIR}/Doxyfile)
 
 # BLAS Support
 OPTION(NEKTAR_USE_BLAS_LAPACK "Use Blas and lapack routines." ON)
@@ -198,6 +172,8 @@ INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
+
+INCLUDE (Doxygen)
 
 IF( NEKTAR_USE_MKL )
     INCLUDE (FindMKL)

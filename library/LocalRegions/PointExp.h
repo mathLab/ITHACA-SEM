@@ -51,20 +51,76 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT PointExp(const SpatialDomains::PointGeomSharedPtr &m_geom);
             LOCAL_REGIONS_EXPORT ~PointExp(void);
 
+            inline const Array<OneD, const NekDouble>& GetCoeffs(void) const
+            {
+                return m_coeffs;
+            }
+
+            inline NekDouble  GetCoeffs(int i) const
+            {
+                ASSERTL1(i == 0,"index out of range");
+
+                return m_coeffs[i];
+            }
+		
+            inline NekDouble  GetPhys(int i) const
+            {
+                ASSERTL1(i == 0,"index out of range");
+		
+                return m_phys[i];
+            }
+            
+            inline NekDouble  GetCoeff(int i) const
+            {
+                ASSERTL1(i == 0,"index out of range");
+
+                return m_coeffs[i];
+            }
+
+            inline Array<OneD, NekDouble>& UpdateCoeffs(void)
+            {
+                return(m_coeffs);
+            }
+
+            inline void  SetCoeff(const NekDouble value)
+            {
+                m_coeffs[0] = value;
+            }
+
+            inline const Array<OneD, const NekDouble>& GetPhys(void) const
+            {
+                return m_phys;
+            }
+  
+            inline Array<OneD, NekDouble>& UpdatePhys(void) 
+            {
+                return(m_phys);
+            }
+
+            inline void  SetPhys(const NekDouble value)
+            {
+                m_phys[0] = value;
+            }
+
+            inline void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
+            {
+                SpatialDomains::PointGeomSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
+                v->GetCoords(x,y,z);
+            }
+
+            inline const SpatialDomains::PointGeomSharedPtr GetGeom() const
+            {
+                return boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
+            }
+
         protected:
+            Array<OneD, NekDouble > m_coeffs; //!< Array containing expansion coefficients
+            Array<OneD, NekDouble > m_phys; //!< Array containing physical point which is likely to be the same as the coefficient but is defined for consistency (It is also used in Robin boundary conditions) 
+
             virtual void v_GetCoords(
                 Array<OneD, NekDouble> &coords_0,
                 Array<OneD, NekDouble> &coords_1,
-                Array<OneD, NekDouble> &coords_2)
-            {
-                Array<OneD, NekDouble> coords(3);
-                SpatialDomains::PointGeomSharedPtr v =
-                    boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
-                v->GetCoords(coords);
-                coords_0[0] = coords[0];
-                coords_1[0] = coords[1];
-                coords_2[0] = coords[2];
-            }
+                Array<OneD, NekDouble> &coords_2);
         };
         
         // type defines for use of PointExp in a boost vector

@@ -403,7 +403,7 @@ namespace Nektar
             // Set up physical normals
             SetUpPhysNormals();
             
-            // Set up information for parallel jobs.
+            // Set up information for parallel and periodic problems. 
             for (int i = 0; i < m_trace->GetExpSize(); ++i)
             {
                 LocalRegions::Expansion1DSharedPtr traceEl = 
@@ -1236,7 +1236,6 @@ namespace Nektar
                     m_traceMap->GetElmtToTrace()[n][e]->
                             as<LocalRegions::Expansion1D>();
             
-            int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
             
             bool fwd = true;
             if (traceEl->GetLeftAdjacentElementEdge () == -1 ||
@@ -1260,6 +1259,8 @@ namespace Nektar
                     }
                     else
                     {
+                        int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
+
                         fwd = m_traceMap->
                             GetTraceToUniversalMapUnique(offset) >= 0;
                     }

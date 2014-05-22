@@ -43,6 +43,7 @@ using namespace std;
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/NodalTriExp.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
@@ -324,10 +325,15 @@ namespace Nektar
                 
 
                 // Construct list of spherigon edges/faces from a tag.
-                int surfTag = m_config["surf"].as<int>();
+                string surfTag = m_config["surf"].as<string>();
                 bool prismTag = m_config["BothTriFacesOnPrism"].beenSet;
-                if (surfTag != -1)
+
+                if (surfTag != "")
                 {
+                    vector<unsigned int> surfs;
+                    ParseUtils::GenerateSeqVector(surfTag.c_str(), surfs);
+                    sort(surfs.begin(), surfs.end());
+
                     m_mesh->m_spherigonSurfs.clear();
                     for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
                     {
@@ -345,21 +351,26 @@ namespace Nektar
 
                             ElementSharedPtr bEl  = m_mesh->m_element[m_mesh->m_expDim-1][bl];
                             vector<int>      tags = bEl->GetTagList();
+                            vector<int>      inter;
 
-                            if (find(tags.begin(), tags.end(), surfTag) !=
-                                tags.end())
+                            sort(tags.begin(), tags.end());
+                            set_intersection(surfs.begin(), surfs.end(),
+                                             tags .begin(), tags .end(),
+                                             back_inserter(inter));
+
+                            if (inter.size() == 1)
                             {
                                 m_mesh->m_spherigonSurfs.insert(make_pair(i, j));
                                 
-                                // Curve other tri face on Prism. Note
-                                // could be problem on pyramid when
-                                // implemented
-                                if((nSurf == 5)&&prismTag)
+                                // Curve other tri face on Prism. Note could be
+                                // problem on pyramid when implemented.
+                                if(nSurf == 5 && prismTag)
                                 {
-                                    // add other end of prism on boundary for smoothing
-                                    int triFace = (j == 1)? 3:1;
-                                    
-                                    m_mesh->m_spherigonSurfs.insert(make_pair(i, triFace));
+                                    // add other end of prism on boundary for
+                                    // smoothing
+                                    int triFace = j == 1 ? 3 : 1;
+                                    m_mesh->m_spherigonSurfs.insert(
+                                        make_pair(i, triFace));
                                 }
                             }
                         }
@@ -533,7 +544,7 @@ namespace Nektar
 
             // See if we should add noise to normals
             std::string normalnoise = m_config["normalnoise"].as<string>();
-            if(normalfile.compare("NotSpecified") != 0)
+            if(normalnoise.compare("NotSpecified") != 0)
             {
                 vector<NekDouble> values;
                 ASSERTL0(ParseUtils::GenerateUnOrderedVector(normalnoise.c_str(),values),"Failed to interpret normal noise string");
@@ -827,9 +838,9 @@ namespace Nektar
                         // Perform steps denoted in equations 2, 3, 8 for C1
                         // smoothing.
                         double tmp1;
-                        K[k]  = P+N*((v[k]-P).dot(N));
+                        K [k] = P+N*((v[k]-P).dot(N));
                         tmp1  = (v[k]-K[k]).dot(vN[k]) / (1.0 + N.dot(vN[k]));
-                        Q[k]  = K[k] + N*tmp1;
+                        Q [k] = K[k] + N*tmp1;
                         Qp[k] = v[k] - N*((v[k]-P).dot(N));
                     }
                     
@@ -849,7 +860,7 @@ namespace Nektar
                 
                 // Push nodes into lines - TODO: face interior nodes. 
                 // offset = 0 (seg), 1 (tri) or 2 (quad)
-                int offset = (int)e->GetConf().m_e-1;
+                int offset = (int)e->GetConf().m_e-2;
                 
                 for (int edge = 0; edge < e->GetEdgeCount(); ++edge)
                 {
@@ -858,8 +869,11 @@ namespace Nektar
                     {
                         bool reverseEdge = !(v[vertMap[offset][edge][0]] ==
                                              *(e->GetEdge(edge)->m_n1));
-                        
-                        if (e->GetConf().m_e == LibUtilities::eQuadrilateral)
+
+                        // Clear existing curvature.
+                        e->GetEdge(edge)->m_edgeNodes.clear();
+
+                        if (e->GetConf().m_e != LibUtilities::eTriangle)
                         {
                             for (int j = 1; j < nq-1; ++j)
                             {
@@ -932,8 +946,11 @@ namespace Nektar
                 {
                     FaceSharedPtr f = m_mesh->m_element[m_mesh->m_expDim][it->first]->
                         GetFace(it->second);
+
                     f->m_faceNodes = el[elmt]->GetVolumeNodes();
-                    f->m_curveType = LibUtilities::eNodalTriElec;
+                    f->m_curveType = f->m_vertexList.size() == 3 ?
+                        LibUtilities::eNodalTriElec :
+                        LibUtilities::eGaussLobattoLegendre;
                 }
             }
 

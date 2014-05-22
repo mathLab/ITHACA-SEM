@@ -77,13 +77,51 @@ namespace Nektar
             const ExpList &locExp,
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
-            const map<int,int> &periodicVertices,
+            const PeriodicMap &periodicVerts,
             const std::string variable)
             : AssemblyMap(pSession,variable)
         {
             int i,j;
             int cnt, vid, gid;
+            int ntrace_exp = trace->GetExpSize();
             int nbnd = bndCondExp.num_elements();
+            
+            int nel  = locExp.GetExp()->size();
+            map<int, int> MeshVertId;
+
+            // determine mapping from geometry edges to trace
+            for(i = 0; i < ntrace_exp; ++i)
+            {
+                int id = trace->GetExp(i)->GetGeom()->GetVid(0);
+                MeshVertId[id] = i;
+            }
+
+
+            Array<OneD, StdRegions::StdExpansionSharedPtr> vertmap(2*nel);
+            m_elmtToTrace = Array<OneD, Array<OneD,StdRegions::StdExpansionSharedPtr> >(nel);
+
+            // set up vert expansions links;
+            cnt = 0;
+            for(i = 0; i < nel; ++i)
+            {
+                m_elmtToTrace[i] = vertmap + cnt;
+                
+                for(j = 0; j < locExp.GetExp(i)->GetNverts(); ++j)
+                    {
+                    int id = ((locExp.GetExp(i)->GetGeom())->GetVertex(j))->GetVid();
+                    
+                    if(MeshVertId.count(id) > 0)
+                    {
+                        m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions:: PointExp> ((*trace).GetExp(MeshVertId.find(id)->second));
+                        
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"Failed to find edge map");
+                    }
+                }
+                cnt += 2;
+            }
 
             // set up Local to Continuous mapping
             Array<OneD,unsigned int> vmap;
@@ -117,7 +155,7 @@ namespace Nektar
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     m_numDirichletBndPhys++;
-                    vid = bndCondExp[i]->GetVertex()->GetVid();
+                    vid = bndCondExp[i]->GetExp(0)->GetGeom()->GetVertex(0)->GetVid();
 
                     MeshVertToLocalVert[vid] = gid++;
                 }
@@ -159,7 +197,7 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-                vid = bndCondExp[i]->GetVertex()->GetVid();
+                vid = bndCondExp[i]->GetExp(0)->GetGeom()->GetVertex(0)->GetVid();
                 m_bndCondCoeffsToGlobalCoeffsMap[i] = MeshVertToLocalVert.find(vid)->second;
 
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
@@ -172,14 +210,25 @@ namespace Nektar
             m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
             CalculateBndSystemBandWidth();
 
+
+            m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbnd);
+            for(i = 0; i < bndCondExp.num_elements(); ++i)
+            {
+                int id  = bndCondExp[i]->GetExp(0)->GetGeom()->GetVid(0);
+                m_bndCondTraceToGlobalTraceMap[i] = 
+                    MeshVertId.find(id)->second;
+            }
+
+            // Now set up mapping from global coefficients to universal.
+#if 1       // Routines need debugging -> Currently causing crash when turned on
+            ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
+            SetUpUniversalDGMap   (locExp);
+            SetUpUniversalTraceMap(locExp, tr, periodicVerts);
+#endif
             m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
                                        m_localToGlobalBndMap.end());
 
-            // Add up hash values if parallel
-            int hash = m_hash;
-            m_comm->GetRowComm()->AllReduce(hash, 
-                              LibUtilities::ReduceSum);
-            m_hash = hash;
+
         }
 
 
@@ -1049,7 +1098,7 @@ namespace Nektar
             m_globalToUniversalBndMap = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
             m_globalToUniversalBndMapUnique = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
 
-            // Loop over all the elements in the domain and compute max edge
+            // Loop over all the elements in the domain and compute max 
             // DOF. Reduce across all processes to get universal maximum.
             for(i = 0; i < locExpVector.size(); ++i)
             {
@@ -1089,14 +1138,15 @@ namespace Nektar
                     StdRegions::StdExpansion>(locExpVector[i]);
                 nDim = locExpansion->GetShapeDimension();
 
-                // Order list according to m_offset_elmt_id details in Exp2D
+                // Order list according to m_offset_elmt_id details in Exp
                 // so that triangules are listed first and then quads
                 eid = locExp.GetOffset_Elmt_Id(i);
 
                 // Populate mapping for each edge of the element.
                 if (nDim == 1)
                 {
-                    for(j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
+                    int nverts = locExpansion->GetNverts();
+                    for(j = 0; j < nverts; ++j)
                     {
                         LocalRegions::PointExpSharedPtr locPointExp = 
                             m_elmtToTrace[eid][j]->as<LocalRegions::PointExp>();
@@ -1105,6 +1155,7 @@ namespace Nektar
                         m_globalToUniversalBndMap[vGlobalId]
                             = id * maxDof + j + 1;
                     }
+                    cnt += nverts;
                 } 
                 else if (nDim == 2)
                 {
@@ -1258,6 +1309,21 @@ namespace Nektar
                 {
                     eid = trace->GetExp(i)->GetGeom()->GetGlobalID();
                     offset = trace->GetPhys_Offset(i);
+
+#if 1
+                    // Check to see if this vert is periodic. If it is, then we
+                    // need use the unique eid of the two points 
+                    PeriodicMap::const_iterator it = perMap.find(eid);
+                    if (perMap.count(eid) > 0)
+                    {
+                        PeriodicEntity ent = it->second[0];
+                        if (ent.isLocal == false) // Not sure if true in 1D
+                        {
+                            eid = min(eid, ent.id);
+                        }
+                    }
+#endif
+
                     m_traceToUniversalMap[offset] = eid*maxQuad+1;
                 }
             }

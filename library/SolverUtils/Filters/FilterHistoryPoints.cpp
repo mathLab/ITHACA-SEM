@@ -165,8 +165,8 @@ namespace Nektar
                                                 gloCoord[1],
                                                 gloCoord[2]);
 
-                idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords);
-            
+                idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords,NekConstants::kGeomFactorsTol);
+
                 // Save Local coordinates for later
                 LocCoords.push_back(locCoords);
                 // Set element id to Vid of m_historyPoints;

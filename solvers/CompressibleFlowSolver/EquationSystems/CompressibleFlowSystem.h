@@ -261,6 +261,10 @@ namespace Nektar
         {
             return m_traceNormals;
         }
+
+        virtual void v_ExtraFldOutput(
+            std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+            std::vector<std::string>             &variables);
     };
 }
 #endif

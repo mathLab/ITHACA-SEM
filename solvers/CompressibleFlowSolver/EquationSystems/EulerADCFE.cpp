@@ -83,10 +83,12 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit CFE not set up.");
         }
-        
+
+        /*
         m_checkpointFuncs["Sensor"] = boost::bind(&EulerADCFE::CPSensor, this, _1, _2);
         m_checkpointFuncs["Mach"] = boost::bind(&EulerADCFE::CPMach, this, _1, _2);
         m_checkpointFuncs["ADViscCoeff"] = boost::bind(&EulerADCFE::CPArtificialDynamicViscosity, this, _1, _2);
+        */
 
     }
 

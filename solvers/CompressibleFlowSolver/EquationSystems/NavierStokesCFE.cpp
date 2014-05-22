@@ -80,11 +80,12 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit CFE not set up.");
         }
-        
+
+        /*
         m_checkpointFuncs["Sensor"] = boost::bind(&NavierStokesCFE::CPSensor, this, _1, _2);
         m_checkpointFuncs["SensorKappa"] = boost::bind(&NavierStokesCFE::CPSensorKappa, this, _1, _2);
         m_checkpointFuncs["SmoothVisc"] = boost::bind(&NavierStokesCFE::CPSmoothArtVisc, this, _1, _2);
-
+        */
     }
 
     NavierStokesCFE::~NavierStokesCFE()

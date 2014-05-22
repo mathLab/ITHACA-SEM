@@ -274,6 +274,7 @@ namespace Nektar
 
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
+        const bool smoothDiffusion = nVariables == m_spacedim + 3;
         
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
@@ -296,14 +297,10 @@ namespace Nektar
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
-            
-            
-            //Vmath::Zero(nBCEdgePts, &Fwd[nVariables-1][id2], 1);
-            
-            
-            if(nVariables == m_spacedim+3)
+
+            // Boundary condition for epsilon term.
+            if (smoothDiffusion)
             {
-                NekDouble Length  = 1.0;
                 NekDouble factor  = 0.0;
                 NekDouble factor2 = 1.0;
                 
@@ -374,6 +371,7 @@ namespace Nektar
 
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
+        const bool smoothDiffusion = nVariables == m_spacedim + 3;
         
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
@@ -397,8 +395,8 @@ namespace Nektar
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
-            
-            if(nVariables == m_spacedim+3)
+
+            if (smoothDiffusion)
             {
                 NekDouble Length  = 1.0;
                 NekDouble factor  = 0.0;
@@ -4415,6 +4413,37 @@ namespace Nektar
         }
         
         m_file2.close();
+    }
+
+    void CompressibleFlowSystem::v_ExtraFldOutput(
+        std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+        std::vector<std::string>             &variables)
+    {
+        const int nPhys   = m_fields[0]->GetNpoints();
+        const int nCoeffs = m_fields[0]->GetNcoeffs();
+        Array<OneD, Array<OneD, NekDouble> > tmp(m_fields.num_elements());
+
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            tmp[i] = m_fields[i]->UpdatePhys();
+        }
+
+        Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
+        GetPressure  (tmp, pressure);
+        GetSoundSpeed(tmp, pressure, soundspeed);
+        GetMach      (tmp, soundspeed, mach);
+
+        Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
+        m_fields[0]->FwdTrans(pressure,   pFwd);
+        m_fields[0]->FwdTrans(soundspeed, sFwd);
+        m_fields[0]->FwdTrans(mach,       mFwd);
+
+        variables.push_back("p");
+        variables.push_back("a");
+        variables.push_back("Mach");
+        fieldcoeffs.push_back(pFwd);
+        fieldcoeffs.push_back(sFwd);
+        fieldcoeffs.push_back(mFwd);
     }
 }
 

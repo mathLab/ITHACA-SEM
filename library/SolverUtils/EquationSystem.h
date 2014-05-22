@@ -243,8 +243,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void Checkpoint_Output(
                 const int n,
                 MultiRegions::ExpListSharedPtr &field,
-                Array< OneD, Array<OneD, NekDouble> > &fieldcoeffs,
-                Array<OneD, std::string> &variables);
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string> &variables);
             
             /// Write field data to the given filename.
             SOLVER_UTILS_EXPORT void WriteFld(const std::string &outname);
@@ -253,8 +253,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void WriteFld(
                 const std::string &outname,
                 MultiRegions::ExpListSharedPtr &field,
-                Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs,
-                Array<OneD, std::string> &variables);
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string> &variables);
             
             /// Input field data from the given file.
             SOLVER_UTILS_EXPORT void ImportFld(
@@ -460,8 +460,6 @@ namespace Nektar
             Array<OneD, bool>                           m_checkIfSystemSingular;
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap              m_fieldMetaDataMap;
-            /// Map to enable solvers to add fields when checkpointing.
-            map<std::string, CPFuncType>                m_checkpointFuncs;
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;
@@ -555,6 +553,10 @@ namespace Nektar
             
             // Get pressure field if available
             SOLVER_UTILS_EXPORT virtual MultiRegions::ExpListSharedPtr v_GetPressure(void); 
+
+            SOLVER_UTILS_EXPORT virtual void v_ExtraFldOutput(
+                std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                std::vector<std::string>             &variables);
             
         private:
             

@@ -97,11 +97,6 @@ namespace Nektar
             
             inline SpatialDomains::Geometry3DSharedPtr GetGeom3D() const;
 
-            static Expansion3DSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
-            {
-                return boost::dynamic_pointer_cast<Expansion3D>(pSrc);
-            }
-
         protected:
             virtual void v_DGDeriv(
                 const int                                       dir,

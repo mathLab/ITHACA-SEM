@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef BLPONITS_H
+#ifndef BLPOINTS_H
 #define BLPOINTS_H
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>

@@ -182,6 +182,7 @@ namespace Nektar
         NekDouble c = m_E * m_nu / (1.0 + m_nu) / (1.0 - 2.0*m_nu);
 
         bool verbose = m_session->DefinesCmdLineArgument("verbose");
+        bool root    = m_session->GetComm()->GetRank() == 0;
 
         // Loop over each element and construct matrices.
         if (nVel == 2)
@@ -190,10 +191,10 @@ namespace Nektar
             {
                 exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
                 const int nPhys = exp->GetTotPoints();
-                
-                StdRegions::VarCoeffMap varcoeffA, varcoeffD;
                 Array<OneD, NekDouble> aArr(nPhys, a);
                 Array<OneD, NekDouble> bArr(nPhys, b);
+                
+                StdRegions::VarCoeffMap varcoeffA, varcoeffD;
                 varcoeffA[StdRegions::eVarCoeffD00] = aArr;
                 varcoeffA[StdRegions::eVarCoeffD11] = bArr;
                 varcoeffD[StdRegions::eVarCoeffD00] = bArr;
@@ -219,7 +220,7 @@ namespace Nektar
                 // Set up the statically condensed block for this element.
                 SetStaticCondBlock(n, exp, mat);
 
-                if (verbose)
+                if (verbose && root)
                 {
                     cout << "\rBuilding matrix system: "
                          << (int)(100.0 * n / nEl) << "%" << flush;
@@ -232,10 +233,10 @@ namespace Nektar
             {
                 exp = m_fields[0]->GetExp(m_fields[0]->GetOffset_Elmt_Id(n));
                 const int nPhys = exp->GetTotPoints();
-                StdRegions::VarCoeffMap varcoeffA, varcoeffE, varcoeffI;
                 Array<OneD, NekDouble> aArr(nPhys, a);
                 Array<OneD, NekDouble> bArr(nPhys, b);
 
+                StdRegions::VarCoeffMap varcoeffA, varcoeffE, varcoeffI;
                 varcoeffA[StdRegions::eVarCoeffD00] = aArr;
                 varcoeffA[StdRegions::eVarCoeffD11] = bArr;
                 varcoeffA[StdRegions::eVarCoeffD22] = bArr;
@@ -249,7 +250,7 @@ namespace Nektar
                 LocalRegions::MatrixKey matkeyA(StdRegions::eLaplacian,
                                                 exp->DetShapeType(),
                                                 *exp, factors, varcoeffA);
-                LocalRegions::MatrixKey matkeyD(StdRegions::eLaplacian,
+                LocalRegions::MatrixKey matkeyE(StdRegions::eLaplacian,
                                                 exp->DetShapeType(),
                                                 *exp, factors, varcoeffE);
                 LocalRegions::MatrixKey matkeyI(StdRegions::eLaplacian,
@@ -267,7 +268,7 @@ namespace Nektar
                 mat[0][2] = BuildLaplacianIJMatrix(2, 0, c, exp);
                 
                 mat[1][0] = mat[0][1];
-                mat[1][1] = exp->GenMatrix(matkeyD);
+                mat[1][1] = exp->GenMatrix(matkeyE);
                 mat[1][2] = BuildLaplacianIJMatrix(2, 1, c, exp);
                 
                 mat[2][0] = mat[0][2];
@@ -277,15 +278,15 @@ namespace Nektar
                 // Set up the statically condensed block for this element.
                 SetStaticCondBlock(n, exp, mat);
 
-                if (verbose)
+                if (verbose && root)
                 {
                     cout << "\rBuilding matrix system: "
                          << (int)(100.0 * n / nEl) << "%" << flush;
                 }
             }
         }
-        
-        if (verbose)
+
+        if (verbose && root)
         {
             cout << "\rBuilding matrix system: done." << endl;
         }
@@ -316,7 +317,7 @@ namespace Nektar
      */
     void LinearElasticSystem::v_DoSolve()
     {
-        int i, j, nv;
+        int i, j, k, l, nv;
         const int nVel = m_fields[0]->GetCoordim(0);
 
         // Build initial matrix system.
@@ -359,7 +360,7 @@ namespace Nektar
         // Add temperature term
         string tempEval;
         m_session->LoadSolverInfo("Temperature", tempEval, "None");
-        if (tempEval != "None")
+        if (tempEval == "Jacobian")
         {
             // Allocate storage
             m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
@@ -367,25 +368,115 @@ namespace Nektar
             for (nv = 0; nv < nVel; ++nv)
             {
                 Array<OneD, NekDouble> tmp;
-                m_temperature[nv] = Array<OneD, NekDouble>(m_fields[nv]->GetNpoints());
+                m_temperature[nv] = Array<OneD, NekDouble>(
+                    m_fields[nv]->GetNpoints());
                 
                 for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
                 {
                     // Calculate element area
                     LocalRegions::ExpansionSharedPtr exp =
                         m_fields[0]->GetExp(i);
-                    LibUtilities::PointsKeyVector pkey = exp->GetPointsKeys();
-                    Array<OneD, NekDouble> jac = exp->GetMetricInfo()->GetJac(pkey);
+                    LibUtilities::PointsKeyVector pkey =
+                        exp->GetPointsKeys();
+                    Array<OneD, NekDouble> jac =
+                        exp->GetMetricInfo()->GetJac(pkey);
                     
-                    NekDouble jac_min = Vmath::Vmin(jac.num_elements(), jac, 1);
-                    NekDouble jac_max = Vmath::Vmax(jac.num_elements(), jac, 1);
-                    
-                    Vmath::Smul(exp->GetTotPoints(), m_beta, jac, 1, tmp = m_temperature[nv] + m_fields[0]->GetPhys_Offset(i), 1);
+                    int offset = m_fields[0]->GetPhys_Offset(i);
+                    Vmath::Smul(exp->GetTotPoints(), m_beta, jac, 1,
+                                tmp = m_temperature[nv] + offset, 1);
                 }
                 m_fields[nv]->PhysDeriv(nv, m_temperature[nv], forcing[nv]);
             }
-            cout << endl;
         }
+        else if (tempEval == "Metric")
+        {
+            m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
+            Array<TwoD, Array<OneD, NekDouble> > beta(nVel, nVel);
+
+            for (nv = 0; nv < nVel; ++nv)
+            {
+                m_temperature[nv] = Array<OneD, NekDouble>(
+                    m_fields[nv]->GetNpoints());
+            }
+
+            for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
+            {
+                // Calculate element area
+                LocalRegions::ExpansionSharedPtr exp =
+                    m_fields[0]->GetExp(i);
+                LibUtilities::PointsKeyVector pkey = exp->GetPointsKeys();
+                Array<OneD, NekDouble> jac =
+                    exp->GetMetricInfo()->GetJac(pkey);
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > deriv
+                    = exp->GetMetricInfo()->GetDeriv(pkey);
+                int offset = m_fields[0]->GetPhys_Offset(i);
+
+                // Compute metric tensor
+                Array<OneD, NekDouble> tmp(nVel*nVel);
+                for (j = 0; j < exp->GetTotPoints(); ++j)
+                {
+                    // TODO: fix this!
+                    /*
+                    for (k = 0; k < nVel; ++k)
+                    {
+                        for (l = 0; l < nVel; ++l)
+                        {
+                            tmp[k*nVel+l] = 0.0;
+                            for (int m = 0; m < nVel; ++m)
+                            {
+                                tmp[k*nVel+l] += deriv[m][k][j] * deriv[l][m][j];
+                            }
+                            cout << tmp[k*nVel+l] << endl;
+                        }
+                    }
+                    */
+
+                    tmp[0] = deriv[0][0][j] * deriv[0][0][j] +
+                             deriv[0][1][j] * deriv[0][1][j];
+                    tmp[1] = deriv[1][0][j] * deriv[0][0][j] +
+                             deriv[1][1][j] * deriv[0][1][j];
+                    tmp[2] = deriv[0][0][j] * deriv[1][0][j] +
+                             deriv[0][1][j] * deriv[1][1][j];
+                    tmp[3] = deriv[1][0][j] * deriv[1][0][j] +
+                             deriv[1][1][j] * deriv[1][1][j];
+
+                    // Compute eigenvalues/eigenvectors.
+                    char jobvl = 'N', jobvr = 'V';
+                    int worklen = 8*nVel, info;
+                    Array<OneD, NekDouble> wi(nVel);
+                    DNekMat evec(nVel, nVel, 0.0, eFULL);
+                    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
+                    Array<OneD, NekDouble> vl(nVel*nVel);
+                    Array<OneD, NekDouble> work(worklen);
+                    Lapack::Dgeev(jobvl, jobvr, nVel, &tmp[0], nVel,
+                                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
+                                  &(evec.GetPtr())[0], nVel,
+                                  &work[0], worklen, info);
+
+                    DNekMat evecinv = evec;
+                    eval(0,0) = 1/eval(0,0);
+                    eval(1,1) = 1/eval(1,1);
+                    evecinv.Invert();
+                    DNekMat beta = evecinv * eval * evec;
+
+                    for (nv = 0; nv < nVel; ++nv)
+                    {
+                        m_temperature[nv][offset + j] =
+                            (beta(nv,0) + beta(nv,1)) * m_beta * jac[j];
+                    }
+                }
+            }
+
+            for (nv = 0; nv < nVel; ++nv)
+            {
+                m_fields[nv]->PhysDeriv(nv, m_temperature[nv], forcing[nv]);
+            }
+        }
+        else if (tempEval != "None")
+        {
+            ASSERTL0(false, "Unknown temperature form: " + tempEval);
+        }
+
 
         // Set up some temporary storage.
         //

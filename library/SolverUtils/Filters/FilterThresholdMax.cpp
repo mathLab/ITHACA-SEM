@@ -55,6 +55,12 @@ namespace Nektar
             ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
                      "Missing parameter 'OutputFile'.");
             m_outputFile = pParams.find("OutputFile")->second;
+
+            if (pParams.find("StartTime") != pParams.end())
+            {
+                m_startTime = atof(pParams.find("StartTime")->second.c_str());
+            }
+
             m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
 
         }
@@ -71,6 +77,11 @@ namespace Nektar
 
         void FilterThresholdMax::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
+            if (time < m_startTime)
+            {
+                return;
+            }
+
             int i;
             NekDouble timestep = pFields[0]->GetSession()->GetParameter("TimeStep");
 

@@ -497,8 +497,8 @@ namespace Nektar
                     evecinv(1,0) =  -fac*evec(1,0);
                     evecinv(1,1) =   fac*evec(0,0);
                     
-                    //eval(0,0) = scale * eval(0,0);
-                    //eval(1,1) = scale * eval(1,1);
+                    eval(0,0) = m_beta * eval(0,0);
+                    eval(1,1) = m_beta * eval(1,1);
 
                     // evecinv.Invert();
                     DNekMat beta = evec * eval * evecinv ;
@@ -506,7 +506,7 @@ namespace Nektar
                     for (nv = 0; nv < nVel; ++nv)
                     {
                         m_temperature[nv][offset + j] =
-                            m_beta * (beta(nv,0) + beta(nv,1)) * eval(nv,nv) * jac[j];
+                            (beta(nv,0) + beta(nv,1)) * jac[j];
                     }
                 }
             }

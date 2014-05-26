@@ -410,9 +410,10 @@ namespace Nektar
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > deriv
                     = exp->GetMetricInfo()->GetDeriv(pkey);
                 int offset = m_fields[0]->GetPhys_Offset(i);
-
+                
+                Array<OneD, NekDouble> tmp_sv(jac.num_elements(),0.0);
                 // Compute metric tensor
-                Array<OneD, NekDouble> tmp(nVel*nVel);
+                Array<OneD, NekDouble> tmp(nVel*nVel, 0.0);
                 for (j = 0; j < exp->GetTotPoints(); ++j)
                 {
                     // TODO: fix this!
@@ -428,9 +429,8 @@ namespace Nektar
                             }
                             cout << tmp[k*nVel+l] << endl;
                         }
-                    }
-                    */
-
+                    }*/
+                    
                     tmp[0] = deriv[0][0][j] * deriv[0][0][j] +
                              deriv[0][1][j] * deriv[0][1][j];
                     tmp[1] = deriv[1][0][j] * deriv[0][0][j] +
@@ -440,29 +440,73 @@ namespace Nektar
                     tmp[3] = deriv[1][0][j] * deriv[1][0][j] +
                              deriv[1][1][j] * deriv[1][1][j];
 
+
                     // Compute eigenvalues/eigenvectors.
                     char jobvl = 'N', jobvr = 'V';
                     int worklen = 8*nVel, info;
                     Array<OneD, NekDouble> wi(nVel);
                     DNekMat evec(nVel, nVel, 0.0, eFULL);
+                    DNekMat evecinv(nVel, nVel, 0.0, eFULL);
                     DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
                     Array<OneD, NekDouble> vl(nVel*nVel);
                     Array<OneD, NekDouble> work(worklen);
-                    Lapack::Dgeev(jobvl, jobvr, nVel, &tmp[0], nVel,
-                                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                                  &(evec.GetPtr())[0], nVel,
-                                  &work[0], worklen, info);
+                    
+                    //Lapack::Dgeev(jobvl, jobvr, nVel, &tmp[0], nVel,
+                    //              &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
+                    //              &(evec.GetPtr())[0], nVel,
+                    //              &work[0], worklen, info);
 
-                    DNekMat evecinv = evec;
-                    eval(0,0) = 1/eval(0,0);
-                    eval(1,1) = 1/eval(1,1);
-                    evecinv.Invert();
-                    DNekMat beta = evecinv * eval * evec;
+                    NekDouble T = -(tmp[0] + tmp[3]);
+                    NekDouble D = tmp[0]*tmp[3] - tmp[1]*tmp[2];
+                    
+                    NekDouble Term = (T*T)-4*D;
+                    eval(0,0) = (-T+sqrt(Term))/2;
+                    eval(1,1) = (-T-sqrt(Term))/2;
+                    
+                    if (tmp[1] != 0)
+                    {
+                        evec(0,0) = tmp[1];
+                        evec(1,0) = eval(0,0) - tmp[0];
+                        
+                        evec(0,1) = tmp[1];
+                        evec(1,1) = eval(1,1) - tmp[0];
+                    }
+                    else if(tmp[2] != 0)
+                    {
+                        evec(0,0) = eval(0,0) - tmp[3];
+                        evec(1,0) = tmp[2];
+                        
+                        evec(0,1) = eval(1,1) - tmp[3];
+                        evec(1,1) = tmp[2];
+                    }
+                    else
+                    {
+                        evec(0,0) = 1.0;
+                        evec(1,0) = 0.0;
+                        
+                        evec(0,1) = 0.0;
+                        evec(1,1) = 1.0;
+                    }
+                    
+                    NekDouble det = evec(0,0)*evec(1,1)-evec(0,1)*evec(1,0);
+                    NekDouble fac = 1/det;
+                    
+                    // inverse of the eigenvectors
+                    evecinv(0,0) =   fac*evec(1,1);
+                    evecinv(0,1) =  -fac*evec(0,1);
+                    evecinv(1,0) =  -fac*evec(1,0);
+                    evecinv(1,1) =   fac*evec(0,0);
+                    
+                    //eval(0,0) = scale * eval(0,0);
+                    //eval(1,1) = scale * eval(1,1);
 
+                    // evecinv.Invert();
+                    DNekMat beta = evec * eval * evecinv ;
+                    
                     for (nv = 0; nv < nVel; ++nv)
                     {
                         m_temperature[nv][offset + j] =
-                            (beta(nv,0) + beta(nv,1)) * m_beta * jac[j];
+                            m_beta * (beta(nv,0) + beta(nv,1)) * eval(nv,nv) * jac[j];
                     }
                 }
             }

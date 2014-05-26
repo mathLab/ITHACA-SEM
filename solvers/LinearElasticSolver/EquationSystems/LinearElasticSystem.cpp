@@ -317,7 +317,7 @@ namespace Nektar
      */
     void LinearElasticSystem::v_DoSolve()
     {
-        int i, j, k, l, nv;
+        int i, j, k, l, m, nv;
         const int nVel = m_fields[0]->GetCoordim(0);
 
         // Build initial matrix system.
@@ -411,102 +411,62 @@ namespace Nektar
                     = exp->GetMetricInfo()->GetDeriv(pkey);
                 int offset = m_fields[0]->GetPhys_Offset(i);
                 
-                Array<OneD, NekDouble> tmp_sv(jac.num_elements(),0.0);
+                Array<OneD, NekDouble> tmp_sv(jac.num_elements(), 0.0);
                 // Compute metric tensor
                 Array<OneD, NekDouble> tmp(nVel*nVel, 0.0);
                 for (j = 0; j < exp->GetTotPoints(); ++j)
                 {
-                    // TODO: fix this!
-                    /*
+                    // Setting up the metric tensor
                     for (k = 0; k < nVel; ++k)
                     {
                         for (l = 0; l < nVel; ++l)
                         {
                             tmp[k*nVel+l] = 0.0;
+                            
                             for (int m = 0; m < nVel; ++m)
                             {
-                                tmp[k*nVel+l] += deriv[m][k][j] * deriv[l][m][j];
+                                tmp[k*nVel+l] += deriv[k][m][j] * deriv[l][m][j];
                             }
-                            cout << tmp[k*nVel+l] << endl;
                         }
-                    }*/
-                    
-                    tmp[0] = deriv[0][0][j] * deriv[0][0][j] +
-                             deriv[0][1][j] * deriv[0][1][j];
-                    tmp[1] = deriv[1][0][j] * deriv[0][0][j] +
-                             deriv[1][1][j] * deriv[0][1][j];
-                    tmp[2] = deriv[0][0][j] * deriv[1][0][j] +
-                             deriv[0][1][j] * deriv[1][1][j];
-                    tmp[3] = deriv[1][0][j] * deriv[1][0][j] +
-                             deriv[1][1][j] * deriv[1][1][j];
-
-
+                    }
+                
                     // Compute eigenvalues/eigenvectors.
                     char jobvl = 'N', jobvr = 'V';
                     int worklen = 8*nVel, info;
-                    Array<OneD, NekDouble> wi(nVel);
+                    
+                    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
                     DNekMat evec(nVel, nVel, 0.0, eFULL);
                     DNekMat evecinv(nVel, nVel, 0.0, eFULL);
-                    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
                     Array<OneD, NekDouble> vl(nVel*nVel);
                     Array<OneD, NekDouble> work(worklen);
+                    Array<OneD, NekDouble> wi(nVel);
                     
-                    //Lapack::Dgeev(jobvl, jobvr, nVel, &tmp[0], nVel,
-                    //              &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                    //              &(evec.GetPtr())[0], nVel,
-                    //              &work[0], worklen, info);
+                    Lapack::Dgeev(jobvl, jobvr, nVel, &tmp[0], nVel,
+                                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
+                                  &(evec.GetPtr())[0], nVel,
+                                  &work[0], worklen, info);
+                    
+                    evecinv = evec;
+                    evecinv.Invert();
 
-                    NekDouble T = -(tmp[0] + tmp[3]);
-                    NekDouble D = tmp[0]*tmp[3] - tmp[1]*tmp[2];
-                    
-                    NekDouble Term = (T*T)-4*D;
-                    eval(0,0) = (-T+sqrt(Term))/2;
-                    eval(1,1) = (-T-sqrt(Term))/2;
-                    
-                    if (tmp[1] != 0)
+                    // rescaling of the eigenvalues
+                    for (nv = 0; nv < nVel; ++nv)
                     {
-                        evec(0,0) = tmp[1];
-                        evec(1,0) = eval(0,0) - tmp[0];
-                        
-                        evec(0,1) = tmp[1];
-                        evec(1,1) = eval(1,1) - tmp[0];
+                        eval(nv,nv) = m_beta * eval(nv,nv);
                     }
-                    else if(tmp[2] != 0)
-                    {
-                        evec(0,0) = eval(0,0) - tmp[3];
-                        evec(1,0) = tmp[2];
-                        
-                        evec(0,1) = eval(1,1) - tmp[3];
-                        evec(1,1) = tmp[2];
-                    }
-                    else
-                    {
-                        evec(0,0) = 1.0;
-                        evec(1,0) = 0.0;
-                        
-                        evec(0,1) = 0.0;
-                        evec(1,1) = 1.0;
-                    }
-                    
-                    NekDouble det = evec(0,0)*evec(1,1)-evec(0,1)*evec(1,0);
-                    NekDouble fac = 1/det;
-                    
-                    // inverse of the eigenvectors
-                    evecinv(0,0) =   fac*evec(1,1);
-                    evecinv(0,1) =  -fac*evec(0,1);
-                    evecinv(1,0) =  -fac*evec(1,0);
-                    evecinv(1,1) =   fac*evec(0,0);
-                    
-                    eval(0,0) = m_beta * eval(0,0);
-                    eval(1,1) = m_beta * eval(1,1);
-
-                    // evecinv.Invert();
+                
                     DNekMat beta = evec * eval * evecinv ;
+                    NekDouble term = 0.0;
                     
                     for (nv = 0; nv < nVel; ++nv)
                     {
+                        term = 0.0;
+                        for (m = 0; m < nVel; ++m)
+                        {
+                            term += beta(nv,m);
+                        }
                         m_temperature[nv][offset + j] =
-                            (beta(nv,0) + beta(nv,1)) * jac[j];
+                            (term) * jac[j];
                     }
                 }
             }

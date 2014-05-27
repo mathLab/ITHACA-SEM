@@ -2,6 +2,7 @@ SET(LinkLibraries
     optimized MultiRegions debug MultiRegions-g    
     optimized LocalRegions debug LocalRegions-g    
     optimized SpatialDomains debug SpatialDomains-g    
+    optimized Collections debug Collections-g
     optimized StdRegions debug StdRegions-g 
     optimized LibUtilities debug LibUtilities-g
     optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
@@ -19,6 +20,12 @@ SET(HelmholtzCont2DSource  Helmholtz2D.cpp)
 ADD_NEKTAR_EXECUTABLE(Helmholtz2D demos HelmholtzCont2DSource)
 TARGET_LINK_LIBRARIES(Helmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Helmholtz2D)
+
+SET(QuadCollectionTestSource  QuadCollectionTest.cpp)
+ADD_NEKTAR_EXECUTABLE(QuadCollectionTest demos QuadCollectionTestSource)
+TARGET_LINK_LIBRARIES(QuadCollectionTest ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(QuadCollectionTest)
+
 
 #SET(Helmholtz2DHomo1DSource  Helmholtz2DHomo1D.cpp)
 #ADD_NEKTAR_EXECUTABLE(Helmholtz2DHomo1D Helmholtz2DHomo1DSource)

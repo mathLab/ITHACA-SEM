@@ -503,8 +503,7 @@ namespace Nektar
                 else if (bndCondExp.num_elements() == 0)
                 {
                     // All boundaries are periodic.
-                    meshVertId = LocalRegions::Expansion2D::FromStdExp(
-                        locExpVector[0])->GetGeom2D()->GetVid(0);
+                    meshVertId = locExpVector[0]->GetGeom()->GetVid(0);
                 }
                 else
                 {

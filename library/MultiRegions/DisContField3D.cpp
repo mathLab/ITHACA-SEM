@@ -190,15 +190,21 @@
              {
                  if(SetUpJustDG)
                  {
-                     m_globalBndMat = In.m_globalBndMat;
-                     m_trace        = In.m_trace;
-                     m_traceMap     = In.m_traceMap;
+                     m_globalBndMat  = In.m_globalBndMat;
+                     m_trace         = In.m_trace;
+                     m_traceMap      = In.m_traceMap;
+                     m_periodicVerts = In.m_periodicVerts;
+                     m_periodicEdges = In.m_periodicEdges;
+                     m_periodicFaces = In.m_periodicFaces;
                  }
                  else 
                  {
-                     m_globalBndMat = In.m_globalBndMat;
-                     m_trace        = In.m_trace;
-                     m_traceMap     = In.m_traceMap;
+                     m_globalBndMat  = In.m_globalBndMat;
+                     m_trace         = In.m_trace;
+                     m_traceMap      = In.m_traceMap;
+                     m_periodicVerts = In.m_periodicVerts;
+                     m_periodicEdges = In.m_periodicEdges;
+                     m_periodicFaces = In.m_periodicFaces;
 
                      int i,cnt,f;
                      Array<OneD, int> ElmtID,FaceID;
@@ -258,7 +264,10 @@
              m_bndConditions       (In.m_bndConditions),
              m_globalBndMat        (In.m_globalBndMat),
              m_trace               (In.m_trace),
-             m_traceMap            (In.m_traceMap)
+             m_traceMap            (In.m_traceMap),
+             m_periodicVerts       (In.m_periodicVerts),
+             m_periodicEdges       (In.m_periodicEdges),
+             m_periodicFaces       (In.m_periodicFaces)
          {
          }
 

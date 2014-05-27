@@ -482,9 +482,9 @@ namespace Nektar
 	
         int checkHBC = HBCnumber;
         m_comm->AllReduce(checkHBC,LibUtilities::ReduceSum);
-        ASSERTL0(checkHBC > 0 ,"At least one high-order pressure boundary "
-                               "condition is required for scheme "
-                               "consistency");
+        //ASSERTL0(checkHBC > 0 ,"At least one high-order pressure boundary "
+        //                       "condition is required for scheme "
+        //                       "consistency");
 
         m_acceleration[0] = Array<OneD, NekDouble>(cnt, 0.0);
         for(n = 0; n < m_intSteps; ++n)

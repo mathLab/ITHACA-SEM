@@ -391,7 +391,6 @@ namespace Nektar
         else if (tempEval == "Metric")
         {
             m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
-            Array<TwoD, Array<OneD, NekDouble> > beta(nVel, nVel);
 
             for (nv = 0; nv < nVel; ++nv)
             {
@@ -411,7 +410,6 @@ namespace Nektar
                     = exp->GetMetricInfo()->GetDeriv(pkey);
                 int offset = m_fields[0]->GetPhys_Offset(i);
                 
-                Array<OneD, NekDouble> tmp_sv(jac.num_elements(), 0.0);
                 // Compute metric tensor
                 Array<OneD, NekDouble> tmp(nVel*nVel, 0.0);
                 for (j = 0; j < exp->GetTotPoints(); ++j)
@@ -761,6 +759,11 @@ namespace Nektar
         const int nCoeffs = m_fields[0]->GetNcoeffs();
         static char *dimStr[] = { "X", "Y", "Z" };
         
+        if (m_temperature.num_elements() == 0)
+        {
+            return;
+        }
+
         for (int i = 0; i < nVel; ++i)
         {
             Array<OneD, NekDouble> tFwd(nCoeffs);

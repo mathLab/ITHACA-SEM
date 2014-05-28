@@ -32,7 +32,7 @@
 // Description: LinearElasticSystem solve routines 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <algorithm>
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
@@ -437,12 +437,12 @@ namespace Nektar
                     char jobvl = 'N', jobvr = 'V';
                     int worklen = 8*nVel, info;
                     
-                    DNekMat eval(nVel, nVel, 0.0, eDIAGONAL);
-                    DNekMat evec(nVel, nVel, 0.0, eFULL);
+                    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
+                    DNekMat evec   (nVel, nVel, 0.0, eFULL);
                     DNekMat evecinv(nVel, nVel, 0.0, eFULL);
-                    Array<OneD, NekDouble> vl(nVel*nVel);
+                    Array<OneD, NekDouble> vl  (nVel*nVel);
                     Array<OneD, NekDouble> work(worklen);
-                    Array<OneD, NekDouble> wi(nVel);
+                    Array<OneD, NekDouble> wi  (nVel);
                     
                     Lapack::Dgeev(jobvl, jobvr, nVel, &tmp[0], nVel,
                                   &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
@@ -455,11 +455,11 @@ namespace Nektar
                     // rescaling of the eigenvalues
                     for (nv = 0; nv < nVel; ++nv)
                     {
-                        eval(nv,nv) = 1.0 / eval(nv,nv);
-                        //eval(nv,nv) = m_beta * eval(nv,nv);
+                        eval(nv,nv) = m_beta * eval(nv,nv);
                     }
 
                     DNekMat beta = evec * eval * evecinv;
+                    
                     NekDouble term = 0.0;
 
                     for (nv = 0; nv < nVel; ++nv)
@@ -478,6 +478,7 @@ namespace Nektar
                 m_fields[nv]->PhysDeriv(0, tmpstress[nv][0], tmpderiv);
                 m_fields[nv]->PhysDeriv(1, tmpstress[nv][1], m_temperature[nv]);
                 Vmath::Vadd(m_fields[nv]->GetNpoints(), tmpderiv, 1, m_temperature[nv], 1, m_temperature[nv], 1);
+                Vmath::Smul(m_fields[nv]->GetNpoints(), 1.0, m_temperature[nv], 1, forcing[nv], 1);
             }
         }
         else if (tempEval != "None")

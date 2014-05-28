@@ -38,6 +38,8 @@
 
 #include <Collections/Operator.h>
 
+#include <boost/unordered_map.hpp>
+
 namespace Nektar {
 namespace Collections {
     /**
@@ -70,9 +72,9 @@ namespace Collections {
         }
 
     protected:
-        StdRegions::StdExpansionSharedPtr         m_stdExp;
-        vector<SpatialDomains::GeometrySharedPtr> m_geom;
-        map<OperatorType, OperatorSharedPtr>      m_ops;
+        StdRegions::StdExpansionSharedPtr                     m_stdExp;
+        vector<SpatialDomains::GeometrySharedPtr>             m_geom;
+        boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
     };
 }
 }

@@ -32,20 +32,6 @@ int main(int argc, char *argv[])
     Exp = MemoryManager<MultiRegions::ContField2D>::
         AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
 
-    Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0);
-    Array<OneD, NekDouble> phys1(Exp->GetNpoints());
-    Array<OneD, NekDouble> phys2(Exp->GetNpoints());
-
-    Timer t;
-    t.Start();
-    for (int i = 0; i < NBWD; ++i)
-    {
-        Exp->BwdTrans(coeffs, phys1);
-    }
-    t.Stop();
-    NekDouble orig = t.TimePerTest(NBWD);
-    cout << "ExpList: " << orig << endl; 
-
     vector<SpatialDomains::GeometrySharedPtr> geom(Exp->GetExpSize());
 
     for (int i = 0; i < Exp->GetExpSize(); ++i)
@@ -55,20 +41,74 @@ int main(int argc, char *argv[])
     
     Collections::Collection c(Exp->GetExp(0), geom);
 
-    t.Start();
-    for (int i = 0; i < NBWD; ++i)
+#if 0
     {
-        c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
+        Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0);
+        Array<OneD, NekDouble> phys1(Exp->GetNpoints());
+        Array<OneD, NekDouble> phys2(Exp->GetNpoints());
+
+        Timer t;
+        t.Start();
+        for (int i = 0; i < NBWD; ++i)
+        {
+            Exp->BwdTrans(coeffs, phys1);
+        }
+        t.Stop();
+        NekDouble orig = t.TimePerTest(NBWD);
+        cout << "ExpList: " << orig << endl; 
+
+        t.Start();
+        for (int i = 0; i < NBWD; ++i)
+        {
+            c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
+        }
+        t.Stop();
+        NekDouble col = t.TimePerTest(NBWD);
+        cout << "Collection: " << t.TimePerTest(NBWD) << endl;
+
+        cout << "Ratio: " << (orig/col) << endl;
+
+        Vmath::Vsub(phys1.num_elements(), phys1, 1, phys2, 1, phys1, 1);
+
+        cout << Vmath::Vmax(phys1.num_elements(), phys1, 1) << endl;
     }
-    t.Stop();
-    NekDouble col = t.TimePerTest(NBWD);
-    cout << "Collection: " << t.TimePerTest(NBWD) << endl;
+#endif
 
-    cout << "Ratio: " << (orig/col) << endl;
+    {
+        const int nq = Exp->GetNpoints();
+        Array<OneD, NekDouble> xc(nq), yc(nq);
+        Array<OneD, NekDouble> input(nq), outexp0(nq), outexp1(nq), outcol(2*nq);
 
-    Vmath::Vsub(phys1.num_elements(), phys1, 1, phys2, 1, phys1, 1);
+        Exp->GetCoords(xc, yc);
+        
+        for (int i = 0; i < nq; ++i)
+        {
+            input[i] = sin(xc[i])*cos(yc[i]);
+        }
 
-    cout << Vmath::Vmax(phys1.num_elements(), phys1, 1) << endl;
+        Timer t;
+        t.Start();
+        for (int i = 0; i < NBWD; ++i)
+        {
+            Exp->PhysDeriv(input, outexp0, NullNekDouble1DArray);
+        }
+        t.Stop();
+        NekDouble orig = t.TimePerTest(NBWD);
+        cout << "ExpList: " << orig << endl; 
+
+        t.Start();
+        for (int i = 0; i < NBWD; ++i)
+        {
+            c.ApplyOperator(Collections::ePhysDeriv, input, outcol);
+        }
+        t.Stop();
+        NekDouble col = t.TimePerTest(NBWD);
+        cout << "Collection: " << t.TimePerTest(NBWD) << endl;
+        cout << "Ratio: " << (orig/col) << endl;
+
+        Vmath::Vsub(nq, outexp0, 1, outcol, 1, outexp0, 1);
+        cout << "Error: " << Vmath::Vmax(nq, outexp0, 1) << endl;
+    }
 
     vSession->Finalise();
 

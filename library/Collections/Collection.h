@@ -52,15 +52,21 @@ namespace Collections {
         {
             OperatorKey bwdLocMat(
                 LibUtilities::eQuadrilateral, eBwdTrans, eLocMat);
+            OperatorKey derivSumFac(
+                LibUtilities::eQuadrilateral, ePhysDeriv, eSumFac);
             m_ops[eBwdTrans] = GetOperatorFactory().CreateInstance(
                 bwdLocMat, pExp, pGeom);
+            m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(
+                derivSumFac, pExp, pGeom);
         }
 
-        void ApplyOperator(const OperatorType                 &op,
-                           const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,       NekDouble> &outarray)
+        void ApplyOperator(
+            const OperatorType                 &op,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
         {
-            (*m_ops[op])(inarray, outarray);
+            Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
+            (*m_ops[op])(inarray, outarray, wsp);
         }
 
     protected:

@@ -40,13 +40,24 @@
 #include <StdRegions/StdExpansion.h>
 #include <SpatialDomains/Geometry.h>
 
+#define OPERATOR_CREATE(cname)                                  \
+    static OperatorKey m_type;                                  \
+    static OperatorSharedPtr create(                            \
+        StdRegions::StdExpansionSharedPtr pExp,                 \
+        vector<SpatialDomains::GeometrySharedPtr> pGeom)        \
+    {                                                           \
+        return MemoryManager<cname>                             \
+            ::AllocateSharedPtr(pExp, pGeom);                   \
+    }
+
 namespace Nektar {
 namespace Collections {
     enum OperatorType
     {
         eBwdTrans,
         eIProductWRTBase,
-        eFwdTrans
+        eFwdTrans,
+        ePhysDeriv
     };
 
     enum ImplementationType
@@ -76,16 +87,25 @@ namespace Collections {
         Operator(StdRegions::StdExpansionSharedPtr pExp,
                  vector<SpatialDomains::GeometrySharedPtr> pGeom)
             : m_stdExp (pExp),
-              m_numElmt(pGeom.size())
+              m_numElmt(pGeom.size()),
+              m_wspSize(0)
         {
         }
 
-        virtual void operator()(const Array<OneD, const NekDouble> &input,
-                                Array<OneD,       NekDouble> &output) = 0;
+        virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &wsp = NullNekDouble1DArray) = 0;
+
+        int GetWspSize()
+        {
+            return m_wspSize;
+        }
 
     protected:
         StdRegions::StdExpansionSharedPtr m_stdExp;
         unsigned int m_numElmt;
+        unsigned int m_wspSize;
     };
 }
 }

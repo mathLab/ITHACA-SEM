@@ -391,11 +391,18 @@ namespace Nektar
         else if (tempEval == "Metric")
         {
             m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmpstress(nVel);
 
             for (nv = 0; nv < nVel; ++nv)
             {
                 m_temperature[nv] = Array<OneD, NekDouble>(
                     m_fields[nv]->GetNpoints());
+                tmpstress[nv] = Array<OneD, Array<OneD, NekDouble> >(nVel);
+                for (i = 0; i < nVel; ++i)
+                {
+                    tmpstress[nv][i] = Array<OneD, NekDouble>(
+                        m_fields[nv]->GetNpoints());
+                }
             }
 
             for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
@@ -404,8 +411,6 @@ namespace Nektar
                 LocalRegions::ExpansionSharedPtr exp =
                     m_fields[0]->GetExp(i);
                 LibUtilities::PointsKeyVector pkey = exp->GetPointsKeys();
-                Array<OneD, NekDouble> jac =
-                    exp->GetMetricInfo()->GetJac(pkey);
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > deriv
                     = exp->GetMetricInfo()->GetDeriv(pkey);
                 int offset = m_fields[0]->GetPhys_Offset(i);
@@ -450,28 +455,29 @@ namespace Nektar
                     // rescaling of the eigenvalues
                     for (nv = 0; nv < nVel; ++nv)
                     {
-                        eval(nv,nv) = m_beta * eval(nv,nv);
+                        eval(nv,nv) = 1.0 / eval(nv,nv);
+                        //eval(nv,nv) = m_beta * eval(nv,nv);
                     }
-                
-                    DNekMat beta = evec * eval * evecinv ;
+
+                    DNekMat beta = evec * eval * evecinv;
                     NekDouble term = 0.0;
-                    
+
                     for (nv = 0; nv < nVel; ++nv)
                     {
-                        term = 0.0;
-                        for (m = 0; m < nVel; ++m)
-                        {
-                            term += beta(nv,m);
-                        }
-                        m_temperature[nv][offset + j] =
-                            (term) * jac[j];
+                        tmpstress[0][0][offset+j] = beta(0,0);
+                        tmpstress[1][0][offset+j] = beta(1,0);
+                        tmpstress[0][1][offset+j] = beta(0,1);
+                        tmpstress[1][1][offset+j] = beta(1,1);
                     }
                 }
             }
 
+            Array<OneD, NekDouble> tmpderiv(m_fields[0]->GetNpoints());
             for (nv = 0; nv < nVel; ++nv)
             {
-                m_fields[nv]->PhysDeriv(nv, m_temperature[nv], forcing[nv]);
+                m_fields[nv]->PhysDeriv(0, tmpstress[nv][0], tmpderiv);
+                m_fields[nv]->PhysDeriv(1, tmpstress[nv][1], m_temperature[nv]);
+                Vmath::Vadd(m_fields[nv]->GetNpoints(), tmpderiv, 1, m_temperature[nv], 1, m_temperature[nv], 1);
             }
         }
         else if (tempEval != "None")

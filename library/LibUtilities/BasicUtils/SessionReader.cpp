@@ -257,6 +257,8 @@ namespace Nektar
          */
         void SessionReader::InitSession()
         {
+            m_exprEvaluator.SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+
             // Split up the communicator
             PartitionComm();
 

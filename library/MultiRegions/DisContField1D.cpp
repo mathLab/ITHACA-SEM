@@ -254,8 +254,7 @@ namespace Nektar
         {
             set<int>::iterator it;
             LocalRegions::Expansion0DSharedPtr traceEl = 
-                boost::dynamic_pointer_cast<LocalRegions::Expansion0D>(
-                    (m_traceMap->GetElmtToTrace())[n][e]);
+                m_traceMap->GetElmtToTrace()[n][e]->as<LocalRegions::Expansion0D>();
 
             
             bool fwd = true;
@@ -815,8 +814,7 @@ namespace Nektar
                     {
                         
                         LocalRegions::Expansion0DSharedPtr vertExp =
-                            boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion0D>(elmtToTrace[i][v]);
+                            elmtToTrace[i][v]->as<LocalRegions::Expansion0D>();
 
                         if(vertExp->GetLeftAdjacentElementExp()->GetGeom()->GetGlobalID() != (*m_exp)[i]->GetGeom()->GetGlobalID())
                         {

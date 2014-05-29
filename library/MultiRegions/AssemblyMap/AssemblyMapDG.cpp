@@ -112,7 +112,7 @@ namespace Nektar
                     
                     if(MeshVertId.count(id) > 0)
                     {
-                        m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions:: PointExp> ((*trace).GetExp(MeshVertId.find(id)->second));
+                        m_elmtToTrace[i][j] = (*trace).GetExp(MeshVertId.find(id)->second)->as<LocalRegions::PointExp>();
                         
                     }
                     else

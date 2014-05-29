@@ -136,7 +136,7 @@ namespace Nektar
             LocalRegions::Expansion1DSharedPtr exp1d;
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                exp1d = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
+                exp1d = (*m_exp)[i]->as<LocalRegions::Expansion1D>();
                 for (int j = 0; j < exp1d->GetNverts(); ++j)
                 {
                     ElmtPointGeom  = (exp1d->GetGeom1D())->GetVid(j);
@@ -147,7 +147,7 @@ namespace Nektar
                         
                         if (TracePointGeom == ElmtPointGeom)
                         {
-                            exp0d = LocalRegions::Expansion0D::FromStdExp(m_trace->GetExp(k));
+                            exp0d = m_trace->GetExp(k)->as<LocalRegions::Expansion0D>();
                             exp0d->SetAdjacentElementExp(j,exp1d);
                             break;
                         }
@@ -905,10 +905,11 @@ namespace Nektar
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 			
             int cnt;
+
             // Loop on the elements
             for (cnt = n = 0; n < nElements; ++n)
             {
-                exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[n]);
+                exp1D = (*m_exp)[n]->as<LocalRegions::Expansion1D>();
 
                 // Set the offset of each element
                 phys_offset = GetPhys_Offset(n);

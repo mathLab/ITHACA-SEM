@@ -101,20 +101,49 @@ namespace SolverUtils
             }
             m_hasRefFlow = true;
         }
+   
+        funcNameElmt = pForce->FirstChildElement("REFFLOWTIME");
+        if (funcNameElmt)
+        {
+            m_funcNameTime = funcNameElmt->GetText();
+            ASSERTL0(m_session->DefinesFunction(funcName),
+                     "Function '" + funcName + "' not defined.");
+            m_hasRefFlowTime = true;
+        }
+
     }
 
     void ForcingSponge::v_Apply(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
-            Array<OneD, Array<OneD, NekDouble> > &outarray)
+            Array<OneD, Array<OneD, NekDouble> > &outarray,
+            const NekDouble &time)
     {
         int nq = m_Forcing[0].num_elements();
+       
+        std::string s_FieldStr;
+        Array<OneD, NekDouble> TimeScale(1);
+        Array<OneD, Array<OneD, NekDouble> > RefflowScaled(m_NumVariable);
+
         if (m_hasRefFlow)
         {
             for (int i = 0; i < m_NumVariable; i++)
             {
+                RefflowScaled[i] = Array<OneD, NekDouble> (nq);
+                if (m_hasRefFlowTime)
+                {
+                    s_FieldStr = m_session->GetVariable(i);
+                    EvaluateTimeFunction(m_session, s_FieldStr, TimeScale, m_funcNameTime, time);
+                    Vmath::Smul(nq, TimeScale[0], m_Refflow[i],1,RefflowScaled[i],1);
+                }
+                else
+                {
+                    Vmath::Vcopy(nq, m_Refflow[i],1, RefflowScaled[i],1);
+                }
+                
+
                 Vmath::Vsub(nq, inarray[i], 1,
-                            m_Refflow[i], 1, m_Forcing[i], 1);
+                            RefflowScaled[i], 1, m_Forcing[i], 1);
                 Vmath::Vmul(nq, m_Sponge[i], 1,
                             m_Forcing[i], 1, m_Forcing[i], 1);
                 Vmath::Vadd(nq, m_Forcing[i], 1,
@@ -132,6 +161,6 @@ namespace SolverUtils
             }
         }
     }
-
+        
 }
 }

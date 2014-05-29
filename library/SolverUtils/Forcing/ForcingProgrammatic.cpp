@@ -74,7 +74,8 @@ namespace SolverUtils
     void ForcingProgrammatic::v_Apply(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                  Array<OneD, Array<OneD, NekDouble> > &outarray)
+            Array<OneD, Array<OneD, NekDouble> > &outarray,
+            const NekDouble &time)
     {
         for (int i = 0; i < m_NumVariable; i++)
         {

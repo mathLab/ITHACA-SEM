@@ -142,8 +142,8 @@ namespace Nektar
                         ptsKeys = pFields[0]->GetExp(n)->GetPointsKeys();
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
-                        jac = LocalRegions::Expansion1D::FromStdExp(
-                            pFields[0]->GetExp(n))->GetGeom1D()
+                        jac = pFields[0]->GetExp(n)
+                                ->as<LocalRegions::Expansion1D>()->GetGeom1D()
                                 ->GetMetricInfo()->GetJac(ptsKeys);
                         for (i = 0; i < nLocalSolutionPts; ++i)
                         {
@@ -192,16 +192,16 @@ namespace Nektar
                         nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = pFields[0]->GetPhys_Offset(n);
                         
-                        jac  = LocalRegions::Expansion2D::FromStdExp(
-                            pFields[0]->GetExp(n))->GetGeom2D()->
-                                GetMetricInfo()->GetJac(ptsKeys);
-                        gmat = LocalRegions::Expansion2D::FromStdExp(
-                            pFields[0]->GetExp(n))->GetGeom2D()->
-                                GetMetricInfo()->GetDerivFactors(ptsKeys);
+                        jac  = pFields[0]->GetExp(n)
+                                ->as<LocalRegions::Expansion2D>()->GetGeom2D()
+                                ->GetMetricInfo()->GetJac(ptsKeys);
+                        gmat = pFields[0]->GetExp(n)
+                                ->as<LocalRegions::Expansion2D>()->GetGeom2D()
+                                ->GetMetricInfo()->GetDerivFactors(ptsKeys);
                         
-                        if (LocalRegions::Expansion2D::FromStdExp(
-                                pFields[0]->GetExp(n))->GetGeom2D()
-                                    ->GetMetricInfo()->GetGtype()
+                        if (pFields[0]->GetExp(n)
+                                ->as<LocalRegions::Expansion2D>()->GetGeom2D()
+                                ->GetMetricInfo()->GetGtype()
                             == SpatialDomains::eDeformed)
                         {
                             for (i = 0; i < nLocalSolutionPts; ++i)

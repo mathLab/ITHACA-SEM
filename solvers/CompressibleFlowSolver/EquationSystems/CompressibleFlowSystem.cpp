@@ -2605,7 +2605,7 @@ namespace Nektar
         {
             if (m_comm->GetRank() == 0)
             {
-                cout << setprecision(16) 
+                cout 
                      << "L2_rho = "  << L2[0] << "    "
                      << "L2_rhou = " << L2[1] << "    "
                      << "L2_E = "    << L2[2] << "    "
@@ -2616,7 +2616,7 @@ namespace Nektar
         {
             if (m_comm->GetRank() == 0)
             {
-                cout << setprecision(16)
+                cout 
                     << "L2_rho = "  << L2[0] << "    "
                      << "L2_rhou = " << L2[1] << "    "
                      << "L2_rhov = " << L2[2] << "    "
@@ -2628,7 +2628,7 @@ namespace Nektar
         {
             if (m_comm->GetRank() == 0)
             {
-                cout << setprecision(16)
+                cout 
                      << "L2_rho = "  << L2[0] << "    "
                      << "L2_rhou = " << L2[1] << "    "
                      << "L2_rhov = " << L2[2] << "    "

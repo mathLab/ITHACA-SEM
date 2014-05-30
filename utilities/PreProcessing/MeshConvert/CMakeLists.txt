@@ -17,6 +17,7 @@ SET(MeshConvertHeaders
     ProcessPerAlign.h
     ProcessSpherigon.h
     ProcessTetSplit.h
+    ProcessExtractTetPrismInterface.h
 )
 
 SET(MeshConvertSources 
@@ -39,6 +40,7 @@ SET(MeshConvertSources
     ProcessPerAlign.cpp
     ProcessSpherigon.cpp
     ProcessTetSplit.cpp
+    ProcessExtractTetPrismInterface.cpp
 )
 
 IF (NEKTAR_USE_VTK)

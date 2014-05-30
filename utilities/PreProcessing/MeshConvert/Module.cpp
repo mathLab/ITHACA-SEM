@@ -215,10 +215,10 @@ namespace Nektar
                 m_mesh->m_element[1][i]->SetEdgeLink(*it);
 
                 // Update 2D element boundary map.
-                ASSERTL0((*it)->m_elLink.size() != 0,
-                         "Empty boundary map!");
-                ASSERTL0((*it)->m_elLink.size() == 1,
-                         "Too many elements in boundary map!");
+                //ASSERTL0((*it)->m_elLink.size() != 0,
+                ///         "Empty boundary map!");
+                //ASSERTL0((*it)->m_elLink.size() == 1,
+                //         "Too many elements in boundary map!");*/
                 pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
                 eMap.first->SetBoundaryLink(eMap.second, i);
             }
@@ -292,10 +292,10 @@ namespace Nektar
                 m_mesh->m_element[2][i]->SetFaceLink(*it);
 
                 // Update 3D element boundary map.
-                ASSERTL0((*it)->m_elLink.size() != 0,
-                         "Empty element link map!");
-                ASSERTL0((*it)->m_elLink.size() == 1,
-                         "Too many elements in element link map!");
+                //ASSERTL0((*it)->m_elLink.size() != 0,
+                //         "Empty element link map!");
+                //ASSERTL0((*it)->m_elLink.size() == 1,
+                 //        "Too many elements in element link map!");
                 pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
                 eMap.first->SetBoundaryLink(eMap.second, i);
             }

@@ -75,10 +75,6 @@ namespace Nektar
             // Iterate over list of elements of expansion dimension.
             for (int i = 0; i < el.size(); ++i)
             {
-                // Create elemental geometry.
-                SpatialDomains::GeometrySharedPtr geom =
-                    el[i]->GetGeom(m_mesh->m_spaceDim);
-
                 int nFaces= el[i]->GetFaceCount();
 
                 //Get the number of nodes on a face of a prism 

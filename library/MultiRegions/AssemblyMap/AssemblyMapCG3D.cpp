@@ -527,28 +527,98 @@ namespace Nektar
             // When running in parallel, we need to ensure that the singular
             // mesh vertex is communicated to any periodic vertices, otherwise
             // the system may diverge.
-            if(systemSingular == true && maxBCIdx != p)
+            if(systemSingular == true && checkIfSystemSingular)
             {
-                // Scan through all periodic vertices
+                // Firstly, we check that no other processors have this
+                // vertex. If they do, then we mark the vertex as also being
+                // Dirichlet.
+                if (maxBCIdx != p)
+                {
+                    for (i = 0; i < locExpVector.size(); ++i)
+                    {
+                        for (j = 0; j < locExpVector[i]->GetNverts(); ++j)
+                        {
+                            if (locExpVector[i]->GetGeom()->GetVid(j) !=
+                                    meshVertId)
+                            {
+                                continue;
+                            }
+
+                            if (vertReorderedGraphVertId.count(meshVertId) == 0)
+                            {
+                                vertReorderedGraphVertId[meshVertId] =
+                                    graphVertId++;
+                            }
+                        }
+                    }
+                }
+
+                // In the case that meshVertId is periodic with other vertices,
+                // this process and all other processes need to make sure that
+                // the periodic vertices are also marked as Dirichlet.
+                int gId;
+
+                // At least one process (maxBCidx) will have already associated
+                // a graphVertId with meshVertId. Others won't even have any of
+                // the vertices. The logic below is designed to handle both
+                // cases.
+                if (vertReorderedGraphVertId.count(meshVertId) == 0)
+                {
+                    gId = -1;
+                }
+                else
+                {
+                    gId = vertReorderedGraphVertId[meshVertId];
+                }
+
                 for (pIt  = periodicVerts.begin();
                      pIt != periodicVerts.end(); ++pIt)
                 {
-                    if (vertReorderedGraphVertId.count(pIt->first) != 0)
+                    // Either the vertex is local to this processor (in which
+                    // case it will be in the pIt->first position) or else
+                    // meshVertId might be contained within another processor's
+                    // vertex list. The if statement below covers both cases. If
+                    // we find it, set as Dirichlet with the vertex id gId.
+                    if (pIt->first == meshVertId)
                     {
-                        continue;
-                    }
+                        vertReorderedGraphVertId[meshVertId] =
+                            gId < 0 ? graphVertId++ : gId;
 
-                    for (i = 0; i < pIt->second.size(); ++i)
-                    {
-                        if (pIt->second[i].isLocal ||
-                            pIt->second[i].id != meshVertId)
+                        for (i = 0; i < pIt->second.size(); ++i)
                         {
-                            continue;
+                            if (pIt->second[i].isLocal)
+                            {
+                                vertReorderedGraphVertId[pIt->second[i].id] =
+                                    gId;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        bool found = false;
+                        for (i = 0; i < pIt->second.size(); ++i)
+                        {
+                            if (pIt->second[i].id == meshVertId)
+                            {
+                                found = true;
+                                break;
+                            }
                         }
 
-                        // Mark this periodic vertex as Dirichlet.
-                        vertReorderedGraphVertId[pIt->first] =
-                            graphVertId++;
+                        if (found)
+                        {
+                            vertReorderedGraphVertId[pIt->first] =
+                                gId < 0 ? graphVertId++ : gId;
+
+                            for (i = 0; i < pIt->second.size(); ++i)
+                            {
+                                if (pIt->second[i].isLocal)
+                                {
+                                    vertReorderedGraphVertId[
+                                        pIt->second[i].id] = gId;
+                                }
+                            }
+                        }
                     }
                 }
             }

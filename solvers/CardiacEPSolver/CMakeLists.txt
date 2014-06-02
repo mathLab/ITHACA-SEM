@@ -16,10 +16,12 @@ IF( NEKTAR_SOLVER_CARDIAC_EP )
        ./CellModels/Fox02.cpp
        ./CellModels/Winslow99.cpp
        ./CellModels/TenTusscher06Epi.cpp
+       ./CellModels/TenTusscher06EpiIschemia.cpp
        ./CellModels/TenTusscher06M.cpp
        ./CellModels/TenTusscher06Endo.cpp
        ./Filters/FilterCheckpointCellModel.cpp
        ./Filters/FilterElectrogram.cpp
+       ./Filters/FilterBenchmark.cpp
        ./Stimuli/Stimulus.cpp
        ./Stimuli/StimulusCircle.cpp
        ./Stimuli/StimulusRect.cpp

@@ -63,16 +63,18 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField1D(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const std::string &variable);
+                const std::string &variable,
+                const bool SetUpJustDG  = true);
             
             /// Constructor for a DisContField1D from a List of subdomains
             /// New Constructor for arterial network 
             MULTI_REGIONS_EXPORT DisContField1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::CompositeMap& domain,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const SpatialDomains::CompositeMap& domain,
+                const SpatialDomains::BoundaryConditions &Allbcs, 
                 const std::string &variable,
-                int i);
+                bool SetToOneSpaceDimensions = false);
 
             /// Constructs a 1D discontinuous field based on an existing field.
             MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);
@@ -87,6 +89,12 @@ namespace Nektar
             /// For a given key, returns the associated global linear system.
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                 const GlobalLinSysKey &mkey);
+
+
+            // Return the internal vector which directs whether the normal flux
+            // at the trace defined by Left and Right Adjacent elements
+            // is negated with respect to the segment normal
+            MULTI_REGIONS_EXPORT vector<bool> &GetNegatedFluxNormal(void);
 
         protected:
             /// The number of boundary segments on which Dirichlet boundary
@@ -110,40 +118,52 @@ namespace Nektar
             
             /// Trace space storage for points between elements.
             ExpListSharedPtr                                   m_trace;
-            Array<OneD, ExpListSharedPtr>                      m_traces;
-            Array<OneD, NekDouble>                             tmpBndSol;
 
             /// Local to global DG mapping for trace space.
             AssemblyMapDGSharedPtr                        m_traceMap;
 
+            /**
+             * @brief A set storing the global IDs of any boundary edges.
+             */
+            std::set<int> m_boundaryVerts;
+
+            
+            /**
+             * @brief A map which identifies groups of periodic vertices.
+             */
+            PeriodicMap m_periodicVerts;
+
+            
+            /**
+             * @brief A vector indicating degress of freedom which need to be
+             * copied from forwards to backwards space in case of a periodic
+             * boundary condition.
+             */
+            vector<int> m_periodicFwdCopy;
+            vector<int> m_periodicBwdCopy;
+
+
+            /*
+             * @brief A map identifying which verts are left- and right-adjacent
+             * for DG.
+             */
+            vector<bool> m_leftAdjacentVerts;
+
+
             /// Discretises the boundary conditions.
             void GenerateBoundaryConditionExpansion(
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                SpatialDomains::BoundaryConditions &bcs,
+                const SpatialDomains::BoundaryConditions &bcs,
                 const std::string variable);
             
-            // Discretises the boundary conditions in case of multidomain solver.
-            void GenerateMultiDomainBoundaryConditionExpansion(
-                const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                SpatialDomains::BoundaryConditions &bcs,
-                const std::string variable,
-                int subdomain);
             
             /// Generate a associative map of periodic vertices in a mesh.
-            void GetPeriodicVertices(
-                const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                const SpatialDomains::BoundaryConditions &bcs,
-                const std::string variable,
-                      map<int,int>& periodicVertices);
-
+            void FindPeriodicVertices(const SpatialDomains::BoundaryConditions &bcs,
+                                      const std::string variable);
+            
             virtual ExpListSharedPtr &v_GetTrace()
             {
                 return m_trace;
-            }
-            
-            virtual ExpListSharedPtr &v_GetTrace(int i)
-            {
-                return m_traces[i];
             }
             
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap(void)
@@ -236,6 +256,17 @@ namespace Nektar
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeff,
                     const Array<OneD, const NekDouble> &dirForcing);
+
+        private:
+            void SetUpDG(const std::string &variable);
+            
+            bool IsLeftAdjacentVertex(const int n, const int e);
+
+            vector<bool> m_negatedFluxNormal;
+
+            SpatialDomains::BoundaryConditionsSharedPtr GetDomainBCs(const SpatialDomains::CompositeMap &domain,
+                                                                     const SpatialDomains::BoundaryConditions &Allbcs,
+                                                                     const std::string &variable);
         };
 
         typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;

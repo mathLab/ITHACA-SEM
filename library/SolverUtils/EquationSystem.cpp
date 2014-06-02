@@ -667,9 +667,10 @@ namespace Nektar
          * @param   pEqn            The equation to evaluate.
          */
         void EquationSystem::EvaluateFunction(
-                                              Array<OneD, Array<OneD, NekDouble> >& pArray,
-                                              std::string pFunctionName,
-                                              const NekDouble pTime)
+            Array<OneD, Array<OneD, NekDouble> >& pArray,
+            std::string pFunctionName,
+            const NekDouble pTime,
+            const int domain)
         {
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
@@ -678,8 +679,8 @@ namespace Nektar
 
             for(int i = 0 ; i < vFieldNames.size(); i++)
             {
-                EvaluateFunction(vFieldNames[i], pArray[i],
-                                 pFunctionName, pTime);
+                EvaluateFunction(vFieldNames[i], pArray[i], pFunctionName,
+                                 pTime, domain);
             }
         }
 
@@ -689,9 +690,10 @@ namespace Nektar
          * @param   force           Array of fields to assign forcing.
          */
         void EquationSystem::EvaluateFunction(
-                                              std::vector<std::string> pFieldNames,
-                                              Array<OneD, Array<OneD, NekDouble> > &pFields,
-                                              const std::string& pFunctionName)
+            std::vector<std::string> pFieldNames,
+            Array<OneD, Array<OneD, NekDouble> > &pFields,
+            const std::string& pFunctionName,
+            const int domain)
         {
             ASSERTL1(pFieldNames.size() == pFields.num_elements(),
                      "Function '" + pFunctionName
@@ -701,7 +703,7 @@ namespace Nektar
 
             for(int i = 0; i < pFieldNames.size(); i++)
             {
-                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName);
+                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName,0.0,domain);
             }
         }
 
@@ -711,9 +713,10 @@ namespace Nektar
          * @param   force           Array of fields to assign forcing.
          */
         void EquationSystem::EvaluateFunction(
-                                              std::vector<std::string> pFieldNames,
-                                              Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                                              const std::string& pFunctionName)
+            std::vector<std::string> pFieldNames,
+            Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const std::string& pFunctionName,
+            const int domain)
         {
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
@@ -723,7 +726,7 @@ namespace Nektar
             for(int i = 0; i < pFieldNames.size(); i++)
             {
                 EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(),
-                                 pFunctionName);
+                                 pFunctionName, 0.0, domain);
                 pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(),
                                                 pFields[i]->UpdateCoeffs());
             }
@@ -732,22 +735,23 @@ namespace Nektar
 
 
         void EquationSystem::EvaluateFunction(
-                                              std::string pFieldName,
-                                              Array<OneD, NekDouble>& pArray,
-                                              const std::string& pFunctionName,
-                                              const NekDouble& pTime)
+            std::string pFieldName,
+            Array<OneD, NekDouble>& pArray,
+            const std::string& pFunctionName,
+            const NekDouble& pTime,
+            const int domain)
         {
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
 
             unsigned int nq = m_fields[0]->GetNpoints();
-            if (pArray.num_elements() != nq)
+            if (pArray.num_elements() < nq)
             {
                 pArray = Array<OneD, NekDouble>(nq);
             }
 
             LibUtilities::FunctionType vType;
-            vType = m_session->GetFunctionType(pFunctionName, pFieldName);
+            vType = m_session->GetFunctionType(pFunctionName, pFieldName,domain);
             if (vType == LibUtilities::eFunctionTypeExpression)
             {
                 Array<OneD,NekDouble> x0(nq);
@@ -758,14 +762,15 @@ namespace Nektar
                 // discretisation)
                 m_fields[0]->GetCoords(x0,x1,x2);
                 LibUtilities::EquationSharedPtr ffunc
-                    = m_session->GetFunction(pFunctionName, pFieldName);
+                    = m_session->GetFunction(pFunctionName, pFieldName,domain);
 
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
             else if (vType == LibUtilities::eFunctionTypeFile)
             {
                 std::string filename
-                    = m_session->GetFunctionFilename(pFunctionName, pFieldName);
+                    = m_session->GetFunctionFilename(pFunctionName, pFieldName,domain);
+
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
@@ -825,7 +830,8 @@ namespace Nektar
          */
         std::string EquationSystem::DescribeFunction(
             std::string pFieldName,
-            const std::string &pFunctionName)
+            const std::string &pFunctionName,
+            const int domain)
         {
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
@@ -837,13 +843,13 @@ namespace Nektar
             if (vType == LibUtilities::eFunctionTypeExpression)
             {
                 LibUtilities::EquationSharedPtr ffunc
-                    = m_session->GetFunction(pFunctionName, pFieldName);
+                    = m_session->GetFunction(pFunctionName, pFieldName,domain);
                 retVal = ffunc->GetExpression();
             }
             else if (vType == LibUtilities::eFunctionTypeFile)
             {
                 std::string filename
-                    = m_session->GetFunctionFilename(pFunctionName, pFieldName);
+                    = m_session->GetFunctionFilename(pFunctionName, pFieldName,domain);
                 retVal = "from file " + filename;
             }
             
@@ -1055,7 +1061,8 @@ namespace Nektar
          * @param  dumpInitialConditions Write the initial condition to file?
          */
         void EquationSystem::v_SetInitialConditions(NekDouble initialtime,
-                                                    bool dumpInitialConditions)
+                                                    bool dumpInitialConditions,
+                                                    const int domain)
         {
             if (m_session->GetComm()->GetRank() == 0)
             {
@@ -1065,7 +1072,7 @@ namespace Nektar
             if (m_session->DefinesFunction("InitialConditions"))
             {
                 EvaluateFunction(m_session->GetVariables(), m_fields, 
-                                 "InitialConditions");
+                                 "InitialConditions",domain);
                 
                 if (m_session->GetComm()->GetRank() == 0)
                 {
@@ -1074,7 +1081,7 @@ namespace Nektar
                     {
                         std::string varName = m_session->GetVariable(i);
                         cout << "  - Field " << varName << ": "
-                             << DescribeFunction(varName, "InitialConditions")
+                             << DescribeFunction(varName, "InitialConditions",domain)
                              << endl;
                     }
                 }
@@ -1574,7 +1581,7 @@ namespace Nektar
             int nvariables)
         {
             int i;
-            int nVelDim         = m_spacedim;
+            int nVelDim         = m_expdim;
             int nPointsTot      = GetNpoints();
             int ncoeffs         = GetNcoeffs();
             int nTracePointsTot = GetTraceNpoints();
@@ -1867,6 +1874,9 @@ namespace Nektar
         }
 
 
+
+
+
         /**
          * Writes the field data to a file with the given filename.
          * @param   outname     Filename to write to.
@@ -1898,6 +1908,8 @@ namespace Nektar
 
         }
 
+
+
         /**
          * Writes the field data to a file with the given filename.
          * @param   outname         Filename to write to.
@@ -1906,12 +1918,11 @@ namespace Nektar
          * @param   variables       An array of variable names.
          */
         void EquationSystem::WriteFld(
-            const std::string &outname, 
-            MultiRegions::ExpListSharedPtr &field, 
-            Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, 
-            Array<OneD, std::string> &variables)
+                                      const std::string &outname, 
+                                      MultiRegions::ExpListSharedPtr &field, 
+                                      Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, 
+                                      Array<OneD, std::string> &variables)
         {
-
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = field->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
@@ -1936,6 +1947,7 @@ namespace Nektar
 
             m_fld->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
         }
+
 
         /**
          * Import field from infile and load into \a m_fields. This routine will
@@ -1972,6 +1984,53 @@ namespace Nektar
                 }
                 pFields[j]->BwdTrans(pFields[j]->GetCoeffs(),
                                      pFields[j]->UpdatePhys());
+            }
+        }
+
+
+
+        /**
+         * Import field from infile and load into \a m_fields. This routine will
+         * also perform a \a BwdTrans to ensure data is in both the physical and
+         * coefficient storage.
+         * @param   infile  Filename to read.
+         * If optionan \a ndomains is specified it assumes we loop over nodmains for each nvariables. 
+         */
+        void EquationSystem::ImportFldToMultiDomains(
+                                                     const std::string &infile, 
+                                                     Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                                                     const int ndomains)
+        {
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<std::vector<NekDouble> > FieldData;
+            
+            LibUtilities::Import(infile,FieldDef,FieldData);
+            
+            int nvariables = GetNvariables();
+
+            ASSERTL0(ndomains*nvariables == pFields.num_elements(),"Number of fields does not match the number of variables and domains");
+            
+            // Copy FieldData into m_fields
+            for(int j = 0; j < ndomains; ++j)
+            {
+                for(int i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Zero(pFields[j*nvariables+i]->GetNcoeffs(),pFields[j*nvariables+i]->UpdateCoeffs(),1);
+                    
+                    for(int n = 0; n < FieldDef.size(); ++n)
+                    {
+                        ASSERTL1(FieldDef[n]->m_fields[i] == m_session->GetVariable(i),
+                                 std::string("Order of ") + infile
+                                 + std::string(" data and that defined in "
+                                               "m_boundaryconditions differs"));
+                        
+                        pFields[j*nvariables+i]->ExtractDataToCoeffs(FieldDef[n], FieldData[n],
+                                                                     FieldDef[n]->m_fields[i],
+                                                                     pFields[j*nvariables+i]->UpdateCoeffs());
+                    }
+                    pFields[j*nvariables+i]->BwdTrans(pFields[j*nvariables+i]->GetCoeffs(),
+                                                      pFields[j*nvariables+i]->UpdatePhys());
+                }
             }
         }
 

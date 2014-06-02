@@ -106,17 +106,16 @@ namespace Nektar
                                        const bool checkIfSystemSingular = false,
                                        int mdswitch = 1,
                                        bool doInteriorMap = false);
-
-
+            
         private:
-
+            
             /// Construct mappings for a two-dimensional scalar expansion.
             void SetUp2DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
                                            const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
-                                               NullExpListSharedPtrArray,
+                                           NullExpListSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
-                                               SpatialDomains::NullBoundaryConditionShPtrArray,
+                                           SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const PeriodicMap& periodicVertsId = NullPeriodicMap,
                                            const PeriodicMap& periodicEdgesId = NullPeriodicMap,
                                            const bool checkIfSystemSingular = false);

@@ -404,9 +404,10 @@ namespace Nektar
 
 
     void Bidomain::v_SetInitialConditions(NekDouble initialtime,
-            bool dumpInitialConditions)
+            bool dumpInitialConditions,
+            const int domain)
     {
-        EquationSystem::v_SetInitialConditions(initialtime, dumpInitialConditions);
+        EquationSystem::v_SetInitialConditions(initialtime, dumpInitialConditions, domain);
         m_cell->Initialise();
     }
 

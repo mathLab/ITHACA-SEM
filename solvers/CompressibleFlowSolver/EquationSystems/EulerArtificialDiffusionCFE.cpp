@@ -99,7 +99,8 @@ namespace Nektar
 
     void EulerArtificialDiffusionCFE::v_SetInitialConditions(
         NekDouble initialtime, 
-        bool      dumpInitialConditions)
+        bool      dumpInitialConditions,
+        const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime, false);
 

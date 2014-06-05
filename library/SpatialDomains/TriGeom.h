@@ -195,8 +195,9 @@ namespace Nektar
 
             private:
                 bool                            m_ownData;
-        };
 
+            void SetUpXmap();
+        };
     }; //end of namespace SpatialDomains
 }; //end of namespace Nektar
 

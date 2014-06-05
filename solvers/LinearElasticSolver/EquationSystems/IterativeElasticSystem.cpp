@@ -33,9 +33,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/format.hpp>
+
+#include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LocalRegions/MatrixKey.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
+
 #include <LinearElasticSolver/EquationSystems/IterativeElasticSystem.h>
 
 namespace Nektar
@@ -53,6 +57,9 @@ namespace Nektar
     void IterativeElasticSystem::v_InitObject()
     {
         LinearElasticSystem::v_InitObject();
+
+        m_session->LoadParameter("NumSteps", m_numSteps, 0);
+        ASSERTL0(m_numSteps > 0, "You must specify at least one step");
     }
 
     void IterativeElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
@@ -64,23 +71,72 @@ namespace Nektar
     {
         int i, j;
 
-        for (i = 0; i < 10; ++i)
+        for (i = 0; i < m_numSteps; ++i)
         {
-            stringstream s;
-            s << "out-" << i << ".xml";
-            cout << i << endl;
-
             LinearElasticSystem::v_DoSolve();
             UpdateGeometry();
-            string blah = s.str();
-            m_fields[0]->GetGraph()->WriteGeometry(blah);
+            WriteGeometry(i);
 
+            cout << "Step: " << i << endl;
+
+            // Check for invalid elements.
+            for (j = 0; j < m_fields[0]->GetExpSize(); ++j)
+            {
+                SpatialDomains::GeomFactorsSharedPtr geomFac =
+                    m_fields[0]->GetExp(j)->GetGeom()->GetGeomFactors();
+
+                if (!geomFac->IsValid())
+                {
+                    break;
+                }
+            }
+
+            if (j != m_fields[0]->GetExpSize())
+            {
+                cout << "- Detected negative Jacobian in element "
+                     << m_fields[0]->GetExp(j)->GetGeom()->GetGlobalID()
+                     << "; terminating" << endl;
+            }
+
+            // Update boundary conditions
             for (j = 0; j < m_fields.num_elements(); ++j)
             {
                 string varName = m_session->GetVariable(j);
                 m_fields[j]->EvaluateBoundaryConditions(m_time, varName);
             }
         }
+    }
+
+    void IterativeElasticSystem::WriteGeometry(const int i)
+    {
+        int padw = (int)ceil(log10(m_numSteps));
+
+        fs::path filename;
+        stringstream s;
+        s << m_session->GetSessionName() << "-"
+          << boost::format("%1$0"+boost::lexical_cast<string>(padw)+"d") % i;
+
+        if (m_session->GetComm()->GetSize() > 1)
+        {
+            s << "_xml";
+
+            if(!fs::is_directory(s.str()))
+            {
+                fs::create_directory(s.str());
+            }
+
+            boost::format pad("P%1$07d.xml");
+            pad % m_session->GetComm()->GetRank();
+            filename = fs::path(s.str()) / fs::path(pad.str());
+        }
+        else
+        {
+            s << ".xml";
+            filename = fs::path(s.str());
+        }
+
+        string fname = LibUtilities::PortablePath(filename);
+        m_fields[0]->GetGraph()->WriteGeometry(fname);
     }
 
     void IterativeElasticSystem::UpdateGeometry()

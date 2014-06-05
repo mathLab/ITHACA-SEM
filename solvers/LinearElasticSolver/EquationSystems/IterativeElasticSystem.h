@@ -63,6 +63,8 @@ namespace Nektar
         static std::string className;
 
     protected:
+        int m_numSteps;
+
         IterativeElasticSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -70,6 +72,7 @@ namespace Nektar
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
         virtual void v_DoSolve();
 
+        void WriteGeometry(const int i);
         void UpdateGeometry();
     };
 }

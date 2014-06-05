@@ -61,17 +61,10 @@ namespace Nektar
         TriGeom::TriGeom(int id, const int coordim):
                                    Geometry2D(coordim), m_fid(id)
         {
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, 2,
-                    LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
-                    LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
-
             m_globalID = m_fid;
-
-            m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
-
 
         /**
          *
@@ -101,22 +94,7 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                     "Cannot call function with dim == 1");
 
-            int order0  = edges[0]->GetBasis(0)->GetNumModes();
-            int points0 = edges[0]->GetBasis(0)->GetNumPoints();
-            int order1  = max(order0,
-                              max(edges[1]->GetBasis(0)->GetNumModes(),
-                                  edges[2]->GetBasis(0)->GetNumModes()));
-            int points1 = max(points0,
-                              max(edges[1]->GetBasis(0)->GetNumPoints(),
-                                  edges[2]->GetBasis(0)->GetNumPoints()));
-
-
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
-                    LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
-                    LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
-
-            m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -155,21 +133,7 @@ namespace Nektar
             m_coordim = edges[0]->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
 
-            int order0  = edges[0]->GetBasis(0)->GetNumModes();
-            int points0 = edges[0]->GetBasis(0)->GetNumPoints();
-            int order1  = max(order0,
-                              max(edges[1]->GetBasis(0)->GetNumModes(),
-                                  edges[2]->GetBasis(0)->GetNumModes()));
-            int points1 = max(points0,
-                              max(edges[1]->GetBasis(0)->GetNumPoints(),
-                                  edges[2]->GetBasis(0)->GetNumPoints()));
-
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
-                    LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
-                    LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
-
-            m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
 
@@ -210,21 +174,7 @@ namespace Nektar
             m_coordim = edges[0]->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
 
-            int order0  = edges[0]->GetBasis(0)->GetNumModes();
-            int points0 = edges[0]->GetBasis(0)->GetNumPoints();
-            int order1  = max(order0,
-                              max(edges[1]->GetBasis(0)->GetNumModes(),
-                                  edges[2]->GetBasis(0)->GetNumModes()));
-            int points1 = max(points0,
-                              max(edges[1]->GetBasis(0)->GetNumPoints(),
-                                  edges[2]->GetBasis(0)->GetNumPoints()));
-
-            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
-                    LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
-                    LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
-
-            m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
+            SetUpXmap();
             SetUpCoeffs(m_xmap->GetNcoeffs());
 
             for(int i = 0; i < m_coordim; ++i)
@@ -274,7 +224,8 @@ namespace Nektar
 
                     // Interpolate points to standard region.
                     LibUtilities::Interp2D(P0, P1, tmp,
-                                           B0.GetPointsKey(),B1.GetPointsKey(),
+                                           m_xmap->GetBasis(0)->GetPointsKey(),
+                                           m_xmap->GetBasis(1)->GetPointsKey(),
                                            phys);
 
                     // Forwards transform to get coefficient space.
@@ -308,7 +259,8 @@ namespace Nektar
                     // Interpolate curve points to standard triangle points.
                     Array<OneD, NekDouble> phys(m_xmap->GetTotPoints());
                     LibUtilities::Interp2D(curveKey,curveKey,tmp,
-                                           B0.GetPointsKey(),B1.GetPointsKey(),
+                                           m_xmap->GetBasis(0)->GetPointsKey(),
+                                           m_xmap->GetBasis(1)->GetPointsKey(),
                                            phys);
                     
                     // Forwards transform to get coefficient space.
@@ -853,10 +805,38 @@ namespace Nektar
             CurveVector &curvedEdges,
             CurveVector &curvedFaces)
         {
+            Geometry::v_Reset(curvedEdges, curvedFaces);
+
             for (int i = 0; i < 3; ++i)
             {
                 m_edges[i]->Reset(curvedEdges, curvedFaces);
             }
+
+            SetUpXmap();
+            SetUpCoeffs(m_xmap->GetNcoeffs());
+        }
+
+        void TriGeom::SetUpXmap()
+        {
+            int order0  = m_edges[0]->GetBasis(0)->GetNumModes();
+            int points0 = m_edges[0]->GetBasis(0)->GetNumPoints();
+            int order1  = max(order0,
+                              max(m_edges[1]->GetBasis(0)->GetNumModes(),
+                                  m_edges[2]->GetBasis(0)->GetNumModes()));
+            int points1 = max(points0,
+                              max(m_edges[1]->GetBasis(0)->GetNumPoints(),
+                                  m_edges[2]->GetBasis(0)->GetNumPoints()));
+
+
+            const LibUtilities::BasisKey B0(
+                LibUtilities::eModified_A, order0, LibUtilities::PointsKey(
+                    points0, LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(
+                LibUtilities::eModified_B, order1, LibUtilities::PointsKey(
+                    points1, LibUtilities::eGaussRadauMAlpha1Beta0));
+
+            m_xmap = MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr(B0,B1);
         }
     }; //end of namespace
 }; //end of namespace

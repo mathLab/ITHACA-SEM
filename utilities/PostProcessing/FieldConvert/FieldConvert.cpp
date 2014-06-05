@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
         if (i < nInput || i == modcmds.size() - 1)
         {
             module.first = (i < nInput ? eInputModule : eOutputModule);
-                
+
             // If no colon detected, automatically detect mesh type from
             // file extension. Otherwise override and use tmp1[1] as the
             // module to load. This also allows us to pass options to

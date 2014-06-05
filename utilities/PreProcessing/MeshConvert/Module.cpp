@@ -190,7 +190,7 @@ namespace Nektar
                             
                             // Update edge to element map.
                             (*(testIns.first))->m_elLink.push_back(
-                                             pair<ElementSharedPtr,int>(elmt[i],j));
+                                pair<ElementSharedPtr,int>(elmt[i],j));
                         }
                     }
                 }
@@ -221,6 +221,16 @@ namespace Nektar
                          "Too many elements in boundary map!");
                 pair<ElementSharedPtr, int> eMap = (*it)->m_elLink.at(0);
                 eMap.first->SetBoundaryLink(eMap.second, i);
+
+                // Copy curvature (why didn't I do this before...)
+                if ((*it)->m_edgeNodes.size() > 0)
+                {
+                    ElementSharedPtr edge = m_mesh->m_element[1][i];
+                    if (edge->GetVertex(0) == (*it)->m_n1)
+                    {
+                        edge->SetVolumeNodes((*it)->m_edgeNodes);
+                    }
+                }
             }
         }
 

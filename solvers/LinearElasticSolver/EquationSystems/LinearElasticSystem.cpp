@@ -32,8 +32,10 @@
 // Description: LinearElasticSystem solve routines 
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <algorithm>
 #include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/SegExp.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
@@ -293,6 +295,70 @@ namespace Nektar
     }
 
     /**
+     * @brief Build boundary conditions from linear (non-curved) elements.
+     */
+    void LinearElasticSystem::BuildBoundaryConditions()
+    {
+        const int nVel = m_fields[0]->GetCoordim(0);
+        int i, j;
+
+        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+            &bndCond = m_fields[0]->GetBndConditions();
+
+        for (i = 0; i < bndCond.num_elements(); ++i)
+        {
+            if (bndCond[i]->GetUserDefined() != SpatialDomains::eWall)
+            {
+                continue;
+            }
+
+            if (nVel == 2)
+            {
+                MultiRegions::ExpListSharedPtr bndCondExpU =
+                    m_fields[0]->GetBndCondExpansions()[i];
+                MultiRegions::ExpListSharedPtr bndCondExpV =
+                    m_fields[1]->GetBndCondExpansions()[i];
+
+                for (j = 0; j < bndCondExpU->GetExpSize(); ++j)
+                {
+                    SpatialDomains::SegGeomSharedPtr existing =
+                        boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(
+                            bndCondExpU->GetExp(j)->GetGeom());
+
+                    // Create temporary SegGeom object without curvature
+                    SpatialDomains::SegGeomSharedPtr tmpGeom = MemoryManager<
+                        SpatialDomains::SegGeom>::AllocateSharedPtr(
+                            0, existing->GetVertex(0), existing->GetVertex(1));
+
+                    // Create temporary SegExp without curvature
+                    LocalRegions::SegExpSharedPtr tmpSeg = MemoryManager<
+                        LocalRegions::SegExp>::AllocateSharedPtr(
+                            bndCondExpU->GetExp(j)->GetBasis(0)->GetBasisKey(), tmpGeom);
+
+                    const int offset = bndCondExpU->GetPhys_Offset(j);
+                    const int nq = tmpSeg->GetTotPoints();
+                    Array<OneD, NekDouble> xL(nq), xC(nq), yL(nq), yC(nq), tmp;
+
+                    bndCondExpU->GetExp(j)->GetCoords(xC, yC);
+                    tmpSeg->GetCoords(xL, yL);
+
+                    Vmath::Vsub(nq, xC, 1, xL, 1, tmp = bndCondExpU->UpdatePhys() + offset, 1);
+                    Vmath::Vsub(nq, yC, 1, yL, 1, tmp = bndCondExpV->UpdatePhys() + offset, 1);
+                }
+
+                bndCondExpU->FwdTrans_BndConstrained(
+                    bndCondExpU->GetPhys(), bndCondExpU->UpdateCoeffs());
+                bndCondExpV->FwdTrans_BndConstrained(
+                    bndCondExpV->GetPhys(), bndCondExpV->UpdateCoeffs());
+            }
+            else
+            {
+                return;
+            }
+        }
+    }
+
+    /**
      * @brief Generate summary at runtime.
      */
     void LinearElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
@@ -319,6 +385,9 @@ namespace Nektar
     {
         int i, j, k, l, m, nv;
         const int nVel = m_fields[0]->GetCoordim(0);
+
+        // Build boundary conditions.
+        BuildBoundaryConditions();
 
         // Build initial matrix system.
         BuildMatrixSystem();

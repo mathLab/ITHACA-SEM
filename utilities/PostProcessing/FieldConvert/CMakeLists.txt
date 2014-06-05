@@ -10,6 +10,7 @@ SET(FieldConvertHeaders
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
     ProcessDeform.h
+    ProcessDisplacement.h
     ProcessInterpField.h
     ProcessVorticity.h
     ProcessC0Projection.h
@@ -28,6 +29,7 @@ SET(FieldConvertSources
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
     ProcessDeform.cpp
+    ProcessDisplacement.cpp
     ProcessInterpField.cpp
     ProcessVorticity.cpp
     ProcessC0Projection.cpp

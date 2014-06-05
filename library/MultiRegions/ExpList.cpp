@@ -1340,7 +1340,7 @@ namespace Nektar
         /**
          * @brief Reset geometry information and reset matrix managers.
          */
-        void ExpList::Reset()
+        void ExpList::v_Reset()
         {
             // Reset matrix managers.
             LibUtilities::NekManager<LocalRegions::MatrixKey,
@@ -1351,7 +1351,8 @@ namespace Nektar
             // Loop over all elements and reset geometry information.
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                (*m_exp)[i]->GetGeom()->Reset();
+                (*m_exp)[i]->GetGeom()->Reset(m_graph->GetCurvedEdges(),
+                                              m_graph->GetCurvedFaces());
             }
 
             // Loop over all elements and rebuild geometric factors.

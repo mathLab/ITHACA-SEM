@@ -59,6 +59,10 @@ namespace Nektar
         class PointGeom;
         typedef boost::shared_ptr< PointGeom >  PointGeomSharedPtr;
 
+        struct Curve;
+        typedef boost::shared_ptr<Curve> CurveSharedPtr;
+        typedef std::vector<CurveSharedPtr> CurveVector;
+
         /// \brief Less than operator to sort Geometry objects by global id when sorting 
         /// STL containers.
         SPATIAL_DOMAINS_EXPORT  bool SortByGlobalId(const boost::shared_ptr<Geometry>& lhs, 
@@ -147,7 +151,9 @@ namespace Nektar
                             GetBasis(const int i);
                 SPATIAL_DOMAINS_EXPORT inline const LibUtilities::PointsKeyVector
                             GetPointsKeys();
-                SPATIAL_DOMAINS_EXPORT inline void Reset();
+                SPATIAL_DOMAINS_EXPORT inline void Reset(
+                    CurveVector &curvedEdges,
+                    CurveVector &curvedFaces);
 
             protected:
 
@@ -230,8 +236,9 @@ namespace Nektar
                 virtual void v_SetOwnData();
                 virtual const LibUtilities::BasisSharedPtr
                              v_GetBasis(const int i);
-                virtual void v_Reset();
-            
+                virtual void v_Reset(
+                    CurveVector &curvedEdges,
+                    CurveVector &curvedFaces);
                 inline void SetUpCoeffs(const int nCoeffs);
         }; // class Geometry
 
@@ -451,6 +458,9 @@ namespace Nektar
             return v_GetBasis(i);
         }
 
+        /**
+         * @brief Initialise the m_coeffs array.
+         */
         inline void Geometry::SetUpCoeffs(const int nCoeffs)
         {
             m_coeffs = Array<OneD, Array<OneD, NekDouble> >(m_coordim);
@@ -466,9 +476,10 @@ namespace Nektar
             return m_xmap->GetPointsKeys();
         }
 
-        inline void Geometry::Reset()
+        inline void Geometry::Reset(CurveVector &curvedEdges,
+                                    CurveVector &curvedFaces)
         {
-            v_Reset();
+            v_Reset(curvedEdges, curvedFaces);
         }
     }; //end of namespace
 }; // end of namespace

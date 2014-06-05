@@ -80,8 +80,6 @@ namespace Nektar
                 string varName = m_session->GetVariable(j);
                 m_fields[j]->EvaluateBoundaryConditions(m_time, varName);
             }
-            
-            BuildMatrixSystem();
         }
     }
 

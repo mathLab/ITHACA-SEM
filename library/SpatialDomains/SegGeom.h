@@ -142,6 +142,10 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_FillGeom ();
 
+                SPATIAL_DOMAINS_EXPORT virtual void v_Reset(
+                    CurveVector &curvedEdges,
+                    CurveVector &curvedFaces);
+            
                 SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetCoord(
                         const int i,
                         const Array<OneD,const NekDouble> &Lcoord);
@@ -168,9 +172,9 @@ namespace Nektar
                 /// Boolean indicating whether object owns the data
                 bool                            m_ownData;
                 CurveSharedPtr                  m_curve;
+
+                void SetUpXmap();
         };
-
-
     }; //end of namespace
 }; //end of namespace
 

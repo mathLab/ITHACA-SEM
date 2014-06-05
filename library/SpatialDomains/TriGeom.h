@@ -189,7 +189,9 @@ namespace Nektar
                               NekDouble                     tol,
                               NekDouble                    &resid);
 
-                SPATIAL_DOMAINS_EXPORT virtual void v_Reset();
+                SPATIAL_DOMAINS_EXPORT virtual void v_Reset(
+                    CurveVector &curvedEdges,
+                    CurveVector &curvedFaces);
 
             private:
                 bool                            m_ownData;

@@ -1673,6 +1673,17 @@ namespace Nektar
             }
         }
 
+        void DisContField2D::v_Reset()
+        {
+            ExpList::v_Reset();
+
+            // Reset boundary condition expansions.
+            for (int n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                m_bndCondExpansions[n]->Reset();
+            }
+        }
+
         /** 
          * @brief Calculate the \f$ L^2 \f$ error of the \f$ Q_{\rm dir} \f$
          * derivative using the consistent DG evaluation of \f$ Q_{\rm dir} \f$.

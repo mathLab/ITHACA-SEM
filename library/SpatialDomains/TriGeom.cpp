@@ -849,11 +849,13 @@ namespace Nektar
             return false;
         }
 
-        void TriGeom::v_Reset()
+        void TriGeom::v_Reset(
+            CurveVector &curvedEdges,
+            CurveVector &curvedFaces)
         {
             for (int i = 0; i < 3; ++i)
             {
-                m_edges[i]->Reset();
+                m_edges[i]->Reset(curvedEdges, curvedFaces);
             }
         }
     }; //end of namespace

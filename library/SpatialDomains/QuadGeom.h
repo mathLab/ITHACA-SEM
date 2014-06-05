@@ -62,8 +62,6 @@ namespace Nektar
         public:
             SPATIAL_DOMAINS_EXPORT QuadGeom();
             
-	    SPATIAL_DOMAINS_EXPORT QuadGeom(int id, const int coordim);
-            
 	    SPATIAL_DOMAINS_EXPORT QuadGeom(
                     const int id, 
                     const PointGeomSharedPtr verts[],
@@ -185,12 +183,15 @@ namespace Nektar
                           NekDouble                     tol,
                           NekDouble                    &resid);
 
-            SPATIAL_DOMAINS_EXPORT virtual void v_Reset();
+            SPATIAL_DOMAINS_EXPORT virtual void v_Reset(
+                    CurveVector &curvedEdges,
+                    CurveVector &curvedFaces);
 
         private:
             /// Boolean indicating whether object owns the data
             bool                                m_ownData;
 
+            void SetUpXmap();
         };
 
     }; //end of namespace

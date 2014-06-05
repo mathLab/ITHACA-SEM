@@ -114,6 +114,7 @@ namespace Nektar
 
         void Expansion::Reset()
         {
+            // Clear metrics
             m_metrics.clear();
 
             // Regenerate geometry factors

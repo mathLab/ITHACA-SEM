@@ -292,10 +292,15 @@ namespace Nektar
             return m_coordim;
         }
 
-        void Geometry::v_Reset()
+        void Geometry::v_Reset(CurveVector &curvedEdges,
+                               CurveVector &curvedFaces)
         {
-            m_state = eNotFilled;
+            // Reset state
+            m_state            = eNotFilled;
             m_geomFactorsState = eNotFilled;
+
+            // Junk geometric factors
+            m_geomFactors = GeomFactorsSharedPtr();
         }
     }; //end of namespace
 }; //end of namespace

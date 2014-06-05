@@ -79,8 +79,6 @@ namespace Nektar
         LinearElasticSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
-        void BuildBoundaryConditions();
-
         NekDouble m_nu;
         NekDouble m_E;
         NekDouble m_beta;

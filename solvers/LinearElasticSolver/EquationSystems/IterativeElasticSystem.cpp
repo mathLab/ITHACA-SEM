@@ -58,8 +58,58 @@ namespace Nektar
     {
         LinearElasticSystem::v_InitObject();
 
+        const int nVel = m_fields[0]->GetCoordim(0);
+
+        // Read in number of steps to take.
         m_session->LoadParameter("NumSteps", m_numSteps, 0);
         ASSERTL0(m_numSteps > 0, "You must specify at least one step");
+
+        // Read in whether to repeatedly apply boundary conditions (for e.g.
+        // rotation purposes).
+        string bcType;
+        m_session->LoadSolverInfo("BCType", bcType, "Normal");
+
+        m_repeatBCs = bcType != "Normal";
+
+        if (!m_repeatBCs)
+        {
+            // Loop over BCs, identify which ones we need to deform.
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                &bndCond = m_fields[0]->GetBndConditions();
+
+            for (int i = 0; i < bndCond.num_elements(); ++i)
+            {
+                if (bndCond[i]->GetUserDefined() == SpatialDomains::eWall)
+                {
+                    m_toDeform.push_back(i);
+                }
+            }
+
+            ASSERTL0(m_toDeform.size() > 0, "Must tag at least one boundary "
+                                            "with the WALL user-defined type");
+
+            m_savedBCs  = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
+                m_toDeform.size());
+
+            for (int i = 0; i < m_toDeform.size(); ++i)
+            {
+                m_savedBCs[i] = Array<OneD, Array<OneD, NekDouble> >(nVel);
+                for (int j = 0; j < nVel; ++j)
+                {
+                    const int id = m_toDeform[i];
+                    MultiRegions::ExpListSharedPtr bndCondExp =
+                        m_fields[j]->GetBndCondExpansions()[id];
+                    int nCoeffs = bndCondExp->GetNcoeffs();
+
+                    m_savedBCs[i][j] = Array<OneD, NekDouble>(nCoeffs);
+                    Vmath::Smul(nCoeffs, 1.0/m_numSteps,
+                                bndCondExp->GetCoeffs(),    1,
+                                bndCondExp->UpdateCoeffs(), 1);
+                    Vmath::Vcopy(nCoeffs, bndCondExp->GetCoeffs(), 1,
+                                 m_savedBCs[i][j], 1);
+                }
+            }
+        }
     }
 
     void IterativeElasticSystem::v_GenerateSummary(SolverUtils::SummaryList& s)
@@ -69,7 +119,7 @@ namespace Nektar
 
     void IterativeElasticSystem::v_DoSolve()
     {
-        int i, j;
+        int i, j, k;
 
         for (i = 0; i < m_numSteps; ++i)
         {
@@ -96,13 +146,34 @@ namespace Nektar
                 cout << "- Detected negative Jacobian in element "
                      << m_fields[0]->GetExp(j)->GetGeom()->GetGlobalID()
                      << "; terminating" << endl;
+                break;
             }
 
             // Update boundary conditions
-            for (j = 0; j < m_fields.num_elements(); ++j)
+            if (m_repeatBCs)
             {
-                string varName = m_session->GetVariable(j);
-                m_fields[j]->EvaluateBoundaryConditions(m_time, varName);
+                for (j = 0; j < m_fields.num_elements(); ++j)
+                {
+                    string varName = m_session->GetVariable(j);
+                    m_fields[j]->EvaluateBoundaryConditions(m_time, varName);
+                }
+            }
+            else
+            {
+                for (j = 0; j < m_fields.num_elements(); ++j)
+                {
+                    const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp =
+                        m_fields[j]->GetBndCondExpansions();
+
+                    for (k = 0; k < m_toDeform.size(); ++k)
+                    {
+                        const int id = m_toDeform[k];
+                        const int nCoeffs = bndCondExp[id]->GetNcoeffs();
+                        Vmath::Vcopy(nCoeffs,
+                                     m_savedBCs[k][j],               1,
+                                     bndCondExp[id]->UpdateCoeffs(), 1);
+                    }
+                }
             }
         }
     }

@@ -64,6 +64,10 @@ namespace Nektar
 
     protected:
         int m_numSteps;
+        bool m_repeatBCs;
+
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_savedBCs;
+        vector<int> m_toDeform;
 
         IterativeElasticSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);

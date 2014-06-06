@@ -2160,8 +2160,8 @@ namespace Nektar
     
     void CoupledLinearNS::v_Output(void)
     {    
-        Array<OneD, Array<OneD, NekDouble > > fieldcoeffs(m_fields.num_elements()+1);
-        Array<OneD, std::string> variables(m_fields.num_elements()+1);
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+        std::vector<std::string> variables(m_fields.num_elements()+1);
         int i;
         
         for(i = 0; i < m_fields.num_elements(); ++i)

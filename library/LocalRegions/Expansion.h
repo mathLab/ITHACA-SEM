@@ -89,11 +89,6 @@ namespace Nektar
                 LOCAL_REGIONS_EXPORT virtual const
                     SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
 
-                static ExpansionSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
-                {
-                    return boost::dynamic_pointer_cast<Expansion>(pSrc);
-                }
-
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
                     const DNekScalMatSharedPtr &r_bnd, 
                     const StdRegions::MatrixType matrixType);

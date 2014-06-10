@@ -36,7 +36,8 @@
 #ifndef NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
 #define NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
 
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+///#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+#include <SolverUtils/Advection/AdvectionTerm.h>
 
 
 //#define TIMING

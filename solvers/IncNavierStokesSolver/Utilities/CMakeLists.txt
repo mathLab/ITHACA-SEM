@@ -7,7 +7,7 @@ SET(CFLStepSources  CFLStep.cpp
        ../EquationSystems/StandardExtrapolate.cpp
        ../EquationSystems/SubSteppingExtrapolate.cpp
        ../AdvectionTerms/AdjointAdvection.cpp
-       ../AdvectionTerms/AdvectionTerm.cpp
+       #../AdvectionTerms/AdvectionTerm.cpp
        ../AdvectionTerms/LinearisedAdvection.cpp
        ../AdvectionTerms/NavierStokesAdvection.cpp
        ../AdvectionTerms/SkewSymmetricAdvection.cpp
@@ -25,7 +25,7 @@ SET(AliasingSources  Aliasing.cpp
        ../EquationSystems/StandardExtrapolate.cpp
        ../EquationSystems/SubSteppingExtrapolate.cpp
        ../AdvectionTerms/AdjointAdvection.cpp
-       ../AdvectionTerms/AdvectionTerm.cpp
+       #../AdvectionTerms/AdvectionTerm.cpp
        ../AdvectionTerms/LinearisedAdvection.cpp
        ../AdvectionTerms/NavierStokesAdvection.cpp
        ../AdvectionTerms/SkewSymmetricAdvection.cpp

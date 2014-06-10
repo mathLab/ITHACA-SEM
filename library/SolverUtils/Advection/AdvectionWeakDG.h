@@ -36,7 +36,8 @@
 #ifndef NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
 #define NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
 
-#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/AdvectionSystem.h>
+/// #include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
 {

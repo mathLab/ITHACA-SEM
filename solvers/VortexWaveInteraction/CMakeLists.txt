@@ -13,7 +13,7 @@ IF( NEKTAR_SOLVER_VORTEXWAVE )
        ../IncNavierStokesSolver/EquationSystems/Extrapolate.cpp
        ../IncNavierStokesSolver/EquationSystems/StandardExtrapolate.cpp
        ../IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.cpp
+       #../IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.cpp
        ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp
@@ -31,7 +31,7 @@ IF( NEKTAR_SOLVER_VORTEXWAVE )
        ../IncNavierStokesSolver/EquationSystems/Extrapolate.cpp
        ../IncNavierStokesSolver/EquationSystems/StandardExtrapolate.cpp
        ../IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.cpp
+       #../IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.cpp
        ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp
@@ -50,7 +50,7 @@ IF( NEKTAR_SOLVER_VORTEXWAVE )
        ../IncNavierStokesSolver/EquationSystems/Extrapolate.cpp
        ../IncNavierStokesSolver/EquationSystems/StandardExtrapolate.cpp
        ../IncNavierStokesSolver/EquationSystems/SubSteppingExtrapolate.cpp
-       ../IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.cpp
+       #../IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.cpp
        ../IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.cpp
        ../IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.cpp

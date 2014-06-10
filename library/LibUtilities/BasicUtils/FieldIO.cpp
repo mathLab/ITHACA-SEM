@@ -432,22 +432,27 @@ namespace Nektar
                 else // only load relevant partitions
                 {
                     int i,j;
-                    map<int,int> FileIDs; 
+                    map<int,vector<int> > FileIDs;
+                    map<int,vector<int> >::iterator it;
                     set<int> LoadFile;
-                    
+
                     for(i = 0; i < elementIDs_OnPartitions.size(); ++i)
                     {
                         for(j = 0; j < elementIDs_OnPartitions[i].size(); ++j)
                         {
-                            FileIDs[elementIDs_OnPartitions[i][j]] = i;
+                            FileIDs[elementIDs_OnPartitions[i][j]].push_back(i);
                         }
                     }
                     
                     for(i = 0; i < ElementIDs.num_elements(); ++i)
                     {
-                        if(FileIDs.count(ElementIDs[i]))
+                        it = FileIDs.find(ElementIDs[i]);
+                        if (it != FileIDs.end())
                         {
-                            LoadFile.insert(FileIDs[ElementIDs[i]]);
+                            for (j = 0; j < it->second.size(); ++j)
+                            {
+                                LoadFile.insert(it->second[j]);
+                            }
                         }
                     }
                     

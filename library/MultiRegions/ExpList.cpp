@@ -1255,8 +1255,8 @@ namespace Nektar
                 // Find nearest element
                 if (!elmtIdDist.empty())
                 {
-                    NekDouble   min_d  = elmtIdDist[0].first;
-                    int         min_id = elmtIdDist[0].second;
+                    NekDouble   min_d  = elmtIdDist[0].second;
+                    int         min_id = elmtIdDist[0].first;
 
                     for (int i = 1; i < elmtIdDist.size(); ++i)
                     {
@@ -1266,6 +1266,10 @@ namespace Nektar
                         }
                     }
 
+                    // retrieve local coordinates of chosen point
+                    (*m_exp)[min_id]->GetGeom()->ContainsPoint(gloCoords,
+                                                               locCoords,
+                                                               tol, resid);
                     return min_id;
                 }
                 else {

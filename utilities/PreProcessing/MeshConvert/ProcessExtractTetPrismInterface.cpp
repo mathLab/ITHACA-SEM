@@ -54,7 +54,7 @@ namespace Nektar
         ProcessExtractTetPrismInterface::ProcessExtractTetPrismInterface(MeshSharedPtr m) : ProcessModule(m)
         {
         }
-
+        
         ProcessExtractTetPrismInterface::~ProcessExtractTetPrismInterface()
         {
         }
@@ -109,9 +109,42 @@ namespace Nektar
             std::vector<int>::iterator it;
             cout << "The intersection has " << (inter.size()) << " elements:\n";
             for (it=inter.begin(); it!=inter.end(); ++it)
-                std::cout << ',' << *it;
+                std::cout << *it << ",";
             std::cout << '\n';
-        }
 
+
+            CompositeMap tmp = m_mesh->m_composite;
+            CompositeMap::iterator it_c;
+
+            //temp counter for composite
+            int c_id = 0; 
+
+            // loop over all composites (2D elements) and identify all quadrilateral faces
+            for (it_c = tmp.begin(); it_c != tmp.end(); ++it_c)
+            {
+                ++c_id;
+                CompositeSharedPtr c = it_c->second;
+                vector<ElementSharedPtr> el = c->m_items;
+                
+                vector<int> quad;
+                
+                for (int i = 0; i < el.size(); ++i)
+                {
+                    if (el[i]->GetConf().m_e == LibUtilities::eQuadrilateral)
+                    {
+                        quad.push_back(el[i]->GetId());
+                    }
+                }
+                
+                cout << "The composite " << c_id << " has " << quad.size() << " elements:\n";
+                for (it=quad.begin(); it!=quad.end(); ++it)
+                    std::cout << *it << ",";
+                std::cout << '\n';
+                
+            }
+        }
+        
     }
+    
 }
+

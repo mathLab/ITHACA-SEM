@@ -291,6 +291,12 @@ namespace Nektar
                         pKeyFrom[0], pKeyFrom[1], tmp,
                         pKeyTo  [0], pKeyTo  [1], phys[j]);
                 }
+                else if (dim == 3)
+                {
+                    LibUtilities::Interp2D(
+                        pKeyFrom[0], pKeyFrom[1], pKeyFrom[2], tmp,
+                        pKeyTo  [0], pKeyTo  [1], pKeyTo  [2], phys[j]);
+                }
 
                 coord   [j] = Array<OneD, NekDouble>(nquad);
                 coordtmp[j] = Array<OneD, NekDouble>(nquad);
@@ -298,7 +304,7 @@ namespace Nektar
 
             exp->GetCoords(coordtmp[0], coordtmp[1]);
 
-            // In 2D loop over edges. 3D TODO
+            // In 2D loop over edges.
             if (dim == 2)
             {
                 SpatialDomains::Geometry2DSharedPtr geom =

@@ -191,7 +191,8 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+            Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const NekDouble                                   &time)
         {
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             int nVel = advVel.num_elements();

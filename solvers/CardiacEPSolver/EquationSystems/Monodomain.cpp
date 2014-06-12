@@ -207,28 +207,34 @@ namespace Nektar
             }
 
             const std::string varName  = "intensity";
-            const NekDouble   f_min    = m_session->GetParameter("d_min");
-            const NekDouble   f_max    = m_session->GetParameter("d_max");
-            const NekDouble   scar_min = 0.0;
-            const NekDouble   scar_max = 1.0;
-
             Array<OneD, NekDouble> vTemp;
             EvaluateFunction(varName, vTemp, "IsotropicConductivity");
 
-            // Threshold based on d_min, d_max
-            for (int j = 0; j < nq; ++j)
-            {
-                vTemp[j] = (vTemp[j] < f_min ? f_min : vTemp[j]);
-                vTemp[j] = (vTemp[j] > f_max ? f_max : vTemp[j]);
+            // If the d_min and d_max parameters are defined, then we need to
+            // rescale the isotropic conductivity to convert from the source
+            // domain (e.g. late-gad intensity) to conductivity
+            if ( m_session->DefinesParameter("d_min") ||
+                 m_session->DefinesParameter("d_max") ) {
+                const NekDouble   f_min    = m_session->GetParameter("d_min");
+                const NekDouble   f_max    = m_session->GetParameter("d_max");
+                const NekDouble   scar_min = 0.0;
+                const NekDouble   scar_max = 1.0;
+
+                // Threshold based on d_min, d_max
+                for (int j = 0; j < nq; ++j)
+                {
+                    vTemp[j] = (vTemp[j] < f_min ? f_min : vTemp[j]);
+                    vTemp[j] = (vTemp[j] > f_max ? f_max : vTemp[j]);
+                }
+
+                // Rescale to s \in [0,1] (0 maps to d_max, 1 maps to d_min)
+                Vmath::Sadd(nq, -f_min, vTemp, 1, vTemp, 1);
+                Vmath::Smul(nq, -1.0/(f_max-f_min), vTemp, 1, vTemp, 1);
+                Vmath::Sadd(nq, 1.0, vTemp, 1, vTemp, 1);
+                Vmath::Smul(nq, scar_max - scar_min, vTemp, 1, vTemp, 1);
+                Vmath::Sadd(nq, scar_min, vTemp, 1, vTemp, 1);
             }
 
-            // Rescale to s \in [0,1] (0 maps to d_max, 1 maps to d_min)
-            Vmath::Sadd(nq, -f_min, vTemp, 1, vTemp, 1);
-            Vmath::Smul(nq, -1.0/(f_max-f_min), vTemp, 1, vTemp, 1);
-            Vmath::Sadd(nq, 1.0, vTemp, 1, vTemp, 1);
-            Vmath::Smul(nq, scar_max - scar_min, vTemp, 1, vTemp, 1);
-            Vmath::Sadd(nq, scar_min, vTemp, 1, vTemp, 1);
-            
             // Scale anisotropic conductivity values
             for (int i = 0; i < nVarDiffCmpts; ++i)
             {
@@ -359,10 +365,12 @@ namespace Nektar
      *
      */
     void Monodomain::v_SetInitialConditions(NekDouble initialtime,
-                        bool dumpInitialConditions)
+                        bool dumpInitialConditions,
+                        const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime,
-                                               dumpInitialConditions);
+                                               dumpInitialConditions,
+                                               domain);
         m_cell->Initialise();
     }
 

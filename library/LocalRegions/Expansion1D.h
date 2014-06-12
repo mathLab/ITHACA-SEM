@@ -92,11 +92,6 @@ namespace Nektar
 
                 inline SpatialDomains::Geometry1DSharedPtr GetGeom1D() const;
 
-                static Expansion1DSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
-                {
-                    return boost::dynamic_pointer_cast<Expansion1D>(pSrc);
-                }
-			
             protected:
                 virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 

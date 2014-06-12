@@ -82,11 +82,6 @@ namespace Nektar
             return v_GetEdge(i);
         }
 
-        const PointGeomSharedPtr Geometry2D::GetVertex(int i) const
-        {
-            return v_GetVertex(i);
-        }
-
         StdRegions::Orientation Geometry2D::GetCartesianEorient(const int i) const
         {
             return v_GetCartesianEorient(i);
@@ -244,7 +239,7 @@ namespace Nektar
             return returnval;
         }
 
-        const PointGeomSharedPtr Geometry2D::v_GetVertex(int i) const
+        PointGeomSharedPtr Geometry2D::v_GetVertex(int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for shape type geometries");

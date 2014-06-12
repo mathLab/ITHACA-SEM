@@ -46,6 +46,7 @@
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <boost/enable_shared_from_this.hpp>
 namespace Nektar { namespace LocalRegions { class MatrixKey; class Expansion; } }
 
 
@@ -65,7 +66,7 @@ namespace Nektar
          *  contains the definition of common data and common routine to all
          *  elements
          */
-        class StdExpansion
+        class StdExpansion : public boost::enable_shared_from_this<StdExpansion>
         {
         public:
 
@@ -1246,7 +1247,7 @@ namespace Nektar
                 return v_GetFaceNormal(face); 
             }
 			
-			const NormalVector & GetVertexNormal(const int vertex) const
+            const NormalVector & GetVertexNormal(const int vertex) const
             {
                 return v_GetVertexNormal(vertex); 
             }
@@ -1284,6 +1285,19 @@ namespace Nektar
             {
                 return v_BuildInverseTransformationMatrix(
                     m_transformationmatrix);
+            }
+
+            template<class T>
+            boost::shared_ptr<T> as()
+            {
+#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
+                typedef typename boost::shared_ptr<T>::element_type E;
+                E * p = dynamic_cast< E* >( shared_from_this().get() );
+                ASSERTL1(p, "Cannot perform cast");
+                return boost::shared_ptr<T>( shared_from_this(), p );
+#else
+                return boost::dynamic_pointer_cast<T>( shared_from_this() );
+#endif
             }
 
         protected:

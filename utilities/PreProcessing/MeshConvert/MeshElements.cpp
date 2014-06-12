@@ -921,6 +921,7 @@ namespace Nektar
                     }
                 }
 
+                /*
                 if (m_conf.m_faceNodes)
                 {
                     int N = 4 + 6*n + j*n*(n-1)/2;
@@ -929,6 +930,7 @@ namespace Nektar
                         faceNodes.push_back(pNodeList[N+i]);
                     }
                 }
+                */
                 m_face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
             }

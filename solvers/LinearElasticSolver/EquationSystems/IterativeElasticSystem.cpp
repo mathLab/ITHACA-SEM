@@ -293,7 +293,7 @@ namespace Nektar
                 }
                 else if (dim == 3)
                 {
-                    LibUtilities::Interp2D(
+                    LibUtilities::Interp3D(
                         pKeyFrom[0], pKeyFrom[1], pKeyFrom[2], tmp,
                         pKeyTo  [0], pKeyTo  [1], pKeyTo  [2], phys[j]);
                 }

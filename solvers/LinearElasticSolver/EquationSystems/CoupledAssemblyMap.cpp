@@ -134,7 +134,9 @@ namespace Nektar
 
         // Order local boundary degrees of freedom. These are basically fine; we
         // reorder storage so that we loop over each element and then each
-        // component of velocity.
+        // component of velocity, by applying a mapping l2g -> nVel*l2g + n, for
+        // 0 <= n < nVel. Note that Dirichlet ordering is preserved under this
+        // transformation.
         cnt1 = cnt2 = 0;
         for (i = 0; i < locExpVector.size(); ++i)
         {

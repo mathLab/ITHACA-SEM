@@ -804,14 +804,14 @@ namespace Nektar
                                     f->m_vertexList.end());
                                         
                     vector<int> tags;
-                    
-                    LibUtilities::ShapeType seg = tri ? LibUtilities::eTriangle : 
+
+                    LibUtilities::ShapeType seg = tri ? LibUtilities::eTriangle :
                         LibUtilities::eQuadrilateral;
                     ElmtConfig conf(seg,1,true,true,false,
                                     LibUtilities::eGaussLobattoLegendre);
                     surfEl = GetElementFactory().
                         CreateInstance(seg,conf,nodeList,tags);
-                    
+
                     // Copy high-order surface information from edges.
                     for (int i = 0; i < f->m_vertexList.size(); ++i)
                     {
@@ -836,7 +836,14 @@ namespace Nektar
                     surfEl = GetElementFactory().
                         CreateInstance(LibUtilities::eSegment,conf,nodeList,tags);
                 }
-                
+
+                LibUtilities::ShapeType surfElType = surfEl->GetConf().m_e;
+                // Hack
+                if (surfElType == LibUtilities::eQuadrilateral)
+                {
+                    surfElType = LibUtilities::eTriangle;
+                }
+
                 if (!found)
                 {
                     // If condition does not already exist, add to condition
@@ -848,7 +855,7 @@ namespace Nektar
                     m_mesh->m_condition[conditionId] = c;
                     
                     surfaceCompMap[conditionId].push_back(
-                        pair<int,LibUtilities::ShapeType>(nComposite,surfEl->GetConf().m_e));
+                        pair<int,LibUtilities::ShapeType>(nComposite,surfElType));
                     
                     nComposite++;
                 }
@@ -869,7 +876,7 @@ namespace Nektar
                     for (j = 0; j < it2->second.size(); ++j)
                     {
                         pair<int,LibUtilities::ShapeType> tmp = it2->second[j];
-                        if (tmp.second == surfEl->GetConf().m_e)
+                        if (tmp.second == surfElType)
                         {
                             found   = true;
                             compTag = tmp.first;
@@ -884,7 +891,7 @@ namespace Nektar
                     if (!found)
                     {
                         it2->second.push_back(pair<int,LibUtilities::ShapeType>(
-                            nComposite,surfEl->GetConf().m_e));
+                                                  nComposite,surfElType));
                         compTag = nComposite;
                         m_mesh->m_condition[it->first]->m_composite.push_back(compTag);
                         nComposite++;

@@ -580,6 +580,27 @@ namespace Nektar
                     ElementSharedPtr el = GetElementFactory().CreateInstance(
                         LibUtilities::ePrism, conf, nodes, tags);
 
+                    // Now transfer high-order information back into
+                    // place. TODO: Face curvature.
+                    for (j = 0; j < 9; ++j)
+                    {
+                        EdgeSharedPtr e1 = line[i]->GetEdge(j);
+                        for (k = 0; k < 9; ++k)
+                        {
+                            EdgeSharedPtr e2 = el->GetEdge(k);
+                            if (e1->m_n1 == e2->m_n1 && e1->m_n2 == e2->m_n2)
+                            {
+                                e2->m_edgeNodes = e1->m_edgeNodes;
+                            }
+                            else if (e1->m_n1 == e2->m_n1 && e1->m_n2 == e2->m_n2)
+                            {
+                                e2->m_edgeNodes = e1->m_edgeNodes;
+                                std::reverse(e2->m_edgeNodes.begin(),
+                                             e2->m_edgeNodes.end());
+                            }
+                        }
+                    }
+
                     // Replace old prism.
                     m_mesh->m_element[3][line[i]->GetId()] = el;
                 }

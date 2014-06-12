@@ -38,12 +38,13 @@
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERREYNOLDSSTRESSES_H
 
 #include <SolverUtils/Filters/Filter.h>
+#include <SolverUtils/Filters/FilterAverageFields.h>
 
 namespace Nektar
 {
     namespace SolverUtils
     {
-        class FilterReynoldsStresses : public Filter
+        class FilterReynoldsStresses : public FilterAverageFields
         {
         public:
             friend class MemoryManager<FilterReynoldsStresses>;
@@ -66,22 +67,10 @@ namespace Nektar
 
         protected:
             virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             virtual bool v_IsTimeDependent();
-            
-            void OutputAvgField(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump = -1);
+            virtual void v_AddExtraFields(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
 
-        private:
-            unsigned int       m_numAverages;
-            unsigned int       m_outputFrequency;
-            unsigned int       m_sampleFrequency;
-            unsigned int       m_index;
-            unsigned int       m_outputIndex;
-            std::string        m_outputFile;
-            LibUtilities::FieldIOSharedPtr m_fld;
-            LibUtilities::FieldMetaDataMap m_avgFieldMetaData;
-            Array<OneD, Array<OneD, NekDouble> > m_fields;
+            std::vector<Array<OneD, NekDouble> > m_fields;
         };
     }
 }

@@ -69,9 +69,12 @@ namespace Nektar
             virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             virtual bool v_IsTimeDependent();
             
+            virtual void v_AddExtraFields(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
+            {
+                // By default do not add any extra fields.
+            }
             void OutputAvgField(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump = -1);
 
-        private:
             unsigned int       m_numAverages;
             unsigned int       m_outputFrequency;
             unsigned int       m_sampleFrequency;
@@ -80,7 +83,8 @@ namespace Nektar
             std::string        m_outputFile;
             LibUtilities::FieldIOSharedPtr m_fld;
             LibUtilities::FieldMetaDataMap m_avgFieldMetaData;
-            Array<OneD, Array<OneD, NekDouble> > m_avgFields;
+            std::vector<Array<OneD, NekDouble> > m_avgFields;
+            std::vector<std::string>             m_variables;
         };
     }
 }

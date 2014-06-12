@@ -79,7 +79,6 @@ namespace Nektar
             m_index       = 0;
             m_outputIndex = 0;
             m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
-
         }
 
         FilterAverageFields::~FilterAverageFields()
@@ -88,11 +87,15 @@ namespace Nektar
 
         void FilterAverageFields::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
-            m_avgFields = Array<OneD,  Array<OneD, NekDouble> >(pFields.num_elements());
-            for(int n =0; n < pFields.num_elements(); ++n)
+            m_avgFields.resize(pFields.num_elements());
+            m_variables.resize(pFields.num_elements());
+
+            for(int n = 0; n < pFields.num_elements(); ++n)
             {
                 m_avgFields[n] = Array<OneD, NekDouble>(pFields[n]->GetNcoeffs(),0.0);
+                m_variables[n] = pFields[n]->GetSession()->GetVariable(n);
             }
+
             m_avgFieldMetaData["InitialTime"] = boost::lexical_cast<std::string>(time);
         }
 
@@ -110,15 +113,18 @@ namespace Nektar
                             pFields[n]->GetCoeffs(),1,m_avgFields[n],1,
                             m_avgFields[n],1);
             }
-            m_numAverages += 1;
+
+            m_numAverages++;
+
             // update FinalTime here since this is when last field will be added. 
             m_avgFieldMetaData["FinalTime"] = boost::lexical_cast<std::string>(time);
 
+            v_AddExtraFields(pFields, time);
+
             if (m_index % m_outputFrequency == 0)
             {
-                OutputAvgField(pFields,++m_outputIndex);
+                OutputAvgField(pFields, ++m_outputIndex);
             }
-            
         }
         
         void FilterAverageFields::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
@@ -128,7 +134,7 @@ namespace Nektar
 
         void FilterAverageFields::OutputAvgField(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, int dump)
         {
-            for(int n = 0; n < m_avgFields.num_elements(); ++n)
+            for(int n = 0; n < m_avgFields.size(); ++n)
             {
                 Vmath::Smul(m_avgFields[n].num_elements(), 1.0/m_numAverages,m_avgFields[n],1,m_avgFields[n],1);
             }
@@ -141,23 +147,24 @@ namespace Nektar
             int ncoeffs = pFields[0]->GetNcoeffs();
             
             // copy Data into FieldData and set variable
-            for(int j = 0; j < pFields.num_elements(); ++j)
-            {                
-                // check to see if field is same order a zeroth field
+            for(int j = 0; j < m_avgFields.size(); ++j)
+            {
+                // check to see if field is same order as zeroth field
                 if(m_avgFields[j].num_elements() == ncoeffs)
                 {
                     fieldcoeffs = m_avgFields[j];
                 }
                 else
                 {
-                    fieldcoeffs = Array<OneD,NekDouble>(ncoeffs);
+                    ASSERTL0(false, "TODO");
+                    fieldcoeffs = Array<OneD, NekDouble>(ncoeffs);
                     pFields[0]->ExtractCoeffsToCoeffs(pFields[j],m_avgFields[j],fieldcoeffs);
                 }
                 
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     // Could do a search here to find correct variable
-                    FieldDef[i]->m_fields.push_back(m_session->GetVariable(j));
+                    FieldDef[i]->m_fields.push_back(m_variables[j]);
                     pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs);
                 }
             }
@@ -176,9 +183,9 @@ namespace Nektar
             
             m_fld->Write(outname.str(),FieldDef,FieldData,m_avgFieldMetaData);
 
-            if(dump != -1) // not final dump so rescale cummulative average
+            if(dump != -1) // not final dump so rescale cumulative average
             {
-                for(int n = 0; n < m_avgFields.num_elements(); ++n)
+                for(int n = 0; n < m_avgFields.size(); ++n)
                 {
                     Vmath::Smul(m_avgFields[n].num_elements(), (NekDouble) m_numAverages,
                                 m_avgFields[n],1,m_avgFields[n],1);

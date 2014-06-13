@@ -237,7 +237,7 @@ namespace Nektar
             }
 
             Pvals = m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                +m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
+                + m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
             Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
             
             // Getting values on the edge and filling the pressure boundary expansion
@@ -482,9 +482,9 @@ namespace Nektar
 	
         int checkHBC = HBCnumber;
         m_comm->AllReduce(checkHBC,LibUtilities::ReduceSum);
-        ASSERTL0(checkHBC > 0 ,"At least one high-order pressure boundary "
-                               "condition is required for scheme "
-                               "consistency");
+        //ASSERTL0(checkHBC > 0 ,"At least one high-order pressure boundary "
+        //"condition is required for scheme "
+        //"consistency");
 
         m_acceleration[0] = Array<OneD, NekDouble>(cnt, 0.0);
         for(n = 0; n < m_intSteps; ++n)
@@ -493,7 +493,7 @@ namespace Nektar
             m_acceleration[n+1] = Array<OneD, NekDouble>(cnt, 0.0);
         }
 		
-		m_pressureCalls = 0;
+        m_pressureCalls = 0;
         
         switch(m_fields[pindex]->GetExpType())
         {

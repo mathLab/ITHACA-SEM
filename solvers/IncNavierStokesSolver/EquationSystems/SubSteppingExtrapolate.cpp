@@ -77,11 +77,13 @@ namespace Nektar
             {
                 m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("ForwardEuler");
                 
+                int nvel = m_velocity.num_elements();
+
                 // Fields for linear interpolation
-                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*m_fields.num_elements());                    
+                m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*nvel);                    
                 int ntotpts  = m_fields[0]->GetTotPoints();
-                m_previousVelFields[0] = Array<OneD, NekDouble>(2*m_fields.num_elements()*ntotpts);
-                for(i = 1; i < 2*m_fields.num_elements(); ++i)
+                m_previousVelFields[0] = Array<OneD, NekDouble>(2*nvel*ntotpts);
+                for(i = 1; i < 2*nvel; ++i)
                 {
                     m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
                 }
@@ -90,7 +92,8 @@ namespace Nektar
             break;
             case LibUtilities::eBDFImplicitOrder2:
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("ForwardEuler");
+                //m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
                     
                 int nvel = m_velocity.num_elements();
                 
@@ -103,8 +106,8 @@ namespace Nektar
                 {
                     m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
                 }
-                 
-                }
+                
+            }
             break;
             default:
                 ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
@@ -231,9 +234,14 @@ namespace Nektar
             velfields[i] = m_fields[m_velocity[i]]->GetPhys(); 
         }
 
+#if 0 
         EvaluatePressureBCs(velfields,inarray,kinvis);
 		
         AddDuDt(inarray,Aii_Dt);
+#else
+        // the acceleration term in this routine may be sufficient. 
+        EvaluatePressureBCs(inarray,velfields,kinvis);
+#endif
     }
 
     /** 
@@ -553,8 +561,7 @@ namespace Nektar
         VBndExp   = m_fields[m_velocity[1]]->GetBndCondExpansions();
         
         StdRegions::StdExpansionSharedPtr elmt;
-        StdRegions::StdExpansion1DSharedPtr Pbc;
-        
+        StdRegions::StdExpansion1DSharedPtr Pbc;        
         
         int cnt,elmtid,nq,offset, boundary,ncoeffs;
         
@@ -592,24 +599,27 @@ namespace Nektar
                     // Get edge values and put into Nu,Nv
                     elmt->GetEdgePhysVals(boundary,Pbc,Nu,N1);
                     elmt->GetEdgePhysVals(boundary,Pbc,Nv,N2);
-                    
-                        
-                    // Take different as Forward Euler but N1,N2
+                                            
+                    // Take difference as Forward Euler but N1,N2
                     // actually contain the integration of the
                     // previous steps from the time integration
                     // scheme.
                     Vmath::Vsub(nq,ubc,1,N1,1,ubc,1);
                     Vmath::Vsub(nq,vbc,1,N2,1,vbc,1);
-                    
                         
+#if 0 
                     // Divide by aii_Dt to get correct Du/Dt.  This is
                     // because all coefficients in the integration
                     // scheme are normalised so u^{n+1} has unit
-                    // coefficient and N is already multiplied by
-                    // local coefficient when taken from integration
-                    // scheme
+                    // coefficient and Non-linear terms is already
+                    // multiplied by local coefficient when taken from
+                    // integration scheme
                     Blas::Dscal(nq,1.0/Aii_Dt,&ubc[0],1);
                     Blas::Dscal(nq,1.0/Aii_Dt,&vbc[0],1);
+#else
+                    Blas::Dscal(nq,1.0/m_timestep,&ubc[0],1);
+                    Blas::Dscal(nq,1.0/m_timestep,&vbc[0],1);
+#endif
                     
                     // subtrace off du/dt derivative 
                     Pbc->NormVectorIProductWRTBase(ubc,vbc,Pvals); 

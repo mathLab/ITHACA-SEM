@@ -64,6 +64,7 @@ namespace Nektar
         int n;
 
         IncNavierStokes::v_InitObject();
+        m_explicitDiffusion = false;
 
         // Set m_pressure to point to last field of m_fields;
         if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
@@ -84,8 +85,8 @@ namespace Nektar
         
         // Load parameters for Spectral Vanishing Viscosity
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
-        m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
-        m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
+        m_session->LoadParameter("SVVCutoffRatio", m_sVVCutoffRatio, 0.75);
+        m_session->LoadParameter("SVVDiffCoeff",   m_sVVDiffCoeff,   0.1 );
             
         // Needs to be set outside of next if so that it is turned off by default
         m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
@@ -294,8 +295,8 @@ namespace Nektar
             (*x)->Apply(m_fields, inarray, outarray);
         }
 		
-		// Calculate High-Order pressure boundary conditions
-		m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
+        // Calculate High-Order pressure boundary conditions
+        m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
     }
     
     /**

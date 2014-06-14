@@ -72,7 +72,8 @@ namespace Nektar
 
         void FilterBenchmark::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
-            //m_threshold = Array<OneD, NekDouble> (pFields[0]->GetNpoints(), m_initialValue);
+            m_threshold.push_back(Array<OneD, NekDouble>(
+                                    pFields[0]->GetNpoints(), m_initialValue));
             m_idx = Array<OneD, int> (pFields[0]->GetNpoints(), 0);
             m_polarity = Array<OneD, int> (pFields[0]->GetNpoints(), -1);
         }
@@ -94,11 +95,6 @@ namespace Nektar
                     (m_polarity[i] == 1 &&
                         pFields[0]->GetPhys()[i] < m_thresholdValue))
                 {
-                    if (m_idx[i] == m_threshold.size())
-                    {
-                        m_threshold.push_back(Array<OneD, NekDouble>(
-                                    pFields[0]->GetNpoints(), m_initialValue));
-                    }
                     m_threshold[m_idx[i]][i] = time;
                     m_idx[i]++;
                     m_polarity[i] *= -1;
@@ -118,7 +114,7 @@ namespace Nektar
 
         void FilterBenchmark::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
-            for (int i = 0; i < m_threshold.size(); ++i)
+            for (int i = 0; i < m_threshold.size() - 1; ++i)
             {
             std::stringstream vOutputFilename;
             vOutputFilename << m_outputFile << "_" << i << ".fld";

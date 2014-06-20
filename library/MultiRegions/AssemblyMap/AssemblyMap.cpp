@@ -1236,7 +1236,6 @@ namespace Nektar
             Array<OneD, NekDouble> tmpGlob(m_numGlobalBndCoeffs, 0.0);
             AssembleBnd(tmpLoc, tmpGlob);
 
-            int highValence    = Vmath::Vmax(m_numGlobalBndCoeffs, tmpGlob, 1);
             int totGlobDof     = globCnt;
             int totGlobBndDof  = globBndCnt;
             int totGlobDirDof  = globDirCnt;
@@ -1244,7 +1243,30 @@ namespace Nektar
             int totLocalBndDof = m_numLocalBndCoeffs;
             int totLocalDirDof = m_numLocalDirBndCoeffs;
 
-            vRowComm->AllReduce(highValence,    LibUtilities::ReduceMax);
+            int meanValence = 0;
+            int maxValence = 0;
+            int minValence = 10000000;
+            for (int i = 0; i < m_numGlobalBndCoeffs; ++i)
+            {
+                if (!m_globalToUniversalBndMapUnique[i])
+                {
+                    continue;
+                }
+
+                if (tmpGlob[i] > maxValence)
+                {
+                    maxValence = tmpGlob[i];
+                }
+                if (tmpGlob[i] < minValence)
+                {
+                    minValence = tmpGlob[i];
+                }
+                meanValence += tmpGlob[i];
+            }
+
+            vRowComm->AllReduce(maxValence,     LibUtilities::ReduceMax);
+            vRowComm->AllReduce(minValence,     LibUtilities::ReduceMin);
+            vRowComm->AllReduce(meanValence,    LibUtilities::ReduceSum);
             vRowComm->AllReduce(totGlobDof,     LibUtilities::ReduceSum);
             vRowComm->AllReduce(totGlobBndDof,  LibUtilities::ReduceSum);
             vRowComm->AllReduce(totGlobDirDof,  LibUtilities::ReduceSum);
@@ -1252,18 +1274,21 @@ namespace Nektar
             vRowComm->AllReduce(totLocalBndDof, LibUtilities::ReduceSum);
             vRowComm->AllReduce(totLocalDirDof, LibUtilities::ReduceSum);
 
+            meanValence /= totGlobBndDof;
+
             if (isRoot)
             {
                 out << "Assembly map statistics for field " << variable << ":"
                     << endl;
-                out << "  - Number of local/global dof           : "
+                out << "  - Number of local/global dof             : "
                     << totLocalDof << " " << totGlobDof << endl;
-                out << "  - Number of local/global boundary dof  : "
+                out << "  - Number of local/global boundary dof    : "
                     << totLocalBndDof << " " << totGlobBndDof << endl;
-                out << "  - Number of local/global Dirichlet dof : "
+                out << "  - Number of local/global Dirichlet dof   : "
                     << totLocalDirDof << " " << totGlobDirDof << endl;
-                out << "  - Highest dof valency                  : "
-                    << highValence << endl;
+                out << "  - dof valency (min/max/mean)             : "
+                    << minValence << " " << maxValence << " " << meanValence
+                    << endl;
 
                 if (n > 1)
                 {
@@ -1276,6 +1301,7 @@ namespace Nektar
                         vRowComm->Recv(i, tmp);
                         mean     += tmp[0];
                         mean2    += tmp[0]*tmp[0];
+
                         if (tmp[0] > maxval)
                         {
                             maxval = tmp[0];
@@ -1286,10 +1312,10 @@ namespace Nektar
                         }
                     }
 
-                    out << "  - Local dof dist. (min/max/mean)       : "
+                    out << "  - Local dof dist. (min/max/mean/dev)     : "
                         << minval << " " << maxval << " " << (mean / n) << " "
                         << sqrt(mean2/n - mean*mean/n/n) << endl;
-                    
+
                     vRowComm->Block();
 
                     mean = minval = maxval = m_numLocalBndCoeffs;
@@ -1300,9 +1326,18 @@ namespace Nektar
                         vRowComm->Recv(i, tmp);
                         mean     += tmp[0];
                         mean2    += tmp[0]*tmp[0];
+
+                        if (tmp[0] > maxval)
+                        {
+                            maxval = tmp[0];
+                        }
+                        if (tmp[0] < minval)
+                        {
+                            minval = tmp[0];
+                        }
                     }
 
-                    out << "  - Local bnd dof dist. (min/max/mean)   : "
+                    out << "  - Local bnd dof dist. (min/max/mean/dev) : "
                         << minval << " " << maxval << " " << (mean / n) << " "
                         << sqrt(mean2/n - mean*mean/n/n) << endl;
                 }

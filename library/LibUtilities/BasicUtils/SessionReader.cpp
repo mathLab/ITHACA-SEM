@@ -297,6 +297,8 @@ namespace Nektar
                                  "number of procs in Y-dir")
                 ("npz",          po::value<int>(),
                                  "number of procs in Z-dir")
+                ("part-only",    po::value<int>(),
+                                 "only partition mesh into N partitions.")
                 ("part-info",    "Output partition information")
             ;
             
@@ -1251,6 +1253,19 @@ namespace Nektar
                              "Error: File '" + pFilename + "' is corrupt.");
                 }
             }
+            else if (pFilename.size() > 4 &&
+                    pFilename.substr(pFilename.size() - 4, 4) == "_xml")
+            {
+                fs::path    pdirname(pFilename);
+                boost::format pad("P%1$07d.xml");
+                pad % m_comm->GetRank();
+                fs::path    pRankFilename(pad.str());
+                fs::path fullpath = pdirname / pRankFilename;
+
+                ifstream file(PortablePath(fullpath).c_str());
+                ASSERTL0(file.good(), "Unable to open file: " + fullpath.string());
+                file >> (*pDoc);
+            }
             else
             {
                 ifstream file(pFilename.c_str());
@@ -1379,20 +1394,83 @@ namespace Nektar
 
             // Get row of comm, or the whole comm if not split
             CommSharedPtr vCommMesh = m_comm->GetRowComm();
+            const bool isRoot = (m_comm->GetRank() == 0);
 
-            // Partition mesh into length of row comms
-            if (vCommMesh->GetSize() > 1)
+            // Delete any existing loaded mesh
+            if (m_xmlDoc)
+            {
+                delete m_xmlDoc;
+            }
+
+            // Load file for root process only (since this is always needed)
+            // and determine if the provided geometry has already been
+            // partitioned. This will be the case if the user provides the
+            // directory of mesh partitions as an input. Partitioned geometries
+            // have the attribute
+            //    PARTITION=X
+            // where X is the number of the partition (and should match the
+            // process rank). The result is shared with all other processes.
+            int isPartitioned = 0;
+            if (isRoot)
+            {
+                m_xmlDoc = MergeDoc(m_filenames);
+
+                if (GetElement("Nektar/Geometry")->Attribute("PARTITION"))
+                {
+                    cout << "Using pre-partitioned mesh." << endl;
+                    isPartitioned = 1;
+                }
+            }
+            GetComm()->AllReduce(isPartitioned, LibUtilities::ReduceMax);
+
+            // If the mesh is already partitioned, we are done. Remaining
+            // processes must load their partitions.
+            if (isPartitioned) {
+                if (!isRoot)
+                {
+                    m_xmlDoc = MergeDoc(m_filenames);
+                }
+                return;
+            }
+
+            // Mesh has not been partitioned so do partitioning if required.
+            // Note in the serial case nothing is done as we have already loaded
+            // the mesh.
+            if (DefinesCmdLineArgument("part-only"))
+            {
+                // Perform partitioning of the mesh only. For this we insist
+                // the code is run in serial (parallel execution is pointless).
+                ASSERTL0(GetComm()->GetSize() == 1,
+                        "The 'part-only' option should be used in serial.");
+
+                // Number of partitions is specified by the parameter.
+                int nParts = GetCmdLineArgument<int>("part-only");
+                SessionReaderSharedPtr vSession     = GetSharedThisPtr();
+                MeshPartitionSharedPtr vPartitioner = MemoryManager<
+                    MeshPartition>::AllocateSharedPtr(vSession);
+                vPartitioner->PartitionMesh(nParts, true);
+                vPartitioner->WriteAllPartitions(vSession);
+                vPartitioner->GetCompositeOrdering(m_compOrder);
+                vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+
+                if (isRoot && DefinesCmdLineArgument("part-info"))
+                {
+                    vPartitioner->PrintPartInfo(std::cout);
+                }
+
+                Finalise();
+                exit(0);
+            }
+            else if (vCommMesh->GetSize() > 1)
             {
                 if (DefinesCmdLineArgument("shared-filesystem"))
                 {
-                    if (GetComm()->GetRank() == 0)
+                    if (isRoot)
                     {
-                        m_xmlDoc = MergeDoc(m_filenames);
-
                         SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                         MeshPartitionSharedPtr vPartitioner = MemoryManager<
                             MeshPartition>::AllocateSharedPtr(vSession);
-                        vPartitioner->PartitionMesh(true);
+                        vPartitioner->PartitionMesh(GetComm()->GetSize(), true);
                         vPartitioner->WriteAllPartitions(vSession);
                         vPartitioner->GetCompositeOrdering(m_compOrder);
                         vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
@@ -1405,7 +1483,11 @@ namespace Nektar
                 }
                 else
                 {
-                    m_xmlDoc = MergeDoc(m_filenames);
+                    // Need to load mesh on non-root processes.
+                    if (!isRoot)
+                    {
+                        m_xmlDoc = MergeDoc(m_filenames);
+                    }
 
                     // Partitioner now operates in parallel
                     // Each process receives partitioning over interconnect
@@ -1413,12 +1495,12 @@ namespace Nektar
                     SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                     MeshPartitionSharedPtr vPartitioner = MemoryManager<
                         MeshPartition>::AllocateSharedPtr(vSession);
-                    vPartitioner->PartitionMesh(false);
+                    vPartitioner->PartitionMesh(GetComm()->GetSize(), false);
                     vPartitioner->WriteLocalPartition(vSession);
                     vPartitioner->GetCompositeOrdering(m_compOrder);
                     vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
 
-                    if (DefinesCmdLineArgument("part-info"))
+                    if (DefinesCmdLineArgument("part-info") && isRoot)
                     {
                         vPartitioner->PrintPartInfo(std::cout);
                     }
@@ -1446,14 +1528,6 @@ namespace Nektar
                 ASSERTL0(loadOkay, "Unable to load file: " + m_filename      + 
                          ". Check XML standards compliance. Error on line: " +
                          boost::lexical_cast<std::string>(m_xmlDoc->Row()));
-            }
-            else
-            {
-                if (m_xmlDoc)
-                {
-                    delete m_xmlDoc;
-                }
-                m_xmlDoc = MergeDoc(m_filenames);
             }
         }
 

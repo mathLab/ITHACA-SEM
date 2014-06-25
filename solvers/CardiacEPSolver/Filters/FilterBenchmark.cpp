@@ -95,8 +95,18 @@ namespace Nektar
                     (m_polarity[i] == 1 &&
                         pFields[0]->GetPhys()[i] < m_thresholdValue))
                 {
-                    m_threshold[m_idx[i]][i] = time;
-                    m_idx[i]++;
+                    // If APD too short, reset
+                    if (m_polarity[i] == 1 &&
+                        time - m_threshold[m_idx[i]][i] < 50)
+                    {
+                        m_idx[i]--;
+                        m_threshold[m_idx[i]][i] = m_initialValue;
+                    }
+                    else
+                    {
+                        m_threshold[m_idx[i]][i] = time;
+                        m_idx[i]++;
+                    }
                     m_polarity[i] *= -1;
                 }
             }

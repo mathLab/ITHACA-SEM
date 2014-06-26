@@ -75,7 +75,11 @@ namespace Nektar
         NekDouble g_to;
         NekDouble g_Ks;
         NekDouble s_inf_factor;
-        NekDouble s_tau_factor;
+        NekDouble s_tau_f1;
+        NekDouble s_tau_f2;
+        NekDouble s_tau_f3;
+        NekDouble s_tau_f4;
+        NekDouble s_tau_f5;
         NekDouble k_0;
 
         enum Variants {

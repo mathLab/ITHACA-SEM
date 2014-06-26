@@ -14,9 +14,6 @@ SET(PP_SOURCES ./Prepacing.cpp
         ../../CellModels/CellModel.cpp
         ../../CellModels/CourtemancheRamirezNattel98.cpp
  	    ../../CellModels/FentonKarma.cpp
- 	    ../../CellModels/TenTusscher06Endo.cpp
- 	    ../../CellModels/TenTusscher06Epi.cpp
- 	    ../../CellModels/TenTusscher06M.cpp
  	    ../../CellModels/TenTusscher06.cpp
         ../../Stimuli/Stimulus.cpp
         ../../Stimuli/StimulusPoint.cpp

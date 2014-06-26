@@ -73,30 +73,50 @@ namespace Nektar
     			TenTusscher06::Variants>("CellModelVariant");
 
     	switch (model_variant) {
-    	case eEpicardium:
-    		g_to = 0.294;
-    		g_Ks = 0.392;
-    		s_inf_factor = 20.0;
-    		k_0 = 5.4;
-    		break;
-    	case eEndocardium:
-    		g_to = 0.073;
-    		g_Ks = 0.392;
-    		s_inf_factor = 28.0;
-    		k_0 = 5.4;
-    		break;
-    	case eMid:
-    		g_to = 0.294;
-    		g_Ks = 0.098;
-    		s_inf_factor = 20.0;
-    		k_0 = 5.4;
-    		break;
-    	case eIschemia:
-    		g_to = 0.294;
-    		g_Ks = 0.392;
-    		s_inf_factor = 20.0;
-    		k_0 = 9.0;
-    		break;
+        case eEpicardium:
+            g_to = 0.294;
+            g_Ks = 0.392;
+            s_inf_factor = 20.0;
+            s_tau_f1 = 85.0;
+            s_tau_f2 = 45.0;
+            s_tau_f3 = 320.0;
+            s_tau_f4 = 0.0;
+            s_tau_f5 = 1.0;
+            k_0 = 5.4;
+            break;
+        case eEndocardium:
+            g_to = 0.073;
+            g_Ks = 0.392;
+            s_inf_factor = 28.0;
+            s_tau_f1 = 1000.0;
+            s_tau_f2 = 67.0;
+            s_tau_f3 = 1000.0;
+            s_tau_f4 = 8.0;
+            s_tau_f5 = 0.0;
+            k_0 = 5.4;
+            break;
+        case eMid:
+            g_to = 0.294;
+            g_Ks = 0.098;
+            s_inf_factor = 20.0;
+            s_tau_f1 = 85.0;
+            s_tau_f2 = 45.0;
+            s_tau_f3 = 320.0;
+            s_tau_f4 = 0.0;
+            s_tau_f5 = 1.0;
+            k_0 = 5.4;
+            break;
+        case eIschemia:
+            g_to = 0.294;
+            g_Ks = 0.392;
+            s_inf_factor = 20.0;
+            s_tau_f1 = 85.0;
+            s_tau_f2 = 45.0;
+            s_tau_f3 = 320.0;
+            s_tau_f4 = 0.0;
+            s_tau_f5 = 1.0;
+            k_0 = 9.0;
+            break;
     	}
         m_nvar = 19;
 
@@ -361,18 +381,7 @@ namespace Nektar
 //            const NekDouble var_L_type_Ca_current__L_type_Ca_current_fCass_gate__d_fCass_d_environment__time = var_L_type_Ca_current_fCass_gate__d_fCass_d_environment__time; // per_millisecond
             const NekDouble var_transient_outward_current_s_gate__V = var_transient_outward_current__V; // millivolt
             const NekDouble var_transient_outward_current_s_gate__s_inf = 1.0 / (1.0 + exp((var_transient_outward_current_s_gate__V + s_inf_factor) / 5.0)); // dimensionless
-            NekDouble var_transient_outward_current_s_gate__tau_s ;
-            switch (model_variant)
-            {
-            case eEpicardium:
-            case eMid:
-            case eIschemia:
-                var_transient_outward_current_s_gate__tau_s = (85.0 * exp((-pow(var_transient_outward_current_s_gate__V + 45.0, 2.0)) / 320.0)) + (5.0 / (1.0 + exp((var_transient_outward_current_s_gate__V - 20.0) / 5.0))) + 3.0; // millisecond
-                break;
-            case eEndocardium:
-            	var_transient_outward_current_s_gate__tau_s = (1000.0 * exp((-pow(var_transient_outward_current_s_gate__V + 67.0, 2.0)) / 1000.0)) + 8.0; // millisecond
-            	break;
-            }
+            const NekDouble var_transient_outward_current_s_gate__tau_s = (s_tau_f1 * exp((-pow(var_transient_outward_current_s_gate__V + s_tau_f2, 2.0)) / s_tau_f3)) + s_tau_f4 + s_tau_f5*((5.0 / (1.0 + exp((var_transient_outward_current_s_gate__V - 20.0) / 5.0))) + 3.0); // millisecond
 //            const NekDouble var_transient_outward_current_s_gate__s = var_transient_outward_current__s; // dimensionless
 //            const NekDouble var_transient_outward_current_s_gate__d_s_d_environment__time = (var_transient_outward_current_s_gate__s_inf - var_transient_outward_current_s_gate__s) / var_transient_outward_current_s_gate__tau_s; // per_millisecond
 //            const NekDouble var_transient_outward_current__transient_outward_current_s_gate__d_s_d_environment__time = var_transient_outward_current_s_gate__d_s_d_environment__time; // per_millisecond

@@ -38,6 +38,7 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 
@@ -89,10 +90,40 @@ int main(int argc, char *argv[])
     {
         case 1:
         {
-            MultiRegions::ExpList1DSharedPtr Exp1D;
-            Exp1D = MemoryManager<MultiRegions::ExpList1D>
-                ::AllocateSharedPtr(vSession,graphShPt);
-            Exp[0] = Exp1D;
+            if(vSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                std::string HomoStr = vSession->GetSolverInfo("HOMOGENEOUS");
+                MultiRegions::ExpList2DHomogeneous1DSharedPtr Exp2DH1;
+
+                ASSERTL0(
+                    HomoStr == "HOMOGENEOUS1D" || HomoStr == "Homogeneous1D" ||
+                    HomoStr == "1D"            || HomoStr == "Homo1D",
+                    "Only 3DH1D supported for XML output currently.");
+
+                int nplanes;
+                vSession->LoadParameter("HomModesZ", nplanes);
+
+                // choose points to be at evenly spaced points at nplanes + 1
+                // points
+                const LibUtilities::PointsKey Pkey(
+                    nplanes + 1, LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::BasisKey  Bkey(
+                    LibUtilities::eFourier, nplanes, Pkey);
+                NekDouble lz = vSession->GetParameter("LZ");
+
+                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>
+                    ::AllocateSharedPtr(
+                        vSession, Bkey, lz, false, false, graphShPt);
+                Exp[0] = Exp2DH1;
+            }
+            else
+            {
+                MultiRegions::ExpList1DSharedPtr Exp1D;
+                Exp1D = MemoryManager<MultiRegions::ExpList1D>
+                    ::AllocateSharedPtr(vSession,graphShPt);
+                Exp[0] = Exp1D;
+            }
+
             break;
         }
         case 2:

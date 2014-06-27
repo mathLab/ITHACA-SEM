@@ -65,7 +65,7 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr &pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const Array<OneD, int> &pVel,
-            const AdvectionTermSharedPtr &advObject)
+            const SolverUtils::AdvectionSharedPtr &advObject)
         {
             ExtrapolateSharedPtr p = MemoryManager<StandardExtrapolate>::AllocateSharedPtr(pSession,pFields,pVel,advObject);
             return p;
@@ -78,7 +78,7 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
             const Array<OneD, int> pVel,
-            const AdvectionTermSharedPtr advObject);
+            const SolverUtils::AdvectionSharedPtr advObject);
 
         virtual ~StandardExtrapolate();
         

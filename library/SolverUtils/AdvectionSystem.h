@@ -50,6 +50,8 @@ namespace Nektar {
             AdvectionSystem(const LibUtilities::SessionReaderSharedPtr &pSession);
             virtual ~AdvectionSystem();
             
+            virtual void v_InitObject();
+
             AdvectionSharedPtr GetAdvObject()
             {
                 return m_advObject;

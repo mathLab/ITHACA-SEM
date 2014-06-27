@@ -54,7 +54,7 @@ namespace Nektar
      * \param
      */
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
-        UnsteadySystem(pSession),
+        AdvectionSystem(pSession),
         m_subSteppingScheme(false),
         m_SmoothAdvection(false),
         m_steadyStateSteps(0)
@@ -63,7 +63,7 @@ namespace Nektar
 
     void IncNavierStokes::v_InitObject()
     {
-        UnsteadySystem::v_InitObject();
+        AdvectionSystem::v_InitObject();
         
         int i,j;
         int numfields = m_fields.num_elements();
@@ -172,7 +172,8 @@ namespace Nektar
         }
 
         // Initialise advection
-        m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
+        m_advObject = SolverUtils::GetAdvectionFactory().CreateInstance(vConvectiveType, vConvectiveType);
+        m_advObject->InitObject( m_session, m_fields);
         
         // Forcing terms
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
@@ -360,8 +361,8 @@ namespace Nektar
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
 
-        m_advObject->DoAdvection(m_fields,m_nConvectiveFields, 
-                                 m_velocity,inarray,outarray,m_time,Deriv);
+        m_advObject->Advect(m_nConvectiveFields,m_fields,
+                                 inarray,inarray,outarray,m_time);
     }
     
     /**

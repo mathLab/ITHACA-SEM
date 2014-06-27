@@ -37,8 +37,8 @@
 
 namespace Nektar
 {
-    string NavierStokesAdvection::className  = GetAdvectionTermFactory().RegisterCreatorFunction("Convective", NavierStokesAdvection::create);
-    string NavierStokesAdvection::className2 = GetAdvectionTermFactory().RegisterCreatorFunction("NonConservative", NavierStokesAdvection::create);
+    string NavierStokesAdvection::className  = SolverUtils::GetAdvectionFactory().RegisterCreatorFunction("Convective", NavierStokesAdvection::create);
+    string NavierStokesAdvection::className2 = SolverUtils::GetAdvectionFactory().RegisterCreatorFunction("NonConservative", NavierStokesAdvection::create);
     
     /**
      * Constructor. Creates ...
@@ -47,10 +47,8 @@ namespace Nektar
      * \param
      */
 
-    NavierStokesAdvection::NavierStokesAdvection(
-            const LibUtilities::SessionReaderSharedPtr&        pSession,
-            const SpatialDomains::MeshGraphSharedPtr&          pGraph):
-        AdvectionTerm(pSession, pGraph)
+    NavierStokesAdvection::NavierStokesAdvection():
+        Advection()
 	
     {
         
@@ -60,12 +58,79 @@ namespace Nektar
     {
     }
     
+
+    void NavierStokesAdvection::v_InitObject(
+                    LibUtilities::SessionReaderSharedPtr        pSession,
+                    Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+    {
+        m_CoeffState = MultiRegions::eLocal;
+        m_homogen_dealiasing = pSession->DefinesSolverInfo("dealiasing");
+
+        pSession->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
+        if(m_specHP_dealiasing == false)
+        {
+            pSession->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
+        }
+        pSession->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
+        pSession->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
+
+        Advection::v_InitObject(pSession, pFields);
+    }
+
     //Advection function
     
-    
+    void NavierStokesAdvection::v_Advect(
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble> >              &outarray,
+        const NekDouble                                   &time)
+    {
+        int i;
+        int nqtot            = fields[0]->GetTotPoints();
+        Array<OneD, Array<OneD, NekDouble> > velocity(nConvectiveFields);
+
+        ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
+
+        for(i = 0; i < nConvectiveFields; ++i)
+        {
+            if(fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+            {
+                velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                fields[i]->HomogeneousBwdTrans(inarray[i],velocity[i]);
+            }
+            else
+            {
+                velocity[i] = inarray[i];
+            }
+        }
+
+        Array<OneD, NekDouble > Deriv;
+
+//        // Set up Derivative work space;
+//        if(pWk.num_elements())
+//        {
+//            ASSERTL0(pWk.num_elements() >= nqtot*VelDim,"Workspace is not sufficient");
+//            Deriv = pWk;
+//        }
+//        else
+//        {
+            Deriv = Array<OneD, NekDouble> (nqtot*nConvectiveFields);
+//        }
+
+
+        for(i=0; i< nConvectiveFields; ++i)
+        {
+            v_ComputeAdvectionTerm(fields,velocity,inarray[i],outarray[i],i,time,Deriv);
+            Vmath::Neg(nqtot,outarray[i],1);
+        }
+
+    }
+
     //Evaluation of the advective terms
     void NavierStokesAdvection::v_ComputeAdvectionTerm(
-            Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
             const Array<OneD, Array<OneD, NekDouble> > &pV,
             const Array<OneD, const NekDouble> &pU,
             Array<OneD, NekDouble> &pOutarray,

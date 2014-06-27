@@ -36,8 +36,8 @@
 #ifndef NEKTAR_SOLVERS_ADJOINTADVECTION_H
 #define NEKTAR_SOLVERS_ADJOINTADVECTION_H
 
-///#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
-#include <SolverUtils/Advection/AdvectionTerm.h>
+#include <SolverUtils/Advection/Advection.h>
+#include <LibUtilities/FFT/NektarFFT.h>
 
 //#define TIMING
 
@@ -51,7 +51,7 @@ namespace Nektar
 {     
 
 
-    class AdjointAdvection: public AdvectionTerm
+    class AdjointAdvection: public SolverUtils::Advection
     {
 		enum FloquetMatType
         {
@@ -69,17 +69,20 @@ namespace Nektar
         friend class MemoryManager<AdjointAdvection>;
 
         /// Creates an instance of this class
-        static AdvectionTermSharedPtr create(
-                                const LibUtilities::SessionReaderSharedPtr& pSession,
-                                const SpatialDomains::MeshGraphSharedPtr& pGraph) {
-            AdvectionTermSharedPtr p = MemoryManager<AdjointAdvection>::AllocateSharedPtr(pSession, pGraph);
-            p->InitObject();
+        static SolverUtils::AdvectionSharedPtr create(std::string) {
+            SolverUtils::AdvectionSharedPtr p = MemoryManager<AdjointAdvection>::AllocateSharedPtr();
             return p;
         }
         /// Name of class
         static std::string className;
 
 	protected:
+        LibUtilities::SessionReaderSharedPtr m_session;
+
+        MultiRegions::ProjectionType m_projectionType;
+        int m_spacedim;
+        int m_expdim;
+
         //Storage of the base flow
         Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
 		
@@ -97,20 +100,30 @@ namespace Nektar
 		bool m_SingleMode;			 ///< flag to determine if use single mode or not
 		bool m_HalfMode;		     ///< flag to determine if use half mode or not
 		bool m_MultipleModes;		 ///< flag to determine if use multiple mode or not
+        bool m_homogen_dealiasing;
+        MultiRegions::CoeffState m_CoeffState;
 
 		DNekBlkMatSharedPtr GetFloquetBlockMatrix(FloquetMatType mattype, bool UseContCoeffs = false) const;
 		DNekBlkMatSharedPtr GenFloquetBlockMatrix(FloquetMatType mattype, bool UseContCoeffs = false) const;
 		FloquetBlockMatrixMapShPtr       m_FloquetBlockMat;
 			
-		AdjointAdvection(
-                const LibUtilities::SessionReaderSharedPtr&        pSession,
-                const SpatialDomains::MeshGraphSharedPtr&          pGraph);
+		AdjointAdvection();
 
         virtual ~AdjointAdvection();
 
-        virtual void v_InitObject();
+        virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr        pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr> pFields);
 
-        void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
+        virtual void v_Advect(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const NekDouble                                   &time);
+
+        void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr mesh);
 		void UpdateBase(const NekDouble m_slices,
 						Array<OneD, const NekDouble> &inarray,
 						Array<OneD, NekDouble> &outarray,
@@ -140,7 +153,7 @@ namespace Nektar
     private:
         //Function for the evaluation of the Adjoint advective terms
         virtual void v_ComputeAdvectionTerm(
-                         Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+                         const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                          const Array<OneD, Array<OneD, NekDouble> > &pV,
                          const Array<OneD, const NekDouble> &pU,
                          Array<OneD, NekDouble> &pOutarray,

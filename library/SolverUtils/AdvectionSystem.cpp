@@ -14,7 +14,6 @@ namespace Nektar {
         AdvectionSystem::AdvectionSystem(const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession)
         {
-            
         }
         
         AdvectionSystem::~AdvectionSystem()
@@ -22,6 +21,11 @@ namespace Nektar {
             
         }
         
+        void AdvectionSystem::v_InitObject()
+        {
+            UnsteadySystem::v_InitObject();
+        }
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         void AdvectionSystem::UpdateBaseFlow(const Array<OneD, Array<OneD, NekDouble> > &inarray)
         {

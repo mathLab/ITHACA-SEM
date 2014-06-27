@@ -76,7 +76,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr& ,
         Array<OneD, MultiRegions::ExpListSharedPtr>& ,
         const Array<OneD, int>& ,
-        const AdvectionTermSharedPtr& > ExtrapolateFactory; 
+        const SolverUtils::AdvectionSharedPtr& > ExtrapolateFactory;
 
     ExtrapolateFactory& GetExtrapolateFactory();
 
@@ -87,7 +87,7 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr  pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
             const Array<OneD, int>                      pVel,
-            const AdvectionTermSharedPtr                advObject);
+            const SolverUtils::AdvectionSharedPtr                advObject);
         
         virtual ~Extrapolate();
 		
@@ -169,7 +169,7 @@ namespace Nektar
 
         Array<OneD, int> m_velocity;
 
-        AdvectionTermSharedPtr m_advObject;
+        SolverUtils::AdvectionSharedPtr m_advObject;
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
 		

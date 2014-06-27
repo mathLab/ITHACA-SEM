@@ -41,9 +41,11 @@
 #include <LibUtilities/FFT/NektarFFT.h>  // for NektarFFTSharedPtr
 #include <SpatialDomains/MeshGraph.h>   // for MeshGraphSharedPtr
 #include <MultiRegions/ExpList.h>       // for ExpListSharedPtr
-
+#include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
+{
+namespace SolverUtils
 {
     class AdvectionTerm;
     
@@ -59,7 +61,7 @@ namespace Nektar
     AdvectionTermFactory& GetAdvectionTermFactory();
     
     /// Base class for the development of solvers.
-    class AdvectionTerm
+    class AdvectionTerm : public SolverUtils::Advection
     {
     public:
         /// Destructor
@@ -68,7 +70,7 @@ namespace Nektar
         inline void InitObject();
         
         /// Compute advection term
-        void DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+        void DoAdvection(const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                          const int nConvectiveFields,
                          const Array<OneD, int>  &vel_loc,
                          const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
@@ -76,7 +78,7 @@ namespace Nektar
                          NekDouble m_time,
                          Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
         
-        void DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+        void DoAdvection(const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                          const Array<OneD, const Array<OneD, NekDouble> > &Velocity,
                          const Array<OneD, const Array<OneD, NekDouble> > &pInarray,
                          Array<OneD, Array<OneD, NekDouble> > &pOutarray,
@@ -139,7 +141,20 @@ namespace Nektar
         
         virtual void v_InitObject();
         
-        virtual void v_ComputeAdvectionTerm(Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+        virtual void v_Advect(
+                            const int nConvectiveFields,
+                            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+                            const Array<OneD, const Array<OneD, NekDouble> >        &inarray,
+                            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                            const NekDouble                                   &time)
+        {
+            Array<OneD, int> vel_loc(fields.num_elements() - 1);
+            for (int i = 0; i < fields.num_elements(); ++i) vel_loc[i] = i;
+            DoAdvection(fields, nConvectiveFields, vel_loc, inarray, outarray, time);
+        }
+
+        virtual void v_ComputeAdvectionTerm(const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                                             const Array<OneD, Array<OneD, NekDouble> > &pV,
                                             const Array<OneD, const NekDouble> &pU,
                                             Array<OneD, NekDouble> &pOutarray,
@@ -155,7 +170,8 @@ namespace Nektar
     {
         v_InitObject();
     }
-} //end of namespace
+}
+} //endof namespace
 
 #endif //NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 

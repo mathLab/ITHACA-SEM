@@ -36,8 +36,7 @@
 #ifndef NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
 #define NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
 
-///#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
-#include <SolverUtils/Advection/AdvectionTerm.h>
+#include <SolverUtils/Advection/Advection.h>
 
 
 //#define TIMING
@@ -50,18 +49,15 @@
 namespace Nektar
 {     
 
-    class NavierStokesAdvection: public AdvectionTerm
+    class NavierStokesAdvection: public SolverUtils::Advection
 	
     {
     public:
         friend class MemoryManager<NavierStokesAdvection>;
 
         /// Creates an instance of this class
-        static AdvectionTermSharedPtr create(
-                                const LibUtilities::SessionReaderSharedPtr& pSession,
-                                const SpatialDomains::MeshGraphSharedPtr& pGraph) {
-            AdvectionTermSharedPtr p = MemoryManager<NavierStokesAdvection>::AllocateSharedPtr(pSession, pGraph);
-            p->InitObject();
+        static SolverUtils::AdvectionSharedPtr create(std::string) {
+            SolverUtils::AdvectionSharedPtr p = MemoryManager<NavierStokesAdvection>::AllocateSharedPtr();
             return p;
         }
         /// Name of class
@@ -70,18 +66,32 @@ namespace Nektar
         
 	protected:
         
-        NavierStokesAdvection(
-                const LibUtilities::SessionReaderSharedPtr&        pSession,
-                const SpatialDomains::MeshGraphSharedPtr&          pGraph);
-
+        NavierStokesAdvection();
 
         virtual ~NavierStokesAdvection();
 
+        virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr        pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr> pFields);
+
+        virtual void v_Advect(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const NekDouble                                   &time);
+
 	private:
+        MultiRegions::CoeffState m_CoeffState;
+        bool m_specHP_dealiasing;
+        bool m_homogen_dealiasing;
+        bool m_SingleMode;
+        bool m_HalfMode;
 
         //Function for the evaluation of the linearised advective terms
         virtual void v_ComputeAdvectionTerm(
-                         Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+                         const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
                          const Array<OneD, Array<OneD, NekDouble> > &pV,
                          const Array<OneD, const NekDouble> &pU,
                          Array<OneD, NekDouble> &pOutarray,

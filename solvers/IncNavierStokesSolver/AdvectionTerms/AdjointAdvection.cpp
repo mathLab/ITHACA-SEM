@@ -49,7 +49,7 @@
 
 namespace Nektar
 {
-    string AdjointAdvection::className = GetAdvectionTermFactory().RegisterCreatorFunction("Adjoint", AdjointAdvection::create);
+    string AdjointAdvection::className = SolverUtils::GetAdvectionFactory().RegisterCreatorFunction("Adjoint", AdjointAdvection::create);
 
     /**
      * Constructor. Creates ...
@@ -58,19 +58,22 @@ namespace Nektar
      * \param
      */
 
-   AdjointAdvection::AdjointAdvection(
-            const LibUtilities::SessionReaderSharedPtr&        pSession,
-            const SpatialDomains::MeshGraphSharedPtr&          pGraph):
-        AdvectionTerm(pSession, pGraph)
+   AdjointAdvection::AdjointAdvection():
+        Advection()
 	{
 	}
 	
 
-	void AdjointAdvection::v_InitObject()
-	{
-	    AdvectionTerm::v_InitObject();
-		m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-		::AllocateSharedPtr(m_session, m_graph);
+   void AdjointAdvection::v_InitObject(
+           LibUtilities::SessionReaderSharedPtr        pSession,
+           Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+   {
+       Advection::v_InitObject(pSession, pFields);
+
+       m_session = pSession;
+
+       m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
+		::AllocateSharedPtr(m_session, pFields[0]->GetGraph());
 		
 		//Setting parameters for homogeneous problems
 		m_HomoDirec       = 0;
@@ -79,7 +82,10 @@ namespace Nektar
 		m_SingleMode	   =false;
 		m_HalfMode		   =false;
 		m_MultipleModes    =false;
-		
+        m_spacedim = pFields[0]->GetGraph()->GetSpaceDimension();
+        m_expdim   = pFields[0]->GetGraph()->GetMeshDimension();
+        m_CoeffState = MultiRegions::eLocal;
+
         if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
         {
             std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
@@ -92,6 +98,8 @@ namespace Nektar
                 m_LhomZ           = m_session->GetParameter("LZ");
                 m_HomoDirec       = 1;
 				
+                m_homogen_dealiasing = pSession->DefinesSolverInfo("DEALIASING");
+
 				if(m_session->DefinesSolverInfo("ModeType"))
 				{
 					m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
@@ -189,7 +197,7 @@ namespace Nektar
             m_projectionType = MultiRegions::eGalerkin;
         }
 		
-		SetUpBaseFields(m_graph);
+		SetUpBaseFields(pFields[0]->GetGraph());
 		ASSERTL0(m_session->DefinesFunction("BaseFlow"),
 				 "Base flow must be defined for linearised forms.");
 		string file = m_session->GetFunctionFilename("BaseFlow", 0);
@@ -217,7 +225,7 @@ namespace Nektar
 			if (m_session->GetFunctionType("BaseFlow", m_session->GetVariable(0))
 				== LibUtilities::eFunctionTypeFile)
 			{
-				ImportFldBase(file,m_graph,1);
+				ImportFldBase(file,pFields[0]->GetGraph(),1);
 				
 			}
 			//analytic base flow
@@ -254,7 +262,57 @@ namespace Nektar
     }
 
     
-    void AdjointAdvection::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh)
+    void AdjointAdvection::v_Advect(
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+        Array<OneD, Array<OneD, NekDouble> >              &outarray,
+        const NekDouble                                   &time)
+    {
+        int i;
+        int nqtot            = fields[0]->GetTotPoints();
+        Array<OneD, Array<OneD, NekDouble> > velocity(nConvectiveFields);
+
+        ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
+
+        for(i = 0; i < nConvectiveFields; ++i)
+        {
+            if(fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+            {
+                velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                fields[i]->HomogeneousBwdTrans(inarray[i],velocity[i]);
+            }
+            else
+            {
+                velocity[i] = inarray[i];
+            }
+        }
+
+        Array<OneD, NekDouble > Deriv;
+
+//        // Set up Derivative work space;
+//        if(pWk.num_elements())
+//        {
+//            ASSERTL0(pWk.num_elements() >= nqtot*VelDim,"Workspace is not sufficient");
+//            Deriv = pWk;
+//        }
+//        else
+//        {
+            Deriv = Array<OneD, NekDouble> (nqtot*nConvectiveFields);
+//        }
+
+
+        for(i=0; i< nConvectiveFields; ++i)
+        {
+            v_ComputeAdvectionTerm(fields,velocity,inarray[i],outarray[i],i,time,Deriv);
+            Vmath::Neg(nqtot,outarray[i],1);
+        }
+
+    }
+
+
+    void AdjointAdvection::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr mesh)
     {
 		int nvariables = m_session->GetVariables().size();
         int i;
@@ -275,7 +333,7 @@ namespace Nektar
 						for(i = 0 ; i < m_base.num_elements(); i++)
 						{
 							m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
+							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
 						}
 					}
 					
@@ -303,7 +361,7 @@ namespace Nektar
 							for(i = 0 ; i < m_base.num_elements(); i++)
 							{								
 								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
 								
 							} 
 						}
@@ -316,7 +374,7 @@ namespace Nektar
 							for(i = 0 ; i < m_base.num_elements(); i++)
 							{																
 								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
 							} 
 							
 						}
@@ -329,7 +387,7 @@ namespace Nektar
 							for(i = 0 ; i < m_base.num_elements(); i++)
 							{
 								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
 								m_base[i]->SetWaveSpace(false);
 							} 
 							
@@ -397,7 +455,7 @@ namespace Nektar
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
+							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
                         }
                     }
 					else 
@@ -422,7 +480,7 @@ namespace Nektar
 						for(i = 0 ; i < m_base.num_elements(); i++)
 						{
 							m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-							::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
+							::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
 						}
 						
 						
@@ -552,9 +610,9 @@ namespace Nektar
 	
         if(m_session->DefinesParameter("N_slices"))
         {
-            m_nConvectiveFields = m_base.num_elements()-1;
+            int n = m_base.num_elements()-1;
             
-            for(int i=0; i<m_nConvectiveFields;++i)
+            for(int i=0; i<n;++i)
             {
                 
                 Vmath::Vcopy(nqtot, &m_base[i]->GetPhys()[0], 1, &m_interp[i][cnt*nqtot], 1);				
@@ -566,7 +624,7 @@ namespace Nektar
    
     //Evaluation of the advective terms
     void AdjointAdvection::v_ComputeAdvectionTerm(
-            Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
             const Array<OneD, Array<OneD, NekDouble> > &pVelocity,
             const Array<OneD, const NekDouble> &pU,
             Array<OneD, NekDouble> &pOutarray,
@@ -574,7 +632,7 @@ namespace Nektar
 			NekDouble m_time,
             Array<OneD, NekDouble> &pWk)
     {
-        int ndim       = m_nConvectiveFields;
+        int ndim       = pVelocity.num_elements();
         int nPointsTot = pFields[0]->GetNpoints();
         Array<OneD, NekDouble> grad0,grad1,grad2;
 	
@@ -601,7 +659,7 @@ namespace Nektar
 			if (m_session->GetFunctionType("BaseFlow", 0)
 				== LibUtilities::eFunctionTypeFile)
 			{
-				for(int i=0; i<m_nConvectiveFields;++i)
+				for(int i=0; i<ndim;++i)
 				{
 					UpdateBase(m_slices,m_interp[i],m_base[i]->UpdatePhys(),m_time,m_period);
 				}
@@ -851,7 +909,7 @@ namespace Nektar
 			{
 				char chkout[16] = "";
 				sprintf(chkout, "%d", i);
-				ImportFldBase(file+"_"+chkout+".bse",m_graph,i);
+				ImportFldBase(file+"_"+chkout+".bse",m_base[0]->GetGraph(),i);
 			} 
 			
 			

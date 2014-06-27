@@ -39,7 +39,9 @@
 
 
 namespace Nektar
-{        
+{
+namespace SolverUtils
+{
     AdvectionTermFactory& GetAdvectionTermFactory()
     {
         typedef Loki::SingletonHolder<AdvectionTermFactory,
@@ -133,7 +135,7 @@ namespace Nektar
     //////////////////////////////////////////////////////////////////////////////////////////////
     
     
-    void AdvectionTerm::DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr> &pFields, 
+    void AdvectionTerm::DoAdvection(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                     const int nConvectiveFields, 
                                     const Array<OneD, int> &vel_loc, 
                                     const Array<OneD, const Array<OneD, NekDouble> > &pInarray, 
@@ -166,7 +168,7 @@ namespace Nektar
         DoAdvection(pFields,velocity,pInarray,pOutarray,time,pWk);
     }
     
-    void AdvectionTerm::DoAdvection(Array<OneD, MultiRegions::ExpListSharedPtr> &pFields, 
+    void AdvectionTerm::DoAdvection(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                     const Array<OneD, const Array<OneD, NekDouble> > &velocity, 
                                     const Array<OneD, const Array<OneD, NekDouble> > &pInarray, 
                                     Array<OneD, Array<OneD, NekDouble> > &pOutarray,
@@ -199,5 +201,5 @@ namespace Nektar
             Vmath::Neg(nqtot,pOutarray[i],1);
         }
     }
-    
+}
 } //end of namespace

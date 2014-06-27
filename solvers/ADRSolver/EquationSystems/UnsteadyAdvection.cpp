@@ -214,7 +214,7 @@ namespace Nektar
 
         // RHS computation using the new advection base class
         m_advection->Advect(nVariables, m_fields, m_velocity, inarray,
-                            outarray);
+                            outarray, time);
 
         // Negate the RHS
         for (i = 0; i < nVariables; ++i)

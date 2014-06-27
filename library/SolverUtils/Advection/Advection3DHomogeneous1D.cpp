@@ -227,7 +227,7 @@ namespace Nektar
                 // Compute advection term for this plane.
                 m_planeAdv->Advect(nConvectiveFields, m_fieldsPlane,
                                    m_advVelPlane, m_inarrayPlane,
-                                   m_outarrayPlane);
+                                   m_outarrayPlane, time);
             }
 
             // Calculate Fourier derivative and add to final result.

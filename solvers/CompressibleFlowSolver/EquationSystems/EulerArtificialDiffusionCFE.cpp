@@ -122,7 +122,8 @@ namespace Nektar
                 
         Array<OneD, Array<OneD, NekDouble> > advVel;
                 
-        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
+        m_advection->Advect(nvariables, m_fields, advVel, inarray,
+                            outarray, time);
                 
         for (i = 0; i < nvariables; ++i)
         {

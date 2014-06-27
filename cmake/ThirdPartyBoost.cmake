@@ -26,8 +26,8 @@ IF (THIRDPARTY_BUILD_BOOST)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost_1_49_0.tar.bz2
-            URL_MD5 "0d202cb811f934282dea64856a175698"
+            URL ${TPURL}/boost_1_55_0.tar.bz2
+            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ./bootstrap.sh --prefix=${TPSRC}/dist
             BUILD_COMMAND NO_BZIP2=1 ./b2
@@ -83,8 +83,8 @@ IF (THIRDPARTY_BUILD_BOOST)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost_1_49_0.tar.bz2
-            URL_MD5 "0d202cb811f934282dea64856a175698"
+            URL ${TPURL}/boost_1_55_0.tar.bz2
+            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND bootstrap.bat --prefix=${TPSRC}/boost
             BUILD_COMMAND b2 --layout=system install

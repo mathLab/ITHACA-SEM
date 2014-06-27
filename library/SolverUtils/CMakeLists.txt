@@ -31,6 +31,7 @@ SET(SOLVER_UTILS_SOURCES
   Forcing/Forcing.cpp
   Forcing/ForcingSponge.cpp
   Forcing/ForcingBody.cpp
+  Forcing/ForcingNoise.cpp
   Forcing/ForcingProgrammatic.cpp
 )
 
@@ -69,6 +70,7 @@ SET(SOLVER_UTILS_HEADERS
   Forcing/Forcing.h
   Forcing/ForcingSponge.h
   Forcing/ForcingBody.h
+  Forcing/ForcingNoise.h
   Forcing/ForcingProgrammatic.h
 )
 

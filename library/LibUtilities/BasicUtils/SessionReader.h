@@ -80,6 +80,9 @@ namespace Nektar
         typedef std::map<std::string, std::string>   GloSysInfoMap;
         typedef std::map<std::string, GloSysInfoMap> GloSysSolnInfoList;
 
+        typedef std::map<std::string, std::string>   GloSysInfoMap;
+        typedef std::map<std::string, GloSysInfoMap> GloSysSolnInfoList;
+
         enum FunctionType
         {
             eFunctionTypeExpression,
@@ -105,7 +108,8 @@ namespace Nektar
             std::string       m_filename;
             EquationSharedPtr m_expression;
         };
-        typedef std::map<std::string, FunctionVariableDefinition>  
+        
+        typedef std::map<std::pair<std::string,int>, FunctionVariableDefinition>  
             FunctionVariableMap;
         typedef std::map<std::string, FunctionVariableMap > 
             FunctionMap;
@@ -233,6 +237,9 @@ namespace Nektar
             /// Returns the value of the specified solver info property.
             LIB_UTILITIES_EXPORT const std::string& GetSolverInfo(
                 const std::string &pProperty) const;
+            /// Sets the value of the specified solver info property.
+            LIB_UTILITIES_EXPORT void SetSolverInfo(
+                const std::string &pProperty, const std::string &pValue);
             /// Returns the value of the specified solver info property as enum
             template<typename T>
             inline const T GetSolverInfoAsEnum(const std::string &pName) const;
@@ -272,6 +279,7 @@ namespace Nektar
                 const std::string &pValue);
         
             /* ----GlobalSysSolnInfo ----- */
+
             LIB_UTILITIES_EXPORT bool DefinesGlobalSysSolnInfo(
                 const std::string &variable,
                 const std::string &property) const;
@@ -325,31 +333,38 @@ namespace Nektar
             /// Checks if a specified function has a given variable defined.
             LIB_UTILITIES_EXPORT bool DefinesFunction(
                 const std::string &name, 
-                const std::string &variable) const;
+                const std::string &variable,
+                const int pDomain = 0) const;
             /// Returns an EquationSharedPtr to a given function variable.
             LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(
                 const std::string &name, 
-                const std::string &variable) const;
+                const std::string &variable,
+                const int pDomain = 0) const;
             /// Returns an EquationSharedPtr to a given function variable index.
             LIB_UTILITIES_EXPORT EquationSharedPtr GetFunction(
                 const std::string  &name, 
-                const unsigned int &var) const;
+                const unsigned int &var,
+                const int pDomain = 0) const;
             /// Returns the type of a given function variable.
             LIB_UTILITIES_EXPORT enum FunctionType GetFunctionType(
                 const std::string &name, 
-                const std::string &variable) const;
+                const std::string &variable,
+                const int pDomain = 0) const;
             /// Returns the type of a given function variable index.
             LIB_UTILITIES_EXPORT enum FunctionType GetFunctionType(
                 const std::string  &pName, 
-                const unsigned int &pVar) const;
+                const unsigned int &pVar,
+                const int pDomain = 0) const;
             /// Returns the filename to be loaded for a given variable.
             LIB_UTILITIES_EXPORT std::string GetFunctionFilename(
                 const std::string &name, 
-                const std::string &variable) const;
+                const std::string &variable,
+                const int pDomain = 0) const;
             /// Returns the filename to be loaded for a given variable index.
             LIB_UTILITIES_EXPORT std::string GetFunctionFilename(
                 const std::string  &name, 
-                const unsigned int &var) const;
+                const unsigned int &var,
+                const int pDomain = 0) const;
 
             /// Returns the instance of AnalyticExpressionEvaluator specific to
             /// this session.
@@ -377,8 +392,11 @@ namespace Nektar
                 const std::string& pName) const;
             /// Retrieves a command-line argument value.
             template <typename T>
-            LIB_UTILITIES_EXPORT T GetCmdLineArgument(
-                const std::string& pName) const;
+            T GetCmdLineArgument(
+                const std::string& pName) const
+            {
+                return m_cmdLineOptions.find(pName)->second.as<T>();
+            }
             /// Registers a command-line argument with the session reader.
             LIB_UTILITIES_EXPORT inline static std::string 
               RegisterCmdLineArgument(
@@ -542,6 +560,7 @@ namespace Nektar
 
             return T(y->second);
         }
+
 
 
         /**

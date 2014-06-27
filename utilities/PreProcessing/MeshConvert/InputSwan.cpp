@@ -79,13 +79,13 @@ namespace Nektar
             // number of points, nas2 (unknown) and order of the grid
             // (i.e. GridOrder = 3 => cubic mesh).
             tmp.resize(6);
-            mshFile.read(reinterpret_cast<char*>(&tmp[0]),
+            m_mshFile.read(reinterpret_cast<char*>(&tmp[0]),
                          static_cast<int>       (6*sizeof(int))); 
             
             if (tmp[0] != tmp[5] || tmp[0] != 4*sizeof(int))
             {
                 cout << "Header data broken" << endl;
-                mshFile.close();
+                m_mshFile.close();
                 return;
             }
             
@@ -103,30 +103,30 @@ namespace Nektar
             // data are ordered with memory traversed fastest with point
             // number.
             tets.resize(ND*NB_Tet+2);
-            mshFile.read(reinterpret_cast<char*>(&tets[0]),
+            m_mshFile.read(reinterpret_cast<char*>(&tets[0]),
                          static_cast<int>       ((ND*NB_Tet+2)*sizeof(int)));
 
             if (tets[0] != tets[ND*NB_Tet+1] || tets[0] != ND*NB_Tet*sizeof(int))
             {
                 cout << "ERROR [InputSwan]: Tetrahedron data broken." << endl;
-                mshFile.close();
+                m_mshFile.close();
                 return;
             }
 
             // Finally, read point data: NB_Points tuples (x,y,z).
             tmp.resize(2);
             pts.resize(3*NB_Points);
-            mshFile.read(reinterpret_cast<char*>(&tmp[0]),
+            m_mshFile.read(reinterpret_cast<char*>(&tmp[0]),
                          static_cast<int>       (sizeof(int)));
-            mshFile.read(reinterpret_cast<char*>(&pts[0]),
+            m_mshFile.read(reinterpret_cast<char*>(&pts[0]),
                          static_cast<int>       (3*NB_Points*sizeof(double)));
-            mshFile.read(reinterpret_cast<char*>(&tmp[1]),
+            m_mshFile.read(reinterpret_cast<char*>(&tmp[1]),
                          static_cast<int>       (sizeof(int)));
 
             if (tmp[0] != tmp[1] || tmp[0] != 3*NB_Points*sizeof(double))
             {
                 cout << "ERROR [InputSwan]: Point data broken." << endl;
-                mshFile.close();
+                m_mshFile.close();
                 return;
             }
 
@@ -167,19 +167,19 @@ namespace Nektar
             // Attempt to read in composites. Need to determine number of
             // triangles from data.
             tmp.resize(2);
-            mshFile.read(reinterpret_cast<char*>(&tmp[0]),
+            m_mshFile.read(reinterpret_cast<char*>(&tmp[0]),
                          static_cast<int>       (sizeof(int)));
             int n_tri = tmp[0]/sizeof(int)/5;
             tets.resize(n_tri*5);
-            mshFile.read(reinterpret_cast<char*>(&tets[0]),
+            m_mshFile.read(reinterpret_cast<char*>(&tets[0]),
                          static_cast<int>       (tmp[0]));
-            mshFile.read(reinterpret_cast<char*>(&tmp[1]),
+            m_mshFile.read(reinterpret_cast<char*>(&tmp[1]),
                          static_cast<int>       (sizeof(int)));
             
             if (tmp[0] != tmp[1])
             {
                 cout << "ERROR [InputSwan]: Surface data broken." << endl;
-                mshFile.close();
+                m_mshFile.close();
                 return;
             }
 
@@ -205,7 +205,7 @@ namespace Nektar
                 m_mesh->m_element[2].push_back(E);
             }
 
-            mshFile.close();
+            m_mshFile.close();
 
             // Process the rest of the mesh.
             ProcessVertices  ();

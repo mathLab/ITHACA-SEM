@@ -79,12 +79,18 @@ namespace Nektar
             m_equ[0]->DoInitialise();
             
             // - SFD Routine -
-            NumElmVelocity = m_equ[0]->GetNumElmVelocity();
-            
-            Array<OneD, Array<OneD, NekDouble> > q0(NumElmVelocity);
-            Array<OneD, Array<OneD, NekDouble> > q1(NumElmVelocity);
-            Array<OneD, Array<OneD, NekDouble> > qBar0(NumElmVelocity);
-            Array<OneD, Array<OneD, NekDouble> > qBar1(NumElmVelocity);
+            // Compressible case
+            NumVar_SFD = m_equ[0]->UpdateFields()[0]->GetCoordim(0);            
+            if (m_session->GetSolverInfo("EqType") == "EulerCFE" || 
+                m_session->GetSolverInfo("EqType") == "NavierStokesCFE")
+            {
+                NumVar_SFD += 2; //Number of variables for the compressible equations
+            }
+                
+            Array<OneD, Array<OneD, NekDouble> > q0(NumVar_SFD);
+            Array<OneD, Array<OneD, NekDouble> > q1(NumVar_SFD);
+            Array<OneD, Array<OneD, NekDouble> > qBar0(NumVar_SFD);
+            Array<OneD, Array<OneD, NekDouble> > qBar1(NumVar_SFD);
             
             NekDouble TOL(0);
             m_n=0;
@@ -117,7 +123,7 @@ namespace Nektar
             m_equ[0]->SetStepsToOne(); //m_steps is set to 1. Then "m_equ[0]->DoSolve()" will run for only one time step			
             ofstream m_file("ConvergenceHistory.txt", ios::out | ios::trunc);
             
-            for(int i = 0; i < NumElmVelocity; ++i)
+            for(int i = 0; i < NumVar_SFD; ++i)
             {
                 q0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0); //q0 is initialised
                 qBar0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
@@ -134,7 +140,7 @@ namespace Nektar
                 //First order Splitting with exact resolution of the filters equation
                 m_equ[0]->DoSolve();
                 
-                for(int i = 0; i < NumElmVelocity; ++i)
+                for(int i = 0; i < NumVar_SFD; ++i)
                 {
                     m_equ[0]->CopyFromPhysField(i, q0[i]);
                     
@@ -211,14 +217,14 @@ namespace Nektar
         {
             //This routine evaluates |q-qBar|_L2 and save the value in "ConvergenceHistory.txt"
             
-            Array<OneD, NekDouble > NormDiff_q_qBar(NumElmVelocity, 1.0);
-            Array<OneD, NekDouble > NormDiff_q1_q0(NumElmVelocity, 1.0);
+            Array<OneD, NekDouble > NormDiff_q_qBar(NumVar_SFD, 1.0);
+            Array<OneD, NekDouble > NormDiff_q1_q0(NumVar_SFD, 1.0);
             
             MaxNormDiff_q_qBar=0.0;
             MaxNormDiff_q1_q0=0.0;
             
             //Norm Calculation
-            for(int i = 0; i < NumElmVelocity; ++i)
+            for(int i = 0; i < NumVar_SFD; ++i)
             {
                 //To check convergence of SFD
                 //NormDiff_q_qBar[i] = m_equ[0]->L2Error(i, qBar1[i], false);

@@ -89,7 +89,7 @@ namespace Nektar
             OpenStream();
             
             // Write MSH header
-            mshFile << "$MeshFormat" << endl
+            m_mshFile << "$MeshFormat" << endl
                     << "2.2 0 8" << endl
                     << "$EndMeshFormat" << endl;
             
@@ -217,23 +217,23 @@ namespace Nektar
             std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(), m_mesh->m_vertexSet.end());
 
             // Write out nodes section.
-            mshFile << "$Nodes"            << endl
+            m_mshFile << "$Nodes"            << endl
                     << m_mesh->m_vertexSet.size() << endl;
             
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
-                mshFile << (*it)->m_id << " " << scientific << setprecision(10)
+                m_mshFile << (*it)->m_id << " " << scientific << setprecision(10)
                         << (*it)->m_x << " " 
                         << (*it)->m_y  << " " << (*it)->m_z 
                         << endl;
             }
             
-            mshFile << "$EndNodes" << endl;
+            m_mshFile << "$EndNodes" << endl;
             
             // Write elements section. All other sections are not currently
             // supported (physical names etc).
-            mshFile << "$Elements" << endl;
-            mshFile << m_mesh->GetNumEntities() << endl;
+            m_mshFile << "$Elements" << endl;
+            m_mshFile << m_mesh->GetNumEntities() << endl;
             
             id = 0;
             
@@ -244,7 +244,7 @@ namespace Nektar
                     ElementSharedPtr e = m_mesh->m_element[d][i];
                     
                     // First output element ID and type.
-                    mshFile << id                   << " " 
+                    m_mshFile << id                   << " " 
                             << elmMap[e->GetConf()] << " ";
                     
                     // Write out number of element tags and then the tags
@@ -257,11 +257,11 @@ namespace Nektar
                         tags.push_back(0);
                     }
                     
-                    mshFile << tags.size() << " ";
+                    m_mshFile << tags.size() << " ";
                     
                     for (int j = 0; j < tags.size(); ++j)
                     {
-                        mshFile << tags[j] << " ";
+                        m_mshFile << tags[j] << " ";
                     }
                     
                     // Finally write out node list. First write vertices, then
@@ -434,13 +434,13 @@ namespace Nektar
                     // Finally write element nodes.
                     for (int j = 0; j < tags.size(); ++j)
                     {
-                        mshFile << tags[j] << " ";
+                        m_mshFile << tags[j] << " ";
                     }
                     
-                    mshFile << endl;
+                    m_mshFile << endl;
                 }
             }
-            mshFile << "$EndElements" << endl;
+            m_mshFile << "$EndElements" << endl;
         }
     }
 }

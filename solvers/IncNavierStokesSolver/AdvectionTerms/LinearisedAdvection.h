@@ -151,17 +151,6 @@ namespace Nektar
 					  Array<OneD, std::string> &variables);
 		
     private:
-
-        //Function for the evaluation of the linearised advective terms
-        virtual void v_ComputeAdvectionTerm(
-                         const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                         const Array<OneD, Array<OneD, NekDouble> > &pV,
-                         const Array<OneD, const NekDouble> &pU,
-                         Array<OneD, NekDouble> &pOutarray,
-                         int pVelocityComponent,
-						 NekDouble m_time,
-                         Array<OneD, NekDouble> &pWk);
-		
 		///Parameter for homogeneous expansions
         enum HomogeneousType
         {

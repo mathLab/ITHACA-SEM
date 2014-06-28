@@ -275,10 +275,202 @@ namespace Nektar
 
         Array<OneD, NekDouble > Deriv = Array<OneD, NekDouble> (nqtot*nConvectiveFields);
 
-        for(int i = 0; i < nConvectiveFields; ++i)
+        for(int n = 0; n < nConvectiveFields; ++n)
         {
-            v_ComputeAdvectionTerm(fields,advVel,inarray[i],outarray[i],i,time,Deriv);
-            Vmath::Neg(nqtot,outarray[i],1);
+            //v_ComputeAdvectionTerm(fields,advVel,inarray[i],outarray[i],i,time,Deriv);
+            int ndim       = advVel.num_elements();
+            int nPointsTot = fields[0]->GetNpoints();
+            Array<OneD, NekDouble> grad0,grad1,grad2;
+
+            //Evaluation of the gradiend of each component of the base flow
+            //\nabla U
+            Array<OneD, NekDouble> grad_base_u0,grad_base_u1,grad_base_u2;
+            // \nabla V
+            Array<OneD, NekDouble> grad_base_v0,grad_base_v1,grad_base_v2;
+            // \nabla W
+            Array<OneD, NekDouble> grad_base_w0,grad_base_w1,grad_base_w2;
+
+
+            grad0 = Array<OneD, NekDouble> (nPointsTot);
+            grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
+            grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
+            grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);
+
+
+            //Evaluation of the base flow for periodic cases
+            //(it requires fld files)
+
+            if(m_slices>1)
+            {
+                if (m_session->GetFunctionType("BaseFlow", 0)
+                    == LibUtilities::eFunctionTypeFile)
+                {
+                    for(int i=0; i<ndim;++i)
+                    {
+                        UpdateBase(m_slices,m_interp[i],m_base[i]->UpdatePhys(),time,m_period);
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false, "Periodic Base flow requires .fld files");
+                }
+            }
+
+            //Evaluate the Adjoint advection term
+            switch(ndim)
+            {
+                        // 1D
+                    case 1:
+                        fields[0]->PhysDeriv(inarray[n],grad0);
+                        fields[0]->PhysDeriv(m_base[0]->GetPhys(),grad_base_u0);
+                        //Evaluate  U du'/dx
+                        Vmath::Vmul(nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                        //Evaluate U du'/dx+ u' dU/dx
+                        Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                        break;
+
+                        //2D
+                    case 2:
+
+                        grad1 = Array<OneD, NekDouble> (nPointsTot);
+                        grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
+                        grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
+
+                        fields[0]->PhysDeriv(inarray[n],grad0,grad1);
+
+                        //Derivates of the base flow
+                        fields[0]-> PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1);
+                        fields[0]-> PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1);
+
+                        //Since the components of the velocity are passed one by one, it is necessary to distinguish which
+                        //term is consider
+                        switch (n)
+                        {
+                            //x-equation
+                        case 0:
+                            // Evaluate U du'/dx
+                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            //Evaluate U du'/dx+ V du'/dy
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            //Evaluate - (U du'/dx+ V du'/dy)
+                            Vmath::Neg(nPointsTot,outarray[n],1);
+                            //Evaluate -(U du'/dx+ V du'/dy)+u' dU/dx
+                            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                            //Evaluate -(U du'/dx+ V du'/dy) +u' dU/dx +v' dV/dx
+                            Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                            break;
+
+                            //y-equation
+                        case 1:
+                            // Evaluate U dv'/dx
+                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            //Evaluate U dv'/dx+ V dv'/dy
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            //Evaluate -(U dv'/dx+ V dv'/dy)
+                            Vmath::Neg(nPointsTot,outarray[n],1);
+                            //Evaluate (U dv'/dx+ V dv'/dy)+u' dU/dy
+                            Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                            //Evaluate (U dv'/dx+ V dv'/dy +u' dv/dx)+v' dV/dy
+                            Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                            break;
+                    }
+                        break;
+
+
+                        //3D
+                    case 3:
+
+                        grad1 = Array<OneD, NekDouble> (nPointsTot);
+                        grad2 = Array<OneD, NekDouble> (nPointsTot);
+                        grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
+                        grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
+                        grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
+
+                        grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
+                        grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
+                        grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
+
+                        m_base[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
+                        m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
+                        m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);
+
+                        //HalfMode has W(x,y,t)=0
+                        if(m_HalfMode)
+                        {
+                            for(int i=0; i<grad_base_u2.num_elements();++i)
+                            {
+                                grad_base_u2[i]=0;
+                                grad_base_v2[i]=0;
+                                grad_base_w2[i]=0;
+
+                            }
+                        }
+
+                    fields[0]->PhysDeriv(inarray[n], grad0, grad1, grad2);
+
+                    switch (n)
+                    {
+                            //x-equation
+                        case 0:
+                            //Evaluate U du'/dx
+                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            //Evaluate U du'/dx+ V du'/dy
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            //Evaluate U du'/dx+ V du'/dy+W du'/dz
+                            Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)
+                            Vmath::Neg(nPointsTot,outarray[n],1);
+                            //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u' dU/dx
+                            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                            //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u'dU/dx+ v' dV/dx
+                            Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                            //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u'dU/dx+ v' dV/dx+ w' dW/dz
+                            Vmath::Vvtvp(nPointsTot,grad_base_w0,1,advVel[2],1,outarray[n],1,outarray[n],1);
+                            break;
+                            //y-equation
+                        case 1:
+                            //Evaluate U dv'/dx
+                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            //Evaluate U dv'/dx+ V dv'/dy
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            //Evaluate U dv'/dx+ V dv'/dy+W dv'/dz
+                            Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            //Evaluate -(U dv'/dx+ V dv'/dy+W dv'/dz)
+                            Vmath::Neg(nPointsTot,outarray[n],1);
+                            //Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy
+                            Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                            //Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy +v' dV/dy
+                            Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                            //Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy +v' dV/dy+ w' dW/dy
+                            Vmath::Vvtvp(nPointsTot,grad_base_w1,1,advVel[2],1,outarray[n],1,outarray[n],1);
+                            break;
+
+                            //z-equation
+                        case 2:
+                            //Evaluate U dw'/dx
+                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            //Evaluate U dw'/dx+ V dw'/dx
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            //Evaluate U dw'/dx+ V dw'/dx+ W dw'/dz
+                            Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)
+                            Vmath::Neg(nPointsTot,outarray[n],1);
+                            //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz
+                            Vmath::Vvtvp(nPointsTot,grad_base_u2,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                            //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz+v'dV/dz
+                            Vmath::Vvtvp(nPointsTot,grad_base_v2,1,advVel[1],1,outarray[n],1,outarray[n],1);
+                            //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz+v'dV/dz + w' dW/dz
+                            Vmath::Vvtvp(nPointsTot,grad_base_w2,1,advVel[2],1,outarray[n],1,outarray[n],1);
+                            break;
+                    }
+                        break;
+
+
+            default:
+                ASSERTL0(false,"dimension unknown");
+            }
+
+            Vmath::Neg(nqtot,outarray[n],1);
         }
 
     }
@@ -594,209 +786,6 @@ namespace Nektar
     }
         
    
-    //Evaluation of the advective terms
-    void AdjointAdvection::v_ComputeAdvectionTerm(
-            const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-            const Array<OneD, Array<OneD, NekDouble> > &pVelocity,
-            const Array<OneD, const NekDouble> &pU,
-            Array<OneD, NekDouble> &pOutarray,
-            int pVelocityComponent,
-			NekDouble m_time,
-            Array<OneD, NekDouble> &pWk)
-    {
-        int ndim       = pVelocity.num_elements();
-        int nPointsTot = pFields[0]->GetNpoints();
-        Array<OneD, NekDouble> grad0,grad1,grad2;
-	
-        //Evaluation of the gradiend of each component of the base flow
-        //\nabla U
-        Array<OneD, NekDouble> grad_base_u0,grad_base_u1,grad_base_u2;
-        // \nabla V
-        Array<OneD, NekDouble> grad_base_v0,grad_base_v1,grad_base_v2;
-        // \nabla W
-        Array<OneD, NekDouble> grad_base_w0,grad_base_w1,grad_base_w2;
-	
-        
-		grad0 = Array<OneD, NekDouble> (nPointsTot);
-		grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
-		grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
-		grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);	
-		
-		
-		//Evaluation of the base flow for periodic cases
-		//(it requires fld files)
-		
-		if(m_slices>1)
-		{				
-			if (m_session->GetFunctionType("BaseFlow", 0)
-				== LibUtilities::eFunctionTypeFile)
-			{
-				for(int i=0; i<ndim;++i)
-				{
-					UpdateBase(m_slices,m_interp[i],m_base[i]->UpdatePhys(),m_time,m_period);
-				}
-			}
-			else 
-			{
-				ASSERTL0(false, "Periodic Base flow requires .fld files");	
-			}
-		}
-	
-		//Evaluate the Adjoint advection term
-        switch(ndim) 
-        {
-					// 1D
-				case 1:
-					pFields[0]->PhysDeriv(pU,grad0);
-					pFields[0]->PhysDeriv(m_base[0]->GetPhys(),grad_base_u0);
-					//Evaluate  U du'/dx
-					Vmath::Vmul(nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
-					//Evaluate U du'/dx+ u' dU/dx
-					Vmath::Vvtvp(nPointsTot,grad_base_u0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
-					break;
-					
-					//2D
-				case 2:
-					
-					grad1 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
-				
-					pFields[0]->PhysDeriv(pU,grad0,grad1);
-				
-					//Derivates of the base flow
-					pFields[0]-> PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1);
-					pFields[0]-> PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1);
-				
-					//Since the components of the velocity are passed one by one, it is necessary to distinguish which
-					//term is consider
-					switch (pVelocityComponent)
-					{
-						//x-equation
-					case 0:
-						// Evaluate U du'/dx
-						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
-						//Evaluate U du'/dx+ V du'/dy
-						Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
-						//Evaluate - (U du'/dx+ V du'/dy)
-						Vmath::Neg(nPointsTot,pOutarray,1);
-						//Evaluate -(U du'/dx+ V du'/dy)+u' dU/dx
-						Vmath::Vvtvp(nPointsTot,grad_base_u0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
-                        //Evaluate -(U du'/dx+ V du'/dy) +u' dU/dx +v' dV/dx
-						Vmath::Vvtvp(nPointsTot,grad_base_v0,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
-						break;
-						
-						//y-equation
-					case 1:
-						// Evaluate U dv'/dx
-						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
-						//Evaluate U dv'/dx+ V dv'/dy
-						Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
-						//Evaluate -(U dv'/dx+ V dv'/dy)
-						Vmath::Neg(nPointsTot,pOutarray,1);
-						//Evaluate (U dv'/dx+ V dv'/dy)+u' dU/dy
-						Vmath::Vvtvp(nPointsTot,grad_base_u1,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
-						//Evaluate (U dv'/dx+ V dv'/dy +u' dv/dx)+v' dV/dy
-						Vmath::Vvtvp(nPointsTot,grad_base_v1,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
-						break;
-				}
-					break;
-					
-					
-					//3D
-				case 3:
-					
-					grad1 = Array<OneD, NekDouble> (nPointsTot);
-					grad2 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
-					
-					grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
-					grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
-				
-					m_base[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
-					m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
-					m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);	
-				
-					//HalfMode has W(x,y,t)=0
-					if(m_HalfMode)
-					{
-						for(int i=0; i<grad_base_u2.num_elements();++i)
-						{
-							grad_base_u2[i]=0;
-							grad_base_v2[i]=0;
-							grad_base_w2[i]=0;
-						
-						}
-					}
-				
-				pFields[0]->PhysDeriv(pU, grad0, grad1, grad2);
-					
-				switch (pVelocityComponent)
-				{
-						//x-equation	
-					case 0:
-						//Evaluate U du'/dx
-						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
-						//Evaluate U du'/dx+ V du'/dy
-						Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
-						//Evaluate U du'/dx+ V du'/dy+W du'/dz
-						Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
-						//Evaluate -(U du'/dx+ V du'/dy+W du'/dz)
-						Vmath::Neg(nPointsTot,pOutarray,1);
-						//Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u' dU/dx
-						Vmath::Vvtvp(nPointsTot,grad_base_u0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
-						//Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u'dU/dx+ v' dV/dx
-						Vmath::Vvtvp(nPointsTot,grad_base_v0,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
-						//Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u'dU/dx+ v' dV/dx+ w' dW/dz
-						Vmath::Vvtvp(nPointsTot,grad_base_w0,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
-						break;
-						//y-equation	
-					case 1:
-						//Evaluate U dv'/dx
-						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
-						//Evaluate U dv'/dx+ V dv'/dy
-						Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
-						//Evaluate U dv'/dx+ V dv'/dy+W dv'/dz
-						Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
-						//Evaluate -(U dv'/dx+ V dv'/dy+W dv'/dz)
-						Vmath::Neg(nPointsTot,pOutarray,1);
-						//Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy
-						Vmath::Vvtvp(nPointsTot,grad_base_u1,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
-						//Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy +v' dV/dy
-						Vmath::Vvtvp(nPointsTot,grad_base_v1,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
-						//Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy +v' dV/dy+ w' dW/dy
-						Vmath::Vvtvp(nPointsTot,grad_base_w1,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
-						break;
-						
-						//z-equation	
-					case 2:
-						//Evaluate U dw'/dx
-						Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
-						//Evaluate U dw'/dx+ V dw'/dx
-						Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
-						//Evaluate U dw'/dx+ V dw'/dx+ W dw'/dz
-						Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
-						//Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)
-						Vmath::Neg(nPointsTot,pOutarray,1);
-						//Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz
-						Vmath::Vvtvp(nPointsTot,grad_base_u2,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
-						//Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz+v'dV/dz
-						Vmath::Vvtvp(nPointsTot,grad_base_v2,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
-						//Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz+v'dV/dz + w' dW/dz
-						Vmath::Vvtvp(nPointsTot,grad_base_w2,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
-						break;
-				}
-					break;
-					
-            
-        default:
-            ASSERTL0(false,"dimension unknown");
-        }
-    }
-		
 		void AdjointAdvection::UpdateBase( const NekDouble m_slices,
 											 Array<OneD, const NekDouble> &inarray,
 											 Array<OneD, NekDouble> &outarray,

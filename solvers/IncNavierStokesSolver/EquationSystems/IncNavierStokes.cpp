@@ -345,24 +345,20 @@ namespace Nektar
         int VelDim     = m_velocity.num_elements();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
         Array<OneD, NekDouble > Deriv;
-        cout << m_SingleMode << ", " << m_HalfMode << endl;
+
         for(i = 0; i < VelDim; ++i)
         {
             if(m_fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
             {
                 velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
-                m_fields[i]->HomogeneousBwdTrans(inarray[i],velocity[i]);
+                m_fields[i]->HomogeneousBwdTrans(inarray[m_velocity[i]],velocity[i]);
             }
             else
             {
-                velocity[i] = inarray[i];
+                velocity[i] = inarray[m_velocity[i]];
             }
         }
 
-//        for(i = 0; i < VelDim; ++i)
-//        {
-//            velocity[i] = inarray[m_velocity[i]];
-//        }
         // Set up Derivative work space; 
         if(wk.num_elements())
         {

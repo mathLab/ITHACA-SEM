@@ -88,17 +88,6 @@ namespace Nektar
         bool m_homogen_dealiasing;
         bool m_SingleMode;
         bool m_HalfMode;
-
-        //Function for the evaluation of the linearised advective terms
-        virtual void v_ComputeAdvectionTerm(
-                         const Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                         const Array<OneD, Array<OneD, NekDouble> > &pV,
-                         const Array<OneD, const NekDouble> &pU,
-                         Array<OneD, NekDouble> &pOutarray,
-                         int pVelocityComponent,
-						 NekDouble m_time,
-                         Array<OneD, NekDouble> &pWk);
-
 	};
     
     

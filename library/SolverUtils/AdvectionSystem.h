@@ -38,7 +38,6 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/Advection/Advection.h>
-#include <SolverUtils/Advection/AdvectionTerm.h>
 
 
 namespace Nektar {
@@ -57,25 +56,12 @@ namespace Nektar {
                 return m_advObject;
             }
             
-            //////////////////////////////////////////////////////////////////////////////////////////////
-//             AdvectionTermSharedPtr GetAdvObject_IncNS()
-//             {
-//                 return m_advObject_IncNS;
-//             }
-            
             void UpdateBaseFlow(const Array<OneD, Array<OneD, NekDouble> > &inarray);
-            //////////////////////////////////////////////////////////////////////////////////////////////
             
             
         protected:
             /// Advection term
             SolverUtils::AdvectionSharedPtr m_advObject;
-            
-            //////////////////////////////////////////////////////////////////////////////////////////////
-//             SolverUtils::AdvectionTermSharedPtr m_advObject_IncNS;
-            //////////////////////////////////////////////////////////////////////////////////////////////
-            
-            
         };
         
         typedef boost::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;

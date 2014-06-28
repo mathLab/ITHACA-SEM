@@ -275,27 +275,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
     {
-        // Evaluate convection terms
-//        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,
-//                                 inarray, outarray, m_time);
-        cout << m_SingleMode << ", " << m_HalfMode << endl;
-        int nqtot      = m_fields[0]->GetTotPoints();
-        int VelDim     = m_velocity.num_elements();
-        Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
-        for(int i = 0; i < VelDim; ++i)
-        {
-            if(m_fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
-            {
-                velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
-                m_fields[i]->HomogeneousBwdTrans(inarray[i],velocity[i]);
-            }
-            else
-            {
-                velocity[i] = inarray[i];
-            }
-        }
-
-        m_advObject->Advect(m_nConvectiveFields, m_fields, velocity, inarray, outarray, m_time);
+        EvaluateAdvectionTerms(inarray, outarray);
         
         // Smooth advection
         if(m_SmoothAdvection)

@@ -270,42 +270,14 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >              &outarray,
         const NekDouble                                   &time)
     {
-        int i;
         int nqtot            = fields[0]->GetTotPoints();
-        Array<OneD, Array<OneD, NekDouble> > velocity(nConvectiveFields);
-
         ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
 
-        for(i = 0; i < nConvectiveFields; ++i)
+        Array<OneD, NekDouble > Deriv = Array<OneD, NekDouble> (nqtot*nConvectiveFields);
+
+        for(int i = 0; i < nConvectiveFields; ++i)
         {
-            if(fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
-            {
-                velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
-                fields[i]->HomogeneousBwdTrans(inarray[i],velocity[i]);
-            }
-            else
-            {
-                velocity[i] = inarray[i];
-            }
-        }
-
-        Array<OneD, NekDouble > Deriv;
-
-//        // Set up Derivative work space;
-//        if(pWk.num_elements())
-//        {
-//            ASSERTL0(pWk.num_elements() >= nqtot*VelDim,"Workspace is not sufficient");
-//            Deriv = pWk;
-//        }
-//        else
-//        {
-            Deriv = Array<OneD, NekDouble> (nqtot*nConvectiveFields);
-//        }
-
-
-        for(i=0; i< nConvectiveFields; ++i)
-        {
-            v_ComputeAdvectionTerm(fields,velocity,inarray[i],outarray[i],i,time,Deriv);
+            v_ComputeAdvectionTerm(fields,advVel,inarray[i],outarray[i],i,time,Deriv);
             Vmath::Neg(nqtot,outarray[i],1);
         }
 

@@ -88,25 +88,33 @@ namespace Nektar
             }
 
             TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
-
             TiXmlElement *points = nektar->FirstChildElement("POINTS");
-            
-            TiXmlAttribute *dimAttr = points->FirstAttribute();
-            std::string attrName(dimAttr->Name());
-            
             int dim; 
-            int err = dimAttr->QueryIntValue(&dim);
+            int err = points->QueryIntAttribute("DIM", &dim);
+            
             ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute DIM.");
             
-            m_f->m_fieldPts->m_ptsDim = dim;
-            m_f->m_fieldPts->m_pts = Array<OneD, Array<OneD, NekDouble> >(dim);            
+            int nfields; 
+            std::string fields = points->Attribute("FIELDS");
+
+            bool valid = ParseUtils::GenerateOrderedStringVector(
+                                         fields.c_str(),m_f->m_fieldPts->m_fields);
+            ASSERTL0(valid,"Unable to process list of field variable in "
+                     " FIELDS attribute:  "+ fields);
+
+            nfields = m_f->m_fieldPts->m_nFields = m_f->m_fieldPts->m_fields.size();
+            
+            int totvars = dim + nfields; 
+            m_f->m_fieldPts->m_ptsDim  = dim;
+            m_f->m_fieldPts->m_nFields = nfields;
+            m_f->m_fieldPts->m_pts = Array<OneD, Array<OneD, NekDouble> >(totvars);  
       
             TiXmlNode *pointsBody = points->FirstChild();
             
             std::istringstream pointsDataStrm(pointsBody->ToText()->Value());
 
             vector<NekDouble> pts; 
-            NekDouble       in_pts; 
+            NekDouble      in_pts; 
             try
             {
                 while(!pointsDataStrm.fail())
@@ -121,22 +129,23 @@ namespace Nektar
                 ASSERTL0(false, "Unable to read Points data.");
             }
 
-            int npts = pts.size()/dim;
+            int npts = pts.size()/totvars;
+
             if(m_f->m_verbose)
             {
-                cout << " Read " << npts << " points of dimension " << dim << endl;
+                cout << " Read " << npts << " points of dimension " << dim << " and " << nfields << " field variables" << endl;
             }
             
-            for(int i = 0; i < dim; ++i)
+            for(int i = 0; i < totvars; ++i)
             {
                 m_f->m_fieldPts->m_pts[i] = Array<OneD, NekDouble>(npts);
             }
             
             for(int i = 0; i < npts; ++i)
             {
-                for(int j = 0; j < dim; ++j)
+                for(int j = 0; j < totvars; ++j)
                 {
-                    m_f->m_fieldPts->m_pts[j][i] = pts[i*dim +j];
+                    m_f->m_fieldPts->m_pts[j][i] = pts[i*totvars +j];
                 }
             }
         }

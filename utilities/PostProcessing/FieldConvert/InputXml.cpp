@@ -187,8 +187,8 @@ namespace Nektar
             int NumHomogeneousDir = 0;
             if(fldfilegiven)
             {
-                m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                    ::AllocateSharedPtr(m_f->m_session->GetComm());
+                //m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
+                //::AllocateSharedPtr(m_f->m_session->GetComm());
                 m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef);
                 NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
                 

@@ -54,12 +54,12 @@ namespace Nektar
         ProcessInterpPoints::ProcessInterpPoints(FieldSharedPtr f) : ProcessModule(f)
         {
 
-            m_config["fromxml"] = ConfigOption(false,"NotSet","Xml file form which to interpolate field");
+            m_config["fromxml"] = ConfigOption(false,"NotSet","Xml file from which to interpolate field");
 
             ASSERTL0(m_config["fromxml"].as<string>().compare("NotSet") != 0,
                      "Need to specify fromxml=file.xml");
 
-            m_config["fromfld"] = ConfigOption(false,"NotSet","Fld file form which to interpolate field");
+            m_config["fromfld"] = ConfigOption(false,"NotSet","Fld file from which to interpolate field");
             
             ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
                      "Need to specify fromfld=file.fld ");

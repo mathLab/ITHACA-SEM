@@ -197,7 +197,13 @@ namespace Nektar
             m_projectionType = MultiRegions::eGalerkin;
         }
 		
-		SetUpBaseFields(pFields[0]->GetGraph());
+        int nvar = m_session->GetVariables().size();
+        m_baseflow = Array<OneD, Array<OneD, NekDouble> >(nvar);
+        for (int i = 0; i < nvar; ++i)
+        {
+            m_baseflow[i] = Array<OneD, NekDouble>(pFields[i]->GetTotPoints(), 0.0);
+        }
+		//SetUpBaseFields(pFields[0]->GetGraph());
 		ASSERTL0(m_session->DefinesFunction("BaseFlow"),
 				 "Base flow must be defined for linearised forms.");
 		string file = m_session->GetFunctionFilename("BaseFlow", 0);
@@ -209,7 +215,7 @@ namespace Nektar
             m_session->LoadParameter("N_slices",m_slices);
             if(m_slices>1)
             {
-				DFT(file,m_slices);
+				DFT(file,pFields,m_slices);
 			}
 			else
 			{
@@ -225,30 +231,26 @@ namespace Nektar
 			if (m_session->GetFunctionType("BaseFlow", m_session->GetVariable(0))
 				== LibUtilities::eFunctionTypeFile)
 			{
-				ImportFldBase(file,pFields[0]->GetGraph(),1);
+				ImportFldBase(file,pFields,1);
 				
 			}
 			//analytic base flow
 			else
 			{
-				int nq = m_base[0]->GetNpoints();
+				int nq = pFields[0]->GetNpoints();
 				Array<OneD,NekDouble> x0(nq);
 				Array<OneD,NekDouble> x1(nq);
 				Array<OneD,NekDouble> x2(nq);
 				
 				// get the coordinates (assuming all fields have the same
 				// discretisation)
-				m_base[0]->GetCoords(x0,x1,x2);
-				for(unsigned int i = 0 ; i < m_base.num_elements(); i++)
+				pFields[0]->GetCoords(x0,x1,x2);
+				for(unsigned int i = 0 ; i < m_baseflow.num_elements(); i++)
 				{
 					LibUtilities::EquationSharedPtr ifunc
 					= m_session->GetFunction("BaseFlow", i);
 					
-					ifunc->Evaluate(x0,x1,x2,m_base[i]->UpdatePhys());
-					
-					m_base[i]->SetPhysState(true);						
-					m_base[i]->FwdTrans_IterPerExp(m_base[i]->GetPhys(),
-												   m_base[i]->UpdateCoeffs());
+					ifunc->Evaluate(x0,x1,x2,m_baseflow[i]);
 				}
 				
 			}
@@ -307,7 +309,7 @@ namespace Nektar
                 {
                     for(int i=0; i<ndim;++i)
                     {
-                        UpdateBase(m_slices,m_interp[i],m_base[i]->UpdatePhys(),time,m_period);
+                        UpdateBase(m_slices,m_interp[i],m_baseflow[i],time,m_period);
                     }
                 }
                 else
@@ -322,9 +324,9 @@ namespace Nektar
                         // 1D
                     case 1:
                         fields[0]->PhysDeriv(inarray[n],grad0);
-                        fields[0]->PhysDeriv(m_base[0]->GetPhys(),grad_base_u0);
+                        fields[0]->PhysDeriv(m_baseflow[0],grad_base_u0);
                         //Evaluate  U du'/dx
-                        Vmath::Vmul(nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                        Vmath::Vmul(nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                         //Evaluate U du'/dx+ u' dU/dx
                         Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                         break;
@@ -339,8 +341,8 @@ namespace Nektar
                         fields[0]->PhysDeriv(inarray[n],grad0,grad1);
 
                         //Derivates of the base flow
-                        fields[0]-> PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1);
-                        fields[0]-> PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1);
+                        fields[0]-> PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1);
+                        fields[0]-> PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1);
 
                         //Since the components of the velocity are passed one by one, it is necessary to distinguish which
                         //term is consider
@@ -349,9 +351,9 @@ namespace Nektar
                             //x-equation
                         case 0:
                             // Evaluate U du'/dx
-                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                             //Evaluate U du'/dx+ V du'/dy
-                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                             //Evaluate - (U du'/dx+ V du'/dy)
                             Vmath::Neg(nPointsTot,outarray[n],1);
                             //Evaluate -(U du'/dx+ V du'/dy)+u' dU/dx
@@ -363,9 +365,9 @@ namespace Nektar
                             //y-equation
                         case 1:
                             // Evaluate U dv'/dx
-                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                             //Evaluate U dv'/dx+ V dv'/dy
-                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                             //Evaluate -(U dv'/dx+ V dv'/dy)
                             Vmath::Neg(nPointsTot,outarray[n],1);
                             //Evaluate (U dv'/dx+ V dv'/dy)+u' dU/dy
@@ -390,12 +392,12 @@ namespace Nektar
                         grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
                         grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
 
-                        m_base[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
-                        m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
-                        m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);
+                        fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1,grad_base_u2);
+                        fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1,grad_base_v2);
+                        fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0, grad_base_w1, grad_base_w2);
 
                         //HalfMode has W(x,y,t)=0
-                        if(m_HalfMode)
+                        if(m_HalfMode || m_SingleMode)
                         {
                             for(int i=0; i<grad_base_u2.num_elements();++i)
                             {
@@ -413,11 +415,11 @@ namespace Nektar
                             //x-equation
                         case 0:
                             //Evaluate U du'/dx
-                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                             //Evaluate U du'/dx+ V du'/dy
-                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                             //Evaluate U du'/dx+ V du'/dy+W du'/dz
-                            Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            Vmath::Vvtvp(nPointsTot,grad2,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
                             //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)
                             Vmath::Neg(nPointsTot,outarray[n],1);
                             //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u' dU/dx
@@ -430,11 +432,11 @@ namespace Nektar
                             //y-equation
                         case 1:
                             //Evaluate U dv'/dx
-                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                             //Evaluate U dv'/dx+ V dv'/dy
-                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                             //Evaluate U dv'/dx+ V dv'/dy+W dv'/dz
-                            Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            Vmath::Vvtvp(nPointsTot,grad2,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
                             //Evaluate -(U dv'/dx+ V dv'/dy+W dv'/dz)
                             Vmath::Neg(nPointsTot,outarray[n],1);
                             //Evaluate  -(U dv'/dx+ V dv'/dy+W dv'/dz)+u' dU/dy
@@ -448,11 +450,11 @@ namespace Nektar
                             //z-equation
                         case 2:
                             //Evaluate U dw'/dx
-                            Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,outarray[n],1);
+                            Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                             //Evaluate U dw'/dx+ V dw'/dx
-                            Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                             //Evaluate U dw'/dx+ V dw'/dx+ W dw'/dz
-                            Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,outarray[n],1,outarray[n],1);
+                            Vmath::Vvtvp(nPointsTot,grad2,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
                             //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)
                             Vmath::Neg(nPointsTot,outarray[n],1);
                             //Evaluate -(U dw'/dx+ V dw'/dx+ W dw'/dz)+u' dU/dz
@@ -476,202 +478,6 @@ namespace Nektar
     }
 
 
-    void AdjointAdvection::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr mesh)
-    {
-		int nvariables = m_session->GetVariables().size();
-        int i;
-        m_base = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
-        if (m_projectionType == MultiRegions::eGalerkin)
-        {
-            switch (m_expdim)
-            {
-				case 1:
-				{
-					if(m_HomogeneousType == eHomogeneous2D)
-					{
-						const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
-						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-						
-						for(i = 0 ; i < m_base.num_elements(); i++)
-						{
-							m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
-						}
-					}
-					
-					else {
-						
-						for(i = 0 ; i < m_base.num_elements(); i++)
-						{
-							m_base[i] = MemoryManager<MultiRegions::ContField1D>
-							::AllocateSharedPtr(m_session,mesh,
-												m_session->GetVariable(i));
-						}
-					}
-					
-				}
-					break;
-				case 2:
-				{
-					if(m_HomogeneousType == eHomogeneous1D)
-					{
-						if(m_SingleMode)
-						{
-							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
-							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-							
-							for(i = 0 ; i < m_base.num_elements(); i++)
-							{								
-								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
-								
-							} 
-						}
-						else if(m_HalfMode)
-						{
-							//1 plane field (half mode expansion)
-							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
-							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierHalfModeRe,m_npointsZ,PkeyZ);
-							
-							for(i = 0 ; i < m_base.num_elements(); i++)
-							{																
-								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
-							} 
-							
-						}
-						else 
-						{
-							const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-							const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-							
-							
-							for(i = 0 ; i < m_base.num_elements(); i++)
-							{
-								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
-								m_base[i]->SetWaveSpace(false);
-							} 
-							
-						}
-					}
-					else
-					{
-						i = 0;
-						MultiRegions::ContField2DSharedPtr firstbase =
-                        MemoryManager<MultiRegions::ContField2D>
-                        ::AllocateSharedPtr(m_session,mesh,
-                                            m_session->GetVariable(i));
-						m_base[0]=firstbase;
-						
-						for(i = 1 ; i < m_base.num_elements(); i++)
-						{
-							m_base[i] = MemoryManager<MultiRegions::ContField2D>
-                            ::AllocateSharedPtr(*firstbase,mesh,
-                                                m_session->GetVariable(i));
-						}
-					}
-				}
-					break;
-				case 3:
-				{
-					if(m_HomogeneousType == eHomogeneous3D)
-					{
-						ASSERTL0(false,"3D fully periodic problems not implemented yet");
-					}
-					else
-					{
-						MultiRegions::ContField3DSharedPtr firstbase =
-						MemoryManager<MultiRegions::ContField3D>
-						::AllocateSharedPtr(m_session,mesh,
-											m_session->GetVariable(0));
-						m_base[0] = firstbase;
-						
-						for(i = 1 ; i < m_base.num_elements(); i++)
-						{
-							m_base[i] = MemoryManager<MultiRegions::ContField3D>
-							::AllocateSharedPtr(*firstbase,mesh,
-												m_session->GetVariable(i));
-						}
-					}	        
-				}
-					break;
-				default:
-					ASSERTL0(false,"Expansion dimension not recognised");
-					break;
-            }
-        }
-        else
-        {
-            switch(m_expdim)
-            {
-				case 1:
-                {
-					if(m_HomogeneousType == eHomogeneous2D)
-                    {
-                        const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
-                        const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-						
-                        for(i = 0 ; i < m_base.num_elements(); i++)
-                        {
-                            m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
-                        }
-                    }
-					else 
-					{
-						for(i = 0 ; i < m_base.num_elements(); i++)
-						{
-							m_base[i] = MemoryManager<MultiRegions
-                            ::DisContField1D>::AllocateSharedPtr(m_session,mesh,
-                                                                 m_session->GetVariable(i));
-						}
-					}
-                    break;
-                }
-				case 2:
-                {
-					if(m_HomogeneousType == eHomogeneous1D)
-                    {
-						
-						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-						
-						for(i = 0 ; i < m_base.num_elements(); i++)
-						{
-							m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-							::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,mesh,m_session->GetVariable(i));
-						}
-						
-						
-						
-					}
-					else
-					{
-						for(i = 0 ; i < m_base.num_elements(); i++)
-						{
-							m_base[i] = MemoryManager<MultiRegions
-							::DisContField2D>::AllocateSharedPtr(m_session, mesh,
-                                                                 m_session->GetVariable(i));
-						}
-					}
-					break;
-					
-				}
-				case 3:
-					ASSERTL0(false,"3 D not set up");
-				default:
-					ASSERTL0(false,"Expansion dimension not recognised");
-					break;
-            }
-        }
-		
-    }
-    
     /**
      * Import field from infile and load into \a m_fields. This routine will
      * also perform a \a BwdTrans to ensure data is in both the physical and
@@ -679,12 +485,13 @@ namespace Nektar
      * @param   infile          Filename to read.
      */
     void AdjointAdvection::ImportFldBase(std::string pInfile,
-            SpatialDomains::MeshGraphSharedPtr pGraph, int cnt)
+            Array<OneD, MultiRegions::ExpListSharedPtr>& pFields, int slice)
     {
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
-        int nqtot = m_base[0]->GetTotPoints();
-	
+        int nqtot = pFields[0]->GetTotPoints();
+        Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
+
         //Get Homogeneous
         LibUtilities::Import(pInfile,FieldDef,FieldData);
 		
@@ -714,20 +521,20 @@ namespace Nektar
                         s = (j == nvar - 1) ? 2 : j;
 			
                         //extraction of the 2D
-                        m_base[j]->ExtractDataToCoeffs(
+                        pFields[j]->ExtractDataToCoeffs(
                                             FieldDef[i],
                                             FieldData[i],
                                             FieldDef[i]->m_fields[s],
-                                            m_base[j]->UpdateCoeffs());
+                                            tmp_coeff);
                     }
 
                     // Put zero on higher modes
-                    int ncplane = (m_base[0]->GetNcoeffs()) / m_npointsZ;
+                    int ncplane = (pFields[0]->GetNcoeffs()) / m_npointsZ;
 
                     if (m_npointsZ > 2)
                     {
                         Vmath::Zero(ncplane*(m_npointsZ-2),
-                                    &m_base[j]->UpdateCoeffs()[2*ncplane],1);
+                                    &tmp_coeff[2*ncplane],1);
                     }
                 }
                 //2D cases and Homogeneous1D Base Flows
@@ -740,30 +547,26 @@ namespace Nektar
                                     + std::string(" data and that defined in "
                                                   "m_boundaryconditions differs")).c_str());
                     
-                    m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                    pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                    FieldDef[i]->m_fields[j],
-                                                   m_base[j]->UpdateCoeffs());
+                                                   tmp_coeff);
                 }
             }
             
             if(m_SingleMode || m_HalfMode)
             {
-                m_base[j]->SetWaveSpace(true);
-		
-                m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
-                                    m_base[j]->UpdatePhys());
+                pFields[j]->GetPlane(0)->BwdTrans(tmp_coeff, m_baseflow[j]);
                 
                 if(m_SingleMode)
                 {
                     //copy the bwd into the second plane for single Mode Analysis
-                    int ncplane=(m_base[0]->GetNpoints())/m_npointsZ;
-                    Vmath::Vcopy(ncplane,&m_base[j]->GetPhys()[0],1,&m_base[j]->UpdatePhys()[ncplane],1);
+                    int ncplane=(pFields[0]->GetNpoints())/m_npointsZ;
+                    Vmath::Vcopy(ncplane,&m_baseflow[j][0],1,&m_baseflow[j][ncplane],1);
                 }
             }
             else
             {
-                m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
-                                    m_base[j]->UpdatePhys());
+                pFields[j]->BwdTrans(tmp_coeff, m_baseflow[j]);
                 
             }
             
@@ -774,12 +577,12 @@ namespace Nektar
 	
         if(m_session->DefinesParameter("N_slices"))
         {
-            int n = m_base.num_elements()-1;
+            int n = pFields.num_elements()-1;
             
             for(int i=0; i<n;++i)
             {
                 
-                Vmath::Vcopy(nqtot, &m_base[i]->GetPhys()[0], 1, &m_interp[i][cnt*nqtot], 1);				
+                Vmath::Vcopy(nqtot, &m_baseflow[i][0], 1, &m_interp[i][slice*nqtot], 1);
             }
             
         }
@@ -793,7 +596,7 @@ namespace Nektar
 											 const NekDouble m_period)
 		{
 			
-			int npoints=m_base[0]->GetTotPoints();
+			int npoints=m_baseflow[0].num_elements();
 			
 			NekDouble BetaT=2*M_PI*fmod (m_time, m_period) / m_period;
 			NekDouble phase;
@@ -818,7 +621,7 @@ namespace Nektar
 			DNekBlkMatSharedPtr BlkMatrix;
 			int n_exp = 0;
 			
-			n_exp = m_base[0]->GetTotPoints(); // will operatore on m_phys
+			n_exp = m_baseflow[0].num_elements(); // will operatore on m_phys
 			
 			Array<OneD,unsigned int> nrows(n_exp);
 			Array<OneD,unsigned int> ncols(n_exp);
@@ -851,12 +654,14 @@ namespace Nektar
 		}
 		
 		//Discrete Fourier Transform for Floquet analysis
-		void AdjointAdvection::DFT(const string file, const NekDouble m_slices)
+		void AdjointAdvection::DFT(const string file,
+	            Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+	            const NekDouble m_slices)
 		{
-			int npoints=m_base[0]->GetTotPoints();
+			int npoints=m_baseflow[0].num_elements();
 			
 			//Convected fields
-			int ConvectedFields=m_base.num_elements()-1;
+			int ConvectedFields=m_baseflow.num_elements()-1;
 			
 			m_interp= Array<OneD, Array<OneD, NekDouble> > (ConvectedFields);
 			for(int i=0; i<ConvectedFields;++i)
@@ -870,7 +675,7 @@ namespace Nektar
 			{
 				char chkout[16] = "";
 				sprintf(chkout, "%d", i);
-				ImportFldBase(file+"_"+chkout+".bse",m_base[0]->GetGraph(),i);
+				ImportFldBase(file+"_"+chkout+".bse",pFields,i);
 			} 
 			
 			

@@ -39,18 +39,8 @@
 #include <SolverUtils/Advection/Advection.h>
 #include <LibUtilities/FFT/NektarFFT.h>
 
-//#define TIMING
-
-//#ifdef TIMING
-//#include <time.h>
-//#include <sys/time.h>
-//#endif
-
-
 namespace Nektar
 {     
-
-
     class AdjointAdvection: public SolverUtils::Advection
     {
 		enum FloquetMatType
@@ -83,8 +73,11 @@ namespace Nektar
         int m_spacedim;
         int m_expdim;
 
-        //Storage of the base flow
-        Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
+        /// Storage for base flow
+        Array<OneD, Array<OneD, NekDouble> >            m_baseflow;
+
+//        //Storage of the base flow
+//        Array<OneD, MultiRegions::ExpListSharedPtr>     m_base;
 		
 		//number of slices
 		int                                             m_slices;
@@ -123,31 +116,20 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >              &outarray,
             const NekDouble                                   &time);
 
-        void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr mesh);
 		void UpdateBase(const NekDouble m_slices,
 						Array<OneD, const NekDouble> &inarray,
 						Array<OneD, NekDouble> &outarray,
 						const NekDouble m_time,
 						const NekDouble m_period);
-		void DFT(const string file, const NekDouble m_slices);
+		void DFT(const string file,
+	            Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+	            const NekDouble m_slices);
 
 
         /// Import Base flow
         void ImportFldBase(std::string pInfile,
-                SpatialDomains::MeshGraphSharedPtr pGraph,int cnt);
-		void ImportFldBase(std::string pInfile,
-						   SpatialDomains::MeshGraphSharedPtr pGraph);
-		
-		/// Write field data to the given filename.
-        void WriteFldBase(std::string &outname);
-		
-        /// Write input fields to the given filename.
-        void WriteFldBase(
-						  std::string &outname,
-						  MultiRegions::ExpListSharedPtr &field,
-						  Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs,
-						  Array<OneD, std::string> &variables);
-		
+                           Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                           int slice);
 
 
     private:

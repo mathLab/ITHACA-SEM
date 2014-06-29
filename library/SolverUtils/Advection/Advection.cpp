@@ -85,5 +85,13 @@ namespace Nektar
                 }
             }
         }
+
+        void Advection::v_SetBaseFlow(
+                const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+        {
+            ASSERTL0(false,
+                    "A baseflow is not appropriate for this advection type.");
+        }
+
     }
 }

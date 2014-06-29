@@ -478,6 +478,23 @@ namespace Nektar
     }
 
 
+    void AdjointAdvection::v_SetBaseFlow(
+            const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+    {
+        ASSERTL1(inarray.num_elements() == m_baseflow.num_elements(),
+                 "Number of base flow variables does not match what is"
+                 "expected.");
+
+        int npts = inarray[0].num_elements();
+        for (int i = 0; i < inarray.num_elements(); ++i)
+        {
+            ASSERTL1(npts == m_baseflow.num_elements(),
+                    "Size of base flow array does not match expected.");
+            Vmath::Vcopy(npts, inarray[i], 1, m_baseflow[i], 1);
+        }
+    }
+
+
     /**
      * Import field from infile and load into \a m_fields. This routine will
      * also perform a \a BwdTrans to ensure data is in both the physical and

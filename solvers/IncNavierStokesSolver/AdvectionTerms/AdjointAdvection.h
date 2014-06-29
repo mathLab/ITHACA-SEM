@@ -116,6 +116,9 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >              &outarray,
             const NekDouble                                   &time);
 
+        virtual void v_SetBaseFlow(
+                const Array<OneD, Array<OneD, NekDouble> >    &inarray);
+
 		void UpdateBase(const NekDouble m_slices,
 						Array<OneD, const NekDouble> &inarray,
 						Array<OneD, NekDouble> &outarray,

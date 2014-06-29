@@ -25,13 +25,5 @@ namespace Nektar {
         {
             UnsteadySystem::v_InitObject();
         }
-
-        //////////////////////////////////////////////////////////////////////////////////////////////
-        void AdvectionSystem::UpdateBaseFlow(const Array<OneD, Array<OneD, NekDouble> > &inarray)
-        {
-            ASSERTL0(false,"This function is not defined in parent class");
-        }
-        //////////////////////////////////////////////////////////////////////////////////////////////
-        
     }
 }

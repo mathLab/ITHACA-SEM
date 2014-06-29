@@ -113,7 +113,25 @@ namespace Nektar
                     m_fluxVector = fluxVector;
                 }
                 
+                /**
+                 * @brief Set the base flow used for linearised advection objects.
+                 *
+                 * @param inarray   Vector to use as baseflow
+                 */
+                inline void SetBaseFlow(const Array<OneD, Array<OneD, NekDouble> >& inarray)
+                {
+                    v_SetBaseFlow(inarray);
+                }
+
             protected:
+                /// Callback function to the flux vector (set when advection is in
+                /// conservative form).
+                AdvectionFluxVecCB     m_fluxVector;
+                /// Riemann solver for DG-type schemes.
+                RiemannSolverSharedPtr m_riemann;
+                /// Storage for space dimension. Used for homogeneous extension.
+                int                    m_spaceDim;
+
                 virtual void v_InitObject(
                     LibUtilities::SessionReaderSharedPtr              pSession,
                     Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
@@ -125,14 +143,9 @@ namespace Nektar
                     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                     Array<OneD, Array<OneD, NekDouble> >              &outarray,
                     const NekDouble                                   &time)=0;
-                        
-                        /// Callback function to the flux vector (set when advection is in
-                        /// conservative form).
-                        AdvectionFluxVecCB     m_fluxVector;
-                        /// Riemann solver for DG-type schemes.
-                        RiemannSolverSharedPtr m_riemann;
-                        /// Storage for space dimension. Used for homogeneous extension.
-                        int                    m_spaceDim;
+
+                virtual void v_SetBaseFlow(
+                        const Array<OneD, Array<OneD, NekDouble> >    &inarray);
             };
             
             /// A shared pointer to an Advection object.

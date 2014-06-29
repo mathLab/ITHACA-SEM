@@ -55,10 +55,7 @@ namespace Nektar {
             {
                 return m_advObject;
             }
-            
-            void UpdateBaseFlow(const Array<OneD, Array<OneD, NekDouble> > &inarray);
-            
-            
+
         protected:
             /// Advection term
             SolverUtils::AdvectionSharedPtr m_advObject;

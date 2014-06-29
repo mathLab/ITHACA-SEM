@@ -849,7 +849,28 @@ namespace Nektar
             {
                 return v_GetPlane(n);
             }
-            
+           
+
+
+			void SetMovBodyForces(Array<OneD, NekDouble> &forces)
+			{
+				m_movbodyfces = forces;
+			} 
+
+            void GetMovBodyForces(Array<OneD, NekDouble> &forces)
+            {
+                forces = m_movbodyfces;
+            }
+
+            void SetMovBodyMotionVars(Array<OneD, NekDouble> &motions)
+            {
+                m_movbodyvars = motions;
+            }
+
+            void GetMovBodyMotionVars(Array<OneD, NekDouble> &motions)
+            {
+                motions = m_movbodyvars;
+            }
             //expansion type
             ExpansionType m_expType;
 
@@ -953,7 +974,11 @@ namespace Nektar
             // it's a bool which determine if the expansion is in the wave space (coefficient space)
             // or not
             bool m_WaveSpace;
-			
+
+			///
+			///
+			Array<OneD, NekDouble> m_movbodyfces;
+            Array<OneD, NekDouble> m_movbodyvars;
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
             const DNekScalBlkMatSharedPtr GenBlockMatrix(

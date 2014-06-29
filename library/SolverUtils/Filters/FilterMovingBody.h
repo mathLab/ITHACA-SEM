@@ -85,12 +85,13 @@ namespace Nektar
             /// expansion
             unsigned int                    m_outputPlane;
             bool                            m_isHomogeneous1D;
-            std::string                     m_outputFile;
-            std::ofstream                   m_outputStream;
             LibUtilities::BasisSharedPtr    m_homogeneousBasis;
             std::string                     m_BoundaryString;
             /// number of planes for homogeneous1D expansion
-            int                             m_nplanes;
+            int                             m_planes;
+            Array<OneD, std::ofstream>      m_outputStream;
+            std::string        				m_outputFile_fce;
+            std::string        				m_outputFile_mot;
         };
     }
 }

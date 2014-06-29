@@ -56,19 +56,25 @@ namespace Nektar
         {
             if (pParams.find("OutputFile") == pParams.end())
             {
-                m_outputFile = m_session->GetSessionName();
+                m_outputFile_fce = m_session->GetSessionName();
+                m_outputFile_mot = m_session->GetSessionName();
             }
             else
             {
                 ASSERTL0(!(pParams.find("OutputFile")->second.empty()),"Missing parameter 'OutputFile'.");
                 
-                m_outputFile = pParams.find("OutputFile")->second;
+                m_outputFile_fce = pParams.find("OutputFile")->second;
+                m_outputFile_mot = pParams.find("OutputFile")->second;
             }
-            if (!(m_outputFile.length() >= 4 && m_outputFile.substr(m_outputFile.length() - 4) == ".fce"))
+            if (!(m_outputFile_fce.length() >= 4 && m_outputFile_fce.substr(m_outputFile_fce.length() - 4) == ".fce"))
             {
-                m_outputFile += ".fce";
+                m_outputFile_fce += ".fce";
             }
 
+            if (!(m_outputFile_mot.length() >= 4 && m_outputFile_mot.substr(m_outputFile_mot.length() - 4) == ".mot"))
+            {
+                m_outputFile_mot += ".mot";
+            }
             if (pParams.find("OutputFrequency") == pParams.end())
             {
                 m_outputFrequency = 1;
@@ -112,6 +118,7 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
+			m_outputStream =  Array<OneD, std::ofstream>(2);
             // Parse the boundary regions into a list.
             std::string::size_type FirstInd = m_BoundaryString.find_first_of('[') + 1;
             std::string::size_type LastInd  = m_BoundaryString.find_last_of(']') - 1;
@@ -156,26 +163,47 @@ namespace Nektar
 
             if (vComm->GetRank() == 0)
             {
-                // Open output stream
-                m_outputStream.open(m_outputFile.c_str());
-                m_outputStream << "#";
-                m_outputStream.width(7);
-                m_outputStream << "Time";
-                m_outputStream.width(25);
-                m_outputStream << "z";
-                m_outputStream.width(25);
-                m_outputStream << "Fx (press)";
-                m_outputStream.width(25);
-                m_outputStream << "Fx (visc)";
-                m_outputStream.width(25);
-                m_outputStream << "Fx (tot)";
-                m_outputStream.width(25);
-                m_outputStream << "Fy (press)";
-                m_outputStream.width(25);
-                m_outputStream << "Fy (visc)";
-                m_outputStream.width(25);
-                m_outputStream << "Fy (tot)";
-                m_outputStream << endl;
+                // Open output stream for cable forces
+                m_outputStream[0].open(m_outputFile_fce.c_str());
+                m_outputStream[0] << "#";
+                m_outputStream[0].width(7);
+                m_outputStream[0] << "Time";
+                m_outputStream[0].width(25);
+                m_outputStream[0] << "z";
+                m_outputStream[0].width(25);
+                m_outputStream[0] << "Fx (press)";
+                m_outputStream[0].width(25);
+                m_outputStream[0] << "Fx (visc)";
+                m_outputStream[0].width(25);
+                m_outputStream[0] << "Fx (tot)";
+                m_outputStream[0].width(25);
+                m_outputStream[0] << "Fy (press)";
+                m_outputStream[0].width(25);
+                m_outputStream[0] << "Fy (visc)";
+                m_outputStream[0].width(25);
+                m_outputStream[0] << "Fy (tot)";
+                m_outputStream[0] << endl;
+
+                // Open output stream for cable motions
+                m_outputStream[1].open(m_outputFile_mot.c_str());
+                m_outputStream[1] << "#";
+                m_outputStream[1].width(7);
+                m_outputStream[1] << "Time";
+                m_outputStream[1].width(25);
+                m_outputStream[1] << "z";
+                m_outputStream[1].width(25);
+                m_outputStream[1] << "Disp_x";
+                m_outputStream[1].width(25);
+                m_outputStream[1] << "Vel_x";
+                m_outputStream[1].width(25);
+                m_outputStream[1] << "Acel_x";
+                m_outputStream[1].width(25);
+                m_outputStream[1] << "Disp_y";
+                m_outputStream[1].width(25);
+                m_outputStream[1] << "Vel_y";
+                m_outputStream[1].width(25);
+                m_outputStream[1] << "Acel_y";
+                m_outputStream[1] << endl;
             }
 
             v_Update(pFields, time);
@@ -189,12 +217,6 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
-            // Only output every m_outputFrequency.
-            if ((m_index++) % m_outputFrequency)
-            {
-                return;
-            }
-
             int n, cnt, elmtid, nq, offset, nt, boundary;
             nt = pFields[0]->GetNpoints();
             int dim = pFields.num_elements()-1;
@@ -346,7 +368,7 @@ namespace Nektar
                             //                          dx_j    dx_i
 
                             //a) DRAG TERMS
-                            //-rho*kinvis*(2*du/dx*nx+(du/dy+dv/dx)*ny
+                            //-rho*kinvis*(2*du/dx*nx+(du/dy+dv/dx)*ny)
 
                             Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
                             Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
@@ -364,7 +386,7 @@ namespace Nektar
 
 
                             //b) LIFT TERMS
-                            //-rho*kinvis*(2*dv/dy*nx+(du/dy+dv/dx)*nx
+                            //-rho*kinvis*(2*dv/dy*ny+(du/dy+dv/dx)*nx)
 
                             Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
                             Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
@@ -389,13 +411,13 @@ namespace Nektar
 
                             Fxp[ZIDs[plane]] += bc->Integral(drag_p);
                             Fyp[ZIDs[plane]] += bc->Integral(lift_p);
-                            }
-                        }
-                        else
-                        {
-                                cnt += BndExp[n]->GetExpSize();
                         }
                     }
+                    else
+                    {
+                        cnt += BndExp[n]->GetExpSize();
+                    }
+                }
             }
             
             for(int i = 0; i < pFields.num_elements(); ++i)
@@ -443,50 +465,178 @@ namespace Nektar
                     vComm->GetColumnComm()->AllReduce(Fyv[z], LibUtilities::ReduceSum);
                 }
             }
-            
+
+            //set the forces imparted on the cable's wall
+            Array<OneD, NekDouble> fces(2);
+            for(int plane = 0 ; plane < local_planes; plane++)
+            {
+                fces[0] = Fxp[ZIDs[plane]] + Fxv[ZIDs[plane]];
+                fces[1] = Fyp[ZIDs[plane]] + Fyv[ZIDs[plane]];
+                pFields[0]->GetPlane(plane)->SetMovBodyForces(fces);
+            }
+           
+			//get and output moving body variables
+			Array<OneD, Array<OneD, NekDouble> > Motion_x;
+			Array<OneD, Array<OneD, NekDouble> > Motion_y;
+			int nStrVars = 3;
+        	Motion_x = Array<OneD, Array<OneD, NekDouble> > (nStrVars);
+        	Motion_y = Array<OneD, Array<OneD, NekDouble> > (nStrVars);
+        	for(int i = 0; i < Motion_x.num_elements(); i++)
+        	{
+            	Motion_x[i] = Array<OneD, NekDouble>(local_planes,0.0);
+            	Motion_y[i] = Array<OneD, NekDouble>(local_planes,0.0);
+        	}
+        	for(int plane = 0; plane < local_planes; plane++)
+        	{
+            	Array<OneD, NekDouble> tmp0(nStrVars);
+            	Array<OneD, NekDouble> tmp1(nStrVars);
+
+            	pFields[0]->GetPlane(plane)->GetMovBodyMotionVars(tmp0);
+            	pFields[1]->GetPlane(plane)->GetMovBodyMotionVars(tmp1);
+                for (int var = 0; var < nStrVars; var++)
+                {
+                    Motion_x[var][plane] = tmp0[var];
+                    Motion_y[var][plane] = tmp1[var];
+                }
+        	}
+            // Only output every m_outputFrequency.
+            if ((m_index++) % m_outputFrequency)
+            {
+                return;
+            }
+ 
             // At thi point in rank (0,0) we have the full vectors
             // containing Fxp,Fxv,Fyp and Fyv where different positions
             // in the vectors correspond to different planes.
             // Here we write it to file. We do it just on one porcess
+
+            Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
+            Array<OneD, const NekDouble> pts = pFields[0]->GetHomogeneousBasis()->GetZ();
+
+            NekDouble LZ;
+            m_session->LoadParameter("LZ", LZ);
+            Vmath::Smul(Num_z_pos,LZ/2.0,pts,1,z_coords,1);
+            Vmath::Sadd(Num_z_pos,LZ/2.0,z_coords,1,z_coords,1);
             if (vComm->GetRank() == 0)
             {
                 
                 Vmath::Vadd(Num_z_pos,Fxp,1,Fxv,1,Fx,1);
                 Vmath::Vadd(Num_z_pos,Fyp,1,Fyv,1,Fy,1);
                 
-                Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
-                Array<OneD, const NekDouble> pts = pFields[0]->GetHomogeneousBasis()->GetZ();
-                
-                NekDouble LZ;
-                m_session->LoadParameter("LZ", LZ);
-                Vmath::Smul(Num_z_pos,LZ/2.0,pts,1,z_coords,1);
-                Vmath::Sadd(Num_z_pos,LZ/2.0,z_coords,1,z_coords,1);
-                
-                
                 for(int i = 0 ; i < Num_z_pos; i++)
                 {
-                    m_outputStream.width(8);
-                    m_outputStream << setprecision(6) << time;
+                    m_outputStream[0].width(8);
+                    m_outputStream[0] << setprecision(6) << time;
                     
-                    m_outputStream.width(25);
-                    m_outputStream << setprecision(6) << z_coords[i];
+                    m_outputStream[0].width(25);
+                    m_outputStream[0] << setprecision(6) << z_coords[i];
                     
-                    m_outputStream.width(25);
-                    m_outputStream << setprecision(8) << Fxp[i];
-                    m_outputStream.width(25);
-                    m_outputStream << setprecision(8) << Fxv[i];
-                    m_outputStream.width(25);
-                    m_outputStream << setprecision(16) << Fx[i];
+                    m_outputStream[0].width(25);
+                    m_outputStream[0] << setprecision(8) << Fxp[i];
+                    m_outputStream[0].width(25);
+                    m_outputStream[0] << setprecision(8) << Fxv[i];
+                    m_outputStream[0].width(25);
+                    m_outputStream[0] << setprecision(16) << Fx[i];
                     
-                    m_outputStream.width(25);
-                    m_outputStream << setprecision(8) << Fyp[i];
-                    m_outputStream.width(25);
-                    m_outputStream << setprecision(8) << Fyv[i];
-                    m_outputStream.width(25);
-                    m_outputStream << setprecision(8) << Fy[i];
-                    m_outputStream << endl;
+                    m_outputStream[0].width(25);
+                    m_outputStream[0] << setprecision(8) << Fyp[i];
+                    m_outputStream[0].width(25);
+                    m_outputStream[0] << setprecision(8) << Fyv[i];
+                    m_outputStream[0].width(25);
+                    m_outputStream[0] << setprecision(8) << Fy[i];
+                    m_outputStream[0] << endl;
                 }
             }
+
+			//
+        	Array <OneD, NekDouble> CableAccelX;
+        	Array <OneD, NekDouble> CableVelocX;
+        	Array <OneD, NekDouble> CableDisplX;
+        	Array <OneD, NekDouble> CableAccelY;
+        	Array <OneD, NekDouble> CableVelocY;
+        	Array <OneD, NekDouble> CableDisplY;
+
+        	int npoints = Motion_x[0].num_elements();
+        	CableAccelX = Array <OneD, NekDouble>(npoints);
+        	CableVelocX = Array <OneD, NekDouble>(npoints);
+        	CableDisplX = Array <OneD, NekDouble>(npoints);
+        	CableAccelY = Array <OneD, NekDouble>(npoints);
+        	CableVelocY = Array <OneD, NekDouble>(npoints);
+        	CableDisplY = Array <OneD, NekDouble>(npoints);
+
+        	Vmath::Vcopy(npoints,Motion_x[0],1,CableDisplX,1);
+        	Vmath::Vcopy(npoints,Motion_x[1],1,CableVelocX,1);
+        	Vmath::Vcopy(npoints,Motion_x[2],1,CableAccelX,1);
+        	Vmath::Vcopy(npoints,Motion_y[0],1,CableDisplY,1);
+        	Vmath::Vcopy(npoints,Motion_y[1],1,CableVelocY,1);
+        	Vmath::Vcopy(npoints,Motion_y[2],1,CableAccelY,1);
+
+        	int colrank = vComm->GetColumnComm()->GetRank();
+        	int nproc   = vComm->GetColumnComm()->GetSize();
+        	// Send to root process.
+        	if (colrank == 0)
+        	{
+            	for (int j = 0; j <Motion_x[0].num_elements(); j++)
+            	{
+                	m_outputStream[1].width(8);
+                	m_outputStream[1] << setprecision(6) << time;
+                	m_outputStream[1].width(25);
+                	m_outputStream[1] << setprecision(6) << z_coords[j];
+                	m_outputStream[1].width(25);
+                	m_outputStream[1] << setprecision(8) << CableDisplX[j];
+                	m_outputStream[1].width(25);
+                	m_outputStream[1] << setprecision(8) << CableVelocX[j];
+                	m_outputStream[1].width(25);
+                	m_outputStream[1] << setprecision(8) << CableAccelX[j];
+                	m_outputStream[1].width(25);
+                	m_outputStream[1] << setprecision(8) << CableDisplY[j];
+                	m_outputStream[1].width(25);
+                	m_outputStream[1] << setprecision(8) << CableVelocY[j];
+                	m_outputStream[1].width(25);
+                	m_outputStream[1] << setprecision(8) << CableAccelY[j];
+                	m_outputStream[1] << endl;
+            	}
+
+            	for (int i = 1; i < nproc; ++i)
+            	{
+                 	vComm->GetColumnComm()->Recv(i, CableAccelX);
+                 	vComm->GetColumnComm()->Recv(i, CableVelocX);
+                 	vComm->GetColumnComm()->Recv(i, CableDisplX);
+                 	vComm->GetColumnComm()->Recv(i, CableAccelY);
+                 	vComm->GetColumnComm()->Recv(i, CableVelocY);
+                 	vComm->GetColumnComm()->Recv(i, CableDisplY);
+
+                	for (int j = 0; j < Motion_x[0].num_elements(); ++j)
+                	{
+                    	m_outputStream[1].width(8);
+                    	m_outputStream[1] << setprecision(6) << time;
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(6) << z_coords[2 * i + j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableDisplX[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableVelocX[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableAccelX[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableDisplY[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableVelocY[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableAccelY[j];
+                    	m_outputStream[1] << endl;
+                	}
+            	}
+        	}
+        	else
+        	{
+            	vComm->GetColumnComm()->Send(0, CableAccelX);
+            	vComm->GetColumnComm()->Send(0, CableVelocX);
+            	vComm->GetColumnComm()->Send(0, CableDisplX);
+            	vComm->GetColumnComm()->Send(0, CableAccelY);
+            	vComm->GetColumnComm()->Send(0, CableVelocY);
+            	vComm->GetColumnComm()->Send(0, CableDisplY);
+        	}
         }
 
 
@@ -499,7 +649,8 @@ namespace Nektar
         {
             if (pFields[0]->GetComm()->GetRank() == 0)
             {
-                m_outputStream.close();
+                m_outputStream[0].close();
+                m_outputStream[1].close();
             }
         }
 

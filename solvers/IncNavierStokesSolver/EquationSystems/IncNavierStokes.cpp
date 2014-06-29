@@ -133,6 +133,8 @@ namespace Nektar
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eTimeDependent ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eFluidStructInt ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eRadiation ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eI,
@@ -378,7 +380,9 @@ namespace Nektar
             for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             {    
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                   SpatialDomains::eTimeDependent)
+                   SpatialDomains::eTimeDependent ||
+					m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
+                   	SpatialDomains::eFluidStructInt)
                 {
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
@@ -445,7 +449,11 @@ namespace Nektar
                 }
                 cnt1 += BndExp[n]->GetTotPoints();
             }
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eWall_Forces || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
+            else if(type == SpatialDomains::eNoUserDefined ||
+					type == SpatialDomains::eWall_Forces || 
+					type == SpatialDomains::eTimeDependent || 
+					type == SpatialDomains::eFluidStructInt ||
+					type == SpatialDomains::eHigh) 
             {
                 cnt += BndExp[n]->GetExpSize();
             }

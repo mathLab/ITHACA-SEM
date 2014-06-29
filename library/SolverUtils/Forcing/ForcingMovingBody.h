@@ -40,10 +40,11 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
-
+#include <LibUtilities/FFT/NektarFFT.h>
 namespace Nektar
 {
 namespace SolverUtils
@@ -90,9 +91,24 @@ namespace SolverUtils
             void UpdateMotion(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                               NekDouble time);
 		
+			void TensionedCableModel(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                        Array<OneD, NekDouble> &Force,
+                        Array<OneD, Array<OneD, NekDouble> > &Motion);
+
+	    	void EvaluateStructDynModel(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                                            const NekDouble &time );
             void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 
-            void EvaluateAccelaration(const Array<OneD, NekDouble> &input, Array<OneD, NekDouble> &output, int npoints);       
+            void EvaluateAccelaration(const Array<OneD, NekDouble> &input, 
+					Array<OneD, NekDouble> &output, 
+					   int npoints);
+       
+	    	void SetDynEqCoeffMatrix(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
+
+	    	void SetBWFinitDiffCoeffs();
+
+	    	void OutputStructMotion(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                                        const NekDouble &time);
 
             void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
         
@@ -105,13 +121,30 @@ namespace SolverUtils
             
             int m_intSteps;                                        //
             int m_movingBodyCalls;                                 //
-                          
-            Array<OneD, NekDouble>  m_StifflyStable_Gamma0_Coeffs;
-            Array<OneD, Array<OneD, NekDouble> > m_StifflyStable_Alpha_Coeffs; 
-            Array<OneD, Array<OneD, NekDouble> > m_acceleration;   //       
 
+	    	Array<OneD, NekDouble>  m_Force_x;
+            Array<OneD, NekDouble>  m_Force_y;                          
+            Array<OneD, NekDouble>  m_Gamma0;
+            Array<OneD, Array<OneD, NekDouble> > m_Alpha; 
+            Array<OneD, Array<OneD, NekDouble> > m_acceleration;   //      
+ 
             NekDouble m_kinvis;
-            NekDouble m_timestep; 
+            NekDouble m_timestep;
+
+	    	//structural dynamic parameters
+	    	int m_NumStructModes;
+	    	int m_NumStructVars;
+	    	int m_NumLocPlanes;	
+	    	NekDouble m_structrho;
+	    	NekDouble m_cabletension;
+	    	NekDouble m_bendingstiff;
+	    	NekDouble m_structdamp;
+	    	NekDouble m_structstiff;
+	    	NekDouble m_lhomz;
+	    	Array<OneD, Array<OneD, NekDouble> > m_Motion_x; //cable's disp, vel and accel
+        	Array<OneD, Array<OneD, NekDouble> > m_Motion_y; //cable's disp, vel and accel
+            Array<OneD, DNekMatSharedPtr> m_CoeffMat_A;
+            Array<OneD, DNekMatSharedPtr> m_CoeffMat_B;
     };
 
 }

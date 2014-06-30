@@ -133,7 +133,7 @@ namespace Nektar
             
             for(int i = 0; i < NumVar_SFD; ++i)
             {
-                q0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0); //q0 is initialised
+                q0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 123.456); //q0 is initialised
                 qBar0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
                 m_equ[0]->CopyFromPhysField(i, qBar0[i]); //qBar0 is initially set at beiing equal to the initial conditions provided in the input file
             }

@@ -50,6 +50,14 @@ namespace Nektar
             CompressibleFlowSystem::create,
             "Auxiliary functions for the compressible flow system.");
 
+    std::string CompressibleFlowSystem::lookupIds[] = {
+        LibUtilities::SessionReader::RegisterEnumValue(
+            "", "Null", eNull),
+        LibUtilities::SessionReader::RegisterEnumValue(
+            "", "Diagonal", eDiagonal),
+    }
+
+
     CompressibleFlowSystem::CompressibleFlowSystem(
         const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession)
@@ -118,7 +126,6 @@ namespace Nektar
         m_session->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
         m_session->LoadParameter ("Twall",         m_Twall,         300.15);
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
-        m_session->LoadSolverInfo("ShockCaptureType",   m_shockCaptureType, "Off");
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
         m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
         m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
@@ -126,11 +133,10 @@ namespace Nektar
         m_session->LoadParameter ("FL",            m_FacL,          0.0);
         m_session->LoadParameter ("FH",            m_FacH,          0.0);
         m_session->LoadParameter ("epsMax",        m_eps_max,       1.0);
+        m_session->LoadSolverInfo("ShockCaptureType",
+                                  m_shockCaptureType,    "Off");
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
-        
-        
-        m_EqTypeStr = m_session->GetSolverInfo("EQTYPE");
         
         m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
@@ -158,53 +164,24 @@ namespace Nektar
                 m_diffusion = SolverUtils::GetDiffusionFactory()
                                             .CreateInstance(diffName, diffName);
 
-                if (m_shockCaptureType == "Off" && m_specHP_dealiasing)
+                if (m_specHP_dealiasing)
                 {
                     m_advection->SetFluxVector(&CompressibleFlowSystem::
                                                GetFluxVectorDeAlias, this);
-                    
                     m_diffusion->SetFluxVectorNS(
-                                                 &CompressibleFlowSystem::
-                                                 GetViscousFluxVectorDeAlias, this);
+                        &CompressibleFlowSystem::GetViscousFluxVectorDeAlias,
+                        this);
                 }
-                else if(m_shockCaptureType == "Off")
+                else
                 {
-                    m_advection->SetFluxVector(&CompressibleFlowSystem::
-                                               GetFluxVector, this);
-                    
+                    m_advection->SetFluxVector  (&CompressibleFlowSystem::
+                                                  GetFluxVector, this);
                     m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
-                                                 GetViscousFluxVector, this);
+                                                  GetViscousFluxVector, this);
                 }
-                // Setting up flux vector for diffusion operator
-                
-                if (m_shockCaptureType=="Smooth" && m_EqTypeStr=="EulerCFE")
-                {
-                    m_advection->SetFluxVector(&CompressibleFlowSystem::
-                                               GetFluxVectorPDESC, this);
-                    
-                    m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
-                                                   GetArtViscFluxVectorPDESC, this);
-                }
-                
-                if (m_shockCaptureType=="Smooth" && m_EqTypeStr=="NavierStokesCFE")
-                {
-                    m_advection->SetFluxVector(&CompressibleFlowSystem::
-                                               GetFluxVectorPDESC, this);
-                    
-                    m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
-                                                 GetViscousFluxVectorPDESC, this);
-                }
-                
-                if (m_shockCaptureType == "NonSmooth")
-                {
-                    m_diffusion->SetArtificialDiffusionVector(
-                        &CompressibleFlowSystem::GetArtificialDynamicViscosity, this);
-                }
+
                 // Setting up Riemann solver for advection operator
                 m_session->LoadSolverInfo("UpwindType", riemName, "Average");
-                
-                
-                m_diffusion->SetArtificialDiffusionVector(&CompressibleFlowSystem::GetArtificialDynamicViscosity, this);
 
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
                                             .CreateInstance(riemName);
@@ -274,7 +251,6 @@ namespace Nektar
 
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
-        const bool smoothDiffusion = nVariables == m_spacedim + 3;
         
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
@@ -299,7 +275,7 @@ namespace Nektar
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
 
             // Boundary condition for epsilon term.
-            if (smoothDiffusion)
+            if (m_smoothDiffusion)
             {
                 NekDouble factor  = 0.0;
                 NekDouble factor2 = 1.0;
@@ -371,7 +347,6 @@ namespace Nektar
 
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
-        const bool smoothDiffusion = nVariables == m_spacedim + 3;
         
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
@@ -380,10 +355,10 @@ namespace Nektar
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
-        
-        // Take into account that for PDE based shock capturing, eps = 0 at the wall
-        // Adjust the physical values of the trace to
-        // take user defined boundaries into account
+
+        // Take into account that for PDE based shock capturing, eps = 0 at the
+        // wall. Adjust the physical values of the trace to take user defined
+        // boundaries into account
         int e, id1, id2, nBCEdgePts, eMax;
 
         eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
@@ -396,7 +371,7 @@ namespace Nektar
                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
 
-            if (smoothDiffusion)
+            if (m_smoothDiffusion)
             {
                 NekDouble Length  = 1.0;
                 NekDouble factor  = 0.0;
@@ -435,48 +410,46 @@ namespace Nektar
     }
     
     void CompressibleFlowSystem::ArtificialViscosityBC(
-                    int                                   bcRegion,
-                    int                                   cnt,
-                    Array<OneD, Array<OneD, NekDouble> > &physarray)
+        int                                   bcRegion,
+        int                                   cnt,
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
         int i;
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
         const int nElements  = m_fields[0]->GetExpSize();
         const Array<OneD, const int> &traceBndMap
-        = m_fields[0]->GetTraceBndMap();
-    
+            = m_fields[0]->GetTraceBndMap();
+
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
         for (i = 0; i < nVariables; ++i)
         {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts,0.0);
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
-        
+
         int e, id1, id2, nBCEdgePts, eMax;
-        
+
         eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
-    
-        //Vmath::Zero(nTracePts, Fwd[nVariables-1], 1);
-        
+
         for (e = 0; e < eMax; ++e)
         {
             nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetExp(e)->GetTotPoints();
+                GetExp(e)->GetTotPoints();
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetPhys_Offset(e);
+                GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
-            
+
             // Copy boundary adjusted values into the boundary expansion
-            
             Vmath::Vcopy(nBCEdgePts, &Fwd[nVariables-1][id2], 1,
-                         &(m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1], 1);
+                         &(m_fields[nVariables-1]->GetBndCondExpansions()[
+                               bcRegion]->UpdatePhys())[id1], 1);
         }
     }
 
     /**
-     * @brief Simmetry boundary conditions for compressible flow problems.
+     * @brief Symmetry boundary conditions for compressible flow problems.
      */
     void CompressibleFlowSystem::SymmetryBC(
         int                                      bcRegion,
@@ -498,8 +471,8 @@ namespace Nektar
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
         
-        // Take into account that for PDE based shock capturing, eps = 0 at the wall
-        
+        // Take into account that for PDE based shock capturing, eps = 0 at the
+        // wall.
         int e, id1, id2, nBCEdgePts, eMax;
 
         eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
@@ -512,7 +485,7 @@ namespace Nektar
                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
             
-            if(nVariables == m_spacedim+3)
+            if (m_smoothDiffusion)
             {
                 NekDouble Length  = 1.0;
                 NekDouble factor  = 0.0;
@@ -939,55 +912,14 @@ namespace Nektar
             Vmath::Vmul(nq, velocity[j], 1, pressure, 1,
                         flux[m_spacedim+1][j], 1);
         }
-    }
-    
-    void CompressibleFlowSystem::GetFluxVectorPDESC(
-            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
-    {
-        int i, j;
-        int nq = m_fields[0]->GetTotPoints();
-        
-        Array<OneD, NekDouble> pressure(nq);
-        Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
-        
-        // Flux vector for the rho equation
-        for (i = 0; i < m_spacedim; ++i)
+
+        if (m_smoothDiffusion)
         {
-            velocity[i] = Array<OneD, NekDouble>(nq);
-            Vmath::Vcopy(nq, physfield[i+1], 1, flux[0][i], 1);
-        }
-        
-        GetVelocityVector(physfield, velocity);
-        GetPressure      (physfield, velocity, pressure);
-        
-        // Flux vector for the velocity fields
-        for (i = 0; i < m_spacedim; ++i)
-        {
+            // Add a zero row for the advective fluxes
             for (j = 0; j < m_spacedim; ++j)
             {
-                Vmath::Vmul(nq, velocity[j], 1, physfield[i+1], 1,
-                            flux[i+1][j], 1);
+                Vmath::Zero(nq, flux[m_spacedim+2][j], 1);
             }
-            
-            // Add pressure to appropriate field
-            Vmath::Vadd(nq, flux[i+1][i], 1, pressure, 1, flux[i+1][i], 1);
-        }
-        
-        // Flux vector for energy.
-        Vmath::Vadd(nq, physfield[m_spacedim+1], 1, pressure, 1,
-                    pressure, 1);
-        
-        for (j = 0; j < m_spacedim; ++j)
-        {
-            Vmath::Vmul(nq, velocity[j], 1, pressure, 1,
-                        flux[m_spacedim+1][j], 1);
-        }
-        
-        // Add a zero row for the advective fluxes
-        for (j = 0; j < m_spacedim; ++j)
-        {
-            Vmath::Zero(nq, flux[m_spacedim+2][j], 1);
         }
     }
 
@@ -1413,7 +1345,7 @@ namespace Nektar
             }
         }
     }
-    
+
     void CompressibleFlowSystem::GetArtViscFluxVectorPDESC(
          const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
@@ -3442,14 +3374,17 @@ namespace Nektar
         Vmath::Smul (nBCEdgePts, m_gamma-1, pressure, 1, pressure, 1);
     }
 
+    /**
+     * @brief Compute the enthalpy term \f$ H = E + p/rho \$.
+     */
     void CompressibleFlowSystem::GetEnthalpy(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                   NekDouble>   &pressure,
                   Array<OneD,                   NekDouble>   &enthalpy)
     {
-        int       npts  = m_fields[0]->GetTotPoints();
-        
-        Array<OneD, NekDouble > tmp   (npts, 0.0);
+        int npts  = m_fields[0]->GetTotPoints();
+        Array<OneD, NekDouble> tmp(npts, 0.0);
+
         // Calculate E = rhoE/rho
         Vmath::Vdiv(npts, physfield[m_spacedim+1], 1, physfield[0], 1, tmp, 1);
         // Calculate p/rho
@@ -3457,6 +3392,7 @@ namespace Nektar
         // Calculate H = E + p/rho
         Vmath::Vadd(npts, tmp, 1, enthalpy, 1, enthalpy, 1);
     }
+
     /**
      * @brief Calculate the pressure field \f$ p =
      * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal
@@ -3673,7 +3609,6 @@ namespace Nektar
             {
                 minLength = 2.0 * sqrt(Area);
             }
-
             else if (boost::dynamic_pointer_cast<LocalRegions::QuadExp>(
                          m_fields[0]->GetExp(n)))
             {
@@ -3726,6 +3661,7 @@ namespace Nektar
             velocity   [i] = Array<OneD, NekDouble>(nTotQuadPoints);
             stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
         }
+
         GetVelocityVector(inarray, velocity);
         GetPressure      (inarray, velocity, pressure);
         GetSoundSpeed    (inarray, pressure, soundspeed);
@@ -3841,9 +3777,9 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::GetSensor(
-                const Array<OneD, const Array<OneD, NekDouble> > &physarray,
-                      Array<OneD,                   NekDouble>   &Sensor,
-                      Array<OneD,                   NekDouble>   &SensorKappa)
+        const Array<OneD, const Array<OneD, NekDouble> > &physarray,
+              Array<OneD,                   NekDouble>   &Sensor,
+              Array<OneD,                   NekDouble>   &SensorKappa)
     {
         
         int i, e, nCoeffsElement, NumModesElement, NumModesCuttOff, NumModesCuttOff_Dir1, NumModesCuttOff_Dir2, nQuadPointsElement;
@@ -4124,10 +4060,9 @@ namespace Nektar
         hmin[1] = Vmath::Vmin(outarray[1].num_elements(), outarray[1], 1);
     }
     
-    
     void CompressibleFlowSystem::GetAbsoluteVelocity(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD,                   NekDouble>   &Vtot)
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,                   NekDouble>   &Vtot)
     {
         int nTotQuadPoints = GetTotPoints();
         
@@ -4251,8 +4186,8 @@ namespace Nektar
     
     
     void CompressibleFlowSystem::GetArtificialDynamicViscosity(
-                        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                              Array<OneD,             NekDouble  > &mu_var)
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+              Array<OneD,             NekDouble  > &mu_var)
     {
         const int npts       = m_fields[0]->GetTotPoints();
         const int nElements  = m_fields[0]->GetExpSize();
@@ -4261,42 +4196,38 @@ namespace Nektar
         int PointCount = 0;
         int nTotQuadPoints  = GetTotPoints();
         
-        Array <OneD , NekDouble > S_e               (nTotQuadPoints, 0.0);
-        Array <OneD , NekDouble > se                (nTotQuadPoints, 0.0);
-        Array <OneD, NekDouble > Sensor             (nTotQuadPoints, 0.0);
-        Array <OneD, NekDouble > SensorKappa        (nTotQuadPoints, 0.0);
-        Array <OneD, NekDouble > absVelocity        (nTotQuadPoints, 0.0);
-        Array <OneD, NekDouble > soundspeed         (nTotQuadPoints, 0.0);
-        Array <OneD, NekDouble > pressure           (nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> S_e        (nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> se         (nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> Sensor     (nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> SensorKappa(nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> absVelocity(nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> soundspeed (nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> pressure   (nTotQuadPoints, 0.0);
         
-        GetAbsoluteVelocity   (physfield, absVelocity);
-        GetPressure      (physfield, pressure);
-        GetSoundSpeed    (physfield, pressure, soundspeed);
-        GetSensor        (physfield, Sensor, SensorKappa);
+        GetAbsoluteVelocity(physfield, absVelocity);
+        GetPressure        (physfield, pressure);
+        GetSoundSpeed      (physfield, pressure, soundspeed);
+        GetSensor          (physfield, Sensor, SensorKappa);
         
-        Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
-        
-        Array <OneD , NekDouble > Lambda(nTotQuadPoints, 1.0);
-        Vmath::Vadd(nTotQuadPoints,absVelocity,1,soundspeed,1,Lambda,1);
+        Array<OneD, int> pOrderElmt = GetNumExpModesPerExp();
+        Array<OneD, NekDouble> Lambda(nTotQuadPoints, 1.0);
+        Vmath::Vadd(nTotQuadPoints, absVelocity, 1, soundspeed, 1, Lambda, 1);
         
         // Determining the maximum wave speed in the element
-        NekDouble LambdaMax = Vmath::Vmax(nTotQuadPoints,Lambda,1);
-        NekDouble StdVMax = Vmath::Vmax(nTotQuadPoints,absVelocity,1);
+        NekDouble LambdaMax = Vmath::Vmax(nTotQuadPoints, Lambda,      1);
+        NekDouble StdVMax   = Vmath::Vmax(nTotQuadPoints, absVelocity, 1);
         
         for (int e = 0; e < nElements; e++)
         {
-            // Threshold value specified in C. Biottos thesis.
-            // Based on a 1D shock tube problem S_k = log10(1/p^4)
-            // See  G.E. Barter and D.L. Darmofal. Shock Capturing with PDE-based
-            // artificial diffusion for DGFEM: Part 1 Formulation, Journal od
-            // Computational Physics 229 (2010) 1810-1827 for further reference
-            
-            //NekDouble S_Kappa = -4.0*log10(pOrderElmt[e]);
-            //const double Kappa = 0.5;
-            
+            // Threshold value specified in C. Biottos thesis.  Based on a 1D
+            // shock tube problem S_k = log10(1/p^4). See G.E. Barter and
+            // D.L. Darmofal. Shock Capturing with PDE-based artificial
+            // diffusion for DGFEM: Part 1 Formulation, Journal of Computational
+            // Physics 229 (2010) 1810-1827 for further reference
+
             // Adjustable depending on the coarsness of the mesh. Might want to
             // move this variable into the session file
-            
+
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
             Array <OneD, NekDouble> one2D(nQuadPointsElement, 1.0);
             NekDouble Area = m_fields[0]->GetExp(e)->Integral(one2D);
@@ -4338,13 +4269,10 @@ namespace Nektar
         Array<OneD, NekDouble > Sensor           (npts, 0.0);
         Array<OneD, NekDouble > SensorKappa      (npts, 0.0);
         Array<OneD, NekDouble > se               (npts,0.0);
-        
+
         GetSensor(physfield, Sensor, SensorKappa);
-        
-        
-        int numfields = m_fields.num_elements();
-        
-        
+
+        int numfields           = m_fields.num_elements();
         int nQuadPointsElement  = 0;
         int npCount             = 0;
         int MinOrder            = 2;
@@ -4408,7 +4336,10 @@ namespace Nektar
                     }
                 }
             }
-            m_file2 << "<E COMPOSITE= \"C[" << e+1 << "]\" NUMMODES=\"" << PolyOrder[npCount + 1] << "\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,rhow,E\" />" << endl;
+            m_file2 << "<E COMPOSITE= \"C[" << e+1
+                    << "]\" NUMMODES=\"" << PolyOrder[npCount + 1]
+                    << "\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,rhow,E\" />"
+                    << endl;
             npCount += nQuadPointsElement;
         }
         
@@ -4438,9 +4369,9 @@ namespace Nektar
         m_fields[0]->FwdTrans(soundspeed, sFwd);
         m_fields[0]->FwdTrans(mach,       mFwd);
 
-        variables.push_back("p");
-        variables.push_back("a");
-        variables.push_back("Mach");
+        variables.push_back  ("p");
+        variables.push_back  ("a");
+        variables.push_back  ("Mach");
         fieldcoeffs.push_back(pFwd);
         fieldcoeffs.push_back(sFwd);
         fieldcoeffs.push_back(mFwd);

@@ -95,19 +95,7 @@ namespace Nektar
         bool                                    dumpInitialConditions = true,
         const int domain = 0);
 
-    void CPSensor(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD, NekDouble> &outarray);
-    
-    void CPSensorKappa(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD, NekDouble> &outarray);
-      
-    void CPSmoothArtVisc(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                                          Array<OneD, NekDouble> &outarray);
-    
-    private:
+  private:
       void SetBoundaryConditions(
         Array<OneD, Array<OneD, NekDouble> >             &physarray, 
         NekDouble                                         time);

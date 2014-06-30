@@ -56,10 +56,8 @@ namespace Nektar
             DiffusionLDG();
             
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
-            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
             LibUtilities::SessionReaderSharedPtr              m_session;
-            std::string                                       m_EqTypeStr;
-            
+
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);

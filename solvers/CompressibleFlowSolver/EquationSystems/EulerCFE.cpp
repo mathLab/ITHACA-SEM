@@ -87,11 +87,6 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit CFE not set up.");
         }
-
-        /*
-        m_checkpointFuncs["Sensor"] = boost::bind(&EulerCFE::CPSensor, this, _1, _2);
-        m_checkpointFuncs["SmoothVisc"] = boost::bind(&EulerCFE::CPSmoothArtVisc, this, _1, _2);
-        */
     }
     
     /**
@@ -179,12 +174,9 @@ namespace Nektar
             {
                 Vmath::Neg(npoints, outarray[i], 1);
             }
-            
         }
-        
-        if(m_shockCaptureType == "Smooth")
+        else if(m_shockCaptureType == "Smooth")
         {
-        
             Array<OneD, Array<OneD, NekDouble> > advVel;
             Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
             Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
@@ -196,8 +188,8 @@ namespace Nektar
             
             for (i = 0; i < nvariables; ++i)
             {
-                outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
-                outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
+                outarrayAdv    [i] = Array<OneD, NekDouble>(npoints, 0.0);
+                outarrayDiff   [i] = Array<OneD, NekDouble>(npoints, 0.0);
                 outarrayForcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
             }
             
@@ -224,9 +216,9 @@ namespace Nektar
             Array<OneD, NekDouble > temperature(npoints, 0.0);
             Array<OneD, NekDouble > enthalpy   (npoints, 0.0);
             Array<OneD, NekDouble > energy     (npoints, 0.0);
-            GetPressure(inarray, pressure);
+            GetPressure   (inarray, pressure);
             GetTemperature(inarray, pressure, temperature);
-            GetEnthalpy(inarray, pressure, enthalpy);
+            GetEnthalpy   (inarray, pressure, enthalpy);
             // Extract velocities
             for (i = 1; i < nvariables-2; ++i)
             {
@@ -285,7 +277,7 @@ namespace Nektar
                             outarray[i], 1);
             }
         }
-        if (m_shockCaptureType == "NonSmooth")
+        else if (m_shockCaptureType == "NonSmooth")
         {
             ASSERTL0(false, "NS with non-smooth shock capturing not yet implemented");
         }
@@ -415,115 +407,7 @@ namespace Nektar
             cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
         }
     }
-    void EulerCFE::CPMach(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        Array<OneD, NekDouble> &outarray)
-    {
-        const int npts = m_fields[0]->GetTotPoints();
-        outarray = Array<OneD, NekDouble>(GetNcoeffs());
-        
-        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+2);
 
-        for (int i = 0; i < m_spacedim+2; ++i)
-        {
-            physfield[i] = Array<OneD, NekDouble>(npts);
-            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
-        }
-
-        Array<OneD, NekDouble> pressure(npts);
-        Array<OneD, NekDouble> soundspeed(npts);
-        Array<OneD, NekDouble> mach(npts);
-
-        GetPressure(physfield, pressure);
-        GetSoundSpeed(physfield, pressure, soundspeed);
-        GetMach(physfield, soundspeed, mach);
-
-        m_fields[0]->FwdTrans(mach, outarray);
-    }
-     
-    void EulerCFE::CPSensor(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                                Array<OneD, NekDouble> &outarray)
-    {
-        const int npts = m_fields[0]->GetTotPoints();
-        outarray = Array<OneD, NekDouble>(GetNcoeffs());
-        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+2);
-
-        for (int i = 0; i < m_spacedim+2; ++i)
-        {
-            physfield[i] = Array<OneD, NekDouble>(npts);
-            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
-        }
-
-        Array<OneD, NekDouble> sensor(npts,0.0);
-        Array<OneD, NekDouble> SensorKappa(npts,0.0);
-        GetSensor(physfield, sensor, SensorKappa);
-        m_fields[0]->FwdTrans(sensor, outarray);
-    }
-    
-    void EulerCFE::CPVarP(
-                          const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                          Array<OneD, NekDouble> &outarray)
-    {
-        const int npts = m_fields[0]->GetTotPoints();
-        outarray = Array<OneD, NekDouble>(GetNcoeffs());
-        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+2);
-        
-        for (int i = 0; i < m_spacedim+2; ++i)
-        {
-            physfield[i] = Array<OneD, NekDouble>(npts);
-            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
-        }
-        Array<OneD,int> ExpOrderElement = GetNumExpModesPerExp();
-        Array<OneD, NekDouble> VarP(npts,ExpOrderElement[0]);
-        SetVarPOrderElmt(physfield, VarP);
-        m_fields[0]->FwdTrans(VarP, outarray);
-    }
-    
-    void EulerCFE::CPEntropy(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        Array<OneD, NekDouble> &outarray)
-    {
-        const int npts = m_fields[0]->GetTotPoints();
-        outarray = Array<OneD, NekDouble>(GetNcoeffs());
-        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+2);
-
-        for (int i = 0; i < m_spacedim+2; ++i)
-        {
-            physfield[i] = Array<OneD, NekDouble>(npts);
-            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
-        }
-
-        Array<OneD, NekDouble> pressure(npts);
-        Array<OneD, NekDouble> temperature(npts);
-        Array<OneD, NekDouble> entropy(npts);
-
-        GetPressure(physfield, pressure);
-        GetTemperature(physfield, pressure, temperature);
-        GetEntropy(physfield, pressure, temperature, entropy);
-
-        m_fields[0]->FwdTrans(entropy, outarray);
-    }
-    
-    void EulerCFE::CPSmoothArtVisc(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD, NekDouble> &outarray)
-    {
-        const int npts = m_fields[0]->GetTotPoints();
-        outarray = Array<OneD, NekDouble>(GetNcoeffs());
-        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+3);
-        
-        for (int i = 0; i < m_spacedim+3; ++i)
-        {
-            physfield[i] = Array<OneD, NekDouble>(npts);
-            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
-        }
-        
-        Array<OneD, NekDouble> eps_bar(npts, 0.0);
-        GetSmoothArtificialViscosity(physfield, eps_bar);
-        
-        m_fields[0]->FwdTrans(eps_bar, outarray);
-    }
     /**
      * @brief Get the exact solutions for isentropic vortex and Ringleb
      * flow problems.
@@ -855,7 +739,6 @@ namespace Nektar
      */
     void EulerCFE::SetInitialRinglebFlow(void)
     {
-
         // Get number of different boundaries in the input file
         int nbnd    = m_fields[0]->GetBndConditions().num_elements();
 

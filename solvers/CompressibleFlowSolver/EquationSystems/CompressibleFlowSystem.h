@@ -102,7 +102,6 @@ namespace Nektar
         NekDouble                           m_wInf;
         NekDouble                           m_gasConstant;
         NekDouble                           m_Twall;
-        std::string                         m_EqTypeStr;
         std::string                         m_ViscosityType;
         std::string                         m_shockCaptureType;
         NekDouble                           m_mu;
@@ -117,6 +116,7 @@ namespace Nektar
         NekDouble                           m_Prandtl;
         StdRegions::StdQuadExpSharedPtr     m_OrthoQuadExp;
         StdRegions::StdHexExpSharedPtr      m_OrthoHexExp;
+        bool                                m_smoothDiffusion;
 
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -127,9 +127,6 @@ namespace Nektar
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         void GetFluxVector(
-            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
-        void GetFluxVectorPDESC(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         void GetFluxVectorDeAlias(

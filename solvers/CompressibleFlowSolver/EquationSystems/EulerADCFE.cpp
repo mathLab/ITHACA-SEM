@@ -29,11 +29,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables with artificial diffusion
+// Description: Euler equations in conservative variables with artificial
+// diffusion
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/EquationSystems/EulerADCFE.h>
+#include <boost/algorithm/string.hpp>
 
 namespace Nektar
 {
@@ -53,14 +55,24 @@ namespace Nektar
     {
         CompressibleFlowSystem::v_InitObject();
 
+        if (m_shockCaptureType == "Smooth")
+        {
+            ASSERTL0(m_fields.num_elements() == m_spacedim + 3,
+                     "Not enough variables for smooth shock capturing; "
+                     "make sure you have added eps to variable list.");
+            m_smoothDiffusion = true;
+        }
+
+        m_diffusion->SetArtificialDiffusionVector(
+            &CompressibleFlowSystem::GetArtificialDynamicViscosity, this);
+
         if(m_session->DefinesSolverInfo("PROBLEMTYPE"))
         {
-
             std::string ProblemTypeStr = m_session->GetSolverInfo("PROBLEMTYPE");
             int i;
             for(i = 0; i < (int) SIZE_ProblemType; ++i)
             {
-                if(NoCaseStringCompare(ProblemTypeMap[i],ProblemTypeStr) == 0)
+                if(boost::iequals(ProblemTypeMap[i], ProblemTypeStr))
                 {
                     m_problemType = (ProblemType)i;
                     break;

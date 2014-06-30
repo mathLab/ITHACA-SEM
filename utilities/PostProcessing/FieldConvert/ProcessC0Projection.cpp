@@ -63,6 +63,11 @@ namespace Nektar
         void ProcessC0Projection::Process(po::variables_map &vm)
         {
             
+            if (m_f->m_verbose)
+            {
+                cout << "ProcessC0Projection: Projecting field into C0 space..." << endl;
+            }
+
             // generate an C0 expansion field with no boundary conditions. 
             bool savedef = m_f->m_declareExpansionAsContField;
             m_f->m_declareExpansionAsContField = true;
@@ -70,10 +75,6 @@ namespace Nektar
                                                 "DefaultVar",true);
             m_f->m_declareExpansionAsContField = savedef;
             
-            if (m_f->m_verbose)
-            {
-                cout << "ProcessC0Projection: Projects fiels into C0 space..." << endl;
-            }
             
             int nfields = m_f->m_exp.size();
             

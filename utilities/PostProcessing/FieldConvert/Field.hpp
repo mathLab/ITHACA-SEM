@@ -281,7 +281,7 @@ namespace Nektar
                                                       m_graph,
                                                       m_session->GetVariable(0));
                             }
-                            else if(m_declareExpansionAsContField)
+                            else if(m_declareExpansionAsDisContField)
                             {
                                 Exp3DH2 = MemoryManager<MultiRegions::
                                     DisContField3DHomogeneous2D>::
@@ -311,7 +311,7 @@ namespace Nektar
                                     ::AllocateSharedPtr(m_session, m_graph,
                                                         m_session->GetVariable(0));
                             }
-                            else if(m_declareExpansionAsContField)
+                            else if(m_declareExpansionAsDisContField)
                             {
                                 Exp1D = MemoryManager<MultiRegions::DisContField1D>
                                     ::AllocateSharedPtr(m_session, m_graph,
@@ -369,7 +369,7 @@ namespace Nektar
                                                       dealiasing, m_graph,
                                                       m_session->GetVariable(0));
                             }
-                            else if (m_declareExpansionAsContField)
+                            else if (m_declareExpansionAsDisContField)
                             {
                                 Exp3DH1 = MemoryManager<MultiRegions::
                                     DisContField3DHomogeneous1D>::
@@ -484,7 +484,7 @@ namespace Nektar
                                     ContField3DHomogeneous2D>::
                                     AllocateSharedPtr(*tmp2);
                             }
-                            else  if(m_declareExpansionAsContField)
+                            else  if(m_declareExpansionAsDisContField)
                             {
                                 MultiRegions::DisContField3DHomogeneous2DSharedPtr tmp2 =
                                     boost::dynamic_pointer_cast<MultiRegions::
@@ -546,36 +546,84 @@ namespace Nektar
                         {                            
                             if(m_declareExpansionAsContField)
                             {
-                                MultiRegions::ContField3DHomogeneous1DSharedPtr tmp2 =
-                                    boost::dynamic_pointer_cast<MultiRegions::
-                                    ContField3DHomogeneous1D>(m_exp[0]);
-                                
-                                tmp = MemoryManager<MultiRegions::
-                                    ContField3DHomogeneous1D>::
-                                    AllocateSharedPtr(*tmp2);
+                                if(NewField)
+                                {
+                                    bool useFFT     = false;
+                                    bool dealiasing = false;
 
-                                //WARNINGL0(false,"ContField is not copying BCs");
+                                    tmp  = MemoryManager<MultiRegions::
+                                        ContField3DHomogeneous1D>::
+                                        AllocateSharedPtr(m_session, 
+                                                          m_exp[0]->GetHomogeneousBasis()->GetBasisKey(),
+                                                          m_exp[0]->GetHomoLen(),
+                                                          useFFT, dealiasing,
+                                                          m_graph, var);
+                                }
+                                else
+                                {
+                                    MultiRegions::ContField3DHomogeneous1DSharedPtr tmp2 =
+                                        boost::dynamic_pointer_cast<MultiRegions::
+                                        ContField3DHomogeneous1D>(m_exp[0]);
+                                    
+                                    ASSERTL0(tmp2,"Failed to type cast m_exp[0]");
+                                    tmp = MemoryManager<MultiRegions::
+                                        ContField3DHomogeneous1D>::
+                                        AllocateSharedPtr(*tmp2);
+                                }
                             }
                             else  if(m_declareExpansionAsDisContField)
                             {
-                                MultiRegions::DisContField3DHomogeneous1DSharedPtr tmp2 =
-                                    boost::dynamic_pointer_cast<MultiRegions::
-                                    DisContField3DHomogeneous1D>(m_exp[0]);
-                                
-                                tmp = MemoryManager<MultiRegions::
-                                    DisContField3DHomogeneous1D>::
-                                    AllocateSharedPtr(*tmp2);
-                                //  WARNINGL0(false,"DisContField is not copying BCs");
+                                if(NewField)
+                                {
+                                    bool useFFT     = false;
+                                    bool dealiasing = false;
+
+                                    tmp  = MemoryManager<MultiRegions::
+                                        DisContField3DHomogeneous1D>::
+                                        AllocateSharedPtr(m_session, 
+                                                          m_exp[0]->GetHomogeneousBasis()->GetBasisKey(),
+                                                          m_exp[0]->GetHomoLen(),
+                                                          useFFT, dealiasing,
+                                                          m_graph,var);
+                                }
+                                else
+                                {
+                                    MultiRegions::DisContField3DHomogeneous1DSharedPtr tmp2 =
+                                        boost::dynamic_pointer_cast<MultiRegions::
+                                        DisContField3DHomogeneous1D>(m_exp[0]);
+                                    ASSERTL0(tmp2,"Failed to type cast m_exp[0]");
+                                    
+                                    tmp = MemoryManager<MultiRegions::
+                                        DisContField3DHomogeneous1D>::
+                                        AllocateSharedPtr(*tmp2);
+                                }
                             }
                             else  
                             {
-                                MultiRegions::ExpList3DHomogeneous1DSharedPtr tmp2 =
-                                    boost::dynamic_pointer_cast<MultiRegions::
-                                    ExpList3DHomogeneous1D>(m_exp[0]);
-                                
-                                tmp = MemoryManager<MultiRegions::
-                                    ExpList3DHomogeneous1D>::
-                                    AllocateSharedPtr(*tmp2);
+                                if(NewField)
+                                {
+                                    bool useFFT     = false;
+                                    bool dealiasing = false;
+                                    
+                                    tmp  = MemoryManager<MultiRegions::
+                                        ExpList3DHomogeneous1D>::
+                                        AllocateSharedPtr(m_session, 
+                                                          m_exp[0]->GetHomogeneousBasis()->GetBasisKey(),
+                                                          m_exp[0]->GetHomoLen(),
+                                                          useFFT, dealiasing,
+                                                          m_graph);
+                                }
+                                else
+                                {
+                                    MultiRegions::ExpList3DHomogeneous1DSharedPtr tmp2 =
+                                        boost::dynamic_pointer_cast<MultiRegions::
+                                        ExpList3DHomogeneous1D>(m_exp[0]);
+                                    ASSERTL0(tmp2,"Failed to type cast m_exp[0]");
+                                    
+                                    tmp = MemoryManager<MultiRegions::
+                                        ExpList3DHomogeneous1D>::
+                                        AllocateSharedPtr(*tmp2);
+                                }
                             }
 
                         }

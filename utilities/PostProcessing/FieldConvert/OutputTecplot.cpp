@@ -180,6 +180,17 @@ namespace Nektar
         {
             
             int coordim  = m_f->m_exp[0]->GetExp(0)->GetCoordim();
+            MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
+            
+            if(HomoExpType == MultiRegions::e3DH1D)
+            {
+                coordim +=1;
+            }
+            else if (HomoExpType == MultiRegions::e3DH2D)
+            {
+                coordim += 2;
+            }
+
             outfile << "Variables = x";
             
             if(coordim == 2)
@@ -211,11 +222,13 @@ namespace Nektar
                                              int expansion)
         {
 
+            
             if(expansion == -1) //write as full block zone
             {
                 int i,j;
                 int coordim   = m_f->m_exp[0]->GetCoordim(0);
                 int totpoints = m_f->m_exp[0]->GetTotPoints();
+                MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
                 
                 Array<OneD,NekDouble> coords[3];
                 
@@ -241,11 +254,29 @@ namespace Nektar
                         }
                     }
                 }
-
-                outfile << "Zone, N=" << totpoints << ", E="<<
-                    GetNumTecplotBlocks() << ", F=FEBlock" ;
                 
-                switch(m_f->m_exp[0]->GetExp(0)->GetNumBases())
+                int numBlocks = GetNumTecplotBlocks();
+                int nBases = m_f->m_exp[0]->GetExp(0)->GetNumBases();
+
+                if (HomoExpType == MultiRegions::e3DH1D)
+                {
+                    nBases  += 1;
+                    coordim += 1;
+                    int nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
+                    NekDouble tmp = numBlocks * (nPlanes-1);
+                    numBlocks = (int)tmp;
+                }
+                else if (HomoExpType == MultiRegions::e3DH2D)
+                {
+                    nBases  += 2;
+                    coordim += 1;
+                }
+                
+                
+                outfile << "Zone, N=" << totpoints << ", E="<<
+                    numBlocks << ", F=FEBlock" ;
+                
+                switch(nBases)
                 {
                 case 1:
                     outfile << ", ET=LINESEG" << std::endl;
@@ -290,7 +321,7 @@ namespace Nektar
                     returnval += (m_f->m_exp[0]->GetExp(i)->GetNumPoints(0)-1);
                 }
             }
-            else             if(m_f->m_exp[0]->GetExp(0)->GetNumBases() == 2)
+            else  if(m_f->m_exp[0]->GetExp(0)->GetNumBases() == 2)
             {
                 for(int i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
                 {
@@ -322,7 +353,7 @@ namespace Nektar
                                               int expansion)
         {
             
-            if(expansion == -1)
+            if(expansion == -1) //write as full block zone
             {
                 int totpoints = m_f->m_exp[0]->GetTotPoints();
 
@@ -386,19 +417,49 @@ namespace Nektar
                 {
                     int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
                     int np1 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
-                    
-                    for(j = 1; j < np1; ++j)
+                    int totPoints = m_f->m_exp[0]->GetTotPoints();
+                    int nPlanes = 1; 
+
+                    if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
                     {
-                        for(k = 1; k < np0; ++k)
-                        {
-                            outfile << cnt + (j-1)*np0 + k  << " ";
-                            outfile << cnt + (j-1)*np0 + k +1 << " ";
-                            outfile << cnt + j*np0 + k +1 << " ";
-                            outfile << cnt + j*np0 + k    << endl;
-                        }
-                    }
+                        nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
+                        totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
+
                     
-                    cnt += np0*np1;
+                        for(int n = 1; n < nPlanes; ++n)
+                        {
+                            for(j = 1; j < np1; ++j)
+                            {
+                                for(k = 1; k < np0; ++k)
+                                {
+                                    outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k  << " ";
+                                    outfile << cnt + (n-1)*totPoints + (j-1)*np0 + k +1 << " ";
+                                    outfile << cnt + (n-1)*totPoints + j*np0 + k +1 << " ";
+                                    outfile << cnt + (n-1)*totPoints + j*np0 + k    << " ";
+
+                                    outfile << cnt + n*totPoints + (j-1)*np0 + k  << " ";
+                                    outfile << cnt + n*totPoints + (j-1)*np0 + k +1 << " ";
+                                    outfile << cnt + n*totPoints + j*np0 + k +1 << " ";
+                                    outfile << cnt + n*totPoints + j*np0 + k    << endl;
+                                }
+                            }
+                        }
+                        cnt += np0*np1;
+                    }
+                    else
+                    {
+                        for(j = 1; j < np1; ++j)
+                        {
+                            for(k = 1; k < np0; ++k)
+                            {
+                                outfile << cnt + (j-1)*np0 + k  << " ";
+                                outfile << cnt + (j-1)*np0 + k +1 << " ";
+                                outfile << cnt + j*np0 + k +1 << " ";
+                                outfile << cnt + j*np0 + k    << endl;
+                            }
+                        }
+                        cnt += np0*np1;
+                    }
                 }
                 else if(nbase == 3)
                 {

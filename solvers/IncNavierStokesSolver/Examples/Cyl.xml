@@ -3268,7 +3268,7 @@
 
         <PARAMETERS>
             <P> TimeStep      = 0.001 </P>
-            <P> FinalTime     =300    </P>
+            <P> FinalTime     = 10    </P>
             <P> NumSteps      = FinalTime/TimeStep </P>
             <P> IO_CheckSteps = 1000    </P>
             <P> IO_InfoSteps  = 10    </P>

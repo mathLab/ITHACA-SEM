@@ -36,21 +36,19 @@
 #ifndef NEKTAR_SOLVERS_NOADVECTION_H
 #define NEKTAR_SOLVERS_NOADVECTION_H
 
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+///#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+#include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
 {     
-    class NoAdvection: public AdvectionTerm
+    class NoAdvection: public SolverUtils::Advection
     {
     public:
         friend class MemoryManager<NoAdvection>;
 
         /// Creates an instance of this class
-        static AdvectionTermSharedPtr create(
-                                const LibUtilities::SessionReaderSharedPtr& pSession,
-                                const SpatialDomains::MeshGraphSharedPtr& pGraph) {
-            AdvectionTermSharedPtr p = MemoryManager<NoAdvection>::AllocateSharedPtr(pSession, pGraph);
-            p->InitObject();
+        static SolverUtils::AdvectionSharedPtr create(std::string) {
+            SolverUtils::AdvectionSharedPtr p = MemoryManager<NoAdvection>::AllocateSharedPtr();
             return p;
         }
         /// Name of class
@@ -58,23 +56,22 @@ namespace Nektar
         
 	protected:
         
-        NoAdvection(const LibUtilities::SessionReaderSharedPtr&        pSession,
-					const SpatialDomains::MeshGraphSharedPtr&          pGraph);
+        NoAdvection();
 
 
         virtual ~NoAdvection();
 
-	private:
+        virtual void v_InitObject(
+                const LibUtilities::SessionReaderSharedPtr&        pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
 
-        //Function for the evaluation of the linearised advective terms
-        virtual void v_ComputeAdvectionTerm(
-                         Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                         const Array<OneD, Array<OneD, NekDouble> > &pV,
-                         const Array<OneD, const NekDouble> &pU,
-                         Array<OneD, NekDouble> &pOutarray,
-                         int pVelocityComponent,
-						 NekDouble m_time,
-                         Array<OneD, NekDouble> &pWk);
+        virtual void v_Advect(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+            const NekDouble                                   &time);
 
 	};
     

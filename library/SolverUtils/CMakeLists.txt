@@ -1,5 +1,6 @@
 SET(SOLVER_UTILS_SOURCES
   Core/Misc.cpp
+  AdvectionSystem.cpp
   Advection/Advection.cpp
   Advection/Advection3DHomogeneous1D.cpp
   Advection/AdvectionFR.cpp
@@ -37,6 +38,7 @@ SET(SOLVER_UTILS_SOURCES
 
 SET(SOLVER_UTILS_HEADERS
   Core/Misc.h
+  AdvectionSystem.h
   Advection/Advection.h
   Advection/AdvectionFR.h
   Advection/Advection3DHomogeneous1D.h

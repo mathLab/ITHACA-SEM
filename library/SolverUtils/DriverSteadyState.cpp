@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/DriverSteadyState.h>
+#include <SolverUtils/AdvectionSystem.h>
 
 
 namespace Nektar
@@ -77,6 +78,13 @@ namespace Nektar
             
             m_equ[0]->PrintSummary(out);
             m_equ[0]->DoInitialise();
+            
+            
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            AdvectionSystemSharedPtr A = boost::dynamic_pointer_cast<AdvectionSystem>(m_equ[0]);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            
+            
             
             // - SFD Routine -
             // Compressible case
@@ -125,7 +133,7 @@ namespace Nektar
             
             for(int i = 0; i < NumVar_SFD; ++i)
             {
-                q0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0); //q0 is initialised
+                q0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 123.456); //q0 is initialised
                 qBar0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
                 m_equ[0]->CopyFromPhysField(i, qBar0[i]); //qBar0 is initially set at beiing equal to the initial conditions provided in the input file
             }
@@ -133,6 +141,11 @@ namespace Nektar
             MaxNormDiff_q_qBar = 1.0;
             MaxNormDiff_q1_q0 = 1.0;
             Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
+            
+            
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            A->GetAdvObject()->SetBaseFlow(q0);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////
             
             
             while (max(MaxNormDiff_q_qBar, MaxNormDiff_q1_q0) > TOL)

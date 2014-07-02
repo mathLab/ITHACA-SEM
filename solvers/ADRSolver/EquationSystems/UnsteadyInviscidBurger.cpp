@@ -193,7 +193,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >    advVel;    
         
         // RHS computation using the new advection base class
-        m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray);
+        m_advection->Advect(nVariables, m_fields, advVel, inarray,
+                            outarray, time);
         
         // Negate the RHS
         for (i = 0; i < nVariables; ++i)

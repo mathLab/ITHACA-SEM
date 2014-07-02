@@ -42,7 +42,8 @@
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+///#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 
 namespace Nektar
@@ -64,7 +65,7 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr &pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             const Array<OneD, int> &pVel,
-            const AdvectionTermSharedPtr &advObject)
+            const SolverUtils::AdvectionSharedPtr &advObject)
         {
             ExtrapolateSharedPtr p = MemoryManager<SubSteppingExtrapolate>::AllocateSharedPtr(pSession,pFields,pVel,advObject);
             return p;
@@ -77,7 +78,7 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
             const Array<OneD, int> pVel,
-            const AdvectionTermSharedPtr advObject);
+            const SolverUtils::AdvectionSharedPtr advObject);
 
         virtual ~SubSteppingExtrapolate();
         

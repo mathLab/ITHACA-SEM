@@ -38,7 +38,7 @@
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/UnsteadySystem.h>
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 #include <SolverUtils/Forcing/Forcing.h>
@@ -101,7 +101,7 @@ namespace Nektar
      * \brief This class is the base class for Navier Stokes problems
      *
      */
-    class IncNavierStokes: public SolverUtils::UnsteadySystem
+    class IncNavierStokes: public SolverUtils::AdvectionSystem
     {
     public:
         // Destructor
@@ -119,10 +119,10 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-        AdvectionTermSharedPtr GetAdvObject(void)
-        {
-            return m_advObject;
-        }
+//        AdvectionTermSharedPtr GetAdvObject(void)
+//        {
+//            return m_advObject;
+//        }
 
 
         int GetNConvectiveFields(void)
@@ -157,9 +157,6 @@ namespace Nektar
         bool m_SmoothAdvection;
 
         LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
-
-        /// Advection term
-        AdvectionTermSharedPtr m_advObject;
 
         /// Forcing terms
         std::vector<SolverUtils::ForcingSharedPtr>               m_forcing;

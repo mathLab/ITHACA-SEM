@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AdvectionWeakDG.h
+// File AdvectionSystem.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,45 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Weak DG advection class.
+// Description: Advection system
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
-#define NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
+#ifndef NEKTAR_SOLVERUTILS_ADVECTIONSYSTEM_H
+#define NEKTAR_SOLVERUTILS_ADVECTIONSYSTEM_H
 
-#include <SolverUtils/AdvectionSystem.h>
-/// #include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/Advection/Advection.h>
 
-namespace Nektar
-{
-    namespace SolverUtils
-    {
-        class AdvectionWeakDG : public Advection
+
+namespace Nektar {
+    namespace SolverUtils {
+        
+        class AdvectionSystem: public UnsteadySystem
         {
         public:
-            static AdvectionSharedPtr create(std::string advType)
+            AdvectionSystem(const LibUtilities::SessionReaderSharedPtr &pSession);
+            virtual ~AdvectionSystem();
+            
+            virtual void v_InitObject();
+
+            AdvectionSharedPtr GetAdvObject()
             {
-                return AdvectionSharedPtr(new AdvectionWeakDG());
+                return m_advObject;
             }
 
-            static std::string type;
-
         protected:
-            AdvectionWeakDG();
-
-            virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr               pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
-
-            virtual void v_Advect(
-                const int                                          nConvective,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const NekDouble                                   &time);
+            /// Advection term
+            SolverUtils::AdvectionSharedPtr m_advObject;
         };
+        
+        typedef boost::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
     }
 }
 

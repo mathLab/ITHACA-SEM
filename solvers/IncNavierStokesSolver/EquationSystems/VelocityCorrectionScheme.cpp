@@ -86,7 +86,8 @@ namespace Nektar
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
-            
+        m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
+
         // Needs to be set outside of next if so that it is turned off by default
         m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
 
@@ -172,7 +173,7 @@ namespace Nektar
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";
-        if (m_advObject->GetSpecHPDealiasing())
+        if (m_specHP_dealiasing)
         {
             dealias += (dealias == "" ? "" : " + ") + string("spectral/hp");
         }
@@ -274,9 +275,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &outarray, 
         const NekDouble time)
     {
-        // Evaluate convection terms
-        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,
-                                 inarray, outarray, m_time);
+        EvaluateAdvectionTerms(inarray, outarray);
         
         // Smooth advection
         if(m_SmoothAdvection)

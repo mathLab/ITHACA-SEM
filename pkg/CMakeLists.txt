@@ -41,33 +41,48 @@ if (DPKG)
     add_deb_package(
         NAME libnektar++-utilities
         SUMMARY "Nektar++ library utilities"
-        DESCRIPTION "This is the LibUtilities library."
+        DESCRIPTION 
+        "This library provides core routines including linear algebra and
+         integration with ThirdParty libraries."
         INSTALL_LIBS "${libnektar++-utilities_LIBS}")
     add_deb_package(
         NAME libnektar++-stdregions
         SUMMARY "Nektar++ StdRegions library"
-        DESCRIPTION "This is the StdRegions library."
-        DEPENDS "libnektar++-utilities (=${NEKTAR_VERSION})"
+        DESCRIPTION 
+        "This library provides construction of the reference expansions for the
+         various 1D, 2D and 3D regions."
+        DEPENDS "libnektar++-utilities (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-stdregions_LIBS}")
     add_deb_package(
         NAME libnektar++-spatialdomains
         SUMMARY "Nektar++ SpatialDomains library"
-        DESCRIPTION "This is the SpatialDomains library."
+        DESCRIPTION
+        "This library provides the mappings between reference regions and
+         physical regions in the domain."
+        DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-spatialdomains_LIBS}")
     add_deb_package(
         NAME libnektar++-localregions
         SUMMARY "Nektar++ LocalRegions library"
-        DESCRIPTION "This is the LocalRegions library."
+        DESCRIPTION 
+        "This library provides physical space expansions on the various
+         supported regions."
+        DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-localregions_LIBS}")
     add_deb_package(
         NAME libnektar++-multiregions
         SUMMARY "Nektar++ MultiRegions library"
-        DESCRIPTION "This is the MultiRegions library."
+        DESCRIPTION
+        "This library provides global expansions on multi-element domains."
+        DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
     add_deb_package(
         NAME libnektar++-solverutils
         SUMMARY "Nektar++ SolverUtils library"
-        DESCRIPTION "This is the SolverUtils library."
+        DESCRIPTION 
+        "This library provides support classes and routines for constructing
+         complete spectral/hp element solvers."
+        DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION}), libnektar++-multiregions (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-solverutils_LIBS}")
 
 endif (DPKG)
@@ -81,33 +96,44 @@ if (RPMBUILD)
     add_rpm_package(
         NAME libnektar++-utilities
         SUMMARY "Nektar++ library utilities"
-        DESCRIPTION "THis is the LibUtilities library."
+        DESCRIPTION 
+        "This library provides core routines including linear algebra and
+         integration with ThirdParty libraries."
         INSTALL_LIBS "${libnektar++-utilities_LIBS}")
     add_rpm_package(
         NAME libnektar++-stdregions
         SUMMARY "Nektar++ StdRegions library"
-        DESCRIPTION "This is the StdRegions library."
+        DESCRIPTION
+        "This library provides construction of the reference expansions for the
+         various 1D, 2D and 3D regions."
         DEPENDS "libnektar++-utilities (=${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-stdregions_LIBS}")
     add_rpm_package(
         NAME libnektar++-spatialdomains
         SUMMARY "Nektar++ SpatialDomains library"
-        DESCRIPTION "This is the SpatialDomains library."
+        DESCRIPTION 
+        "This library provides the mappings between reference regions and
+         physical regions in the domain."
         INSTALL_LIBS "${libnektar++-spatialdomains_LIBS}")
     add_rpm_package(
         NAME libnektar++-localregions
         SUMMARY "Nektar++ LocalRegions library"
-        DESCRIPTION "This is the LocalRegions library."
+        DESCRIPTION
+        "This library provides physical space expansions on the various
+         supported regions."
         INSTALL_LIBS "${libnektar++-localregions_LIBS}")
     add_rpm_package(
         NAME libnektar++-multiregions
         SUMMARY "Nektar++ MultiRegions library"
-        DESCRIPTION "This is the MultiRegions library."
+        DESCRIPTION
+        "This library provides global expansions on multi-element domains."
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
     add_rpm_package(
         NAME libnektar++-solverutils
         SUMMARY "Nektar++ SolverUtils library"
-        DESCRIPTION "This is the SolverUtils library."
+        DESCRIPTION 
+        "This library provides support classes and routines for constructing
+         complete spectral/hp element solvers."
         INSTALL_LIBS "${libnektar++-solverutils_LIBS}")
 
 

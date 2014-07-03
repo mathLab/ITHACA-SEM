@@ -39,16 +39,17 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        std::string Driver::evolutionOperatorLookupIds[5] = {
+        std::string Driver::evolutionOperatorLookupIds[6] = {
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Nonlinear"      ,eNonlinear),
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Direct"         ,eDirect),
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Adjoint"        ,eAdjoint),
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","TransientGrowth",eTransientGrowth),
-            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","SkewSymmetric"  ,eSkewSymmetric)
+            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","SkewSymmetric"  ,eSkewSymmetric),
+            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","OptimizedSteadyState"  ,eOptimizedSteadyState)
         };
         std::string Driver::evolutionOperatorDef = LibUtilities::SessionReader::RegisterDefaultSolverInfo("EvolutionOperator","Nonlinear");
         std::string Driver::driverDefault = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Driver","Standard");
-
+        
 	DriverFactory& GetDriverFactory()
         {
             typedef Loki::SingletonHolder<DriverFactory,
@@ -99,7 +100,11 @@ namespace Nektar
                 /// @todo At the moment this is Navier-Stokes specific - generalise?
                 m_EvolutionOperator = m_session->GetSolverInfoAsEnum<EvolutionOperatorType>("EvolutionOperator");
 
-                m_nequ = (m_EvolutionOperator == eTransientGrowth ? 2 : 1);
+                //m_nequ = (m_EvolutionOperator == eTransientGrowth ? 2 : 1);
+                m_nequ = ((m_EvolutionOperator == eTransientGrowth || m_EvolutionOperator == eOptimizedSteadyState) ? 2 : 1);
+                cout << "\n \t In Driver.cpp: m_nequ = " << m_nequ << endl;
+                cout << "\t In Driver.cpp: m_EvolutionOperator = " << m_EvolutionOperator << "\n" << endl;
+                
                 m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
 
                 // Set the AdvectiveType tag and create EquationSystem objects.
@@ -129,6 +134,15 @@ namespace Nektar
                     case eSkewSymmetric:
                         m_session->SetTag("AdvectiveType","SkewSymmetric");
                         m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
+                        break;
+                    case eOptimizedSteadyState:
+                        //For running stability analysis
+                        m_session->SetTag("AdvectiveType","Linearised");
+                        m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
+                        
+                        //For running the SFD method on the nonlinear problem 
+                        m_session->SetTag("AdvectiveType","Convective");
+                        m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
                         break;
                     default:
                         ASSERTL0(false, "Unrecognised evolution operator.");

@@ -562,6 +562,7 @@ namespace Nektar
                     "Size of base flow array does not match expected.");
             Vmath::Vcopy(npts, inarray[i], 1, m_baseflow[i], 1);
         }
+        cout << "m_baseflow[0][50] = " << m_baseflow[0][50] << endl;
     }
 
 

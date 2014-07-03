@@ -38,12 +38,18 @@
 
 #include <SolverUtils/Driver.h>
 
+////////////////////
+#include <SolverUtils/DriverArnoldi.h>
+#include <SolverUtils/DriverModifiedArnoldi.h>
+///////////////////
+
 namespace Nektar
 {
     namespace SolverUtils
     {
         /// Base class for the development of solvers.
-        class DriverSteadyState: public Driver
+        //         class DriverSteadyState: public Driver//, public DriverArnoldi
+        class DriverSteadyState: public DriverModifiedArnoldi
         {
         public:
             friend class MemoryManager<DriverSteadyState>;
@@ -69,6 +75,19 @@ namespace Nektar
                               Array<OneD, Array<OneD, NekDouble> > &q1,
                               Array<OneD, Array<OneD, NekDouble> > &qBar1);
             
+            void EvalEV_ScalarSFD(const NekDouble &X_input,
+                                  const NekDouble &Delta_input,
+                                  const complex<NekDouble> &alpha,
+                                  NekDouble &MaxEV);
+            
+            void GradientDescentMethod(const complex<NekDouble> &alpha,
+                                       NekDouble &X_output,
+                                       NekDouble &Delta_output);
+            
+            void ReadEVfile(const int &KrylovSubspaceDim, NekDouble &growthEV, NekDouble &frequencyEV);
+            
+            void ComputeOptimization();
+            
             
         protected:
             /// Constructor
@@ -86,6 +105,8 @@ namespace Nektar
             static std::string driverLookupId;
             
         private:
+            int NumVar_SFD;  
+            
             //Definition of the SFD parameters:
             NekDouble m_Delta;
             NekDouble m_Delta0;
@@ -106,23 +127,19 @@ namespace Nektar
             int m_infosteps;
             int m_checksteps;
             
-            NekDouble m_MinNormDiff_q_qBar;
-            NekDouble m_MaxNormDiff_q_qBar;
-            NekDouble m_First_MinNormDiff_q_qBar;
-            
-            int NumVar_SFD;
-            
             int MPIrank;
             
-            NekDouble MaxNormDiff_q_qBar;
-            NekDouble MaxNormDiff_q1_q0;
+            NekDouble Diff_q_qBar;
+            NekDouble Diff_q1_q0;
+            NekDouble MinDiff;
             
             NekDouble Min_MaxNormDiff_q_qBar;
             
             std::ofstream m_file;
         };
-    }	
+    }   
 } //end of namespace
+
 
 #endif //NEKTAR_SOLVERUTILS_DRIVERSTEADYSTATE_H
 

@@ -379,7 +379,12 @@ namespace Nektar
                     cout << "CFL safety factor : " << m_cflSafetyFactor << endl
                          << "CFL time-step     : " << m_timestep        << endl;
                 }
-                cout << "Time-integration  : " << intTime  << "s"   << endl;
+                ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                 if (m_EvolutionOperator != eOptimizedSteadyState)
+//                 {
+//                     cout << "Time-integration  : " << intTime  << "s"   << endl;
+//                 }
+                ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
             
             // If homogeneous, transform back into physical space if necessary.

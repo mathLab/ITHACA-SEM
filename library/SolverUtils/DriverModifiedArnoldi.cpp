@@ -117,7 +117,8 @@ namespace Nektar
 
 		
             // Copy starting vector into second sequence element (temporary).
-            if(m_session->DefinesFunction("InitialConditions"))
+            if(m_session->DefinesFunction("InitialConditions") && m_EvolutionOperator != eOptimizedSteadyState)
+                //m_EvolutionOperator != eOptimizedSteadyState is necessary for the coupling between DriverSteadyState and DriverArnoldi
             {
                 out << "\tInital vector       : specified in input file " << endl;
                 m_equ[0]->SetInitialConditions(0.0,false);

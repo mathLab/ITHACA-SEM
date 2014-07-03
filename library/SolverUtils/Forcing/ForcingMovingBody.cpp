@@ -677,7 +677,7 @@ namespace SolverUtils
         //Get the hydrodynamic forces from the fluid solver
 		Array<OneD, unsigned int> ZIDs;
         ZIDs = pFields[0]->GetZIDs();
-		Array <OneD, NekDouble> tmp;
+		Array <OneD, NekDouble> tmp(m_motion.num_elements());
 	
 		int ndirmotion = m_motion.num_elements();
         Array<OneD, Array <OneD, NekDouble> > Hydrofces(ndirmotion);
@@ -685,7 +685,7 @@ namespace SolverUtils
         Hydrofces[1] = Array <OneD, NekDouble> (m_NumLocPlanes);
         for(int plane = 0; plane < m_NumLocPlanes; plane++)
         {
-            pFields[0]->GetPlane(plane)->GetMovBodyForces(tmp);
+            pFields[0]->GetPlane(plane)->GetMovBodyForces(tmp[0],tmp[1]);
 		 	Hydrofces[0][plane] = tmp[0];
             Hydrofces[1][plane] = tmp[1];
         }
@@ -712,8 +712,8 @@ namespace SolverUtils
 		
         for(int plane = 0; plane < m_NumLocPlanes; plane++)
         {
-			Array<OneD, NekDouble> tmp0(3);
-			Array<OneD, NekDouble> tmp1(3);
+			Array<OneD, NekDouble> tmp0(m_NumStructVars);
+			Array<OneD, NekDouble> tmp1(m_NumStructVars);
 			for (int var = 0; var < m_NumStructVars; var++)
 			{
 				tmp0[var] = m_Motion_x[var][plane];
@@ -731,9 +731,9 @@ namespace SolverUtils
         bndConds = Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >(ndirmotion);
         for (int plane = 0; plane < m_NumLocPlanes; plane++)
         {
-            Array<OneD, Array<OneD, NekDouble> > tmp(2);
-			tmp[0] = Array<OneD, NekDouble>(3,0.0);
-			tmp[1] = Array<OneD, NekDouble>(3,0.0);
+            Array<OneD, Array<OneD, NekDouble> > tmp(ndirmotion);
+			tmp[0] = Array<OneD, NekDouble>(m_NumStructVars,0.0);
+			tmp[1] = Array<OneD, NekDouble>(m_NumStructVars,0.0);
 			tmp[0][1] = m_Motion_x[1][plane];
 			tmp[1][1] = m_Motion_y[1][plane];
 			 

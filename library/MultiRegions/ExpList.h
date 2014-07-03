@@ -851,26 +851,29 @@ namespace Nektar
             }
            
 
-
-			void SetMovBodyForces(Array<OneD, NekDouble> &forces)
+			//
+			inline void SetMovBodyForces(NekDouble &forcex, NekDouble &forcey)
 			{
-				m_movbodyfces = forces;
+				m_movbodyfces[0] = forcex;
+                m_movbodyfces[1] = forcey;
 			} 
 
-            void GetMovBodyForces(Array<OneD, NekDouble> &forces)
+            inline void GetMovBodyForces(NekDouble &forcex, NekDouble &forcey)
             {
-                forces = m_movbodyfces;
+                forcex = m_movbodyfces[0];
+                forcey = m_movbodyfces[1];
             }
 
-            void SetMovBodyMotionVars(Array<OneD, NekDouble> &motions)
+            inline void SetMovBodyMotionVars(Array<OneD, NekDouble> &motions)
             {
                 m_movbodyvars = motions;
             }
 
-            void GetMovBodyMotionVars(Array<OneD, NekDouble> &motions)
+            inline void GetMovBodyMotionVars(Array<OneD, NekDouble> &motions)
             {
                 motions = m_movbodyvars;
             }
+
             //expansion type
             ExpansionType m_expType;
 

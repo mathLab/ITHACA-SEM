@@ -118,6 +118,7 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
+			m_index = 0;
 			m_outputStream =  Array<OneD, std::ofstream>(2);
             // Parse the boundary regions into a list.
             std::string::size_type FirstInd = m_BoundaryString.find_first_of('[') + 1;
@@ -472,7 +473,7 @@ namespace Nektar
             {
                 fces[0] = Fxp[ZIDs[plane]] + Fxv[ZIDs[plane]];
                 fces[1] = Fyp[ZIDs[plane]] + Fyv[ZIDs[plane]];
-                pFields[0]->GetPlane(plane)->SetMovBodyForces(fces);
+                pFields[0]->GetPlane(plane)->SetMovBodyForces(fces[0],fces[1]);
             }
            
 			//get and output moving body variables

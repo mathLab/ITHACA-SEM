@@ -7,27 +7,45 @@ CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_SCOTCH
 
 IF( NEKTAR_USE_SCOTCH )
     IF (THIRDPARTY_BUILD_SCOTCH)
-        MESSAGE("Building Scotch is not yet supported.")
-    
+        UNSET(FLEX CACHE)
+        FIND_PROGRAM(FLEX flex)
+        IF(NOT FLEX)
+            MESSAGE(FATAL_ERROR
+                "'flex' lexical parser not found. Cannot build scotch.")
+        ENDIF(NOT FLEX)
+
+        SET(SCOTCH_SRC ${TPSRC}/src/scotch-6.0.0/src)
+
+        IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+            SET(SCOTCH_MAKE Makefile.inc.x86-64_pc_linux2.shlib)
+        ELSE ()
+            SET(SCOTCH_MAKE Makefile.inc.i686_pc_linux2.shlib)
+        ENDIF ()
+
         INCLUDE(ExternalProject)
         EXTERNALPROJECT_ADD(
             scotch-6.0.0
             PREFIX ${TPSRC}
             URL ${TPURL}/scotch_6.0.0.tar.gz
-            URL_MD5 "6c6816aea0f53db6c71b1d98ed4ad42b"
+            URL_MD5 "ba117428c0a6cd97d0c93e8b872bb3fe"
             DOWNLOAD_DIR ${TPSRC}
-            CONFIGURE_COMMAND ${CMAKE_COMMAND}
-                -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
-                -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
-                -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist
-                -DCMAKE_C_FLAGS:STRING=-fPIC
-                ${TPSRC}/src/scotch_6.0.0
+            CONFIGURE_COMMAND rm -f ${SCOTCH_SRC}/Makefile.inc
+                COMMAND ln -s
+                ${SCOTCH_SRC}/Make.inc/${SCOTCH_MAKE}
+                ${SCOTCH_SRC}/Makefile.inc
+            BUILD_COMMAND $(MAKE) -C ${TPSRC}/src/scotch-6.0.0/src
+                "LDFLAGS=-lz -lm -lrt -lpthread" scotch
+            INSTALL_COMMAND $(MAKE) -C ${TPSRC}/src/scotch-6.0.0/src
+                prefix=${TPSRC}/dist install
         )
         SET(SCOTCH_LIB scotch CACHE FILEPATH
             "Scotch library" FORCE)
+        SET(SCOTCHERR_LIB scotcherr CACHE FILEPATH
+            "Scotch error library" FORCE)
         SET(SCOTCHMETIS_LIB scotchmetis CACHE FILEPATH
             "Scotch Metis interface library" FORCE)
         MARK_AS_ADVANCED(SCOTCH_LIB)
+        MARK_AS_ADVANCED(SCOTCHERR_LIB)
         MARK_AS_ADVANCED(SCOTCHMETIS_LIB)
         LINK_DIRECTORIES(${TPSRC}/dist/lib)
         INCLUDE_DIRECTORIES(${TPSRC}/dist/include)

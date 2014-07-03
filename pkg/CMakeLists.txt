@@ -113,3 +113,11 @@ if (RPMBUILD)
 
 endif (RPMBUILD)
 
+add_custom_target(pkg-tgz)
+add_dependencies(pkg pkg-tgz)
+
+add_tgz_package(
+    NAME nektar++
+    SUMMARY "Nektar++ libraries and solvers"
+    DESCRIPTION "This is all of Nektar++"
+    INSTALL_LIBS "${nektar++_LIBS}")

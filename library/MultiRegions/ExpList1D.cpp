@@ -473,12 +473,14 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey bkey = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
-                        exp1D = LocalRegions::Expansion1D::FromStdExp(
-                            bndConstraint[i]->GetExp(j));
+                        exp1D = bndConstraint[i]->GetExp(j)->
+                                    as<LocalRegions::Expansion1D>();
                         segGeom = exp1D->GetGeom1D();
+
                         seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, segGeom);
                         edgesDone.insert(segGeom->GetEid());
+
                         seg->SetElmtId(elmtid++);
                         (*m_exp).push_back(seg);
                     }
@@ -492,7 +494,7 @@ namespace Nektar
             
             for(i = 0; i < locexp.size(); ++i)
             {
-                exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
+                exp2D = locexp[i]->as<LocalRegions::Expansion2D>();
                 
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
@@ -582,7 +584,7 @@ namespace Nektar
                 
                 for(i = 0; i < locexp.size(); ++i)
                 {
-                    exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
+                    exp2D = locexp[i]->as<LocalRegions::Expansion2D>();
                     
                     int nedges = locexp[i]->GetNedges();
                     
@@ -1085,8 +1087,6 @@ namespace Nektar
             // Assume whole array is of same coordinate dimension
             int coordim = GetCoordim(0);
 
-            int nproc = -1;
-            
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
@@ -1101,8 +1101,6 @@ namespace Nektar
                 
                     LocalRegions::Expansion2DSharedPtr loc_elmt =
                     loc_exp->GetLeftAdjacentElementExp();
-            
-                    int GlobalID = loc_exp->GetGeom1D()->GetGlobalID();
             
                     // Get the number of points and normals for this expansion.
                     e_npoints  = (*m_exp)[i]->GetNumPoints(0);
@@ -1169,9 +1167,6 @@ namespace Nektar
                     boost::dynamic_pointer_cast<
                     LocalRegions::Expansion1D>(loc_elmt->GetEdgeExp(
                                     loc_exp->GetLeftAdjacentElementEdge()));
-                    
-                    // Determine the Global ID of the trace edge
-                    int GlobalID = loc_exp->GetGeom1D()->GetGlobalID();
                     
                     // Get the number of points and normals for this expansion.
                     e_npoints  = (*m_exp)[i]->GetNumPoints(0);

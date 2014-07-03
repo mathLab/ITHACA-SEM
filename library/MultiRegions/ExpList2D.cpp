@@ -488,8 +488,9 @@ namespace Nektar
                             ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         LibUtilities::BasisKey bkey1 = bndConstraint[i]
                             ->GetExp(j)->GetBasis(1)->GetBasisKey();
-                        FaceGeom = LocalRegions::Expansion2D::FromStdExp(
-                            bndConstraint[i]->GetExp(j))->GetGeom2D();
+                        exp2D = bndConstraint[i]->GetExp(j)
+                                    ->as<LocalRegions::Expansion2D>();
+                        FaceGeom = exp2D->GetGeom2D();
 
                         //if face is a quad
                         if((FaceQuadGeom = boost::dynamic_pointer_cast<
@@ -528,9 +529,8 @@ namespace Nektar
 
             for(i = 0; i < locexp.size(); ++i)
             {
-                exp3D = LocalRegions::Expansion3D::FromStdExp(locexp[i]);
-                
-                for(j = 0; j < exp3D->GetNfaces(); ++j)
+                exp3D = locexp[i]->as<LocalRegions::Expansion3D>();
+                for (j = 0; j < exp3D->GetNfaces(); ++j)
                 {
                     FaceGeom = exp3D->GetGeom3D()->GetFace(j);
                     id       = FaceGeom->GetFid();
@@ -641,7 +641,7 @@ namespace Nektar
                 
                 for(i = 0; i < locexp.size(); ++i)
                 {
-                    exp3D = LocalRegions::Expansion3D::FromStdExp(locexp[i]);
+                    exp3D = locexp[i]->as<LocalRegions::Expansion3D>();
                     
                     int nfaces = locexp[i]->GetNfaces();
                     

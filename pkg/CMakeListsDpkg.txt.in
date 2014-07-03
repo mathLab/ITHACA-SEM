@@ -1,0 +1,71 @@
+cmake_minimum_required(VERSION 2.6)
+
+project("pkg-deb-@PKG_PROJ@")
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_OUTPUT_FILE_PREFIX "..") # Put in pkg dir. CMake >= 2.8.3 only.
+
+# Find out the machine architecture
+execute_process(COMMAND dpkg --print-architecture 
+                OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# Package details
+set(CPACK_PACKAGE_NAME "@PKG_NAME@")
+set(CPACK_PACKAGE_VENDOR "Imperial College London")
+set(CPACK_PACKAGE_CONTACT 
+    "Nektar++ users mailing list <nektar-users@imperial.ac.uk>")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER 
+    "Chris Cantwell <c.cantwell@imperial.ac.uk>")
+set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.nektar.info")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "@PKG_SUMM@")
+set(CPACK_PACKAGE_DESCRIPTION "@PKG_DESC@")
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "@PKG_SUMM@\n.\n@PKG_DESC@")
+set(CPACK_RESOURCE_FILE_LICENSE "@CMAKE_SOURCE_DIR@/LICENSE")
+set(CPACK_PACKAGE_VERSION "@NEKTAR_VERSION@")
+set(CPACK_PACKAGE_VERSION_MAJOR "@NEKTAR_VERSION_MAJOR@")
+set(CPACK_PACKAGE_VERSION_MINOR "@NEKTAR_VERSION_MINOR@")
+set(CPACK_PACKAGE_VERSION_PATCH "@NEKTAR_VERSION_PATCH@")
+
+# Override the output filename to comply with Debian naming policy
+set(CPACK_PACKAGE_FILE_NAME 
+    "${CPACK_PACKAGE_NAME}_${CPACK_PACKAGE_VERSION}-1_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
+
+# Files to go in the package
+set(INSTALL_BINS "@INSTALL_BINS@")
+set(INSTALL_LIBS "@INSTALL_LIBS@")
+
+# Add the versioned form of each library
+foreach(l ${INSTALL_LIBS})
+    if (APPLE)
+        list(APPEND INSTALL_LIBS ${l}.${VERSION_MAJOR_MINOR})
+    else ()
+        list(APPEND INSTALL_LIBS ${l}.${CPACK_PACKAGE_VERSION})
+    endif()
+endforeach()
+
+# Install any libraries in the lib directory
+if(INSTALL_LIBS)
+    message(STATUS "Packaging libraries: ${INSTALL_LIBS}")
+    install(FILES ${INSTALL_LIBS} DESTINATION lib
+        PERMISSIONS
+            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+            GROUP_READ GROUP_EXECUTE
+            WORLD_READ WORLD_EXECUTE
+    )
+endif()
+
+# Install any binaries in the bin directory
+if(INSTALL_BINS)
+    message(STATUS "Packaging binaries: ${INSTALL_BINS}")
+    install(FILES ${INSTALL_BINS} DESTINATION bin
+        PERMISSIONS
+            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+            GROUP_READ GROUP_EXECUTE
+            WORLD_READ WORLD_EXECUTE
+    )
+endif()
+
+include(CPack)

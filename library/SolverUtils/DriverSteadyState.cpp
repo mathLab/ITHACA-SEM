@@ -154,6 +154,16 @@ namespace Nektar
                 MinDiff = 1.0;
                 int OscillationCounter(0);
                 
+                
+                NekDouble LocalMax(0.0);
+                NekDouble AutomatedTOL_init(0);
+                NekDouble AutomatedTOL_updated(0);
+                AutomatedTOL_init = 100.0*TOL;
+                AutomatedTOL_updated = AutomatedTOL_init;
+                bool NormIncreasing;
+                NormIncreasing = true;
+                
+                
                 //while (max(Diff_q_qBar, Diff_q1_q0) > TOL)
                 while (min(Diff_q_qBar, Diff_q1_q0) > TOL)
                 {
@@ -173,26 +183,28 @@ namespace Nektar
                     
                     if(m_infosteps && !((m_n+1)%m_infosteps))
                     {
-                        ConvergenceHistory(qBar1, q1, Diff_q_qBar, Diff_q1_q0);
+                        ConvergenceHistory(qBar1, q0, Diff_q_qBar, Diff_q1_q0);
                         
                         //////////////////////////////////////////////////////////////////////////////////////////
                         if (m_EvolutionOperator == eOptimizedSteadyState)
-                        {
-                            ///cout << "We UPDATE the base floooooow !!!!" << endl;
-                            
-                            
+                        {                       
                             ///We add this block for defining when we run stability-analysis and optimisation of the parameters
                             if(MinDiff > Diff_q1_q0) //The norm is decreasing (the flow is getting closer to its steady-state)
                             {
                                 MinDiff = Diff_q1_q0;
+                                NormIncreasing = false;
                                 
+                                cout << "\t - We save the current flow field as the 'partially converged SS' - " << endl;
                                 for(int i = 0; i < NumVar_SFD; ++i)
                                 {
-                                    Vmath::Vcopy(q1[i].num_elements(), q1[i], 1, partialSteadyFlow[i], 1);
+                                    Vmath::Vcopy(q0[i].num_elements(), q0[i], 1, partialSteadyFlow[i], 1);
                                 }
                                 
-                                if (MinDiff < 10.0*TOL)
+                                if (MinDiff < AutomatedTOL_updated)
                                 {
+                                    
+                                    AutomatedTOL_updated = TOL/10.0;
+                                    
                                     cout << "\n\t We compute optimization because the flow is partially converged ! \n" << endl;
                                     // -----> UpdateBaseFlow(partialSteadyFlow)
                                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,12 +215,15 @@ namespace Nektar
                                     ComputeOptimization();
                                 }
                             }
-                            else  //The norm is increasing
+                            else if(NormIncreasing == false)  //The norm is increasing
                             {
+                                NormIncreasing = true;
                                 OscillationCounter += 1;
                                 
-                                if (Diff_q1_q0 > 100.0*MinDiff || OscillationCounter > 25)
+                                if (Diff_q1_q0 > 10.0*MinDiff || OscillationCounter > 25)
                                 {
+                                    AutomatedTOL_updated = AutomatedTOL_init;
+                                    
                                     cout << "\n\t We compute optimization because the flow NOT converging towards SS ! \n" << endl;
                                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                     A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);
@@ -279,6 +294,8 @@ namespace Nektar
                 X_opt = m_X/m_dt;
                 Delta_opt = m_Delta*m_dt;
                 GradientDescentMethod(ApproxEV, X_opt, Delta_opt);
+                m_X = X_opt*m_dt;
+                m_Delta = Delta_opt/m_dt;
             }
             
             
@@ -337,13 +354,13 @@ namespace Nektar
                 MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
                 if (MPIrank==0)
                 {
-                    cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[m_nequ - 1]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X0 <<" and Delta = " << m_Delta0 <<endl;
+                    cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[m_nequ - 1]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X/m_dt <<" and Delta = " << m_Delta*m_dt <<endl;
                     std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
                     m_file << m_n+1 << "\t" << m_equ[m_nequ - 1]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
                     m_file.close();
                 }
                 #else
-                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[m_nequ - 1]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X0 <<" and Delta = " << m_Delta0 <<endl;
+                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[m_nequ - 1]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X/dt <<" and Delta = " << m_Delta*m_dt <<endl;
                 std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
                 m_file << m_n+1 << "\t" << m_equ[m_nequ - 1]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
                 m_file.close();

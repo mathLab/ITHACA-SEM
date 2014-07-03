@@ -380,10 +380,10 @@ namespace Nektar
                          << "CFL time-step     : " << m_timestep        << endl;
                 }
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                 if (m_EvolutionOperator != eOptimizedSteadyState)
-//                 {
-//                     cout << "Time-integration  : " << intTime  << "s"   << endl;
-//                 }
+                if (m_session->GetSolverInfo("Driver") != "SteadyState")
+                {
+                    cout << "Time-integration  : " << intTime  << "s"   << endl;
+                }
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
             

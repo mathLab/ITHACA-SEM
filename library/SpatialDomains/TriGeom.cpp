@@ -263,7 +263,8 @@ namespace Nektar
                         MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
                             T0, T1, curve->m_ptype);
 
-                    Array<OneD, NekDouble> phys(t->GetTotPoints());
+                    Array<OneD, NekDouble> phys(max(t->GetTotPoints(),
+                                                    m_xmap->GetTotPoints()));
                     for (int j = 0; j < N; ++j)
                     {
                         phys[j] = (curve->m_points[j]->GetPtr())[i];

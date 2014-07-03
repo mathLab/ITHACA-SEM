@@ -71,6 +71,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void WriteAllPartitions(
                     SessionReaderSharedPtr& pSession);
 
+            LIB_UTILITIES_EXPORT void PrintPartInfo(std::ostream &out);
             LIB_UTILITIES_EXPORT void GetCompositeOrdering(
                     CompositeOrdering &composites);
             LIB_UTILITIES_EXPORT void GetBndRegionOrdering(

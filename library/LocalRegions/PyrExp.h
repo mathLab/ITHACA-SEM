@@ -119,7 +119,15 @@ namespace Nektar
             // Helper functions
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
-
+            LOCAL_REGIONS_EXPORT virtual 
+                StdRegions::Orientation v_GetFaceOrient(int face);
+            LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
+            LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
+                const int                                face,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
             
             //---------------------------------------
             // Matrix creation functions
@@ -138,13 +146,16 @@ namespace Nektar
                 const MatrixKey &mkey);
             LOCAL_REGIONS_EXPORT DNekScalBlkMatSharedPtr CreateStaticCondMatrix(
                 const MatrixKey &mkey);
-            
-        private:
-            SpatialDomains::Geometry3DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
 
+        private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+
+            virtual void v_LaplacianMatrixOp_MatFree_Kernel(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp);
         };
 
         // type defines for use of PyrExp in a boost vector

@@ -157,8 +157,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
 
             /// Returns the global index of the boundary trace giving the
-            /// index on the boundary  expansion
+            /// index on the boundary expansion
             MULTI_REGIONS_EXPORT int GetBndCondTraceToGlobalTraceMap(const int i);
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>
+                &GetBndCondTraceToGlobalTraceMap();
  
             /// Returns the number of global Dirichlet boundary coefficients.
             MULTI_REGIONS_EXPORT int GetNumGlobalDirBndCoeffs() const;
@@ -249,6 +251,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT int GetNumNonDirEdges() const;
 
             MULTI_REGIONS_EXPORT int GetNumNonDirFaces() const;
+
+            MULTI_REGIONS_EXPORT void PrintStats(std::ostream &out, std::string variable) const;
 
             MULTI_REGIONS_EXPORT const Array<OneD, const int>& 
                 GetExtraDirEdges();

@@ -91,7 +91,7 @@ namespace Nektar
         SolverUtils::RiemannSolverSharedPtr m_riemannSolverLDG;
         SolverUtils::AdvectionSharedPtr     m_advection;
         SolverUtils::DiffusionSharedPtr     m_diffusion;
-        Array<OneD, NekDouble>              m_velLoc;
+        Array<OneD, Array<OneD, NekDouble> >m_vecLocs;
         NekDouble                           m_gamma;
         NekDouble                           m_pInf;
         NekDouble                           m_rhoInf;
@@ -128,30 +128,26 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-        void WallBoundary(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void WallBoundaryViscous(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void SymmetryBoundary(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void InflowCFSBoundary(
-            int                                               bcRegion, 
-            int                                               cnt, 
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void OutflowCFSBoundary(
-            int                                               bcRegion, 
-            int                                               cnt, 
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void ExtrapOrder0Boundary(
-            int                                               bcRegion, 
-            int                                               cnt, 
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void WallBC(
+            int                                                 bcRegion,
+            int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void WallViscousBC(
+            int                                                 bcRegion,
+            int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void SymmetryBC(
+            int                                                 bcRegion,
+            int                                                 cnt,
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void RiemannInvariantBC(
+            int                                                 bcRegion, 
+            int                                                 cnt, 
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
+        void ExtrapOrder0BC(
+            int                                                 bcRegion, 
+            int                                                 cnt, 
+            Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void GetVelocityVector(
             const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
                   Array<OneD,       Array<OneD,       NekDouble> >&velocity);
@@ -174,21 +170,16 @@ namespace Nektar
             const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
             const Array<OneD, const Array<OneD,       NekDouble> >&velocity,
                   Array<OneD,                         NekDouble>  &pressure);
-        void GetDynamicViscosity(
-            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
-                  Array<OneD,                         NekDouble  >&mu);
         void GetStdVelocity(
             const Array<OneD, const Array<OneD,       NekDouble> >&inarray,
                   Array<OneD,                         NekDouble>  &stdV);
+        void GetDynamicViscosity(
+            const Array<OneD, const NekDouble>                    &temperature,
+                  Array<OneD,       NekDouble>                    &mu);
       
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
-        virtual void v_SetInitialConditions(
-            NekDouble initialtime = 0.0,
-            bool dumpInitialConditions = true)
-        {
-        }
 
         NekDouble GetGasConstant()
         {
@@ -200,18 +191,15 @@ namespace Nektar
             return m_gamma;
         }
       
-        const Array<OneD, NekDouble> &GetVelLoc()
+        const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs()
         {
-            return m_velLoc;
+            return m_vecLocs;
         }
-      
+        
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()
         {
             return m_traceNormals;
         }
-      
-    private:
-
     };
 }
 #endif

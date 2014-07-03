@@ -69,29 +69,6 @@ namespace Nektar
 
         protected:
             //---------------------------------------
-            // Integration Methods
-            //---------------------------------------
-            STD_REGIONS_EXPORT void TripleTensorProduct(
-                const Array<OneD, const NekDouble>& fx, 
-                const Array<OneD, const NekDouble>& gy, 
-                const Array<OneD, const NekDouble>& hz, 
-                const Array<OneD, const NekDouble>& inarray, 
-                      Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT NekDouble TripleInnerProduct(
-                const Array<OneD, const NekDouble>& fxyz,
-                const Array<OneD, const NekDouble>& wx,
-                const Array<OneD, const NekDouble>& wy,
-                const Array<OneD, const NekDouble>& wz);
-            STD_REGIONS_EXPORT NekDouble Integral3D(
-                const Array<OneD, const NekDouble>& inarray,
-                const Array<OneD, const NekDouble>& wx,
-                const Array<OneD, const NekDouble>& wy,
-                const Array<OneD, const NekDouble>& wz);
-            STD_REGIONS_EXPORT virtual NekDouble v_Integral(
-                const Array<OneD, const NekDouble>& inarray);
-            
-
-            //---------------------------------------
             // Differentiation Methods
             //---------------------------------------
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
@@ -177,9 +154,9 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& Lcoords,
-                const Array<OneD, const NekDouble>& physvals);
+            STD_REGIONS_EXPORT virtual void v_LocCoordToLocCollapsed(
+                                              const Array<OneD, const NekDouble>& xi,
+                                              Array<OneD, NekDouble>& eta);
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                 Array<OneD, NekDouble> & xi_x, 
                 Array<OneD, NekDouble> & xi_y, 

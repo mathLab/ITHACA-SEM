@@ -46,6 +46,7 @@
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <boost/enable_shared_from_this.hpp>
 namespace Nektar { namespace LocalRegions { class MatrixKey; class Expansion; } }
 
 
@@ -65,7 +66,7 @@ namespace Nektar
          *  contains the definition of common data and common routine to all
          *  elements
          */
-        class StdExpansion
+        class StdExpansion : public boost::enable_shared_from_this<StdExpansion>
         {
         public:
 
@@ -1085,6 +1086,44 @@ namespace Nektar
                 return v_PhysEvaluate(coords,physvals);
             }
 
+
+            /** \brief This function evaluates the expansion at a single
+             *  (arbitrary) point of the domain
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_PhysEvaluate()
+             *
+             *  Based on the value of the expansion at the quadrature
+             *  points provided in \a physvals, this function
+             *  calculates the value of the expansion at an arbitrary
+             *  single points associated with the interpolation
+             *  matrices provided in \f$ I \f$.
+             *
+             *  \param I an Array of lagrange interpolantes evaluated
+             *  at the coordinate and going through the local physical
+             *  quadrature
+             *  \param physvals the interpolated field at the quadrature points
+             *
+             *  \return returns the value of the expansion at the
+             *  single point
+             */
+            NekDouble PhysEvaluate(const Array<OneD, DNekMatSharedPtr>& I, 
+                                   const Array<OneD, const NekDouble >& physvals)
+            {
+                return v_PhysEvaluate(I,physvals);
+            }
+
+
+            /**
+             * \brief Convert local cartesian coordinate \a xi into local
+             * collapsed coordinates \a eta
+             **/
+            void LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                        Array<OneD, NekDouble>& eta)
+            {
+                v_LocCoordToLocCollapsed(xi,eta);
+            }
+
             const boost::shared_ptr<SpatialDomains::GeomFactors>& GetMetricInfo(void) const
             {
                 return v_GetMetricInfo();
@@ -1208,7 +1247,7 @@ namespace Nektar
                 return v_GetFaceNormal(face); 
             }
 			
-			const NormalVector & GetVertexNormal(const int vertex) const
+            const NormalVector & GetVertexNormal(const int vertex) const
             {
                 return v_GetVertexNormal(vertex); 
             }
@@ -1246,6 +1285,19 @@ namespace Nektar
             {
                 return v_BuildInverseTransformationMatrix(
                     m_transformationmatrix);
+            }
+
+            template<class T>
+            boost::shared_ptr<T> as()
+            {
+#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
+                typedef typename boost::shared_ptr<T>::element_type E;
+                E * p = dynamic_cast< E* >( shared_from_this().get() );
+                ASSERTL1(p, "Cannot perform cast");
+                return boost::shared_ptr<T>( shared_from_this(), p );
+#else
+                return boost::dynamic_pointer_cast<T>( shared_from_this() );
+#endif
             }
 
         protected:
@@ -1520,6 +1572,13 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
+
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, DNekMatSharedPtr >& I, const Array<OneD, const NekDouble> & physvals);
+
+            STD_REGIONS_EXPORT virtual void v_LocCoordToLocCollapsed(
+                                        const Array<OneD, const NekDouble>& xi,
+                                        Array<OneD, NekDouble>& eta);
+
 
             STD_REGIONS_EXPORT virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 

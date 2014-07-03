@@ -66,7 +66,7 @@ namespace Nektar
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, 2,
                     LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
 
-            m_fid = id;
+            m_globalID = m_fid;
 
             m_xmap = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
             SetUpCoeffs(m_xmap->GetNcoeffs());
@@ -83,6 +83,7 @@ namespace Nektar
                 Geometry2D(verts[0]->GetCoordim()),
                 m_fid(id)
         {
+            m_globalID = m_fid;
             m_shapeType = LibUtilities::eTriangle;
 
             /// Copy the vert shared pointers.
@@ -128,6 +129,7 @@ namespace Nektar
                 Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
                 m_fid(id)
         {
+            m_globalID = m_fid;
             m_shapeType = LibUtilities::eTriangle;
 
             /// Copy the edge shared pointers.
@@ -182,6 +184,7 @@ namespace Nektar
                 Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
                 m_fid(id)
         {
+            m_globalID = m_fid;
             m_shapeType =  LibUtilities::eTriangle;
 
             /// Copy the edge shared pointers.
@@ -329,6 +332,7 @@ namespace Nektar
 
             // From TriFaceComponent
             m_fid = in.m_fid;
+            m_globalID = m_fid;
             m_ownVerts = in.m_ownVerts;
             std::list<CompToElmt>::const_iterator def;
             for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
@@ -622,8 +626,10 @@ namespace Nektar
         /**
          *
          */
-        void TriGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        NekDouble TriGeom::v_GetLocCoords(const Array<OneD,const NekDouble> &coords, 
+                                          Array<OneD,NekDouble> &Lcoords)
         {
+            NekDouble resid = 0.0;
             TriGeom::v_FillGeom();
 
             // calculate local coordinate for coord
@@ -682,8 +688,9 @@ namespace Nektar
                 Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[1])/2 -1.0;
 
                 // Perform newton iteration to find local coordinates 
-                NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords);
+                NewtonIterationForLocCoord(coords, ptsx, ptsy, Lcoords,resid);
             }
+            return resid;
         }
 
 
@@ -710,7 +717,7 @@ namespace Nektar
         /**
          *
          */
-        const PointGeomSharedPtr TriGeom::v_GetVertex(int i) const
+        PointGeomSharedPtr TriGeom::v_GetVertex(int i) const
         {
             ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
             return m_verts[i];
@@ -821,10 +828,19 @@ namespace Nektar
                                       Array<OneD, NekDouble> &stdCoord,
                                       NekDouble tol)
         {
+            NekDouble resid;
+            return v_ContainsPoint(gloCoord,stdCoord,tol,resid);
+        }
+
+        bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+                                      Array<OneD, NekDouble> &stdCoord,
+                                      NekDouble tol,
+                                      NekDouble &resid)
+        {
             ASSERTL1(gloCoord.num_elements() >= 2,
                     "Two dimensional geometry expects at least two coordinates.");
 
-            GetLocCoords(gloCoord, stdCoord);
+            resid = GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -(1+tol) && stdCoord[1] >= -(1+tol)
                     && stdCoord[0] + stdCoord[1] <= tol)
             {

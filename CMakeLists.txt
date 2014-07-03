@@ -45,6 +45,7 @@ SET(NEKTAR_BIN_DIR bin)
 SET(NEKTAR_LIB_DIR ${LIB_DIR})
 SET(NEKTAR_INCLUDE_DIR include/nektar++)
 SET(NEKTAR_SHARE_DIR share/nektar++)
+SET(NEKTAR_DOC_DIR share/doc/nektar++)
 SET(NEKTAR_LIBRARY_TYPE "SHARED")
 
 # Set up RPATH
@@ -173,6 +174,8 @@ INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
 
+INCLUDE (Doxygen)
+
 IF( NEKTAR_USE_MKL )
     INCLUDE (FindMKL)
     SET(NEKTAR_USING_BLAS TRUE)
@@ -267,10 +270,13 @@ IF (NEKTAR_BUILD_LIBRARY)
         MultiRegions)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
+    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR})
 ENDIF (NEKTAR_BUILD_LIBRARY)
 
-INCLUDE_DIRECTORIES(solvers)
-ADD_SUBDIRECTORY(solvers)
+IF (NEKTAR_BUILD_SOLVERS)
+    INCLUDE_DIRECTORIES(solvers)
+    ADD_SUBDIRECTORY(solvers)
+ENDIF(NEKTAR_BUILD_SOLVERS)
 
 IF (NEKTAR_BUILD_UTILITIES)
     INCLUDE_DIRECTORIES(utilities)
@@ -298,14 +304,11 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindScotch.cmake
 	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/NektarCommon.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindGSMPI.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindXXT.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindSMV.cmake
               DESTINATION ${CMAKE_INSTALL_PREFIX}) 
-
-INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR})
 
 SET(NEKTAR_PASSED_FIRST_CONFIGURE ON CACHE BOOL INTERNAL)
 MARK_AS_ADVANCED(NEKTAR_PASSED_FIRST_CONFIGURE)

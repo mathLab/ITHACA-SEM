@@ -12,7 +12,6 @@ SET(LocProject3DSource  LocProject3D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject3D demos LocProject3DSource)
 TARGET_LINK_LIBRARIES(LocProject3D ${LinkLibraries})
 
-
 SET(LocProject_Diff1DSource  LocProject_Diff1D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject_Diff1D demos LocProject_Diff1DSource)
 TARGET_LINK_LIBRARIES(LocProject_Diff1D ${LinkLibraries})
@@ -24,38 +23,6 @@ TARGET_LINK_LIBRARIES(LocProject_Diff2D ${LinkLibraries})
 SET(LocProject_Diff3DSource  LocProject_Diff3D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject_Diff3D demos LocProject_Diff3DSource)
 TARGET_LINK_LIBRARIES(LocProject_Diff3D ${LinkLibraries})
-
-SET(LocTetExpDemoSource  LocTetExpDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(LocTetExpDemo demos LocTetExpDemoSource)
-TARGET_LINK_LIBRARIES(LocTetExpDemo ${LinkLibraries})
-
-SET(LocPyrExpDemoSource  LocPyrExpDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(LocPyrExpDemo demos LocPyrExpDemoSource)
-TARGET_LINK_LIBRARIES(LocPyrExpDemo ${LinkLibraries})
-
-SET(LocPrismExpDemoSource  LocPrismExpDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(LocPrismExpDemo demos LocPrismExpDemoSource)
-TARGET_LINK_LIBRARIES(LocPrismExpDemo ${LinkLibraries})
-
-SET(LocHexExpDemoSource  LocHexExpDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(LocHexExpDemo demos LocHexExpDemoSource)
-TARGET_LINK_LIBRARIES(LocHexExpDemo ${LinkLibraries})
-
-SET(LocHexExpDemoSource  LocHexExpDemo_2.cpp)
-ADD_NEKTAR_EXECUTABLE(LocHexExpDemo_2 demos LocHexExpDemoSource)
-TARGET_LINK_LIBRARIES(LocHexExpDemo_2 ${LinkLibraries})
-
-SET(LocPrismExpDemoSource  LocPrismExpDemo_2.cpp)
-ADD_NEKTAR_EXECUTABLE(LocPrismExpDemo_2 demos LocPrismExpDemoSource)
-TARGET_LINK_LIBRARIES(LocPrismExpDemo_2 ${LinkLibraries})
-
-SET(LocPyrExpDemoSource  LocPyrExpDemo_2.cpp)
-ADD_NEKTAR_EXECUTABLE(LocPyrExpDemo_2 demos LocPyrExpDemoSource)
-TARGET_LINK_LIBRARIES(LocPyrExpDemo_2 ${LinkLibraries})
-
-SET(LocTetExpDemoSource  LocTetExpDemo_2.cpp)
-ADD_NEKTAR_EXECUTABLE(LocTetExpDemo_2 demos LocTetExpDemoSource)
-TARGET_LINK_LIBRARIES(LocTetExpDemo_2 ${LinkLibraries})
 
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")
@@ -84,6 +51,7 @@ ADD_NEKTAR_TEST(LocProject3D_Tet_Ortho_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject3D_Tet_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject3D_Prism_Ortho_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject3D_Prism_Mod_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Pyr_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject3D_Hex_Ortho_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject3D_Hex_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject3D_Hex_Lagrange_Basis_P6_Q7)
@@ -99,6 +67,7 @@ ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Hex_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Hex_Ortho_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Prism_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Prism_Ortho_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Pyr_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Tet_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Tet_Ortho_Basis_P6_Q7)
 

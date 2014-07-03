@@ -28,38 +28,6 @@ SET(StdProject_Diff3DSource  StdProject_Diff3D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject_Diff3D demos StdProject_Diff3DSource)
 TARGET_LINK_LIBRARIES(StdProject_Diff3D ${LinkLibraries})
 
-SET(StdTetExpDemoSource StdTetExpDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(StdTetExpDemo demos StdTetExpDemoSource)
-TARGET_LINK_LIBRARIES(StdTetExpDemo ${LinkLibraries})
-
-SET(StdHexExpDemoSource StdHexExpDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(StdHexExpDemo demos StdHexExpDemoSource)
-TARGET_LINK_LIBRARIES(StdHexExpDemo ${LinkLibraries})
-
-SET(StdTetExp_Diff3DSource StdTetExp_Diff3D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdTetExp_Diff3D demos StdTetExp_Diff3DSource)
-TARGET_LINK_LIBRARIES(StdTetExp_Diff3D ${LinkLibraries})  
-
-SET(StdHexExp_Diff3DSource StdHexExp_Diff3D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdHexExp_Diff3D demos StdHexExp_Diff3DSource)
-TARGET_LINK_LIBRARIES(StdHexExp_Diff3D ${LinkLibraries})
-
-SET(StdPrismExpDemoSource StdPrismExpDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(StdPrismExpDemo demos StdPrismExpDemoSource)
-TARGET_LINK_LIBRARIES(StdPrismExpDemo ${LinkLibraries})
-   
-SET(StdPrismExp_Diff3DSource StdPrismExp_Diff3D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdPrismExp_Diff3D demos StdPrismExp_Diff3DSource)
-TARGET_LINK_LIBRARIES(StdPrismExp_Diff3D ${LinkLibraries})
-    
-SET(StdPyrExpDemoSource StdPyrExpDemo.cpp)
-ADD_NEKTAR_EXECUTABLE(StdPyrExpDemo demos StdPyrExpDemoSource)
-TARGET_LINK_LIBRARIES(StdPyrExpDemo ${LinkLibraries})
-    
-SET(StdPyrExp_Diff3DSource StdPyrExp_Diff3D.cpp)
-ADD_NEKTAR_EXECUTABLE(StdPyrExp_Diff3D demos StdPyrExp_Diff3DSource)
-TARGET_LINK_LIBRARIES(StdPyrExp_Diff3D ${LinkLibraries})     
-    
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")
 LIST(REMOVE_ITEM dir_list "${CMAKE_SOURCE_DIR}/.svn")
@@ -68,7 +36,6 @@ FOREACH(dir ${dir_list})
         ADD_SUBDIRECTORY(${dir})
     ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
 ENDFOREACH(dir ${dir_list})
-
 
 ADD_NEKTAR_TEST(StdProject1D_Seg_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject1D_Seg_Mod_P6_Q7)
@@ -94,6 +61,7 @@ ADD_NEKTAR_TEST(StdProject3D_Tet_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Tet_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Prism_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Prism_Mod_P6_Q7)
+ADD_NEKTAR_TEST(StdProject3D_Pyr_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Hex_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Hex_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject3D_Hex_Lagrange_P6_Q7)
@@ -103,6 +71,7 @@ ADD_NEKTAR_TEST(StdProject_Diff3D_Tet_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Tet_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Prism_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Prism_Mod_P6_Q7)
+ADD_NEKTAR_TEST(StdProject_Diff3D_Pyr_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Hex_Orth_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Hex_Mod_P6_Q7)
 ADD_NEKTAR_TEST(StdProject_Diff3D_Hex_Lagrange_P6_Q7)

@@ -101,6 +101,9 @@ namespace Nektar
                         boost::lexical_cast<std::string>(m_time);
             }
 
+            // By default attempt to forward transform initial condition.
+            m_homoInitialFwd = true;
+
             // Set up filters
             LibUtilities::FilterMap::const_iterator x;
             LibUtilities::FilterMap f = m_session->GetFilters();
@@ -183,7 +186,7 @@ namespace Nektar
             }
 
             // Integrate in wave-space if using homogeneous1D
-            if(m_HomogeneousType == eHomogeneous1D)
+            if(m_HomogeneousType == eHomogeneous1D && m_homoInitialFwd)
             {
                 for(i = 0; i < nfields; ++i)
                 {
@@ -332,21 +335,29 @@ namespace Nektar
                 {
                     if(m_HomogeneousType == eHomogeneous1D)
                     {
-                        for(i = 0; i< nfields; i++)
+                        vector<bool> transformed(nfields, false);
+                        for(i = 0; i < nfields; i++)
                         {
-                            m_fields[i]->SetWaveSpace(false);
-                            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
-                                                  m_fields[i]->UpdatePhys());
-                            m_fields[i]->SetPhysState(true);
+                            if (m_fields[i]->GetWaveSpace())
+                            {
+                                m_fields[i]->SetWaveSpace(false);
+                                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                                      m_fields[i]->UpdatePhys());
+                                m_fields[i]->SetPhysState(true);
+                                transformed[i] = true;
+                            }
                         }
                         Checkpoint_Output(nchk++);
-                        for(i = 0; i< nfields; i++)
+                        for(i = 0; i < nfields; i++)
                         {
-                            m_fields[i]->SetWaveSpace(true);
-                            m_fields[i]->HomogeneousFwdTrans(
+                            if (transformed[i])
+                            {
+                                m_fields[i]->SetWaveSpace(true);
+                                m_fields[i]->HomogeneousFwdTrans(
                                     m_fields[i]->GetPhys(),
                                     m_fields[i]->UpdatePhys());
-                            m_fields[i]->SetPhysState(false);
+                                m_fields[i]->SetPhysState(false);
+                            }
                         }
                     }
                     else
@@ -371,14 +382,18 @@ namespace Nektar
                 cout << "Time-integration  : " << intTime  << "s"   << endl;
             }
             
-            // If homogeneous, transform back into physical space
+            // If homogeneous, transform back into physical space if necessary.
             if(m_HomogeneousType == eHomogeneous1D)
             {
-                for(i = 0 ; i< nfields; i++)
+                for(i = 0; i < nfields; i++)
                 {
-                    m_fields[i]->SetWaveSpace(false);
-                    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-                    m_fields[i]->SetPhysState(true);
+                    if (m_fields[i]->GetWaveSpace())
+                    {
+                        m_fields[i]->SetWaveSpace(false);
+                        m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                              m_fields[i]->UpdatePhys());
+                        m_fields[i]->SetPhysState(true);
+                    }
                 }
             }
             else

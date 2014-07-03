@@ -79,6 +79,8 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT SegGeom(const SegGeom &in);
 
+                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GenerateOneSpaceDimGeom(void);
+
                 SPATIAL_DOMAINS_EXPORT ~SegGeom();
 
                 SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(
@@ -99,7 +101,6 @@ namespace Nektar
             protected:
                 int                                               m_eid;
                 std::list<CompToElmt>                             m_elmtMap;
-                StdRegions::StdExpansion1DSharedPtr               m_xmap;
                 SpatialDomains::PointGeomSharedPtr                m_verts[kNverts];
                 StdRegions::Orientation                           m_porient[kNverts];
 
@@ -130,9 +131,9 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual LibUtilities::ShapeType
                         v_DetShapeType() const;
 
-                SPATIAL_DOMAINS_EXPORT virtual void v_GetLocCoords(
+                SPATIAL_DOMAINS_EXPORT virtual NekDouble v_GetLocCoords(
                         const Array<OneD, const NekDouble>& coords,
-                              Array<OneD,NekDouble>& Lcoords);
+                        Array<OneD,NekDouble>& Lcoords);
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_GenGeomFactors();
 
@@ -154,9 +155,15 @@ namespace Nektar
                         NekDouble tol = 0.0);
 
                 SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
-                                             const Array<OneD, const NekDouble> &gloCoord, 
-                                             Array<OneD, NekDouble> &locCoord,
-                                             NekDouble                     tol = 0.0);
+                        const Array<OneD, const NekDouble> &gloCoord,
+                              Array<OneD, NekDouble>       &locCoord,
+                              NekDouble                     tol);
+
+                SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble> &gloCoord,
+                        Array<OneD, NekDouble>             &locCoord,
+                        NekDouble                           tol,
+                        NekDouble                          &resid);
             private:
                 /// Boolean indicating whether object owns the data
                 bool                            m_ownData;

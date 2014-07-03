@@ -84,6 +84,7 @@ namespace Nektar
             NekDouble                            m_rhoInf;
             NekDouble                            m_pInf;
             
+            
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_IF1;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DU1;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DFC1;
@@ -98,6 +99,11 @@ namespace Nektar
             
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp1;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp2;
+            
+            Array<OneD, Array<OneD, NekDouble> > m_homoDerivs;
+            
+            int                                  m_spaceDim;
+            int                                  m_diffDim;
             
             std::string m_diffType;
             
@@ -173,8 +179,26 @@ namespace Nektar
                 const Array<OneD, const NekDouble>               &fluxX2,
                 const Array<OneD, const NekDouble>               &numericalFlux,
                       Array<OneD,       NekDouble>               &divCFlux);
-
-        }; 
+            
+            virtual void v_FluxVec(
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
+            {
+                fluxvector = m_viscTensor;
+            };
+            
+            virtual void v_SetHomoDerivs(
+                                         Array<OneD, Array<OneD, NekDouble> > &deriv)
+            {
+                m_homoDerivs = deriv;
+            }
+            
+            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
+            {
+                return m_viscTensor;
+            }
+        };
+        
+        typedef boost::shared_ptr<DiffusionLFRNS> DiffusionLFRNSSharedPtr;
     }
 }
 

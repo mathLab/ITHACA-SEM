@@ -57,7 +57,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField3D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        const std::string &variable,
+                        const std::string &variable  = "DefaultVar",
                         const bool CheckIfSingularSystem = false);
 
             /// Construct a global continuous field with solution type based on
@@ -157,6 +157,8 @@ namespace Nektar
 
             /// Impose the Dirichlet Boundary Conditions on outarray 
             virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+
+            virtual void v_FillBndCondFromField();
 
             virtual void v_LocalToGlobal(void);
 

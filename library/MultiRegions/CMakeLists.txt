@@ -100,19 +100,19 @@ IF(NEKTAR_USE_MPI)
         GlobalLinSysXxt.h
         GlobalLinSysXxtFull.h
         GlobalLinSysXxtStaticCond.h
-        PreconditionerLinear.cpp
-        PreconditionerLinearWithLowEnergy.cpp
-        PreconditionerLinearWithDiag.cpp
-        PreconditionerLinearWithBlock.cpp
+        PreconditionerLinear.h
+        PreconditionerLinearWithLowEnergy.h
+        PreconditionerLinearWithDiag.h
+        PreconditionerLinearWithBlock.h
     )
     SET(MULTI_REGIONS_SOURCES ${MULTI_REGIONS_SOURCES}
         GlobalLinSysXxt.cpp
         GlobalLinSysXxtFull.cpp
         GlobalLinSysXxtStaticCond.cpp
-        PreconditionerLinear.h
-        PreconditionerLinearWithLowEnergy.h
-        PreconditionerLinearWithDiag.h
-        PreconditionerLinearWithBlock.h
+        PreconditionerLinear.cpp
+        PreconditionerLinearWithLowEnergy.cpp
+        PreconditionerLinearWithDiag.cpp
+        PreconditionerLinearWithBlock.cpp
     )
 ENDIF(NEKTAR_USE_MPI)
 
@@ -130,10 +130,7 @@ IF( NEKTAR_USE_MPI )
     TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${GSMPI_LIBRARY} ${XXT_LIBRARY})
 ENDIF( NEKTAR_USE_MPI )
 
-INSTALL(FILES ${MULTI_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions COMPONENT dev)
-INSTALL(FILES ${ASSEMBLY_MAP_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions/AssemblyMap COMPONENT dev)
-
-
+INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 
 
 

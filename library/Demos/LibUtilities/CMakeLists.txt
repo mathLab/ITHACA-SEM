@@ -5,6 +5,9 @@
 SET(MemoryManagerSources 
     MemoryManager.cpp)
     
+SET(PartitionAnalyseSources
+    PartitionAnalyse.cpp)
+    
 SET(VecMatSources
     VecMatExample.cpp)
 
@@ -36,6 +39,9 @@ SET(TimeIntegrationDemoSources
 #ADD_NEKTAR_EXECUTABLE(MemoryManager MemoryManagerSources )
 ADD_NEKTAR_EXECUTABLE(Matrix demos VecMatSources)
 TARGET_LINK_LIBRARIES(Matrix LibUtilities)
+
+ADD_NEKTAR_EXECUTABLE(PartitionAnalyse demos PartitionAnalyseSources)
+SET_LAPACK_LINK_LIBRARIES(PartitionAnalyse)
 
 ADD_NEKTAR_EXECUTABLE(FoundationDemo demos FoundationSources )
 TARGET_LINK_LIBRARIES(FoundationDemo LibUtilities)

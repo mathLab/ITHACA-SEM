@@ -40,6 +40,7 @@
 #include <StdRegions/StdExpansion3D.h>  // for StdExpansion3DSharedPtr, etc
 
 #include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 namespace Nektar
@@ -77,8 +78,8 @@ namespace Nektar
             // Helper functions
             //---------------------------------------
             SPATIAL_DOMAINS_EXPORT int GetEid(int i) const;
-            SPATIAL_DOMAINS_EXPORT const PointGeomSharedPtr
-                GetVertex(int i) const;
+            SPATIAL_DOMAINS_EXPORT const Geometry1DSharedPtr
+                        GetEdge(int i) const;
             SPATIAL_DOMAINS_EXPORT Geometry2DSharedPtr 
                 GetFace(int i);
             SPATIAL_DOMAINS_EXPORT StdRegions::Orientation 
@@ -106,7 +107,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &ptsx,
                 const Array<OneD, const NekDouble> &ptsy,
                 const Array<OneD, const NekDouble> &ptsz,
-                      Array<OneD,       NekDouble> &Lcoords);
+                      Array<OneD,       NekDouble> &Lcoords,
+                NekDouble                          &resid);
 
             virtual void      v_FillGeom();
             virtual NekDouble v_GetCoord(const int i, 
@@ -118,6 +120,7 @@ namespace Nektar
             //---------------------------------------
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetVid(int i) const;
+            virtual PointGeomSharedPtr          v_GetVertex(int i) const;
             virtual const SegGeomSharedPtr      v_GetEdge(int i) const;
             virtual StdRegions::Orientation v_GetEorient(const int i) const;
             virtual int                         v_GetEid(int i) const;

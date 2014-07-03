@@ -554,11 +554,12 @@ namespace Nektar
         // Evaluation functions //
         //////////////////////////
 
-        NekDouble StdQuadExp::v_PhysEvaluate(
-                                 const Array<OneD, const NekDouble>& coords,
-                                 const Array<OneD, const NekDouble> & physvals)
+
+        void StdQuadExp::v_LocCoordToLocCollapsed(const Array<OneD, const NekDouble>& xi,
+                                                 Array<OneD, NekDouble>& eta)
         {
-            return  StdExpansion2D::v_PhysEvaluate(coords, physvals);
+            eta[0] = xi[0];
+            eta[1] = xi[1];
         }
 
         /** \brief Fill outarray with mode \a mode of expansion

@@ -145,25 +145,30 @@ namespace Nektar
         class Module
         {
         public:
-            Module(MeshSharedPtr p_m) : m(p_m) {}
+        Module(MeshSharedPtr p_m) : m_mesh(p_m) {}
             virtual void Process() = 0;
             
             void RegisterConfig(string key, string value);
             void PrintConfig();
             void SetDefaults();
-            
-        protected:
-            /// Mesh object
-            MeshSharedPtr m;
-            /// List of configuration values.
-            map<string, ConfigOption> config;
-            
+            MeshSharedPtr GetMesh()
+            { 
+                return m_mesh;
+            }
+
             /// Extract element vertices
             virtual void ProcessVertices();
+
+        protected:
+            /// Mesh object
+            MeshSharedPtr m_mesh;
+            /// List of configuration values.
+            map<string, ConfigOption> m_config;
+            
             /// Extract element edges
-            virtual void ProcessEdges();
+            virtual void ProcessEdges(bool ReprocessEdges = true);
             /// Extract element faces
-            virtual void ProcessFaces();
+            virtual void ProcessFaces(bool ReprocessFaces = true);
             /// Generate element IDs
             virtual void ProcessElements();
             /// Generate composites
@@ -179,7 +184,7 @@ namespace Nektar
         /**
          * @brief Abstract base class for input modules.
          *
-         * Input modules should read the contents of #mshFile in the Process()
+         * Input modules should read the contents of #m_mshFile in the Process()
          * function and populate the members of #m. Typically any given module
          * should populate Mesh::expDim, Mesh::spaceDim, Mesh::node and
          * Mesh::element, then call the protected ProcessX functions to
@@ -195,7 +200,7 @@ namespace Nektar
             /// Print summary of elements.
             void         PrintSummary();
             /// Input stream
-            std::ifstream mshFile;
+            std::ifstream m_mshFile;
         };
 
         /**
@@ -216,7 +221,7 @@ namespace Nektar
          * @brief Abstract base class for output modules.
          *
          * Output modules take the mesh #m and write to the file specified by
-         * the stream #mshFile.
+         * the stream #m_mshFile.
          */
         class OutputModule : public Module
         {
@@ -226,7 +231,7 @@ namespace Nektar
             
         protected:
             /// Output stream
-            std::ofstream mshFile;
+            std::ofstream m_mshFile;
         };
         
         typedef std::pair<ModuleType,std::string> ModuleKey;

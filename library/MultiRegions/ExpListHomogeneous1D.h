@@ -264,6 +264,8 @@ namespace Nektar
                 return GetPlane(n);
             }
             
+            virtual NekDouble v_GetHomoLen(void);
+            
         private:
             
             //Padding operations variables

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-project("pkg-@PKG_PROJ@")
+project("pkg-@PKG_NAME@")
 
 set(CPACK_GENERATOR "RPM")
 set(CPACK_OUTPUT_FILE_PREFIX "..") # Put in pkg dir. CMake >= 2.8.3 only.
@@ -9,15 +9,17 @@ set(CPACK_OUTPUT_FILE_PREFIX "..") # Put in pkg dir. CMake >= 2.8.3 only.
 execute_process(COMMAND rpm --eval %{_arch}
                 OUTPUT_VARIABLE CPACK_RPM_PACKAGE_ARCHITECTURE
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
-message("RPM arch: ${CPACK_RPM_PACKAGE_ARCHITECTURE}")
+
 # Package details
 set(CPACK_PACKAGE_NAME "@PKG_NAME@")
 set(CPACK_PACKAGE_VENDOR "Imperial College London")
 set(CPACK_PACKAGE_CONTACT 
     "Nektar++ users mailing list <nektar-users@imperial.ac.uk>")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "@PKG_SUMM@")
-set(CPACK_PACKAGE_DESCRIPTION "@PKG_DESC@")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "@PKG_SUMMARY@")
+set(CPACK_PACKAGE_DESCRIPTION "@PKG_DESCRIPTION@")
 #set(CPACK_PACKAGE_DESCRIPTION_FILE "@PKG_DESC_FILE@")
+set(CPACK_RPM_PACKAGE_SUMMARY "@PKG_SUMMARY@")
+set(CPACK_RPM_PACKAGE_DESCRIPTION "@PKG_DESCRIPTION@")
 set(CPACK_RESOURCE_FILE_LICENSE "@CMAKE_SOURCE_DIR@/LICENSE")
 set(CPACK_PACKAGE_VERSION "@NEKTAR_VERSION@")
 set(CPACK_PACKAGE_VERSION_MAJOR "@NEKTAR_VERSION_MAJOR@")
@@ -32,8 +34,8 @@ set(CPACK_PACKAGE_FILE_NAME
     "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-1.${CPACK_RPM_PACKAGE_ARCHITECTURE}")
 
 # Files to go in the package
-set(INSTALL_BINS "@INSTALL_BINS@")
-set(INSTALL_LIBS "@INSTALL_LIBS@")
+set(INSTALL_BINS "@PKG_INSTALL_BINS@")
+set(INSTALL_LIBS "@PKG_INSTALL_LIBS@")
 
 # Add the versioned form of each library
 foreach(l ${INSTALL_LIBS})
@@ -45,7 +47,7 @@ foreach(l ${INSTALL_LIBS})
 endforeach()
 
 # Install any libraries in the lib directory
-if("${INSTALL_LIBS}")
+if(INSTALL_LIBS)
     install(FILES ${INSTALL_LIBS} DESTINATION lib
         PERMISSIONS
             OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -55,7 +57,7 @@ if("${INSTALL_LIBS}")
 endif()
 
 # Install any binaries in the bin directory
-if("${INSTALL_BINS}")
+if(INSTALL_BINS)
     install(FILES ${INSTALL_BINS} DESTINATION bin
         PERMISSIONS
             OWNER_READ OWNER_WRITE OWNER_EXECUTE

@@ -2,9 +2,9 @@
 <test>
     <description>NS, Subsonic Cylinder, mixed bcs, WeakDG advection and LDG diffusion, variable viscosity</description>
     <executable>CompressibleFlowSolver</executable>
-    <parameters>CylinderSubsonic_NS_WeakDG_LDG_VariableMu.xml</parameters>
+    <parameters>CylinderSubsonic_NS_WeakDG_LDG_SEM_VariableMu.xml</parameters>
     <files>
-        <file description="Session File">CylinderSubsonic_NS_WeakDG_LDG_VariableMu.xml</file>
+        <file description="Session File">CylinderSubsonic_NS_WeakDG_LDG_SEM_VariableMu.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

@@ -200,7 +200,7 @@ namespace Nektar
             // type.
             if (m_comm->GetSize() > 1)
             {
-                m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                GetSolverInfoDefaults()["GLOBALSYSSOLN"] = 
                     "IterativeStaticCond";
             }
         }
@@ -241,7 +241,7 @@ namespace Nektar
 
                 if (m_comm->GetSize() > 1)
                 {
-                    m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                    GetSolverInfoDefaults()["GLOBALSYSSOLN"] = 
                         "IterativeStaticCond";
                 }
             }
@@ -250,7 +250,7 @@ namespace Nektar
             // type.
             if (m_comm->GetSize() > 1)
             {
-                m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                GetSolverInfoDefaults()["GLOBALSYSSOLN"] = 
                     "IterativeStaticCond";
             }
         }

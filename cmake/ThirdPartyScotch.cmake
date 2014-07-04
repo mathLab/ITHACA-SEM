@@ -17,9 +17,9 @@ IF( NEKTAR_USE_SCOTCH )
         SET(SCOTCH_SRC ${TPSRC}/src/scotch-6.0.0/src)
 
         IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-            SET(SCOTCH_MAKE Makefile.inc.x86-64_pc_linux2.shlib)
+            SET(SCOTCH_MAKE Makefile.inc.x86-64_pc_linux2)
         ELSE ()
-            SET(SCOTCH_MAKE Makefile.inc.i686_pc_linux2.shlib)
+            SET(SCOTCH_MAKE Makefile.inc.i686_pc_linux2)
         ENDIF ()
 
         INCLUDE(ExternalProject)
@@ -34,7 +34,8 @@ IF( NEKTAR_USE_SCOTCH )
                 ${SCOTCH_SRC}/Make.inc/${SCOTCH_MAKE}
                 ${SCOTCH_SRC}/Makefile.inc
             BUILD_COMMAND $(MAKE) -C ${TPSRC}/src/scotch-6.0.0/src
-                "LDFLAGS=-lz -lm -lrt -lpthread" scotch
+                "LDFLAGS=-lz -lm -lrt -lpthread"
+                "CLIBFLAGS=-fPIC" scotch
             INSTALL_COMMAND $(MAKE) -C ${TPSRC}/src/scotch-6.0.0/src
                 prefix=${TPSRC}/dist install
         )

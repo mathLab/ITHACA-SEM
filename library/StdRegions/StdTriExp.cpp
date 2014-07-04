@@ -1349,8 +1349,9 @@ namespace Nektar
             int       nmodes0 = m_base[0]->GetNumModes();
             int       nmodes1 = m_base[1]->GetNumModes();
             int       numMax  = nmodes0;
-            int       i, numMin2;
-
+            int       numMin2 = nmodes0;
+            int       i;
+            
             const LibUtilities::PointsKey Pkey0(
                 nmodes0, LibUtilities::eGaussLobattoLegendre);
             const LibUtilities::PointsKey Pkey1(

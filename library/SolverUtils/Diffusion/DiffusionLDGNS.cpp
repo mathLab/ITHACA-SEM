@@ -395,7 +395,7 @@ namespace Nektar
                 GetBndCondExpansions()[j]->GetExpSize();
                 for (e = 0; e < nBndEdges; ++e)
                 {
-                    nBndEdgePts = fields[nScalars]->
+                    nBndEdgePts = fields[m_spaceDim]->
                     GetBndCondExpansions()[j]->GetExp(e)->GetTotPoints();
 
                     id1 = fields[m_spaceDim]->

@@ -1547,7 +1547,7 @@ namespace Nektar
              {
                  ASSERTL0(false, "This function is not defined in StdExpansion.");
              }
-        
+
             void StdExpansion::v_ReduceOrderCoeffs(int numMin,
                                                    const Array<OneD, const NekDouble> &inarray,
                                                    Array<OneD, NekDouble> &outarray)

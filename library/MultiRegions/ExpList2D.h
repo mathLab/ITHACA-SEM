@@ -96,7 +96,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList2D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const Array<OneD,const ExpListSharedPtr> &bndConstraint,
-                const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
+                const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+                                                                       &bndCond,
                 const LocalRegions::ExpansionVector &locexp,
                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
                 const PeriodicMap &periodicFaces,
@@ -144,7 +145,6 @@ namespace Nektar
                 const Array<OneD, NekDouble> &inarray,
                       Array<OneD, NekDouble> &outarray);
 
-            bool    m_parallel;
             virtual void v_PhysGalerkinProjection1DScaled(
                 const NekDouble scale,
                 const Array<OneD, NekDouble> &inarray,

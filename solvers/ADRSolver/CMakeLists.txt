@@ -80,7 +80,6 @@ IF( NEKTAR_SOLVER_ADR )
     ADD_NEKTAR_TEST        (Advection3D_m12_DG_prism_VarP)
     ADD_NEKTAR_TEST        (Advection3D_m12_DG_tet)
     ADD_NEKTAR_TEST        (Advection3D_m12_DG_tet_VarP)
-    
 
     # 1D inviscid Burger (DG/FR)
     ADD_NEKTAR_TEST_LENGTHY(InviscidBurger1D_FRDG_GLL_LAGRANGE_SEM)

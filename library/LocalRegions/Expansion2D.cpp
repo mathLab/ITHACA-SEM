@@ -187,7 +187,7 @@ namespace Nektar
                 LibUtilities::BasisKey bkey_ortho(btype,EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
                 LibUtilities::BasisKey bkey(EdgeExp->GetBasis(0)->GetBasisType(),EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
                 LibUtilities::InterpCoeff1D(bkey,edgeCoeffs,bkey_ortho,coeff);
-                
+
                 // Cutting high frequencies
                 for(i = order_e; i < n_coeffs; i++)
                 {

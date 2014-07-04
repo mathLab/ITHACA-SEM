@@ -61,10 +61,6 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr&
         > EquationSystemFactory;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
-       
-        typedef boost::function<
-            void (const Array<OneD, const Array<OneD, NekDouble> >&,
-                        Array<OneD, NekDouble> &) > CPFuncType;
 
         /// A base class for describing how to solve specific equations.
         class EquationSystem

@@ -1512,16 +1512,16 @@ namespace Nektar
             Array<OneD, NekDouble> coeff_tmp1(nmodes0*nmodes1, 0.0);
             Array<OneD, NekDouble> coeff_tmp2(n_coeffs,        0.0);
             Array<OneD, NekDouble> tmp, tmp2, tmp3, tmp4;
-            
+
             Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp2,1);
-            
+
             const LibUtilities::PointsKey Pkey0(
                 nmodes0, LibUtilities::eGaussLobattoLegendre);
             const LibUtilities::PointsKey Pkey1(
                 nmodes1, LibUtilities::eGaussLobattoLegendre);
             const LibUtilities::PointsKey Pkey2(
                 nmodes2, LibUtilities::eGaussLobattoLegendre);
-            
+
             LibUtilities::BasisKey b0(
                 m_base[0]->GetBasisType(), nmodes0, Pkey0);
             LibUtilities::BasisKey b1(
@@ -1538,9 +1538,9 @@ namespace Nektar
             LibUtilities::InterpCoeff3D(
                 b0,      b1,      b2,      coeff_tmp2,
                 bortho0, bortho1, bortho2, coeff);
-            
+
             Vmath::Zero(n_coeffs, coeff_tmp2, 1);
-            
+
             int cnt = 0, cnt2 = 0;
 
             for (int u = 0; u < numMin+1; ++u)
@@ -1550,17 +1550,17 @@ namespace Nektar
                     Vmath::Vcopy(numMin,
                                  tmp  = coeff+cnt+cnt2,1,
                                  tmp2 = coeff_tmp1+cnt,1);
-                    
+
                     cnt = i*numMax;
                 }
-                
+
                 Vmath::Vcopy(nmodes0*nmodes1,
                              tmp3 = coeff_tmp1,1,
                              tmp4 = coeff_tmp2+cnt2,1);
-                
+
                 cnt2 = u*nmodes0*nmodes1;
             }
-            
+
             LibUtilities::InterpCoeff3D(
                 bortho0, bortho1, bortho2, coeff_tmp2,
                 b0,      b1,      b2,      outarray);

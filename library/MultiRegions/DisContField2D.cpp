@@ -385,7 +385,6 @@ namespace Nektar
             // retains a pointer to the trace space segments, to ensure
             // uniqueness of normals when retrieving from two adjoining elements
             // which do not lie in a plane.
-            
             for (int i = 0; i < m_exp->size(); ++i)
             {
                 for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j)

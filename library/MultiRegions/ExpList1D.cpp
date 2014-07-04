@@ -454,7 +454,7 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr       seg_tmp;
             LocalRegions::Expansion1DSharedPtr  exp1D;
             LocalRegions::Expansion2DSharedPtr  exp2D;
-            
+
             SetExpType(e1D);
 
             map<int,int> EdgeDone;
@@ -495,7 +495,7 @@ namespace Nektar
             for(i = 0; i < locexp.size(); ++i)
             {
                 exp2D = locexp[i]->as<LocalRegions::Expansion2D>();
-                
+
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
                     segGeom = exp2D->GetGeom2D()->GetEdge(j);
@@ -507,7 +507,7 @@ namespace Nektar
                     }
 
                     it = edgeOrders.find(id);
-                    
+
                     if (it == edgeOrders.end())
                     {
                         edgeOrders.insert(std::make_pair(id, std::make_pair(
@@ -542,25 +542,22 @@ namespace Nektar
                     }
                 }
             }
-            
-            LibUtilities::CommSharedPtr vComm = pSession->GetComm();
+
+            LibUtilities::CommSharedPtr vComm =
+                pSession->GetComm()->GetRowComm();
             int nproc = vComm->GetSize(); // number of processors
             int edgepr = vComm->GetRank(); // ID processor
-            
-            m_parallel = false;
-            
+
             if (nproc > 1)
             {
-                m_parallel = true;
-                
                 int eCnt = 0;
-                
+
                 // Count the number of edges on each partition
                 for(i = 0; i < locexp.size(); ++i)
                 {
                     eCnt += locexp[i]->GetNedges();
                 }
-                
+
                 // Set up the offset and the array that will contain the list of
                 // edge IDs, then reduce this across processors.
                 Array<OneD, int> edgesCnt(nproc, 0);
@@ -574,20 +571,20 @@ namespace Nektar
                 {
                     eTotOffsets[i] = eTotOffsets[i-1] + edgesCnt[i-1];
                 }
-                
+
                 // Local list of the edges per element
                 Array<OneD, int> EdgesTotID(totEdgeCnt, 0);
                 Array<OneD, int> EdgesTotNm(totEdgeCnt, 0);
                 Array<OneD, int> EdgesTotPnts(totEdgeCnt, 0);
-                
+
                 int cntr = eTotOffsets[edgepr];
-                
+
                 for(i = 0; i < locexp.size(); ++i)
                 {
                     exp2D = locexp[i]->as<LocalRegions::Expansion2D>();
-                    
+
                     int nedges = locexp[i]->GetNedges();
-                    
+
                     for(j = 0; j < nedges; ++j, ++cntr)
                     {
                         LibUtilities::BasisKey bkeyEdge =
@@ -640,7 +637,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             for (it = edgeOrders.begin(); it != edgeOrders.end(); ++it)
             {
                 seg = MemoryManager<LocalRegions::SegExp>
@@ -648,7 +645,7 @@ namespace Nektar
                 seg->SetElmtId(elmtid++);
                 (*m_exp).push_back(seg);
             }
-            
+
             // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
@@ -926,42 +923,7 @@ namespace Nektar
                 }
             }
         }
-		
-/*
-	void ExpList1D::SetUpPhysTangents(
-		const LocalRegions::ExpansionVector &locexp)
-	{
-	    map<int, int> EdgeGID;
-	    int i,cnt,n,id;
-	    LocalRegions::Expansion1DSharedPtr exp1D;
-	    LocalRegions::Expansion2DSharedPtr exp2D;
 
-	    //setup map of all global ids along booundary
-	    for(cnt = i=0; i< (*m_exp).size(); ++i)
-	    {
-            exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
-	        id = exp1D->GetGeom1D()->GetEid();
-	        EdgeGID[id] = cnt++;
-	    }
-	    
-	    //loop over elements and find edges that match
-	    for(cnt = n =0; n< locexp.size(); ++n)
-	    {
-	       for(i=0; i < locexp[n]->GetNedges(); ++i)
-	       {
-                   exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[n]);
-                   id = exp2D->GetGeom2D()->GetEid(i);
-                   if(EdgeGID.count(id)> 0)
-                   {
-                       (*m_exp)[EdgeGID.find(id)->second]
-                           ->SetUpPhysTangents(locexp[n],i);
-                   }
-	       }
-	    }
-	}
-        
-*/
-        
         /**
          * Upwind the left and right states given by the Arrays Fwd and Bwd
          * using the vector quantity Vec and ouput the upwinded value in the
@@ -1078,7 +1040,6 @@ namespace Nektar
         void ExpList1D::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            
             int i,j,k,e_npoints,offset;
             SpatialDomains::Geometry1DSharedPtr segGeom;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
@@ -1091,33 +1052,35 @@ namespace Nektar
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
 
-            if(m_parallel == false)
+            for(i = 0; i < m_exp->size(); ++i)
             {
-                for(i = 0; i < m_exp->size(); ++i)
-                {
-                    LocalRegions::Expansion1DSharedPtr loc_exp =
+                LocalRegions::Expansion1DSharedPtr loc_exp =
                     boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion1D>((*m_exp)[i]);
+                        LocalRegions::Expansion1D>((*m_exp)[i]);
                 
-                    LocalRegions::Expansion2DSharedPtr loc_elmt =
+                LocalRegions::Expansion2DSharedPtr loc_elmt =
                     loc_exp->GetLeftAdjacentElementExp();
             
-                    // Get the number of points and normals for this expansion.
-                    e_npoints  = (*m_exp)[i]->GetNumPoints(0);
+                // Get the number of points and normals for this expansion.
+                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                 
-                    locnormals = loc_elmt->GetEdgeNormal(
-                                loc_exp->GetLeftAdjacentElementEdge());
+                locnormals = loc_elmt->GetEdgeNormal(
+                    loc_exp->GetLeftAdjacentElementEdge());
                     
-                    if (e_npoints != locnormals[0].num_elements())
-                    {   
-                        LocalRegions::Expansion2DSharedPtr loc_elmt =
-                            loc_exp->GetRightAdjacentElementExp();
-                
+                if (e_npoints != locnormals[0].num_elements())
+                {
+                    LocalRegions::Expansion2DSharedPtr loc_elmt =
+                        loc_exp->GetRightAdjacentElementExp();
+
+                    if (loc_elmt)
+                    {
+                        // Serial case: right element is connected so we can
+                        // just grab that normal.
                         locnormals = loc_elmt->GetEdgeNormal(
-                                loc_exp->GetRightAdjacentElementEdge());
-                        
+                            loc_exp->GetRightAdjacentElementEdge());
+
                         offset = m_phys_offset[i];
-                        
+
                         // Process each point in the expansion.
                         for (j = 0; j < e_npoints; ++j)
                         {
@@ -1131,68 +1094,16 @@ namespace Nektar
                     }
                     else
                     {
-                        // Get the physical data offset for this expansion.
-                        offset = m_phys_offset[i];
-                        
-                        // Process each point in the expansion.
-                        for (j = 0; j < e_npoints; ++j)
-                        {
-                            // Process each spatial dimension and copy the values
-                            // into the output array.
-                            for (k = 0; k < coordim; ++k)
-                            {
-                                normals[k][offset + j] = locnormals[k][j];
-                            }
-                        }
-                    }  
-                }
-            }
-            if(m_parallel == true)
-            {
-                for(i = 0; i < m_exp->size(); ++i)
-                {
-                    // set-up the expansion of the trace edge from the
-                    // element expansion
-                    LocalRegions::Expansion1DSharedPtr loc_exp =
-                    boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion1D>((*m_exp)[i]);
-                    
-                    // set-up the expansion of the corresponding element
-                    LocalRegions::Expansion2DSharedPtr loc_elmt =
-                    loc_exp->GetLeftAdjacentElementExp();
-                    
-                    // set-up the expansion of the corresponding edge from the
-                    // element expansion
-                    LocalRegions::Expansion1DSharedPtr to_exp =
-                    boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion1D>(loc_elmt->GetEdgeExp(
-                                    loc_exp->GetLeftAdjacentElementEdge()));
-                    
-                    // Get the number of points and normals for this expansion.
-                    e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                    
-                    int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
-                    int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
-                    
-                    // determine the edge normals
-                    locnormals = loc_elmt->GetEdgeNormal(
-                                loc_exp->GetLeftAdjacentElementEdge());
-                    
-                    // Check if the expansion has a similar 
-                    if (e_nmodes != loc_nmodes)
-                    {
+                        // Parallel case: need to interpolate normal.
                         Array<OneD, Array<OneD, NekDouble> > normal(coordim);
                         
                         for (int p = 0; p < coordim; ++p)
                         {
                             normal[p] = Array<OneD, NekDouble>(e_npoints,0.0);
-                            
                             LibUtilities::PointsKey to_key =
-                                            loc_exp->GetBasis(0)->GetPointsKey();
-                            
+                                loc_exp->GetBasis(0)->GetPointsKey();
                             LibUtilities::PointsKey from_key =
-                                           loc_elmt->GetBasis(0)->GetPointsKey();
-                            
+                                loc_elmt->GetBasis(0)->GetPointsKey();
                             LibUtilities::Interp1D(from_key,
                                                    locnormals[p],
                                                    to_key,
@@ -1200,7 +1111,7 @@ namespace Nektar
                         }
                         
                         offset = m_phys_offset[i];
-                        
+
                         // Process each point in the expansion.
                         for (j = 0; j < e_npoints; ++j)
                         {
@@ -1212,70 +1123,25 @@ namespace Nektar
                             }
                         }
                     }
-                    else
+                }
+                else
+                {
+                    // Get the physical data offset for this expansion.
+                    offset = m_phys_offset[i];
+
+                    // Process each point in the expansion.
+                    for (j = 0; j < e_npoints; ++j)
                     {
-                        // Get the physical data offset for this expansion.
-                        offset = m_phys_offset[i];
-                        
-                        // Process each point in the expansion.
-                        for (j = 0; j < e_npoints; ++j)
+                        // Process each spatial dimension and copy the values
+                        // into the output array.
+                        for (k = 0; k < coordim; ++k)
                         {
-                            // Process each spatial dimension and copy the values
-                            // into the output array.
-                            for (k = 0; k < coordim; ++k)
-                            {
-                                normals[k][offset + j] = locnormals[k][j];
-                            }
+                            normals[k][offset + j] = locnormals[k][j];
                         }
                     }
                 }
             }
         }
-        
-/*        void ExpList1D::v_GetTangents(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents)
-        {
-            int i,j,k,e_npoints,offset;
-            Array<OneD,Array<OneD, NekDouble> > loctangent;
-
-            // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
-
-            ASSERTL1(normals.num_elements() >= coordim,
-                     "Output vector does not have sufficient dimensions to "
-                     "match coordim");
-
-            // Process each expansion.
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                // Get the number of points and normals for this expansion.
-                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                for (j = 0; j < 2; ++j)
-                {
-                    loctangent = (*m_exp)[i]->GetMetricInfo()->GetTangent(j);
-
-                    // Get the physical data offset for this expansion.
-                    offset = m_phys_offset[i];
-                    for (k = 0; k < coordim; ++k)
-                    {
-                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1,
-                                                &(tangents[j][k][offset]), 1);
-                    }
-                }
-            }
-*/                // Process each point in the expansion.
-/*                for(j = 0; j < e_npoints; ++j)
-                {
-                    // Process each spatial dimension and copy the values into
-                    // the output array.
-                    for(k = 0; k < coordim; ++k)
-                    {
-                        //normals[k][offset+j] = locnormals[k*e_npoints + j];
-                        normals[k][offset+j] = locnormals[k][j];
-                    }
-                }*/
-
-//        }
 
         /**
          *

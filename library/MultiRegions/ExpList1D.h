@@ -166,8 +166,6 @@ namespace Nektar
 
             /// Populate \a normals with the normals of all expansions.
             void v_GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
-            
-            //Gs::gs_data * m_traceGsh;
 
         private:
             /// Definition of the total number of degrees of freedom and
@@ -186,8 +184,6 @@ namespace Nektar
             int m_firstIntEl;
             
             Array<OneD, NekDouble> m_normSign;
-            
-            bool    m_parallel;
         };
 
         /// Empty ExpList1D object.

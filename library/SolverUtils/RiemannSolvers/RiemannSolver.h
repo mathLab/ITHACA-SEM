@@ -137,7 +137,7 @@ namespace Nektar
             {
                 return m_params;
             }
-            
+
             int m_spacedim;
 
         protected:

@@ -466,7 +466,7 @@ namespace Nektar
             int i, j, id, elmtid=0;
             set<int> facesDone;
             bool var_p = false;
-            
+
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
             SpatialDomains::QuadGeomSharedPtr   FaceQuadGeom;
             SpatialDomains::TriGeomSharedPtr    FaceTriGeom;
@@ -474,7 +474,7 @@ namespace Nektar
             LocalRegions::TriExpSharedPtr       FaceTriExp;
             LocalRegions::Expansion2DSharedPtr  exp2D;
             LocalRegions::Expansion3DSharedPtr  exp3D;
-            
+
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
             for (i = 0; i < bndCond.num_elements(); ++i)
@@ -519,7 +519,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             map<int, pair<SpatialDomains::Geometry2DSharedPtr,
                           pair<LibUtilities::BasisKey,
                                LibUtilities::BasisKey> > > faceOrders;
@@ -534,13 +534,13 @@ namespace Nektar
                 {
                     FaceGeom = exp3D->GetGeom3D()->GetFace(j);
                     id       = FaceGeom->GetFid();
-                    
+
                     if(facesDone.count(id) != 0)
                     {
                         continue;
                     }
                     it = faceOrders.find(id);
-                    
+
                     if (it == faceOrders.end())
                     {
                         LibUtilities::BasisKey face_dir0
@@ -557,7 +557,7 @@ namespace Nektar
                     else // variable modes/points
                     {
                         var_p = true;
-                        
+
                         LibUtilities::BasisKey face0     =
                             locexp[i]->DetFaceBasisKey(j,0);
                         LibUtilities::BasisKey face1     =
@@ -566,7 +566,7 @@ namespace Nektar
                             it->second.second.first;
                         LibUtilities::BasisKey existing1 =
                             it->second.second.second;
-                    
+
                         int np11 = face0    .GetNumPoints();
                         int np12 = face1    .GetNumPoints();
                         int np21 = existing0.GetNumPoints();
@@ -575,7 +575,7 @@ namespace Nektar
                         int nm12 = face1    .GetNumModes ();
                         int nm21 = existing0.GetNumModes ();
                         int nm22 = existing1.GetNumModes ();
-                        
+
                         if ((np22 >= np12 || np21 >= np11) &&
                             (nm22 >= nm12 || nm21 >= nm11))
                         {
@@ -596,55 +596,51 @@ namespace Nektar
                     }
                 }
             }
-        
+
             LibUtilities::CommSharedPtr vComm = pSession->GetComm();
             int nproc = vComm->GetSize(); // number of processors
             int facepr = vComm->GetRank(); // ID processor
-            
-            m_parallel = false;
-            
+
             if (nproc > 1 && var_p == true)
             {
-                m_parallel = true;
-                
                 int fCnt = 0;
-                
+
                 // Count the number of faces on each partition
                 for(i = 0; i < locexp.size(); ++i)
                 {
                     fCnt += locexp[i]->GetNfaces();
                 }
-                
+
                 // Set up the offset and the array that will contain the list of
                 // face IDs, then reduce this across processors.
                 Array<OneD, int> faceCnt(nproc,0);
                 faceCnt[facepr] = fCnt;
                 vComm->AllReduce(faceCnt, LibUtilities::ReduceSum);
-                
+
                 int totFaceCnt = Vmath::Vsum(nproc, faceCnt, 1);
                 Array<OneD, int> fTotOffsets(nproc,0);
-                
+
                 for (i = 1; i < nproc; ++i)
                 {
                     fTotOffsets[i] = fTotOffsets[i-1] + faceCnt[i-1];
                 }
-                
+
                 // Local list of the edges per element
-                
+
                 Array<OneD, int> FacesTotID   (totFaceCnt, 0);
                 Array<OneD, int> FacesTotNm0  (totFaceCnt, 0);
                 Array<OneD, int> FacesTotNm1  (totFaceCnt, 0);
                 Array<OneD, int> FacesTotPnts0(totFaceCnt, 0);
                 Array<OneD, int> FacesTotPnts1(totFaceCnt, 0);
-                
+
                 int cntr = fTotOffsets[facepr];
-                
+
                 for(i = 0; i < locexp.size(); ++i)
                 {
                     exp3D = locexp[i]->as<LocalRegions::Expansion3D>();
-                    
+
                     int nfaces = locexp[i]->GetNfaces();
-                    
+
                     for(j = 0; j < nfaces; ++j, ++cntr)
                     {
                         LibUtilities::BasisKey face_dir0
@@ -659,7 +655,7 @@ namespace Nektar
                         FacesTotPnts1[cntr] = face_dir1.GetNumPoints();
                     }
                 }
-                
+
                 vComm->AllReduce(FacesTotID,    LibUtilities::ReduceSum);
                 vComm->AllReduce(FacesTotNm0,   LibUtilities::ReduceSum);
                 vComm->AllReduce(FacesTotNm1,   LibUtilities::ReduceSum);
@@ -720,7 +716,7 @@ namespace Nektar
             for (it = faceOrders.begin(); it != faceOrders.end(); ++it)
             {
                 FaceGeom = it->second.first;
-                
+
                 if ((FaceQuadGeom = boost::dynamic_pointer_cast<
                      SpatialDomains::QuadGeom>(FaceGeom)))
                 {
@@ -946,36 +942,37 @@ namespace Nektar
             Array<OneD, NekDouble> tmp;
             // Assume whole array is of same coordinate dimension
             int coordim = GetCoordim(0);
-            
+
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
-            
+
             // Process each expansion.
-            if(m_parallel == false)
+            for(i = 0; i < m_exp->size(); ++i)
             {
-                for(i = 0; i < m_exp->size(); ++i)
+                int e_npoints = (*m_exp)[i]->GetTotPoints();
+
+                LocalRegions::Expansion2DSharedPtr loc_exp =
+                    boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion2D>((*m_exp)[i]);
+                LocalRegions::Expansion3DSharedPtr loc_elmt =
+                    loc_exp->GetLeftAdjacentElementExp();
+                int faceNumber = loc_exp->GetLeftAdjacentElementFace();
+
+                // Get the number of points and normals for this expansion.
+                locnormals = loc_elmt->GetFaceNormal(faceNumber);
+                int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
+
+                if (e_nmodes != loc_nmodes)
                 {
-                    int e_npoints = (*m_exp)[i]->GetTotPoints();
-                
-                    LocalRegions::Expansion2DSharedPtr loc_exp =
-                        boost::dynamic_pointer_cast<
-                            LocalRegions::Expansion2D>((*m_exp)[i]);
-                    LocalRegions::Expansion3DSharedPtr loc_elmt = 
-                        loc_exp->GetLeftAdjacentElementExp();
-                    int faceNumber = loc_exp->GetLeftAdjacentElementFace();
-                
-                    // Get the number of points and normals for this expansion.
-                    locnormals = loc_elmt->GetFaceNormal(faceNumber);
-                    int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
-                    int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
-                    //if (e_npoints != locnormals[0].num_elements())
-                    if (e_nmodes != loc_nmodes)
+                    if (loc_exp->GetRightAdjacentElementFace() >= 0)
                     {
                         LocalRegions::Expansion3DSharedPtr loc_elmt =
                             loc_exp->GetRightAdjacentElementExp();
+
                         int faceNumber = loc_exp->GetRightAdjacentElementFace();
-                        
+
                         // Get the number of points and normals for this expansion.
                         locnormals = loc_elmt->GetFaceNormal(faceNumber);
 
@@ -991,66 +988,21 @@ namespace Nektar
                     }
                     else
                     {
-                        // Get the physical data offset for this expansion.
-                        offset = m_phys_offset[i];
-                
-                        for (k = 0; k < coordim; ++k)
-                        {
-                            LibUtilities::Interp2D(
-                                    loc_elmt->GetFacePointsKey(faceNumber, 0),
-                                    loc_elmt->GetFacePointsKey(faceNumber, 1),
-                                    locnormals[k],
-                                    (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
-                                    (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
-                                    tmp = normals[k]+offset);
-                        }
-                    }
-                }
-            }
-            if(m_parallel == true)
-            {
-                for(i = 0; i < m_exp->size(); ++i)
-                {
-                    int e_npoints = (*m_exp)[i]->GetTotPoints();
-                    
-                    LocalRegions::Expansion2DSharedPtr loc_exp =
-                    boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion2D>((*m_exp)[i]);
-                    
-                    LocalRegions::Expansion3DSharedPtr loc_elmt =
-                    loc_exp->GetLeftAdjacentElementExp();
-                    
-                    LocalRegions::Expansion2DSharedPtr to_exp =
-                    boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion2D>(loc_elmt->GetFaceExp(
-                                loc_exp->GetLeftAdjacentElementFace()));
-                    
-                    int faceNumber = loc_exp->GetLeftAdjacentElementFace();
-                    
-                    int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
-                    int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
-                    
-                    // Get the number of points and normals for this expansion.
-                    locnormals = loc_elmt->GetFaceNormal(faceNumber);
-                    
-                    if (e_nmodes != loc_nmodes)
-                    {
                         Array<OneD, Array<OneD, NekDouble> > normal(coordim);
-                        
+
                         for (int p = 0; p < coordim; ++p)
                         {
                             normal[p] = Array<OneD, NekDouble>(e_npoints,0.0);
-                            
+
                             LibUtilities::PointsKey to_key0 =
-                            loc_exp->GetBasis(0)->GetPointsKey();
+                                loc_exp->GetBasis(0)->GetPointsKey();
                             LibUtilities::PointsKey to_key1 =
-                            loc_exp->GetBasis(1)->GetPointsKey();
-                            
+                                loc_exp->GetBasis(1)->GetPointsKey();
                             LibUtilities::PointsKey from_key0 =
-                            loc_elmt->GetBasis(0)->GetPointsKey();
+                                loc_elmt->GetBasis(0)->GetPointsKey();
                             LibUtilities::PointsKey from_key1 =
-                            loc_elmt->GetBasis(1)->GetPointsKey();
-                            
+                                loc_elmt->GetBasis(1)->GetPointsKey();
+
                             LibUtilities::Interp2D(from_key0,
                                                    from_key1,
                                                    locnormals[p],
@@ -1058,9 +1010,9 @@ namespace Nektar
                                                    to_key1,
                                                    normal[p]);
                         }
-                        
+
                         offset = m_phys_offset[i];
-                        
+
                         // Process each point in the expansion.
                         for (j = 0; j < e_npoints; ++j)
                         {
@@ -1072,21 +1024,21 @@ namespace Nektar
                             }
                         }
                     }
-                    else
+                }
+                else
+                {
+                    // Get the physical data offset for this expansion.
+                    offset = m_phys_offset[i];
+
+                    for (k = 0; k < coordim; ++k)
                     {
-                        // Get the physical data offset for this expansion.
-                        offset = m_phys_offset[i];
-                        
-                        for (k = 0; k < coordim; ++k)
-                        {
-                            LibUtilities::Interp2D(
-                                loc_elmt->GetFacePointsKey(faceNumber, 0),
-                                loc_elmt->GetFacePointsKey(faceNumber, 1),
-                                locnormals[k],
-                                (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
-                                (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
-                                tmp = normals[k]+offset);
-                        }
+                        LibUtilities::Interp2D(
+                            loc_elmt->GetFacePointsKey(faceNumber, 0),
+                            loc_elmt->GetFacePointsKey(faceNumber, 1),
+                            locnormals[k],
+                            (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                            (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                            tmp = normals[k]+offset);
                     }
                 }
             }

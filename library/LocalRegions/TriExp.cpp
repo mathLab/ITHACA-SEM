@@ -1578,7 +1578,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         /**
          * Function is used to compute exactly the advective numerical flux on
          * theinterface of two elements with different expansions, hence an
@@ -1602,16 +1602,15 @@ namespace Nektar
             int nqtot    = nquad0*nquad1;
             int nmodes0  = m_base[0]->GetNumModes();
             int nmodes1  = m_base[1]->GetNumModes();
-            int numMax   = nmodes0;
             int numMin2  = nmodes0, i;
-            
+
             Array<OneD, NekDouble> coeff(n_coeffs,0.0);
             Array<OneD, NekDouble> phys_tmp(nqtot,0.0);
             Array<OneD, NekDouble> tmp, tmp2;
 
             const LibUtilities::PointsKey Pkey0 = m_base[0]->GetPointsKey();
             const LibUtilities::PointsKey Pkey1 = m_base[1]->GetPointsKey();
-            
+
             LibUtilities::BasisKey b0(
                 m_base[0]->GetBasisType(), nmodes0, Pkey0);
             LibUtilities::BasisKey b1(
@@ -1620,18 +1619,18 @@ namespace Nektar
                 LibUtilities::eOrtho_A,    nmodes0, Pkey0);
             LibUtilities::BasisKey bortho1(
                 LibUtilities::eOrtho_B,    nmodes1, Pkey1);
-            
+
             // Check if it is also possible to use the same InterCoeff routine
             // which is also used for Quadrilateral and Hexagonal shaped
             // elements
-            
+
             // For now, set up the used basis on the standard element to
             // calculate the phys values, set up the orthogonal basis to do a
             // forward transform, to obtain the coefficients in orthogonal
             // coefficient space
             StdRegions::StdTriExpSharedPtr m_OrthoTriExp;
             StdRegions::StdTriExpSharedPtr m_TriExp;
-            
+
             m_TriExp      = MemoryManager<StdRegions::StdTriExp>
                 ::AllocateSharedPtr(b0,      b1);
             m_OrthoTriExp = MemoryManager<StdRegions::StdTriExp>
@@ -1639,8 +1638,6 @@ namespace Nektar
 
             m_TriExp     ->BwdTrans(inarray,phys_tmp);
             m_OrthoTriExp->FwdTrans(phys_tmp, coeff);
-
-            int cnt = 0;
 
             for (i = 0; i < n_coeffs; i++)
             {
@@ -1651,7 +1648,7 @@ namespace Nektar
                     numMin2  -= 1.0;
                 }
             }
-            
+
             m_OrthoTriExp->BwdTrans(coeff,phys_tmp);
             m_TriExp     ->FwdTrans(phys_tmp, outarray);
         }

@@ -47,7 +47,7 @@ namespace Nektar
     namespace LibUtilities
     {
         // Coefficient Space Interpolation methods
-        
+
         // 1D Interpolation
         LIB_UTILITIES_EXPORT void InterpCoeff1D(
             const BasisKey                      &fbasis0,
@@ -82,7 +82,7 @@ namespace Nektar
             const BasisKey                      &tbasis1,
             const BasisKey                      &tbasis2,
             Array<OneD, NekDouble>              &to);
-        
+
         LIB_UTILITIES_EXPORT void InterpCoeff3D(
             const BasisKey                      &fbasis0,
             const BasisKey                      &fbasis1,

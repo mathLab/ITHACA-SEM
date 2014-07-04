@@ -916,10 +916,10 @@ namespace Nektar
         }
         
         void Expansion3D::v_AddFaceNormBoundaryInt(
-                                                   const int                            face,
-                                                   StdRegions::StdExpansionSharedPtr   &FaceExp,
-                                                   const Array<OneD, const NekDouble>  &Fn,
-                                                   Array<OneD,       NekDouble>  &outarray)
+            const int                            face,
+            StdRegions::StdExpansionSharedPtr   &FaceExp,
+            const Array<OneD, const NekDouble>  &Fn,
+            Array<OneD,       NekDouble>  &outarray)
         {
             int i, j;
             
@@ -946,7 +946,7 @@ namespace Nektar
                     }
                     
                     Expansion2DSharedPtr faceExp = m_faceExp[i].lock();
-                    
+
                     if (faceExp->GetRightAdjacentElementExp())
                     {
                         if (faceExp->GetRightAdjacentElementExp()->GetGeom3D()
@@ -957,50 +957,41 @@ namespace Nektar
                     }
                 }
             }
-            
+
             StdRegions::IndexMapKey ikey(
-                                         StdRegions::eFaceToElement, DetShapeType(),
-                                         GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                         face, GetFaceOrient(face));
+                StdRegions::eFaceToElement, DetShapeType(),
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
             StdRegions::IndexMapValuesSharedPtr map =
             StdExpansion::GetIndexMap(ikey);
-            
+
             int order_e  = (*map).num_elements(); // Order of the element
             int n_coeffs = FaceExp->GetNcoeffs();
-            
+
             Array<OneD, NekDouble> faceCoeffs(n_coeffs);
-            
-            // Order of the element
-            //int order_e = (*map).num_elements();
-            // Order of the trace
-            //int n_coeffs = FaceExp->GetCoeffs().num_elements();
-            
+
             if (n_coeffs != order_e) // Going to orthogonal space
             {
                 Array<OneD, NekDouble> coeff(n_coeffs);
                 Array<OneD, NekDouble> array(n_coeffs);
-                
-                //ASSERTL0(FaceExp->DetShapeType() == LibUtilities::eQuadrilateral,
-                //         "Triangular trace expansion not supported with "
-                //         "variable p");
-                
-                FaceExp->FwdTrans(Fn,faceCoeffs);
-                
+
+                FaceExp->FwdTrans(Fn, faceCoeffs);
+
                 int NumModesElementMax  = FaceExp->GetBasis(0)->GetNumModes();
                 int NumModesElementMin  = m_base[0]->GetNumModes();
-                
+
                 FaceExp->ReduceOrderCoeffs(NumModesElementMin,
                                            faceCoeffs,
                                            faceCoeffs);
-                
+
                 StdRegions::StdMatrixKey masskey(
-                                                 StdRegions::eMass, FaceExp->DetShapeType(), *FaceExp);
+                    StdRegions::eMass, FaceExp->DetShapeType(), *FaceExp);
                 FaceExp->MassMatrixOp(
                                       faceCoeffs,faceCoeffs,masskey);
-                
+
                 // Reorder coefficients for the lower degree face.
                 int offset1 = 0, offset2 = 0;
-                
+
                 if (FaceExp->DetShapeType() == LibUtilities::eQuadrilateral)
                 {
                     for (i = 0; i < NumModesElementMin; ++i)
@@ -1013,7 +1004,7 @@ namespace Nektar
                         offset1 += NumModesElementMin;
                         offset2 += NumModesElementMax;
                     }
-                    
+
                     // Extract lower degree modes. TODO: Check this is correct.
                     for (i = NumModesElementMin; i < NumModesElementMax; ++i)
                     {
@@ -1023,13 +1014,13 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if (FaceExp->DetShapeType() == LibUtilities::eTriangle)
                 {
-                    
+
                     // Reorder coefficients for the lower degree face.
                     int offset1 = 0, offset2 = 0;
-                    
+
                     for (i = 0; i < NumModesElementMin; ++i)
                     {
                         for (j = 0; j < NumModesElementMin-i; ++j)
@@ -1041,18 +1032,17 @@ namespace Nektar
                         offset2 += NumModesElementMax-i;
                     }
                 }
-                
+
             }
             else
             {
                 FaceExp->IProductWRTBase(Fn, faceCoeffs);
             }
-            
+
             if (m_requireNeg[face])
             {
                 for (i = 0; i < order_e; ++i)
                 {
-                    
                     outarray[(*map)[i].index] -= (*map)[i].sign * faceCoeffs[i];
                 }
             }

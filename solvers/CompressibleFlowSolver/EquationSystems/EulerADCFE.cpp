@@ -64,7 +64,7 @@ namespace Nektar
         }
 
         m_diffusion->SetArtificialDiffusionVector(
-            &CompressibleFlowSystem::GetArtificialDynamicViscosity, this);
+            &EulerADCFE::GetArtificialDynamicViscosity, this);
 
         if(m_session->DefinesSolverInfo("PROBLEMTYPE"))
         {

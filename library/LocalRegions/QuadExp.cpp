@@ -2096,13 +2096,13 @@ namespace Nektar
             Array<OneD, NekDouble> coeff    (n_coeffs);
             Array<OneD, NekDouble> coeff_tmp(n_coeffs, 0.0);
             Array<OneD, NekDouble> tmp, tmp2;
-            
+
             int nmodes0 = m_base[0]->GetNumModes();
             int nmodes1 = m_base[1]->GetNumModes();
             int numMax  = nmodes0;
-            
+
             Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
-            
+
             const LibUtilities::PointsKey Pkey0(
                 nmodes0, LibUtilities::eGaussLobattoLegendre);
             const LibUtilities::PointsKey Pkey1(
@@ -2120,17 +2120,17 @@ namespace Nektar
                 b0, b1, coeff_tmp, bortho0, bortho1, coeff);
 
             Vmath::Zero(n_coeffs, coeff_tmp, 1);
-            
+
             int cnt = 0;
             for (int i = 0; i < numMin+1; ++i)
             {
                 Vmath::Vcopy(numMin,
                              tmp  = coeff+cnt,1,
                              tmp2 = coeff_tmp+cnt,1);
-                
+
                 cnt = i*numMax;
             }
-            
+
             LibUtilities::InterpCoeff2D(
                 bortho0, bortho1, coeff_tmp,
                 b0,      b1,      outarray);

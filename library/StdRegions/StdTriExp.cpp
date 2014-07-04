@@ -1331,9 +1331,10 @@ namespace Nektar
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
 
-        void StdTriExp::v_ReduceOrderCoeffs(int numMin,
-                                            const Array<OneD, const NekDouble> &inarray,
-                                            Array<OneD, NekDouble> &outarray)
+        void StdTriExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
         {
             int n_coeffs = inarray.num_elements();
             int nquad0   = m_base[0]->GetNumPoints();
@@ -1344,36 +1345,34 @@ namespace Nektar
             Array<OneD, NekDouble> tmp2;
             int nqtot    = nquad0*nquad1;
             Array<OneD, NekDouble> phys_tmp(nqtot,0.0);
-            
+
             int       nmodes0 = m_base[0]->GetNumModes();
             int       nmodes1 = m_base[1]->GetNumModes();
             int       numMax  = nmodes0;
             int       i, numMin2;
-            
-            const LibUtilities::PointsKey Pkey0(nmodes0,LibUtilities::eGaussLobattoLegendre);
-            
-            const LibUtilities::PointsKey Pkey1(nmodes1,LibUtilities::eGaussLobattoLegendre);
-            
+
+            const LibUtilities::PointsKey Pkey0(
+                nmodes0, LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::PointsKey Pkey1(
+                nmodes1, LibUtilities::eGaussLobattoLegendre);
+
             LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
             LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),nmodes1,Pkey1);
-            
+
             LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
             LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_B,nmodes1,Pkey1);
-            
-            /*LibUtilities::InterpCoeff2D(
-                                        b0,b1,inarray,
-                                        bortho0, bortho1, coeff);*/
+
             StdRegions::StdTriExpSharedPtr m_OrthoTriExp;
             StdRegions::StdTriExpSharedPtr m_TriExp;
-            
+
             m_TriExp      = MemoryManager<StdRegions::StdTriExp>
-            ::AllocateSharedPtr(b0,      b1);
+                ::AllocateSharedPtr(b0,      b1);
             m_OrthoTriExp = MemoryManager<StdRegions::StdTriExp>
-            ::AllocateSharedPtr(bortho0, bortho1);
-            
+                ::AllocateSharedPtr(bortho0, bortho1);
+
             m_TriExp     ->BwdTrans(inarray,phys_tmp);
             m_OrthoTriExp->FwdTrans(phys_tmp, coeff);
-            
+
             for (i = 0; i < n_coeffs; i++)
             {
                 if (i == numMin)
@@ -1383,13 +1382,10 @@ namespace Nektar
                     numMin2 -= 1.0;
                 }
             }
-            
+
             m_OrthoTriExp->BwdTrans(coeff,phys_tmp);
             m_TriExp     ->FwdTrans(phys_tmp, outarray);
-            /*LibUtilities::InterpCoeff2D(
-                                        b0,b1,coeff,
-                                        bortho0, bortho1,outarray);*/
-            
+
         }
 
         void StdTriExp::v_GeneralMatrixOp_MatOp(

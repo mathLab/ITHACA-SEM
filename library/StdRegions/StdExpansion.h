@@ -925,7 +925,7 @@ namespace Nektar
             {
                 v_LaplacianMatrixOp(inarray,outarray,mkey);
             }
-            
+
             void ReduceOrderCoeffs(int numMin,
                                    const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray)
@@ -1682,7 +1682,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD,NekDouble> &array,
                                              const StdMatrixKey &mkey);
-            
+
             STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
                                             int numMin,
                                             const Array<OneD, const NekDouble> &inarray,

@@ -908,7 +908,7 @@ namespace Nektar
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
             ASSERTL2(k >= 0 && k <= 1, "basis key id is out of range");
-            int nummodes = GetBasis(0)->GetNumModes(); 
+            int nummodes = GetBasis(0)->GetNumModes();
 
             //temporary solution, need to add conditions based on face id
             //also need to add check of the points type
@@ -956,7 +956,7 @@ namespace Nektar
                     break;
                 }
             }
-            
+
             // Should never get here.
             return LibUtilities::NullBasisKey;
         }

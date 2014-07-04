@@ -195,7 +195,7 @@ namespace Nektar
         {
             Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             int nVel = advVel.num_elements();
-            
+
             // Call solver's flux vector function to compute the flux vector on
             // the entire domain.
             m_fluxVector(inarray, m_fluxVecStore);

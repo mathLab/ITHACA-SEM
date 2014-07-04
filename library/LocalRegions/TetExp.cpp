@@ -1490,53 +1490,50 @@ namespace Nektar
             int nmodes1  = m_base[1]->GetNumModes();
             int nmodes2  = m_base[2]->GetNumModes();
             int numMax   = nmodes0;
-            
+
             Array<OneD, NekDouble> coeff     (n_coeffs);
             Array<OneD, NekDouble> coeff_tmp1(n_coeffs, 0.0);
             Array<OneD, NekDouble> coeff_tmp2(n_coeffs,        0.0);
             Array<OneD, NekDouble> phys_tmp(nqtot,0.0);
             Array<OneD, NekDouble> tmp, tmp2, tmp3, tmp4;
-            
+
             Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp2,1);
-            
+
             const LibUtilities::PointsKey Pkey0 = m_base[0]->GetPointsKey();
             const LibUtilities::PointsKey Pkey1 = m_base[1]->GetPointsKey();
             const LibUtilities::PointsKey Pkey2 = m_base[2]->GetPointsKey();
-            
+
             LibUtilities::BasisKey b0 = m_base[0]->GetBasisKey();
             LibUtilities::BasisKey b1 = m_base[1]->GetBasisKey();
             LibUtilities::BasisKey b2 = m_base[2]->GetBasisKey();
-            
+
             LibUtilities::BasisKey bortho0(
                                            LibUtilities::eOrtho_A,    nmodes0, Pkey0);
             LibUtilities::BasisKey bortho1(
                                            LibUtilities::eOrtho_B,    nmodes1, Pkey1);
             LibUtilities::BasisKey bortho2(
                                            LibUtilities::eOrtho_C,    nmodes2, Pkey2);
-            
-            
+
+
             Vmath::Zero(n_coeffs, coeff_tmp2, 1);
-            
-            int i,j;
-            int cnt1 = 0;
-            
+
             StdRegions::StdTetExpSharedPtr m_OrthoTetExp;
             StdRegions::StdTetExpSharedPtr m_TetExp;
-            
+
             m_TetExp      = MemoryManager<StdRegions::StdTetExp>
             ::AllocateSharedPtr(b0, b1, b2);
             m_OrthoTetExp = MemoryManager<StdRegions::StdTetExp>
             ::AllocateSharedPtr(bortho0, bortho1, bortho2);
-            
+
             m_TetExp     ->BwdTrans(inarray,phys_tmp);
             m_OrthoTetExp->FwdTrans(phys_tmp, coeff);
-            
+
             Vmath::Zero(m_ncoeffs,outarray,1);
-            
+
             // filtering
-            
-            int cnt = 0, cnt2 = 0;
-            
+
+            int cnt = 0;
+
             for (int u = 0; u < numMax; ++u)
             {
                 for (int i = 0; i < numMax-u; ++i)
@@ -1544,11 +1541,11 @@ namespace Nektar
                     Vmath::Vcopy(numMin-u-i,
                                  tmp  = coeff+cnt,1,
                                  tmp2 = coeff_tmp1+cnt,1);
-                    
+
                     cnt += numMax - u - i;
                 }
             }
-            
+
             m_OrthoTetExp->BwdTrans(coeff_tmp1,phys_tmp);
             m_TetExp     ->FwdTrans(phys_tmp, outarray);
         }

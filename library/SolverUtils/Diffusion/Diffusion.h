@@ -101,13 +101,13 @@ namespace Nektar
             {
                 m_fluxVectorNS = boost::bind(func, obj, _1, _2, _3);
             }
-            
+
             template<typename FuncPointerT, typename ObjectPointerT>
             void SetArtificialDiffusionVector(FuncPointerT func, ObjectPointerT obj)
             {
                 m_ArtificialDiffusionVector = boost::bind(func, obj, _1, _2);
             }
-            
+
             void SetFluxVectorNS(DiffusionFluxVecCBNS fluxVector)
             {
                 m_fluxVectorNS = fluxVector;

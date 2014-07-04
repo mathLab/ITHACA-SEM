@@ -132,7 +132,7 @@ namespace Nektar
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
             v_NumFluxforVector(fields, inarray, qfield, flux[0]);
-            
+
             if (m_ArtificialDiffusionVector)
             {
                 Array<OneD, NekDouble> muvar(nPts, 0.0);
@@ -168,8 +168,6 @@ namespace Nektar
                         nBndEdgePts = fields[0]->GetBndCondExpansions()[i]
                             ->GetExp(e)->GetTotPoints();
 
-                        int id1 = fields[0]->GetBndCondExpansions()[i]
-                            ->GetPhys_Offset(e);
                         int id2 = fields[0]->GetTrace()->GetPhys_Offset(
                             fields[0]->GetTraceMap()
                                 ->GetBndCondTraceToGlobalTraceMap(cnt++));
@@ -180,7 +178,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 for(i = 0; i < nConvectiveFields; ++i)
                 {
                     for(int k = 0; k < nTracePts; ++k)
@@ -301,7 +299,6 @@ namespace Nektar
             int cnt         = 0;
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
-            int nDim        = fields.num_elements()-2;
             Array<OneD, NekDouble > uplus(nTracePts);
             
             fields[var]->ExtractTracePhys(ufield, uplus);
@@ -478,7 +475,6 @@ namespace Nektar
             Array<OneD, NekDouble > qtemp(nTracePts);
             int cnt = 0;
             
-            int nDim       = qfield.num_elements();
             /*
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);

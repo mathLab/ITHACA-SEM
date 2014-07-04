@@ -50,14 +50,6 @@ namespace Nektar
             CompressibleFlowSystem::create,
             "Auxiliary functions for the compressible flow system.");
 
-    std::string CompressibleFlowSystem::lookupIds[] = {
-        LibUtilities::SessionReader::RegisterEnumValue(
-            "", "Null", eNull),
-        LibUtilities::SessionReader::RegisterEnumValue(
-            "", "Diagonal", eDiagonal),
-    }
-
-
     CompressibleFlowSystem::CompressibleFlowSystem(
         const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession)
@@ -373,7 +365,6 @@ namespace Nektar
 
             if (m_smoothDiffusion)
             {
-                NekDouble Length  = 1.0;
                 NekDouble factor  = 0.0;
                 NekDouble factor2 = 1.0;
                 
@@ -415,9 +406,8 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
         int i;
-        int nTracePts = GetTraceTotPoints();
-        int nVariables = physarray.num_elements();
-        const int nElements  = m_fields[0]->GetExpSize();
+        const int nTracePts = GetTraceTotPoints();
+        const int nVariables = physarray.num_elements();
         const Array<OneD, const int> &traceBndMap
             = m_fields[0]->GetTraceBndMap();
 
@@ -487,7 +477,6 @@ namespace Nektar
             
             if (m_smoothDiffusion)
             {
-                NekDouble Length  = 1.0;
                 NekDouble factor  = 0.0;
                 NekDouble factor2 = 1.0;
                 
@@ -1351,14 +1340,11 @@ namespace Nektar
                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        int i, j, k;
+        int i, j;
         int nvariables = m_fields.num_elements();
         int nPts       = m_fields[0]->GetTotPoints();
         
-        int nScalars   = physfield.num_elements();
-        
         // Stokes hypotesis
-        NekDouble C1     = 3.0;
         NekDouble C1C2   = 0.075;
         // Auxiliary variables
         Array<OneD, NekDouble > mu                  (nPts, 0.0);
@@ -1444,7 +1430,6 @@ namespace Nektar
         
         NekDouble hmean_inv  = 0.0;
         NekDouble hmeanx_inv = 0.0;
-        NekDouble hmeany_inv = 0.0;
         
         // Based on eps, determine eps_bar
 
@@ -2022,7 +2007,7 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        int i, j, k;
+        int i, j;
         int nvariables = m_fields.num_elements();
         int nPts       = m_fields[0]->GetTotPoints();
         
@@ -2030,7 +2015,6 @@ namespace Nektar
     
         // Stokes hypotesis
         NekDouble lambda = -0.66666;
-        NekDouble C1     = 3.0;
         NekDouble C1C2   = 0.075;
         // Auxiliary variables
         Array<OneD, NekDouble > mu                  (nPts, 0.0);
@@ -3548,17 +3532,15 @@ namespace Nektar
         const Array<OneD, const NekDouble>               &temperature,
               Array<OneD,       NekDouble>               &entropy)
     {
-        NekDouble entropyL2, entropy_sum = 0.0;
+        NekDouble entropy_sum = 0.0;
         const int npts = m_fields[0]->GetTotPoints();
         const NekDouble temp_inf = m_pInf/(m_rhoInf*m_gasConstant);;
-        
-        Array<OneD,       NekDouble> L2entropy(npts, 0.0);
-        
+        Array<OneD, NekDouble> L2entropy(npts, 0.0);
+
         for (int i = 0; i < npts; ++i)
         {
             entropy[i] = m_gamma/(m_gamma-1.0)*m_gasConstant*log(temperature[i]/temp_inf) -
-            m_gasConstant*log(pressure[i]/m_pInf);
-            
+                m_gasConstant*log(pressure[i]/m_pInf);
         }
         
         Vmath::Vmul(npts,entropy,1,entropy,1,L2entropy,1);
@@ -3573,7 +3555,6 @@ namespace Nektar
         //m_file << Vmath::Vmax(entropy.num_elements(),entropy,1) << endl;
         
         m_file.close();
-    
     }
 
     /**
@@ -3778,11 +3759,7 @@ namespace Nektar
               Array<OneD,                   NekDouble>   &Sensor,
               Array<OneD,                   NekDouble>   &SensorKappa)
     {
-        
-        int i, e, nCoeffsElement, NumModesElement, NumModesCuttOff, NumModesCuttOff_Dir1, NumModesCuttOff_Dir2, nQuadPointsElement;
-        NekDouble SensorNumerator, SensorDenominator;
-        
-        int nVariables      = m_fields.num_elements();
+        int e, NumModesElement, nQuadPointsElement;
         int nTotQuadPoints  = GetTotPoints();
         int nElements       = m_fields[0]->GetExpSize();
         
@@ -3999,17 +3976,12 @@ namespace Nektar
                           Array<OneD,       NekDouble > &hmin)
     {
         // So far, this function is only implemented for quads
-        const int nPts = m_fields[0]->GetTotPoints();
-        const int nvariables = m_fields.num_elements();
         const int nElements = m_fields[0]->GetExpSize();
         
         SpatialDomains::HexGeomSharedPtr    ElHexGeom;
         
         NekDouble hx = 0.0;
         NekDouble hy = 0.0;
-        NekDouble hz = 0.0;
-        
-        int PointCount = 0;
         
         for (int e = 0; e < nElements; e++)
         {
@@ -4043,7 +4015,7 @@ namespace Nektar
             }
             // determine the minimum length in x and y direction
             // still have to find a better estimate when dealing with unstructured meshes
-            if(boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom()));
+            if(boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom()))
             {
                 hx = min(L1[0], L1[2]);
                 hy = min(L1[1], L1[3]);
@@ -4091,11 +4063,8 @@ namespace Nektar
                         const Array<OneD, Array<OneD, NekDouble> > &physfield,
                               Array<OneD,             NekDouble  > &eps_bar)
     {
-        
-        int i, j, k;
         int nvariables = physfield.num_elements();
         int nPts       = m_fields[0]->GetTotPoints();
-        
         
         Array<OneD, NekDouble > pressure            (nPts, 0.0);
         Array<OneD, NekDouble > temperature         (nPts, 0.0);
@@ -4157,8 +4126,6 @@ namespace Nektar
         NekDouble Phi0     = (ThetaH+ThetaL)/2;
         NekDouble DeltaPhi = ThetaH-Phi0;
         
-        int PointCount = 0.0;
-        //cout << ThetaH << endl;
         Vmath::Zero(eps_bar.num_elements(), eps_bar, 1);
         
         for (int e = 0; e < eps_bar.num_elements(); e++)
@@ -4186,9 +4153,7 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD,             NekDouble  > &mu_var)
     {
-        const int npts       = m_fields[0]->GetTotPoints();
         const int nElements  = m_fields[0]->GetExpSize();
-        const int ploc       = m_fields[0]->GetExpSize();
     
         int PointCount = 0;
         int nTotQuadPoints  = GetTotPoints();
@@ -4210,10 +4175,6 @@ namespace Nektar
         Array<OneD, NekDouble> Lambda(nTotQuadPoints, 1.0);
         Vmath::Vadd(nTotQuadPoints, absVelocity, 1, soundspeed, 1, Lambda, 1);
         
-        // Determining the maximum wave speed in the element
-        NekDouble LambdaMax = Vmath::Vmax(nTotQuadPoints, Lambda,      1);
-        NekDouble StdVMax   = Vmath::Vmax(nTotQuadPoints, absVelocity, 1);
-        
         for (int e = 0; e < nElements; e++)
         {
             // Threshold value specified in C. Biottos thesis.  Based on a 1D
@@ -4227,7 +4188,6 @@ namespace Nektar
 
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
             Array <OneD, NekDouble> one2D(nQuadPointsElement, 1.0);
-            NekDouble Area = m_fields[0]->GetExp(e)->Integral(one2D);
             
             for (int n = 0; n < nQuadPointsElement; n++)
             {
@@ -4257,8 +4217,8 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                       Array<OneD,                    NekDouble  > &PolyOrder)
     {
-        int e, cnt;
-        NekDouble s_0, s_ds, s_sm, s_fl;
+        int e;
+        NekDouble s_ds, s_sm, s_fl;
         
         int nElements  = m_fields[0]->GetExpSize();
         int npts       = m_fields[0]->GetTotPoints();
@@ -4269,7 +4229,6 @@ namespace Nektar
 
         GetSensor(physfield, Sensor, SensorKappa);
 
-        int numfields           = m_fields.num_elements();
         int nQuadPointsElement  = 0;
         int npCount             = 0;
         int MinOrder            = 2;

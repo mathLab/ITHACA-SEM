@@ -1868,21 +1868,19 @@
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
+
             for(n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);
                 e_outarray = outarray+offset;
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
-                    t_offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    
-                    //cout << "BEFORE " << Fn.num_elements() << "  " << e_outarray.num_elements() << endl;
+                    t_offset = m_trace->GetPhys_Offset(
+                        elmtToTrace[n][e]->GetElmtId());
                     (*m_exp)[n]->AddFaceNormBoundaryInt(e,
                                                         elmtToTrace[n][e],
                                                         Fn + t_offset,
                                                         e_outarray);
-                    //cout << "AFTER " << Fn.num_elements() << "  " << e_outarray.num_elements() << endl;
                 }
             }
         }

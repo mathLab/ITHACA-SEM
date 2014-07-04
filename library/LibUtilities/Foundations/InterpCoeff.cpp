@@ -44,11 +44,11 @@ namespace Nektar
 {    
     namespace LibUtilities
     {     
-        void InterpCoeff1D(const BasisKey                      &fbasis0, 
-                           const Array<OneD, const NekDouble>&  from,  
-                           const BasisKey                      &tbasis0, 
+        void InterpCoeff1D(const BasisKey                      &fbasis0,
+                           const Array<OneD, const NekDouble>&  from,
+                           const BasisKey                      &tbasis0,
                                  Array<OneD, NekDouble>        &to)
-        { 
+        {
             ASSERTL0(fbasis0.GetNumModes() == tbasis0.GetNumModes(),
                      "Number of modes must be the same for "
                      "interpolating coefficients");
@@ -80,7 +80,7 @@ namespace Nektar
             InterpCoeff2D(fbasis0, fbasis1, from.data(),
                           tbasis0, tbasis1, to.  data());
         }
-        
+
         void InterpCoeff2D(const BasisKey  &fbasis0,
                            const BasisKey  &fbasis1,
                            const NekDouble *from,
@@ -92,9 +92,9 @@ namespace Nektar
             const int fnm1 = fbasis1.GetNumModes();
             const int tnm0 = tbasis0.GetNumModes();
             const int tnm1 = tbasis1.GetNumModes();
-            
+
             Array<OneD, NekDouble> wsp(tnm1 * fnm0);
-            
+
             if (fbasis1.GetBasisType() == tbasis1.GetBasisType())
             {
                 Vmath::Vcopy(fnm0*tnm1, from, 1, wsp.get(), 1);
@@ -116,7 +116,7 @@ namespace Nektar
             {
                 // interpolate
                 DNekMatSharedPtr ft0 = BasisManager()[fbasis0]->GetI(tbasis0);
-                
+
                 Blas::Dgemm('N', 'N', tnm0, tnm1, fnm0, 1.0, ft0->GetPtr().get(),
                             tnm0, wsp.get(), fnm0, 0.0, to, tnm0);
             }

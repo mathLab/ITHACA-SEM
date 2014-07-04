@@ -19,11 +19,14 @@ IF( NEKTAR_USE_SCOTCH )
         IF (APPLE)
             SET(SCOTCH_MAKE Makefile.inc.i686_mac_darwin8)
             SET(SCOTCH_LDFLAGS "")
+            SET(SCOTCH_CFLAGS "-O3 -Drestrict=__restrict -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DCOMMON_TIMING_OLD -DSCOTCH_PTHREAD -DSCOTCH_RENAME -DCOMMON_PTHREAD_BARRIER")
         ELSE ()
             IF (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
                 SET(SCOTCH_MAKE Makefile.inc.x86-64_pc_linux2)
+                SET(SCOTCH_CFLAGS "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -DSCOTCH_PTHREAD -Drestrict=__restrict -DIDXSIZE64")
             ELSE ()
                 SET(SCOTCH_MAKE Makefile.inc.i686_pc_linux2)
+                SET(SCOTCH_CFLAGS "-O3 -DCOMMON_FILE_COMPRESS_GZ -DCOMMON_PTHREAD -DCOMMON_RANDOM_FIXED_SEED -DSCOTCH_RENAME -DSCOTCH_PTHREAD -Drestrict=__restrict")
             ENDIF ()
             SET(SCOTCH_LDFLAGS "-lz -lm -lrt -lpthread")
         ENDIF ()
@@ -40,6 +43,7 @@ IF( NEKTAR_USE_SCOTCH )
                 ${SCOTCH_SRC}/Make.inc/${SCOTCH_MAKE}
                 ${SCOTCH_SRC}/Makefile.inc
             BUILD_COMMAND $(MAKE) -C ${TPSRC}/src/scotch-6.0.0/src
+                "CFLAGS=${SCOTCH_CFLAGS}"
                 "LDFLAGS=${SCOTCH_LDFLAGS}"
                 "CLIBFLAGS=-fPIC" scotch
             INSTALL_COMMAND $(MAKE) -C ${TPSRC}/src/scotch-6.0.0/src

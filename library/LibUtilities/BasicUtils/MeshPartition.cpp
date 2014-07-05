@@ -45,7 +45,7 @@
 #include <vector>
 #include <map>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>

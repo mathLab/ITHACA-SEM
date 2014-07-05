@@ -48,7 +48,7 @@ using namespace std;
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>

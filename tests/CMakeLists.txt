@@ -27,6 +27,7 @@ IF(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 ENDIF()
 
 ADD_EXECUTABLE(Tester ${TESTER_SOURCES} ${ARGN})
+MESSAGE(STATUS "Tinyxml: ${TINYXML_LIB}")
 TARGET_LINK_LIBRARIES(Tester
   ${Boost_FILESYSTEM_LIBRARY} 
   ${Boost_SYSTEM_LIBRARY}
@@ -35,7 +36,7 @@ TARGET_LINK_LIBRARIES(Tester
   ${Boost_THREAD_LIBRARY}
   optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
 )
-ADD_DEPENDENCIES(Tester boost tinyxml)
+ADD_DEPENDENCIES(Tester boost tinyxml-2.4.3)
 
 IF( ${CMAKE_SYSTEM} MATCHES "Linux.*")
   TARGET_LINK_LIBRARIES(Tester optimized rt debug rt)

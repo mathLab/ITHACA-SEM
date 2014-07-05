@@ -41,7 +41,7 @@
 #include <string>
 #include <vector>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace fs = boost::filesystem;
 

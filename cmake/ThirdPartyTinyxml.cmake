@@ -11,7 +11,7 @@ IF (THIRDPARTY_BUILD_TINYXML)
         tinyxml-2.4.3
         PREFIX ${TPSRC}
         URL ${TPURL}/tinyxml_2_4_3-1.tar.bz2
-        URL_MD5 "76e7fa1264520ec0bbc36a0d5117806d"
+        URL_MD5 "a00f5e3b547b803977c5744547a688f7"
         DOWNLOAD_DIR ${TPSRC}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
             -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
@@ -19,10 +19,6 @@ IF (THIRDPARTY_BUILD_TINYXML)
             -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist
             -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
             ${TPSRC}/src/tinyxml-2.4.3
-        INSTALL_COMMAND $(MAKE) install
-            COMMAND ${CMAKE_COMMAND} -E copy 
-                ${TPSRC}/src/tinyxml-2.4.3/tinyxml.h
-                ${TPSRC}/dist/include/tinyxml.h
     )
     SET(TINYXML_LIB tinyxml CACHE FILEPATH 
         "Tinyxml library" FORCE)

@@ -10,8 +10,8 @@ IF (THIRDPARTY_BUILD_TINYXML)
     EXTERNALPROJECT_ADD(
         tinyxml-2.4.3
         PREFIX ${TPSRC}
-        URL ${TPSRC}/tinyxml_2_4_3.tar.bz2
-        URL_MD5 "aec842139928e65aa7abdff6de0a09ec"
+        URL ${TPURL}/tinyxml_2_4_3-1.tar.bz2
+        URL_MD5 "76e7fa1264520ec0bbc36a0d5117806d"
         DOWNLOAD_DIR ${TPSRC}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
             -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}

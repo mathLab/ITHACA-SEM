@@ -24,12 +24,11 @@ IF (THIRDPARTY_BUILD_TINYXML)
                 ${TPSRC}/src/tinyxml-2.4.3/tinyxml.h
                 ${TPSRC}/dist/include/tinyxml.h
     )
-    SET(TINYXML_LIB ${TPSRC}/dist/lib/libtinyxml.so CACHE FILEPATH 
+    SET(TINYXML_LIB tinyxml CACHE FILEPATH 
         "Tinyxml library" FORCE)
     MARK_AS_ADVANCED(TINYXML_LIB)
     LINK_DIRECTORIES(${TPSRC}/dist/lib)
     INCLUDE_DIRECTORIES(${TPSRC}/dist/include)
-    MESSAGE(STATUS "Build TinyXML: ${TPSRC}/dist/lib/lib${TINYXML_LIB}.so")
 ELSE (THIRDPARTY_BUILD_TINYXML)
     INCLUDE (FindTinyXml)
 ENDIF (THIRDPARTY_BUILD_TINYXML)

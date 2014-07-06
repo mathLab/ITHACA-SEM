@@ -213,7 +213,7 @@ namespace Nektar
             rhovf = rhouL * vL;
             rhowf = rhouL * wL;
             Ef    = uL * (EL + pL);
-            Epsf  = EpsL;
+            Epsf  = 0.0;
         }
         // HLLC Riemann fluxes (negative case)
         else if (SR <= 0)
@@ -223,7 +223,7 @@ namespace Nektar
             rhovf = rhouR * vR;
             rhowf = rhouR * wR;
             Ef    = uR * (ER + pR);
-            Epsf  = EpsR;
+            Epsf  = 0.0;
         }
         // HLLC Riemann fluxes (general case (SL < 0 | SR > 0)
         else
@@ -253,7 +253,7 @@ namespace Nektar
                 rhovf = rhouL * vL + SL * (rhovML - rhovL);
                 rhowf = rhouL * wL + SL * (rhowML - rhowL);
                 Ef    = uL * (EL + pL) + SL * (EML - EL);
-                Epsf  = EpsL + SL * (EpsML - EpsL);
+                Epsf  = 0.0;
             }
             else if(SM < 0.0 && SR > 0.0)
             {
@@ -262,7 +262,7 @@ namespace Nektar
                 rhovf = rhouR * vR + SR * (rhovMR - rhovR);
                 rhowf = rhouR * wR + SR * (rhowMR - rhowR);
                 Ef    = uR * (ER + pR) + SR * (EMR - ER);
-                Epsf  = EpsR + SR * (EpsMR - EpsR);
+                Epsf  = 0.0;
             }
         }
     }

@@ -124,7 +124,10 @@ namespace Nektar
         m_session->LoadParameter ("mu0",           m_mu0,           1.0);
         m_session->LoadParameter ("FL",            m_FacL,          0.0);
         m_session->LoadParameter ("FH",            m_FacH,          0.0);
+        m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
         m_session->LoadParameter ("epsMax",        m_eps_max,       1.0);
+        m_session->LoadParameter ("C1",             m_C1,           3.0);
+        m_session->LoadParameter ("C2",             m_C2,           5.0);
         m_session->LoadSolverInfo("ShockCaptureType",
                                   m_shockCaptureType,    "Off");
         m_session->LoadParameter ("thermalConductivity",
@@ -170,6 +173,15 @@ namespace Nektar
                                                   GetFluxVector, this);
                     m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
                                                   GetViscousFluxVector, this);
+                }
+                
+                if (m_shockCaptureType=="Smooth")
+                {
+                    m_advection->SetFluxVector(&CompressibleFlowSystem::
+                                               GetFluxVector, this);
+                    
+                    m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
+                                                 GetArtViscFluxVectorPDESC, this);
                 }
 
                 // Setting up Riemann solver for advection operator
@@ -267,7 +279,7 @@ namespace Nektar
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
 
             // Boundary condition for epsilon term.
-            if (m_smoothDiffusion)
+            if (nVariables == m_spacedim+3)
             {
                 NekDouble factor  = 0.0;
                 NekDouble factor2 = 1.0;
@@ -287,6 +299,7 @@ namespace Nektar
                             factor2,
                             &Fwd[nVariables-1][id2], 1,
                             &Fwd[nVariables-1][id2], 1);
+                
             }
             
             // For 2D/3D, define: v* = v - 2(v.n)n
@@ -363,7 +376,7 @@ namespace Nektar
                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
 
-            if (m_smoothDiffusion)
+            if (nVariables == m_spacedim+3)
             {
                 NekDouble factor  = 0.0;
                 NekDouble factor2 = 1.0;
@@ -475,7 +488,7 @@ namespace Nektar
                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);
             
-            if (m_smoothDiffusion)
+            if (nVariables == m_spacedim+3)
             {
                 NekDouble factor  = 0.0;
                 NekDouble factor2 = 1.0;
@@ -865,7 +878,8 @@ namespace Nektar
     {
         int i, j;
         int nq = physfield[0].num_elements();
-
+        int nVariables = m_fields.num_elements();
+        
         Array<OneD, NekDouble> pressure(nq);
         Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
 
@@ -902,7 +916,8 @@ namespace Nektar
                         flux[m_spacedim+1][j], 1);
         }
 
-        if (m_smoothDiffusion)
+        // For the smooth viscosity model
+        if (nVariables == m_spacedim+3)
         {
             // Add a zero row for the advective fluxes
             for (j = 0; j < m_spacedim; ++j)
@@ -1334,18 +1349,20 @@ namespace Nektar
             }
         }
     }
-
+    
     void CompressibleFlowSystem::GetArtViscFluxVectorPDESC(
-         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
-               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        int i, j;
+        int i, j, k;
         int nvariables = m_fields.num_elements();
         int nPts       = m_fields[0]->GetTotPoints();
         
-        // Stokes hypotesis
-        NekDouble C1C2   = 0.075;
+        int nScalars   = physfield.num_elements();
+        
+        NekDouble C1C2 = m_C1*m_C2;
+        
         // Auxiliary variables
         Array<OneD, NekDouble > mu                  (nPts, 0.0);
         Array<OneD, NekDouble > mu2                 (nPts, 0.0);
@@ -1375,71 +1392,25 @@ namespace Nektar
         // Determine the maximum wavespeed
         Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);
         NekDouble LambdaMax = Vmath::Vmax(nPts, Lambda, 1);
-        
         // Determine hbar = hx_i/h
         const int nElements  = m_fields[0]->GetExpSize();
         //
-        
-        Array <OneD, Array <OneD, NekDouble > > h_av(m_spacedim);
-        Array <OneD, Array <OneD, NekDouble > > ElDim(m_spacedim);
-        Array <OneD, NekDouble> h_minmin(m_spacedim, 0.0);
-        
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            h_av[i] = Array <OneD, NekDouble > (nPts, 1.0);
-            ElDim[i] = Array <OneD, NekDouble > (nElements, 1.0);
-        }
-        
-        GetElementDimensions(ElDim, h_minmin);
-        
-        Array <OneD, NekDouble > h_mean_xy(m_spacedim, 0.0);
-        
-        // Allocate geometrical information for every node in
-        // the computational domain
-        
         Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
         Array<OneD, NekDouble> pOrder (nPts, 0.0);
         
         int PointCount = 0.0;
-        for (int e = 0; e < nElements; e++)
-        {
-            int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-            
-            for (int n = 0; n < nQuadPointsElement; n++)
-            {
-                h_av[0][n + PointCount] = ElDim[0][e];
-                h_av[1][n + PointCount] = ElDim[1][e];
-                pOrder[n + PointCount]  = pOrderElmt[e];
-            }
-            
-            PointCount += nQuadPointsElement;
-        }
-    
+        
         // Calculate the arithmic mean of hx and hy
-        NekDouble h_mean_sumx = 0.0;
-        NekDouble h_mean_sumy = 0.0;
-        
-        for (int i = 0; i < nElements; ++i)
-        {
-            h_mean_sumx += ElDim[0][i];
-            h_mean_sumy += ElDim[1][i];
-        }
-        
-        h_mean_xy[0] = h_mean_sumx/nElements;
-        h_mean_xy[1] = h_mean_sumy/nElements;
-        
-        NekDouble hmean_inv  = 0.0;
-        NekDouble hmeanx_inv = 0.0;
         
         // Based on eps, determine eps_bar
-
+        
         Array<OneD, NekDouble> eps_bar(nPts, 0.0);
         GetSmoothArtificialViscosity(fields, eps_bar);
         
         // Computing diagonal terms of viscous stress tensor
         
         Array<OneD, Array<OneD, NekDouble> > Seps(m_spacedim);
-    
+        
         Array<OneD, Array<OneD, NekDouble> >vel(m_spacedim);
         // Collect the velocity components
         for (i = 0; i < m_spacedim; ++i)
@@ -1454,19 +1425,19 @@ namespace Nektar
         
         // Initiate the matrix containing the mixed derivatives
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                            derivativesMix(m_spacedim);
+        derivMix(m_spacedim);
         
         // Set up the matrix that contains the mixed derivatives:
         // d(rhou)/dx_i, d(rhov)/dx_i and d(rhoH)/dx_i
         
         for (i = 0; i < m_spacedim; ++i)
         {
-            derivativesMix[i] = Array<OneD, Array<OneD, NekDouble> >
+            derivMix[i] = Array<OneD, Array<OneD, NekDouble> >
             (m_spacedim+1);
             
             for (j = 0; j < m_spacedim+1; ++j)
             {
-                derivativesMix[i][j] = Array<OneD, NekDouble>(nPts, 0.0);
+                derivMix[i][j] = Array<OneD, NekDouble>(nPts, 0.0);
             }
         }
         
@@ -1484,15 +1455,15 @@ namespace Nektar
                 Vmath::Vmul(nPts,
                             &vel[j][0], 1,
                             &derivativesO1[i][nvariables-2][0], 1,
-                            &derivativesMix[i][j][0], 1);
+                            &derivMix[i][j][0], 1);
                 
                 // d(rhou)/dx = u*drho/dx + rho*du/dx
                 
                 Vmath::Vvtvp(nPts,
                              &physfield[nvariables-2][0], 1,
                              &derivativesO1[i][j][0], 1,
-                             &derivativesMix[i][j][0], 1,
-                             &derivativesMix[i][j][0], 1);
+                             &derivMix[i][j][0], 1,
+                             &derivMix[i][j][0], 1);
             }
         }
         
@@ -1505,15 +1476,15 @@ namespace Nektar
             Vmath::Vmul(nPts,
                         &physfield[nvariables][0], 1,
                         &derivativesO1[i][nvariables-2][0], 1,
-                        &derivativesMix[i][m_spacedim][0], 1);
+                        &derivMix[i][m_spacedim][0], 1);
             
             // d(rhoH)/dx_i = H*drho/dx + rho*dH/dx_i
             
             Vmath::Vvtvp(nPts,
                          &physfield[nvariables-2][0], 1,
                          &derivativesO1[i][nvariables][0], 1,
-                         &derivativesMix[i][m_spacedim][0], 1,
-                         &derivativesMix[i][m_spacedim][0], 1);
+                         &derivMix[i][m_spacedim][0], 1,
+                         &derivMix[i][m_spacedim][0], 1);
         }
         
         // first terms of artificial viscous stress tensor
@@ -1532,21 +1503,6 @@ namespace Nektar
                         &SrrArtVisc[j][0], 1,
                         &derivativesO1[j][nvariables-2][0], 1,
                         &SrrArtVisc[j][0], 1);
-            
-            //------------------------------------------------------------------
-            // ---------------------------GEOM-H_I------------------------------
-            
-            /*Vmath::Vmul(nPts,
-                        &h_av[j][0], 1,
-                        &SrrArtVisc[j][0], 1,
-                        &SrrArtVisc[j][0], 1);
-            
-            hmean_inv = 1.0/h_mean_xy[j];
-            
-            Vmath::Smul(nPts, hmean_inv,
-                        &SrrArtVisc[j][0], 1,
-                        &SrrArtVisc[j][0], 1);*/
-            
         }
         
         // Digonal terms of artificial viscous stress tensor
@@ -1557,24 +1513,13 @@ namespace Nektar
         {
             SggArtVisc[j]      = Array<OneD, NekDouble>(nPts, 0.0);
             
-            Vmath::Vcopy(nPts,
-                        &eps_bar[0], 1,
-                        &SggArtVisc[j][0], 1);
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &SggArtVisc[j][0], 1);
+            
+            Vmath::Smul(nPts, m_hFactor, &SggArtVisc[j][0], 1, &SggArtVisc[j][0], 1);
             
             Vmath::Vmul(nPts,
                         &SggArtVisc[j][0], 1,
-                        &derivativesMix[j][j][0], 1,
-                        &SggArtVisc[j][0], 1);
-            
-            Vmath::Vmul(nPts,
-                        &h_av[j][0], 1,
-                        &SggArtVisc[j][0], 1,
-                        &SggArtVisc[j][0], 1);
-            
-            hmean_inv = 1.0/h_mean_xy[j];
-            
-            Vmath::Smul(nPts, hmean_inv,
-                        &SggArtVisc[j][0], 1,
+                        &derivMix[j][j][0], 1,
                         &SggArtVisc[j][0], 1);
         }
         
@@ -1582,40 +1527,26 @@ namespace Nektar
         
         for (j = 0; j < m_spacedim; ++j)
         {
-
-            Seps[j] = Array<OneD, NekDouble>(nPts, 0.0);
+            Seps[j] = Array<OneD, NekDouble>(nPts, 1.0);
             
-            // Seps = h_i^2
-            Vmath::Vmul(nPts,
-                        &h_av[j][0], 1,
-                        &h_av[j][0], 1,
-                        &Seps[j][0], 1);
-            
-            // Seps = h_i^2/(min(h_i))
-            NekDouble hminimal_inv  = 1/h_minmin[j];
-            
-            Vmath::Smul(nPts, hminimal_inv,
-                        &Seps[j][0], 1,
-                        &Seps[j][0], 1);
-            
-            // Seps = LambdaMax * C1C2 * h_i^2/(min(h_i))
+            // Seps = LambdaMax * C1C2
             Vmath::Smul(nPts, C1C2,
                         &Seps[j][0], 1,
                         &Seps[j][0], 1);
             
-            // Seps = p * LambdaMax * C1C2 * h_i^2/(min(h_i))
+            // Seps = p * LambdaMax * C1C2
             Vmath::Vmul(nPts,
                         &Seps[j][0], 1,
                         &pOrder[0], 1,
                         &Seps[j][0], 1);
             
-            // Seps = p * C1C2 * h_i^2/(min(h_i))
+            // Seps = p * C1C2
             Vmath::Smul(nPts,
                         LambdaMax,
                         &Seps[j][0], 1,
                         &Seps[j][0], 1);
             
-            // Seps = deps/dx_i * Lambda * p * C1C2 * h_i^2/(min(h_i))
+            // Seps = deps/dx_i * Lambda * p * C1C2
             Vmath::Vmul(nPts,
                         &Seps[j][0], 1,
                         &derivativesO1[j][nvariables-1][0], 1,
@@ -1624,7 +1555,7 @@ namespace Nektar
         
         // Extra diagonal terms of viscous stress tensor (Sxy, Sxz, Syz)
         // Note: they exist for 2D and 3D problems only
-    
+        
         Array<OneD, NekDouble > SxyArtVisc(nPts, 0.0);
         Array<OneD, NekDouble > SxzArtVisc(nPts, 0.0);
         Array<OneD, NekDouble > SyxArtVisc(nPts, 0.0);
@@ -1635,7 +1566,7 @@ namespace Nektar
         if (m_spacedim == 2)
         {
             // Added terms related to artificial viscosity
-            //-------------------------------Sxy--------------------------------
+            // -Sxy--------------------------------
             
             // SxyArtVisc = h_x*eps_bar
             
@@ -1647,146 +1578,90 @@ namespace Nektar
             
             Vmath::Vmul(nPts,
                         &SxyArtVisc[0], 1,
-                        &derivativesMix[1][0][0], 1,
+                        &derivMix[1][0][0], 1,
                         &SxyArtVisc[0], 1);
+            // ------------------------------------
+            // -Syx--------------------------------
             
-            //------------------------------------------------------------------
-            // ----------------------------GEOM-HX------------------------------
+            // SyxArtVisc = eps_bar
             
-            Vmath::Vmul(nPts,
-                        &h_av[0][0], 1,
-                        &SxyArtVisc[0], 1,
-                        &SxyArtVisc[0], 1);
-            
-            hmeanx_inv = 1.0/h_mean_xy[0];
-            
-            // SxyArtVisc = h_y*eps_bar/hmeany
-            
-            Vmath::Smul(nPts, hmeanx_inv,
-                        &SxyArtVisc[0], 1,
-                        &SxyArtVisc[0], 1);
-            
-            //-------------------------------Syx--------------------------------
-            
-            // SyxArtVisc = h_y*eps_bar
-            
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &SyxArtVisc[0], 1);
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &SyxArtVisc[0], 1);
             
             
-            // SyxArtVisc = h_y*eps_bar/hmeany*d(rhov)/dx
+            // SyxArtVisc = eps_bar/hmeany*d(rhov)/dx
             
-            Vmath::Vmul(nPts,
-                        &SyxArtVisc[0], 1,
-                        &derivativesMix[0][1][0], 1,
+            Vmath::Vmul(nPts, &SyxArtVisc[0], 1, &derivMix[0][1][0], 1,
                         &SyxArtVisc[0], 1);
             
-            //------------------------------------------------------------------
-            // ----------------------------GEOM-HY------------------------------
+            // ------------------------------------
             
-            /*Vmath::Vmul(nPts,
-                        &h_av[1][0], 1,
-                        &SyxArtVisc[0], 1,
-                        &SyxArtVisc[0], 1);
-            
-            hmeany_inv = 1.0/h_mean_xy[1];
-            
-            // SyxArtVisc = h_y*eps_bar/hmeany
-            Vmath::Smul(nPts, hmeany_inv,
-                        &SyxArtVisc[0], 1,
-                        &SyxArtVisc[0], 1);*/
         }
         else if (m_spacedim == 3)
         {
-            //-------------------------------Sxy--------------------------------
+            // -Sxy--------------------------------
             
             // SxyArtVisc = eps_bar
             
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &SxyArtVisc[0], 1);
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &SxyArtVisc[0], 1);
             
             
             // SxyArtVisc = eps_bar*d(rhou)/dy
             
-            Vmath::Vmul(nPts,
-                        &SxyArtVisc[0], 1,
-                        &derivativesMix[1][0][0], 1,
+            Vmath::Vmul(nPts, &SxyArtVisc[0], 1, &derivMix[1][0][0], 1,
                         &SxyArtVisc[0], 1);
             
-            //-------------------------------Sxz--------------------------------
+            // -Sxz--------------------------------
             
             // SxzArtVisc = eps_bar
             
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &SxzArtVisc[0], 1);
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &SxzArtVisc[0], 1);
             
             // SxzArtVisc = eps_bar*d(rhou)/dz
             
-            Vmath::Vmul(nPts,
-                        &SxzArtVisc[0], 1,
-                        &derivativesMix[2][0][0], 1,
+            Vmath::Vmul(nPts, &SxzArtVisc[0], 1, &derivMix[2][0][0], 1,
                         &SxzArtVisc[0], 1);
-            //-------------------------------Syx--------------------------------
-           
+            // -Syx--------------------------------
+            
             // SyxArtVisc = eps_bar
             
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &SyxArtVisc[0], 1);
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &SyxArtVisc[0], 1);
             
             // SxzArtVisc = eps_bar*d(rhov)/dx
             
-            Vmath::Vmul(nPts,
-                        &SyxArtVisc[0], 1,
-                        &derivativesMix[0][1][0], 1,
+            Vmath::Vmul(nPts, &SyxArtVisc[0], 1, &derivMix[0][1][0], 1,
                         &SyxArtVisc[0], 1);
             
-            //-------------------------------Syz--------------------------------
+            // -Syz--------------------------------
             
             // SyzArtVisc = eps_bar
             
-            Vmath::Vcopy(nPts,
-                        &eps_bar[0], 1,
-                        &SyzArtVisc[0], 1);
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &SyzArtVisc[0], 1);
             
             // SyzArtVisc = eps_bar*d(rhov)/dz
             
-            Vmath::Vmul(nPts,
-                        &eps_bar[0], 1,
-                        &derivativesMix[2][1][0], 1,
+            Vmath::Vmul(nPts, &eps_bar[0], 1, &derivMix[2][1][0], 1,
                         &SyzArtVisc[0], 1);
-           
-            //-------------------------------Szx--------------------------------
+            
+            // -Szx--------------------------------
             
             // SyzArtVisc = eps_bar
             
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &SzxArtVisc[0], 1);
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &SzxArtVisc[0], 1);
             
             // SyzArtVisc = eps_bar*d(rhow)/dx
             
-            Vmath::Vmul(nPts,
-                        &SzxArtVisc[0], 1,
-                        &derivativesMix[0][2][0], 1,
+            Vmath::Vmul(nPts, &SzxArtVisc[0], 1, &derivMix[0][2][0], 1,
                         &SzxArtVisc[0], 1);
             
-            //-------------------------------Szy--------------------------------
+            // -Szy--------------------------------
             
             // SyzArtVisc = eps_bar
             
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &SzyArtVisc[0], 1);
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &SzyArtVisc[0], 1);
             
             // SyzArtVisc = eps_bar*d(rhow)/dy
             
-            Vmath::Vmul(nPts,
-                        &SzyArtVisc[0], 1,
-                        &derivativesMix[1][2][0], 1,
+            Vmath::Vmul(nPts, &SzyArtVisc[0], 1, &derivMix[1][2][0], 1,
                         &SzyArtVisc[0], 1);
         }
         
@@ -1798,108 +1673,67 @@ namespace Nektar
         
         if (m_spacedim == 1)
         {
-            // tmp = h_av*eps_bar
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &STxArtVisc[0], 1);
+            // tmp = eps_bar
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &STxArtVisc[0], 1);
             
             // tmp = eps_bar*d(rhoH)/dx
-            Vmath::Vmul(nPts,
-                        &STxArtVisc[0], 1,
-                        &derivativesMix[0][m_spacedim][0], 1,
+            Vmath::Vmul(nPts, &STxArtVisc[0], 1,
+                        &derivMix[0][m_spacedim][0], 1,
                         &STxArtVisc[0], 1);
         }
         else if (m_spacedim == 2)
         {
-            //------------------------------STx---------------------------------
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &STxArtVisc[0], 1);
+            // STx---------------------------------
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &STxArtVisc[0], 1);
             
-            // STyArtVisc = h_av*eps_bar*d(rhoH)/dx
+            // STyArtVisc = eps_bar*d(rhoH)/dx
             Vmath::Vmul(nPts,
                         &STxArtVisc[0], 1,
-                        &derivativesMix[0][m_spacedim][0], 1,
+                        &derivMix[0][m_spacedim][0], 1,
                         &STxArtVisc[0], 1);
             
-            //------------------------------------------------------------------
-            // ----------------------------GEOM-HX------------------------------
-            /*Vmath::Vmul(nPts,
-                        &h_av[0][0], 1,
-                        &STxArtVisc[0], 1,
-                        &STxArtVisc[0], 1);
+            // ------------------------------------
+            // STy---------------------------------
             
-            hmeany_inv = 1.0/h_mean_xy[0];
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &STyArtVisc[0], 1);
             
-            // STxArtVisc = h_av/hmean * eps_bar
-            Vmath::Smul(nPts, hmeanx_inv,
-                        &STxArtVisc[0], 1,
-                        &STxArtVisc[0], 1);*/
-            //------------------------------STy---------------------------------
-            
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &STyArtVisc[0], 1);
-            
-            // STyArtVisc = h_av*eps_bar*d(rhoH)/dy
-            Vmath::Vmul(nPts,
-                        &STyArtVisc[0], 1,
-                        &derivativesMix[1][m_spacedim][0], 1,
+            // STyArtVisc = eps_bar*d(rhoH)/dy
+            Vmath::Vmul(nPts, &STyArtVisc[0], 1,
+                        &derivMix[1][m_spacedim][0], 1,
                         &STyArtVisc[0], 1);
             
-            //------------------------------------------------------------------
-            // ----------------------------GEOM-HY------------------------------
-            /*Vmath::Vmul(nPts,
-                        &h_av[1][0], 1,
-                        &STyArtVisc[0], 1,
-                        &STyArtVisc[0], 1);
-            
-            hmeany_inv = 1.0/h_mean_xy[1];
-            
-            // STyArtVisc = h_av/hmean * eps_bar
-            Vmath::Smul(nPts, hmeany_inv,
-                        &STyArtVisc[0], 1,
-                        &STyArtVisc[0], 1);*/
+            // ------------------------------------
         }
         else if (m_spacedim == 3)
         {
-            //------------------------------STx---------------------------------
-        
-            // tmp = h_av*eps_bar
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &STxArtVisc[0], 1);
+            // STx---------------------------------
             
-            // tmp = h_av*eps_bar*d(rhoH)/dx
-            Vmath::Vmul(nPts,
-                        &STxArtVisc[0], 1,
-                        &derivativesMix[0][m_spacedim][0], 1,
+            // tmp = eps_bar
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &STxArtVisc[0], 1);
+            
+            // tmp = eps_bar*d(rhoH)/dx
+            Vmath::Vmul(nPts, &STxArtVisc[0], 1,
+                        &derivMix[0][m_spacedim][0], 1,
                         &STxArtVisc[0], 1);
-        
-            //------------------------------STy---------------------------------
             
-            // tmp = h_av*eps_bar
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &STyArtVisc[0], 1);
+            // STy---------------------------------
             
-            // tmp = h_av*eps_bar*d(rhoH)/dx
-            Vmath::Vmul(nPts,
-                        &STyArtVisc[0], 1,
-                        &derivativesMix[1][m_spacedim][0], 1,
+            // tmp = eps_bar
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &STyArtVisc[0], 1);
+            
+            // tmp = eps_bar*d(rhoH)/dx
+            Vmath::Vmul(nPts, &STyArtVisc[0], 1,
+                        &derivMix[1][m_spacedim][0], 1,
                         &STyArtVisc[0], 1);
             
-            //------------------------------STz---------------------------------
+            // STz---------------------------------
             
-            // tmp = h_av*eps_bar
-            Vmath::Vcopy(nPts,
-                         &eps_bar[0], 1,
-                         &STzArtVisc[0], 1);
+            // tmp = eps_bar
+            Vmath::Vcopy(nPts, &eps_bar[0], 1, &STzArtVisc[0], 1);
             
-            // tmp = h_av*eps_bar*d(rhoH)/dx
-            Vmath::Vmul(nPts,
-                        &STzArtVisc[0], 1,
-                        &derivativesMix[2][m_spacedim][0], 1,
+            // tmp = eps_bar*d(rhoH)/dx
+            Vmath::Vmul(nPts, &STzArtVisc[0], 1,
+                        &derivMix[2][m_spacedim][0], 1,
                         &STzArtVisc[0], 1);
         }
         

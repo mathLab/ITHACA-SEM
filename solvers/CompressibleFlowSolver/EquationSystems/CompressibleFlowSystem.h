@@ -113,6 +113,9 @@ namespace Nektar
         NekDouble                           m_eps_max;
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
+        NekDouble                           m_C1;
+        NekDouble                           m_C2;
+        NekDouble                           m_hFactor;
         NekDouble                           m_Prandtl;
         StdRegions::StdQuadExpSharedPtr     m_OrthoQuadExp;
         StdRegions::StdHexExpSharedPtr      m_OrthoHexExp;
@@ -136,6 +139,9 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+        void GetFluxVectorPDESC(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         void GetArtViscFluxVectorPDESC(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,

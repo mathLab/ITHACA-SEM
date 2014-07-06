@@ -48,5 +48,6 @@ ENDIF (NEKTAR_USE_VTK)
 
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
 
-#ADD_NEKTAR_TEST(MeshConvert_CubePer)
-#ADD_NEKTAR_TEST_LENGTHY(MeshConvert_StraightRW)
+IF (NEKTAR_USE_VTK)
+    TARGET_LINK_LIBRARIES(MeshConvert vtkCommon vtkIO vtkGraphics)
+ENDIF (NEKTAR_USE_VTK)

@@ -13,13 +13,6 @@ LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 SET(ProjectName LocalRegionsUnitTests)
 ADD_NEKTAR_EXECUTABLE(${ProjectName} unit-test Sources Headers)
 
-TARGET_LINK_LIBRARIES(${ProjectName}
-    LibUtilities 
-    SpatialDomains
-    StdRegions 
-    LocalRegions 
-    ${Boost_THREAD_LIBRARY}
-)
+TARGET_LINK_LIBRARIES(${ProjectName} LocalRegions)
 
-SET_LAPACK_LINK_LIBRARIES(${ProjectName})
 #ADD_TEST(NAME LocalRegions COMMAND ${ProjectName} --detect_memory_leaks=0)

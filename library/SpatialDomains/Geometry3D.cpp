@@ -74,14 +74,6 @@ namespace SpatialDomains
     }
 
     /**
-    * @brief Return vertex i in this element.
-    */
-    const PointGeomSharedPtr Geometry3D::GetVertex(int i) const
-    {
-      return m_verts[i];
-    }
-
-    /**
     * @brief Return face i in this element.
     */
     Geometry2DSharedPtr Geometry3D::GetFace(int i)
@@ -371,6 +363,14 @@ namespace SpatialDomains
                "Vertex ID must be between 0 and "+
                boost::lexical_cast<string>(m_verts.size() - 1));
       return m_verts[i]->GetVid();
+    }
+      
+    /**
+     * @brief Return vertex i in this element.
+     */
+    PointGeomSharedPtr Geometry3D::v_GetVertex(int i) const
+    {
+        return m_verts[i];
     }
 
     /**

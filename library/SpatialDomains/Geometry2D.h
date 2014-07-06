@@ -74,8 +74,6 @@ namespace Nektar
             //---------------------------------------
 
             SPATIAL_DOMAINS_EXPORT int GetFid() const;
-            SPATIAL_DOMAINS_EXPORT const PointGeomSharedPtr
-                        GetVertex(int i) const;
             SPATIAL_DOMAINS_EXPORT const Geometry1DSharedPtr
                         GetEdge(int i) const;
             SPATIAL_DOMAINS_EXPORT const Geometry2DSharedPtr
@@ -116,7 +114,7 @@ namespace Nektar
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetFid() const;
             virtual int                         v_GetEid(int i) const;
-            virtual const PointGeomSharedPtr    v_GetVertex(int i) const;
+            virtual PointGeomSharedPtr          v_GetVertex(int i) const;
             virtual const Geometry1DSharedPtr   v_GetEdge(int i) const;
             virtual const Geometry2DSharedPtr   v_GetFace(int i) const;
             virtual StdRegions::Orientation v_GetFaceOrient(const int i) const;

@@ -263,7 +263,8 @@ namespace Nektar
                         MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
                             T0, T1, curve->m_ptype);
 
-                    Array<OneD, NekDouble> phys(t->GetTotPoints());
+                    Array<OneD, NekDouble> phys(max(t->GetTotPoints(),
+                                                    m_xmap->GetTotPoints()));
                     for (int j = 0; j < N; ++j)
                     {
                         phys[j] = (curve->m_points[j]->GetPtr())[i];
@@ -717,7 +718,7 @@ namespace Nektar
         /**
          *
          */
-        const PointGeomSharedPtr TriGeom::v_GetVertex(int i) const
+        PointGeomSharedPtr TriGeom::v_GetVertex(int i) const
         {
             ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
             return m_verts[i];

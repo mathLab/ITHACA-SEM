@@ -79,6 +79,8 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT SegGeom(const SegGeom &in);
 
+                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GenerateOneSpaceDimGeom(void);
+
                 SPATIAL_DOMAINS_EXPORT ~SegGeom();
 
                 SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(

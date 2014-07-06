@@ -25,8 +25,9 @@ IF (THIRDPARTY_BUILD_BOOST)
         ENDIF(APPLE)
         EXTERNALPROJECT_ADD(
             boost
-            URL ${TPURL}/boost_1_49_0.tar.bz2
-            URL_MD5 "0d202cb811f934282dea64856a175698"
+            PREFIX ${TPSRC}
+            URL ${TPURL}/boost_1_55_0.tar.bz2
+            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
             STAMP_DIR ${TPSRC}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/boost
@@ -86,8 +87,9 @@ IF (THIRDPARTY_BUILD_BOOST)
     ELSE ()
         EXTERNALPROJECT_ADD(
             boost
-            URL ${TPURL}/boost_1_49_0.tar.bz2
-            URL_MD5 "0d202cb811f934282dea64856a175698"
+            PREFIX ${TPSRC}
+            URL ${TPURL}/boost_1_55_0.tar.bz2
+            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
             STAMP_DIR ${TPSRC}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/boost

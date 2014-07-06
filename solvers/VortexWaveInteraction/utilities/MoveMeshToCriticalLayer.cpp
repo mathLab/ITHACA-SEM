@@ -37,7 +37,7 @@
 #include <cstdlib>
 #include <iomanip>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2D.h>

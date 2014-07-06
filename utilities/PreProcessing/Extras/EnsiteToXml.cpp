@@ -5,7 +5,7 @@
 #include <vector>
 #include <list>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 using namespace std;
 
 

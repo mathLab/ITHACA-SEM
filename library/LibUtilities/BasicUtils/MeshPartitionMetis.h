@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Tester.cpp
+// File MeshPartitionMetis.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,63 +29,53 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Encapsulation of test XML file.
+// Description: Metis partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
+#ifndef NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
+#define NEKTAR_LIB_UTILITIES_MESHPARTITIONMETIS_H
 
-#ifndef NEKTAR_TESTER_TESTDATA
-#define NEKTAR_TESTER_TESTDATA
+#include "LibUtilities/Memory/NekMemoryManager.hpp"
 
-#include <boost/filesystem.hpp>
-
-#include <string>
-#include <vector>
-
-#include <tinyxml.h>
-
-namespace fs = boost::filesystem;
+#include "MeshPartition.h"
 
 namespace Nektar
 {
-    struct DependentFile
+namespace LibUtilities
+{
+
+    class MeshPartitionMetis : public MeshPartition
     {
-        std::string m_description;
-        std::string m_filename;
+        public:
+            /// Creates an instance of this class
+            static MeshPartitionSharedPtr create(const SessionReaderSharedPtr& pSession)
+            {
+                return MemoryManager<MeshPartitionMetis>::AllocateSharedPtr(pSession);
+            }
+
+            /// Name of class
+            static std::string className;
+            static std::string cmdSwitch;
+
+            MeshPartitionMetis(const SessionReaderSharedPtr& pSession);
+            virtual ~MeshPartitionMetis();
+
+        private:
+            virtual void PartitionGraphImpl(
+                    int&                              nVerts,
+                    int&                              nVertConds,
+                    Nektar::Array<Nektar::OneD, int>& xadj,
+                    Nektar::Array<Nektar::OneD, int>& adjcy,
+                    Nektar::Array<Nektar::OneD, int>& vertWgt,
+                    Nektar::Array<Nektar::OneD, int>& vertSize,
+                    int&                              nparts,
+                    int&                              volume,
+                    Nektar::Array<Nektar::OneD, int>& part);
+
+
     };
 
-    class TestData
-    {
-    public:
-        TestData(const fs::path& pFilename);
-        TestData(const TestData& pSrc);
-
-        const std::string& GetDescription() const;
-        const std::string  GetExecutable() const;
-        const std::string& GetParameters() const;
-        const unsigned int& GetNProcesses() const;
-
-        std::string GetMetricType(unsigned int pId) const;
-        unsigned int GetNumMetrics() const;
-        TiXmlElement* GetMetric(unsigned int pId);
-        unsigned int GetMetricId(unsigned int pId);
-
-        DependentFile GetDependentFile(unsigned int pId) const;
-        unsigned int GetNumDependentFiles() const;
-
-        void SaveFile();
-
-    private:
-        std::string                     m_filename;
-        std::string                     m_description;
-        std::string                     m_executable;
-        std::string                     m_parameters;
-        unsigned int                    m_processes;
-        TiXmlDocument*                  m_doc;
-        std::vector<TiXmlElement*>      m_metrics;
-        std::vector<DependentFile>      m_files;
-
-        void Parse(TiXmlDocument* pDoc);
-    };
+}
 }
 
 #endif

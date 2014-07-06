@@ -36,7 +36,7 @@
 
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <SpatialDomains/Conditions.h>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {

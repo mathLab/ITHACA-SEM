@@ -9,5 +9,7 @@ IF (NEKTAR_USE_VTK)
     SET(VtkStripsToPolysSources VtkStripsToPolys.cpp)
     ADD_UTILITIES_EXECUTABLE(VtkToFld util-extra ${VtkToFldSources})
     ADD_UTILITIES_EXECUTABLE(VtkStripsToPolys util-extra ${VtkStripsToPolysSources})
+    TARGET_LINK_LIBRARIES(VtkToFld vtkCommon vtkIO vtkGraphics)
+    TARGET_LINK_LIBRARIES(VtkStripsToPolys vtkCommon vtkIO vtkGraphics)
 ENDIF (NEKTAR_USE_VTK)
 

@@ -11,7 +11,7 @@
 #define TIXML_USE_STL
 #endif
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 
 void Header(FILE *, int nel);

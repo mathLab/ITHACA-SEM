@@ -447,14 +447,14 @@ namespace Nektar
             /// Map of original boundary region ordering for parallel periodic
             /// bcs.
             BndRegionOrdering                         m_bndRegOrder;
-            /// String to enumeration map for Solver Info parameters.
-            static EnumMapList&                       GetSolverInfoEnums();
+            /// String to enumeration map for Solver Info parameters. 
+            LIB_UTILITIES_EXPORT static EnumMapList&  GetSolverInfoEnums();
             /// Default solver info options.
-            static SolverInfoMap&                     GetSolverInfoDefaults();
+            LIB_UTILITIES_EXPORT static SolverInfoMap& GetSolverInfoDefaults();
             /// GlobalSysSoln Info map.
-            static GloSysSolnInfoList&                GetGloSysSolnList();
+            LIB_UTILITIES_EXPORT static GloSysSolnInfoList& GetGloSysSolnList();
             /// CmdLine argument map.
-            static CmdLineArgMap&                     GetCmdLineArgMap();
+            LIB_UTILITIES_EXPORT static CmdLineArgMap& GetCmdLineArgMap();
 
             /// Main constructor
             LIB_UTILITIES_EXPORT SessionReader(

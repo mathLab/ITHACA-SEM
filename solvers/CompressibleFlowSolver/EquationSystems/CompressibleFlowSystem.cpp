@@ -163,16 +163,16 @@ namespace Nektar
                 {
                     m_advection->SetFluxVector(&CompressibleFlowSystem::
                                                GetFluxVectorDeAlias, this);
-                    m_diffusion->SetFluxVectorNS(
-                        &CompressibleFlowSystem::GetViscousFluxVectorDeAlias,
-                        this);
+                    //m_diffusion->SetFluxVectorNS(
+                    //    &CompressibleFlowSystem::GetViscousFluxVectorDeAlias,
+                    //    this);
                 }
                 else
                 {
                     m_advection->SetFluxVector  (&CompressibleFlowSystem::
                                                   GetFluxVector, this);
-                    m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
-                                                  GetViscousFluxVector, this);
+                    //m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
+                    //                              GetViscousFluxVector, this);
                 }
                 
                 if (m_shockCaptureType=="Smooth")
@@ -1530,21 +1530,21 @@ namespace Nektar
             Seps[j] = Array<OneD, NekDouble>(nPts, 1.0);
             
             // Seps = LambdaMax * C1C2
-            Vmath::Smul(nPts, C1C2,
-                        &Seps[j][0], 1,
-                        &Seps[j][0], 1);
+            //Vmath::Smul(nPts, C1C2,
+            //            &Seps[j][0], 1,
+            //             &Seps[j][0], 1);
             
             // Seps = p * LambdaMax * C1C2
-            Vmath::Vmul(nPts,
-                        &Seps[j][0], 1,
-                        &pOrder[0], 1,
-                        &Seps[j][0], 1);
+            // Vmath::Vmul(nPts,
+            //            &Seps[j][0], 1,
+            //            &pOrder[0], 1,
+            //            &Seps[j][0], 1);
             
             // Seps = p * C1C2
-            Vmath::Smul(nPts,
-                        LambdaMax,
-                        &Seps[j][0], 1,
-                        &Seps[j][0], 1);
+            //Vmath::Smul(nPts,
+            //            LambdaMax,
+            //            &Seps[j][0], 1,
+            //            &Seps[j][0], 1);
             
             // Seps = deps/dx_i * Lambda * p * C1C2
             Vmath::Vmul(nPts,
@@ -3719,8 +3719,8 @@ namespace Nektar
     }
     
     void CompressibleFlowSystem::GetForcingTerm(
-              const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                    Array<OneD, Array<OneD, NekDouble> > outarrayForcing)
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                      Array<OneD, Array<OneD, NekDouble> > outarrayForcing)
     {
         const int nPts = m_fields[0]->GetTotPoints();
         const int nvariables = m_fields.num_elements();
@@ -3730,12 +3730,10 @@ namespace Nektar
         NekDouble hymin = 0.0;
         NekDouble hmin  = 0.0;
         
-        int C1 = 3.0;
-        
         Array<OneD,  NekDouble>  Sensor(nPts, 0.0);
         Array<OneD,  NekDouble>  SensorKappa(nPts, 0.0);
         Array <OneD, NekDouble > Lambda(nPts, 0.0);
-        Array <OneD, NekDouble > Tau(nPts, 0.0);
+        Array <OneD, NekDouble > Tau(nPts, 1.0);
         Array <OneD, NekDouble > soundspeed(nPts, 0.0);
         Array <OneD, NekDouble > pressure(nPts, 0.0);
         Array <OneD, NekDouble > temperature(nPts, 0.0);
@@ -3757,38 +3755,7 @@ namespace Nektar
         
         NekDouble LambdaMax = Vmath::Vmax(nPts, Lambda, 1);
         
-        // Determine the spacial dimension approximation of the element
-        Array <OneD, Array <OneD, NekDouble > > h_av(m_spacedim);
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            h_av[i] = Array <OneD, NekDouble > (nPts, 0.0);
-        }
-        Array <OneD, Array <OneD, NekDouble > > ElDim(m_spacedim);
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            ElDim[i] = Array <OneD, NekDouble > (nElements, 0.0);
-        }
-        //
-        GetElementDimensions(ElDim, h_minmin);
-        //
-        int PointCount = 0.0;
-        for (int e = 0; e < nElements; e++)
-        {
-            int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-            
-            for (int n = 0; n < nQuadPointsElement; n++)
-            {
-                h_av[0][n + PointCount] = ElDim[0][e];
-                h_av[1][n + PointCount] = ElDim[1][e];
-            }
-            
-            PointCount += nQuadPointsElement;
-        }
-        
-        hxmin = Vmath::Vmin(ElDim[0].num_elements(), &ElDim[0][0], 1);
-        hymin = Vmath::Vmin(ElDim[1].num_elements(), &ElDim[1][0], 1);
-        hmin  = min(hxmin, hymin);
-        PointCount = 0;
+        int PointCount = 0;
         for (int e = 0; e < nElements; e++)
         {
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
@@ -3797,9 +3764,9 @@ namespace Nektar
             {
                 pOrder[n + PointCount] = pOrderElmt[e];
                 
-                Tau[n + PointCount] = hmin/(C1*pOrder[n + PointCount]*LambdaMax); // order 1.0e-06
+                Tau[n + PointCount] = 1.0/(m_C1*pOrder[n + PointCount]*LambdaMax); // order 1.0e-06
                 
-                outarrayForcing[nvariables-1][n + PointCount] = 1/Tau[n + PointCount]*(hxmin/pOrder[n + PointCount]*LambdaMax*SensorKappa[n + PointCount]-inarray[nvariables-1][n + PointCount]);
+                outarrayForcing[nvariables-1][n + PointCount] = 1/Tau[n + PointCount]*(m_hFactor*LambdaMax/pOrder[n + PointCount]*SensorKappa[n + PointCount]-inarray[nvariables-1][n + PointCount]);
             }
             PointCount += nQuadPointsElement;
         }
@@ -3954,12 +3921,12 @@ namespace Nektar
         
         NekDouble h_mean  = (h_meanx+h_meany)/2;
         
-        NekDouble ThetaH = LambdaMax/order*h_mean;
-        NekDouble ThetaL = 0.05*LambdaMax/order*h_mean;;
+        NekDouble ThetaH = LambdaMax/order;//*h_mean;
+        NekDouble ThetaL = 0.05*LambdaMax/order;//*h_mean;;
         
         NekDouble Phi0     = (ThetaH+ThetaL)/2;
         NekDouble DeltaPhi = ThetaH-Phi0;
-        
+    
         Vmath::Zero(eps_bar.num_elements(), eps_bar, 1);
         
         for (int e = 0; e < eps_bar.num_elements(); e++)
@@ -3970,18 +3937,15 @@ namespace Nektar
             }
             else if(physfield[nvariables-1][e] >= (Phi0 + DeltaPhi))
             {
-                eps_bar[e] = ThetaH;
+                eps_bar[e] = m_mu0;
             }
             else if(abs(physfield[nvariables-1][e]-Phi0) < DeltaPhi)
             {
-                eps_bar[e] = ThetaH/2*(1+sin(M_PI*
+                eps_bar[e] = m_mu0/2*(1+sin(M_PI*
                 (physfield[nvariables-1][e]-Phi0)/(2*DeltaPhi)));
             }
         }
-        
-        Vmath::Smul(nPts, m_eps_max, eps_bar, 1, eps_bar, 1);
     }
-    
     
     void CompressibleFlowSystem::GetArtificialDynamicViscosity(
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
@@ -4149,22 +4113,32 @@ namespace Nektar
             tmp[i] = m_fields[i]->UpdatePhys();
         }
 
-        Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
+        Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys), sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);
+        
         GetPressure  (tmp, pressure);
         GetSoundSpeed(tmp, pressure, soundspeed);
         GetMach      (tmp, soundspeed, mach);
+        GetSensor    (tmp, sensor, SensorKappa);
+        GetSmoothArtificialViscosity    (tmp, smooth);
 
-        Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
+        Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs), sensFwd(nCoeffs), smoothFwd(nCoeffs);
+        
         m_fields[0]->FwdTrans(pressure,   pFwd);
         m_fields[0]->FwdTrans(soundspeed, sFwd);
         m_fields[0]->FwdTrans(mach,       mFwd);
+        m_fields[0]->FwdTrans(sensor,     sensFwd);
+        m_fields[0]->FwdTrans(smooth,     smoothFwd);
 
         variables.push_back  ("p");
         variables.push_back  ("a");
         variables.push_back  ("Mach");
+        variables.push_back  ("Sensor");
+        variables.push_back  ("SmoothVisc");
         fieldcoeffs.push_back(pFwd);
         fieldcoeffs.push_back(sFwd);
         fieldcoeffs.push_back(mFwd);
+        fieldcoeffs.push_back(sensFwd);
+        fieldcoeffs.push_back(smoothFwd);
     }
 }
 

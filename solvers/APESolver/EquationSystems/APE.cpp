@@ -59,6 +59,10 @@ void APE::v_InitObject()
 {
     UnsteadySystem::v_InitObject();
 
+    // TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
+    // problems are currently disabled. This should get fixed in the future.
+    ASSERTL0(m_spacedim > 1, "1D problems currently not supported by the APE class.");
+
     // Load constant incompressible density
     m_session->LoadParameter("Rho0", m_Rho0, 1.204);
 

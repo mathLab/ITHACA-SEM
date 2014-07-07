@@ -11,9 +11,11 @@ IF( NEKTAR_SOLVER_APE )
     ADD_SOLVER_EXECUTABLE(APESolver solvers 
 			${APESolverSource})
 
-    ADD_NEKTAR_TEST(APE_1DPulseSource_FRDG_MODIFIED)
+# TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
+# problems are currently disabled. This should get fixed in the future. (See APE.cpp:64)
+#    ADD_NEKTAR_TEST(APE_1DPulseSource_FRDG_MODIFIED)
 #    ADD_NEKTAR_TEST(APE_1DPulseSource_Galerkin_MODIFIED)
-    ADD_NEKTAR_TEST(APE_1DPulseWall_FRDG_MODIFIED)
+#    ADD_NEKTAR_TEST(APE_1DPulseWall_FRDG_MODIFIED)
     ADD_NEKTAR_TEST(APE_2DChannel_FRDG_MODIFIED)
     ADD_NEKTAR_TEST(APE_2DPulseAdv_FRDG_MODIFIED)
     ADD_NEKTAR_TEST(APE_2DPulseAdv_Galerkin_MODIFIED)

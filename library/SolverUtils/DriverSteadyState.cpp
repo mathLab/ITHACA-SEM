@@ -151,17 +151,9 @@ namespace Nektar
                 
                 Diff_q_qBar = 1.0;
                 Diff_q1_q0 = 1.0;
-                MinDiff = 1.0;
-                int OscillationCounter(0);
                 
-                
-                NekDouble LocalMax(0.0);
-                NekDouble AutomatedTOL_init(0);
-                NekDouble AutomatedTOL_updated(0);
-                AutomatedTOL_init = 100.0*TOL;
-                AutomatedTOL_updated = AutomatedTOL_init;
-                bool NormIncreasing;
-                NormIncreasing = true;
+                NekDouble GlobalMin(1.0);
+                NekDouble PartialTOL = 1.0e-05;
                 
                 
                 //while (max(Diff_q_qBar, Diff_q1_q0) > TOL)
@@ -189,10 +181,9 @@ namespace Nektar
                         if (m_EvolutionOperator == eOptimizedSteadyState)
                         {                       
                             ///We add this block for defining when we run stability-analysis and optimisation of the parameters
-                            if(MinDiff > Diff_q1_q0) //The norm is decreasing (the flow is getting closer to its steady-state)
+                            if(GlobalMin > Diff_q1_q0) //The norm is decreasing (the flow is getting closer to its steady-state)
                             {
-                                MinDiff = Diff_q1_q0;
-                                NormIncreasing = false;
+                                GlobalMin = Diff_q1_q0;
                                 
                                 cout << "\t - We save the current flow field as the 'partially converged SS' - " << endl;
                                 for(int i = 0; i < NumVar_SFD; ++i)
@@ -200,13 +191,12 @@ namespace Nektar
                                     Vmath::Vcopy(q0[i].num_elements(), q0[i], 1, partialSteadyFlow[i], 1);
                                 }
                                 
-                                if (MinDiff < AutomatedTOL_updated)
+                                if (GlobalMin < PartialTOL)
                                 {
                                     
-                                    AutomatedTOL_updated = TOL/10.0;
+                                    PartialTOL = PartialTOL/10.0;
                                     
                                     cout << "\n\t We compute optimization because the flow is partially converged ! \n" << endl;
-                                    // -----> UpdateBaseFlow(partialSteadyFlow)
                                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                     A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);
                                     m_equ[m_nequ - 1]->Checkpoint_Output(010101010); //We save the flow field into a .chk file 
@@ -215,24 +205,16 @@ namespace Nektar
                                     ComputeOptimization();
                                 }
                             }
-                            else if(NormIncreasing == false)  //The norm is increasing
+                            else if (Diff_q1_q0 > 5.0*GlobalMin)
                             {
-                                NormIncreasing = true;
-                                OscillationCounter += 1;
-                                
-                                if (Diff_q1_q0 > 10.0*MinDiff || OscillationCounter > 25)
-                                {
-                                    AutomatedTOL_updated = AutomatedTOL_init;
-                                    
-                                    cout << "\n\t We compute optimization because the flow NOT converging towards SS ! \n" << endl;
-                                    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                    A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);
-                                    m_equ[m_nequ - 1]->Checkpoint_Output(010101010); //We save the flow field into a .chk file 
-                                    ////////////////////////////////////////////////////////////////////////////////////////////////////////////                                       
-                                    DriverModifiedArnoldi::v_Execute(out);
-                                    ComputeOptimization();
-                                    OscillationCounter = 0;
-                                }
+                                cout << "\n\t We compute optimization because the flow NOT converging towards SS ! \n" << endl;
+                                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);
+                                m_equ[m_nequ - 1]->Checkpoint_Output(010101010); //We save the flow field into a .chk file 
+                                ////////////////////////////////////////////////////////////////////////////////////////////////////////////                                       
+                                DriverModifiedArnoldi::v_Execute(out);
+                                ComputeOptimization();
+                                GlobalMin = 10.0;
                             }
                         }
                         //////////////////////////////////////////////////////////////////////////////////////////
@@ -294,8 +276,16 @@ namespace Nektar
                 X_opt = m_X/m_dt;
                 Delta_opt = m_Delta*m_dt;
                 GradientDescentMethod(ApproxEV, X_opt, Delta_opt);
+                
+                ///////////////////////////////////////////////////////////////////////////
                 m_X = X_opt*m_dt;
                 m_Delta = Delta_opt/m_dt;
+                c1 = 1.0/(1.0 + m_X*m_Delta);
+                F11 = c1*(1.0 + m_X*m_Delta*exp(-(m_X + 1.0/m_Delta)));
+                F12 = c1*(m_X*m_Delta*(1.0 - exp(-(m_X + 1.0/m_Delta))));
+                F21 = c1*(1.0 - exp(-(m_X + 1.0/m_Delta)));
+                F22 = c1*(m_X*m_Delta + exp(-(m_X + 1.0/m_Delta)));
+                ///////////////////////////////////////////////////////////////////////////
             }
             
             
@@ -360,7 +350,7 @@ namespace Nektar
                     m_file.close();
                 }
                 #else
-                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[m_nequ - 1]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X/dt <<" and Delta = " << m_Delta*m_dt <<endl;
+                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[m_nequ - 1]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X/m_dt <<" and Delta = " << m_Delta*m_dt <<endl;
                 std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
                 m_file << m_n+1 << "\t" << m_equ[m_nequ - 1]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
                 m_file.close();

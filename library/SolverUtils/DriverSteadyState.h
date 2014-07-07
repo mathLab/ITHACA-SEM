@@ -131,7 +131,6 @@ namespace Nektar
             
             NekDouble Diff_q_qBar;
             NekDouble Diff_q1_q0;
-            NekDouble MinDiff;
             
             NekDouble Min_MaxNormDiff_q_qBar;
             

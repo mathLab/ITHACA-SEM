@@ -34,21 +34,12 @@ set(CPACK_PACKAGE_FILE_NAME
     "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-1.${CPACK_RPM_PACKAGE_ARCHITECTURE}")
 
 # Files to go in the package
-set(INSTALL_BINS "@PKG_INSTALL_BINS@")
-set(INSTALL_LIBS "@PKG_INSTALL_LIBS@")
-
-# Add the versioned form of each library
-foreach(l ${INSTALL_LIBS})
-    if (APPLE)
-        list(APPEND INSTALL_LIBS ${l}.${VERSION_MAJOR_MINOR})
-    else ()
-        list(APPEND INSTALL_LIBS ${l}.${CPACK_PACKAGE_VERSION})
-    endif()
-endforeach()
+set(INSTALL_BINS_FILES "@PKG_INSTALL_BINS_FILES@")
+set(INSTALL_LIBS_FILES "@PKG_INSTALL_LIBS_FILES@")
 
 # Install any libraries in the lib directory
-if(INSTALL_LIBS)
-    install(FILES ${INSTALL_LIBS} DESTINATION lib
+if(INSTALL_LIBS_FILES)
+    install(FILES ${INSTALL_LIBS_FILES} DESTINATION lib
         PERMISSIONS
             OWNER_READ OWNER_WRITE OWNER_EXECUTE
             GROUP_READ GROUP_EXECUTE
@@ -57,8 +48,8 @@ if(INSTALL_LIBS)
 endif()
 
 # Install any binaries in the bin directory
-if(INSTALL_BINS)
-    install(FILES ${INSTALL_BINS} DESTINATION bin
+if(INSTALL_BINS_FILES)
+    install(FILES ${INSTALL_BINS_FILES} DESTINATION bin
         PERMISSIONS
             OWNER_READ OWNER_WRITE OWNER_EXECUTE
             GROUP_READ GROUP_EXECUTE

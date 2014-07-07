@@ -3,37 +3,44 @@ include (CMakeCommon.cmake)
 add_custom_target(pkg)
 
 # LibUtilities
-get_target_property(TARGET_LOCATION LibUtilities LOCATION)
-list(APPEND libnektar++-utilities_LIBS ${TARGET_LOCATION})
-list(APPEND nektar++_LIBS ${TARGET_LOCATION})
+list(APPEND libnektar++-utilities_LIBS LibUtilities)
+list(APPEND nektar++_LIBS LibUtilities)
 
 # StdRegions
-get_target_property(TARGET_LOCATION StdRegions LOCATION)
-list(APPEND libnektar++-stdregions_LIBS ${TARGET_LOCATION})
-list(APPEND nektar++_LIBS ${TARGET_LOCATION})
+list(APPEND libnektar++-stdregions_LIBS StdRegions)
+list(APPEND nektar++_LIBS StdRegions)
 
 # SpatialDomains
-get_target_property(TARGET_LOCATION SpatialDomains LOCATION)
-list(APPEND libnektar++-spatialdomains_LIBS ${TARGET_LOCATION})
-list(APPEND nektar++_LIBS ${TARGET_LOCATION})
+list(APPEND libnektar++-spatialdomains_LIBS SpatialDomains)
+list(APPEND nektar++_LIBS SpatialDomains)
 
 # LocalRegions
-get_target_property(TARGET_LOCATION LocalRegions LOCATION)
-list(APPEND libnektar++-localregions_LIBS ${TARGET_LOCATION})
-list(APPEND nektar++_LIBS ${TARGET_LOCATION})
+list(APPEND libnektar++-localregions_LIBS LocalRegions)
+list(APPEND nektar++_LIBS LocalRegions)
 
 # MultiRegions
-get_target_property(TARGET_LOCATION MultiRegions LOCATION)
-list(APPEND libnektar++-multiregions_LIBS ${TARGET_LOCATION})
-list(APPEND nektar++_LIBS ${TARGET_LOCATION})
+list(APPEND libnektar++-multiregions_LIBS MultiRegions)
+list(APPEND nektar++_LIBS MultiRegions)
 
 # SolverUtils
-get_target_property(TARGET_LOCATION SolverUtils LOCATION)
-list(APPEND libnektar++-solverutils_LIBS ${TARGET_LOCATION})
-list(APPEND nektar++_LIBS ${TARGET_LOCATION})
+list(APPEND libnektar++-solverutils_LIBS SolverUtils)
+list(APPEND nektar++_LIBS SolverUtils)
+
+# IncNavierStokesSolver
+list(APPEND nektar++-incnavierstokes-solver_BINS IncNavierStokesSolver)
+list(APPEND nektar++_BINS IncNavierStokesSolver)
+
+# CardiacEPSolver
+list(APPEND nektar++-cardiacep-solver_BINS CardiacEPSolver)
+list(APPEND nektar++-BINS CardiacEPSolver)
+
+# CompressibleFlowSolver
+list(APPEND nektar++-compressibleflow-solver_BINS CompressibleFlowSolver)
+list(APPEND nektar++-BINS CompressibleFlowSolver)
 
 # Check if we can build debian files
 find_program(DPKG "dpkg")
+mark_as_advanced(DPKG)
 if (DPKG)
     add_custom_target(pkg-deb)
     add_dependencies(pkg pkg-deb)
@@ -84,11 +91,19 @@ if (DPKG)
          complete spectral/hp element solvers."
         DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION}), libnektar++-multiregions (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-solverutils_LIBS}")
-
+    #add_deb_package(
+    #    NAME nektar++-incnavierstokes-solver
+    #    SUMMARY "Nektar++ incompressible Navier-Stokes flow solver"
+    #    DESCRIPTION
+    #    "Solves the incompressible Navier-Stokes equations using the Nektar++
+    #     high-order spectral/hp element framework"
+    #    DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-     utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (=                  ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION}), libnektar++-multiregions (= ${NEKTAR_VERSION})"
+    #    INSTALL_BINS "${nektar++-incnavierstokes-solver_BINS}")
 endif (DPKG)
 
 
 find_program(RPMBUILD "rpmbuild")
+mark_as_advanced(RPMBUILD)
 if (RPMBUILD)
     add_custom_target(pkg-rpm)
     add_dependencies(pkg pkg-rpm)
@@ -146,4 +161,5 @@ add_tgz_package(
     NAME nektar++
     SUMMARY "Nektar++ libraries and solvers"
     DESCRIPTION "This is all of Nektar++"
-    INSTALL_LIBS "${nektar++_LIBS}")
+    INSTALL_LIBS "${nektar++_LIBS}"
+)

@@ -163,3 +163,37 @@ add_tgz_package(
     DESCRIPTION "This is all of Nektar++"
     INSTALL_LIBS "${nektar++_LIBS}"
 )
+
+# Configure source package
+add_custom_target(pkg-src
+    ${CMAKE_CPACK_COMMAND} --config CPackSourceConfig.cmake
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+add_dependencies(pkg pkg-src)
+
+set(CPACK_SOURCE_TBZ2 "ON")
+set(CPACK_SOURCE_TGZ "ON")
+set(CPACK_SOURCE_TZ "OFF")
+set(CPACK_SOURCE_ZIP "ON")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "nektar++-${NEKTAR_VERSION}")
+set(CPACK_SOURCE_IGNORE_FILES
+    "/CVS/"
+    "/\\\\.svn/"
+    "/\\\\.bzr/"
+    "/\\\\.hg/"
+    "/\\\\.git/"
+    "/build/"
+    "/builds/"
+    "/ThirdParty/"
+    "/distribute\\\\.sh"
+    "/dist-exclude"
+    "/Testing/"
+    "/solvers/ImageWarpingSolver/"
+    "/solvers/PulseWaveSolver/"
+    "/solvers/VortexWaveInteraction/"
+    "/utilities/PreProcessing/Extras/"
+    "/utilities/PostProcessing/Extras/"
+)
+
+
+include(CPack)

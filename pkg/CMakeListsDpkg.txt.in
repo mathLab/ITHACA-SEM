@@ -4,7 +4,7 @@ project("pkg-deb-@PKG_NAME@")
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_DEBUG ON)
-set(CPACK_OUTPUT_FILE_PREFIX "..") # Put in pkg dir. CMake >= 2.8.3 only.
+set(CPACK_OUTPUT_FILE_PREFIX "../../") # Put in builds dir.
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 # Find out the machine architecture

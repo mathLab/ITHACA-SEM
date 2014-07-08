@@ -61,7 +61,8 @@ namespace Nektar
         : m_session(pSession),
           m_fields(pFields),
           m_velocity(pVel),
-          m_advObject(advObject)
+          m_advObject(advObject),
+          m_extrapolateDuDt(true)
     {      
         m_session->LoadParameter("TimeStep", m_timestep,   0.01);
         m_comm = m_session->GetComm();
@@ -107,8 +108,6 @@ namespace Nektar
             // Rotate HOPBCs storage
             RollOver(m_pressureHBCs);
 
-            // Rotate acceleration term
-            RollOver(m_acceleration);
 
             // Calculate BCs at current level
             CalcPressureBCs(fields,N,kinvis);
@@ -125,31 +124,37 @@ namespace Nektar
                     cnt += nq;
                 }
             }
-
-            //Calculate acceleration term at level n based on previous steps
-            if (m_pressureCalls > 2)
+            
+            if(m_extrapolateDuDt)
             {
-                acc_order = min(m_pressureCalls-2,m_intSteps);
-                Vmath::Smul(cnt, StifflyStable_Gamma0_Coeffs[acc_order-1],
-                                 m_acceleration[0], 1,
-                                 accelerationTerm,  1);
+                // Rotate acceleration term
+                RollOver(m_acceleration);
 
-                for(int i = 0; i < acc_order; i++)
+                //Calculate acceleration term at level n based on previous steps
+                if (m_pressureCalls > 2)
                 {
-                    Vmath::Svtvp(cnt, 
-                                -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
-                                 m_acceleration[i+1], 1,
-                                 accelerationTerm,    1,
-                                 accelerationTerm,    1);
+                    acc_order = min(m_pressureCalls-2,m_intSteps);
+                    Vmath::Smul(cnt, StifflyStable_Gamma0_Coeffs[acc_order-1],
+                                m_acceleration[0], 1,
+                                accelerationTerm,  1);
+                    
+                    for(int i = 0; i < acc_order; i++)
+                    {
+                        Vmath::Svtvp(cnt, 
+                                     -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
+                                     m_acceleration[i+1], 1,
+                                     accelerationTerm,    1,
+                                     accelerationTerm,    1);
+                    }
                 }
+                
+                // Adding acceleration term to HOPBCs
+                Vmath::Svtvp(cnt, -1.0/m_timestep,
+                             accelerationTerm,  1,
+                             m_pressureHBCs[0], 1,
+                             m_pressureHBCs[0], 1);
             }
-
-            // Adding acceleration term to HOPBCs
-            Vmath::Svtvp(cnt, -1.0/m_timestep,
-                         accelerationTerm,  1,
-                         m_pressureHBCs[0], 1,
-                         m_pressureHBCs[0], 1);
-
+            
             // Extrapolate to n+1
             Vmath::Smul(cnt, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
                              m_pressureHBCs[nint-1],    1,
@@ -209,7 +214,7 @@ namespace Nektar
         {
             /// Casting the boundary expansion to the specific case
             Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> 
-                (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetExp(m_HBCdata[j].m_bndElmtOffset));
+                (m_PBndExp[m_HBCdata[j].m_bndryID]->GetExp(m_HBCdata[j].m_bndElmtID));
 			
             /// Picking up the element where the HOPBc is located
             m_elmt = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
@@ -236,8 +241,8 @@ namespace Nektar
                 MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
             }
 
-            Pvals = m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()
-                + m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
+            Pvals = m_PBndExp[m_HBCdata[j].m_bndryID]->UpdateCoeffs()
+                + m_PBndExp[m_HBCdata[j].m_bndryID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtID);
             Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
             
             // Getting values on the edge and filling the pressure boundary expansion
@@ -261,15 +266,15 @@ namespace Nektar
                 {
                     if(m_HBCdata[j].m_elmtTraceID == 0)
                     {
-                        (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+
-                         m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(
-                             m_HBCdata[j].m_bndElmtOffset))[0] = -1.0*Q[0][0];
+                        (m_PBndExp[m_HBCdata[j].m_bndryID]->UpdateCoeffs()+
+                         m_PBndExp[m_HBCdata[j].m_bndryID]->GetCoeff_Offset(
+                             m_HBCdata[j].m_bndElmtID))[0] = -1.0*Q[0][0];
                     }
                     else if (m_HBCdata[j].m_elmtTraceID == 1)
                     {
-                        (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+
-                         m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(
-                             m_HBCdata[j].m_bndElmtOffset))[0] = Q[0][m_HBCdata[j].m_ptsInElmt-1];
+                        (m_PBndExp[m_HBCdata[j].m_bndryID]->UpdateCoeffs()+
+                         m_PBndExp[m_HBCdata[j].m_bndryID]->GetCoeff_Offset(
+                             m_HBCdata[j].m_bndElmtID))[0] = Q[0][m_HBCdata[j].m_ptsInElmt-1];
                     }
                     else 
                     {
@@ -550,9 +555,9 @@ namespace Nektar
                             m_elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
                             m_HBCdata[j].m_ptsInElmt = m_elmt->GetTotPoints();         
                             m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
-                            m_HBCdata[j].m_bndElmtOffset = i;       
+                            m_HBCdata[j].m_bndElmtID = i;       
                             m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
-                            m_HBCdata[j].m_bndryElmtID = n;
+                            m_HBCdata[j].m_bndryID = n;
                             m_HBCdata[j].m_coeffOffset = coeff_count;
                             coeff_count += m_elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
                             j = j+1;
@@ -632,9 +637,9 @@ namespace Nektar
                                 m_elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
                                 m_HBCdata[j].m_ptsInElmt = m_elmt->GetTotPoints();         
                                 m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
-                                m_HBCdata[j].m_bndElmtOffset = i+k*exp_size_per_plane;       
+                                m_HBCdata[j].m_bndElmtID = i+k*exp_size_per_plane;       
                                 m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
-                                m_HBCdata[j].m_bndryElmtID = n;
+                                m_HBCdata[j].m_bndryID = n;
                                 m_HBCdata[j].m_coeffOffset = coeff_count;
                                 coeff_count += m_elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
                                 
@@ -714,9 +719,9 @@ namespace Nektar
                                     m_elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
                                     m_HBCdata[j].m_ptsInElmt = m_elmt->GetTotPoints();
                                     m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
-                                    m_HBCdata[j].m_bndElmtOffset = i+(k1*m_npointsY+k2)*exp_size_per_line;
+                                    m_HBCdata[j].m_bndElmtID = i+(k1*m_npointsY+k2)*exp_size_per_line;
                                     m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];                
-                                    m_HBCdata[j].m_bndryElmtID = n;
+                                    m_HBCdata[j].m_bndryID = n;
                                     //m_wavenumber[j] = 2*M_PI*sign*(NekDouble(k1))/m_LhomZ;
                                     //m_negWavenumberSq[j] = 2*M_PI*sign*(NekDouble(k2))/m_LhomY;
                                 }

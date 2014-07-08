@@ -79,6 +79,11 @@ namespace Nektar
             const Array<OneD, int> pVel,
             const AdvectionTermSharedPtr advObject);
 
+        void IProductNormVelocityOnHBC(const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
+                                       Array<OneD, NekDouble> &IprodVn);
+        
+        void IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IprodVn);
+        
         virtual ~SubSteppingExtrapolate();
         
     protected:

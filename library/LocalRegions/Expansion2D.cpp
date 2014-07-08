@@ -1365,6 +1365,7 @@ namespace Nektar
             ComputeEdgeNormal(edge);
         }
 
+
         const StdRegions::NormalVector &Expansion2D::v_GetEdgeNormal(const int edge) const
         {
             std::map<int, StdRegions::NormalVector>::const_iterator x;
@@ -1372,6 +1373,11 @@ namespace Nektar
             ASSERTL0 (x != m_edgeNormals.end(),
                         "Edge normal not computed.");
             return x->second;
+        }
+        
+        void Expansion2D::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
+        {
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], Fvec[2], outarray);
         }
         
         void Expansion2D::v_NegateEdgeNormal(const int edge)

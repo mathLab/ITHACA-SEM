@@ -269,13 +269,13 @@ namespace Nektar
                     }
                 }
                 
+                timer.Start();
                 // Perform any solver-specific pre-integration steps
                 if (v_PreIntegrate(step))
                 {
                     break;
                 }
 
-                timer.Start();
                 fields = m_intScheme->TimeIntegrate(
                     step, m_timestep, m_intSoln, m_ode);
                 timer.Stop();

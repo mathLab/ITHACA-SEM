@@ -169,6 +169,8 @@ namespace Nektar
             virtual bool v_EdgeNormalNegated(const int edge);
             virtual void v_SetUpPhysNormals(const int edge);
             const StdRegions::NormalVector &v_GetEdgeNormal(const int edge) const;
+
+            virtual void v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray);
         };
 
         inline ExpansionSharedPtr Expansion2D::GetEdgeExp(int edge, bool SetUpNormal)

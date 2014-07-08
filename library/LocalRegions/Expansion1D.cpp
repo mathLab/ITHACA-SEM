@@ -396,6 +396,13 @@ namespace Nektar
             Vmath::Zero(GetNcoeffs(), coeffs, 1);
             coeffs[map] = primCoeffs[0];
         }
+
+        void Expansion1D::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
+        {
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], outarray);
+        }
+        
+
     } //end of namespace
 } //end of namespace
 

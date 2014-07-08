@@ -55,11 +55,11 @@ namespace Nektar
         /// Physical offset of the element in the global list.
         int m_physOffset;
         /// Physical offset of the element in the boundary expansion.
-        int m_bndElmtOffset;
+        int m_bndElmtID;
         /// Trace ID of the element
         int m_elmtTraceID;
         /// Pressure boundary condition ID.
-        int m_bndryElmtID;
+        int m_bndryID;
         /// Associated element physical offset (\f$ k\f$ and \f$ k_c\f$ are the
         /// real and complex plane).
         int m_assPhysOffset;
@@ -201,6 +201,8 @@ namespace Nektar
         bool m_HalfMode;
         /// Flag to determine if use multiple homogenenous modes are used.
         bool m_MultipleModes;
+
+        bool m_extrapolateDuDt; 
 
         NekDouble m_LhomZ;  ///< physical length in Z direction (if homogeneous)
         

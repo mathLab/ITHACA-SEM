@@ -69,7 +69,7 @@ namespace Nektar
                                     NekDouble &MaxNormDiff_q_qBar,
                                     NekDouble &MaxNormDiff_q1_q0);
             
-            void ExactFilters(const int i,
+            void ComputeSFD(const int i,
                               const Array<OneD, const Array<OneD, NekDouble> > &q0,
                               const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
                               Array<OneD, Array<OneD, NekDouble> > &q1,
@@ -87,6 +87,8 @@ namespace Nektar
             void ReadEVfile(const int &KrylovSubspaceDim, NekDouble &growthEV, NekDouble &frequencyEV);
             
             void ComputeOptimization();
+            
+            void SetSFDOperator(const NekDouble X_input, const NekDouble Delta_input);
             
             
         protected:
@@ -109,20 +111,19 @@ namespace Nektar
             
             //Definition of the SFD parameters:
             NekDouble m_Delta;
-            NekDouble m_Delta0;
             NekDouble m_X;
-            NekDouble m_X0;
             NekDouble m_dt; 
             
             //For implementation of the exact solution of the filters equation
-            NekDouble c1;
-            NekDouble F11;
-            NekDouble F12;
-            NekDouble F21;
-            NekDouble F22;
+            NekDouble M11;
+            NekDouble M12;
+            NekDouble M21;
+            NekDouble M22;
             
-            int m_n;
+            int m_stepCounter;
             int m_Check;
+            NekDouble TOL;
+            
             
             int m_infosteps;
             int m_checksteps;
@@ -133,6 +134,12 @@ namespace Nektar
             NekDouble Diff_q1_q0;
             
             NekDouble Min_MaxNormDiff_q_qBar;
+            
+            //For coupling SFD and Arnoldi
+            bool OptumiumParametersFound;
+            NekDouble PartialTOL;
+            NekDouble TimeToRestart;
+            int m_NonConvergingStepsCounter;
             
             std::ofstream m_file;
         };

@@ -151,20 +151,14 @@ namespace Nektar
             {
                 return;
             }
-
-//             cout << "\n\n\n We are in BoundaryConditions::ReadBoundaryConditions \n\n\n" << endl;
             
             // Read REGION tags
             TiXmlElement *boundaryConditionsElement = conditions->FirstChildElement("BOUNDARYCONDITIONS");
             ASSERTL0(boundaryConditionsElement, "Boundary conditions must be specified.");
             
-            
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ///Condition necessary for coupling SFD method with Arnoldi algorithm
             if (m_session->GetSolverInfo("Driver") == "SteadyState" && m_session->GetTag("AdvectiveType") == "Linearised")
-            //if (m_session->GetSolverInfo("Driver") == "SteadyState")
-            {
-                cout << "\n\n\n The HOMOGENEOUSBOUNDARYCONDITIONS are used!!! \n\n\n" << endl;
-                
+            {                
                 TiXmlElement *boundaryConditionsElement_Homogeneous = conditions->FirstChildElement("HOMOGENEOUSBOUNDARYCONDITIONS");
                 
                 ASSERTL0(boundaryConditionsElement_Homogeneous, "To use the Automated SFD method, a section called " 
@@ -173,9 +167,7 @@ namespace Nektar
                 "but with homogeneous boundary conditions.");
                 
                 boundaryConditionsElement = boundaryConditionsElement_Homogeneous;
-            }
-            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
+            }            
 
             TiXmlElement *regionElement = boundaryConditionsElement->FirstChildElement("REGION");
 

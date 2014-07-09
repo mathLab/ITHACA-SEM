@@ -100,10 +100,7 @@ namespace Nektar
                 /// @todo At the moment this is Navier-Stokes specific - generalise?
                 m_EvolutionOperator = m_session->GetSolverInfoAsEnum<EvolutionOperatorType>("EvolutionOperator");
 
-                //m_nequ = (m_EvolutionOperator == eTransientGrowth ? 2 : 1);
                 m_nequ = ((m_EvolutionOperator == eTransientGrowth || m_EvolutionOperator == eOptimizedSteadyState) ? 2 : 1);
-                cout << "\n \t In Driver.cpp: m_nequ = " << m_nequ << endl;
-                cout << "\t In Driver.cpp: m_EvolutionOperator = " << m_EvolutionOperator << "\n" << endl;
                 
                 m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
 
@@ -135,7 +132,7 @@ namespace Nektar
                         m_session->SetTag("AdvectiveType","SkewSymmetric");
                         m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
                         break;
-                    case eOptimizedSteadyState:
+                    case eOptimizedSteadyState: ///Coupling SFD method and Arnoldi algorithm
                         //For running stability analysis
                         m_session->SetTag("AdvectiveType","Linearised");
                         m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);

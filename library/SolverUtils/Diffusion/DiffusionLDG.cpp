@@ -54,7 +54,10 @@ namespace Nektar
         {
             m_session = pSession;
             
-            // Setting up the normals
+	    m_session->LoadSolverInfo("ShockCaptureType",
+                                  m_shockCaptureType,    "Off");		
+            
+	    // Setting up the normals
             int i;
             int nDim = pFields[0]->GetCoordim(0);
             int nTracePts = pFields[0]->GetTrace()->GetTotPoints();
@@ -137,10 +140,17 @@ namespace Nektar
             {
                 Array<OneD, NekDouble> muvar(nPts, 0.0);
                 m_ArtificialDiffusionVector(inarray, muvar);
-
+	        
+	        int numConvFields = nConvectiveFields;
+                
+                if (m_shockCaptureType == "Smooth")
+                {
+                    numConvFields = nConvectiveFields - 1;
+                }
+	
                 for (j = 0; j < nDim; ++j)
                 {
-                    for (i = 0; i < nConvectiveFields; ++i)
+                    for (i = 0; i < numConvFields; ++i)
                     {
                         Vmath::Vmul(nPts,qfield[j][i],1,muvar,1,qfield[j][i],1);
                     }
@@ -179,7 +189,7 @@ namespace Nektar
                     }
                 }
 
-                for(i = 0; i < nConvectiveFields; ++i)
+                for(i = 0; i < numConvFields; ++i)
                 {
                     for(int k = 0; k < nTracePts; ++k)
                     {

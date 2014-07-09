@@ -133,6 +133,8 @@ namespace Nektar
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
         
+	m_EqTypeStr = m_session->GetSolverInfo("EQTYPE");
+
         m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
 
@@ -175,13 +177,16 @@ namespace Nektar
                     //                              GetViscousFluxVector, this);
                 }
                 
-                if (m_shockCaptureType=="Smooth")
+                if (m_shockCaptureType=="Smooth" && m_EqTypeStr=="EulerADCFE")
                 {
                     m_advection->SetFluxVector(&CompressibleFlowSystem::
                                                GetFluxVector, this);
                     
-                    m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
-                                                 GetArtViscFluxVectorPDESC, this);
+                    //m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
+                    //                             GetArtViscFluxVectorPDESC, this);
+                    
+                    m_diffusion->SetArtificialDiffusionVector(
+                        &CompressibleFlowSystem::GetSmoothArtificialViscosity, this);
                 }
 
                 // Setting up Riemann solver for advection operator
@@ -281,7 +286,7 @@ namespace Nektar
             // Boundary condition for epsilon term.
             if (nVariables == m_spacedim+3)
             {
-                NekDouble factor  = 0.0;
+                NekDouble factor  = 1.0;
                 NekDouble factor2 = 1.0;
                 
                 Array<OneD, NekDouble > tmp2(nBCEdgePts, 0.0);
@@ -3896,40 +3901,20 @@ namespace Nektar
         
         NekDouble order = Vmath::Vmax(pOrderElmt.num_elements(), pOrderElmt, 1);
         
-        Array <OneD, Array <OneD, NekDouble > > ElDim(m_spacedim);
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            ElDim[i] = Array <OneD, NekDouble > (nElements, 0.0);
-        }
-        
-        GetElementDimensions(ElDim, h_minmin);
-        
-        NekDouble h_mean_sumx = 0.0;
-        NekDouble h_mean_sumy = 0.0;
-        
-        NekDouble h_meanx     = 0.0;
-        NekDouble h_meany     = 0.0;
-        
-        for (int i = 0; i < nElements; ++i)
-        {
-            h_mean_sumx += ElDim[0][i];
-            h_mean_sumy += ElDim[1][i];
-        }
-        
-        h_meanx =  h_mean_sumx/nElements;
-        h_meany =  h_mean_sumy/nElements;
-        
-        NekDouble h_mean  = (h_meanx+h_meany)/2;
-        
-        NekDouble ThetaH = LambdaMax/order;//*h_mean;
-        NekDouble ThetaL = 0.05*LambdaMax/order;//*h_mean;;
+        NekDouble ThetaH = m_FacH;
+        NekDouble ThetaL = m_FacL;
         
         NekDouble Phi0     = (ThetaH+ThetaL)/2;
         NekDouble DeltaPhi = ThetaH-Phi0;
     
         Vmath::Zero(eps_bar.num_elements(), eps_bar, 1);
-        
-        for (int e = 0; e < eps_bar.num_elements(); e++)
+
+	Vmath::Smul(eps_bar.num_elements(),
+                    m_eps_max,
+                    &physfield[nvariables-1][0], 1,
+                    &eps_bar[0], 1);
+
+        /*for (int e = 0; e < eps_bar.num_elements(); e++)
         {
             if (physfield[nvariables-1][e] <= (Phi0 - DeltaPhi))
             {
@@ -3944,7 +3929,8 @@ namespace Nektar
                 eps_bar[e] = m_mu0/2*(1+sin(M_PI*
                 (physfield[nvariables-1][e]-Phi0)/(2*DeltaPhi)));
             }
-        }
+        }	
+	Vmath::Smul(nPts, m_eps_max, eps_bar, 1, eps_bar, 1);*/
     }
     
     void CompressibleFlowSystem::GetArtificialDynamicViscosity(
@@ -4120,7 +4106,7 @@ namespace Nektar
         GetMach      (tmp, soundspeed, mach);
         GetSensor    (tmp, sensor, SensorKappa);
         GetSmoothArtificialViscosity    (tmp, smooth);
-
+	
         Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs), sensFwd(nCoeffs), smoothFwd(nCoeffs);
         
         m_fields[0]->FwdTrans(pressure,   pFwd);

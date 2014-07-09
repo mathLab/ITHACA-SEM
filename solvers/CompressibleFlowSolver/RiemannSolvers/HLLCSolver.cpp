@@ -253,7 +253,7 @@ namespace Nektar
                 rhovf = rhouL * vL + SL * (rhovML - rhovL);
                 rhowf = rhouL * wL + SL * (rhowML - rhowL);
                 Ef    = uL * (EL + pL) + SL * (EML - EL);
-                Epsf  = 0.0;
+                Epsf  = 0.0 + SL * (EpsML - EpsL);
             }
             else if(SM < 0.0 && SR > 0.0)
             {
@@ -262,7 +262,7 @@ namespace Nektar
                 rhovf = rhouR * vR + SR * (rhovMR - rhovR);
                 rhowf = rhouR * wR + SR * (rhowMR - rhowR);
                 Ef    = uR * (ER + pR) + SR * (EMR - ER);
-                Epsf  = 0.0;
+                Epsf  = 0.0 + SR * (EpsMR - EpsR);
             }
         }
     }

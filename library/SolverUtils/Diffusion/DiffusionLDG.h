@@ -54,7 +54,9 @@ namespace Nektar
             
         protected:
             DiffusionLDG();
-            
+   		
+	    std::string                          m_shockCaptureType;
+	         
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
             LibUtilities::SessionReaderSharedPtr              m_session;
 

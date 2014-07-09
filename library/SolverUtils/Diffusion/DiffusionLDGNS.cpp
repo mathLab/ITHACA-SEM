@@ -469,7 +469,7 @@ namespace Nektar
             if (nScalars == (m_spaceDim+4))
             {
                 // for the density
-                cnt = 0;
+                /*cnt = 0;
                 nBndRegions = fields[0]->
                 GetBndCondExpansions().num_elements();
                 for (j = 0; j < nBndRegions; ++j)
@@ -508,7 +508,7 @@ namespace Nektar
                                     &penaltyfluxO1[nConvectiveFields-2][id2], 1);
                         }
                     }
-                }
+                }*/
 
                 // for the viscosity term
                 cnt = 0;
@@ -536,7 +536,7 @@ namespace Nektar
                             SpatialDomains::eDirichlet)
                         {
                             Vmath::Vcopy(nBndEdgePts,
-                                &scalarVariables[nConvectiveFields-1][id2], 1,
+				&scalarVariables[nConvectiveFields-1][id2], 1,
                                 &penaltyfluxO1[nConvectiveFields-1][id2], 1);
                         }
 
@@ -575,9 +575,9 @@ namespace Nektar
                         }
                     }
                 }
-
+		
                 // for the enthalpy
-                cnt = 0;
+                /*cnt = 0;
                 nBndRegions = fields[0]->
                 GetBndCondExpansions().num_elements();
                 for (j = 0; j < nBndRegions; ++j)
@@ -617,7 +617,7 @@ namespace Nektar
                                 &penaltyfluxO1[nConvectiveFields][id2], 1);
                         }
                     }
-                }
+                }*/
             }
             // -----------------------------------------------------------------
         }

@@ -129,7 +129,7 @@ namespace Nektar
         m_session->LoadParameter ("C1",             m_C1,           3.0);
         m_session->LoadParameter ("C2",             m_C2,           5.0);
         m_session->LoadSolverInfo("ShockCaptureType",
-                                  m_shockCaptureType,    "Off");
+                                  m_shockCaptureType,    "NonSmooth");
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
         
@@ -187,6 +187,17 @@ namespace Nektar
                     
                     m_diffusion->SetArtificialDiffusionVector(
                         &CompressibleFlowSystem::GetSmoothArtificialViscosity, this);
+                }
+                if (m_shockCaptureType=="NonSmooth" && m_EqTypeStr=="EulerADCFE")
+                {
+                    m_advection->SetFluxVector(&CompressibleFlowSystem::
+                                               GetFluxVector, this);
+                    
+                    //m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
+                    //                             GetArtViscFluxVectorPDESC, this);
+                    
+                    m_diffusion->SetArtificialDiffusionVector(
+                        &CompressibleFlowSystem::GetArtificialViscosity, this);
                 }
 
                 // Setting up Riemann solver for advection operator

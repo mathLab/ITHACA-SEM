@@ -143,14 +143,6 @@ namespace Nektar
         void GetFluxVectorPDESC(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
-        void GetArtViscFluxVectorPDESC(
-            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
-        void GetViscousFluxVectorPDESC(
-            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
         void GetViscousFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
@@ -163,10 +155,6 @@ namespace Nektar
             int                                                 bcRegion,
             int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void ArtificialViscosityBC(
-            int                                   bcRegion,
-            int                                   cnt,
-            Array<OneD, Array<OneD, NekDouble> > &physarray);
         void SymmetryBC(
             int                                                 bcRegion,
             int                                                 cnt,

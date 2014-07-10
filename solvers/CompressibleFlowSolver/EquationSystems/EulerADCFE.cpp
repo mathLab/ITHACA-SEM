@@ -130,9 +130,9 @@ namespace Nektar
     }
 
     void EulerADCFE::DoOdeRhs(
-                                               const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                                               Array<OneD,       Array<OneD, NekDouble> > &outarray,
-                                               const NekDouble                                   time)
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble                                   time)
     {
         int i;
         int nvariables = inarray.num_elements();
@@ -164,7 +164,27 @@ namespace Nektar
                         outarrayDiff[i], 1,
                         outarray[i], 1);
         }
-        
+    
+        if(m_shockCaptureType == "Smooth")
+        {
+            Array<OneD, Array<OneD, NekDouble> > outarrayForcing(nvariables);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                outarrayForcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            }
+            
+            GetForcingTerm(inarray, outarrayForcing);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                // Add Forcing Term
+                Vmath::Vadd(npoints,
+                            outarray[i], 1,
+                            outarrayForcing[i], 1,
+                            outarray[i], 1);
+            }
+        }
     }
 
     void EulerADCFE::DoOdeProjection(

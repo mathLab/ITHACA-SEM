@@ -4,39 +4,47 @@ add_custom_target(pkg)
 
 # LibUtilities
 list(APPEND libnektar++-utilities_LIBS LibUtilities)
-list(APPEND nektar++_LIBS LibUtilities)
 
 # StdRegions
 list(APPEND libnektar++-stdregions_LIBS StdRegions)
-list(APPEND nektar++_LIBS StdRegions)
 
 # SpatialDomains
 list(APPEND libnektar++-spatialdomains_LIBS SpatialDomains)
-list(APPEND nektar++_LIBS SpatialDomains)
 
 # LocalRegions
 list(APPEND libnektar++-localregions_LIBS LocalRegions)
-list(APPEND nektar++_LIBS LocalRegions)
 
 # MultiRegions
 list(APPEND libnektar++-multiregions_LIBS MultiRegions)
-list(APPEND nektar++_LIBS MultiRegions)
 
 # SolverUtils
 list(APPEND libnektar++-solverutils_LIBS SolverUtils)
-list(APPEND nektar++_LIBS SolverUtils)
 
 # IncNavierStokesSolver
 list(APPEND nektar++-incnavierstokes-solver_BINS IncNavierStokesSolver)
-list(APPEND nektar++_BINS IncNavierStokesSolver)
 
 # CardiacEPSolver
 list(APPEND nektar++-cardiacep-solver_BINS CardiacEPSolver)
-list(APPEND nektar++-BINS CardiacEPSolver)
 
 # CompressibleFlowSolver
 list(APPEND nektar++-compressibleflow-solver_BINS CompressibleFlowSolver)
-list(APPEND nektar++-BINS CompressibleFlowSolver)
+
+# ADRSolver
+list(APPEND nektar++-adr-solver_BINS ADRSolver)
+
+# DiffusionSolver
+list(APPEND nektar++-diffusion-solver_BINS DiffusionSolver 
+                                           DiffusionSolverTimeInt)
+
+# ShallowWaterSolver
+list(APPEND nektar++-shallowwater-solver_BINS ShallowWaterSolver)
+
+# Nektar++ binary archive
+list(APPEND nektar++_LIBS LibUtilities StdRegions SpatialDomains LocalRegions
+                          MultiRegions SolverUtils)
+list(APPEND nektar++_BINS ADRSolver IncNavierStokesSolver CardiacEPSolver
+                          CompressibleFlowSolver DiffusionSolver 
+                          DiffusionSolverTimeInt ShallowWaterSolver)
 
 # Check if we can build debian files
 find_program(DPKG "dpkg")
@@ -91,14 +99,47 @@ if (DPKG)
          complete spectral/hp element solvers."
         DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION}), libnektar++-multiregions (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-solverutils_LIBS}")
-    #add_deb_package(
-    #    NAME nektar++-incnavierstokes-solver
-    #    SUMMARY "Nektar++ incompressible Navier-Stokes flow solver"
-    #    DESCRIPTION
-    #    "Solves the incompressible Navier-Stokes equations using the Nektar++
-    #     high-order spectral/hp element framework"
-    #    DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-     utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (=                  ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION}), libnektar++-multiregions (= ${NEKTAR_VERSION})"
-    #    INSTALL_BINS "${nektar++-incnavierstokes-solver_BINS}")
+
+    set(SOLVERDEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION}), libnektar++-multiregions (= ${NEKTAR_VERSION})")
+
+    add_deb_package(
+        NAME nektar++-incnavierstokes-solver
+        SUMMARY "Nektar++ incompressible Navier-Stokes flow solver"
+        DESCRIPTION
+        "Solves the incompressible Navier-Stokes equations using the Nektar++
+         high-order spectral/hp element framework"
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-incnavierstokes-solver_BINS}")
+    add_deb_package(
+        NAME nektar++-adr-solver
+        SUMMARY "Nektar++ advection-diffusion-reaction solver"
+        DESCRIPTION
+        "Solves a range of advection, diffusion, reaction PDE problems."
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-adr-solver_BINS}")
+    add_deb_package(
+        NAME nektar++-cardiacep-solver
+        SUMMARY "Nektar++ cardiac electrophysiology solver"
+        DESCRIPTION
+        "Solves the cardiac electrophysiology monodomain equations."
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-cardiacep-solver_BINS}")
+    add_deb_package(
+        NAME nektar++-shallowwater-solver
+        SUMMARY "Nektar++ shallow water equations solver"
+        DESCRIPTION
+        "Solves the shallow water equations."
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-shallowwater-solver_BINS}")
+    add_deb_package(
+        NAME nektar++-compressibleflow-solver
+        SUMMARY "Nektar++ compressible Navier-Stokes flow solver"
+        DESCRIPTION
+        "Solves the compressible Euler and compressible Navier-Stokes 
+         equations."
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-compressibleflow-solver_BINS}")
+    
 endif (DPKG)
 
 
@@ -151,7 +192,44 @@ if (RPMBUILD)
          complete spectral/hp element solvers."
         INSTALL_LIBS "${libnektar++-solverutils_LIBS}")
 
-
+    add_rpm_package(
+        NAME nektar++-incnavierstokes-solver
+        SUMMARY "Nektar++ incompressible Navier-Stokes flow solver"
+        DESCRIPTION
+        "Solves the incompressible Navier-Stokes equations using the Nektar++
+         high-order spectral/hp element framework"
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-incnavierstokes-solver_BINS}")
+    add_rpm_package(
+        NAME nektar++-adr-solver
+        SUMMARY "Nektar++ advection-diffusion-reaction solver"
+        DESCRIPTION
+        "Solves a range of advection, diffusion, reaction PDE problems."
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-adr-solver_BINS}")
+    add_rpm_package(
+        NAME nektar++-cardiacep-solver
+        SUMMARY "Nektar++ cardiac electrophysiology solver"
+        DESCRIPTION
+        "Solves the cardiac electrophysiology monodomain equations."
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-cardiacep-solver_BINS}")
+    add_rpm_package(
+        NAME nektar++-shallowwater-solver
+        SUMMARY "Nektar++ shallow water equations solver"
+        DESCRIPTION
+        "Solves the shallow water equations."
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-shallowwater-solver_BINS}")
+    add_rpm_package(
+        NAME nektar++-compressibleflow-solver
+        SUMMARY "Nektar++ compressible Navier-Stokes flow solver"
+        DESCRIPTION
+        "Solves the compressible Euler and compressible Navier-Stokes 
+         equations."
+        DEPENDS "${SOLVERDEPENDS}"
+        INSTALL_BINS "${nektar++-compressibleflow-solver_BINS}")
+    
 endif (RPMBUILD)
 
 add_custom_target(pkg-tgz)

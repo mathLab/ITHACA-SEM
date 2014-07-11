@@ -1,0 +1,18 @@
+SET(USERGUIDESRC ${CMAKE_CURRENT_SOURCE_DIR})
+SET(USERGUIDE ${CMAKE_BINARY_DIR}/docs/user-guide)
+
+FILE(MAKE_DIRECTORY ${USERGUIDE}/html)
+
+FIND_PROGRAM(HTLATEX htlatex)
+ADD_CUSTOM_TARGET(user-guide-html
+    ${HTLATEX} ${USERGUIDESRC}/user-guide.tex 
+        "${USERGUIDESRC}/styling.cfg,html,3,next"
+    COMMAND 
+    WORKING_DIRECTORY ${USERGUIDE}/html
+)
+
+FIND_PROGRAM(PDFLATEX pdflatex)
+ADD_CUSTOM_TARGET(user-guide-pdf
+    ${PDFLATEX} ${USERGUIDESRC}/user-guide.tex
+    COMMAND ${PDFLATEX} ${USERGUIDESRC}/user-guide.tex
+)

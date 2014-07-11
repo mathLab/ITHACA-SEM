@@ -29,12 +29,19 @@ openany, % A chapter may start on either a recto or verso page.
 % \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
 
+
 %%% PAGE LAYOUT 
 %%%------------------------------------------------------------------------------
 
 \setlrmarginsandblock{0.15\paperwidth}{*}{1} % Left and right margin
 \setulmarginsandblock{0.2\paperwidth}{*}{1}  % Upper and lower margin
 \checkandfixthelayout
+
+\newlength\forceindent
+\setlength{\forceindent}{\parindent}
+\setlength{\parindent}{0cm}
+\renewcommand{\indent}{\hspace*{\forceindent}}
+\setlength{\parskip}{1em}
 
 %%% SECTIONAL DIVISIONS
 %%%------------------------------------------------------------------------------
@@ -132,13 +139,32 @@ openany, % A chapter may start on either a recto or verso page.
 \aliaspagestyle{chapter}{chap} %
 
 %%% NEW COMMANDS
-%%%------------------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 \newcommand{\p}{\partial} %Partial
 % Or what ever you want
 
+
+%%% CODE SNIPPETS, COMMANDS, ETC
+%%%-----------------------------------------------------------------------------
+\usepackage{xcolor}
+\usepackage{listings} % Display code / shell commands
+%\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
+\lstdefinestyle{BashInputStyle}{
+  language=bash,
+  basicstyle=\small\sffamily,
+%  numbers=left,
+%  numberstyle=\tiny,
+%  numbersep=3pt,
+  frame=,
+  columns=fullflexible,
+  backgroundcolor=\color{black!10},
+  linewidth=0.9\linewidth,
+  xleftmargin=0.1\linewidth
+}
+
 %%% TABLE OF CONTENTS
-%%%------------------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 \maxtocdepth{subsection} % Only parts, chapters and sections in the table of contents
 \settocdepth{subsection}
@@ -162,8 +188,6 @@ pdfauthor={I am the Author} % author
 \author{Department of Aeronautics, Imperial College London, UK\\
 Scientific Computing and Imaging Institute, University of Utah, USA}
 \title{Nektar++: Spectral/hp Element Framework}
-
-\usepackage{lipsum} % Just to put in some text
 
 \begin{document}
 
@@ -196,8 +220,7 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 \chapter{XML Input File Reference}
 
 
-\chapter{General command-line options}
-
+\input{command-line/command-line}
 
 \chapter{Frequently Asked Questions}
 

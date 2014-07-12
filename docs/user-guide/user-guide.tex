@@ -158,10 +158,41 @@ openany, % A chapter may start on either a recto or verso page.
 %  numbersep=3pt,
   frame=,
   columns=fullflexible,
-  backgroundcolor=\color{black!10},
+  backgroundcolor=\color{black!05},
   linewidth=0.9\linewidth,
   xleftmargin=0.1\linewidth
 }
+\definecolor{gray}{rgb}{0.4,0.4,0.4}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
+\definecolor{cyan}{rgb}{0.0,0.6,0.6}
+\definecolor{maroon}{rgb}{0.5,0.0,0.0}
+\lstdefinelanguage{XML}
+{
+  basicstyle=\ttfamily\footnotesize,
+  morestring=[b]",
+  moredelim=[s][\bfseries\color{maroon}]{<}{\ },
+  moredelim=[s][\bfseries\color{maroon}]{</}{>},
+  moredelim=[l][\bfseries\color{maroon}]{/>},
+  moredelim=[l][\bfseries\color{maroon}]{>},
+  morecomment=[s]{<?}{?>},
+  morecomment=[s]{<!--}{-->},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  identifierstyle=\color{darkblue}
+}
+\lstdefinestyle{XMLStyle}{
+  language=XML,
+  basicstyle=\sffamily\footnotesize,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=,
+  columns=fullflexible,
+  backgroundcolor=\color{black!05},
+  linewidth=0.9\linewidth,
+  xleftmargin=0.1\linewidth
+}
+
 
 %%% TABLE OF CONTENTS
 %%%-----------------------------------------------------------------------------
@@ -172,14 +203,49 @@ openany, % A chapter may start on either a recto or verso page.
 %\AtEndDocument{\addtocontents{toc}{\par}} % Add a \par to the end of the TOC
 
 %%% INTERNAL HYPERLINKS
-%%%-------------------------------------------------------------------------------
-
+%%%-----------------------------------------------------------------------------
 \usepackage{hyperref}   % Internal hyperlinks
 \hypersetup{
 pdfborder={0 0 0},      % No borders around internal hyperlinks
 pdfauthor={I am the Author} % author
 }
 \usepackage{memhfixc}   %
+
+
+%%% PRETTY TITLE PAGE FOR PDF DOC
+%%%-----------------------------------------------------------------------------
+\makeatletter
+\newlength\drop
+\newcommand{\br}{\hfill\break}
+\newcommand*{\titlepage}{%
+    \thispagestyle{empty}
+    \begingroup% Gentle Madness
+    \drop = 0.1\textheight
+    \vspace*{\baselineskip}
+    \vfill
+    \hbox{%
+      \hspace*{0.1\textwidth}%
+      \rule{1pt}{\dimexpr\textheight-28pt\relax}%
+      \hspace*{0.05\textwidth}% 
+      \parbox[b]{0.85\textwidth}{%
+        \vbox{%
+          \vspace{\drop}
+          {\Huge\bfseries\raggedright\@title\par}
+          \vskip2.37\baselineskip
+          {\huge\bfseries Version 4.0\par}
+          \vskip4\baselineskip
+          {\huge\bfseries User Guide\par}
+          \vskip1.0\baselineskip
+          {\large\bfseries\@date\par}
+          \vspace{0.3\textheight}
+          {\small\noindent\@author}\\[\baselineskip]
+        }% end of vbox
+      }% end of parbox
+    }% end of hbox
+    \vfill
+    \null
+\endgroup}
+\makeatother
 
 %%% THE DOCUMENT
 %%% Where all the important stuff is included!
@@ -188,16 +254,25 @@ pdfauthor={I am the Author} % author
 \author{Department of Aeronautics, Imperial College London, UK\\
 Scientific Computing and Imaging Institute, University of Utah, USA}
 \title{Nektar++: Spectral/hp Element Framework}
+\date{\today}
 
 \begin{document}
 
 \frontmatter
 
+% Render pretty title page if not building HTML
+\ifdefined\HCode
 \maketitle
+\else
+\titlepage
+\fi
 
 \clearpage
 
+\ifx\HCode\undefined
 \tableofcontents*
+\fi
+
 \clearpage
 
 \chapter{Introduction}
@@ -217,7 +292,7 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 \chapter{Solvers}
 
 
-\chapter{XML Input File Reference}
+\input{xml/xml}
 
 
 \input{command-line/command-line}

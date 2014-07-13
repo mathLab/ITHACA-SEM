@@ -53,7 +53,7 @@ macro (add_deb_package)
         pkg-deb-${PKG_NAME}
         rm -f ${BUILD_DIR}/CPackConfig.cmake
         COMMAND ${CMAKE_COMMAND} .
-        COMMAND ${CMAKE_CPACK_COMMAND}
+        COMMAND ${CMAKE_CPACK_COMMAND} --config CPackConfig.cmake
         WORKING_DIRECTORY ${BUILD_DIR}
     )
     add_dependencies(pkg-deb-${PKG_NAME}
@@ -79,7 +79,7 @@ macro (add_rpm_package)
         pkg-rpm-${PKG_NAME}
         rm -f ${BUILD_DIR}/CPackConfig.cmake
         COMMAND ${CMAKE_COMMAND} .
-        COMMAND ${CMAKE_CPACK_COMMAND}
+        COMMAND ${CMAKE_CPACK_COMMAND} --config CPackConfig.cmake
         WORKING_DIRECTORY ${BUILD_DIR}
     )
     add_dependencies(pkg-rpm-${PKG_NAME}
@@ -105,7 +105,7 @@ macro (add_tgz_package)
         pkg-tgz-${PKG_NAME}
         rm -f ${BUILD_DIR}/CPackConfig.cmake
         COMMAND ${CMAKE_COMMAND} .
-        COMMAND ${CMAKE_CPACK_COMMAND}
+        COMMAND ${CMAKE_CPACK_COMMAND} --config CPackConfig.cmake
         WORKING_DIRECTORY ${BUILD_DIR}
     )
     add_dependencies(pkg-tgz-${PKG_NAME}

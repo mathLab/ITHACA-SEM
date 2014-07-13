@@ -53,61 +53,65 @@ if (DPKG)
     add_custom_target(pkg-deb)
     add_dependencies(pkg pkg-deb)
 
+    # add_deb_package macro used to create debian packaging project.
+    # Note that the formatting of the DESCRIPTION field is VERY specific. It
+    # must start with a new line, each line must start with a space, and there
+    # must be NO blank line at the end of the description.
     add_deb_package(
         NAME libnektar++-utilities
         SUMMARY "Nektar++ library utilities"
-        DESCRIPTION 
-        "This library provides core routines including linear algebra and
-         integration with ThirdParty libraries."
+        DESCRIPTION "
+ This library provides core routines including linear algebra and integration
+ with ThirdParty libraries."
         INSTALL_LIBS "${libnektar++-utilities_LIBS}")
     add_deb_package(
         NAME libnektar++-stdregions
         SUMMARY "Nektar++ StdRegions library"
-        DESCRIPTION 
-        "This library provides construction of the reference expansions for the
-         various 1D, 2D and 3D regions."
+        DESCRIPTION "
+ This library provides construction of the reference expansions for the
+ various 1D, 2D and 3D regions."
         DEPENDS "libnektar++-utilities (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-stdregions_LIBS}")
     add_deb_package(
         NAME libnektar++-spatialdomains
         SUMMARY "Nektar++ SpatialDomains library"
-        DESCRIPTION
-        "This library provides the mappings between reference regions and
-         physical regions in the domain."
+        DESCRIPTION "
+ This library provides the mappings between reference regions and physical
+ regions in the domain."
         DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-spatialdomains_LIBS}")
     add_deb_package(
         NAME libnektar++-localregions
         SUMMARY "Nektar++ LocalRegions library"
-        DESCRIPTION 
-        "This library provides physical space expansions on the various
-         supported regions."
+        DESCRIPTION "
+ This library provides physical space expansions on the various supported
+ regions."
         DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-localregions_LIBS}")
     add_deb_package(
         NAME libnektar++-multiregions
         SUMMARY "Nektar++ MultiRegions library"
-        DESCRIPTION
-        "This library provides global expansions on multi-element domains."
+        DESCRIPTION "
+ This library provides global expansions on multi-element domains."
         DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
     add_deb_package(
         NAME libnektar++-solverutils
         SUMMARY "Nektar++ SolverUtils library"
-        DESCRIPTION 
-        "This library provides support classes and routines for constructing
-         complete spectral/hp element solvers."
+        DESCRIPTION "
+ This library provides support classes and routines for constructing complete
+ spectral/hp element solvers."
         DEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION}), libnektar++-multiregions (= ${NEKTAR_VERSION})"
         INSTALL_LIBS "${libnektar++-solverutils_LIBS}")
 
-    set(SOLVERDEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION}), libnektar++-multiregions (= ${NEKTAR_VERSION})")
+    set(SOLVERDEPENDS "libnektar++-stdregions (= ${NEKTAR_VERSION}), libnektar++-utilities (= ${NEKTAR_VERSION}), libnektar++-spatialdomains (= ${NEKTAR_VERSION}), libnektar++-localregions (= ${NEKTAR_VERSION}), libnektar++-multiregions (= ${NEKTAR_VERSION}), libnektar++-solverutils (= ${NEKTAR_VERSION})")
 
     add_deb_package(
         NAME nektar++-incnavierstokes-solver
         SUMMARY "Nektar++ incompressible Navier-Stokes flow solver"
-        DESCRIPTION
-        "Solves the incompressible Navier-Stokes equations using the Nektar++
-         high-order spectral/hp element framework"
+        DESCRIPTION "
+ Solves the incompressible Navier-Stokes equations using the Nektar++ high-
+ order spectral/hp element framework"
         DEPENDS "${SOLVERDEPENDS}"
         INSTALL_BINS "${nektar++-incnavierstokes-solver_BINS}")
     add_deb_package(
@@ -120,8 +124,8 @@ if (DPKG)
     add_deb_package(
         NAME nektar++-cardiacep-solver
         SUMMARY "Nektar++ cardiac electrophysiology solver"
-        DESCRIPTION
-        "Solves the cardiac electrophysiology monodomain equations."
+        DESCRIPTION "
+ Solves the cardiac electrophysiology monodomain equations."
         DEPENDS "${SOLVERDEPENDS}"
         INSTALL_BINS "${nektar++-cardiacep-solver_BINS}")
     add_deb_package(
@@ -134,9 +138,8 @@ if (DPKG)
     add_deb_package(
         NAME nektar++-compressibleflow-solver
         SUMMARY "Nektar++ compressible Navier-Stokes flow solver"
-        DESCRIPTION
-        "Solves the compressible Euler and compressible Navier-Stokes 
-         equations."
+        DESCRIPTION "
+ Solves the compressible Euler and compressible Navier-Stokes equations."
         DEPENDS "${SOLVERDEPENDS}"
         INSTALL_BINS "${nektar++-compressibleflow-solver_BINS}")
     

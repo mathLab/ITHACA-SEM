@@ -6,7 +6,7 @@ FILE(MAKE_DIRECTORY ${USERGUIDE}/html)
 FIND_PROGRAM(HTLATEX htlatex)
 ADD_CUSTOM_TARGET(user-guide-html
     export TEXINPUTS=${USERGUIDESRC}//: && ${HTLATEX} ${USERGUIDESRC}/user-guide.tex 
-        "${USERGUIDESRC}/styling.cfg,html,3,next"
+    "${USERGUIDESRC}/styling.cfg,html,2,next,NoFonts"
     WORKING_DIRECTORY ${USERGUIDE}/html
 )
 

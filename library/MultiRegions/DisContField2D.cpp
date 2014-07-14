@@ -2217,7 +2217,6 @@ namespace Nektar
                             condition.Evaluate(x0, x1, x2, time,
                                                locExpList->UpdatePhys());
                         }
-<<<<<<< HEAD
 
                         LibUtilities::Equation coeff =
                             boost::static_pointer_cast<
@@ -2232,23 +2231,20 @@ namespace Nektar
                         coeff.Evaluate(x0, x1, x2, time,
                                        locExpList->UpdatePhys());
                     }    
-=======
-                    }
->>>>>>> movingbody module is updated
                     else
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
                 else if (m_bndConditions[i]->GetUserDefined() ==
-                    		SpatialDomains::eFluidStructInt)
+                            SpatialDomains::eFluidStructInt)
                 {
-                	locExpList = m_bndCondExpansions[i];
+                    locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();
                     Array<OneD, NekDouble> x0(npoints, 0.0);
                     Array<OneD, NekDouble> x1(npoints, 0.0);
                     Array<OneD, NekDouble> x2(npoints, 0.0);
-					Array<OneD, NekDouble> tmp(npoints);
+                    Array<OneD, NekDouble> tmp(npoints);
 
                     // Homogeneous input case for x2.
                     if (x2_in == NekConstants::kNekUnsetDouble)
@@ -2271,12 +2267,12 @@ namespace Nektar
 
                         condition.Evaluate(x0, x1, x2, time,
                                         locExpList->UpdatePhys());
-						Array<OneD, NekDouble> movingbodyvars;
+                        Array<OneD, NekDouble> movingbodyvars;
                         locExpList->GetMovBodyMotionVars(movingbodyvars);
                         Vmath::Fill(npoints, movingbodyvars[1], tmp, 1);
-                        Vmath::Vsub(npoints, locExpList->UpdatePhys(), 1, 
-											 tmp, 					   1, 
-											 locExpList->UpdatePhys(), 1);
+                        Vmath::Vsub(npoints, locExpList->UpdatePhys(), 1,
+                                             tmp,                      1,
+                                             locExpList->UpdatePhys(), 1);
                         locExpList->FwdTrans_IterPerExp(
                                     locExpList->GetPhys(),
                                     locExpList->UpdateCoeffs());
@@ -2285,7 +2281,7 @@ namespace Nektar
                     {
                         ASSERTL0(false, "This type of BC not implemented yet");
                     }
-				}
+                }
             }
         }
     } // end of namespace

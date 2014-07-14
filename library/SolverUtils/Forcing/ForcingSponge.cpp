@@ -47,7 +47,8 @@ namespace SolverUtils
 
     ForcingSponge::ForcingSponge(const LibUtilities::SessionReaderSharedPtr& pSession)
             : Forcing(pSession),
-              m_hasRefFlow(false)
+              m_hasRefFlow(false),	
+	      m_hasRefFlowTime(false)
     {
     }
 

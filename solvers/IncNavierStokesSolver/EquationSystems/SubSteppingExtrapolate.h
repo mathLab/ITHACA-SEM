@@ -63,10 +63,11 @@ namespace Nektar
         static ExtrapolateSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            MultiRegions::ExpListSharedPtr              &pPressure,
             const Array<OneD, int> &pVel,
             const AdvectionTermSharedPtr &advObject)
         {
-            ExtrapolateSharedPtr p = MemoryManager<SubSteppingExtrapolate>::AllocateSharedPtr(pSession,pFields,pVel,advObject);
+            ExtrapolateSharedPtr p = MemoryManager<SubSteppingExtrapolate>::AllocateSharedPtr(pSession,pFields,pPressure,pVel,advObject);
             return p;
         }
 
@@ -76,6 +77,7 @@ namespace Nektar
         SubSteppingExtrapolate(
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
+            MultiRegions::ExpListSharedPtr              pPressure,
             const Array<OneD, int> pVel,
             const AdvectionTermSharedPtr advObject);
 

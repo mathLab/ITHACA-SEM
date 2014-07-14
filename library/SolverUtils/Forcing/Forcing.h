@@ -80,8 +80,13 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT void Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+<<<<<<< HEAD
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                       NekDouble time = 0.0);
+=======
+                Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const NekDouble &time);
+>>>>>>> feature/INCNSPressureOutflowFix
 
             SOLVER_UTILS_EXPORT static std::vector<ForcingSharedPtr> Load(
                         const LibUtilities::SessionReaderSharedPtr& pSession,
@@ -108,14 +113,27 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT virtual void v_Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+<<<<<<< HEAD
                       Array<OneD, Array<OneD, NekDouble> >        &outarray,
                       NekDouble time)=0;
+=======
+                Array<OneD, Array<OneD, NekDouble> >        &outarray,
+                const NekDouble &time)=0;
+>>>>>>> feature/INCNSPressureOutflowFix
 
             void EvaluateFunction(
                     Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-                    LibUtilities::SessionReaderSharedPtr pSession,
-                    std::string pFieldName, Array<OneD, NekDouble>& pArray,
+                    LibUtilities::SessionReaderSharedPtr        pSession,
+                    std::string                                 pFieldName, 
+                    Array<OneD, NekDouble>&                     pArray,
                     const std::string& pFunctionName,
+                    NekDouble pTime = NekDouble(0));
+
+            void EvaluateTimeFunction(
+                    LibUtilities::SessionReaderSharedPtr        pSession,
+                    std::string                                 pFieldName, 
+                    Array<OneD, NekDouble>&                     pArray,
+                    const std::string&                          pFunctionName,
                     NekDouble pTime = NekDouble(0));
 
     };

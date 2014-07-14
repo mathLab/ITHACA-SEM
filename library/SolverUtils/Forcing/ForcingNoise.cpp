@@ -80,8 +80,13 @@ namespace SolverUtils
     void ForcingNoise::v_Apply(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
+<<<<<<< HEAD
                   Array<OneD, Array<OneD, NekDouble> > &outarray,
 				  NekDouble time)
+=======
+            Array<OneD, Array<OneD, NekDouble> > &outarray,
+            const NekDouble &time)
+>>>>>>> feature/INCNSPressureOutflowFix
     {
         for (int i = 0; i < m_NumVariable; i++)
         {

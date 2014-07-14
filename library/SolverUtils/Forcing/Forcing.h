@@ -80,13 +80,8 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT void Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-<<<<<<< HEAD
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                      NekDouble time = 0.0);
-=======
                 Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble &time);
->>>>>>> feature/INCNSPressureOutflowFix
 
             SOLVER_UTILS_EXPORT static std::vector<ForcingSharedPtr> Load(
                         const LibUtilities::SessionReaderSharedPtr& pSession,

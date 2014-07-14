@@ -451,15 +451,12 @@ namespace Nektar
                 }
                 cnt1 += BndExp[n]->GetTotPoints();
             }
-<<<<<<< HEAD
             else if(type == SpatialDomains::eNoUserDefined ||
 					type == SpatialDomains::eWall_Forces || 
 					type == SpatialDomains::eTimeDependent || 
 					type == SpatialDomains::eFluidStructInt ||
-					type == SpatialDomains::eHigh) 
-=======
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eWall_Forces || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh || type == SpatialDomains::eHighOutflow) 
->>>>>>> feature/INCNSPressureOutflowFix
+					type == SpatialDomains::eHigh ||
+					type == SpatialDomains::eHighOutflow) 
             {
                 cnt += BndExp[n]->GetExpSize();
             }

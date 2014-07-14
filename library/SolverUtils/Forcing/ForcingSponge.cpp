@@ -117,11 +117,7 @@ namespace SolverUtils
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> > &outarray,
-<<<<<<< HEAD
-            NekDouble time)
-=======
             const NekDouble &time)
->>>>>>> feature/INCNSPressureOutflowFix
     {
         int nq = m_Forcing[0].num_elements();
        

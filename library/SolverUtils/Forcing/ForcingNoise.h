@@ -79,13 +79,8 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT virtual void v_Apply(
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
-<<<<<<< HEAD
-                          Array<OneD, Array<OneD, NekDouble> > &outarray, 
-						  NekDouble time);
-=======
                     Array<OneD, Array<OneD, NekDouble> > &outarray,
                     const NekDouble &time);
->>>>>>> feature/INCNSPressureOutflowFix
 
         private:
             ForcingNoise(const LibUtilities::SessionReaderSharedPtr& pSession);

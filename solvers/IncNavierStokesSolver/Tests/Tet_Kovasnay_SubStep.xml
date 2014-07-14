@@ -322,17 +322,17 @@
           <I PROPERTY="EQTYPE"                VALUE="UnsteadyNavierStokes" />
           <I PROPERTY="AdvectionForm"         VALUE="Convective" />
           <I PROPERTY="Projection"            VALUE="Mixed_CG_Discontinuous" />  
-          <I PROPERTY="TimeIntegrationMethod" VALUE="BackwardEuler" />
+          <I PROPERTY="TimeIntegrationMethod" VALUE="BDFImplicitOrder2" />
           <I PROPERTY="Extrapolation"         VALUE="SubStepping" />
         </SOLVERINFO>
         
         <PARAMETERS>
-          <P> TimeStep      = 0.005        </P>
-          <P> NumSteps      = 10 </P>
+          <P> TimeStep      = 0.05  </P>
+          <P> NumSteps      = 10    </P>
           <P> IO_CheckSteps = 10    </P>
-          <P> IO_InfoSteps  = 1    </P>
-          <P> Kinvis        = 0.025        </P>
-          <P> MinSubSteps  = 4        </P>
+          <P> IO_InfoSteps  = 1     </P>
+          <P> Kinvis        = 0.025 </P>
+          <P> MinSubSteps  = 4      </P>
         </PARAMETERS>
         
         <VARIABLES>

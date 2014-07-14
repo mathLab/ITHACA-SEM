@@ -115,16 +115,30 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection);
 
-        void EvaluatePressureBCs(
+        inline void  EvaluatePressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
 
+        void CalcExplicitDuDt(const Array<OneD, const Array<OneD, NekDouble> > &fields);
+        void ExtrapolatePressureHBCs(void);
+        void CopyPressureHBCsToPbndExp(void);
+
         Array<OneD,NekDouble> GetMaxStdVelocity(
             const Array<OneD, Array<OneD,NekDouble> > inarray);
         
-    protected:
-        virtual void v_SubSteppingTimeIntegration(
+        void IProductNormVelocityOnHBC(const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
+                                       Array<OneD, NekDouble> &IprodVn);
+        
+        void IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IprodVn);
+        
+    protected: 
+        virtual void v_EvaluatePressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            NekDouble kinvis)=0;
+
+       virtual void v_SubSteppingTimeIntegration(
             int intMethod,        
             const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme)=0;
 
@@ -159,6 +173,8 @@ namespace Nektar
             Array<OneD, Array<OneD, const NekDouble> > &Vel,
             Array<OneD, Array<OneD, NekDouble> > &Q,
             const int j);
+
+        
         
         LibUtilities::SessionReaderSharedPtr m_session;
 
@@ -202,8 +218,6 @@ namespace Nektar
         /// Flag to determine if use multiple homogenenous modes are used.
         bool m_MultipleModes;
 
-        bool m_extrapolateDuDt; 
-
         NekDouble m_LhomZ;  ///< physical length in Z direction (if homogeneous)
         
         int m_npointsX;     ///< number of points in X direction (if homogeneous)
@@ -236,14 +250,26 @@ namespace Nektar
         /// minus Square of wavenumber
         Array<OneD, NekDouble>  m_negWavenumberSq;
 
-    private:
-        static std::string def;
-		
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];
         static NekDouble StifflyStable_Gamma0_Coeffs[3];
+
+    private:
+        static std::string def;
+		
     };
+
+    /**
+     * Evaluate Pressure Boundary Conditions for Standard Extrapolation
+     */
+    inline void Extrapolate::EvaluatePressureBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            NekDouble kinvis)
+    {
+        v_EvaluatePressureBCs(inarray,N,kinvis);
+    }
 
     /**
      *

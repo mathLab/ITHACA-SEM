@@ -82,6 +82,10 @@ namespace Nektar
         virtual ~StandardExtrapolate();
         
     protected:
+        virtual void v_EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields,
+                                           const Array<OneD, const Array<OneD, NekDouble> >  &N,
+                                           NekDouble kinvis);
+        
         virtual void v_SubSteppingTimeIntegration(
             int intMethod,
             const LibUtilities::TimeIntegrationWrapperSharedPtr &IntegrationScheme);

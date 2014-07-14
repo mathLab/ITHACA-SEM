@@ -54,13 +54,19 @@ namespace Nektar
         : Extrapolate(pSession,pFields,pVel,advObject)
     {
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-        m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.5);
-        m_session->LoadParameter("MinSubSteps", minsubsteps,0);
+        m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.5);
+        m_session->LoadParameter("MinSubSteps", m_minsubsteps,0);
     }
 
     SubSteppingExtrapolate::~SubSteppingExtrapolate()
     {
     }
+    
+    void SubSteppingExtrapolate::v_EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N,   NekDouble kinvis)
+    {
+        ASSERTL0(false,"This method should not be called by Substepping routine");
+    }
+    
     
     void SubSteppingExtrapolate::v_SubSteppingTimeIntegration(
         int intMethod,
@@ -92,8 +98,7 @@ namespace Nektar
             break;
             case LibUtilities::eBDFImplicitOrder2:
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("ForwardEuler");
-                //m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
                     
                 int nvel = m_velocity.num_elements();
                 
@@ -179,26 +184,6 @@ namespace Nektar
             /// Store in outarray the physical values of the RHS
             m_fields[i]->BwdTrans(WeakAdv[i], outarray[i]);
         }
-        
-        //add the force
-        /*if(m_session->DefinesFunction("BodyForce"))
-        {
-            if(m_SingleMode || m_HalfMode)
-            {
-                for(int i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_forces[i]->SetWaveSpace(true);    
-                    m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
-                                          m_forces[i]->UpdatePhys());
-                }
-            }
-            
-            int nqtot = m_fields[0]->GetTotPoints();
-            for(int i = 0; i < m_nConvectiveFields; ++i)
-            {
-                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
-            }
-            }*/
     }
         
     /** 
@@ -234,22 +219,28 @@ namespace Nektar
             velfields[i] = m_fields[m_velocity[i]]->GetPhys(); 
         }
 
-        m_extrapolateDuDt = false;
+        m_pressureCalls++;
 
-        // the acceleration term in this routine may be sufficient. 
-        EvaluatePressureBCs(inarray,velfields,kinvis);
+        // Rotate HOPBCs storage
+        RollOver(m_pressureHBCs);
 
-        if(m_extrapolateDuDt == false)
-        {
-            AddDuDt(inarray,Aii_Dt);
-        }
+        // Calculate non-linear and viscous BCs at current level and put in m_pressureHBCs[0]
+        CalcPressureBCs(inarray,velfields,kinvis);
+        
+        // Extrapolate to m_pressureHBCs to n+1
+        ExtrapolatePressureHBCs();
+        
+        // Add (phi,Du/Dt) term to m_presureHBC 
+        AddDuDt();
+
+        // Copy m_pressureHBCs to m_PbndExp
+        CopyPressureHBCsToPbndExp();            
     }
 
     /** 
      * 
      */
-    void SubSteppingExtrapolate::v_SubStepSaveFields(
-                                                     const int nstep)
+    void SubSteppingExtrapolate::v_SubStepSaveFields(const int nstep)
     {
         int i,n;
         int nvel = m_velocity.num_elements();
@@ -259,6 +250,7 @@ namespace Nektar
         int nblocks = m_previousVelFields.num_elements()/nvel; 
         Array<OneD, NekDouble> save; 
         
+        // rotate storage space
         for(n = 0; n < nvel; ++n)
         {
             save = m_previousVelFields[(nblocks-1)*nvel+n];
@@ -321,7 +313,7 @@ namespace Nektar
         dt = GetSubstepTimeStep();
 
         nsubsteps = (m_timestep > dt)? ((int)(m_timestep/dt)+1):1; 
-        nsubsteps = max(minsubsteps, nsubsteps);
+        nsubsteps = max(m_minsubsteps, nsubsteps);
 
         dt = m_timestep/nsubsteps;
         
@@ -346,11 +338,13 @@ namespace Nektar
             
             for(n = 0; n < nsubsteps; ++n)
             {
-                fields = m_subStepIntegrationScheme->TimeIntegrate(
-                                                                   n, dt, SubIntegrationSoln,
+                fields = m_subStepIntegrationScheme->TimeIntegrate(n, dt, SubIntegrationSoln,
                                                                    m_subStepIntegrationOps);
             }
             
+            // set up HBC m_acceleration field for Pressure BCs
+            IProductNormVelocityOnHBC(fields,m_acceleration[m+1]);
+
             // Reset time integrated solution in m_integrationSoln 
             integrationSoln->SetSolVector(m,fields);
         }
@@ -410,8 +404,8 @@ namespace Nektar
         int nTracePts   = m_fields[0]->GetTrace()->GetNpoints();
 
         /// Number of spatial dimensions
-        int nDimensions = m_curl_dim;
-
+        int nDimensions = m_bnd_dim;
+        
         Array<OneD, Array<OneD, NekDouble> > traceNormals(m_curl_dim);
 
         for(i = 0; i < nDimensions; ++i)
@@ -437,7 +431,7 @@ namespace Nektar
         // Extract velocity field along the trace space and multiply by trace normals
         for(i = 0; i < nDimensions; ++i)
         {
-            m_fields[0]->ExtractTracePhys(m_fields[m_velocity[i]]->GetPhys(), Fwd);
+            m_fields[0]->ExtractTracePhys(velfield[i], Fwd);
             Vmath::Vvtvp(nTracePts, traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
         }
         
@@ -520,452 +514,46 @@ namespace Nektar
     /** 
      * 
      */
-    void SubSteppingExtrapolate::AddDuDt(
-                                         const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-                                         NekDouble Aii_Dt)
+    void SubSteppingExtrapolate::AddDuDt(void)
     {
-#if 0
-        switch(m_velocity.num_elements())
-        {
-        case 1:
-            ASSERTL0(
-                     false,
-                     "Velocity correction scheme not designed to have just one velocity component");
-            break;
-        case 2:
-            AddDuDt2D(N,Aii_Dt);
-            break;
-        case 3:
-            AddDuDt3D(N,Aii_Dt);
-            break;
-
-        }
-#else
-#if 1
-        int i,j,n;
-        int dim = m_velocity.num_elements(); 
-        int pindex=m_fields.num_elements()-1;                
-
-        int cnt,elmtid,nq,offset, boundary,ncoeffs;        
-        StdRegions::StdExpansionSharedPtr  elmt,Pbc;
-        Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
-        Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
-        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > VelBndExp(dim);
-
-        PBndConds = m_fields[pindex]->GetBndConditions();
-        PBndExp   = m_fields[pindex]->GetBndCondExpansions();
-        
-        for(i = 0; i < dim; ++i)
-        {
-            VelBndExp[i] = m_fields[m_velocity[i]]->GetBndCondExpansions();
-        }
-        
-        Array<OneD, Array<OneD, NekDouble> > velbc(dim);
-        velbc[0] = Array<OneD, NekDouble>(dim*m_pressureBCsMaxPts);
-        for(i = 1; i < dim; ++i)
-        {
-            velbc[i] = velbc[i-1] + m_pressureBCsMaxPts;
-        }
-
-        Array<OneD, NekDouble> Pvals(m_pressureBCsMaxPts);
-        Array<OneD, NekDouble> Nsav (m_pressureBCsMaxPts);
-        Array<OneD, NekDouble> Ptmp, Nelmt;
-        
-        for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
-        {            
-            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
-            
-            if(type == SpatialDomains::eHigh)
-            {
-                for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
-                {
-                    // find element and face of this expansion. 
-                    elmtid = m_pressureBCtoElmtID[cnt];
-                    elmt   = m_fields[0]->GetExp(elmtid);
-                    offset = m_fields[0]->GetPhys_Offset(elmtid);
-                    
-                    Pbc =  PBndExp[n]->GetExp(i);
-                    nq       = Pbc->GetTotPoints();
-                    ncoeffs  = Pbc->GetNcoeffs();
-                    boundary = m_pressureBCtoTraceID[cnt];
-                    
-                    // Get velocity bc
-                    for(j = 0; j < dim; ++j)
-                    {
-                        VelBndExp[j][n]->GetExp(i)->BwdTrans(VelBndExp[j][n]->GetCoeffs() + VelBndExp[j][n]->GetCoeff_Offset(i),velbc[j]);
-                        
-                        // scale by 1.0/Dt 
-                        Blas::Dscal(nq,1.0/m_timestep,&velbc[j][0],1);
-
-                        Nelmt = N[j] + offset;
-                        // Get edge values and put into Nsav
-                        elmt->GetTracePhysVals(boundary,Pbc,Nelmt,Nsav);
-                        
-                        // Divide by aii_Dt.  This is because all
-                        // coefficients in the integration scheme are
-                        // normalised so u^{n+1} has unit coefficient
-                        // and N is already multiplied by local
-                        // coefficient when taken from integration
-                        // scheme
-                        Blas::Dscal(nq,1.0/Aii_Dt,&Nsav[0],1);
-
-                        // Take difference as Forward Euler but N1,N2,N3
-                        // actually contain the integration of the
-                        // previous steps from the time integration
-                        // scheme.
-                        Vmath::Vsub(nq,velbc[j],1,Nsav,1,velbc[j],1);
-                        
-                    }
-                    
-                    // subtract off du/dt derivative 
-                    Pbc->NormVectorIProductWRTBase(velbc,Pvals); 
-                    
-                    Vmath::Vsub(ncoeffs,
-                                Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),
-                                1,Pvals,1, 
-                                Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),
-                                1);
-                }
-            }
-            // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
-            {
-                cnt += PBndExp[n]->GetExpSize();
-            }
-            else
-            {
-                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
-            }
-        }        
-
-#else
         int HBCPts = m_acceleration[0].num_elements();
 
         Array<OneD, NekDouble> accelerationTerm(HBCPts, 0.0);
 
-        // Update velocity BF at n+1
+        // Update velocity BF at n+1 (actually only needs doing if velocity is time dependent on HBCs)
         IProductNormVelocityBCOnHBC(m_acceleration[0]);
-        Blas::Dscal(HBCPts,1.0/m_timestep,&m_acceleration[0][0],1);
-        // Update base of characteristic 
-        IProductNormVelocityOnHBC(N,m_acceleration[1]);
-        // scale according to time integration scheme. 
-        Blas::Dscal(HBCPts,1.0/Aii_Dt,&m_acceleration[1][0],1);
-        Vmath::Vsub(HBCPts,m_acceleration[0],1,m_acceleration[1],1,accelerationTerm,1);
-
-
-        // Subtrace acceleration terms off m_PBbdExp values 
-        int cnt,n;
-        for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+        
+#if  1
+        //Calculate acceleration term at level n based on previous steps
+        int acc_order = min(m_pressureCalls,m_intSteps);
+        Vmath::Smul(HBCPts, StifflyStable_Gamma0_Coeffs[acc_order-1]/m_timestep,
+                    m_acceleration[0], 1, accelerationTerm,  1);
+        
+        for(int i = 0; i < acc_order; i++)
         {
-            // High order boundary condition;
-            if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
-            {
-                int ncoeff = m_PBndExp[n]->GetNcoeffs();
-                
-                Vmath::Vsub(ncoeff, &(m_PBndExp[n]->UpdateCoeffs()[0]), 1,
-                            &(accelerationTerm[cnt]),  1,&(m_PBndExp[n]->UpdateCoeffs()[0]), 1);
-                cnt += ncoeff;
-            }
-        }
-#endif
-#endif
-    }
-    
-    void SubSteppingExtrapolate::IProductNormVelocityOnHBC(
-                                const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
-                                Array<OneD, NekDouble> &IProdVn)
-    {
-        
-        int i,j,n;
-
-        int pindex=m_fields.num_elements()-1;                
-        StdRegions::StdExpansionSharedPtr  Pbc;
-
-        Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
-        velbc[0] = Array<OneD, NekDouble>(m_bnd_dim*m_pressureBCsMaxPts);
-        for(i = 1; i < m_bnd_dim; ++i)
-        {
-            velbc[i] = velbc[i-1] + m_pressureBCsMaxPts;
-        }
-
-        Array<OneD, NekDouble> Velmt,IProdVnTmp; 
-
-        for(n = 0; n < m_HBCdata.num_elements(); ++n)
-        {            
-            Pbc = m_PBndExp[m_HBCdata[n].m_bndryID]->GetExp(m_HBCdata[n].m_bndElmtID);
-
-            /// Picking up the element where the HOPBc is located
-            m_elmt = m_fields[pindex]->GetExp(m_HBCdata[n].m_globalElmtID);
-
-            // Get velocity bc
-            for(j = 0; j < m_bnd_dim; ++j)
-            {
-                // Get edge values and put into velbc
-                Velmt = Vel[j] + m_HBCdata[n].m_physOffset;
-                m_elmt->GetTracePhysVals(m_HBCdata[n].m_elmtTraceID,Pbc,Velmt,velbc[j]);
-            }
-            
-            IProdVnTmp = IProdVn + m_HBCdata[n].m_coeffOffset; 
-            // Evaluate Iproduct wrt norm term 
-            Pbc->NormVectorIProductWRTBase(velbc,IProdVnTmp); 
-        }
-    }
-
-
-    void SubSteppingExtrapolate::IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IProdVn)
-    {
-        
-        int i,j,n;
-
-        StdRegions::StdExpansionSharedPtr  Pbc;
-
-        Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > VelBndExp(m_bnd_dim);
-        
-        for(i = 0; i < m_bnd_dim; ++i)
-        {
-            VelBndExp[i] = m_fields[m_velocity[i]]->GetBndCondExpansions();
+            Vmath::Svtvp(HBCPts, 
+                         -1*StifflyStable_Alpha_Coeffs[acc_order-1][i]/m_timestep,
+                         m_acceleration[i+1], 1,
+                         accelerationTerm,    1,
+                         accelerationTerm,    1);
         }
         
-        Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
-        velbc[0] = Array<OneD, NekDouble>(m_bnd_dim*m_pressureBCsMaxPts);
-        for(i = 1; i < m_bnd_dim; ++i)
-        {
-            velbc[i] = velbc[i-1] + m_pressureBCsMaxPts;
-        }
-        
-        Array<OneD, NekDouble> Velmt,IProdVnTmp; 
-        int bndid,elmtid;
-
-        for(n = 0; n < m_HBCdata.num_elements(); ++n)
-        {            
-            bndid  = m_HBCdata[n].m_bndryID;
-            elmtid = m_HBCdata[n].m_bndElmtID;
-                      
-            // Get velocity bc
-            for(j = 0; j < m_bnd_dim; ++j)
-            {                
-                VelBndExp[j][bndid]->GetExp(elmtid)->BwdTrans(VelBndExp[j][bndid]->GetCoeffs() + 
-                                                              VelBndExp[j][bndid]->GetCoeff_Offset(elmtid),
-                                                              velbc[j]);
-            }
-                      
-            IProdVnTmp = IProdVn + m_HBCdata[n].m_coeffOffset; 
-            // Evaluate Iproduct wrt norm term 
-            Pbc = m_PBndExp[m_HBCdata[n].m_bndryID]->GetExp(m_HBCdata[n].m_bndElmtID);
-            Pbc->NormVectorIProductWRTBase(velbc,IProdVnTmp); 
-        }
-    }
-
-    /** 
-     * 
-     */    
-    void SubSteppingExtrapolate::AddDuDt2D(
-        const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-        NekDouble Aii_Dt)
-    {
-        int i,n;
-        ASSERTL0(m_velocity.num_elements() == 2," Routine currently only set up for 2D");
-        
-        int pindex=2;
-
-        Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
-        Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp,UBndExp,VBndExp;
-        
-        PBndConds = m_fields[pindex]->GetBndConditions();
-        PBndExp   = m_fields[pindex]->GetBndCondExpansions();
-        
-        UBndExp   = m_fields[m_velocity[0]]->GetBndCondExpansions();
-        VBndExp   = m_fields[m_velocity[1]]->GetBndCondExpansions();
-        
-        StdRegions::StdExpansionSharedPtr elmt;
-        StdRegions::StdExpansion1DSharedPtr Pbc;        
-        
-        int cnt,elmtid,nq,offset, boundary,ncoeffs;
-        
-        Array<OneD, NekDouble> N1(m_pressureBCsMaxPts), N2(m_pressureBCsMaxPts);
-        Array<OneD, NekDouble> ubc(m_pressureBCsMaxPts),vbc(m_pressureBCsMaxPts);
-        Array<OneD, NekDouble> Pvals(m_pressureBCsMaxPts);
-        Array<OneD, NekDouble> Nu,Nv,Ptmp;
-        
-        for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
-        {            
-            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
-            
-            if(type == SpatialDomains::eHigh)
-            {
-                for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
-                {
-                    // find element and edge of this expansion. 
-                    elmtid = m_pressureBCtoElmtID[cnt];
-                    elmt   = m_fields[0]->GetExp(elmtid);
-                    offset = m_fields[0]->GetPhys_Offset(elmtid);
-                    
-                    Nu = N[0] + offset;
-                    Nv = N[1] + offset; 
-                    
-                    Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[n]->GetExp(i));
-                    nq       = Pbc->GetTotPoints();
-                    ncoeffs  = Pbc->GetNcoeffs();
-                    boundary = m_pressureBCtoTraceID[cnt];
-                    
-                    // Get velocity bc
-                    UBndExp[n]->GetExp(i)->BwdTrans(UBndExp[n]->GetCoeffs() + UBndExp[n]->GetCoeff_Offset(i),ubc);
-                    VBndExp[n]->GetExp(i)->BwdTrans(VBndExp[n]->GetCoeffs() + VBndExp[n]->GetCoeff_Offset(i),vbc);
-                    
-                    
-                    // Get edge values and put into Nu,Nv
-                    elmt->GetEdgePhysVals(boundary,Pbc,Nu,N1);
-                    elmt->GetEdgePhysVals(boundary,Pbc,Nv,N2);
-                                            
-                    // Take difference as Forward Euler but N1,N2
-                    // actually contain the integration of the
-                    // previous steps from the time integration
-                    // scheme.
-                    Vmath::Vsub(nq,ubc,1,N1,1,ubc,1);
-                    Vmath::Vsub(nq,vbc,1,N2,1,vbc,1);
-                        
-#if 1
-                    // Divide by aii_Dt to get correct Du/Dt.  This is
-                    // because all coefficients in the integration
-                    // scheme are normalised so u^{n+1} has unit
-                    // coefficient and Non-linear terms is already
-                    // multiplied by local coefficient when taken from
-                    // integration scheme
-                    Blas::Dscal(nq,1.0/Aii_Dt,&ubc[0],1);
-                    Blas::Dscal(nq,1.0/Aii_Dt,&vbc[0],1);
 #else
-                    Blas::Dscal(nq,1.0/m_timestep,&ubc[0],1);
-                    Blas::Dscal(nq,1.0/m_timestep,&vbc[0],1);
+        Blas::Dscal(HBCPts,1.0/m_timestep,&m_acceleration[0][0],1);
+
+        // Update base of characteristic - Now done in v_SubStepAdvanace()
+        // scale according to time integration scheme. 
+        Blas::Dscal(HBCPts,1.0/m_timestep,&m_acceleration[1][0],1);
+
+        // evaluate time derivative 
+        Vmath::Vsub(HBCPts,m_acceleration[0],1,m_acceleration[1],1,accelerationTerm,1);
 #endif
-                    
-                    // subtrace off du/dt derivative 
-                    Pbc->NormVectorIProductWRTBase(ubc,vbc,Pvals); 
-                    
-                    Vmath::Vsub(ncoeffs,Ptmp = PBndExp[n]->UpdateCoeffs()
-                                +PBndExp[n]->GetCoeff_Offset(i),1, Pvals,1, 
-                                Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1);
-                }
-            }
-            // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
-            {
-                cnt += PBndExp[n]->GetExpSize();
-            }
-            else
-            {
-                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
-            }
-        }        
+
+        // Subtract accleration term off m_pressureHBCs[nlevels-1]
+        int  nlevels = m_pressureHBCs.num_elements();
+        Vmath::Vsub(HBCPts, m_pressureHBCs[nlevels-1],1,accelerationTerm, 1,
+                    m_pressureHBCs[nlevels-1],1);
+        
     }
-    
-    /** 
-     * 
-     */   
-    void SubSteppingExtrapolate::AddDuDt3D(
-        const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-        NekDouble Aii_Dt)
-    {
-        int i,n;
-        ASSERTL0(m_velocity.num_elements() == 3," Routine currently only set up for 3D");
-        int pindex=3;                
-
-        Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
-        Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp,UBndExp,VBndExp,WBndExp;
-
-        PBndConds = m_fields[pindex]->GetBndConditions();
-        PBndExp   = m_fields[pindex]->GetBndCondExpansions();
-        
-        UBndExp   = m_fields[m_velocity[0]]->GetBndCondExpansions();
-        VBndExp   = m_fields[m_velocity[1]]->GetBndCondExpansions();
-        WBndExp   = m_fields[m_velocity[2]]->GetBndCondExpansions();
-        
-        StdRegions::StdExpansionSharedPtr  elmt;
-        StdRegions::StdExpansion2DSharedPtr Pbc;
-            
-        int cnt,elmtid,nq,offset, boundary,ncoeffs;        
-        
-        Array<OneD, NekDouble> N1(m_pressureBCsMaxPts), N2(m_pressureBCsMaxPts), 
-            N3(m_pressureBCsMaxPts);
-        Array<OneD, NekDouble> ubc(m_pressureBCsMaxPts),vbc(m_pressureBCsMaxPts),
-            wbc(m_pressureBCsMaxPts);
-        Array<OneD, NekDouble> Pvals(m_pressureBCsMaxPts);
-        Array<OneD, NekDouble> Nu,Nv,Nw,Ptmp;
-        
-        for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
-        {            
-            SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined(); 
-            
-            if(type == SpatialDomains::eHigh)
-            {
-                for(i = 0; i < PBndExp[n]->GetExpSize(); ++i,cnt++)
-                {
-                    // find element and face of this expansion. 
-                    elmtid = m_pressureBCtoElmtID[cnt];
-                    elmt   = m_fields[0]->GetExp(elmtid);
-                    offset = m_fields[0]->GetPhys_Offset(elmtid);
-                    
-                    Nu = N[0] + offset;
-                    Nv = N[1] + offset;
-                    Nw = N[2] + offset;
-                    
-                    Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion2D> (PBndExp[n]->GetExp(i));
-                    nq       = Pbc->GetTotPoints();
-                    ncoeffs  = Pbc->GetNcoeffs();
-                    boundary = m_pressureBCtoTraceID[cnt];
-                    
-                    // Get velocity bc
-                    UBndExp[n]->GetExp(i)->BwdTrans(UBndExp[n]->GetCoeffs() + 
-                                                    UBndExp[n]->GetCoeff_Offset(i),ubc);
-                    VBndExp[n]->GetExp(i)->BwdTrans(VBndExp[n]->GetCoeffs() + 
-                                                    VBndExp[n]->GetCoeff_Offset(i),vbc);
-                    WBndExp[n]->GetExp(i)->BwdTrans(WBndExp[n]->GetCoeffs() + 
-                                                    WBndExp[n]->GetCoeff_Offset(i),wbc);
-                    
-                    // Get edge values and put into N1,N2,N3
-                    elmt->GetFacePhysVals(boundary,Pbc,Nu,N1);
-                    elmt->GetFacePhysVals(boundary,Pbc,Nv,N2);
-                    elmt->GetFacePhysVals(boundary,Pbc,Nw,N3);
-                    
-                    
-                    // Take different as Forward Euler but N1,N2,N3
-                    // actually contain the integration of the
-                    // previous steps from the time integration
-                    // scheme.
-                    Vmath::Vsub(nq,ubc,1,N1,1,ubc,1);
-                    Vmath::Vsub(nq,vbc,1,N2,1,vbc,1);
-                    Vmath::Vsub(nq,wbc,1,N3,1,wbc,1);
-                    
-                    // Divide by aii_Dt to get correct Du/Dt.  This is
-                    // because all coefficients in the integration
-                    // scheme are normalised so u^{n+1} has unit
-                    // coefficient and N is already multiplied by
-                    // local coefficient when taken from integration
-                    // scheme
-                    Blas::Dscal(nq,1.0/Aii_Dt,&ubc[0],1);
-                    Blas::Dscal(nq,1.0/Aii_Dt,&vbc[0],1);
-                    Blas::Dscal(nq,1.0/Aii_Dt,&wbc[0],1);
-                    
-                    // subtrace off du/dt derivative 
-                    Pbc->NormVectorIProductWRTBase(ubc,vbc,wbc,Pvals); 
-                    
-                    Vmath::Vsub(
-                        ncoeffs,
-                        Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),
-                        1,Pvals,1, 
-                        Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),
-                        1);
-                }
-            }
-            // setting if just standard BC no High order
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
-            {
-                cnt += PBndExp[n]->GetExpSize();
-            }
-            else
-            {
-                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
-            }
-        }        
-    }    
 }
 

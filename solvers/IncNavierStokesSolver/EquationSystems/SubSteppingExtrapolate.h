@@ -79,14 +79,12 @@ namespace Nektar
             const Array<OneD, int> pVel,
             const AdvectionTermSharedPtr advObject);
 
-        void IProductNormVelocityOnHBC(const Array<OneD, const Array<OneD, NekDouble> >  &Vel, 
-                                       Array<OneD, NekDouble> &IprodVn);
-        
-        void IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IprodVn);
-        
         virtual ~SubSteppingExtrapolate();
         
     protected:
+        virtual void v_EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields,
+                                           const Array<OneD, const Array<OneD, NekDouble> >  &N,
+                                           NekDouble kinvis);
 
         virtual void v_SubSteppingTimeIntegration(
             int intMethod,
@@ -112,15 +110,7 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection);
         
-        void AddDuDt(
-            const Array<OneD, const Array<OneD, NekDouble> >  &N,
-            NekDouble Aii_Dt);
-        void AddDuDt2D(
-            const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-            NekDouble Aii_Dt);
-        void AddDuDt3D(
-            const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-            NekDouble Aii_Dt);
+        void AddDuDt(void);
 
         void SubStepAdvection(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
@@ -150,7 +140,7 @@ namespace Nektar
 
         NekDouble m_cflSafetyFactor;
         int m_infosteps;
-        int minsubsteps;
+        int m_minsubsteps;
     };
 }
 

@@ -1193,6 +1193,13 @@ namespace Nektar
             ASSERTL0(false, "This function is not valid or not defined");
             return 0;
         }        
+        
+        int StdExpansion::v_GetTraceNcoeffs(const int i) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
 
         LibUtilities::PointsKey StdExpansion::v_GetFacePointsKey(const int i, const int j) const
         {

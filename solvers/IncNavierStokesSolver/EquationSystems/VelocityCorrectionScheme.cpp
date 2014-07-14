@@ -322,7 +322,7 @@ namespace Nektar
         // Enforcing boundary conditions on all fields
         SetBoundaryConditions(time);
         
-        // Substep the pressure boundary condition
+        // Substep the pressure boundary condition if using substepping
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
 	
         // Set up forcing term and coefficients for pressure Poisson equation

@@ -105,7 +105,7 @@ namespace SolverUtils
     void ForcingWavyness::v_Apply(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
                                     Array<OneD, Array<OneD, NekDouble> > &outarray,
-                                    NekDouble time)
+                                    const NekDouble& time)
     {
 		//calcualte the forcing components Ax,Ay,Az and put them in m_Forcing
 		CalculateForcing(fields);

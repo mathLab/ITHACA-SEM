@@ -231,7 +231,7 @@ namespace SolverUtils
 	void ForcingMovingBody::v_Apply(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
 				    				const Array<OneD, Array<OneD, NekDouble> > &inarray,
 				    					  Array<OneD, Array<OneD, NekDouble> > &outarray,
-				    					  NekDouble time)
+				    				const NekDouble& time)
 	{
 		// Fill in m_zeta and m_eta with all the required values
 		UpdateMotion(fields,time);

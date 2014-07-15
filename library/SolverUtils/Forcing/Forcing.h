@@ -108,13 +108,8 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT virtual void v_Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-<<<<<<< HEAD
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                      NekDouble time)=0;
-=======
                 Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble &time)=0;
->>>>>>> feature/INCNSPressureOutflowFix
 
             void EvaluateFunction(
                     Array<OneD, MultiRegions::ExpListSharedPtr> pFields,

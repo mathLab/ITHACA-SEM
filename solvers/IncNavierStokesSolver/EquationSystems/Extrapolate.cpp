@@ -311,7 +311,13 @@ namespace Nektar
     {
         
         static bool init = true;
-        
+        static bool noHOBC = false;
+       
+	if(noHOBC == true)
+	{
+	   return;
+        } 
+
         if(init) // set up storage for boundary velocity at outflow
         {
             init = false;
@@ -322,6 +328,12 @@ namespace Nektar
                 {
                     totbndpts += m_PBndExp[n]->GetTotPoints();
                 }
+            }
+
+	    if(totbndpts == 0)
+            { 
+	        noHOBC = true;
+		return;
             }
             
             m_outflowVel = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_bnd_dim);

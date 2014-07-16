@@ -138,8 +138,11 @@ namespace Nektar
             //For coupling SFD and Arnoldi
             bool OptumiumParametersFound;
             NekDouble PartialTOL;
+            NekDouble PartialTOL_init;
             NekDouble TimeToRestart;
             int m_NonConvergingStepsCounter;
+            NekDouble ParametersTOL;
+            NekDouble UpdateCoefficient;
             
             std::ofstream m_file;
         };

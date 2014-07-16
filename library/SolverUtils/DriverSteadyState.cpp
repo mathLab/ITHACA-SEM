@@ -90,6 +90,8 @@ namespace Nektar
             m_session->LoadParameter("TOL", TOL, 1.0e-08); ///Criteria for reaching SFD
             m_session->LoadParameter("PartialTOL", PartialTOL, 1.0e-02); ///Criteria for coupling SFD and Arnoldi
             m_session->LoadParameter("TimeToRestart", TimeToRestart, 25.0); ///Criteria for coupling SFD and Arnoldi
+            m_session->LoadParameter("ParametersTOL", ParametersTOL, 0.05); ///Criteria for coupling SFD and Arnoldi
+            m_session->LoadParameter("UpdateCoefficient", UpdateCoefficient, 10.0); ///Criteria for coupling SFD and Arnoldi
             
             cout << "\n------------------ SFD Parameters ------------------" << endl;
             cout << "\tControl Coefficient: X = " << m_X << endl;
@@ -137,6 +139,7 @@ namespace Nektar
             m_Check=0;
             Diff_q_qBar = 1.0;
             Diff_q1_q0 = 1.0;
+            PartialTOL_init = PartialTOL;
             
             NekDouble GlobalMin(1.0);
             OptumiumParametersFound = false;
@@ -163,27 +166,30 @@ namespace Nektar
                     ConvergenceHistory(qBar1, q0, Diff_q_qBar, Diff_q1_q0);
                     
                     //Coupling between SFD method and Arnoldi algorithm 
-                    if (m_EvolutionOperator == eOptimizedSteadyState && OptumiumParametersFound == false)
+                    if (m_EvolutionOperator == eOptimizedSteadyState)
                     {   
                         if(Diff_q_qBar < GlobalMin) 
                         {
                             //The norm is decreasing (the flow is getting closer to its steady-state)
                             GlobalMin = Diff_q_qBar;
                             
-                            //The curent flow field is store in 'partialSteadyFlow'
-                            for(int i = 0; i < NumVar_SFD; ++i)
+                            if (OptumiumParametersFound == false)
                             {
-                                Vmath::Vcopy(q0[i].num_elements(), q0[i], 1, partialSteadyFlow[i], 1);
-                            }
-                            
-                            if (GlobalMin < PartialTOL)
-                            {
-                                cout << "\n\t We compute stability-analysis on the current 'partially converged' flow field: \n" << endl;
-                                PartialTOL = PartialTOL/10.0;
+                                //The curent flow field is store in 'partialSteadyFlow'
+                                for(int i = 0; i < NumVar_SFD; ++i)
+                                {
+                                    Vmath::Vcopy(q0[i].num_elements(), q0[i], 1, partialSteadyFlow[i], 1);
+                                }
                                 
-                                A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);
-                                DriverModifiedArnoldi::v_Execute(out);
-                                ComputeOptimization();
+                                if (GlobalMin < PartialTOL)
+                                {
+                                    cout << "\n\t We compute stability-analysis on the current 'partially converged' flow field: \n" << endl;
+                                    PartialTOL = PartialTOL/UpdateCoefficient;
+                                    
+                                    A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);
+                                    DriverModifiedArnoldi::v_Execute(out);
+                                    ComputeOptimization();
+                                } 
                             }
                             
                             m_NonConvergingStepsCounter = 0;
@@ -196,6 +202,8 @@ namespace Nektar
                             ComputeOptimization();
                             GlobalMin = 10.0;
                             m_NonConvergingStepsCounter = 0;
+                            PartialTOL = PartialTOL_init;
+                            OptumiumParametersFound = false;
                         }
                         else 
                         {
@@ -268,7 +276,7 @@ namespace Nektar
             
             GradientDescentMethod(ApproxEV, X_new, Delta_new);
             
-            if (max(abs(X_new - m_X)/m_X, abs(Delta_new - m_Delta)/m_Delta) < 0.05) 
+            if (max(abs(X_new - m_X)/m_X, abs(Delta_new - m_Delta)/m_Delta) < ParametersTOL) 
             {
                 //If there is less than 5% of difference between the old parameters and the new ones, 
                 //then we consider that the optimum parameters have been found.

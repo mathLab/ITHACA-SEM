@@ -201,6 +201,9 @@ namespace Nektar
         
         /// Maximum points used in pressure BC evaluation
         int m_pressureBCsMaxPts;
+
+        /// Maximum points used in Element adjacent to pressure BC evaluation
+        int m_pressureBCsElmtMaxPts;
 		
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;

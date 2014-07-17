@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.4)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
 SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build,
 options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
 RelWithDebInfo MinSizeRel.")
@@ -45,6 +45,7 @@ SET(NEKTAR_BIN_DIR bin)
 SET(NEKTAR_LIB_DIR ${LIB_DIR})
 SET(NEKTAR_INCLUDE_DIR include/nektar++)
 SET(NEKTAR_SHARE_DIR share/nektar++)
+SET(NEKTAR_DOC_DIR share/doc/nektar++)
 SET(NEKTAR_LIBRARY_TYPE "SHARED")
 
 # Set up RPATH
@@ -163,6 +164,7 @@ ENDIF ()
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
+INCLUDE (ThirdPartyScotch)
 INCLUDE (ThirdPartyBoost)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyFFTW)
@@ -171,6 +173,8 @@ INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
+
+INCLUDE (Doxygen)
 
 IF( NEKTAR_USE_MKL )
     INCLUDE (FindMKL)
@@ -266,10 +270,13 @@ IF (NEKTAR_BUILD_LIBRARY)
         MultiRegions Collections)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
+    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR})
 ENDIF (NEKTAR_BUILD_LIBRARY)
 
-INCLUDE_DIRECTORIES(solvers)
-ADD_SUBDIRECTORY(solvers)
+IF (NEKTAR_BUILD_SOLVERS)
+    INCLUDE_DIRECTORIES(solvers)
+    ADD_SUBDIRECTORY(solvers)
+ENDIF(NEKTAR_BUILD_SOLVERS)
 
 IF (NEKTAR_BUILD_UTILITIES)
     INCLUDE_DIRECTORIES(utilities)
@@ -294,6 +301,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindScotch.cmake
 	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
@@ -301,8 +309,6 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindXXT.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindSMV.cmake
               DESTINATION ${CMAKE_INSTALL_PREFIX}) 
-
-INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR})
 
 SET(NEKTAR_PASSED_FIRST_CONFIGURE ON CACHE BOOL INTERNAL)
 MARK_AS_ADVANCED(NEKTAR_PASSED_FIRST_CONFIGURE)

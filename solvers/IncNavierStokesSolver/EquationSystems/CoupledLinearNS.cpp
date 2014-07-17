@@ -637,7 +637,8 @@ namespace Nektar
                 // the same time resusing differential of velocity
                 // space
                 
-                DNekScalMat &HelmMat = *(boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(helmkey));
+                DNekScalMat &HelmMat = *(locExp->as<LocalRegions::Expansion>()
+                                               ->GetLocMatrix(helmkey));
                 DNekScalMatSharedPtr MassMat;
                 
                 Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
@@ -649,7 +650,8 @@ namespace Nektar
                     LocalRegions::MatrixKey masskey(StdRegions::eMass,
                                                     locExp->DetShapeType(),
                                                     *locExp);
-                    MassMat = boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(masskey);
+                    MassMat = locExp->as<LocalRegions::Expansion>()
+                                    ->GetLocMatrix(masskey);
                 }
                 
                 Array<OneD, NekDouble> Advtmp;
@@ -2160,8 +2162,8 @@ namespace Nektar
     
     void CoupledLinearNS::v_Output(void)
     {    
-        Array<OneD, Array<OneD, NekDouble > > fieldcoeffs(m_fields.num_elements()+1);
-        Array<OneD, std::string> variables(m_fields.num_elements()+1);
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+        std::vector<std::string> variables(m_fields.num_elements()+1);
         int i;
         
         for(i = 0; i < m_fields.num_elements(); ++i)

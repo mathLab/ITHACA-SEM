@@ -443,9 +443,9 @@ namespace Nektar
         // Write out data into base flow with variable Vx,Vy
         cout << "Writing data to session-Base.fld" << endl;
         
-        Array<OneD, std::string> variables(2);
+        std::vector<std::string> variables(2);
         variables[0] = "Vx";   variables[1] = "Vy";
-        Array<OneD, Array<OneD, NekDouble> > outfield(2);
+        std::vector<Array<OneD, NekDouble> > outfield(2);
         outfield[0]  = m_solverRoll->UpdateFields()[0]->UpdateCoeffs(); 
         outfield[1]  = m_solverRoll->UpdateFields()[1]->UpdateCoeffs(); 
         std::string outname = m_sessionName  + "-Base.fld";
@@ -720,8 +720,8 @@ namespace Nektar
 
             // dump field
             {
-                Array<OneD, std::string> variables(3);
-                Array<OneD, Array<OneD, NekDouble> > outfield(3);
+                std::vector<std::string> variables(3);
+                std::vector<Array<OneD, NekDouble> > outfield(3);
                 variables[0] = "u_w"; 
                 variables[1] = "v_w"; 
                 variables[2] = "w_w"; 
@@ -930,8 +930,8 @@ namespace Nektar
             
             
             // dump output
-            Array<OneD, std::string> variables(4);
-            Array<OneD, Array<OneD, NekDouble> > outfield(4);
+            std::vector<std::string> variables(4);
+            std::vector<Array<OneD, NekDouble> > outfield(4);
             variables[0] = "u";  variables[1] = "v"; 
             variables[2] = "pr"; variables[3] = "pi";
             outfield[0]  = m_vwiForcing[0];

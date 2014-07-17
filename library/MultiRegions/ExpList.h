@@ -48,9 +48,8 @@
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
-
 #include <boost/enable_shared_from_this.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {

@@ -12,7 +12,7 @@
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <boost/lexical_cast.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 
 using namespace Nektar;
@@ -245,9 +245,8 @@ cout<<"nIregions="<<nIregions<<endl;
     SpatialDomains::PointGeomSharedPtr vertex0 =
        graphShPt->GetVertex
        (
-       ( (boost::dynamic_pointer_cast<LocalRegions
-           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
-         )->GetGeom1D()
+       ( (bndfieldx[lastIregion]->GetExp(0)->as<LocalRegions::SegExp>())
+                                ->GetGeom1D()
        )
        ->GetVid(0)
        );
@@ -292,9 +291,8 @@ cout<<"x_conn="<<x_connect<<"   yt="<<yt<<"  zt="<<zt<<" vid="<<Vids_low[v2]<<en
     vertex0 =
        graphShPt->GetVertex
        (
-       ( (boost::dynamic_pointer_cast<LocalRegions
-           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
-         )->GetGeom1D()
+       ( (bndfieldx[lastIregion]->GetExp(0)->as<LocalRegions::SegExp>())
+                                ->GetGeom1D()
        )
        ->GetVid(0)
        );
@@ -340,9 +338,8 @@ cout<<"WARNING x0="<<x0<<endl;
     vertex0 =
        graphShPt->GetVertex
        (
-       ( (boost::dynamic_pointer_cast<LocalRegions
-           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
-         )->GetGeom1D()
+       ( (bndfieldx[lastIregion]->GetExp(0)->as<LocalRegions::SegExp>())
+                                ->GetGeom1D()
        )
        ->GetVid(0)
        );
@@ -657,7 +654,8 @@ cout<<x_c[q]<<"    "<<y_c[q]<<endl;
     for(int r=0; r<nedges; r++)
     {
     	    
-         bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfieldx[lastIregion]->GetExp(r));   
+         bndSegExp = bndfieldx[lastIregion]->GetExp(r)
+                                           ->as<LocalRegions::SegExp>();
          Eid = (bndSegExp->GetGeom1D())->GetEid();
          id1 = (bndSegExp->GetGeom1D())->GetVid(0);
          id2 = (bndSegExp->GetGeom1D())->GetVid(1);  
@@ -1191,8 +1189,8 @@ cout<<"cntlow="<<cntlow<<endl;
 cout<<"nquad per edge="<<nqedge<<endl;
        for(int l=0; l<2; l++)
        {
-           Edge_newcoords[l] = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>
-                (bndfieldx[lastIregion]->GetExp(0));
+           Edge_newcoords[l] = bndfieldx[lastIregion]->GetExp(0)
+                                   ->as<StdRegions::StdExpansion1D>();
        }   
        Array<OneD, NekDouble> xnull(nqedge);
        Array<OneD, NekDouble> ynull(nqedge);
@@ -2337,7 +2335,7 @@ cout<<"move layerdown to up:"<<endl;
             for(int j=0; j<nedges; j++)
             {
    	        LocalRegions::SegExpSharedPtr  bndSegExplow = 
-   	             boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfield->GetExp(j)) ;   	
+   	             bndfield->GetExp(j)->as<LocalRegions::SegExp>() ;
    	        edge = (bndSegExplow->GetGeom1D())->GetEid();
 //cout<<" edge="<<edge<<endl;   	   
    	        for(int k=0; k<2; k++)
@@ -2802,7 +2800,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
             int polorder;	    
             for(int s= firstedge; s< lastedge; s++)
             {
-            	 bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfield->GetExp(s));   
+            	 bndSegExp = bndfield->GetExp(s)->as<LocalRegions::SegExp>();
             	 Eid = (bndSegExp->GetGeom1D())->GetEid();
             	 id1 = (bndSegExp->GetGeom1D())->GetVid(0);
             	 id2 = (bndSegExp->GetGeom1D())->GetVid(1);  
@@ -2860,7 +2858,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
             Array<OneD, int> V2tmp(4*nel, 10000);
             for(int i=0; i<nel; i++)
             { 
-                if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i])))
+                if((locQuadExp = (*exp2D)[i]->as<LocalRegions::QuadExp>()))
                 {
                      for(int j = 0; j < locQuadExp->GetNedges(); ++j)
                      {
@@ -2876,7 +2874,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
                 }
                 //in the future the tri edges may be not necessary (if the nedges is known)
 
-                else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i])))
+                else if((locTriExp = (*exp2D)[i]->as<LocalRegions::TriExp>()))
                 {
                      for(int j = 0; j < locTriExp->GetNedges(); ++j)
                      {

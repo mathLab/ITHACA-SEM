@@ -37,6 +37,10 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/GlobalLinSys.h>
 
+#include <StdRegions/StdSegExp.h>
+#include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdQuadExp.h>
+
 #include <LocalRegions/MatrixKey.h>     // for MatrixKey
 #include <LocalRegions/Expansion.h>     // for Expansion
 
@@ -50,6 +54,7 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
+#include <Collections/Operator.h>
 
 namespace Nektar
 {
@@ -405,6 +410,12 @@ namespace Nektar
                                   Array<OneD, NekDouble> &out_d1,
                                   Array<OneD, NekDouble> &out_d2)
         {
+#if 0
+            for (i = 0; i < m_collections.size(); ++i)
+            {
+                m_collections[i]->ApplyOperator();
+            }
+#else
             int  i;
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
@@ -424,6 +435,7 @@ namespace Nektar
                 }
                 (*m_exp)[i]->PhysDeriv(inarray+m_phys_offset[i],e_out_d0,e_out_d1,e_out_d2);
             }
+#endif
         }
 
         void ExpList::v_PhysDeriv(const int dir,
@@ -1148,6 +1160,22 @@ namespace Nektar
         void ExpList::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
 											Array<OneD, NekDouble> &outarray)
         {
+#if 1
+            cout << "being called" << endl;
+            cout << m_collections.size() << " collections found" << endl;
+
+            Array<OneD, NekDouble> tmp;
+            for (int i = 0; i < m_collections.size(); ++i)
+            {
+                m_collections[i].ApplyOperator(Collections::eBwdTrans, inarray, outarray);
+                /*
+                  m_collections[i].ApplyOperator(
+                    Collections::eBwdTrans,
+                    inarray + m_coll_coeff_offset[i],
+                    tmp = outarray + m_coll_phys_offset[i]);
+                */
+            }
+#else
             // get optimisation information about performing block
             // matrix multiplies
             const Array<OneD, const bool>  doBlockMatOp
@@ -1183,6 +1211,7 @@ namespace Nektar
                     }
                 }
             }
+#endif
         }
 
         LocalRegions::ExpansionSharedPtr& ExpList::GetExp(
@@ -2554,19 +2583,112 @@ namespace Nektar
 
         void ExpList::CreateCollections()
         {
-            //map<LibUtilities::ShapeType,
-            //    vector<LocalRegions::ExpansionSharedPtr> > collections;
-            //map<LibUtilities::ShapeType,
-            //    vector<LocalRegions::ExpansionSharedPtr> >::iterator it;
-
+#if 0
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                //collections[(*m_exp)[i]->GetShapeType()].push_back((*m_exp)[i]);
                 vector<SpatialDomains::GeometrySharedPtr> tmp(1);
                 tmp[0] = (*m_exp)[i]->GetGeom();
                 Collections::Collection tmp2((*m_exp)[i], tmp);
                 m_collections.push_back(tmp2);
             }
+#else
+            map<LibUtilities::ShapeType,
+                vector<LocalRegions::ExpansionSharedPtr> > collections;
+            map<LibUtilities::ShapeType,
+                vector<LocalRegions::ExpansionSharedPtr> >::iterator it;
+
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                collections[(*m_exp)[i]->DetShapeType()].push_back((*m_exp)[i]);
+            }
+
+            cout << "FOUND " << collections.size() << endl;
+
+            for (it = collections.begin(); it != collections.end(); ++it)
+            {
+                vector<SpatialDomains::GeometrySharedPtr> geom;
+
+                for (int i = 0; i < it->second.size(); ++i)
+                {
+                    geom.push_back(it->second[i]->GetGeom());
+                }
+                Collections::Collection tmp(it->second[0], geom);
+                m_collections.push_back(tmp);
+            }
+#if 0
+            for (it = collections.begin(); it != collections.end(); ++it)
+            {
+                StdRegions::StdExpansionSharedPtr stdExp;
+                LocalRegions::ExpansionSharedPtr exp = it->second[0];
+
+                if (exp->DetShapeType() == LibUtilities::eSegment)
+                {
+                    stdExp = MemoryManager<StdRegions::StdSegExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey());
+                }
+                else if (exp->DetShapeType() == LibUtilities::eTriangle)
+                {
+                    stdExp = MemoryManager<StdRegions::StdTriExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey());
+                }
+                else if (exp->DetShapeType() == LibUtilities::eQuadrilateral)
+                {
+                    stdExp = MemoryManager<StdRegions::StdQuadExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey());
+                }
+
+                vector<SpatialDomains::GeometrySharedPtr> geom;
+
+                int prevCoeffOffset = m_coeff_offset[it->second[0]->GetElmtId()];
+                int prevPhysOffset = m_phys_offset[it->second[0]->GetElmtId()];
+                int prevCollCoeffOffset = m_coeff_offset[it->second[0]->GetElmtId()];
+                int prevCollPhysOffset = m_phys_offset[it->second[0]->GetElmtId()];
+
+                m_coll_coeff_offset.push_back(prevCoeffOffset);
+                m_coll_phys_offset .push_back(prevPhysOffset);
+
+                geom.push_back(it->second[0]->GetGeom());
+
+                for (int i = 1; i < it->second.size(); ++i)
+                {
+                    const int nCoeffs = it->second[i]->GetNcoeffs();
+                    const int nPhys   = it->second[i]->GetTotPoints();
+                    int offset = m_coeff_offset[it->second[i]->GetElmtId()];
+
+                    if (prevCoeffOffset + nCoeffs != offset || i == it->second.size() - 1)
+                    {
+                        Collections::Collection tmp(stdExp, geom);
+                        m_collections.push_back(tmp);
+                        geom.empty();
+
+                        if (i != it->second.size() - 1)
+                        {
+                            m_coll_coeff_offset.push_back(prevCollCoeffOffset);
+                            m_coll_phys_offset .push_back(prevCollPhysOffset);
+                        }
+                        prevCollCoeffOffset = prevCoeffOffset;
+                        prevCollPhysOffset  = prevPhysOffset;
+                    }
+                    else
+                    {
+                        geom.push_back(it->second[i]->GetGeom());
+                    }
+
+                    prevCoeffOffset += nCoeffs;
+                    prevPhysOffset  += nPhys;
+                }
+            }
+
+            cout << "OFFSETS: " << endl;
+            for (int i = 0; i < m_coll_coeff_offset.size(); ++i)
+            {
+                cout << m_coll_coeff_offset[i] << " "
+                     << m_coll_phys_offset [i] << endl;
+            }
+#endif
+#endif
         }
     } //end of namespace
 } //end of namespace

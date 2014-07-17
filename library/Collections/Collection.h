@@ -65,9 +65,9 @@ namespace Collections {
             OperatorKey derivIterPerExp(
                 pExp->DetShapeType(), ePhysDeriv, eIterPerExp);
             m_ops[eBwdTrans] = GetOperatorFactory().CreateInstance(
-                bwdIterPerExp, pExp, pGeom);
-            m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(
-                derivIterPerExp, pExp, pGeom);
+                bwdLocMat, pExp, pGeom);
+            //m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(
+            //    derivIterPerExp, pExp, pGeom);
         }
 
         void ApplyOperator(

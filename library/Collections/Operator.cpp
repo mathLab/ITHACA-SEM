@@ -98,7 +98,7 @@ namespace Collections {
             : Operator(pExp, pGeom),
               m_key(StdRegions::eBwdTrans, pExp->DetShapeType(), *pExp)
         {
-
+            m_mat = m_stdExp->GetStdMatrix(m_key);
         }
 
         virtual void operator()(
@@ -106,27 +106,41 @@ namespace Collections {
                   Array<OneD,       NekDouble> &output,
                   Array<OneD,       NekDouble> &wsp)
         {
-            DNekMatSharedPtr mat = m_stdExp->GetStdMatrix(m_key);
-
-            Blas::Dgemm('N', 'N', mat->GetRows(), m_numElmt, mat->GetColumns(),
-                        1.0, mat->GetRawPtr(), mat->GetRows(), input.get(),
-                        m_stdExp->GetNcoeffs(), 0.0, output.get(),
-                        m_stdExp->GetTotPoints());
+            Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
+                        m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),
+                        m_mat->GetRows(), input.get(), m_stdExp->GetNcoeffs(),
+                        0.0, output.get(), m_stdExp->GetTotPoints());
         }
 
         OPERATOR_CREATE(BwdTrans_LocMat)
 
         StdRegions::StdMatrixKey m_key;
+        DNekMatSharedPtr m_mat;
     };
 
     OperatorKey BwdTrans_LocMat::m_typeArr[] =
     {
         GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eSegment, eBwdTrans, eLocMat),
+            BwdTrans_LocMat::create, "BwdTrans_LocMat_Seg"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eBwdTrans, eLocMat),
+            BwdTrans_LocMat::create, "BwdTrans_LocMat_Tri"),
+        GetOperatorFactory().RegisterCreatorFunction(
             OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, eLocMat),
             BwdTrans_LocMat::create, "BwdTrans_LocMat_Quad"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eTriangle, eBwdTrans, eLocMat),
-            BwdTrans_LocMat::create, "BwdTrans_LocMat_Tri")
+            OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eLocMat),
+            BwdTrans_LocMat::create, "BwdTrans_LocMat_Tet"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePyramid, eBwdTrans, eLocMat),
+            BwdTrans_LocMat::create, "BwdTrans_LocMat_Pyr"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePrism, eBwdTrans, eLocMat),
+            BwdTrans_LocMat::create, "BwdTrans_LocMat_Prism"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eLocMat),
+            BwdTrans_LocMat::create, "BwdTrans_LocMat_Hex"),
     };
 
     class BwdTrans_IterPerExp : public Operator
@@ -159,11 +173,26 @@ namespace Collections {
     OperatorKey BwdTrans_IterPerExp::m_typeArr[] =
     {
         GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eSegment, eBwdTrans, eIterPerExp),
+            BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Seg"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eBwdTrans, eIterPerExp),
+            BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Tri"),
+        GetOperatorFactory().RegisterCreatorFunction(
             OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, eIterPerExp),
             BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Quad"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eTriangle, eBwdTrans, eIterPerExp),
-            BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Tri")
+            OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eIterPerExp),
+            BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Tet"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePyramid, eBwdTrans, eIterPerExp),
+            BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Pyr"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePrism, eBwdTrans, eIterPerExp),
+            BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Prism"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eIterPerExp),
+            BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Hex"),
     };
 
     /*

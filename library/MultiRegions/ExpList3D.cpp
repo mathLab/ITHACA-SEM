@@ -152,6 +152,7 @@ namespace Nektar
             SetCoeffPhys();
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
         /**
@@ -273,6 +274,7 @@ namespace Nektar
 
             SetCoeffPhys();
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
         /**
@@ -394,6 +396,7 @@ namespace Nektar
                 ::AllocateSharedPtr(nel);
 
             SetCoeffPhys();
+            CreateCollections();
         }
 
         /**

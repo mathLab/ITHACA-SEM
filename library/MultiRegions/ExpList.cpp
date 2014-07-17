@@ -1161,19 +1161,13 @@ namespace Nektar
 											Array<OneD, NekDouble> &outarray)
         {
 #if 1
-            cout << "being called" << endl;
-            cout << m_collections.size() << " collections found" << endl;
-
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
-                m_collections[i].ApplyOperator(Collections::eBwdTrans, inarray, outarray);
-                /*
-                  m_collections[i].ApplyOperator(
+                m_collections[i].ApplyOperator(
                     Collections::eBwdTrans,
                     inarray + m_coll_coeff_offset[i],
                     tmp = outarray + m_coll_phys_offset[i]);
-                */
             }
 #else
             // get optimisation information about performing block
@@ -2602,20 +2596,6 @@ namespace Nektar
                 collections[(*m_exp)[i]->DetShapeType()].push_back((*m_exp)[i]);
             }
 
-            cout << "FOUND " << collections.size() << endl;
-
-            for (it = collections.begin(); it != collections.end(); ++it)
-            {
-                vector<SpatialDomains::GeometrySharedPtr> geom;
-
-                for (int i = 0; i < it->second.size(); ++i)
-                {
-                    geom.push_back(it->second[i]->GetGeom());
-                }
-                Collections::Collection tmp(it->second[0], geom);
-                m_collections.push_back(tmp);
-            }
-#if 0
             for (it = collections.begin(); it != collections.end(); ++it)
             {
                 StdRegions::StdExpansionSharedPtr stdExp;
@@ -2640,11 +2620,11 @@ namespace Nektar
                 }
 
                 vector<SpatialDomains::GeometrySharedPtr> geom;
-
+                
                 int prevCoeffOffset = m_coeff_offset[it->second[0]->GetElmtId()];
                 int prevPhysOffset = m_phys_offset[it->second[0]->GetElmtId()];
-                int prevCollCoeffOffset = m_coeff_offset[it->second[0]->GetElmtId()];
-                int prevCollPhysOffset = m_phys_offset[it->second[0]->GetElmtId()];
+                int prevCollCoeffOffset = prevCoeffOffset;
+                int prevCollPhysOffset = prevPhysOffset;
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
                 m_coll_phys_offset .push_back(prevPhysOffset);
@@ -2655,19 +2635,26 @@ namespace Nektar
                 {
                     const int nCoeffs = it->second[i]->GetNcoeffs();
                     const int nPhys   = it->second[i]->GetTotPoints();
-                    int offset = m_coeff_offset[it->second[i]->GetElmtId()];
-
-                    if (prevCoeffOffset + nCoeffs != offset || i == it->second.size() - 1)
+                    int coeffOffset = m_coeff_offset[it->second[i]->GetElmtId()];
+                    int physOffset  = m_phys_offset [it->second[i]->GetElmtId()];
+                    
+                    if (prevCoeffOffset + nCoeffs != coeffOffset ||
+                        i == it->second.size() - 1)
                     {
-                        Collections::Collection tmp(stdExp, geom);
-                        m_collections.push_back(tmp);
-                        geom.empty();
-
                         if (i != it->second.size() - 1)
                         {
                             m_coll_coeff_offset.push_back(prevCollCoeffOffset);
                             m_coll_phys_offset .push_back(prevCollPhysOffset);
                         }
+                        else
+                        {
+                            geom.push_back(it->second[i]->GetGeom());
+                        }
+
+                        Collections::Collection tmp(stdExp, geom);
+                        m_collections.push_back(tmp);
+                        geom.empty();
+
                         prevCollCoeffOffset = prevCoeffOffset;
                         prevCollPhysOffset  = prevPhysOffset;
                     }
@@ -2676,18 +2663,10 @@ namespace Nektar
                         geom.push_back(it->second[i]->GetGeom());
                     }
 
-                    prevCoeffOffset += nCoeffs;
-                    prevPhysOffset  += nPhys;
+                    prevCoeffOffset = coeffOffset;
+                    prevPhysOffset  = physOffset;
                 }
             }
-
-            cout << "OFFSETS: " << endl;
-            for (int i = 0; i < m_coll_coeff_offset.size(); ++i)
-            {
-                cout << m_coll_coeff_offset[i] << " "
-                     << m_coll_phys_offset [i] << endl;
-            }
-#endif
 #endif
         }
     } //end of namespace

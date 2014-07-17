@@ -96,7 +96,7 @@ namespace Collections {
         BwdTrans_LocMat(StdRegions::StdExpansionSharedPtr pExp,
                         vector<SpatialDomains::GeometrySharedPtr> pGeom)
             : Operator(pExp, pGeom),
-              m_key(StdRegions::eBwdTrans, pExp->GetShapeType(), *pExp)
+              m_key(StdRegions::eBwdTrans, pExp->DetShapeType(), *pExp)
         {
 
         }
@@ -164,6 +164,136 @@ namespace Collections {
         GetOperatorFactory().RegisterCreatorFunction(
             OperatorKey(LibUtilities::eTriangle, eBwdTrans, eIterPerExp),
             BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Tri")
+    };
+
+    /*
+     * ----------------------------------------------------------
+     * PhysDeriv operators
+     * ----------------------------------------------------------
+     */
+
+    class PhysDeriv_IterPerExp : public Operator
+    {
+    public:
+        PhysDeriv_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
+                             vector<SpatialDomains::GeometrySharedPtr> pGeom)
+            : Operator(pExp, pGeom)
+        {
+        }
+
+        virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &wsp)
+        {
+            const int nPhys = m_stdExp->GetTotPoints();
+            Array<OneD, NekDouble> tmp;
+
+            for (int i = 0; i < m_numElmt; ++i)
+            {
+                m_stdExp->PhysDeriv(input + i*nPhys, tmp = output + i*nPhys);
+            }
+        }
+
+        OPERATOR_CREATE(PhysDeriv_IterPerExp)
+    };
+
+    OperatorKey PhysDeriv_IterPerExp::m_typeArr[] =
+    {
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eIterPerExp),
+            PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Quad"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eIterPerExp),
+            PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Tri")
+    };
+
+    /*
+     * ----------------------------------------------------------
+     * IProductWRTBase operators
+     * ----------------------------------------------------------
+     */
+
+    class IProductWRTBase_IterPerExp : public Operator
+    {
+    public:
+        IProductWRTBase_IterPerExp(
+            StdRegions::StdExpansionSharedPtr pExp,
+            vector<SpatialDomains::GeometrySharedPtr> pGeom)
+                : Operator(pExp, pGeom)
+        {
+        }
+
+        virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &wsp)
+        {
+            const int nCoeffs = m_stdExp->GetNcoeffs();
+            const int nPhys   = m_stdExp->GetTotPoints();
+            Array<OneD, NekDouble> tmp;
+
+            for (int i = 0; i < m_numElmt; ++i)
+            {
+                m_stdExp->IProductWRTBase(
+                    input + i*nPhys, tmp = output + i*nCoeffs);
+            }
+        }
+
+        OPERATOR_CREATE(IProductWRTBase_IterPerExp)
+    };
+
+    OperatorKey IProductWRTBase_IterPerExp::m_typeArr[] =
+    {
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eIterPerExp),
+            IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Quad"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eIterPerExp),
+            IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Tri")
+    };
+
+    /*
+     * ----------------------------------------------------------
+     * FwdTrans operators
+     * ----------------------------------------------------------
+     */
+
+    class FwdTrans_IterPerExp : public Operator
+    {
+    public:
+        FwdTrans_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
+                            vector<SpatialDomains::GeometrySharedPtr> pGeom)
+            : Operator(pExp, pGeom)
+        {
+        }
+
+        virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &wsp)
+        {
+            const int nCoeffs = m_stdExp->GetNcoeffs();
+            const int nPhys   = m_stdExp->GetTotPoints();
+            Array<OneD, NekDouble> tmp;
+
+            for (int i = 0; i < m_numElmt; ++i)
+            {
+                m_stdExp->FwdTrans(input + i*nCoeffs, tmp = output + i*nPhys);
+            }
+        }
+
+        OPERATOR_CREATE(FwdTrans_IterPerExp)
+    };
+
+    OperatorKey FwdTrans_IterPerExp::m_typeArr[] =
+    {
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eQuadrilateral, eFwdTrans, eIterPerExp),
+            FwdTrans_IterPerExp::create, "FwdTrans_IterPerExp_Quad"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eFwdTrans, eIterPerExp),
+            FwdTrans_IterPerExp::create, "FwdTrans_IterPerExp_Tri")
     };
 }
 }

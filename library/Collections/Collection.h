@@ -57,15 +57,17 @@ namespace Collections {
             : m_stdExp(pExp), m_geom(pGeom)
         {
             OperatorKey bwdLocMat(
-                pExp->GetShapeType(), eBwdTrans, eLocMat);
+                pExp->DetShapeType(), eBwdTrans, eLocMat);
             OperatorKey bwdIterPerExp(
-                pExp->GetShapeType(), eBwdTrans, eIterPerExp);
+                pExp->DetShapeType(), eBwdTrans, eIterPerExp);
             OperatorKey derivSumFac(
-                pExp->GetShapeType(), ePhysDeriv, eSumFac);
+                pExp->DetShapeType(), ePhysDeriv, eSumFac);
+            OperatorKey derivIterPerExp(
+                pExp->DetShapeType(), ePhysDeriv, eIterPerExp);
             m_ops[eBwdTrans] = GetOperatorFactory().CreateInstance(
                 bwdIterPerExp, pExp, pGeom);
             m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(
-                derivSumFac, pExp, pGeom);
+                derivIterPerExp, pExp, pGeom);
         }
 
         void ApplyOperator(

@@ -44,42 +44,11 @@ namespace Collections {
      * ----------------------------------------------------------
      */
 
-    class QuadPhysDerivIterPerExp : public Operator
+    class PhysDeriv_SumFac_Quad : public Operator
     {
     public:
-        QuadPhysDerivIterPerExp(StdRegions::StdExpansionSharedPtr pExp,
-                               vector<SpatialDomains::GeometrySharedPtr> pGeom)
-            : Operator(pExp, pGeom)
-        {
-        }
-
-        virtual void operator()(
-            const Array<OneD, const NekDouble> &input,
-                  Array<OneD,       NekDouble> &output,
-                  Array<OneD,       NekDouble> &wsp)
-        {
-            const int nPhys   = m_stdExp->GetTotPoints();
-            Array<OneD, NekDouble> tmp;
-
-            for (int i = 0; i < m_numElmt; ++i)
-            {
-                m_stdExp->PhysDeriv(input + i*nPhys, tmp = output + i*nPhys);
-            }
-        }
-
-        OPERATOR_CREATE(QuadPhysDerivIterPerExp)
-    };
-
-    OperatorKey QuadPhysDerivIterPerExp::m_type = GetOperatorFactory().
-        RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eLocMat),
-            QuadPhysDerivIterPerExp::create, "QuadPhysDerivIterPerExp");
-
-    class QuadPhysDerivSumFac : public Operator
-    {
-    public:
-        QuadPhysDerivSumFac(StdRegions::StdExpansionSharedPtr pExp,
-                            vector<SpatialDomains::GeometrySharedPtr> pGeom)
+        PhysDeriv_SumFac_Quad(StdRegions::StdExpansionSharedPtr pExp,
+                              vector<SpatialDomains::GeometrySharedPtr> pGeom)
             : Operator (pExp, pGeom),
               m_nquad0 (pExp->GetNumPoints(0)),
               m_nquad1 (pExp->GetNumPoints(1)),
@@ -165,7 +134,7 @@ namespace Collections {
             }
         }
 
-        OPERATOR_CREATE(QuadPhysDerivSumFac)
+        OPERATOR_CREATE(PhysDeriv_SumFac_Quad)
 
     protected:
         const int m_nquad0;
@@ -173,87 +142,9 @@ namespace Collections {
         Array<TwoD, NekDouble> m_df;
     };
 
-    OperatorKey QuadPhysDerivSumFac::m_type = GetOperatorFactory().
+    OperatorKey PhysDeriv_SumFac_Quad::m_type = GetOperatorFactory().
         RegisterCreatorFunction(
             OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eSumFac),
-            QuadPhysDerivSumFac::create, "QuadPhysDerivSumFac");
-
-    /*
-     * ----------------------------------------------------------
-     * IProductWRTBase operators
-     * ----------------------------------------------------------
-     */
-
-    class QuadIProductIterPerExp : public Operator
-    {
-    public:
-        QuadIProductIterPerExp(StdRegions::StdExpansionSharedPtr pExp,
-                               vector<SpatialDomains::GeometrySharedPtr> pGeom)
-            : Operator(pExp, pGeom)
-        {
-        }
-
-        virtual void operator()(
-            const Array<OneD, const NekDouble> &input,
-                  Array<OneD,       NekDouble> &output,
-                  Array<OneD,       NekDouble> &wsp)
-        {
-            const int nCoeffs = m_stdExp->GetNcoeffs();
-            const int nPhys   = m_stdExp->GetTotPoints();
-            Array<OneD, NekDouble> tmp;
-
-            for (int i = 0; i < m_numElmt; ++i)
-            {
-                m_stdExp->IProductWRTBase(
-                    input + i*nPhys, tmp = output + i*nCoeffs);
-            }
-        }
-
-        OPERATOR_CREATE(QuadIProductIterPerExp)
-    };
-
-    OperatorKey QuadIProductIterPerExp::m_type = GetOperatorFactory().
-        RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eLocMat),
-            QuadIProductIterPerExp::create, "QuadIProductIterPerExp");
-
-    /*
-     * ----------------------------------------------------------
-     * FwdTrans operators
-     * ----------------------------------------------------------
-     */
-
-    class QuadFwdTransIterPerExp : public Operator
-    {
-    public:
-        QuadFwdTransIterPerExp(StdRegions::StdExpansionSharedPtr pExp,
-                               vector<SpatialDomains::GeometrySharedPtr> pGeom)
-            : Operator(pExp, pGeom)
-        {
-        }
-
-        virtual void operator()(
-            const Array<OneD, const NekDouble> &input,
-                  Array<OneD,       NekDouble> &output,
-                  Array<OneD,       NekDouble> &wsp)
-        {
-            const int nCoeffs = m_stdExp->GetNcoeffs();
-            const int nPhys   = m_stdExp->GetTotPoints();
-            Array<OneD, NekDouble> tmp;
-
-            for (int i = 0; i < m_numElmt; ++i)
-            {
-                m_stdExp->FwdTrans(input + i*nCoeffs, tmp = output + i*nPhys);
-            }
-        }
-
-        OPERATOR_CREATE(QuadFwdTransIterPerExp)
-    };
-
-    OperatorKey QuadFwdTransIterPerExp::m_type = GetOperatorFactory().
-        RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eQuadrilateral, eFwdTrans, eLocMat),
-            QuadFwdTransIterPerExp::create, "QuadFwdTransIterPerExp");
-
+            PhysDeriv_SumFac_Quad::create, "PhysDeriv_SumFac_Quad");
 }
 }

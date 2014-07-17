@@ -134,7 +134,6 @@ namespace Nektar
                                     m_periodicEdges,
                                     CheckIfSingularSystem,
                                     variable);
-
         }
 
 

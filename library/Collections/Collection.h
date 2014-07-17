@@ -42,6 +42,10 @@
 
 namespace Nektar {
 namespace Collections {
+    class Collection;
+    typedef std::vector<Collection> CollectionVector;
+    typedef boost::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
+
     /**
      * @brief Collection
      */
@@ -54,10 +58,12 @@ namespace Collections {
         {
             OperatorKey bwdLocMat(
                 LibUtilities::eQuadrilateral, eBwdTrans, eLocMat);
+            OperatorKey bwdIterPerExp(
+                LibUtilities::eQuadrilateral, eBwdTrans, eIterPerExp);
             OperatorKey derivSumFac(
                 LibUtilities::eQuadrilateral, ePhysDeriv, eSumFac);
             m_ops[eBwdTrans] = GetOperatorFactory().CreateInstance(
-                bwdLocMat, pExp, pGeom);
+                bwdIterPerExp, pExp, pGeom);
             m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(
                 derivSumFac, pExp, pGeom);
         }

@@ -62,6 +62,7 @@ namespace Collections {
 
     enum ImplementationType
     {
+        eIterPerExp,
         eSumFac,
         eLocMat
     };

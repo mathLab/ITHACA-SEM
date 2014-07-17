@@ -2547,6 +2547,23 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
             return NullExpListSharedPtr;
         }
+
+        void ExpList::CreateCollections()
+        {
+            //map<LibUtilities::ShapeType,
+            //    vector<LocalRegions::ExpansionSharedPtr> > collections;
+            //map<LibUtilities::ShapeType,
+            //    vector<LocalRegions::ExpansionSharedPtr> >::iterator it;
+
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                //collections[(*m_exp)[i]->GetShapeType()].push_back((*m_exp)[i]);
+                vector<SpatialDomains::GeometrySharedPtr> tmp(1);
+                tmp[0] = (*m_exp)[i]->GetGeom();
+                Collections::Collection tmp2((*m_exp)[i], tmp);
+                m_collections.push_back(tmp2);
+            }
+        }
     } //end of namespace
 } //end of namespace
 

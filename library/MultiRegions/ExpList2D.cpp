@@ -206,6 +206,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
          }
 
 
@@ -320,6 +321,7 @@ namespace Nektar
              }
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
 
@@ -432,6 +434,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters();
+            CreateCollections();
         }
 
         /**
@@ -661,6 +664,8 @@ namespace Nektar
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
+
+            CreateCollections();
         }
 
          /**
@@ -793,6 +798,7 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
 
             ReadGlobalOptimizationParameters(); 
+            CreateCollections();
         }
         
         /**

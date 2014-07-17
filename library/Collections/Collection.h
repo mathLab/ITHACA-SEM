@@ -57,11 +57,11 @@ namespace Collections {
             : m_stdExp(pExp), m_geom(pGeom)
         {
             OperatorKey bwdLocMat(
-                LibUtilities::eQuadrilateral, eBwdTrans, eLocMat);
+                pExp->GetShapeType(), eBwdTrans, eLocMat);
             OperatorKey bwdIterPerExp(
-                LibUtilities::eQuadrilateral, eBwdTrans, eIterPerExp);
+                pExp->GetShapeType(), eBwdTrans, eIterPerExp);
             OperatorKey derivSumFac(
-                LibUtilities::eQuadrilateral, ePhysDeriv, eSumFac);
+                pExp->GetShapeType(), ePhysDeriv, eSumFac);
             m_ops[eBwdTrans] = GetOperatorFactory().CreateInstance(
                 bwdIterPerExp, pExp, pGeom);
             m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(

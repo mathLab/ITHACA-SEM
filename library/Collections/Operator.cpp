@@ -83,5 +83,87 @@ namespace Collections {
                                       Loki::NoDestroy > Type;
         return Type::Instance();
     }
+
+    /*
+     * ----------------------------------------------------------
+     * BwdTrans operators
+     * ----------------------------------------------------------
+     */
+
+    class BwdTrans_LocMat : public Operator
+    {
+    public:
+        BwdTrans_LocMat(StdRegions::StdExpansionSharedPtr pExp,
+                        vector<SpatialDomains::GeometrySharedPtr> pGeom)
+            : Operator(pExp, pGeom),
+              m_key(StdRegions::eBwdTrans, pExp->GetShapeType(), *pExp)
+        {
+
+        }
+
+        virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &wsp)
+        {
+            DNekMatSharedPtr mat = m_stdExp->GetStdMatrix(m_key);
+
+            Blas::Dgemm('N', 'N', mat->GetRows(), m_numElmt, mat->GetColumns(),
+                        1.0, mat->GetRawPtr(), mat->GetRows(), input.get(),
+                        m_stdExp->GetNcoeffs(), 0.0, output.get(),
+                        m_stdExp->GetTotPoints());
+        }
+
+        OPERATOR_CREATE(BwdTrans_LocMat)
+
+        StdRegions::StdMatrixKey m_key;
+    };
+
+    OperatorKey BwdTrans_LocMat::m_typeArr[] =
+    {
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, eLocMat),
+            BwdTrans_LocMat::create, "BwdTrans_LocMat_Quad"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eBwdTrans, eLocMat),
+            BwdTrans_LocMat::create, "BwdTrans_LocMat_Tri")
+    };
+
+    class BwdTrans_IterPerExp : public Operator
+    {
+    public:
+        BwdTrans_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
+                            vector<SpatialDomains::GeometrySharedPtr> pGeom)
+            : Operator(pExp, pGeom)
+        {
+        }
+
+        virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &wsp)
+        {
+            const int nCoeffs = m_stdExp->GetNcoeffs();
+            const int nPhys   = m_stdExp->GetTotPoints();
+            Array<OneD, NekDouble> tmp;
+
+            for (int i = 0; i < m_numElmt; ++i)
+            {
+                m_stdExp->BwdTrans(input + i*nCoeffs, tmp = output + i*nPhys);
+            }
+        }
+
+        OPERATOR_CREATE(BwdTrans_IterPerExp)
+    };
+
+    OperatorKey BwdTrans_IterPerExp::m_typeArr[] =
+    {
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, eIterPerExp),
+            BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Quad"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eBwdTrans, eIterPerExp),
+            BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Tri")
+    };
 }
 }

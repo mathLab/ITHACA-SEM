@@ -42,6 +42,7 @@
 
 #define OPERATOR_CREATE(cname)                                  \
     static OperatorKey m_type;                                  \
+    static OperatorKey m_typeArr[];                             \
     static OperatorSharedPtr create(                            \
         StdRegions::StdExpansionSharedPtr pExp,                 \
         vector<SpatialDomains::GeometrySharedPtr> pGeom)        \

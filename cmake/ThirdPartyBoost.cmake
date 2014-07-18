@@ -43,7 +43,6 @@ IF (THIRDPARTY_BUILD_BOOST)
                             ${BOOST_FLAGS} ${BOOST_LIB_LIST} 
                             --layout=system toolset=${TOOLSET} install
             INSTALL_COMMAND ""
-            #BUILD_IN_SOURCE 1
         )
     
         IF (APPLE)
@@ -99,7 +98,6 @@ IF (THIRDPARTY_BUILD_BOOST)
             CONFIGURE_COMMAND bootstrap.bat --prefix=${TPDIST}/boost
             BUILD_COMMAND b2 --layout=system install
             INSTALL_COMMAND ""
-            #BUILD_IN_SOURCE 1
         )
     ENDIF ()
 ELSE (THIRDPARTY_BUILD_BOOST)
@@ -118,10 +116,6 @@ ELSE (THIRDPARTY_BUILD_BOOST)
             FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time
                 filesystem system program_options regex )
         ELSE ()
-            #SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
-            #FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
-            #SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
-            #FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
             SET(BOOST_ROOT ${TPDIST})
             FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
         ENDIF()

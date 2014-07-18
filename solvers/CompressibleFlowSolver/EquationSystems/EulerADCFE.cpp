@@ -157,16 +157,58 @@ namespace Nektar
         
         m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff);
         
-        for (i = 0; i < nvariables; ++i)
+        if (m_shockCaptureType == "NonSmooth")
         {
-            Vmath::Vadd(npoints,
-                        outarrayAdv[i], 1,
-                        outarrayDiff[i], 1,
-                        outarray[i], 1);
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints,
+                            outarrayAdv[i], 1,
+                            outarrayDiff[i], 1,
+                            outarray[i], 1);
+            }
         }
-    
         if(m_shockCaptureType == "Smooth")
         {
+            const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
+            
+            NekDouble pOrder = Vmath::Vmax(ExpOrder.num_elements(), ExpOrder, 1);
+            
+            Array <OneD, NekDouble > a_vel  (npoints, 0.0);
+            Array <OneD, NekDouble > u_abs  (npoints, 0.0);
+            Array <OneD, NekDouble > pres   (npoints, 0.0);
+            Array <OneD, NekDouble > wave_sp(npoints, 0.0);
+            
+            GetPressure(inarray, pres);
+            GetSoundSpeed(inarray, pres, a_vel);
+            GetAbsoluteVelocity(inarray, u_abs);
+            
+            Vmath::Vadd(npoints, a_vel, 1, u_abs, 1, wave_sp, 1);
+            
+            NekDouble max_wave_sp = Vmath::Vmax(npoints, wave_sp, 1);
+            
+            Vmath::Smul(npoints,
+                        m_C2,
+                        outarrayDiff[nvariables-1], 1,
+                        outarrayDiff[nvariables-1], 1);
+            
+            Vmath::Smul(npoints,
+                        max_wave_sp,
+                        outarrayDiff[nvariables-1], 1,
+                        outarrayDiff[nvariables-1], 1);
+            
+            Vmath::Smul(npoints,
+                        pOrder,
+                        outarrayDiff[nvariables-1], 1,
+                        outarrayDiff[nvariables-1], 1);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints,
+                            outarrayAdv[i], 1,
+                            outarrayDiff[i], 1,
+                            outarray[i], 1);
+            }
+            
             Array<OneD, Array<OneD, NekDouble> > outarrayForcing(nvariables);
             
             for (i = 0; i < nvariables; ++i)

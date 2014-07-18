@@ -1060,24 +1060,27 @@ namespace Nektar
                 
                 LocalRegions::Expansion2DSharedPtr loc_elmt =
                     loc_exp->GetLeftAdjacentElementExp();
+		
+		int edgeNumber = loc_exp->GetLeftAdjacentElementEdge();
             
                 // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                 
-                locnormals = loc_elmt->GetEdgeNormal(
-                    loc_exp->GetLeftAdjacentElementEdge());
-                    
-                if (e_npoints != locnormals[0].num_elements())
-                {
-                    LocalRegions::Expansion2DSharedPtr loc_elmt =
-                        loc_exp->GetRightAdjacentElementExp();
+                locnormals = loc_elmt->GetEdgeNormal(edgeNumber);
+		int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
 
-                    if (loc_elmt)
+                if (e_nmodes != loc_nmodes)
+                {
+		    if (loc_exp->GetRightAdjacentElementEdge() >= 0)
                     {
+		        LocalRegions::Expansion2DSharedPtr loc_elmt =
+                                       loc_exp->GetRightAdjacentElementExp();
+
+			int EdgeNumber = loc_exp->GetRightAdjacentElementEdge();
                         // Serial case: right element is connected so we can
                         // just grab that normal.
-                        locnormals = loc_elmt->GetEdgeNormal(
-                            loc_exp->GetRightAdjacentElementEdge());
+                        locnormals = loc_elmt->GetEdgeNormal(EdgeNumber);
 
                         offset = m_phys_offset[i];
 

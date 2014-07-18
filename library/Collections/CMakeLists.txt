@@ -1,4 +1,5 @@
 SET(COLLECTIONS_SOURCES
+  Collection.cpp
   Operator.cpp
   QuadOperators.cpp
   )

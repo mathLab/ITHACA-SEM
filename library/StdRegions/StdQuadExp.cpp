@@ -61,7 +61,7 @@ namespace Nektar
         StdQuadExp::StdQuadExp(const StdQuadExp &T):
             StdExpansion(T),
             StdExpansion2D(T)
-        {
+        {            
         }
 
         /** \brief Destructor */

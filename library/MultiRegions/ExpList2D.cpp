@@ -189,6 +189,12 @@ namespace Nektar
 
             }
 
+            // set up element numbering
+            for(int i = 0; i < (*m_exp).size(); ++i)
+            {
+                (*m_exp)[i]->SetElmtId(i);
+            }
+
             // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>

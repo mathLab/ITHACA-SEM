@@ -80,6 +80,7 @@ namespace Collections {
         OperatorKey,
         Operator,
         StdRegions::StdExpansionSharedPtr,
+
         vector<SpatialDomains::GeometrySharedPtr> > OperatorFactory;
     OperatorFactory& GetOperatorFactory();
 

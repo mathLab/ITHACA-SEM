@@ -40,6 +40,10 @@
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdPyrExp.h>
+#include <StdRegions/StdPrismExp.h>
+#include <StdRegions/StdHexExp.h>
 
 #include <LocalRegions/MatrixKey.h>     // for MatrixKey
 #include <LocalRegions/Expansion.h>     // for Expansion
@@ -2587,84 +2591,117 @@ namespace Nektar
             }
 #else
             map<LibUtilities::ShapeType,
-                vector<LocalRegions::ExpansionSharedPtr> > collections;
+                vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
             map<LibUtilities::ShapeType,
-                vector<LocalRegions::ExpansionSharedPtr> >::iterator it;
+                vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                collections[(*m_exp)[i]->DetShapeType()].push_back((*m_exp)[i]);
+                collections[(*m_exp)[i]->DetShapeType()].push_back(std::pair<LocalRegions::ExpansionSharedPtr,int> ((*m_exp)[i],i));
             }
 
             for (it = collections.begin(); it != collections.end(); ++it)
             {
                 StdRegions::StdExpansionSharedPtr stdExp;
-                LocalRegions::ExpansionSharedPtr exp = it->second[0];
+                LocalRegions::ExpansionSharedPtr exp = it->second[0].first;
 
-                if (exp->DetShapeType() == LibUtilities::eSegment)
+                switch(exp->DetShapeType())
                 {
+                case LibUtilities::eSegment:
                     stdExp = MemoryManager<StdRegions::StdSegExp>
                         ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey());
-                }
-                else if (exp->DetShapeType() == LibUtilities::eTriangle)
-                {
+                    break;
+                case LibUtilities::eTriangle:
                     stdExp = MemoryManager<StdRegions::StdTriExp>
                         ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
                                             exp->GetBasis(1)->GetBasisKey());
-                }
-                else if (exp->DetShapeType() == LibUtilities::eQuadrilateral)
-                {
+                    break;
+                case LibUtilities::eQuadrilateral:
                     stdExp = MemoryManager<StdRegions::StdQuadExp>
                         ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
                                             exp->GetBasis(1)->GetBasisKey());
+                    break;
+                case LibUtilities::eTetrahedron:
+                    stdExp = MemoryManager<StdRegions::StdTetExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey(),
+                                            exp->GetBasis(2)->GetBasisKey());
+                    break;
+                case LibUtilities::ePyramid:
+                    stdExp = MemoryManager<StdRegions::StdPyrExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey(),
+                                            exp->GetBasis(2)->GetBasisKey());
+                    break;
+                case LibUtilities::ePrism:
+                    stdExp = MemoryManager<StdRegions::StdPrismExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey(),
+                                            exp->GetBasis(2)->GetBasisKey());
+                    break;
+                case LibUtilities::eHexahedron:
+                    stdExp = MemoryManager<StdRegions::StdHexExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey(),
+                                            exp->GetBasis(2)->GetBasisKey());
+                    break;
+                default:
+                    ASSERTL0(false,"Shape type not setup");
+                    break;
                 }
-
+                
                 vector<SpatialDomains::GeometrySharedPtr> geom;
                 
-                int prevCoeffOffset = m_coeff_offset[it->second[0]->GetElmtId()];
-                int prevPhysOffset = m_phys_offset[it->second[0]->GetElmtId()];
+                int prevCoeffOffset     = m_coeff_offset[it->second[0].second];
+                int prevPhysOffset      = m_phys_offset [it->second[0].second];
                 int prevCollCoeffOffset = prevCoeffOffset;
-                int prevCollPhysOffset = prevPhysOffset;
+                int prevCollPhysOffset  = prevPhysOffset;
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
                 m_coll_phys_offset .push_back(prevPhysOffset);
 
-                geom.push_back(it->second[0]->GetGeom());
-
-                for (int i = 1; i < it->second.size(); ++i)
+                geom.push_back(it->second[0].first->GetGeom());
+                if(it->second.size() == 1) // single element case
                 {
-                    const int nCoeffs = it->second[i]->GetNcoeffs();
-                    const int nPhys   = it->second[i]->GetTotPoints();
-                    int coeffOffset = m_coeff_offset[it->second[i]->GetElmtId()];
-                    int physOffset  = m_phys_offset [it->second[i]->GetElmtId()];
-                    
-                    if (prevCoeffOffset + nCoeffs != coeffOffset ||
-                        i == it->second.size() - 1)
+                    Collections::Collection tmp(stdExp, geom);
+                    m_collections.push_back(tmp);
+                }
+                else
+                {
+                    for (int i = 1; i < it->second.size(); ++i)
                     {
-                        if (i != it->second.size() - 1)
+                        const int nCoeffs = it->second[i].first->GetNcoeffs();
+                        int coeffOffset = m_coeff_offset[it->second[i].second];
+                        int physOffset  = m_phys_offset [it->second[i].second];
+                        
+                        if (prevCoeffOffset + nCoeffs != coeffOffset ||
+                            i == it->second.size() - 1)
                         {
-                            m_coll_coeff_offset.push_back(prevCollCoeffOffset);
-                            m_coll_phys_offset .push_back(prevCollPhysOffset);
+                            if (i != it->second.size() - 1)
+                            {
+                                m_coll_coeff_offset.push_back(prevCollCoeffOffset);
+                                m_coll_phys_offset .push_back(prevCollPhysOffset);
+                            }
+                            else
+                            {
+                                geom.push_back(it->second[i].first->GetGeom());
+                            }
+                            
+                            Collections::Collection tmp(stdExp, geom);
+                            m_collections.push_back(tmp);
+                            geom.empty();
+                            
+                            prevCollCoeffOffset = prevCoeffOffset;
+                            prevCollPhysOffset  = prevPhysOffset;
                         }
                         else
                         {
-                            geom.push_back(it->second[i]->GetGeom());
+                            geom.push_back(it->second[i].first->GetGeom());
                         }
-
-                        Collections::Collection tmp(stdExp, geom);
-                        m_collections.push_back(tmp);
-                        geom.empty();
-
-                        prevCollCoeffOffset = prevCoeffOffset;
-                        prevCollPhysOffset  = prevPhysOffset;
+                        
+                        prevCoeffOffset = coeffOffset;
+                        prevPhysOffset  = physOffset;
                     }
-                    else
-                    {
-                        geom.push_back(it->second[i]->GetGeom());
-                    }
-
-                    prevCoeffOffset = coeffOffset;
-                    prevPhysOffset  = physOffset;
                 }
             }
 #endif

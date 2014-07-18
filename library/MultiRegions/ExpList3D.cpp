@@ -174,6 +174,7 @@ namespace Nektar
         {
             SetExpType(e3D);
 
+            int elmtid = 0;
             LocalRegions::TetExpSharedPtr   tet;
             LocalRegions::HexExpSharedPtr   hex;
             LocalRegions::PrismExpSharedPtr prism;
@@ -211,6 +212,7 @@ namespace Nektar
                         tet = MemoryManager<LocalRegions::TetExp>
                                         ::AllocateSharedPtr(TetBa,TetBb,TetBc,
                                                             TetGeom);
+                        tet->SetElmtId(elmtid++);
                         (*m_exp).push_back(tet);
                     }
                 }
@@ -227,6 +229,7 @@ namespace Nektar
                     prism = MemoryManager<LocalRegions::PrismExp>
                                         ::AllocateSharedPtr(PrismBa,PrismBb,
                                                             PrismBc,PrismGeom);
+                    prism->SetElmtId(elmtid++);
                     (*m_exp).push_back(prism);
                 }
                 else if((PyrGeom = boost::dynamic_pointer_cast<
@@ -242,6 +245,7 @@ namespace Nektar
                     pyramid = MemoryManager<LocalRegions::PyrExp>
                                         ::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,
                                                             PyrGeom);
+                    pyramid->SetElmtId(elmtid++);
                     (*m_exp).push_back(pyramid);
                 }
                 else if((HexGeom = boost::dynamic_pointer_cast<
@@ -257,6 +261,7 @@ namespace Nektar
                     hex = MemoryManager<LocalRegions::HexExp>
                                         ::AllocateSharedPtr(HexBa,HexBb,HexBc,
                                                             HexGeom);
+                    hex->SetElmtId(elmtid++);
                     (*m_exp).push_back(hex);
                 }
                 else
@@ -296,6 +301,7 @@ namespace Nektar
         {
             SetExpType(e3D);
 
+            int elmtid = 0;
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;
             LocalRegions::PrismExpSharedPtr prism;
@@ -334,6 +340,7 @@ namespace Nektar
                         tet = MemoryManager<LocalRegions::TetExp>
                                         ::AllocateSharedPtr(TetBa,TetBb,TetBc,
                                                             TetGeom);
+                        tet->SetElmtId(elmtid++);
                         (*m_exp).push_back(tet);
                     }
                 }
@@ -350,6 +357,7 @@ namespace Nektar
                     prism = MemoryManager<LocalRegions::PrismExp>
                                         ::AllocateSharedPtr(PrismBa,PrismBb,
                                                             PrismBc,PrismGeom);
+                    prism->SetElmtId(elmtid++);
                     (*m_exp).push_back(prism);
                 }
                 else if((PyrGeom = boost::dynamic_pointer_cast<
@@ -365,6 +373,7 @@ namespace Nektar
                     pyramid = MemoryManager<LocalRegions::PyrExp>
                                         ::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,
                                                             PyrGeom);
+                    pyramid->SetElmtId(elmtid++);
                     (*m_exp).push_back(pyramid);
                 }
                 else if((HexGeom = boost::dynamic_pointer_cast<
@@ -380,6 +389,7 @@ namespace Nektar
                     hex = MemoryManager<LocalRegions::HexExp>
                                         ::AllocateSharedPtr(HexBa,HexBb,HexBc,
                                                             HexGeom);
+                    hex->SetElmtId(elmtid++);
                     (*m_exp).push_back(hex);
                 }
                 else

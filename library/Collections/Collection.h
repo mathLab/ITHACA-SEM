@@ -41,50 +41,36 @@
 #include <boost/unordered_map.hpp>
 
 namespace Nektar {
-namespace Collections {
-    class Collection;
-    typedef std::vector<Collection> CollectionVector;
-    typedef boost::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
-
-    /**
-     * @brief Collection
-     */
-    class Collection
-    {
-    public:
-        Collection(StdRegions::StdExpansionSharedPtr pExp,
-                   vector<SpatialDomains::GeometrySharedPtr> pGeom)
-            : m_stdExp(pExp), m_geom(pGeom)
+    namespace Collections {
+        class Collection;
+        typedef std::vector<Collection> CollectionVector;
+        typedef boost::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
+        
+        /**
+         * @brief Collection
+         */
+        class Collection
         {
-            OperatorKey bwdLocMat(
-                pExp->DetShapeType(), eBwdTrans, eLocMat);
-            OperatorKey bwdIterPerExp(
-                pExp->DetShapeType(), eBwdTrans, eIterPerExp);
-            OperatorKey derivSumFac(
-                pExp->DetShapeType(), ePhysDeriv, eSumFac);
-            OperatorKey derivIterPerExp(
-                pExp->DetShapeType(), ePhysDeriv, eIterPerExp);
-            m_ops[eBwdTrans] = GetOperatorFactory().CreateInstance(
-                bwdLocMat, pExp, pGeom);
-            //m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(
-            //    derivIterPerExp, pExp, pGeom);
-        }
-
-        void ApplyOperator(
-            const OperatorType                 &op,
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray)
-        {
-            Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
-            (*m_ops[op])(inarray, outarray, wsp);
-        }
-
-    protected:
-        StdRegions::StdExpansionSharedPtr                     m_stdExp;
-        vector<SpatialDomains::GeometrySharedPtr>             m_geom;
-        boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
-    };
-}
+        public:
+            
+            Collection(StdRegions::StdExpansionSharedPtr pExp,
+                       vector<SpatialDomains::GeometrySharedPtr> pGeom);
+            
+            void ApplyOperator(
+                               const OperatorType                 &op,
+                               const Array<OneD, const NekDouble> &inarray,
+                               Array<OneD,       NekDouble> &outarray)
+            {
+                Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
+                (*m_ops[op])(inarray, outarray, wsp);
+            }
+            
+        protected:
+            StdRegions::StdExpansionSharedPtr                     m_stdExp;
+            vector<SpatialDomains::GeometrySharedPtr>             m_geom;
+            boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
+        };
+    }
 }
 
 #endif

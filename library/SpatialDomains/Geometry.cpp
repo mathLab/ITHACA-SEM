@@ -291,6 +291,29 @@ namespace Nektar
         {
             return m_coordim;
         }
+        
+        void Geometry::CoalesceGeomFactors(const LibUtilities::PointsKeyVector &ptsKeys, std::vector<GeometrySharedPtr> &GeomList)
+        {
+            if(GeomList.size() == 1)
+            {
+                return;
+            }
+            else
+            {
+
+                // set up a vector of GeomFactors. 
+                std::vector<GeomFactorsSharedPtr> GeomFactorsList;
+
+                for(int i = 0; i < GeomList.size(); ++i)
+                {
+                    GeomFactorsList.push_back(GeomList[i]->GetGeomFactors());
+                }
+
+                GeomFactorsList[0]->CoalesceGeomFactors(ptsKeys,GeomFactorsList);
+                
+            }
+        }
+
 
     }; //end of namespace
 }; //end of namespace

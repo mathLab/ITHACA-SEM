@@ -195,6 +195,83 @@ namespace Collections {
             BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Hex"),
     };
 
+
+    /*
+     * ----------------------------------------------------------
+     * IProductWRTBase operators
+     * ----------------------------------------------------------
+     */
+
+    class IProductWRTBase_LocMat : public Operator
+    {
+    public:
+        IProductWRTBase_LocMat(StdRegions::StdExpansionSharedPtr pExp,
+                        vector<SpatialDomains::GeometrySharedPtr> pGeom)
+            : Operator(pExp, pGeom),
+              m_key(StdRegions::eIProductWRTBase, pExp->DetShapeType(), *pExp)
+        {
+            int nqtot = 1;
+            LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+            for(int i = 0; i < PtsKey.size(); ++i)
+            {
+                nqtot *= PtsKey[i].GetNumPoints();
+            }
+            m_jac = pGeom[0]->GetGeomFactors()->GetJac(pExp->GetPointsKeys());
+            m_mat = m_stdExp->GetStdMatrix(m_key);
+            m_wspSize = nqtot*m_numElmt;
+        }
+
+        virtual void operator()(
+            const Array<OneD, const NekDouble> &input,
+                  Array<OneD,       NekDouble> &output,
+                  Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL1(wsp.num_elements() == m_wspSize,
+                     "Incorrect workspace size");
+
+            Vmath::Vmul(m_jac.num_elements(),m_jac,1,input,1,wsp,1);
+
+            Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
+                        m_mat->GetColumns(), 1.0, m_mat->GetRawPtr(),
+                        m_mat->GetRows(), wsp.get(), m_stdExp->GetTotPoints(),
+                        0.0, output.get(), m_stdExp->GetNcoeffs());
+        }
+
+        OPERATOR_CREATE(IProductWRTBase_LocMat)
+
+        StdRegions::StdMatrixKey m_key;
+        DNekMatSharedPtr m_mat;
+        Array<OneD, const NekDouble> m_jac;
+
+    };
+
+    OperatorKey IProductWRTBase_LocMat::m_typeArr[] =
+    {
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eSegment, eIProductWRTBase, eLocMat),
+            IProductWRTBase_LocMat::create, "IProductWRTBase_LocMat_Seg"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eLocMat),
+            IProductWRTBase_LocMat::create, "IProductWRTBase_LocMat_Tri"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eLocMat),
+            IProductWRTBase_LocMat::create, "IProductWRTBase_LocMat_Quad"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eLocMat),
+            IProductWRTBase_LocMat::create, "IProductWRTBase_LocMat_Tet"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eLocMat),
+            IProductWRTBase_LocMat::create, "IProductWRTBase_LocMat_Pyr"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eLocMat),
+            IProductWRTBase_LocMat::create, "IProductWRTBase_LocMat_Prism"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eLocMat),
+            IProductWRTBase_LocMat::create, "IProductWRTBase_LocMat_Hex"),
+    };
+
+
+
     /*
      * ----------------------------------------------------------
      * PhysDeriv operators

@@ -176,6 +176,9 @@ namespace Nektar
             m_npoints(in.m_npoints),
             m_physState(false),
             m_exp(in.m_exp),
+            m_collections(in.m_collections),
+            m_coll_coeff_offset(in.m_coll_coeff_offset),
+            m_coll_phys_offset(in.m_coll_phys_offset),
             m_coeff_offset(in.m_coeff_offset),
             m_phys_offset(in.m_phys_offset),
             m_offset_elmt_id(in.m_offset_elmt_id),
@@ -310,6 +313,17 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray)
         {
+
+#if 1
+            Array<OneD,NekDouble>  tmp;
+            for (int i = 0; i < m_collections.size(); ++i)
+            {
+                
+                m_collections[i].ApplyOperator(Collections::eIProductWRTBase,
+                                               inarray + m_coll_phys_offset[i],
+                                               tmp = outarray + m_coll_coeff_offset[i]);
+            }
+#else
             // get optimisation information about performing block
             // matrix multiplies
             const Array<OneD, const bool>  doBlockMatOp
@@ -345,6 +359,7 @@ namespace Nektar
                     }
                 }
             }
+#endif
         }
 
         /**
@@ -1164,14 +1179,14 @@ namespace Nektar
         void ExpList::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
 											Array<OneD, NekDouble> &outarray)
         {
-#if 1
+#if 0
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
                 m_collections[i].ApplyOperator(
-                    Collections::eBwdTrans,
-                    inarray + m_coll_coeff_offset[i],
-                    tmp = outarray + m_coll_phys_offset[i]);
+                                               Collections::eBwdTrans,
+                                               inarray + m_coll_coeff_offset[i],
+                                               tmp = outarray + m_coll_phys_offset[i]);
             }
 #else
             // get optimisation information about performing block
@@ -2681,15 +2696,21 @@ namespace Nektar
                             {
                                 m_coll_coeff_offset.push_back(prevCollCoeffOffset);
                                 m_coll_phys_offset .push_back(prevCollPhysOffset);
-                            }
-                            else
-                            {
+                                Collections::Collection tmp(stdExp, geom);
+                                m_collections.push_back(tmp);
+
+                                // start new geom list 
+                                geom.empty();
                                 geom.push_back(it->second[i].first->GetGeom());
                             }
+                            else // end this list
+                            {
+                                geom.push_back(it->second[i].first->GetGeom());
+                                Collections::Collection tmp(stdExp, geom);
+                                m_collections.push_back(tmp);
+                                geom.empty();
+                            }
                             
-                            Collections::Collection tmp(stdExp, geom);
-                            m_collections.push_back(tmp);
-                            geom.empty();
                             
                             prevCollCoeffOffset = prevCoeffOffset;
                             prevCollPhysOffset  = prevPhysOffset;

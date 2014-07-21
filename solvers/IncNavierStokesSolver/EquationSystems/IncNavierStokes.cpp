@@ -447,7 +447,11 @@ namespace Nektar
                 }
                 cnt1 += BndExp[n]->GetTotPoints();
             }
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eWall_Forces || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh || type == SpatialDomains::eHighOutflow) 
+            else if(type == SpatialDomains::eNoUserDefined ||
+                    type == SpatialDomains::eWall_Forces ||
+                    type == SpatialDomains::eTimeDependent ||
+                    type == SpatialDomains::eHigh ||
+                    type == SpatialDomains::eHighOutflow)
             {
                 cnt += BndExp[n]->GetExpSize();
             }

@@ -1339,7 +1339,7 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            (*x)->Apply(m_fields, outarray, outarray,time);
+            (*x)->Apply(m_fields, outarray, outarray, time);
         }
     }
     
@@ -1486,7 +1486,7 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            const NekDouble time=0;
+            const NekDouble time = 0;
             (*x)->Apply(m_fields, forcing_phys, forcing_phys, time);
         }
         for (unsigned int i = 0; i < ncmpt; ++i)

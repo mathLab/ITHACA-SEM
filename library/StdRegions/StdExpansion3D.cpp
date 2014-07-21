@@ -307,7 +307,8 @@ namespace Nektar
 
         }
 
-        const NormalVector & StdExpansion3D::v_GetSurfaceNormal(const int id) const
+        const NormalVector & StdExpansion3D::v_GetSurfaceNormal(
+                const int id) const
         {
             return v_GetFaceNormal(id);
         }

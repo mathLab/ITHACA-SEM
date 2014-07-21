@@ -74,7 +74,7 @@ namespace SolverUtils
             bool                                    m_hasRefFlowTime;
             Array<OneD, Array<OneD, NekDouble> >    m_Sponge;
             Array<OneD, Array<OneD, NekDouble> >    m_Refflow;
-            std::string                      m_funcNameTime;
+            std::string                             m_funcNameTime;
   
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,

@@ -100,7 +100,11 @@ int main(int argc, char * argv[])
     // Create a mapper and actor
     vtkSmartPointer<vtkDataSetMapper> mapper =
             vtkSmartPointer<vtkDataSetMapper>::New();
+#if VTK_MAJOR_REVISION <= 5
     mapper->SetInput(data);
+#else
+    mapper->SetInputData(data);
+#endif
     mapper->ImmediateModeRenderingOn();
     mapper->ScalarVisibilityOn();
     mapper->SetScalarModeToUsePointData();

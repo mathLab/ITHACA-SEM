@@ -547,6 +547,10 @@ namespace Nektar
                             weight    = StdSegData::getNumberOfCoefficients(na);
                             bndWeight = StdSegData::getNumberOfBndCoefficients(na);
                             break;
+                        case 'V':
+                            weight    = 1;
+                            bndWeight = 1;
+                            break;
                         default:
                             break;
                     }
@@ -710,6 +714,10 @@ namespace Nektar
                         case 'S':
                             weight    = StdSegData::getNumberOfCoefficients(na);
                             bndWeight = StdSegData::getNumberOfBndCoefficients(na);
+                            break;
+                        case 'V':
+                            weight    = 1;
+                            bndWeight = 1;
                             break;
                         default:
                             break;
@@ -1120,6 +1128,12 @@ namespace Nektar
                     // Based on entity type, check if in this partition
                     switch (vIt->second.type)
                     {
+                    case 'V':
+                        if (vVertices.find(vIt->second.list[j]) == vVertices.end())
+                        {
+                            continue;
+                        }
+                        break;
                     case 'E':
                         if (vEdges.find(vIt->second.list[j]) == vEdges.end())
                         {

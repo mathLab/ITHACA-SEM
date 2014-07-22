@@ -221,19 +221,29 @@ namespace Nektar
                 meshVertId  = pIt->first;
                 meshVertId2 = pIt->second[0].id;
 
-                if (vertReorderedGraphVertId.count(meshVertId) == 0 &&
-                    vertReorderedGraphVertId.count(meshVertId2) == 0)
+                if (!pIt->second[0].isLocal)
                 {
-                    vertReorderedGraphVertId[meshVertId]  = graphVertId;
-                    vertReorderedGraphVertId[meshVertId2] = graphVertId++;
+                    if (vertReorderedGraphVertId.count(meshVertId) == 0)
+                    { 
+                        vertReorderedGraphVertId[meshVertId]  = graphVertId++;
+                    }
                 }
-                else if ((vertReorderedGraphVertId.count(meshVertId)  == 0 &&
-                          vertReorderedGraphVertId.count(meshVertId2) != 0) ||
-                         (vertReorderedGraphVertId.count(meshVertId)  != 0 &&
-                          vertReorderedGraphVertId.count(meshVertId2) == 0))
+                else
                 {
-                    ASSERTL0(false,
-                             "Numbering error for periodic boundary conditions!");
+                    if (vertReorderedGraphVertId.count(meshVertId) == 0 &&
+                        vertReorderedGraphVertId.count(meshVertId2) == 0)
+                    {
+                        vertReorderedGraphVertId[meshVertId]  = graphVertId;
+                        vertReorderedGraphVertId[meshVertId2] = graphVertId++;
+                    }
+                    else if ((vertReorderedGraphVertId.count(meshVertId)  == 0 &&
+                              vertReorderedGraphVertId.count(meshVertId2) != 0) ||
+                             (vertReorderedGraphVertId.count(meshVertId)  != 0 &&
+                              vertReorderedGraphVertId.count(meshVertId2) == 0))
+                    {
+                        ASSERTL0(false,
+                                 "Numbering error for periodic boundary conditions!");
+                    }
                 }
             }
 

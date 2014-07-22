@@ -82,11 +82,12 @@ namespace Nektar
 	  }
 		   
 	 // Set up locations of velocity vector.
-        m_velLoc = Array<OneD, NekDouble>(m_spacedim);
-        for (int i = 0; i < m_spacedim; ++i)
-        {
-            m_velLoc[i] = i+1;
-        }
+	 m_vecLocs = Array<OneD, Array<OneD, NekDouble> >(1);
+	 m_vecLocs[0] = Array<OneD, NekDouble>(m_spacedim);
+	 for (int i = 0; i < m_spacedim; ++i)
+	 {
+			m_vecLocs[0][i] = 1 + i;
+	 }
 
  	// Load generic input parameters
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);

@@ -36,7 +36,7 @@
 #ifndef NEKTAR_TESTS_METRIC_H
 #define NEKTAR_TESTS_METRIC_H
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <string>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>

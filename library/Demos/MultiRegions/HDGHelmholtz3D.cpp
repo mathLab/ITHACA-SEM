@@ -57,10 +57,18 @@ int main(int argc, char *argv[])
 
     if (vComm->GetRank() == 0)
     {
-        cout << "Solving 3D Helmholtz:"  << endl;
-        cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
-        cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
-        cout << endl;
+            cout << "Solving 3D Helmholtz:"  << endl;
+            cout << "  - Communication: " 
+                 << vSession->GetComm()->GetType() << " (" 
+                 << vSession->GetComm()->GetSize() 
+                 << " processes)" << endl;
+            cout << "  - Solver type  : " 
+                 << vSession->GetSolverInfo("GlobalSysSoln") << endl;
+            cout << "  - Lambda       : " 
+                 << factors[StdRegions::eFactorLambda] << endl;
+            cout << "  - No. modes    : " 
+                 << bkey0.GetNumModes() << endl;
+            cout << endl;
     }
     //----------------------------------------------
    

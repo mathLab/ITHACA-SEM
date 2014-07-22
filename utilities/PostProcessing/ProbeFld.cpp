@@ -4,6 +4,7 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
@@ -57,7 +58,7 @@ int main(int argc, char *argv[])
     for(i = 0; i < fielddef.size(); ++i)
     {
         vector<LibUtilities::PointsType> ptype;
-        for(j = 0; j < 2; ++j)
+        for(j = 0; j < 3; ++j)
         {
             ptype.push_back(LibUtilities::ePolyEvenlySpaced);
         }
@@ -77,7 +78,7 @@ int main(int argc, char *argv[])
 
     switch(expdim)
     {
-    case 1:
+        case 1:
         {
             ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 2,"NumHomogeneousDir is only set up for 1 or 2");
 
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
             }
         }
         break;
-    case 2:
+        case 2:
         {
             ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
 
@@ -191,12 +192,24 @@ int main(int argc, char *argv[])
             }
         }
         break;
-    case 3:
-        ASSERTL0(false,"3D not set up");
+        case 3:
+        {
+            MultiRegions::ExpList3DSharedPtr Exp3D;
+            Exp3D = MemoryManager<MultiRegions::ExpList3D>
+                ::AllocateSharedPtr(vSession,graphShPt);
+            Exp[0] =  Exp3D;
+            
+            for(i = 1; i < nfields; ++i)
+            {
+                Exp[i] = MemoryManager<MultiRegions::ExpList3D>
+                    ::AllocateSharedPtr(*Exp3D);
+            }
+        }
         break;
-    default:
-        ASSERTL0(false,"Expansion dimension not recognised");
-        break;
+        
+        default:
+            ASSERTL0(false,"Expansion dimension not recognised");
+            break;
     }
     //----------------------------------------------
 

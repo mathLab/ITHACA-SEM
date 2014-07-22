@@ -97,9 +97,9 @@ namespace Nektar
             int  nComposite = 0;
             
             // read first zone (Hopefully 3D)
-            while (!mshFile.eof())
+            while (!m_mshFile.eof())
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
                 if(line.find("ZONE") != string::npos) 
                 {
                     ReadZone(nComposite);
@@ -108,7 +108,7 @@ namespace Nektar
             }
             
             // read remaining 2D zones
-            while (!mshFile.eof())
+            while (!m_mshFile.eof())
             {            
                 if(line.find("ZONE") != string::npos) 
                 {
@@ -117,7 +117,7 @@ namespace Nektar
             }
 
             PrintSummary();
-            mshFile.close();
+            m_mshFile.close();
 
             ProcessEdges();
             ProcessFaces();
@@ -138,18 +138,18 @@ namespace Nektar
 
             // Read Zone Header
             nnodes  = nfaces = nelements = 0;
-            while (!mshFile.eof())
+            while (!m_mshFile.eof())
             {
-                pos = mshFile.tellg();
+                pos = m_mshFile.tellg();
 
-                getline(mshFile, line);
+                getline(m_mshFile, line);
 
                 boost::to_upper(line);
                 
                 // cehck to see if readable data. 
                 if(sscanf(line.c_str(),"%lf",&value) == 1)
                 {
-                    mshFile.seekg(pos);
+                    m_mshFile.seekg(pos);
                     break;
                 }
 
@@ -212,19 +212,19 @@ namespace Nektar
             // Read in Nodes
             for(i = 0; i < nnodes; ++i)
             {
-                mshFile >> value; 
+                m_mshFile >> value; 
                 x.push_back(value);
             }
 
             for(i = 0; i < nnodes; ++i)
             {
-                mshFile >> value; 
+                m_mshFile >> value; 
                 y.push_back(value);
             }
 
             for(i = 0; i < nnodes; ++i)
             {
-                mshFile >> value; 
+                m_mshFile >> value; 
                 z.push_back(value);
             }
 
@@ -235,12 +235,12 @@ namespace Nektar
             }
             
             // Read Node count per face 
-            getline(mshFile, line);
+            getline(m_mshFile, line);
             if(line.find("node count per face") == string::npos)
             {
                 if(line.find("face nodes") == string::npos)
                 {
-                    getline(mshFile,line);
+                    getline(m_mshFile,line);
                 }
             }
 
@@ -253,19 +253,19 @@ namespace Nektar
                 int nodes;
                 for(i = 0; i < nfaces; ++i)
                 {
-                    mshFile>> nodes;
+                    m_mshFile>> nodes;
                     ASSERTL0(nodes <= 4,"Can only handle meshes with "
                              "up to four nodes per face");
                     Nodes_per_face.push_back(nodes);
                 }
                 // Read next line
-                getline(mshFile, line);
+                getline(m_mshFile, line);
             }
 
             // Read face nodes; 
             if(line.find("face nodes") == string::npos)
             {
-                getline(mshFile,line);
+                getline(m_mshFile,line);
             }
             s.clear();
             s.str(line);
@@ -286,7 +286,7 @@ namespace Nektar
                     for(int j = 0; j < nodes; ++j)
                     {
                         
-                        mshFile>> nodeID;
+                        m_mshFile>> nodeID;
                         
                         Fnodes.push_back(nodeID-1);
                     }
@@ -304,10 +304,10 @@ namespace Nektar
             Array<OneD, vector< int> > ElementFaces(nelements);
 
             // check to see if next line contains left elements
-            getline(mshFile, line);
+            getline(m_mshFile, line);
             if(line.find("left elements") == string::npos)
             {
-                getline(mshFile,line);
+                getline(m_mshFile,line);
             }
 
             if(line.find("left elements") != string::npos)
@@ -316,7 +316,7 @@ namespace Nektar
 
                 for(i = 0; i < nfaces; ++i)
                 {
-                    mshFile>> elmtID;
+                    m_mshFile>> elmtID;
                     
                     if(elmtID > 0)
                     {
@@ -331,10 +331,10 @@ namespace Nektar
                 
             
             // check to see if next line contains right elements
-            getline(mshFile, line);
+            getline(m_mshFile, line);
             if(line.find("right elements") == string::npos)
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
             }
 
             if(line.find("right elements") != string::npos)
@@ -344,7 +344,7 @@ namespace Nektar
 
                 for(i = 0; i < nfaces; ++i)
                 {
-                    mshFile>> elmtID;
+                    m_mshFile>> elmtID;
                     
                     if(elmtID > 0)
                     {
@@ -353,7 +353,7 @@ namespace Nektar
                 }
                 
                 // read to end of line
-                getline(mshFile, line);
+                getline(m_mshFile, line);
             }
             else
             {
@@ -707,7 +707,7 @@ namespace Nektar
             }
             
             // Create element
-            ElmtConfig conf(elType,1,false,false);
+            ElmtConfig conf(elType,1,true,true);
             ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
                                                                      nodeList,tags);
             
@@ -763,7 +763,7 @@ namespace Nektar
             // Create element
             if(elType != LibUtilities::ePyramid)
             {
-                ElmtConfig conf(elType,1,false,false,DoOrient);
+                ElmtConfig conf(elType,1,true,true,DoOrient);
                 ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
                                                            nodeList,tags);
                 

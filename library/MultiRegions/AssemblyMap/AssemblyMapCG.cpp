@@ -278,9 +278,8 @@ namespace Nektar
                 // Loop over all faces of element i
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    faceOrient = boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion3D>(
-                            locExpansion)->GetGeom3D()->GetFaceOrient(j);
+                    faceOrient = locExpansion->as<LocalRegions::Expansion3D>()
+                            ->GetGeom3D()->GetFaceOrient(j);
 
                     meshFaceId = locExpansion->GetGeom()->GetFid(j);
                     
@@ -752,7 +751,5 @@ namespace Nektar
         {
             return m_extraDirEdges;
         }
-
-
     } // namespace
 } // namespace

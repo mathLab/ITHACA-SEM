@@ -432,23 +432,28 @@ namespace Nektar
                 else // only load relevant partitions
                 {
                     int i,j;
-                    map<int,int> FileIDs; 
+                    map<int,vector<int> > FileIDs;
+                    map<int,vector<int> >::iterator it;
                     set<int> LoadFile;
-                    
+
                     for(i = 0; i < elementIDs_OnPartitions.size(); ++i)
                     {
                         for(j = 0; j < elementIDs_OnPartitions[i].size(); ++j)
                         {
-                            FileIDs[elementIDs_OnPartitions[i][j]] = i;
+                            FileIDs[elementIDs_OnPartitions[i][j]].push_back(i);
                         }
                     }
                     
                     for(i = 0; i < ElementIDs.num_elements(); ++i)
                     {
-                        ASSERTL1(FileIDs.count(ElementIDs[i]) != 0,
-                                 "ElementIDs  not found in partitions");
-                        
-                        LoadFile.insert(FileIDs[ElementIDs[i]]);
+                        it = FileIDs.find(ElementIDs[i]);
+                        if (it != FileIDs.end())
+                        {
+                            for (j = 0; j < it->second.size(); ++j)
+                            {
+                                LoadFile.insert(it->second[j]);
+                            }
+                        }
                     }
                     
                     set<int>::iterator iter; 
@@ -518,20 +523,19 @@ namespace Nektar
 
             for (int t = 0; t < fileNames.size(); ++t)
             {
+                if(elementList[t].size())
+                {
+                    TiXmlElement * elemIDs = new TiXmlElement("Partition");
+                    root->LinkEndChild(elemIDs);
+                    
+                    elemIDs->SetAttribute("FileName",fileNames[t]);
+                    
+                    string IDstring;
+                    
+                    GenerateSeqString(elementList[t],IDstring);
 
-                ASSERTL1(elementList[t].size() > 0,
-                         "Element list must contain at least one value.");
-
-                TiXmlElement * elemIDs = new TiXmlElement("Partition");
-                root->LinkEndChild(elemIDs);
-
-                elemIDs->SetAttribute("FileName",fileNames[t]);
-
-                string IDstring;
-
-                GenerateSeqString(elementList[t],IDstring);
-
-                elemIDs->LinkEndChild(new TiXmlText(IDstring));
+                    elemIDs->LinkEndChild(new TiXmlText(IDstring));
+                }
             }
 
             doc.SaveFile(outFile);
@@ -1329,7 +1333,12 @@ namespace Nektar
         int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
         {
             int i;
-            ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
+
+            if(fielddefs->m_elementIDs.size() == 0) // empty partition
+            {
+                return 0;
+            }
+            //ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
 
             unsigned int numbasis = 0;
 

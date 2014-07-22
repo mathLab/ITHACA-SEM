@@ -114,7 +114,7 @@ namespace Nektar
             // Ignore first 3 lines. 4th line contains number of parameters.
             for (i = 0; i < 4; ++i)
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
             }
 
             stringstream s(line);
@@ -123,38 +123,38 @@ namespace Nektar
             for (i = 0; i < nParam; ++i)
             {
                 string tmp1, tmp2;
-                getline(mshFile, line);
+                getline(m_mshFile, line);
                 s.str(line);
                 s >> tmp1 >> tmp2;
             }
             
             // -- Read in passive scalars (ignore)
-            getline(mshFile, line);
+            getline(m_mshFile, line);
             s.clear();
             s.str(line);
             s >> j;
             for (i = 0; i < j; ++i)
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
             }
 
             // -- Read in logical switches (ignore)
-            getline(mshFile, line);
+            getline(m_mshFile, line);
             s.clear();
             s.str(line);
             s >> j;
             for (i = 0; i < j; ++i)
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
             }
 
             // -- Read in mesh data.
             
             // First hunt for MESH tag
             bool foundMesh = false;
-            while (!mshFile.eof())
+            while (!m_mshFile.eof())
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
                 if (line.find("MESH") != string::npos)
                 {
                     foundMesh = true;
@@ -169,7 +169,7 @@ namespace Nektar
             }
             
             // Now read in number of elements and space dimension.
-            getline(mshFile, line);
+            getline(m_mshFile, line);
             s.clear(); s.str(line);
             s >> nElements >> m_mesh->m_expDim;
             m_mesh->m_spaceDim = m_mesh->m_expDim;
@@ -186,7 +186,7 @@ namespace Nektar
             // Loop over and create elements.
             for (i = 0; i < nElements; ++i)
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
                 
                 if (m_mesh->m_expDim == 2)
                 {
@@ -241,7 +241,7 @@ namespace Nektar
 
                 for (j = 0; j < m_mesh->m_expDim; ++j)
                 {
-                    getline(mshFile,line);
+                    getline(m_mshFile,line);
                     s.clear(); s.str(line);
                     for (k = 0; k < nNodes; ++k)
                     {
@@ -326,7 +326,7 @@ namespace Nektar
             }
 
             // -- Read in curved data.
-            getline(mshFile, line);
+            getline(m_mshFile, line);
             if (line.find("CURVE") == string::npos)
             {
                 cerr << "Cannot find curved side data." << endl;
@@ -334,7 +334,7 @@ namespace Nektar
             }
             
             // Read number of curves.
-            getline(mshFile, line);
+            getline(m_mshFile, line);
             s.clear(); s.str(line);
             s >> nCurves; 
             
@@ -344,14 +344,14 @@ namespace Nektar
                 
                 for (i = 0; i < nCurves; ++i)
                 {
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     s.clear(); s.str(line);
                     s >> word;
                     
                     if (word == "File")
                     {
                         // Next line contains filename and curve tag.
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         s.clear(); s.str(line);
                         s >> word >> curveTag;
                         curveTags[curveTag] = make_pair(eFile, word);
@@ -359,7 +359,7 @@ namespace Nektar
                     else if (word == "Recon")
                     {
                         // Next line contains curve tag.
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         s.clear(); s.str(line);
                         s >> word >> curveTag;
                         curveTags[curveTag] = make_pair(eRecon, word);
@@ -376,7 +376,7 @@ namespace Nektar
                 
                 // Read in curve information. First line should contain number
                 // of curved sides.
-                getline(mshFile,line);
+                getline(m_mshFile,line);
                 
                 if (line.find("side") == string::npos)
                 {
@@ -396,7 +396,7 @@ namespace Nektar
                 // information in the HOSurfSet, then map this onto faces.
                 for (i = 0; i < nCurvedSides; ++i)
                 {
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     s.clear(); s.str(line);
                     s >> faceId >> elId >> word;
                     faceId--;
@@ -446,21 +446,21 @@ namespace Nektar
                         }
                         
                         // Read x/y/z coordinates.
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         s.clear(); s.str(line);
                         for (j = 0; j < tmp.size(); ++j)
                         {
                             s >> n[j].m_x;
                         }
 
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         s.clear(); s.str(line);
                         for (j = 0; j < tmp.size(); ++j)
                         {
                             s >> n[j].m_y;
                         }
 
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         s.clear(); s.str(line);
                         for (j = 0; j < tmp.size(); ++j)
                         {
@@ -648,17 +648,17 @@ namespace Nektar
             map<int,vector<pair<int,LibUtilities::ShapeType> > > surfaceCompMap;
             
             // Skip boundary conditions line.
-            getline(mshFile, line);
-            getline(mshFile, line);
+            getline(m_mshFile, line);
+            getline(m_mshFile, line);
             
             int nSurfaces = 0;
 
             while (true)
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
                 
                 // Break out of loop at end of boundary conditions section.
-                if (line.find("*") != string::npos || mshFile.eof() ||
+                if (line.find("*") != string::npos || m_mshFile.eof() ||
                     line.length() == 0)
                 {
                     break;
@@ -703,7 +703,7 @@ namespace Nektar
                     {
                         for (i = 0; i < m_mesh->m_fields.size()-1; ++i)
                         {
-                            getline(mshFile, line);
+                            getline(m_mshFile, line);
                             size_t p = line.find_first_of('=');
                             vals.push_back(boost::algorithm::trim_copy(
                                                line.substr(p+1)));
@@ -905,7 +905,7 @@ namespace Nektar
                 nSurfaces++;
             }
 
-            mshFile.close();
+            m_mshFile.close();
             
             // -- Process rest of mesh.
             ProcessEdges     ();

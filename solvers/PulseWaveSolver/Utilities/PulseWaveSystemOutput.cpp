@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File TenTusscher06Epi.h
+// File PulseWaveSystemOutput.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,49 +29,58 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: ten Tusscher 2006 Epicardium cell model
+// Description: Output routines for  Pulse Wave Solver
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHER_PANFILOV_2006_EPI_CELL_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHER_PANFILOV_2006_EPI_CELL_H
+#include <iostream>
 
-#include <CardiacEPSolver/CellModels/CellModel.h>
+#include <PulseWaveSolver/Utilities/PulseWaveSystemOutput.h>
+
 
 namespace Nektar
 {
-    class TenTusscher06Epi : public CellModel
+    
+    string PulseWaveSystemOutput::className = GetEquationSystemFactory().RegisterCreatorFunction("PulseWaveSystemOutput", PulseWaveSystemOutput::create, "Pulse Wave Propagation output.");
+
+    /**
+     *  @class PulseWaveSystemOutput
+     *
+     *  Initialises the arterial subdomains in m_vessels and sets up
+     *  all domain-linking conditions (bifurcations, junctions,
+     *  merging flows). Detects the network structure and assigns
+     *  boundary conditons. Also provides the underlying timestepping
+     *  framework for pulse wave solvers including the general
+     *  timestepping routines.
+     */
+    
+    /**
+     *  Processes SolverInfo parameters from the session file and sets
+     *  up timestepping-specific code.
+     *
+     *  @param   m_Session        Session object to read parameters from.
+     */
+    PulseWaveSystemOutput::PulseWaveSystemOutput(const LibUtilities::SessionReaderSharedPtr& m_session)
+        : PulseWaveSystem(m_session)
     {
-
-    public:
-        /// Creates an instance of this class
-        static CellModelSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession,
-                const MultiRegions::ExpListSharedPtr& pField)
-        {
-            return MemoryManager<TenTusscher06Epi>::AllocateSharedPtr(pSession, pField);
-        }
-
-        /// Name of class
-        static std::string className;
-
-        /// Constructor
-        TenTusscher06Epi(const LibUtilities::SessionReaderSharedPtr& pSession, const MultiRegions::ExpListSharedPtr& pField);
-
-        /// Desctructor
-        virtual ~TenTusscher06Epi() {}
-
-    protected:
-        virtual void v_Update(
-               const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                     Array<OneD,        Array<OneD, NekDouble> >&outarray,
-               const NekDouble time);
-
-        /// Prints a summary of the model parameters.
-        virtual void v_GenerateSummary(SummaryList& s);
-
-        virtual void v_SetInitialConditions();
-    };
+    }
+    
+    /**
+     *  Destructor
+     */
+    PulseWaveSystemOutput::~PulseWaveSystemOutput()
+    {
+    }
+    
+    /** o
+     *
+     * Duplicates PulseWaveSystem InitObject but does not set 
+     * 
+     */
+    void PulseWaveSystemOutput::v_InitObject()
+    {       
+        m_session->RegisterCmdLineArgument("SetToOneSpaceDimension","False","Redefine mesh to be aligned to x-axis");
+        
+        PulseWaveSystem::v_InitObject();
+    }
 }
-
-#endif

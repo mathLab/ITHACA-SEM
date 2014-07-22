@@ -48,25 +48,25 @@ namespace Nektar
     {
         ModuleKey ProcessQCriterion::className =
         GetModuleFactory().RegisterCreatorFunction(
-                            ModuleKey(eProcessModule, "QCriterion"),
-                            ProcessQCriterion::create, "Computes Q-Criterion.");
-
+            ModuleKey(eProcessModule, "QCriterion"),
+                                                   ProcessQCriterion::create, "Computes Q-Criterion.");
+        
         ProcessQCriterion::ProcessQCriterion(FieldSharedPtr f) :
-                ProcessModule(f)
+        ProcessModule(f)
         {
         }
-
+        
         ProcessQCriterion::~ProcessQCriterion()
         {
         }
-
+        
         void ProcessQCriterion::Process(po::variables_map &vm)
         {
             if (m_f->m_verbose)
             {
                 cout << "ProcessQCriterion: Calculating Q Criterion..." << endl;
             }
-
+            
             int i, j;
             int expdim    = m_f->m_graph->GetMeshDimension();
             int spacedim  = expdim;
@@ -79,31 +79,31 @@ namespace Nektar
             if (spacedim == 1 || spacedim == 2)
             {
                 cerr << "\n Error: ProcessQCriterion must be computed for a 3D"
-                        " (or quasi-3D) case. \n" << endl;
+                " (or quasi-3D) case. \n" << endl;
             }
-
+            
             //For calculating Q-Criterion only 1 field must be added
             int addfields = 1;
-
+            
             int npoints = m_f->m_exp[0]->GetNpoints();
-
+            
             Array<OneD, Array<OneD, NekDouble> > grad(nfields * nfields);
-
+            
             Array<OneD, Array<OneD, NekDouble> > omega(nfields * nfields);
             Array<OneD, Array<OneD, NekDouble> > S    (nfields * nfields);
-
+            
             Array<OneD, Array<OneD, NekDouble> > outfield (addfields);
             Array<OneD, Array<OneD, NekDouble> > outfield1(addfields);
             Array<OneD, Array<OneD, NekDouble> > outfield2(addfields);
             Array<OneD, Array<OneD, NekDouble> > outfield3(addfields);
-
+            
             m_f->m_exp.resize(nfields+addfields);
-
+            
             for (i = 0; i < nfields*nfields; ++i)
             {
                 grad[i] = Array<OneD, NekDouble>(npoints);
             }
-
+            
             for (i = 0; i < addfields; ++i)
             {
                 //Will store the Q-Criterion
@@ -111,11 +111,11 @@ namespace Nektar
                 outfield1[i] = Array<OneD, NekDouble>(npoints);
                 outfield2[i] = Array<OneD, NekDouble>(npoints);
                 outfield3[i] = Array<OneD, NekDouble>(npoints);
-
+                
                 omega[i] = Array<OneD, NekDouble>(npoints);
                 S[i] = Array<OneD, NekDouble>(npoints);
             }
-
+            
             for (i = 0; i < nfields; ++i)
             {
                 m_f->m_exp[i]->PhysDeriv(m_f->m_exp[i]->GetPhys(),
@@ -123,132 +123,132 @@ namespace Nektar
                                          grad[i*nfields+1],
                                          grad[i*nfields+2]);
             }
-
+            
             // W_x = Wy - Vz
             Vmath::Vsub(npoints, grad[2 * nfields + 1], 1,
-                                 grad[1 * nfields + 2], 1,
-                                 outfield1[0],          1);
+                        grad[1 * nfields + 2], 1,
+                        outfield1[0],          1);
             // W_x^2
             Vmath::Vmul(npoints, outfield1[0],          1,
-                                 outfield1[0],          1,
-                                 outfield1[0],          1);
-
+                        outfield1[0],          1,
+                        outfield1[0],          1);
+            
             // W_y = Uz - Wx
             Vmath::Vsub(npoints, grad[0 * nfields + 2], 1,
-                                 grad[2 * nfields + 0], 1,
-                                 outfield2[0],          1);
+                        grad[2 * nfields + 0], 1,
+                        outfield2[0],          1);
             // W_y^2
             Vmath::Vmul(npoints, outfield2[0],          1,
-                                 outfield2[0],          1,
-                                 outfield2[0],          1);
-
+                        outfield2[0],          1,
+                        outfield2[0],          1);
+            
             // W_z = Vx - Uy
             Vmath::Vsub(npoints, grad[1 * nfields + 0], 1,
-                                 grad[0 * nfields + 1], 1,
-                                 outfield3[0],          1);
+                        grad[0 * nfields + 1], 1,
+                        outfield3[0],          1);
             // W_z^2
             Vmath::Vmul(npoints, outfield3[0],          1,
-                                 outfield3[0],          1,
-                                 outfield3[0],          1);
-
+                        outfield3[0],          1,
+                        outfield3[0],          1);
+            
             // add fields omega = 0.5*(W_x^2 + W_y^2 + W_z^2)
-
+            
             NekDouble fac = 0.5;
             Vmath::Vadd(npoints, &outfield1[0][0],      1,
-                                 &outfield2[0][0],      1,
-                                 &omega[0][0],          1);
+                        &outfield2[0][0],      1,
+                        &omega[0][0],          1);
             Vmath::Vadd(npoints, &omega[0][0],          1,
-                                 &outfield3[0][0],      1,
-                                 &omega[0][0],          1);
-
+                        &outfield3[0][0],      1,
+                        &omega[0][0],          1);
+            
             for (int k = 0; k < addfields; ++k)
             {
                 Vmath::Smul(npoints, fac, &omega[k][0], 1, &omega[k][0], 1);
             }
-
+            
             Vmath::Zero(npoints, &outfield1[0][0], 1);
             Vmath::Zero(npoints, &outfield2[0][0], 1);
             Vmath::Zero(npoints, &outfield3[0][0], 1);
-
+            
             Vmath::Vmul(npoints, grad[0 * nfields + 0], 1,
-                                 grad[0 * nfields + 0], 1,
-                                 outfield1[0],          1);
+                        grad[0 * nfields + 0], 1,
+                        outfield1[0],          1);
             Vmath::Vmul(npoints, grad[1 * nfields + 1], 1,
-                                 grad[1 * nfields + 1], 1,
-                                 outfield2[0],          1);
+                        grad[1 * nfields + 1], 1,
+                        outfield2[0],          1);
             Vmath::Vmul(npoints, grad[2 * nfields + 2], 1,
-                                 grad[2 * nfields + 2], 1,
-                                 outfield3[0],          1);
-
+                        grad[2 * nfields + 2], 1,
+                        outfield3[0],          1);
+            
             Vmath::Vadd(npoints, &outfield1[0][0], 1,
-                                 &outfield2[0][0], 1,
-                                 &S[0][0], 1);
+                        &outfield2[0][0], 1,
+                        &S[0][0], 1);
             Vmath::Vadd(npoints, &S[0][0], 1,
-                                 &outfield3[0][0], 1,
-                                 &S[0][0], 1);
-
+                        &outfield3[0][0], 1,
+                        &S[0][0], 1);
+            
             // W_y + V_z
             Vmath::Vadd(npoints, grad[2 * nfields + 1], 1,
-                                 grad[1 * nfields + 2], 1,
-                                 outfield1[0], 1);
+                        grad[1 * nfields + 2], 1,
+                        outfield1[0], 1);
             Vmath::Vmul(npoints, &outfield1[0][0], 1,
-                                 &outfield1[0][0], 1,
-                                 &outfield1[0][0], 1);
-
+                        &outfield1[0][0], 1,
+                        &outfield1[0][0], 1);
+            
             // U_z + W_x
             Vmath::Vadd(npoints, grad[0 * nfields + 2], 1,
-                                 grad[2 * nfields + 0], 1,
-                                 outfield2[0], 1);
+                        grad[2 * nfields + 0], 1,
+                        outfield2[0], 1);
             Vmath::Vmul(npoints, &outfield2[0][0], 1,
-                                 &outfield2[0][0], 1,
-                                 &outfield2[0][0], 1);
-
+                        &outfield2[0][0], 1,
+                        &outfield2[0][0], 1);
+            
             // V_x + U_y
             Vmath::Vadd(npoints, grad[1 * nfields + 0], 1,
-                                 grad[0 * nfields + 1], 1,
-                                 outfield3[0], 1);
+                        grad[0 * nfields + 1], 1,
+                        outfield3[0], 1);
             Vmath::Vmul(npoints, &outfield3[0][0], 1,
-                                 &outfield3[0][0], 1,
-                                 &outfield3[0][0], 1);
-
+                        &outfield3[0][0], 1,
+                        &outfield3[0][0], 1);
+            
             Vmath::Vadd(npoints, &outfield1[0][0], 1,
-                                 &outfield2[0][0], 1,
-                                 &outfield2[0][0], 1);
+                        &outfield2[0][0], 1,
+                        &outfield2[0][0], 1);
             Vmath::Vadd(npoints, &outfield2[0][0], 1,
-                                 &outfield3[0][0], 1,
-                                 &outfield3[0][0], 1);
-
+                        &outfield3[0][0], 1,
+                        &outfield3[0][0], 1);
+            
             for (int k = 0; k < addfields; ++k)
             {
                 Vmath::Smul(npoints, fac, &outfield3[k][0], 1,
-                                          &outfield3[k][0], 1);
+                            &outfield3[k][0], 1);
             }
-
+            
             Vmath::Vadd(npoints, &outfield3[0][0], 1, &S[0][0], 1, &S[0][0], 1);
             Vmath::Vsub(npoints, omega[0], 1, S[0], 1, outfield[0], 1);
-
+            
             for (int k = 0; k < addfields; ++k)
             {
                 Vmath::Smul(npoints, fac, &outfield[k][0], 1,
-                                          &outfield[k][0], 1);
+                            &outfield[k][0], 1);
             }
-
-
+            
+            
             for (i = 0; i < addfields; ++i)
             {
-                m_f->m_exp[nfields + i] = m_f->AppendExpList();
+                m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
                 m_f->m_exp[nfields + i]->UpdatePhys() = outfield[i];
                 m_f->m_exp[nfields + i]->FwdTrans(outfield[i],
-                                    m_f->m_exp[nfields + i]->UpdateCoeffs());
+                                                  m_f->m_exp[nfields + i]->UpdateCoeffs());
             }
-
+            
             vector<string> outname;
             outname.push_back("Q");
-
+            
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
             = m_f->m_exp[0]->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
+            
             for (j = 0; j < nfields + addfields; ++j)
             {
                 for (i = 0; i < FieldDef.size(); ++i)
@@ -260,12 +260,12 @@ namespace Nektar
                     else
                     {
                         FieldDef[i]->m_fields.push_back(
-                                            m_f->m_fielddef[0]->m_fields[j]);
+                            m_f->m_fielddef[0]->m_fields[j]);
                     }
                     m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
                 }
             }
-
+            
             m_f->m_fielddef = FieldDef;
             m_f->m_data     = FieldData;
         }

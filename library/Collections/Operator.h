@@ -45,72 +45,76 @@
     static OperatorKey m_typeArr[];                             \
     static OperatorSharedPtr create(                            \
         StdRegions::StdExpansionSharedPtr pExp,                 \
-        vector<SpatialDomains::GeometrySharedPtr> pGeom)        \
+        vector<SpatialDomains::GeometrySharedPtr> pGeom,        \
+        boost::shared_ptr<CoalescedGeomData> GeomData)          \
     {                                                           \
         return MemoryManager<cname>                             \
-            ::AllocateSharedPtr(pExp, pGeom);                   \
+            ::AllocateSharedPtr(pExp, pGeom, GeomData);         \
     }
 
 namespace Nektar {
-namespace Collections {
-    enum OperatorType
-    {
-        eBwdTrans,
-        eIProductWRTBase,
-        eFwdTrans,
-        ePhysDeriv
-    };
+    namespace Collections {
 
-    enum ImplementationType
-    {
-        eIterPerExp,
-        eSumFac,
-        eLocMat
-    };
+        class CoalescedGeomData;
 
-    class Operator;
-    typedef boost::shared_ptr<Operator> OperatorSharedPtr;
 
-    typedef boost::tuple<
-        LibUtilities::ShapeType, OperatorType, ImplementationType> OperatorKey;
-    bool operator< (OperatorKey const &p1, OperatorKey const &p2);
-    std::ostream &operator<<(std::ostream &os, OperatorKey const &p);
+        enum OperatorType
+        {
+            eBwdTrans,
+            eIProductWRTBase,
+            eFwdTrans,
+            ePhysDeriv
+        };
+        
+        enum ImplementationType
+        {
+            eIterPerExp,
+            eSumFac,
+            eStdMat
+        };
+        
+        class Operator;
+        typedef boost::shared_ptr<Operator> OperatorSharedPtr;
+        
+        typedef boost::tuple<
+            LibUtilities::ShapeType, OperatorType, ImplementationType> OperatorKey;
+        bool operator< (OperatorKey const &p1, OperatorKey const &p2);
+        std::ostream &operator<<(std::ostream &os, OperatorKey const &p);
 
-    typedef Nektar::LibUtilities::NekFactory<
-        OperatorKey,
-        Operator,
-        StdRegions::StdExpansionSharedPtr,
-
-        vector<SpatialDomains::GeometrySharedPtr> > OperatorFactory;
-    OperatorFactory& GetOperatorFactory();
-
-    class Operator
-    {
-    public:
+        typedef Nektar::LibUtilities::NekFactory<
+            OperatorKey,
+            Operator,
+            StdRegions::StdExpansionSharedPtr,
+            vector<SpatialDomains::GeometrySharedPtr>,
+            boost::shared_ptr<CoalescedGeomData> > OperatorFactory;
+        OperatorFactory& GetOperatorFactory();
+        
+        class Operator
+        {
+        public:
         Operator(StdRegions::StdExpansionSharedPtr pExp,
-                 vector<SpatialDomains::GeometrySharedPtr> pGeom)
+                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                 boost::shared_ptr<CoalescedGeomData> GeomData)
             : m_stdExp (pExp),
-              m_numElmt(pGeom.size()),
-              m_wspSize(0)
-        {
-        }
-
-        virtual void operator()(
-            const Array<OneD, const NekDouble> &input,
-                  Array<OneD,       NekDouble> &output,
-                  Array<OneD,       NekDouble> &wsp = NullNekDouble1DArray) = 0;
-
-        int GetWspSize()
-        {
-            return m_wspSize;
-        }
-
-    protected:
-        StdRegions::StdExpansionSharedPtr m_stdExp;
-        unsigned int m_numElmt;
-        unsigned int m_wspSize;
-    };
+                m_numElmt(pGeom.size()),
+                m_wspSize(0)
+                {
+                }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &wsp = NullNekDouble1DArray) = 0;
+            
+            int GetWspSize()
+            {
+                return m_wspSize;
+            }
+            
+        protected:
+            StdRegions::StdExpansionSharedPtr m_stdExp;
+            unsigned int m_numElmt;
+            unsigned int m_wspSize;
+        };
+    }
 }
-}
-
 #endif

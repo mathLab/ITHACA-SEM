@@ -39,6 +39,7 @@
 
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdPyrExp.h>
@@ -1179,7 +1180,7 @@ namespace Nektar
         void ExpList::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
 											Array<OneD, NekDouble> &outarray)
         {
-#if 0
+#if 1
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
@@ -2627,9 +2628,22 @@ namespace Nektar
                         ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey());
                     break;
                 case LibUtilities::eTriangle:
-                    stdExp = MemoryManager<StdRegions::StdTriExp>
-                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                            exp->GetBasis(1)->GetBasisKey());
+                    {
+                        StdRegions::StdNodalTriExpSharedPtr nexp;
+                        if((nexp = boost::dynamic_pointer_cast<StdRegions::StdNodalTriExp>(exp)))
+                        {
+                            stdExp = MemoryManager<StdRegions::StdNodalTriExp>
+                                ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                                    exp->GetBasis(1)->GetBasisKey(),
+                                                    nexp->GetNodalPointsKey()->GetPointsType());
+                        }
+                        else
+                        {
+                            stdExp = MemoryManager<StdRegions::StdTriExp>
+                                ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                                    exp->GetBasis(1)->GetBasisKey());
+                        }
+                    }
                     break;
                 case LibUtilities::eQuadrilateral:
                     stdExp = MemoryManager<StdRegions::StdQuadExp>

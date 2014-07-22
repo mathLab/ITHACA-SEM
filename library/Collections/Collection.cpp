@@ -39,32 +39,88 @@ namespace Nektar {
 
     namespace Collections {
 
+
+        CoalescedGeomData::CoalescedGeomData(void)
+        {
+        }
+
+        CoalescedGeomData::~CoalescedGeomData(void)
+        {
+        }
+
+        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(const LibUtilities::PointsKeyVector &ptsKeys,
+                                                               vector<SpatialDomains::GeometrySharedPtr> &pGeom)
+        {
+            if(m_oneDGeomData.count(eJac) == 0)
+            {
+
+                int nElmts = pGeom.size();
+                
+                // set up Cached Jacobians to be continuous 
+                int npts = 1;
+                for (int i = 0; i < ptsKeys.size(); ++i)
+                {
+                    npts   *= ptsKeys[i].GetNumPoints();
+                }
+                
+
+                Array<OneD, NekDouble> newjac(npts*nElmts);
+            
+                //copy Jacobians into a continuous list and set new chatched value
+                int cnt = 0;
+                for(int i = 0; i < nElmts; ++i)
+                {
+                    const Array<OneD, const NekDouble> jac= pGeom[i]->GetGeomFactors()->GetJac(ptsKeys);
+                    
+                    if (pGeom[i]->GetGeomFactors()->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
+                    }
+                    else
+                    {
+                        Vmath::Fill(npts, jac[0], &newjac[cnt], 1);
+                    }
+
+                    cnt += npts;
+                }
+                
+                m_oneDGeomData[eJac] = newjac; 
+            }
+            
+            return m_oneDGeomData[eJac];
+        }
+        
+        
         Collection::Collection(StdRegions::StdExpansionSharedPtr pExp,
                    vector<SpatialDomains::GeometrySharedPtr> pGeom)
             : m_stdExp(pExp), m_geom(pGeom)
         {
+            
+            OperatorKey bwdStdMat    (pExp->DetShapeType(), eBwdTrans, eStdMat);
+            OperatorKey bwdIterPerExp(pExp->DetShapeType(), eBwdTrans, eIterPerExp);
+            OperatorKey bwdSumFac    (pExp->DetShapeType(), eBwdTrans, eSumFac);
+            
+            OperatorKey iproductWRTBaseStdMat(
+                pExp->DetShapeType(), eIProductWRTBase, eStdMat);
+            OperatorKey iproductWRTBaseIterPerExp(
+                pExp->DetShapeType(), eIProductWRTBase, eIterPerExp);
 
-            OperatorKey bwdLocMat(
-                pExp->DetShapeType(), eBwdTrans, eLocMat);
-            OperatorKey bwdIterPerExp(
-                pExp->DetShapeType(), eBwdTrans, eIterPerExp);
-            OperatorKey iproductWRTBaseLocMat(
-                pExp->DetShapeType(), eIProductWRTBase, eLocMat);
             OperatorKey derivSumFac(
                 pExp->DetShapeType(), ePhysDeriv, eSumFac);
             OperatorKey derivIterPerExp(
                 pExp->DetShapeType(), ePhysDeriv, eIterPerExp);
 
-            // Coalesce geometry factor of Jacobian 
-            pGeom[0]->CoalesceGeomFactors(pExp->GetPointsKeys(),pGeom);
-
+            m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
+            
             m_ops[eBwdTrans]        = GetOperatorFactory().CreateInstance(
-                                                 bwdIterPerExp, pExp, pGeom);
+                                                          bwdSumFac, pExp, pGeom, m_geomData);
+            //m_ops[eBwdTrans]        = GetOperatorFactory().CreateInstance(
+            //                                            bwdStdMat, pExp, pGeom, m_geomData);
             m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(
-                                              iproductWRTBaseLocMat, pExp, pGeom);
+                                                          iproductWRTBaseIterPerExp, pExp, pGeom,m_geomData);
 
             //m_ops[eBwdTrans] = GetOperatorFactory().CreateInstance(
-            //bwdLocMat, pExp, pGeom);
+            //bwdStdMat, pExp, pGeom);
             //m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(
             //    derivIterPerExp, pExp, pGeom);
         }

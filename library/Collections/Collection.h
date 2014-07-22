@@ -42,10 +42,34 @@
 
 namespace Nektar {
     namespace Collections {
-        class Collection;
-        typedef std::vector<Collection> CollectionVector;
-        typedef boost::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
+
+
+        enum GeomData
+        {
+            eJac,
+            eDerivFactors
+        };
+
+        class CoalescedGeomData
+        {
+        public:
+            CoalescedGeomData(void);
+            
+            virtual ~CoalescedGeomData(void);
+
+            const Array<OneD, const NekDouble> &GetJac(const LibUtilities::PointsKeyVector &ptsKeys,
+                                                       vector<SpatialDomains::GeometrySharedPtr> &pGeom);
+            
+        private:
+            map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
+            map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
+
+        };
         
+        typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;
+                
+        static CoalescedGeomDataSharedPtr GeomDataNull;
+
         /**
          * @brief Collection
          */
@@ -56,8 +80,7 @@ namespace Nektar {
             Collection(StdRegions::StdExpansionSharedPtr pExp,
                        vector<SpatialDomains::GeometrySharedPtr> pGeom);
             
-            void ApplyOperator(
-                               const OperatorType                 &op,
+            void ApplyOperator(const OperatorType                 &op,
                                const Array<OneD, const NekDouble> &inarray,
                                Array<OneD,       NekDouble> &outarray)
             {
@@ -69,7 +92,12 @@ namespace Nektar {
             StdRegions::StdExpansionSharedPtr                     m_stdExp;
             vector<SpatialDomains::GeometrySharedPtr>             m_geom;
             boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
+            CoalescedGeomDataSharedPtr                            m_geomData;
         };
+
+        typedef std::vector<Collection> CollectionVector;
+        typedef boost::shared_ptr<CollectionVector> CollectionVectorSharedPtr;
+
     }
 }
 

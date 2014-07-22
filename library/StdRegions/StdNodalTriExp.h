@@ -72,6 +72,11 @@ namespace Nektar
                 Array<OneD, const NekDouble> &x,
                 Array<OneD, const NekDouble> &y);
             STD_REGIONS_EXPORT DNekMatSharedPtr GenNBasisTransMatrix();
+            
+            STD_REGIONS_EXPORT const boost::shared_ptr<LibUtilities::PointsKey> GetNodalPointsKey() const
+            {
+                return m_nodalPointsKey;
+            };
 
         protected:
             boost::shared_ptr<LibUtilities::PointsKey> m_nodalPointsKey;

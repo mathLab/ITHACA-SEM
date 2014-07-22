@@ -148,8 +148,6 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline const LibUtilities::PointsKeyVector
                             GetPointsKeys();
 
-                SPATIAL_DOMAINS_EXPORT void CoalesceGeomFactors(const LibUtilities::PointsKeyVector &ptsKeys, std::vector<GeometrySharedPtr> &GeomList);
-
             protected:
 
                 SPATIAL_DOMAINS_EXPORT static GeomFactorsSharedPtr

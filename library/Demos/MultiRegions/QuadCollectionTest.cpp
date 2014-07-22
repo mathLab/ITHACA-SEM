@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 
     if(argc < 2)
     {
-        fprintf(stderr,"Usage: Helmholtz2D meshfile [SysSolnType]   or   \n");
+        fprintf(stderr,"Usage: QuadCollection meshfile [SysSolnType]   or   \n");
         exit(1);
     }
 
@@ -41,9 +41,9 @@ int main(int argc, char *argv[])
     
     Collections::Collection c(Exp->GetExp(0), geom);
 
-#if 0
+#if 1
     {
-        Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0);
+        Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
         Array<OneD, NekDouble> phys1(Exp->GetNpoints());
         Array<OneD, NekDouble> phys2(Exp->GetNpoints());
 
@@ -51,7 +51,14 @@ int main(int argc, char *argv[])
         t.Start();
         for (int i = 0; i < NBWD; ++i)
         {
+#if 1
+            for(int j = 0; j < Exp->GetNumElmts(); ++j)
+            {
+                Exp->GetExp(j)->BwdTrans(coeffs+Exp->GetCoeff_Offset(j), tmp = phys1+Exp->GetPhys_Offset(j));
+            }
+#else
             Exp->BwdTrans(coeffs, phys1);
+#endif
         }
         t.Stop();
         NekDouble orig = t.TimePerTest(NBWD);
@@ -74,6 +81,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
+#if 0 
     {
         const int nq = Exp->GetNpoints();
         Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -109,7 +117,7 @@ int main(int argc, char *argv[])
         Vmath::Vsub(nq, outexp0, 1, outcol, 1, outexp0, 1);
         cout << "Error: " << Vmath::Vmax(nq, outexp0, 1) << endl;
     }
-
+#endif
     vSession->Finalise();
 
     return 0;

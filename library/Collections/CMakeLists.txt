@@ -2,6 +2,8 @@ SET(COLLECTIONS_SOURCES
   Collection.cpp
   Operator.cpp
   QuadOperators.cpp
+  SegOperators.cpp
+  TriOperators.cpp
   )
 
 SET(SOLVER_UTILS_HEADERS

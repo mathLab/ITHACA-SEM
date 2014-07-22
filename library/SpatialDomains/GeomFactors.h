@@ -128,11 +128,6 @@ namespace SpatialDomains
             /// Computes a hash of this GeomFactors element.
             inline size_t GetHash();
 
-            /// Coalesce Geom Factors so memory for Jacobian and derivfactos are contigious
-            ///  in the vector list provided 
-            void CoalesceGeomFactors(const LibUtilities::PointsKeyVector &ptsKeys, 
-                                     std::vector<GeomFactorsSharedPtr> GeomFactorsList);
-        
     protected:
             /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
             GeomType m_type;

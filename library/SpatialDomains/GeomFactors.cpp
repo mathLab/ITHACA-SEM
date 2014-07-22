@@ -631,41 +631,6 @@ namespace Nektar
         }
 
 
-        void GeomFactors::CoalesceGeomFactors(const LibUtilities::PointsKeyVector &ptsKeys, std::vector<GeomFactorsSharedPtr> GeomFactorsList)
-        {
-            int nElmts = GeomFactorsList.size();
-            
-            // set up Cached Jacobians to be continuous 
-            int npts = 1;
-            for (int i = 0; i < m_expDim; ++i)
-            {
-                npts   *= ptsKeys[i].GetNumPoints();
-            }
-
-
-            Array<OneD, NekDouble> newjac(npts*nElmts);
-
-            //copy Jacobians into a continuous list and set new chatched value
-            int cnt = 0;
-            for(int i = 0; i < nElmts; ++i)
-            {
-                const Array<OneD, const NekDouble> jac= GeomFactorsList[i]->GetJac(ptsKeys);
-                
-                if (GeomFactorsList[i]->GetGtype() == SpatialDomains::eDeformed)
-                {
-                    Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
-                }
-                else
-                {
-                    Vmath::Fill(npts, jac[0], &newjac[cnt], 1);
-                }
-
-                cnt += npts;
-            }
-
-            m_jacCache[ptsKeys] = newjac;
-        }
-
 
     }; //end of namespace
 }; //end of namespace

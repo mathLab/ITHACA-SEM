@@ -473,7 +473,7 @@ namespace Nektar
             KSPGetPC(m_ksp, &pc);
             PCSetType(pc, PCLU);
             KSPSetFromOptions(m_ksp);
-            KSPSetOperators(m_ksp, m_matrix, m_matrix, DIFFERENT_NONZERO_PATTERN);
+            KSPSetOperators(m_ksp, m_matrix, m_matrix);
 
             /*
             ierr = VecDestroy(&x);CHKERRQ(ierr);

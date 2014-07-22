@@ -77,6 +77,15 @@ namespace Nektar
             // fill global matrix
             DNekScalMatSharedPtr loc_mat;
 
+            // reordering of global indices
+            //MPI_Comm comm = MPI_COMM_WORLD; // massive hack
+            //AOCreateMapping();
+
+
+
+
+
+
             MatCreate(PETSC_COMM_WORLD, &m_matrix);
             MatSetType(m_matrix, MATSEQAIJ);
             MatSetSizes(m_matrix, rows, cols, PETSC_DETERMINE, PETSC_DETERMINE);
@@ -163,8 +172,7 @@ namespace Nektar
                 m_ksp, pLocToGloMap->GetIterativeTolerance(),
                 PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
             KSPSetFromOptions(m_ksp);
-            KSPSetOperators(
-                m_ksp, m_matrix, m_matrix, DIFFERENT_NONZERO_PATTERN);
+            KSPSetOperators(m_ksp, m_matrix, m_matrix);
         }
 
 

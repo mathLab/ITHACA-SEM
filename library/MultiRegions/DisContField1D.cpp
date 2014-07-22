@@ -546,7 +546,7 @@ namespace Nektar
                     SpatialDomains::MeshGraph1D>(m_graph);
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            LibUtilities::CommSharedPtr     vComm       =
+            LibUtilities::CommSharedPtr vComm =
                 m_session->GetComm()->GetRowComm();
 
             int region1ID;
@@ -554,10 +554,10 @@ namespace Nektar
 
             SpatialDomains::BoundaryConditionShPtr locBCond;
             
-            map<int,int>                     BregionToVertMap;
+            map<int,int> BregionToVertMap;
 
-            // Construct list of all periodic Region and their global vertex on 
-            //  this  process.
+            // Construct list of all periodic Region and their global vertex on
+            // this process.
             for (it = bregions.begin(); it != bregions.end(); ++it)
             {
                 locBCond = GetBoundaryCondition(bconditions, it->first, variable);
@@ -575,7 +575,7 @@ namespace Nektar
 
             map<int,int>::iterator iit;
             set<int> islocal;
-            
+
             if(vComm->GetSize() != 1) // share map between all processors
             {
                 // number of bregions
@@ -613,7 +613,6 @@ namespace Nektar
                 }                
             }
             
-
             // Construct list of all periodic pairs local to this process.
             for (it = bregions.begin(); it != bregions.end(); ++it)
             {
@@ -640,7 +639,7 @@ namespace Nektar
                 PeriodicEntity ent(BregionToVertMap[region2ID],
                                    StdRegions::eNoOrientation,
                                    islocal.count(region2ID) != 0);
-                
+
                 m_periodicVerts[BregionToVertMap[region1ID]].push_back(ent);
             }
         }

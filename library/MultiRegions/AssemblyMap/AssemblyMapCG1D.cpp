@@ -214,23 +214,28 @@ namespace Nektar
                 }
             }
 
-            // STEP 2: Order the periodic vertices next
-            // This allows to give corresponding DOF's the same
-            // global ID
+            // STEP 2: Order the periodic vertices next. This allows to give
+            // corresponding DOF's the same global ID
             for(pIt = periodicVerts.begin(); pIt != periodicVerts.end(); pIt++)
             {
                 meshVertId  = pIt->first;
                 meshVertId2 = pIt->second[0].id;
 
-                ASSERTL0(vertReorderedGraphVertId.count(meshVertId) == 0,
-                         "This periodic boundary vertex has been specified before");
-                ASSERTL0(vertReorderedGraphVertId.count(meshVertId) == 0,
-                         "This periodic boundary vertex has been specified before");
-
-                vertReorderedGraphVertId[meshVertId]  = graphVertId;
-                vertReorderedGraphVertId[meshVertId2] = graphVertId++;
+                if (vertReorderedGraphVertId.count(meshVertId) == 0 &&
+                    vertReorderedGraphVertId.count(meshVertId2) == 0)
+                {
+                    vertReorderedGraphVertId[meshVertId]  = graphVertId;
+                    vertReorderedGraphVertId[meshVertId2] = graphVertId++;
+                }
+                else if ((vertReorderedGraphVertId.count(meshVertId)  == 0 &&
+                          vertReorderedGraphVertId.count(meshVertId2) != 0) ||
+                         (vertReorderedGraphVertId.count(meshVertId)  != 0 &&
+                          vertReorderedGraphVertId.count(meshVertId2) == 0))
+                {
+                    ASSERTL0(false,
+                             "Numbering error for periodic boundary conditions!");
+                }
             }
-
 
             // STEP 3: List the other vertices
             // STEP 4: Set up simple map based on vertex and edge id's

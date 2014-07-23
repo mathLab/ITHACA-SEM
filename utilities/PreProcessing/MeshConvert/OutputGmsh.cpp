@@ -108,9 +108,8 @@ namespace Nektar
                     maxOrder = e->GetMaxOrder();
                 }
             }
-            
+
             //maxOrder = 2;
-            
             for (int d = 1; d <= 3; ++d)
             {
                 for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
@@ -127,7 +126,7 @@ namespace Nektar
                         m_mesh->m_element[d][i]->GetGeom(m_mesh->m_spaceDim);
                 }
             }
-            
+
             // Complete these elements.
             for (int i = 0; i < toComplete.size(); ++i)
             {
@@ -137,7 +136,6 @@ namespace Nektar
             // Do second pass over elements to enumerate high-order vertices.
             for (int d = 1; d <= 3; ++d)
             {
-                //cout << "D = " << d << endl;
                 for (int i = 0; i < m_mesh->m_element[d].size(); ++i)
                 {
                     // Keep track of faces and edges to ensure that high-order
@@ -145,21 +143,13 @@ namespace Nektar
                     boost::unordered_set<int> edgesDone;
                     boost::unordered_set<int> facesDone;
                     ElementSharedPtr e = m_mesh->m_element[d][i];
-                    
-                    //cout << "Element " << i << ": ";
-                    
+
                     if (e->GetConf().m_order > 1)
                     {
                         vector<NodeSharedPtr> tmp;
                         vector<EdgeSharedPtr> edgeList = e->GetEdgeList();
                         vector<FaceSharedPtr> faceList = e->GetFaceList();
                         vector<NodeSharedPtr> volList  = e->GetVolumeNodes();
-                        
-                        /*
-                        cout << " edge = " << edgeList.size() << " "
-                             << " face = " << faceList.size() << " "
-                             << " vol  = " << volList.size()  << endl;
-                        */
                         
                         for (int j = 0; j < edgeList.size(); ++j)
                         {
@@ -211,21 +201,22 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // Create ordered set of nodes - not required but looks nicer.
             std::set<NodeSharedPtr>::iterator it;
-            std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(), m_mesh->m_vertexSet.end());
+            std::set<NodeSharedPtr> tmp(m_mesh->m_vertexSet.begin(),
+                                        m_mesh->m_vertexSet.end());
 
             // Write out nodes section.
-            m_mshFile << "$Nodes"            << endl
-                    << m_mesh->m_vertexSet.size() << endl;
+            m_mshFile << "$Nodes"                   << endl
+                      << m_mesh->m_vertexSet.size() << endl;
             
             for (it = tmp.begin(); it != tmp.end(); ++it)
             {
                 m_mshFile << (*it)->m_id << " " << scientific << setprecision(10)
-                        << (*it)->m_x << " " 
-                        << (*it)->m_y  << " " << (*it)->m_z 
-                        << endl;
+                          << (*it)->m_x  << " "
+                          << (*it)->m_y  << " " << (*it)->m_z 
+                          << endl;
             }
             
             m_mshFile << "$EndNodes" << endl;
@@ -245,7 +236,7 @@ namespace Nektar
                     
                     // First output element ID and type.
                     m_mshFile << id                   << " " 
-                            << elmMap[e->GetConf()] << " ";
+                              << elmMap[e->GetConf()] << " ";
                     
                     // Write out number of element tags and then the tags
                     // themselves.

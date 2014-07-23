@@ -93,6 +93,7 @@ IF (THIRDPARTY_BUILD_BOOST)
         )
     ENDIF ()
 ELSE (THIRDPARTY_BUILD_BOOST)
+    ADD_CUSTOM_TARGET(boost ALL)
     SET(Boost_DEBUG 0)
     SET(Boost_NO_BOOST_CMAKE ON)
     #If the user has not set BOOST_ROOT, look in a couple common places first.

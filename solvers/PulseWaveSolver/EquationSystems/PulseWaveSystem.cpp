@@ -288,7 +288,7 @@ namespace Nektar
                     {
                         for(int p = 0; p < 2; ++p)
                         {
-                            if(boost::dynamic_pointer_cast<LocalRegions::Expansion>(m_vessels[vesselID]->GetTraceMap()->GetElmtToTrace()[n][p])->GetGeom()->GetVid(0) == vid)
+                            if(m_vessels[vesselID]->GetTraceMap()->GetElmtToTrace()[n][p]->as<LocalRegions::Expansion>()->GetGeom()->GetVid(0) == vid)
                             {
                                 int eid = m_vessels[vesselID]->GetTraceMap()->GetElmtToTrace()[n][p]->GetElmtId();
 

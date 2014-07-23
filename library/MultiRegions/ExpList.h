@@ -50,7 +50,7 @@
 
 #include <LibUtilities/Communication/Transposition.h>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {

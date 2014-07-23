@@ -146,12 +146,11 @@ namespace Nektar
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
 
-            int check = nDirDofs > 0 ? 1 : 0;
-            LibUtilities::CommSharedPtr vComm
-                = m_expList.lock()->GetSession()->GetComm();
-            vComm->AllReduce(check, LibUtilities::ReduceMax);
+            int nDirTotal = nDirDofs;
+            m_expList.lock()->GetComm()->GetRowComm()->AllReduce(
+                nDirTotal, LibUtilities::ReduceSum);
             
-            if(check)
+            if(nDirTotal)
             {
                 // calculate the dirichlet forcing
                 if(dirForcCalculated)

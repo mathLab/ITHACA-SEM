@@ -131,7 +131,7 @@ namespace Nektar
             
             expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);
             
-            Array<OneD, NekDouble> tmp(nGlobDofs);
+            Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
 
             if(nDirTotal)
             {
@@ -156,9 +156,12 @@ namespace Nektar
                 if (vCG)
                 {
                     Array<OneD, NekDouble> out(nGlobDofs,0.0);
+
                     // solve for perturbation from intiial guess in pOutput
-                    SolveLinearSystem(nGlobDofs, tmp, out, pLocToGloMap, nDirDofs);
-                    Vmath::Vadd(nGlobDofs,out,1,pOutput,1,out,1);
+                    SolveLinearSystem(
+                        nGlobDofs, tmp, out, pLocToGloMap, nDirDofs);
+                    Vmath::Vadd(nGlobDofs-nDirDofs,    &out    [nDirDofs], 1,
+                                &pOutput[nDirDofs], 1, &pOutput[nDirDofs], 1);
                 }
                 else
                 {

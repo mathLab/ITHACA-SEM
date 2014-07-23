@@ -91,8 +91,8 @@ namespace Nektar
                      &pLocToGloMap)
                 : GlobalLinSysPETSc(pKey, pExpList, pLocToGloMap)
         {
-            ASSERTL1((pKey.GetGlobalSysSolnType()==eDirectStaticCond)||
-                     (pKey.GetGlobalSysSolnType()==eDirectMultiLevelStaticCond),
+            ASSERTL1((pKey.GetGlobalSysSolnType()==ePETScStaticCond)||
+                     (pKey.GetGlobalSysSolnType()==ePETScMultiLevelStaticCond),
                      "This constructor is only valid when using static "
                      "condensation");
             ASSERTL1(pKey.GetGlobalSysSolnType()
@@ -338,149 +338,65 @@ namespace Nektar
         void GlobalLinSysPETScStaticCond::AssembleSchurComplement(
             const AssemblyMapSharedPtr &pLocToGloMap)
         {
-            int i,j,n,cnt,gid1,gid2;
-            NekDouble sign1,sign2,value;
+            int i, j, n, cnt, gid1, gid2, loc_lda;
+            NekDouble sign1, sign2, value;
 
-            int nBndDofs  = pLocToGloMap->GetNumGlobalBndCoeffs();
-            int NumDirBCs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            const int nBndDofs    = pLocToGloMap->GetNumGlobalCoeffs();
+            const int nDirDofs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
 
             DNekScalBlkMatSharedPtr SchurCompl = m_schurCompl;
             DNekScalBlkMatSharedPtr BinvD      = m_BinvD;
             DNekScalBlkMatSharedPtr C          = m_C;
             DNekScalBlkMatSharedPtr invD       = m_invD;
+            DNekScalMatSharedPtr    loc_mat;
 
-            unsigned int rows = nBndDofs - NumDirBCs;
-            unsigned int cols = nBndDofs - NumDirBCs;
+            // CALCULATE REORDERING MAPPING
+            CalculateReordering(pLocToGloMap->GetGlobalToUniversalBndMap(),
+                                pLocToGloMap->GetGlobalToUniversalBndMapUnique(),
+                                pLocToGloMap);
 
-            /*
-            // Figure out size of universal matrix system excluding Dirichlet
-            // degrees of freedom.
-            const Array<OneD, const int>& glo2uni
-                = pLocToGloMap->GetGlobalToUniversalBndMap();
-            const Array<OneD, const int>& glo2unique
-                = pLocToGloMap->GetGlobalToUniversalBndMapUnique();
+            // SET UP VECTORS AND MATRIX
+            SetUpMatVec();
 
-            int nUniversal = 0;
-            for (i = NumDirBCs; i < nBndDofs; ++i)
-            {
-                if (glo2unique[i] > 0)
-                {
-                    ++nUniversal;
-                }
-            }
-
-            LibUtilities::CommSharedPtr vComm
-                = m_expList.lock()->GetSession()->GetComm()->GetRowComm();
-            vComm->AllReduce(nUniversal, LibUtilities::ReduceSum);
-            */
-
-            // fill global matrix
-            DNekScalMatSharedPtr loc_mat;
-
-            MatCreate(PETSC_COMM_WORLD, &m_matrix);
-            MatSetType(m_matrix, MATSEQAIJ);
-            MatSetSizes(m_matrix, rows, cols, PETSC_DETERMINE, PETSC_DETERMINE);
-            MatSetFromOptions(m_matrix);
-
-            // preallocate
-            int loc_lda;
-            Array<OneD, int> nnz(nBndDofs-NumDirBCs, 0);
-            vector<set<int> > hack(rows);
-            
-            for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
-            {
-                if (m_linSysKey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
-                {
-                    loc_lda = m_expList.lock()->GetExp(n)->NumDGBndryCoeffs();
-                }
-                else
-                {
-                    loc_lda = m_expList.lock()->GetExp(n)->NumBndryCoeffs();
-                }
-
-                for(i = 0; i < loc_lda; ++i)
-                {
-                    gid1 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + i)-NumDirBCs;
-                    if(gid1 < 0)
-                    {
-                        continue;
-                    }
-
-                    for(j = 0; j < loc_lda; ++j)
-                    {
-                        gid2 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + j)
-                            - NumDirBCs;
-                        if(gid2 < 0)
-                        {
-                            continue;
-                        }
-
-                        if (hack[gid1].count(gid2) > 0)
-                        {
-                            continue;
-                        }
-
-                        hack[gid1].insert(gid2);
-                        nnz[gid1]++;
-                    }
-                }
-                cnt += loc_lda;
-            }
-
-            MatSeqAIJSetPreallocation(m_matrix, 0, nnz.get());
-            MatGetVecs(m_matrix, &m_x, &m_b);
-
-            //cout << "setting up" << endl;
             for(n = cnt = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
             {
-                //cout << n << endl;
                 loc_mat = m_schurCompl->GetBlock(n,n);
                 loc_lda = loc_mat->GetRows();
 
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + i)-NumDirBCs;
+                    gid1 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + i)-nDirDofs;
                     sign1 = pLocToGloMap->GetLocalToGlobalBndSign(cnt + i);
                     if(gid1 >= 0)
                     {
+                        int gid1ro = m_reorderedMap[gid1];
                         for(j = 0; j < loc_lda; ++j)
                         {
                             gid2 = pLocToGloMap->GetLocalToGlobalBndMap(cnt + j)
-                                                                    - NumDirBCs;
+                                                                    - nDirDofs;
                             sign2 = pLocToGloMap->GetLocalToGlobalBndSign(cnt + j);
                             if(gid2 >= 0)
                             {
+                                int gid2ro = m_reorderedMap[gid2];
                                 value = sign1*sign2*(*loc_mat)(i,j);
                                 MatSetValue(
-                                    m_matrix, gid1, gid2, value, ADD_VALUES);
+                                    m_matrix, gid1ro, gid2ro, value, ADD_VALUES);
                             }
                         }
                     }
                 }
                 cnt   += loc_lda;
             }
-            //cout << "finished" << endl;
 
-            MatAssemblyBegin(m_matrix,MAT_FINAL_ASSEMBLY);
-            MatAssemblyEnd(m_matrix,MAT_FINAL_ASSEMBLY);
+            // ASSEMBLE MATRIX
+            MatAssemblyBegin(m_matrix, MAT_FINAL_ASSEMBLY);
+            MatAssemblyEnd  (m_matrix, MAT_FINAL_ASSEMBLY);
 
-            KSPCreate(PETSC_COMM_WORLD, &m_ksp);
+            // SET UP SCATTER OBJECTS
+            SetUpScatter();
 
-            // Set up preconditioner
-            PC pc;
-            KSPSetType(m_ksp, KSPCG);
-            KSPSetTolerances(m_ksp, pLocToGloMap->GetIterativeTolerance(), PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
-            KSPGetPC(m_ksp, &pc);
-            PCSetType(pc, PCLU);
-            KSPSetFromOptions(m_ksp);
-            KSPSetOperators(m_ksp, m_matrix, m_matrix);
-
-            /*
-            ierr = VecDestroy(&x);CHKERRQ(ierr);
-            ierr = VecDestroy(&b);CHKERRQ(ierr);
-            ierr = MatDestroy(&A);CHKERRQ(ierr);
-            ierr = KSPDestroy(&ksp);CHKERRQ(ierr);
-            */
+            // CONSTRUCT KSP OBJECT
+            SetUpSolver(pLocToGloMap->GetIterativeTolerance());
         }
 
         /**

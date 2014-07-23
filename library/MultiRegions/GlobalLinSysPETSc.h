@@ -77,6 +77,7 @@ namespace Nektar
 
             void SetUpScatter();
             void SetUpMatVec();
+            void SetUpSolver(NekDouble tolerance);
             void CalculateReordering(
                 const Array<OneD, const int> &glo2uniMap,
                 const Array<OneD, const int> &glo2unique,

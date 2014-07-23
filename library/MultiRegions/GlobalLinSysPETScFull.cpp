@@ -70,7 +70,6 @@ namespace Nektar
 
             const int nDofs    = pLocToGloMap->GetNumGlobalCoeffs();
             const int nDirDofs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            const int nHomDofs = nDofs - nDirDofs;
             
             int i, j, n, cnt, gid1, gid2, loc_lda;
             NekDouble sign1, sign2, value;
@@ -116,19 +115,14 @@ namespace Nektar
             }
 
             // ASSEMBLE MATRIX
-            MatAssemblyBegin(m_matrix,MAT_FINAL_ASSEMBLY);
-            MatAssemblyEnd(m_matrix,MAT_FINAL_ASSEMBLY);
+            MatAssemblyBegin(m_matrix, MAT_FINAL_ASSEMBLY);
+            MatAssemblyEnd  (m_matrix, MAT_FINAL_ASSEMBLY);
 
             // SET UP SCATTER OBJECTS
             SetUpScatter();
 
             // CONSTRUCT KSP OBJECT
-            KSPCreate(PETSC_COMM_WORLD, &m_ksp);
-            KSPSetTolerances(
-                m_ksp, pLocToGloMap->GetIterativeTolerance(),
-                PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
-            KSPSetFromOptions(m_ksp);
-            KSPSetOperators(m_ksp, m_matrix, m_matrix);
+            SetUpSolver(pLocToGloMap->GetIterativeTolerance());
         }
 
 

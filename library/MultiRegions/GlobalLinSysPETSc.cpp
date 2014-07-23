@@ -174,12 +174,6 @@ namespace Nektar
                 uniIdReorder[allUniIds[n]] = cnt++;
             }
 
-            map<int,int>::iterator it;
-            for (it = uniIdReorder.begin(); it != uniIdReorder.end(); ++it)
-            {
-                cout << it->first << " -> " << it->second << endl;
-            }
-
             for (n = 0; n < nHomDofs; ++n)
             {
                 int gid = n + nDirDofs;
@@ -204,6 +198,15 @@ namespace Nektar
                               PETSC_DETERMINE, PETSC_DETERMINE);
             MatSetFromOptions(m_matrix);
             MatSetUp         (m_matrix);
+        }
+
+        void GlobalLinSysPETSc::SetUpSolver(NekDouble tolerance)
+        {
+            KSPCreate(PETSC_COMM_WORLD, &m_ksp);
+            KSPSetTolerances(
+                m_ksp, tolerance, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+            KSPSetFromOptions(m_ksp);
+            KSPSetOperators(m_ksp, m_matrix, m_matrix);
         }
     }
 }

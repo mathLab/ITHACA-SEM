@@ -69,9 +69,18 @@ namespace Nektar
 
         protected:
             Mat m_matrix;
-            Vec m_x, m_b;
+            Vec m_x, m_b, m_locVec;
             KSP m_ksp;
             vector<int> m_reorderedMap;
+            VecScatter m_ctx;
+            int m_nLocal;
+
+            void SetUpScatter();
+            void SetUpMatVec();
+            void CalculateReordering(
+                const Array<OneD, const int> &glo2uniMap,
+                const Array<OneD, const int> &glo2unique,
+                const AssemblyMapSharedPtr   &pLocToGloMap);
         };
     }
 }

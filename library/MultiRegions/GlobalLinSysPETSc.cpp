@@ -74,36 +74,136 @@ namespace Nektar
             const int                          pNumDir)
         {
             const int nHomDofs = pNumRows - pNumDir;
-            int i;
+
+            // Populate RHS vector from input
             VecSetValues(m_b, nHomDofs, &m_reorderedMap[0], &pInput[pNumDir], INSERT_VALUES);
 
+            // Assemble RHS vector
             VecAssemblyBegin(m_b);
             VecAssemblyEnd  (m_b);
 
+            // Do system solve
             PetscErrorCode ierr = KSPSolve(m_ksp, m_b, m_x);
 
+            // Grab number of iterations taken
             PetscInt its;
-            KSPGetIterationNumber(m_ksp,&its);
-            cout << "iteration = " << its << endl;
+            KSPGetIterationNumber(m_ksp, &its);
 
-            IS isGlobal, isLocal;
-            ISCreateGeneral(PETSC_COMM_SELF, nHomDofs, &m_reorderedMap[0], PETSC_COPY_VALUES, &isGlobal);
-            ISCreateStride(PETSC_COMM_SELF, nHomDofs, 0, 1, &isLocal);
+            // Scatter results to local vector
+            VecScatterBegin(m_ctx, m_x, m_locVec, INSERT_VALUES, SCATTER_FORWARD);
+            VecScatterEnd  (m_ctx, m_x, m_locVec, INSERT_VALUES, SCATTER_FORWARD);
 
-            Vec locVec;
-            VecCreate        (PETSC_COMM_SELF, &locVec);
-            VecSetSizes      (locVec, nHomDofs, PETSC_DECIDE);
-            VecSetFromOptions(locVec);
-
-            VecScatter ctx;
-            VecScatterCreate(m_x, isGlobal, locVec, isLocal, &ctx);
-            VecScatterBegin(ctx, m_x, locVec, INSERT_VALUES, SCATTER_FORWARD);
-            VecScatterEnd(ctx, m_x, locVec, INSERT_VALUES, SCATTER_FORWARD);
-
+            // Copy results into output vector
             PetscScalar *avec;
-            VecGetArray(locVec, &avec);
-            Vmath::Vcopy(nHomDofs, avec, 1, &pOutput[0], 1);
-            VecRestoreArray(locVec, &avec);
+            VecGetArray    (m_locVec, &avec);
+            Vmath::Vcopy   (nHomDofs, avec, 1, &pOutput[0], 1);
+            VecRestoreArray(m_locVec, &avec);
+        }
+
+        void GlobalLinSysPETSc::SetUpScatter()
+        {
+            const int nHomDofs = m_reorderedMap.size();
+
+            // Create local and global numbering systems for vector
+            IS isGlobal, isLocal;
+            ISCreateGeneral(PETSC_COMM_SELF, nHomDofs, &m_reorderedMap[0],
+                            PETSC_COPY_VALUES, &isGlobal);
+            ISCreateStride (PETSC_COMM_SELF, nHomDofs, 0, 1, &isLocal);
+
+            // Create local vector for output
+            VecCreate        (PETSC_COMM_SELF, &m_locVec);
+            VecSetSizes      (m_locVec, m_reorderedMap.size(), PETSC_DECIDE);
+            VecSetFromOptions(m_locVec);
+
+            // Create scatter context
+            VecScatterCreate (m_x, isGlobal, m_locVec, isLocal, &m_ctx);
+
+            // Clean up
+            ISDestroy(&isGlobal);
+            ISDestroy(&isLocal);
+        }
+
+        void GlobalLinSysPETSc::CalculateReordering(
+            const Array<OneD, const int> &glo2uniMap,
+            const Array<OneD, const int> &glo2unique,
+            const AssemblyMapSharedPtr   &pLocToGloMap)
+        {
+            LibUtilities::CommSharedPtr vComm
+                = m_expList.lock()->GetSession()->GetComm();
+
+            const int nDirDofs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            const int nHomDofs = glo2uniMap.num_elements() - nDirDofs;
+            const int nProc    = vComm->GetSize();
+            const int rank     = vComm->GetRank();
+
+            int n, cnt;
+
+            m_nLocal = Vmath::Vsum(nHomDofs, glo2unique + nDirDofs, 1);
+
+            m_reorderedMap.resize(nHomDofs);
+
+            Array<OneD, int> localCounts(nProc, 0), localOffset(nProc, 0);
+            localCounts[rank] = nHomDofs;
+            vComm->AllReduce(localCounts, LibUtilities::ReduceSum);
+
+            for (n = 1; n < nProc; ++n)
+            {
+                localOffset[n] = localOffset[n-1] + localCounts[n-1];
+            }
+
+            int totHomDofs = Vmath::Vsum(nProc, localCounts, 1);
+            vector<unsigned int> allUniIds(totHomDofs, 0);
+
+            for (n = 0; n < nHomDofs; ++n)
+            {
+                int gid = n + nDirDofs;
+                allUniIds[n + localOffset[rank]] = glo2uniMap[gid];
+            }
+
+            vComm->AllReduce(allUniIds, LibUtilities::ReduceSum);
+            std::sort(allUniIds.begin(), allUniIds.end());
+            map<int,int> uniIdReorder;
+
+            for (cnt = n = 0; n < allUniIds.size(); ++n)
+            {
+                if (uniIdReorder.count(allUniIds[n]) > 0)
+                {
+                    continue;
+                }
+
+                uniIdReorder[allUniIds[n]] = cnt++;
+            }
+
+            map<int,int>::iterator it;
+            for (it = uniIdReorder.begin(); it != uniIdReorder.end(); ++it)
+            {
+                cout << it->first << " -> " << it->second << endl;
+            }
+
+            for (n = 0; n < nHomDofs; ++n)
+            {
+                int gid = n + nDirDofs;
+                int uniId = glo2uniMap[gid];
+                ASSERTL0(uniIdReorder.count(uniId) > 0, "Error in ordering");
+                m_reorderedMap[n] = uniIdReorder[uniId];
+            }
+        }
+
+        void GlobalLinSysPETSc::SetUpMatVec()
+        {
+            // CREATE VECTORS
+            VecCreate        (PETSC_COMM_WORLD, &m_x);
+            VecSetSizes      (m_x, m_nLocal, PETSC_DECIDE);
+            VecSetFromOptions(m_x);
+            VecDuplicate     (m_x, &m_b);
+
+            // CREATE MATRICES
+            MatCreate        (PETSC_COMM_WORLD, &m_matrix);
+            MatSetType       (m_matrix, MATMPIAIJ);
+            MatSetSizes      (m_matrix, m_nLocal, m_nLocal,
+                              PETSC_DETERMINE, PETSC_DETERMINE);
+            MatSetFromOptions(m_matrix);
+            MatSetUp         (m_matrix);
         }
     }
 }

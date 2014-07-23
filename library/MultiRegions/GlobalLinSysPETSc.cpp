@@ -75,15 +75,10 @@ namespace Nektar
         {
             const int nHomDofs = pNumRows - pNumDir;
             int i;
-            for (i = pNumDir; i < pNumRows; ++i)
-            {
-                VecSetValue(m_b, m_reorderedMap[i-pNumDir], pInput[i], INSERT_VALUES);
-            }
+            VecSetValues(m_b, nHomDofs, &m_reorderedMap[0], &pInput[pNumDir], INSERT_VALUES);
 
             VecAssemblyBegin(m_b);
             VecAssemblyEnd  (m_b);
-
-            VecView(m_b, PETSC_VIEWER_STDOUT_WORLD);
 
             PetscErrorCode ierr = KSPSolve(m_ksp, m_b, m_x);
 
@@ -91,14 +86,9 @@ namespace Nektar
             KSPGetIterationNumber(m_ksp,&its);
             cout << "iteration = " << its << endl;
 
-            //VecCreate        (PETSC_COMM_WORLD, &m_x);
-            //VecSetSizes      (m_x, nLocal, PETSC_DECIDE);
-            //VecSetFromOptions(m_x);
-
             IS isGlobal, isLocal;
             ISCreateGeneral(PETSC_COMM_SELF, nHomDofs, &m_reorderedMap[0], PETSC_COPY_VALUES, &isGlobal);
             ISCreateStride(PETSC_COMM_SELF, nHomDofs, 0, 1, &isLocal);
-            //ISView(isGlobal, PETSC_VIEWER_STDOUT_SELF);
 
             Vec locVec;
             VecCreate        (PETSC_COMM_SELF, &locVec);
@@ -107,18 +97,12 @@ namespace Nektar
 
             VecScatter ctx;
             VecScatterCreate(m_x, isGlobal, locVec, isLocal, &ctx);
-            //VecScatterView(ctx, PETSC_VIEWER_STDOUT_WORLD);
             VecScatterBegin(ctx, m_x, locVec, INSERT_VALUES, SCATTER_FORWARD);
             VecScatterEnd(ctx, m_x, locVec, INSERT_VALUES, SCATTER_FORWARD);
 
             PetscScalar *avec;
             VecGetArray(locVec, &avec);
-
-            for (i = 0; i < pNumRows - pNumDir; ++i)
-            {
-                pOutput[i] = avec[i];
-            }
-
+            Vmath::Vcopy(nHomDofs, avec, 1, &pOutput[0], 1);
             VecRestoreArray(locVec, &avec);
         }
     }

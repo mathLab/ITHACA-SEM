@@ -134,14 +134,6 @@ namespace Nektar
                 uniIdReorder[allUniIds[n]] = cnt++;
             }
 
-            map<int,int>::iterator mIt;
-
-            for (mIt = uniIdReorder.begin(); mIt != uniIdReorder.end(); ++mIt)
-            {
-                cout << "RANK " << vComm->GetRank() << ": " << mIt->first
-                     << " -> " << mIt->second << endl;
-            }
-
             for (n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
                 loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
@@ -154,7 +146,7 @@ namespace Nektar
                     if (gid1 >= 0)
                     {
                         int uniid = pLocToGloMap->GetGlobalToUniversalMap(gid1 + nDirDofs);
-                        ASSERTL0(uniIdReorder.count(uniid) > 0, "wat");
+                        ASSERTL0(uniIdReorder.count(uniid) > 0, "Error in ordering");
                         m_reorderedMap[gid1] = uniIdReorder[uniid];
                     }
                 }
@@ -254,8 +246,6 @@ namespace Nektar
             MatAssemblyBegin(m_matrix,MAT_FINAL_ASSEMBLY);
             MatAssemblyEnd(m_matrix,MAT_FINAL_ASSEMBLY);
 
-            MatView(m_matrix,  PETSC_VIEWER_STDOUT_WORLD);
-
             // CONSTRUCT KSP OBJECT
             KSPCreate(PETSC_COMM_WORLD, &m_ksp);
             KSPSetTolerances(
@@ -285,8 +275,13 @@ namespace Nektar
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
+
+            int check = nDirDofs > 0 ? 1 : 0;
+            LibUtilities::CommSharedPtr vComm
+                = m_expList.lock()->GetSession()->GetComm();
+            vComm->AllReduce(check, LibUtilities::ReduceMax);
             
-            if(nDirDofs)
+            if(check)
             {
                 // calculate the dirichlet forcing
                 if(dirForcCalculated)

@@ -71,6 +71,7 @@ namespace Nektar
             Mat m_matrix;
             Vec m_x, m_b;
             KSP m_ksp;
+            vector<int> m_reorderedMap;
         };
     }
 }

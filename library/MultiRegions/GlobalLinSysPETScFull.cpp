@@ -36,6 +36,9 @@
 #include <MultiRegions/GlobalLinSysPETScFull.h>
 #include <MultiRegions/ExpList.h>
 
+#include "petscao.h"
+#include "petscis.h"
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -68,29 +71,111 @@ namespace Nektar
             int i, j, n, cnt, gid1, gid2;
             NekDouble sign1, sign2, value;
 
-            int nDofs     = pLocToGloMap->GetNumGlobalCoeffs();
-            int NumDirBCs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-
-            unsigned int rows = nDofs - NumDirBCs;
-            unsigned int cols = nDofs - NumDirBCs;
-
+            int nDofs    = pLocToGloMap->GetNumGlobalCoeffs();
+            int nDirDofs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            int nHomDofs = nDofs - nDirDofs;
+            
             // fill global matrix
             DNekScalMatSharedPtr loc_mat;
 
-            // reordering of global indices
-            //MPI_Comm comm = MPI_COMM_WORLD; // massive hack
-            //AOCreateMapping();
+            LibUtilities::CommSharedPtr vComm
+                = pExp.lock()->GetSession()->GetComm();
+            const Array<OneD, const int>& glo2unique
+                = pLocToGloMap->GetGlobalToUniversalMapUnique();
+            int nLocal = Vmath::Vsum(nHomDofs, glo2unique + nDirDofs, 1);
 
+            int nProc = vComm->GetSize();
+            int rank  = vComm->GetRank();
 
+            m_reorderedMap.resize(nHomDofs);
 
+            Array<OneD, int> localCounts(nProc, 0);
+            Array<OneD, int> localOffset(nProc, 0);
+            localCounts[rank] = nHomDofs;
+            vComm->AllReduce(localCounts, LibUtilities::ReduceSum);
 
+            for (i = 1; i < nProc; ++i)
+            {
+                localOffset[i] = localOffset[i-1] + localCounts[i-1];
+            }
 
+            int totHomDofs = Vmath::Vsum(nProc, localCounts, 1);
+            vector<unsigned int> allUniIds(totHomDofs, 0);
 
-            MatCreate(PETSC_COMM_WORLD, &m_matrix);
-            MatSetType(m_matrix, MATSEQAIJ);
-            MatSetSizes(m_matrix, rows, cols, PETSC_DETERMINE, PETSC_DETERMINE);
+            for (n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
+            {
+                loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
+                int loc_lda = loc_mat->GetRows();
+
+                for (i = 0; i < loc_lda; ++i)
+                {
+                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt+i) - nDirDofs;
+
+                    if (gid1 >= 0)
+                    {
+                        allUniIds[gid1+localOffset[rank]] =
+                            pLocToGloMap->GetGlobalToUniversalMap(gid1 + nDirDofs);
+                    }
+                }
+                cnt += loc_lda;
+            }
+
+            vComm->AllReduce(allUniIds, LibUtilities::ReduceSum);
+            std::sort(allUniIds.begin(), allUniIds.end());
+            map<int,int> uniIdReorder;
+
+            for (cnt = n = 0; n < allUniIds.size(); ++n)
+            {
+                if (uniIdReorder.count(allUniIds[n]) > 0)
+                {
+                    continue;
+                }
+
+                uniIdReorder[allUniIds[n]] = cnt++;
+            }
+
+            map<int,int>::iterator mIt;
+
+            for (mIt = uniIdReorder.begin(); mIt != uniIdReorder.end(); ++mIt)
+            {
+                cout << "RANK " << vComm->GetRank() << ": " << mIt->first
+                     << " -> " << mIt->second << endl;
+            }
+
+            for (n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
+            {
+                loc_mat = GetBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
+                int loc_lda = loc_mat->GetRows();
+
+                for (i = 0; i < loc_lda; ++i)
+                {
+                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt+i) - nDirDofs;
+
+                    if (gid1 >= 0)
+                    {
+                        int uniid = pLocToGloMap->GetGlobalToUniversalMap(gid1 + nDirDofs);
+                        ASSERTL0(uniIdReorder.count(uniid) > 0, "wat");
+                        m_reorderedMap[gid1] = uniIdReorder[uniid];
+                    }
+                }
+                cnt += loc_lda;
+            }
+
+            // CREATE VECTORS
+            VecCreate        (PETSC_COMM_WORLD, &m_x);
+            VecSetSizes      (m_x, nLocal, PETSC_DECIDE);
+            VecSetFromOptions(m_x);
+            VecDuplicate     (m_x, &m_b);
+
+            // CREATE MATRICES
+            MatCreate        (PETSC_COMM_WORLD, &m_matrix);
+            MatSetType       (m_matrix, MATMPIAIJ);
+            MatSetSizes      (m_matrix, nLocal, nLocal,
+                              PETSC_DETERMINE, PETSC_DETERMINE);
             MatSetFromOptions(m_matrix);
+            MatSetUp         (m_matrix);
 
+#if 0
             // preallocate
             int loc_lda;
             Array<OneD, int> nnz(nDofs-NumDirBCs, 0);
@@ -131,7 +216,9 @@ namespace Nektar
             }
 
             MatSeqAIJSetPreallocation(m_matrix, 0, nnz.get());
-            MatGetVecs(m_matrix, &m_x, &m_b);
+#endif
+
+            int loc_lda;
 
             for(n = cnt = 0; n < m_expList.lock()->GetNumElmts(); ++n)
             {
@@ -140,20 +227,22 @@ namespace Nektar
 
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt + i)-NumDirBCs;
+                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt+i) - nDirDofs;
                     sign1 = pLocToGloMap->GetLocalToGlobalSign(cnt + i);
                     if(gid1 >= 0)
                     {
+                        int gid1ro = m_reorderedMap[gid1];
                         for(j = 0; j < loc_lda; ++j)
                         {
                             gid2 = pLocToGloMap->GetLocalToGlobalMap(cnt + j)
-                                                                    - NumDirBCs;
+                                                                     - nDirDofs;
                             sign2 = pLocToGloMap->GetLocalToGlobalSign(cnt + j);
                             if(gid2 >= 0)
                             {
+                                int gid2ro = m_reorderedMap[gid2];
                                 value = sign1*sign2*(*loc_mat)(i,j);
                                 MatSetValue(
-                                    m_matrix, gid1, gid2, value, ADD_VALUES);
+                                    m_matrix, gid1ro, gid2ro, value, ADD_VALUES);
                             }
                         }
                     }
@@ -161,13 +250,14 @@ namespace Nektar
                 cnt += loc_lda;
             }
 
+            // ASSEMBLE MATRIX
             MatAssemblyBegin(m_matrix,MAT_FINAL_ASSEMBLY);
             MatAssemblyEnd(m_matrix,MAT_FINAL_ASSEMBLY);
 
-            KSPCreate(PETSC_COMM_WORLD, &m_ksp);
+            MatView(m_matrix,  PETSC_VIEWER_STDOUT_WORLD);
 
-            PC pc;
-            //KSPSetType(m_ksp, KSPCG);
+            // CONSTRUCT KSP OBJECT
+            KSPCreate(PETSC_COMM_WORLD, &m_ksp);
             KSPSetTolerances(
                 m_ksp, pLocToGloMap->GetIterativeTolerance(),
                 PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);

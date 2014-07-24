@@ -238,7 +238,21 @@ namespace Nektar
             bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
                 DoGlobalMatOp(m_linSysKey.GetMatrixType());
 
+            // Set up unique map
             v_UniqueMap();
+
+            // Build precon again if we in multi-level static condensation (a
+            // bit of a hack)
+            if (m_linSysKey.GetGlobalSysSolnType()==eIterativeMultiLevelStaticCond)
+            {
+                MultiRegions::PreconditionerType pType
+                    = m_locToGloMap->GetPreconType();
+                std::string PreconType
+                    = MultiRegions::PreconditionerTypeMap[pType];
+                m_precon = GetPreconFactory().CreateInstance(
+                    PreconType,GetSharedThisPtr(),m_locToGloMap);
+                m_precon->BuildPreconditioner();
+            }
 
             if (!doGlobalOp)
             {

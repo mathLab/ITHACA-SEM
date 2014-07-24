@@ -42,7 +42,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        std::string Preconditioner::lookupIds[9] = {
+        std::string Preconditioner::lookupIds[8] = {
             LibUtilities::SessionReader::RegisterEnumValue(
                 "Preconditioner", "Null", eNull),
             LibUtilities::SessionReader::RegisterEnumValue(
@@ -61,8 +61,6 @@ namespace Nektar
                 "Preconditioner", "Block",eBlock),
             LibUtilities::SessionReader::RegisterEnumValue(
                 "Preconditioner", "FullLinearSpaceWithBlock",eLinearWithBlock),
-            LibUtilities::SessionReader::RegisterEnumValue(
-                "Preconditioner", "LinearPETSc",eLinearPETSc),
         };
         std::string Preconditioner::def =
             LibUtilities::SessionReader::RegisterDefaultSolverInfo(

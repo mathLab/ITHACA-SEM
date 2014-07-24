@@ -195,7 +195,8 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual const Array<OneD, const int>& v_GetExtraDirEdges();
 
-            MULTI_REGIONS_EXPORT virtual AssemblyMapSharedPtr v_XxtLinearSpaceMap(const ExpList &locexp);
+            MULTI_REGIONS_EXPORT virtual AssemblyMapSharedPtr v_LinearSpaceMap(
+                const ExpList &locexp, GlobalSysSolnType solnType);
         };
 
 

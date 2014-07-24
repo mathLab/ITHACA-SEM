@@ -257,7 +257,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT const Array<OneD, const int>& 
                 GetExtraDirEdges();
 
-            MULTI_REGIONS_EXPORT boost::shared_ptr<AssemblyMap> XxtLinearSpaceMap(const ExpList &locexp);
+            MULTI_REGIONS_EXPORT boost::shared_ptr<AssemblyMap> LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType);
 
             /// Returns the bandwidth of the boundary system.
             MULTI_REGIONS_EXPORT int GetBndSystemBandWidth() const;
@@ -473,8 +473,8 @@ namespace Nektar
                 v_GetExtraDirEdges();
             
             /// Generate a linear space mapping from existing mapping 
-            virtual boost::shared_ptr<AssemblyMap> v_XxtLinearSpaceMap
-                (const ExpList &locexp);
+            virtual boost::shared_ptr<AssemblyMap> v_LinearSpaceMap(
+                const ExpList &locexp, GlobalSysSolnType solnType);
         };
 
 

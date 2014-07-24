@@ -34,6 +34,7 @@ GlobalLinSysDirectStaticCond.cpp
 GlobalLinSysIterative.cpp
 GlobalLinSysIterativeFull.cpp
 GlobalLinSysIterativeStaticCond.cpp
+GlobalLinSysStaticCond.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
 GlobalOptimizationParameters.cpp
@@ -74,6 +75,7 @@ GlobalLinSysDirectStaticCond.h
 GlobalLinSysIterative.h
 GlobalLinSysIterativeFull.h
 GlobalLinSysIterativeStaticCond.h
+GlobalLinSysStaticCond.h
 GlobalMatrix.h
 GlobalMatrixKey.h
 GlobalOptimizationParameters.h

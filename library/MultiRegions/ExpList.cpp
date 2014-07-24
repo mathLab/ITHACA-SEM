@@ -1617,7 +1617,7 @@ namespace Nektar
             int nq = (*m_exp)[expansion]->GetTotPoints();
 
             // printing the fields of that zone
-            outfile << "        <DataArray type=\"Float32\" Name=\""
+            outfile << "        <DataArray type=\"Float64\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
             const Array<OneD, NekDouble> phys = m_phys + m_phys_offset[expansion];

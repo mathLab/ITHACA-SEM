@@ -166,7 +166,7 @@ namespace Nektar
                     // from the rhs
                     m_expList.lock()->GeneralMatrixOp(
                         m_linSysKey, pOutput, tmp, eGlobal);
-                    
+
                     Vmath::Vsub(nGlobDofs, 
                                 pInput.get(), 1,
                                 tmp.get(),    1,

@@ -79,8 +79,7 @@ namespace Nektar
             }
 
             virtual void v_BasisInvTransform(
-                Array<OneD, NekDouble>& pInOut,
-                int offset)
+                Array<OneD, NekDouble>& pInOut)
             {
                 
             }

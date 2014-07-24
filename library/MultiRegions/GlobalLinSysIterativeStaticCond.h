@@ -115,7 +115,7 @@ namespace Nektar
             virtual ~GlobalLinSysIterativeStaticCond();
 
         protected:
-            //virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
+            virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
             virtual GlobalLinSysStaticCondSharedPtr v_Recurse(
                 const GlobalLinSysKey                &mkey,
                 const boost::weak_ptr<ExpList>       &pExpList,
@@ -124,6 +124,15 @@ namespace Nektar
                 const DNekScalBlkMatSharedPtr         pC,
                 const DNekScalBlkMatSharedPtr         pInvD,
                 const boost::shared_ptr<AssemblyMap> &locToGloMap);
+
+            virtual DNekScalBlkMatSharedPtr v_PreSolve(
+                int                     scLevel,
+                NekVector<NekDouble>   &F_GlobBnd);
+            virtual void v_BasisTransform(
+                Array<OneD, NekDouble>& pInOut,
+                int                     offset);
+            virtual void v_BasisInvTransform(
+                Array<OneD, NekDouble>& pInOut);
 
         private:
             DNekScalBlkMatSharedPtr                  m_S1Blk;

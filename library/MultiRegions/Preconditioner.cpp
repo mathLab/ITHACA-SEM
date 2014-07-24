@@ -178,8 +178,8 @@ namespace Nektar
          * \brief Get block elemental transposed transformation matrix
          * \f$\mathbf{R}^{T}\f$
          */
-        DNekScalBlkMatSharedPtr Preconditioner::v_TransformedSchurCompl(
-            int offset, const boost::shared_ptr<DNekScalBlkMat> &loc_mat)
+        DNekScalMatSharedPtr Preconditioner::v_TransformedSchurCompl(
+            int offset, const boost::shared_ptr<DNekScalMat> &loc_mat)
 	{
 	    return loc_mat;
 	}

@@ -229,7 +229,7 @@ namespace Nektar
                         nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
 
                     // Transform back to original basis
-                    v_BasisInvTransform(F, nDirBndDofs);
+                    v_BasisInvTransform(pert);
 
                     // Add back initial conditions onto difference
                     Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,
@@ -343,7 +343,6 @@ namespace Nektar
                     DNekScalBlkMatSharedPtr loc_schur
                         = GlobalLinSys::v_GetStaticCondBlock(
                             m_expList.lock()->GetOffset_Elmt_Id(n));
-
                     DNekScalMatSharedPtr t;
                     m_schurCompl->SetBlock(n, n, t = loc_schur->GetBlock(0,0));
                     m_BinvD     ->SetBlock(n, n, t = loc_schur->GetBlock(0,1));

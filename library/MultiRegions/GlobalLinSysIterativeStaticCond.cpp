@@ -161,7 +161,38 @@ namespace Nektar
             // Allocate memory for top-level structure
             SetupTopLevel(m_locToGloMap);
 
+            // Setup Block Matrix systems
+            int n, n_exp = m_expList.lock()->GetNumElmts();
+
+            MatrixStorage blkmatStorage = eDIAGONAL;
+            const Array<OneD,const unsigned int>& nbdry_size
+                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+
+            m_S1Blk      = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+
+            // Preserve original matrix in m_S1Blk
+            for (n = 0; n < n_exp; ++n)
+            {
+                DNekScalMatSharedPtr mat = m_schurCompl->GetBlock(n, n);
+                m_S1Blk->SetBlock(n, n, mat);
+            }
+
+            // Build preconditioner
             m_precon->BuildPreconditioner();
+
+            // Do transform of Schur complement matrix
+            for (n = 0; n < n_exp; ++n)
+            {
+                if (m_linSysKey.GetMatrixType() !=
+                        StdRegions::eHybridDGHelmBndLam)
+                {
+                    DNekScalMatSharedPtr mat = m_S1Blk->GetBlock(n, n);
+                    DNekScalMatSharedPtr t = m_precon->TransformedSchurCompl(
+                        m_expList.lock()->GetOffset_Elmt_Id(n), mat);
+                    m_schurCompl->SetBlock(n, n, t);
+                }
+            }
 
             // Construct this level
             Initialise(m_locToGloMap);
@@ -175,7 +206,6 @@ namespace Nektar
             
         }
 
-#if 0
         DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::
             v_GetStaticCondBlock(unsigned int n)
         {
@@ -193,7 +223,7 @@ namespace Nektar
 
             return schurComplBlock;
         }
-#endif
+
         /**
          * Assemble the schur complement matrix from the block matrices stored
          * in #m_blkMatrices and the given local to global mapping information.
@@ -202,6 +232,9 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::v_AssembleSchurComplement(
             const AssemblyMapSharedPtr pLocToGloMap)
         {
+            int i,j,n,cnt,gid1,gid2;
+            NekDouble sign1,sign2;
+
             bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
                 DoGlobalMatOp(m_linSysKey.GetMatrixType());
 
@@ -212,9 +245,6 @@ namespace Nektar
                 PrepareLocalSchurComplement();
                 return;
             }
-
-            int i,j,n,cnt,gid1,gid2;
-            NekDouble sign1,sign2;
 
             int nBndDofs  = pLocToGloMap->GetNumGlobalBndCoeffs();
             int NumDirBCs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
@@ -433,16 +463,14 @@ namespace Nektar
         {
             int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
             int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-
-
             bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
                     DoGlobalMatOp(m_linSysKey.GetMatrixType());
 
             if(doGlobalOp)
             {
                 // Do matrix multiply globally
-                Array<OneD, NekDouble> in  = pInput + nDir;
-                Array<OneD, NekDouble> out = pOutput+ nDir;
+                Array<OneD, NekDouble> in  = pInput  + nDir;
+                Array<OneD, NekDouble> out = pOutput + nDir;
 
                 m_sparseSchurCompl->Multiply(in,out);
                 m_locToGloMap->UniversalAssembleBnd(pOutput, nDir);
@@ -477,6 +505,34 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::v_UniqueMap()
         {
             m_map = m_locToGloMap->GetGlobalToUniversalBndMapUnique();
+        }
+
+        DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::v_PreSolve(
+            int                     scLevel,
+            NekVector<NekDouble>   &F_GlobBnd)
+        {
+            if (scLevel == 0)
+            {
+                Set_Rhs_Magnitude(F_GlobBnd);
+                return m_S1Blk;
+            }
+            else
+            {
+                return m_schurCompl;
+            }
+        }
+
+        void GlobalLinSysIterativeStaticCond::v_BasisTransform(
+            Array<OneD, NekDouble>& pInOut,
+            int                     offset)
+        {
+            m_precon->DoTransformToLowEnergy(pInOut, offset);
+        }
+
+        void GlobalLinSysIterativeStaticCond::v_BasisInvTransform(
+            Array<OneD, NekDouble>& pInOut)
+        {
+            m_precon->DoTransformFromLowEnergy(pInOut);
         }
 
         GlobalLinSysStaticCondSharedPtr GlobalLinSysIterativeStaticCond::v_Recurse(

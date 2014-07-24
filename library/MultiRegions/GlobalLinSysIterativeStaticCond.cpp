@@ -155,7 +155,6 @@ namespace Nektar
                 = m_locToGloMap->GetPreconType();
             std::string PreconType
                 = MultiRegions::PreconditionerTypeMap[pType];
-            v_UniqueMap();
             m_precon = GetPreconFactory().CreateInstance(
                 PreconType,GetSharedThisPtr(),m_locToGloMap);
 
@@ -205,6 +204,8 @@ namespace Nektar
         {
             bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
                 DoGlobalMatOp(m_linSysKey.GetMatrixType());
+
+            v_UniqueMap();
 
             if (!doGlobalOp)
             {

@@ -92,10 +92,6 @@ namespace Nektar
             }
 
             virtual int v_GetNumBlocks();
-            virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n)
-            {
-                return GlobalLinSys::GetStaticCondBlock(n);
-            }
 
             virtual GlobalLinSysStaticCondSharedPtr v_Recurse(
                 const GlobalLinSysKey                &mkey,

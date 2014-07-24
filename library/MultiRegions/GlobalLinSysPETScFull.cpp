@@ -62,7 +62,8 @@ namespace Nektar
             const GlobalLinSysKey                &pLinSysKey,
             const boost::weak_ptr<ExpList>       &pExp,
             const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
-                : GlobalLinSysPETSc(pLinSysKey, pExp, pLocToGloMap)
+            : GlobalLinSys     (pLinSysKey, pExp, pLocToGloMap),
+              GlobalLinSysPETSc(pLinSysKey, pExp, pLocToGloMap)
         {
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType() == ePETScFullMatrix,
                      "This routine should only be used when using a Full PETSc"
@@ -173,8 +174,7 @@ namespace Nektar
                                 tmp.get(),    1);
                 }
 
-                SolveLinearSystem(nGlobDofs, tmp,
-                                  tmp2 = pOutput + nDirDofs,
+                SolveLinearSystem(nGlobDofs, tmp, pOutput,
                                   pLocToGloMap, nDirDofs);
             }
             else

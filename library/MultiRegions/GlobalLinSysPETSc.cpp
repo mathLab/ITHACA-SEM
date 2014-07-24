@@ -96,7 +96,7 @@ namespace Nektar
             // Copy results into output vector
             PetscScalar *avec;
             VecGetArray    (m_locVec, &avec);
-            Vmath::Vcopy   (nHomDofs, avec, 1, &pOutput[0], 1);
+            Vmath::Vcopy   (nHomDofs, avec, 1, &pOutput[pNumDir], 1);
             VecRestoreArray(m_locVec, &avec);
         }
 

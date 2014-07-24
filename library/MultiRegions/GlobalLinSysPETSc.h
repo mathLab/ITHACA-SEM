@@ -49,7 +49,7 @@ namespace Nektar
         class ExpList;
 
         /// A global linear system.
-        class GlobalLinSysPETSc : public GlobalLinSys
+        class GlobalLinSysPETSc : virtual public GlobalLinSys
         {
         public:
             /// Constructor for full direct matrix solve.

@@ -32,10 +32,12 @@
 // Description: GlobalLinSysStaticCond header
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTSTATICCOND_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTSTATICCOND_H
 
 #include <MultiRegions/GlobalLinSysPETSc.h>
+#include <MultiRegions/GlobalLinSysStaticCond.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 
 namespace Nektar
@@ -50,7 +52,8 @@ namespace Nektar
                                         GlobalLinSysPETScStaticCondSharedPtr;
 
         /// A global linear system.
-        class GlobalLinSysPETScStaticCond : public GlobalLinSysPETSc
+        class GlobalLinSysPETScStaticCond : virtual public GlobalLinSysPETSc,
+                                            virtual public GlobalLinSysStaticCond
         {
         public:
             /// Creates an instance of this class
@@ -60,8 +63,11 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-                return MemoryManager<GlobalLinSysPETScStaticCond>
-                    ::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
+                GlobalLinSysSharedPtr p = MemoryManager<
+                    GlobalLinSysPETScStaticCond>::AllocateSharedPtr(
+                        pLinSysKey, pExpList, pLocToGloMap);
+                p->InitObject();
+                return p;
             }
 
             /// Name of class
@@ -88,42 +94,20 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysPETScStaticCond();
 
-        private:
-            /// Schur complement for Direct Static Condensation.
-            GlobalLinSysPETScStaticCondSharedPtr m_recursiveSchurCompl;
-
-            /// Block matrices at this level
-            DNekScalBlkMatSharedPtr m_schurCompl;
-            DNekScalBlkMatSharedPtr m_BinvD;
-            DNekScalBlkMatSharedPtr m_C;
-            DNekScalBlkMatSharedPtr m_invD;
-
-            /// Solve the linear system for given input and output vectors
-            /// using a specified local to global map.
-            virtual void v_Solve(
-                        const Array<OneD, const NekDouble>  &in,
-                              Array<OneD,       NekDouble>  &out,
-                        const AssemblyMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble>  &dirForcing
-                                                        = NullNekDouble1DArray);
-
-            /// Initialise this object
-            void Initialise(
-                const boost::shared_ptr<AssemblyMap>& locToGloMap);
-
-            /// Set up the storage for the Schur complement or the top level
-            /// of the multi-level Schur complement.
-            void SetupTopLevel(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
+        protected:
+            virtual GlobalLinSysStaticCondSharedPtr v_Recurse(
+                const GlobalLinSysKey                &mkey,
+                const boost::weak_ptr<ExpList>       &pExpList,
+                const DNekScalBlkMatSharedPtr         pSchurCompl,
+                const DNekScalBlkMatSharedPtr         pBinvD,
+                const DNekScalBlkMatSharedPtr         pC,
+                const DNekScalBlkMatSharedPtr         pInvD,
+                const boost::shared_ptr<AssemblyMap> &locToGloMap);
 
             /// Assemble the Schur complement matrix.
-            void AssembleSchurComplement(
-                const boost::shared_ptr<AssemblyMap>& locToGloMap);
-
-            ///
-            void ConstructNextLevelCondensedSystem(
-                const boost::shared_ptr<AssemblyMap>& locToGloMap);
-         };
+            virtual void v_AssembleSchurComplement(
+                boost::shared_ptr<AssemblyMap> locToGloMap);
+        };
     }
 }
 

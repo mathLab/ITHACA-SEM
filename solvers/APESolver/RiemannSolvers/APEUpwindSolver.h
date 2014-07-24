@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File APESolver.cpp
+// File: APEUpwindSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,46 +29,47 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: APE Equations framework solver
+// Description: Upwind Riemann solver for the APE equations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
+#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
 
-#include <SolverUtils/Driver.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
-using namespace Nektar;
 using namespace Nektar::SolverUtils;
 
-int main(int argc, char *argv[])
+namespace Nektar
 {
-    LibUtilities::SessionReaderSharedPtr session;
-    string vDriverModule;
-    DriverSharedPtr drv;
 
-    try
-    {
-        // Create session reader.
-        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+class APEUpwindSolver : public RiemannSolver
+{
+    public:
+        static RiemannSolverSharedPtr create()
+        {
+            return RiemannSolverSharedPtr(new APEUpwindSolver());
+        }
 
-        // Create driver
-        session->LoadSolverInfo("Driver", vDriverModule, "Standard");
-        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+        static std::string solverName;
 
-        // Execute driver
-        drv->Execute();
+    protected:
+        APEUpwindSolver();
 
-        // Finalise session
-        session->Finalise();
-    }
-    catch (const std::runtime_error& e)
-    {
-        return 1;
-    }
-    catch (const std::string& eStr)
-    {
-        cout << "Error: " << eStr << endl;
-    }
+        virtual void v_Solve(
+                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                      Array<OneD,       Array<OneD, NekDouble> > &flux);
 
-    return 0;
+        void Solve1D(
+                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                      Array<OneD,       Array<OneD, NekDouble> > &flux);
+
+        Array<OneD, Array<OneD, NekDouble> >            m_rotBasefield;
+};
+
 }
+
+#endif

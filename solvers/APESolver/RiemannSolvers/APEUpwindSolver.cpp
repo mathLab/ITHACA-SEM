@@ -61,6 +61,7 @@ APEUpwindSolver::APEUpwindSolver() :
 *
 */
 void APEUpwindSolver::v_Solve(
+        int                                               nDim,
         const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
         const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
               Array<OneD,       Array<OneD, NekDouble> > &flux)
@@ -78,7 +79,6 @@ void APEUpwindSolver::v_Solve(
 
     int nFields = Fwd   .num_elements();
     int nPts    = Fwd[0].num_elements();
-    int nDim    = normals.num_elements();
 
     // rotate and store basefield
     m_rotBasefield = Array<OneD, Array<OneD, NekDouble> > (nDim+1);

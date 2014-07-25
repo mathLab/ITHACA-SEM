@@ -1375,6 +1375,12 @@ namespace Nektar
                         "Edge normal not computed.");
             return x->second;
         }
+
+        const StdRegions::NormalVector &Expansion2D::v_GetSurfaceNormal(
+                const int id) const
+        {
+            return v_GetEdgeNormal(id);
+        }
         
         void Expansion2D::v_NegateEdgeNormal(const int edge)
         {

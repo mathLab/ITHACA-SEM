@@ -1135,6 +1135,10 @@ namespace Nektar
                 return v_GetMetricInfo();
             }
 
+            /// \brief Get the element id of this expansion when used
+            /// in a list by returning value of #m_elmt_id
+            STD_REGIONS_EXPORT virtual int v_GetElmtId();
+
             STD_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
 
             STD_REGIONS_EXPORT virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
@@ -1258,10 +1262,9 @@ namespace Nektar
                 return v_GetVertexNormal(vertex); 
             }
 
-            const NormalVector & GetSurfaceNormal() const
+            const NormalVector & GetSurfaceNormal(const int id) const
             {
-                // @TODO Implement this
-                return v_GetSurfaceNormal(); 
+                return v_GetSurfaceNormal(id); 
             }
 
             const LibUtilities::PointsKeyVector GetPointsKeys() const
@@ -1746,7 +1749,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
 			
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
-            STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
+            STD_REGIONS_EXPORT virtual const NormalVector & 
+                v_GetSurfaceNormal(const int id) const;
 
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
                 v_GetEdgeInverseBoundaryMap(int eid);

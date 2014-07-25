@@ -86,7 +86,7 @@ namespace Nektar
                 {
                     
                     Blas::Dgemm('N','N', m_nquad1,m_numElmt,m_nmodes1-i,1.0, base1.get()+mode*m_nquad1,
-                                m_nquad1, &input[0]+mode, ncoeffs,0.0,&wsp[i*m_nquad1*m_numElmt], m_nquad0);
+                                m_nquad1, &input[0]+mode, ncoeffs,0.0,&wsp[i*m_nquad1*m_numElmt], m_nquad1);
                     mode += m_nmodes1-i;
                 }
                 

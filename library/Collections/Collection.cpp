@@ -92,37 +92,31 @@ namespace Nektar {
         
         
         Collection::Collection(StdRegions::StdExpansionSharedPtr pExp,
-                   vector<SpatialDomains::GeometrySharedPtr> pGeom)
+                               vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                               ImplementationType  pImpType)
             : m_stdExp(pExp), m_geom(pGeom)
         {
             
-            OperatorKey bwdStdMat    (pExp->DetShapeType(), eBwdTrans, eStdMat);
-            OperatorKey bwdIterPerExp(pExp->DetShapeType(), eBwdTrans, eIterPerExp);
-            OperatorKey bwdSumFac    (pExp->DetShapeType(), eBwdTrans, eSumFac);
-            
-            OperatorKey iproductWRTBaseStdMat(
-                pExp->DetShapeType(), eIProductWRTBase, eStdMat);
-            OperatorKey iproductWRTBaseIterPerExp(
-                pExp->DetShapeType(), eIProductWRTBase, eIterPerExp);
+            ImplementationType ImpType;
 
-            OperatorKey derivSumFac(
-                pExp->DetShapeType(), ePhysDeriv, eSumFac);
-            OperatorKey derivIterPerExp(
-                pExp->DetShapeType(), ePhysDeriv, eIterPerExp);
+            if(pImpType == eNoType)
+            {
+                ImpType = eStdMat;
+            }
+            else
+            {
+                ImpType = pImpType;
+            }
+
+            OperatorKey bwdTrans       (pExp->DetShapeType(), eBwdTrans, ImpType);
+            OperatorKey iproductWRTBase(pExp->DetShapeType(), eIProductWRTBase, ImpType);
+
 
             m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
             
-            m_ops[eBwdTrans]        = GetOperatorFactory().CreateInstance(
-                                                          bwdSumFac, pExp, pGeom, m_geomData);
-            //m_ops[eBwdTrans]        = GetOperatorFactory().CreateInstance(
-            //                                            bwdStdMat, pExp, pGeom, m_geomData);
-            m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(
-                                                          iproductWRTBaseIterPerExp, pExp, pGeom,m_geomData);
+            m_ops[eBwdTrans]        = GetOperatorFactory().CreateInstance(bwdTrans, pExp, pGeom, m_geomData);
+            m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
 
-            //m_ops[eBwdTrans] = GetOperatorFactory().CreateInstance(
-            //bwdStdMat, pExp, pGeom);
-            //m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(
-            //    derivIterPerExp, pExp, pGeom);
         }
     }
 }

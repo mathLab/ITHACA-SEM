@@ -1,8 +1,8 @@
-SET(LibrarySubDirs Collections LibUtilities LocalRegions MultiRegions SpatialDomains
-StdRegions SolverUtils)
+SET(LibrarySubDirs Collections LibUtilities LocalRegions 
+MultiRegions SpatialDomains StdRegions SolverUtils)
 SET(UnitTestSubDirs UnitTests)
-SET(DemoSubDirs Demos)
-SET(TimingsSubDirs Timings)
+SET(DemoSubDirs     Demos)
+SET(TimingsSubDirs  Timings)
 
 SUBDIRS(${LibrarySubDirs} )
 

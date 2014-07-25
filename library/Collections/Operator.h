@@ -68,6 +68,7 @@ namespace Nektar {
         
         enum ImplementationType
         {
+            eNoType,
             eIterPerExp,
             eSumFac,
             eStdMat

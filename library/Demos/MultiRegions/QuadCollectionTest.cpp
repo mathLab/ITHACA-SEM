@@ -9,7 +9,7 @@
 
 #include <Collections/Collection.h>
 
-#define NBWD 1000000
+#define NBWD 10000
 
 using namespace Nektar;
 

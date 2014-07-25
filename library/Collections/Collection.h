@@ -78,7 +78,8 @@ namespace Nektar {
         public:
             
             Collection(StdRegions::StdExpansionSharedPtr pExp,
-                       vector<SpatialDomains::GeometrySharedPtr> pGeom);
+                       vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                       ImplementationType pImpType = eNoType);
             
             void ApplyOperator(const OperatorType                 &op,
                                const Array<OneD, const NekDouble> &inarray,

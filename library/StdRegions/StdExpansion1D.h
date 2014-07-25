@@ -104,6 +104,8 @@ namespace Nektar
             }
 
             STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int vertex);
+            STD_REGIONS_EXPORT const NormalVector & v_GetSurfaceNormal(
+                    const int id) const;
 
             STD_REGIONS_EXPORT const NormalVector & v_GetVertexNormal(const int vertex) const;
         };

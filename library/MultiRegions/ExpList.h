@@ -346,12 +346,6 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray,
                 int BndID);
 			
-            /// This function calculates Surface Normal vector of a smooth
-            /// manifold.
-            MULTI_REGIONS_EXPORT void GetSurfaceNormal(
-                Array<OneD,NekDouble> &SurfaceNormal,
-                const int k);
-
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 

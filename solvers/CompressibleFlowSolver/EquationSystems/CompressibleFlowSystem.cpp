@@ -165,16 +165,16 @@ namespace Nektar
                 {
                     m_advection->SetFluxVector(&CompressibleFlowSystem::
                                                GetFluxVectorDeAlias, this);
-                    //m_diffusion->SetFluxVectorNS(
-                    //    &CompressibleFlowSystem::GetViscousFluxVectorDeAlias,
-                    //    this);
+                    m_diffusion->SetFluxVectorNS(
+                        &CompressibleFlowSystem::GetViscousFluxVectorDeAlias,
+                        this);
                 }
                 else
                 {
                     m_advection->SetFluxVector  (&CompressibleFlowSystem::
                                                   GetFluxVector, this);
-                    //m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
-                    //                              GetViscousFluxVector, this);
+                    m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
+                                                  GetViscousFluxVector, this);
                 }
                 
                 if (m_shockCaptureType=="Smooth" && m_EqTypeStr=="EulerADCFE")
@@ -2674,7 +2674,7 @@ namespace Nektar
 
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {
-            tmp[i] = m_fields[i]->UpdatePhys();
+            tmp[i] = m_fields[i]->GetPhys();
         }
 
         Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys), sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);

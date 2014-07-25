@@ -136,7 +136,7 @@ namespace Nektar
                 StdRegions::ePreconLinearSpaceMass :
                 StdRegions::ePreconLinearSpace;
 
-            GlobalLinSysKey preconKey(mType, m_vertLocToGloMap);
+            GlobalLinSysKey preconKey(mType, m_vertLocToGloMap, (m_linsys.lock())->GetKey().GetConstFactors());
 
             switch(solveType)
             {

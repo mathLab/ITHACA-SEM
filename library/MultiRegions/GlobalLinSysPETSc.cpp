@@ -88,6 +88,7 @@ namespace Nektar
             // Grab number of iterations taken
             PetscInt its;
             KSPGetIterationNumber(m_ksp, &its);
+            cout << "iterations = " << its << endl;
 
             // Scatter results to local vector
             VecScatterBegin(m_ctx, m_x, m_locVec, INSERT_VALUES, SCATTER_FORWARD);

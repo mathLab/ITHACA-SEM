@@ -146,20 +146,7 @@ namespace Nektar
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
             // set up normalisation factor for right hand side on first SC level
-#if 0
-            if(scLevel == 0)
-            {
-                Set_Rhs_Magnitude(F_GlobBnd);
-            }
-
-            // Select correct matrix to use at difference levels: top level
-            // should use the transformed matrix, all other levels should use
-            // original matrix since the transformed matrix is recursively
-            // passed down.
-            DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
-#else
             DNekScalBlkMatSharedPtr sc = v_PreSolve(scLevel, F_GlobBnd);
-#endif
 
             if(nGlobHomBndDofs)
             {

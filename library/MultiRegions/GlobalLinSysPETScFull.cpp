@@ -71,7 +71,7 @@ namespace Nektar
 
             const int nDofs    = pLocToGloMap->GetNumGlobalCoeffs();
             const int nDirDofs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            
+
             int i, j, n, cnt, gid1, gid2, loc_lda;
             NekDouble sign1, sign2, value;
             DNekScalMatSharedPtr loc_mat;
@@ -174,8 +174,10 @@ namespace Nektar
                                 tmp.get(),    1);
                 }
 
-                SolveLinearSystem(nGlobDofs, tmp, pOutput,
-                                  pLocToGloMap, nDirDofs);
+                Array<OneD, NekDouble> out(nGlobDofs,0.0);
+                SolveLinearSystem(nGlobDofs, tmp, out, pLocToGloMap, nDirDofs);
+                Vmath::Vadd(nGlobDofs-nDirDofs,    &out    [nDirDofs], 1,
+                            &pOutput[nDirDofs], 1, &pOutput[nDirDofs], 1);
             }
             else
             {

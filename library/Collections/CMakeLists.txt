@@ -1,6 +1,7 @@
 SET(COLLECTIONS_SOURCES
   Collection.cpp
   Operator.cpp
+  HexOperators.cpp
   QuadOperators.cpp
   SegOperators.cpp
   TriOperators.cpp

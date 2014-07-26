@@ -1,7 +1,10 @@
 
 SET(Sources
     main.cpp
-    TestSingleHexCollection.cpp
+    TestHexCollection.cpp
+    TestQuadCollection.cpp
+    TestSegCollection.cpp
+    TestTriCollection.cpp
 )
 
 SET(Headers

@@ -196,12 +196,11 @@ namespace Nektar {
                                      BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Hex"),
             };
         
-        
         /*
          * ----------------------------------------------------------
          * IProductWRTBase operators
-     * ----------------------------------------------------------
-     */
+         * ----------------------------------------------------------
+         */
         
         class IProductWRTBase_StdMat : public Operator
         {

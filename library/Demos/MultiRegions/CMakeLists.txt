@@ -1,5 +1,10 @@
 SET(LinkLibraries MultiRegions)
 
+SET(CollectionTest3DSource  CollectionTest3D.cpp)
+ADD_NEKTAR_EXECUTABLE(CollectionTest3D demos CollectionTest3DSource)
+TARGET_LINK_LIBRARIES(CollectionTest3D ${LinkLibraries})
+
+
 SET(HelmholtzCont1DSource  Helmholtz1D.cpp)
 ADD_NEKTAR_EXECUTABLE(Helmholtz1D demos HelmholtzCont1DSource)
 TARGET_LINK_LIBRARIES(Helmholtz1D ${LinkLibraries})

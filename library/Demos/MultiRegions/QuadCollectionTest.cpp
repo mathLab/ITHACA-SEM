@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
         geom[i] = Exp->GetExp(i)->GetGeom();
     }
     
-    Collections::Collection c(Exp->GetExp(0), geom);
+    Collections::Collection c(Exp->GetExp(0), geom,Collections::eSumFac);
 
 #if 1
     {

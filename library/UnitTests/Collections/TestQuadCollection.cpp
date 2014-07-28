@@ -32,7 +32,7 @@
 
 #include <LocalRegions/QuadExp.h>
 #include <SpatialDomains/MeshGraph.h>
-#include <Collections/collection.h>
+#include <Collections/Collection.h>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>

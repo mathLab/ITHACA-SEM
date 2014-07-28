@@ -699,6 +699,174 @@ namespace Nektar
         }        
 
 
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_SumFac_VariableP_CollAll)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
+            
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eGLL_Lagrange;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(4, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(6, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir3(8, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,6,quadPointsKeyDir2);
+            const Nektar::LibUtilities::BasisKey basisKeyDir3(basisTypeDir1,8,quadPointsKeyDir3);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3, hexGeom);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            GeomVec.push_back(hexGeom);
+            
+            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> phys(nq);
+            Array<OneD, NekDouble> coeffs1(Exp->GetNcoeffs());
+            Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
+
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+
+            Exp->IProductWRTBase(phys, coeffs1);
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }        
+
+
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_SumFac_VariableP_CollDir02)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
+            
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eGLL_Lagrange;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(4, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(7, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir3(8, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,6,quadPointsKeyDir2);
+            const Nektar::LibUtilities::BasisKey basisKeyDir3(basisTypeDir1,8,quadPointsKeyDir3);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3, hexGeom);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            GeomVec.push_back(hexGeom);
+            
+            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> phys(nq);
+            Array<OneD, NekDouble> coeffs1(Exp->GetNcoeffs());
+            Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
+
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+
+            Exp->IProductWRTBase(phys, coeffs1);
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }        
+
+
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_SumFac_VariableP_CollDir12)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
+            
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eGLL_Lagrange;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(5, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(6, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir3(8, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,6,quadPointsKeyDir2);
+            const Nektar::LibUtilities::BasisKey basisKeyDir3(basisTypeDir1,8,quadPointsKeyDir3);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3, hexGeom);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            GeomVec.push_back(hexGeom);
+            
+            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> phys(nq);
+            Array<OneD, NekDouble> coeffs1(Exp->GetNcoeffs());
+            Array<OneD, NekDouble> coeffs2(Exp->GetNcoeffs());
+
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+
+            Exp->IProductWRTBase(phys, coeffs1);
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }        
+
+
         BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_StdMat_VariableP_MultiElmt)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
@@ -993,6 +1161,7 @@ namespace Nektar
 
             for(int i = 0; i < nelmts; ++i)
             {
+                Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
                 Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
             }
             c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
@@ -1006,5 +1175,140 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
         }
+
+
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_SumFac_VariableP_MultiElmt_CollDir02)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
+            
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eGLL_Lagrange;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(4, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(6, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir3(8, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,6,quadPointsKeyDir2);
+            const Nektar::LibUtilities::BasisKey basisKeyDir3(basisTypeDir1,8,quadPointsKeyDir3);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3, hexGeom);
+
+            int nelmts = 10;
+            
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            for(int i = 0; i < nelmts; ++i)
+                GeomVec.push_back(hexGeom);
+            
+            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> phys(nelmts*nq), tmp;
+            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs());
+            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
+
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
+                Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
+            }
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-4;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                // clamp values below 1e-14 to zero 
+                coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+                coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
+
+
+        BOOST_AUTO_TEST_CASE(TestHexIProductWRTBase_SumFac_VariableP_MultiElmt_CollDir12)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
+            
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eGLL_Lagrange;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(5, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(6, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir3(8, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,6,quadPointsKeyDir2);
+            const Nektar::LibUtilities::BasisKey basisKeyDir3(basisTypeDir1,8,quadPointsKeyDir3);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3, hexGeom);
+
+            int nelmts = 10;
+            
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            for(int i = 0; i < nelmts; ++i)
+                GeomVec.push_back(hexGeom);
+            
+            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> phys(nelmts*nq), tmp;
+            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs());
+            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
+
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
+                Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
+            }
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-4;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                // clamp values below 1e-14 to zero 
+                coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+                coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
+
     }
+
+
 }

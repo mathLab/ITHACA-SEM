@@ -2251,7 +2251,7 @@ namespace Nektar
 
             for(i = 0; i < nq12; ++i)
             {
-                Vmath::Smul(nquad0, w1[i%nquad2], outarray.get()+i*nquad0, 1,
+                Vmath::Smul(nquad0, w1[i%nquad1], outarray.get()+i*nquad0, 1,
                             outarray.get()+i*nquad0, 1);
             }
 

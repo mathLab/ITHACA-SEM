@@ -49,7 +49,7 @@ namespace Nektar {
         }
 
         const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(const LibUtilities::PointsKeyVector &ptsKeys,
-                                                               vector<SpatialDomains::GeometrySharedPtr> &pGeom)
+                                                                      vector<SpatialDomains::GeometrySharedPtr> &pGeom)
         {
             if(m_oneDGeomData.count(eJac) == 0)
             {
@@ -89,8 +89,52 @@ namespace Nektar {
             
             return m_oneDGeomData[eJac];
         }
+
         
-        
+        const Array<OneD, const NekDouble> &CoalescedGeomData::GetBaseWithWeights(const int dir, 
+                                                              StdRegions::StdExpansionSharedPtr &stdExp)
+        {
+            GeomData ReturnEnum;
+
+            switch(dir)
+            {
+            case 0:
+                ReturnEnum = eBase0WithWeights;
+                break;
+            case 1:
+                ReturnEnum = eBase1WithWeights;
+                break;
+            case 2:
+                ReturnEnum = eBase2WithWeights;
+                break;
+            default:
+                ASSERTL0(false,"Unknown direction value");
+                break;
+            }
+
+            if(m_oneDGeomData.count(ReturnEnum) == 0)
+            {
+
+                Array<OneD, const NekDouble>     base = stdExp->GetBasis(dir)->GetBdata();
+                const Array<OneD, const NekDouble>& w = stdExp->GetBasis(dir)->GetW();
+
+                Array<OneD, NekDouble> baseWithWeights(base);
+
+                int nq    = w.num_elements();
+                int nvals = baseWithWeights.num_elements()/nq;
+
+                for(int i = 0; i < nvals; ++i)
+                {
+                    Vmath::Vmul(nq,&w[0],1,&baseWithWeights[i*nq],1,&baseWithWeights[i*nq],1);
+                }
+                
+                m_oneDGeomData[ReturnEnum] = baseWithWeights; 
+            }
+
+            return m_oneDGeomData[ReturnEnum];
+        }
+
+
         Collection::Collection(StdRegions::StdExpansionSharedPtr pExp,
                                vector<SpatialDomains::GeometrySharedPtr> pGeom,
                                ImplementationType  pImpType)
@@ -115,11 +159,16 @@ namespace Nektar {
             m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
             
             m_ops[eBwdTrans]        = GetOperatorFactory().CreateInstance(bwdTrans, pExp, pGeom, m_geomData);
-            if(ImpType != Collections::eSumFac)
+
+            if(ImpType != eSumFac)
             {
                 m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
             }
-
+            else if (pExp->DetShapeType() == LibUtilities::eHexahedron)
+            {
+                m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
+            }
+            
         }
     }
 }

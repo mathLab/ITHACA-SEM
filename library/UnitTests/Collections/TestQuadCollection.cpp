@@ -158,6 +158,53 @@ namespace Nektar
             }
         }
 
+
+        BOOST_AUTO_TEST_CASE(TestQuadBwdTrans_StdMat_VariableP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, 0.0));
+            
+            SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(5, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(7, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,6,quadPointsKeyDir2);
+            
+            Nektar::LocalRegions::QuadExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, quadGeom);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            int nelmts = 10;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(quadGeom);
+            }
+            
+            Collections::Collection c(Exp, GeomVec,Collections::eStdMat);
+
+            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
+            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
+            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
+            
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
+            }
+            c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < phys1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            }
+        }
+
         BOOST_AUTO_TEST_CASE(TestQuadBwdTrans_IterPerExp_UniformP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
@@ -522,5 +569,65 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
             }
         }        
+
+        BOOST_AUTO_TEST_CASE(TestQuadIProductWRTBase_StdMat_VariableP_MultiElmt)
+        {
+
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u,  1.0,  1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0,  1.0, 0.0));
+            
+            SpatialDomains::QuadGeomSharedPtr quadGeom = CreateQuad(v0, v1, v2, v3);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(5, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(7, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,6,quadPointsKeyDir2);
+            
+            Nektar::LocalRegions::QuadExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::QuadExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, quadGeom);
+
+            int nelmts = 10;
+            
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(quadGeom);
+            }
+            
+            Collections::Collection c(Exp, GeomVec,Collections::eStdMat);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp;
+            Array<OneD, NekDouble> coeffs1(nelmts*Exp->GetNcoeffs());
+            Array<OneD, NekDouble> coeffs2(nelmts*Exp->GetNcoeffs());
+
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,&phys[0],1,&phys[i*nq],1);
+                Exp->IProductWRTBase(phys +i*nq, tmp = coeffs1 + i*Exp->GetNcoeffs());
+            }
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }        
+
     }
 }

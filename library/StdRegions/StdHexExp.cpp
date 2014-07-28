@@ -431,12 +431,12 @@ namespace Nektar
                                                      bool doCheckCollDir1,
                                                      bool doCheckCollDir2)
         {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nquad2 = m_base[2]->GetNumPoints();
-            int    nmodes0 = m_base[0]->GetNumModes();
-            int    nmodes1 = m_base[1]->GetNumModes();
-            int    nmodes2 = m_base[2]->GetNumModes();
+            int  nquad0  = m_base[0]->GetNumPoints();
+            int  nquad1  = m_base[1]->GetNumPoints();
+            int  nquad2  = m_base[2]->GetNumPoints();
+            int  nmodes0 = m_base[0]->GetNumModes();
+            int  nmodes1 = m_base[1]->GetNumModes();
+            int  nmodes2 = m_base[2]->GetNumModes();
 
             bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
             bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;

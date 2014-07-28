@@ -47,7 +47,10 @@ namespace Nektar {
         enum GeomData
         {
             eJac,
-            eDerivFactors
+            eDerivFactors,
+            eBase0WithWeights,
+            eBase1WithWeights,
+            eBase2WithWeights
         };
 
         class CoalescedGeomData
@@ -59,7 +62,8 @@ namespace Nektar {
 
             const Array<OneD, const NekDouble> &GetJac(const LibUtilities::PointsKeyVector &ptsKeys,
                                                        vector<SpatialDomains::GeometrySharedPtr> &pGeom);
-            
+            const Array<OneD, const NekDouble> &GetBaseWithWeights(const int dir, 
+                                                              StdRegions::StdExpansionSharedPtr &stdExp);
         private:
             map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
             map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
@@ -94,6 +98,7 @@ namespace Nektar {
             vector<SpatialDomains::GeometrySharedPtr>             m_geom;
             boost::unordered_map<OperatorType, OperatorSharedPtr> m_ops;
             CoalescedGeomDataSharedPtr                            m_geomData;
+
         };
 
         typedef std::vector<Collection> CollectionVector;

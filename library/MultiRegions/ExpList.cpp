@@ -315,7 +315,6 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray)
         {
 
-#if 1
             Array<OneD,NekDouble>  tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
@@ -324,43 +323,6 @@ namespace Nektar
                                                inarray + m_coll_phys_offset[i],
                                                tmp = outarray + m_coll_coeff_offset[i]);
             }
-#else
-            // get optimisation information about performing block
-            // matrix multiplies
-            const Array<OneD, const bool>  doBlockMatOp
-                = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
-            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
-            const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
-
-            Array<OneD,NekDouble> tmp_outarray;
-            int cnt = 0,eid;
-
-            for(int n = 0; n < shape.num_elements(); ++n)
-            {
-                if(doBlockMatOp[n])
-                {
-                    if(num_elmts[n])
-                    {
-                        GlobalMatrixKey mkey(StdRegions::eIProductWRTBase,
-                                             shape[n]);
-                        eid = m_offset_elmt_id[cnt];
-                        MultiplyByBlockMatrix(mkey,inarray + m_phys_offset[eid],
-                                              tmp_outarray = outarray + m_coeff_offset[eid]);
-                        cnt += num_elmts[n];
-                    }
-                }
-                else
-                {
-                    int    i;
-                    for(i = 0; i < num_elmts[n]; ++i)
-                    {
-                        eid = m_offset_elmt_id[cnt++];
-                        (*m_exp)[eid]->IProductWRTBase(inarray+m_phys_offset[eid],
-                                                       tmp_outarray = outarray+m_coeff_offset[eid]);
-                    }
-                }
-            }
-#endif
         }
 
         /**
@@ -1180,7 +1142,6 @@ namespace Nektar
         void ExpList::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
 											Array<OneD, NekDouble> &outarray)
         {
-#if 1
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
@@ -1189,43 +1150,6 @@ namespace Nektar
                                                inarray + m_coll_coeff_offset[i],
                                                tmp = outarray + m_coll_phys_offset[i]);
             }
-#else
-            // get optimisation information about performing block
-            // matrix multiplies
-            const Array<OneD, const bool>  doBlockMatOp
-                = m_globalOptParam->DoBlockMatOp(StdRegions::eBwdTrans);
-            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
-            const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
-
-            Array<OneD,NekDouble> tmp_outarray;
-            int cnt = 0,eid;
-
-            for(int n = 0; n < num_elmts.num_elements(); ++n)
-            {
-                if(doBlockMatOp[n])
-                {
-                    if(num_elmts[n])
-                    {
-                        GlobalMatrixKey mkey(StdRegions::eBwdTrans, shape[n]);
-                        eid = m_offset_elmt_id[cnt];
-                        MultiplyByBlockMatrix(mkey,inarray + m_coeff_offset[eid],
-                                              tmp_outarray = outarray + m_phys_offset[eid]);
-                        cnt += num_elmts[n];
-                    }
-                }
-                else
-                {
-                    int  i;
-
-                    for(i= 0; i < num_elmts[n]; ++i)
-                    {
-                        eid = m_offset_elmt_id[cnt++];
-                        (*m_exp)[eid]->BwdTrans(inarray + m_coeff_offset[eid],
-                                   tmp_outarray = outarray+m_phys_offset[eid]);
-                    }
-                }
-            }
-#endif
         }
 
         LocalRegions::ExpansionSharedPtr& ExpList::GetExp(
@@ -2403,7 +2327,14 @@ namespace Nektar
                                 Array<OneD,       NekDouble> &outarray,
                                 CoeffState coeffstate)	   
         {
-            v_IProductWRTBase_IterPerExp(inarray,outarray);
+            Array<OneD,NekDouble>  tmp;
+            for (int i = 0; i < m_collections.size(); ++i)
+            {
+                
+                m_collections[i].ApplyOperator(Collections::eIProductWRTBase,
+                                               inarray + m_coll_phys_offset[i],
+                                               tmp = outarray + m_coll_coeff_offset[i]);
+            }
         }
         
         void ExpList::v_GeneralMatrixOp(
@@ -2575,15 +2506,6 @@ namespace Nektar
 
         void ExpList::CreateCollections()
         {
-#if 0
-            for (int i = 0; i < m_exp->size(); ++i)
-            {
-                vector<SpatialDomains::GeometrySharedPtr> tmp(1);
-                tmp[0] = (*m_exp)[i]->GetGeom();
-                Collections::Collection tmp2((*m_exp)[i], tmp);
-                m_collections.push_back(tmp2);
-            }
-#else
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
             map<LibUtilities::ShapeType,
@@ -2670,7 +2592,7 @@ namespace Nektar
                 geom.push_back(it->second[0].first->GetGeom());
                 if(it->second.size() == 1) // single element case
                 {
-                    Collections::Collection tmp(stdExp, geom);
+                    Collections::Collection tmp(stdExp, geom, Collections::eIterPerExp);
                     m_collections.push_back(tmp);
                 }
                 else
@@ -2698,7 +2620,7 @@ namespace Nektar
                             else // end this list
                             {
                                 geom.push_back(it->second[i].first->GetGeom());
-                                Collections::Collection tmp(stdExp, geom);
+                                Collections::Collection tmp(stdExp, geom, Collections::eIterPerExp);
                                 m_collections.push_back(tmp);
                                 geom.empty();
                             }
@@ -2717,7 +2639,6 @@ namespace Nektar
                     }
                 }
             }
-#endif
         }
     } //end of namespace
 } //end of namespace

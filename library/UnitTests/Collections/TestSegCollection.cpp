@@ -89,8 +89,52 @@ namespace Nektar
                 BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
             }
         }
-        
 
+        
+        BOOST_AUTO_TEST_CASE(TestSegBwdTrans_StdMat_UniformP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
+            
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            unsigned int numSegPoints = 6;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(numSegPoints, segPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+            
+            Nektar::LocalRegions::SegExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+
+            int nelmts = 10;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(segGeom);
+            }
+            
+            Collections::Collection c(Exp, GeomVec,Collections::eStdMat);
+
+
+            Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
+            Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
+            Array<OneD, NekDouble> phys2(nelmts*Exp->GetTotPoints());
+            
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Exp->BwdTrans(coeffs + i*Exp->GetNcoeffs(), tmp = phys1+i*Exp->GetTotPoints());
+            }
+            c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < phys1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(phys1[i],phys2[i], epsilon);
+            }
+        }
+        
 
         BOOST_AUTO_TEST_CASE(TestSegBwdTrans_IterPerExp_UniformP)
         {

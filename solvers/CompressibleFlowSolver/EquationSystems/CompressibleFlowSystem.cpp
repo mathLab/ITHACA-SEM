@@ -519,13 +519,13 @@ namespace Nektar
         if (nDimensions == 2 || nDimensions == 3)
         {
             velInf[1] = m_vInf;
-            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[1], 1, tmp1, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
         }
         if (nDimensions == 3)
         {
             velInf[2] = m_wInf;
-            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[2], 1, tmp2, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
         }
 

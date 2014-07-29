@@ -61,8 +61,9 @@ namespace Nektar {
         enum OperatorType
         {
             eBwdTrans,
-            eIProductWRTBase,
             eFwdTrans,
+            eIProductWRTBase,
+            eIProductWRTDerivBase,
             ePhysDeriv
         };
         

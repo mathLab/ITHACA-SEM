@@ -96,10 +96,10 @@ namespace Nektar {
             BwdTrans_StdMat(StdRegions::StdExpansionSharedPtr pExp,
                             vector<SpatialDomains::GeometrySharedPtr> pGeom,
                             CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom, GeomData),
-                  m_key(StdRegions::eBwdTrans, pExp->DetShapeType(), *pExp)
+                : Operator(pExp, pGeom, GeomData)
             {
-                m_mat = m_stdExp->GetStdMatrix(m_key);
+                StdRegions::StdMatrixKey  key(StdRegions::eBwdTrans, pExp->DetShapeType(), *pExp);
+                m_mat = m_stdExp->GetStdMatrix(key);
             }
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -114,7 +114,6 @@ namespace Nektar {
             
             OPERATOR_CREATE(BwdTrans_StdMat)
             
-            StdRegions::StdMatrixKey m_key;
             DNekMatSharedPtr m_mat;
         };
         
@@ -208,8 +207,7 @@ namespace Nektar {
             IProductWRTBase_StdMat(StdRegions::StdExpansionSharedPtr pExp,
                                    vector<SpatialDomains::GeometrySharedPtr> pGeom,
                                    CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom,GeomData),
-                  m_key(StdRegions::eIProductWRTBase, pExp->DetShapeType(), *pExp)
+                : Operator(pExp, pGeom,GeomData)
             {
                 int nqtot = 1;
                 LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
@@ -218,7 +216,8 @@ namespace Nektar {
                     nqtot *= PtsKey[i].GetNumPoints();
                 }
                 m_jac = GeomData->GetJac(PtsKey,pGeom);
-                m_mat = m_stdExp->GetStdMatrix(m_key);
+                StdRegions::StdMatrixKey key(StdRegions::eIProductWRTBase, pExp->DetShapeType(), *pExp);
+                m_mat = m_stdExp->GetStdMatrix(key);
                 m_wspSize = nqtot*m_numElmt;
             }
             
@@ -239,7 +238,6 @@ namespace Nektar {
             
             OPERATOR_CREATE(IProductWRTBase_StdMat)
             
-            StdRegions::StdMatrixKey m_key;
             DNekMatSharedPtr m_mat;
             Array<OneD, const NekDouble> m_jac;
             
@@ -342,91 +340,219 @@ namespace Nektar {
 
 
 
-    /*
-     * ----------------------------------------------------------
-     * PhysDeriv operators
-     * ----------------------------------------------------------
-     */
-
-    class PhysDeriv_IterPerExp : public Operator
-    {
-    public:
-        PhysDeriv_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
-                             vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                             CoalescedGeomDataSharedPtr GeomData)
-            : Operator(pExp, pGeom, GeomData)
+        /*
+         * ----------------------------------------------------------
+         * PhysDeriv operators
+         * ----------------------------------------------------------
+         */
+        
+        class PhysDeriv_IterPerExp : public Operator
         {
-        }
-
-        virtual void operator()(
-            const Array<OneD, const NekDouble> &input,
-                  Array<OneD,       NekDouble> &output,
-                  Array<OneD,       NekDouble> &wsp)
-        {
-            const int nPhys = m_stdExp->GetTotPoints();
-            Array<OneD, NekDouble> tmp;
-
-            for (int i = 0; i < m_numElmt; ++i)
+        public:
+            PhysDeriv_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
+                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                 CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pExp, pGeom, GeomData)
             {
-                m_stdExp->PhysDeriv(input + i*nPhys, tmp = output + i*nPhys);
+                int nqtot = 1;
+                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                m_dim = PtsKey.size();
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    nqtot *= PtsKey[i].GetNumPoints();
+                }
+                m_derivFac = GeomData->GetDerivFactors(PtsKey,pGeom);
+                m_wspSize = 3*nqtot*m_numElmt;
             }
-        }
-
-        OPERATOR_CREATE(PhysDeriv_IterPerExp)
-    };
-
-    OperatorKey PhysDeriv_IterPerExp::m_typeArr[] =
-    {
-        GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eIterPerExp),
-            PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Quad"),
-        GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eIterPerExp),
-            PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Tri")
-    };
-
-
-    /*
-     * ----------------------------------------------------------
-     * FwdTrans operators
-     * ----------------------------------------------------------
-     */
-    
-    class FwdTrans_IterPerExp : public Operator
-    {
-    public:
-        FwdTrans_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
-                            vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                            CoalescedGeomDataSharedPtr GeomData)
-            : Operator(pExp, pGeom, GeomData)
-        {
-        }
-
-        virtual void operator()(const Array<OneD, const NekDouble> &input,
-                                Array<OneD,       NekDouble> &output,
-                                Array<OneD,       NekDouble> &wsp)
-        {
-            const int nCoeffs = m_stdExp->GetNcoeffs();
-            const int nPhys   = m_stdExp->GetTotPoints();
-            Array<OneD, NekDouble> tmp;
-
-            for (int i = 0; i < m_numElmt; ++i)
+            
+            virtual void operator()(
+                                    const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &wsp)
             {
-                m_stdExp->FwdTrans(input + i*nCoeffs, tmp = output + i*nPhys);
+                int nPhys = m_stdExp->GetTotPoints();
+                int ntot = m_numElmt*nPhys;
+                Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+                Array<OneD, Array<OneD, NekDouble> > Diff(3);
+                Array<OneD, Array<OneD, NekDouble> > out(3);
+
+
+                //determine the number of derivative by size of output
+                int  nderiv = output.num_elements()/ntot;
+                ASSERTL1(nderiv == m_stdExp->GetCoordim(),"Input array not sufficiently long for all derivatives");
+
+                for(int i = 0; i < nderiv; ++i)
+                {
+                    Diff[i] = wsp + i*ntot;
+                    out[i] = output + i*ntot;
+                }
+
+                for(int i = nderiv;  i < 3; ++i) // set unwanted derivaties to Null
+                {
+                    Diff[i] = NullNekDouble1DArray;
+                }
+                
+                // calculate local derivatives
+                for (int i = 0; i < m_numElmt; ++i)
+                {
+                    m_stdExp->PhysDeriv(input + i*nPhys, tmp0 = Diff[0] + i*nPhys,
+                                        tmp1 = Diff[1] + i*nPhys, tmp2 = Diff[2] + i*nPhys);
+                }
+                
+                // calculate full derivative 
+                Vmath::Zero(nderiv*ntot,output,1);
+                for(int i = 0; i < nderiv; ++i)
+                {
+                    for(int j = 0; j < nderiv; ++j)
+                    {
+                        Vmath::Vvtvp (ntot,m_derivFac[i*m_dim+j],1,Diff[j],1, out[i], 1, out[i],1);
+                    }
+                }
             }
-        }
+            
+            OPERATOR_CREATE(PhysDeriv_IterPerExp)
 
-        OPERATOR_CREATE(FwdTrans_IterPerExp)
+            Array<TwoD, const NekDouble> m_derivFac;
+            int m_dim;
+        };
+
+        OperatorKey PhysDeriv_IterPerExp::m_typeArr[] =
+            {
+                GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eSegment, ePhysDeriv, eIterPerExp),
+            PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Seg"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eIterPerExp),
+                               PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Tri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eIterPerExp),
+                               PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Quad"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eIterPerExp),
+                               PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Tet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eIterPerExp),
+                               PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::ePrism, ePhysDeriv, eIterPerExp),
+                               PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Prism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eIterPerExp),
+                               PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Hex")
+            };
+
+        class PhysDeriv_StdMat : public Operator
+        {
+        public:
+            PhysDeriv_StdMat(StdRegions::StdExpansionSharedPtr pExp,
+                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                 CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pExp, pGeom, GeomData)
+            {
+                int nqtot = 1;
+                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                m_dim = PtsKey.size();
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    nqtot *= PtsKey[i].GetNumPoints();
+                }
+                // set up a PhysDeriv StdMat. 
+                m_derivMat = Array<OneD, DNekMatSharedPtr>(m_dim);
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    Array<OneD, NekDouble> tmp(nqtot),tmp1(nqtot);
+                    m_derivMat[i] = MemoryManager<DNekMat>::AllocateSharedPtr(nqtot,nqtot);
+                    for(int j = 0; j < nqtot; ++j)
+                    {
+                        Vmath::Zero(nqtot,tmp,1);
+                        tmp[j] = 1.0;
+                        m_stdExp->PhysDeriv(i,tmp,tmp1);
+                        Vmath::Vcopy(nqtot,&tmp1[0],1,&(m_derivMat[i]->GetPtr())[0]+j*nqtot,1);
+                    }
+                }
+                m_derivFac = GeomData->GetDerivFactors(PtsKey,pGeom);
+                m_wspSize = 3*nqtot*m_numElmt;
+            }
+            
+            virtual void operator()(
+                                    const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                int nPhys = m_stdExp->GetTotPoints();
+                int ntot = m_numElmt*nPhys;
+                Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+                Array<OneD, Array<OneD, NekDouble> > Diff(3);
+                Array<OneD, Array<OneD, NekDouble> > out(3);
+
+
+                //determine the number of derivative by size of output
+                int  nderiv = output.num_elements()/ntot;
+                ASSERTL1(nderiv == m_stdExp->GetCoordim(),"Input array not sufficiently long for all derivatives");
+
+                for(int i = 0; i < nderiv; ++i)
+                {
+                    Diff[i] = wsp + i*ntot;
+                    out[i] = output + i*ntot;
+                }
+
+                for(int i = nderiv;  i < 3; ++i) // set unwanted derivaties to Null
+                {
+                    Diff[i] = NullNekDouble1DArray;
+                }
+                
+                // calculate local derivatives
+                for(int i = 0; i < nderiv; ++i)
+                {
+                    Blas::Dgemm('N', 'N', m_derivMat[i]->GetRows(), m_numElmt,
+                                m_derivMat[i]->GetColumns(), 1.0, m_derivMat[i]->GetRawPtr(),
+                                m_derivMat[i]->GetRows(), input.get(), nPhys,
+                                0.0, &Diff[i][0],nPhys);
+                }
+
+                // calculate full derivative 
+                Vmath::Zero(nderiv*ntot,output,1);
+                for(int i = 0; i < nderiv; ++i)
+                {
+                    for(int j = 0; j < nderiv; ++j)
+                    {
+                        Vmath::Vvtvp (ntot,m_derivFac[i*m_dim+j],1,Diff[j],1, out[i], 1, out[i],1);
+                    }
+                }
+            }
+            
+            OPERATOR_CREATE(PhysDeriv_StdMat)
+
+            Array<OneD, DNekMatSharedPtr> m_derivMat;
+            Array<TwoD, const NekDouble> m_derivFac;
+            int m_dim;
+        };
+
+        OperatorKey PhysDeriv_StdMat::m_typeArr[] =
+            {
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eSegment, ePhysDeriv, eStdMat),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Seg"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eStdMat),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Tri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eStdMat),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Quad"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eStdMat),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Tet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eStdMat),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, ePhysDeriv, eStdMat),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Prism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eStdMat),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Hex")
     };
 
-    OperatorKey FwdTrans_IterPerExp::m_typeArr[] =
-    {
-        GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eQuadrilateral, eFwdTrans, eIterPerExp),
-            FwdTrans_IterPerExp::create, "FwdTrans_IterPerExp_Quad"),
-        GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eTriangle, eFwdTrans, eIterPerExp),
-            FwdTrans_IterPerExp::create, "FwdTrans_IterPerExp_Tri")
-    };
-}
+
+    }
 }

@@ -62,6 +62,8 @@ namespace Nektar {
 
             const Array<OneD, const NekDouble> &GetJac(const LibUtilities::PointsKeyVector &ptsKeys,
                                                        vector<SpatialDomains::GeometrySharedPtr> &pGeom);
+            const Array<TwoD, const NekDouble> &GetDerivFactors(const LibUtilities::PointsKeyVector &ptsKeys,
+                                                                vector<SpatialDomains::GeometrySharedPtr> &pGeom);
             const Array<OneD, const NekDouble> &GetBaseWithWeights(const int dir, 
                                                               StdRegions::StdExpansionSharedPtr &stdExp);
         private:

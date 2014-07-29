@@ -90,6 +90,56 @@ namespace Nektar {
             return m_oneDGeomData[eJac];
         }
 
+
+        const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(const LibUtilities::PointsKeyVector &ptsKeys,
+                                                                      vector<SpatialDomains::GeometrySharedPtr> &pGeom)
+        {
+            if(m_twoDGeomData.count(eDerivFactors) == 0)
+            {
+
+                int nElmts = pGeom.size();
+                const int coordim = pGeom[0]->GetCoordim();
+                int dim = ptsKeys.size();
+
+                // set up Cached Jacobians to be continuous 
+                int npts = 1;
+                for (int i = 0; i < dim; ++i)
+                {
+                    npts   *= ptsKeys[i].GetNumPoints();
+                }
+                
+
+                Array<TwoD, NekDouble> newDFac(dim*coordim,npts*nElmts);
+            
+                //copy Jacobians into a continuous list and set new chatched value
+                int cnt = 0;
+                for(int i = 0; i < nElmts; ++i)
+                {
+                    const Array<TwoD, const NekDouble> Dfac= pGeom[i]->GetGeomFactors()->GetDerivFactors(ptsKeys);
+                    
+                    if (pGeom[i]->GetGeomFactors()->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        for (int j = 0; j < dim*coordim; ++j)
+                        {
+                            Vmath::Vcopy(npts, &Dfac[j][0], 1, &newDFac[j][cnt], 1);
+                        }
+                    }
+                    else
+                    {
+                        for (int j = 0; j < dim*coordim; ++j)
+                        {
+                            Vmath::Fill(npts, Dfac[j][0], &newDFac[j][cnt], 1);
+                        }
+                    }
+                    cnt += npts;
+                }
+                
+                m_twoDGeomData[eDerivFactors] = newDFac; 
+            }
+            
+            return m_twoDGeomData[eDerivFactors];
+        }
+
         
         const Array<OneD, const NekDouble> &CoalescedGeomData::GetBaseWithWeights(const int dir, 
                                                               StdRegions::StdExpansionSharedPtr &stdExp)
@@ -154,11 +204,17 @@ namespace Nektar {
 
             OperatorKey bwdTrans       (pExp->DetShapeType(), eBwdTrans, ImpType);
             OperatorKey iproductWRTBase(pExp->DetShapeType(), eIProductWRTBase, ImpType);
+            OperatorKey physDeriv      (pExp->DetShapeType(), ePhysDeriv, ImpType);
 
 
             m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
             
-            m_ops[eBwdTrans]        = GetOperatorFactory().CreateInstance(bwdTrans, pExp, pGeom, m_geomData);
+            m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
+
+            if(ImpType != eSumFac)
+            {
+                m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
+            }
 
             if(ImpType != eSumFac)
             {

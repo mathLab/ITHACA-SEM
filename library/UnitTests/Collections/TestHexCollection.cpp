@@ -179,10 +179,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir1, basisKeyDir1, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eStdMat);
+            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -226,10 +230,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eStdMat);
+            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -270,10 +278,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir1, basisKeyDir1, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eIterPerExp);
+            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -316,10 +328,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eIterPerExp);
+            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -362,6 +378,9 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
 
             int nelmts = 10;
             
@@ -369,7 +388,7 @@ namespace Nektar
             for(int i = 0; i < nelmts; ++i)
                 GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eIterPerExp);
+            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
 
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
@@ -413,13 +432,17 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir1, basisKeyDir1, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1);
+
             int nelmts = 1;
             
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             for(int i = 0; i < nelmts; ++i)
                 GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec, Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec, Collections::eSumFac);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -461,13 +484,17 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir1, basisKeyDir1, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1);
+
             int nelmts = 10;
             
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             for(int i = 0; i < nelmts; ++i)
                 GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec, Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec, Collections::eSumFac);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -514,13 +541,17 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             int nelmts = 1;
             
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             for(int i = 0; i < nelmts; ++i)
                 GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec, Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec, Collections::eSumFac);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -565,13 +596,17 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             int nelmts = 10;
             
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             for(int i = 0; i < nelmts; ++i)
                 GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec, Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec, Collections::eSumFac);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -613,10 +648,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir1, basisKeyDir1, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eStdMat);
+            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -669,10 +708,15 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eStdMat);
+            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -725,10 +769,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -781,10 +829,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -837,10 +889,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -893,6 +949,11 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
+
             int nelmts = 10;
             
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
@@ -900,8 +961,8 @@ namespace Nektar
             {
                 GeomVec.push_back(hexGeom);
             }
-
-            Collections::Collection c(Exp, GeomVec,Collections::eStdMat);
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -957,10 +1018,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir1, basisKeyDir1, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1016,10 +1081,14 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -1070,6 +1139,10 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir1, basisKeyDir1, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1);
+
             int nelmts = 10;
             
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
@@ -1078,7 +1151,7 @@ namespace Nektar
                 GeomVec.push_back(hexGeom);
             }
             
-            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
             
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1137,13 +1210,17 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             int nelmts = 10;
             
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             for(int i = 0; i < nelmts; ++i)
                 GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
             
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1203,13 +1280,17 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             int nelmts = 10;
             
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             for(int i = 0; i < nelmts; ++i)
                 GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
             
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1269,13 +1350,17 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
                 basisKeyDir2, basisKeyDir3, hexGeom);
 
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
             int nelmts = 10;
             
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             for(int i = 0; i < nelmts; ++i)
                 GeomVec.push_back(hexGeom);
             
-            Collections::Collection c(Exp, GeomVec,Collections::eSumFac);
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
             
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq), tmp;
@@ -1308,7 +1393,256 @@ namespace Nektar
             }
         }
 
+        BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_IterPerExp_UniformP)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
+            
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            unsigned int numQuadPoints = 6;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1, hexGeom);
+            
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            GeomVec.push_back(hexGeom);
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+
+            
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            Array<OneD, NekDouble> phys(nq),tmp,tmp1;
+            Array<OneD, NekDouble> diff1(3*nq);
+            Array<OneD, NekDouble> diff2(3*nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+
+            Exp->PhysDeriv(phys,diff1,tmp = diff1+nq, tmp1 = diff1+2*nq);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_IterPerExp_VariableP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
+            
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(5, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(6, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir3(8, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,6,quadPointsKeyDir2);
+            const Nektar::LibUtilities::BasisKey basisKeyDir3(basisTypeDir1,8,quadPointsKeyDir3);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3, hexGeom);
+
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
+            int nelmts = 10;
+            
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(hexGeom);
+            }
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp,tmp1,tmp2;
+            Array<OneD, NekDouble> diff1(3*nelmts*nq);
+            Array<OneD, NekDouble> diff2(3*nelmts*nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->PhysDeriv(phys, tmp = diff1+i*nq,
+                               tmp1 = diff1+(nelmts+i)*nq, 
+                               tmp2 = diff1+(2*nelmts+i)*nq);
+            }
+
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
+
+
+
+        BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_StdMat_UniformP)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
+            
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            unsigned int numQuadPoints = 4;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(numQuadPoints, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,3,quadPointsKeyDir1);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1, hexGeom);
+            
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir1, basisKeyDir1);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            GeomVec.push_back(hexGeom);
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            Array<OneD, NekDouble> phys(nq),tmp,tmp1;
+            Array<OneD, NekDouble> diff1(3*nq);
+            Array<OneD, NekDouble> diff2(3*nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+
+            Exp->PhysDeriv(phys,diff1,tmp = diff1+nq, tmp1 = diff1+2*nq);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestHexPhysDeriv_StdMat_VariableP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.5, -1.5, -1.5));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
+            
+            SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
+            
+            Nektar::LibUtilities::PointsType quadPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            Nektar::LibUtilities::BasisType basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir1(5, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir2(6, quadPointsTypeDir1);
+            const Nektar::LibUtilities::PointsKey quadPointsKeyDir3(8, quadPointsTypeDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir1(basisTypeDir1,4,quadPointsKeyDir1);
+            const Nektar::LibUtilities::BasisKey basisKeyDir2(basisTypeDir1,6,quadPointsKeyDir2);
+            const Nektar::LibUtilities::BasisKey basisKeyDir3(basisTypeDir1,8,quadPointsKeyDir3);
+
+            Nektar::LocalRegions::HexExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::HexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3, hexGeom);
+
+            Nektar::StdRegions::StdHexExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdHexExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, basisKeyDir3);
+
+            int nelmts = 10;
+            
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(hexGeom);
+            }
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp,tmp1,tmp2;
+            Array<OneD, NekDouble> diff1(3*nelmts*nq);
+            Array<OneD, NekDouble> diff2(3*nelmts*nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+            }
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->PhysDeriv(phys, tmp = diff1+i*nq,
+                               tmp1 = diff1+(nelmts+i)*nq, 
+                               tmp2 = diff1+(2*nelmts+i)*nq);
+            }
+
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
+
     }
-
-
 }

@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
         t.Start();
         for (int i = 0; i < NBWD; ++i)
         {
-#if 1
+#if 0
             for(int j = 0; j < Exp->GetNumElmts(); ++j)
             {
                 Exp->GetExp(j)->BwdTrans(coeffs+Exp->GetCoeff_Offset(j), tmp = phys1+Exp->GetPhys_Offset(j));

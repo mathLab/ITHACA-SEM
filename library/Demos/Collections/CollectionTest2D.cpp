@@ -118,20 +118,20 @@ int main(int argc, char *argv[])
             for (int i = 0; i < Ntest; ++i)
             {
                 // Do test by calling every element in loop 
-                for (int i = 0; i < Ntest; ++i)
+                for(int j = 0; j < nelmt; ++j)
                 {
-                    for(int j = 0; j < nelmt; ++j)
-                    {
-                        Exp->GetExp(j)->IProductWRTBase(input + Exp->GetPhys_Offset(j), 
-                                                        tmp  = output1 + Exp->GetCoeff_Offset(j));
-                    }
+                    Exp->GetExp(j)->IProductWRTBase(input + Exp->GetPhys_Offset(j), 
+                                                    tmp  = output1 + Exp->GetCoeff_Offset(j));
                 }
             }
             t.Stop();
             NekDouble orig = t.TimePerTest(Ntest);
             cout << "\t ExpList: " << orig << endl; 
             t.Start();
-            Exp->IProductWRTBase(input, output2);
+            for (int i = 0; i < Ntest; ++i)
+            {
+                Exp->IProductWRTBase(input, output2);
+            }
             t.Stop();
             NekDouble col = t.TimePerTest(Ntest);
             cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
@@ -162,21 +162,21 @@ int main(int argc, char *argv[])
             for (int i = 0; i < Ntest; ++i)
             {
                 // Do test by calling every element in loop 
-                for (int i = 0; i < Ntest; ++i)
+                for(int j = 0; j < nelmt; ++j)
                 {
-                    for(int j = 0; j < nelmt; ++j)
-                    {
-                        Exp->GetExp(j)->PhysDeriv(input +Exp->GetPhys_Offset(j), 
-                                                  tmp  = diff1_0 +Exp->GetPhys_Offset(j), 
-                                                  tmp1 = diff1_1 +Exp->GetPhys_Offset(j));
-                    }
+                    Exp->GetExp(j)->PhysDeriv(input +Exp->GetPhys_Offset(j), 
+                                              tmp  = diff1_0 +Exp->GetPhys_Offset(j), 
+                                              tmp1 = diff1_1 +Exp->GetPhys_Offset(j));
                 }
             }
             t.Stop();
             NekDouble orig = t.TimePerTest(Ntest);
             cout << "\t ExpList: " << orig << endl; 
             t.Start();
-            Exp->PhysDeriv(input, diff2_0, diff2_1);
+            for (int i = 0; i < Ntest; ++i)
+            {
+                Exp->PhysDeriv(input, diff2_0, diff2_1);
+            }
             t.Stop();
             NekDouble col = t.TimePerTest(Ntest);
             cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;

@@ -104,6 +104,8 @@ namespace Nektar {
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
                                     Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
                 Blas::Dgemm('N', 'N', m_mat->GetRows(), m_numElmt,
@@ -155,6 +157,8 @@ namespace Nektar {
             virtual void operator()(
                                     const Array<OneD, const NekDouble> &input,
                                     Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
                 const int nCoeffs = m_stdExp->GetNcoeffs();
@@ -223,6 +227,8 @@ namespace Nektar {
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
                                     Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
                 ASSERTL1(wsp.num_elements() == m_wspSize,
@@ -287,10 +293,11 @@ namespace Nektar {
             m_wspSize = nqtot*m_numElmt;
         }
 
-        virtual void operator()(
-            const Array<OneD, const NekDouble> &input,
-                  Array<OneD,       NekDouble> &output,
-                  Array<OneD,       NekDouble> &wsp)
+        virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                Array<OneD,       NekDouble> &output,
+                                Array<OneD,       NekDouble> &output1,
+                                Array<OneD,       NekDouble> &output2,
+                                Array<OneD,       NekDouble> &wsp)
         {
             ASSERTL1(wsp.num_elements() == m_wspSize,
                      "Incorrect workspace size");
@@ -357,6 +364,8 @@ namespace Nektar {
                 int nqtot = 1;
                 LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
                 m_dim = PtsKey.size();
+                m_coordim = m_stdExp->GetCoordim();
+
                 for(int i = 0; i < m_dim; ++i)
                 {
                     nqtot *= PtsKey[i].GetNumPoints();
@@ -365,9 +374,10 @@ namespace Nektar {
                 m_wspSize = 3*nqtot*m_numElmt;
             }
             
-            virtual void operator()(
-                                    const Array<OneD, const NekDouble> &input,
-                                    Array<OneD,       NekDouble> &output,
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output0,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
                 int nPhys = m_stdExp->GetTotPoints();
@@ -375,23 +385,13 @@ namespace Nektar {
                 Array<OneD, NekDouble> tmp0,tmp1,tmp2;
                 Array<OneD, Array<OneD, NekDouble> > Diff(3);
                 Array<OneD, Array<OneD, NekDouble> > out(3);
+                out[0] = output0;  out[1] = output1;    out[2] = output2;
 
-
-                //determine the number of derivative by size of output
-                int  nderiv = output.num_elements()/ntot;
-                ASSERTL1(nderiv == m_stdExp->GetCoordim(),"Input array not sufficiently long for all derivatives");
-
-                for(int i = 0; i < nderiv; ++i)
+                for(int i = 0; i < m_dim; ++i)
                 {
                     Diff[i] = wsp + i*ntot;
-                    out[i] = output + i*ntot;
                 }
 
-                for(int i = nderiv;  i < 3; ++i) // set unwanted derivaties to Null
-                {
-                    Diff[i] = NullNekDouble1DArray;
-                }
-                
                 // calculate local derivatives
                 for (int i = 0; i < m_numElmt; ++i)
                 {
@@ -400,10 +400,10 @@ namespace Nektar {
                 }
                 
                 // calculate full derivative 
-                Vmath::Zero(nderiv*ntot,output,1);
-                for(int i = 0; i < nderiv; ++i)
+                for(int i = 0; i < m_coordim; ++i)
                 {
-                    for(int j = 0; j < nderiv; ++j)
+                    Vmath::Zero(ntot,out[i],1);
+                    for(int j = 0; j < m_dim; ++j)
                     {
                         Vmath::Vvtvp (ntot,m_derivFac[i*m_dim+j],1,Diff[j],1, out[i], 1, out[i],1);
                     }
@@ -414,6 +414,7 @@ namespace Nektar {
 
             Array<TwoD, const NekDouble> m_derivFac;
             int m_dim;
+            int m_coordim;
         };
 
         OperatorKey PhysDeriv_IterPerExp::m_typeArr[] =
@@ -452,6 +453,8 @@ namespace Nektar {
                 int nqtot = 1;
                 LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
                 m_dim = PtsKey.size();
+                m_coordim = m_stdExp->GetCoordim();
+
                 for(int i = 0; i < m_dim; ++i)
                 {
                     nqtot *= PtsKey[i].GetNumPoints();
@@ -474,9 +477,10 @@ namespace Nektar {
                 m_wspSize = 3*nqtot*m_numElmt;
             }
             
-            virtual void operator()(
-                                    const Array<OneD, const NekDouble> &input,
-                                    Array<OneD,       NekDouble> &output,
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output0,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
                 int nPhys = m_stdExp->GetTotPoints();
@@ -484,25 +488,15 @@ namespace Nektar {
                 Array<OneD, NekDouble> tmp0,tmp1,tmp2;
                 Array<OneD, Array<OneD, NekDouble> > Diff(3);
                 Array<OneD, Array<OneD, NekDouble> > out(3);
+                out[0] = output0;  out[1] = output1;    out[2] = output2;
 
-
-                //determine the number of derivative by size of output
-                int  nderiv = output.num_elements()/ntot;
-                ASSERTL1(nderiv == m_stdExp->GetCoordim(),"Input array not sufficiently long for all derivatives");
-
-                for(int i = 0; i < nderiv; ++i)
+                for(int i = 0; i < m_dim; ++i)
                 {
                     Diff[i] = wsp + i*ntot;
-                    out[i] = output + i*ntot;
                 }
 
-                for(int i = nderiv;  i < 3; ++i) // set unwanted derivaties to Null
-                {
-                    Diff[i] = NullNekDouble1DArray;
-                }
-                
                 // calculate local derivatives
-                for(int i = 0; i < nderiv; ++i)
+                for(int i = 0; i < m_dim; ++i)
                 {
                     Blas::Dgemm('N', 'N', m_derivMat[i]->GetRows(), m_numElmt,
                                 m_derivMat[i]->GetColumns(), 1.0, m_derivMat[i]->GetRawPtr(),
@@ -511,10 +505,10 @@ namespace Nektar {
                 }
 
                 // calculate full derivative 
-                Vmath::Zero(nderiv*ntot,output,1);
-                for(int i = 0; i < nderiv; ++i)
+                for(int i = 0; i < m_coordim; ++i)
                 {
-                    for(int j = 0; j < nderiv; ++j)
+                    Vmath::Zero(ntot,out[i],1);
+                    for(int j = 0; j < m_dim; ++j)
                     {
                         Vmath::Vvtvp (ntot,m_derivFac[i*m_dim+j],1,Diff[j],1, out[i], 1, out[i],1);
                     }
@@ -526,6 +520,7 @@ namespace Nektar {
             Array<OneD, DNekMatSharedPtr> m_derivMat;
             Array<TwoD, const NekDouble> m_derivFac;
             int m_dim;
+            int m_coordim;
         };
 
         OperatorKey PhysDeriv_StdMat::m_typeArr[] =

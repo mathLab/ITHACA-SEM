@@ -89,10 +89,31 @@ namespace Nektar {
             
             void ApplyOperator(const OperatorType                 &op,
                                const Array<OneD, const NekDouble> &inarray,
-                               Array<OneD,       NekDouble> &outarray)
+                               Array<OneD,       NekDouble> &output)
             {
                 Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
-                (*m_ops[op])(inarray, outarray, wsp);
+                (*m_ops[op])(inarray, output, NullNekDouble1DArray,
+                             NullNekDouble1DArray, wsp);
+            }
+
+
+            void ApplyOperator(const OperatorType                 &op,
+                               const Array<OneD, const NekDouble> &inarray,
+                               Array<OneD,       NekDouble> &output0,
+                               Array<OneD,       NekDouble> &output1)
+            {
+                Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
+                (*m_ops[op])(inarray, output0, output1, NullNekDouble1DArray, wsp);
+            }
+
+            void ApplyOperator(const OperatorType                 &op,
+                               const Array<OneD, const NekDouble> &inarray,
+                               Array<OneD,       NekDouble> &output0,
+                               Array<OneD,       NekDouble> &output1,
+                               Array<OneD,       NekDouble> &output2)
+            {
+                Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
+                (*m_ops[op])(inarray, output0, output1, output2, wsp);
             }
             
         protected:

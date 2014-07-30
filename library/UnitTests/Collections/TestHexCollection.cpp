@@ -1428,7 +1428,7 @@ namespace Nektar
             
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
-            Array<OneD, NekDouble> phys(nq),tmp,tmp1;
+            Array<OneD, NekDouble> phys(nq),tmp,tmp1,tmp2;
             Array<OneD, NekDouble> diff1(3*nq);
             Array<OneD, NekDouble> diff2(3*nq);
             
@@ -1440,7 +1440,7 @@ namespace Nektar
             }
 
             Exp->PhysDeriv(phys,diff1,tmp = diff1+nq, tmp1 = diff1+2*nq);
-            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,tmp = diff2+nq, tmp2 = diff2+2*nq);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)
@@ -1509,7 +1509,8 @@ namespace Nektar
                                tmp2 = diff1+(2*nelmts+i)*nq);
             }
 
-            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,tmp = diff2 + nelmts*nq, 
+                            tmp2 = diff2+2*nelmts*nq);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)
@@ -1554,7 +1555,7 @@ namespace Nektar
             
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq);
-            Array<OneD, NekDouble> phys(nq),tmp,tmp1;
+            Array<OneD, NekDouble> phys(nq),tmp,tmp1,tmp2;
             Array<OneD, NekDouble> diff1(3*nq);
             Array<OneD, NekDouble> diff2(3*nq);
             
@@ -1566,7 +1567,7 @@ namespace Nektar
             }
 
             Exp->PhysDeriv(phys,diff1,tmp = diff1+nq, tmp1 = diff1+2*nq);
-            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,tmp = diff2+nq, tmp2 = diff2+2*nq);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)
@@ -1635,7 +1636,8 @@ namespace Nektar
                                tmp2 = diff1+(2*nelmts+i)*nq);
             }
 
-            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2,tmp = diff2 + nelmts*nq, 
+                            tmp2 = diff2+2*nelmts*nq);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)

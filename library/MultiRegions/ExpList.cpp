@@ -392,10 +392,16 @@ namespace Nektar
                                   Array<OneD, NekDouble> &out_d1,
                                   Array<OneD, NekDouble> &out_d2)
         {
-#if 0
-            for (i = 0; i < m_collections.size(); ++i)
+#if 1
+            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+            for (int i = 0; i < m_collections.size(); ++i)
             {
-                m_collections[i]->ApplyOperator();
+                m_collections[i].ApplyOperator(
+                                               Collections::ePhysDeriv,
+                                               inarray + m_coll_coeff_offset[i],
+                                               tmp0 = out_d0 + m_coll_phys_offset[i],
+                                               tmp1 = out_d1 + m_coll_phys_offset[i],
+                                               tmp2 = out_d2 + m_coll_phys_offset[i]);
             }
 #else
             int  i;
@@ -2504,12 +2510,19 @@ namespace Nektar
             return NullExpListSharedPtr;
         }
 
-        void ExpList::CreateCollections()
+        
+        void ExpList::CreateCollections(Collections::ImplementationType ImpType)
         {
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
+
+            // clear vectors in case previously called 
+            m_collections.clear();
+            m_coll_coeff_offset.clear();
+            m_coll_phys_offset.clear();
+
 
             for (int i = 0; i < m_exp->size(); ++i)
             {
@@ -2592,7 +2605,7 @@ namespace Nektar
                 geom.push_back(it->second[0].first->GetGeom());
                 if(it->second.size() == 1) // single element case
                 {
-                    Collections::Collection tmp(stdExp, geom, Collections::eIterPerExp);
+                    Collections::Collection tmp(stdExp, geom, ImpType);
                     m_collections.push_back(tmp);
                 }
                 else
@@ -2620,7 +2633,7 @@ namespace Nektar
                             else // end this list
                             {
                                 geom.push_back(it->second[i].first->GetGeom());
-                                Collections::Collection tmp(stdExp, geom, Collections::eIterPerExp);
+                                Collections::Collection tmp(stdExp, geom, ImpType);
                                 m_collections.push_back(tmp);
                                 geom.empty();
                             }

@@ -1,10 +1,5 @@
 SET(LinkLibraries MultiRegions)
 
-SET(CollectionTest3DSource  CollectionTest3D.cpp)
-ADD_NEKTAR_EXECUTABLE(CollectionTest3D demos CollectionTest3DSource)
-TARGET_LINK_LIBRARIES(CollectionTest3D ${LinkLibraries})
-
-
 SET(HelmholtzCont1DSource  Helmholtz1D.cpp)
 ADD_NEKTAR_EXECUTABLE(Helmholtz1D demos HelmholtzCont1DSource)
 TARGET_LINK_LIBRARIES(Helmholtz1D ${LinkLibraries})
@@ -12,10 +7,6 @@ TARGET_LINK_LIBRARIES(Helmholtz1D ${LinkLibraries})
 SET(HelmholtzCont2DSource  Helmholtz2D.cpp)
 ADD_NEKTAR_EXECUTABLE(Helmholtz2D demos HelmholtzCont2DSource)
 TARGET_LINK_LIBRARIES(Helmholtz2D ${LinkLibraries})
-
-SET(QuadCollectionTestSource  QuadCollectionTest.cpp)
-ADD_NEKTAR_EXECUTABLE(QuadCollectionTest demos QuadCollectionTestSource)
-TARGET_LINK_LIBRARIES(QuadCollectionTest ${LinkLibraries})
 
 #SET(Helmholtz2DHomo1DSource  Helmholtz2DHomo1D.cpp)
 #ADD_NEKTAR_EXECUTABLE(Helmholtz2DHomo1D Helmholtz2DHomo1DSource)

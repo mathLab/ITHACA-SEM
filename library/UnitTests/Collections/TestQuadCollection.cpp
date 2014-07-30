@@ -780,7 +780,7 @@ namespace Nektar
             }
 
             Exp->PhysDeriv(phys,diff1,tmp = diff1+nq);
-            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nq);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)
@@ -841,7 +841,7 @@ namespace Nektar
                                tmp1 = diff1+(nelmts+i)*nq);
             }
 
-            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nelmts*nq);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)
@@ -894,7 +894,7 @@ namespace Nektar
             }
 
             Exp->PhysDeriv(phys,diff1,tmp = diff1+nq);
-            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nq);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)
@@ -957,7 +957,7 @@ namespace Nektar
 
             }
 
-            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2, tmp = diff2 + nelmts*nq);
 
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)

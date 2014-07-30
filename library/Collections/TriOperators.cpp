@@ -71,6 +71,8 @@ namespace Nektar
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
                                     Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
                 

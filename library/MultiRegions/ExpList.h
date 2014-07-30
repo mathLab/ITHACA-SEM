@@ -846,6 +846,8 @@ namespace Nektar
             //expansion type
             ExpansionType m_expType;
 
+            void CreateCollections(Collections::ImplementationType ImpType = Collections::eIterPerExp);
+
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                 const GlobalLinSysKey &mkey,
@@ -1266,7 +1268,6 @@ namespace Nektar
                             BoundaryConditionCollection& collection,
                             unsigned int index, const std::string& variable);
 
-            void CreateCollections();
         
         private:
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();

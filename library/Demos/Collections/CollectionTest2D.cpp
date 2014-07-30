@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     int Ntest = 100;
     if(argc < 2)
     {
-        fprintf(stderr,"Usage: Collection2D ntest meshfile  or Collection2D meshfile \n");
+        fprintf(stderr,"Usage: Collection2D meshfile \n");
         exit(1);
     }
     
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
             cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
             Vmath::Vsub(nq, diff1_0, 1, diff2_0, 1, diff1_0, 1);
             Vmath::Vsub(nq, diff1_1, 1, diff2_1, 1, diff1_1, 1);
-            cout << "\t Difference: " << Vmath::Vmax(nq, diff1_0, 1) << "," << Vmath::Vmax(nq, diff1_0, 1) << endl;
+            cout << "\t Difference: " << Vmath::Vmax(nq, diff1_0, 1) << "," << Vmath::Vmax(nq, diff1_1, 1) << endl;
             cout << "\t Ratio: " << (orig/col) << endl;
             
         }

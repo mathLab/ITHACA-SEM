@@ -1,3 +1,4 @@
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -9,8 +10,6 @@
 
 #include <Collections/Collection.h>
 
-#define NBWD 10000
-
 using namespace Nektar;
 
 int main(int argc, char *argv[])
@@ -20,104 +19,178 @@ int main(int argc, char *argv[])
 
     MultiRegions::ContField3DSharedPtr Exp;
 
+    int Ntest = 100;
     if(argc < 2)
     {
-        fprintf(stderr,"Usage: CollectionTest3D meshfile [SysSolnType]   or   \n");
+        fprintf(stderr,"Usage: Collection3D meshfile \n");
         exit(1);
     }
-
+    
+    // Read in mesh and set up ExpList
     SpatialDomains::MeshGraphSharedPtr graph3D = 
         SpatialDomains::MeshGraph::Read(vSession);
 
     Exp = MemoryManager<MultiRegions::ContField3D>::
         AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
 
-    vector<SpatialDomains::GeometrySharedPtr> geom(Exp->GetExpSize());
+    int nelmt = Exp->GetNumElmts();
 
-    for (int i = 0; i < Exp->GetExpSize(); ++i)
+    for(int imp = 0; imp < 3; ++imp)
     {
-        geom[i] = Exp->GetExp(i)->GetGeom();
-    }
-    
-    Collections::Collection c(Exp->GetExp(0), geom,Collections::eSumFac);
 
-#if 1
-    {
-        Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
-        Array<OneD, NekDouble> phys1(Exp->GetNpoints());
-        Array<OneD, NekDouble> phys2(Exp->GetNpoints());
-
-        Timer t;
-        t.Start();
-        for (int i = 0; i < NBWD; ++i)
-        {
-#if 1
-            for(int j = 0; j < Exp->GetNumElmts(); ++j)
+        // set up different collection implementations:
+        switch(imp){
+        case 2:
             {
-                Exp->GetExp(j)->BwdTrans(coeffs+Exp->GetCoeff_Offset(j), tmp = phys1+Exp->GetPhys_Offset(j));
+                Exp->CreateCollections(Collections::eSumFac);
+                cout << endl << "Using SumFac Collection Implementation" << endl;
             }
-#else
-            Exp->BwdTrans(coeffs, phys1);
-#endif
+            break;
+        case 1:
+            {
+                Exp->CreateCollections(Collections::eStdMat);
+                cout << endl << "Using StdMat Collection Implementation" << endl;
+            }
+            break;
+        default:
+            {
+                cout <<"Using IterPerExp Collection Implementation" << endl;
+            }
+            break;
         }
-        t.Stop();
-        NekDouble orig = t.TimePerTest(NBWD);
-        cout << "ExpList: " << orig << endl; 
-
-        t.Start();
-        for (int i = 0; i < NBWD; ++i)
-        {
-            c.ApplyOperator(Collections::eBwdTrans, coeffs, phys2);
-        }
-        t.Stop();
-        NekDouble col = t.TimePerTest(NBWD);
-        cout << "Collection: " << t.TimePerTest(NBWD) << endl;
-
-        cout << "Ratio: " << (orig/col) << endl;
-
-        Vmath::Vsub(phys1.num_elements(), phys1, 1, phys2, 1, phys1, 1);
-
-        cout << Vmath::Vmax(phys1.num_elements(), phys1, 1) << endl;
-    }
-#endif
-
-#if 0 
-    {
-        const int nq = Exp->GetNpoints();
-        Array<OneD, NekDouble> xc(nq), yc(nq);
-        Array<OneD, NekDouble> input(nq), outexp0(nq), outexp1(nq), outcol(2*nq);
-
-        Exp->GetCoords(xc, yc);
         
-        for (int i = 0; i < nq; ++i)
+        //BwdTrans comparison
         {
-            input[i] = sin(xc[i])*cos(yc[i]);
+            
+            cout << "BwdTrans Op: Ntest = " << Ntest << endl;
+            
+            Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
+            Array<OneD, NekDouble> phys1(Exp->GetNpoints());
+            Array<OneD, NekDouble> phys2(Exp->GetNpoints());
+            
+            Timer t;
+            t.Start();
+            
+            // Do test by calling every element in loop 
+            for (int i = 0; i < Ntest; ++i)
+            {
+                for(int j = 0; j < nelmt; ++j)
+                {
+                    Exp->GetExp(j)->BwdTrans(coeffs+Exp->GetCoeff_Offset(j), tmp = phys1+Exp->GetPhys_Offset(j));
+                }
+            }
+            t.Stop();
+            NekDouble orig = t.TimePerTest(Ntest);
+            cout << "\t ExpList   : " << orig << endl; 
+            
+            t.Start();
+            // call collection implementation in thorugh ExpList. 
+            for (int i = 0; i < Ntest; ++i)
+            {
+                Exp->BwdTrans(coeffs, phys2);
+            }
+            t.Stop();
+            NekDouble col = t.TimePerTest(Ntest);
+            cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
+            Vmath::Vsub(phys1.num_elements(), phys1, 1, phys2, 1, phys1, 1);
+            cout << "\t Difference: "<< Vmath::Vmax(phys1.num_elements(), phys1, 1) << endl;
+            
+            cout << "\t Ratio: " << (orig/col) << endl;
+            
+        }
+        
+        // IProductWRTBase Comparison 
+        {
+            cout << "IProductWRTBase Op: Ntest = " << Ntest << endl;
+            
+            const int nq = Exp->GetNpoints();
+            const int nc = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq), tmp,tmp1;
+            Array<OneD, NekDouble> input(nq), output1(nc), output2(nc);
+            
+            Exp->GetCoords(xc, yc, zc);
+            for (int i = 0; i < nq; ++i)
+            {
+                input[i] = sin(xc[i])*cos(yc[i])*cos(zc[i]);
+            }
+            
+            Timer t;
+            t.Start();
+            for (int i = 0; i < Ntest; ++i)
+            {
+                // Do test by calling every element in loop 
+                for(int j = 0; j < nelmt; ++j)
+                {
+                    Exp->GetExp(j)->IProductWRTBase(input + Exp->GetPhys_Offset(j), 
+                                                    tmp  = output1 + Exp->GetCoeff_Offset(j));
+                }
+            }
+            t.Stop();
+            NekDouble orig = t.TimePerTest(Ntest);
+            cout << "\t ExpList: " << orig << endl; 
+            t.Start();
+            for (int i = 0; i < Ntest; ++i)
+            {
+                Exp->IProductWRTBase(input, output2);
+            }
+            t.Stop();
+            NekDouble col = t.TimePerTest(Ntest);
+            cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
+            Vmath::Vsub(nc, output1, 1, output2, 1, output1, 1);
+            cout << "\t Difference: " << Vmath::Vmax(nc, output1, 1) << endl;
+            cout << "\t Ratio: " << (orig/col) << endl;
+            
         }
 
-        Timer t;
-        t.Start();
-        for (int i = 0; i < NBWD; ++i)
+        // PhysDeriv Comparison 
         {
-            Exp->PhysDeriv(input, outexp0, NullNekDouble1DArray);
+            cout << "PhysDeriv Op: Ntest = " << Ntest << endl;
+            
+            const int nq = Exp->GetNpoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq), tmp,tmp1,tmp2;
+            Array<OneD, NekDouble> input(nq), diff1_0(nq), diff1_1(nq), diff1_2(nq);
+            Array<OneD, NekDouble> diff2_0(nq), diff2_1(nq),  diff2_2(nq);
+            
+            Exp->GetCoords(xc, yc, zc);
+            
+            for (int i = 0; i < nq; ++i)
+            {
+                input[i] = sin(xc[i])*cos(yc[i])*cos(zc[i]);
+            }
+            
+            Timer t;
+            t.Start();
+            for (int i = 0; i < Ntest; ++i)
+            {
+                // Do test by calling every element in loop 
+                for(int j = 0; j < nelmt; ++j)
+                {
+                    Exp->GetExp(j)->PhysDeriv(input +Exp->GetPhys_Offset(j), 
+                                              tmp  = diff1_0 +Exp->GetPhys_Offset(j), 
+                                              tmp1 = diff1_1 +Exp->GetPhys_Offset(j),
+                                              tmp2 = diff1_2 +Exp->GetPhys_Offset(j));
+                }
+            }
+            t.Stop();
+            NekDouble orig = t.TimePerTest(Ntest);
+            cout << "\t ExpList: " << orig << endl; 
+            t.Start();
+            for (int i = 0; i < Ntest; ++i)
+            {
+                Exp->PhysDeriv(input, diff2_0, diff2_1,diff2_2);
+            }
+            t.Stop();
+            NekDouble col = t.TimePerTest(Ntest);
+            cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
+            Vmath::Vsub(nq, diff1_0, 1, diff2_0, 1, diff1_0, 1);
+            Vmath::Vsub(nq, diff1_1, 1, diff2_1, 1, diff1_1, 1);
+            Vmath::Vsub(nq, diff1_2, 1, diff2_2, 1, diff1_2, 1);
+            cout << "\t Difference: " << Vmath::Vmax(nq, diff1_0, 1) << "," << Vmath::Vmax(nq, diff1_1, 1) << "," 
+                 << Vmath::Vmax(nq, diff1_2, 1) << endl;
+            cout << "\t Ratio: " << (orig/col) << endl;
+            
         }
-        t.Stop();
-        NekDouble orig = t.TimePerTest(NBWD);
-        cout << "ExpList: " << orig << endl; 
-
-        t.Start();
-        for (int i = 0; i < NBWD; ++i)
-        {
-            c.ApplyOperator(Collections::ePhysDeriv, input, outcol);
-        }
-        t.Stop();
-        NekDouble col = t.TimePerTest(NBWD);
-        cout << "Collection: " << t.TimePerTest(NBWD) << endl;
-        cout << "Ratio: " << (orig/col) << endl;
-
-        Vmath::Vsub(nq, outexp0, 1, outcol, 1, outexp0, 1);
-        cout << "Error: " << Vmath::Vmax(nq, outexp0, 1) << endl;
     }
-#endif
     vSession->Finalise();
 
     return 0;

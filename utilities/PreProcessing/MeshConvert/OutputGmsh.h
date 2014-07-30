@@ -59,7 +59,7 @@ namespace Nektar
 
         bool operator==(ElmtConfig const &p1, ElmtConfig const &p2)
         {
-            return p1.m_e         == p2.m_e         &&
+            return p1.m_e           == p2.m_e           &&
                    p1.m_faceNodes   == p2.m_faceNodes   &&
                    p1.m_volumeNodes == p2.m_volumeNodes &&
                    p1.m_order       == p2.m_order;

@@ -45,6 +45,10 @@ int main(int argc, char* argv[])
     // Write out the new mesh
     vtkPolyDataWriter *vtkMeshWriter = vtkPolyDataWriter::New();
     vtkMeshWriter->SetFileName(argv[2]);
+#if VTK_MAJOR_VERSION <= 5
     vtkMeshWriter->SetInput(vtkMesh);
+#else
+    vtkMeshWriter->SetInputData(vtkMesh);
+#endif
     vtkMeshWriter->Update();
 }

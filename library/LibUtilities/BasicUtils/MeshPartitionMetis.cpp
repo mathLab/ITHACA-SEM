@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File TenTusscher06M.h
+// File MeshPartitionMetis.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,55 +29,52 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: ten Tusscher 2006 Mid-myocardium cell model
+// Description: Metis partitioner interface
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHER_PANFILOV_2006_M_CELL_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHER_PANFILOV_2006_M_CELL_H
+#include "MeshPartitionMetis.h"
 
-#include <CardiacEPSolver/CellModels/CellModel.h>
+#include <LibUtilities/BasicUtils/Metis.hpp>
+#include "LibUtilities/BasicUtils/SessionReader.h"
 
 namespace Nektar
 {
-    class TenTusscher06M : public CellModel
+namespace LibUtilities
+{
+
+    std::string MeshPartitionMetis::className
+        = GetMeshPartitionFactory().RegisterCreatorFunction(
+            "Metis",
+            MeshPartitionMetis::create,
+            "Partitioning using the METIS library.");
+
+    std::string MeshPartitionMetis::cmdSwitch
+        = SessionReader::RegisterCmdLineFlag("use-metis","","Use METIS for mesh partitioning.");
+
+    MeshPartitionMetis::MeshPartitionMetis(const SessionReaderSharedPtr& pSession)
+        : MeshPartition(pSession)
     {
 
-    public:
-        /// Creates an instance of this class
-        static CellModelSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession,
-                const MultiRegions::ExpListSharedPtr& pField)
-        {
-            return MemoryManager<TenTusscher06M>::AllocateSharedPtr(pSession, pField);
-        }
+    }
 
-        /// Name of class
-        static std::string className;
+    MeshPartitionMetis::~MeshPartitionMetis()
+    {
 
-        /// Constructor
-        TenTusscher06M(
-                const LibUtilities::SessionReaderSharedPtr& pSession,
-                const MultiRegions::ExpListSharedPtr& pField);
+    }
 
-        /// Destructor
-        virtual ~TenTusscher06M() {}
-
-    protected:
-        /// Computes the reaction terms $f(u,v)$ and $g(u,v)$.
-        virtual void v_Update(
-               const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                     Array<OneD,        Array<OneD, NekDouble> >&outarray,
-               const NekDouble time);
-
-        /// Prints a summary of the model parameters.
-        virtual void v_GenerateSummary(SummaryList& s);
-
-        virtual void v_SetInitialConditions();
-
-    private:
-
-    };
+    void MeshPartitionMetis::PartitionGraphImpl(
+            int&                              nVerts,
+            int&                              nVertConds,
+            Nektar::Array<Nektar::OneD, int>& xadj,
+            Nektar::Array<Nektar::OneD, int>& adjcy,
+            Nektar::Array<Nektar::OneD, int>& vertWgt,
+            Nektar::Array<Nektar::OneD, int>& vertSize,
+            int&                              nparts,
+            int&                              volume,
+            Nektar::Array<Nektar::OneD, int>& part)
+    {
+        Metis::PartGraphVKway(nVerts, nVertConds, xadj, adjcy, vertWgt, vertSize, nparts, volume, part);
+    }
 }
-
-#endif
+}

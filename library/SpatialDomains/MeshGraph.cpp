@@ -47,7 +47,7 @@
 #define TIXML_USE_STL
 #endif
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <cstring>
 #include <sstream>
 #include <iomanip>

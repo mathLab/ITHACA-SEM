@@ -42,7 +42,7 @@ using namespace std;
 #include <boost/iostreams/filter/gzip.hpp>
 namespace io = boost::iostreams;
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 #include "MeshElements.h"
 #include "OutputNekpp.h"

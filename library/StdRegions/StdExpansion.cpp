@@ -966,6 +966,11 @@ namespace Nektar
             v_AddFaceNormBoundaryInt(face,FaceExp,Fn,outarray);
         }
 
+        int StdExpansion::v_GetElmtId(void)
+        {
+            return m_elmt_id;
+        }
+
         const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
@@ -1686,7 +1691,7 @@ namespace Nektar
             return result;
         }	
 	
-        const NormalVector & StdExpansion::v_GetSurfaceNormal() const
+        const NormalVector & StdExpansion::v_GetSurfaceNormal(const int id) const
         {
             ASSERTL0(false, "Cannot get face normals for this expansion.");
             static NormalVector result;

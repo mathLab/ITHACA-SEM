@@ -48,7 +48,7 @@ using namespace std;
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
@@ -117,7 +117,11 @@ namespace Nektar
          * map is therefore fully populated before the SessionReader class is
          * instantiated and a file is read in and parsed.
          */
-        EnumMapList SessionReader::m_enums;
+        EnumMapList& SessionReader::GetSolverInfoEnums()
+        {
+            static EnumMapList solverInfoEnums;
+            return solverInfoEnums;
+        }
 
 
         /**
@@ -128,7 +132,11 @@ namespace Nektar
          * member variable which is called statically from various classes to
          * register the default value for a given parameter.
          */
-        SolverInfoMap SessionReader::m_solverInfoDefaults;
+        SolverInfoMap& SessionReader::GetSolverInfoDefaults()
+        {
+            static SolverInfoMap solverInfoMap;
+            return solverInfoMap;
+        }
 
 
         /**
@@ -140,7 +148,11 @@ namespace Nektar
          * This List allows for details to define for the Global Sys
          * solver for each variable. 
          */
-        GloSysSolnInfoList SessionReader::m_gloSysSolnList;
+        GloSysSolnInfoList& SessionReader::GetGloSysSolnList()
+        {
+            static GloSysSolnInfoList gloSysSolnInfoList;
+            return gloSysSolnInfoList;
+        }
 
         /**
          * Lists the possible command-line argument which can be specified for
@@ -150,7 +162,11 @@ namespace Nektar
          * member function which is called statically from various classes to
          * register command-line arguments they need.
          */
-        CmdLineArgMap SessionReader::m_cmdLineArguments;
+        CmdLineArgMap& SessionReader::GetCmdLineArgMap()
+        {
+            static CmdLineArgMap cmdLineArguments;
+            return cmdLineArguments;
+        }
 
 
         /**
@@ -184,7 +200,7 @@ namespace Nektar
             // type.
             if (m_comm->GetSize() > 1)
             {
-                m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                GetSolverInfoDefaults()["GLOBALSYSSOLN"] = 
                     "IterativeStaticCond";
             }
         }
@@ -225,7 +241,7 @@ namespace Nektar
 
                 if (m_comm->GetSize() > 1)
                 {
-                    m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                    GetSolverInfoDefaults()["GLOBALSYSSOLN"] = 
                         "IterativeStaticCond";
                 }
             }
@@ -234,7 +250,7 @@ namespace Nektar
             // type.
             if (m_comm->GetSize() > 1)
             {
-                m_solverInfoDefaults["GLOBALSYSSOLN"] = 
+                GetSolverInfoDefaults()["GLOBALSYSSOLN"] = 
                     "IterativeStaticCond";
             }
         }
@@ -303,8 +319,8 @@ namespace Nektar
             ;
             
             CmdLineArgMap::const_iterator cmdIt;
-            for (cmdIt  = m_cmdLineArguments.begin(); 
-                 cmdIt != m_cmdLineArguments.end(); ++cmdIt)
+            for (cmdIt  = GetCmdLineArgMap().begin();
+                 cmdIt != GetCmdLineArgMap().end(); ++cmdIt)
             {
                 std::string names = cmdIt->first;
                 if (cmdIt->second.shortName != "")
@@ -758,8 +774,9 @@ namespace Nektar
                                                      const std::string &pProperty) const
         {
 
-            GloSysSolnInfoList::const_iterator iter = m_gloSysSolnList.find(pVariable);
-            if(iter == m_gloSysSolnList.end())
+            GloSysSolnInfoList::const_iterator iter =
+                    GetGloSysSolnList().find(pVariable);
+            if(iter == GetGloSysSolnList().end())
             {
                 return false;
             }
@@ -783,7 +800,8 @@ namespace Nektar
         {
             GloSysSolnInfoList::const_iterator iter; 
 
-            ASSERTL0( (iter = m_gloSysSolnList.find(pVariable)) != m_gloSysSolnList.end(),
+            ASSERTL0( (iter = GetGloSysSolnList().find(pVariable)) !=
+                              GetGloSysSolnList().end(),
                       "Failed to find variable in GlobalSysSolnInfoList");
 
             std::string vProperty = boost::to_upper_copy(pProperty);
@@ -1463,14 +1481,34 @@ namespace Nektar
             }
             else if (vCommMesh->GetSize() > 1)
             {
+                // Default partitioner to use is Metis. Use Scotch as default
+                // if it is installed. Override default with command-line flags
+                // if they are set.
+                string vPartitionerName = "Metis";
+                if (GetMeshPartitionFactory().ModuleExists("Scotch"))
+                {
+                    vPartitionerName = "Scotch";
+                }
+                if (DefinesCmdLineArgument("use-metis"))
+                {
+                    vPartitionerName = "Metis";
+                }
+                if (DefinesCmdLineArgument("use-scotch"))
+                {
+                    vPartitionerName = "Scotch";
+                }
+
+                SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                 if (DefinesCmdLineArgument("shared-filesystem"))
                 {
                     if (isRoot)
                     {
-                        SessionReaderSharedPtr vSession     = GetSharedThisPtr();
-                        MeshPartitionSharedPtr vPartitioner = MemoryManager<
-                            MeshPartition>::AllocateSharedPtr(vSession);
-                        vPartitioner->PartitionMesh(GetComm()->GetSize(), true);
+                        m_xmlDoc = MergeDoc(m_filenames);
+
+                        MeshPartitionSharedPtr vPartitioner =
+                                GetMeshPartitionFactory().CreateInstance(
+                                                    vPartitionerName, vSession);
+                        vPartitioner->PartitionMesh(true);
                         vPartitioner->WriteAllPartitions(vSession);
                         vPartitioner->GetCompositeOrdering(m_compOrder);
                         vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
@@ -1492,10 +1530,10 @@ namespace Nektar
                     // Partitioner now operates in parallel
                     // Each process receives partitioning over interconnect
                     // and writes its own session file to the working directory.
-                    SessionReaderSharedPtr vSession     = GetSharedThisPtr();
-                    MeshPartitionSharedPtr vPartitioner = MemoryManager<
-                        MeshPartition>::AllocateSharedPtr(vSession);
-                    vPartitioner->PartitionMesh(GetComm()->GetSize(), false);
+                    MeshPartitionSharedPtr vPartitioner =
+                                GetMeshPartitionFactory().CreateInstance(
+                                                    vPartitionerName, vSession);
+                    vPartitioner->PartitionMesh(false);
                     vPartitioner->WriteLocalPartition(vSession);
                     vPartitioner->GetCompositeOrdering(m_compOrder);
                     vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
@@ -1679,7 +1717,7 @@ namespace Nektar
         void SessionReader::ReadSolverInfo(TiXmlElement *conditions)
         {
             m_solverInfo.clear();
-            m_solverInfo = m_solverInfoDefaults;
+            m_solverInfo = GetSolverInfoDefaults();
 
             if (!conditions)
             {
@@ -1724,8 +1762,8 @@ namespace Nektar
                              + boost::lexical_cast<string>(solverInfo->Row()));
 
                     EnumMapList::const_iterator propIt = 
-                        m_enums.find(solverPropertyUpper);
-                    if (propIt != m_enums.end())
+                        GetSolverInfoEnums().find(solverPropertyUpper);
+                    if (propIt != GetSolverInfoEnums().end())
                     {
                         EnumMap::const_iterator valIt = 
                             propIt->second.find(solverValue);
@@ -1777,7 +1815,7 @@ namespace Nektar
          */
         void SessionReader::ReadGlobalSysSolnInfo(TiXmlElement *conditions)
         {
-            m_gloSysSolnList.clear();
+            GetGloSysSolnList().clear();
 
             if (!conditions)
             {
@@ -1857,10 +1895,10 @@ namespace Nektar
                         for(int i = 0; i < varStrings.size(); ++i)
                         {
                             GloSysSolnInfoList::iterator x;
-                            if ((x = m_gloSysSolnList.find(varStrings[i])) ==
-                                    m_gloSysSolnList.end())
+                            if ((x = GetGloSysSolnList().find(varStrings[i])) ==
+                                    GetGloSysSolnList().end())
                             {
-                                (m_gloSysSolnList[varStrings[i]])[
+                                (GetGloSysSolnList()[varStrings[i]])[
                                         SysSolnPropertyUpper] = SysSolnValue;
                             }
                             else
@@ -1875,15 +1913,15 @@ namespace Nektar
                 }
             }
 
-            if (m_verbose && m_gloSysSolnList.size() > 0 && m_comm)
+            if (m_verbose && GetGloSysSolnList().size() > 0 && m_comm)
             {
                 if(m_comm->GetRank() == 0)
                 {
                     cout << "GlobalSysSoln Info:" << endl;
 
                     GloSysSolnInfoList::iterator x;
-                    for (x = m_gloSysSolnList.begin();
-                         x != m_gloSysSolnList.end();
+                    for (x = GetGloSysSolnList().begin();
+                         x != GetGloSysSolnList().end();
                          ++x)
                     {
                         cout << "\t Variable: " << x->first <<  endl;

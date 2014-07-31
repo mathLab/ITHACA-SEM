@@ -1,42 +1,32 @@
-SET(LinkLibraries 
-    optimized StdRegions debug StdRegions-g
-    optimized LibUtilities debug LibUtilities-g
-    optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
-)
+SET(LinkLibraries StdRegions)
+
 SET(StdProject0DSource  StdProject0D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject0D demos StdProject0DSource)
 TARGET_LINK_LIBRARIES(StdProject0D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(StdProject0D)
 	  
 SET(StdProject1DSource  StdProject1D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject1D demos StdProject1DSource)
 TARGET_LINK_LIBRARIES(StdProject1D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(StdProject1D)
 
 SET(StdProject_Diff1DSource  StdProject_Diff1D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject_Diff1D demos StdProject_Diff1DSource)
 TARGET_LINK_LIBRARIES(StdProject_Diff1D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(StdProject_Diff1D)
 
 SET(StdProject2DSource  StdProject2D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject2D demos StdProject2DSource)
 TARGET_LINK_LIBRARIES(StdProject2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(StdProject2D)
 
 SET(StdProject_Diff2DSource  StdProject_Diff2D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D demos StdProject_Diff2DSource)
 TARGET_LINK_LIBRARIES(StdProject_Diff2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(StdProject_Diff2D)
 
 SET(StdProject3DSource  StdProject3D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject3D demos StdProject3DSource)
 TARGET_LINK_LIBRARIES(StdProject3D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(StdProject3D)
 
 SET(StdProject_Diff3DSource  StdProject_Diff3D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject_Diff3D demos StdProject_Diff3DSource)
 TARGET_LINK_LIBRARIES(StdProject_Diff3D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(StdProject_Diff3D)
 
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")

@@ -135,6 +135,10 @@ namespace Nektar
                                     CheckIfSingularSystem,
                                     variable);
 
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_locToGloMap->PrintStats(std::cout, variable);
+            }
         }
 
 
@@ -181,12 +185,16 @@ namespace Nektar
                                         m_periodicVerts,
                                         m_periodicEdges,
                                         CheckIfSingularSystem);
+
+                if (m_session->DefinesCmdLineArgument("verbose"))
+                {
+                    m_locToGloMap->PrintStats(std::cout, variable);
+                }
             }
             else
             {
                 m_locToGloMap = In.m_locToGloMap;
             }
-
         }
 
 

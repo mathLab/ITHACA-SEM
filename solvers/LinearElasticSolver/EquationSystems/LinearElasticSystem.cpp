@@ -382,10 +382,20 @@ namespace Nektar
                         exp->GetPointsKeys();
                     Array<OneD, NekDouble> jac =
                         exp->GetMetricInfo()->GetJac(pkey);
-                    
+
                     int offset = m_fields[0]->GetPhys_Offset(i);
-                    Vmath::Smul(exp->GetTotPoints(), m_beta, jac, 1,
-                                tmp = m_temperature[nv] + offset, 1);
+
+                    if (exp->GetMetricInfo()->GetGtype() ==
+                        SpatialDomains::eDeformed)
+                    {
+                        Vmath::Smul(exp->GetTotPoints(), m_beta, jac, 1,
+                                    tmp = m_temperature[nv] + offset, 1);
+                    }
+                    else
+                    {
+                        Vmath::Fill(exp->GetTotPoints(), m_beta*jac[0],
+                                    tmp = m_temperature[nv] + offset, 1);
+                    }
                 }
                 m_fields[nv]->PhysDeriv(nv, m_temperature[nv], forcing[nv]);
             }
@@ -457,7 +467,7 @@ namespace Nektar
                     // rescaling of the eigenvalues
                     for (nv = 0; nv < nVel; ++nv)
                     {
-                        eval(nv,nv) = m_beta * eval(nv,nv);
+                        eval(nv,nv) = m_beta * (sqrt(eval(nv,nv)) - 1.0);
                     }
 
                     DNekMat beta = evec * eval * evecinv;
@@ -466,10 +476,10 @@ namespace Nektar
 
                     for (nv = 0; nv < nVel; ++nv)
                     {
-                        tmpstress[0][0][offset+j] = beta(0,0);
-                        tmpstress[1][0][offset+j] = beta(1,0);
-                        tmpstress[0][1][offset+j] = beta(0,1);
-                        tmpstress[1][1][offset+j] = beta(1,1);
+                        tmpstress[0][0][offset+j] = -beta(0,0);
+                        tmpstress[1][0][offset+j] = -beta(1,0);
+                        tmpstress[0][1][offset+j] = -beta(0,1);
+                        tmpstress[1][1][offset+j] = -beta(1,1);
                     }
                 }
             }

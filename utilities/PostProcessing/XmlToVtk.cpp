@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <cstdlib>
+#include <iomanip>
 
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
@@ -54,11 +55,16 @@ int main(int argc, char *argv[])
 
     LibUtilities::SessionReader::RegisterCmdLineFlag(
         "jacobian", "j", "Output Jacobian as scalar field");
+    LibUtilities::SessionReader::RegisterCmdLineFlag(
+        "quality", "q", "Output distribution of scaled Jacobians");
 
     LibUtilities::SessionReaderSharedPtr vSession
         = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     bool jac = vSession->DefinesCmdLineArgument("jacobian");
+    bool quality = vSession->DefinesCmdLineArgument("quality");
+
+    jac = quality ? true : jac;
 
     // Read in mesh from input file
     string meshfile(argv[argc-1]);
@@ -194,6 +200,13 @@ int main(int argc, char *argv[])
         Array<OneD, NekDouble> x2 (Exp[0]->GetNpoints());
         Exp[0]->GetCoords(x0, x1, x2);
 
+        vector<NekDouble> jacDist;
+
+        if (quality)
+        {
+            jacDist.resize(Exp[0]->GetExpSize());
+        }
+
         // Write out field containing Jacobian.
         for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
         {
@@ -201,18 +214,38 @@ int main(int argc, char *argv[])
             SpatialDomains::GeomFactorsSharedPtr g = e->GetMetricInfo();
             LibUtilities::PointsKeyVector ptsKeys = e->GetPointsKeys();
             unsigned int npts = e->GetTotPoints();
+            NekDouble scaledJac = 1.0;
 
             if (g->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vcopy(npts, g->GetJac(ptsKeys), 1, 
-                                   tmp = Exp[0]->UpdatePhys()
-                                        + Exp[0]->GetPhys_Offset(i), 1);
+                const Array<OneD, const NekDouble> &jacobian
+                    = g->GetJac(ptsKeys);
+                if (!quality)
+                {
+                    Vmath::Vcopy(npts, jacobian, 1, 
+                                 tmp = Exp[0]->UpdatePhys()
+                                 + Exp[0]->GetPhys_Offset(i), 1);
+                }
+                else
+                {
+                    scaledJac = Vmath::Vmin(npts, jacobian, 1) /
+                                Vmath::Vmax(npts, jacobian, 1);
+                    
+                    Vmath::Fill(npts, scaledJac,
+                                tmp = Exp[0]->UpdatePhys()
+                                    + Exp[0]->GetPhys_Offset(i), 1);
+                }
             }
             else
             {
                 Vmath::Fill (npts, g->GetJac(ptsKeys)[0], 
                                    tmp = Exp[0]->UpdatePhys()
                                         + Exp[0]->GetPhys_Offset(i), 1);
+            }
+
+            if (quality)
+            {
+                jacDist[i] = scaledJac;
             }
 
             Exp[0]->WriteVtkPieceHeader(outfile, i);
@@ -227,6 +260,25 @@ int main(int argc, char *argv[])
              << " at coords (" << x0[n] << ", " << x1[n] << ", " << x2[n] << ")"
              << endl;
 
+        if (quality)
+        {
+            string distName = vSession->GetSessionName() + ".jac";
+            ofstream dist(distName);
+            dist.setf (ios::scientific, ios::floatfield);
+
+            for (int i = 0; i < Exp[0]->GetExpSize(); ++i)
+            {
+                dist << setw(10) << i << "    "
+                     << setw(20) << setprecision(15) << jacDist[i] << endl;
+            }
+
+            dist.close();
+
+            cout << "- Minimum/maximum scaled Jacobian: "
+                 << Vmath::Vmin(Exp[0]->GetExpSize(), &jacDist[0], 1) << " "
+                 << Vmath::Vmax(Exp[0]->GetExpSize(), &jacDist[0], 1)
+                 << endl;
+        }
     }
     else
     {

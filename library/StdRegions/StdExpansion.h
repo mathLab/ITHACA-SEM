@@ -1303,6 +1303,13 @@ namespace Nektar
 #endif
             }
 
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD, NekDouble> &outarray,
+                                        bool multiplybyweights = true)
+            {
+                v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
+            }
+
         protected:
             Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
             int m_elmt_id;
@@ -1348,11 +1355,6 @@ namespace Nektar
                 v_BwdTrans_SumFac(inarray,outarray);
             }
 
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
-                                        Array<OneD, NekDouble> &outarray)
-            {
-                v_IProductWRTBase_SumFac(inarray,outarray);
-            }
 
             void IProductWRTDerivBase_SumFac(const int dir,
                                              const Array<OneD, const NekDouble>& inarray,
@@ -1663,7 +1665,7 @@ namespace Nektar
                                            Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
-                                                  Array<OneD, NekDouble> &outarray);
+                                                                     Array<OneD, NekDouble> &outarray, bool multiplybyweights = true);
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase_SumFac(const int dir,
                                                        const Array<OneD, const NekDouble>& inarray,

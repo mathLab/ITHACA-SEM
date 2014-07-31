@@ -1477,10 +1477,9 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                      "Method does not exist for this shape or library");
             }
-
-            void StdExpansion::v_GetFacePhysVals(
-                const int                                face,
-                const boost::shared_ptr<StdExpansion>   &FaceExp,
+        
+            void StdExpansion::v_GetFacePhysVals( const int                                face,
+                                             const boost::shared_ptr<StdExpansion>   &FaceExp,
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient)
@@ -1492,11 +1491,11 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
-                v_MultiplyByStdQuadratureMetric(inarray, outarray);
+                v_MultiplyByStdQuadratureMetric(inarray,outarray);
             }
-
+        
             void StdExpansion::v_MultiplyByStdQuadratureMetric(
-                    const Array<OneD, const NekDouble> &inarray,
+                                                           const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library");
@@ -1516,7 +1515,8 @@ namespace Nektar
             }
 
             void StdExpansion::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
-                                                  Array<OneD, NekDouble> &outarray)
+                                                        Array<OneD, NekDouble> &outarray,
+                                                        bool multiplybyweights)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }

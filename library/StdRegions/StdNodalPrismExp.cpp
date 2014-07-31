@@ -224,9 +224,10 @@ namespace Nektar
         
         void StdNodalPrismExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray, 
-                  Array<OneD,       NekDouble>& outarray)
+            Array<OneD,       NekDouble>& outarray,
+            bool multiplybyweights)
         {
-            StdPrismExp::v_IProductWRTBase_SumFac(inarray,outarray);
+            StdPrismExp::v_IProductWRTBase_SumFac(inarray,outarray,multiplybyweights);
             NodalToModalTranspose(outarray,outarray);    
         }
 

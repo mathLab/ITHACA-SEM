@@ -219,7 +219,7 @@ namespace Nektar {
                 {
                     nqtot *= PtsKey[i].GetNumPoints();
                 }
-                m_jac = GeomData->GetJac(PtsKey,pGeom);
+                m_jac = GeomData->GetJac(pExp,pGeom);
                 StdRegions::StdMatrixKey key(StdRegions::eIProductWRTBase, pExp->DetShapeType(), *pExp);
                 m_mat = m_stdExp->GetStdMatrix(key);
                 m_wspSize = nqtot*m_numElmt;
@@ -289,7 +289,13 @@ namespace Nektar {
             {
                 nqtot *= PtsKey[i].GetNumPoints();
             }
-            m_jac = GeomData->GetJac(PtsKey,pGeom);
+            
+#if 1
+            m_jac = GeomData->GetJacWithStdWeights(pExp,pGeom);
+#else
+            m_jac = GeomData->GetJac(pExp,pGeom);
+#endif      
+            
             m_wspSize = nqtot*m_numElmt;
         }
 
@@ -310,13 +316,13 @@ namespace Nektar {
 
             for (int i = 0; i < m_numElmt; ++i)
             {
-                m_stdExp->IProductWRTBase(wsp + i*nPhys, tmp = output + i*nCoeffs);
+                m_stdExp->IProductWRTBase_SumFac(wsp + i*nPhys, tmp = output + i*nCoeffs,false);
             }
         }
 
         OPERATOR_CREATE(IProductWRTBase_IterPerExp)
         
-        Array<OneD, const NekDouble> m_jac;
+        Array<OneD, NekDouble> m_jac;
 
     };
 
@@ -370,7 +376,7 @@ namespace Nektar {
                 {
                     nqtot *= PtsKey[i].GetNumPoints();
                 }
-                m_derivFac = GeomData->GetDerivFactors(PtsKey,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
                 m_wspSize = 3*nqtot*m_numElmt;
             }
             
@@ -473,7 +479,7 @@ namespace Nektar {
                         Vmath::Vcopy(nqtot,&tmp1[0],1,&(m_derivMat[i]->GetPtr())[0]+j*nqtot,1);
                     }
                 }
-                m_derivFac = GeomData->GetDerivFactors(PtsKey,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
                 m_wspSize = 3*nqtot*m_numElmt;
             }
             

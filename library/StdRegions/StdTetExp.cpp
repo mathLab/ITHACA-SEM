@@ -547,7 +547,8 @@ namespace Nektar
          */
         void StdTetExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+            Array<OneD,       NekDouble>& outarray,
+            bool multiplybyweights)
         {
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
@@ -555,17 +556,28 @@ namespace Nektar
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp (nquad0*nquad1*nquad2);
             Array<OneD, NekDouble> wsp (nquad1*nquad2*order0 +
                                         nquad2*order0*(order1+1)/2);
 
-            MultiplyByQuadratureMetric(inarray, tmp);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp (nquad0*nquad1*nquad2);
+                MultiplyByQuadratureMetric(inarray, tmp);
 
-            StdTetExp::IProductWRTBase_SumFacKernel(
-                    m_base[0]->GetBdata(),
-                    m_base[1]->GetBdata(),
-                    m_base[2]->GetBdata(),
-                    tmp, outarray, wsp, true, true, true);
+                StdTetExp::IProductWRTBase_SumFacKernel(
+                              m_base[0]->GetBdata(),
+                              m_base[1]->GetBdata(),
+                              m_base[2]->GetBdata(),
+                              tmp, outarray, wsp, true, true, true);
+            }
+            else
+            {
+                StdTetExp::IProductWRTBase_SumFacKernel(
+                               m_base[0]->GetBdata(),
+                               m_base[1]->GetBdata(),
+                               m_base[2]->GetBdata(),
+                               inarray, outarray, wsp, true, true, true);
+            }
         }
 
 

@@ -120,18 +120,29 @@ namespace Nektar
 
 
         void NodalTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                                 Array<OneD, NekDouble> &outarray)
+                                                 Array<OneD, NekDouble> &outarray,
+                                                 bool multiplybyweights)
         { 
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order1 = m_base[1]->GetNumModes();
-            
-            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad0*order1);
-            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
-            
-            MultiplyByQuadratureMetric(inarray,tmp);
-            StdTriExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
-            NodalToModalTranspose(outarray,outarray);  
+
+            if(multiplybyweights)
+            {
+                Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad0*order1);
+                Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
+                
+                MultiplyByQuadratureMetric(inarray,tmp);
+                StdTriExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
+                NodalToModalTranspose(outarray,outarray);  
+            }
+            else
+            {
+                Array<OneD,NekDouble> wsp(nquad0*order1);
+                
+                StdTriExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,outarray,wsp);
+                NodalToModalTranspose(outarray,outarray);  
+            }
         }
 
         void NodalTriExp::IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 

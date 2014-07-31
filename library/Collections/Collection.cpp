@@ -48,12 +48,13 @@ namespace Nektar {
         {
         }
 
-        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(const LibUtilities::PointsKeyVector &ptsKeys,
-                                                                      vector<SpatialDomains::GeometrySharedPtr> &pGeom)
+        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(StdRegions::StdExpansionSharedPtr pExp,  vector<SpatialDomains::GeometrySharedPtr> &pGeom)
         {
+
             if(m_oneDGeomData.count(eJac) == 0)
             {
 
+                LibUtilities::PointsKeyVector ptsKeys = pExp->GetPointsKeys();            
                 int nElmts = pGeom.size();
                 
                 // set up Cached Jacobians to be continuous 
@@ -91,11 +92,56 @@ namespace Nektar {
         }
 
 
-        const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(const LibUtilities::PointsKeyVector &ptsKeys,
+
+        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJacWithStdWeights(StdRegions::StdExpansionSharedPtr pExp, vector<SpatialDomains::GeometrySharedPtr> &pGeom)
+        {
+            if(m_oneDGeomData.count(eJacWithStdWeights) == 0)
+            {
+                LibUtilities::PointsKeyVector ptsKeys = pExp->GetPointsKeys();            
+                int nElmts = pGeom.size();
+                
+                // set up Cached Jacobians to be continuous 
+                int npts = 1;
+                for (int i = 0; i < ptsKeys.size(); ++i)
+                {
+                    npts   *= ptsKeys[i].GetNumPoints();
+                }
+                
+
+                Array<OneD, NekDouble> newjac(npts*nElmts), tmp;
+            
+                //copy Jacobians into a continuous list and set new chatched value
+                int cnt = 0;
+                for(int i = 0; i < nElmts; ++i)
+                {
+                    const Array<OneD, const NekDouble> jac= pGeom[i]->GetGeomFactors()->GetJac(ptsKeys);
+                    
+                    if (pGeom[i]->GetGeomFactors()->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
+                    }
+                    else
+                    {
+                        Vmath::Fill(npts, jac[0], &newjac[cnt], 1);
+                    }
+                    
+                    pExp->MultiplyByStdQuadratureMetric(newjac+cnt,tmp=newjac+cnt);
+                    cnt += npts;
+                }
+                
+                m_oneDGeomData[eJacWithStdWeights] = newjac; 
+            }
+            
+            return m_oneDGeomData[eJacWithStdWeights];
+        }
+
+
+        const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(StdRegions::StdExpansionSharedPtr pExp,
                                                                       vector<SpatialDomains::GeometrySharedPtr> &pGeom)
         {
             if(m_twoDGeomData.count(eDerivFactors) == 0)
             {
+                LibUtilities::PointsKeyVector ptsKeys = pExp->GetPointsKeys();            
 
                 int nElmts = pGeom.size();
                 const int coordim = pGeom[0]->GetCoordim();

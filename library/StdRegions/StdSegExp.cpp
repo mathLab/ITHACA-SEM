@@ -447,7 +447,8 @@ namespace Nektar
 
         void StdSegExp::v_IProductWRTBase_SumFac(
                 const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray)
+                Array<OneD, NekDouble> &outarray,
+                bool multiplybyweights)
         {
             v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
         }
@@ -519,6 +520,18 @@ namespace Nektar
             Blas::Daxpy(m_ncoeffs, mkey.GetConstFactor(eFactorLambda), wsp.get(), 1, outarray.get(), 1);
         }
 
+        //up to here
+        void StdSegExp::v_MultiplyByStdQuadratureMetric(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {         
+            int nquad0 = m_base[0]->GetNumPoints();
+                
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+
+            Vmath::Vmul(nquad0, inarray.get(),1,
+                        w0.get(),1,outarray.get(),1);
+        }
 
         void StdSegExp::v_GetCoords(
                 Array<OneD, NekDouble> &coords_0,

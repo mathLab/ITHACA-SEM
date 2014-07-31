@@ -398,7 +398,7 @@ namespace Nektar
             {
                 m_collections[i].ApplyOperator(
                                                Collections::ePhysDeriv,
-                                               inarray + m_coll_coeff_offset[i],
+                                               inarray + m_coll_phys_offset[i],
                                                tmp0 = out_d0 + m_coll_phys_offset[i],
                                                tmp1 = out_d1 + m_coll_phys_offset[i],
                                                tmp2 = out_d2 + m_coll_phys_offset[i]);
@@ -1151,8 +1151,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
-                m_collections[i].ApplyOperator(
-                                               Collections::eBwdTrans,
+                m_collections[i].ApplyOperator(Collections::eBwdTrans,
                                                inarray + m_coll_coeff_offset[i],
                                                tmp = outarray + m_coll_phys_offset[i]);
             }
@@ -2596,20 +2595,25 @@ namespace Nektar
                 
                 int prevCoeffOffset     = m_coeff_offset[it->second[0].second];
                 int prevPhysOffset      = m_phys_offset [it->second[0].second];
-                int prevCollCoeffOffset = prevCoeffOffset;
-                int prevCollPhysOffset  = prevPhysOffset;
+                int collmax;
+                int collcnt; 
+                
+                m_session->LoadParameter("CollectionMax",collmax,100);
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
                 m_coll_phys_offset .push_back(prevPhysOffset);
 
-                geom.push_back(it->second[0].first->GetGeom());
                 if(it->second.size() == 1) // single element case
                 {
+                    geom.push_back(it->second[0].first->GetGeom());
                     Collections::Collection tmp(stdExp, geom, ImpType);
                     m_collections.push_back(tmp);
                 }
                 else
                 {
+                    geom.push_back(it->second[0].first->GetGeom());
+                    int prevnCoeff = it->second[0].first->GetNcoeffs();
+                    collcnt = 1;
                     for (int i = 1; i < it->second.size(); ++i)
                     {
                         const int nCoeffs = it->second[i].first->GetNcoeffs();
@@ -2617,38 +2621,41 @@ namespace Nektar
                         int physOffset  = m_phys_offset [it->second[i].second];
                         
                         if (prevCoeffOffset + nCoeffs != coeffOffset ||
-                            i == it->second.size() - 1)
+                            prevnCoeff != nCoeffs ||
+                            i == it->second.size() - 1 || collcnt >= collmax)
                         {
-                            if (i != it->second.size() - 1)
+                            if (i != it->second.size() - 1 )
                             {
-                                m_coll_coeff_offset.push_back(prevCollCoeffOffset);
-                                m_coll_phys_offset .push_back(prevCollPhysOffset);
                                 Collections::Collection tmp(stdExp, geom);
                                 m_collections.push_back(tmp);
 
                                 // start new geom list 
-                                geom.empty();
+                                geom.clear();
+
+                                m_coll_coeff_offset.push_back(coeffOffset);
+                                m_coll_phys_offset .push_back(physOffset);
                                 geom.push_back(it->second[i].first->GetGeom());
+                                collcnt = 1;
                             }
                             else // end this list
                             {
                                 geom.push_back(it->second[i].first->GetGeom());
                                 Collections::Collection tmp(stdExp, geom, ImpType);
                                 m_collections.push_back(tmp);
-                                geom.empty();
+                                geom.clear();
+                                collcnt = 0;
                             }
                             
-                            
-                            prevCollCoeffOffset = prevCoeffOffset;
-                            prevCollPhysOffset  = prevPhysOffset;
                         }
                         else
                         {
                             geom.push_back(it->second[i].first->GetGeom());
+                            collcnt++;
                         }
                         
                         prevCoeffOffset = coeffOffset;
                         prevPhysOffset  = physOffset;
+                        prevnCoeff      = nCoeffs;
                     }
                 }
             }

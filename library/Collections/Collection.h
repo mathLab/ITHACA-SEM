@@ -47,6 +47,7 @@ namespace Nektar {
         enum GeomData
         {
             eJac,
+            eJacWithStdWeights,
             eDerivFactors,
             eBase0WithWeights,
             eBase1WithWeights,
@@ -60,16 +61,17 @@ namespace Nektar {
             
             virtual ~CoalescedGeomData(void);
 
-            const Array<OneD, const NekDouble> &GetJac(const LibUtilities::PointsKeyVector &ptsKeys,
+            const Array<OneD, const NekDouble> &GetJac(StdRegions::StdExpansionSharedPtr pExp,
                                                        vector<SpatialDomains::GeometrySharedPtr> &pGeom);
-            const Array<TwoD, const NekDouble> &GetDerivFactors(const LibUtilities::PointsKeyVector &ptsKeys,
+            const Array<OneD, const NekDouble> &GetJacWithStdWeights(StdRegions::StdExpansionSharedPtr pExp,
+                                                       vector<SpatialDomains::GeometrySharedPtr> &pGeom);
+            const Array<TwoD, const NekDouble> &GetDerivFactors(StdRegions::StdExpansionSharedPtr pExp,
                                                                 vector<SpatialDomains::GeometrySharedPtr> &pGeom);
             const Array<OneD, const NekDouble> &GetBaseWithWeights(const int dir, 
                                                               StdRegions::StdExpansionSharedPtr &stdExp);
         private:
             map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
             map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
-
         };
         
         typedef boost::shared_ptr<CoalescedGeomData>   CoalescedGeomDataSharedPtr;

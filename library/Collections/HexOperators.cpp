@@ -186,7 +186,7 @@ namespace Nektar
                   m_colldir2(pExp->GetBasis(2)->Collocation())
             {
                 LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
-                m_jac = GeomData->GetJac(PtsKey,pGeom);
+                m_jac = GeomData->GetJac(pExp,pGeom);
 
                 m_base0 = GeomData->GetBaseWithWeights(0,pExp);
                 m_base1 = GeomData->GetBaseWithWeights(1,pExp);

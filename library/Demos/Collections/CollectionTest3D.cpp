@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     MultiRegions::ContField3DSharedPtr Exp;
 
-    int Ntest = 100;
+    int Ntest = 10;
     if(argc < 2)
     {
         fprintf(stderr,"Usage: Collection3D meshfile \n");

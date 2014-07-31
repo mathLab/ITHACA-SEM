@@ -113,7 +113,8 @@ namespace Nektar
                                   Array<OneD, NekDouble> & outarray);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                             const Array<OneD, const NekDouble>& inarray,
-                                  Array<OneD, NekDouble> &outarray);
+                            Array<OneD, NekDouble> &outarray,
+                            bool multiplybyweights = true);
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_MatOp(
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> &outarray);

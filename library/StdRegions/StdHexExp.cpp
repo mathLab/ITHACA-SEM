@@ -396,7 +396,8 @@ namespace Nektar
          */
         void StdHexExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD, NekDouble> &outarray)
+            Array<OneD, NekDouble> &outarray,
+            bool multiplybyweights)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -404,16 +405,26 @@ namespace Nektar
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(inarray.num_elements());
             Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) + 
                                        order0*order1*nquad2);
 
-            MultiplyByQuadratureMetric(inarray,tmp);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(inarray.num_elements());
+                MultiplyByQuadratureMetric(inarray,tmp);
 
-            StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetBdata(),
-                                         m_base[2]->GetBdata(),
-                                         tmp,outarray,wsp,true,true,true);
+                StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                           m_base[1]->GetBdata(),
+                                           m_base[2]->GetBdata(),
+                                           tmp,outarray,wsp,true,true,true);
+            }
+            else
+            {
+                StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                           m_base[1]->GetBdata(),
+                                           m_base[2]->GetBdata(),
+                                           inarray,outarray,wsp,true,true,true);
+            }
         }
 
 

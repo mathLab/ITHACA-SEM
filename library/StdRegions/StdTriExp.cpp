@@ -519,12 +519,12 @@ namespace Nektar
                   bool                          doCheckCollDir0,
                   bool                          doCheckCollDir1)
         {
-            int    i;
-            int    mode;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();   
-            int    nmodes0 = m_base[0]->GetNumModes();
-            int    nmodes1 = m_base[1]->GetNumModes();
+            int i;
+            int mode;
+            int nquad0  = m_base[0]->GetNumPoints();
+            int nquad1  = m_base[1]->GetNumPoints();   
+            int nmodes0 = m_base[0]->GetNumModes();
+            int nmodes1 = m_base[1]->GetNumModes();
             
             ASSERTL1(wsp.num_elements() >= nquad1*nmodes0,
                      "Workspace size is not sufficient");

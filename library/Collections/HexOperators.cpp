@@ -185,15 +185,11 @@ namespace Nektar
                   m_colldir1(pExp->GetBasis(1)->Collocation()),
                   m_colldir2(pExp->GetBasis(2)->Collocation())
             {
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
-                m_jac = GeomData->GetJac(pExp,pGeom);
+                m_jac = GeomData->GetJacWithStdWeights(pExp,pGeom);
 
-                m_base0 = GeomData->GetBaseWithWeights(0,pExp);
-                m_base1 = GeomData->GetBaseWithWeights(1,pExp);
-                m_base2 = GeomData->GetBaseWithWeights(2,pExp);
-                m_w0 = pExp->GetBasis(0)->GetW();
-                m_w1 = pExp->GetBasis(1)->GetW();
-                m_w2 = pExp->GetBasis(2)->GetW();
+                m_base0 = GeomData->GetBase(0,pExp);
+                m_base1 = GeomData->GetBase(1,pExp);
+                m_base2 = GeomData->GetBase(2,pExp);
                 m_wspSize = 3*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,m_nmodes0*m_nmodes1*m_nmodes2));
             }
             
@@ -206,34 +202,21 @@ namespace Nektar
                 int totmodes  = m_nmodes0*m_nmodes1*m_nmodes2;
                 int totpoints = m_nquad0 *m_nquad1 *m_nquad2;
 
-                Vmath::Vmul(m_numElmt*totpoints,m_jac,1,input,1,wsp,1);
                 
                 if(m_colldir0 && m_colldir1 && m_colldir2)
                 {
                 
-                    int cnt = 0;
-
-                    for(int k = 0; k < m_nquad2; ++k)
-                    {
-                        for(int j = 0; j < m_nquad1; ++j)
-                        {
-                            for(int i = 0; i < m_nquad0; ++i)
-                            {
-                                Vmath::Smul(m_numElmt,m_w0[i]*m_w1[j]*m_w2[k],
-                                           &wsp[cnt],totmodes,&output[cnt],totmodes);
-                                cnt++;
-                            }
-                        }
-                    }
+                    Vmath::Vmul(m_numElmt*totpoints,m_jac,1,input,1,output,1);
                 }
                 else
                 { 
                     ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
                     
+                    Vmath::Vmul(m_numElmt*totpoints,m_jac,1,input,1,wsp,1);
+
                     // Assign second half of workspace for 2nd DGEMM operation.
-                    
                     Array<OneD, NekDouble> wsp1 = wsp  + totpoints*m_numElmt; 
-                    if(m_numElmt < m_nmodes0) // note sure what criterion we shoudl use to swap around these strategies
+                    if(m_numElmt < m_nmodes0) // note sure what criterion we should use to swap around these strategies
                     {
                         Array<OneD, NekDouble> wsp2 = wsp1 + m_nmodes0*m_nquad1*m_nquad2;
 
@@ -245,8 +228,8 @@ namespace Nektar
 
                                 for(int i = 0; i < m_nmodes0; ++i)
                                 {
-                                    Vmath::Smul(m_nquad1*m_nquad2,m_w0[i],&wsp[n*totpoints] + i,m_nquad0,
-                                                wsp1.get()+m_nquad1*m_nquad2*i,1);
+                                    Vmath::Vcopy(m_nquad1*m_nquad2,&wsp[n*totpoints] + i,m_nquad0,
+                                                 wsp1.get()+m_nquad1*m_nquad2*i,1);
                                 }
                             }
                             else
@@ -263,7 +246,7 @@ namespace Nektar
                                 // reshuffle data for next operation.
                                 for(int i = 0; i < m_nmodes1; ++i)
                                 {
-                                    Vmath::Smul(m_nquad2*m_nmodes0,m_w1[i],wsp1.get()+i,m_nquad1,
+                                    Vmath::Vcopy(m_nquad2*m_nmodes0,wsp1.get()+i,m_nquad1,
                                                 wsp2.get()+m_nquad2*m_nmodes0*i,1);
                                 }
                             }
@@ -280,7 +263,7 @@ namespace Nektar
                                 // reshuffle data for next operation.
                                 for(int i = 0; i < m_nmodes2; ++i)
                                 {
-                                    Vmath::Smul(m_nmodes0*m_nmodes1,m_w2[i],wsp2.get()+i,m_nquad2,
+                                    Vmath::Vcopy(m_nmodes0*m_nmodes1,wsp2.get()+i,m_nquad2,
                                                 &output[n*totmodes]+m_nmodes0*m_nmodes1*i,1);
                                 }
                             }
@@ -301,7 +284,7 @@ namespace Nektar
                         {
                             for(int i = 0; i < m_nquad0; ++i)
                             {
-                                Vmath::Smul(m_nquad1*m_nquad2*m_numElmt,m_w0[i],&wsp[i],m_nquad0,
+                                Vmath::Vcopy(m_nquad1*m_nquad2*m_numElmt,&wsp[i],m_nquad0,
                                             &wsp1[i*m_nquad1*m_nquad2*m_numElmt],1);
                             }
                         }
@@ -317,7 +300,7 @@ namespace Nektar
                         {
                             for(int i = 0; i < m_nquad1; ++i)
                             {
-                                Vmath::Smul(m_nquad2*m_numElmt*m_nmodes0,m_w1[i],&wsp1[i],m_nquad1,
+                                Vmath::Vcopy(m_nquad2*m_numElmt*m_nmodes0,&wsp1[i],m_nquad1,
                                             &wsp2[i*m_nquad2*m_numElmt*m_nmodes0],1);
                             }
                         }
@@ -335,7 +318,7 @@ namespace Nektar
                             {
                                 for(int i = 0; i < m_nquad2; ++i)
                                 {
-                                    Vmath::Smul(m_numElmt*m_nmodes0*m_nmodes1,m_w2[i],&wsp2[i],m_nquad2,
+                                    Vmath::Vcopy(m_numElmt*m_nmodes0*m_nmodes1,&wsp2[i],m_nquad2,
                                                 &wsp1[i*m_numElmt*m_nmodes0*m_nmodes1],1);
                                 }
                             }
@@ -346,7 +329,7 @@ namespace Nektar
                                             1.0, &wsp2[0],  m_nquad2,  m_base2.get(),   m_nquad2,
                                             0.0, &wsp1[0],  m_numElmt*m_nmodes0*m_nmodes1);
                             }       
-
+                            
                             for(int i = 0; i < totmodes; ++i)
                             {
                                 Vmath::Vcopy(m_numElmt,&wsp1[i*m_numElmt],1,&output[i],totmodes);
@@ -359,7 +342,7 @@ namespace Nektar
                             {
                                 for(int i = 0; i < m_nquad2; ++i)
                                 {
-                                    Vmath::Smul(m_nmodes0*m_nmodes1,m_w2[i],&wsp2[i],m_nquad2,
+                                    Vmath::Vcopy(m_nmodes0*m_nmodes1,&wsp2[i],m_nquad2,
                                                 &output[i*m_nmodes0*m_nmodes1],1);
                                 }
                             }
@@ -390,9 +373,6 @@ namespace Nektar
             Array<OneD, const NekDouble> m_base0;
             Array<OneD, const NekDouble> m_base1;
             Array<OneD, const NekDouble> m_base2;
-            Array<OneD, const NekDouble> m_w0;
-            Array<OneD, const NekDouble> m_w1;
-            Array<OneD, const NekDouble> m_w2;
         };
         
         OperatorKey IProductWRTBase_SumFac_Hex::m_type = GetOperatorFactory().

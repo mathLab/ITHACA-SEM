@@ -399,7 +399,6 @@ namespace Nektar
         {
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
-            Array<OneD, const NekDouble> z =  m_base[0]->GetZ();
             Array<OneD, const NekDouble> w =  m_base[0]->GetW();
 
             Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
@@ -450,7 +449,23 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray,
                 bool multiplybyweights)
         {
-            v_IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
+            int    nquad = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble> tmp(nquad);
+            Array<OneD, const NekDouble> w =  m_base[0]->GetW();
+            Array<OneD, const NekDouble> base =  m_base[0]->GetBdata();
+            
+            if(multiplybyweights)
+            {
+                Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
+
+                Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
+                                &tmp[0],1,0.0,outarray.get(),1);
+            }
+            else
+            {
+                Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
+                            &inarray[0],1,0.0,outarray.get(),1);
+            }
         }
 
 

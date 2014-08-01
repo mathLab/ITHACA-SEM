@@ -58,6 +58,7 @@ namespace Nektar
                   m_colldir0(pExp->GetBasis(0)->Collocation())
             {
                 m_wspSize = 0;
+                m_base0 = GeomData->GetBase(0,pExp);
             }
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -67,16 +68,14 @@ namespace Nektar
                                     Array<OneD,       NekDouble> &wsp)
             {
                 
-                if(m_colldir0 )
+                if(m_colldir0)
                 {
                     Vmath::Vcopy(m_numElmt*m_nmodes0,input.get(),1,output.get(),1);
                 }
                 else
                 { 
-                    Array<OneD, const NekDouble> base0  = m_stdExp->GetBasis(0)->GetBdata();
-
                     // out = B0*in; 
-                    Blas::Dgemm('N','N', m_nquad0,m_numElmt,m_nmodes0,1.0, base0.get(),
+                    Blas::Dgemm('N','N', m_nquad0,m_numElmt,m_nmodes0,1.0, m_base0.get(),
                                 m_nquad0, &input[0], m_nmodes0,0.0,&output[0], m_nquad0);
                 }
             }
@@ -87,12 +86,75 @@ namespace Nektar
             const int  m_nquad0;
             const int  m_nmodes0;
             const bool m_colldir0;
+            Array<OneD, const NekDouble> m_base0;
         };
         
         OperatorKey BwdTrans_SumFac_Seg::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eSegment, eBwdTrans, 
                                                 eSumFac),
                                     BwdTrans_SumFac_Seg::create, "BwdTrans_SumFac_Seg");
+
+
+
+        /*
+         * ----------------------------------------------------------
+         * IProductWRTBase operators
+         * ----------------------------------------------------------
+         */       
+        class IProductWRTBase_SumFac_Seg : public Operator
+        {
+        public:
+            IProductWRTBase_SumFac_Seg(StdRegions::StdExpansionSharedPtr pExp,
+                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                  CoalescedGeomDataSharedPtr GeomData)
+                : Operator  (pExp, pGeom, GeomData),
+                  m_nquad0  (pExp->GetNumPoints(0)),
+                  m_nmodes0 (pExp->GetBasisNumModes(0)),
+                  m_colldir0(pExp->GetBasis(0)->Collocation())
+            {
+                m_wspSize = m_numElmt*m_nquad0;
+                m_jac = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_base0 = GeomData->GetBase(0,pExp);
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                
+                if(m_colldir0)
+                {
+                    Vmath::Vmul(m_numElmt*m_nquad0,m_jac,1,input,1,output,1);
+                }
+                else
+                { 
+                    Vmath::Vmul(m_numElmt*m_nquad0,m_jac,1,input,1,wsp,1);
+
+                    // out = B0*in; 
+                    Blas::Dgemm('T','N', m_nmodes0,m_numElmt,m_nquad0,1.0, m_base0.get(), m_nquad0,
+                                &wsp[0], m_nquad0, 0.0,&output[0], m_nmodes0);
+                }
+            }
+            
+            OPERATOR_CREATE(IProductWRTBase_SumFac_Seg)
+            
+            protected:
+            const int  m_nquad0;
+            const int  m_nmodes0;
+            const bool m_colldir0;
+            Array<OneD, const NekDouble> m_jac;
+            Array<OneD, const NekDouble> m_base0;
+        };
+        
+        OperatorKey IProductWRTBase_SumFac_Seg::m_type = GetOperatorFactory().
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eSegment, eIProductWRTBase, 
+                                                eSumFac),
+                                    IProductWRTBase_SumFac_Seg::create, "IProductWRTBase_SumFac_Seg");
+
+
+
 
 
 

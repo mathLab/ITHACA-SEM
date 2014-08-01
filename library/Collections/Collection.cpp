@@ -187,6 +187,36 @@ namespace Nektar {
         }
 
         
+        const Array<OneD, const NekDouble> &CoalescedGeomData::GetBase(const int dir, 
+                                                              StdRegions::StdExpansionSharedPtr &stdExp)
+        {
+            GeomData ReturnEnum;
+
+            switch(dir)
+            {
+            case 0:
+                ReturnEnum = eBase0;
+                break;
+            case 1:
+                ReturnEnum = eBase1;
+                break;
+            case 2:
+                ReturnEnum = eBase2;
+                break;
+            default:
+                ASSERTL0(false,"Unknown direction value");
+                break;
+            }
+
+            if(m_oneDGeomData.count(ReturnEnum) == 0)
+            {
+                m_oneDGeomData[ReturnEnum] = stdExp->GetBasis(dir)->GetBdata();
+            }
+
+            return m_oneDGeomData[ReturnEnum];
+        }
+
+
         const Array<OneD, const NekDouble> &CoalescedGeomData::GetBaseWithWeights(const int dir, 
                                                               StdRegions::StdExpansionSharedPtr &stdExp)
         {
@@ -256,21 +286,12 @@ namespace Nektar {
             m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
             
             m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
+            m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
 
             if(ImpType != eSumFac)
             {
                 m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
             }
-
-            if(ImpType != eSumFac)
-            {
-                m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
-            }
-            else if (pExp->DetShapeType() == LibUtilities::eHexahedron)
-            {
-                m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
-            }
-            
         }
     }
 }

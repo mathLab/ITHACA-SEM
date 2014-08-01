@@ -49,6 +49,9 @@ namespace Nektar {
             eJac,
             eJacWithStdWeights,
             eDerivFactors,
+            eBase0,
+            eBase1,
+            eBase2,
             eBase0WithWeights,
             eBase1WithWeights,
             eBase2WithWeights
@@ -67,6 +70,7 @@ namespace Nektar {
                                                        vector<SpatialDomains::GeometrySharedPtr> &pGeom);
             const Array<TwoD, const NekDouble> &GetDerivFactors(StdRegions::StdExpansionSharedPtr pExp,
                                                                 vector<SpatialDomains::GeometrySharedPtr> &pGeom);
+            const Array<OneD, const NekDouble> &GetBase(const int dir, StdRegions::StdExpansionSharedPtr &stdExp);
             const Array<OneD, const NekDouble> &GetBaseWithWeights(const int dir, 
                                                               StdRegions::StdExpansionSharedPtr &stdExp);
         private:

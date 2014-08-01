@@ -126,6 +126,129 @@ namespace Nektar
                                     BwdTrans_SumFac_Quad::create, "BwdTrans_SumFac_Quad");
 
 
+        /*
+         * ----------------------------------------------------------
+         * IProductWRTBase operators
+         * ----------------------------------------------------------
+         */       
+        class IProductWRTBase_SumFac_Quad : public Operator
+        {
+        public:
+            IProductWRTBase_SumFac_Quad(StdRegions::StdExpansionSharedPtr pExp,
+                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                  CoalescedGeomDataSharedPtr GeomData)
+                : Operator  (pExp, pGeom, GeomData),
+                  m_nquad0  (pExp->GetNumPoints(0)),
+                  m_nquad1  (pExp->GetNumPoints(1)),
+                  m_nmodes0 (pExp->GetBasisNumModes(0)),
+                  m_nmodes1 (pExp->GetBasisNumModes(1)),
+                  m_colldir0(pExp->GetBasis(0)->Collocation()),
+                  m_colldir1(pExp->GetBasis(1)->Collocation())
+            {
+                m_jac     = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_base0   = GeomData->GetBase(0,pExp);
+                m_base1   = GeomData->GetBase(1,pExp);
+                m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                int totmodes  = m_nmodes0*m_nmodes1;
+                int totpoints = m_nquad0 *m_nquad1;
+                
+                Vmath::Vmul(m_numElmt*totpoints,m_jac,1,input,1,wsp,1);
+
+                if(m_colldir0 && m_colldir1)
+                {
+                    Vmath::Vcopy(m_numElmt*totmodes,wsp.get(),1,output.get(),1);
+                }
+                else
+                { 
+                    ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
+                    
+                    Array<OneD, NekDouble> wsp1 = wsp  + max(totpoints,totmodes)*m_numElmt; 
+
+                    if(m_colldir0)
+                    {
+                        for(int i = 0; i < m_nquad0; ++i)
+                        {
+                            Vmath::Vcopy(m_nquad1*m_numElmt,&wsp[i],m_nquad0,
+                                         &wsp1[i*m_nquad1*m_numElmt],1);
+                        }
+                    }
+                    else
+                    {
+                        Blas::Dgemm('T','N', m_nquad1*m_numElmt,m_nmodes0,m_nquad0,1.0,
+                                &wsp[0],m_nquad0, m_base0.get(), m_nquad0, 
+                                    0.0,&wsp1[0], m_nquad1*m_numElmt);
+                    }
+
+                    
+                    if(m_numElmt > 1)
+                    {
+
+                        if(m_colldir1)
+                        {
+                            for(int i = 0; i < m_nquad1; ++i)
+                            {
+                                Vmath::Vcopy(m_numElmt*m_nmodes0,&wsp1[i],m_nquad1,
+                                             &wsp[i*m_numElmt*m_nmodes0],1);
+                            }
+                        }
+                        else
+                        {
+                            
+                            Blas::Dgemm('T','N', m_numElmt*m_nmodes0,  m_nmodes1, m_nquad1,
+                                        1.0, &wsp1[0], m_nquad1, m_base1.get(),   m_nquad1,
+                                        0.0, &wsp[0], m_numElmt*m_nmodes0);
+                        }
+                        
+                        for(int i = 0; i < totmodes; ++i)
+                        {
+                            Vmath::Vcopy(m_numElmt,&wsp[i*m_numElmt],1,&output[i],totmodes);
+                        }
+                    }
+                    else
+                    {
+                        if(m_colldir1)
+                        {
+                            for(int i = 0; i < m_nquad1; ++i)
+                            {
+                                Vmath::Vcopy(m_numElmt*m_nmodes0,&wsp1[i],m_nquad1,
+                                             &output[i*m_numElmt*m_nmodes0],1);
+                            }
+                        }
+                        else
+                        {
+                            Blas::Dgemm('T','N', m_nmodes0,  m_nmodes1, m_nquad1,
+                                        1.0, &wsp1[0], m_nquad1, m_base1.get(),   m_nquad1,
+                                        0.0, &output[0], m_nmodes0);
+                        }
+                    }
+                } 
+            }
+            
+            OPERATOR_CREATE(IProductWRTBase_SumFac_Quad)
+            
+            protected:
+            const int  m_nquad0;
+            const int  m_nquad1;
+            const int  m_nmodes0;
+            const int  m_nmodes1;
+            const bool m_colldir0;
+            const bool m_colldir1;
+            Array<OneD, const NekDouble> m_jac;
+            Array<OneD, const NekDouble> m_base0;
+            Array<OneD, const NekDouble> m_base1;
+        };
+        
+        OperatorKey IProductWRTBase_SumFac_Quad::m_type = GetOperatorFactory().
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eSumFac),IProductWRTBase_SumFac_Quad::create, "IProductWRTBase_SumFac_Quad");
+
 
 
         /*

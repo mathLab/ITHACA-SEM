@@ -61,11 +61,11 @@ namespace Nektar
                 m_wspSize = m_nquad0*m_nmodes1*m_numElmt;
                 if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
                 {
-                    m_addTopVertex = true;
+                    m_sortTopVertex = true;
                 }
                 else
                 {
-                    m_addTopVertex = false;
+                    m_sortTopVertex = false;
                 }
             }
             
@@ -93,13 +93,14 @@ namespace Nektar
                 }
                 
                 // fix for modified basis by splitting top vertex mode
-                if(m_addTopVertex)
+                if(m_sortTopVertex)
                 {
                     for(i = 0; i < m_numElmt; ++i)
                     {
                         Blas::Daxpy(m_nquad1,input[1+i*ncoeffs],base1.get()+m_nquad1,1,
                                     &wsp[m_nquad1*m_numElmt]+i*m_nquad1,1);
                     }
+
                 }
                 
                 Blas::Dgemm('N','T', m_nquad0,m_nquad1*m_numElmt,m_nmodes0,1.0, base0.get(),m_nquad0,
@@ -113,7 +114,7 @@ namespace Nektar
             const int  m_nquad1;
             const int  m_nmodes0;
             const int  m_nmodes1;
-            bool m_addTopVertex;
+            bool m_sortTopVertex;
         };
         
         OperatorKey BwdTrans_SumFac_Tri::m_type = GetOperatorFactory().
@@ -121,6 +122,90 @@ namespace Nektar
                                     BwdTrans_SumFac_Tri::create, "BwdTrans_SumFac_Tri");
 
 
+        /*
+         * ----------------------------------------------------------
+         * IProductWRTBase operators
+         * ----------------------------------------------------------
+         */       
+        class IProductWRTBase_SumFac_Tri : public Operator
+        {
+        public:
+            IProductWRTBase_SumFac_Tri(StdRegions::StdExpansionSharedPtr pExp,
+                                       vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                       CoalescedGeomDataSharedPtr GeomData)
+                : Operator  (pExp, pGeom, GeomData),
+                  m_nquad0  (pExp->GetNumPoints(0)),
+                  m_nquad1  (pExp->GetNumPoints(1)),
+                  m_nmodes0 (pExp->GetBasisNumModes(0)),
+                  m_nmodes1 (pExp->GetBasisNumModes(1))
+            {
+                m_jac     = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_base0   = GeomData->GetBase(0,pExp);
+                m_base1   = GeomData->GetBase(1,pExp);
+                m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
+                if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
+                {
+                    m_sortTopVertex = true;
+                }
+                else
+                {
+                    m_sortTopVertex = false;
+                }
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                int totmodes  = m_stdExp->GetNcoeffs(); 
+                int totpoints = m_nquad0 *m_nquad1;
+                
+                Vmath::Vmul(m_numElmt*totpoints,m_jac,1,input,1,wsp,1);
+
+                ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
+                
+                Array<OneD, NekDouble> wsp1 = wsp  + max(totpoints,totmodes)*m_numElmt; 
+                
+                Blas::Dgemm('T','N', m_nquad1*m_numElmt,m_nmodes0,m_nquad0,1.0,
+                            &wsp[0],m_nquad0, m_base0.get(), m_nquad0, 
+                            0.0,&wsp1[0], m_nquad1*m_numElmt);
+                
+                int i, mode;
+                // Inner product with respect to 'b' direction 
+                for (mode=i=0; i < m_nmodes0; ++i)
+                {
+                    Blas::Dgemm('T','N',m_nmodes1-i,m_numElmt,m_nquad1,1.0,m_base1.get()+mode*m_nquad1,
+                                m_nquad1,wsp1.get() + i*m_nquad1*m_numElmt,m_nquad1, 
+                                0.0, &output[mode],totmodes);
+                    
+                    mode += m_nmodes1 - i;
+                }
+
+                // fix for modified basis by splitting top vertex mode
+                if (m_sortTopVertex)
+                {
+                    Blas::Dgemv('T', m_nquad1,m_numElmt,1.0,wsp1.get()+m_nquad1*m_numElmt,m_nquad1,
+                                m_base1.get()+m_nquad1,1,1.0, &output[1],totmodes);
+                }
+            }
+            
+            OPERATOR_CREATE(IProductWRTBase_SumFac_Tri)
+            
+            protected:
+            const int  m_nquad0;
+            const int  m_nquad1;
+            const int  m_nmodes0;
+            const int  m_nmodes1;
+            Array<OneD, const NekDouble> m_jac;
+            Array<OneD, const NekDouble> m_base0;
+            Array<OneD, const NekDouble> m_base1;
+            bool m_sortTopVertex;
+        };
+        
+        OperatorKey IProductWRTBase_SumFac_Tri::m_type = GetOperatorFactory().
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eSumFac),IProductWRTBase_SumFac_Tri::create, "IProductWRTBase_SumFac_Tri");
 
     }
 }

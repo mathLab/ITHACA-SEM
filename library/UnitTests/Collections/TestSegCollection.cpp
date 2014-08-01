@@ -274,6 +274,179 @@ namespace Nektar
             }
         }
 
+
+        BOOST_AUTO_TEST_CASE(TestSegIProductWRTBase_IterPerExp_UniformP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
+            
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5, segPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
+                                                                               segGeom);
+
+            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+
+            int nelmts = 10;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(segGeom);
+            }
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+
+            const int nq = Exp->GetTotPoints();
+            const int nc = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq),yc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp;
+            Array<OneD, NekDouble> coeffs1(nelmts*nc);
+            Array<OneD, NekDouble> coeffs2(nelmts*nc);
+            
+            Exp->GetCoords(xc,yc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i]);
+            }
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->IProductWRTBase(phys + i*nq ,tmp = coeffs1 + i*nc);
+            }
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestSegIProductWRTBase_StdMat_UniformP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
+            
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5, segPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
+                                                                               segGeom);
+
+            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+
+            int nelmts = 10;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(segGeom);
+            }
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+
+            const int nq = Exp->GetTotPoints();
+            const int nc = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq),yc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp;
+            Array<OneD, NekDouble> coeffs1(nelmts*nc);
+            Array<OneD, NekDouble> coeffs2(nelmts*nc);
+            
+            Exp->GetCoords(xc,yc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i]);
+            }
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->IProductWRTBase(phys + i*nq ,tmp = coeffs1 + i*nc);
+            }
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestSegIProductWRTBase_SumFac_UniformP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
+            
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5, segPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
+                                                                               segGeom);
+
+            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+
+            int nelmts = 10;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(segGeom);
+            }
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+
+            const int nq = Exp->GetTotPoints();
+            const int nc = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq),yc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp;
+            Array<OneD, NekDouble> coeffs1(nelmts*nc);
+            Array<OneD, NekDouble> coeffs2(nelmts*nc);
+            
+            Exp->GetCoords(xc,yc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i]);
+            }
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->IProductWRTBase(phys + i*nq ,tmp = coeffs1 + i*nc);
+            }
+            c.ApplyOperator(Collections::eIProductWRTBase, phys, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
+
+
         BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_IterPerExp_UniformP)
         {
             SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));

@@ -263,7 +263,7 @@ namespace Nektar
          * the next level of the condensed system is computed.
          * @param   pLocToGloMap    Local to global mapping.
          */
-        void GlobalLinSysStaticCond::Initialise(
+        void GlobalLinSysStaticCond::v_Initialise(
                 const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();

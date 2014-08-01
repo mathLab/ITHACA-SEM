@@ -1175,6 +1175,7 @@ namespace Nektar
         // since this then makes the matrix storage of type eFull
         MultiRegions::GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,locToGloMap);
         mat.m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,m_fields[0],pAh,pBh,pCh,pDh,locToGloMap);
+        mat.m_CoupledBndSys->Initialise(locToGloMap);
         timer.Stop();
         cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }

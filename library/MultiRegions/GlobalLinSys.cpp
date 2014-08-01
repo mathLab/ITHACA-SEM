@@ -399,6 +399,12 @@ namespace Nektar
         {
             NEKERROR(ErrorUtil::efatal, "Method does not exist" );
 	}
+
+        void GlobalLinSys::v_Initialise(
+            const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
+        {
+            NEKERROR(ErrorUtil::efatal, "Method does not exist" );
+	}
     } //end of namespace
 } //end of namespace
 

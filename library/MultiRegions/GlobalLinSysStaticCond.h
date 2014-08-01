@@ -128,7 +128,7 @@ namespace Nektar
             virtual void v_InitObject();
 
             /// Initialise this object
-            void Initialise(
+            virtual void v_Initialise(
                     const boost::shared_ptr<AssemblyMap>& locToGloMap);
 
             /// Set up the storage for the Schur complement or the top level

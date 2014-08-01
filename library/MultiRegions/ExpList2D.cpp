@@ -465,7 +465,6 @@ namespace Nektar
 
             int i, j, id, elmtid=0;
             set<int> facesDone;
-            bool var_p = false;
 
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
             SpatialDomains::QuadGeomSharedPtr   FaceQuadGeom;
@@ -556,8 +555,6 @@ namespace Nektar
                     }
                     else // variable modes/points
                     {
-                        var_p = true;
-
                         LibUtilities::BasisKey face0     =
                             locexp[i]->DetFaceBasisKey(j,0);
                         LibUtilities::BasisKey face1     =
@@ -601,7 +598,7 @@ namespace Nektar
             int nproc = vComm->GetSize(); // number of processors
             int facepr = vComm->GetRank(); // ID processor
 
-            if (nproc > 1 && var_p == true)
+            if (nproc > 1)
             {
                 int fCnt = 0;
 

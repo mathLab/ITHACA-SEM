@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
         if (quality)
         {
             string distName = vSession->GetSessionName() + ".jac";
-            ofstream dist(distName);
+            ofstream dist(distName.c_str());
             dist.setf (ios::scientific, ios::floatfield);
 
             for (int i = 0; i < Exp[0]->GetExpSize(); ++i)

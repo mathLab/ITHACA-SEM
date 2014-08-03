@@ -2,14 +2,14 @@
 <test>
     <description>2D channel with base flow, P=5</description>
     <executable>APESolver</executable>
-    <parameters>Channel.xml</parameters>
+    <parameters>APE_2DChannel_FRDG_MODIFIED.xml</parameters>
     <files>
-        <file description="Session File">Channel.xml</file>
+        <file description="Session File">APE_2DChannel_FRDG_MODIFIED.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">
-            <value variable="p" tolerance="1e-12">0.0322839</value>
-            <value variable="u" tolerance="1e-12">7.86337e-05</value>
+            <value variable="p" tolerance="1e-12">0.102091</value>
+            <value variable="u" tolerance="1e-12">0.000248662</value>
             <value variable="v" tolerance="1e-12">0</value>
         </metric>
         <metric type="Linf" id="2">

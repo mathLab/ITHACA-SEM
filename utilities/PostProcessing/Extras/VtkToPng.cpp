@@ -42,7 +42,6 @@
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
 #include <vtkGraphicsFactory.h>
-#include <vtkImagingFactory.h>
 #include <vtkXMLUnstructuredGridReader.h>
 #include <vtkDataSetMapper.h>
 #include <vtkLookupTable.h>
@@ -68,10 +67,6 @@ int main(int argc, char * argv[])
             vtkSmartPointer<vtkGraphicsFactory>::New();
     graphics_factory->SetOffScreenOnlyMode( 1);
     graphics_factory->SetUseMesaClasses( 1 );
-
-    vtkSmartPointer<vtkImagingFactory> imaging_factory =
-            vtkSmartPointer<vtkImagingFactory>::New();
-    imaging_factory->SetUseMesaClasses( 1 );
 
     // Create a poly data reader and retrieve dataset from file
     vtkXMLUnstructuredGridReader* reader = vtkXMLUnstructuredGridReader::New();
@@ -100,7 +95,11 @@ int main(int argc, char * argv[])
     // Create a mapper and actor
     vtkSmartPointer<vtkDataSetMapper> mapper =
             vtkSmartPointer<vtkDataSetMapper>::New();
+#if VTK_MAJOR_VERSION <= 5
     mapper->SetInput(data);
+#else
+    mapper->SetInputData(data);
+#endif
     mapper->ImmediateModeRenderingOn();
     mapper->ScalarVisibilityOn();
     mapper->SetScalarModeToUsePointData();

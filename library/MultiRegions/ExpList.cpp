@@ -1257,8 +1257,8 @@ namespace Nektar
                 // Find nearest element
                 if (!elmtIdDist.empty())
                 {
-                    NekDouble   min_d  = elmtIdDist[0].second;
-                    int         min_id = elmtIdDist[0].first;
+                    NekDouble   min_d  = elmtIdDist[0].first;
+                    int         min_id = elmtIdDist[0].second;
 
                     for (int i = 1; i < elmtIdDist.size(); ++i)
                     {
@@ -1268,10 +1268,6 @@ namespace Nektar
                         }
                     }
 
-                    // retrieve local coordinates of chosen point
-                    (*m_exp)[min_id]->GetGeom()->ContainsPoint(gloCoords,
-                                                               locCoords,
-                                                               tol, resid);
                     return min_id;
                 }
                 else 
@@ -1344,24 +1340,6 @@ namespace Nektar
             }
         }
 
-
-        /**
-         * The operation is evaluated locally by the elemental
-         * function StdRegions#StdExpansion#GetSurfaceNormal.
-         */
-        void ExpList::GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
-                                const int k)
-        {
-            int i;
-            Array<OneD, NekDouble> normals;
-
-            for(i = 0; i < (*m_exp).size(); ++i)
-            {
-                //e_SN = SurfaceNormal + m_phys_offset[i];
-                normals = (*m_exp)[i]->GetSurfaceNormal()[k];
-                Vmath::Vcopy(normals.num_elements(), &normals[0], 1, &SurfaceNormal[0] + m_phys_offset[i], 1);
-            }
-        }
 
         /**
          * Configures geometric info, such as tangent direction, on each

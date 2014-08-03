@@ -169,12 +169,12 @@ namespace Nektar
                 Array<OneD, const NekDouble> &from,
                 Array<OneD, const NekDouble> &to,
                 NekDouble                    *mat);
-            void rotateToNormal  (
+            SOLVER_UTILS_EXPORT void rotateToNormal  (
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
                 const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);
-            void rotateFromNormal(
+            SOLVER_UTILS_EXPORT void rotateFromNormal(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
                 const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,

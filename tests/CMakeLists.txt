@@ -35,7 +35,7 @@ TARGET_LINK_LIBRARIES(Tester
   ${Boost_THREAD_LIBRARY}
   optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
 )
-ADD_DEPENDENCIES(Tester boost tinyxml)
+ADD_DEPENDENCIES(Tester boost tinyxml-2.4.3)
 
 IF( ${CMAKE_SYSTEM} MATCHES "Linux.*")
   TARGET_LINK_LIBRARIES(Tester optimized rt debug rt)

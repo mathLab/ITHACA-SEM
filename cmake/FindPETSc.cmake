@@ -75,6 +75,8 @@ find_path (PETSC_DIR include/petsc.h
   /usr/lib/petscdir/3.4 /usr/lib/petscdir/3.4.2
   /usr/lib/petscdir/3.3 /usr/lib/petscdir/3.2 /usr/lib/petscdir/3.1
   /usr/lib/petscdir/3.0.0 /usr/lib/petscdir/2.3.3 /usr/lib/petscdir/2.3.2
+  # MacPorts paths
+  /opt/local/lib/petsc
   $ENV{HOME}/petsc
   DOC "PETSc Directory")
 

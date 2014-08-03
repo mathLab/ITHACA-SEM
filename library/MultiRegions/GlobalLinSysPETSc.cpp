@@ -36,6 +36,7 @@
 #include <MultiRegions/GlobalLinSysPETSc.h>
 
 #include "petscis.h"
+#include "petscversion.h"
 
 namespace Nektar
 {
@@ -207,7 +208,11 @@ namespace Nektar
             KSPSetTolerances(
                 m_ksp, tolerance, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
             KSPSetFromOptions(m_ksp);
+#if PETSC_VERSION_GE(3,5,0)
             KSPSetOperators(m_ksp, m_matrix, m_matrix);
+#else
+            KSPSetOperators(m_ksp, m_matrix, m_matrix, SAME_NONZERO_PATTERN);
+#endif
         }
     }
 }

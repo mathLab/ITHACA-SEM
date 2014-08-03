@@ -96,8 +96,28 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr vSession = boost::shared_ptr<LibUtilities::SessionReader>(new LibUtilities::SessionReader(0,0,files,vComm));
             vSession->SetUpXmlDoc();
 
-            LibUtilities::MeshPartition vMeshPartition(vSession);
-            vMeshPartition.PartitionMesh(false);
+            // Default partitioner to use is Metis. Use Scotch as default
+            // if it is installed. Override default with command-line flags
+            // if they are set.
+            string vPartitionerName = "Metis";
+            if (LibUtilities::GetMeshPartitionFactory().ModuleExists("Scotch"))
+            {
+                vPartitionerName = "Scotch";
+            }
+            if (vSession->DefinesCmdLineArgument("use-metis"))
+            {
+                vPartitionerName = "Metis";
+            }
+            if (vSession->DefinesCmdLineArgument("use-scotch"))
+            {
+                vPartitionerName = "Scotch";
+            }
+            
+            LibUtilities::MeshPartitionSharedPtr vMeshPartition = 
+                LibUtilities::GetMeshPartitionFactory().CreateInstance(
+                                                         vPartitionerName, vSession);
+
+            vMeshPartition->PartitionMesh(false);
 
             // get hold of local partition ids 
 
@@ -107,7 +127,7 @@ namespace Nektar
             for (i = 0; i < nprocs; ++i)
             {
                 std::vector<unsigned int> tmp;
-                vMeshPartition.GetElementIDs(i,tmp);
+                vMeshPartition->GetElementIDs(i,tmp);
                 ElementIDs[i] = tmp;
             }
             

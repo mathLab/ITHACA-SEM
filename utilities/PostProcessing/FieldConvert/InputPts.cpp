@@ -37,7 +37,7 @@
 #include <iostream>
 using namespace std;
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 #include "InputPts.h"
 

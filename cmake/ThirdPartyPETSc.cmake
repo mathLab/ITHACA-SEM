@@ -33,6 +33,9 @@ IF (NEKTAR_USE_PETSC)
             CONFIGURE_COMMAND ./configure
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
+                --with-shared-libraries=0
+                --with-pic=1
+                --with-x=0
                 --prefix=${TPSRC}/dist
                 --with-petsc-arch=c-opt
                 --with-fc=0
@@ -41,7 +44,7 @@ IF (NEKTAR_USE_PETSC)
 
         INCLUDE_DIRECTORIES(${TPSRC}/dist/include)
         SET(PETSC_LIBRARIES "${TPSRC}/dist/lib/libpetsc.a")
-        MESSAGE(STATUS "Will build PETSc")
+        MESSAGE(STATUS "Build PETSc: ${PETSC_LIBRARIES}")
     ELSE (THIRDPARTY_BUILD_PETSC)
         INCLUDE(FindPETSc)
         IF (NOT PETSC_FOUND)

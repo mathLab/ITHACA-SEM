@@ -38,17 +38,22 @@ int main(int argc, char* argv[])
         }
     }
 
-    // Clear out the triangle strips and use polygons instead
-    vtkMesh->DeleteCells();
-    vtkMesh->SetPolys(vtkPolys);
+    // Create the new poly data
+    vtkPolyData *vtkNewMesh = vtkPolyData::New();
+    vtkNewMesh->SetPoints(vtkPoints);
+    vtkNewMesh->SetPolys(vtkPolys);
+
+    // Copy data across
+    for (int i = 0; i < vtkMesh->GetPointData()->GetNumberOfArrays(); ++i)
+        vtkNewMesh->GetPointData()->SetScalars(vtkMesh->GetPointData()->GetArray(i));
 
     // Write out the new mesh
     vtkPolyDataWriter *vtkMeshWriter = vtkPolyDataWriter::New();
     vtkMeshWriter->SetFileName(argv[2]);
 #if VTK_MAJOR_VERSION <= 5
-    vtkMeshWriter->SetInput(vtkMesh);
+    vtkMeshWriter->SetInput(vtkNewMesh);
 #else
-    vtkMeshWriter->SetInputData(vtkMesh);
+    vtkMeshWriter->SetInputData(vtkNewMesh);
 #endif
-    vtkMeshWriter->Update();
+    vtkMeshWriter->Write();
 }

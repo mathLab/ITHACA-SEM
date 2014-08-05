@@ -61,7 +61,7 @@ APEUpwindSolver::APEUpwindSolver() :
 *
 */
 void APEUpwindSolver::v_Solve(
-        int                                               nDim,
+        const int                                         nDim,
         const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
         const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
               Array<OneD,       Array<OneD, NekDouble> > &flux)

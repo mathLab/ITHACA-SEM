@@ -38,16 +38,16 @@
 namespace Nektar
 {
     CompressibleSolver::CompressibleSolver() : RiemannSolver(),
-    m_pointSolve(true)
+                                               m_pointSolve(true)
     {
         m_requiresRotation = true;
     }
     
     void CompressibleSolver::v_Solve(
-                    int   nDim,
-                    const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-                    const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                          Array<OneD,       Array<OneD, NekDouble> > &flux)
+        const int                                         nDim,
+        const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+        const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+              Array<OneD,       Array<OneD, NekDouble> > &flux)
     {
         if (m_pointSolve)
         {
@@ -57,15 +57,14 @@ namespace Nektar
             NekDouble rhouf, rhovf;
             
             // Check if PDE-based SC is used
-            
             if (expDim == 1)
             {
                 for (int i = 0; i < Fwd[0].num_elements(); ++i)
                 {
                     v_PointSolve(
-                    Fwd [0][i], Fwd [1][i], 0.0,   0.0,   Fwd [2][i],
-                    Bwd [0][i], Bwd [1][i], 0.0,   0.0,   Bwd [2][i],
-                    flux[0][i], flux[1][i], rhouf, rhovf, flux[2][i]);
+                        Fwd [0][i], Fwd [1][i], 0.0,   0.0,   Fwd [2][i],
+                        Bwd [0][i], Bwd [1][i], 0.0,   0.0,   Bwd [2][i],
+                        flux[0][i], flux[1][i], rhouf, rhovf, flux[2][i]);
                 }
             }
             else if (expDim == 2)
@@ -75,9 +74,9 @@ namespace Nektar
                     for (int i = 0; i < Fwd[0].num_elements(); ++i)
                     {
                         v_PointSolve(
-                        Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0,   Fwd [3][i],
-                        Bwd [0][i], Bwd [1][i], Bwd [2][i], 0.0,   Bwd [3][i],
-                        flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i]);
+                            Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0,   Fwd [3][i],
+                            Bwd [0][i], Bwd [1][i], Bwd [2][i], 0.0,   Bwd [3][i],
+                            flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i]);
                     }
                 }
                 
@@ -86,9 +85,9 @@ namespace Nektar
                     for (int i = 0; i < Fwd[0].num_elements(); ++i)
                     {
                         v_PointSolveVisc(
-                        Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0, Fwd [3][i], Fwd [4][i],
-                        Bwd [0][i], Bwd [1][i], Bwd [2][i], 0.0, Bwd [3][i], Bwd [4][i],
-                        flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i], flux[4][i]);
+                            Fwd [0][i], Fwd [1][i], Fwd [2][i], 0.0, Fwd [3][i], Fwd [4][i],
+                            Bwd [0][i], Bwd [1][i], Bwd [2][i], 0.0, Bwd [3][i], Bwd [4][i],
+                            flux[0][i], flux[1][i], flux[2][i], rhovf, flux[3][i], flux[4][i]);
                     }
                 }
                 
@@ -98,18 +97,18 @@ namespace Nektar
                 for (int i = 0; i < Fwd[0].num_elements(); ++i)
                 {
                     v_PointSolve(
-                    Fwd [0][i], Fwd [1][i], Fwd [2][i], Fwd [3][i], Fwd [4][i],
-                    Bwd [0][i], Bwd [1][i], Bwd [2][i], Bwd [3][i], Bwd [4][i],
-                    flux[0][i], flux[1][i], flux[2][i], flux[3][i], flux[4][i]);
+                        Fwd [0][i], Fwd [1][i], Fwd [2][i], Fwd [3][i], Fwd [4][i],
+                        Bwd [0][i], Bwd [1][i], Bwd [2][i], Bwd [3][i], Bwd [4][i],
+                        flux[0][i], flux[1][i], flux[2][i], flux[3][i], flux[4][i]);
                 }
                 if (nvariables > expDim+2)
                 {
                     for (int i = 0; i < Fwd[0].num_elements(); ++i)
                     {
                         v_PointSolveVisc(
-                        Fwd [0][i], Fwd [1][i], Fwd [2][i], Fwd [3][i], Fwd [4][i], Fwd [5][i],
-                        Bwd [0][i], Bwd [1][i], Bwd [2][i], Bwd [3][i], Bwd [4][i], Bwd [5][i],
-                        flux[0][i], flux[1][i], flux[2][i], flux[3][i], flux[4][i], flux[5][i]);
+                            Fwd [0][i], Fwd [1][i], Fwd [2][i], Fwd [3][i], Fwd [4][i], Fwd [5][i],
+                            Bwd [0][i], Bwd [1][i], Bwd [2][i], Bwd [3][i], Bwd [4][i], Bwd [5][i],
+                            flux[0][i], flux[1][i], flux[2][i], flux[3][i], flux[4][i], flux[5][i]);
                     }
                 }
             }

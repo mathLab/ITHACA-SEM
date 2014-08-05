@@ -38,9 +38,8 @@
 namespace Nektar
 {
     std::string HLLCSolver::solverName =
-    SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
-                        "HLLC",HLLCSolver::create,
-                               "HLLC Riemann solver");
+        SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
+            "HLLC", HLLCSolver::create, "HLLC Riemann solver");
     
     HLLCSolver::HLLCSolver() : CompressibleSolver()
     {
@@ -67,9 +66,9 @@ namespace Nektar
      * @param Ef        Computed Riemann flux for energy.
      */
     void HLLCSolver::v_PointSolve(
-                                  double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
-                                  double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
-                                  double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
+        NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,
+        NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
+        NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef)
     {
         static NekDouble gamma = m_params["gamma"]();
         
@@ -83,9 +82,9 @@ namespace Nektar
         
         // Left and right pressure, sound speed and enthalpy.
         NekDouble pL = (gamma - 1.0) *
-        (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
+            (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
         NekDouble pR = (gamma - 1.0) *
-        (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
+            (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
         NekDouble cL = sqrt(gamma * pL / rhoL);
         NekDouble cR = sqrt(gamma * pR / rhoR);
         NekDouble hL = (EL + pL) / rhoL;
@@ -163,10 +162,11 @@ namespace Nektar
             }
         }
     }
+
     void HLLCSolver::v_PointSolveVisc(
-            double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL, double  EpsL,
-            double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER, double  EpsR,
-            double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef, double &Epsf)
+        NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL, NekDouble  EpsL,
+        NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER, NekDouble  EpsR,
+        NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef, NekDouble &Epsf)
     {
         static NekDouble gamma = m_params["gamma"]();
         
@@ -180,9 +180,9 @@ namespace Nektar
         
         // Left and right pressure, sound speed and enthalpy.
         NekDouble pL = (gamma - 1.0) *
-        (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
+            (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
         NekDouble pR = (gamma - 1.0) *
-        (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
+            (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
         NekDouble cL = sqrt(gamma * pL / rhoL);
         NekDouble cR = sqrt(gamma * pR / rhoR);
         NekDouble hL = (EL + pL) / rhoL;

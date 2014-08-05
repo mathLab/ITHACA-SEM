@@ -36,7 +36,6 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <iostream>
-#include <fstream>
 #include <math.h>
 
 namespace Nektar
@@ -1229,6 +1228,7 @@ namespace Nektar
                               solvector_out->UpdateSolutionVector(),
                               solvector_out->UpdateTimeVector(),op);
 
+
                 // STEP 3: copy the information contained in the
                 //         output vector of the current scheme to the
                 //         solution vector of the master scheme
@@ -1348,11 +1348,10 @@ namespace Nektar
                 
                 TimeIntegrationSolutionSharedPtr solvector_new = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(key,nvar,npoints); 
                 
-                TimeIntegrate(timestep,
-                              solvector->GetSolutionVector(),
+                TimeIntegrate(timestep,solvector->GetSolutionVector(),
                               solvector->GetTimeVector(),
                               solvector_new->UpdateSolutionVector(),
-                              solvector_new->UpdateTimeVector(),op);
+                              solvector_new->UpdateTimeVector(),op); 
                 
                 solvector = solvector_new;
             }
@@ -1714,11 +1713,11 @@ namespace Nektar
 
             return true;
         }
-        
+            
         bool TimeIntegrationScheme::CheckIfLastStageEqualsNewSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
-                   const Array<OneD, const Array<TwoD, NekDouble> >& B,
-                   const Array<TwoD, const NekDouble>& U,
-                   const Array<TwoD, const NekDouble>& V) const
+                                                                      const Array<OneD, const Array<TwoD, NekDouble> >& B,
+                                                                      const Array<TwoD, const NekDouble>& U,
+                                                                      const Array<TwoD, const NekDouble>& V) const
         {
             int i,m;
             // Last stage equals new solution if:

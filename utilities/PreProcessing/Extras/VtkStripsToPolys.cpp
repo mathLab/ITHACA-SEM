@@ -45,7 +45,10 @@ int main(int argc, char* argv[])
 
     // Copy data across
     for (int i = 0; i < vtkMesh->GetPointData()->GetNumberOfArrays(); ++i)
-        vtkNewMesh->GetPointData()->SetScalars(vtkMesh->GetPointData()->GetArray(i));
+    {
+        vtkNewMesh->GetPointData()->SetScalars(
+                                        vtkMesh->GetPointData()->GetArray(i));
+    }
 
     // Write out the new mesh
     vtkPolyDataWriter *vtkMeshWriter = vtkPolyDataWriter::New();

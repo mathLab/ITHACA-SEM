@@ -145,6 +145,10 @@ namespace Nektar
             OptumiumParametersFound = false;
             m_NonConvergingStepsCounter = 0;
             
+            int PartiallyConverged(111);
+            int NotConvergedUnstable(222);
+            int NotConvergedStable(333);
+            
             while (max(Diff_q_qBar, Diff_q1_q0) > TOL)
             {
                 //First order Splitting with exact resolution of the filters equation
@@ -166,38 +170,48 @@ namespace Nektar
                     ConvergenceHistory(qBar1, q0, Diff_q_qBar, Diff_q1_q0);
                     
                     //Coupling between SFD method and Arnoldi algorithm 
-                    if (m_EvolutionOperator == eOptimizedSteadyState)
+                    if (m_EvolutionOperator == eOptimizedSteadyState && OptumiumParametersFound == false)
                     {   
                         if(Diff_q_qBar < GlobalMin) 
                         {
                             //The norm is decreasing (the flow is getting closer to its steady-state)
                             GlobalMin = Diff_q_qBar;
-                            
-                            if (OptumiumParametersFound == false)
+
+                            //The curent flow field is store in 'partialSteadyFlow'
+                            cout << "\tWe save the curent flow field into 'partialSteadyFlow' !!!" << endl;
+                            for(int i = 0; i < NumVar_SFD; ++i)
                             {
-                                //The curent flow field is store in 'partialSteadyFlow'
-                                for(int i = 0; i < NumVar_SFD; ++i)
-                                {
-                                    Vmath::Vcopy(q0[i].num_elements(), q0[i], 1, partialSteadyFlow[i], 1);
-                                }
-                                
-                                if (GlobalMin < PartialTOL)
-                                {
-                                    cout << "\n\t We compute stability-analysis on the current 'partially converged' flow field: \n" << endl;
-                                    PartialTOL = PartialTOL/UpdateCoefficient;
-                                    
-                                    A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);
-                                    DriverModifiedArnoldi::v_Execute(out);
-                                    ComputeOptimization();
-                                } 
+                                Vmath::Vcopy(q0[i].num_elements(), q0[i], 1, partialSteadyFlow[i], 1);
                             }
+                            
+                            ///////////////////////////////////////////////////////////////////////////////////
+                            m_equ[m_nequ - 1]->Checkpoint_Output(NotConvergedStable); //We save the flow field into a .chk file 
+                            ///////////////////////////////////////////////////////////////////////////////////
+                            
+                            if (GlobalMin < PartialTOL)
+                            {
+                                cout << "\n\t We compute stability-analysis on the current 'partially converged' flow field: \n" << endl;
+                                PartialTOL = PartialTOL/UpdateCoefficient;
+                                A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);
+                                ////////////////////////////////////////////////////////////////////
+                                m_equ[m_nequ - 1]->Checkpoint_Output(PartiallyConverged); //We save the flow field into a .chk file 
+                                PartiallyConverged++;
+                                ////////////////////////////////////////////////////////////////////
+                                DriverModifiedArnoldi::v_Execute(out);
+                                ComputeOptimization();
+                            } 
                             
                             m_NonConvergingStepsCounter = 0;
                         }
                         else if (m_NonConvergingStepsCounter*m_dt*m_infosteps > TimeToRestart)
                         {
                             cout << "\n\t SFD method NOT converging!!! We compute stability-analysis on a stored 'partially converged' flow field: \n" << endl;
-                            A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);                                      
+                            A->GetAdvObject()->SetBaseFlow(partialSteadyFlow);
+                            ////////////////////////////////////////////////////////////////////
+                            m_equ[m_nequ - 1]->Checkpoint_Output(NotConvergedUnstable); //We save the flow field into a .chk file 
+                            NotConvergedUnstable++;
+                            NotConvergedStable++;
+                            ////////////////////////////////////////////////////////////////////
                             DriverModifiedArnoldi::v_Execute(out);
                             ComputeOptimization();
                             GlobalMin = 10.0;

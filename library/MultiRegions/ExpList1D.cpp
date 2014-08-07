@@ -1052,7 +1052,7 @@ namespace Nektar
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
 
-            for(i = 0; i < m_exp->size(); ++i)
+            for (i = 0; i < m_exp->size(); ++i)
             {
                 LocalRegions::Expansion1DSharedPtr loc_exp =
                     boost::dynamic_pointer_cast<
@@ -1061,7 +1061,7 @@ namespace Nektar
                 LocalRegions::Expansion2DSharedPtr loc_elmt =
                     loc_exp->GetLeftAdjacentElementExp();
 		
-		int edgeNumber = loc_exp->GetLeftAdjacentElementEdge();
+                int edgeNumber = loc_exp->GetLeftAdjacentElementEdge();
             
                 // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);

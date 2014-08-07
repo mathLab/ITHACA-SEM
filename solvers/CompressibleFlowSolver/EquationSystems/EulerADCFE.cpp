@@ -105,7 +105,8 @@ namespace Nektar
     void EulerADCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         CompressibleFlowSystem::v_GenerateSummary(s);
-        SolverUtils::AddSummaryItem(s, "Problem Type", ProblemTypeMap[m_problemType]);
+        SolverUtils::AddSummaryItem(
+            s, "Problem Type", ProblemTypeMap[m_problemType]);
     }
 
     void EulerADCFE::v_SetInitialConditions(

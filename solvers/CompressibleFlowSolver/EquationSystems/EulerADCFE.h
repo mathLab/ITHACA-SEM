@@ -29,79 +29,82 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables wit artificial diffusion
+// Description: Euler equations in conservative variables with artificial
+// diffusion
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERARTIFICIALDIFFUSIONCFE_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERARTIFICIALDIFFUSIONCFE_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERADCFE_H
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERADCFE_H
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
 namespace Nektar
 {  
-
-  enum ProblemType
-  {           
-    eGeneral,          ///< No problem defined - Default Inital data
-    SIZE_ProblemType   ///< Length of enum list
-  };
-  
-  const char* const ProblemTypeMap[] =
-    {
-      "General"
+    enum ProblemType
+    {           
+        eGeneral,          ///< No problem defined - Default Inital data
+        SIZE_ProblemType   ///< Length of enum list
     };
   
-  /**
-   * 
-   * 
-   **/
-  class EulerADCFE : public CompressibleFlowSystem
-  {
-  public:
-      friend class MemoryManager<EulerADCFE>;
-
-    /// Creates an instance of this class
-    static SolverUtils::EquationSystemSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
+    const char* const ProblemTypeMap[] =
     {
-      SolverUtils::EquationSystemSharedPtr p = MemoryManager<EulerADCFE>::AllocateSharedPtr(pSession);
-      p->InitObject();
-      return p;
-    }
-    /// Name of class
-    static std::string className;
-    
-    virtual ~EulerADCFE();
+        "General"
+    };
+  
+    /**
+     * 
+     * 
+     **/
+    class EulerADCFE : public CompressibleFlowSystem
+    {
+    public:
+        friend class MemoryManager<EulerADCFE>;
 
-    ///< problem type selector
-    ProblemType                                     m_problemType;   
+        /// Creates an instance of this class
+        static SolverUtils::EquationSystemSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+        {
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<
+                EulerADCFE>::AllocateSharedPtr(pSession);
+            p->InitObject();
+            return p;
+        }
+        /// Name of class
+        static std::string className;
     
-  protected:
+        virtual ~EulerADCFE();
 
-    EulerADCFE(
+        ///< problem type selector
+        ProblemType m_problemType;
+    
+    protected:
+        EulerADCFE(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
-    virtual void v_InitObject();
+        virtual void v_InitObject();
 
-    /// Print a summary of time stepping parameters.
-    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
+        /// Print a summary of time stepping parameters.
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
-    void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-		  Array<OneD,  Array<OneD, NekDouble> > &outarray,
-		  const NekDouble time);
+        void DoOdeRhs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble                                   time);
     
-    void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-			 Array<OneD,  Array<OneD, NekDouble> > &outarray,
-			 const NekDouble time);
+        void DoOdeProjection(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble                                   time);
 
-    virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
-					bool dumpInitialConditions = true,
-                                        const int domain = 0);
+        virtual void v_SetInitialConditions(
+            NekDouble initialtime = 0.0,
+            bool dumpInitialConditions = true,
+            const int domain = 0);
+
     private:
-
-    void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
-    
-  };
+        void SetBoundaryConditions(
+            Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
+    };
 }
 #endif

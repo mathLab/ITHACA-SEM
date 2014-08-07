@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File EulerCFE.h
+// File EulerArtificialDiffusionCFE.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables without artificial diffusion
+// Description: Euler equations in conservative variables with artificial
+// diffusion
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERADCFE_H
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERADCFE_H
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
@@ -43,42 +44,43 @@ namespace Nektar
     enum ProblemType
     {           
         eGeneral,          ///< No problem defined - Default Inital data
-        eIsentropicVortex, ///< Isentropic Vortex
-        eRinglebFlow,      ///< Ringleb Flow
         SIZE_ProblemType   ///< Length of enum list
     };
   
     const char* const ProblemTypeMap[] =
     {
-        "General",
-        "IsentropicVortex",
-        "RinglebFlow"
+        "General"
     };
   
-    class EulerCFE : public CompressibleFlowSystem
+    /**
+     * 
+     * 
+     **/
+    class EulerADCFE : public CompressibleFlowSystem
     {
     public:
-        friend class MemoryManager<EulerCFE>;
+        friend class MemoryManager<EulerADCFE>;
 
-        /// Creates an instance of this class.
+        /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            SolverUtils::EquationSystemSharedPtr p = MemoryManager<EulerCFE>::AllocateSharedPtr(pSession);
+            SolverUtils::EquationSystemSharedPtr p = MemoryManager<
+                EulerADCFE>::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
-        /// Name of class.
+        /// Name of class
         static std::string className;
     
-        virtual ~EulerCFE();
+        virtual ~EulerADCFE();
 
         ///< problem type selector
-        ProblemType     m_problemType;   
+        ProblemType m_problemType;
     
     protected:
-
-        EulerCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
+        EulerADCFE(
+            const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual void v_InitObject();
 
@@ -89,55 +91,20 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
+    
         void DoOdeProjection(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray,
             const NekDouble                                   time);
+
         virtual void v_SetInitialConditions(
-            NekDouble               initialtime = 0.0,
-            bool                    dumpInitialConditions = true,
+            NekDouble initialtime = 0.0,
+            bool dumpInitialConditions = true,
             const int domain = 0);
-        
-        virtual void v_EvaluateExactSolution(
-            unsigned int            field,
-            Array<OneD, NekDouble> &outfield,
-            const NekDouble         time = 0.0);
 
     private:
         void SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >            &physarray,
-            NekDouble                                        time);
-
-        /// Isentropic Vortex Test Case.
-        void EvaluateIsentropicVortex(
-            const Array<OneD, NekDouble>                    &x,
-            const Array<OneD, NekDouble>                    &y,
-            const Array<OneD, NekDouble>                    &z,
-                  Array<OneD, Array<OneD, NekDouble> >      &u,
-                  NekDouble                                  time,
-            const int                                        o = 0);
-        void GetExactIsentropicVortex(
-            int                                              field, 
-            Array<OneD, NekDouble>                          &outarray, 
-            NekDouble                                        time);
-        void SetInitialIsentropicVortex(
-            NekDouble                                        initialtime);
-        void SetBoundaryIsentropicVortex(
-            int                                              bcRegion, 
-            NekDouble                                        time, 
-            int cnt, Array<OneD, Array<OneD, NekDouble> >   &physarray);
-
-        /// Ringleb Flow Test Case.
-        void GetExactRinglebFlow(
-            int                                             field, 
-            Array<OneD, NekDouble>                         &outarray);
-        void SetInitialRinglebFlow(
-            void);
-        void SetBoundaryRinglebFlow(
-            int                                              bcRegion, 
-            NekDouble                                        time, 
-            int                                              cnt, 
-            Array<OneD, Array<OneD, NekDouble> >            &physarray);
+            Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
     };
 }
 #endif

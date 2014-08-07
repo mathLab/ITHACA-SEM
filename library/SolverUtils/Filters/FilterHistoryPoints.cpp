@@ -177,16 +177,16 @@ namespace Nektar
                     SpatialDomains::GeometrySharedPtr g =
                                     pFields[0]->GetExp(idList[i])->GetGeom();
                     StdRegions::StdExpansionSharedPtr e = g->GetXmap();
-                    Array<OneD, NekDouble> xvals(e->GetTotPoints());
-                    Array<OneD, NekDouble> yvals(e->GetTotPoints());
-                    Array<OneD, NekDouble> zvals(e->GetTotPoints());
-                    e->BwdTrans(g->GetCoeffs(0), xvals);
-                    e->BwdTrans(g->GetCoeffs(1), yvals);
-                    e->BwdTrans(g->GetCoeffs(2), zvals);
-                    double x = e->PhysEvaluate(locCoords, xvals) - gloCoord[0];
-                    double y = e->PhysEvaluate(locCoords, yvals) - gloCoord[1];
-                    double z = e->PhysEvaluate(locCoords, zvals) - gloCoord[2];
-                    if (x*x + y*y + z*z > NekConstants::kGeomFactorsTol)
+                    Array<OneD, NekDouble> coordVals(e->GetTotPoints());
+                    double distance = 0.0;
+                    for (int j = 0; j < g->GetCoordim(); ++j)
+                    {
+                        e->BwdTrans(g->GetCoeffs(j), coordVals);
+                        double x = e->PhysEvaluate(locCoords, coordVals)
+                                                                 - gloCoord[j];
+                        distance += x*x;
+                    }
+                    if (distance > NekConstants::kGeomFactorsTol)
                     {
                         idList[i] = -1;
                     }

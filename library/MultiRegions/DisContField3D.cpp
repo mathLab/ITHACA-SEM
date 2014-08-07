@@ -314,7 +314,7 @@
              // Set up Trace space
              bool UseGenSegExp = true;
              trace = MemoryManager<ExpList2D>::AllocateSharedPtr(
-                 m_bndCondExpansions, m_bndConditions,
+                 m_session, m_bndCondExpansions, m_bndConditions,
                  *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
 
              m_trace    = trace;
@@ -1875,14 +1875,15 @@
                 e_outarray = outarray+offset;
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
-                    t_offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,elmtToTrace[n][e],
+                    t_offset = m_trace->GetPhys_Offset(
+                        elmtToTrace[n][e]->GetElmtId());
+                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,
+                                                        elmtToTrace[n][e],
                                                         Fn + t_offset,
                                                         e_outarray);
                 }
             }
         }
-
         /**
          * @brief Add trace contributions into elemental coefficient spaces.
          * 

@@ -65,7 +65,6 @@ namespace Nektar
             LIB_UTILITIES_EXPORT static const char* SOLVERINFO_ELEMENT_NAME;
             LIB_UTILITIES_EXPORT static const char* VARIABLES_ELEMENT_NAME;
             LIB_UTILITIES_EXPORT static const char* BOUNDARYCONDITIONS_ELEMENT_NAME;
-            LIB_UTILITIES_EXPORT static const char* HOMOGENEOUSBOUNDARYCONDITIONS_ELEMENT_NAME;
 
     };
 }

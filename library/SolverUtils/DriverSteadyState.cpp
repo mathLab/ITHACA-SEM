@@ -87,7 +87,7 @@ namespace Nektar
             m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);
             m_session->LoadParameter("ControlCoeff",m_X, 1);
             m_session->LoadParameter("FilterWidth", m_Delta, 1);
-            m_session->LoadParameter("TOL", TOL, 1.0e-08); ///Criteria for reaching SFD
+            m_session->LoadParameter("TOL", TOL, 1.0e-08); ///Criteria for reaching steady-state solution
             m_session->LoadParameter("PartialTOL", PartialTOL, 1.0e-02); ///Criteria for coupling SFD and Arnoldi
             m_session->LoadParameter("TimeToRestart", TimeToRestart, 25.0); ///Criteria for coupling SFD and Arnoldi
             m_session->LoadParameter("ParametersTOL", ParametersTOL, 0.05); ///Criteria for coupling SFD and Arnoldi

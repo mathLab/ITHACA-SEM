@@ -155,20 +155,6 @@ namespace Nektar
             // Read REGION tags
             TiXmlElement *boundaryConditionsElement = conditions->FirstChildElement("BOUNDARYCONDITIONS");
             ASSERTL0(boundaryConditionsElement, "Boundary conditions must be specified.");
-            
-            ///Condition necessary for coupling SFD method with Arnoldi algorithm
-            if (m_session->GetSolverInfo("Driver") == "SteadyState" && m_session->GetTag("AdvectiveType") == "Linearised")
-            {                
-                TiXmlElement *boundaryConditionsElement_Homogeneous = conditions->FirstChildElement("HOMOGENEOUSBOUNDARYCONDITIONS");
-                
-                ASSERTL0(boundaryConditionsElement_Homogeneous, "To use the Automated SFD method, a section called " 
-                "HOMOGENEOUSBOUNDARYCONDITIONS must be declared.\n"
-                "It should be similar to the section BOUNDARYCONDITIONS " 
-                "but with homogeneous boundary conditions.");
-                
-                boundaryConditionsElement = boundaryConditionsElement_Homogeneous;
-            }            
-
             TiXmlElement *regionElement = boundaryConditionsElement->FirstChildElement("REGION");
 
             // Read R (Robin), D (Dirichlet), N (Neumann), P (Periodic) C(Cauchy) tags

@@ -67,6 +67,11 @@ namespace Nektar
               m_session(pSession)
         {
         }
+        
+//         Driver::Driver(const LibUtilities::SessionReaderSharedPtr pSession, const LibUtilities::SessionReaderSharedPtr pSession2)
+//         : m_comm(pSession->GetComm()), m_session(pSession), m_comm2(pSession2->GetComm()), m_session2(pSession2)
+//         {
+//         }
     
         Driver::~Driver()
         
@@ -103,6 +108,22 @@ namespace Nektar
                 m_nequ = ((m_EvolutionOperator == eTransientGrowth || m_EvolutionOperator == eOptimizedSteadyState) ? 2 : 1);
                 
                 m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
+                
+                ///////////////////////////////////////////////////////////////
+                ///For having 2 equation systems defined into 2 different session files    
+                string meshfile = m_session->GetSessionName() + ".gz";
+                
+                string LinNSCondFile = m_session->GetSessionName(); 
+                LinNSCondFile += "_LinNS.xml"; 
+                
+                vector<string> LinNSFilenames;
+                LinNSFilenames.push_back(meshfile);   
+                LinNSFilenames.push_back(LinNSCondFile);
+                
+                cout << "m_session->GetSessionName() = " << m_session->GetSessionName() << endl ;
+                // Create Incompressible NavierStokesSolver session reader.
+                LibUtilities::SessionReaderSharedPtr session_LinNS = LibUtilities::SessionReader::CreateInstance(0, NULL, LinNSFilenames, m_session->GetComm());
+                ///////////////////////////////////////////////////////////////
 
                 // Set the AdvectiveType tag and create EquationSystem objects.
                 switch (m_EvolutionOperator)
@@ -134,8 +155,8 @@ namespace Nektar
                         break;
                     case eOptimizedSteadyState: ///Coupling SFD method and Arnoldi algorithm
                         //For running stability analysis
-                        m_session->SetTag("AdvectiveType","Linearised");
-                        m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
+                        session_LinNS->SetTag("AdvectiveType","Linearised");
+                        m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, session_LinNS);
                         
                         //For running the SFD method on the nonlinear problem 
                         m_session->SetTag("AdvectiveType","Convective");

@@ -49,9 +49,10 @@ namespace Nektar
     SubSteppingExtrapolate::SubSteppingExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
+        MultiRegions::ExpListSharedPtr  pPressure,
         const Array<OneD, int> pVel,
         const AdvectionTermSharedPtr advObject)
-        : Extrapolate(pSession,pFields,pVel,advObject)
+        : Extrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
         m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.5);
@@ -225,7 +226,7 @@ namespace Nektar
         RollOver(m_pressureHBCs);
 
         // Calculate non-linear and viscous BCs at current level and put in m_pressureHBCs[0]
-        CalcPressureBCs(inarray,velfields,kinvis);
+        CalcNeumannPressureBCs(inarray,velfields,kinvis);
         
         // Extrapolate to m_pressureHBCs to n+1
         ExtrapolatePressureHBCs();

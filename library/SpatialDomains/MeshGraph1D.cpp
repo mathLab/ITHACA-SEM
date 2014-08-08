@@ -36,7 +36,7 @@
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {

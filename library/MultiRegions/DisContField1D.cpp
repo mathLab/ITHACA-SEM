@@ -254,8 +254,7 @@ namespace Nektar
         {
             set<int>::iterator it;
             LocalRegions::Expansion0DSharedPtr traceEl = 
-                boost::dynamic_pointer_cast<LocalRegions::Expansion0D>(
-                    (m_traceMap->GetElmtToTrace())[n][e]);
+                m_traceMap->GetElmtToTrace()[n][e]->as<LocalRegions::Expansion0D>();
 
             
             bool fwd = true;
@@ -547,18 +546,17 @@ namespace Nektar
                     SpatialDomains::MeshGraph1D>(m_graph);
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            LibUtilities::CommSharedPtr     vComm       =
+            LibUtilities::CommSharedPtr vComm =
                 m_session->GetComm()->GetRowComm();
 
-            int region1ID;
-            int region2ID;
+            int i, region1ID, region2ID;
 
             SpatialDomains::BoundaryConditionShPtr locBCond;
             
-            map<int,int>                     BregionToVertMap;
+            map<int,int> BregionToVertMap;
 
-            // Construct list of all periodic Region and their global vertex on 
-            //  this  process.
+            // Construct list of all periodic Region and their global vertex on
+            // this process.
             for (it = bregions.begin(); it != bregions.end(); ++it)
             {
                 locBCond = GetBoundaryCondition(bconditions, it->first, variable);
@@ -576,44 +574,40 @@ namespace Nektar
 
             map<int,int>::iterator iit;
             set<int> islocal;
-            
-            if(vComm->GetSize() != 1) // share map between all processors
+
+            int n = vComm->GetSize();
+            int p = vComm->GetRank();
+
+            Array<OneD, int> nregions(n, 0);
+            nregions[p] = BregionToVertMap.size();
+            vComm->AllReduce(nregions, LibUtilities::ReduceSum);
+
+            int totRegions = Vmath::Vsum(n, nregions, 1);
+
+            Array<OneD, int> regOffset(n, 0);
+
+            for (i = 1; i < n; ++i)
             {
-                // number of bregions
-                int nregions = 0; 
-                for(iit = BregionToVertMap.begin(); iit != BregionToVertMap.end(); ++iit)
-                {
-                    nregions = (nregions > iit->first)? nregions:iit->first;
-                }
-                vComm->AllReduce(nregions, LibUtilities::ReduceMax);
-
-                Array<OneD, int> bregmap(nregions,-1);
-                
-                for(iit = BregionToVertMap.begin(); iit != BregionToVertMap.end(); ++iit)
-                {
-                    bregmap[iit->first] = iit->second;
-                    islocal.insert(iit->first);
-                }
-
-                vComm->AllReduce(bregmap, LibUtilities::ReduceSum);
-
-                for(int i = 0; i < nregions; ++i)
-                {
-                    if(bregmap[i] >=0 )
-                    {
-                        BregionToVertMap[i] = bregmap[i];
-                    }
-                }
+                regOffset[i] = regOffset[i-1] + nregions[i-1];
             }
-            else
+
+            Array<OneD, int> bregmap(totRegions, 0);
+            Array<OneD, int> bregid (totRegions, 0);
+            for(i = regOffset[p], iit = BregionToVertMap.begin();
+                iit != BregionToVertMap.end(); ++iit, ++i)
             {
-                // in serial case set all verties on boundary as being local
-                for(iit = BregionToVertMap.begin(); iit != BregionToVertMap.end(); ++iit)
-                {
-                    islocal.insert(iit->first);
-                }                
+                bregid [i] = iit->first;
+                bregmap[i] = iit->second;
+                islocal.insert(iit->first);
             }
-            
+
+            vComm->AllReduce(bregmap, LibUtilities::ReduceSum);
+            vComm->AllReduce(bregid,  LibUtilities::ReduceSum);
+
+            for (int i = 0; i < totRegions; ++i)
+            {
+                BregionToVertMap[bregid[i]] = bregmap[i];
+            }
 
             // Construct list of all periodic pairs local to this process.
             for (it = bregions.begin(); it != bregions.end(); ++it)
@@ -641,7 +635,7 @@ namespace Nektar
                 PeriodicEntity ent(BregionToVertMap[region2ID],
                                    StdRegions::eNoOrientation,
                                    islocal.count(region2ID) != 0);
-                
+
                 m_periodicVerts[BregionToVertMap[region1ID]].push_back(ent);
             }
         }
@@ -815,8 +809,7 @@ namespace Nektar
                     {
                         
                         LocalRegions::Expansion0DSharedPtr vertExp =
-                            boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion0D>(elmtToTrace[i][v]);
+                            elmtToTrace[i][v]->as<LocalRegions::Expansion0D>();
 
                         if(vertExp->GetLeftAdjacentElementExp()->GetGeom()->GetGlobalID() != (*m_exp)[i]->GetGeom()->GetGlobalID())
                         {

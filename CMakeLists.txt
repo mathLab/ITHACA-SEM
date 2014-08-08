@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.4)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
 SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build,
 options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
 RelWithDebInfo MinSizeRel.")
@@ -158,12 +158,15 @@ INCLUDE (NektarCommon)
 # Find Libraries
 SET(TPURL http://www.nektar.info/thirdparty)
 SET(TPSRC ${CMAKE_SOURCE_DIR}/ThirdParty)
+SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
+SET(TPDIST ${CMAKE_INSTALL_PREFIX})
 IF (NOT EXISTS ${TPSRC})
     FILE(MAKE_DIRECTORY ${TPSRC})
 ENDIF ()
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
+INCLUDE (ThirdPartyScotch)
 INCLUDE (ThirdPartyBoost)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyFFTW)
@@ -300,6 +303,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindScotch.cmake
 	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake

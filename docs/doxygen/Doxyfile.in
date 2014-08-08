@@ -753,7 +753,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = @CMAKE_SOURCE_DIR@/docs/html/doxygen/ \
+INPUT                  = @CMAKE_SOURCE_DIR@/docs/doxygen/ \
                          @CMAKE_SOURCE_DIR@/library/LibUtilities/ \
                          @CMAKE_SOURCE_DIR@/library/StdRegions/ \
                          @CMAKE_SOURCE_DIR@/library/SpatialDomains/ \
@@ -879,7 +879,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = @CMAKE_SOURCE_DIR@/docs/html/doxygen/images/
+IMAGE_PATH             = @CMAKE_SOURCE_DIR@/docs/doxygen/images/
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program

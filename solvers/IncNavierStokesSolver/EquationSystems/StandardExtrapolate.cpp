@@ -49,9 +49,10 @@ namespace Nektar
     StandardExtrapolate::StandardExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
+        MultiRegions::ExpListSharedPtr pPressure,
         const Array<OneD, int> pVel,
         const AdvectionTermSharedPtr advObject)
-        : Extrapolate(pSession,pFields,pVel,advObject)
+        : Extrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
     }
 
@@ -67,7 +68,7 @@ namespace Nektar
      * Acceleration term is also computed.
      * This routine is a general one for 2d and 3D application and it can be called
      * directly from velocity correction scheme. Specialisation on dimensionality is
-     * redirected to the CalcPressureBCs method.
+     * redirected to the CalcNeumannPressureBCs method.
      */
     void StandardExtrapolate::v_EvaluatePressureBCs(
         const Array<OneD, const Array<OneD, NekDouble> > &fields,
@@ -83,7 +84,7 @@ namespace Nektar
             
             // Calculate non-linear and viscous BCs at current level
             // and put in m_pressureHBCs[0]
-            CalcPressureBCs(fields,N,kinvis);
+            CalcNeumannPressureBCs(fields,N,kinvis);
             
             // calculate (phi,du/dt) and level n which will then be
             // extrpolated.
@@ -94,6 +95,8 @@ namespace Nektar
             
             // Copy m_pressureHBCs to m_PbndExp
             CopyPressureHBCsToPbndExp();            
+
+            CalcOutflowBCs(fields, N, kinvis);
         }
     }
 

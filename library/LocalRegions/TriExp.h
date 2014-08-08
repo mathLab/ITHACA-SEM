@@ -253,6 +253,10 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray,
                               Array<OneD,       NekDouble> &wsp);
+            LOCAL_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                            int   numMin,
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,NekDouble> &outarray);
 
             LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
 

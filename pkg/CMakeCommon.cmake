@@ -24,7 +24,7 @@ function (find_bin_files PKG_INSTALL_BINS PKG_INSTALL_BINS_FILES)
     foreach(b ${PKG_INSTALL_BINS})
         get_target_property(TARGET_LOCATION ${b} LOCATION)
         if (NOT TARGET_LOCATION)
-            message(FATAL_ERROR "Target '${l}' could not be found.")
+            message(FATAL_ERROR "Target '${b}' could not be found.")
         endif ()
         list(APPEND PKG_INSTALL_BINS_FILES ${TARGET_LOCATION})
         list(APPEND PKG_INSTALL_BINS_FILES 

@@ -79,7 +79,7 @@ if (DPKG)
  various 1D, 2D and 3D regions."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-stdregions_LIBS}")
-    set(NEK_DEP "${NEK_DEP} libnektar++-stdregions (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-stdregions (= ${NEKTAR_VERSION})")
 
     add_deb_package(
         NAME libnektar++-spatialdomains
@@ -89,7 +89,7 @@ if (DPKG)
  regions in the domain."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-spatialdomains_LIBS}")
-    set(NEK_DEP "${NEK_DEP} libnektar++-spatialdomains (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-spatialdomains (= ${NEKTAR_VERSION})")
 
     add_deb_package(
         NAME libnektar++-localregions
@@ -99,7 +99,7 @@ if (DPKG)
  regions."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-localregions_LIBS}")
-    set(NEK_DEP "${NEK_DEP} libnektar++-localregions (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-localregions (= ${NEKTAR_VERSION})")
 
     add_deb_package(
         NAME libnektar++-multiregions
@@ -108,7 +108,7 @@ if (DPKG)
  This library provides global expansions on multi-element domains."
         DEPENDS "${NEK_DEP}"
         INSTALL_LIBS "${libnektar++-multiregions_LIBS}")
-    set(NEK_DEP "${NEK_DEP} libnektar++-multiregions (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-multiregions (= ${NEKTAR_VERSION})")
 
     add_deb_package(
         NAME libnektar++-solverutils
@@ -118,7 +118,7 @@ if (DPKG)
  spectral/hp element solvers."
         DEPENDS ${NEK_DEP}
         INSTALL_LIBS "${libnektar++-solverutils_LIBS}")
-    set(NEK_DEP "${NEK_DEP} libnektar++-solverutils (= ${NEKTAR_VERSION})")
+    set(NEK_DEP "${NEK_DEP}, libnektar++-solverutils (= ${NEKTAR_VERSION})")
 
     add_deb_package(
         NAME nektar++-incnavierstokes-solver

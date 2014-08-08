@@ -353,6 +353,59 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * The operation is evaluated locally for every element by the function
+         * StdRegions#StdExpansion#IProductWRTDerivBase.
+         *
+         * @param   inarray         An array of arrays of size \f$Q_{\mathrm{tot}}\f$
+         *                          containing the values of the function
+         *                          \f$f(\boldsymbol{x})\f$ at the quadrature
+         *                          points \f$\boldsymbol{x}_i\f$ in dir directions.
+         * @param   outarray        An array of size \f$N_{\mathrm{eof}}\f$
+         *                          used to store the result.
+         */
+        void ExpList::IProductWRTDerivBase(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                                           Array<OneD, NekDouble> &outarray)
+        {
+            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+            switch(inarray.num_elements())
+            {
+            case 1:
+                for (int i = 0; i < m_collections.size(); ++i)
+                {
+                    m_collections[i].ApplyOperator(
+                                                   Collections::eIProductWRTDerivBase,
+                                                   inarray[0] + m_coll_phys_offset[i],
+                                                   tmp0 = outarray + m_coll_coeff_offset[i]);
+                }
+                break;
+            case 2:
+                for (int i = 0; i < m_collections.size(); ++i)
+                {
+                    m_collections[i].ApplyOperator(
+                                                   Collections::eIProductWRTDerivBase,
+                                                   inarray[0] + m_coll_phys_offset[i],
+                                                   tmp0 = inarray[1] + m_coll_phys_offset[i],
+                                                   tmp1 = outarray + m_coll_coeff_offset[i]);
+                }
+                break;
+            case 3:
+                for (int i = 0; i < m_collections.size(); ++i)
+                {
+                    m_collections[i].ApplyOperator(
+                                                   Collections::eIProductWRTDerivBase,
+                                                   inarray[0] + m_coll_phys_offset[i],
+                                                   tmp0 = inarray[1] + m_coll_phys_offset[i],
+                                                   tmp1 = inarray[2] + m_coll_phys_offset[i],
+                                                   tmp2 = outarray + m_coll_coeff_offset[i]);
+                }
+                break;
+            default:
+                ASSERTL0(false,"Dimension of inarray not correct");
+                break;
+            }
+        }
         /**
          * Given a function \f$f(\boldsymbol{x})\f$ evaluated at
          * the quadrature points, this function calculates the

@@ -154,6 +154,75 @@ namespace Nektar
                                     IProductWRTBase_SumFac_Seg::create, "IProductWRTBase_SumFac_Seg");
 
 
+        /*
+         * ----------------------------------------------------------
+         * PhysDeriv operators
+         * ----------------------------------------------------------
+         */       
+        class PhysDeriv_SumFac_Seg : public Operator
+        {
+        public:
+            PhysDeriv_SumFac_Seg(StdRegions::StdExpansionSharedPtr pExp,
+                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                  CoalescedGeomDataSharedPtr GeomData)
+                : Operator (pExp, pGeom, GeomData),
+                  m_nquad0 (pExp->GetNumPoints(0))
+            {
+                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                m_coordim = pExp->GetCoordim();
+
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+
+                m_Deriv0 = &((pExp->GetBasis(0)->GetD())->GetPtr())[0];
+                m_wspSize = m_nquad0*m_numElmt;
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output0,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                const int nqcol   = m_nquad0*m_numElmt;
+                
+                ASSERTL1(wsp.num_elements() == m_wspSize,
+                         "Incorrect workspace size");
+                ASSERTL1(input.num_elements() >= nqcol,
+                         "Incorrect input size");
+                
+                Array<OneD, NekDouble> diff0(nqcol, wsp);
+                
+                Blas::Dgemm('N', 'N', m_nquad0, m_numElmt, 
+                            m_nquad0, 1.0, m_Deriv0, m_nquad0, 
+                            input.get(), m_nquad0, 0.0,
+                            diff0.get(), m_nquad0);
+                
+                Vmath::Vmul  (nqcol, m_derivFac[0], 1, diff0, 1, output0, 1);
+                
+                if (m_coordim == 2)
+                {
+                    Vmath::Vmul  (nqcol, m_derivFac[1], 1, diff0, 1, output1, 1);
+                }
+                else if (m_coordim == 3)
+                {
+                    Vmath::Vmul  (nqcol, m_derivFac[1], 1, diff0, 1, output1, 1);
+                    Vmath::Vmul  (nqcol, m_derivFac[2], 1, diff0, 1, output2, 1);
+                }
+            }
+            
+            OPERATOR_CREATE(PhysDeriv_SumFac_Seg)
+            
+            protected:
+            int m_coordim;
+            const int m_nquad0;
+            Array<TwoD, const NekDouble> m_derivFac;
+            NekDouble *m_Deriv0;
+        };
+        
+        OperatorKey PhysDeriv_SumFac_Seg::m_type = GetOperatorFactory().
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eSegment,
+                                                ePhysDeriv, eSumFac),
+                     PhysDeriv_SumFac_Seg::create, "PhysDeriv_SumFac_Seg");
 
 
 

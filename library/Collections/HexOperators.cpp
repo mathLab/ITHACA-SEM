@@ -378,5 +378,109 @@ namespace Nektar
         OperatorKey IProductWRTBase_SumFac_Hex::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eSumFac),
                                     IProductWRTBase_SumFac_Hex::create, "IProductWRTBase_SumFac_Hex");
+
+        /*
+         * ----------------------------------------------------------
+         * PhysDeriv operators
+         * ----------------------------------------------------------
+         */
+        
+        class PhysDeriv_SumFac : public Operator
+        {
+        public:
+            PhysDeriv_SumFac(StdRegions::StdExpansionSharedPtr pExp,
+                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                 CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pExp, pGeom, GeomData),
+                  m_nquad0  (pExp->GetNumPoints(0)),
+                  m_nquad1  (pExp->GetNumPoints(1)),
+                  m_nquad2  (pExp->GetNumPoints(2))
+            {
+                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+
+                m_dim = PtsKey.size();
+                m_coordim = m_stdExp->GetCoordim();
+
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+
+                m_Deriv0 = &((pExp->GetBasis(0)->GetD())->GetPtr())[0];
+                m_Deriv1 = &((pExp->GetBasis(1)->GetD())->GetPtr())[0];
+                m_Deriv2 = &((pExp->GetBasis(2)->GetD())->GetPtr())[0];
+
+                m_wspSize = 3*m_nquad0*m_nquad1*m_nquad2*m_numElmt;
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output0,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                int nPhys = m_stdExp->GetTotPoints();
+                int ntot = m_numElmt*nPhys;
+                Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+                Array<OneD, Array<OneD, NekDouble> > Diff(3);
+                Array<OneD, Array<OneD, NekDouble> > out(3);
+                out[0] = output0;  out[1] = output1;    out[2] = output2;
+
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    Diff[i] = wsp + i*ntot;
+                }
+
+                Blas::Dgemm('N','N', m_nquad0,m_nquad1*m_nquad2*m_numElmt,
+                            m_nquad0,1.0, m_Deriv0,m_nquad0,&input[0],
+                            m_nquad0,0.0,&Diff[0][0],m_nquad0);
+                
+                for(int  i = 0; i < m_numElmt; ++i)
+                {
+                    for (int j = 0; j < m_nquad2; ++j)
+                    {
+                        Blas::Dgemm('N', 'T', m_nquad0, m_nquad1, m_nquad1,
+                                    1.0, &input[i*nPhys+j*m_nquad0*m_nquad1],
+                                    m_nquad0, m_Deriv1, m_nquad1, 0.0, 
+                                    &Diff[1][i*nPhys+j*m_nquad0*m_nquad1],
+                                    m_nquad0);
+                    }
+                }
+
+                for(int  i = 0; i < m_numElmt; ++i)
+                {
+                    Blas::Dgemm('N','T',m_nquad0*m_nquad1,m_nquad2,m_nquad2,
+                                1.0, &input[i*nPhys],m_nquad0*m_nquad1,
+                                m_Deriv2,m_nquad2, 0.0,&Diff[2][i*nPhys],
+                                m_nquad0*m_nquad1);
+                }
+
+                // calculate full derivative 
+                for(int i = 0; i < m_coordim; ++i)
+                {
+                    Vmath::Zero(ntot,out[i],1);
+                    for(int j = 0; j < m_dim; ++j)
+                    {
+                        Vmath::Vvtvp (ntot,m_derivFac[i*m_dim+j],1,Diff[j],1, out[i], 1, out[i],1);
+                    }
+                }
+            }
+            
+            OPERATOR_CREATE(PhysDeriv_SumFac)
+
+            Array<TwoD, const NekDouble> m_derivFac;
+            int m_dim;
+            int m_coordim;
+            const int m_nquad0;
+            const int m_nquad1;
+            const int m_nquad2;
+            NekDouble *m_Deriv0;
+            NekDouble *m_Deriv1;
+            NekDouble *m_Deriv2;
+        };
+
+        OperatorKey PhysDeriv_SumFac::m_typeArr[] =
+        {
+            GetOperatorFactory().RegisterCreatorFunction(
+                OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eSumFac),
+                PhysDeriv_SumFac::create, "PhysDeriv_SumFac_Hex")
+        };
     }
 }

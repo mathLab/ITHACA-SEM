@@ -207,5 +207,131 @@ namespace Nektar
         OperatorKey IProductWRTBase_SumFac_Tri::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eSumFac),IProductWRTBase_SumFac_Tri::create, "IProductWRTBase_SumFac_Tri");
 
+        /*
+         * ----------------------------------------------------------
+         * PhysDeriv operators
+         * ----------------------------------------------------------
+         */       
+        class PhysDeriv_SumFac_Tri : public Operator
+        {
+        public:
+            PhysDeriv_SumFac_Tri(StdRegions::StdExpansionSharedPtr pExp,
+                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                  CoalescedGeomDataSharedPtr GeomData)
+                : Operator (pExp, pGeom, GeomData),
+                  m_nquad0 (pExp->GetNumPoints(0)),
+                  m_nquad1 (pExp->GetNumPoints(1))
+            {
+                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                m_coordim = pExp->GetCoordim();
+
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+
+                const Array<OneD, const NekDouble>& z0 = pExp->GetBasis(0)->GetZ();
+                const Array<OneD, const NekDouble>& z1 = pExp->GetBasis(1)->GetZ();
+                
+                m_fac0 = Array<OneD, NekDouble>(m_nquad0*m_nquad1);
+                // set up geometric factor: 0.5*(1+z0)
+                for (int i = 0; i < m_nquad0; ++i)
+                {
+                    for(int j = 0; j < m_nquad1; ++j)
+                    {
+                        m_fac0[i+j*m_nquad0] = 0.5*(1+z0[i]);
+                    }
+                }
+
+                m_fac1 = Array<OneD, NekDouble>(m_nquad0*m_nquad1);
+                // set up geometric factor: 2/(1-z1)
+                for (int i = 0; i < m_nquad0; ++i)
+                {
+                    for(int j = 0; j < m_nquad1; ++j)
+                    {
+                        m_fac1[i+j*m_nquad0] = 2.0/(1-z1[j]);
+                    }
+                }
+
+                
+                m_Deriv0 = &((pExp->GetBasis(0)->GetD())->GetPtr())[0];
+                m_Deriv1 = &((pExp->GetBasis(1)->GetD())->GetPtr())[0];
+                m_wspSize = 2 * m_nquad0*m_nquad1*m_numElmt;
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output0,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                const int nqtot   = m_nquad0 * m_nquad1;
+                const int nqcol   = nqtot*m_numElmt;
+                
+                ASSERTL1(wsp.num_elements() == m_wspSize,
+                         "Incorrect workspace size");
+                ASSERTL1(input.num_elements() >= nqcol,
+                         "Incorrect input size");
+                
+                Array<OneD, NekDouble> diff0(nqcol, wsp             );
+                Array<OneD, NekDouble> diff1(nqcol, wsp    +   nqcol);
+                
+                // Tensor Product Derivative 
+                Blas::Dgemm('N', 'N', m_nquad0, m_nquad1*m_numElmt, 
+                            m_nquad0, 1.0, m_Deriv0, m_nquad0, 
+                            input.get(), m_nquad0, 0.0,
+                            diff0.get(), m_nquad0);
+                
+                int cnt = 0;
+                for (int i = 0; i < m_numElmt; ++i, cnt += nqtot)
+                {
+                    // scale diff0 by geometric factor: 2/(1-z1)
+                    Vmath::Vmul(nqtot,&m_fac1[0],1,diff0.get()+cnt,1,
+                                diff0.get()+cnt,1);
+                    
+                    Blas::Dgemm('N', 'T', m_nquad0, m_nquad1, m_nquad1, 1.0,
+                                input.get() + cnt, m_nquad0, 
+                                m_Deriv1, m_nquad1, 0.0,
+                                diff1.get() + cnt, m_nquad0);
+
+                    // add to diff1 by diff0 scaled by: (1_z0)/(1-z1)
+                    Vmath::Vvtvp(nqtot,m_fac0.get(),1,diff0.get()+cnt,1,
+                                 diff1.get()+cnt,1,diff1.get()+cnt,1);
+                }
+
+                
+                Vmath::Vmul  (nqcol, m_derivFac[0], 1, diff0, 1, output0, 1);
+                Vmath::Vvtvp (nqcol, m_derivFac[1], 1, diff1, 1, 
+                              output0, 1, output0, 1);
+                Vmath::Vmul  (nqcol, m_derivFac[2], 1, diff0, 1, output1, 1);
+                Vmath::Vvtvp (nqcol, m_derivFac[3], 1, diff1, 1, 
+                              output1, 1, output1, 1);
+                
+                if (m_coordim == 3)
+                {
+                    Vmath::Vmul  (nqcol, m_derivFac[4], 1, diff0, 1, 
+                                  output2, 1);
+                    Vmath::Vvtvp (nqcol, m_derivFac[5], 1, diff1, 1, 
+                                  output2, 1, output2, 1);
+                }
+            }
+            
+            OPERATOR_CREATE(PhysDeriv_SumFac_Tri)
+            
+            protected:
+            int m_coordim;
+            const int m_nquad0;
+            const int m_nquad1;
+            Array<TwoD, const NekDouble> m_derivFac;
+            NekDouble *m_Deriv0;
+            NekDouble *m_Deriv1;
+            Array<OneD, NekDouble> m_fac0;
+            Array<OneD, NekDouble> m_fac1;
+        };
+        
+        OperatorKey PhysDeriv_SumFac_Tri::m_type = GetOperatorFactory().
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eTriangle, 
+                                                ePhysDeriv, eSumFac),
+                    PhysDeriv_SumFac_Tri::create, "PhysDeriv_SumFac_Tri");
+
+
+
     }
 }

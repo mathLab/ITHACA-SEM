@@ -290,11 +290,7 @@ namespace Nektar {
                 nqtot *= PtsKey[i].GetNumPoints();
             }
             
-#if 1
             m_jac = GeomData->GetJacWithStdWeights(pExp,pGeom);
-#else
-            m_jac = GeomData->GetJac(pExp,pGeom);
-#endif      
             
             m_wspSize = nqtot*m_numElmt;
         }
@@ -552,8 +548,284 @@ namespace Nektar {
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eStdMat),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Hex")
-    };
+            };
 
+        
+        
+        class IProductWRTDerivBase_IterPerExp : public Operator
+        {
+        public:
+            IProductWRTDerivBase_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
+                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                 CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pExp, pGeom, GeomData)
+            {
+                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                m_dim = PtsKey.size();
+                m_coordim = m_stdExp->GetCoordim();
+                
+                int nqtot  = pExp->GetTotPoints(); 
 
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_jac = GeomData->GetJac(pExp,pGeom);
+                m_wspSize = m_dim*nqtot*m_numElmt;
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &entry0,
+                                    Array<OneD, NekDouble> &entry1,
+                                    Array<OneD, NekDouble> &entry2,
+                                    Array<OneD, NekDouble> &entry3,
+                                    Array<OneD, NekDouble> &wsp)
+            {
+                int nPhys = m_stdExp->GetTotPoints();
+                int ntot = m_numElmt*nPhys;
+                int nmodes = m_stdExp->GetNcoeffs();
+                Array<OneD, Array<OneD, const NekDouble> > in(3);
+                Array<OneD, NekDouble> output;
+                Array<OneD, Array<OneD, NekDouble> > tmp(3);
+
+                in[0] = entry0; in[1] = entry1; in[2] = entry2; 
+
+                switch(m_coordim)
+                {
+                case 1:
+                    output = entry1;
+                    break;
+                case 2:
+                    output = entry2;
+                    break;
+                case 3:
+                    output = entry3;
+                    break;
+                default:
+                    break;
+                }
+
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    tmp[i] = wsp + i*ntot; 
+                }
+                
+                // calculate dx/dxi in[0] + dy/dxi in[2] + dz/dxi in[3]
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, 
+                                 tmp[i],1);
+                    for(int j = 1; j < m_coordim; ++j)
+                    {
+                        Vmath::Vvtvp (ntot,m_derivFac[i +j*m_dim],1,
+                                      in[j],1, tmp[i], 1, tmp[i],1);
+                    }
+                }
+
+                Vmath::Zero(nmodes*m_numElmt,output,1);
+                Array<OneD, NekDouble> tmp1(nmodes);
+                // calculate Iproduct WRT Std Deriv
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    // multiply by Jacobian
+                    Vmath::Vmul(m_numElmt*nPhys,m_jac,1,tmp[i],1,tmp[i],1);
+                    for(int n = 0; n < m_numElmt; ++n)
+                    {
+                        m_stdExp->IProductWRTDerivBase(i,tmp[i]+n*nPhys,tmp1);
+                        Vmath::Vadd(nmodes,&tmp1[0],1,&output[n*nmodes],1,
+                                    &output[n*nmodes],1);
+                    }
+                }
+            }
+            
+            OPERATOR_CREATE(IProductWRTDerivBase_IterPerExp)
+
+            Array<TwoD, const NekDouble>  m_derivFac;
+            Array<OneD, const NekDouble> m_jac;
+            int m_dim;
+            int m_coordim;
+        };
+
+        OperatorKey IProductWRTDerivBase_IterPerExp::m_typeArr[] =
+            {
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eSegment, 
+                                  eIProductWRTDerivBase, eIterPerExp),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_Seg"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, 
+                                  eIProductWRTDerivBase, eIterPerExp),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_Tri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eQuadrilateral, 
+                                  eIProductWRTDerivBase, eIterPerExp),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_Quad"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, 
+                                  eIProductWRTDerivBase, eIterPerExp),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_Tet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePyramid, 
+                                  eIProductWRTDerivBase, eIterPerExp),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, 
+                                  eIProductWRTDerivBase, eIterPerExp),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_Prism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eHexahedron, 
+                                  eIProductWRTDerivBase, eIterPerExp),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_Hex")
+            };
+        
+        class IProductWRTDerivBase_StdMat : public Operator
+        {
+        public:
+            IProductWRTDerivBase_StdMat(StdRegions::StdExpansionSharedPtr pExp,
+                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                 CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pExp, pGeom, GeomData)
+            {
+                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                m_dim = PtsKey.size();
+                m_coordim = m_stdExp->GetCoordim();
+                
+                int nqtot  = pExp->GetTotPoints(); 
+                int nmodes = pExp->GetNcoeffs(); 
+
+                // set up a IProductWRTDerivBase StdMat. 
+                m_iProdWRTStdDBase = Array<OneD, DNekMatSharedPtr>(m_dim);
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    Array<OneD, NekDouble> tmp(nqtot),tmp1(nmodes);
+                    m_iProdWRTStdDBase[i] = MemoryManager<DNekMat>::AllocateSharedPtr(nmodes,nqtot);
+                    for(int j = 0; j < nqtot; ++j)
+                    {
+                        Vmath::Zero(nqtot,tmp,1);
+                        tmp[j] = 1.0;
+                        m_stdExp->IProductWRTDerivBase(i,tmp,tmp1);
+                        Vmath::Vcopy(nmodes,&tmp1[0],1,
+                                     &(m_iProdWRTStdDBase[i]->GetPtr())[0]+j*nmodes,1);
+                    }
+                }
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_jac      = GeomData->GetJac(pExp,pGeom);
+                m_wspSize = m_dim*nqtot*m_numElmt;
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &entry0,
+                                    Array<OneD,       NekDouble> &entry1,
+                                    Array<OneD,       NekDouble> &entry2,
+                                    Array<OneD,       NekDouble> &entry3,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                int nPhys = m_stdExp->GetTotPoints();
+                int ntot = m_numElmt*nPhys;
+                int nmodes = m_stdExp->GetNcoeffs();
+                Array<OneD, Array<OneD, const NekDouble> > in(4);
+                Array<OneD, NekDouble> output;
+                Array<OneD, Array<OneD, NekDouble> > tmp(3);
+
+                in[0] = entry0; in[1] = entry1; 
+                in[2] = entry2; in[3] = entry3;
+
+                switch(m_coordim)
+                {
+                case 1:
+                    output = entry1;
+                    break;
+                case 2:
+                    output = entry2;
+                    break;
+                case 3:
+                    output = entry3;
+                    break;
+                default:
+                    break;
+                }
+                
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    tmp[i] = wsp + i*ntot; 
+                }
+                
+                // calculate dx/dxi in[0] + dy/dxi in[2] + dz/dxi in[3]
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, 
+                                 tmp[i],1);
+                    for(int j = 1; j < m_coordim; ++j)
+                    {
+                        Vmath::Vvtvp (ntot,m_derivFac[i +j*m_dim],1,
+                                      in[j],1, tmp[i], 1, tmp[i],1);
+                    }
+                }
+
+                Vmath::Zero(nmodes*m_numElmt,output,1);
+                // calculate Iproduct WRT Std Deriv
+                for(int i = 0; i < m_dim; ++i)
+                {
+                    Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
+                    Blas::Dgemm('N', 'N', m_iProdWRTStdDBase[i]->GetRows(), 
+                               m_numElmt,m_iProdWRTStdDBase[i]->GetColumns(), 
+                               1.0, m_iProdWRTStdDBase[i]->GetRawPtr(),
+                               m_iProdWRTStdDBase[i]->GetRows(), 
+                               tmp[i].get(), nPhys, 1.0,
+                               output.get(), nmodes);
+                }
+            }
+            
+            OPERATOR_CREATE(IProductWRTDerivBase_StdMat)
+
+            Array<OneD, DNekMatSharedPtr> m_iProdWRTStdDBase;
+            Array<TwoD, const NekDouble>  m_derivFac;
+            Array<OneD, const NekDouble>  m_jac;
+            int m_dim;
+            int m_coordim;
+        };
+
+        OperatorKey IProductWRTDerivBase_StdMat::m_typeArr[] =
+            {
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eSegment, 
+                                  eIProductWRTDerivBase, eStdMat),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_Seg"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, 
+                                  eIProductWRTDerivBase, eStdMat),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_Tri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eQuadrilateral, 
+                                  eIProductWRTDerivBase, eStdMat),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_Quad"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, 
+                                  eIProductWRTDerivBase, eStdMat),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_Tet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePyramid, 
+                                  eIProductWRTDerivBase, eStdMat),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, 
+                                  eIProductWRTDerivBase, eStdMat),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_Prism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eHexahedron, 
+                                  eIProductWRTDerivBase, eStdMat),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_Hex")
+            };
+        
+       
     }
 }

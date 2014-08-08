@@ -4,7 +4,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ExpList2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 
 #include <Collections/Collection.h>
@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
         = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    MultiRegions::ContField2DSharedPtr Exp;
+    MultiRegions::ExpList2DSharedPtr Exp;
 
     int Ntest = 100;
     if(argc < 2)
@@ -29,12 +29,12 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraphSharedPtr graph2D = 
         SpatialDomains::MeshGraph::Read(vSession);
 
-    Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(vSession,graph2D,vSession->GetVariable(0));
+    Exp = MemoryManager<MultiRegions::ExpList2D>::
+        AllocateSharedPtr(vSession,graph2D);
 
     int nelmt = Exp->GetNumElmts();
 
-    for(int imp = 0; imp < 3; ++imp)
+    for(int imp = 0; imp < 2; ++imp)
     {
 
         // set up different collection implementations:
@@ -186,6 +186,58 @@ int main(int argc, char *argv[])
             cout << "\t Ratio: " << (orig/col) << endl;
             
         }
+
+        // IProductWRTDerivBase Comparison 
+        {
+            cout << "IProductWRTDerivBase Op: Ntest = " << Ntest << endl;
+            
+            const int nq = Exp->GetNpoints();
+            const int nc = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq), yc(nq), tmp,tmp1;
+            Array<OneD, NekDouble> input1(nq), input2(nq), output1(nc), output2(nc);
+            Array<OneD, Array<OneD, NekDouble> > input(2);
+
+            input[0] = input1; input[1] = input2;
+            
+            Exp->GetCoords(xc, yc);
+            for (int i = 0; i < nq; ++i)
+            {
+                input1[i] = sin(xc[i])*cos(yc[i]);
+                input2[i] = cos(xc[i])*sin(yc[i]);
+            }
+            
+            Timer t;
+            t.Start();
+            for (int i = 0; i < Ntest; ++i)
+            {
+                // Do test by calling every element in loop 
+                for(int j = 0; j < nelmt; ++j)
+                {
+                    Exp->GetExp(j)->IProductWRTDerivBase(0,input1 + Exp->GetPhys_Offset(j), 
+                                                    tmp  = output1 + Exp->GetCoeff_Offset(j));
+                    Exp->GetExp(j)->IProductWRTDerivBase(1,input2 + Exp->GetPhys_Offset(j), 
+                                                         tmp  = output2 + Exp->GetCoeff_Offset(j));
+                }
+                Vmath::Vadd(nc,output1,1,output2,1,output1,1);
+            }
+            t.Stop();
+            NekDouble orig = t.TimePerTest(Ntest);
+            cout << "\t ExpList: " << orig << endl; 
+            t.Start();
+            for (int i = 0; i < Ntest; ++i)
+            {
+                Exp->IProductWRTDerivBase(input, output2);
+            }
+            t.Stop();
+            NekDouble col = t.TimePerTest(Ntest);
+            cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
+            Vmath::Vsub(nc, output1, 1, output2, 1, output1, 1);
+            cout << "\t Difference: " << Vmath::Vmax(nc, output1, 1) << endl;
+            cout << "\t Ratio: " << (orig/col) << endl;
+            
+        }
+
+
     }
     vSession->Finalise();
 

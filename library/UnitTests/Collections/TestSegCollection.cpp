@@ -660,5 +660,63 @@ namespace Nektar
             }
         }
 
+        BOOST_AUTO_TEST_CASE(TestSegPhysDeriv_SumFac_UniformP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            
+            SpatialDomains::SegGeomSharedPtr segGeom = CreateSegGeom(0, v0, v1);
+            
+            Nektar::LibUtilities::PointsType segPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey segPointsKeyDir1(5, segPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,segPointsKeyDir1);
+
+            Nektar::LocalRegions::SegExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
+                                                                               segGeom);
+
+            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
+
+            int nelmts = 10;
+            
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(segGeom);
+            }
+
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+
+            const int nq = Exp->GetTotPoints();
+            Array<OneD, NekDouble> xc(nq), yc(nq);
+            Array<OneD, NekDouble> phys(nelmts*nq),tmp;
+            Array<OneD, NekDouble> diff1(nelmts*nq);
+            Array<OneD, NekDouble> diff2(nelmts*nq);
+            
+            Exp->GetCoords(xc, yc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys[i] = sin(xc[i])*cos(yc[i]);
+            }
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys,1,tmp = phys+i*nq,1);
+                Exp->PhysDeriv(phys, tmp = diff1+i*nq);
+            }
+
+            c.ApplyOperator(Collections::ePhysDeriv, phys, diff2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < diff1.num_elements(); ++i)
+            {
+                diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+                diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
+                BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
+            }
+        }
+
     }
 }

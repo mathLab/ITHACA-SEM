@@ -87,6 +87,11 @@ namespace Nektar
                 m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
                 m_periodicVerts, m_periodicEdges, m_periodicFaces,
                 CheckIfSingularSystem, variable);
+
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_locToGloMap->PrintStats(std::cout, variable);
+            }
         }
 
 
@@ -130,6 +135,11 @@ namespace Nektar
                     m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
                     m_periodicVerts, m_periodicEdges, m_periodicFaces,
                     CheckIfSingularSystem,variable);
+
+                if (m_session->DefinesCmdLineArgument("verbose"))
+                {
+                    m_locToGloMap->PrintStats(std::cout, variable);
+                }
             }
             else
             {

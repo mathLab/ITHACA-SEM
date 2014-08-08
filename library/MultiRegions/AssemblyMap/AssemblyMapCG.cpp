@@ -751,7 +751,5 @@ namespace Nektar
         {
             return m_extraDirEdges;
         }
-
-
     } // namespace
 } // namespace

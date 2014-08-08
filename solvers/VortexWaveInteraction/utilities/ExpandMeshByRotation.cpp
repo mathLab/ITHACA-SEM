@@ -43,7 +43,7 @@
 #include <sstream>
 #include <map>
 #include <iomanip>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 using namespace std;
 using namespace Nektar;

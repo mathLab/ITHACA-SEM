@@ -11,8 +11,12 @@ ADD_CUSTOM_TARGET(user-guide-html
 )
 
 FIND_PROGRAM(PDFLATEX pdflatex)
+FIND_PROGRAM(BIBTEX bibtex)
+FIND_PROGRAM(MAKEINDEX makeindex)
 ADD_CUSTOM_TARGET(user-guide-pdf
     ${PDFLATEX} --output-directory ${USERGUIDE} ${USERGUIDESRC}/user-guide.tex
+    COMMAND TEXMFOUTPUT=${USERGUIDE} ${BIBTEX} ${USERGUIDE}/user-guide.aux
+    COMMAND TEXMFOUTPUT=${USERGUIDE} ${MAKEINDEX} ${USERGUIDE}/user-guide.idx
     COMMAND ${PDFLATEX} --output-directory ${USERGUIDE}
         ${USERGUIDESRC}/user-guide.tex
     WORKING_DIRECTORY ${USERGUIDESRC}

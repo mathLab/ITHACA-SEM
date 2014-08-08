@@ -152,6 +152,7 @@ openany, % A chapter may start on either a recto or verso page.
 %%%-----------------------------------------------------------------------------
 \usepackage{xcolor}
 \usepackage{listings} % Display code / shell commands
+\usepackage{xspace}
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
   language=bash,
@@ -186,7 +187,7 @@ openany, % A chapter may start on either a recto or verso page.
 }
 \lstdefinestyle{XMLStyle}{
   language=XML,
-  basicstyle=\sffamily\footnotesize,
+  basicstyle=\ttfamily\footnotesize,
   numbers=left,
   numberstyle=\tiny,
   numbersep=3pt,
@@ -194,9 +195,13 @@ openany, % A chapter may start on either a recto or verso page.
   columns=fullflexible,
   backgroundcolor=\color{black!05},
   linewidth=0.9\linewidth,
-  xleftmargin=0.1\linewidth
+  xleftmargin=0.1\linewidth,
+  keepspaces=true
 }
 
+\usepackage{tikz}
+\newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,rounded corners,outer sep=0,draw=black!30,fill=black!10]{\texttt{#1}};}
+\newcommand{\nekpp}{{\em Nektar++}\xspace}
 
 %%% TABLE OF CONTENTS AND INDEX
 %%%-----------------------------------------------------------------------------

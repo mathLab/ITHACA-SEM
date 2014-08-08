@@ -29,6 +29,7 @@ openany, % A chapter may start on either a recto or verso page.
 % \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
 \usepackage{makeidx}
+\usepackage{import}
 
 %%% PAGE LAYOUT 
 %%%-----------------------------------------------------------------------------
@@ -285,29 +286,28 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 
 \clearpage
 
-\chapter{Introduction}
-Welcome to the user guide for Nektar++\cite{nektar-website}.
+\import{introduction/}{introduction}
 
 \mainmatter
 
-\chapter{Installation}
+\part{Getting Started}
 
-\section{Installing on Debian/Ubuntu Systems}
+\import{installation/}{installation}
 
-\section{Installing of Redhat/Fedora Systems}
+\import{formulation/}{formulation}
 
-\section{Installing from Source}
+\part{Applications and Utilities}
 
+\import{solvers/}{solvers}
 
-\chapter{Solvers}
+\import{utilities/}{utilities}
 
+\part{Reference}
+\import{xml/}{xml}
 
-\input{xml/xml}
+\import{command-line/}{command-line}
 
-
-\input{command-line/command-line}
-
-\chapter{Frequently Asked Questions}
+\import{faq/}{faq}
 
 
 %\appendix

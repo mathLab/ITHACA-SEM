@@ -1,49 +1,21 @@
 include (CMakeCommon.cmake)
 
-add_custom_target(pkg)
-
-# LibUtilities
+# Package content lists
 list(APPEND libnektar++-utilities_LIBS LibUtilities)
-
-# StdRegions
 list(APPEND libnektar++-stdregions_LIBS StdRegions)
-
-# SpatialDomains
 list(APPEND libnektar++-spatialdomains_LIBS SpatialDomains)
-
-# LocalRegions
 list(APPEND libnektar++-localregions_LIBS LocalRegions)
-
-# MultiRegions
 list(APPEND libnektar++-multiregions_LIBS MultiRegions)
-
-# SolverUtils
 list(APPEND libnektar++-solverutils_LIBS SolverUtils)
-
-# IncNavierStokesSolver
 list(APPEND nektar++-incnavierstokes-solver_BINS IncNavierStokesSolver)
-
-# CardiacEPSolver
 list(APPEND nektar++-cardiacep-solver_BINS CardiacEPSolver)
-
-# CompressibleFlowSolver
 list(APPEND nektar++-compressibleflow-solver_BINS CompressibleFlowSolver)
-
-# ADRSolver
 list(APPEND nektar++-adr-solver_BINS ADRSolver)
-
-# DiffusionSolver
 list(APPEND nektar++-diffusion-solver_BINS DiffusionSolver 
                                            DiffusionSolverTimeInt)
-
-# ShallowWaterSolver
 list(APPEND nektar++-shallowwater-solver_BINS ShallowWaterSolver)
-
-# Utilities
 list(APPEND nektar++-utilities_BINS MeshConvert FieldConvert FldToVtk
     FldToTecplot XmlToVtk XmlToTecplot ProbeFld)
-
-# Demos
 list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
     Helmholtz3DHomo1D Helmholtz3DHomo2D
     StdProject0D StdProject1D StdProject2D StdProject3D 
@@ -58,20 +30,15 @@ list(APPEND nektar++_LIBS LibUtilities StdRegions SpatialDomains LocalRegions
 list(APPEND nektar++_BINS ADRSolver IncNavierStokesSolver CardiacEPSolver
                           CompressibleFlowSolver DiffusionSolver 
                           DiffusionSolverTimeInt ShallowWaterSolver
-                          ${nektar++-utilities_BINS})
+                          ${nektar++-utilities_BINS}
+                          ${nektar++-demos_BINS})
 
-# Check if we can build debian files
-find_program(DPKG "dpkg")
-mark_as_advanced(DPKG)
-if (DPKG)
-    add_custom_target(pkg-deb)
-    add_dependencies(pkg pkg-deb)
-
-    # add_deb_package macro used to create debian packaging project.
-    # Note that the formatting of the DESCRIPTION field is VERY specific. It
-    # must start with a new line, each line must start with a space, and there
-    # must be NO blank line at the end of the description.
-    if (NEKTAR_BUILD_LIBRARY)
+# add_deb_package macro used to create debian packaging project.
+# Note that the formatting of the DESCRIPTION field is VERY specific. It
+# must start with a new line, each line must start with a space, and there
+# must be NO blank line at the end of the description.
+if (NEKTAR_BUILD_LIBRARY)
+    ### DEBIAN PACKAGES ############################################
     add_deb_package(
         NAME libnektar++-utilities
         SUMMARY "Nektar++ library utilities"
@@ -203,17 +170,15 @@ if (DPKG)
             INSTALL_BINS "${nektar++-utilities_BINS}")
     endif (NEKTAR_BUILD_UTILITIES)
 
-    endif (NEKTAR_BUILD_LIBRARY)
-endif (DPKG)
+    # Top level meta package
+    add_deb_package(
+        NAME nektar++
+        SUMMARY "Nektar++ complete meta package"
+        DESCRIPTION "
+ This meta-package depends on the entire Nektar++ suite."
+        DEPENDS "${NEK_DEP}, nektar++-incnavierstokes-solver (= ${NEKTAR_VERSION}), nektar++-adr-solver (=${NEKTAR_VERSION}), nektar++-cardiacep-solver (=${NEKTAR_VERSION}), nektar++-shallowwater-solver (=${NEKTAR_VERSION}), nektar++-compressibleflow-solver (=${NEKTAR_VERSION}), nektar++-utilities (=${NEKTAR_VERSION})")
 
-
-find_program(RPMBUILD "rpmbuild")
-mark_as_advanced(RPMBUILD)
-if (RPMBUILD)
-    add_custom_target(pkg-rpm)
-    add_dependencies(pkg pkg-rpm)
-
-    if (NEKTAR_BUILD_LIBRARY)
+    ### RPM PACKAGES ###############################################
     add_rpm_package(
         NAME libnektar++-utilities
         SUMMARY "Nektar++ library utilities"
@@ -323,18 +288,20 @@ if (RPMBUILD)
             INSTALL_BINS "${nektar++-utilities_BINS}")
     endif (NEKTAR_BUILD_UTILITIES)
 
-    endif (NEKTAR_BUILD_LIBRARY)
-endif (RPMBUILD)
+    add_rpm_package(
+        NAME nektar++
+        SUMMARY "Nektar++ complete meta package"
+        DESCRIPTION "
+ This meta-package depends on the entire Nektar++ suite."
+        DEPENDS "nektar++-incnavierstokes-solver = ${NEKTAR_VERSION}, nektar++-adr-solver = ${NEKTAR_VERSION}, nektar++-cardiacep-solver = ${NEKTAR_VERSION}, nektar++-shallowwater-solver = ${NEKTAR_VERSION}, nektar++-compressibleflow-solver = ${NEKTAR_VERSION}, nektar++-utilities = ${NEKTAR_VERSION}")
 
-add_custom_target(pkg-tgz)
-add_dependencies(pkg pkg-tgz)
-
-add_tgz_package(
-    NAME nektar++
-    SUMMARY "Nektar++ libraries and solvers"
-    DESCRIPTION "This is all of Nektar++"
-    INSTALL_LIBS "${nektar++_LIBS}"
-)
+    add_tgz_package(
+        NAME nektar++
+        SUMMARY "Nektar++ libraries and solvers"
+        DESCRIPTION "This is all of Nektar++"
+        INSTALL_LIBS "${nektar++_LIBS}"
+    )   
+endif (NEKTAR_BUILD_LIBRARY)
 
 # Configure source package
 add_custom_target(pkg-src

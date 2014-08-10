@@ -9,16 +9,146 @@
 3.4/UserGuide/Examples/IncNavierStokesSolver/KovasznayFlow2D
 3.4/UserGuide/Examples/IncNavierStokesSolver/LaminarChannelFlow2D
 3.4/UserGuide/Examples/IncNavierStokesSolver/LaminarChannelFlow2DLinNS
+
+\newpage
 3.4/UserGuide/Examples/IncNavierStokesSolver/LaminarChannelFlow3D
-
-3.4/UserGuide/Examples/IncNavierStokesSolver/LaminarChannelFlow3DH1D
-
-\subsection{Laminar Channel Flow Quasi-3D}
-
-In this example we reuse the 2D mesh used before for the \hyperref{2D Laminar Channel Flow} example, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the IncNavierStokesSolver using the Velocity Correction Scheme algorithm.
+\subsection{Laminar Channel Flow 3D}
+The following example demonstrates the application of the \textbf{IncNavierStokesSolver  (REF?)} using the \textbf{Velocity Correction Scheme (REF?)} algorithm for modelling 3D laminar channel flow.
 
 \subsubsection{Background}
+The governing equation is the unsteady incompressible Navier-Stokes equation:
+\begin{equation}
+\begin{cases}
+\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
+\nabla \cdot \textbf{u} = 0
+\end{cases}
+\end{equation}
 
+In the following we will numerically solve for the three dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 1.
+
+\subsection{Geometry}
+The geometry under consideration is a 3D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using tetrahedral elements.
+
+\subsection{Input parameters}
+The session file can be found in the tests folder under the IncNavierStokesSolver folder and is named Tet\_channel\_m8\_par.xml.
+
+\paragraph{Expansion:~} In this example we will use a 7th order polynomial expansion (\textit{i.e.} $P=8$).
+\begin{lstlisting}[style=XMLStyle]
+<EXPANSIONS>
+  <E COMPOSITE="C[0]" NUMMODES="8" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+</EXPANSIONS>
+\end{lstlisting}
+
+\paragraph{Solver information:~} These information are given by
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+  <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+  <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+  <I PROPERTY="AdvectionForm" VALUE="Convective" />
+  <I PROPERTY="Projection" VALUE="Galerkin" />
+  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
+</SOLVERINFO>
+\end{lstlisting}
+
+\paragraph{Parameters:~} Setting the mean inlet velocity to 1, allows us to define the kinematic viscosity as $\nu = \frac{UD}{Re}=1$.
+\begin{lstlisting}[style=XMLStyle]
+<PARAMETERS>
+  <P> TimeStep      = 0.001 </P>
+  <P> NumSteps      = 10 </P>
+  <P> IO_CheckSteps = 10    </P>
+  <P> IO_InfoSteps  = 10    </P>
+  <P> Kinvis        = 1   </P>
+  <P> IterativeSolverTolerance = 1e-10 </P>
+</PARAMETERS>
+\end{lstlisting}
+
+\paragraph{Boundary conditions:~} The boundary conditions are defined by
+\begin{lstlisting}[style=XMLStyle]
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>    <!-- Inlet -->
+            <B ID="1"> C[6] </B>    <!-- Outlet -->
+            <B ID="2"> C[2] </B>    <!-- Wall -->
+            <B ID="3"> C[3] </B>    <!-- Wall left -->
+            <B ID="4"> C[4] </B>    <!-- Wall -->
+            <B ID="5"> C[5] </B>    <!-- Wall right -->
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="y*(1-y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <N VAR="u" VALUE="0" />
+                <N VAR="v" VALUE="0" />
+                <N VAR="w" VALUE="0" />
+                <D VAR="p" VALUE="0" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="y*(1-y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="4">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+            <REGION REF="5">
+                <D VAR="u" VALUE="0" />
+                <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="y*(1-y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+\paragraph{Functions:~} The exact solution is known in this case, and is therefore used to calculate the error.
+\begin{lstlisting}[style=XMLStyle]
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="w" VALUE="y*(1-y)" />
+            <E VAR="p" VALUE="-2*Kinvis*(z-1)" />
+        </FUNCTION>
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+            <E VAR="w" VALUE="y*(1-y)" />
+            <E VAR="p" VALUE="-2*Kinvis*(z-1)" />
+        </FUNCTION>
+\end{lstlisting}
+
+\paragraph{Usage:~}
+./IncNaverStokesSolver Tet\_channel\_m8\_par.xml
+
+\subsubsection{Result}
+\begin{figure}
+\includegraphics[width=7cm]{Figures/CF3DP8PR.png}
+\includegraphics[width=7cm]{Figures/CF3DP8.png}
+\end{figure}
+
+
+
+
+
+
+\newpage
+3.4/UserGuide/Examples/IncNavierStokesSolver/LaminarChannelFlow3DH1D
+\subsection{Laminar Channel Flow Quasi-3D}
+In this example we reuse the 2D mesh used before for the \textbf{2D Laminar Channel Flow (REF?)} example, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \textbf{IncNavierStokesSolver  (REF?)} using the \textbf{Velocity Correction Scheme (REF?)} algorithm.
+
+\subsubsection{Background}
 The governing equation is the unsteady incompressible Navier-Stokes equation:
 \begin{equation}
 \begin{cases}
@@ -30,11 +160,9 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 The Reynolds number under consideration is 1.
 
 \subsubsection{Geometry}
-
-The geometry under consideration is a 2D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using 4 quadrilateral elements. The geometry as well as the mesh is identical to that used in the 2D Laminar Channel Flow example.
+The geometry under consideration is a 2D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using 4 quadrilateral elements. The geometry as well as the mesh is identical to that used in the \textbf{2D Laminar Channel Flow (REF?)} example.
 
 \subsubsection{Input parameters}
-
 \paragraph{Expansion:~} In this example we will use a quadratic polynomial expansion (\textit{i.e.} $P=3$).
 \begin{lstlisting}[style=XMLStyle]
 <EXPANSIONS>
@@ -121,11 +249,12 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 ./IncNaverStokesSolver session.xml
 
 \subsubsection{Result}
-
 \begin{figure}
 \includegraphics[width=7cm]{Figures/CF3DCVP3PR.png}
 \includegraphics[width=7cm]{Figures/CF3DCVP3.png}
 \end{figure}
+
+\newpage
 
 
 

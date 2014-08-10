@@ -826,7 +826,7 @@ namespace Nektar
                     if(m_comm->GetColumnComm()->GetRank() == 0)
                     {
                         // Attempt partitioning using METIS.
-                        int ncon = m_weightingRequired ? 2*m_numFields : 1;
+                        int ncon = 1; //m_weightingRequired ? 2*m_numFields : 1;
                         PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
 
                         // Check METIS produced a valid partition and fix if not.

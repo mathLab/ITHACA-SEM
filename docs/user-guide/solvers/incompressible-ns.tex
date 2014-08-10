@@ -129,13 +129,16 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
         </FUNCTION>
 \end{lstlisting}
 
-\paragraph{Usage:~}
+\subsubsection{Usage}
 ./IncNaverStokesSolver Tet\_channel\_m8\_par.xml
 
 \subsubsection{Result}
 \begin{figure}
+\begin{center}
 \includegraphics[width=7cm]{Figures/CF3DP8PR.png}
 \includegraphics[width=7cm]{Figures/CF3DP8.png}
+\caption{Pressure and velocity profiles for the laminar channel flow (full 3D).}
+\end{center}
 \end{figure}
 
 
@@ -250,8 +253,11 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 
 \subsubsection{Result}
 \begin{figure}
+\begin{center}
 \includegraphics[width=7cm]{Figures/CF3DCVP3PR.png}
 \includegraphics[width=7cm]{Figures/CF3DCVP3.png}
+\caption{Pressure and velocity profiles for the laminar channel flow (quasi 3D).}
+\end{center}
 \end{figure}
 
 \newpage
@@ -266,6 +272,135 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 
 3.4/UserGuide/Examples/IncNavierStokesSolver/SteadyOseenFlow2D
 3.4/UserGuide/Examples/IncNavierStokesSolver/Transient
+
+\newpage
 3.4/UserGuide/Examples/IncNavierStokesSolver/TurbulentChannelFlow
+\subsection{Turbulent Channel Flow Quasi-3D}
+In this example we use a 2D mesh for channel flow, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \textbf{IncNavierStokesSolver  (REF?)} using the \textbf{Velocity Correction Scheme (REF?)} algorithm in order to solve for turbulent channel flow.
+
+\subsubsection{Background}
+The governing equation is the unsteady incompressible Navier-Stokes equation:
+\begin{equation}
+\begin{cases}
+\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
+\nabla \cdot \textbf{u} = 0
+\label{IncNS_equations}
+\end{cases}
+\end{equation}
+
+The Reynolds number under consideration is 2000.
+
+\subsubsection{Geometry}
+The geometry under consideration is a 2D square channel with height of 2 units (\textit{i.e.} $D=2$), and length of 12.57. The channel is modelled using quadrilateral elements.
+\begin{figure}
+\begin{center}
+\includegraphics[width=10cm]{Figures/ChanMesh.png}
+\caption{Mesh used for the turbulent channel flow (quasi-3D).}
+\end{center}
+\end{figure}
+
+\subsubsection{Input parameters}
+For this tutorial, the input file (in the \textbf{Nektar++ input format (REF?)}) used can be found in Nektar++/solvers/IncNavierStokesSolver/Examples/TurbChFl\_3DH1D.xml.
+
+\paragraph{Expansion:~} In this example we will use a quadratic polynomial expansion (\textit{i.e.} $P=3$).
+\begin{lstlisting}[style=XMLStyle]
+<EXPANSIONS>
+  <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="u,v,w,p" TYPE="MODIFIED" />
+</EXPANSIONS>
+\end{lstlisting}
+
+\paragraph{Solver information:~} The flag 
+\begin{lstlisting}[style=XMLStyle]
+<I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
+\end{lstlisting}
+is informing the code that, even if the mesh is 2D, the problem is 3D and the third direction needs to be added with a Fourier series. An extra flag could be added to activate the FFT routines inside the code 
+\begin{lstlisting}[style=XMLStyle]
+<I PROPERTY="USEFFT" VALUE="FFTW"/>
+\end{lstlisting}
+In this case Nektar++ uses the FFTW library to move the degrees of freedom from wave to real space. HomModesZ and LZ set the number of Fourier modes and the length of the third direction respectively.
+
+\begin{lstlisting}[style=XMLStyle]
+    <SOLVERINFO>
+      <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
+      <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
+      <I PROPERTY="AdvectionForm" VALUE="Convective"/>
+      <I PROPERTY="Projection" VALUE="Galerkin"/>
+      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+      <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
+    </SOLVERINFO>
+\end{lstlisting}
+
+\paragraph{Parameters:~} Setting the mean inlet velocity to 1, allows us to define the kinematic viscosity as $\nu = \frac{UD}{Re}=1$.
+\begin{lstlisting}[style=XMLStyle]
+    <PARAMETERS>
+      <P> TimeStep      = 0.0001      </P>
+      <P> NumSteps      = 10000       </P>
+      <P> IO_CheckSteps = 1000       </P>
+      <P> IO_InfoSteps  = 10       </P>
+      <P> Re            = 2000       </P>
+      <P> Kinvis        = 1.0/Re     </P>
+      <P> HomModesZ     = 32          </P>
+      <P> LZ            = 4*PI/3     </P>
+    </PARAMETERS>
+\end{lstlisting}
+
+\paragraph{Boundary conditions:~} The boundary conditions are defined by
+\begin{lstlisting}[style=XMLStyle]
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[1] </B> //walls
+      <B ID="1"> C[2] </B> //inflow
+      <B ID="2"> C[3] </B> //outflow
+    </BOUNDARYREGIONS>
+
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <D VAR="u" VALUE="0" />
+        <D VAR="v" VALUE="0" />
+        <D VAR="w" VALUE="0" />
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />  
+      </REGION>
+      <REGION REF="1">
+        <P VAR="u" VALUE="[2]" />
+        <P VAR="v" VALUE="[2]" />
+        <P VAR="w" VALUE="[2]" />
+        <P VAR="p" VALUE="[2]" />
+      </REGION>
+      <REGION REF="2">
+        <P VAR="u" VALUE="[1]" />
+        <P VAR="v" VALUE="[1]" />
+        <P VAR="w" VALUE="[1]" />
+        <P VAR="p" VALUE="[1]" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+\paragraph{Functions:~} The initial conditions and the body force (\textit{i.e.} $f$ in the governing equations \ref{IncNS_equations}) are given by
+\begin{lstlisting}[style=XMLStyle]
+   <FUNCTION NAME="InitialConditions">
+     <E VAR="u" VALUE="1" />
+     <E VAR="v" VALUE="0" />
+     <E VAR="w" VALUE="0" />
+     <E VAR="p" VALUE="0" />
+   </FUNCTION>
+   
+   <FUNCTION NAME="BodyForce">
+          <E VAR="u" VALUE="2*Kinvis" />
+          <E VAR="v" VALUE="0" />
+          <E VAR="w" VALUE="0" />
+   </FUNCTION>
+\end{lstlisting}
+
+\subsubsection{Usage} ./IncNaverStokesSolver TurbChFl\_3DH1D.xml 
+
+\subsubsection{Result}
+\begin{figure}
+\begin{center}
+\includegraphics[width=12cm]{Figures/ChanCont.png}
+\caption{Velocity profile of the turbulent channel flow (quasi-3D).}
+\end{center}
+\end{figure}
+
+\newpage
+
 3.4/UserGuide/Examples/IncNavierStokesSolver/TurbulentPipeFlow
 

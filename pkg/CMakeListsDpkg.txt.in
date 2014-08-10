@@ -5,7 +5,6 @@ project("pkg-deb-@PKG_NAME@")
 set(CPACK_GENERATOR "DEB")
 set(CPACK_DEBIAN_PACKAGE_DEBUG ON)
 set(CPACK_OUTPUT_FILE_PREFIX "../../") # Put in builds dir.
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 
 # Find out the machine architecture
 execute_process(COMMAND dpkg --print-architecture 
@@ -40,6 +39,10 @@ set(CPACK_PACKAGE_FILE_NAME
 # Files to go in the package
 set(INSTALL_BINS_FILES "@PKG_INSTALL_BINS_FILES@")
 set(INSTALL_LIBS_FILES "@PKG_INSTALL_LIBS_FILES@")
+
+if (INSTALL_BINS_FILES OR INSTALL_LIBS_FILES)
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+endif ()
 
 # Install any libraries in the lib directory
 if(INSTALL_LIBS_FILES)

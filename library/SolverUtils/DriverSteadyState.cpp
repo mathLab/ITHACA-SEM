@@ -37,8 +37,8 @@
 #include <SolverUtils/AdvectionSystem.h>
 
 ////////////////////////
-#include <SolverUtils/DriverModifiedArnoldi.h>
-#include <SolverUtils/DriverArnoldi.h>
+// #include <SolverUtils/DriverModifiedArnoldi.h>
+// #include <SolverUtils/DriverArnoldi.h>
 ///////////////////////
 
 
@@ -93,10 +93,7 @@ namespace Nektar
             m_session->LoadParameter("ParametersTOL", ParametersTOL, 0.05); ///Criteria for coupling SFD and Arnoldi
             m_session->LoadParameter("UpdateCoefficient", UpdateCoefficient, 10.0); ///Criteria for coupling SFD and Arnoldi
             
-            cout << "\n------------------ SFD Parameters ------------------" << endl;
-            cout << "\tControl Coefficient: X = " << m_X << endl;
-            cout << "\tFilter Width: Delta = " << m_Delta << endl;
-            cout << "----------------------------------------------------\n" << endl;
+            PrintSummarySFD();
             
             ///Definition of shared pointer used only for coupling SFD and Arnoldi algorithm 
             AdvectionSystemSharedPtr A = boost::dynamic_pointer_cast<AdvectionSystem>(m_equ[0]);
@@ -134,6 +131,12 @@ namespace Nektar
                 
                 partialSteadyFlow[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //Only for coupling with SFD
             }
+            
+            cpuTime       = 0.0;
+            elapsed       = 0.0;
+            totalTime       = 0.0;
+            
+            timer.Start();
             
             m_stepCounter=0;
             m_Check=0;
@@ -481,11 +484,17 @@ namespace Nektar
                 }
             }
             
+            timer.Stop();
+            elapsed  = timer.TimePerTest(1);
+            cpuTime += elapsed;
+            totalTime += elapsed;
+            
             #if NEKTAR_USE_MPI   
             MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
             if (MPIrank==0)
             {
-                cout << "SFD (MPI) - Step: " << m_stepCounter+1 << "; Time: " << m_equ[m_nequ - 1]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X <<" and Delta = " << m_Delta <<endl;
+                //cout << "SFD (MPI) - Step: " << m_stepCounter+1 << "; Time: " << m_equ[m_nequ - 1]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X <<" and Delta = " << m_Delta <<endl;
+                cout << "SFD (MPI) - Step: " <<  left <<  m_stepCounter+1 << "; Time: " << left << m_equ[m_nequ - 1]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; CPU Time = " << cpuTime << "s" << "; Total Time = " << totalTime << "s" <<  ";\t for X = " << m_X <<" and Delta = " << m_Delta <<endl;
                 std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
                 m_file << m_stepCounter+1 << "\t" << m_equ[m_nequ - 1]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
                 m_file.close();
@@ -495,7 +504,48 @@ namespace Nektar
             std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
             m_file << m_stepCounter+1 << "\t" << m_equ[m_nequ - 1]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
             m_file.close();
-            #endif              
+            #endif       
+            
+            cpuTime = 0.0;
+            timer.Start();
+        }
+        
+        
+        void DriverSteadyState::PrintSummarySFD()
+        {
+            #if NEKTAR_USE_MPI   
+            MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
+            if (MPIrank==0)
+            {
+                cout << "\n=======================================================================" << endl;
+                cout << "Parameters for the SFD method:" << endl;
+                cout << "\tControl Coefficient: X = " << m_X << endl;
+                cout << "\tFilter Width: Delta = " << m_Delta << endl;
+                cout << "The simulation is stopped when:" << endl;
+                cout << "\t|q-qBar|inf < " << TOL << endl;
+                if (m_EvolutionOperator == eOptimizedSteadyState)
+                {
+                    cout << "\nWe also run the coupling between the SFD method and the Arnoldi method:" << endl;
+                    cout << "  We run Arnoldi (and update SFD parameters) when |q-qBar|inf < " << PartialTOL << endl;
+                    cout << "  or when |q-qBar|inf is not devreasing for" << TimeToRestart << "time units." << endl;
+                }
+                cout << "=======================================================================\n" << endl;
+            }
+            #else
+            cout << "\n=======================================================================" << endl;
+            cout << "Parameters for the SFD method:" << endl;
+            cout << "\tControl Coefficient: X = " << m_X << endl;
+            cout << "\tFilter Width: Delta = " << m_Delta << endl;
+            cout << "The simulation is stopped when:" << endl;
+            cout << "\t|q-qBar|inf < " << TOL << endl;
+            if (m_EvolutionOperator == eOptimizedSteadyState)
+            {
+                cout << "\nWe also run the coupling between the SFD method and the Arnoldi method:" << endl;
+                cout << "  We run Arnoldi (and update SFD parameters) when |q-qBar|inf < " << PartialTOL << endl;
+                cout << "  or when |q-qBar|inf is not devreasing for" << TimeToRestart << "time units." << endl;
+            }
+            cout << "=======================================================================\n" << endl;
+            #endif 
         }
     }
 }

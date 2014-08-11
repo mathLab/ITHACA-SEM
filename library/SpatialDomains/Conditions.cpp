@@ -155,8 +155,9 @@ namespace Nektar
             // Read REGION tags
             TiXmlElement *boundaryConditionsElement = conditions->FirstChildElement("BOUNDARYCONDITIONS");
             ASSERTL0(boundaryConditionsElement, "Boundary conditions must be specified.");
+            
             TiXmlElement *regionElement = boundaryConditionsElement->FirstChildElement("REGION");
-
+            
             // Read R (Robin), D (Dirichlet), N (Neumann), P (Periodic) C(Cauchy) tags
             while (regionElement)
             {

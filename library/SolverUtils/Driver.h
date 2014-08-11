@@ -86,6 +86,12 @@ namespace Nektar
 	
             /// Session reader object
             LibUtilities::SessionReaderSharedPtr        m_session;
+            
+            /// I the Coupling between SFD and arnoldi
+            LibUtilities::SessionReaderSharedPtr        session_LinNS;
+            string meshfile;
+            string LinNSCondFile;
+            vector<string> LinNSFilename;
         
             /// Equation system to solve
             Array<OneD, EquationSystemSharedPtr>        m_equ;

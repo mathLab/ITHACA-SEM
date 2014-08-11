@@ -50,37 +50,30 @@ namespace Nektar
         std::string Driver::evolutionOperatorDef = LibUtilities::SessionReader::RegisterDefaultSolverInfo("EvolutionOperator","Nonlinear");
         std::string Driver::driverDefault = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Driver","Standard");
         
-	DriverFactory& GetDriverFactory()
+        DriverFactory& GetDriverFactory()
         {
             typedef Loki::SingletonHolder<DriverFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy > Type;
+            Loki::CreateUsingNew,
+            Loki::NoDestroy > Type;
             return Type::Instance();
         }
-
-
+        
         /**
-         *
+         * 
          */
         Driver::Driver(const LibUtilities::SessionReaderSharedPtr pSession)
-            : m_comm(pSession->GetComm()),
-              m_session(pSession)
+        : m_comm(pSession->GetComm()),
+        m_session(pSession)
         {
         }
         
-//         Driver::Driver(const LibUtilities::SessionReaderSharedPtr pSession, const LibUtilities::SessionReaderSharedPtr pSession2)
-//         : m_comm(pSession->GetComm()), m_session(pSession), m_comm2(pSession2->GetComm()), m_session2(pSession2)
-//         {
-//         }
-    
         Driver::~Driver()
         
         {
         }
-    
-    
+        
         /**
-         *
+         * 
          */
         void Driver::v_InitObject(ostream &out)
         {
@@ -94,37 +87,19 @@ namespace Nektar
                 {
                     vEquation = m_session->GetSolverInfo("SolverType");
                 }
-
+                
                 // Check such a module exists for this equation.
                 ASSERTL0(GetEquationSystemFactory().ModuleExists(vEquation),
                          "EquationSystem '" + vEquation + "' is not defined.\n"
                          "Ensure equation name is correct and module is compiled.\n");
-
-			
+                
                 // Retrieve the type of evolution operator to use
                 /// @todo At the moment this is Navier-Stokes specific - generalise?
                 m_EvolutionOperator = m_session->GetSolverInfoAsEnum<EvolutionOperatorType>("EvolutionOperator");
-
-                m_nequ = ((m_EvolutionOperator == eTransientGrowth || m_EvolutionOperator == eOptimizedSteadyState) ? 2 : 1);
                 
+                m_nequ = ((m_EvolutionOperator == eTransientGrowth || m_EvolutionOperator == eOptimizedSteadyState) ? 2 : 1);
                 m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
                 
-                ///////////////////////////////////////////////////////////////
-                ///For having 2 equation systems defined into 2 different session files    
-                string meshfile = m_session->GetSessionName() + ".gz";
-                
-                string LinNSCondFile = m_session->GetSessionName(); 
-                LinNSCondFile += "_LinNS.xml"; 
-                
-                vector<string> LinNSFilenames;
-                LinNSFilenames.push_back(meshfile);   
-                LinNSFilenames.push_back(LinNSCondFile);
-                
-                cout << "m_session->GetSessionName() = " << m_session->GetSessionName() << endl ;
-                // Create Incompressible NavierStokesSolver session reader.
-                LibUtilities::SessionReaderSharedPtr session_LinNS = LibUtilities::SessionReader::CreateInstance(0, NULL, LinNSFilenames, m_session->GetComm());
-                ///////////////////////////////////////////////////////////////
-
                 // Set the AdvectiveType tag and create EquationSystem objects.
                 switch (m_EvolutionOperator)
                 {
@@ -144,7 +119,7 @@ namespace Nektar
                         //forward timestepping
                         m_session->SetTag("AdvectiveType","Linearised");
                         m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
-
+                        
                         //backward timestepping
                         m_session->SetTag("AdvectiveType","Adjoint");
                         m_equ[1] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
@@ -154,6 +129,15 @@ namespace Nektar
                         m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
                         break;
                     case eOptimizedSteadyState: ///Coupling SFD method and Arnoldi algorithm
+                        ///For having 2 equation systems defined into 2 different session files
+                        ///(with the mesh into a file named 'session'.gz)
+                        meshfile = m_session->GetSessionName() + ".gz";
+                        LinNSCondFile = m_session->GetSessionName(); 
+                        LinNSCondFile += "_LinNS.xml"; 
+                        LinNSFilename.push_back(meshfile);   
+                        LinNSFilename.push_back(LinNSCondFile);
+                        session_LinNS = LibUtilities::SessionReader::CreateInstance(0, NULL, LinNSFilename, m_session->GetComm());
+                        
                         //For running stability analysis
                         session_LinNS->SetTag("AdvectiveType","Linearised");
                         m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, session_LinNS);
@@ -172,13 +156,13 @@ namespace Nektar
                 out << "An error occurred during driver initialisation." << endl;
             }
         }
-
+        
         Array<OneD, NekDouble> Driver::v_GetRealEvl(void)
         {
             ASSERTL0(false,"This routine is not valid in this class");
             return NullNekDouble1DArray;
         }
-    
+        
         Array<OneD, NekDouble> Driver::v_GetImagEvl(void)
         {
             ASSERTL0(false,"This routine is not valid in this class");

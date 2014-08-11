@@ -41,6 +41,7 @@
 ////////////////////
 #include <SolverUtils/DriverArnoldi.h>
 #include <SolverUtils/DriverModifiedArnoldi.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 ///////////////////
 
 namespace Nektar
@@ -63,6 +64,8 @@ namespace Nektar
             
             ///Name of the class
             static std::string className;
+            
+            void PrintSummarySFD();
             
             void ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
                                     const Array<OneD, const Array<OneD, NekDouble> > &q0,
@@ -143,6 +146,11 @@ namespace Nektar
             int m_NonConvergingStepsCounter;
             NekDouble ParametersTOL;
             NekDouble UpdateCoefficient;
+            
+            Timer     timer;
+            NekDouble cpuTime;
+            NekDouble totalTime;
+            NekDouble elapsed;
             
             std::ofstream m_file;
         };

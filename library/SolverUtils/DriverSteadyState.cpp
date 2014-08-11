@@ -36,12 +36,6 @@
 #include <SolverUtils/DriverSteadyState.h>
 #include <SolverUtils/AdvectionSystem.h>
 
-////////////////////////
-// #include <SolverUtils/DriverModifiedArnoldi.h>
-// #include <SolverUtils/DriverArnoldi.h>
-///////////////////////
-
-
 namespace Nektar
 {
     namespace SolverUtils
@@ -78,8 +72,8 @@ namespace Nektar
         void DriverSteadyState::v_Execute(ostream &out)
         
         {
-            //With a loop over "DoSolve", this Driver implements the "encaplulated" Selective Frequency Damping method
-            //to find the steady state of a flow above the critical Reynolds number.
+            ///With a loop over "DoSolve", this Driver implements the "encaplulated" Selective Frequency Damping method
+            ///to find the steady state of a flow above the critical Reynolds number.
             m_equ[m_nequ - 1]->PrintSummary(out);
             m_equ[m_nequ - 1]->DoInitialise();
             
@@ -87,16 +81,18 @@ namespace Nektar
             m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);
             m_session->LoadParameter("ControlCoeff",m_X, 1);
             m_session->LoadParameter("FilterWidth", m_Delta, 1);
-            m_session->LoadParameter("TOL", TOL, 1.0e-08); ///Criteria for reaching steady-state solution
-            m_session->LoadParameter("PartialTOL", PartialTOL, 1.0e-02); ///Criteria for coupling SFD and Arnoldi
-            m_session->LoadParameter("TimeToRestart", TimeToRestart, 25.0); ///Criteria for coupling SFD and Arnoldi
-            m_session->LoadParameter("ParametersTOL", ParametersTOL, 0.05); ///Criteria for coupling SFD and Arnoldi
-            m_session->LoadParameter("UpdateCoefficient", UpdateCoefficient, 10.0); ///Criteria for coupling SFD and Arnoldi
+            m_session->LoadParameter("TOL", TOL, 1.0e-08);    
             
-            m_session->LoadParameter("GrowthRateEV", GrowthRateEV, 0.0); ///To evaluate optimum SFD parameters if growth rate provided in the xml file
-            m_session->LoadParameter("FrequencyEV", FrequencyEV, 0.0); ///To evaluate optimum SFD parameters if frequency provided in the xml file
+            m_session->LoadParameter("PartialTOL", PartialTOL, 1.0e-02);            //Used only for coupling SFD and Arnoldi
+            m_session->LoadParameter("TimeToRestart", TimeToRestart, 25.0);         //Used only for coupling SFD and Arnoldi
+            m_session->LoadParameter("ParametersTOL", ParametersTOL, 0.05);         //Used only for coupling SFD and Arnoldi
+            m_session->LoadParameter("UpdateCoefficient", UpdateCoefficient, 10.0); //Used only for coupling SFD and Arnoldi
+            
+            m_session->LoadParameter("GrowthRateEV", GrowthRateEV, 0.0); //To evaluate optimum SFD parameters if growth rate provided in the xml file
+            m_session->LoadParameter("FrequencyEV", FrequencyEV, 0.0);   //To evaluate optimum SFD parameters if frequency provided in the xml file
             
             PrintSummarySFD();
+            timer.Start();
             
             ///Definition of shared pointer (used only for coupling SFD and Arnoldi algorithm) 
             AdvectionSystemSharedPtr A = boost::dynamic_pointer_cast<AdvectionSystem>(m_equ[0]);
@@ -141,43 +137,40 @@ namespace Nektar
             {
                 q0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //q0 is initialised
                 qBar0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0);
-                m_equ[m_nequ - 1]->CopyFromPhysField(i, qBar0[i]); //qBar0 is initially set at beiing equal to the initial conditions provided in the input file
+                m_equ[m_nequ - 1]->CopyFromPhysField(i, qBar0[i]); //qBar0 is initially set at being equal to the initial conditions provided in the input file
                 partialSteadyFlow[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //Used only for coupling SFD and Arnoldi algorithm
             }
             
-            cpuTime       = 0.0;
-            elapsed       = 0.0;
-            totalTime       = 0.0;
-            
-            timer.Start();
-            
-            m_stepCounter=0;
-            m_Check=0;
-            Diff_q_qBar = 1.0;
-            Diff_q1_q0 = 1.0;
-            PartialTOL_init = PartialTOL;
-            
-            NekDouble GlobalMin(1.0);
-            OptumiumParametersFound = false;
+            ///Definition of variables used in this algorithm
+            m_stepCounter               = 0;
+            m_Check                     = 0;
             m_NonConvergingStepsCounter = 0;
-            
-            int PartiallyConverged(111);
-            int NotConvergedUnstable(222);
-            int NotConvergedStable(333);
+            Diff_q_qBar                 = 1.0;
+            Diff_q1_q0                  = 1.0;
+            NekDouble GlobalMin(1.0);
+            cpuTime                     = 0.0;
+            elapsed                     = 0.0;
+            totalTime                   = 0.0;
+            PartialTOL_init             = PartialTOL;
+            OptumiumParametersFound     = false;
             
             while (max(Diff_q_qBar, Diff_q1_q0) > TOL)
             {
-                //First order Splitting with exact resolution of the filters equation
+                ///Call the Navier-Stokes solver for one time step
                 m_equ[m_nequ - 1]->DoSolve();
                 
                 for(int i = 0; i < NumVar_SFD; ++i)
                 {
+                    ///Copy the current flow field into q0
                     m_equ[m_nequ - 1]->CopyFromPhysField(i, q0[i]);
                     
-                    //Apply the linear operator F to the outcome of the solver
+                    ///Apply the linear operator to the outcome of the solver
                     ComputeSFD(i, q0, qBar0, q1, qBar1);
                     
+                    ///Update qBar
                     qBar0[i] = qBar1[i];
+                    
+                    ///Copy the output of the SFD method into the current flow field
                     m_equ[m_nequ - 1]->CopyToPhysField(i, q1[i]);     
                 }
                 
@@ -192,26 +185,18 @@ namespace Nektar
                         {
                             ///The norm is decreasing (the flow is getting closer to its steady-state)
                             GlobalMin = Diff_q_qBar;
-
+                            
                             ///The curent flow field is store in 'partialSteadyFlow'
                             for(int i = 0; i < NumVar_SFD; ++i)
                             {
                                 Vmath::Vcopy(q0[i].num_elements(), q0[i], 1, partialSteadyFlow[i], 1);
                             }
                             
-                            ///////////////////////////////////////////////////////////////////////////////////
-                            m_equ[m_nequ - 1]->Checkpoint_Output(NotConvergedStable); //We save the flow field into a .chk file 
-                            ///////////////////////////////////////////////////////////////////////////////////
-                            
                             if (GlobalMin < PartialTOL)
                             {
                                 cout << "\n\t We compute stability-analysis on the current 'partially converged' flow field: \n" << endl;
                                 PartialTOL = PartialTOL/UpdateCoefficient;
                                 A->GetAdvObject()->SetBaseFlow(partialSteadyFlow); //Set up the the "Base Flow" used by the Arnoldi algotithm 
-                                ////////////////////////////////////////////////////////////////////
-                                m_equ[m_nequ - 1]->Checkpoint_Output(PartiallyConverged); //We save the flow field into a .chk file 
-                                PartiallyConverged++;
-                                ////////////////////////////////////////////////////////////////////
                                 DriverModifiedArnoldi::v_Execute(out);
                                 ComputeOptimization();
                             } 
@@ -222,11 +207,6 @@ namespace Nektar
                         {
                             cout << "\n\t SFD method NOT converging!!! We compute stability-analysis on a stored 'partially converged' flow field: \n" << endl;
                             A->GetAdvObject()->SetBaseFlow(partialSteadyFlow); //Set up the the "Base Flow" used by the Arnoldi algotithm 
-                            ////////////////////////////////////////////////////////////////////
-                            m_equ[m_nequ - 1]->Checkpoint_Output(NotConvergedUnstable); //We save the flow field into a .chk file 
-                            NotConvergedUnstable++;
-                            NotConvergedStable++;
-                            ////////////////////////////////////////////////////////////////////
                             DriverModifiedArnoldi::v_Execute(out);
                             ComputeOptimization();
                             GlobalMin = 10.0;
@@ -259,6 +239,9 @@ namespace Nektar
         void DriverSteadyState::SetSFDOperator(const NekDouble X_input, 
                                                const NekDouble Delta_input)
         {
+            ///This routine defines the encapsulated SFD operator with first order splitting
+            ///and exact resolution of the second subproblem
+            ///(See http://scitation.aip.org/content/aip/journal/pof2/26/3/10.1063/1.4867482 for details)
             NekDouble X = X_input*m_dt;
             NekDouble Delta = Delta_input/m_dt;
             NekDouble coeff = 1.0/(1.0 + X*Delta);

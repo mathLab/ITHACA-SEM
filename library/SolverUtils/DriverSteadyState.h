@@ -37,12 +37,9 @@
 #define NEKTAR_SOLVERUTILS_DRIVERSTEADYSTATE_H
 
 #include <SolverUtils/Driver.h>
-
-////////////////////
 #include <SolverUtils/DriverArnoldi.h>
 #include <SolverUtils/DriverModifiedArnoldi.h>
 #include <LibUtilities/BasicUtils/Timer.h>
-///////////////////
 
 namespace Nektar
 {

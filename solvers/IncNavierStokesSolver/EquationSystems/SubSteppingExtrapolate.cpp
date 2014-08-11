@@ -49,6 +49,7 @@ namespace Nektar
     SubSteppingExtrapolate::SubSteppingExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
+        MultiRegions::ExpListSharedPtr  pPressure,
         const Array<OneD, int> pVel,
         const SolverUtils::AdvectionSharedPtr advObject)
         : Extrapolate(pSession,pFields,pVel,advObject)

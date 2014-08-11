@@ -135,7 +135,9 @@ namespace Nektar
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eRadiation ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eI,
+                            SpatialDomains::eI ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eHighOutflow,
                         "Unknown USERDEFINEDTYPE boundary condition");
                 }
             }
@@ -259,6 +261,7 @@ namespace Nektar
                 vExtrapolation, 
                 m_session,
                 m_fields,
+		m_pressure,
                 m_velocity,
                 m_advObject);
         }
@@ -456,7 +459,11 @@ namespace Nektar
                 }
                 cnt1 += BndExp[n]->GetTotPoints();
             }
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eWall_Forces || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
+            else if(type == SpatialDomains::eNoUserDefined ||
+                    type == SpatialDomains::eWall_Forces ||
+                    type == SpatialDomains::eTimeDependent ||
+                    type == SpatialDomains::eHigh ||
+                    type == SpatialDomains::eHighOutflow)
             {
                 cnt += BndExp[n]->GetExpSize();
             }

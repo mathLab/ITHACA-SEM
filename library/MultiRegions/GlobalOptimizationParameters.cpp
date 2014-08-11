@@ -36,7 +36,7 @@
 #ifndef TIXML_USE_STL
 #define TIXML_USE_STL
 #endif
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
 
 namespace Nektar

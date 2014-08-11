@@ -29,38 +29,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables with artificial diffusion
+// Description: Euler equations in conservative variables with artificial
+// diffusion
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <CompressibleFlowSolver/EquationSystems/EulerArtificialDiffusionCFE.h>
+#include <CompressibleFlowSolver/EquationSystems/EulerADCFE.h>
+#include <boost/algorithm/string.hpp>
 
 namespace Nektar
 {
-    string EulerArtificialDiffusionCFE::className = 
+    string EulerADCFE::className =
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
-            "EulerArtificialDiffusionCFE", EulerArtificialDiffusionCFE::create, 
+            "EulerADCFE", EulerADCFE::create,
             "Euler equations in conservative variables with "
             "artificial diffusion.");
 
-    EulerArtificialDiffusionCFE::EulerArtificialDiffusionCFE(
+    EulerADCFE::EulerADCFE(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : CompressibleFlowSystem(pSession)
     {
     }
 
-    void EulerArtificialDiffusionCFE::v_InitObject()
+    void EulerADCFE::v_InitObject()
     {
         CompressibleFlowSystem::v_InitObject();
 
+        if (m_shockCaptureType == "Smooth")
+        {
+            ASSERTL0(m_fields.num_elements() == m_spacedim + 3,
+                     "Not enough variables for smooth shock capturing; "
+                     "make sure you have added eps to variable list.");
+            m_smoothDiffusion = true;
+        }
+
+        m_diffusion->SetArtificialDiffusionVector(
+            &EulerADCFE::GetArtificialDynamicViscosity, this);
+
         if(m_session->DefinesSolverInfo("PROBLEMTYPE"))
         {
-
             std::string ProblemTypeStr = m_session->GetSolverInfo("PROBLEMTYPE");
             int i;
             for(i = 0; i < (int) SIZE_ProblemType; ++i)
             {
-                if(NoCaseStringCompare(ProblemTypeMap[i],ProblemTypeStr) == 0)
+                if(boost::iequals(ProblemTypeMap[i], ProblemTypeStr))
                 {
                     m_problemType = (ProblemType)i;
                     break;
@@ -74,30 +86,30 @@ namespace Nektar
 
         if (m_explicitAdvection)
         {
-            m_ode.DefineOdeRhs    (&EulerArtificialDiffusionCFE::
+            m_ode.DefineOdeRhs    (&EulerADCFE::
                                     DoOdeRhs, this);
-            m_ode.DefineProjection(&EulerArtificialDiffusionCFE::
+            m_ode.DefineProjection(&EulerADCFE::
                                     DoOdeProjection, this);
         }
         else
         {
             ASSERTL0(false, "Implicit CFE not set up.");
         }
-
     }
 
-    EulerArtificialDiffusionCFE::~EulerArtificialDiffusionCFE()
+    EulerADCFE::~EulerADCFE()
     {
 
     }
 
-    void EulerArtificialDiffusionCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
+    void EulerADCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         CompressibleFlowSystem::v_GenerateSummary(s);
-        SolverUtils::AddSummaryItem(s, "Problem Type", ProblemTypeMap[m_problemType]);
+        SolverUtils::AddSummaryItem(
+            s, "Problem Type", ProblemTypeMap[m_problemType]);
     }
 
-    void EulerArtificialDiffusionCFE::v_SetInitialConditions(
+    void EulerADCFE::v_SetInitialConditions(
         NekDouble initialtime, 
         bool      dumpInitialConditions,
         const int domain)
@@ -111,27 +123,107 @@ namespace Nektar
         }
     }
 
-    void EulerArtificialDiffusionCFE::DoOdeRhs(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+    void EulerADCFE::DoOdeRhs(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble                                   time)
     {
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
-                
-        Array<OneD, Array<OneD, NekDouble> > advVel;
-                
+        
+        Array<OneD, Array<OneD, NekDouble> > advVel;                
         m_advection->Advect(nvariables, m_fields, advVel, inarray,
                             outarray, time);
                 
         for (i = 0; i < nvariables; ++i)
         {
-            Vmath::Neg(npoints, outarray[i], 1);
+            outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
+        }
+        
+        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
+        
+        for (i = 0; i < nvariables; ++i)
+        {
+            Vmath::Neg(npoints, outarrayAdv[i], 1);
+        }
+        
+        m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff);
+        
+        if (m_shockCaptureType == "NonSmooth")
+        {
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints,
+                            outarrayAdv[i], 1,
+                            outarrayDiff[i], 1,
+                            outarray[i], 1);
+            }
+        }
+        if(m_shockCaptureType == "Smooth")
+        {
+            const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
+            
+            NekDouble pOrder = Vmath::Vmax(ExpOrder.num_elements(), ExpOrder, 1);
+            
+            Array <OneD, NekDouble > a_vel  (npoints, 0.0);
+            Array <OneD, NekDouble > u_abs  (npoints, 0.0);
+            Array <OneD, NekDouble > pres   (npoints, 0.0);
+            Array <OneD, NekDouble > wave_sp(npoints, 0.0);
+            
+            GetPressure(inarray, pres);
+            GetSoundSpeed(inarray, pres, a_vel);
+            GetAbsoluteVelocity(inarray, u_abs);
+            
+            Vmath::Vadd(npoints, a_vel, 1, u_abs, 1, wave_sp, 1);
+            
+            NekDouble max_wave_sp = Vmath::Vmax(npoints, wave_sp, 1);
+            
+            Vmath::Smul(npoints,
+                        m_C2,
+                        outarrayDiff[nvariables-1], 1,
+                        outarrayDiff[nvariables-1], 1);
+            
+            Vmath::Smul(npoints,
+                        max_wave_sp,
+                        outarrayDiff[nvariables-1], 1,
+                        outarrayDiff[nvariables-1], 1);
+            
+            Vmath::Smul(npoints,
+                        pOrder,
+                        outarrayDiff[nvariables-1], 1,
+                        outarrayDiff[nvariables-1], 1);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vadd(npoints,
+                            outarrayAdv[i], 1,
+                            outarrayDiff[i], 1,
+                            outarray[i], 1);
+            }
+            
+            Array<OneD, Array<OneD, NekDouble> > outarrayForcing(nvariables);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                outarrayForcing[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            }
+            
+            GetForcingTerm(inarray, outarrayForcing);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                // Add Forcing Term
+                Vmath::Vadd(npoints,
+                            outarray[i], 1,
+                            outarrayForcing[i], 1,
+                            outarray[i], 1);
+            }
         }
     }
 
-    void EulerArtificialDiffusionCFE::DoOdeProjection(
+    void EulerADCFE::DoOdeProjection(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
@@ -165,7 +257,7 @@ namespace Nektar
         }
     }
     
-    void EulerArtificialDiffusionCFE::SetBoundaryConditions(
+    void EulerADCFE::SetBoundaryConditions(
         Array<OneD, Array<OneD, NekDouble> > &inarray,
         NekDouble                             time)
     {    

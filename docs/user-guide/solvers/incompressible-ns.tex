@@ -1,19 +1,28 @@
 \section{Incompressible Navier-Stokes Solver}
 
+\subsection{Incompressible Navier-Stokes solver}
+\label{IncNSsolver}
 3.4/UserGuide/Tutorial/IncNavierStokesSolver
+\subsubsection{Velocity Correction Scheme}
+\label{VCSscheme}
+here...
+
+\newpage
 3.4/UserGuide/Tutorial/IncNavierStokesSolver/Stability
 3.4/UserGuide/Examples/IncNavierStokesSolver/Adjoint
 3.4/UserGuide/Examples/IncNavierStokesSolver/Aorta
 3.4/UserGuide/Examples/IncNavierStokesSolver/Biglobal
 3.4/UserGuide/Examples/IncNavierStokesSolver/Direct
 3.4/UserGuide/Examples/IncNavierStokesSolver/KovasznayFlow2D
+
+\subsection{Laminar Channel Flow 2D}
+\label{LaminarChannelFlow2D}
 3.4/UserGuide/Examples/IncNavierStokesSolver/LaminarChannelFlow2D
 3.4/UserGuide/Examples/IncNavierStokesSolver/LaminarChannelFlow2DLinNS
 
-\newpage
-3.4/UserGuide/Examples/IncNavierStokesSolver/LaminarChannelFlow3D
+
 \subsection{Laminar Channel Flow 3D}
-The following example demonstrates the application of the \textbf{IncNavierStokesSolver  (REF?)} using the \textbf{Velocity Correction Scheme (REF?)} algorithm for modelling 3D laminar channel flow.
+The following example demonstrates the application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling 3D laminar channel flow.
 
 \subsubsection{Background}
 The governing equation is the unsteady incompressible Navier-Stokes equation:
@@ -143,13 +152,8 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
 
 
 
-
-
-
-\newpage
-3.4/UserGuide/Examples/IncNavierStokesSolver/LaminarChannelFlow3DH1D
 \subsection{Laminar Channel Flow Quasi-3D}
-In this example we reuse the 2D mesh used before for the \textbf{2D Laminar Channel Flow (REF?)} example, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \textbf{IncNavierStokesSolver  (REF?)} using the \textbf{Velocity Correction Scheme (REF?)} algorithm.
+In this example we reuse the 2D mesh used before for the \hyperref[LaminarChannelFlow2D]{2D Laminar Channel Flow} example, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm.
 
 \subsubsection{Background}
 The governing equation is the unsteady incompressible Navier-Stokes equation:
@@ -163,7 +167,7 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 The Reynolds number under consideration is 1.
 
 \subsubsection{Geometry}
-The geometry under consideration is a 2D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using 4 quadrilateral elements. The geometry as well as the mesh is identical to that used in the \textbf{2D Laminar Channel Flow (REF?)} example.
+The geometry under consideration is a 2D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using 4 quadrilateral elements. The geometry as well as the mesh is identical to that used in the \hyperref[LaminarChannelFlow2D]{2D Laminar Channel Flow} example.
 
 \subsubsection{Input parameters}
 \paragraph{Expansion:~} In this example we will use a quadratic polynomial expansion (\textit{i.e.} $P=3$).
@@ -263,20 +267,12 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 \newpage
 
 
-
-
-
-
-
-
-
 3.4/UserGuide/Examples/IncNavierStokesSolver/SteadyOseenFlow2D
 3.4/UserGuide/Examples/IncNavierStokesSolver/Transient
 
-\newpage
-3.4/UserGuide/Examples/IncNavierStokesSolver/TurbulentChannelFlow
+
 \subsection{Turbulent Channel Flow Quasi-3D}
-In this example we use a 2D mesh for channel flow, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \textbf{IncNavierStokesSolver  (REF?)} using the \textbf{Velocity Correction Scheme (REF?)} algorithm in order to solve for turbulent channel flow.
+In this example we use a 2D mesh for channel flow, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm in order to solve for turbulent channel flow.
 
 \subsubsection{Background}
 The governing equation is the unsteady incompressible Navier-Stokes equation:
@@ -300,7 +296,7 @@ The geometry under consideration is a 2D square channel with height of 2 units (
 \end{figure}
 
 \subsubsection{Input parameters}
-For this tutorial, the input file (in the \textbf{Nektar++ input format (REF?)}) used can be found in Nektar++/solvers/IncNavierStokesSolver/Examples/TurbChFl\_3DH1D.xml.
+For this tutorial, the input file (in the \hyperref[XMLformat]{\nekpp input format}) used can be found in Nektar++/solvers/IncNavierStokesSolver/Examples/TurbChFl\_3DH1D.xml.
 
 \paragraph{Expansion:~} In this example we will use a quadratic polynomial expansion (\textit{i.e.} $P=3$).
 \begin{lstlisting}[style=XMLStyle]

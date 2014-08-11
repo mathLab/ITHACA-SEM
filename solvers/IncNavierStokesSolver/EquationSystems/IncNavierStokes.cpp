@@ -63,7 +63,10 @@ namespace Nektar
 
     void IncNavierStokes::v_InitObject()
     {
-        AdvectionSystem::v_InitObject();
+        if (m_session->GetSolverInfo("Driver") == "SteadyState")
+        {
+            AdvectionSystem::v_InitObject();
+        }
         
         int i,j;
         int numfields = m_fields.num_elements();

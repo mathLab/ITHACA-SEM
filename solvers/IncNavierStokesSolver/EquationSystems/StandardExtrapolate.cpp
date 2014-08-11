@@ -52,7 +52,7 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr pPressure,
         const Array<OneD, int> pVel,
         const SolverUtils::AdvectionSharedPtr advObject)
-        : Extrapolate(pSession,pFields,pVel,advObject)
+    : Extrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
     }
 

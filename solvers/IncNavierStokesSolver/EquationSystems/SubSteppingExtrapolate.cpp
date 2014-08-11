@@ -52,7 +52,7 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr  pPressure,
         const Array<OneD, int> pVel,
         const SolverUtils::AdvectionSharedPtr advObject)
-        : Extrapolate(pSession,pFields,pVel,advObject)
+        : Extrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
         m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.5);

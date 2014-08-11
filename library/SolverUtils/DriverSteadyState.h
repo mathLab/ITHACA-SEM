@@ -73,10 +73,10 @@ namespace Nektar
                                     NekDouble &MaxNormDiff_q1_q0);
             
             void ComputeSFD(const int i,
-                              const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                              const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                              Array<OneD, Array<OneD, NekDouble> > &q1,
-                              Array<OneD, Array<OneD, NekDouble> > &qBar1);
+                            const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                            const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                            Array<OneD, Array<OneD, NekDouble> > &q1,
+                            Array<OneD, Array<OneD, NekDouble> > &qBar1);
             
             void EvalEV_ScalarSFD(const NekDouble &X_input,
                                   const NekDouble &Delta_input,
@@ -87,11 +87,14 @@ namespace Nektar
                                        NekDouble &X_output,
                                        NekDouble &Delta_output);
             
-            void ReadEVfile(const int &KrylovSubspaceDim, NekDouble &growthEV, NekDouble &frequencyEV);
+            void ReadEVfile(const int &KrylovSubspaceDim, 
+                            NekDouble &growthEV, 
+                            NekDouble &frequencyEV);
             
             void ComputeOptimization();
             
-            void SetSFDOperator(const NekDouble X_input, const NekDouble Delta_input);
+            void SetSFDOperator(const NekDouble X_input, 
+                                const NekDouble Delta_input);
             
             
         protected:
@@ -110,35 +113,36 @@ namespace Nektar
             static std::string driverLookupId;
             
         private:
-            int NumVar_SFD;  
+            int m_stepCounter;
+            int m_Check;
+            NekDouble TOL;
+            int m_infosteps;
+            int m_checksteps;
+            int MPIrank;
+            int NumVar_SFD; 
             
-            //Definition of the SFD parameters:
+            Timer     timer;
+            NekDouble cpuTime;
+            NekDouble totalTime;
+            NekDouble elapsed;
+            std::ofstream m_file;
+            
+            ///Definition of the SFD parameters:
             NekDouble m_Delta;
             NekDouble m_X;
             NekDouble m_dt; 
             
-            //For implementation of the exact solution of the filters equation
+            ///Definition of the SFD operator
             NekDouble M11;
             NekDouble M12;
             NekDouble M21;
             NekDouble M22;
             
-            int m_stepCounter;
-            int m_Check;
-            NekDouble TOL;
-            
-            
-            int m_infosteps;
-            int m_checksteps;
-            
-            int MPIrank;
-            
             NekDouble Diff_q_qBar;
             NekDouble Diff_q1_q0;
-            
             NekDouble Min_MaxNormDiff_q_qBar;
             
-            //For coupling SFD and Arnoldi
+            ///For coupling SFD and Arnoldi
             bool OptumiumParametersFound;
             NekDouble PartialTOL;
             NekDouble PartialTOL_init;
@@ -146,13 +150,8 @@ namespace Nektar
             int m_NonConvergingStepsCounter;
             NekDouble ParametersTOL;
             NekDouble UpdateCoefficient;
-            
-            Timer     timer;
-            NekDouble cpuTime;
-            NekDouble totalTime;
-            NekDouble elapsed;
-            
-            std::ofstream m_file;
+            NekDouble GrowthRateEV;
+            NekDouble FrequencyEV;
         };
     }   
 } //end of namespace

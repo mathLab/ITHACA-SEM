@@ -949,9 +949,7 @@ namespace Nektar
             {
                 int e_npoints = (*m_exp)[i]->GetTotPoints();
 
-                LocalRegions::Expansion2DSharedPtr loc_exp =
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion2D>((*m_exp)[i]);
+                LocalRegions::Expansion2DSharedPtr loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion2D>();
                 LocalRegions::Expansion3DSharedPtr loc_elmt =
                     loc_exp->GetLeftAdjacentElementExp();
                 int faceNumber = loc_exp->GetLeftAdjacentElementFace();

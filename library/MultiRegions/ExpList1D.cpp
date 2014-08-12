@@ -1054,9 +1054,7 @@ namespace Nektar
 
             for (i = 0; i < m_exp->size(); ++i)
             {
-                LocalRegions::Expansion1DSharedPtr loc_exp =
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion1D>((*m_exp)[i]);
+                LocalRegions::Expansion1DSharedPtr loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion1D>();
                 
                 LocalRegions::Expansion2DSharedPtr loc_elmt =
                     loc_exp->GetLeftAdjacentElementExp();

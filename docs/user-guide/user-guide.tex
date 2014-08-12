@@ -156,15 +156,16 @@ openany, % A chapter may start on either a recto or verso page.
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
   language=bash,
-  basicstyle=\small\sffamily,
+  basicstyle=\small\ttfamily,
 %  numbers=left,
 %  numberstyle=\tiny,
 %  numbersep=3pt,
   frame=,
   columns=fullflexible,
-  backgroundcolor=\color{black!05},
-  linewidth=0.9\linewidth,
-  xleftmargin=0.1\linewidth
+  backgroundcolor=\color{black!10},
+  linewidth=\linewidth,
+  xleftmargin=0.05\linewidth,
+  keepspaces=true
 }
 \definecolor{gray}{rgb}{0.4,0.4,0.4}
 \definecolor{darkblue}{rgb}{0.0,0.0,0.6}
@@ -194,13 +195,16 @@ openany, % A chapter may start on either a recto or verso page.
   frame=,
   columns=fullflexible,
   backgroundcolor=\color{black!05},
-  linewidth=0.9\linewidth,
-  xleftmargin=0.1\linewidth,
+  linewidth=\linewidth,
+  xleftmargin=0.05\linewidth,
   keepspaces=true
 }
 
 \usepackage{tikz}
-\newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,rounded corners,outer sep=0,draw=black!30,fill=black!10]{\texttt{#1}};}
+\newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
+rounded corners,outer sep=0,draw=black!30,fill=black!10]{\texttt{#1}};}
+\newcommand{\inlsh}[1]{\tikz[anchor=base,baseline]\node[inner sep=2pt,
+outer sep=0,fill=black!10]{\texttt{#1}};}
 \newcommand{\nekpp}{{\em Nektar++}\xspace}
 
 %%% TABLE OF CONTENTS AND INDEX

@@ -152,6 +152,7 @@ openany, % A chapter may start on either a recto or verso page.
 %%%-----------------------------------------------------------------------------
 \usepackage{xcolor}
 \usepackage{listings} % Display code / shell commands
+\usepackage{lstautogobble}
 \usepackage{xspace}
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
@@ -160,12 +161,16 @@ openany, % A chapter may start on either a recto or verso page.
 %  numbers=left,
 %  numberstyle=\tiny,
 %  numbersep=3pt,
-  frame=,
+  frame=single,
   columns=fullflexible,
-  backgroundcolor=\color{black!10},
+  backgroundcolor=\color{yellow!10},
   linewidth=\linewidth,
   xleftmargin=0.05\linewidth,
-  keepspaces=true
+  keepspaces=true,
+  framesep=5pt,
+  rulecolor=\color{black!30},
+  aboveskip=10pt,
+  autogobble=true
 }
 \definecolor{gray}{rgb}{0.4,0.4,0.4}
 \definecolor{darkblue}{rgb}{0.0,0.0,0.6}
@@ -202,10 +207,75 @@ openany, % A chapter may start on either a recto or verso page.
 
 \usepackage{tikz}
 \newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
-rounded corners,outer sep=0,draw=black!30,fill=black!10]{\texttt{#1}};}
+rounded corners,outer sep=0,draw=black!30,fill=black!05]{\small\texttt{#1}};}
 \newcommand{\inlsh}[1]{\tikz[anchor=base,baseline]\node[inner sep=2pt,
-outer sep=0,fill=black!10]{\texttt{#1}};}
+outer sep=0,fill=black!05]{\texttt{#1}};}
 \newcommand{\nekpp}{{\em Nektar++}\xspace}
+
+% Highlight box
+\usepackage{environ}
+\usepackage[tikz]{bclogo}
+\usetikzlibrary{calc}
+\NewEnviron{notebox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=3pt,fill=black!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\textwidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bcinfo};
+      \end{minipage}%
+      \begin{minipage}{.8\textwidth}
+      \textbf{Note}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{warningbox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=3pt,fill=red!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\textwidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bcdanger};
+      \end{minipage}%
+      \begin{minipage}{.8\textwidth}
+      \textbf{Warning}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{tipbox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=3pt,fill=green!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\textwidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bclampe};
+      \end{minipage}%
+      \begin{minipage}{.8\textwidth}
+      \textbf{Tip}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{custombox}[3]
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=3pt,fill=#3!10,draw=black!30] (box)
+    {\parbox[t]{.99\textwidth}{%
+      \begin{minipage}{.1\textwidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{#2};
+      \end{minipage}%
+      \begin{minipage}{.8\textwidth}
+      \textbf{#1}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
 
 %%% TABLE OF CONTENTS AND INDEX
 %%%-----------------------------------------------------------------------------
@@ -225,12 +295,23 @@ colorlinks,
 citecolor=darkblue,
 filecolor=darkblue,
 linkcolor=darkblue,
-urlcolor=darkblue
+urlcolor=darkblue,
 pdfborder={0 0 0},      % No borders around internal hyperlinks
 pdfauthor={I am the Author} % author
 }
 \usepackage{memhfixc}   %
 
+% \makeatletter
+% \def\@setref#1#2#3{%
+%   \ifx#1\relax
+%    \protect\G@refundefinedtrue
+%    \nfss@text{\reset@font\bfseries\huge\textcolor{red}{#3 undefined}}%
+%    \@latex@warning{Reference `#3' on page \thepage \space
+%              undefined}%
+%   \else
+%    \expandafter#2#1\null
+%   \fi}
+% \makeatother
 
 %%% PRETTY TITLE PAGE FOR PDF DOC
 %%%-----------------------------------------------------------------------------

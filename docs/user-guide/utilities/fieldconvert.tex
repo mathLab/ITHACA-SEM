@@ -1,3 +1,50 @@
 \section{Field Convert}
-
-3.4.1/UserGuide/Tutorial/FieldConvert
+In this section, the capabilities of the field convert utility are explained. This utility allows the user to convert and add extra output data to the already existing output data (.fld or .chk file) given by running a solver in \nekpp. The new output data is converted into a format that is compatible with the available external visualizers like Tecplot or Paraview. For now, this utility has the following functionality:
+\begin{itemize}
+\item Convert a .fld file to a .vtu or .dat file
+\item Calculate vorticity
+\item Extract a boundary region
+\item Specify a sub-range of the domain
+\end{itemize}
+The executable FieldConvert can be found in the PostProcessing directory located in builds:\\
+\\
+\inltt{nektar++/builds/utilities/PostProcessing/FieldConvert/FieldConvert}\\
+\\
+In the remaining of this section all the command lines will be called from the FieldConvert directory located in builds. Converting an output file that has been obtained using \nekpp into a .dat file goes then as follows:\\
+\\
+\inltt{FieldConvert test.xml test.fld test.dat
+}
+\subsection{Calculating vorticity}
+To perform the vorticity calculation and obtain an output data containing the vorticity solution, the executable FieldConvert has to be run. This executable can be found in:\\
+\\
+\inltt{FieldConvert -m vorticity test.xml test.fld test-vort.fld}\\
+\\
+where the file test-vort.fld can be processed in a similar way as described above to visualise the solution.
+\subsection{Sub-range of the domain}
+One can also select a region in the computational domain and process only the data for that part of the domain. For example for processing the data of a 2D plane defined by $-2\leq x \leq 3$, $-1\leq y \leq 2$, the following command can be run:\\
+\\
+\inltt{FieldConvert -r -2,3,-1,2  test.xml test.fld test.dat}\\
+\\
+where -r defines the range option of the field convert utility, the two first numbers define the range in $x$ direction and the the third and forth number specify the $y$ range. The a 3D part of the domain, a third set of numbers has to be provided to define the $z$ range. For calculating the vorticity in a specified part of the computational domain, the following command line can be run:\\
+\\
+\inltt{FieldConvert -r -2,3,-1,2 -m vorticity test.xml test.fld test-vort.fld}
+\subsection{Extracting a boundary region}
+The boundary region of a domain be extracted from the output data using the following command line\\
+\\
+\inltt{FieldConvert -m extract:bnd=2:fldtoboundary=1 test.xml test.fld test-boundary.fld}\\
+\\
+The option \inltt{bnd} specifies which boundary region to extract. Note this is different to MeshConvert where the parameter \inltt{surf} is specified and corresponds to composites rather boundaries. If bnd is to provided all boundaries are extracted to different field. The fldtoboundary is an optional command argument which copies the expansion of test.fld into the boundary region before outputting the .fld file. This option is on by default. If it turned off using \inltt{fldtoboundary=0} the extraction will only evaluate the boundary condition from the xml file. The output will be placed in test-boundary-b2.fld. If more than one boundary region is specified the extension -b0.fld, -b1.fld etc will be outputted. To process this file you will need an xml file of the same region. This can be generated using the command:
+\\
+\inltt{MeshConvert -m extract:surf=5  test.xml test-b0.xml}\\
+\\
+The surface to be extracted in this command is the composite number and so needs to correspond to the boundary region of interest. Finally to process the surface file one can use
+\\
+\inltt{MeshConvert -m extract:surf=5  test.xml test-b0.xml}\\
+\\
+This will obviously generate a tecplot output using a .dat file is specified in the last argument. A .vtu extension will produce a vtk output.\\
+\\
+To run the utility, if you have compiled \nekpp with MPI support, you may run in parallel\\
+\\
+\inltt{mpirun -np <nprocs> FieldConvert test.xml test.fld test.dat }\\
+\\
+replacing <nprocs> with the number of processors. This will produce multiple .dat files of the form test-P0.dat, test-P1.dat, test-P2.dat etc. Similarly the VTK files can be processed in this manner as can the vorticity option. In the case of the vorticity option a directory called test-vort.fld (or the specified output name) will be produced with the standard parallel field files placed within the directory.

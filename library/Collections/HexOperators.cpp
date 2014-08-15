@@ -455,8 +455,8 @@ namespace Nektar
                 // calculate full derivative 
                 for(int i = 0; i < m_coordim; ++i)
                 {
-                    Vmath::Zero(ntot,out[i],1);
-                    for(int j = 0; j < m_dim; ++j)
+                    Vmath::Vmul(ntot,m_derivFac[i*m_dim],1,Diff[0],1,out[i],1);
+                    for(int j = 1; j < m_dim; ++j)
                     {
                         Vmath::Vvtvp (ntot,m_derivFac[i*m_dim+j],1,Diff[j],1, out[i], 1, out[i],1);
                     }

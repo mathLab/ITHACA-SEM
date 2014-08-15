@@ -271,7 +271,7 @@ namespace Nektar {
 
             if(pImpType == eNoType)
             {
-                ImpType = eStdMat;
+                ImpType = eIterPerExp;
             }
             else
             {
@@ -287,9 +287,11 @@ namespace Nektar {
             m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
             
             m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
-            m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
-            m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
 
+            m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
+
+            m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
+                
             if(ImpType != eSumFac)
             {
                 m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);

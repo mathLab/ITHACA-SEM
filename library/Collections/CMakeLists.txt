@@ -9,6 +9,7 @@ SET(COLLECTIONS_SOURCES
 
 SET(SOLVER_UTILS_HEADERS
   Collection.h
+  IProduct2D.h
   Operator.h
 )
 

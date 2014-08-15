@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     MultiRegions::ContField3DSharedPtr Exp;
 
-    int Ntest = 10;
+    int Ntest = 100;
     if(argc < 2)
     {
         fprintf(stderr,"Usage: Collection3D meshfile \n");
@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
             break;
         default:
             {
+                Exp->CreateCollections(Collections::eIterPerExp);
                 cout <<"Using IterPerExp Collection Implementation" << endl;
             }
             break;
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
             }
             t.Stop();
             NekDouble col = t.TimePerTest(Ntest);
-            cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
+            cout << "\t Collection: " << col  << endl;
             Vmath::Vsub(phys1.num_elements(), phys1, 1, phys2, 1, phys1, 1);
             cout << "\t Difference: "<< Vmath::Vmax(phys1.num_elements(), phys1, 1) << endl;
             
@@ -135,7 +136,7 @@ int main(int argc, char *argv[])
             }
             t.Stop();
             NekDouble col = t.TimePerTest(Ntest);
-            cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
+            cout << "\t Collection: " << col << endl;
             Vmath::Vsub(nc, output1, 1, output2, 1, output1, 1);
             cout << "\t Difference: " << Vmath::Vmax(nc, output1, 1) << endl;
             cout << "\t Ratio: " << (orig/col) << endl;
@@ -181,7 +182,7 @@ int main(int argc, char *argv[])
             }
             t.Stop();
             NekDouble col = t.TimePerTest(Ntest);
-            cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
+            cout << "\t Collection: " << col << endl;
             Vmath::Vsub(nq, diff1_0, 1, diff2_0, 1, diff1_0, 1);
             Vmath::Vsub(nq, diff1_1, 1, diff2_1, 1, diff1_1, 1);
             Vmath::Vsub(nq, diff1_2, 1, diff2_2, 1, diff1_2, 1);

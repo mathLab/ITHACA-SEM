@@ -460,6 +460,7 @@ namespace Nektar
          *                                   m_phys arrays
          **/
         ExpList2D::ExpList2D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
             const Array<OneD, const ExpListSharedPtr> &bndConstraint,
             const Array<OneD, const SpatialDomains::
                               BoundaryConditionShPtr> &bndCond,
@@ -468,7 +469,7 @@ namespace Nektar
             const PeriodicMap &periodicFaces,
             const bool DeclareCoeffPhysArrays, 
             const std::string variable):
-            ExpList()
+            ExpList(pSession, graph3D)
         {
             SetExpType(e2D);
 

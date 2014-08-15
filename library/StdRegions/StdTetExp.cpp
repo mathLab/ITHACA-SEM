@@ -557,7 +557,7 @@ namespace Nektar
             int  order1 = m_base[1]->GetNumModes();
 
             Array<OneD, NekDouble> wsp (nquad1*nquad2*order0 +
-                                        nquad2*order0*(order1+1)/2);
+                                        nquad2*order0*(2*order1-order0+1)/2);
 
             if(multiplybyweights)
             {

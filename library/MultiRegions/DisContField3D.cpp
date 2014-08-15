@@ -314,7 +314,7 @@
              // Set up Trace space
              bool UseGenSegExp = true;
              trace = MemoryManager<ExpList2D>::AllocateSharedPtr(
-                 m_bndCondExpansions, m_bndConditions,
+                 m_session, m_bndCondExpansions, m_bndConditions,
                  *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
 
              m_trace    = trace;

@@ -446,21 +446,30 @@ namespace Nektar
                                   Array<OneD, NekDouble> &out_d2)
         {
 #if 1
-            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
-            for (int i = 0; i < m_collections.size(); ++i)
-            {
-                m_collections[i].ApplyOperator(
-                                               Collections::ePhysDeriv,
-                                               inarray + m_coll_phys_offset[i],
-                                               tmp0 = out_d0 + m_coll_phys_offset[i],
-                                               tmp1 = out_d1 + m_coll_phys_offset[i],
-                                               tmp2 = out_d2 + m_coll_phys_offset[i]);
-            }
-#else
-            int  i;
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
+            for (int i = 0; i < m_collections.size(); ++i)
+            {
+#if 1
+                int offset = m_coll_phys_offset[i];
+                e_out_d0 = out_d0  + offset;
+                e_out_d1 = out_d1  + offset; 
+                e_out_d2 = out_d2  + offset; 
+                
+#if 1
+                m_collections[i].ApplyOperator(Collections::ePhysDeriv,
+                                               inarray + offset,
+                                               e_out_d0,e_out_d1, e_out_d2);
+#else
+                m_collections[i].ApplyOperator(Collections::eIProductWRTBase,
+                                               inarray + offset,
+                                               e_out_d0);
+#endif
+#endif
+            }
+#else
+            int  i;
 
             for(i= 0; i < (*m_exp).size(); ++i)
             {
@@ -2679,7 +2688,7 @@ namespace Nektar
                         {
                             if (i != it->second.size() - 1 )
                             {
-                                Collections::Collection tmp(stdExp, geom);
+                                Collections::Collection tmp(stdExp, geom, ImpType);
                                 m_collections.push_back(tmp);
 
                                 // start new geom list 

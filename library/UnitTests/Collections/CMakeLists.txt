@@ -4,6 +4,7 @@ SET(Sources
     TestHexCollection.cpp
     TestQuadCollection.cpp
     TestSegCollection.cpp
+    TestTetCollection.cpp
     TestTriCollection.cpp
 )
 

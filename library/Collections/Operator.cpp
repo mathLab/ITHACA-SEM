@@ -39,6 +39,7 @@
 
 namespace Nektar {
     namespace Collections {
+
         bool operator< (OperatorKey const &p1, OperatorKey const &p2)
         {
             if (boost::get<0>(p1) < boost::get<0>(p2))
@@ -76,6 +77,11 @@ namespace Nektar {
                << boost::get<2>(p) << endl;
             return os;
         }
+
+        Operator::~Operator(void)
+        {
+        }
+
         
         OperatorFactory& GetOperatorFactory()
         {
@@ -213,16 +219,10 @@ namespace Nektar {
                                    CoalescedGeomDataSharedPtr GeomData)
                 : Operator(pExp, pGeom,GeomData)
             {
-                int nqtot = 1;
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
-                for(int i = 0; i < PtsKey.size(); ++i)
-                {
-                    nqtot *= PtsKey[i].GetNumPoints();
-                }
                 m_jac = GeomData->GetJac(pExp,pGeom);
                 StdRegions::StdMatrixKey key(StdRegions::eIProductWRTBase, pExp->DetShapeType(), *pExp);
                 m_mat = m_stdExp->GetStdMatrix(key);
-                m_wspSize = nqtot*m_numElmt;
+                m_wspSize = pExp->GetTotPoints()*m_numElmt;
             }
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -382,12 +382,13 @@ namespace Nektar {
                                     Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
+#if 1
                 int nPhys = m_stdExp->GetTotPoints();
                 int ntot = m_numElmt*nPhys;
                 Array<OneD, NekDouble> tmp0,tmp1,tmp2;
                 Array<OneD, Array<OneD, NekDouble> > Diff(3);
                 Array<OneD, Array<OneD, NekDouble> > out(3);
-                out[0] = output0;  out[1] = output1;    out[2] = output2;
+                out[0] = output0;  out[1] = output1;  out[2] = output2;
 
                 for(int i = 0; i < m_dim; ++i)
                 {
@@ -400,16 +401,18 @@ namespace Nektar {
                     m_stdExp->PhysDeriv(input + i*nPhys, tmp0 = Diff[0] + i*nPhys,
                                         tmp1 = Diff[1] + i*nPhys, tmp2 = Diff[2] + i*nPhys);
                 }
-                
+#if 1
                 // calculate full derivative 
                 for(int i = 0; i < m_coordim; ++i)
                 {
-                    Vmath::Zero(ntot,out[i],1);
-                    for(int j = 0; j < m_dim; ++j)
+                    Vmath::Vmul(ntot,m_derivFac[i*m_dim],1,Diff[0],1,out[i],1);
+                    for(int j = 1; j < m_dim; ++j)
                     {
                         Vmath::Vvtvp (ntot,m_derivFac[i*m_dim+j],1,Diff[j],1, out[i], 1, out[i],1);
                     }
                 }
+#endif
+#endif          
             }
             
             OPERATOR_CREATE(PhysDeriv_IterPerExp)

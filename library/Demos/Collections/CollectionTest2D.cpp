@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
             break;
         default:
             {
+                Exp->CreateCollections(Collections::eIterPerExp);
                 cout <<"Using IterPerExp Collection Implementation" << endl;
             }
             break;

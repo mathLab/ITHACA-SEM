@@ -35,7 +35,7 @@
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
-
+#include <Collections/IProduct2D.hpp>
 namespace Nektar 
 {
     namespace Collections 
@@ -124,7 +124,7 @@ namespace Nektar
             RegisterCreatorFunction(OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, 
                                                 eSumFac),
                                     BwdTrans_SumFac_Quad::create, "BwdTrans_SumFac_Quad");
-
+        
 
         /*
          * ----------------------------------------------------------
@@ -135,8 +135,8 @@ namespace Nektar
         {
         public:
             IProductWRTBase_SumFac_Quad(StdRegions::StdExpansionSharedPtr pExp,
-                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                                  CoalescedGeomDataSharedPtr GeomData)
+                                        vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                        CoalescedGeomDataSharedPtr GeomData)
                 : Operator  (pExp, pGeom, GeomData),
                   m_nquad0  (pExp->GetNumPoints(0)),
                   m_nquad1  (pExp->GetNumPoints(1)),
@@ -157,11 +157,18 @@ namespace Nektar
                                     Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
+#if 1
+                Vmath::Vmul(m_numElmt*m_nquad0*m_nquad1,m_jac,1,input,1,wsp,1);
+                ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
+                QuadIProduct(m_colldir0,m_colldir1,m_numElmt, 
+                             m_nquad0,  m_nquad1,
+                             m_nmodes0, m_nmodes1, 
+                             m_base0,   m_base1,
+                             input,output,wsp);
+#endif
                 int totmodes  = m_nmodes0*m_nmodes1;
                 int totpoints = m_nquad0 *m_nquad1;
-                
                 Vmath::Vmul(m_numElmt*totpoints,m_jac,1,input,1,wsp,1);
-
                 if(m_colldir0 && m_colldir1)
                 {
                     Vmath::Vcopy(m_numElmt*totmodes,wsp.get(),1,output.get(),1);
@@ -229,7 +236,7 @@ namespace Nektar
                                         0.0, &output[0], m_nmodes0);
                         }
                     }
-                } 
+                }
             }
             
             OPERATOR_CREATE(IProductWRTBase_SumFac_Quad)
@@ -248,9 +255,9 @@ namespace Nektar
         
         OperatorKey IProductWRTBase_SumFac_Quad::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eSumFac),IProductWRTBase_SumFac_Quad::create, "IProductWRTBase_SumFac_Quad");
-
-
-
+        
+        
+        
         /*
          * ----------------------------------------------------------
          * PhysDeriv operators

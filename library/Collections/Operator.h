@@ -38,7 +38,7 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <StdRegions/StdExpansion.h>
-#include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/Geometry.h> 
 
 #define OPERATOR_CREATE(cname)                                  \
     static OperatorKey m_type;                                  \
@@ -51,7 +51,7 @@
         return MemoryManager<cname>                             \
             ::AllocateSharedPtr(pExp, pGeom, GeomData);         \
     }
-
+ 
 namespace Nektar {
     namespace Collections {
 
@@ -108,6 +108,8 @@ namespace Nektar {
                                     Array<OneD,       NekDouble> &output1,
                                     Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp = NullNekDouble1DArray) = 0;
+
+            virtual ~Operator(void);
             
             int GetWspSize()
             {

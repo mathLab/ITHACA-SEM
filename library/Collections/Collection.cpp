@@ -186,81 +186,6 @@ namespace Nektar {
             return m_twoDGeomData[eDerivFactors];
         }
 
-        
-        const Array<OneD, const NekDouble> &CoalescedGeomData::GetBase(const int dir, 
-                                                              StdRegions::StdExpansionSharedPtr &stdExp)
-        {
-            GeomData ReturnEnum;
-
-            switch(dir)
-            {
-            case 0:
-                ReturnEnum = eBase0;
-                break;
-            case 1:
-                ReturnEnum = eBase1;
-                break;
-            case 2:
-                ReturnEnum = eBase2;
-                break;
-            default:
-                ASSERTL0(false,"Unknown direction value");
-                break;
-            }
-
-            if(m_oneDGeomData.count(ReturnEnum) == 0)
-            {
-                m_oneDGeomData[ReturnEnum] = stdExp->GetBasis(dir)->GetBdata();
-            }
-
-            return m_oneDGeomData[ReturnEnum];
-        }
-
-
-        const Array<OneD, const NekDouble> &CoalescedGeomData::GetBaseWithWeights(const int dir, 
-                                                              StdRegions::StdExpansionSharedPtr &stdExp)
-        {
-            GeomData ReturnEnum;
-
-            switch(dir)
-            {
-            case 0:
-                ReturnEnum = eBase0WithWeights;
-                break;
-            case 1:
-                ReturnEnum = eBase1WithWeights;
-                break;
-            case 2:
-                ReturnEnum = eBase2WithWeights;
-                break;
-            default:
-                ASSERTL0(false,"Unknown direction value");
-                break;
-            }
-
-            if(m_oneDGeomData.count(ReturnEnum) == 0)
-            {
-
-                Array<OneD, const NekDouble>     base = stdExp->GetBasis(dir)->GetBdata();
-                const Array<OneD, const NekDouble>& w = stdExp->GetBasis(dir)->GetW();
-
-                Array<OneD, NekDouble> baseWithWeights(base);
-
-                int nq    = w.num_elements();
-                int nvals = baseWithWeights.num_elements()/nq;
-
-                for(int i = 0; i < nvals; ++i)
-                {
-                    Vmath::Vmul(nq,&w[0],1,&baseWithWeights[i*nq],1,&baseWithWeights[i*nq],1);
-                }
-                
-                m_oneDGeomData[ReturnEnum] = baseWithWeights; 
-            }
-
-            return m_oneDGeomData[ReturnEnum];
-        }
-
-
         Collection::Collection(StdRegions::StdExpansionSharedPtr pExp,
                                vector<SpatialDomains::GeometrySharedPtr> pGeom,
                                ImplementationType  pImpType)
@@ -292,9 +217,18 @@ namespace Nektar {
 
             m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
                 
-            if(ImpType != eSumFac)
+            
+            if(ImpType == eSumFac)
             {
-                m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);
+                if(pExp->DetShapeType() != LibUtilities::eTetrahedron)
+                {
+                    m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);
+                    
+                }
+            }
+            else
+            {
+                    m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);
             }
         }
     }

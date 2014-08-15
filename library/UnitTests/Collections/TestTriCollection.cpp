@@ -1507,5 +1507,224 @@ namespace Nektar
             }
         }
 
+        BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_StdMat_VariableP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
+            
+            SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
+            
+            Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,triPointsKeyDir1);
+
+            Nektar::LibUtilities::PointsType triPointsTypeDir2 = Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
+            Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
+            
+            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, triGeom);
+
+            Nektar::StdRegions::StdTriExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdTriExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2);
+
+            int nelmts = 10;
+            
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(triGeom);
+            }
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+
+            const int nq = Exp->GetTotPoints();
+            const int nm = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq), yc(nq),tmp,tmp1;
+            Array<OneD, NekDouble> phys1(nelmts*nq);
+            Array<OneD, NekDouble> phys2(nelmts*nq);
+            Array<OneD, NekDouble> coeffs1(nelmts*nm);
+            Array<OneD, NekDouble> coeffs2(nelmts*nm);
+            
+            Exp->GetCoords(xc, yc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys1[i] = sin(xc[i])*cos(yc[i]);
+                phys2[i] = cos(xc[i])*sin(yc[i]);
+            }
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
+                Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
+                
+                // Standard routines
+                Exp->IProductWRTDerivBase(0, phys1 + i*nq, 
+                                          tmp  = coeffs1 + i*nm);
+                Exp->IProductWRTDerivBase(1, phys2 + i*nq, 
+                                          tmp1 = coeffs2 + i*nm);
+                Vmath::Vadd(nm,coeffs1 +i*nm ,1,coeffs2 + i*nm ,1,
+                            tmp = coeffs1 + i*nm,1);
+            }
+
+            c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+                coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
+
+
+        BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_SumFac_UniformP)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
+            
+            SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
+            
+            Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,triPointsKeyDir1);
+
+            Nektar::LibUtilities::PointsType triPointsTypeDir2 = Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir2(5, triPointsTypeDir2);
+            Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,4,triPointsKeyDir2);
+            
+            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, triGeom);
+
+            Nektar::StdRegions::StdTriExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdTriExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2);
+
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            GeomVec.push_back(triGeom);
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+
+            const int nq = Exp->GetTotPoints();
+            const int nm = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> phys1(nq);
+            Array<OneD, NekDouble> phys2(nq);
+            Array<OneD, NekDouble> coeffs1(nm);
+            Array<OneD, NekDouble> coeffs2(nm);
+
+            Array<OneD, NekDouble> xc(nq), yc(nq);
+            
+            Exp->GetCoords(xc, yc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys1[i] = sin(xc[i])*cos(yc[i]);
+                phys2[i] = cos(xc[i])*sin(yc[i]);
+            }
+
+            // Standard routines
+            Exp->IProductWRTDerivBase(0, phys1, coeffs1);
+            Exp->IProductWRTDerivBase(1, phys2, coeffs2);
+            Vmath::Vadd(nm,coeffs1,1,coeffs2,1,coeffs1,1);
+            
+            c.ApplyOperator(Collections::eIProductWRTDerivBase, 
+                            phys1, phys2, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+                coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
+
+        BOOST_AUTO_TEST_CASE(TestTriIProductWRTDerivBase_SumFac_VariableP_MultiElmt)
+        {
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(2u, 0u, -1.5, -1.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(2u, 1u,  1.0, -1.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(2u, 2u, -1.0,  1.0, 0.0));
+            
+            SpatialDomains::TriGeomSharedPtr triGeom = CreateTri(v0, v1, v2);
+            
+            Nektar::LibUtilities::PointsType triPointsTypeDir1 = Nektar::LibUtilities::eGaussLobattoLegendre;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir1(5, triPointsTypeDir1);
+            Nektar::LibUtilities::BasisType       basisTypeDir1 = Nektar::LibUtilities::eModified_A;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir1(basisTypeDir1,4,triPointsKeyDir1);
+
+            Nektar::LibUtilities::PointsType triPointsTypeDir2 = Nektar::LibUtilities::eGaussRadauMAlpha1Beta0;
+            const Nektar::LibUtilities::PointsKey triPointsKeyDir2(7, triPointsTypeDir2);
+            Nektar::LibUtilities::BasisType       basisTypeDir2 = Nektar::LibUtilities::eModified_B;
+            const Nektar::LibUtilities::BasisKey  basisKeyDir2(basisTypeDir2,6,triPointsKeyDir2);
+            
+            Nektar::LocalRegions::TriExpSharedPtr Exp = 
+                MemoryManager<Nektar::LocalRegions::TriExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2, triGeom);
+
+            Nektar::StdRegions::StdTriExpSharedPtr stdExp = 
+                MemoryManager<Nektar::StdRegions::StdTriExp>::AllocateSharedPtr(basisKeyDir1,
+                basisKeyDir2);
+
+            int nelmts = 10;
+            
+            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            for(int i = 0; i < nelmts; ++i)
+            {
+                GeomVec.push_back(triGeom);
+            }
+            
+            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+
+            const int nq = Exp->GetTotPoints();
+            const int nm = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq), yc(nq),tmp,tmp1;
+            Array<OneD, NekDouble> phys1(nelmts*nq);
+            Array<OneD, NekDouble> phys2(nelmts*nq);
+            Array<OneD, NekDouble> coeffs1(nelmts*nm);
+            Array<OneD, NekDouble> coeffs2(nelmts*nm);
+            
+            Exp->GetCoords(xc, yc);
+        
+            for (int i = 0; i < nq; ++i)
+            {
+                phys1[i] = sin(xc[i])*cos(yc[i]);
+                phys2[i] = cos(xc[i])*sin(yc[i]);
+            }
+
+            for(int i = 0; i < nelmts; ++i)
+            {
+                Vmath::Vcopy(nq,phys1,1,tmp = phys1+i*nq,1);
+                Vmath::Vcopy(nq,phys2,1,tmp = phys2+i*nq,1);
+                
+                // Standard routines
+                Exp->IProductWRTDerivBase(0, phys1 + i*nq, 
+                                          tmp  = coeffs1 + i*nm);
+                Exp->IProductWRTDerivBase(1, phys2 + i*nq, 
+                                          tmp1 = coeffs2 + i*nm);
+                Vmath::Vadd(nm,coeffs1 +i*nm ,1,coeffs2 + i*nm ,1,
+                            tmp = coeffs1 + i*nm,1);
+            }
+
+            c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1, phys2, coeffs2);
+
+            double epsilon = 1.0e-8;
+            for(int i = 0; i < coeffs1.num_elements(); ++i)
+            {
+                coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];
+                coeffs2[i] = (fabs(coeffs2[i]) < 1e-14)? 0.0: coeffs2[i];
+                BOOST_CHECK_CLOSE(coeffs1[i],coeffs2[i], epsilon);
+            }
+        }
     }
 }

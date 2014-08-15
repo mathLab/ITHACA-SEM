@@ -1,0 +1,330 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: IProduct2D.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: IProduct operators for multiple calls in different operators
+//
+///////////////////////////////////////////////////////////////////////////////
+#include <Collections/Collection.h>
+#include <Collections/IProduct.h>
+
+namespace Nektar 
+{
+    namespace Collections 
+    {
+        void QuadIProduct(bool colldir0, bool colldir1, int numElmt, 
+                          int  nquad0,   int  nquad1, 
+                          int  nmodes0,  int  nmodes1, 
+                          const Array<OneD, const NekDouble> &base0,
+                          const Array<OneD, const NekDouble> &base1,
+                          const Array<OneD, const NekDouble> &jac, 
+                          const Array<OneD, const NekDouble> &input, 
+                          Array<OneD, NekDouble> &output,
+                          Array<OneD, NekDouble> &wsp)
+        {
+            int totpoints = nquad0*nquad1;
+            int totmodes  = nmodes0*nmodes1;
+            
+            Vmath::Vmul(numElmt*totpoints,jac,1,input,1,wsp,1);
+
+            if(colldir0 && colldir1)
+            {
+                Vmath::Vcopy(numElmt*totmodes,wsp.get(),1,output.get(),1);
+            }
+            else
+            {                 
+                Array<OneD, NekDouble> wsp1 = wsp  + max(totpoints,totmodes)*numElmt; 
+                if(colldir0)
+                {
+                    for(int i = 0; i < nquad0; ++i)
+                    {
+                        Vmath::Vcopy(nquad1*numElmt,&wsp[i],nquad0,
+                                     &wsp1[i*nquad1*numElmt],1);
+                    }
+                }
+                else
+                {
+                    Blas::Dgemm('T','N', nquad1*numElmt,nmodes0,nquad0,1.0,
+                                &wsp[0],nquad0, base0.get(), nquad0, 
+                                0.0,&wsp1[0], nquad1*numElmt);
+                }
+                
+                
+                if(numElmt > 1)
+                {
+                    
+                    if(colldir1)
+                    {
+                        for(int i = 0; i < nquad1; ++i)
+                        {
+                            Vmath::Vcopy(numElmt*nmodes0,&wsp1[i],nquad1,
+                                             &wsp[i*numElmt*nmodes0],1);
+                        }
+                    }
+                    else
+                    {
+                        
+                        Blas::Dgemm('T','N', numElmt*nmodes0,  nmodes1, nquad1,
+                                    1.0, &wsp1[0], nquad1, base1.get(),   nquad1,
+                                    0.0, &wsp[0], numElmt*nmodes0);
+                    }
+                    
+                    for(int i = 0; i < totmodes; ++i)
+                    {
+                        Vmath::Vcopy(numElmt,&wsp[i*numElmt],1,&output[i],totmodes);
+                    }
+                }
+                else
+                {
+                    if(colldir1)
+                    {
+                        for(int i = 0; i < nquad1; ++i)
+                        {
+                            Vmath::Vcopy(numElmt*nmodes0,&wsp1[i],nquad1,
+                                         &output[i*numElmt*nmodes0],1);
+                        }
+                    }
+                    else
+                    {
+                        Blas::Dgemm('T','N', nmodes0,  nmodes1, nquad1,
+                                    1.0, &wsp1[0], nquad1, base1.get(), nquad1,
+                                    0.0, &output[0], nmodes0);
+                    }
+                }
+            }
+        }
+
+        void TriIProduct(bool sortTopVertex, int numElmt, int  nquad0,  
+                         int nquad1, int nmodes0, int  nmodes1, 
+                         const Array<OneD, const NekDouble> &base0,
+                         const Array<OneD, const NekDouble> &base1,
+                         const Array<OneD, const NekDouble> &jac, 
+                         const Array<OneD, const NekDouble> &input, 
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp)
+        {
+            int totmodes  = LibUtilities::StdTriData::getNumberOfCoefficients(nmodes0,nmodes1);
+            int totpoints = nquad0*nquad1;
+            
+            Vmath::Vmul(numElmt*totpoints,jac,1,input,1,wsp,1);
+            
+            Array<OneD, NekDouble> wsp1 = wsp + max(totpoints,totmodes)*numElmt; 
+                
+            Blas::Dgemm('T','N', nquad1*numElmt,nmodes0,nquad0,1.0,&wsp[0],nquad0, 
+                        base0.get(), nquad0, 0.0, &wsp1[0], nquad1*numElmt);
+                
+            int i, mode;
+            // Inner product with respect to 'b' direction 
+            for (mode=i=0; i < nmodes0; ++i)
+            {
+                Blas::Dgemm('T','N',nmodes1-i,numElmt,nquad1,1.0,base1.get()+mode*nquad1,
+                            nquad1,wsp1.get() + i*nquad1*numElmt,nquad1, 
+                            0.0, &output[mode],totmodes);
+                
+                mode += nmodes1 - i;
+            }
+            
+            // fix for modified basis by splitting top vertex mode
+            if (sortTopVertex)
+            {
+                Blas::Dgemv('T', nquad1,numElmt,1.0,wsp1.get()+nquad1*numElmt,nquad1,
+                            base1.get()+nquad1,1,1.0, &output[1],totmodes);
+            }
+        }
+
+
+        void HexIProduct(bool colldir0, bool colldir1, bool colldir2, int numElmt, 
+                         int  nquad0,   int  nquad1,  int nquad2, 
+                         int  nmodes0,  int  nmodes1, int nmodes2,
+                         const Array<OneD, const NekDouble> &base0,
+                         const Array<OneD, const NekDouble> &base1,
+                         const Array<OneD, const NekDouble> &base2,
+                         const Array<OneD, const NekDouble> &jac, 
+                         const Array<OneD, const NekDouble> &input, 
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp)
+        {
+            int totmodes  = nmodes0*nmodes1*nmodes2;
+            int totpoints = nquad0 *nquad1 *nquad2;
+            
+            
+            if(colldir0 && colldir1 && colldir2)
+            {
+                
+                Vmath::Vmul(numElmt*totpoints,jac,1,input,1,output,1);
+            }
+            else
+            { 
+                Vmath::Vmul(numElmt*totpoints,jac,1,input,1,wsp,1);
+                
+                // Assign second half of workspace for 2nd DGEMM operation.
+                Array<OneD, NekDouble> wsp1 = wsp  + totpoints*numElmt; 
+                if(numElmt < nmodes0) // note sure what criterion we should use to swap around these strategies
+                {
+                    Array<OneD, NekDouble> wsp2 = wsp1 + nmodes0*nquad1*nquad2;
+                    
+                    //loop over elements 
+                    for(int n = 0; n < numElmt; ++n)
+                    {
+                        if(colldir0)
+                        {
+                            
+                            for(int i = 0; i < nmodes0; ++i)
+                            {
+                                Vmath::Vcopy(nquad1*nquad2,&wsp[n*totpoints] + i,nquad0,
+                                             wsp1.get()+nquad1*nquad2*i,1);
+                            }
+                        }
+                        else
+                        {
+                            Blas::Dgemm('T', 'N', nquad1*nquad2, nmodes0, nquad0,
+                                        1.0, &wsp[n*totpoints],  nquad0,
+                                        base0.get(), nquad0,
+                                        0.0, wsp1.get(),  nquad1*nquad2);
+                        }
+                        
+                        
+                        if(colldir1)
+                        {
+                            // reshuffle data for next operation.
+                            for(int i = 0; i < nmodes1; ++i)
+                            {
+                                Vmath::Vcopy(nquad2*nmodes0,wsp1.get()+i,nquad1,
+                                             wsp2.get()+nquad2*nmodes0*i,1);
+                            }
+                        }
+                        else
+                        {
+                            Blas::Dgemm('T', 'N', nquad2*nmodes0, nmodes1, nquad1,
+                                        1.0, wsp1.get(),  nquad1,
+                                        base1.get(), nquad1,
+                                        0.0, wsp2.get(),  nquad2*nmodes0);
+                        }
+                        
+                        if(colldir2)
+                        {
+                            // reshuffle data for next operation.
+                            for(int i = 0; i < nmodes2; ++i)
+                            {
+                                Vmath::Vcopy(nmodes0*nmodes1,wsp2.get()+i,nquad2,
+                                             &output[n*totmodes]+nmodes0*nmodes1*i,1);
+                            }
+                        }
+                        else
+                        {
+                            Blas::Dgemm('T', 'N', nmodes0*nmodes1, nmodes2, nquad2,
+                                        1.0, wsp2.get(),  nquad2,
+                                        base2.get(), nquad2,
+                                        0.0, &output[n*totmodes], nmodes0*nmodes1);
+                        }
+                    }
+                }
+                else
+                {
+                    Array<OneD, NekDouble> wsp2 = wsp1 + numElmt*(max(totpoints,totmodes));
+                    
+                    if(colldir0)
+                    {
+                        for(int i = 0; i < nquad0; ++i)
+                        {
+                            Vmath::Vcopy(nquad1*nquad2*numElmt,&wsp[i],nquad0,
+                                         &wsp1[i*nquad1*nquad2*numElmt],1);
+                        }
+                    }
+                    else
+                    {
+                        // large degmm but copy at end. 
+                        Blas::Dgemm('T','N', nquad1*nquad2*numElmt, nmodes0, nquad0,
+                                    1.0, &wsp[0],  nquad0,  base0.get(),   nquad0,
+                                    0.0, &wsp1[0], nquad1*nquad2*numElmt);
+                    }
+                    
+                    if(colldir1)
+                    {
+                        for(int i = 0; i < nquad1; ++i)
+                        {
+                            Vmath::Vcopy(nquad2*numElmt*nmodes0,&wsp1[i],nquad1,
+                                         &wsp2[i*nquad2*numElmt*nmodes0],1);
+                        }
+                    }
+                    else
+                    {
+                        Blas::Dgemm('T','N', nquad2*numElmt*nmodes0,  nmodes1, nquad1,
+                                    1.0, &wsp1[0],   nquad1, base1.get(),   nquad1,
+                                    0.0, &wsp2[0],  nquad2*numElmt*nmodes0);
+                    }
+                    
+                    
+                    if(numElmt > 1)
+                    {
+                        if(colldir2)
+                        {
+                            for(int i = 0; i < nquad2; ++i)
+                            {
+                                Vmath::Vcopy(numElmt*nmodes0*nmodes1,&wsp2[i],nquad2,
+                                                &wsp1[i*numElmt*nmodes0*nmodes1],1);
+                            }
+                        }
+                        else
+                        {
+                            
+                            Blas::Dgemm('T','N', numElmt*nmodes0*nmodes1, nmodes2, nquad2,
+                                        1.0, &wsp2[0],  nquad2,  base2.get(),   nquad2,
+                                        0.0, &wsp1[0],  numElmt*nmodes0*nmodes1);
+                        }       
+                        
+                        for(int i = 0; i < totmodes; ++i)
+                        {
+                            Vmath::Vcopy(numElmt,&wsp1[i*numElmt],1,&output[i],totmodes);
+                        }
+                        
+                    }
+                    else
+                    {
+                        if(colldir2)
+                        {
+                            for(int i = 0; i < nquad2; ++i)
+                            {
+                                Vmath::Vcopy(nmodes0*nmodes1,&wsp2[i],nquad2,
+                                             &output[i*nmodes0*nmodes1],1);
+                            }
+                        }
+                        else
+                        {
+                            Blas::Dgemm('T','N', numElmt*nmodes0*nmodes1, nmodes2, nquad2,
+                                        1.0, &wsp2[0],  nquad2,  base2.get(),   nquad2,
+                                        0.0, &output[0],  numElmt*nmodes0*nmodes1);
+                        }
+                    }
+                }                
+            }
+        }
+    }
+}

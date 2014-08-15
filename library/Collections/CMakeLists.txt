@@ -2,6 +2,7 @@ SET(COLLECTIONS_SOURCES
   Collection.cpp
   Operator.cpp
   HexOperators.cpp
+  IProduct.cpp
   QuadOperators.cpp
   SegOperators.cpp
   TriOperators.cpp
@@ -9,7 +10,7 @@ SET(COLLECTIONS_SOURCES
 
 SET(SOLVER_UTILS_HEADERS
   Collection.h
-  IProduct2D.h
+  IProduct.h
   Operator.h
 )
 

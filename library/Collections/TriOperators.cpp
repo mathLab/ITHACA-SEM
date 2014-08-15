@@ -35,7 +35,7 @@
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
-
+#include <Collections/IProduct.h>
 namespace Nektar 
 {
     namespace Collections 
@@ -137,11 +137,11 @@ namespace Nektar
                   m_nquad0  (pExp->GetNumPoints(0)),
                   m_nquad1  (pExp->GetNumPoints(1)),
                   m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1))
+                  m_nmodes1 (pExp->GetBasisNumModes(1)),
+                  m_base0   (pExp->GetBasis(0)->GetBdata()),
+                  m_base1   (pExp->GetBasis(1)->GetBdata())
             {
                 m_jac     = GeomData->GetJacWithStdWeights(pExp,pGeom);
-                m_base0   = GeomData->GetBase(0,pExp);
-                m_base1   = GeomData->GetBase(1,pExp);
                 m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
                 if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
                 {
@@ -159,36 +159,11 @@ namespace Nektar
                                     Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
-                int totmodes  = m_stdExp->GetNcoeffs(); 
-                int totpoints = m_nquad0 *m_nquad1;
-                
-                Vmath::Vmul(m_numElmt*totpoints,m_jac,1,input,1,wsp,1);
-
                 ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
-                
-                Array<OneD, NekDouble> wsp1 = wsp  + max(totpoints,totmodes)*m_numElmt; 
-                
-                Blas::Dgemm('T','N', m_nquad1*m_numElmt,m_nmodes0,m_nquad0,1.0,
-                            &wsp[0],m_nquad0, m_base0.get(), m_nquad0, 
-                            0.0,&wsp1[0], m_nquad1*m_numElmt);
-                
-                int i, mode;
-                // Inner product with respect to 'b' direction 
-                for (mode=i=0; i < m_nmodes0; ++i)
-                {
-                    Blas::Dgemm('T','N',m_nmodes1-i,m_numElmt,m_nquad1,1.0,m_base1.get()+mode*m_nquad1,
-                                m_nquad1,wsp1.get() + i*m_nquad1*m_numElmt,m_nquad1, 
-                                0.0, &output[mode],totmodes);
-                    
-                    mode += m_nmodes1 - i;
-                }
 
-                // fix for modified basis by splitting top vertex mode
-                if (m_sortTopVertex)
-                {
-                    Blas::Dgemv('T', m_nquad1,m_numElmt,1.0,wsp1.get()+m_nquad1*m_numElmt,m_nquad1,
-                                m_base1.get()+m_nquad1,1,1.0, &output[1],totmodes);
-                }
+                TriIProduct(m_sortTopVertex, m_numElmt, m_nquad0, m_nquad1, 
+                            m_nmodes0, m_nmodes1,m_base0,m_base1,m_jac, input,
+                            output,wsp);
             }
             
             OPERATOR_CREATE(IProductWRTBase_SumFac_Tri)
@@ -333,5 +308,171 @@ namespace Nektar
 
 
 
+
+        /*
+         * ----------------------------------------------------------
+         * IProductWRTDerivBase operator
+         * ----------------------------------------------------------
+         */       
+        class IProductWRTDerivBase_SumFac_Tri : public Operator
+        {
+        public:
+            IProductWRTDerivBase_SumFac_Tri(
+                   StdRegions::StdExpansionSharedPtr pExp,
+                   vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                   CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pExp, pGeom, GeomData),
+                  m_nquad0  (pExp->GetNumPoints(0)),
+                  m_nquad1  (pExp->GetNumPoints(1)),
+                  m_nmodes0 (pExp->GetBasisNumModes(0)),
+                  m_nmodes1 (pExp->GetBasisNumModes(1)),
+                  m_colldir0(pExp->GetBasis(0)->Collocation()),
+                  m_colldir1(pExp->GetBasis(1)->Collocation()),
+                  m_base0   (pExp->GetBasis(0)->GetBdata()),
+                  m_base1   (pExp->GetBasis(1)->GetBdata()),
+                  m_derbase0   (pExp->GetBasis(0)->GetDbdata()),
+                  m_derbase1   (pExp->GetBasis(1)->GetDbdata())
+            {
+                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                m_coordim = m_stdExp->GetCoordim();
+                
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_jac      = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_wspSize  = 4*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
+
+                if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
+                {
+                    m_sortTopVertex = true;
+                }
+                else
+                {
+                    m_sortTopVertex = false;
+                }
+
+                const Array<OneD, const NekDouble>& z0 = pExp->GetBasis(0)->GetZ();
+                const Array<OneD, const NekDouble>& z1 = pExp->GetBasis(1)->GetZ();
+                
+                m_fac0 = Array<OneD, NekDouble>(m_nquad0*m_nquad1);
+                // set up geometric factor: 2/(1-z1)
+                for (int i = 0; i < m_nquad0; ++i)
+                {
+                    for(int j = 0; j < m_nquad1; ++j)
+                    {
+                        m_fac0[i+j*m_nquad0] = 2.0/(1-z1[j]);
+                    }
+                }
+
+                m_fac1 = Array<OneD, NekDouble>(m_nquad0*m_nquad1);
+                // set up geometric factor: (1+z0)/(1-z1)
+                for (int i = 0; i < m_nquad0; ++i)
+                {
+                    for(int j = 0; j < m_nquad1; ++j)
+                    {
+                        m_fac1[i+j*m_nquad0] = (1+z0[i])/(1-z1[j]);
+                    }
+                }
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &entry0,
+                                    Array<OneD, NekDouble> &entry1,
+                                    Array<OneD, NekDouble> &entry2,
+                                    Array<OneD, NekDouble> &entry3,
+                                    Array<OneD, NekDouble> &wsp)
+            {
+                unsigned int nPhys  = m_stdExp->GetTotPoints();
+                unsigned int ntot   = m_numElmt*nPhys;
+                unsigned int nmodes = m_stdExp->GetNcoeffs();
+                unsigned int nmax   = max(ntot,m_numElmt*nmodes);
+                Array<OneD, Array<OneD, const NekDouble> > in(3);
+                Array<OneD, NekDouble> output, wsp1;
+                Array<OneD, Array<OneD, NekDouble> > tmp(2);
+                
+                in[0] = entry0; in[1] = entry1; in[2] = entry2; 
+                
+                output = (m_coordim == 2)? entry2: entry3;
+                
+                tmp[0] = wsp; tmp[1] = wsp + nmax;
+                wsp1   = wsp + 2*nmax;
+                
+                
+                // calculate (dphi/dx,in[0]) = ((dphi/dxi_0 dxi_0/dx + dphi/dxi_1 dxi_1/dx),in[0])
+                //     +     (dphi/dy,in[1]) = ((dphi/dxi_0 dxi_0/dy + dphi/dxi_1 dxi_1/dy),in[1]) 
+                //
+                // Note dphi/dxi_0  = 
+                //             dphi/deta_0 deta_0/dxi_0 = dphi/deta_0 2/(1-eta_1) 
+                // 
+                //      dphi/dxi_1  = 
+                //             dphi/deta_1 deta_1/dxi_1 + dphi/deta_1 deta_1/dxi_1 = 
+                //             dphi/deta_0 (1+eta_0)/(1-eta_1) + dphi/deta_1
+                // 
+                // and so the full inner products are 
+                //
+                // (dphi/dx,in[0]) + (dphi/dy,in[1])
+                //    = (dphi/deta_0, ((2/(1-eta_1) (dxi_0/dx in[0] + dxi_0/dy in[1])
+                //            + (1_eta_0)/(1-eta_1) (dxi_1/dx in[0] + dxi_1/dy in[1]))
+                //    + (dphi/deta_1, (dxi_1/dx in[0] + dxi_1/dy in[1]))
+                
+                for(int i = 0; i < 2; ++i)
+                {
+                    Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, tmp[i],1);
+
+                    for(int j = 1; j < m_coordim; ++j)
+                    {
+                        Vmath::Vvtvp (ntot,m_derivFac[i +j*2],1,
+                                      in[j],1, tmp[i], 1, tmp[i],1);
+                    }
+                }
+            
+                // Multiply by factor: 2/(1-z1)
+                for (int i = 0; i < m_numElmt; ++i)
+                {
+                    // scale tmp[0] by geometric factor: 2/(1-z1)
+                    Vmath::Vmul(nPhys,&m_fac0[0],1,tmp[0].get()+i*nPhys,1,
+                                tmp[0].get()+i*nPhys,1);
+                    
+                    // scale tmp[1] by geometric factor (1+z0)/(1-z1)
+                    Vmath::Vvtvp(nPhys,&m_fac1[0],1,tmp[1].get()+i*nPhys,1,
+                                 tmp[0].get()+i*nPhys,1,tmp[0].get()+i*nPhys,1);
+                }
+                
+                // Iproduct wrt derivative of base 0 
+                TriIProduct(m_sortTopVertex, m_numElmt, m_nquad0, m_nquad1,
+                            m_nmodes0,  m_nmodes1, m_derbase0, m_base1,
+                            m_jac, tmp[0], output, wsp1);
+                
+                // Iproduct wrt derivative of base 1 
+                TriIProduct(m_sortTopVertex, m_numElmt, m_nquad0, m_nquad1,
+                            m_nmodes0,  m_nmodes1, m_base0, m_derbase1,
+                            m_jac, tmp[1], tmp[0], wsp1);
+                
+                Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+            }
+            
+            OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Tri)
+            
+            const int  m_nquad0;
+            const int  m_nquad1;
+            const int  m_nmodes0;
+            const int  m_nmodes1;
+            const bool m_colldir0;
+            const bool m_colldir1;
+            int m_coordim;
+            Array<TwoD, const NekDouble> m_derivFac;
+            Array<OneD, const NekDouble> m_jac;
+            Array<OneD, const NekDouble> m_base0;
+            Array<OneD, const NekDouble> m_base1;
+            Array<OneD, const NekDouble> m_derbase0;
+            Array<OneD, const NekDouble> m_derbase1;
+            Array<OneD, NekDouble> m_fac0;
+            Array<OneD, NekDouble> m_fac1;
+            bool m_sortTopVertex;
+        };
+        
+        OperatorKey IProductWRTDerivBase_SumFac_Tri::m_type = 
+            GetOperatorFactory().RegisterCreatorFunction(
+                OperatorKey(LibUtilities::eTriangle, 
+                            eIProductWRTDerivBase, eSumFac),
+                IProductWRTDerivBase_SumFac_Tri::create, 
+                "IProductWRTDerivBase_IterPerExp_Tri");
     }
 }

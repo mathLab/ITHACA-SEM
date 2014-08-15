@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
     int nelmt = Exp->GetNumElmts();
 
-    for(int imp = 0; imp < 2; ++imp)
+    for(int imp = 0; imp < 3; ++imp)
     {
 
         // set up different collection implementations:

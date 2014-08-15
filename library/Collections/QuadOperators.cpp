@@ -35,7 +35,7 @@
 
 #include <Collections/Operator.h>
 #include <Collections/Collection.h>
-#include <Collections/IProduct2D.hpp>
+#include <Collections/IProduct.h>
 namespace Nektar 
 {
     namespace Collections 
@@ -58,7 +58,9 @@ namespace Nektar
                   m_nmodes0 (pExp->GetBasisNumModes(0)),
                   m_nmodes1 (pExp->GetBasisNumModes(1)),
                   m_colldir0(pExp->GetBasis(0)->Collocation()),
-                  m_colldir1(pExp->GetBasis(1)->Collocation())
+                  m_colldir1(pExp->GetBasis(1)->Collocation()), 
+                  m_base0   (pExp->GetBasis(0)->GetBdata()),
+                  m_base1   (pExp->GetBasis(1)->GetBdata())
             {
                 m_wspSize = m_nquad0*m_nmodes1*m_numElmt;
             }
@@ -79,32 +81,32 @@ namespace Nektar
                     Array<OneD, const NekDouble> base1  = m_stdExp->GetBasis(1)->GetBdata();
                     for(int i = 0; i < m_numElmt; ++i)
                     {
-                        Blas::Dgemm('N','T', m_nquad0, m_nquad1,m_nmodes1, 1.0, &input[i*m_nquad0*m_nmodes1], m_nquad0, 
-                                    base1.get(), m_nquad1, 0.0, &output[i*m_nquad0*m_nquad1], m_nquad0);
+                        Blas::Dgemm('N','T', m_nquad0, m_nquad1,m_nmodes1, 1.0, 
+                                    &input[i*m_nquad0*m_nmodes1], m_nquad0, 
+                                    base1.get(), m_nquad1, 0.0, &output[i*m_nquad0*m_nquad1],
+                                    m_nquad0);
                     }
                 }
                 else if(m_colldir1)
                 {
-                    Array<OneD, const NekDouble> base0  = m_stdExp->GetBasis(0)->GetBdata();
-                    Blas::Dgemm('N','N', m_nquad0,m_nmodes1*m_numElmt,m_nmodes0,1.0, base0.get(),
+                    Blas::Dgemm('N','N', m_nquad0,m_nmodes1*m_numElmt,m_nmodes0,1.0, m_base0.get(),
                                 m_nquad0, &input[0], m_nmodes0,0.0,&output[0], m_nquad0);
                 }
                 else
                 { 
                     ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
                     
-                    Array<OneD, const NekDouble> base0  = m_stdExp->GetBasis(0)->GetBdata();
-                    Array<OneD, const NekDouble> base1  = m_stdExp->GetBasis(1)->GetBdata();
-
                     // Those two calls correpsond to the operation
                     // out = B0*in*Transpose(B1); 
-                    Blas::Dgemm('N','N', m_nquad0,m_nmodes1*m_numElmt,m_nmodes0,1.0, base0.get(),
+                    Blas::Dgemm('N','N', m_nquad0,m_nmodes1*m_numElmt,m_nmodes0,1.0, m_base0.get(),
                                 m_nquad0, &input[0], m_nmodes0,0.0,&wsp[0], m_nquad0);
             
                     for(int i = 0; i < m_numElmt; ++i)
                     {
-                        Blas::Dgemm('N','T', m_nquad0, m_nquad1,m_nmodes1, 1.0, &wsp[i*m_nquad0*m_nmodes1], m_nquad0, 
-                                    base1.get(), m_nquad1, 0.0, &output[i*m_nquad0*m_nquad1], m_nquad0);
+                        Blas::Dgemm('N','T', m_nquad0, m_nquad1,m_nmodes1, 1.0, 
+                                    &wsp[i*m_nquad0*m_nmodes1], m_nquad0, 
+                                    m_base1.get(), m_nquad1, 0.0, &output[i*m_nquad0*m_nquad1], 
+                                    m_nquad0);
                     }
                 } 
             }
@@ -118,6 +120,8 @@ namespace Nektar
             const int  m_nmodes1;
             const bool m_colldir0;
             const bool m_colldir1;
+            Array<OneD, const NekDouble> m_base0;
+            Array<OneD, const NekDouble> m_base1;
         };
         
         OperatorKey BwdTrans_SumFac_Quad::m_type = GetOperatorFactory().
@@ -143,11 +147,11 @@ namespace Nektar
                   m_nmodes0 (pExp->GetBasisNumModes(0)),
                   m_nmodes1 (pExp->GetBasisNumModes(1)),
                   m_colldir0(pExp->GetBasis(0)->Collocation()),
-                  m_colldir1(pExp->GetBasis(1)->Collocation())
+                  m_colldir1(pExp->GetBasis(1)->Collocation()),
+                  m_base0   (pExp->GetBasis(0)->GetBdata()),
+                  m_base1   (pExp->GetBasis(1)->GetBdata())
             {
                 m_jac     = GeomData->GetJacWithStdWeights(pExp,pGeom);
-                m_base0   = GeomData->GetBase(0,pExp);
-                m_base1   = GeomData->GetBase(1,pExp);
                 m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
             }
             
@@ -157,86 +161,13 @@ namespace Nektar
                                     Array<OneD,       NekDouble> &output2,
                                     Array<OneD,       NekDouble> &wsp)
             {
-#if 1
-                Vmath::Vmul(m_numElmt*m_nquad0*m_nquad1,m_jac,1,input,1,wsp,1);
                 ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
+
                 QuadIProduct(m_colldir0,m_colldir1,m_numElmt, 
                              m_nquad0,  m_nquad1,
                              m_nmodes0, m_nmodes1, 
                              m_base0,   m_base1,
-                             input,output,wsp);
-#endif
-                int totmodes  = m_nmodes0*m_nmodes1;
-                int totpoints = m_nquad0 *m_nquad1;
-                Vmath::Vmul(m_numElmt*totpoints,m_jac,1,input,1,wsp,1);
-                if(m_colldir0 && m_colldir1)
-                {
-                    Vmath::Vcopy(m_numElmt*totmodes,wsp.get(),1,output.get(),1);
-                }
-                else
-                { 
-                    ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
-                    
-                    Array<OneD, NekDouble> wsp1 = wsp  + max(totpoints,totmodes)*m_numElmt; 
-
-                    if(m_colldir0)
-                    {
-                        for(int i = 0; i < m_nquad0; ++i)
-                        {
-                            Vmath::Vcopy(m_nquad1*m_numElmt,&wsp[i],m_nquad0,
-                                         &wsp1[i*m_nquad1*m_numElmt],1);
-                        }
-                    }
-                    else
-                    {
-                        Blas::Dgemm('T','N', m_nquad1*m_numElmt,m_nmodes0,m_nquad0,1.0,
-                                &wsp[0],m_nquad0, m_base0.get(), m_nquad0, 
-                                    0.0,&wsp1[0], m_nquad1*m_numElmt);
-                    }
-
-                    
-                    if(m_numElmt > 1)
-                    {
-
-                        if(m_colldir1)
-                        {
-                            for(int i = 0; i < m_nquad1; ++i)
-                            {
-                                Vmath::Vcopy(m_numElmt*m_nmodes0,&wsp1[i],m_nquad1,
-                                             &wsp[i*m_numElmt*m_nmodes0],1);
-                            }
-                        }
-                        else
-                        {
-                            
-                            Blas::Dgemm('T','N', m_numElmt*m_nmodes0,  m_nmodes1, m_nquad1,
-                                        1.0, &wsp1[0], m_nquad1, m_base1.get(),   m_nquad1,
-                                        0.0, &wsp[0], m_numElmt*m_nmodes0);
-                        }
-                        
-                        for(int i = 0; i < totmodes; ++i)
-                        {
-                            Vmath::Vcopy(m_numElmt,&wsp[i*m_numElmt],1,&output[i],totmodes);
-                        }
-                    }
-                    else
-                    {
-                        if(m_colldir1)
-                        {
-                            for(int i = 0; i < m_nquad1; ++i)
-                            {
-                                Vmath::Vcopy(m_numElmt*m_nmodes0,&wsp1[i],m_nquad1,
-                                             &output[i*m_numElmt*m_nmodes0],1);
-                            }
-                        }
-                        else
-                        {
-                            Blas::Dgemm('T','N', m_nmodes0,  m_nmodes1, m_nquad1,
-                                        1.0, &wsp1[0], m_nquad1, m_base1.get(),   m_nquad1,
-                                        0.0, &output[0], m_nmodes0);
-                        }
-                    }
-                }
+                             m_jac, input, output, wsp);
             }
             
             OPERATOR_CREATE(IProductWRTBase_SumFac_Quad)
@@ -338,10 +269,116 @@ namespace Nektar
         };
         
         OperatorKey PhysDeriv_SumFac_Quad::m_type = GetOperatorFactory().
-            RegisterCreatorFunction(OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, 
-                                                eSumFac),
-                                    PhysDeriv_SumFac_Quad::create, "PhysDeriv_SumFac_Quad");
+            RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eQuadrilateral, 
+                                  ePhysDeriv, eSumFac),
+                      PhysDeriv_SumFac_Quad::create, "PhysDeriv_SumFac_Quad");
 
 
+        /*
+         * ----------------------------------------------------------
+         * IProductWRTDerivBase operator
+         * ----------------------------------------------------------
+         */       
+        class IProductWRTDerivBase_SumFac_Quad : public Operator
+        {
+        public:
+            IProductWRTDerivBase_SumFac_Quad(
+                   StdRegions::StdExpansionSharedPtr pExp,
+                   vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                   CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pExp, pGeom, GeomData),
+                  m_nquad0  (pExp->GetNumPoints(0)),
+                  m_nquad1  (pExp->GetNumPoints(1)),
+                  m_nmodes0 (pExp->GetBasisNumModes(0)),
+                  m_nmodes1 (pExp->GetBasisNumModes(1)),
+                  m_colldir0(pExp->GetBasis(0)->Collocation()),
+                  m_colldir1(pExp->GetBasis(1)->Collocation()),
+                  m_base0   (pExp->GetBasis(0)->GetBdata()),
+                  m_base1   (pExp->GetBasis(1)->GetBdata()),
+                  m_derbase0   (pExp->GetBasis(0)->GetDbdata()),
+                  m_derbase1   (pExp->GetBasis(1)->GetDbdata())
+            {
+                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                m_coordim = m_stdExp->GetCoordim();
+                
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_jac      = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_wspSize  = 4*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &entry0,
+                                    Array<OneD, NekDouble> &entry1,
+                                    Array<OneD, NekDouble> &entry2,
+                                    Array<OneD, NekDouble> &entry3,
+                                    Array<OneD, NekDouble> &wsp)
+            {
+                unsigned int nPhys  = m_stdExp->GetTotPoints();
+                unsigned int ntot   = m_numElmt*nPhys;
+                unsigned int nmodes = m_stdExp->GetNcoeffs();
+                unsigned int nmax   = max(ntot,m_numElmt*nmodes);
+                Array<OneD, Array<OneD, const NekDouble> > in(3);
+                Array<OneD, NekDouble> output, wsp1;
+                Array<OneD, Array<OneD, NekDouble> > tmp(2);
+                
+                in[0] = entry0; in[1] = entry1; in[2] = entry2; 
+                
+                output = (m_coordim == 2)? entry2: entry3;
+                
+                tmp[0] = wsp; tmp[1] = wsp + nmax;
+                wsp1   = wsp + 2*nmax;
+                
+                // calculate dx/dxi in[0] + dy/dxi in[1] 
+                for(int i = 0; i < 2; ++i)
+                {
+                    Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, 
+                                 tmp[i],1);
+                    for(int j = 1; j < m_coordim; ++j)
+                    {
+                        Vmath::Vvtvp (ntot,m_derivFac[i +j*2],1,
+                                      in[j],1, tmp[i], 1, tmp[i],1);
+                    }
+                }
+            
+                // Iproduct wrt derivative of base 0 
+                QuadIProduct(false, m_colldir1,m_numElmt, 
+                             m_nquad0,   m_nquad1,
+                             m_nmodes0,  m_nmodes1, 
+                             m_derbase0, m_base1,
+                             m_jac, tmp[0], output, wsp1);
+                
+                // Iproduct wrt derivative of base 1 
+                QuadIProduct(m_colldir0, false, m_numElmt, 
+                             m_nquad0,   m_nquad1,
+                             m_nmodes0,  m_nmodes1, 
+                             m_base0, m_derbase1,
+                             m_jac, tmp[1],  tmp[0], wsp1);
+                
+                Vmath::Vadd(m_numElmt*nmodes,tmp[0],1,output,1,output,1);
+            }
+            
+            OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Quad)
+            
+            const int  m_nquad0;
+            const int  m_nquad1;
+            const int  m_nmodes0;
+            const int  m_nmodes1;
+            const bool m_colldir0;
+            const bool m_colldir1;
+            int m_coordim;
+            Array<TwoD, const NekDouble> m_derivFac;
+            Array<OneD, const NekDouble> m_jac;
+            Array<OneD, const NekDouble> m_base0;
+            Array<OneD, const NekDouble> m_base1;
+            Array<OneD, const NekDouble> m_derbase0;
+            Array<OneD, const NekDouble> m_derbase1;
+        };
+        
+        OperatorKey IProductWRTDerivBase_SumFac_Quad::m_type = 
+            GetOperatorFactory().RegisterCreatorFunction(
+                OperatorKey(LibUtilities::eQuadrilateral, 
+                            eIProductWRTDerivBase, eSumFac),
+                IProductWRTDerivBase_SumFac_Quad::create, 
+                "IProductWRTDerivBase_IterPerExp_Quad");
     }
 }

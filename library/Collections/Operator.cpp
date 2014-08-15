@@ -580,33 +580,22 @@ namespace Nektar {
                                     Array<OneD, NekDouble> &entry3,
                                     Array<OneD, NekDouble> &wsp)
             {
-                int nPhys = m_stdExp->GetTotPoints();
-                int ntot = m_numElmt*nPhys;
-                int nmodes = m_stdExp->GetNcoeffs();
+                unsigned int nPhys  = m_stdExp->GetTotPoints();
+                unsigned int ntot   = m_numElmt*nPhys;
+                unsigned int nmodes = m_stdExp->GetNcoeffs();
+                unsigned int nmax   = max(ntot,m_numElmt*nmodes);
                 Array<OneD, Array<OneD, const NekDouble> > in(3);
-                Array<OneD, NekDouble> output;
+                Array<OneD, NekDouble> output, tmp1;
                 Array<OneD, Array<OneD, NekDouble> > tmp(3);
 
                 in[0] = entry0; in[1] = entry1; in[2] = entry2; 
 
-                switch(m_coordim)
-                {
-                case 1:
-                    output = entry1;
-                    break;
-                case 2:
-                    output = entry2;
-                    break;
-                case 3:
-                    output = entry3;
-                    break;
-                default:
-                    break;
-                }
+                output = (m_coordim == 3)? entry3: (m_coordim == 2)?
+                    entry2: entry1;
 
                 for(int i = 0; i < m_dim; ++i)
                 {
-                    tmp[i] = wsp + i*ntot; 
+                    tmp[i] = wsp + i*nmax; 
                 }
                 
                 // calculate dx/dxi in[0] + dy/dxi in[2] + dz/dxi in[3]
@@ -621,18 +610,25 @@ namespace Nektar {
                     }
                 }
 
-                Vmath::Zero(nmodes*m_numElmt,output,1);
-                Array<OneD, NekDouble> tmp1(nmodes);
                 // calculate Iproduct WRT Std Deriv
-                for(int i = 0; i < m_dim; ++i)
+                // first component
+                Vmath::Vmul(ntot,m_jac,1,tmp[0],1,tmp[0],1);
+                for(int n = 0; n < m_numElmt; ++n)
+                {
+                    m_stdExp->IProductWRTDerivBase(0,tmp[0]+n*nPhys,
+                                                   tmp1 = output + n*nmodes);
+                }
+
+                // other components
+                for(int i = 1; i < m_dim; ++i)
                 {
                     // multiply by Jacobian
-                    Vmath::Vmul(m_numElmt*nPhys,m_jac,1,tmp[i],1,tmp[i],1);
+                    Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
                     for(int n = 0; n < m_numElmt; ++n)
                     {
-                        m_stdExp->IProductWRTDerivBase(i,tmp[i]+n*nPhys,tmp1);
-                        Vmath::Vadd(nmodes,&tmp1[0],1,&output[n*nmodes],1,
-                                    &output[n*nmodes],1);
+                        m_stdExp->IProductWRTDerivBase(i,tmp[i]+n*nPhys,tmp[0]);
+                        Vmath::Vadd(nmodes,tmp[0],1,output+n*nmodes,1,
+                                    tmp1 = output+n*nmodes,1);
                     }
                 }
             }
@@ -728,34 +724,22 @@ namespace Nektar {
                 int nPhys = m_stdExp->GetTotPoints();
                 int ntot = m_numElmt*nPhys;
                 int nmodes = m_stdExp->GetNcoeffs();
-                Array<OneD, Array<OneD, const NekDouble> > in(4);
+                Array<OneD, Array<OneD, const NekDouble> > in(3);
                 Array<OneD, NekDouble> output;
                 Array<OneD, Array<OneD, NekDouble> > tmp(3);
 
                 in[0] = entry0; in[1] = entry1; 
-                in[2] = entry2; in[3] = entry3;
-
-                switch(m_coordim)
-                {
-                case 1:
-                    output = entry1;
-                    break;
-                case 2:
-                    output = entry2;
-                    break;
-                case 3:
-                    output = entry3;
-                    break;
-                default:
-                    break;
-                }
+                in[2] = entry2; 
                 
+                output = (m_coordim == 3)? entry3: (m_coordim == 2)?
+                    entry2: entry1;
+
                 for(int i = 0; i < m_dim; ++i)
                 {
                     tmp[i] = wsp + i*ntot; 
                 }
                 
-                // calculate dx/dxi in[0] + dy/dxi in[2] + dz/dxi in[3]
+                // calculate dx/dxi in[0] + dy/dxi in[1] + dz/dxi in[2]
                 for(int i = 0; i < m_dim; ++i)
                 {
                     Vmath::Vmul (ntot,m_derivFac[i],1, in[0],1, 
@@ -767,17 +751,27 @@ namespace Nektar {
                     }
                 }
 
-                Vmath::Zero(nmodes*m_numElmt,output,1);
                 // calculate Iproduct WRT Std Deriv
-                for(int i = 0; i < m_dim; ++i)
+
+                // First component
+                Vmath::Vmul(ntot,m_jac,1,tmp[0],1,tmp[0],1);
+                Blas::Dgemm('N', 'N', m_iProdWRTStdDBase[0]->GetRows(), 
+                            m_numElmt,m_iProdWRTStdDBase[0]->GetColumns(), 
+                            1.0, m_iProdWRTStdDBase[0]->GetRawPtr(),
+                            m_iProdWRTStdDBase[0]->GetRows(), 
+                            tmp[0].get(), nPhys, 0.0,
+                            output.get(), nmodes);
+
+                // Other components
+                for(int i = 1; i < m_dim; ++i)
                 {
                     Vmath::Vmul(ntot,m_jac,1,tmp[i],1,tmp[i],1);
                     Blas::Dgemm('N', 'N', m_iProdWRTStdDBase[i]->GetRows(), 
-                               m_numElmt,m_iProdWRTStdDBase[i]->GetColumns(), 
-                               1.0, m_iProdWRTStdDBase[i]->GetRawPtr(),
-                               m_iProdWRTStdDBase[i]->GetRows(), 
-                               tmp[i].get(), nPhys, 1.0,
-                               output.get(), nmodes);
+                                m_numElmt,m_iProdWRTStdDBase[i]->GetColumns(), 
+                                1.0, m_iProdWRTStdDBase[i]->GetRawPtr(),
+                                m_iProdWRTStdDBase[i]->GetRows(), 
+                                tmp[i].get(), nPhys, 1.0,
+                                output.get(), nmodes);
                 }
             }
             

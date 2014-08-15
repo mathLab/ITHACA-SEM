@@ -55,10 +55,10 @@ namespace Nektar
                 : Operator  (pExp, pGeom, GeomData),
                   m_nquad0  (pExp->GetNumPoints(0)),
                   m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_colldir0(pExp->GetBasis(0)->Collocation())
+                  m_colldir0(pExp->GetBasis(0)->Collocation()),
+                  m_base0   (pExp->GetBasis(0)->GetBdata())
             {
                 m_wspSize = 0;
-                m_base0 = GeomData->GetBase(0,pExp);
             }
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -110,11 +110,11 @@ namespace Nektar
                 : Operator  (pExp, pGeom, GeomData),
                   m_nquad0  (pExp->GetNumPoints(0)),
                   m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_colldir0(pExp->GetBasis(0)->Collocation())
+                  m_colldir0(pExp->GetBasis(0)->Collocation()),
+                  m_base0   (pExp->GetBasis(0)->GetBdata())
             {
                 m_wspSize = m_numElmt*m_nquad0;
                 m_jac = GeomData->GetJacWithStdWeights(pExp,pGeom);
-                m_base0 = GeomData->GetBase(0,pExp);
             }
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -225,7 +225,56 @@ namespace Nektar
                      PhysDeriv_SumFac_Seg::create, "PhysDeriv_SumFac_Seg");
 
 
+        /*
+         * ----------------------------------------------------------
+         * IProductWRTDerivBase operators
+         * ----------------------------------------------------------
+         */       
+        class IProductWRTDerivBase_SumFac_Seg : public Operator
+        {
+        public:
+            IProductWRTDerivBase_SumFac_Seg(StdRegions::StdExpansionSharedPtr pExp,
+                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                  CoalescedGeomDataSharedPtr GeomData)
+                : Operator  (pExp, pGeom, GeomData),
+                  m_nquad0  (pExp->GetNumPoints(0)),
+                  m_nmodes0 (pExp->GetBasisNumModes(0)),
+                  m_derbase0(pExp->GetBasis(0)->GetDbdata())
+            {
+                m_wspSize = m_numElmt*m_nquad0;
+                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_jac = GeomData->GetJacWithStdWeights(pExp,pGeom);
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
 
+                Vmath::Vmul(m_numElmt*m_nquad0,m_jac,1,input,1,wsp,1);
+                Vmath::Vmul(m_numElmt*m_nquad0,&m_derivFac[0][0],1,&wsp[0],1,&wsp[0],1);
+                
+                // out = B0*in; 
+                Blas::Dgemm('T','N', m_nmodes0,m_numElmt,m_nquad0,1.0, m_derbase0.get(), m_nquad0,
+                            &wsp[0], m_nquad0, 0.0,&output[0], m_nmodes0);
+            }
+            
+            OPERATOR_CREATE(IProductWRTDerivBase_SumFac_Seg)
+            
+            protected:
+            const int  m_nquad0;
+            const int  m_nmodes0;
+            Array<OneD, const NekDouble> m_jac;
+            Array<OneD, const NekDouble> m_derbase0;
+            Array<TwoD, const NekDouble> m_derivFac;
+        };
 
+        OperatorKey IProductWRTDerivBase_SumFac_Seg::m_type = GetOperatorFactory().
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eSegment, eIProductWRTDerivBase, 
+                                                eSumFac),
+                                    IProductWRTDerivBase_SumFac_Seg::create, 
+                                    "IProductWRTDerivBase_SumFac_Seg");
     }
 }

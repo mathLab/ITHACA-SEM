@@ -47,10 +47,58 @@ using namespace std;
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
+#include <boost/unordered_set.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+
 namespace Nektar
 {
     namespace Utilities
     {
+        struct TriFaceIDs
+        {
+            TriFaceIDs(int a, int b, int c) : a(a), b(b), c(c) {}
+            int a;
+            int b;
+            int c;
+        };
+
+        struct TriFaceHash : std::unary_function<TriFaceIDs, std::size_t>
+        {
+            std::size_t operator()(TriFaceIDs const& p) const
+            {
+                std::vector<int> ids(3);
+
+                ids[0] = p.a;
+                ids[1] = p.b;
+                ids[2] = p.c;
+
+                std::sort(ids.begin(), ids.end());
+                return boost::hash_range(ids.begin(), ids.end());
+            }
+        };
+
+        bool operator==(TriFaceIDs const &p1, TriFaceIDs const &p2)
+        {
+            std::vector<int> ids1(3), ids2(3);
+
+            ids1[0] = p1.a;
+            ids1[1] = p1.b;
+            ids1[2] = p1.c;
+            ids2[0] = p2.a;
+            ids2[1] = p2.b;
+            ids2[2] = p2.c;
+
+            std::sort(ids1.begin(), ids1.end());
+            std::sort(ids2.begin(), ids2.end());
+
+            return ids1[0] == ids2[0] &&
+                   ids1[1] == ids2[1] &&
+                   ids1[2] == ids2[2];
+        }
+
+        typedef boost::unordered_map<TriFaceIDs, int, TriFaceHash> TriFaceMap;
+
         ModuleKey ProcessDisplacement::className =
         GetModuleFactory().RegisterCreatorFunction(
             ModuleKey(eProcessModule, "displacement"), ProcessDisplacement::create,
@@ -63,8 +111,11 @@ namespace Nektar
                 false, "", "Name of file containing high order boundary");
             m_config["id"] = ConfigOption(
                 false, "", "Boundary ID to calculate displacement for");
+            m_config["usevertexids"] = ConfigOption(
+                false, "0", "Use vertex IDs instead of face IDs for matching");
             f->m_declareExpansionAsContField = true;
             f->m_writeBndFld = true;
+            f->m_fldToBnd = false;
         }
 
         ProcessDisplacement::~ProcessDisplacement()
@@ -87,6 +138,8 @@ namespace Nektar
                 return;
             }
 
+            bool useVertexIds = m_config["usevertexids"].m_beenSet;
+
             vector<string> files;
             files.push_back(toFile);
             LibUtilities::SessionReaderSharedPtr bndSession =
@@ -96,6 +149,7 @@ namespace Nektar
 
             // Try to find boundary condition expansion.
             int bndCondId = m_config["id"].as<int>();
+
             // FIXME: We should be storing boundary condition IDs
             // somewhere...
             m_f->m_bndRegionsToWrite.push_back(bndCondId);
@@ -182,13 +236,49 @@ namespace Nektar
                         = i;
                 }
 
+                TriFaceMap vertexFaceMap;
+
+                if (useVertexIds)
+                {
+                    for (int i = 0; i < bndCondExpU->GetExpSize(); ++i)
+                    {
+                        SpatialDomains::TriGeomSharedPtr from =
+                            boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
+                                bndCondExpU->GetExp(i)->GetGeom());
+
+                        TriFaceIDs t(from->GetVid(0), from->GetVid(1), from->GetVid(2));
+                        vertexFaceMap[t] = from->GetGlobalID();
+                    }
+                }
+
                 const SpatialDomains::TriGeomMap &tmp =
                     bndGraph->GetAllTriGeoms();
                 SpatialDomains::TriGeomMap::const_iterator sIt;
 
                 for (sIt = tmp.begin(); sIt != tmp.end(); ++sIt)
                 {
-                    map<int, int>::iterator mIt = bndCondIds.find(sIt->first);
+                    map<int, int>::iterator mIt;
+
+                    if (useVertexIds)
+                    {
+                        TriFaceIDs t(sIt->second->GetVid(0),
+                                     sIt->second->GetVid(1),
+                                     sIt->second->GetVid(2));
+                        TriFaceMap::iterator tIt = vertexFaceMap.find(t);
+
+                        if (tIt == vertexFaceMap.end())
+                        {
+                            mIt = bndCondIds.end();
+                        }
+                        else
+                        {
+                            mIt = bndCondIds.find(tIt->second);
+                        }
+                    }
+                    else
+                    {
+                        mIt = bndCondIds.find(sIt->first);
+                    }
 
                     if (mIt == bndCondIds.end())
                     {

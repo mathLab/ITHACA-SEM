@@ -86,6 +86,7 @@ namespace Nektar
         // patches need to be re-ordered in order to allow for multi-level
         // static condensation support.
         m_staticCondLevel           = cgMap->GetStaticCondLevel();
+        m_lowestStaticCondLevel     = cgMap->GetLowestStaticCondLevel();
         m_numPatches                = cgMap->GetNumPatches();
         m_numLocalBndCoeffsPerPatch = cgMap->GetNumLocalBndCoeffsPerPatch();
         m_numLocalIntCoeffsPerPatch = cgMap->GetNumLocalIntCoeffsPerPatch();

@@ -1122,8 +1122,8 @@ namespace Nektar
                 break;
                 case 1:
                 {
-                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                    //const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                    //const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
                     return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
                 }
                 break;

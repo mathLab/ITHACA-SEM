@@ -160,8 +160,29 @@ namespace Nektar
                 }    
             }
 
-            m_f->m_session = LibUtilities::SessionReader::
-                CreateInstance(0, 0, files, m_f->m_comm);
+            if(m_f->m_verbose)
+            {
+                string firstarg = "FieldConvert";
+                string verbose = "-v";
+                char **argv; 
+                argv = (char**)malloc(2*sizeof(char*));
+                argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
+                argv[1] = (char *)malloc(verbose.size()*sizeof(char));
+                
+                sprintf(argv[0],"%s",firstarg.c_str());
+                sprintf(argv[1],"%s",verbose.c_str());
+                
+                m_f->m_session = LibUtilities::SessionReader::
+                    CreateInstance(2, (char **)argv, files, m_f->m_comm);
+            }
+            else
+            {
+                m_f->m_session = LibUtilities::SessionReader::
+                    CreateInstance(0, 0, files, m_f->m_comm);
+            }
+
+
+
 
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
             m_f->m_fld = MemoryManager<LibUtilities::FieldIO>

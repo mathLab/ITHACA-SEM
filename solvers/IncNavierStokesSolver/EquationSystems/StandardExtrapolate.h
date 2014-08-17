@@ -67,7 +67,8 @@ namespace Nektar
             const Array<OneD, int> &pVel,
             const AdvectionTermSharedPtr &advObject)
         {
-            ExtrapolateSharedPtr p = MemoryManager<StandardExtrapolate>::AllocateSharedPtr(pSession,pFields,pPressure,pVel,advObject);
+            ExtrapolateSharedPtr p = MemoryManager<StandardExtrapolate>
+                ::AllocateSharedPtr(pSession,pFields,pPressure,pVel,advObject);
             return p;
         }
 

@@ -80,8 +80,8 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT void Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                Array<OneD, Array<OneD, NekDouble> >        &outarray,
-                const NekDouble &time);
+                Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                const NekDouble                                   &time);
 
             SOLVER_UTILS_EXPORT static std::vector<ForcingSharedPtr> Load(
                         const LibUtilities::SessionReaderSharedPtr& pSession,

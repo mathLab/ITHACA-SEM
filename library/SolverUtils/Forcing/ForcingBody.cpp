@@ -112,7 +112,7 @@ namespace SolverUtils
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> > &outarray,
             const NekDouble &time)
- {
+    {
         for (int i = 0; i < m_NumVariable; i++)
         {
             Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,

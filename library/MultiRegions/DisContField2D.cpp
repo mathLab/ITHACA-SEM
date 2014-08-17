@@ -367,7 +367,7 @@ namespace Nektar
             
             // Set up trace space
             trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
-                m_bndCondExpansions, m_bndConditions, *m_exp, 
+                m_session, m_bndCondExpansions, m_bndConditions, *m_exp,
                 graph2D, m_periodicEdges);
             
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);

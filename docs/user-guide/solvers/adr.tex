@@ -1,11 +1,11 @@
-\section{ADRSolver}
+\chapter{ADRSolver}
 
 %3.4/UserGuide/Tutorial/ADRSolver
 %3.4/UserGuide/Examples/ADRSolver/1DAdvection
 %3.4/UserGuide/Examples/ADRSolver/3DAdvectionMassTransport
 %3.4/UserGuide/Examples/ADRSolver/Helmholtz2D
 
-\subsection{Synopsis}
+\section{Synopsis}
 
 The ADRSolver is designed to solve partial differential equations of the form:
 \begin{equation}
@@ -49,17 +49,17 @@ $\dfrac{\partial u}{\partial t}  + u\nabla u =  0$       		                     
 \label{t:ADR1}
 \end{table}
 
-\subsection{Usage}
+\section{Usage}
 
 ADRSolver session.xml
 
-\subsection{Session file configuration}
+\section{Session file configuration}
 
 The type of equation which is to be solved is specified through the EquationType 
 SOLVERINFO option in the session file. This can be set as in table \ref{t:ADR1}.
 At present, the Steady non-symmetric solvers cannot be used in parallel. \\
 
-\subsubsection{Solver Info}
+\subsection{Solver Info}
 
 The solver info are listed below:
 \begin{itemize}
@@ -117,7 +117,7 @@ UnstedayInviscidBurger     			&  \checkmark 	 &	 & 	&\\
 \end{itemize}
 \end{itemize}
 
-\subsubsection{Parameters}
+\subsection{Parameters}
 
 The following parameters can be specified in the PARAMETERS section of the session file:
 \begin{itemize}
@@ -132,7 +132,7 @@ The following parameters can be specified in the PARAMETERS section of the sessi
 \textit{Default value}: 0.
 \end{itemize}
 
-\subsubsection{Functions}
+\subsection{Functions}
 
 The following functions can be specified inside the CONDITIONS section of the session file:
 
@@ -141,6 +141,8 @@ The following functions can be specified inside the CONDITIONS section of the se
 \item \textbf{InitialConditions}: specifies the initial condition for unsteady problems.
 \item \textbf{Forcing}: specifies the forcing function f.
 \end{itemize}
+
+\section{Examples}
 
 \subsection{1D Advection equation}
 

@@ -1,6 +1,6 @@
-\section{Cardiac Electrophysiology Solver}
+\chapter{Cardiac Electrophysiology Solver}
 
-\subsection{Synopsis}
+\section{Synopsis}
 
 The CardiacEPSolver is intended to model the electrophysiology of cardiac
 tissue, specifically using the monodomain or bidomain model. These models are
@@ -9,7 +9,7 @@ cells. The system is a reaction-diffusion system, with the reaction term
 modeling the flow of current in and out of the cells using a separate set of
 ODEs.
 
-\subsubsection{Bidomain Model}
+\subsection{Bidomain Model}
 The Bidomain model is given by the following PDEs,
 \begin{align*}
 g_{ix}\frac{\partial^2 V_i}{\partial x^2} + g_{iy}\frac{\partial^2 V_i}{\partial y^2} &=  \chi \left[ C_m \frac{\partial(V_i-V_e)}{\partial t} + G_m(V_i-V_e) \right] \\
@@ -23,7 +23,7 @@ of the transmembrane potential and extracellular potential,
   &= -g_{ix} \frac{\partial^2 V_m}{\partial x^2} - g_{iy} \frac{\partial^2 V_m}{\partial y^2}
 \end{align*}
 
-\subsubsection{Monodomain Model}
+\subsection{Monodomain Model}
 In the case where the intracellular and extracellular conductivities are
 proportional, that is $g_{ix} = kg_{ex}$ for some $k$,
 then the above two PDEs can be reduced to a single PDE:
@@ -31,7 +31,7 @@ then the above two PDEs can be reduced to a single PDE:
 \chi\left[ C_m \frac{\partial V_m}{\partial t} + J_{ion} \right] &= \nabla \cdot (\sigma \nabla V_m)
 \end{align*}
 
-\subsubsection{Cell Models}
+\subsection{Cell Models}
 The action potential of a cardiac cell can be modelled at either a biophysical
 level of detail, including a number of transmembrane currents, or as a
 phenomenological model, to reproduce the features of the action potential, with
@@ -62,14 +62,14 @@ The monodomain equation:
 \chi \left[ C_m \frac{\partial V_m}{\partial t} + J_{ion} \right] &= \nabla \cdot (\sigma \nabla V_m)
 \end{align*}
 
-\subsection{Usage}
+\section{Usage}
 
 \begin{lstlisting}[style=BashInputStyle]
 CardiacEPSolver session.xml
 \end{lstlisting}
 
-\subsection{Session file configuration}
-\subsubsection{Solver Info}
+\section{Session file configuration}
+\subsection{Solver Info}
 \begin{itemize}
     \item \inltt{Eqtype} Specifies the PDE system to solve. This should take
     the value \inltt{Monodomain}.

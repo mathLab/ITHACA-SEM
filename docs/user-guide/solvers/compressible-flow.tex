@@ -1,5 +1,6 @@
-\section{Compressible Flow Solver}
+\chapter{Compressible Flow Solver}
 
+\section{Synopsis}
 The CompressibleFlowSolver allows us to solve
 the unsteady compressible Euler and Navier-Stokes 
 equations for 1D/2D/3D problems using a discontinuous 
@@ -175,14 +176,14 @@ interface fluxes just mentioned.
 For a more detailed description of the above the interested reader can refer 
 to \cite{DeGMen14} and \cite{MenDeG14}.
 
-\subsection{Usage}
+\section{Usage}
 \inltt{CompressibleFlowSolver session.xml} 
 
 
-\subsection{Session file configuration}
+\section{Session file configuration}
 In the following we describe the session file configuration. Specifically we consider the
 sections under the tag \inltt{<CONDITIONS>} in the session (.xml) file.
-\subsubsection*{Parameters}
+\subsection*{Parameters}
 Under this section it is possible to set the parameters of the simulation.
 \begin{lstlisting}[style=XmlStyle]
 <PARAMETERS>
@@ -226,7 +227,7 @@ conditions are employed (i.e. $T_{w}$). Default value = 300.15$K$;
 \item \inltt{thermalConductivity} thermal conductivity (i.e. $\kappa_{\infty}$). Default value = 0.0257 $W / (K m)$;
 \end{itemize}
 
-\subsubsection*{Solver info}
+\subsection*{Solver info}
 Under this section it is possible to set the solver information.
 \begin{lstlisting}[style=XmlStyle]       
 <SOLVERINFO>
@@ -305,7 +306,7 @@ isentropic vortex or the Ringleb flow.
 \end{itemize}
 \end{itemize}
 
-\subsubsection*{Boundary conditions}
+\subsection*{Boundary conditions}
 In this section we can specify the boundary conditions for our problem.
 First we need to define the variables under the section \inltt{VARIABLES}.
 For a 1D problem we have:
@@ -399,7 +400,7 @@ In the following some examples for a 2D problem:
 \end{lstlisting}
 \end{itemize}
 
-\subsubsection*{Initial conditions and exact solution}
+\subsection*{Initial conditions and exact solution}
 Under the two following sections it is possible to define the initial conditions and the exact solution (if existent).
 \begin{lstlisting}[style=XmlStyle]           
 <FUNCTION NAME="InitialConditions">
@@ -418,6 +419,8 @@ Under the two following sections it is possible to define the initial conditions
   VALUE="pInf/(Gamma-1)+0.5*rhoInf*(uInf*uInf+vInf*vInf+wInf*wInf)"/>
 </FUNCTION>
 \end{lstlisting}
+
+\section{Examples}
 \subsection{Shock capturing}
 Compressible flow is characterised by abrupt changes in density within the flow domain often referred to as shocks. These discontinuities lead to numerical instabilities (Gibbs phenomena). This problem is prevented by locally adding a diffusion term to the equations to damp the numerical fluctuations. These fluctuations in an element are identified using a sensor algorithm which quantifies the smoothness of the solution within an element. The value of the sensor in an element is defined as
 \begin{equation}\label{eq:sensor}

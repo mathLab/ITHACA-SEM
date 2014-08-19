@@ -8,6 +8,7 @@
 3.4/UserGuide/Examples/IncNavierStokesSolver/Biglobal
 3.4/UserGuide/Examples/IncNavierStokesSolver/Direct
 3.4/UserGuide/Examples/IncNavierStokesSolver/KovasznayFlow2D
+\subsection{Synopsis}
 \subsubsection{Velocity Correction Scheme}
 \label{VCSscheme}
 A useful tool implemented in Nektar++ is the incompressible Navier Stokes solver that allows to solve the governing equation for viscid Newtonians fluid using two different algorithms. 
@@ -75,7 +76,7 @@ are the stiffly stable time integration coefficients given in the table below.
  This multi-step implicit-explicit splitting scheme decouples the velocity field $mathbf{V}$ from the pressure $p$, leading to an
 explicit treatment of the advection term and an implicit treatment of the pressure and the diffusion term.
 
-\textbf{Direct solver (coupled approach)}
+\subsubsection{Direct solver (coupled approach)}
 
 The second approach consists of directly solving the matrix problem arising from the discretization of the Stokes problem. 
 The direct solution of the Stokes system introduces the problem of appropriate spaces for the velocity and the pressure systems to satisfy the inf-sup condition and it requires the solution of the full velocity-pressure system. However, if a discontinuous pressure space is used then all but the constant mode of the pressure system can be decoupled from the velocity. Furthermore, when implementing this approach with a spectral/hp element discretization, the remaining velocity system may then be statically condensed to decouple the so called interior elemental degrees of freedom, reducing the Stokes problem to a smaller system expressed on the elemental boundaries. The direct solution of the Stokes problem provides a very natural setting for the solution of the pressure system which is not easily dealt with in a splitting scheme. Further, the solution of the full coupled velocity system allows the introduction of a spatially varying viscosity, which arise for non-Newtonian flows, with only minor modifications.
@@ -116,11 +117,11 @@ The indices $b$ and $i$ refer to the degrees of freedom on the elemental boundar
 This has the principal effect of modifying the weak Laplacian operator $\nabla\phi,\nu\nabla\boldsymbol{u}$] into a weak Helmholtz operator
 $\nabla\phi,\nu\nabla\boldsymbol{u})-\lambda(\phi,\boldsymbol{u}$ where $\lambda$ depends on the time integration scheme. The second modification requires the explicit discretisation of the non-linear terms in a similar manner to the splitting scheme and this term is then introduced as the forcing term $\boldsymbol{f}$.
 
-\textbf{Usage}
+\subsection{Usage}
 
 \texttt{./IncNavierStokesSolver session.xml}
 
-\textbf{Session file configuration}
+\subsection{Session file configuration}
 
 In the following the possible options are shown for the incompressible Navier-Stokes. The \texttt{Expansion} section for an incompressible flow simulation can be set as for other solvers regardless of the projection type. Here an example for a 3D simulation (for 2D simulations the specified field would be just $u$,$v$,$p$).
 
@@ -144,7 +145,7 @@ Possible choices for the expansion \texttt{TYPE} are:
 \end{center}
 \end{table}
 
-\textbf{Solver Info}
+\subsubsection{Solver Info}
 
 The following parameters can be specified in the \texttt{SOLVERINFO} section of the session file: 
 
@@ -306,7 +307,7 @@ Default values are \texttt{DirectMultiLevelStaticCond} in serial and \texttt{Ite
 
 \end{itemize}
 
-\textbf{Parameters}
+\subsubsection{Parameters}
  The following parameters can be specified in the \texttt{PARAMETERS} section of the session file: 
  
  \begin{itemize}
@@ -319,13 +320,14 @@ Default values are \texttt{DirectMultiLevelStaticCond} in serial and \texttt{Ite
 \item  \texttt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1) 
  \end{itemize}
 
+\subsection{Examples}
 
-
-\subsection{Kovasznay Flow 2D}
+\subsubsection{1. Kovasznay Flow 2D}
 \label{KovasznayFlow2D}
 The following example demonstrates the application of the the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm to solve for the laminar flow behind a 2D grid for which the exact solution is the 2D Kovasznay flow.
 
-\subsubsection{Background}
+\textbf{Background}
+
 The governing equation is the unsteady incompressible Navier-Stokes equation:
 \begin{equation}
 \begin{cases}
@@ -336,10 +338,11 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 
 In the following we will numerically solve for the two dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 40.
 
-\subsection{Geometry}
+\textbf{Geometry}
+
 The 2D mesh is composed of 12 quadrilaterals elements.
 
-\subsection{Input parameters}
+\textbf{Input parameters}
 
 \paragraph{Expansion:~}
 In this example we will use a 5th order polynomial expansion (\textit{i.e.} $P=6$).
@@ -406,8 +409,6 @@ In this example we will use a 5th order polynomial expansion (\textit{i.e.} $P=6
   		</FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Usage}
-./IncNaverStokesSolver session.xml
 
 \begin{figure}
 \begin{center}
@@ -419,11 +420,12 @@ In this example we will use a 5th order polynomial expansion (\textit{i.e.} $P=6
 
 \newpage
 
-\subsection{Laminar Channel Flow 2D}
+\subsubsection{2. Laminar Channel Flow 2D}
 \label{LaminarChannelFlow2D}
 The following example demonstrates the application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling 2D laminar channel flow. A skew-symmetric advection form has been used.
 
-\subsubsection{Background}
+\textbf{Background}
+
 The governing equation is the unsteady incompressible Navier-Stokes equation:
 \begin{equation}
 \begin{cases}
@@ -434,10 +436,12 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 
 In the following we will numerically solve for the two dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 1.
 
-\subsection{Geometry}
+\textbf{Geometry}
+
 The geometry under consideration is a 2D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using 4 quadrilateral elements.
 
-\subsection{Input parameters}
+\textbf{Input parameters}
+
 The session file can be found in the tests folder under the IncNavierStokesSolver folder and is named ChanFlow\_m3\_SKS.xml.
 
 \paragraph{Expansion:~} In this example we will use a quadratic polynomial expansion (\textit{i.e.} $P=3$).
@@ -504,8 +508,8 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
 		</FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Usage}
-./IncNaverStokesSolver ChanFlow\_m3\_SKS.xml
+%\textbf{Usage}
+%./IncNaverStokesSolver ChanFlow\_m3\_SKS.xml
 
 \begin{figure}
 \begin{center}
@@ -515,10 +519,11 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
 \end{center}
 \end{figure}
 
-\subsection{Laminar Channel Flow 3D}
+\subsubsection{3. Laminar Channel Flow 3D}
 The following example demonstrates the application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling 3D laminar channel flow.
 
-\subsubsection{Background}
+\textbf{Background}
+
 The governing equation is the unsteady incompressible Navier-Stokes equation:
 \begin{equation}
 \begin{cases}
@@ -529,10 +534,12 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 
 In the following we will numerically solve for the three dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 1.
 
-\subsection{Geometry}
+\textbf{Geometry}
+
 The geometry under consideration is a 3D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using tetrahedral elements.
 
-\subsection{Input parameters}
+\textbf{Input parameters}
+
 The session file can be found in the tests folder under the IncNavierStokesSolver folder and is named Tet\_channel\_m8\_par.xml.
 
 \paragraph{Expansion:~} In this example we will use a 7th order polynomial expansion (\textit{i.e.} $P=8$).
@@ -632,8 +639,8 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
         </FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Usage}
-./IncNaverStokesSolver Tet\_channel\_m8\_par.xml
+%\textbf{Usage}
+%./IncNaverStokesSolver Tet\_channel\_m8\_par.xml
 
 \begin{figure}
 \begin{center}
@@ -644,11 +651,11 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
 \end{figure}
 
 
-
-\subsection{Laminar Channel Flow Quasi-3D}
+\subsubsection{4. Laminar Channel Flow Quasi-3D}
 In this example we reuse the 2D mesh used before for the \hyperref[LaminarChannelFlow2D]{2D Laminar Channel Flow} example, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm.
 
-\subsubsection{Background}
+\textbf{Background}
+
 The governing equation is the unsteady incompressible Navier-Stokes equation:
 \begin{equation}
 \begin{cases}
@@ -659,10 +666,12 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 
 The Reynolds number under consideration is 1.
 
-\subsubsection{Geometry}
+\textbf{Geometry}
+
 The geometry under consideration is a 2D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using 4 quadrilateral elements. The geometry as well as the mesh is identical to that used in the \hyperref[LaminarChannelFlow2D]{2D Laminar Channel Flow} example.
 
-\subsubsection{Input parameters}
+\textbf{Input parameters}
+
 \paragraph{Expansion:~} In this example we will use a quadratic polynomial expansion (\textit{i.e.} $P=3$).
 \begin{lstlisting}[style=XMLStyle]
 <EXPANSIONS>
@@ -745,8 +754,8 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
   </FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Usage}
-./IncNaverStokesSolver session.xml
+%\textbf{Usage}
+%./IncNaverStokesSolver session.xml
 
 \begin{figure}
 \begin{center}
@@ -757,10 +766,11 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 \end{figure}
 
 
-\subsection{Turbulent Channel Flow Quasi-3D}
+\subsubsection{5. Turbulent Channel Flow Quasi-3D}
 In this example we use a 2D mesh for channel flow, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm in order to solve for turbulent channel flow.
 
-\subsubsection{Background}
+\textbf{Background}
+
 The governing equation is the unsteady incompressible Navier-Stokes equation:
 \begin{equation}
 \begin{cases}
@@ -772,7 +782,8 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 
 The Reynolds number under consideration is 2000.
 
-\subsubsection{Geometry}
+\textbf{Geometry}
+
 The geometry under consideration is a 2D square channel with height of 2 units (\textit{i.e.} $D=2$), and length of 12.57. The channel is modelled using quadrilateral elements.
 \begin{figure}
 \begin{center}
@@ -781,7 +792,8 @@ The geometry under consideration is a 2D square channel with height of 2 units (
 \end{center}
 \end{figure}
 
-\subsubsection{Input parameters}
+\textbf{Input parameters}
+
 For this tutorial, the input file (in the \hyperref[XMLformat]{\nekpp input format}) used can be found in Nektar++/solvers/IncNavierStokesSolver/Examples/TurbChFl\_3DH1D.xml.
 
 \paragraph{Expansion:~} In this example we will use a quadratic polynomial expansion (\textit{i.e.} $P=3$).
@@ -872,7 +884,8 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
    </FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Usage} ./IncNaverStokesSolver TurbChFl\_3DH1D.xml 
+%\textbf{Usage} 
+%./IncNaverStokesSolver TurbChFl\_3DH1D.xml 
 
 \begin{figure}
 \begin{center}
@@ -882,10 +895,11 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 \end{figure}
 
 
-\subsection{Laminar Channel Flow 3D}
+\subsubsection{6. Laminar Channel Flow 3D}
 The following example demonstrates the application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling 3D laminar channel flow.
 
-\subsubsection{Background}
+\textbf{Background}
+
 The governing equation is the unsteady incompressible Navier-Stokes equation:
 \begin{equation}
 \begin{cases}
@@ -896,10 +910,12 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 
 In the following we will numerically solve for the three dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 1.
 
-\subsection{Geometry}
+\textbf{Geometry}
+
 The geometry under consideration is a 3D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using tetrahedral elements.
 
-\subsection{Input parameters}
+\textbf{Input parameters}
+
 The session file can be found in the tests folder under the IncNavierStokesSolver folder and is named Tet\_channel\_m8\_par.xml.
 
 \paragraph{Expansion:~} In this example we will use a 7th order polynomial expansion (\textit{i.e.} $P=8$).
@@ -999,8 +1015,8 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
         </FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Usage}
-./IncNaverStokesSolver Tet\_channel\_m8\_par.xml
+%\textbf{Usage}
+%./IncNaverStokesSolver Tet\_channel\_m8\_par.xml
 
 \begin{figure}
 \begin{center}
@@ -1011,11 +1027,11 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
 \end{figure}
 
 
-
-\subsection{Laminar Channel Flow Quasi-3D}
+\subsubsection{7. Laminar Channel Flow Quasi-3D}
 In this example we reuse the 2D mesh used before for the \hyperref[LaminarChannelFlow2D]{2D Laminar Channel Flow} example, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm.
 
-\subsubsection{Background}
+\textbf{Background}
+
 The governing equation is the unsteady incompressible Navier-Stokes equation:
 \begin{equation}
 \begin{cases}
@@ -1026,10 +1042,12 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 
 The Reynolds number under consideration is 1.
 
-\subsubsection{Geometry}
+\textbf{Geometry}
+
 The geometry under consideration is a 2D square channel with unit length and height (\textit{i.e.} $D=1$). The channel is modelled using 4 quadrilateral elements. The geometry as well as the mesh is identical to that used in the \hyperref[LaminarChannelFlow2D]{2D Laminar Channel Flow} example.
 
-\subsubsection{Input parameters}
+\textbf{Input parameters}
+
 \paragraph{Expansion:~} In this example we will use a quadratic polynomial expansion (\textit{i.e.} $P=3$).
 \begin{lstlisting}[style=XMLStyle]
 <EXPANSIONS>
@@ -1112,8 +1130,8 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
   </FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Usage}
-./IncNaverStokesSolver session.xml
+%\textbf{Usage}
+%./IncNaverStokesSolver session.xml
 
 \begin{figure}
 \begin{center}
@@ -1130,10 +1148,11 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 3.4/UserGuide/Examples/IncNavierStokesSolver/Transient
 
 
-\subsection{Turbulent Channel Flow Quasi-3D}
+\subsubsection{8. Turbulent Channel Flow Quasi-3D}
 In this example we use a 2D mesh for channel flow, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm in order to solve for turbulent channel flow.
 
-\subsubsection{Background}
+\textbf{Background}
+
 The governing equation is the unsteady incompressible Navier-Stokes equation:
 \begin{equation}
 \begin{cases}
@@ -1145,7 +1164,8 @@ The governing equation is the unsteady incompressible Navier-Stokes equation:
 
 The Reynolds number under consideration is 2000.
 
-\subsubsection{Geometry}
+\textbf{Geometry}
+
 The geometry under consideration is a 2D square channel with height of 2 units (\textit{i.e.} $D=2$), and length of 12.57. The channel is modelled using quadrilateral elements.
 \begin{figure}
 \begin{center}
@@ -1154,7 +1174,8 @@ The geometry under consideration is a 2D square channel with height of 2 units (
 \end{center}
 \end{figure}
 
-\subsubsection{Input parameters}
+\textbf{Input parameters}
+
 For this tutorial, the input file (in the \hyperref[XMLformat]{\nekpp input format}) used can be found in Nektar++/solvers/IncNavierStokesSolver/Examples/TurbChFl\_3DH1D.xml.
 
 \paragraph{Expansion:~} In this example we will use a quadratic polynomial expansion (\textit{i.e.} $P=3$).
@@ -1245,7 +1266,8 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
    </FUNCTION>
 \end{lstlisting}
 
-\subsubsection{Usage} ./IncNaverStokesSolver TurbChFl\_3DH1D.xml 
+%\textbf{Usage} 
+%./IncNaverStokesSolver TurbChFl\_3DH1D.xml 
 
 \begin{figure}
 \begin{center}
@@ -1253,8 +1275,6 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 \caption{Velocity profile of the turbulent channel flow (quasi-3D).}
 \end{center}
 \end{figure}
-
-\newpage
 
 
 
@@ -1274,7 +1294,7 @@ In Nektar++ it is then possible to use the following tools to perform stability 
 \item  transient growth analysis;
 \end{itemize}
 
-\subsection{Direct stability analysis}
+\subsubsection{Direct stability analysis}
 
 
 The equations that describe the evolution of an infinitesimal disturbance in the flow can be derived decomposing the solution into a basic state $(\mathbf{U}, p)$ and a perturbed state  $\mathbf{U}+\varepsilon \mathbf{u'}$ with $\varepsilon \ll 1$ that both satisfy the Navier-Stokes equations. Substituting into the Navier Stokes equations and considering that the quadratic terms $\mathbf{u'} \cdot \nabla \mathbf{u'}$can be neglected, we obtain the linearised Navier-Stokes equations:
@@ -1312,7 +1332,7 @@ Then we obtain the associated eigenproblem:
 
 The dominant eigenvalue determines the behaviour of the flow. If it the real part is positive there exists exponentially growing solutions, conversely if every single eigenvalues has negative real part then the flow is linearly stable. If the real part of the eigenvalue is zero, it is present a bifurcation point.
 
-\subsection{Adjoint Stability Analysis}
+\subsubsection{Adjoint Stability Analysis}
 
 The adjoint of a linear operator is one of the most important concept in functional analysis and has an it has important role to tackle the transition to turbulence. Let us write the linearised Navier-Stokes equation in a compact form:
 
@@ -1346,7 +1366,7 @@ Integrating by parts and employing the divergence theorem, it is possible to exp
 
 The adjoint fields are in fact related to the concept of \textbf{receptivity}. The value of the adjoint velocity at a point in the flow indicates the response that arises from an unsteady momentum source at that point. The adjoint pressure and the adjoint stream function play instead the same role for mass and vorticity sources respectively. Therefore, the adjoint modes can be seen as a powerful tool to understand where to act in order to ease/inhibit the transition.
 
-\subsection{Transient Growth Analysis}
+\subsubsection{Transient Growth Analysis}
 
 Transient growth  is a phenomenon that occurs when a flow that is linearly stable, but whose perturbations exhibit a non-negligible transient response due to regions of localised convective instabilities. This situation is common in many engineering applications, for example in open flows where the geometry is complex, producing a steep variation of the base flow. Therefore, the main question to answer is if it exists a bounded solution that exhibit large growth before inevitably decaying. Let us introduce a norm to quantify the size of a perturbation. It is physically meaningful to use the total kinetic energy of a perturbation on the domain $\Omega$. This is convenient because it is directly associated with the
 standard-$L2$ inner product: 

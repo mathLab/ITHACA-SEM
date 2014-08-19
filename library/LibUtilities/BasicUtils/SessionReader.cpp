@@ -1451,6 +1451,23 @@ namespace Nektar
                 return;
             }
 
+            // Default partitioner to use is Metis. Use Scotch as default
+            // if it is installed. Override default with command-line flags
+            // if they are set.
+            string vPartitionerName = "Metis";
+            if (GetMeshPartitionFactory().ModuleExists("Scotch"))
+            {
+                vPartitionerName = "Scotch";
+            }
+            if (DefinesCmdLineArgument("use-metis"))
+            {
+                vPartitionerName = "Metis";
+            }
+            if (DefinesCmdLineArgument("use-scotch"))
+            {
+                vPartitionerName = "Scotch";
+            }
+
             // Mesh has not been partitioned so do partitioning if required.
             // Note in the serial case nothing is done as we have already loaded
             // the mesh.
@@ -1464,8 +1481,9 @@ namespace Nektar
                 // Number of partitions is specified by the parameter.
                 int nParts = GetCmdLineArgument<int>("part-only");
                 SessionReaderSharedPtr vSession     = GetSharedThisPtr();
-                MeshPartitionSharedPtr vPartitioner = MemoryManager<
-                    MeshPartition>::AllocateSharedPtr(vSession);
+                MeshPartitionSharedPtr vPartitioner = 
+                        GetMeshPartitionFactory().CreateInstance(
+                                            vPartitionerName, vSession);
                 vPartitioner->PartitionMesh(nParts, true);
                 vPartitioner->WriteAllPartitions(vSession);
                 vPartitioner->GetCompositeOrdering(m_compOrder);
@@ -1481,24 +1499,8 @@ namespace Nektar
             }
             else if (vCommMesh->GetSize() > 1)
             {
-                // Default partitioner to use is Metis. Use Scotch as default
-                // if it is installed. Override default with command-line flags
-                // if they are set.
-                string vPartitionerName = "Metis";
-                if (GetMeshPartitionFactory().ModuleExists("Scotch"))
-                {
-                    vPartitionerName = "Scotch";
-                }
-                if (DefinesCmdLineArgument("use-metis"))
-                {
-                    vPartitionerName = "Metis";
-                }
-                if (DefinesCmdLineArgument("use-scotch"))
-                {
-                    vPartitionerName = "Scotch";
-                }
-
                 SessionReaderSharedPtr vSession     = GetSharedThisPtr();
+                int nParts = vCommMesh->GetSize();
                 if (DefinesCmdLineArgument("shared-filesystem"))
                 {
                     if (isRoot)
@@ -1508,7 +1510,7 @@ namespace Nektar
                         MeshPartitionSharedPtr vPartitioner =
                                 GetMeshPartitionFactory().CreateInstance(
                                                     vPartitionerName, vSession);
-                        vPartitioner->PartitionMesh(true);
+                        vPartitioner->PartitionMesh(nParts, true);
                         vPartitioner->WriteAllPartitions(vSession);
                         vPartitioner->GetCompositeOrdering(m_compOrder);
                         vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
@@ -1533,7 +1535,7 @@ namespace Nektar
                     MeshPartitionSharedPtr vPartitioner =
                                 GetMeshPartitionFactory().CreateInstance(
                                                     vPartitionerName, vSession);
-                    vPartitioner->PartitionMesh(false);
+                    vPartitioner->PartitionMesh(nParts, false);
                     vPartitioner->WriteLocalPartition(vSession);
                     vPartitioner->GetCompositeOrdering(m_compOrder);
                     vPartitioner->GetBndRegionOrdering(m_bndRegOrder);

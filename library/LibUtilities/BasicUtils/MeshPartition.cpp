@@ -826,7 +826,7 @@ namespace Nektar
                     {
                         // Attempt partitioning using METIS.
                         int ncon = 1;
-                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
+                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, nParts, vol, part);
 
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(nParts, part);

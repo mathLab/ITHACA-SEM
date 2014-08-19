@@ -49,6 +49,14 @@ namespace Nektar
         RegisterCreatorFunction("LinearElasticSystem",
                                 LinearElasticSystem::create);
 
+    inline void idealToRef(NekDouble &x, NekDouble &y)
+    {
+        x -= sqrt(3) * y / 3.0;
+        y *= 2.0*sqrt(3) / 3.0;
+        x -= sqrt(3)/3.0;
+        y += (2.0*sqrt(3) - 3.0) / 3.0;
+    }
+
     LinearElasticSystem::LinearElasticSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : EquationSystem(pSession)
@@ -429,7 +437,7 @@ namespace Nektar
                 
                 // Compute metric tensor
                 Array<OneD, NekDouble> tmp(nVel*nVel, 0.0);
-                for (j = 0; j < exp->GetTotPoints(); ++j)
+                for (j = 0; j < deriv[0][0].num_elements(); ++j)
                 {
                     // Setting up the metric tensor
                     for (k = 0; k < nVel; ++k)
@@ -467,20 +475,30 @@ namespace Nektar
                     // rescaling of the eigenvalues
                     for (nv = 0; nv < nVel; ++nv)
                     {
-                        eval(nv,nv) = m_beta * (sqrt(eval(nv,nv)) - 1.0);
+                        eval(nv,nv) = m_beta * (sqrt(eval(nv,nv))-1.0);
                     }
 
                     DNekMat beta = evec * eval * evecinv;
                     
                     NekDouble term = 0.0;
 
-                    for (nv = 0; nv < nVel; ++nv)
-                    {
-                        tmpstress[0][0][offset+j] = -beta(0,0);
-                        tmpstress[1][0][offset+j] = -beta(1,0);
-                        tmpstress[0][1][offset+j] = -beta(0,1);
-                        tmpstress[1][1][offset+j] = -beta(1,1);
-                    }
+                    tmpstress[0][0][offset+j] = -beta(0,0);
+                    tmpstress[1][0][offset+j] = -beta(1,0);
+                    tmpstress[0][1][offset+j] = -beta(0,1);
+                    tmpstress[1][1][offset+j] = -beta(1,1);
+                }
+
+                if (deriv[0][0].num_elements() != exp->GetTotPoints())
+                {
+                    Array<OneD, NekDouble> tmp;
+                    Vmath::Fill(exp->GetTotPoints(), tmpstress[0][0][offset],
+                                tmp = tmpstress[0][0] + offset, 1);
+                    Vmath::Fill(exp->GetTotPoints(), tmpstress[1][0][offset],
+                                tmp = tmpstress[1][0] + offset, 1);
+                    Vmath::Fill(exp->GetTotPoints(), tmpstress[0][1][offset],
+                                tmp = tmpstress[0][1] + offset, 1);
+                    Vmath::Fill(exp->GetTotPoints(), tmpstress[1][1][offset],
+                                tmp = tmpstress[1][1] + offset, 1);
                 }
             }
 
@@ -490,9 +508,180 @@ namespace Nektar
                 m_fields[nv]->PhysDeriv(0, tmpstress[nv][0], tmpderiv);
                 m_fields[nv]->PhysDeriv(1, tmpstress[nv][1], m_temperature[nv]);
                 Vmath::Vadd(m_fields[nv]->GetNpoints(), tmpderiv, 1, m_temperature[nv], 1, m_temperature[nv], 1);
-                Vmath::Smul(m_fields[nv]->GetNpoints(), 1.0, m_temperature[nv], 1, forcing[nv], 1);
+                Vmath::Vcopy(m_fields[nv]->GetNpoints(), m_temperature[nv], 1, forcing[nv], 1);
             }
         }
+#if 0
+        else if (tempEval == "IdealMetric")
+        {
+            m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmpstress(nVel);
+
+            for (nv = 0; nv < nVel; ++nv)
+            {
+                m_temperature[nv] = Array<OneD, NekDouble>(
+                    m_fields[nv]->GetNpoints());
+                tmpstress[nv] = Array<OneD, Array<OneD, NekDouble> >(nVel);
+                for (i = 0; i < nVel; ++i)
+                {
+                    tmpstress[nv][i] = Array<OneD, NekDouble>(
+                        m_fields[nv]->GetNpoints());
+                }
+            }
+
+            // Grab existing basis keys for first element.
+            LibUtilities::BasisKey bkey0 =
+                m_fields[0]->GetExp(0)->GetBasis(0)->GetBasisKey();
+            LibUtilities::BasisKey bkey1 =
+                m_fields[0]->GetExp(0)->GetBasis(1)->GetBasisKey();
+
+            // Set up basis keys for nodal expansion.
+            LibUtilities::BasisKey B0(
+                LibUtilities::eOrtho_A, bkey0.GetNumModes(),
+                LibUtilities::PointsKey(
+                    bkey0.GetNumPoints(), LibUtilities::eGaussLobattoLegendre));
+            LibUtilities::BasisKey B1(
+                LibUtilities::eOrtho_B, bkey1.GetNumModes(),
+                LibUtilities::PointsKey(
+                    bkey1.GetNumPoints(), LibUtilities::eGaussRadauMAlpha1Beta0));
+
+            StdRegions::StdNodalTriExpSharedPtr stdNodal =
+                MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
+                    B0, B1, LibUtilities::eNodalTriEvenlySpaced);
+
+            Array<OneD, Array<OneD, NekDouble> > tmpNodal(4);
+
+            for (i = 0; i < 4; ++i)
+            {
+                tmpNodal[i] = Array<OneD, NekDouble>(stdNodal->GetNcoeffs());
+            }
+
+            for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
+            {
+                // Calculate element area
+                LocalRegions::ExpansionSharedPtr exp =
+                    m_fields[0]->GetExp(i);
+                SpatialDomains::GeomFactorsSharedPtr gf = exp->GetMetricInfo();
+                StdRegions::StdExpansionSharedPtr xmap = exp->GetGeom()->GetXmap();
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > deriv
+                    = gf->GetDeriv(xmap->GetPointsKeys());
+                int offset = m_fields[0]->GetPhys_Offset(i);
+
+                // Ignore linear elements
+                if (deriv[0][0].num_elements() == 1)
+                {
+                    Array<OneD, NekDouble> tmp;
+                    for (nv = 0; nv < nVel; ++nv)
+                    {
+                        Vmath::Zero(exp->GetTotPoints(),
+                                    tmp = m_temperature[nv] + offset, 1);
+                    }
+                    continue;
+                }
+
+                // Get distribution of nodal points
+                int nNodal = stdNodal->GetNcoeffs();
+                Array<OneD, NekDouble> xn(nNodal), yn(nNodal);
+                stdNodal->GetNodalPoints(xn, yn);
+
+                Array<OneD, NekDouble> tmp(nVel*nVel, 0.0);
+
+                for (j = 0; j < nNodal; ++j)
+                {
+                    // Grab coords in reference element
+                    Array<OneD, NekDouble> coords(2);
+                    coords[0] = xn[j];
+                    coords[1] = yn[j];
+
+                    idealToRef(coords[0], coords[1]);
+
+                    // Evaluate derivatives at appropriate place.
+                    NekDouble d00 = xmap->StdPhysEvaluate(coords, deriv[0][0]);
+                    NekDouble d01 = xmap->StdPhysEvaluate(coords, deriv[0][1]);
+                    NekDouble d10 = xmap->StdPhysEvaluate(coords, deriv[1][0]);
+                    NekDouble d11 = xmap->StdPhysEvaluate(coords, deriv[1][1]);
+
+                    // Compute metric tensor
+                    tmp[0] = d00 * d00 + d10 * d10;
+                    tmp[1] = d01 * d00 + d11 * d10;
+                    tmp[2] = d00 * d01 + d10 * d11;
+                    tmp[3] = d01 * d01 + d11 * d11;
+
+                    // Compute eigenvalues/eigenvectors.
+                    char jobvl = 'N', jobvr = 'V';
+                    int worklen = 8*nVel, info;
+                    
+                    DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
+                    DNekMat evec   (nVel, nVel, 0.0, eFULL);
+                    DNekMat evecinv(nVel, nVel, 0.0, eFULL);
+                    Array<OneD, NekDouble> vl  (nVel*nVel);
+                    Array<OneD, NekDouble> work(worklen);
+                    Array<OneD, NekDouble> wi  (nVel);
+                    
+                    Lapack::Dgeev(jobvl, jobvr, nVel, &tmp[0], nVel,
+                                  &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
+                                  &(evec.GetPtr())[0], nVel,
+                                  &work[0], worklen, info);
+                    
+                    evecinv = evec;
+                    evecinv.Invert();
+
+                    // rescaling of the eigenvalues
+                    for (nv = 0; nv < nVel; ++nv)
+                    {
+                        eval(nv,nv) = m_beta * (sqrt(eval(nv,nv))-1.0);
+                    }
+
+                    DNekMat beta = evec * eval * evecinv;
+                    
+                    NekDouble term = 0.0;
+
+                    // We now have temperature term at nodal points, store in
+                    // element to backwards transform in a second
+
+                    tmpNodal[0][j] = beta(0,0);
+                    tmpNodal[1][j] = beta(0,1);
+                    tmpNodal[2][j] = beta(1,0);
+                    tmpNodal[3][j] = beta(1,1);
+                    
+                    /*
+                    tmpstress[0][0][offset+j] = -beta(0,0);
+                    tmpstress[1][0][offset+j] = -beta(1,0);
+                    tmpstress[0][1][offset+j] = -beta(0,1);
+                    tmpstress[1][1][offset+j] = -beta(1,1);
+                    */
+                }
+
+                Array<OneD, NekDouble> tmp2;
+                stdNodalExp->BwdTrans(tmpNodal[0], tmp2 = tmpstress[0][0][offset]);
+                stdNodalExp->BwdTrans(tmpNodal[1], tmp2 = tmpstress[0][1][offset]);
+                stdNodalExp->BwdTrans(tmpNodal[2], tmp2 = tmpstress[1][0][offset]);
+                stdNodalExp->BwdTrans(tmpNodal[3], tmp2 = tmpstress[1][1][offset]);
+
+                if (deriv[0][0].num_elements() != exp->GetTotPoints())
+                {
+                    Array<OneD, NekDouble> tmp;
+                    Vmath::Fill(exp->GetTotPoints(), tmpstress[0][0][offset],
+                                tmp = tmpstress[0][0] + offset, 1);
+                    Vmath::Fill(exp->GetTotPoints(), tmpstress[1][0][offset],
+                                tmp = tmpstress[1][0] + offset, 1);
+                    Vmath::Fill(exp->GetTotPoints(), tmpstress[0][1][offset],
+                                tmp = tmpstress[0][1] + offset, 1);
+                    Vmath::Fill(exp->GetTotPoints(), tmpstress[1][1][offset],
+                                tmp = tmpstress[1][1] + offset, 1);
+                }
+            }
+
+            Array<OneD, NekDouble> tmpderiv(m_fields[0]->GetNpoints());
+            for (nv = 0; nv < nVel; ++nv)
+            {
+                m_fields[nv]->PhysDeriv(0, tmpstress[nv][0], tmpderiv);
+                m_fields[nv]->PhysDeriv(1, tmpstress[nv][1], m_temperature[nv]);
+                Vmath::Vadd(m_fields[nv]->GetNpoints(), tmpderiv, 1, m_temperature[nv], 1, m_temperature[nv], 1);
+                Vmath::Vcopy(m_fields[nv]->GetNpoints(), m_temperature[nv], 1, forcing[nv], 1);
+            }
+        }
+#endif
         else if (tempEval != "None")
         {
             ASSERTL0(false, "Unknown temperature form: " + tempEval);

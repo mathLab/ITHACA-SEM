@@ -21,27 +21,38 @@ see the table below.
 \renewcommand\arraystretch{2.2} 
 \begin{tabular}{|l|l|l|l|}
 \hline
-\textbf{Equation to solve}			    								         & \textbf{EquationType} 	                                 & \textbf{Dimensions supported}   & \textbf{Projection supported} \\
+\textbf{Equation to solve} & \textbf{EquationType} & \textbf{Dimensions supported}   & \textbf{Projection supported} \\
 \hline 
-$\nabla^2 u = 0$      													& Laplace 	  		                                 & All 	   	  			&  Continuous/Discontinuous	\\
+$\nabla^2 u = 0$ & 
+    \inltt{Laplace} & All &  Continuous/Discontinuous	\\
 \hline
-$\nabla^2 u  =  f$       					                                    		        & Poisson 	  	                                                  & All 	   	  			&  Continuous/Discontinuous	\\
+$\nabla^2 u  =  f$ & 
+    \inltt{Poisson} & All &  Continuous/Discontinuous	\\
 \hline
-$\nabla^2 u  + \lambda u =  f$     					                                         & Helmholtz 	  	                                          & All 	   	 			 &  Continuous/Discontinuous	\\
+$\nabla^2 u  + \lambda u =  f$ & 
+    \inltt{Helmholtz} & All & Continuous/Discontinuous \\
 \hline
-$\epsilon \nabla^2 u + \mathbf{V}\nabla u = f$    						        & SteadyAdvectionDiffusion 	  	                 & 2D only 	   	 		 &  Continuous/Discontinuous	\\
+$\epsilon \nabla^2 u + \mathbf{V}\nabla u = f$ & 
+    \inltt{SteadyAdvectionDiffusion} & 2D only & Continuous/Discontinuous \\
 \hline
-$\epsilon \nabla^2 u +  \lambda u = f$       								        & SteadyDiffusionReaction 	  	                 & 2D only 	   	 		 &  Continuous/Discontinuous	\\
+$\epsilon \nabla^2 u +  \lambda u = f$ & 
+    \inltt{SteadyDiffusionReaction} & 2D only &  Continuous/Discontinuous \\
 \hline
-$\epsilon \nabla^2 u  \mathbf{V}\nabla u + \lambda u = f$   			         	& SteadyAdvectionDiffusionReaction 	  	& 2D only 	   	 		 &  Continuous/Discontinuous	\\
+$\epsilon \nabla^2 u  \mathbf{V}\nabla u + \lambda u = f$ & 
+    \inltt{SteadyAdvectionDiffusionReaction} & 2D only & 
+    Continuous/Discontinuous \\
 \hline
-$ \dfrac{\partial u}{\partial t} + \mathbf{V}\nabla u = f$       		                                  & UnsteadyAdvection 	  	                          & All 	   			 &  Continuous/Discontinuous	\\
+$ \dfrac{\partial u}{\partial t} + \mathbf{V}\nabla u = f$ &
+    \inltt{UnsteadyAdvection} & All & Continuous/Discontinuous \\
 \hline
-$\dfrac{\partial u}{\partial t}  = \epsilon \nabla^2 u$      			                         & UnsteadyDiffusion 	  	                                 & All 	   	  			&  Continuous/Discontinuous	\\
+$\dfrac{\partial u}{\partial t}  = \epsilon \nabla^2 u$ & 
+    \inltt{UnsteadyDiffusion} & All & Continuous/Discontinuous \\
 \hline
-$\dfrac{\partial u}{\partial t}  + \mathbf{V}\nabla u = \epsilon \nabla^2 u$        		& UnsteadyAdvectionDiffusion 	  	                & All 	   				  &  Continuous/Discontinuous	\\
+$\dfrac{\partial u}{\partial t}  + \mathbf{V}\nabla u = \epsilon \nabla^2 u$ &
+    \inltt{UnsteadyAdvectionDiffusion} & All & Continuous/Discontinuous \\
 \hline
-$\dfrac{\partial u}{\partial t}  + u\nabla u =  0$       		                                          & UnsteadyInviscidBurger 	  	                & 1D only 	   			  &  Continuous/Discontinuous	\\
+$\dfrac{\partial u}{\partial t}  + u\nabla u =  0$ &
+    \inltt{UnsteadyInviscidBurger} & 1D only & Continuous/Discontinuous \\
 \hline
 \end{tabular}
 \end{center}
@@ -51,7 +62,9 @@ $\dfrac{\partial u}{\partial t}  + u\nabla u =  0$       		                     
 
 \section{Usage}
 
+\begin{lstlisting}[style=BashInputStyle]
 ADRSolver session.xml
+\end{lstlisting}
 
 \section{Session file configuration}
 
@@ -69,17 +82,18 @@ The solver info are listed below:
 \begin{center}
 \footnotesize
 \renewcommand\arraystretch{1.2} 
-\begin{tabular}{|c|c|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|}
 \hline
-& \textbf{Explicit} & \textbf{Diagonally Implicit}   & \textbf{ IMEX}  &  \textbf{Implicit}   \\
+\textbf{EqType} & \textbf{Explicit} & \textbf{Diagonally Implicit} &
+    \textbf{ IMEX} & \textbf{Implicit}   \\
 \hline 
-UnstedayAdvection     				&  \checkmark 	 &	 & 	&\\
+\inltt{UnstedayAdvection} &  \checkmark 	 &	 & 	&\\
 \hline
-UnstedayDifusion   					&  \checkmark 	 & \checkmark 	 & 	&\\
+\inltt{UnstedayDifusion} &  \checkmark 	 & \checkmark 	 & 	&\\
 \hline
-UnstedayAdvectionDiffusion     			&  	 &   	& \checkmark	&\\
+\inltt{UnstedayAdvectionDiffusion} &  	 &   	& \checkmark	&\\
 \hline
-UnstedayInviscidBurger     			&  \checkmark 	 &	 & 	&\\
+\inltt{UnstedayInviscidBurger} &  \checkmark 	 &	 & 	&\\
 \hline
 
 \end{tabular}
@@ -89,57 +103,63 @@ UnstedayInviscidBurger     			&  \checkmark 	 &	 & 	&\\
 \vspace{-1 cm}
 \item \textbf{Projection}: The Galerkin projection used may be either:
 \begin{itemize}
-	\item Continuous for a C0-continuous Galerkin (CG) projection.
-	\item Discontinuous for a discontinous Galerkin (DG) projection.
+	\item \inltt{Continuous} for a C0-continuous Galerkin (CG) projection.
+	\item \inltt{Discontinuous} for a discontinous Galerkin (DG) projection.
 \end{itemize}
 \item \textbf{DiffusionAdvancement}: This specifies how to treat the diffusion term. This will be restricted by the choice of time integration scheme:
 \begin{itemize}
-	\item Explicit: Requires the use of an explicit time integration scheme.
-	\item Implcit: Requires the use of a diagonally implicit, IMEX or Implicit scheme.
+	\item \inltt{Explicit} Requires the use of an explicit time integration
+	scheme.
+	\item \inltt{Implcit} Requires the use of a diagonally implicit, IMEX or
+	Implicit scheme.
 \end{itemize}
 \item \textbf{AdvectionAdvancement}: This specifies how to treat the advection term. This will be restricted by the choice of time integration scheme:
 \begin{itemize}
-	\item Explicit: Requires the use of an explicit or IMEX time integration scheme.
-	\item Implicit: Not supported at present.
+	\item \inltt{Explicit} Requires the use of an explicit or IMEX time integration
+	scheme.
+	\item \inltt{Implicit} Not supported at present.
 \end{itemize}
 \item \textbf{AdvectionType}: Specifies the type of advection:
 \begin{itemize}
-	\item NonConservative (for CG only).
-	\item WeakDG (for DG only).
+	\item \inltt{NonConservative} (for CG only).
+	\item \inltt{WeakDG} (for DG only).
 \end{itemize}
 \item \textbf{DiffusionType}:
 \begin{itemize}
-	\item LDG.
+	\item \inltt{LDG}.
 \end{itemize}
 \item \textbf{UpwindType}:
 \begin{itemize}
-	\item Upwind.
+	\item \inltt{Upwind}.
 \end{itemize}
 \end{itemize}
 
 \subsection{Parameters}
 
-The following parameters can be specified in the PARAMETERS section of the session file:
+The following parameters can be specified in the \inltt{PARAMETERS} section of
+the session file:
 \begin{itemize}
-\item \textbf{epsilon}: sets the diffusion coefficient $\epsilon$.\\ 
+\item \inltt{epsilon}: sets the diffusion coefficient $\epsilon$.\\ 
 \textit{Can be used} in: SteadyDiffusionReaction, SteadyAdvectionDiffusionReaction, UnsteadyDiffusion, UnsteadyAdvectionDiffusion. \\
 \textit{Default value}: 0.
-\item  \textbf{d00, d11, d22}: sets the diagonal entries of the diffusion tensor $D$. \\
+\item  \inltt{d00}, \inltt{d11}, \inltt{d22}: sets the diagonal entries of the
+diffusion tensor $D$. \\
 \textit{Can be used in}: UnsteadyDiffusion \\
 \textit{Default value}: All set to 1 (i.e. identity matrix). 
-\item  \textbf{lambda}: sets the reaction coefficient  $\lambda$. \\
+\item  \inltt{lambda}: sets the reaction coefficient  $\lambda$. \\
 \textit{Can be used in}: SteadyDiffusionReaction, Helmholtz, SteadyAdvectionDiffusionReaction\\
 \textit{Default value}: 0.
 \end{itemize}
 
 \subsection{Functions}
 
-The following functions can be specified inside the CONDITIONS section of the session file:
+The following functions can be specified inside the \inltt{CONDITIONS} section
+of the session file:
 
 \begin{itemize}
-\item \textbf{AdvectionVelocity}: specifies the advection velocity $\mathbf{V}$.
-\item \textbf{InitialConditions}: specifies the initial condition for unsteady problems.
-\item \textbf{Forcing}: specifies the forcing function f.
+\item \inltt{AdvectionVelocity}: specifies the advection velocity $\mathbf{V}$.
+\item \inltt{InitialConditions}: specifies the initial condition for unsteady problems.
+\item \inltt{Forcing}: specifies the forcing function f.
 \end{itemize}
 
 \section{Examples}

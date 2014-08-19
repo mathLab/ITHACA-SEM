@@ -1,13 +1,7 @@
 \chapter{Incompressible Navier-Stokes Solver}
 \label{IncNSsolver}
-
-\newpage
-3.4/UserGuide/Tutorial/IncNavierStokesSolver/Stability
-3.4/UserGuide/Examples/IncNavierStokesSolver/Adjoint
 3.4/UserGuide/Examples/IncNavierStokesSolver/Aorta
-3.4/UserGuide/Examples/IncNavierStokesSolver/Biglobal
-3.4/UserGuide/Examples/IncNavierStokesSolver/Direct
-3.4/UserGuide/Examples/IncNavierStokesSolver/KovasznayFlow2D
+
 
 \section{Synopsis}
 \subsection{Velocity Correction Scheme}
@@ -229,7 +223,9 @@ where $\sigma=\left\| \mathbf{u'}(\tau)\right\|$. This is no other that the sing
 
 \section{Usage}
 
-\texttt{./IncNavierStokesSolver session.xml}
+\begin{lstlisting}[style=BashInputStyle]
+IncNavierStokesSolver session.xml}
+\end{lstlisting}
 
 \section{Session file configuration}
 

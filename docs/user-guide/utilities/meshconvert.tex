@@ -1,7 +1,6 @@
 \section{MeshConvert}
 \label{s:utilities:meshconvert}
-%3.4/Reference/Utilities/MeshConvert
-%3.4/UserGuide/Tutorial/MeshConvert
+
 MeshConvert is a utility bundled with Nektar++ which primarily allows foreign mesh file formats to be converted into the XML file format used by the solvers and other utilities. However, there is also some limited support for other output formats - consult the MeshConvert reference page for more information on which formats are supported.
 
 On this page, we will run through a basic example to show how a mesh can be converted from the widely-used mesh-generator ?Gmsh to the XML file format.
@@ -43,23 +42,23 @@ Physical Surface(2) = {16};
 Physical Surface(3) = {24};
 \end{lstlisting}
 Either choose the option File -> Save Mesh or, assuming this is saved in a file named `test.geo', run the command
-\begin{lstlisting}[style=XmlStyle]
+\begin{lstlisting}[style=BashInputStyle]
 gmsh -3 test.geo
 \end{lstlisting}
 which will produce the resulting MSH file `test.msh'. One can generate a high-order mesh by specifying the order on the command line, for example
-\begin{lstlisting}[style=XmlStyle]
+\begin{lstlisting}[style=BashInputStyle]
 gmsh -3 -order 6 test.geo
 \end{lstlisting}
 will generate a sixth-order mesh. Note that you will need to use a current version of Gmsh in order to do this, most likely from subversion.
 %------------------------------------------------------------------------------------------
 \subsection{Converting the MSH to Nektar++ format}
 Assuming that you have compiled Nektar++ according to the compilation instructions, run the command
-\begin{lstlisting}[style=XmlStyle]
-nektar++/builds/utilities/PreProcessing/MeshConvert/MeshConvert test.msh test.xml
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert test.msh test.xml
 \end{lstlisting}
 to generate the XML file. To validate the mesh visually, we can use a utility such as Paraview or ?VisIt. To do this, run the command
-\begin{lstlisting}[style=XmlStyle]
-nektar++/builds/utilities/PostProcessing/XmlToVtk test.xml
+\begin{lstlisting}[style=BashInputStyle]
+XmlToVtk test.xml
 \end{lstlisting}
 which generates an unstructured VTK file test.vtu
 %------------------------------------------------------------------------------------------
@@ -144,34 +143,37 @@ This sets up an incompressible Navier-Stokes simulation using a first-order spli
  %------------------------------------------------------------
 \subsubsection{Detecting elements with negative Jocabians}
 To detect elements with negative Jacobians use :
-\begin{lstlisting}[style=XmlStyle]
+\begin{lstlisting}[style=BashInputStyle]
 MeshConvert -m jac Mesh.xml
 \end{lstlisting}
 and to extract the elements (in order to visualize them for example) use :
-\begin{lstlisting}[style=XmlStyle]
+\begin{lstlisting}[style=BashInputStyle]
 MeshConvert -m jac:extract Mesh.xml MeshWithNegativeElements.xml
 \end{lstlisting}
  %------------------------------------------------------------
 \subsubsection{Periodic boundary conditions}
 Gmsh and Nektar++ use different edge ordering and surface orientation. To use periodic boundary conditions the faces must be aligned properly. To make sure faces (or edges for a 2D mesh) are aligned correctly use the following command :
-\begin{lstlisting}[style=XmlStyle]
-MeshConvert -m peralign:surf1=11:surf2=12:dir=y -m peralign:surf1=13:surf2=14:dir=z Mesh.xml Mesh_aligned.xml
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m peralign:surf1=11:surf2=12:dir=y \
+    -m peralign:surf1=13:surf2=14:dir=z Mesh.xml Mesh_aligned.xml
 \end{lstlisting}
 where the surfaces "11" and "12" will be aligned normal to "y" and the surfaces "13" and "14" will be aligned normal to "z". Mind the double use of the "-m"! Mesh.xml is the initial mesh by Gmsh and \verb+Mesh_aligned.xml+ is the new mesh output by this command with aligned surfaces (or edges).
  %------------------------------------------------------------
 \subsubsection{Spherigon Patches}
 To use spherigon patches on two contiguous surfaces "11" and "12" use the following command :
-\begin{lstlisting}[style=XmlStyle]
-MeshConvert -m spherigon:surf=11,12 MeshWithStraighEdges.xml MeshWithSpherigons.xml
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m spherigon:surf=11,12 \
+    MeshWithStraighEdges.xml MeshWithSpherigons.xml
 \end{lstlisting}
 If the two surfaces "11" and "12" are not contiguous use :
-\begin{lstlisting}[style=XmlStyle]
-MeshConvert -m spherigon:surf=11 -m spherigon:surf=12 MeshWithStraighEdges.xml MeshWithSpherigons.xml
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m spherigon:surf=11 -m spherigon:surf=12 \
+    MeshWithStraighEdges.xml MeshWithSpherigons.xml
 \end{lstlisting}
 If you have a high-resolution mesh of the surfaces "11" and "12" in ".ply " format it can be used to improve the normal definition of the spherigons. Run :
-\begin{lstlisting}[style=XmlStyle]
-MeshConvert -m spherigon:surf=11,12:usenormalfile=Surf_11-12_Mesh.ply
-MeshWithStraighEdges.xml MeshWithSpherigons.xml 
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m spherigon:surf=11,12:usenormalfile=Surf_11-12_Mesh.ply \
+    MeshWithStraighEdges.xml MeshWithSpherigons.xml 
 \end{lstlisting}
 This can be useful, for example, when meshing the Leading edge of an airfoil. Starting from a "linear" mesh (Fig.1) the spherigon patches curve the surface elements producing leading edge closer to the underlying geometry :
 \begin{figure}[!htbp]
@@ -185,7 +187,7 @@ This can be useful, for example, when meshing the Leading edge of an airfoil. St
  %------------------------------------------------------------
 \subsubsection{Prism splitting}
 To split a prism boundary layer on surface "11" into 3 layers with a growth rate of 2 and 7 integration points per element use the following command :
-\begin{lstlisting}[style=XmlStyle]
+\begin{lstlisting}[style=BashInputStyle]
 MeshConvert -m bl:surf=11:layers=3:r=2:nq=7 MeshWithOnePrismLayer.xml
 MeshWith3PrismsLayers.xml
 \end{lstlisting}
@@ -201,13 +203,12 @@ MeshWith3PrismsLayers.xml
  %------------------------------------------------------------
 \subsubsection{Running the simulation}
 The 3D problem defined here is relatively expensive, and will require significant amounts of memory and CPU time at high-order. To run the simulation, execute the command
-\begin{lstlisting}[style=XmlStyle]
-nektar++/builds/solvers/IncNavierStokesSolver/IncNavierStokesSolver test.xml
+\begin{lstlisting}[style=BashInputStyle]
+IncNavierStokesSolver test.xml
 \end{lstlisting}
 Alternatively, if you have compiled Nektar++ with MPI support, you may run in parallel
-\begin{lstlisting}[style=XmlStyle]
-mpirun -np <nprocs> nektar++/builds/solvers/IncNavierStokesSolver/IncNavierStokesSolver
-test.xml
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -np <nprocs> IncNavierStokesSolver test.xml
 \end{lstlisting}
 replacing <nprocs> with the number of processors.
 

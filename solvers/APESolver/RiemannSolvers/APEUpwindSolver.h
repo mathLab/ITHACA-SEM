@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File TenTusscher06M.h
+// File: APEUpwindSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,55 +29,48 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: ten Tusscher 2006 Mid-myocardium cell model
+// Description: Upwind Riemann solver for the APE equations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHER_PANFILOV_2006_M_CELL_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_TENTUSSCHER_PANFILOV_2006_M_CELL_H
+#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
+#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
 
-#include <CardiacEPSolver/CellModels/CellModel.h>
+#include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-    class TenTusscher06M : public CellModel
-    {
 
+class APEUpwindSolver : public RiemannSolver
+{
     public:
-        /// Creates an instance of this class
-        static CellModelSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession,
-                const MultiRegions::ExpListSharedPtr& pField)
+        static RiemannSolverSharedPtr create()
         {
-            return MemoryManager<TenTusscher06M>::AllocateSharedPtr(pSession, pField);
+            return RiemannSolverSharedPtr(new APEUpwindSolver());
         }
 
-        /// Name of class
-        static std::string className;
-
-        /// Constructor
-        TenTusscher06M(
-                const LibUtilities::SessionReaderSharedPtr& pSession,
-                const MultiRegions::ExpListSharedPtr& pField);
-
-        /// Destructor
-        virtual ~TenTusscher06M() {}
+        static std::string solverName;
 
     protected:
-        /// Computes the reaction terms $f(u,v)$ and $g(u,v)$.
-        virtual void v_Update(
-               const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                     Array<OneD,        Array<OneD, NekDouble> >&outarray,
-               const NekDouble time);
+        APEUpwindSolver();
 
-        /// Prints a summary of the model parameters.
-        virtual void v_GenerateSummary(SummaryList& s);
+        virtual void v_Solve(
+                const int                                         nDim,
+                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                      Array<OneD,       Array<OneD, NekDouble> > &flux);
 
-        virtual void v_SetInitialConditions();
+        void Solve1D(
+                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                      Array<OneD,       Array<OneD, NekDouble> > &flux);
 
-    private:
+        Array<OneD, Array<OneD, NekDouble> >            m_rotBasefield;
+};
 
-    };
 }
 
 #endif

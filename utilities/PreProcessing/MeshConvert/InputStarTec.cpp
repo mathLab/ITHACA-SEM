@@ -707,7 +707,7 @@ namespace Nektar
             }
             
             // Create element
-            ElmtConfig conf(elType,1,false,false);
+            ElmtConfig conf(elType,1,true,true);
             ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
                                                                      nodeList,tags);
             
@@ -763,7 +763,7 @@ namespace Nektar
             // Create element
             if(elType != LibUtilities::ePyramid)
             {
-                ElmtConfig conf(elType,1,false,false,DoOrient);
+                ElmtConfig conf(elType,1,true,true,DoOrient);
                 ElementSharedPtr  E = GetElementFactory().CreateInstance(elType,conf,
                                                            nodeList,tags);
                 

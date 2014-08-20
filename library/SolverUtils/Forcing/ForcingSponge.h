@@ -71,9 +71,11 @@ namespace SolverUtils
 
         protected:
             bool                                    m_hasRefFlow;
+            bool                                    m_hasRefFlowTime;
             Array<OneD, Array<OneD, NekDouble> >    m_Sponge;
             Array<OneD, Array<OneD, NekDouble> >    m_Refflow;
-
+            std::string                             m_funcNameTime;
+  
             SOLVER_UTILS_EXPORT virtual void v_InitObject(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
@@ -82,7 +84,8 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT virtual void v_Apply(
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                          Array<OneD, Array<OneD, NekDouble> > &outarray);
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble &time);
 
         private:
             ForcingSponge(const LibUtilities::SessionReaderSharedPtr& pSession);

@@ -1088,7 +1088,7 @@ namespace Nektar
         }
 
         m_pressureCalls = 0;
-
+		
         switch(m_pressure->GetExpType())
         {
             case MultiRegions::e2D:
@@ -1179,7 +1179,6 @@ namespace Nektar
                 m_wavenumber      = Array<OneD, NekDouble>(HBCnumber);
                 m_negWavenumberSq = Array<OneD, NekDouble>(HBCnumber);
 		
-                int coeff_count = 0;
                 int exp_size, exp_size_per_plane;
                 int j=0;
                 int K;
@@ -1219,6 +1218,20 @@ namespace Nektar
                     m_npointsZ = m_session->GetParameter("HomModesZ");
                 }
 
+               	Array<OneD, int> coeff_count(m_PBndConds.num_elements(),0);
+               	Array<OneD, int> coeffPlaneOffset(m_PBndConds.num_elements(),0);
+
+               	cnt = 0;
+               	for(int n = 0 ; n < m_PBndConds.num_elements(); ++n)
+               	{
+                   	coeffPlaneOffset[n] = cnt;
+                   	if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                   	{
+                       	cnt += m_PBndExp[n]->GetNcoeffs();
+                   	}
+               	}
+
+				cnt = 0;
                 for(int k = 0; k < num_planes; k++)
                 {
                     K = planes[k]/2;
@@ -1238,9 +1251,9 @@ namespace Nektar
                                 m_HBCdata[j].m_bndElmtOffset = i+k*exp_size_per_plane;       
                                 m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
                                 m_HBCdata[j].m_bndryElmtID = n;
-                                m_HBCdata[j].m_coeffOffset = coeff_count;
-                                coeff_count += elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
-                                
+                                m_HBCdata[j].m_coeffOffset = coeffPlaneOffset[n] + coeff_count[n];
+                               	coeff_count[n] += elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
+    
                                 if(m_SingleMode)
                                 {
                                     m_wavenumber[j]      = -2*M_PI/m_LhomZ;       

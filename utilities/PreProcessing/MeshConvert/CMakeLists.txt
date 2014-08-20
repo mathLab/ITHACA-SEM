@@ -15,6 +15,7 @@ SET(MeshConvertHeaders
     ProcessExtractSurf.h
     ProcessJac.h
     ProcessPerAlign.h
+    ProcessScalar.h
     ProcessSpherigon.h
     ProcessTetSplit.h
 )
@@ -37,6 +38,7 @@ SET(MeshConvertSources
     ProcessExtractSurf.cpp
     ProcessJac.cpp
     ProcessPerAlign.cpp
+    ProcessScalar.cpp
     ProcessSpherigon.cpp
     ProcessTetSplit.cpp
 )

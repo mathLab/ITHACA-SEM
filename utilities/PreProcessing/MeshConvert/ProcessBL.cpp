@@ -45,6 +45,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LocalRegions/PrismExp.h>
+#include <LocalRegions/HexExp.h>
 
 namespace Nektar
 {
@@ -70,6 +71,7 @@ namespace Nektar
         struct SplitMapHelper
         {
             int size;
+            int layerOff;
             int *edge;
             int *offset;
             int *inc;
@@ -82,6 +84,7 @@ namespace Nektar
             int *edge;
             int **edgeVert;
             int *offset;
+            int *inc;
         };
 
         ProcessBL::ProcessBL(MeshSharedPtr m) : ProcessModule(m)
@@ -113,6 +116,7 @@ namespace Nektar
             // A set containing all element types which are valid.
             set<LibUtilities::ShapeType> validElTypes;
             validElTypes.insert(LibUtilities::ePrism);
+            validElTypes.insert(LibUtilities::eHexahedron);
 
             int nodeId  = m_mesh->m_vertexSet.size();
             int nl      = m_config["layers"].as<int>();
@@ -161,13 +165,31 @@ namespace Nektar
             int splitMapIncPrism   [6]    = {1, 1,  po, po,   po,      po};
             int splitMapConnPrism  [6][2] = {{0,0}, {1,0}, {1,1},
                                              {0,1}, {2,0}, {2,1}};
-            splitPrism.size   = 6;
-            splitPrism.edge   = splitMapEdgePrism;
-            splitPrism.offset = splitMapOffsetPrism;
-            splitPrism.inc    = splitMapIncPrism;
-            splitPrism.conn   = helper2d(6, splitMapConnPrism);
+            splitPrism.size     = 6;
+            splitPrism.layerOff = nq;
+            splitPrism.edge     = splitMapEdgePrism;
+            splitPrism.offset   = splitMapOffsetPrism;
+            splitPrism.inc      = splitMapIncPrism;
+            splitPrism.conn     = helper2d(6, splitMapConnPrism);
             splitMap[LibUtilities::ePrism][1] = splitPrism;
             splitMap[LibUtilities::ePrism][3] = splitPrism;
+
+            int ho = nq*(nq-1);
+            int tl = nq*nq;
+            SplitMapHelper splitHex0;
+            int splitMapEdgeHex0  [8]    = {0, 1,    2,  3,  8,  9,       10,    11};
+            int splitMapOffsetHex0[8]    = {0, nq-1, ho, 0,  tl, tl+nq-1, tl+ho, tl};
+            int splitMapIncHex0   [8]    = {1, nq,   1,  nq, 1,  nq,      1,     nq};
+            int splitMapConnHex0  [8][2] = {{0,0}, {1,0}, {2,0}, {3,0},
+                                            {0,1}, {1,1}, {2,1}, {3,1}};
+            splitHex0.size     = 8;
+            splitHex0.layerOff = nq*nq;
+            splitHex0.edge     = splitMapEdgeHex0;
+            splitHex0.offset   = splitMapOffsetHex0;
+            splitHex0.inc      = splitMapIncHex0;
+            splitHex0.conn     = helper2d(8, splitMapConnHex0);
+            splitMap[LibUtilities::eHexahedron][0] = splitHex0;
+            splitMap[LibUtilities::eHexahedron][5] = splitHex0;
 
             // splitEdge enumerates the edges in the standard prism along which
             // new nodes should be generated. These edges are the three between
@@ -180,20 +202,39 @@ namespace Nektar
             // edgeOffset holds the offset of each of edges 3, 1 and 8
             // respectively inside the collapsed coordinate system.
             map<LibUtilities::ShapeType, map<int, SplitEdgeHelper> > splitEdge;
+
             int splitPrismEdges   [3]    = {3,     1,     8};
             int splitPrismEdgeVert[3][2] = {{0,3}, {1,2}, {4,5}};
             int splitPrismOffset  [3]    = {0,     nq-1,  nq*(nl+1)*(nq-1)};
+            int splitPrismInc     [3]    = {nq,    nq,    nq};
             SplitEdgeHelper splitPrismEdge;
             splitPrismEdge.size     = 3;
             splitPrismEdge.edge     = splitPrismEdges;
             splitPrismEdge.edgeVert = helper2d(3, splitPrismEdgeVert);
             splitPrismEdge.offset   = splitPrismOffset;
+            splitPrismEdge.inc      = splitPrismInc;
             splitEdge[LibUtilities::ePrism][1] = splitPrismEdge;
             splitEdge[LibUtilities::ePrism][3] = splitPrismEdge;
+
+            int splitHex0Edges   [4]    = {4,     5,     6,       7};
+            int splitHex0EdgeVert[4][2] = {{0,4}, {1,5}, {2,6},   {3,7}};
+            int splitHex0Offset  [4]    = {0,     nq-1,  nq*nq-1, nq*(nq-1) };
+            int splitHex0Inc     [4]    = {nq*nq, nq*nq, nq*nq,   nq*nq};
+            SplitEdgeHelper splitHex0Edge;
+            splitHex0Edge.size     = 4;
+            splitHex0Edge.edge     = splitHex0Edges;
+            splitHex0Edge.edgeVert = helper2d(4, splitHex0EdgeVert);
+            splitHex0Edge.offset   = splitHex0Offset;
+            splitHex0Edge.inc      = splitHex0Inc;
+            splitEdge[LibUtilities::eHexahedron][0] = splitHex0Edge;
+            splitEdge[LibUtilities::eHexahedron][5] = splitHex0Edge;
 
             map<LibUtilities::ShapeType, map<int, bool> > revPoints;
             revPoints[LibUtilities::ePrism][1] = false;
             revPoints[LibUtilities::ePrism][3] = true;
+
+            revPoints[LibUtilities::eHexahedron][0] = true;
+            revPoints[LibUtilities::eHexahedron][5] = false;
 
             // edgeMap associates geometry edge IDs to the (nl+1) vertices which
             // are generated along that edge when a prism is split, and is used
@@ -381,6 +422,23 @@ namespace Nektar
                     q = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
                         B0, B1, B2, g);
                 }
+                else if (elType == LibUtilities::eHexahedron)
+                {
+                    // Create basis.
+                    LibUtilities::BasisKey B0(
+                        LibUtilities::eModified_A, nq,
+                        LibUtilities::PointsKey(nq,pt));
+                    LibUtilities::BasisKey B1(
+                        LibUtilities::eModified_A, 2,
+                        LibUtilities::PointsKey(nl+1, t, r));
+
+                    // Create local region.
+                    SpatialDomains::HexGeomSharedPtr g =
+                        boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(
+                            geom);
+                    q = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(
+                        B0, B0, B1, g);
+                }
 
                 // Grab co-ordinates.
                 Array<OneD, NekDouble> x(nq*nq*(nl+1));
@@ -460,7 +518,7 @@ namespace Nektar
                             // Create new interior nodes.
                             for (int k = 1; k < nl; ++k)
                             {
-                                int pos = sEdge.offset[j] + k*nq;
+                                int pos = sEdge.offset[j] + k*sEdge.inc[j];
                                 edgeNodes[j][k] = NodeSharedPtr(
                                     new Node(nodeId++, x[pos], y[pos], z[pos]));
                             }
@@ -480,7 +538,7 @@ namespace Nektar
                 {
                     // Offset of this layer within the collapsed coordinate
                     // system.
-                    int offset = j*nq;
+                    int offset = j * sMap.layerOff;
 
                     // Get corner vertices.
                     vector<NodeSharedPtr> nodeList(sMap.size);
@@ -489,14 +547,6 @@ namespace Nektar
                         nodeList[k] =
                             edgeNodes[sMap.conn[k][0]][j + sMap.conn[k][1]];
                     }
-                    /*
-                    nodeList[0] = edgeNodes[0][j  ];
-                    nodeList[1] = edgeNodes[1][j  ];
-                    nodeList[2] = edgeNodes[1][j+1];
-                    nodeList[3] = edgeNodes[0][j+1];
-                    nodeList[4] = edgeNodes[2][j  ];
-                    nodeList[5] = edgeNodes[2][j+1];
-                    */
 
                     // Create the element.
                     ElmtConfig conf(elType, 1, true, true, false);
@@ -505,7 +555,7 @@ namespace Nektar
                             elType, conf, nodeList, el[i]->GetTagList());
 
                     // Add high order nodes to split prismatic edges.
-                    for (int l = 0; l < 6; ++l)
+                    for (int l = 0; l < sMap.size; ++l)
                     {
                         EdgeSharedPtr HOedge = elmt->GetEdge(
                             sMap.edge[l]);

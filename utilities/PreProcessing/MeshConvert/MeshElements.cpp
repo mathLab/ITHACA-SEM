@@ -1705,6 +1705,7 @@ namespace Nektar
             // This is based on the ordering produced by gmsh.
             map<pair<int,int>, int> edgeNodeMap;
             map<pair<int,int>, int>::iterator it;
+            /*
             edgeNodeMap[pair<int,int>(1,2)] = 9;
             edgeNodeMap[pair<int,int>(1,4)] = 9 + n;
             edgeNodeMap[pair<int,int>(1,5)] = 9 + 2*n;
@@ -1717,6 +1718,19 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(5,8)] = 9 + 9*n;
             edgeNodeMap[pair<int,int>(6,7)] = 9 + 10*n;
             edgeNodeMap[pair<int,int>(7,8)] = 9 + 11*n;
+            */
+            edgeNodeMap[pair<int,int>(1,2)] = 9;
+            edgeNodeMap[pair<int,int>(2,3)] = 9 + n;
+            edgeNodeMap[pair<int,int>(4,3)] = 9 + 2*n;
+            edgeNodeMap[pair<int,int>(1,4)] = 9 + 3*n;
+            edgeNodeMap[pair<int,int>(1,5)] = 9 + 4*n;
+            edgeNodeMap[pair<int,int>(2,6)] = 9 + 5*n;
+            edgeNodeMap[pair<int,int>(3,7)] = 9 + 6*n;
+            edgeNodeMap[pair<int,int>(4,8)] = 9 + 7*n;
+            edgeNodeMap[pair<int,int>(5,6)] = 9 + 8*n;
+            edgeNodeMap[pair<int,int>(6,7)] = 9 + 9*n;
+            edgeNodeMap[pair<int,int>(8,7)] = 9 + 10*n;
+            edgeNodeMap[pair<int,int>(5,8)] = 9 + 11*n;
 
             // Add vertices
             for (int i = 0; i < 8; ++i) {
@@ -1739,8 +1753,9 @@ namespace Nektar
             }
 
             // Create faces
+            int face_edges[6][4];
             int face_ids[6][4] = {
-                {0,1,2,3},{0,1,5,4},{1,2,6,5},{2,3,7,6},{3,0,4,7},{4,5,6,7}};
+                {0,1,2,3},{0,1,5,4},{1,2,6,5},{3,2,6,7},{0,3,7,4},{4,5,6,7}};
             for (int j = 0; j < 6; ++j)
             {
                 vector<NodeSharedPtr> faceVertices;
@@ -1756,6 +1771,7 @@ namespace Nektar
                         if ( ((*(m_edge[i]->m_n1)==*a) && (*(m_edge[i]->m_n2)==*b))
                                 || ((*(m_edge[i]->m_n1)==*b) && (*(m_edge[i]->m_n2) == *a)) )
                         {
+                            face_edges[j][k] = i;
                             faceEdges.push_back(m_edge[i]);
                             break;
                         }
@@ -1773,6 +1789,22 @@ namespace Nektar
                 m_face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
             }
+
+            // Reorder edges to be consistent with Nektar++ ordering.
+            vector<EdgeSharedPtr> tmp(12);
+            tmp[ 0] = m_edge[face_edges[0][0]];
+            tmp[ 1] = m_edge[face_edges[0][1]];
+            tmp[ 2] = m_edge[face_edges[0][2]];
+            tmp[ 3] = m_edge[face_edges[0][3]];
+            tmp[ 4] = m_edge[face_edges[1][3]];
+            tmp[ 5] = m_edge[face_edges[1][1]];
+            tmp[ 6] = m_edge[face_edges[2][1]];
+            tmp[ 7] = m_edge[face_edges[4][1]];
+            tmp[ 8] = m_edge[face_edges[5][0]];
+            tmp[ 9] = m_edge[face_edges[5][1]];
+            tmp[10] = m_edge[face_edges[5][2]];
+            tmp[11] = m_edge[face_edges[5][3]];
+            m_edge = tmp;
         }
         
         SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)

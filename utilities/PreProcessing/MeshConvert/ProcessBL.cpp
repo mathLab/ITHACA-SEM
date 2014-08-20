@@ -68,6 +68,20 @@ namespace Nektar
             return ret;
         }
 
+        int **helper2d(int lda, int arr[][4])
+        {
+            int **ret = new int*[lda];
+            for (int i = 0; i < lda; ++i)
+            {
+                ret[i] = new int[4];
+                ret[i][0] = arr[i][0];
+                ret[i][1] = arr[i][1];
+                ret[i][2] = arr[i][2];
+                ret[i][3] = arr[i][3];
+            }
+            return ret;
+        }
+
         struct SplitMapHelper
         {
             int size;
@@ -76,6 +90,8 @@ namespace Nektar
             int *offset;
             int *inc;
             int **conn;
+            int bfacesSize;
+            int *bfaces;
         };
 
         struct SplitEdgeHelper
@@ -142,6 +158,11 @@ namespace Nektar
             // Prismatic node -> face map.
             int prismFaceNodes[5][4] = {
                 {0,1,2,3},{0,1,4,-1},{1,2,5,4},{3,2,5,-1},{0,3,5,4}};
+            int hexFaceNodes  [6][4] = {
+                {0,1,2,3},{0,1,5,4},{1,2,6,5},{3,2,6,7},{0,3,7,4},{4,5,6,7}};
+            map<LibUtilities::ShapeType, int **> faceNodeMap;
+            faceNodeMap[LibUtilities::ePrism]      = helper2d(5, prismFaceNodes);
+            faceNodeMap[LibUtilities::eHexahedron] = helper2d(6, hexFaceNodes);
 
             // Default PointsType.
             LibUtilities::PointsType pt = LibUtilities::eGaussLobattoLegendre;
@@ -163,14 +184,17 @@ namespace Nektar
             int splitMapEdgePrism  [6]    = {0, 2,  4,  5,    6,       7};
             int splitMapOffsetPrism[6]    = {0, nq, 0,  nq-1, nq+nq-1, nq};
             int splitMapIncPrism   [6]    = {1, 1,  po, po,   po,      po};
+            int splitMapBFacesPrism[3]    = {0, 2, 4};
             int splitMapConnPrism  [6][2] = {{0,0}, {1,0}, {1,1},
                                              {0,1}, {2,0}, {2,1}};
-            splitPrism.size     = 6;
-            splitPrism.layerOff = nq;
-            splitPrism.edge     = splitMapEdgePrism;
-            splitPrism.offset   = splitMapOffsetPrism;
-            splitPrism.inc      = splitMapIncPrism;
-            splitPrism.conn     = helper2d(6, splitMapConnPrism);
+            splitPrism.size       = 6;
+            splitPrism.layerOff   = nq;
+            splitPrism.edge       = splitMapEdgePrism;
+            splitPrism.offset     = splitMapOffsetPrism;
+            splitPrism.inc        = splitMapIncPrism;
+            splitPrism.conn       = helper2d(6, splitMapConnPrism);
+            splitPrism.bfacesSize = 3;
+            splitPrism.bfaces     = splitMapBFacesPrism;
             splitMap[LibUtilities::ePrism][1] = splitPrism;
             splitMap[LibUtilities::ePrism][3] = splitPrism;
 
@@ -180,14 +204,17 @@ namespace Nektar
             int splitMapEdgeHex0  [8]    = {0, 1,    2,  3,  8,  9,       10,    11};
             int splitMapOffsetHex0[8]    = {0, nq-1, ho, 0,  tl, tl+nq-1, tl+ho, tl};
             int splitMapIncHex0   [8]    = {1, nq,   1,  nq, 1,  nq,      1,     nq};
+            int splitMapBFacesHex0[4]    = {1, 2, 3, 4};
             int splitMapConnHex0  [8][2] = {{0,0}, {1,0}, {2,0}, {3,0},
                                             {0,1}, {1,1}, {2,1}, {3,1}};
-            splitHex0.size     = 8;
-            splitHex0.layerOff = nq*nq;
-            splitHex0.edge     = splitMapEdgeHex0;
-            splitHex0.offset   = splitMapOffsetHex0;
-            splitHex0.inc      = splitMapIncHex0;
-            splitHex0.conn     = helper2d(8, splitMapConnHex0);
+            splitHex0.size       = 8;
+            splitHex0.layerOff   = nq*nq;
+            splitHex0.edge       = splitMapEdgeHex0;
+            splitHex0.offset     = splitMapOffsetHex0;
+            splitHex0.inc        = splitMapIncHex0;
+            splitHex0.conn       = helper2d(8, splitMapConnHex0);
+            splitHex0.bfacesSize = 4;
+            splitHex0.bfaces     = splitMapBFacesHex0;
             splitMap[LibUtilities::eHexahedron][0] = splitHex0;
             splitMap[LibUtilities::eHexahedron][5] = splitHex0;
 
@@ -355,19 +382,21 @@ namespace Nektar
                 }
 
                 const int faceNum = sIt->second;
+                LibUtilities::ShapeType elType = el[i]->GetConf().m_e;
+
+                SplitMapHelper  &sMap  = splitMap [elType][faceNum];
+                SplitEdgeHelper &sEdge = splitEdge[elType][faceNum];
 
                 // Find quadrilateral boundary faces if any
                 std::map<int, int> bLink;
-                for (int j = 0; j < 5; j += 2)
+                for (int j = 0; j < sMap.bfacesSize; ++j)
                 {
-                    int bl = el[i]->GetBoundaryLink(j);
+                    int bl = el[i]->GetBoundaryLink(sMap.bfaces[j]);
                     if (bl != -1)
                     {
-                        bLink[j] = bl;
+                        bLink[sMap.bfaces[j]] = bl;
                     }
                 }
-
-                LibUtilities::ShapeType elType = el[i]->GetConf().m_e;
 
                 // Get elemental geometry object.
                 SpatialDomains::Geometry3DSharedPtr geom =
@@ -446,8 +475,6 @@ namespace Nektar
                 Array<OneD, NekDouble> z(nq*nq*(nl+1));
                 q->GetCoords(x,y,z);
 
-                SplitMapHelper  &sMap  = splitMap [elType][faceNum];
-                SplitEdgeHelper &sEdge = splitEdge[elType][faceNum];
                 int nSplitEdge = sEdge.size;
                 int nSplitFace = sMap .size;
                 vector<vector<NodeSharedPtr> > edgeNodes(nSplitEdge);
@@ -568,9 +595,9 @@ namespace Nektar
                         }
                         HOedge->m_curveType = pt;
                     }
-#if 0
-                    // Change the surface elements of the quad face on the
-                    // symmetry plane to match the layers of prisms.
+
+                    // Change the surface elements to match the layers of
+                    // elements on the boundary of the domain.
                     map<int,int>::iterator it;
                     for (it = bLink.begin(); it != bLink.end(); ++it)
                     {
@@ -584,7 +611,7 @@ namespace Nektar
                             for (int k = 0; k < 4; ++k)
                             {
                                 e->SetVertex(
-                                    k, nodeList[prismFaceNodes[fid][k]]);
+                                    k, nodeList[faceNodeMap[elType][fid][k]]);
                             }
                         }
                         else
@@ -593,7 +620,7 @@ namespace Nektar
                             vector<NodeSharedPtr> qNodeList(4);
                             for (int k = 0; k < 4; ++k)
                             {
-                                qNodeList[k] = nodeList[prismFaceNodes[fid][k]];
+                                qNodeList[k] = nodeList[faceNodeMap[elType][fid][k]];
                             }
                             vector<int> tagBE;
                             tagBE = m_mesh->m_element[m_mesh->m_expDim-1][bl]->GetTagList();
@@ -604,7 +631,7 @@ namespace Nektar
                             m_mesh->m_element[m_mesh->m_expDim-1].push_back(boundaryElmt);
                         }
                     }
-#endif
+
                     m_mesh->m_element[m_mesh->m_expDim].push_back(elmt);
                 }
             }

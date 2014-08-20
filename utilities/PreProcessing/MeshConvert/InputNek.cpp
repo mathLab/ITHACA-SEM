@@ -85,7 +85,7 @@ namespace Nektar
             int         i, j, k, nodeCounter = 0;
             int         nComposite = 0;
             LibUtilities::ShapeType elType;
-            double      vertex[3][6];
+            double      vertex[3][8];
             map<LibUtilities::ShapeType,int> domainComposite;
             map<LibUtilities::ShapeType,vector< vector<NodeSharedPtr> > > elNodes;
             map<LibUtilities::ShapeType,vector<int> > elIds;
@@ -269,7 +269,7 @@ namespace Nektar
                                  vertex[1][k],  vertex[2][k]));
                     nodeList.push_back(n);
                 }
-                
+
                 elNodes[elType].push_back(nodeList);
                 elIds  [elType].push_back(i);
             }
@@ -281,7 +281,7 @@ namespace Nektar
             {
                 LibUtilities::ShapeType elType = elmOrder[i];
                 vector<vector<NodeSharedPtr> > &tmp = elNodes[elType];
-                
+
                 for (j = 0; j < tmp.size(); ++j)
                 {
                     vector<int> tags;

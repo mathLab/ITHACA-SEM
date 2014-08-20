@@ -155,11 +155,11 @@ namespace Nektar
             int vRank = vComm->GetRank();
             Array<OneD, int>  procList(m_historyPoints.size(), -1);
             Array<OneD, int> idList(m_historyPoints.size());
-            Array<OneD, NekDouble>  locCoords(3);
             std::vector<Array<OneD, NekDouble> > LocCoords; 
-            
+
             for (i = 0; i < m_historyPoints.size(); ++i)
             {
+                Array<OneD, NekDouble> locCoords(3);
 
                 // Determine the expansion and local coordinates
                 m_historyPoints[i]->GetCoords(  gloCoord[0],
@@ -178,11 +178,11 @@ namespace Nektar
                                     pFields[0]->GetExp(idList[i])->GetGeom();
                     StdRegions::StdExpansionSharedPtr e = g->GetXmap();
                     Array<OneD, NekDouble> coordVals(e->GetTotPoints());
-                    double distance = 0.0;
+                    NekDouble distance = 0.0;
                     for (int j = 0; j < g->GetCoordim(); ++j)
                     {
                         e->BwdTrans(g->GetCoeffs(j), coordVals);
-                        double x = e->PhysEvaluate(locCoords, coordVals)
+                        NekDouble x = e->PhysEvaluate(locCoords, coordVals)
                                                                  - gloCoord[j];
                         distance += x*x;
                     }
@@ -194,6 +194,7 @@ namespace Nektar
 
                 // Save Local coordinates for later
                 LocCoords.push_back(locCoords);
+
                 // Set element id to Vid of m_history point for later use
                 m_historyPoints[i]->SetVid(idList[i]);
                 
@@ -378,7 +379,6 @@ namespace Nektar
 
                         // interpolate point
                         data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
-                        
                     }
                 }
             }

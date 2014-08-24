@@ -287,6 +287,32 @@ namespace Nektar
             // Override SOLVERINFO and parameters with any specified on the
             // command line.
             CmdLineOverride();
+
+            // In verbose mode, print out parameters and solver info sections
+            if (m_verbose && m_comm)
+            {
+                if (m_comm->GetRank() == 0 && m_parameters.size() > 0)
+                {
+                    cout << "Parameters:" << endl;
+                    ParameterMap::iterator x;
+                    for (x = m_parameters.begin(); x != m_parameters.end(); ++x)
+                    {
+                        cout << "\t" << x->first << " = " << x->second << endl;
+                    }
+                    cout << endl;
+                }
+
+                if (m_comm->GetRank() == 0 && m_solverInfo.size() > 0)
+                {
+                    cout << "Solver Info:" << endl;
+                    SolverInfoMap::iterator x;
+                    for (x = m_solverInfo.begin(); x != m_solverInfo.end(); ++x)
+                    {
+                        cout << "\t" << x->first << " = " << x->second << endl;
+                    }
+                    cout << endl;
+                }
+            }
         }
 
 
@@ -1719,20 +1745,6 @@ namespace Nektar
                     parameter = parameter->NextSiblingElement();
                 }
             }
-
-            if (m_verbose && m_parameters.size() > 0 && m_comm)
-            {
-                if(m_comm->GetRank() == 0)
-                {
-                    cout << "Parameters:" << endl;
-                    ParameterMap::iterator x;
-                    for (x = m_parameters.begin(); x != m_parameters.end(); ++x)
-                    {
-                        cout << "\t" << x->first << " = " << x->second << endl;
-                    }
-                    cout << endl;
-                }
-            }
         }
 
 
@@ -1816,20 +1828,6 @@ namespace Nektar
                     m_solverInfo["GLOBALSYSSOLN"] == "XxtStaticCond"       ||
                     m_solverInfo["GLOBALSYSSOLN"] == "XxtMultiLevelStaticCond",
                     "A parallel solver must be used when run in parallel.");
-            }
-            
-            if (m_verbose && m_solverInfo.size() > 0 && m_comm)
-            {
-                if(m_comm->GetRank() == 0)
-                {
-                    cout << "Solver Info:" << endl;
-                    SolverInfoMap::iterator x;
-                    for (x = m_solverInfo.begin(); x != m_solverInfo.end(); ++x)
-                    {
-                        cout << "\t" << x->first << " = " << x->second << endl;
-                    }
-                    cout << endl;
-                }
             }
         }
 

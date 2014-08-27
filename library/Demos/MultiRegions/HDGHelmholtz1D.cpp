@@ -40,7 +40,6 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     factors[StdRegions::eFactorTau] = 1.0;
-    const SpatialDomains::CompositeMap domain = (graph1D->GetDomain());
     cout << "Solving 1D Helmholtz:"  << endl;
     cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
     //----------------------------------------------

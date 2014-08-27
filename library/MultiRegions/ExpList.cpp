@@ -1310,24 +1310,6 @@ namespace Nektar
 
 
         /**
-         * The operation is evaluated locally by the elemental
-         * function StdRegions#StdExpansion#GetSurfaceNormal.
-         */
-        void ExpList::GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
-                                const int k)
-        {
-            int i;
-            Array<OneD, NekDouble> normals;
-
-            for(i = 0; i < (*m_exp).size(); ++i)
-            {
-                //e_SN = SurfaceNormal + m_phys_offset[i];
-                normals = (*m_exp)[i]->GetSurfaceNormal()[k];
-                Vmath::Vcopy(normals.num_elements(), &normals[0], 1, &SurfaceNormal[0] + m_phys_offset[i], 1);
-            }
-        }
-
-        /**
          * Configures geometric info, such as tangent direction, on each
          * expansion.
          * @param   graph2D         Mesh
@@ -1857,11 +1839,11 @@ namespace Nektar
         }
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
-												  int NumHomoDir, 
-												  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
-												  std::vector<NekDouble> &HomoLen,
-												  std::vector<unsigned int> &HomoZIDs,
-												  std::vector<unsigned int> &HomoYIDs)
+                                                  int NumHomoDir, 
+                                                  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
+                                                  std::vector<NekDouble> &HomoLen,
+                                                  std::vector<unsigned int> &HomoZIDs,
+                                                  std::vector<unsigned int> &HomoYIDs)
         {
             int startenum, endenum, s;
 
@@ -1949,6 +1931,7 @@ namespace Nektar
                 }
             }
         }
+
 
         //
         // Virtual functions
@@ -2160,14 +2143,6 @@ namespace Nektar
         }
         
         boost::shared_ptr<ExpList> &ExpList::v_GetTrace()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList> returnVal;
-            return returnVal;
-        }
-
-        boost::shared_ptr<ExpList> &ExpList::v_GetTrace(int i)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2454,42 +2429,6 @@ namespace Nektar
             }
         }
 		
-        /**
-         */
-        void ExpList::v_SetCoeff(NekDouble val)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-	
-        /**
-         */
-        void ExpList::v_SetPhys(NekDouble val)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-	
-        /**
-         */
-        const SpatialDomains::PointGeomSharedPtr ExpList::v_GetGeom(void) const
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-        }
-		
-        /**
-         */
-        const SpatialDomains::PointGeomSharedPtr ExpList::v_GetVertex(void) const
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-        }
-	
         /**
          */
         void ExpList::v_SetUpPhysNormals()

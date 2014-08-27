@@ -95,15 +95,17 @@ namespace Nektar
             const NekDouble                                   time);
         virtual void v_SetInitialConditions(
             NekDouble               initialtime = 0.0,
-            bool                    dumpInitialConditions = true);
+            bool                    dumpInitialConditions = true,
+            const int domain = 0);
+        
         virtual void v_EvaluateExactSolution(
             unsigned int            field,
             Array<OneD, NekDouble> &outfield,
             const NekDouble         time = 0.0);
-      
+
     private:
         void SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >            &physarray, 
+            Array<OneD, Array<OneD, NekDouble> >            &physarray,
             NekDouble                                        time);
 
         /// Isentropic Vortex Test Case.

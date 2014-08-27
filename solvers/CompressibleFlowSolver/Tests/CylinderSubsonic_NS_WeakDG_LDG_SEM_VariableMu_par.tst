@@ -17,7 +17,7 @@
         <metric type="Linf" id="2">
             <value variable="rho" tolerance="1e-6">0.530775</value>
             <value variable="rhou" tolerance="1e-6">92.5591</value>
-            <value variable="rhov" tolerance="1e-6">58.1904</value>
+            <value variable="rhov" tolerance="2e-4">58.1904</value>
             <value variable="E" tolerance="1e-6">346994</value>
         </metric>
     </metrics>

@@ -8,7 +8,7 @@
     </files>
     <metrics>
         <metric type="L2" id="1">
-            <value variable="rho" tolerance="1e-12">0.0889271</value>
+            <value variable="rho" tolerance="2e-6">0.0889271</value>
             <value variable="rhou" tolerance="1e-12">62.1008</value>
             <value variable="rhov" tolerance="1e-8">0.17592</value>
             <value variable="E" tolerance="1e-12">4904.01</value>

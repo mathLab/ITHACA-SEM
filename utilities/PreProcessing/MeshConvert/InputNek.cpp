@@ -221,8 +221,7 @@ namespace Nektar
                     else if (line.find("Pyr") != string::npos || 
                              line.find("pyr") != string::npos) 
                     {
-                        cerr << "Pyramid elements not yet supported." << endl;
-                        abort();
+                        elType = LibUtilities::ePyramid;
                     }
                     else if (line.find("Qua") != string::npos || 
                              line.find("qua") != string::npos) 
@@ -1090,6 +1089,7 @@ namespace Nektar
             case LibUtilities::eTriangle:      nNodes = 3;  break;
             case LibUtilities::eQuadrilateral: nNodes = 4;  break;
             case LibUtilities::eTetrahedron:   nNodes = 4;  break;
+            case LibUtilities::ePyramid:       nNodes = 5;  break;
             case LibUtilities::ePrism:         nNodes = 6;  break;
             case LibUtilities::eHexahedron:    nNodes = 8;  break;
             default:

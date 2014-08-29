@@ -454,7 +454,6 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
             /// Flag to indicate if the fields should be checked for singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
-       
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap              m_fieldMetaDataMap;
 

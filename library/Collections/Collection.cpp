@@ -208,27 +208,30 @@ namespace Nektar {
             OperatorKey physDeriv      (pExp->DetShapeType(), ePhysDeriv, ImpType);
             OperatorKey iproductWRTDerivBase(pExp->DetShapeType(), eIProductWRTDerivBase, ImpType);
 
-
+            
             m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
             
-            m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
-
-            m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
-
-            m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
                 
             
             if(ImpType == eSumFac)
             {
+                m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
+
                 if(pExp->DetShapeType() != LibUtilities::eTetrahedron)
                 {
+                    m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
+                    m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
                     m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);
                     
                 }
             }
             else
             {
-                    m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);
+                m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
+                
+                m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
+                m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
+                m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);
             }
         }
     }

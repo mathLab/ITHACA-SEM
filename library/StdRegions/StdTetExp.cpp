@@ -375,9 +375,6 @@ namespace Nektar
             Array<OneD, NekDouble > tmp  = wsp;
             Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*order1*(order1+1)/2;
 
-            //Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
-            //Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
-
             int i, j, mode, mode1, cnt;
 
             // Perform summation over '2' direction
@@ -699,7 +696,7 @@ namespace Nektar
                     break;
             }
 
-            StdMatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
+            StdMatrixKey     iprodmatkey(mtype,DetShapeType(),*this);
             DNekMatSharedPtr iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),

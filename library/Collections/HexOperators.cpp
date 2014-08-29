@@ -60,6 +60,9 @@ namespace Nektar
                   m_nmodes0 (pExp->GetBasisNumModes(0)),
                   m_nmodes1 (pExp->GetBasisNumModes(1)),
                   m_nmodes2 (pExp->GetBasisNumModes(2)),
+                  m_base0   (pExp->GetBasis(0)->GetBdata()),
+                  m_base1   (pExp->GetBasis(1)->GetBdata()),
+                  m_base2   (pExp->GetBasis(2)->GetBdata()),
                   m_colldir0(pExp->GetBasis(0)->Collocation()),
                   m_colldir1(pExp->GetBasis(1)->Collocation()),
                   m_colldir2(pExp->GetBasis(2)->Collocation())
@@ -74,11 +77,6 @@ namespace Nektar
                                     Array<OneD,       NekDouble> &wsp)
             {
                 
-                Array<OneD, const NekDouble> base0  = m_stdExp->GetBasis(0)->GetBdata();
-                Array<OneD, const NekDouble> base1  = m_stdExp->GetBasis(1)->GetBdata();
-                Array<OneD, const NekDouble> base2  = m_stdExp->GetBasis(2)->GetBdata();
-
-
                 if(m_colldir0 && m_colldir1 && m_colldir2)
                 {
                     Vmath::Vcopy(m_numElmt*m_nmodes0*m_nmodes1*m_nmodes2,input.get(),1,output.get(),1);
@@ -100,15 +98,15 @@ namespace Nektar
                         {
                             // BwdTrans in each direction using DGEMM
                             Blas::Dgemm('T','T', m_nmodes1*m_nmodes2, m_nquad0, m_nmodes0,
-                                        1.0, &input[n*totmodes],   m_nmodes0,  base0.get(),   m_nquad0,
+                                        1.0, &input[n*totmodes],   m_nmodes0,  m_base0.get(),   m_nquad0,
                                         0.0, &wsp[0], m_nmodes1*m_nmodes2);
                             
                             Blas::Dgemm('T','T', m_nquad0*m_nmodes2,  m_nquad1, m_nmodes1,
-                                        1.0, &wsp[0],  m_nmodes1,  base1.get(), m_nquad1,
+                                        1.0, &wsp[0],  m_nmodes1,  m_base1.get(), m_nquad1,
                                         0.0, &wsp2[0], m_nquad0*m_nmodes2);
 
                             Blas::Dgemm('T','T', m_nquad0*m_nquad1,   m_nquad2, m_nmodes2,
-                                        1.0, &wsp2[0], m_nmodes2, base2.get(), m_nquad2,
+                                        1.0, &wsp2[0], m_nmodes2, m_base2.get(), m_nquad2,
                                         0.0, &output[n*totpoints],  m_nquad0*m_nquad1);
                         }
                     }
@@ -118,17 +116,17 @@ namespace Nektar
                         
                         // large degmm but copy at end. 
                         Blas::Dgemm('T','T', m_nmodes1*m_nmodes2*m_numElmt, m_nquad0, m_nmodes0,
-                                    1.0, &input[0],   m_nmodes0,  base0.get(),   m_nquad0,
+                                    1.0, &input[0],   m_nmodes0,  m_base0.get(),   m_nquad0,
                                     0.0, &wsp[0],    m_nmodes1*m_nmodes2*m_numElmt);
                         
                         Blas::Dgemm('T','T', m_nmodes2*m_numElmt*m_nquad0,  m_nquad1, m_nmodes1,
-                                    1.0, &wsp[0],   m_nmodes1, base1.get(),   m_nquad1,
+                                    1.0, &wsp[0],   m_nmodes1, m_base1.get(),   m_nquad1,
                                     0.0, &wsp2[0],  m_nmodes2*m_numElmt*m_nquad0);
 
                         if(m_numElmt > 1)
                         {
                             Blas::Dgemm('T','T', m_numElmt*m_nquad0*m_nquad1, m_nquad2, m_nmodes2,
-                                        1.0, &wsp2[0],  m_nmodes2,  base2.get(),   m_nquad2,
+                                        1.0, &wsp2[0],  m_nmodes2,  m_base2.get(),   m_nquad2,
                                         0.0, &wsp[0],  m_numElmt*m_nquad0*m_nquad1);
                             
                             for(int i = 0; i < totpoints; ++i)
@@ -139,7 +137,7 @@ namespace Nektar
                         else
                         {
                             Blas::Dgemm('T','T', m_numElmt*m_nquad0*m_nquad1, m_nquad2, m_nmodes2,
-                                        1.0, &wsp2[0],  m_nmodes2,  base2.get(),   m_nquad2,
+                                        1.0, &wsp2[0],  m_nmodes2,  m_base2.get(),   m_nquad2,
                                         0.0, &output[0],  m_numElmt*m_nquad0*m_nquad1);
                         }
                     }
@@ -155,6 +153,9 @@ namespace Nektar
             const int  m_nmodes0;
             const int  m_nmodes1;
             const int  m_nmodes2;
+            Array<OneD, const NekDouble> m_base0;
+            Array<OneD, const NekDouble> m_base1;
+            Array<OneD, const NekDouble> m_base2;
             const bool m_colldir0;
             const bool m_colldir1;
             const bool m_colldir2;

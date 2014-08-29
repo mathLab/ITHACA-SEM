@@ -5,6 +5,7 @@ SET(COLLECTIONS_SOURCES
   IProduct.cpp
   QuadOperators.cpp
   SegOperators.cpp
+  TetOperators.cpp
   TriOperators.cpp
   )
 

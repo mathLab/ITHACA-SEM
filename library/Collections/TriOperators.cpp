@@ -56,7 +56,9 @@ namespace Nektar
                   m_nquad0  (pExp->GetNumPoints(0)),
                   m_nquad1  (pExp->GetNumPoints(1)),
                   m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1))
+                  m_nmodes1 (pExp->GetBasisNumModes(1)),
+                  m_base0   (pExp->GetBasis(0)->GetBdata()),
+                  m_base1   (pExp->GetBasis(1)->GetBdata())
             {
                 m_wspSize = m_nquad0*m_nmodes1*m_numElmt;
                 if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
@@ -78,16 +80,13 @@ namespace Nektar
                 
                 ASSERTL1(wsp.num_elements() == m_wspSize, "Incorrect workspace size");
                 
-                Array<OneD, const NekDouble> base0  = m_stdExp->GetBasis(0)->GetBdata();
-                Array<OneD, const NekDouble> base1  = m_stdExp->GetBasis(1)->GetBdata();
-                
 
                 int ncoeffs = m_stdExp->GetNcoeffs(); 
                 int i,mode;
                 for (i = mode = 0; i < m_nmodes0; ++i)
                 {
                     
-                    Blas::Dgemm('N','N', m_nquad1,m_numElmt,m_nmodes1-i,1.0, base1.get()+mode*m_nquad1,
+                    Blas::Dgemm('N','N', m_nquad1,m_numElmt,m_nmodes1-i,1.0, m_base1.get()+mode*m_nquad1,
                                 m_nquad1, &input[0]+mode, ncoeffs,0.0,&wsp[i*m_nquad1*m_numElmt], m_nquad1);
                     mode += m_nmodes1-i;
                 }
@@ -97,13 +96,13 @@ namespace Nektar
                 {
                     for(i = 0; i < m_numElmt; ++i)
                     {
-                        Blas::Daxpy(m_nquad1,input[1+i*ncoeffs],base1.get()+m_nquad1,1,
+                        Blas::Daxpy(m_nquad1,input[1+i*ncoeffs],m_base1.get()+m_nquad1,1,
                                     &wsp[m_nquad1*m_numElmt]+i*m_nquad1,1);
                     }
 
                 }
                 
-                Blas::Dgemm('N','T', m_nquad0,m_nquad1*m_numElmt,m_nmodes0,1.0, base0.get(),m_nquad0,
+                Blas::Dgemm('N','T', m_nquad0,m_nquad1*m_numElmt,m_nmodes0,1.0, m_base0.get(),m_nquad0,
                             &wsp[0], m_nquad1*m_numElmt,0.0, &output[0], m_nquad0);
             } 
             
@@ -114,6 +113,8 @@ namespace Nektar
             const int  m_nquad1;
             const int  m_nmodes0;
             const int  m_nmodes1;
+            Array<OneD, const NekDouble> m_base0;
+            Array<OneD, const NekDouble> m_base1;
             bool m_sortTopVertex;
         };
         

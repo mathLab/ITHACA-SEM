@@ -42,7 +42,7 @@ IF( NEKTAR_USE_SCOTCH )
             PREFIX ${TPSRC}
             URL ${TPURL}/scotch_6.0.0.tar.gz
             URL_MD5 "ba117428c0a6cd97d0c93e8b872bb3fe"
-            STAMP_DIR ${TPSRC}/stamp
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPBUILD}/scotch-6.0.0
             BINARY_DIR ${TPBUILD}/scotch-6.0.0

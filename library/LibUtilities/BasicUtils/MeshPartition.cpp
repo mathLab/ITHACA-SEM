@@ -307,6 +307,10 @@ namespace Nektar
 
             x = vSubElement->FirstChildElement();
             i = 0;
+            if (x->FirstAttribute())
+            {
+                i = x->FirstAttribute()->IntValue();
+            }
             while(x)
             {
                 TiXmlAttribute* y = x->FirstAttribute();

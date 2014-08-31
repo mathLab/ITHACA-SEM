@@ -20,6 +20,7 @@ list(APPEND nektar++-demos_BINS Helmholtz1D Helmholtz2D Helmholtz3D
     Helmholtz3DHomo1D Helmholtz3DHomo2D
     StdProject0D StdProject1D StdProject2D StdProject3D 
     StdProject_Diff1D StdProject_Diff2D StdProject_Diff3D
+    SteadyAdvectionDiffusionReaction2D SteadyLinearAdvectionReaction2D
     LocProject1D LocProject2D LocProject3D LocProject_Diff1D
     LocProject_Diff2D LocProject_Diff3D
     HDGHelmholtz1D HDGHelmholtz2D HDGHelmholtz3D HDGHelmholtz3DHomo1D)

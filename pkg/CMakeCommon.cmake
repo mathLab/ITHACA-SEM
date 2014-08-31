@@ -128,16 +128,10 @@ macro (add_tgz_package)
 endmacro (add_tgz_package)
 
 
-# Check if we can build debian files
+# Check if we can build DEB files
 find_program(DPKG "dpkg")
 mark_as_advanced(DPKG)
 find_program(DPKGSHLIBDEPS "dpkg-shlibdeps")
-find_program(RPMBUILD "rpmbuild")
-mark_as_advanced(RPMBUILD)
-
-# Base packaging target
-add_custom_target(pkg)
-
 if (DPKG)
     if (NOT DPKGSHLIBDEPS)
         MESSAGE(FATAL_ERROR "dpkg-shlibdeps program not found but is required.")
@@ -146,10 +140,17 @@ if (DPKG)
     add_dependencies(pkg pkg-deb)
 endif (DPKG)
 
+# Check if we can build RPM files
+find_program(RPMBUILD "rpmbuild")
+mark_as_advanced(RPMBUILD)
 if (RPMBUILD)
     add_custom_target(pkg-rpm)
     add_dependencies(pkg pkg-rpm)
 endif (RPMBUILD)
 
+# Base packaging target
+add_custom_target(pkg)
+
+# Binary archive target
 add_custom_target(pkg-tgz)
 add_dependencies(pkg pkg-tgz)

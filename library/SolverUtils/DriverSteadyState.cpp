@@ -153,6 +153,9 @@ namespace Nektar
             totalTime                   = 0.0;
             PartialTOL_init             = PartialTOL;
             OptumiumParametersFound     = false;
+	    
+	    int CheckConverging = 111;
+	    int CheckNonConverging = 222;
             
             while (max(Diff_q_qBar, Diff_q1_q0) > TOL)
             {
@@ -192,13 +195,24 @@ namespace Nektar
                                 Vmath::Vcopy(q0[i].num_elements(), q0[i], 1, partialSteadyFlow[i], 1);
                             }
                             
+                            //////////////////////////////////////////////////////////////////////////////
+                            m_equ[m_nequ - 1]->Checkpoint_Output(CheckConverging);
+			    //////////////////////////////////////////////////////////////////////////////
+                            
                             if (GlobalMin < PartialTOL)
                             {
-                                cout << "\n\t We compute stability-analysis on the current 'partially converged' flow field: \n" << endl;
+				//////////////////////////////////////////////////////////////////////////////
+				CheckConverging++;
+				//////////////////////////////////////////////////////////////////////////////
+                                cout << "\n\t We compute stability-analysis on the current 'partially converged' flow field: \n" << endl;				
                                 PartialTOL = PartialTOL/UpdateCoefficient;
+				
                                 A->GetAdvObject()->SetBaseFlow(partialSteadyFlow); //Set up the the "Base Flow" used by the Arnoldi algotithm 
                                 DriverModifiedArnoldi::v_Execute(out);
                                 ComputeOptimization();
+				 //////////////////////////////////////////////////////////////////////////////
+				TimeToRestart = 1.5*TimeToRestart;
+				//////////////////////////////////////////////////////////////////////////////
                             } 
                             
                             m_NonConvergingStepsCounter = 0;
@@ -206,11 +220,18 @@ namespace Nektar
                         else if (m_NonConvergingStepsCounter*m_dt*m_infosteps > TimeToRestart)
                         {
                             cout << "\n\t SFD method NOT converging!!! We compute stability-analysis on a stored 'partially converged' flow field: \n" << endl;
+			    
+			    //////////////////////////////////////////////////////////////////////////////
+			    m_equ[m_nequ - 1]->Checkpoint_Output(CheckNonConverging);
+			    CheckNonConverging++;
+			    CheckConverging++;
+			    //////////////////////////////////////////////////////////////////////////////
+			    
                             A->GetAdvObject()->SetBaseFlow(partialSteadyFlow); //Set up the the "Base Flow" used by the Arnoldi algotithm 
                             DriverModifiedArnoldi::v_Execute(out);
                             ComputeOptimization();
                             GlobalMin = 10.0;
-                            m_NonConvergingStepsCounter = 0;
+                            m_NonConvergingStepsCounter = 0;			    
                             PartialTOL = PartialTOL_init;
                             OptumiumParametersFound = false;
                         }

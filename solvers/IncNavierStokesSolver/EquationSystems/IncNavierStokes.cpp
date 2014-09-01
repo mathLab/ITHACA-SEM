@@ -63,7 +63,8 @@ namespace Nektar
 
     void IncNavierStokes::v_InitObject()
     {
-        if (m_session->GetSolverInfo("Driver") == "SteadyState")
+        if (m_session->GetSolverInfo("Driver") == "SteadyState" &&
+	    m_session->GetTag("AdvectiveType") == "Linearised")
         {
             AdvectionSystem::v_InitObject();
         }

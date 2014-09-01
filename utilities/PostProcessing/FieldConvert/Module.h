@@ -224,19 +224,19 @@ namespace Nektar
         class FieldConvertComm : public  LibUtilities::CommSerial
         {
         public:
-            LIB_UTILITIES_EXPORT FieldConvertComm(int argc, char* argv[], int size, int rank) : CommSerial(argc, argv)
+            FieldConvertComm(int argc, char* argv[], int size, int rank) : CommSerial(argc, argv)
             {
                 m_size = size;
                 m_rank = rank;
                 m_type = "FieldConvert parallel";
             }
-            LIB_UTILITIES_EXPORT FieldConvertComm(int size, int rank) : CommSerial(0, NULL)
+            FieldConvertComm(int size, int rank) : CommSerial(0, NULL)
             {
                 m_size = size;
                 m_rank = rank;
                 m_type = "FieldConvert parallel";
             }
-            LIB_UTILITIES_EXPORT virtual ~FieldConvertComm() {}
+            virtual ~FieldConvertComm() {}
             void v_SplitComm(int pRows, int pColumns)
             {
             // Compute row and column in grid.
@@ -244,6 +244,7 @@ namespace Nektar
                 m_commColumn = boost::shared_ptr<FieldConvertComm>(new FieldConvertComm(pRows,0));
             }
 
+        protected:
             int v_GetRank(void)
             {
                 return m_rank;

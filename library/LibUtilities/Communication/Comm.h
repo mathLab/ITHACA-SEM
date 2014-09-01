@@ -197,7 +197,7 @@ namespace Nektar
 										Array<OneD, int>& pRecvDataOffsetMap) = 0;
                 virtual void v_SplitComm(int pRows, int pColumns) = 0;
                 virtual bool v_TreatAsRankZero(void) = 0;
-                virtual bool v_RemoveExistingFiles(void);
+                LIB_UTILITIES_EXPORT virtual bool v_RemoveExistingFiles(void);
         };
 
 

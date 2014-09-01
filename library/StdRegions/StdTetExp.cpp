@@ -157,7 +157,7 @@ namespace Nektar
             
             if (out_dxi0.num_elements() > 0)
             {
-                // out_dxi1 = 4.0/((1-eta_1)(1-eta_2)) Out_dEta0
+                // out_dxi0 = 4.0/((1-eta_1)(1-eta_2)) Out_dEta0
                 Vmath::Smul(Qtot,2.0,out_dEta0,1,out_dxi0,1);
             }
 
@@ -199,7 +199,7 @@ namespace Nektar
                         }
                     }
                     
-                    // calculate out_dxi1 =
+                    // calculate out_dxi2 =
                     // 2.0(1+eta_0)/((1-eta_1)(1-eta_2)) Out_dEta0 +
                     // (1 + eta_1)/(1 -eta_2)*out_dEta1 + out_dEta2
                     Vmath::Vadd(Qtot,out_dEta0,1,out_dEta1,1,out_dxi2,1); 

@@ -215,14 +215,13 @@ namespace Nektar {
             
             if(ImpType == eSumFac)
             {
-                m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
-
-                if(pExp->DetShapeType() != LibUtilities::eTetrahedron)
+                if(pExp->DetShapeType() != LibUtilities::ePrism)
                 {
+                    m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
                     m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
+
                     m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
                     m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);
-                    
                 }
             }
             else

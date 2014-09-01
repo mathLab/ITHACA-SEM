@@ -239,10 +239,10 @@ namespace Nektar
          * ----------------------------------------------------------
          */
         
-        class PhysDeriv_SumFac : public Operator
+        class PhysDeriv_SumFac_Hex : public Operator
         {
         public:
-            PhysDeriv_SumFac(StdRegions::StdExpansionSharedPtr pExp,
+            PhysDeriv_SumFac_Hex(StdRegions::StdExpansionSharedPtr pExp,
                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
                                  CoalescedGeomDataSharedPtr GeomData)
                 : Operator(pExp, pGeom, GeomData),
@@ -317,7 +317,7 @@ namespace Nektar
                 }
             }
             
-            OPERATOR_CREATE(PhysDeriv_SumFac)
+            OPERATOR_CREATE(PhysDeriv_SumFac_Hex)
 
             Array<TwoD, const NekDouble> m_derivFac;
             int m_dim;
@@ -330,11 +330,11 @@ namespace Nektar
             NekDouble *m_Deriv2;
         };
 
-        OperatorKey PhysDeriv_SumFac::m_typeArr[] =
+        OperatorKey PhysDeriv_SumFac_Hex::m_typeArr[] =
         {
             GetOperatorFactory().RegisterCreatorFunction(
                 OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eSumFac),
-                PhysDeriv_SumFac::create, "PhysDeriv_SumFac_Hex")
+                PhysDeriv_SumFac_Hex::create, "PhysDeriv_SumFac_Hex")
         };
 
         /*

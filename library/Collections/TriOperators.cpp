@@ -309,7 +309,6 @@ namespace Nektar
 
 
 
-
         /*
          * ----------------------------------------------------------
          * IProductWRTDerivBase operator

@@ -191,6 +191,64 @@ int main(int argc, char *argv[])
             cout << "\t Ratio: " << (orig/col) << endl;
             
         }
+
+        // IProductWRTDerivBase Comparison 
+        {
+            cout << "IProductWRTDerivBase Op: Ntest = " << Ntest << endl;
+            
+            const int nq = Exp->GetNpoints();
+            const int nc = Exp->GetNcoeffs();
+            Array<OneD, NekDouble> xc(nq), yc(nq), zc(nq),tmp,tmp1;
+            Array<OneD, NekDouble> input1(nq), input2(nq), input3(nq), output1(nc), output2(nc);
+            Array<OneD, Array<OneD, NekDouble> > input(3);
+
+            input[0] = input1; input[1] = input2; input[2] = input3;
+            
+            Exp->GetCoords(xc, yc, zc);
+            for (int i = 0; i < nq; ++i)
+            {
+                input1[i] = sin(xc[i])*cos(yc[i])*sin(zc[i]);
+                input2[i] = cos(xc[i])*sin(yc[i])*cos(zc[i]);
+                input3[i] = cos(xc[i])*sin(yc[i])*sin(zc[i]);
+            }
+            
+            Timer t;
+            t.Start();
+            for (int i = 0; i < Ntest; ++i)
+            {
+                // Do test by calling every element in loop 
+                for(int j = 0; j < nelmt; ++j)
+                {
+                    Exp->GetExp(j)->IProductWRTDerivBase(0,input1 + Exp->GetPhys_Offset(j), 
+                                                    tmp  = output1 + Exp->GetCoeff_Offset(j));
+                    Exp->GetExp(j)->IProductWRTDerivBase(1,input2 + Exp->GetPhys_Offset(j), 
+                                                         tmp  = output2 + Exp->GetCoeff_Offset(j));
+                }
+                Vmath::Vadd(nc,output1,1,output2,1,output1,1);
+
+                for(int j = 0; j < nelmt; ++j)
+                {
+                    Exp->GetExp(j)->IProductWRTDerivBase(2,input3 + Exp->GetPhys_Offset(j), 
+                                                         tmp  = output2 + Exp->GetCoeff_Offset(j));
+                }
+                Vmath::Vadd(nc,output1,1,output2,1,output1,1);
+            }
+            t.Stop();
+            NekDouble orig = t.TimePerTest(Ntest);
+            cout << "\t ExpList: " << orig << endl; 
+            t.Start();
+            for (int i = 0; i < Ntest; ++i)
+            {
+                Exp->IProductWRTDerivBase(input,output2);
+            }
+            t.Stop();
+            NekDouble col = t.TimePerTest(Ntest);
+            cout << "\t Collection: " << t.TimePerTest(Ntest) << endl;
+            Vmath::Vsub(nc, output1, 1, output2, 1, output1, 1);
+            cout << "\t Difference: " << Vmath::Vmax(nc, output1, 1) << endl;
+            cout << "\t Ratio: " << (orig/col) << endl;
+            
+        }
     }
     vSession->Finalise();
 

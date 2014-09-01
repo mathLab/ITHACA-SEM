@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
             t.Start();
             for (int i = 0; i < Ntest; ++i)
             {
-                Exp->IProductWRTDerivBase(input, output2);
+                Exp->IProductWRTDerivBase(input,output2);
             }
             t.Stop();
             NekDouble col = t.TimePerTest(Ntest);

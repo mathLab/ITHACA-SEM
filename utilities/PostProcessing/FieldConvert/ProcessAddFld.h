@@ -40,32 +40,34 @@
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+/**
+ * @brief This processing module scales the input fld file
+ *
+ */
+class ProcessAddFld : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        /**
-         * @brief This processing module scales the input fld file 
-         *
-         */
-        class ProcessAddFld : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
-            {
-                return MemoryManager<ProcessAddFld>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessAddFld(FieldSharedPtr f);
-            virtual ~ProcessAddFld();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-            
-        private:
-            FieldSharedPtr m_fromField; 
-        };
+        return MemoryManager<ProcessAddFld>::AllocateSharedPtr(f);
     }
+    static ModuleKey className;
+
+    ProcessAddFld(FieldSharedPtr f);
+    virtual ~ProcessAddFld();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+private:
+    FieldSharedPtr m_fromField;
+};
+
+}
 }
 
 #endif

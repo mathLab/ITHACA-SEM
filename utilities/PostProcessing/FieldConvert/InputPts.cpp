@@ -43,111 +43,109 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey InputPts::m_className[5] = {
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "pts"), InputPts::create, "Reads Pts file."),
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eInputModule, "pts.gz"), InputPts::create, "Reads Pts file."),
+};
+
+/**
+ * @brief Set up InputPts object.
+ *
+ */
+InputPts::InputPts(FieldSharedPtr f) : InputModule(f)
+{
+    m_allowedFiles.insert("pts");
+    f->m_fieldPts = MemoryManager<FieldPts>::AllocateSharedPtr();
+}
+
+InputPts::~InputPts()
+{
+}
+
+/**
+ *
+ */
+void InputPts::Process(po::variables_map &vm)
+{
+    if(m_f->m_verbose)
     {
-        ModuleKey InputPts::m_className[5] = {
-            GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eInputModule, "pts"), InputPts::create,
-                "Reads Pts file."),
-            GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eInputModule, "pts.gz"), InputPts::create,
-                "Reads Pts file."),
-        };
+        cout << "Processing input pts file" << endl;
+    }
 
-        /**
-         * @brief Set up InputPts object.
-         *
-         */
-        InputPts::InputPts(FieldSharedPtr f) : InputModule(f)
+    string pts_ending = "pts";
+
+    TiXmlDocument docInput;
+    ASSERTL0(!docInput.LoadFile((m_f->m_inputfiles["pts"][0]).c_str()),
+             "Unable to open file '" + m_f->m_inputfiles["pts"][0] + "'.");
+
+    TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
+    TiXmlElement *points = nektar->FirstChildElement("POINTS");
+    int dim;
+    int err = points->QueryIntAttribute("DIM", &dim);
+
+    ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute DIM.");
+
+    int nfields;
+    std::string fields = points->Attribute("FIELDS");
+
+    bool valid = ParseUtils::GenerateOrderedStringVector(
+                                 fields.c_str(),m_f->m_fieldPts->m_fields);
+    ASSERTL0(valid,"Unable to process list of field variable in "
+             " FIELDS attribute:  "+ fields);
+
+    nfields = m_f->m_fieldPts->m_nFields = m_f->m_fieldPts->m_fields.size();
+
+    int totvars = dim + nfields;
+    m_f->m_fieldPts->m_ptsDim  = dim;
+    m_f->m_fieldPts->m_nFields = nfields;
+    m_f->m_fieldPts->m_pts = Array<OneD, Array<OneD, NekDouble> >(totvars);
+
+    TiXmlNode *pointsBody = points->FirstChild();
+
+    std::istringstream pointsDataStrm(pointsBody->ToText()->Value());
+
+    vector<NekDouble> pts;
+    NekDouble      in_pts;
+    try
+    {
+        while(!pointsDataStrm.fail())
         {
-            m_allowedFiles.insert("pts");
-            f->m_fieldPts = MemoryManager<FieldPts>::AllocateSharedPtr();
-        }
-        
-        InputPts::~InputPts()
-        {
-        }
+            pointsDataStrm >> in_pts;
 
-        /**
-         *
-         */
-        void InputPts::Process(po::variables_map &vm)
-        {
-            if(m_f->m_verbose)
-            {
-                cout << "Processing input pts file" << endl;
-            }
-
-            string pts_ending = "pts";
-
-            TiXmlDocument docInput;
-            if (!docInput.LoadFile((m_f->m_inputfiles["pts"][0]).c_str()))
-            {
-                std::cerr << "Unable to open file '" << m_f->m_inputfiles["pts"][0] << "'." << std::endl;
-                exit(1);
-            }
-
-            TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
-            TiXmlElement *points = nektar->FirstChildElement("POINTS");
-            int dim; 
-            int err = points->QueryIntAttribute("DIM", &dim);
-            
-            ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute DIM.");
-            
-            int nfields; 
-            std::string fields = points->Attribute("FIELDS");
-
-            bool valid = ParseUtils::GenerateOrderedStringVector(
-                                         fields.c_str(),m_f->m_fieldPts->m_fields);
-            ASSERTL0(valid,"Unable to process list of field variable in "
-                     " FIELDS attribute:  "+ fields);
-
-            nfields = m_f->m_fieldPts->m_nFields = m_f->m_fieldPts->m_fields.size();
-            
-            int totvars = dim + nfields; 
-            m_f->m_fieldPts->m_ptsDim  = dim;
-            m_f->m_fieldPts->m_nFields = nfields;
-            m_f->m_fieldPts->m_pts = Array<OneD, Array<OneD, NekDouble> >(totvars);  
-      
-            TiXmlNode *pointsBody = points->FirstChild();
-            
-            std::istringstream pointsDataStrm(pointsBody->ToText()->Value());
-
-            vector<NekDouble> pts; 
-            NekDouble      in_pts; 
-            try
-            {
-                while(!pointsDataStrm.fail())
-                {
-                    pointsDataStrm >> in_pts; 
-
-                    pts.push_back(in_pts);
-                }
-            }
-            catch(...)
-            {
-                ASSERTL0(false, "Unable to read Points data.");
-            }
-
-            int npts = pts.size()/totvars;
-
-            if(m_f->m_verbose)
-            {
-                cout << " Read " << npts << " points of dimension " << dim << " and " << nfields << " field variables" << endl;
-            }
-            
-            for(int i = 0; i < totvars; ++i)
-            {
-                m_f->m_fieldPts->m_pts[i] = Array<OneD, NekDouble>(npts);
-            }
-            
-            for(int i = 0; i < npts; ++i)
-            {
-                for(int j = 0; j < totvars; ++j)
-                {
-                    m_f->m_fieldPts->m_pts[j][i] = pts[i*totvars +j];
-                }
-            }
+            pts.push_back(in_pts);
         }
     }
+    catch(...)
+    {
+        ASSERTL0(false, "Unable to read Points data.");
+    }
+
+    int npts = pts.size()/totvars;
+
+    if(m_f->m_verbose)
+    {
+        cout << " Read " << npts << " points of dimension " << dim << " and "
+             << nfields << " field variables" << endl;
+    }
+
+    for(int i = 0; i < totvars; ++i)
+    {
+        m_f->m_fieldPts->m_pts[i] = Array<OneD, NekDouble>(npts);
+    }
+
+    for(int i = 0; i < npts; ++i)
+    {
+        for(int j = 0; j < totvars; ++j)
+        {
+            m_f->m_fieldPts->m_pts[j][i] = pts[i*totvars +j];
+        }
+    }
+}
+
+}
 }

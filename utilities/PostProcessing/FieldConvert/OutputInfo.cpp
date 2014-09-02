@@ -43,105 +43,110 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey OutputInfo::m_className = GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "info"), OutputInfo::create,
+        "Writes an Info file.");
+
+OutputInfo::OutputInfo(FieldSharedPtr f) : OutputModule(f)
+{
+}
+
+OutputInfo::~OutputInfo()
+{
+}
+
+void OutputInfo::Process(po::variables_map &vm)
+{
+    // Extract the output filename and extension
+    string filename = m_config["outfile"].as<string>();
+    int i;
+
+    if (m_f->m_verbose)
     {
-        ModuleKey OutputInfo::m_className =  GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eOutputModule, "info"), OutputInfo::create,
-                "Writes an Info file."); 
-        
-        OutputInfo::OutputInfo(FieldSharedPtr f) : OutputModule(f)
-        {
-        }
-        
-        OutputInfo::~OutputInfo()
-        {
-        }
-        
-        void OutputInfo::Process(po::variables_map &vm)
-        {         
-            // Extract the output filename and extension
-            string filename = m_config["outfile"].as<string>();
-            int i;
-
-            if (m_f->m_verbose)
-            {
-                cout << "OutputInfo: Writing Info file..." << endl;
-            }
-
-            // partition mesh
-            ASSERTL0(vm.count("nprocs") > 0,"--nprocs nust be specified with info output");
-
-            int nprocs = vm["nprocs"].as<int>(); 
-
-            LibUtilities::CommSharedPtr vComm = boost::shared_ptr<FieldConvertComm>(new FieldConvertComm(0, NULL, nprocs,0));
-            vComm->SplitComm(1,nprocs);
-
-            // define new session with psuedo parallel communicator
-            string xml_ending = "xml";
-            string xml_gz_ending = "xml.gz";
-
-            std::vector<std::string> files;
-            // load .xml ending
-            for (int i = 0; i < m_f->m_inputfiles[xml_ending].size(); ++i)
-            {
-                files.push_back(m_f->m_inputfiles[xml_ending][i]);
-            }
-
-            // load any .xml.gz endings
-            for (int j =0; j < m_f->m_inputfiles[xml_gz_ending].size(); ++j)
-            {
-                files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
-            }
-            
-            LibUtilities::SessionReaderSharedPtr vSession = boost::shared_ptr<LibUtilities::SessionReader>(new LibUtilities::SessionReader(0,0,files,vComm));
-            vSession->SetUpXmlDoc();
-
-            // Default partitioner to use is Metis. Use Scotch as default
-            // if it is installed. Override default with command-line flags
-            // if they are set.
-            string vPartitionerName = "Metis";
-            if (LibUtilities::GetMeshPartitionFactory().ModuleExists("Scotch"))
-            {
-                vPartitionerName = "Scotch";
-            }
-            if (vSession->DefinesCmdLineArgument("use-metis"))
-            {
-                vPartitionerName = "Metis";
-            }
-            if (vSession->DefinesCmdLineArgument("use-scotch"))
-            {
-                vPartitionerName = "Scotch";
-            }
-            
-            LibUtilities::MeshPartitionSharedPtr vMeshPartition = 
-                LibUtilities::GetMeshPartitionFactory().CreateInstance(
-                                                         vPartitionerName, vSession);
-
-            vMeshPartition->PartitionMesh(false);
-
-            // get hold of local partition ids 
-
-            std::vector<std::vector<unsigned int> > ElementIDs(nprocs);
-            
-            // Populate the list of element ID lists from all processes
-            for (i = 0; i < nprocs; ++i)
-            {
-                std::vector<unsigned int> tmp;
-                vMeshPartition->GetElementIDs(i,tmp);
-                ElementIDs[i] = tmp;
-            }
-            
-            // Set up output names
-            std::vector<std::string> filenames;
-            for(int i = 0; i < nprocs; ++i)
-            {
-                boost::format pad("P%1$07d.fld");
-                pad % i;
-                filenames.push_back(pad.str());
-            }
-            
-            // Write the output file
-            m_f->m_fld->WriteMultiFldFileIDs(filename,filenames, ElementIDs);
-        }     
+        cout << "OutputInfo: Writing Info file..." << endl;
     }
+
+    // partition mesh
+    ASSERTL0(vm.count("nprocs") > 0,
+             "--nprocs nust be specified with info output");
+
+    int nprocs = vm["nprocs"].as<int>();
+
+    LibUtilities::CommSharedPtr vComm = boost::shared_ptr<FieldConvertComm>(
+            new FieldConvertComm(0, NULL, nprocs,0));
+    vComm->SplitComm(1,nprocs);
+
+    // define new session with psuedo parallel communicator
+    string xml_ending    = "xml";
+    string xml_gz_ending = "xml.gz";
+
+    std::vector<std::string> files;
+    // load .xml ending
+    for (int i = 0; i < m_f->m_inputfiles[xml_ending].size(); ++i)
+    {
+        files.push_back(m_f->m_inputfiles[xml_ending][i]);
+    }
+
+    // load any .xml.gz endings
+    for (int j =0; j < m_f->m_inputfiles[xml_gz_ending].size(); ++j)
+    {
+        files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
+    }
+
+    LibUtilities::SessionReaderSharedPtr vSession =
+                    boost::shared_ptr<LibUtilities::SessionReader>(
+                            new LibUtilities::SessionReader(0,0,files,vComm));
+    vSession->SetUpXmlDoc();
+
+    // Default partitioner to use is Metis. Use Scotch as default
+    // if it is installed. Override default with command-line flags
+    // if they are set.
+    string vPartitionerName = "Metis";
+    if (LibUtilities::GetMeshPartitionFactory().ModuleExists("Scotch"))
+    {
+        vPartitionerName = "Scotch";
+    }
+    if (vSession->DefinesCmdLineArgument("use-metis"))
+    {
+        vPartitionerName = "Metis";
+    }
+    if (vSession->DefinesCmdLineArgument("use-scotch"))
+    {
+        vPartitionerName = "Scotch";
+    }
+
+    LibUtilities::MeshPartitionSharedPtr vMeshPartition =
+        LibUtilities::GetMeshPartitionFactory().CreateInstance(
+                                                 vPartitionerName, vSession);
+
+    vMeshPartition->PartitionMesh(false);
+
+    // get hold of local partition ids
+    std::vector<std::vector<unsigned int> > ElementIDs(nprocs);
+
+    // Populate the list of element ID lists from all processes
+    for (i = 0; i < nprocs; ++i)
+    {
+        std::vector<unsigned int> tmp;
+        vMeshPartition->GetElementIDs(i,tmp);
+        ElementIDs[i] = tmp;
+    }
+
+    // Set up output names
+    std::vector<std::string> filenames;
+    for(int i = 0; i < nprocs; ++i)
+    {
+        boost::format pad("P%1$07d.fld");
+        pad % i;
+        filenames.push_back(pad.str());
+    }
+
+    // Write the output file
+    m_f->m_fld->WriteMultiFldFileIDs(filename,filenames, ElementIDs);
+}
+
+}
 }

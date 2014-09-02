@@ -180,7 +180,8 @@ namespace Nektar
               m_trace(NullExpListSharedPtr)
         {
             // Set up boundary conditions for this variable.
-            if(variable.compare("DefaultVar") != 0) // do not set up BCs if default variable
+            // Do not set up BCs if default variable
+            if(variable.compare("DefaultVar") != 0)
             {
                 SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
                 GenerateBoundaryConditionExpansion(graph2D, bcs, variable);

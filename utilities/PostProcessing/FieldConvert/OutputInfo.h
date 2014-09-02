@@ -41,24 +41,26 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
-        class OutputInfo : public OutputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<OutputInfo>::AllocateSharedPtr(f);
-            }
-            static ModuleKey m_className;
-            
-            OutputInfo(FieldSharedPtr f);
-            virtual ~OutputInfo();
-            
-            /// Write fld to output file.
-            virtual void Process(po::variables_map &vm);
-        };
+namespace Utilities
+{
+
+class OutputInfo : public OutputModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+        return MemoryManager<OutputInfo>::AllocateSharedPtr(f);
     }
+    static ModuleKey m_className;
+
+    OutputInfo(FieldSharedPtr f);
+    virtual ~OutputInfo();
+
+    /// Write fld to output file.
+    virtual void Process(po::variables_map &vm);
+};
+
+}
 }
 
 #endif

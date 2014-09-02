@@ -44,107 +44,113 @@ using namespace std;
 #include <boost/math/special_functions/fpclassify.hpp>
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey ProcessInterpPointDataToFld::className =
+    GetModuleFactory().RegisterCreatorFunction(
+       ModuleKey(eProcessModule, "interppointdatatofld"),
+       ProcessInterpPointDataToFld::create,
+       "Interpolates given discrete data using a finite differece "
+       "approximation to a fld file given a xml file");
+
+
+ProcessInterpPointDataToFld::ProcessInterpPointDataToFld(FieldSharedPtr f)
+        : ProcessModule(f)
+{
+
+    m_config["interpcoord"] = ConfigOption(false, "0",
+                                    "coordinate id ot use for interpolation");
+
+}
+
+ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
+{
+}
+
+void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
+{
+    int i,j;
+    if(m_f->m_verbose)
     {
-        ModuleKey ProcessInterpPointDataToFld::className =
-            GetModuleFactory().RegisterCreatorFunction(
-               ModuleKey(eProcessModule, "interppointdatatofld"), 
-               ProcessInterpPointDataToFld::create, "Interpolates given discrete data using a finite differece approximation to a fld file given a xml file");
+        cout << "Processing point data interpolation (linear)" << endl;
+    }
 
+    // Check for command line point specification if no .pts file specified
+    ASSERTL0(m_f->m_fieldPts != NullFieldPts,
+             "No input points found");
 
-        ProcessInterpPointDataToFld::ProcessInterpPointDataToFld(FieldSharedPtr f) : ProcessModule(f)
+    ASSERTL0(m_f->m_fieldPts->m_nFields > 0,
+             "No field values provided in input");
+
+    // assume one field is already defined from input file.
+    m_f->m_exp.resize(m_f->m_fieldPts->m_nFields+1);
+    for(i = 1; i < m_f->m_fieldPts->m_nFields; ++i)
+    {
+        m_f->m_exp[i] = m_f->AppendExpList(0);
+    }
+
+    if(m_f->m_session->GetComm()->GetRank() == 0)
+    {
+        cout << "Interpolating [" << flush;
+    }
+
+    int totpoints = m_f->m_exp[0]->GetTotPoints();
+    Array<OneD,NekDouble> coords[3];
+
+    coords[0] = Array<OneD,NekDouble>(totpoints);
+    coords[1] = Array<OneD,NekDouble>(totpoints);
+    coords[2] = Array<OneD,NekDouble>(totpoints);
+
+    m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
+
+    int coord_id = m_config["interpcoord"].as<int>();
+
+    // interpolate points and transform
+    Array<OneD, NekDouble> intfields(m_f->m_fieldPts->m_nFields);
+    for(i = 0; i < totpoints; ++i)
+    {
+        m_f->m_fieldPts->Interp1DPts(coords[coord_id][i],intfields);
+        for(j = 0; j < m_f->m_fieldPts->m_nFields; ++j)
         {
-
-            m_config["interpcoord"] = ConfigOption(false,"0","coordinate id ot use for interpolation");
-
-        }
-
-        ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
-        {
-        }
-
-        void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
-        {
-            int i,j;
-            if(m_f->m_verbose)
-            {
-                cout << "Processing point data interpolation (linear)" << endl;
-            }
-            
-            // Check for command line point specification if no .pts file specified
-            ASSERTL0(m_f->m_fieldPts != NullFieldPts,"No input points found");
-
-            ASSERTL0(m_f->m_fieldPts->m_nFields > 0,"No field values provided in input");
-
-            // assume one field is already defined from input file.
-            m_f->m_exp.resize(m_f->m_fieldPts->m_nFields+1);
-            for(i = 1; i < m_f->m_fieldPts->m_nFields; ++i)
-            {
-                m_f->m_exp[i] = m_f->AppendExpList(0);
-            }
-
-            
-            if(m_f->m_session->GetComm()->GetRank() == 0)
-            {
-                cout << "Interpolating [" << flush;
-            }
-            
-
-            int totpoints = m_f->m_exp[0]->GetTotPoints();
-            Array<OneD,NekDouble> coords[3];
-            
-            coords[0] = Array<OneD,NekDouble>(totpoints);
-            coords[1] = Array<OneD,NekDouble>(totpoints);
-            coords[2] = Array<OneD,NekDouble>(totpoints);
-            
-            m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
-                
-            int coord_id = m_config["interpcoord"].as<int>();
-            
-            // interpolate points and transform
-            Array<OneD, NekDouble> intfields(m_f->m_fieldPts->m_nFields);
-            for(i = 0; i < totpoints; ++i)
-            {
-                m_f->m_fieldPts->Interp1DPts(coords[coord_id][i],intfields);
-                for(j = 0; j < m_f->m_fieldPts->m_nFields; ++j)
-                {
-                    m_f->m_exp[j]->SetPhys(i,intfields[j]);
-                }
-            }
-            
-            if(m_f->m_session->GetComm()->GetRank() == 0)
-            {
-                cout << "]" << endl;
-            }
-            
-            // forward transform fields 
-            for(i = 0; i < m_f->m_fieldPts->m_nFields; ++i)
-            {
-                m_f->m_exp[i]->FwdTrans_IterPerExp(m_f->m_exp[i]->GetPhys(),
-                                                   m_f->m_exp[i]->UpdateCoeffs());
-            }
-
-
-            // set up output fld file. 
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = m_f->m_exp[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-            for (j = 0; j < m_f->m_fieldPts->m_nFields; ++j)
-            {
-                for (i = 0; i < FieldDef.size(); ++i)
-                {   
-                    FieldDef[i]->m_fields.push_back(m_f->m_fieldPts->m_fields[j]);
-                    
-                    m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-                }
-            }
-            
-            m_f->m_fielddef = FieldDef;
-            m_f->m_data     = FieldData;
-
+            m_f->m_exp[j]->SetPhys(i,intfields[j]);
         }
     }
+
+    if(m_f->m_session->GetComm()->GetRank() == 0)
+    {
+        cout << "]" << endl;
+    }
+
+    // forward transform fields
+    for(i = 0; i < m_f->m_fieldPts->m_nFields; ++i)
+    {
+        m_f->m_exp[i]->FwdTrans_IterPerExp(m_f->m_exp[i]->GetPhys(),
+                                           m_f->m_exp[i]->UpdateCoeffs());
+    }
+
+
+    // set up output fld file.
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+        = m_f->m_exp[0]->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+    for (j = 0; j < m_f->m_fieldPts->m_nFields; ++j)
+    {
+        for (i = 0; i < FieldDef.size(); ++i)
+        {
+            FieldDef[i]->m_fields.push_back(m_f->m_fieldPts->m_fields[j]);
+
+            m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+        }
+    }
+
+    m_f->m_fielddef = FieldDef;
+    m_f->m_data     = FieldData;
+
+}
+
+}
 }
 
 

@@ -40,30 +40,31 @@
 
 namespace Nektar
 {
-    namespace Utilities
-    {
+namespace Utilities
+{
 
-        /**
-         * @brief This processing module interpolates one field to another 
-         */
-        class ProcessInterpPointDataToFld : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessInterpPointDataToFld>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessInterpPointDataToFld(FieldSharedPtr f);
-            virtual ~ProcessInterpPointDataToFld();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-
-        private:
-        };
+/**
+ * @brief This processing module interpolates one field to another
+ */
+class ProcessInterpPointDataToFld : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+        return MemoryManager<ProcessInterpPointDataToFld>::AllocateSharedPtr(f);
     }
+    static ModuleKey className;
+
+    ProcessInterpPointDataToFld(FieldSharedPtr f);
+    virtual ~ProcessInterpPointDataToFld();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+private:
+};
+
+}
 }
 
 #endif

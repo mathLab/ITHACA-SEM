@@ -44,66 +44,72 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey ProcessScaleInFld::className =
+GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "scaleinputfld"),
+    ProcessScaleInFld::create, "rescale input field by a constant factor.");
+
+ProcessScaleInFld::ProcessScaleInFld(FieldSharedPtr f) : ProcessModule(f)
+{
+    if((f->m_inputfiles.count("fld") == 0) &&
+       (f->m_inputfiles.count("rst") == 0) &&
+       (f->m_inputfiles.count("chk") == 0))
     {
-        ModuleKey ProcessScaleInFld::className =
-        GetModuleFactory().RegisterCreatorFunction(
-            ModuleKey(eProcessModule, "scaleinputfld"),
-            ProcessScaleInFld::create, "rescale input field by a constant factor.");
-        
-        ProcessScaleInFld::ProcessScaleInFld(FieldSharedPtr f) : ProcessModule(f)
-        {
-            if((f->m_inputfiles.count("fld") == 0)&&(f->m_inputfiles.count("rst") == 0)&&
-               (f->m_inputfiles.count("chk") == 0))
-            {
-                cout << "A fld, chk or rst input file must be specified for the scaleinputfld module" << endl;
-                exit(3);
-            }
+        cout << "A fld, chk or rst input file must be specified for the "
+                "scaleinputfld module" << endl;
+        exit(3);
+    }
 
-            m_config["scale"] = ConfigOption(false,"NotSet","scale factor");
-            ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
-                     "scaleinputfld: Need to specify a sacle factor");
-        }
-        
-        ProcessScaleInFld::~ProcessScaleInFld()
-        {
-        }
-        
-        void ProcessScaleInFld::Process(po::variables_map &vm)
-        {
-            if (m_f->m_verbose)
-            {
-                cout << "ProcessScaleInFld: Rescaling input fld" << endl;
-            }
-            
-            ASSERTL0(m_f->m_data.size() != 0,"No input data defined");
-            
-            string scalestr = m_config["scale"].as<string>();
-            NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
+    m_config["scale"] = ConfigOption(false,"NotSet","scale factor");
+    ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
+             "scaleinputfld: Need to specify a sacle factor");
+}
 
-            for(int i = 0; i < m_f->m_data.size(); ++i)
+ProcessScaleInFld::~ProcessScaleInFld()
+{
+}
+
+void ProcessScaleInFld::Process(po::variables_map &vm)
+{
+    if (m_f->m_verbose)
+    {
+        cout << "ProcessScaleInFld: Rescaling input fld" << endl;
+    }
+
+    ASSERTL0(m_f->m_data.size() != 0,"No input data defined");
+
+    string scalestr = m_config["scale"].as<string>();
+    NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
+
+    for(int i = 0; i < m_f->m_data.size(); ++i)
+    {
+        int datalen = m_f->m_data[i].size();
+
+        Vmath::Smul(datalen, scale, &(m_f->m_data[i][0]), 1,
+                                    &(m_f->m_data[i][0]), 1);
+    }
+
+    if(m_f->m_exp.size())// expansiosn are defined reload field
+    {
+        int nfields = m_f->m_fielddef[0]->m_fields.size();
+
+        // import basic field again in case of rescaling
+        for (int j = 0; j < nfields; ++j)
+        {
+            for (int i = 0; i < m_f->m_data.size(); ++i)
             {
-                int datalen = m_f->m_data[i].size();
-                
-                Vmath::Smul(datalen,scale,&(m_f->m_data[i][0]),1,&(m_f->m_data[i][0]),1);
-            }            
-            
-            if(m_f->m_exp.size())// expansiosn are defined reload field
-            {
-                int nfields = m_f->m_fielddef[0]->m_fields.size();
-                
-                // import basic field again in case of rescaling
-                for (int j = 0; j < nfields; ++j)
-                {
-                    for (int i = 0; i < m_f->m_data.size(); ++i)
-                    {
-                        m_f->m_exp[j]->ExtractDataToCoeffs(m_f->m_fielddef[i], 
-                                                           m_f->m_data[i],
-                                                           m_f->m_fielddef[i]->m_fields[j],
-                                                           m_f->m_exp[j]->UpdateCoeffs());
-                    }
-                }
+                m_f->m_exp[j]->ExtractDataToCoeffs(
+                                       m_f->m_fielddef[i],
+                                       m_f->m_data[i],
+                                       m_f->m_fielddef[i]->m_fields[j],
+                                       m_f->m_exp[j]->UpdateCoeffs());
             }
         }
     }
+}
+
+}
 }

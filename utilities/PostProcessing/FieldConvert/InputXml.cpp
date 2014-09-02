@@ -123,23 +123,28 @@ namespace Nektar
                 files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
             }
 
+            SpatialDomains::DomainRangeShPtr rng =
+                                        SpatialDomains::NullDomainRangeShPtr;
 
-            SpatialDomains::DomainRangeShPtr rng = SpatialDomains::NullDomainRangeShPtr; 
             // define range to process output 
             if(vm.count("range"))
             {
                 vector<NekDouble> values;
-                ASSERTL0(ParseUtils::GenerateUnOrderedVector(vm["range"].as<string>().c_str(),values),"Failed to interpret range string");
-                
-                ASSERTL0(values.size() > 1,"Do not have minimum values of xmin,xmax");
-                ASSERTL0(values.size()%2 == 0,"Do not have an even number of range values");
+                ASSERTL0(ParseUtils::GenerateUnOrderedVector(
+                            vm["range"].as<string>().c_str(), values),
+                         "Failed to interpret range string");
+
+                ASSERTL0(values.size() > 1,
+                         "Do not have minimum values of xmin,xmax");
+                ASSERTL0(values.size() % 2 == 0,
+                         "Do not have an even number of range values");
 
                 int nvalues = values.size()/2;
                 rng = MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
 
                 rng->doZrange = false;
                 rng->doYrange = false;
-                
+
                 switch(nvalues)
                 {
                 case 3:
@@ -168,10 +173,10 @@ namespace Nektar
                 argv = (char**)malloc(2*sizeof(char*));
                 argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
                 argv[1] = (char *)malloc(verbose.size()*sizeof(char));
-                
+
                 sprintf(argv[0],"%s",firstarg.c_str());
                 sprintf(argv[1],"%s",verbose.c_str());
-                
+
                 m_f->m_session = LibUtilities::SessionReader::
                     CreateInstance(2, (char **)argv, files, m_f->m_comm);
             }
@@ -186,13 +191,12 @@ namespace Nektar
 
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
             m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                ::AllocateSharedPtr(m_f->m_session->GetComm());
-            
-            
+                            ::AllocateSharedPtr(m_f->m_session->GetComm());
+
             // currently load all field (possibly could read data from
             // expansion list but it is re-arranged in expansion)
             const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
-            
+
             // if Range has been speficied it is possible to have a
             // partition which is empty so ccheck this and return if
             // no elements present.
@@ -208,11 +212,8 @@ namespace Nektar
             int NumHomogeneousDir = 0;
             if(fldfilegiven)
             {
-                //m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                //::AllocateSharedPtr(m_f->m_session->GetComm());
                 m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef);
                 NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
-                
 
                 //----------------------------------------------
                 // Set up Expansion information to use mode order from field
@@ -223,7 +224,7 @@ namespace Nektar
                 if(m_f->m_session->DefinesSolverInfo("HOMOGENEOUS"))
                 {
                     std::string HomoStr = m_f->m_session->GetSolverInfo("HOMOGENEOUS");
-                    
+
                     if((HomoStr == "HOMOGENEOUS1D") || (HomoStr == "Homogeneous1D")
                        || (HomoStr == "1D") || (HomoStr == "Homo1D"))
                     {

@@ -71,7 +71,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT virtual void v_Finalise();
             LIB_UTILITIES_EXPORT virtual int  v_GetRank();
             LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero(void);
-            
+
             LIB_UTILITIES_EXPORT virtual void v_Block();
             LIB_UTILITIES_EXPORT virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData);
             LIB_UTILITIES_EXPORT virtual void v_Send(int pProc, Array<OneD, int>& pData);

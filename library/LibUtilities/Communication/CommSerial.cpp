@@ -73,9 +73,9 @@ namespace Nektar
             return 0;
         }
 
-         
+
         /**
-         * 
+         *
          */
         bool CommSerial::v_TreatAsRankZero(void)
         {

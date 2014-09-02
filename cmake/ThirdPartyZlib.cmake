@@ -33,7 +33,7 @@ IF (THIRDPARTY_BUILD_ZLIB)
         zlib-1.2.7
         URL ${TPURL}/zlib-1.2.7.tar.gz
         URL_MD5 "4a162e0f643232e7e278d59a0603ceb0"
-        STAMP_DIR ${TPSRC}/stamp
+        STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/zlib-1.2.7
         BINARY_DIR ${TPBUILD}/zlib-1.2.7

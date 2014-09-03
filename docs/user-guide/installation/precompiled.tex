@@ -2,7 +2,7 @@
 \label{s:installation:debian}
 Binary packages are available for current Debian/Ubuntu based Linux
 distributions. These can be installed through the use of standard system package
-management utilities such as Apt if administrative access is
+management utilities, such as Apt, if administrative access is
 available.
 
 \begin{enumerate}
@@ -56,16 +56,15 @@ following contents
 \begin{lstlisting}[style=BashInputStyle]
 [Nektar]
 name=nektar
+baseurl=<baseurl>
 \end{lstlisting}
-
-Add a line specifying the \inlsh{baseurl}, depending on the version of your
-distribution:
+substituting \inlsh{<baseurl>} for the appropriate line from the table below.
 
 {\small
 \begin{center}
 \begin{tabular}{ll}
 \toprule
-Distribution & baseurl \\
+Distribution & \inlsh{<baseurl>} \\
 \midrule
 Fedora 20 & 
    \texttt{http://ww.nektar.info/fedora/20/\$basearch}\\
@@ -75,7 +74,7 @@ Fedora 20 &
 }
 
 \begin{notebox}
-The \inltt{\$basearch} variable is replaced automatically by Yum with
+The \inltt{\$basearch} variable is automatically replaced by Yum with
 the architecture of your system.
 \end{notebox}
 

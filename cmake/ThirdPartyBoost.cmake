@@ -28,9 +28,9 @@ IF (THIRDPARTY_BUILD_BOOST)
             PREFIX ${TPSRC}
             URL ${TPURL}/boost_1_55_0.tar.bz2
             URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
-            STAMP_DIR ${TPSRC}/stamp
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPSRC}/boost
+            SOURCE_DIR ${TPBUILD}/boost
             BINARY_DIR ${TPBUILD}/boost
             TMP_DIR ${TPBUILD}/boost-tmp
             INSTALL_DIR ${TPDIST}

@@ -15,7 +15,7 @@ IF( NEKTAR_USE_VTK )
             vtk-5.10.1
             URL ${TPURL}/vtk-5.10.1-nek.tar.bz2
             URL_MD5 "f4e2c6b848d3873d44479baa9e7e4d35"
-            STAMP_DIR ${TPSRC}/stamp
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/vtk-5.10.1
             BINARY_DIR ${TPBUILD}/vtk-5.10.1

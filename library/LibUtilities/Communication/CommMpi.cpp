@@ -119,6 +119,21 @@ namespace Nektar
             return m_rank;
         }
 
+        /**
+         * 
+         */
+        bool CommMpi::v_TreatAsRankZero(void)
+        {
+            if(m_rank == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+            return true; 
+        }
 
         /**
          *

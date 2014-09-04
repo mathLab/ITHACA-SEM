@@ -14,7 +14,7 @@ IF( NEKTAR_USE_FFTW )
             fftw-3.2.2
             URL ${TPURL}/fftw-3.2.2.tar.gz
             URL_MD5 "b616e5c91218cc778b5aa735fefb61ae"
-            STAMP_DIR ${TPSRC}/stamp
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/fftw-3.2.2
             BINARY_DIR ${TPBUILD}/fftw-3.2.2
@@ -24,7 +24,7 @@ IF( NEKTAR_USE_FFTW )
         )
         SET(FFTW_LIB fftw3)
         MARK_AS_ADVANCED(FFTW_LIB)
-        INCLUDE_DIRECTORIES(${TPDIST}/include)
+	SET(FFTW_INCLUDE_DIR ${TPDIST}/include)
         MESSAGE(STATUS "Build FFTW: ${TPDIST}/lib/lib${FFTW_LIB}.so")
     ELSE ()
         INCLUDE (FindFFTW)

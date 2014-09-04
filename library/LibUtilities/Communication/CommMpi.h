@@ -79,6 +79,7 @@ namespace Nektar
             virtual void v_Finalise();
             virtual int  v_GetRank();
             virtual void v_Block();
+            virtual bool v_TreatAsRankZero(void);
             virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData);
             virtual void v_Send(int pProc, Array<OneD, int>& pData);
             virtual void v_Send(int pProc, std::vector<unsigned int>& pData);

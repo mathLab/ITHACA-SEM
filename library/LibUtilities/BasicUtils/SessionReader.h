@@ -122,7 +122,7 @@ namespace Nektar
             public boost::enable_shared_from_this<SessionReader>
         {
         public:
-            /// Support creation through MemoryManager only.
+            /// Support creation through MemoryManager.
             friend class MemoryManager<SessionReader>;
 
             /**
@@ -166,6 +166,12 @@ namespace Nektar
                 p->InitSession();
                 return p;
             }
+
+            LIB_UTILITIES_EXPORT SessionReader(
+                int                             argc, 
+                char                           *argv[], 
+                const std::vector<std::string> &pFilenames, 
+                const CommSharedPtr            &pComm);
 
             /// Destructor
             LIB_UTILITIES_EXPORT ~SessionReader();
@@ -409,6 +415,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT CompositeOrdering GetCompositeOrdering() const;
             LIB_UTILITIES_EXPORT BndRegionOrdering GetBndRegionOrdering() const;
 
+            LIB_UTILITIES_EXPORT void SetUpXmlDoc();
+
         private:
             boost::program_options::variables_map m_cmdLineOptions;
 
@@ -460,11 +468,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT SessionReader(
                 int                             argc, 
                 char                           *argv[]);
-            LIB_UTILITIES_EXPORT SessionReader(
-                int                             argc, 
-                char                           *argv[], 
-                const std::vector<std::string> &pFilenames, 
-                const CommSharedPtr            &pComm);
+
             LIB_UTILITIES_EXPORT void InitSession();
 
             /// Returns a shared pointer to the current object.
@@ -488,6 +492,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void CreateComm(
                 int               &argc, 
                 char*              argv[]);
+
             /// Partitions the mesh when running in parallel.
             LIB_UTILITIES_EXPORT void PartitionMesh();
             /// Partitions the comm object based on session parameters.

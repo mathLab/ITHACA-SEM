@@ -422,7 +422,6 @@ Peclet number of the transport regime under consideration is $750000$, which is
 physiologically relevant.
 
 \subsubsection{Input file}
-
 The geometry under consideration is a pipe of radius, $R = 0.5$ and length $l =
 0.5$
 
@@ -459,7 +458,8 @@ streamwise direction and 4th order polynomial normal to the wall for a prismatic
 element.
 
 We choose to use a continuous projection and an first-order implicit-explicit
-time-integration scheme.
+time-integration scheme. The \inltt{DiffusionAdvancement} and
+\inltt{AdvectionAdvancement} parameters specify how these terms are treated.
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion" />
 <I PROPERTY="Projection"            VALUE="Continuous" />
@@ -470,14 +470,14 @@ time-integration scheme.
 \end{lstlisting}
 
 We integrate for a total of $30$ time units with a time-step of $0.0005$,
-necessary to keep the simulation numerical stable.
+necessary to keep the simulation numerically stable.
 \begin{lstlisting}[style=XMLStyle]
 <P> TimeStep = 0.0005              </P>
 <P> FinalTime = 30                 </P>
 <P> NumSteps = FinalTime/TimeStep  </P>
 \end{lstlisting}
 
-The value of $\epsilon$ parameter is $\epsilon = 1/Pe$.
+The value of the $\epsilon$ parameter is $\epsilon = 1/Pe$
 \begin{lstlisting}[style=XMLStyle]
 <P> epsilon = 1.33333e-6           </P>
 \end{lstlisting}

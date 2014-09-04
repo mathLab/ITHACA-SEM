@@ -1,15 +1,22 @@
 \section{MeshConvert}
 \label{s:utilities:meshconvert}
 
-MeshConvert is a utility bundled with Nektar++ which primarily allows foreign mesh file formats to be converted into the XML file format used by the solvers and other utilities. However, there is also some limited support for other output formats - consult the MeshConvert reference page for more information on which formats are supported.
+MeshConvert is a utility bundled with Nektar++ which primarily allows foreign
+mesh file formats to be converted into the XML file format used by the solvers
+and other utilities. However, there is also some limited support for other
+output formats - consult the MeshConvert reference page for more information on
+which formats are supported.
 
-On this page, we will run through a basic example to show how a mesh can be converted from the widely-used mesh-generator ?Gmsh to the XML file format.
+We will run through a basic example to show how a mesh can be
+converted from the widely-used mesh-generator Gmsh to the XML file format.
 
 
 \subsection{Exporting a mesh from Gmsh}
 
-To demonstrate how MeshConvert works, we will define a simple channel-like 3D geometry and run the incompressible Navier-Stokes solver on the resulting mesh. First, we must define the Gmsh geometry to be used. The Gmsh definition is given below, and is visualised on the right.
-
+To demonstrate how MeshConvert works, we will define a simple channel-like 3D
+geometry.
+First, we must define the Gmsh geometry to be used. The Gmsh definition is given
+below, and is visualised on the right.
 
 \begin{lstlisting}[style=XmlStyle]
 Point(1) = {-1, 0, 0, 1.0};
@@ -22,8 +29,13 @@ v[] = Extrude {{0, 0, 1}, {0, 0, 0}, Pi} {
   Surface{s[1]}; Layers{10}; Recombine;
 };
 \end{lstlisting}
-Whilst a full tutorial on Gmsh is far beyond the scope of this page, note the use of the Recombine argument. This allows us to generate a structured hexahedral mesh; remove the first Recombine to generate a prismatic mesh and both to generate a tetrahedral mesh. Increasing the `Layers' numbers refines the mesh in the radial and azimuthal direction respectively.
-%------------------------------------------------------------------------------------------
+
+Whilst a full tutorial on Gmsh is far beyond the scope of this document, note
+the use of the Recombine argument. This allows us to generate a structured
+hexahedral mesh; remove the first Recombine to generate a prismatic mesh and
+both to generate a tetrahedral mesh. Increasing the `Layers' numbers refines the
+mesh in the radial and azimuthal direction respectively.
+
 \subsection{Defining physical surfaces and volumes}
 
 In order for us to use the mesh, we need to define the physical surfaces which correspond to the inflow, outflow and walls so that we can set appropriate boundary conditions. The numbering resulting from the extrusions in this case is not straightforward. In the graphical interface, select Geometry > Physical Groups > Add > Surface, and then hover over each of the surfaces which are shown by the dashed gray lines. The numbering will be revealed in the toolbar underneath the geometry as a ruled surface. In this case:
@@ -35,110 +47,46 @@ In order for us to use the mesh, we need to define the physical surfaces which c
 
 We also need to define the physical volumes, which can be done in a similar fashion. For this example, there is only one volume having ID 1. Adding these groups to the end of the `.geo' file is very straightforward:
 
-\begin{lstlisting}[style=XmlStyle]
-Physical Volume(0) = {1};
-Physical Surface(1) = {7,8,28,29};
-Physical Surface(2) = {16};
+\begin{lstlisting}[style=XmlStyle] 
+Physical Volume(0) = {1}; 
+Physical Surface(1)= {7,8,28,29}; 
+Physical Surface(2) = {16}; 
 Physical Surface(3) = {24};
 \end{lstlisting}
-Either choose the option File -> Save Mesh or, assuming this is saved in a file named `test.geo', run the command
+Either choose the option \inlsh{File->Save Mesh} or, assuming this is saved in
+a file named `test.geo', run the command 
 \begin{lstlisting}[style=BashInputStyle]
 gmsh -3 test.geo
 \end{lstlisting}
-which will produce the resulting MSH file `test.msh'. One can generate a high-order mesh by specifying the order on the command line, for example
-\begin{lstlisting}[style=BashInputStyle]
+which will produce the resulting MSH file `test.msh'. One can generate a
+high-order mesh by specifying the order on the command line, for example
+\begin{lstlisting}[style=BashInputStyle] 
 gmsh -3 -order 6 test.geo
 \end{lstlisting}
-will generate a sixth-order mesh. Note that you will need to use a current version of Gmsh in order to do this, most likely from subversion.
-%------------------------------------------------------------------------------------------
+will generate a sixth-order mesh. Note that you will need to use a current
+version of Gmsh in order to do this, most likely from subversion.
+
+
 \subsection{Converting the MSH to Nektar++ format}
 Assuming that you have compiled Nektar++ according to the compilation instructions, run the command
 \begin{lstlisting}[style=BashInputStyle]
 MeshConvert test.msh test.xml
 \end{lstlisting}
-to generate the XML file. To validate the mesh visually, we can use a utility such as Paraview or ?VisIt. To do this, run the command
+to generate the XML file. 
+
+\begin{notebox}
+This file contains only the geometry definition (and a default
+\inltt{EXPANSIONS} definition). In order to use this mesh, a \inltt{CONDITIONS}
+section must be supplied detailing the solver and parameters to use.
+\end{notebox}
+
+To validate the mesh visually, we can use a utility such as Paraview or ?VisIt. To do this, run the command
 \begin{lstlisting}[style=BashInputStyle]
 XmlToVtk test.xml
 \end{lstlisting}
 which generates an unstructured VTK file test.vtu
-%------------------------------------------------------------------------------------------
-\subsection{Adapting the XML for incompressible Navier-Stokes simulations}
-Open test.xml and scroll to the end of the file. You will see the following (with the longer lines abbreviated to "...") :
-\begin{lstlisting}[style=XmlStyle]
-     <COMPOSITE>
-            <C ID="0"> H[0-99] </C>
-            <C ID="1"> F[...] </C>
-            <C ID="2"> F[...] </C>
-            <C ID="3"> F[...] </C>
-        </COMPOSITE>
-        <DOMAIN> C[0] </DOMAIN>
-    </GEOMETRY>
-    <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="7" TYPE="MODIFIED" FIELDS="u" />
-    </EXPANSIONS>
-    <CONDITIONS />
-\end{lstlisting}
-    Some points to note:
 
-You can see that the physical surfaces and volumes we defined in the Gmsh test.geo file have now been grouped into various composites. The IDs of the surfaces and volumes correspond exactly with the composite IDs; so composite ID 0 is the volume, ID 1 is the wall faces, ID 2 is the inflow and ID 3 is the outflow.
-The expansion order defaults to 7 modes (i.e. order 6), which may be quite high for some simulations!
-Finally we must specify some sensible boundary conditions. To do this, replace the CONDITIONS tag with the following:
-\begin{lstlisting}[style=XmlStyle]
- <CONDITIONS>
-        <SOLVERINFO>
-            <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
-            <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
-            <I PROPERTY="AdvectionForm" VALUE="Convective" />
-            <I PROPERTY="Projection" VALUE="Galerkin" />
-            <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
-        </SOLVERINFO>
 
-        <PARAMETERS>
-            <P> TimeStep      = 0.001 </P>
-            <P> NumSteps      = 100 </P>
-            <P> IO_CheckSteps = 10    </P>
-            <P> IO_InfoSteps  = 1    </P>
-            <P> Kinvis        = 1   </P>
-        </PARAMETERS>
-
-        <VARIABLES>
-            <V ID="0"> u </V>
-            <V ID="1"> v </V>
-            <V ID="2"> w </V>
-            <V ID="3"> p </V>
-        </VARIABLES>
-
-        <BOUNDARYREGIONS>
-            <B ID="0"> C[2] </B>  <!-- Inlet -->
-            <B ID="1"> C[3] </B>  <!-- Outlet -->
-            <B ID="2"> C[1] </B>  <!-- Wall -->
-        </BOUNDARYREGIONS>
-
-        <BOUNDARYCONDITIONS>
-            <REGION REF="0">
-                <D VAR="u" VALUE="0" />
-                <D VAR="v" VALUE="0" />
-                <D VAR="w" VALUE="y*(1-y)" />
-                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
-            </REGION>
-            <REGION REF="1">
-                <N VAR="u" VALUE="0" />
-                <N VAR="v" VALUE="0" />
-                <N VAR="w" VALUE="0" />
-                <D VAR="p" VALUE="0" />
-            </REGION>
-            <REGION REF="2">
-                <D VAR="u" VALUE="0" />
-                <D VAR="v" VALUE="0" />
-                <D VAR="w" VALUE="10*(0.3-sqrt(x*x+y*y))*(sqrt(x*x+y*y)-1)*y" />
-                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
-            </REGION>
-        </BOUNDARYCONDITIONS>
-    </CONDITIONS>
-\end{lstlisting}
-This sets up an incompressible Navier-Stokes simulation using a first-order splitting scheme with boundary conditions that are axisymmetric until they are multiplied by `y' to ensure compatibility of the wall boundary condition with the inflow and outflow.
-
- %------------------------------------------------------------------------------------------
 \subsection{MeshConvert modules}
  %------------------------------------------------------------
 \subsubsection{Detecting elements with negative Jocabians}
@@ -188,8 +136,8 @@ This can be useful, for example, when meshing the Leading edge of an airfoil. St
 \subsubsection{Prism splitting}
 To split a prism boundary layer on surface "11" into 3 layers with a growth rate of 2 and 7 integration points per element use the following command :
 \begin{lstlisting}[style=BashInputStyle]
-MeshConvert -m bl:surf=11:layers=3:r=2:nq=7 MeshWithOnePrismLayer.xml
-MeshWith3PrismsLayers.xml
+MeshConvert -m bl:surf=11:layers=3:r=2:nq=7 MeshWithOnePrismLayer.xml \
+        MeshWith3PrismsLayers.xml
 \end{lstlisting}
 \begin{figure}[!htbp]
 \begin{center}
@@ -199,16 +147,3 @@ MeshWith3PrismsLayers.xml
 \label{fig:}
 \end{center}
 \end{figure}
-
- %------------------------------------------------------------
-\subsubsection{Running the simulation}
-The 3D problem defined here is relatively expensive, and will require significant amounts of memory and CPU time at high-order. To run the simulation, execute the command
-\begin{lstlisting}[style=BashInputStyle]
-IncNavierStokesSolver test.xml
-\end{lstlisting}
-Alternatively, if you have compiled Nektar++ with MPI support, you may run in parallel
-\begin{lstlisting}[style=BashInputStyle]
-mpirun -np <nprocs> IncNavierStokesSolver test.xml
-\end{lstlisting}
-replacing <nprocs> with the number of processors.
-

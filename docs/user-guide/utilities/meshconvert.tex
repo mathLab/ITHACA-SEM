@@ -147,3 +147,25 @@ MeshConvert -m bl:surf=11:layers=3:r=2:nq=7 MeshWithOnePrismLayer.xml \
 \label{fig:}
 \end{center}
 \end{figure}
+
+\subsubsection{High-order cylinder generation}
+Generating accurate high-order curved geometries in Gmsh is quite challenging.
+This module processes an existing linear cylindrical mesh, with axis aligned
+with the z-coordinate axis, to generate accurate high-order curvature
+information along the edges.
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m cyl:surf=2:r=1.0:N=5 LinearCylinder.xml HighOrderCylinder.xml
+\end{lstlisting}
+The module parameters are:
+\begin{itemize}
+    \item \inlsh{surf}: Surface on which to apply curvature. This should be the
+        outer surface of the cylinder.
+    \item \inlsh{r}: Radius of the cylinder.
+    \item \inlsh{N}: Number of high-order points along each element edge.
+\end{itemize}
+
+\begin{notebox}
+    The module could also be used to apply curvature along the interior of a
+    hollow cylinder. However, there are no checks to ensure the resulting
+    elements are not self-intersecting.
+\end{notebox}

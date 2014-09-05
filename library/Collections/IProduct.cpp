@@ -294,13 +294,6 @@ namespace Nektar
                         }
                         else
                         {
-                            
-                            for(int i = 0; i < numElmt; ++i)
-                            {
-                                Dgemm('T', 'N', nmodes0*nmodes1,nmodes2,nquad2,
-                                      1.0, &wsp2[i*nmodes0*nmodes1*nquad2],nquad2
-                            }
-
                             Blas::Dgemm('T','N', numElmt*nmodes0*nmodes1, nmodes2, nquad2,
                                         1.0, &wsp2[0],  nquad2,  base2.get(),   nquad2,
                                         0.0, &wsp1[0],  numElmt*nmodes0*nmodes1);

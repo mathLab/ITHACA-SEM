@@ -65,14 +65,22 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
             
         protected:
-            virtual void v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
-            virtual void v_GetLocCoords(
+            virtual void v_GenGeomFactors();
+            virtual NekDouble v_GetLocCoords(
                 const Array<OneD, const NekDouble> &coords,
                       Array<OneD,       NekDouble> &Lcoords);
             virtual bool v_ContainsPoint(
                 const Array<OneD, const NekDouble> &gloCoord, 
                       NekDouble                     tol = 0.0);
+            virtual bool v_ContainsPoint(
+                const Array<OneD, const NekDouble> &gloCoord,
+                      Array<OneD, NekDouble>       &locCoord,
+                      NekDouble                     tol);
+            virtual bool v_ContainsPoint(
+                const Array<OneD, const NekDouble> &gloCoord,
+                      Array<OneD, NekDouble>       &locCoord,
+                      NekDouble                     tol,
+                      NekDouble                    &resid);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
             virtual int v_GetNumFaces() const;
@@ -89,6 +97,10 @@ namespace Nektar
             void SetUpLocalVertices();
             void SetUpEdgeOrientation();
             void SetUpFaceOrientation();
+
+	    static const unsigned int VertexEdgeConnectivity[ 8][3];
+	    static const unsigned int VertexFaceConnectivity[ 8][3];
+	    static const unsigned int EdgeFaceConnectivity  [12][2];
         };
 
         typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;

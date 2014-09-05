@@ -64,7 +64,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField2D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                        const std::string &variable,
+                        const std::string &variable  = "DefaultVar",
                         const bool DeclareCoeffPhysArrays = true,
                         const bool CheckIfSingularSystem = false);
 
@@ -209,6 +209,7 @@ namespace Nektar
             /// Impose the Dirichlet Boundary Conditions on outarray 
             MULTI_REGIONS_EXPORT virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
+            MULTI_REGIONS_EXPORT virtual void v_FillBndCondFromField();
 
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.

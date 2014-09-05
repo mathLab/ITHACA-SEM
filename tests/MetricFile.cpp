@@ -80,8 +80,67 @@ namespace Nektar
         }
     }
     
-    std::string MetricFile::CalculateHash(std::string filename)
+    std::string MetricFile::CalculateHash(std::string pfilename)
     {
+        int    fdot   = pfilename.find_last_of('.');
+        string ending = pfilename.substr(fdot);
+        string filename; 
+        
+        if(ending == ".fld" || ending == ".chk" || ending == ".rst")
+        {
+            TiXmlDocument *xmlFldFile;
+            fs::path pathfilename(pfilename);
+            
+            if(fs::is_directory(pathfilename))
+            {
+                std::vector<fs::path> dirfiles;
+                
+                // make list of all files in directoryj
+                copy(fs::directory_iterator(pathfilename), 
+                     fs::directory_iterator(),
+                     back_inserter(dirfiles));
+                
+                xmlFldFile = new TiXmlDocument;
+                
+                // load all them into the 
+                for(int i = 0; i < dirfiles.size(); ++i)
+                {
+                    std::string infile = PortablePath(dirfiles[i]);
+                    std::ifstream file(infile.c_str());
+                    ASSERTL0(file.good(), "Unable to open file: " + infile);
+                    file >> (*xmlFldFile);
+                }
+            }
+            else
+            {
+                xmlFldFile = new TiXmlDocument(pfilename);
+                xmlFldFile->LoadFile(pfilename);
+            }       
+
+            // strip out meta data before check
+            TiXmlElement* vNektar  = xmlFldFile->FirstChildElement("NEKTAR");
+            while(vNektar)
+            {
+            
+                TiXmlNode* vMetaData = vNektar->FirstChild("Metadata");
+                
+                // delete MetaData section
+                if(vMetaData) 
+                {
+                    vNektar->RemoveChild(vMetaData);
+                }
+                vNektar = vNektar->NextSiblingElement("NEKTAR");
+            }                
+
+            filename = pfilename + ".tmp";
+            xmlFldFile->SaveFile(filename);
+
+        }
+        else
+        {
+            filename = pfilename;
+        }
+            
         // Open file.
         std::ifstream testFile(filename.c_str(), std::ios::binary);
         ASSERTL0(testFile.is_open(), "Error opening file "+filename);

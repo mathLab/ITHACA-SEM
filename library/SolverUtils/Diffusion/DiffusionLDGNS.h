@@ -66,7 +66,13 @@ namespace Nektar
             NekDouble                            m_thermalConductivity;
             NekDouble                            m_rhoInf;
             NekDouble                            m_pInf;
-
+            
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_viscTensor;
+            
+            Array<OneD, Array<OneD, NekDouble> > m_homoDerivs;
+            
+            int                                  m_spaceDim;
+            int                                  m_diffDim;
             
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
@@ -101,7 +107,20 @@ namespace Nektar
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
                       Array<OneD,       NekDouble>                &penaltyflux);
-        }; 
+
+            virtual void v_SetHomoDerivs(
+                Array<OneD, Array<OneD, NekDouble> > &deriv)
+            {
+                m_homoDerivs = deriv;
+            }
+            
+            virtual Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &v_GetFluxTensor()
+            {
+                return m_viscTensor;
+            }
+        };
+
+        typedef boost::shared_ptr<DiffusionLDGNS> DiffusionLDGNSSharedPtr;
     }
 }
 

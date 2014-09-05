@@ -33,8 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <StdRegions/StdSegExp.h>
-
+#include <StdRegions/StdSegExp.h> 
 
 namespace Nektar
 {
@@ -303,6 +302,12 @@ namespace Nektar
                         offset = 1;
                     }
                     break;
+                case LibUtilities::eGauss_Lagrange:
+                {
+                    nInteriorDofs = m_ncoeffs;
+                    offset = 0;
+                }
+                break;
                 case LibUtilities::eModified_A:
                 case LibUtilities::eModified_B:
                     {
@@ -314,28 +319,37 @@ namespace Nektar
                 }
 
                 fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
-
-                outarray[GetVertexMap(0)] = inarray[0];
-                outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
-
-                if(m_ncoeffs>2)
+                
+                if(m_base[0]->GetBasisType() != LibUtilities::eGauss_Lagrange)
                 {
-                    // ideally, we would like to have tmp0 to be replaced by
-                    // outarray (currently MassMatrixOp does not allow aliasing)
-                    Array<OneD, NekDouble> tmp0(m_ncoeffs);
-                    Array<OneD, NekDouble> tmp1(m_ncoeffs);
+                    outarray[GetVertexMap(0)] = inarray[0];
+                    outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
 
-                    StdMatrixKey      masskey(eMass,v_DetShapeType(),*this);
-                    MassMatrixOp(outarray,tmp0,masskey);
-                    v_IProductWRTBase(inarray,tmp1);
+                    if(m_ncoeffs>2)
+                    {
+                        // ideally, we would like to have tmp0 to be replaced by
+                        // outarray (currently MassMatrixOp does not allow aliasing)
+                        Array<OneD, NekDouble> tmp0(m_ncoeffs);
+                        Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
-                    Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                        StdMatrixKey      masskey(eMass,v_DetShapeType(),*this);
+                        MassMatrixOp(outarray,tmp0,masskey);
+                        v_IProductWRTBase(inarray,tmp1);
 
-                    // get Mass matrix inverse (only of interior DOF)
-                    DNekMatSharedPtr  matsys = (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
+                        Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
 
-                    Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0, &(matsys->GetPtr())[0],
-                                nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);
+                        // get Mass matrix inverse (only of interior DOF)
+                        DNekMatSharedPtr  matsys =
+                        (m_stdStaticCondMatrixManager[masskey])-> GetBlock(1,1);
+
+                        Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0,
+                                &(matsys->GetPtr())[0],nInteriorDofs,tmp1.get()
+                                +offset,1,0.0,outarray.get()+offset,1);
+                    }
+                }
+                else
+                {
+                    StdSegExp::v_FwdTrans(inarray, outarray);
                 }
             }
 
@@ -457,11 +471,6 @@ namespace Nektar
             Vmath::Vcopy(nquad,(NekDouble *)base+mode*nquad,1, &outarray[0],1);
         }
 
-        NekDouble StdSegExp::v_PhysEvaluate(
-                const Array<OneD, const NekDouble>& coords)
-        {
-            return  StdExpansion1D::v_PhysEvaluate(coords, m_phys);
-        }
 
         NekDouble StdSegExp::v_PhysEvaluate(
                 const Array<OneD, const NekDouble>& coords,
@@ -528,60 +537,6 @@ namespace Nektar
         // Helper functions
         //---------------------------------------------------------------------
 
-
-        void StdSegExp::v_WriteToFile(
-                std::ofstream &outfile,
-                OutputFormat format,
-                const bool dumpVar,
-                std::string var)
-        {
-            if(format==eTecplot)
-            {
-                int i;
-                int     nquad = m_base[0]->GetNumPoints();
-                Array<OneD, const NekDouble> z = m_base[0]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile << "Variables = z";   
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-
-                outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
-
-                for(i = 0; i < nquad; ++i)
-                {
-                    outfile << z[i] << " " << m_phys[i] << std::endl;
-                }
-            }
-            else if(format==eGmsh)
-            {
-                int i;
-                int     nquad = m_base[0]->GetNumPoints();
-                Array<OneD, const NekDouble> z = m_base[0]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile<<"View.Type = 2;"<<endl;
-                    outfile<<"View \" \" {"<<endl;
-                }
- 
-                for(i = 0; i < nquad; ++i)
-                {
-                    outfile << "SP(" << z[i] <<",  0.0, 0.0){" << m_phys[i] << "};" << endl;
-                }
-
-                if(dumpVar)
-                { 
-                    outfile << "};" << endl;
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
-        }
-
         int StdSegExp::v_GetNverts() const
         {
             return 2;
@@ -627,9 +582,6 @@ namespace Nektar
                     DNekMat &Imass = *GetStdMatrix(imasskey);
 
                     (*Mat) = Imass*Iprod;
-					
-					
-					
                 }
                 break;
             default:
@@ -726,7 +678,7 @@ namespace Nektar
             }
         }
 
-        int StdSegExp::v_GetVertexMap(int localVertexId)
+        int StdSegExp::v_GetVertexMap(int localVertexId,bool useCoeffPacking)
         {
             ASSERTL0((localVertexId==0)||(localVertexId==1),"local vertex id"
                      "must be between 0 or 1");

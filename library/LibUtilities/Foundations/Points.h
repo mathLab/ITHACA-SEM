@@ -48,17 +48,17 @@
 
 namespace Nektar
 {
-
+    
     namespace LibUtilities
     {
         // Need to add method to compute total number of points given dimension
         // and number of points.
-
+        
         /// Defines a specification for a set of points.
         class PointsKey
         {
         public:
-            // Used for looking up the creator.  The creator for number of points
+            // Used for looking up the creator. The creator for number of points
             // can generate for any number, so we want the same creator called
             // for all number.
             struct opLess
@@ -67,22 +67,25 @@ namespace Nektar
             };
             
             /// Default constructor.
-            PointsKey(void):
+           PointsKey(void):
                 m_numpoints(0), 
-                m_pointstype(eNoPointsType)
-            {
-            }
-
+                m_pointstype(eNoPointsType),
+                m_factor(NekConstants::kNekUnsetDouble)
+                {
+                }
+            
             /// Constructor defining the number and distribution of points.
-            PointsKey(const int &numpoints, const PointsType &pointstype): 
+        PointsKey(const int &numpoints, const PointsType &pointstype,
+                  const NekDouble factor = NekConstants::kNekUnsetDouble): 
                 m_numpoints(numpoints), 
-                m_pointstype(pointstype)
-            {
-            }
-
+                    m_pointstype(pointstype),
+                    m_factor(factor)
+                    {
+                    }
+                
             /// Destructor.
-            virtual ~PointsKey()
-            {
+                virtual ~PointsKey()
+                {
             }
 
             /// Copy constructor.
@@ -90,15 +93,16 @@ namespace Nektar
             {
                 *this = key; // defer to assignment operator
             }
-
+            
             PointsKey& operator=(const PointsKey &key)
             {
-                m_numpoints = key.m_numpoints;
-                m_pointstype  = key.m_pointstype;
-
+                m_numpoints  = key.m_numpoints;
+                m_pointstype = key.m_pointstype;
+                m_factor     = key.m_factor;
+                
                 return *this;
             }
-
+            
             inline unsigned int GetNumPoints() const
             {
                 return m_numpoints;
@@ -109,10 +113,21 @@ namespace Nektar
                 return m_pointstype;
             }
 
+            inline NekDouble GetFactor() const
+            {
+                return m_factor;
+            }
+
             inline bool operator==(const PointsKey &key)
             {
-                return (m_numpoints == key.m_numpoints &&
-                    m_pointstype == key.m_pointstype);
+                
+                if(fabs(m_factor - key.m_factor) < NekConstants::kNekZeroTol)
+                {
+                    return (m_numpoints == key.m_numpoints &&
+                            m_pointstype == key.m_pointstype);
+                }
+
+                return false;
             }
 
             inline bool operator== (const PointsKey *y)
@@ -192,7 +207,7 @@ namespace Nektar
         protected:
             unsigned int m_numpoints;     //!< number of the points (as appropriately defined for PointsType)
             PointsType m_pointstype;      //!< Type of Points
-
+            NekDouble  m_factor;          //!< optional factor
         private:
         };
 
@@ -201,6 +216,8 @@ namespace Nektar
         LIB_UTILITIES_EXPORT bool operator==(const PointsKey &lhs, const PointsKey &rhs);
         LIB_UTILITIES_EXPORT bool operator<(const PointsKey &lhs, const PointsKey &rhs);
         LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const PointsKey& rhs);
+
+        typedef std::vector<PointsKey> PointsKeyVector;
 
         /// Stores a set of points of datatype DataT, defined by a PointKey.
         template<typename DataT>

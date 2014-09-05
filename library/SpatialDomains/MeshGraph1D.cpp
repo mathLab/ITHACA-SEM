@@ -36,7 +36,7 @@
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -47,10 +47,11 @@ namespace Nektar
         {
         }
 
-        MeshGraph1D::MeshGraph1D(const LibUtilities::SessionReaderSharedPtr &pSession)
-            : MeshGraph(pSession)
+        MeshGraph1D::MeshGraph1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                 const DomainRangeShPtr &rng)
+            : MeshGraph(pSession,rng)
         {
-            ReadGeometry(pSession->GetDocument());
+            ReadGeometry  (pSession->GetDocument());
             ReadExpansions(pSession->GetDocument());
         }
 
@@ -141,8 +142,8 @@ namespace Nektar
 
                     ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
 
-                    VertexComponentSharedPtr v1 = GetVertex(vertex1);
-                    VertexComponentSharedPtr v2 = GetVertex(vertex2);
+                    PointGeomSharedPtr v1 = GetVertex(vertex1);
+                    PointGeomSharedPtr v2 = GetVertex(vertex2);
                     SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, v1,v2);
                     seg->SetGlobalID(indx);
                     m_segGeoms[indx] = seg;

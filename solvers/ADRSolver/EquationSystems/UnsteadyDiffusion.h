@@ -63,11 +63,13 @@ namespace Nektar
 
     protected:
         bool m_useSpecVanVisc;
-        NekDouble m_sVVCutoffRatio;   // cutt off ratio from which to start decayhing modes
+        NekDouble m_sVVCutoffRatio;   // cut off ratio from which to start decayhing modes
         NekDouble m_sVVDiffCoeff;     // Diffusion coefficient of SVV modes
         SolverUtils::DiffusionSharedPtr         m_diffusion;        
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
-
+        
+        virtual void v_GenerateSummary(SummaryList &s);
+        
         UnsteadyDiffusion(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
         

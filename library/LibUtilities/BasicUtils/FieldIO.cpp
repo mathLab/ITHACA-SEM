@@ -33,65 +33,156 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/format.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <boost/asio/ip/host_name.hpp>
+
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/FileSystem.h>
+#include <LibUtilities/BasicConst/GitRevision.h>
+
+#include "zlib.h"
+#include <set>
+
+#ifdef NEKTAR_USE_MPI
+#include <mpi.h>
+#endif
+
+// Buffer size for zlib compression/decompression
+#define CHUNK 16384
+
+#ifndef NEKTAR_VERSION
+#define NEKTAR_VERSION "Unknown"
+#endif
+
+namespace ptime = boost::posix_time;
+namespace ip = boost::asio::ip;
+namespace berrc = boost::system::errc;
 
 namespace Nektar
 {
     namespace LibUtilities
     {
         /**
+         * This function allows for data to be written to an FLD file when a
+         * session and/or communicator is not instantiated. Typically used in
+         * utilities which do not take XML input and operate in serial only.
+         */
+        void Write(     const std::string &outFile,
+                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                        std::vector<std::vector<NekDouble> >   &fielddata,
+                        const FieldMetaDataMap &fieldinfomap)
+        {
+#ifdef NEKTAR_USE_MPI
+            int size;
+            int init;
+            MPI_Initialized(&init);
+
+            // If MPI has been initialised we can check the number of processes
+            // and, if > 1, tell the user he should not be running this
+            // function in parallel. If it is not initialised, we do not
+            // initialise it here, and assume the user knows what they are
+            // doing.
+            if (init)
+            {
+                MPI_Comm_size( MPI_COMM_WORLD, &size );
+                ASSERTL0(size == 1,
+                     "This static function is not available in parallel. Please"
+                     "instantiate a FieldIO object for parallel use.");
+            }
+#endif
+            CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
+            FieldIO f(c);
+            f.Write(outFile, fielddefs, fielddata, fieldinfomap);
+        }
+
+
+        /**
+         * This function allows for data to be imported from an FLD file when
+         * a session and/or communicator is not instantiated. Typically used in
+         * utilities which only operate in serial.
+         */
+        LIB_UTILITIES_EXPORT void Import(
+                        const std::string& infilename,
+                        std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                        std::vector<std::vector<NekDouble> > &fielddata,
+                        FieldMetaDataMap &fieldinfomap,
+                        const Array<OneD, int> ElementiDs)
+        {
+#ifdef NEKTAR_USE_MPI
+            int size;
+            int init;
+            MPI_Initialized(&init);
+
+            // If MPI has been initialised we can check the number of processes
+            // and, if > 1, tell the user he should not be running this
+            // function in parallel. If it is not initialised, we do not
+            // initialise it here, and assume the user knows what they are
+            // doing.
+            if (init)
+            {
+                MPI_Comm_size( MPI_COMM_WORLD, &size );
+                ASSERTL0(size == 1,
+                     "This static function is not available in parallel. Please"
+                     "instantiate a FieldIO object for parallel use.");
+            }
+#endif
+            CommSharedPtr c = GetCommFactory().CreateInstance("Serial", 0, 0);
+            FieldIO f(c);
+            f.Import(infilename, fielddefs, fielddata, fieldinfomap, ElementiDs);
+        }
+
+
+        /**
          *
          */
-        void Write(const std::string &outFile,
+        FieldIO::FieldIO(
+                LibUtilities::CommSharedPtr pComm)
+            : m_comm(pComm)
+        {
+        }
+
+
+        /**
+         *
+         */
+        void FieldIO::Write(const std::string &outFile,
                    std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                    std::vector<std::vector<NekDouble> > &fielddata, 
-                   FieldMetaDataMap &fieldmetadatamap)
+                   const FieldMetaDataMap &fieldmetadatamap)
         {
-           ASSERTL1(fielddefs.size() == fielddata.size(),
-                     "Length of fielddefs and fielddata incompatible");
-
-            TiXmlDocument doc;
-            TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
-            doc.LinkEndChild(decl);
-
-            cout << "Writing outfile: " << outFile << endl;
-
-            TiXmlElement * root = new TiXmlElement("NEKTAR");
-            doc.LinkEndChild(root);
-
-            //---------------------------------------------
-            // write field info section 
-            if(fieldmetadatamap != NullFieldMetaDataMap)
-            {
-                TiXmlElement * infoTag = new TiXmlElement("FIELDMETADATA");
-                root->LinkEndChild(infoTag);
-                
-                FieldMetaDataMap::iterator infoit;
-                
-                for(infoit = fieldmetadatamap.begin(); infoit != fieldmetadatamap.end(); ++infoit)
-                {
-                    NekDouble val = infoit->second;
-                    stringstream s;
-                    s << val; 
-                    TiXmlElement * v = new TiXmlElement( "P" );
-                    v->SetAttribute("PARAM",(infoit->first).c_str());
-                    v->LinkEndChild(new TiXmlText(s.str()));
-                    infoTag->LinkEndChild(v);
-                }
-
-            }
-
+            // Check everything seems sensible
+            ASSERTL1(fielddefs.size() == fielddata.size(),
+                      "Length of fielddefs and fielddata incompatible");
             for (int f = 0; f < fielddefs.size(); ++f)
             {
-
                 ASSERTL1(fielddata[f].size() > 0,
                         "Fielddata vector must contain at least one value.");
-                
+
                 ASSERTL1(fielddata[f].size() ==
                              fielddefs[f]->m_fields.size() *
                              CheckFieldDefinition(fielddefs[f]),
                          "Invalid size of fielddata vector.");
+            }
 
+            // Prepare to write out data. In parallel, we must create directory
+            // and determine the full pathname to the file to write out.
+            // Any existing file/directory which is in the way is removed.
+            std::string filename = SetUpOutput(outFile, fielddefs, fieldmetadatamap);
+
+            // Create the file (partition)
+            TiXmlDocument doc;
+            TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
+            doc.LinkEndChild(decl);
+
+            TiXmlElement * root = new TiXmlElement("NEKTAR");
+            doc.LinkEndChild(root);
+
+            AddInfoTag(root,fieldmetadatamap);
+
+            for (int f = 0; f < fielddefs.size(); ++f)
+            {
                 //---------------------------------------------
                 // Write ELEMENTS
                 TiXmlElement * elemTag = new TiXmlElement("ELEMENTS");
@@ -252,94 +343,25 @@ namespace Nektar
                 std::string idString;
                 {
                     std::stringstream idStringStream;
-                    bool first = true;
-                    for (std::vector<unsigned int>::size_type i = 0; 
-                         i < fielddefs[f]->m_elementIDs.size(); i++)
-                    {
-                        if (!first)
-                            idStringStream << ",";
-                        idStringStream << fielddefs[f]->m_elementIDs[i];
-                        first = false;
-                    }
-                    idString = idStringStream.str();
+                    GenerateSeqString(fielddefs[f]->m_elementIDs,idString);
                 }
                 elemTag->SetAttribute("ID", idString);
 
-                // Write binary data
                 std::string compressedDataString;
+                ASSERTL0(Z_OK == Deflate(fielddata[f], compressedDataString),
+                        "Failed to compress field data.");
+
+                // If the string length is not divisible by 3,
+                // pad it. There is a bug in transform_width
+                // that will make it reference past the end
+                // and crash.
+                switch (compressedDataString.length() % 3)
                 {
-                    // Serialize the fielddata vector to the stringstream.
-                    std::stringstream archiveStringStream(std::string((char*) &fielddata[f][0], sizeof(fielddata[f][0]) / sizeof(char) * fielddata[f].size()));
-
-                    // Compress the serialized data.
-                    std::stringstream compressedData;
-                    {
-                        boost::iostreams::filtering_streambuf<boost::iostreams::input>   out;
-                        out.push(boost::iostreams::zlib_compressor());
-                        out.push(archiveStringStream);
-                        boost::iostreams::copy(out, compressedData);
-
-                        // try decompressing to see if compression accurate
-                        try
-                        {
-                            std::stringstream elementDecompressedData;
-                            boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-                            in.push(boost::iostreams::zlib_decompressor());
-                            in.push(compressedData);
-                            
-                            boost::iostreams::copy(in, elementDecompressedData);
-                        }
-                        catch (boost::iostreams::zlib_error e)
-                        {
-                            if (e.error() == boost::iostreams::zlib::stream_end)
-                            {
-                                cout <<  "Stream end zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::stream_error)
-                            {
-                                cout <<   "Stream zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::version_error)
-                            {
-                                cout << "Version zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::data_error)
-                            {
-                                cout <<  "Data zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::mem_error)
-                            {
-                                cout << "Memory zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::buf_error)
-                            {
-                                cout <<"Buffer zlib error";
-                            }
-                            else
-                            {
-                                cout <<  "Unknown zlib error";
-                            }
-
-                            cout << endl << "Retrying compression will not check again" << endl;
-                            compressedData.clear();
-                            compressedData.str("");
-                            boost::iostreams::copy(out, compressedData);
-                        }
-                    }
-
-                    // If the string length is not divisible by 3,
-                    // pad it. There is a bug in transform_width
-                    // that will make it reference past the end
-                    // and crash.
-                    switch (compressedData.str().length() % 3)
-                    {
-                    case 1:
-                        compressedData << '\0';
-                    case 2:
-                        compressedData << '\0';
-                        break;
-                    }
-                    compressedDataString = compressedData.str();
+                case 1:
+                    compressedDataString += '\0';
+                case 2:
+                    compressedDataString += '\0';
+                    break;
                 }
 
                 // Convert from binary to base64.
@@ -351,37 +373,239 @@ namespace Nektar
                 elemTag->LinkEndChild(new TiXmlText(base64string));
 
             }
-            doc.SaveFile(outFile);
+            doc.SaveFile(filename);
         }
 
 
         /**
          *
          */
-        void Import(const std::string& infilename,
+        void FieldIO::Import(const std::string& infilename,
                     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                     std::vector<std::vector<NekDouble> > &fielddata,
-                    FieldMetaDataMap &fieldmetadatamap)
+                    FieldMetaDataMap &fieldmetadatamap,
+                    const Array<OneD, int> ElementIDs)
         {
-            TiXmlDocument doc(infilename);
-            bool loadOkay = doc.LoadFile();
 
-            std::stringstream errstr;
-            errstr << "Unable to load file: " << infilename << std::endl;
-            errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-            errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
-            ASSERTL0(loadOkay, errstr.str());
+            std::string infile = infilename;
 
+            fs::path pinfilename(infilename);            
+            
+            if(fs::is_directory(pinfilename)) // check to see that infile is a directory
+            {
+                fs::path infofile("Info.xml");
+                fs::path fullpath = pinfilename / infofile; 
+                infile = PortablePath(fullpath);
 
-            //---------------------------------------------
-            // read field meta data  section 
-            ImportFieldMetaData(doc,fieldmetadatamap);
-            ImportFieldDefs(doc, fielddefs, false);
-            ImportFieldData(doc, fielddefs, fielddata);
+                std::vector<std::string> filenames; 
+                std::vector<std::vector<unsigned int> > elementIDs_OnPartitions;
+                
+            
+                ImportMultiFldFileIDs(infile,filenames, elementIDs_OnPartitions,
+                                      fieldmetadatamap);
+                
+                if(ElementIDs == NullInt1DArray) //load all fields
+                {
+                    for(int i = 0; i < filenames.size(); ++i)
+                    {
+                        fs::path pfilename(filenames[i]);
+                        fullpath = pinfilename / pfilename; 
+                        string fname = PortablePath(fullpath); 
+
+                        TiXmlDocument doc1(fname);
+                        bool loadOkay1 = doc1.LoadFile();
+                        
+                        std::stringstream errstr;
+                        errstr << "Unable to load file: " << fname << std::endl;
+                        errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
+                        errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc1.ErrorCol() << std::endl;
+                        ASSERTL0(loadOkay1, errstr.str());
+                        
+                        ImportFieldDefs(doc1, fielddefs, false);
+                        if(fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
+                    }
+                    
+                }
+                else // only load relevant partitions
+                {
+                    int i,j;
+                    map<int,vector<int> > FileIDs;
+                    map<int,vector<int> >::iterator it;
+                    set<int> LoadFile;
+
+                    for(i = 0; i < elementIDs_OnPartitions.size(); ++i)
+                    {
+                        for(j = 0; j < elementIDs_OnPartitions[i].size(); ++j)
+                        {
+                            FileIDs[elementIDs_OnPartitions[i][j]].push_back(i);
+                        }
+                    }
+                    
+                    for(i = 0; i < ElementIDs.num_elements(); ++i)
+                    {
+                        it = FileIDs.find(ElementIDs[i]);
+                        if (it != FileIDs.end())
+                        {
+                            for (j = 0; j < it->second.size(); ++j)
+                            {
+                                LoadFile.insert(it->second[j]);
+                            }
+                        }
+                    }
+                    
+                    set<int>::iterator iter; 
+                    for(iter = LoadFile.begin(); iter != LoadFile.end(); ++iter)
+                    {
+                        fs::path pfilename(filenames[*iter]);
+                        fullpath = pinfilename / pfilename; 
+                        string fname = PortablePath(fullpath); 
+                        TiXmlDocument doc1(fname);
+                        bool loadOkay1 = doc1.LoadFile();
+                        
+                        std::stringstream errstr;
+                        errstr << "Unable to load file: " << fname << std::endl;
+                        errstr << "Reason: " << doc1.ErrorDesc() << std::endl;
+                        errstr << "Position: Line " << doc1.ErrorRow() << ", Column " << doc1.ErrorCol() << std::endl;
+                        ASSERTL0(loadOkay1, errstr.str());
+                        
+                        ImportFieldDefs(doc1, fielddefs, false);
+                        if(fielddata != NullVectorNekDoubleVector)
+                        {
+                            ImportFieldData(doc1, fielddefs, fielddata);
+                        }
+                    }
+                }
+            }
+            else // serial format case 
+            {
+                
+                TiXmlDocument doc(infile);
+                bool loadOkay = doc.LoadFile();
+                
+                std::stringstream errstr;
+                errstr << "Unable to load file: " << infile << std::endl;
+                errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+                errstr << "Position: Line " << doc.ErrorRow() << ", Column " << 
+                    doc.ErrorCol() << std::endl;
+                ASSERTL0(loadOkay, errstr.str());
+                
+                ImportFieldMetaData(doc,fieldmetadatamap);
+                ImportFieldDefs(doc, fielddefs, false);
+                if(fielddata != NullVectorNekDoubleVector)
+                {
+                    ImportFieldData(doc, fielddefs, fielddata);
+                }
+            }
         }
 
 
-        void ImportFieldMetaData(std::string filename,
+        /**
+         *
+         */
+        void FieldIO::WriteMultiFldFileIDs(const std::string &outFile,
+                                  const std::vector<std::string> fileNames,
+                                  std::vector<std::vector<unsigned int> > &elementList,
+                                  const FieldMetaDataMap &fieldmetadatamap)
+        {
+            TiXmlDocument doc;
+            TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
+            doc.LinkEndChild(decl);
+
+            ASSERTL0(fileNames.size() == elementList.size(),"Outfile names and list of elements ids does not match");
+
+            TiXmlElement * root = new TiXmlElement("NEKTAR");
+            doc.LinkEndChild(root);
+
+            AddInfoTag(root,fieldmetadatamap);
+
+            for (int t = 0; t < fileNames.size(); ++t)
+            {
+                if(elementList[t].size())
+                {
+                    TiXmlElement * elemIDs = new TiXmlElement("Partition");
+                    root->LinkEndChild(elemIDs);
+                    
+                    elemIDs->SetAttribute("FileName",fileNames[t]);
+                    
+                    string IDstring;
+                    
+                    GenerateSeqString(elementList[t],IDstring);
+
+                    elemIDs->LinkEndChild(new TiXmlText(IDstring));
+                }
+            }
+
+            doc.SaveFile(outFile);
+        }
+
+
+        /** 
+         *
+         */
+         void FieldIO::ImportMultiFldFileIDs(const std::string &inFile,
+                                    std::vector<std::string> &fileNames,
+                                    std::vector<std::vector<unsigned int> > &elementList,
+                                    FieldMetaDataMap &fieldmetadatamap)
+         {        
+             TiXmlDocument doc(inFile);
+             bool loadOkay = doc.LoadFile();
+             
+             
+             std::stringstream errstr;
+             errstr << "Unable to load file: " << inFile<< std::endl;
+             errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+             errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+             ASSERTL0(loadOkay, errstr.str());
+             
+             // Handle on XML document
+             TiXmlHandle docHandle(&doc);
+             
+             // Retrieve main NEKTAR tag - XML specification states one
+             // top-level element tag per file.
+             TiXmlElement* master = doc.FirstChildElement("NEKTAR");
+             ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+
+             // Partition element tag name
+             std::string strPartition = "Partition";
+
+             // First attempt to get the first Partition element
+             TiXmlElement* fldfileIDs = master->FirstChildElement(strPartition.c_str());
+             if (!fldfileIDs)
+             {
+                 // If this files try previous name
+                 strPartition = "MultipleFldFiles";
+                 fldfileIDs = master->FirstChildElement("MultipleFldFiles");
+             }
+             ASSERTL0(fldfileIDs,
+                      "Unable to find 'Partition' or 'MultipleFldFiles' tag "
+                      "within nektar tag.");
+
+             while (fldfileIDs)
+             {
+                // Read file name of partition file
+                const char *attr = fldfileIDs->Attribute("FileName");
+                ASSERTL0(attr, "'FileName' not provided as an attribute of '"
+                                + strPartition + "' tag.");
+                fileNames.push_back(std::string(attr));
+
+                const char* elementIDs = fldfileIDs->GetText();
+                ASSERTL0(elementIDs, "Element IDs not specified.");
+
+                std::string elementIDsStr(elementIDs);
+
+                std::vector<unsigned int> idvec;
+                ParseUtils::GenerateSeqVector(elementIDsStr.c_str(),idvec);
+
+                elementList.push_back(idvec);
+
+                fldfileIDs = fldfileIDs->NextSiblingElement(strPartition.c_str());
+             }
+         }
+
+        void FieldIO::ImportFieldMetaData(std::string filename,
                                  FieldMetaDataMap &fieldmetadatamap)
         {
             TiXmlDocument doc(filename);
@@ -397,35 +621,31 @@ namespace Nektar
         }
         
 
-        void ImportFieldMetaData(TiXmlDocument &doc,
+        void FieldIO::ImportFieldMetaData(TiXmlDocument &doc,
                                 FieldMetaDataMap &fieldmetadatamap)
         {
             
             TiXmlHandle docHandle(&doc);
-            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
+            TiXmlElement* master = 0;    // Master tag within which all data is contained.
+            TiXmlElement* metadata = 0;
             
             master = doc.FirstChildElement("NEKTAR");
             ASSERTL0(master, "Unable to find NEKTAR tag in file.");
             std::string strLoop = "NEKTAR";
 
-
-            TiXmlElement* metadata = master->FirstChildElement("FIELDMETADATA");
-            
-            if(!metadata) // section not available so just exit
+            // Retain original metadata structure for backwards compatibility
+            // TODO: Remove old metadata format
+            metadata = master->FirstChildElement("FIELDMETADATA");
+            if(metadata)
             {
-                return;
-            }
-            else
-            {
-                
                 TiXmlElement *param = metadata->FirstChildElement("P");
-                    
+
                 while (param)
                 {
                     TiXmlAttribute *paramAttr = param->FirstAttribute();
                     std::string attrName(paramAttr->Name());
                     std::string paramString;
-                    
+
                     if(attrName == "PARAM")
                     {
                         paramString.insert(0,paramAttr->Value());
@@ -437,41 +657,46 @@ namespace Nektar
 
                     // Now read body of param
                     std::string paramBodyStr;
-                    
-                    TiXmlNode *paramBody = param->FirstChild();
-                    
-                    paramBodyStr += paramBody->ToText()->Value();
-                    
-                    NekDouble value;
-                    std::istringstream paramStrm(paramBodyStr.c_str());
-                    
-                    try
-                    {
-                        while(!paramStrm.fail())
-                        {
-                            paramStrm >> value;
-                        }
-                    }
-                    catch(...)
-                    {
-                        ASSERTL0(false,"Failied to read PARAM data");
-                    }
 
-                    fieldmetadatamap[paramString] = value; 
+                    TiXmlNode *paramBody = param->FirstChild();
+
+                    paramBodyStr += paramBody->ToText()->Value();
+
+                    fieldmetadatamap[paramString] = paramBodyStr;
                     param = param->NextSiblingElement("P");
                 }
             }
+
+            // New metadata format
+            metadata = master->FirstChildElement("Metadata");
+            if(metadata)
+            {
+                TiXmlElement *param = metadata->FirstChildElement();
+                    
+                while (param)
+                {
+                    std::string paramString = param->Value();
+                    if (paramString != "Provenance")
+                    {
+                        // Now read body of param
+                        TiXmlNode *paramBody = param->FirstChild();
+                        std::string paramBodyStr = paramBody->ToText()->Value();
+
+                        fieldmetadatamap[paramString] = paramBodyStr;
+                    }
+                    param = param->NextSiblingElement();
+                }
+            }
+
         }
         
 
         /**
          * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
          */
-        void ImportFieldDefs(TiXmlDocument &doc, std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
+        void FieldIO::ImportFieldDefs(TiXmlDocument &doc, std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                              bool expChild)
         {
-            ASSERTL1(fielddefs.size() == 0, "Expected an empty fielddefs vector.");
-
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master = NULL;    // Master tag within which all data is contained.
 
@@ -719,10 +944,9 @@ namespace Nektar
         /**
          *
          */
-        void ImportFieldData(TiXmlDocument &doc, const std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<NekDouble> > &fielddata)
+        void FieldIO::ImportFieldData(TiXmlDocument &doc, const std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<NekDouble> > &fielddata)
         {
             int cntdumps = 0;
-            ASSERTL1(fielddata.size() == 0, "Expected an empty fielddata vector.");
 
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master = NULL;    // Master tag within which all data is contained.
@@ -754,53 +978,13 @@ namespace Nektar
                     typedef boost::archive::iterators::transform_width<
                             boost::archive::iterators::binary_from_base64<
                             std::string::const_iterator>, 8, 6 > binary_t;
-                    std::stringstream elementCompressedData(std::string(binary_t(elementStr.begin()), binary_t(elementStr.end())));
+                    std::string vCompressed(binary_t(elementStr.begin()),
+                                            binary_t(elementStr.end()));
 
-                    // Decompress the binary data.
-                    std::stringstream elementDecompressedData;
-                    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-                    in.push(boost::iostreams::zlib_decompressor());
-                    in.push(elementCompressedData);
-                    try
-                    {
-                        boost::iostreams::copy(in, elementDecompressedData);
-                    }
-                    catch (boost::iostreams::zlib_error e)
-                    {
-                        if (e.error() == boost::iostreams::zlib::stream_end)
-                        {
-                            ASSERTL0(false, "Stream end zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::stream_error)
-                        {
-                            ASSERTL0(false, "Stream zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::version_error)
-                        {
-                            ASSERTL0(false, "Version zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::data_error)
-                        {
-                            ASSERTL0(false, "Data zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::mem_error)
-                        {
-                            ASSERTL0(false, "Memory zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::buf_error)
-                        {
-                            ASSERTL0(false, "Buffer zlib error");
-                        }
-                        else
-                        {
-                            ASSERTL0(false, "Unknown zlib error");
-                        }
-                    }
+                    std::vector<NekDouble> elementFieldData;
+                    ASSERTL0(Z_OK == Inflate(vCompressed, elementFieldData),
+                            "Failed to decompress field data.");
 
-                    // Deserialize the array.
-                    std::string vData = elementDecompressedData.str();
-                    NekDouble* readFieldData = (NekDouble*) vData.c_str();
-                    std::vector<NekDouble> elementFieldData(readFieldData, readFieldData + elementDecompressedData.str().length() * sizeof(*elementDecompressedData.str().c_str()) / sizeof(NekDouble));
                     fielddata.push_back(elementFieldData);
 
                     int datasize = CheckFieldDefinition(fielddefs[cntdumps]);
@@ -816,12 +1000,348 @@ namespace Nektar
 
 
         /**
+         * \brief add information about provenance and fieldmetadata
+         */
+        void FieldIO::AddInfoTag(TiXmlElement * root,
+                             const FieldMetaDataMap &fieldmetadatamap)
+        {
+            FieldMetaDataMap ProvenanceMap;
+
+            // Nektar++ release version from VERSION file
+            ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
+
+            // Date/time stamp
+            ptime::time_facet *facet = new ptime::time_facet("%d-%b-%Y %H:%M:%S");
+            std::stringstream wss;
+            wss.imbue(locale(wss.getloc(), facet));
+            wss << ptime::second_clock::local_time();
+            ProvenanceMap["Timestamp"] = wss.str();
+
+            // Hostname
+            boost::system::error_code ec;
+            ProvenanceMap["Hostname"] = ip::host_name(ec);
+
+            // Git information
+            // If built from a distributed package, do not include this
+            if (NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
+            {
+                ProvenanceMap["GitSHA1"]   = NekConstants::kGitSha1;
+                ProvenanceMap["GitBranch"] = NekConstants::kGitBranch;
+            }
+
+            TiXmlElement * infoTag = new TiXmlElement("Metadata");
+            root->LinkEndChild(infoTag);
+
+            TiXmlElement * v;
+            FieldMetaDataMap::const_iterator infoit;
+
+            TiXmlElement * provTag = new TiXmlElement("Provenance");
+            infoTag->LinkEndChild(provTag);
+            for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end(); ++infoit)
+            {
+                v = new TiXmlElement( (infoit->first).c_str() );
+                v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
+                provTag->LinkEndChild(v);
+            }
+
+            //---------------------------------------------
+            // write field info section
+            if(fieldmetadatamap != NullFieldMetaDataMap)
+            {
+                for(infoit = fieldmetadatamap.begin(); infoit != fieldmetadatamap.end(); ++infoit)
+                {
+                    v = new TiXmlElement( (infoit->first).c_str() );
+                    v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
+                    infoTag->LinkEndChild(v);
+                }
+            }
+        }
+
+
+        /**
          *
          */
-        int CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
+        void FieldIO::GenerateSeqString(const std::vector<unsigned int> &elmtids,
+                                      std::string &idString)
+        {
+            std::stringstream idStringStream;
+            bool setdash = true;
+            unsigned int endval;
+
+            idStringStream << elmtids[0];
+            for (int i = 1; i < elmtids.size(); ++i)
+            {
+                if(elmtids[i] == elmtids[i-1]+1)
+                {
+                    if(setdash)
+                    {
+                        idStringStream << "-";
+                        setdash = false;
+                    }
+
+                    if(i == elmtids.size()-1) // last element
+                    {
+                        idStringStream << elmtids[i];
+                    }
+                    else
+                    {
+                        endval = elmtids[i];
+                    }
+                }
+                else
+                {
+                    if(setdash == false) // finish off previous dash sequence
+                    {
+                        idStringStream << endval;
+                        setdash = true;
+                    }
+
+
+                    idStringStream << "," << elmtids[i];
+                }
+            }
+            idString = idStringStream.str();
+        }
+
+
+        /**
+         *
+         */
+        std::string FieldIO::SetUpOutput(const std::string outname,
+                const std::vector<FieldDefinitionsSharedPtr>& fielddefs,
+                const FieldMetaDataMap &fieldmetadatamap)
+        {
+            ASSERTL0(!outname.empty(), "Empty path given to SetUpOutput()");
+
+            int nprocs = m_comm->GetSize();
+            int rank   = m_comm->GetRank();
+
+            // Directory name if in parallel, regular filename if in serial
+            fs::path specPath (outname);
+
+            // Remove any existing file which is in the way
+            if(m_comm->RemoveExistingFiles())
+            {
+                try
+                {
+                    fs::remove_all(specPath);
+                }
+                catch (fs::filesystem_error& e)
+                {
+                    ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                             "Filesystem error: " + string(e.what()));
+                }
+            }
+
+            // serial processing just add ending.
+            if(nprocs == 1)
+            {
+                cout << "Writing: " << specPath << endl;
+                return LibUtilities::PortablePath(specPath);
+            }
+
+            // Compute number of elements on this process and share with other
+            // processes. Also construct list of elements on this process from
+            // available vector of field definitions.
+            std::vector<unsigned int> elmtnums(nprocs,0);
+            std::vector<unsigned int> idlist;
+            int i;
+            for (i = 0; i < fielddefs.size(); ++i)
+            {
+                elmtnums[rank] += fielddefs[i]->m_elementIDs.size();
+                idlist.insert(idlist.end(), fielddefs[i]->m_elementIDs.begin(),
+                                            fielddefs[i]->m_elementIDs.end());
+            }
+            m_comm->AllReduce(elmtnums,LibUtilities::ReduceMax);
+
+            // Create the destination directory
+            try
+            {
+                fs::create_directory(specPath);
+            }
+            catch (fs::filesystem_error& e)
+            {
+                ASSERTL0(false, "Filesystem error: " + string(e.what()));
+            }
+
+            // Collate per-process element lists on root process to generate
+            // the info file.
+            if (rank == 0)
+            {
+                std::vector<std::vector<unsigned int> > ElementIDs(nprocs);
+
+                // Populate the list of element ID lists from all processes
+                ElementIDs[0] = idlist;
+                for (i = 1; i < nprocs; ++i)
+                {
+                    std::vector<unsigned int> tmp(elmtnums[i]);
+                    m_comm->Recv(i, tmp);
+                    ElementIDs[i] = tmp;
+                }
+
+                // Set up output names
+                std::vector<std::string> filenames;
+                for(int i = 0; i < nprocs; ++i)
+                {
+                    boost::format pad("P%1$07d.fld");
+                    pad % i;
+                    filenames.push_back(pad.str());
+                }
+
+                // Write the Info.xml file
+                string infofile = LibUtilities::PortablePath(
+                                            specPath / fs::path("Info.xml"));
+
+                cout << "Writing: " << specPath << endl;
+                WriteMultiFldFileIDs(infofile, filenames, ElementIDs,
+                                     fieldmetadatamap);
+            }
+            else
+            {
+                // Send this process's ID list to the root process
+                m_comm->Send(0, idlist);
+            }
+
+            // Pad rank to 8char filenames, e.g. P0000000.fld
+            boost::format pad("P%1$07d.fld");
+            pad % m_comm->GetRank();
+
+            // Generate full path name
+            fs::path poutfile(pad.str());
+            fs::path fulloutname = specPath / poutfile;
+
+            // Return the full path to the partition for this process
+            return LibUtilities::PortablePath(fulloutname);
+        }
+
+
+        /**
+         * Compress a vector of NekDouble values into a string using zlib.
+         */
+        int FieldIO::Deflate(std::vector<NekDouble>& in,
+                        string& out)
+        {
+            int ret;
+            unsigned have;
+            z_stream strm;
+            unsigned char* input = (unsigned char*)(&in[0]);
+            string buffer;
+            buffer.resize(CHUNK);
+
+            /* allocate deflate state */
+            strm.zalloc = Z_NULL;
+            strm.zfree = Z_NULL;
+            strm.opaque = Z_NULL;
+            ret = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
+
+            ASSERTL0(ret == Z_OK, "Error initializing Zlib.");
+
+            strm.avail_in = in.size() * sizeof(NekDouble) / sizeof(char);
+            strm.next_in = input;
+
+            // Deflate input until output buffer is no longer full.
+            do {
+                strm.avail_out = CHUNK;
+                strm.next_out = (unsigned char*)(&buffer[0]);
+
+                ret = deflate(&strm, Z_FINISH);
+
+                // Deflate can return Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR or
+                // Z_STREAM_END. All, except Z_STREAM_ERROR are ok.
+                ASSERTL0(ret != Z_STREAM_ERROR, "Zlib stream error");
+
+                have = CHUNK - strm.avail_out;
+                out += buffer.substr(0, have);
+
+            } while (strm.avail_out == 0);
+
+            // Check all input was processed.
+            ASSERTL0(strm.avail_in == 0, "Not all input was used.");
+
+            // Check stream is complete.
+            ASSERTL0(ret == Z_STREAM_END, "Stream not finished");
+
+            // Clean-up and return
+            (void)deflateEnd(&strm);
+            return Z_OK;
+        }
+
+
+        /**
+         * Decompress a zlib-compressed string into a vector of NekDouble
+         * values.
+         */
+        int FieldIO::Inflate(std::string& in,
+                    std::vector<NekDouble>& out)
+        {
+            int ret;
+            unsigned have;
+            z_stream strm;
+            string buffer;
+            buffer.resize(CHUNK);
+            string output;
+
+            strm.zalloc = Z_NULL;
+            strm.zfree = Z_NULL;
+            strm.opaque = Z_NULL;
+            strm.avail_in = 0;
+            strm.next_in = Z_NULL;
+            ret = inflateInit(&strm);
+            ASSERTL0(ret == Z_OK, "Error initializing zlib decompression.");
+
+            strm.avail_in = in.size();
+            strm.next_in = (unsigned char*)(&in[0]);
+
+            do {
+                strm.avail_out = CHUNK;
+                strm.next_out = (unsigned char*)(&buffer[0]);
+
+                ret = inflate(&strm, Z_NO_FLUSH);
+
+                ASSERTL0(ret != Z_STREAM_ERROR, "Stream error occured.");
+
+                switch (ret) {
+                    case Z_NEED_DICT:
+                        ret = Z_DATA_ERROR;     /* and fall through */
+                    case Z_DATA_ERROR:
+                    case Z_MEM_ERROR:
+                        (void)inflateEnd(&strm);
+                        return ret;
+                }
+
+                have = CHUNK - strm.avail_out;
+                output += buffer.substr(0, have);
+
+            } while (strm.avail_out == 0);
+
+            (void)inflateEnd(&strm);
+
+            if (ret == Z_STREAM_END)
+            {
+                NekDouble* readFieldData = (NekDouble*) output.c_str();
+                unsigned int len = output.size() * sizeof(*output.c_str())
+                                                 / sizeof(NekDouble);
+                out.assign( readFieldData, readFieldData + len);
+                return Z_OK;
+            }
+            else
+            {
+                return Z_DATA_ERROR;
+            }
+        }
+
+        /**
+         *
+         */
+        int FieldIO::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
         {
             int i;
-            ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
+
+            if(fielddefs->m_elementIDs.size() == 0) // empty partition
+            {
+                return 0;
+            }
+            //ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
 
             unsigned int numbasis = 0;
 
@@ -1021,7 +1541,5 @@ namespace Nektar
             
             return datasize;
         }
-        
-
     }
 }

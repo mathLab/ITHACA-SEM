@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables without artificial
+// Description: Euler equations in consƒervative variables without artificial
 // diffusion
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -99,10 +99,10 @@ namespace Nektar
     /**
      * @brief Print out a summary with some relevant information.
      */
-    void EulerCFE::v_PrintSummary(std::ostream &out)
+    void EulerCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        CompressibleFlowSystem::v_PrintSummary(out);
-        out << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
+        CompressibleFlowSystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Problem Type", ProblemTypeMap[m_problemType]);
     }
 
     /**
@@ -110,7 +110,8 @@ namespace Nektar
      */
     void EulerCFE::v_SetInitialConditions(
         NekDouble   initialtime, 
-        bool        dumpInitialConditions)
+        bool        dumpInitialConditions,
+        const int   domain)
     {
         switch (m_problemType)
         {
@@ -123,6 +124,24 @@ namespace Nektar
             {
                 EquationSystem::v_SetInitialConditions(initialtime, false);
                 break;
+            }
+        }
+        
+        //insert white noise in initial condition
+        NekDouble Noise;
+        int phystot = m_fields[0]->GetTotPoints();
+        Array<OneD, NekDouble> noise(phystot);
+        
+        m_session->LoadParameter("Noise", Noise,0.0);
+        int m_nConvectiveFields =  m_fields.num_elements();
+        
+        if(Noise > 0.0)
+        {
+            for(int i = 0; i < m_nConvectiveFields; i++)
+            {
+                Vmath::FillWhiteNoise(phystot,Noise,noise,1,m_comm->GetColumnComm()->GetRank()+1);
+                Vmath::Vadd(phystot,m_fields[i]->GetPhys(),1,noise,1,m_fields[i]->UpdatePhys(),1);
+                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
             }
         }
 
@@ -141,15 +160,14 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        //cout<<setprecision(16);
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
-
-        Array<OneD, Array<OneD, NekDouble> > advVel;
-        
+     
+        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
+            
         m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
-
+        
         for (i = 0; i < nvariables; ++i)
         {
             Vmath::Neg(npoints, outarray[i], 1);
@@ -209,6 +227,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &inarray, 
         NekDouble                             time)
     {
+        std::string varName;
         int nvariables = m_fields.num_elements();
         int cnt        = 0;
 
@@ -219,7 +238,7 @@ namespace Nektar
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eWall)
             {
-                WallBoundary(n, cnt, inarray);
+                WallBC(n, cnt, inarray);
             }
             
             // Wall Boundary Condition
@@ -234,28 +253,21 @@ namespace Nektar
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eSymmetry)
             {
-                SymmetryBoundary(n, cnt, inarray);
+                SymmetryBC(n, cnt, inarray);
             }
-            
-            // Inflow characteristic Boundary Condition
+                        
+            // Riemann invariant characteristic Boundary Condition (CBC)
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eInflowCFS)
+                SpatialDomains::eRiemannInvariant)
             {
-                InflowCFSBoundary(n, cnt, inarray);
-            }
-            
-            // Outflow characteristic Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eOutflowCFS)
-            {
-                OutflowCFSBoundary(n, cnt, inarray);
+                RiemannInvariantBC(n, cnt, inarray);
             }
 
             // Extrapolation of the data at the boundaries
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eExtrapOrder0)
             {
-                ExtrapOrder0Boundary(n, cnt, inarray);
+                ExtrapOrder0BC(n, cnt, inarray);
             }
             
             // Time Dependent Boundary Condition (specified in meshfile)
@@ -264,7 +276,8 @@ namespace Nektar
             {
                 for (int i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->EvaluateBoundaryConditions(time);
+                    varName = m_session->GetVariable(i);
+                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
             }
             
@@ -423,6 +436,7 @@ namespace Nektar
         int nvariables      = physarray.num_elements();
         int nTraceNumPoints = GetTraceTotPoints();
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        const Array<OneD, const int> &bndTraceMap = m_fields[0]->GetTraceBndMap();
 
         // Get physical values of the forward trace (from exp to phys)
         for (int i = 0; i < nvariables; ++i)
@@ -431,16 +445,16 @@ namespace Nektar
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
 
-        for(int e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetExpSize(); ++e)
+        int id2, e_max;
+        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+
+        for(int e = 0; e < e_max; ++e)
         {
             int npoints = m_fields[0]->
                 GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
             int id1  = m_fields[0]->
                 GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
-            int id2 = m_fields[0]->
-                GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                    GetBndCondTraceToGlobalTraceMap(cnt++));
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(bndTraceMap[cnt++]);
 
             Array<OneD,NekDouble> x(npoints, 0.0);
             Array<OneD,NekDouble> y(npoints, 0.0);
@@ -616,7 +630,6 @@ namespace Nektar
      */
     void EulerCFE::SetInitialRinglebFlow(void)
     {
-
         // Get number of different boundaries in the input file
         int nbnd    = m_fields[0]->GetBndConditions().num_elements();
 
@@ -869,6 +882,16 @@ namespace Nektar
         int nTraceNumPoints = GetTraceTotPoints();
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
         
+        // For 3DHomogenoeus1D
+        int n_planes;
+        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+        {
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            n_planes = nPointsTot/nPointsTot_plane;
+            nTraceNumPoints = nTraceNumPoints * n_planes;
+        }
+        
         // Get physical values of the forward trace (from exp to phys)
         for (int i = 0; i < nvariables; ++i)
         {
@@ -876,20 +899,40 @@ namespace Nektar
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
         
-        for(int e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetExpSize(); ++e)
+        int id2, id2_plane, e_max;
+        
+        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        
+        for(int e = 0; e < e_max; ++e)
         {
-            
             int npoints = m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
             int id1  = m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
-            //int id2  = m_fields[0]->
-            //  GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
-            //      GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-            int id2 = m_fields[0]->
-            GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                                       GetBndCondTraceToGlobalTraceMap(cnt++));
+            
+            // For 3DHomogenoeus1D
+            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            {
+                int cnt_plane = cnt/n_planes;
+                int e_plane;
+                int e_max_plane = e_max/n_planes;
+                int nTracePts_plane = GetTraceTotPoints();
+                
+                int planeID = floor((e + 0.5 )/ e_max_plane );
+                e_plane = e - e_max_plane*planeID;
+                
+                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                                m_fields[0]->GetTraceMap()->
+                                    GetBndCondCoeffsToGlobalCoeffsMap(
+                                        cnt_plane + e_plane));
+                id2 = id2_plane + planeID*nTracePts_plane;
+            }
+            else // For general case
+            {
+                id2 = m_fields[0]->
+                        GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                            GetBndCondTraceToGlobalTraceMap(cnt++));
+            }
             
             Array<OneD,NekDouble> x0(npoints, 0.0);
             Array<OneD,NekDouble> x1(npoints, 0.0);

@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <CardiacEPSolver/Stimuli/ProtocolS1S2.h>
 
 namespace Nektar
@@ -116,7 +116,7 @@ namespace Nektar
         
     }
     
-    void ProtocolS1S2::v_PrintSummary(std::ostream &out)
+    void ProtocolS1S2::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         
     }

@@ -5,6 +5,7 @@
 #include <StdRegions/StdHexExp.h>
 #include <StdRegions/StdPrismExp.h>
 #include <StdRegions/StdNodalPrismExp.h>
+#include <StdRegions/StdPyrExp.h>
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdNodalTetExp.h>
 
@@ -41,7 +42,7 @@ int main(int argc, char *argv[]){
     LibUtilities::BasisType     btype3 =   LibUtilities::eOrtho_C;
     LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
     LibUtilities::ShapeType     regionshape;
-    StdRegions::StdExpansion *E;
+    StdRegions::StdExpansion *E = NULL;
     Array<OneD, NekDouble> sol;
 
     if(argc != 11)
@@ -51,6 +52,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"Where RegionShape is an integer value which "
                        "dictates the region shape:\n");
         fprintf(stderr,"\t Tetrahedron   = 5\n");
+        fprintf(stderr,"\t Pyramid       = 6\n");
         fprintf(stderr,"\t Prism         = 7\n");
         fprintf(stderr,"\t Hexahedron    = 8\n");
 
@@ -65,6 +67,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"\t Modified_C          =  6\n");
         fprintf(stderr,"\t Fourier             =  7\n");
         fprintf(stderr,"\t Lagrange            =  8\n");
+        fprintf(stderr,"\t Gauss Lagrange      =  9\n");
         fprintf(stderr,"\t Legendre            = 10\n");
         fprintf(stderr,"\t Chebyshev           = 11\n");
         fprintf(stderr,"\t Nodal tri (Electro) = 12\n");
@@ -80,6 +83,7 @@ int main(int argc, char *argv[]){
 
     // Check to see if 3D region
     if ((regionshape != LibUtilities::eTetrahedron)
+        && (regionshape != LibUtilities::ePyramid)
         && (regionshape != LibUtilities::ePrism)
         && (regionshape != LibUtilities::eHexahedron))
     {
@@ -148,6 +152,26 @@ int main(int argc, char *argv[]){
             {
                 NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_A, "
                          "Ortho_C, Modified_A or Modified_C");
+            }
+            if((btype3 == eOrtho_A) || (btype3 == eOrtho_B)
+               || (btype3 == eModified_A) || (btype3 == eModified_B))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
+                         "Ortho_B, Modified_A or Modified_B");
+            }
+            break;
+        case LibUtilities::ePyramid:
+            if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
+               || (btype1 == eModified_B) || (btype1 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B, "
+                         "Ortho_C, Modified_B or Modified_C");
+            }
+            if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
+               || (btype2 == eModified_B) || (btype2 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_B, "
+                         "Ortho_C, Modified_B or Modified_C");
             }
             if((btype3 == eOrtho_A) || (btype3 == eOrtho_B)
                || (btype3 == eModified_A) || (btype3 == eModified_B))
@@ -234,7 +258,8 @@ int main(int argc, char *argv[]){
 
     if(btype3 != LibUtilities::eFourier)
     {
-        if (regionshape == LibUtilities::eTetrahedron) 
+        if (regionshape == LibUtilities::eTetrahedron ||
+            regionshape == LibUtilities::ePyramid) 
         {
             Qtype3 = LibUtilities::eGaussRadauMAlpha2Beta0;
         }
@@ -277,8 +302,31 @@ int main(int argc, char *argv[]){
             {
                 E = new StdRegions::StdTetExp(Bkey1,Bkey2,Bkey3);
             }
+
             E->GetCoords(x,y,z);
             
+            //----------------------------------------------
+            // Define solution to be projected
+            for(i = 0; i < nq1*nq2*nq3; ++i)
+            {
+                sol[i]  = Tet_sol(x[i],y[i],z[i],order1,order2,order3);
+            }
+            //----------------------------------------------
+        }
+        break;
+    case LibUtilities::ePyramid:
+        {
+            const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
+            const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
+            const LibUtilities::PointsKey Pkey3(nq3,Qtype3);
+            const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
+            const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
+            const LibUtilities::BasisKey  Bkey3(btype3,order3,Pkey3);
+
+            StdRegions::StdPyrExp *F = new StdRegions::StdPyrExp(Bkey1,Bkey2,Bkey3);
+            E = F;
+            E->GetCoords(x,y,z);
+
             //----------------------------------------------
             // Define solution to be projected
             for(i = 0; i < nq1*nq2*nq3; ++i)
@@ -346,20 +394,24 @@ int main(int argc, char *argv[]){
             break;
     }
 
+    
+    Array<OneD, NekDouble> phys (nq1*nq2*nq3);
+    Array<OneD, NekDouble> coeffs(order1*order2*order3);
+
     //---------------------------------------------
     // Project onto Expansion
-    E->FwdTrans(sol,E->UpdateCoeffs());
+    E->FwdTrans(sol,coeffs);
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
+    E->BwdTrans(coeffs,phys);
     //-------------------------------------------
 
     //--------------------------------------------
     // Calculate L_inf error
-    cout << "L infinity error: " << E->Linf(sol) << endl;
-    cout << "L 2 error:        " << E->L2  (sol) << endl;
+    cout << "L infinity error: " << E->Linf(phys,sol) << endl;
+    cout << "L 2 error:        " << E->L2  (phys,sol) << endl;
     //--------------------------------------------
 
     //-------------------------------------------
@@ -369,7 +421,8 @@ int main(int argc, char *argv[]){
     t[1] = -0.25;
     t[2] = -0.3;
 
-    if(regionshape == LibUtilities::eTetrahedron)
+    if(regionshape == LibUtilities::eTetrahedron ||
+       regionshape == LibUtilities::ePyramid)
     {
         sol[0] = Tet_sol(t[0], t[1], t[2], order1, order2, order3);
     }
@@ -383,7 +436,7 @@ int main(int argc, char *argv[]){
                          btype1, btype2, btype3);
     }
 
-    NekDouble nsol = E->PhysEvaluate(x);
+    NekDouble nsol = E->PhysEvaluate(x,phys);
     cout << "error at x = (" << t[0] << "," << t[1] << "," << t[2] << "): "
          << nsol - sol[0] << endl;
     //-------------------------------------------
@@ -396,7 +449,7 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
                   int order1, int order2, int order3)
 {
     int    l,k,m;
-    NekDouble sol = 0;
+    NekDouble sol = 0.0;
 
     for(k = 0; k < order1; ++k)
     {
@@ -408,9 +461,9 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
             }
         }
     }
+
     return sol;
 }
-
 
 NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
                     int order1, int order2, int order3)

@@ -111,23 +111,65 @@ namespace Nektar
             }
         }
 
-        NekDouble StdExpansion3D::v_PhysEvaluate(
-            const Array<OneD, const NekDouble> &coords)
+        void StdExpansion3D::BwdTrans_SumFacKernel(
+            const Array<OneD, const NekDouble>& base0,
+            const Array<OneD, const NekDouble>& base1,
+            const Array<OneD, const NekDouble>& base2,
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray,
+                  Array<OneD,       NekDouble>& wsp,
+            bool                                doCheckCollDir0,
+            bool                                doCheckCollDir1,
+            bool                                doCheckCollDir2)
         {
-            return PhysEvaluate(coords,m_phys);
+            v_BwdTrans_SumFacKernel(base0, base1, base2, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1, doCheckCollDir2);
         }
-        
+
+        void StdExpansion3D::IProductWRTBase_SumFacKernel(
+                const Array<OneD, const NekDouble>& base0,
+                const Array<OneD, const NekDouble>& base1,
+                const Array<OneD, const NekDouble>& base2,
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray,
+                      Array<OneD, NekDouble> &wsp,
+                bool doCheckCollDir0,
+                bool doCheckCollDir1,
+                bool doCheckCollDir2)
+        {
+            v_IProductWRTBase_SumFacKernel(base0, base1, base2, inarray, outarray, wsp, doCheckCollDir0, doCheckCollDir1, doCheckCollDir2);
+        }
+
         NekDouble StdExpansion3D::v_PhysEvaluate(
             const Array<OneD, const NekDouble> &coords, 
             const Array<OneD, const NekDouble> &physvals)
         {
+            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
+            Array<OneD, DNekMatSharedPtr>  I(3);
+
+            WARNINGL2(coords[0] >= -1,"coord[0] < -1");
+            WARNINGL2(coords[0] <=  1,"coord[0] >  1");
+            WARNINGL2(coords[1] >= -1,"coord[1] < -1");
+            WARNINGL2(coords[1] <=  1,"coord[1] >  1");
+            WARNINGL2(coords[2] >= -1,"coord[2] < -1");
+            WARNINGL2(coords[2] <=  1,"coord[2] >  1");
+
+            // Obtain local collapsed corodinate from 
+            // cartesian coordinate. 
+            LocCoordToLocCollapsed(coords,eta);
+
+            // Get Lagrange interpolants. 
+            I[0] = m_base[0]->GetI(eta);
+            I[1] = m_base[1]->GetI(eta+1);
+            I[2] = m_base[2]->GetI(eta+2);
+
+            return v_PhysEvaluate(I,physvals);
+        }
+
+        NekDouble StdExpansion3D::v_PhysEvaluate(
+            const Array<OneD, DNekMatSharedPtr > &I, 
+            const Array<OneD, const NekDouble> &physvals)
+        {
             NekDouble  value;
-            ASSERTL2(coords[0] >= -1,"coord[0] < -1");
-            ASSERTL2(coords[0] <=  1,"coord[0] >  1");
-            ASSERTL2(coords[1] >= -1,"coord[1] < -1");
-            ASSERTL2(coords[1] <=  1,"coord[1] >  1");
-            ASSERTL2(coords[2] >= -1,"coord[2] < -1");
-            ASSERTL2(coords[2] <=  1,"coord[2] >  1");
             
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();
@@ -137,36 +179,138 @@ namespace Nektar
             Array<OneD, NekDouble> sumFactorization_r  = Array<OneD, NekDouble>(Qz);
             
             // Lagrangian interpolation matrix
-            DNekMatSharedPtr I;
             NekDouble *interpolatingNodes = 0;
             
             // Interpolate first coordinate direction
-            I = m_base[0]->GetI(coords);
-            interpolatingNodes = &I->GetPtr()[0];
-            for(int i = 0; i < Qy*Qz;++i)
-            {
-                sumFactorization_qr[i] =  Blas::Ddot(Qx, interpolatingNodes, 1, &physvals[ i*Qx ], 1);
-            }
-            
+            interpolatingNodes = &I[0]->GetPtr()[0];
+
+            Blas::Dgemv('T',Qx,Qy*Qz,1.0,&physvals[0],Qx,&interpolatingNodes[0], 1, 0.0, &sumFactorization_qr[0], 1);
+
             // Interpolate in second coordinate direction
-            I = m_base[1]->GetI(coords+1);
-            interpolatingNodes = &I->GetPtr()[0];
-            for(int j =0; j < Qz; ++j)
-            {
-                sumFactorization_r[j] = Blas::Ddot(Qy, interpolatingNodes, 1, &sumFactorization_qr[ j*Qy ], 1);
-            }
-            
+            interpolatingNodes = &I[1]->GetPtr()[0];
+
+            Blas::Dgemv('T',Qy,Qz,1.0,&sumFactorization_qr[0],Qy,&interpolatingNodes[0],1,0.0,&sumFactorization_r[0], 1);
+
             // Interpolate in third coordinate direction
-            I = m_base[2]->GetI(coords+2);
-            interpolatingNodes = &I->GetPtr()[0];
+            interpolatingNodes = &I[2]->GetPtr()[0];
             value = Blas::Ddot(Qz, interpolatingNodes, 1, &sumFactorization_r[0], 1);
             
             return value;
         }
         
-        const NormalVector & StdExpansion3D::v_GetSurfaceNormal() const
+
+        /**
+         * @param   inarray     Input coefficients.
+         * @param   output      Output coefficients.
+         * @param   mkey        Matrix key
+         */
+        void StdExpansion3D::v_LaplacianMatrixOp_MatFree(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray,
+                const StdRegions::StdMatrixKey &mkey)
         {
-            return m_surfaceNormal;
+            if ( mkey.GetNVarCoeff() == 0 &&
+                !mkey.ConstFactorExists(eFactorSVVCutoffRatio))
+            {
+                // This implementation is only valid when there are no
+                // coefficients associated to the Laplacian operator
+                int nqtot = GetTotPoints();
+
+                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
+
+                // Allocate temporary storage
+                Array<OneD,NekDouble> wsp0(7*nqtot);
+                Array<OneD,NekDouble> wsp1(wsp0+nqtot);
+
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
+                     m_base[2]->Collocation()))
+                {
+                    // LAPLACIAN MATRIX OPERATION
+                    // wsp0 = u       = B   * u_hat
+                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                    BwdTrans_SumFacKernel(base0,base1,base2,inarray,wsp0,wsp1,true,true,true);
+                    LaplacianMatrixOp_MatFree_Kernel(wsp0,outarray,wsp1);
+                }
+                else
+                {
+                    LaplacianMatrixOp_MatFree_Kernel(inarray,outarray,wsp1);
+                }
+            }
+            else
+            {
+                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+            }
+        }
+
+
+        void StdExpansion3D::v_HelmholtzMatrixOp_MatFree(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray,
+                const StdRegions::StdMatrixKey &mkey)
+        {
+            if(mkey.GetNVarCoeff() == 0)
+            {
+                int nquad0  = m_base[0]->GetNumPoints();
+                int nquad1  = m_base[1]->GetNumPoints();
+                int nquad2  = m_base[2]->GetNumPoints();
+                int nmodes0 = m_base[0]->GetNumModes();
+                int nmodes1 = m_base[1]->GetNumModes();
+                int nmodes2 = m_base[2]->GetNumModes();
+                int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
+                                  nquad0*nquad1*(nquad2+nmodes0)+
+                                  nmodes0*nmodes1*nquad2);
+
+                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
+
+                const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
+                const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
+                const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
+                Array<OneD,NekDouble> wsp0(8*wspsize);
+                Array<OneD,NekDouble> wsp1(wsp0+1*wspsize);
+                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
+
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
+                     m_base[2]->Collocation()))
+                {
+                    // MASS MATRIX OPERATION
+                    // The following is being calculated:
+                    // wsp0     = B   * u_hat = u
+                    // wsp1     = W   * wsp0
+                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
+                    BwdTrans_SumFacKernel           (base0,base1,base2,inarray,
+                                                     wsp0,wsp2,true,true,true);
+                    MultiplyByQuadratureMetric      (wsp0,wsp1);
+                    IProductWRTBase_SumFacKernel    (base0,base1,base2,wsp1,
+                                                     outarray,wsp2,true,true,true);
+                    LaplacianMatrixOp_MatFree_Kernel(wsp0,wsp1,wsp2);
+                }
+                else
+                {
+                    // specialised implementation for the classical spectral
+                    // element method
+                    MultiplyByQuadratureMetric      (inarray,outarray);
+                    LaplacianMatrixOp_MatFree_Kernel(inarray,wsp1,wsp2);
+                }
+
+                // outarray = lambda * outarray + wsp1
+                //          = (lambda * M + L ) * u_hat
+                Vmath::Svtvp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,
+                             &outarray[0],1);
+            }
+            else
+            {
+                StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+            }
+
+        }
+
+        const NormalVector & StdExpansion3D::v_GetSurfaceNormal(
+                const int id) const
+        {
+            return v_GetFaceNormal(id);
         }
         
         const NormalVector & StdExpansion3D::v_GetFaceNormal(const int face) const
@@ -178,6 +322,16 @@ namespace Nektar
             return x->second;
         }
 
+        NekDouble StdExpansion3D::v_Integral(
+            const Array<OneD, const NekDouble>& inarray)
+        {
+            const int nqtot = GetTotPoints();
+            Array<OneD, NekDouble> tmp(GetTotPoints());
+            MultiplyByStdQuadratureMetric(inarray, tmp);
+            return Vmath::Vsum(nqtot, tmp, 1);
+        }
+        
+        
         void StdExpansion3D::v_NegateFaceNormal(const int face)
         {
             m_negatedNormals[face] = true;

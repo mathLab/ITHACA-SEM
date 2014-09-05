@@ -12,7 +12,7 @@
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <boost/lexical_cast.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 
 using namespace Nektar;
@@ -242,12 +242,11 @@ cout<<"nIregions="<<nIregions<<endl;
     int v1,v2;
     //first point for x_connect=0(or-1.6 for the full mesh (-pi,pi)  )
     x_connect=0;
-    SpatialDomains::VertexComponentSharedPtr vertex0 =
+    SpatialDomains::PointGeomSharedPtr vertex0 =
        graphShPt->GetVertex
        (
-       ( (boost::dynamic_pointer_cast<LocalRegions
-           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
-         )->GetGeom1D()
+       ( (bndfieldx[lastIregion]->GetExp(0)->as<LocalRegions::SegExp>())
+                                ->GetGeom1D()
        )
        ->GetVid(0)
        );
@@ -262,7 +261,7 @@ cout<<"WARNING x0="<<x0<<endl;
     OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-1], 
        	Vids_low, v1, v2 , x_connect ,lastedge, xold_low,yold_low);    
     ASSERTL0(Vids_low[v2]!=-10, "Vids_low[v2] is wrong");
-    SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_low[v2]);    
+    SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(Vids_low[v2]);
 
     //update x_connect    
 cout<<"x_conn="<<x_connect<<"   yt="<<yt<<"  zt="<<zt<<" vid="<<Vids_low[v2]<<endl;
@@ -274,7 +273,7 @@ cout<<"x_conn="<<x_connect<<"   yt="<<yt<<"  zt="<<zt<<" vid="<<Vids_low[v2]<<en
          v1=i;
          OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-1], 
         	Vids_low, v1, v2 , x_connect, lastedge, xold_low, yold_low );          
-         SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_low[v1]);     
+         SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(Vids_low[v1]);
 //cout<<"Vids low="<<Vids_low[v1]<<endl;         
          //update x_connect  (lastedge is updated on the OrderVertices function) 
          vertex->GetCoords(x_connect,yt,zt);
@@ -292,9 +291,8 @@ cout<<"x_conn="<<x_connect<<"   yt="<<yt<<"  zt="<<zt<<" vid="<<Vids_low[v2]<<en
     vertex0 =
        graphShPt->GetVertex
        (
-       ( (boost::dynamic_pointer_cast<LocalRegions
-           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
-         )->GetGeom1D()
+       ( (bndfieldx[lastIregion]->GetExp(0)->as<LocalRegions::SegExp>())
+                                ->GetGeom1D()
        )
        ->GetVid(0)
        );
@@ -310,7 +308,7 @@ cout<<"WARNING x0="<<x0<<endl;
     v2=1;
     OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2 ], 
         	Vids_up, v1, v2 , x_connect ,lastedge, xold_up, yold_up);    
-    SpatialDomains::VertexComponentSharedPtr vertexU = graphShPt->GetVertex(Vids_up[v2]);    
+    SpatialDomains::PointGeomSharedPtr vertexU = graphShPt->GetVertex(Vids_up[v2]);
 //cout<<"VIdup="<<Vids_up[v2]<<endl;
     //update x_connect    
     vertexU->GetCoords(x_connect,yt,zt);
@@ -321,7 +319,7 @@ cout<<"WARNING x0="<<x0<<endl;
          v1=i;
          OrderVertices(nedges, graphShPt, bndfieldx[lastIregion-2], 
          	Vids_up, v1, v2 , x_connect, lastedge, xold_up, yold_up );          
-         SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_up[v1]);  
+         SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(Vids_up[v1]);
 //cout<<"VIdup="<<Vids_up[v1]<<endl;   
          //update x_connect  (lastedge is updated on the OrderVertices function) 
          vertex->GetCoords(x_connect,yt,zt);
@@ -340,9 +338,8 @@ cout<<"WARNING x0="<<x0<<endl;
     vertex0 =
        graphShPt->GetVertex
        (
-       ( (boost::dynamic_pointer_cast<LocalRegions
-           ::SegExp>(bndfieldx[lastIregion]->GetExp(0))
-         )->GetGeom1D()
+       ( (bndfieldx[lastIregion]->GetExp(0)->as<LocalRegions::SegExp>())
+                                ->GetGeom1D()
        )
        ->GetVid(0)
        );
@@ -359,7 +356,7 @@ cout<<"WARNING x0="<<x0<<endl;
 
     OrderVertices(nedges, graphShPt, bndfieldx[lastIregion], 
         	Vids_c, v1, v2 , x_connect ,lastedge, xold_c, yold_c);    
-    SpatialDomains::VertexComponentSharedPtr vertexc = graphShPt->GetVertex(Vids_c[v2]);    
+    SpatialDomains::PointGeomSharedPtr vertexc = graphShPt->GetVertex(Vids_c[v2]);
 
     //update x_connect    
     vertexc->GetCoords(x_connect,yt,zt);
@@ -370,7 +367,7 @@ cout<<"WARNING x0="<<x0<<endl;
          v1=i;
          OrderVertices(nedges, graphShPt, bndfieldx[lastIregion], 
          	Vids_c, v1, v2 , x_connect, lastedge, xold_c, yold_c );          
-         SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_c[v1]);  
+         SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(Vids_c[v1]);
 //cout<<"Vids cl="<<Vids_low[v1]<<endl;  
          //update x_connect  (lastedge is updated on the OrderVertices function) 
          vertex->GetCoords(x_connect,yt,zt);
@@ -652,12 +649,13 @@ cout<<x_c[q]<<"    "<<y_c[q]<<endl;
     int Eid,id1,id2;
     NekDouble x1,y1,z1;
     NekDouble x2,y2,z2;
-    SpatialDomains::VertexComponentSharedPtr vertex1;
-    SpatialDomains::VertexComponentSharedPtr vertex2;    
+    SpatialDomains::PointGeomSharedPtr vertex1;
+    SpatialDomains::PointGeomSharedPtr vertex2;
     for(int r=0; r<nedges; r++)
     {
     	    
-         bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfieldx[lastIregion]->GetExp(r));   
+         bndSegExp = bndfieldx[lastIregion]->GetExp(r)
+                                           ->as<LocalRegions::SegExp>();
          Eid = (bndSegExp->GetGeom1D())->GetEid();
          id1 = (bndSegExp->GetGeom1D())->GetVid(0);
          id2 = (bndSegExp->GetGeom1D())->GetVid(1);  
@@ -898,7 +896,7 @@ cout<<"LAST coeff==y(x==0)="<<curve_coeffs[nedges*(npedge-2)+nedges] <<endl;
     cnt=0;
     for(int n=0; n<nVertTot; n++)
     {
-         SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(n);
+         SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(n);
          NekDouble x,y,z;
          vertex->GetCoords(x,y,z); 
          xold[n] =x;
@@ -966,7 +964,7 @@ cout<<"nlays="<<nlays<<endl;
     for(int i=0; i<nVertTot; i++)
     {
          bool mvpoint =false;
-         SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(i);
+         SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(i);
          NekDouble x,y,z;
          vertex->GetCoords(x,y,z); 
          //x coord doesn't change
@@ -1191,8 +1189,8 @@ cout<<"cntlow="<<cntlow<<endl;
 cout<<"nquad per edge="<<nqedge<<endl;
        for(int l=0; l<2; l++)
        {
-           Edge_newcoords[l] = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>
-                (bndfieldx[lastIregion]->GetExp(0));
+           Edge_newcoords[l] = bndfieldx[lastIregion]->GetExp(0)
+                                   ->as<StdRegions::StdExpansion1D>();
        }   
        Array<OneD, NekDouble> xnull(nqedge);
        Array<OneD, NekDouble> ynull(nqedge);
@@ -1978,7 +1976,7 @@ cout<<std::setprecision(8)<<xnew[lay_Vids[m][l] ]<<"    "<<ynew[lay_Vids[m][l] ]
      for(int n=0; n<nVertTot; n++)
      {
           NekDouble ratio;  
-          SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(n);
+          SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(n);
           NekDouble x,y,z;
           vertex->GetCoords(x,y,z); 
           int qp_closer;
@@ -2337,13 +2335,13 @@ cout<<"move layerdown to up:"<<endl;
             for(int j=0; j<nedges; j++)
             {
    	        LocalRegions::SegExpSharedPtr  bndSegExplow = 
-   	             boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfield->GetExp(j)) ;   	
+   	             bndfield->GetExp(j)->as<LocalRegions::SegExp>() ;
    	        edge = (bndSegExplow->GetGeom1D())->GetEid();
 //cout<<" edge="<<edge<<endl;   	   
    	        for(int k=0; k<2; k++)
    	        {
    	            Vids_temp[j+k]=(bndSegExplow->GetGeom1D())->GetVid(k);   
-   	            SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids_temp[j+k]);
+   	            SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(Vids_temp[j+k]);
    	            NekDouble x1,y1,z1;
    	            vertex->GetCoords(x1,y1,z1);     	   	   
    	            if(x1==x_connect && edge!=lastedge)
@@ -2359,7 +2357,7 @@ cout<<"move layerdown to up:"<<endl;
 			     {
 			     	   Vids_temp[j+1]=(bndSegExplow->GetGeom1D())->GetVid(1);     	            	 	 
 			     	   Vids[v2]=Vids_temp[j+1]; 
-			     	   SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids[v2]);
+			     	   SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(Vids[v2]);
 			     	   NekDouble x2,y2,z2;
 			     	   vertex->GetCoords(x2,y2,z2); 
 				   x[v2]=x2;
@@ -2369,7 +2367,7 @@ cout<<"move layerdown to up:"<<endl;
 			     {
 			     	   Vids_temp[j+0]=(bndSegExplow->GetGeom1D())->GetVid(0);   	       	         	 
 			     	   Vids[v2]=Vids_temp[j+0];
-			     	   SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids[v2]);
+			     	   SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(Vids[v2]);
 			     	   NekDouble x2,y2,z2;
 			     	   vertex->GetCoords(x2,y2,z2); 
 				   x[v2]=x2;
@@ -2383,7 +2381,7 @@ cout<<"move layerdown to up:"<<endl;
 			     {
 			     	   Vids_temp[j+1]=(bndSegExplow->GetGeom1D())->GetVid(1);     	            	 	 
 			     	   Vids[v1]=Vids_temp[j+1]; 
-			     	   SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids[v1]);
+			     	   SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(Vids[v1]);
 			     	   NekDouble x1,y1,z1;
 			     	   vertex->GetCoords(x1,y1,z1); 
 				   x[v1]=x1;
@@ -2393,7 +2391,7 @@ cout<<"move layerdown to up:"<<endl;
 			     {
 			     	   Vids_temp[j+0]=(bndSegExplow->GetGeom1D())->GetVid(0);   	       	         	 
 			     	   Vids[v1]=Vids_temp[j+0];
-			     	   SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(Vids[v1]);
+			     	   SpatialDomains::PointGeomSharedPtr vertex = graphShPt->GetVertex(Vids[v1]);
 			     	   NekDouble x1,y1,z1;
 			     	   vertex->GetCoords(x1,y1,z1); 
 				   x[v1]=x1;
@@ -2784,8 +2782,8 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
             int Eid,id1,id2;
             NekDouble x1,y1,z1;
             NekDouble x2,y2,z2;
-            SpatialDomains::VertexComponentSharedPtr vertex1;
-            SpatialDomains::VertexComponentSharedPtr vertex2;
+            SpatialDomains::PointGeomSharedPtr vertex1;
+            SpatialDomains::PointGeomSharedPtr vertex2;
 
             int firstedge=0;
 	    int firstcoeff=0;      	    
@@ -2802,7 +2800,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
             int polorder;	    
             for(int s= firstedge; s< lastedge; s++)
             {
-            	 bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndfield->GetExp(s));   
+            	 bndSegExp = bndfield->GetExp(s)->as<LocalRegions::SegExp>();
             	 Eid = (bndSegExp->GetGeom1D())->GetEid();
             	 id1 = (bndSegExp->GetGeom1D())->GetVid(0);
             	 id2 = (bndSegExp->GetGeom1D())->GetVid(1);  
@@ -2849,7 +2847,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
         void MapEdgeVertices(MultiRegions::ExpListSharedPtr field, Array<OneD, int> &V1,
                  Array<OneD, int> &V2)
         {
-            const boost::shared_ptr<StdRegions::StdExpansionVector> exp2D = field->GetExp();
+            const boost::shared_ptr<LocalRegions::ExpansionVector> exp2D = field->GetExp();
             int nel        = exp2D->size();
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;
@@ -2860,7 +2858,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
             Array<OneD, int> V2tmp(4*nel, 10000);
             for(int i=0; i<nel; i++)
             { 
-                if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i])))
+                if((locQuadExp = (*exp2D)[i]->as<LocalRegions::QuadExp>()))
                 {
                      for(int j = 0; j < locQuadExp->GetNedges(); ++j)
                      {
@@ -2876,7 +2874,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
                 }
                 //in the future the tri edges may be not necessary (if the nedges is known)
 
-                else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i])))
+                else if((locTriExp = (*exp2D)[i]->as<LocalRegions::TriExp>()))
                 {
                      for(int j = 0; j < locTriExp->GetNedges(); ++j)
                      {

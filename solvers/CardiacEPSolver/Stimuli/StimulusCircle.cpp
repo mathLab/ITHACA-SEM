@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <CardiacEPSolver/Stimuli/StimulusCircle.h>
 
@@ -170,7 +170,7 @@ namespace Nektar
     /**
      *
      */
-    void StimulusCirc::v_PrintSummary(std::ostream &out)
+    void StimulusCirc::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         
     }

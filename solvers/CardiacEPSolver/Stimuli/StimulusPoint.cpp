@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include <CardiacEPSolver/Stimuli/StimulusPoint.h>
@@ -108,7 +108,7 @@ namespace Nektar
     /**
      *
      */
-    void StimulusPoint::v_PrintSummary(std::ostream &out)
+    void StimulusPoint::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
 
 

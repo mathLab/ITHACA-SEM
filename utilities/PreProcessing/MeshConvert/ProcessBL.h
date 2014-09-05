@@ -62,15 +62,6 @@ namespace Nektar
             
             /// Write mesh to output file.
             virtual void Process();
-            
-        private:
-            /// Search ProcessBL::createdNodes for a node. Returns the node
-            /// (if found) or adds the node otherwise.
-            NodeSharedPtr checkNode(Node *n);
-            
-            /// Stores unique set of nodes which have been created in the
-            /// refinement process.
-            vector<NodeSharedPtr> createdNodes;
         };
     }
 }

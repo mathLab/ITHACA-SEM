@@ -56,9 +56,7 @@ namespace Nektar
             eNeumann,
             eRobin,
             ePeriodic,
-            eJunction,
-            eBifurcation,
-            eMerging
+            eNotDefined
         };
 
         enum BndUserDefinedType
@@ -66,10 +64,11 @@ namespace Nektar
             eI,
             eMG,
             eHigh,
+            eHighOutflow,
+            eWall_Forces,
             eWall,
-            eWALL,
             eWallViscous,
-            eWALLVISCOUS,
+            eArtificialViscosity,
             eSymmetry,
             eRinglebFlow,
             eTimeDependent,
@@ -83,49 +82,79 @@ namespace Nektar
             eRCRterminal,
             eInflowCFS,
             eOutflowCFS,
+            eRiemannInvariant,
             eExtrapOrder0,
             eNoUserDefined
+        };
+
+        const char* const BndUserDefinedTypeMap[] =
+        {
+            "I",
+            "MG",
+            "High",
+            "HighOutflow",
+            "Wall_Forces",
+            "Wall",
+            "WallViscous",
+            "ArtificialVisc",
+            "Symmetry",
+            "RinglebFlow",
+            "TimeDependent",
+            "Radiation",
+            "IsentropicVortex",
+            "CalcBC",
+            "Qinflow",
+            "Terminal",
+            "Rterminal",
+            "CRterminal",
+            "RCRterminal",
+            "InflowCFS",
+            "OutflowCFS",
+            "RiemannInvariant",
+            "ExtrapOrder0",
+            "NoUserDefined"
         };
 
         struct BoundaryConditionBase
         {
             BoundaryConditionBase(
-                    BoundaryConditionType type,
-                    const std::string &userDefined = std::string("NoUserDefined")):
-                m_boundaryConditionType(type)
+                BoundaryConditionType type,
+                const std::string &userDefined = std::string("NoUserDefined")):
+                    m_boundaryConditionType(type)
             {
                 std::map<const std::string, BndUserDefinedType>  known_type;
                 known_type["H"] = eHigh;
+                known_type["HOutflow"] = eHighOutflow;
                 known_type["I"] = eI;
                 known_type["MG"] = eMG;
                 known_type["Wall"] = eWall;
                 known_type["WallViscous"] = eWallViscous;
+                known_type["ArtificialVisc"] = eArtificialViscosity;
                 known_type["Q-inflow"] = eQinflow;
                 known_type["Terminal"] = eTerminal;
                 known_type["R-terminal"] = eRterminal;
                 known_type["CR-terminal"] = eCRterminal;
                 known_type["RCR-terminal"] = eRCRterminal;
-                known_type["WALL"] = eWALL;
-                known_type["WALLVISCOUS"] = eWALLVISCOUS;
                 known_type["CalcBC"] = eCalcBC;
                 known_type["RinglebFlow"] = eRinglebFlow;
                 known_type["Symmetry"] = eSymmetry;
                 known_type["TimeDependent"] = eTimeDependent;
                 known_type["Radiation"] = eRadiation;
                 known_type["IsentropicVortex"] = eIsentropicVortex;
-                known_type["InflowCFS"] = eInflowCFS;
-                known_type["OutflowCFS"] = eOutflowCFS;
-                known_type["ExtrapOrder0"] = eExtrapOrder0;
-                known_type["NoUserDefined"] = eNoUserDefined;
+                known_type["RiemannInvariant"] = eRiemannInvariant;
+                known_type["ExtrapOrder0"]     = eExtrapOrder0;
+                known_type["NoUserDefined"]    = eNoUserDefined;
 
-                std::map<const std::string, BndUserDefinedType>::const_iterator it = known_type.find(userDefined);
+                std::map<const std::string, BndUserDefinedType>::
+                    const_iterator it = known_type.find(userDefined);
                 if (it != known_type.end())
                 {
                     m_userDefined = it->second;
                 }
                 else
                 {
-                    //ASSERTL0(false, std::string("Unknown boundary condition user defined type [") + userDefined + std::string("]"));
+                    //ASSERTL0(false, std::string("Unknown boundary condition "
+                    //"user defined type [") + userDefined + std::string("]"));
                     m_userDefined = eNoUserDefined;
                 }
             }
@@ -138,6 +167,11 @@ namespace Nektar
                 return m_boundaryConditionType;
             }
 
+            void SetBoundaryConditionType(BoundaryConditionType boundaryType) 
+            {
+                m_boundaryConditionType = boundaryType;
+            }
+
             void SetUserDefined(BndUserDefinedType type)
             {
                 m_userDefined = type;
@@ -148,45 +182,10 @@ namespace Nektar
                 return m_userDefined;
             }
 
-            int m_parent;
-            int m_daughter1;
-            int m_daughter2;
-
-            void SetJunction(int P, int D1)
+            const std::string GetBndTypeAsString(BndUserDefinedType type)
             {
-                m_parent = P;
-				m_daughter1 = D1;
+                return BndUserDefinedTypeMap[type];
             }
-			
-			void SetBifurcation(int P, int D1, int D2)
-            {
-                m_parent = P;
-				m_daughter1 = D1;
-				m_daughter2 = D2;
-            }
-			
-			void SetMerging(int P, int D1, int D2)
-            {
-                m_parent = P;
-				m_daughter1 = D1;
-				m_daughter2 = D2;
-            }
-			
-			int GetParent() const
-            {
-                return m_parent;
-            }
-			
-			int GetDaughter1() const
-            {
-                return m_daughter1;
-            }
-			
-			int GetDaughter2() const
-            {
-                return m_daughter2;
-            }
-
 
         protected:
             BoundaryConditionType m_boundaryConditionType;
@@ -197,16 +196,16 @@ namespace Nektar
         struct DirichletBoundaryCondition : public BoundaryConditionBase
         {
 
-             DirichletBoundaryCondition(
-                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const std::string& eqn,
-                    const std::string& userDefined = std::string("NoUserDefined"),
-                    const std::string& filename=std::string("")):
-                BoundaryConditionBase(eDirichlet, userDefined),
-                m_dirichletCondition(pSession, eqn),
-                m_filename(filename)
-                {
-                }
+            DirichletBoundaryCondition(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string& eqn,
+                const std::string& userDefined = std::string("NoUserDefined"),
+                const std::string& filename=std::string("")):
+                    BoundaryConditionBase(eDirichlet, userDefined),
+                    m_dirichletCondition(pSession, eqn),
+                    m_filename(filename)
+            {
+            }
 
             LibUtilities::Equation m_dirichletCondition;
             std::string m_filename;
@@ -215,13 +214,13 @@ namespace Nektar
         struct NeumannBoundaryCondition : public BoundaryConditionBase
         {
             NeumannBoundaryCondition(
-                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const std::string& eqn,
-                    const std::string& userDefined = std::string("NoUserDefined"),
-                    const std::string& filename=std::string("")):
-                BoundaryConditionBase(eNeumann, userDefined),
-                m_neumannCondition(pSession, eqn),
-                m_filename(filename)
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string& eqn,
+                const std::string& userDefined = std::string("NoUserDefined"),
+                const std::string& filename=std::string("")):
+                    BoundaryConditionBase(eNeumann, userDefined),
+                    m_neumannCondition(pSession, eqn),
+                    m_filename(filename)
             {
             }
 
@@ -232,19 +231,19 @@ namespace Nektar
         struct RobinBoundaryCondition : public BoundaryConditionBase
         {
             RobinBoundaryCondition(
-                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                    const std::string &a,
-                    const std::string &b,
-                    const std::string &userDefined = std::string("NoUserDefined"),
-                    const std::string& filename=std::string("")):
-                BoundaryConditionBase(eRobin, userDefined),
-                m_robinFunction(pSession, a),
-                m_robinPrimitiveCoeff(pSession, b),
-                m_filename(filename)
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string &a,
+                const std::string &b,
+                const std::string &userDefined = std::string("NoUserDefined"),
+                const std::string& filename=std::string("")):
+                    BoundaryConditionBase(eRobin, userDefined),
+                    m_robinFunction(pSession, a),
+                    m_robinPrimitiveCoeff(pSession, b),
+                    m_filename(filename)
             {
             }
-                // \frac{\partial {u}}{\partial{n}} +
-                // m_robinPrimativeCoeff(x,y,z)*u = m_robinFunction(x,y,z)
+            // \frac{\partial {u}}{\partial{n}} +
+            // m_robinPrimativeCoeff(x,y,z)*u = m_robinFunction(x,y,z)
             LibUtilities::Equation m_robinFunction;
             LibUtilities::Equation m_robinPrimitiveCoeff;
             std::string m_filename;
@@ -262,57 +261,35 @@ namespace Nektar
             unsigned int m_connectedBoundaryRegion;
         };
 
-        struct JunctionBoundaryCondition : public BoundaryConditionBase
+        struct NotDefinedBoundaryCondition : public BoundaryConditionBase
         {
-            JunctionBoundaryCondition( const int &P, const int &D1, const std::string &userDefined = std::string("NoUserDefined")):
-            BoundaryConditionBase(eJunction, userDefined),
-            m_parent(P), m_daughter1(D1)
-            {
-                SetJunction(P, D1);
-            }
-            int m_parent;
-            int m_daughter1;
-        };
+            
+               NotDefinedBoundaryCondition(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::string& eqn,
+                    const std::string& userDefined = std::string("NoUserDefined"),
+                    const std::string& filename=std::string("")):
+            BoundaryConditionBase(eNotDefined, userDefined),
+                m_notDefinedCondition(pSession, eqn),
+                m_filename(filename)
+                {
+                }
 
-        struct BifurcationBoundaryCondition : public BoundaryConditionBase
-        {
-            BifurcationBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
-            BoundaryConditionBase(eBifurcation, userDefined),
-            m_parent(P), m_daughter1(D1), m_daughter2(D2)
-            {
-                SetBifurcation(P, D1, D2);
-            }
-            int m_parent;
-            int m_daughter1;
-            int m_daughter2;
-        };
-
-        struct MergingBoundaryCondition : public BoundaryConditionBase
-        {
-            MergingBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
-            BoundaryConditionBase(eMerging, userDefined),
-            m_parent(P), m_daughter1(D1), m_daughter2(D2)
-            {
-                SetMerging(P, D1, D2);
-            }
-            int m_parent;
-            int m_daughter1;
-            int m_daughter2;
+            LibUtilities::Equation m_notDefinedCondition;
+            std::string m_filename;
         };
 
 
         typedef std::map<int, Composite> BoundaryRegion;
         typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
         typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
-        typedef std::vector<BoundaryRegionShPtr> BoundaryRegionCollection;
+        typedef std::map<int, BoundaryRegionShPtr> BoundaryRegionCollection;
 
         typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
         typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
         typedef boost::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
         typedef boost::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
-        typedef boost::shared_ptr<JunctionBoundaryCondition>  JunctionBCShPtr;
-        typedef boost::shared_ptr<BifurcationBoundaryCondition>  BifurcationBCShPtr;
-        typedef boost::shared_ptr<MergingBoundaryCondition>   MergingBCShPtr;
+
         typedef std::map<std::string,BoundaryConditionShPtr>  BoundaryConditionMap;
         typedef boost::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
@@ -323,16 +300,29 @@ namespace Nektar
         {
         public:
             SPATIAL_DOMAINS_EXPORT BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph);
-            SPATIAL_DOMAINS_EXPORT ~BoundaryConditions();
+
+            SPATIAL_DOMAINS_EXPORT BoundaryConditions(void);
+            SPATIAL_DOMAINS_EXPORT ~BoundaryConditions(void);
 
             const BoundaryRegionCollection &GetBoundaryRegions(void) const
             {
                 return m_boundaryRegions;
             }
 
+            void AddBoundaryRegions(const int regionID, BoundaryRegionShPtr &bRegion)
+            {
+                m_boundaryRegions[regionID] = bRegion;
+            }
+
             const BoundaryConditionCollection &GetBoundaryConditions(void) const
             {
                 return m_boundaryConditions;
+            }
+
+
+            void AddBoundaryConditions(const int regionID, BoundaryConditionMapShPtr &bCond)
+            {
+                m_boundaryConditions[regionID] = bCond; 
             }
 
             const std::string GetVariable(unsigned int indx)
@@ -349,7 +339,6 @@ namespace Nektar
             BoundaryConditionCollection             m_boundaryConditions;
 
         private:
-            BoundaryConditions();
 
             /// Read segments (and general MeshGraph) given TiXmlDocument.
             void Read(TiXmlElement *conditions);
@@ -358,7 +347,8 @@ namespace Nektar
             void ReadBoundaryConditions(TiXmlElement *conditions);
         };
 
-        typedef boost::shared_ptr<BoundaryConditions> BoundaryConditionsSharedPtr;
+        typedef boost::shared_ptr<BoundaryConditions> 
+            BoundaryConditionsSharedPtr;
     }
 }
 

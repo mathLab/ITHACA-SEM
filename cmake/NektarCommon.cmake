@@ -4,64 +4,7 @@ MACRO(CHANGE_EXTENSION output var new_ext)
     SET(${output} ${Path}/${FileName}.${new_ext})
 ENDMACRO()
 
-MACRO(SET_LAPACK_LINK_LIBRARIES name)
-    # Link FFTW before MKL to ensure FFTW original implementation used.
-    IF( NEKTAR_USE_FFTW )    
-        TARGET_LINK_LIBRARIES(${name} optimized ${FFTW_LIB} debug ${FFTW_LIB})
-    ENDIF( NEKTAR_USE_FFTW )
-
-    IF( NEKTAR_USE_BLAS_LAPACK )
-        IF( NEKTAR_USE_MKL AND MKL_FOUND )
-            TARGET_LINK_LIBRARIES(${name} ${MKL} )
-        ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
-
-        IF( NEKTAR_USE_ACML AND ACML_FOUND )
-            TARGET_LINK_LIBRARIES(${name} ${ACML_TARGET_LINK_LIBRARIES}  )
-        ENDIF( NEKTAR_USE_ACML AND ACML_FOUND )
-
-        IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
-            TARGET_LINK_LIBRARIES(${name} ${ACCELERATE_FRAMEWORK_LINK_FLAGS})
-        ENDIF ( NEKTAR_USE_ACCELERATE_FRAMEWORK )
-
-        IF( NEKTAR_USE_CHUD_FRAMEWORK )
-            TARGET_LINK_LIBRARIES(${name} ${CHUD_FRAMEWORK_LINK_FLAGS})
-        ENDIF ( NEKTAR_USE_CHUD_FRAMEWORK )
-
-        IF( NEKTAR_USE_WIN32_LAPACK )
-	        TARGET_LINK_LIBRARIES(${name} ${WIN32_LAPACK} ${WIN32_BLAS})
-	        INSTALL(FILES ${WIN32_LAPACK_DLL} ${WIN32_BLAS_DLL}
-	            DESTINATION ${NEKTAR_BIN_DIR})
-        ENDIF( NEKTAR_USE_WIN32_LAPACK )
-
-        IF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
-            TARGET_LINK_LIBRARIES(${name} ${NATIVE_LAPACK} ${OPENBLAS})
-        ENDIF( NEKTAR_USE_OPENBLAS AND OPENBLAS_FOUND )
-
-        IF( NEKTAR_USE_SMV AND SMV_FOUND )
-            TARGET_LINK_LIBRARIES(${name} ${SMV_LIBRARY})
-        ENDIF( NEKTAR_USE_SMV AND SMV_FOUND )
-
-        IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
-            TARGET_LINK_LIBRARIES(${name} ${NATIVE_LAPACK} ${NATIVE_BLAS})
-        ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
-
-    ENDIF( NEKTAR_USE_BLAS_LAPACK )
-
-    IF( NEKTAR_USE_NIST_SPARSE_BLAS_TOOLKIT AND NIST_SPARSE_BLAS_FOUND )   
-        TARGET_LINK_LIBRARIES(${name} ${NIST_SPARSE_BLAS} )
-    ENDIF( NEKTAR_USE_NIST_SPARSE_BLAS_TOOLKIT AND NIST_SPARSE_BLAS_FOUND )
         
-    IF( NEKTAR_USE_METIS )    
-        TARGET_LINK_LIBRARIES(${name} optimized ${METIS_LIB} debug 
-            ${METIS_LIB} )
-    ENDIF( NEKTAR_USE_METIS )
-        
-    IF( NEKTAR_USE_ARPACK )
-        TARGET_LINK_LIBRARIES(${name} optimized ${ARPACK_LIB} debug 
-            ${ARPACK_LIB} )
-    ENDIF( NEKTAR_USE_ARPACK )
-ENDMACRO(SET_LAPACK_LINK_LIBRARIES name)
-
 MACRO(SET_COMMON_PROPERTIES name)
 	SET_TARGET_PROPERTIES(${name} PROPERTIES VERSION ${NEKTAR_VERSION})
 
@@ -118,9 +61,14 @@ MACRO(SET_COMMON_PROPERTIES name)
                     "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
             ENDIF()
         ENDIF( NOT MSVC)
-                        
+
+        # Define version
+        SET_PROPERTY(TARGET ${name}
+            APPEND PROPERTY COMPILE_DEFINITIONS
+            NEKTAR_VERSION=\"${NEKTAR_VERSION}\")
+
         SET(CMAKE_CXX_FLAGS_RELEASE 
-                    "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
+                "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
     ENDIF(NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
         
     IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
@@ -156,37 +104,7 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
 	
     SET_COMMON_PROPERTIES(${name})
     
-    IF( NEKTAR_USE_MKL AND MKL_FOUND )
-        TARGET_LINK_LIBRARIES(${name} ${MKL} )
-        SET_TARGET_PROPERTIES(${name}
-                PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -DMKL_ILP64")
-    ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
-        
-
-    TARGET_LINK_LIBRARIES(${name}
-        optimized LibUtilities debug LibUtilities-g
-        ${Boost_THREAD_LIBRARY} 
-        ${Boost_IOSTREAMS_LIBRARY} 
-        ${Boost_DATE_TIME_LIBRARY} 
-        ${Boost_FILESYSTEM_LIBRARY} 
-        ${Boost_SYSTEM_LIBRARY}
-        ${Boost_PROGRAM_OPTIONS_LIBRARY} 
-        ${ZLIB_LIBRARY} 
-        optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
-	)
-    ADD_DEPENDENCIES(${name} boost tinyxml zlib-1.2.7)
-
-    IF( NEKTAR_USE_MPI )
-        TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
-        SET_TARGET_PROPERTIES(${name}
-            PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS}")
-        SET_TARGET_PROPERTIES(${name}
-            PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} ${MPI_LINK_FLAGS}")
-    ENDIF( NEKTAR_USE_MPI )
-
     IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
-		TARGET_LINK_LIBRARIES(${name} optimized rt debug rt)
-
         # The boost thread library needs pthread on linux.
         GET_TARGET_PROPERTY(THE_COMPILE_FLAGS ${name} COMPILE_FLAGS)
         GET_TARGET_PROPERTY(THE_LINK_FLAGS ${name} LINK_FLAGS)
@@ -223,14 +141,7 @@ ENDMACRO(ADD_NEKTAR_EXECUTABLE name component sources)
 MACRO(ADD_NEKTAR_LIBRARY name component type)
     ADD_LIBRARY(${name} ${type} ${ARGN})
 
-    # NIST Sparse BLAS only static, so link into Nektar libraries directly.
-    TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS} ${METIS_LIB})
-    ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-5.0.2 boost tinyxml
-        zlib-1.2.7)
     SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
-    IF (NEKTAR_USE_MPI)
-        TARGET_LINK_LIBRARIES( ${name} ${GSMPI_LIBRARY} ${XXT_LIBRARY})
-    ENDIF (NEKTAR_USE_MPI)
     
     SET_COMMON_PROPERTIES(${name})
 
@@ -262,3 +173,11 @@ MACRO(ADD_NEKTAR_TEST name)
     ADD_TEST(NAME ${dir}_${name}
          COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
 ENDMACRO(ADD_NEKTAR_TEST)
+
+MACRO(ADD_NEKTAR_TEST_LENGTHY name)
+    IF (NEKTAR_TEST_ALL)
+        GET_FILENAME_COMPONENT(dir ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+        ADD_TEST(NAME ${dir}_${name}
+             COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
+    ENDIF(NEKTAR_TEST_ALL)
+ENDMACRO(ADD_NEKTAR_TEST_LENGTHY)

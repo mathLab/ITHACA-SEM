@@ -48,14 +48,16 @@ using namespace std;
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 
 #include <boost/program_options.hpp>
+#include <boost/format.hpp>
 
 namespace po = boost::program_options;
 namespace io = boost::iostreams;
@@ -115,7 +117,11 @@ namespace Nektar
          * map is therefore fully populated before the SessionReader class is
          * instantiated and a file is read in and parsed.
          */
-        EnumMapList SessionReader::m_enums;
+        EnumMapList& SessionReader::GetSolverInfoEnums()
+        {
+            static EnumMapList solverInfoEnums;
+            return solverInfoEnums;
+        }
 
 
         /**
@@ -126,8 +132,27 @@ namespace Nektar
          * member variable which is called statically from various classes to
          * register the default value for a given parameter.
          */
-        SolverInfoMap SessionReader::m_solverInfoDefaults;
+        SolverInfoMap& SessionReader::GetSolverInfoDefaults()
+        {
+            static SolverInfoMap solverInfoMap;
+            return solverInfoMap;
+        }
 
+
+        /**
+         * List of values for GlobalSysSoln parameters to be used to override
+         * details given in SolverInfo
+         *
+         * This list is populated by ReadGlobalSysSoln if the
+         * GLOBALSYSSOLNINFO section is defined in the input file.
+         * This List allows for details to define for the Global Sys
+         * solver for each variable. 
+         */
+        GloSysSolnInfoList& SessionReader::GetGloSysSolnList()
+        {
+            static GloSysSolnInfoList gloSysSolnInfoList;
+            return gloSysSolnInfoList;
+        }
 
         /**
          * Lists the possible command-line argument which can be specified for
@@ -137,7 +162,11 @@ namespace Nektar
          * member function which is called statically from various classes to
          * register command-line arguments they need.
          */
-        CmdLineArgMap SessionReader::m_cmdLineArguments;
+        CmdLineArgMap& SessionReader::GetCmdLineArgMap()
+        {
+            static CmdLineArgMap cmdLineArguments;
+            return cmdLineArguments;
+        }
 
 
         /**
@@ -150,17 +179,30 @@ namespace Nektar
          */
         SessionReader::SessionReader(int argc, char *argv[])
         {
-            std::vector<std::string> vFilenames = 
-                ParseCommandLineArguments(argc, argv);
+            m_xmlDoc    = 0;
+            m_filenames = ParseCommandLineArguments(argc, argv);
 
-            ASSERTL0(vFilenames.size() > 0, "No session file(s) given.");
+            ASSERTL0(m_filenames.size() > 0, "No session file(s) given.");
 
-            m_filename    = vFilenames[0];
+            m_filename    = m_filenames[0];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
-            m_xmlDoc      = MergeDoc(vFilenames);
+            if (m_filename.size() > 3 &&
+                m_filename.substr(m_filename.size() - 3, 3) == ".gz")
+            {
+                m_sessionName =
+                    m_sessionName.substr(0, m_sessionName.find_last_of('.'));
+            }
 
             // Create communicator
-            CreateComm(argc, argv, m_filename);
+            CreateComm(argc, argv);
+
+            // If running in parallel change the default global sys solution
+            // type.
+            if (m_comm->GetSize() > 1)
+            {
+                GetSolverInfoDefaults()["GLOBALSYSSOLN"] = 
+                    "IterativeStaticCond";
+            }
         }
 
 
@@ -175,21 +217,41 @@ namespace Nektar
         {
             ASSERTL0(pFilenames.size() > 0, "No filenames specified.");
 
-            std::vector<std::string> vFilenames = 
-                ParseCommandLineArguments(argc, argv);
+            ParseCommandLineArguments(argc, argv);
+            m_xmlDoc      = 0;
+            m_filenames   = pFilenames;
 
             m_filename    = pFilenames[0];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
-            m_xmlDoc      = MergeDoc(pFilenames);
+            if (m_filename.size() > 3 &&
+                m_filename.substr(m_filename.size() - 3, 3) == ".gz")
+            {
+                m_sessionName =
+                    m_sessionName.substr(0, m_sessionName.find_last_of('.'));
+            }
 
             // Create communicator
             if (!pComm.get())
             {
-                CreateComm(argc, argv, m_filename);
+                CreateComm(argc, argv);
             }
             else
             {
                 m_comm = pComm;
+
+                if (m_comm->GetSize() > 1)
+                {
+                    GetSolverInfoDefaults()["GLOBALSYSSOLN"] = 
+                        "IterativeStaticCond";
+                }
+            }
+
+            // If running in parallel change the default global sys solution
+            // type.
+            if (m_comm->GetSize() > 1)
+            {
+                GetSolverInfoDefaults()["GLOBALSYSSOLN"] = 
+                    "IterativeStaticCond";
             }
         }
 
@@ -199,7 +261,7 @@ namespace Nektar
          */
         SessionReader::~SessionReader()
         {
-
+            delete m_xmlDoc;
         }
 
 
@@ -211,6 +273,8 @@ namespace Nektar
          */
         void SessionReader::InitSession()
         {
+            m_exprEvaluator.SetRandomSeed((m_comm->GetRank() + 1) * time(NULL));
+
             // Split up the communicator
             PartitionComm();
 
@@ -223,6 +287,32 @@ namespace Nektar
             // Override SOLVERINFO and parameters with any specified on the
             // command line.
             CmdLineOverride();
+
+            // In verbose mode, print out parameters and solver info sections
+            if (m_verbose && m_comm)
+            {
+                if (m_comm->GetRank() == 0 && m_parameters.size() > 0)
+                {
+                    cout << "Parameters:" << endl;
+                    ParameterMap::iterator x;
+                    for (x = m_parameters.begin(); x != m_parameters.end(); ++x)
+                    {
+                        cout << "\t" << x->first << " = " << x->second << endl;
+                    }
+                    cout << endl;
+                }
+
+                if (m_comm->GetRank() == 0 && m_solverInfo.size() > 0)
+                {
+                    cout << "Solver Info:" << endl;
+                    SolverInfoMap::iterator x;
+                    for (x = m_solverInfo.begin(); x != m_solverInfo.end(); ++x)
+                    {
+                        cout << "\t" << x->first << " = " << x->second << endl;
+                    }
+                    cout << endl;
+                }
+            }
         }
 
 
@@ -242,21 +332,38 @@ namespace Nektar
                                  "override a SOLVERINFO property")
                 ("parameter,P",  po::value<vector<std::string> >(),
                                  "override a parameter")
+                ("shared-filesystem,s", "Using shared filesystem.")
+                ("npx",          po::value<int>(),
+                                 "number of procs in X-dir")
+                ("npy",          po::value<int>(),
+                                 "number of procs in Y-dir")
+                ("npz",          po::value<int>(),
+                                 "number of procs in Z-dir")
+                ("part-info",    "Output partition information")
             ;
             
             CmdLineArgMap::const_iterator cmdIt;
-            for (cmdIt  = m_cmdLineArguments.begin(); 
-                 cmdIt != m_cmdLineArguments.end(); ++cmdIt)
+            for (cmdIt  = GetCmdLineArgMap().begin();
+                 cmdIt != GetCmdLineArgMap().end(); ++cmdIt)
             {
                 std::string names = cmdIt->first;
                 if (cmdIt->second.shortName != "")
                 {
                     names += "," + cmdIt->second.shortName;
                 }
-                desc.add_options()
-                    (names.c_str(), po::value<std::string>(), 
-                     cmdIt->second.description.c_str())
-                ;
+                if (cmdIt->second.isFlag)
+                {
+                    desc.add_options()
+                        (names.c_str(), cmdIt->second.description.c_str())
+                    ;
+                }
+                else
+                {
+                    desc.add_options()
+                        (names.c_str(), po::value<std::string>(),
+                         cmdIt->second.description.c_str())
+                    ;
+                }
             }
 
             // List hidden options (e.g. session file arguments are not actually
@@ -425,10 +532,16 @@ namespace Nektar
          */
         const std::string SessionReader::GetSessionNameRank() const
         {
-            return m_sessionName + "_P" + boost::lexical_cast<std::string>(
-                m_comm->GetRowComm()->GetRank());
-        }
+            std::string  dirname = m_sessionName + "_xml"; 
+            fs::path     pdirname(dirname);
+            
+            std::string vFilename = "P" + boost::lexical_cast<std::string>(m_comm->GetRowComm()->GetRank());
+            fs::path    pFilename(vFilename);            
 
+            fs::path fullpath = pdirname / pFilename;
+
+            return PortablePath(fullpath);
+        }
 
         /**
          *
@@ -600,6 +713,20 @@ namespace Nektar
             return iter->second;
         }
 
+        /**
+         *
+         */
+        void SessionReader::SetSolverInfo(
+            const std::string &pProperty, const std::string &pValue) 
+        {
+            std::string vProperty = boost::to_upper_copy(pProperty);
+            SolverInfoMap::iterator iter = m_solverInfo.find(vProperty);
+
+            ASSERTL1(iter != m_solverInfo.end(),
+                     "Unable to find requested property: " + pProperty);
+
+            iter->second = pValue;
+        }
 
         /**
          *
@@ -664,6 +791,52 @@ namespace Nektar
         }
 
 
+        /**
+         *
+         */
+        bool SessionReader::DefinesGlobalSysSolnInfo(const std::string &pVariable, 
+                                                     const std::string &pProperty) const
+        {
+
+            GloSysSolnInfoList::const_iterator iter =
+                    GetGloSysSolnList().find(pVariable);
+            if(iter == GetGloSysSolnList().end())
+            {
+                return false;
+            }
+
+            std::string vProperty = boost::to_upper_copy(pProperty);
+            
+            GloSysInfoMap::const_iterator iter1 = iter->second.find(vProperty);
+            if(iter1 == iter->second.end())
+            {
+                return false;
+            }
+            
+            return true;
+        }
+
+        
+        /**
+         *
+         */
+        const std::string &SessionReader::GetGlobalSysSolnInfo(const std::string &pVariable, const std::string &pProperty) const
+        {
+            GloSysSolnInfoList::const_iterator iter; 
+
+            ASSERTL0( (iter = GetGloSysSolnList().find(pVariable)) !=
+                              GetGloSysSolnList().end(),
+                      "Failed to find variable in GlobalSysSolnInfoList");
+
+            std::string vProperty = boost::to_upper_copy(pProperty);
+            GloSysInfoMap::const_iterator iter1; 
+
+            ASSERTL0( (iter1 = iter->second.find(vProperty)) != iter->second.end(),
+                      "Failed to find property: " + vProperty + " in GlobalSysSolnInfoList");
+            
+            return iter1->second;
+        }
+        
         /**
          *
          */
@@ -778,6 +951,18 @@ namespace Nektar
         }
 
 
+
+        /**
+         *
+         */
+        void SessionReader::SetVariable(const unsigned int &idx, 
+                                        std::string newname) 
+        {
+            ASSERTL0(idx < m_variables.size(), "Variable index out of range.");
+            m_variables[idx] = newname;
+        }
+
+
         /**
          *
          */
@@ -808,7 +993,8 @@ namespace Nektar
          */
         bool SessionReader::DefinesFunction(
             const std::string &pName,
-            const std::string &pVariable) const
+            const std::string &pVariable,
+            const int pDomain) const
         {
             FunctionMap::const_iterator it1;
             FunctionVariableMap::const_iterator it2;
@@ -817,9 +1003,11 @@ namespace Nektar
             // Check function exists
             if ((it1 = m_functions.find(vName))     != m_functions.end())
             {
+                pair<std::string, int> key(pVariable,pDomain);
+                pair<std::string, int> defkey("*",pDomain);
                 bool varExists =
-                    (it2 = it1->second.find(pVariable)) != it1->second.end() ||
-                    (it2 = it1->second.find("*")) != it1->second.end();
+                    (it2 = it1->second.find(key)) != it1->second.end() ||
+                    (it2 = it1->second.find(defkey)) != it1->second.end();
                 return varExists;
             }
             return false;
@@ -831,7 +1019,8 @@ namespace Nektar
          */
         EquationSharedPtr SessionReader::GetFunction(
             const std::string &pName,
-            const std::string &pVariable) const
+            const std::string &pVariable,
+            const int pDomain) const
         {
             FunctionMap::const_iterator it1;
             FunctionVariableMap::const_iterator it2, it3;
@@ -842,16 +1031,19 @@ namespace Nektar
                      + std::string("' has been defined in the session file."));
 
             // Check for specific and wildcard definitions
-            bool specific = (it2 = it1->second.find(pVariable)) !=
-                            it1->second.end();
-            bool wildcard = (it3 = it1->second.find("*")) !=
-                            it1->second.end();
+            pair<std::string,int> key(pVariable,pDomain);
+            pair<std::string,int> defkey("*",pDomain);
+            bool specific = (it2 = it1->second.find(key)) !=
+                it1->second.end();
+            bool wildcard = (it3 = it1->second.find(defkey)) !=
+                it1->second.end();
 
             // Check function is defined somewhere
             ASSERTL0(specific || wildcard,
-                     std::string("No such variable '") + pVariable
-                     + std::string("' defined for function '") + pName
-                     + std::string("' in session file."));
+                     "No such variable " + pVariable
+                     + " in domain " + boost::lexical_cast<string>(pDomain) 
+                     + " defined for function " + pName
+                     + " in session file.");
 
             // If not specific, must be wildcard
             if (!specific)
@@ -870,10 +1062,11 @@ namespace Nektar
          */
         EquationSharedPtr SessionReader::GetFunction(
             const std::string  &pName,
-            const unsigned int &pVar) const
+            const unsigned int &pVar,
+            const int pDomain) const
         {
             ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
-            return GetFunction(pName, m_variables[pVar]);
+            return GetFunction(pName, m_variables[pVar],pDomain);
         }
 
 
@@ -882,7 +1075,8 @@ namespace Nektar
          */
         enum FunctionType SessionReader::GetFunctionType(
             const std::string &pName,
-            const std::string &pVariable) const
+            const std::string &pVariable,
+            const int pDomain) const
         {
             FunctionMap::const_iterator it1;
             FunctionVariableMap::const_iterator it2, it3;
@@ -894,16 +1088,19 @@ namespace Nektar
                       + std::string("' not found."));
 
             // Check for specific and wildcard definitions
-            bool specific = (it2 = it1->second.find(pVariable)) !=
+            pair<std::string,int> key(pVariable,pDomain);
+            pair<std::string,int> defkey("*",pDomain);
+            bool specific = (it2 = it1->second.find(key)) !=
                             it1->second.end();
-            bool wildcard = (it3 = it1->second.find("*")) !=
+            bool wildcard = (it3 = it1->second.find(defkey)) !=
                             it1->second.end();
 
             // Check function is defined somewhere
             ASSERTL0(specific || wildcard,
-                     std::string("No such variable '") + pVariable
-                     + std::string("' defined for function '") + pName
-                     + std::string("' in session file."));
+                     "No such variable " + pVariable
+                     + " in domain " + boost::lexical_cast<string>(pDomain) 
+                     + " defined for function " + pName
+                     + " in session file.");
 
             // If not specific, must be wildcard
             if (!specific)
@@ -920,10 +1117,11 @@ namespace Nektar
          */
         enum FunctionType SessionReader::GetFunctionType(
             const std::string  &pName,
-            const unsigned int &pVar) const
+            const unsigned int &pVar,
+            const int pDomain) const
         {
             ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
-            return GetFunctionType(pName, m_variables[pVar]);
+            return GetFunctionType(pName, m_variables[pVar],pDomain);
         }
 
 
@@ -932,7 +1130,8 @@ namespace Nektar
          */
         std::string SessionReader::GetFunctionFilename(
             const std::string &pName, 
-            const std::string &pVariable) const
+            const std::string &pVariable,
+            const int pDomain) const
         {
             FunctionMap::const_iterator it1;
             FunctionVariableMap::const_iterator it2, it3;
@@ -944,17 +1143,20 @@ namespace Nektar
                       + std::string("' not found."));
 
             // Check for specific and wildcard definitions
-            bool specific = (it2 = it1->second.find(pVariable)) !=
+            pair<std::string,int> key(pVariable,pDomain);
+            pair<std::string,int> defkey("*",pDomain);
+            bool specific = (it2 = it1->second.find(key)) !=
                             it1->second.end();
-            bool wildcard = (it3 = it1->second.find("*")) !=
+            bool wildcard = (it3 = it1->second.find(defkey)) !=
                             it1->second.end();
 
             // Check function is defined somewhere
             ASSERTL0(specific || wildcard,
-                     std::string("No such variable '") + pVariable
-                     + std::string("' defined for function '") + pName
-                     + std::string("' in session file."));
-
+                     "No such variable " + pVariable
+                     + " in domain " + boost::lexical_cast<string>(pDomain) 
+                     + " defined for function " + pName
+                     + " in session file.");
+            
             // If not specific, must be wildcard
             if (!specific)
             {
@@ -970,10 +1172,11 @@ namespace Nektar
          */
         std::string SessionReader::GetFunctionFilename(
             const std::string  &pName, 
-            const unsigned int &pVar) const
+            const unsigned int &pVar,
+            const int pDomain) const
         {
             ASSERTL0(pVar < m_variables.size(), "Variable index out of range.");
-            return GetFunctionFilename(pName, m_variables[pVar]);
+            return GetFunctionFilename(pName, m_variables[pVar],pDomain);
         }
 
 
@@ -1044,16 +1247,6 @@ namespace Nektar
         /**
          *
          */
-        std::string SessionReader::GetCmdLineArgument(
-            const std::string& pName) const
-        {
-            return m_cmdLineOptions.find(pName)->second.as<std::string>();
-        }
-
-
-        /**
-         *
-         */
         void SessionReader::SubstituteExpressions(std::string& pExpr)
         {
             ExpressionMap::iterator exprIter;
@@ -1064,6 +1257,15 @@ namespace Nektar
             }
         }
 
+        CompositeOrdering SessionReader::GetCompositeOrdering() const
+        {
+            return m_compOrder;
+        }
+
+        BndRegionOrdering SessionReader::GetBndRegionOrdering() const
+        {
+            return m_bndRegOrder;
+        }
 
         /**
          *
@@ -1122,31 +1324,34 @@ namespace Nektar
             // version already present in the loaded XML data.
             for (int i = 1; i < pFilenames.size(); ++i)
             {
-                TiXmlDocument* vTempDoc = new TiXmlDocument;
-                LoadDoc(pFilenames[i], vTempDoc);
-
-                TiXmlHandle docHandle(vTempDoc);
-                TiXmlElement* vTempNektar;
-                vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
-                ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
-                TiXmlElement* p = vTempNektar->FirstChildElement();
-
-                while (p)
+                if((pFilenames[i].compare(pFilenames[i].size()-3,3,"xml") == 0)
+                   ||(pFilenames[i].compare(pFilenames[i].size()-6,6,"xml.gz") == 0))
                 {
-                    TiXmlElement *vMainEntry = 
-                        vMainNektar->FirstChildElement(p->Value());
-                    TiXmlElement *q = new TiXmlElement(*p);
-                    if (vMainEntry)
+                    TiXmlDocument* vTempDoc = new TiXmlDocument;
+                    LoadDoc(pFilenames[i], vTempDoc);
+                    
+                    TiXmlHandle docHandle(vTempDoc);
+                    TiXmlElement* vTempNektar;
+                    vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
+                    ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
+                    TiXmlElement* p = vTempNektar->FirstChildElement();
+                    
+                    while (p)
                     {
-                        vMainNektar->RemoveChild(vMainEntry);
+                        TiXmlElement *vMainEntry = 
+                            vMainNektar->FirstChildElement(p->Value());
+                        TiXmlElement *q = new TiXmlElement(*p);
+                        if (vMainEntry)
+                        {
+                            vMainNektar->RemoveChild(vMainEntry);
+                        }
+                        vMainNektar->LinkEndChild(q);
+                        p = p->NextSiblingElement();
                     }
-                    vMainNektar->LinkEndChild(q);
-                    p = p->NextSiblingElement();
+                    
+                    delete vTempDoc;
                 }
-
-                delete vTempDoc;
             }
-
             return vMainDoc;
         }
 
@@ -1166,11 +1371,12 @@ namespace Nektar
                 FirstChildElement("CONDITIONS").Element();
 
             // Read the various sections of the CONDITIONS block
-            ReadParameters (e);
-            ReadSolverInfo (e);
-            ReadExpressions(e);
-            ReadVariables  (e);
-            ReadFunctions  (e);
+            ReadParameters        (e);
+            ReadSolverInfo        (e);
+            ReadGlobalSysSolnInfo (e);
+            ReadExpressions       (e);
+            ReadVariables         (e);
+            ReadFunctions         (e);
 
             e = docHandle.FirstChildElement("NEKTAR").
                 FirstChildElement("GEOMETRY").Element();
@@ -1189,8 +1395,7 @@ namespace Nektar
          */
         void SessionReader::CreateComm(
             int               &argc, 
-            char*              argv[], 
-            const std::string &pFilename)
+            char*              argv[])
         {
             if (argc == 0)
             {
@@ -1198,32 +1403,13 @@ namespace Nektar
             }
             else
             {
-                TiXmlHandle docHandle(m_xmlDoc);
-                TiXmlElement* e;
-                e = docHandle.FirstChildElement("NEKTAR").
-                    FirstChildElement("CONDITIONS").Element();
-
-                ReadSolverInfo(e);
-
                 string vCommModule("Serial");
-                if (e && DefinesSolverInfo("Communication"))
-                {
-                    vCommModule = GetSolverInfo("Communication");
-                }
-                else if (GetCommFactory().ModuleExists("ParallelMPI"))
+                if (GetCommFactory().ModuleExists("ParallelMPI"))
                 {
                     vCommModule = "ParallelMPI";
                 }
 
                 m_comm = GetCommFactory().CreateInstance(vCommModule,argc,argv);
-
-                // If running in parallel change the default global sys solution
-                // type.
-                if (m_comm->GetSize() > 1)
-                {
-                    m_solverInfoDefaults["GLOBALSYSSOLN"] = 
-                        "IterativeStaticCond";
-                }
             }
         }
 
@@ -1241,27 +1427,196 @@ namespace Nektar
             // Partition mesh into length of row comms
             if (vCommMesh->GetSize() > 1)
             {
-                // Partitioner now operates in parallel
-                // Each process receives partitioning over interconnect
-                // and writes its own session file to the working directory.
+                // Default partitioner to use is Metis. Use Scotch as default
+                // if it is installed. Override default with command-line flags
+                // if they are set.
+                string vPartitionerName = "Metis";
+                if (GetMeshPartitionFactory().ModuleExists("Scotch"))
+                {
+                    vPartitionerName = "Scotch";
+                }
+                if (DefinesCmdLineArgument("use-metis"))
+                {
+                    vPartitionerName = "Metis";
+                }
+                if (DefinesCmdLineArgument("use-scotch"))
+                {
+                    vPartitionerName = "Scotch";
+                }
+
                 SessionReaderSharedPtr vSession     = GetSharedThisPtr();
-                MeshPartitionSharedPtr vPartitioner = MemoryManager<
-                    MeshPartition>::AllocateSharedPtr(vSession);
-                vPartitioner->PartitionMesh();
-                vPartitioner->WriteLocalPartition(vSession);
-                
+                if (DefinesCmdLineArgument("shared-filesystem"))
+                {
+                    CommSharedPtr vComm = GetComm();
+                    vector<unsigned int> keys, vals;
+                    int i;
+
+                    if (vComm->GetRank() == 0)
+                    {
+                        m_xmlDoc = MergeDoc(m_filenames);
+
+                        MeshPartitionSharedPtr vPartitioner =
+                                GetMeshPartitionFactory().CreateInstance(
+                                                    vPartitionerName, vSession);
+                        vPartitioner->PartitionMesh(true);
+                        vPartitioner->WriteAllPartitions(vSession);
+                        vPartitioner->GetCompositeOrdering(m_compOrder);
+                        vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+
+                        // Communicate orderings to the other processors.
+
+                        // First send sizes of the orderings and boundary
+                        // regions to allocate storage on the remote end.
+                        keys.resize(2);
+                        keys[0] = m_compOrder.size();
+                        keys[1] = m_bndRegOrder.size();
+
+                        for (i = 1; i < vComm->GetSize(); ++i)
+                        {
+                            vComm->Send(i, keys);
+                        }
+
+                        // Construct the keys and sizes of values for composite
+                        // ordering
+                        CompositeOrdering::iterator cIt;
+                        keys.resize(m_compOrder.size());
+                        vals.resize(m_compOrder.size());
+
+                        for (cIt  = m_compOrder.begin(), i = 0;
+                             cIt != m_compOrder.end(); ++cIt, ++i)
+                        {
+                            keys[i] = cIt->first;
+                            vals[i] = cIt->second.size();
+                        }
+
+                        // Send across data.
+                        for (i = 1; i < vComm->GetSize(); ++i)
+                        {
+                            vComm->Send(i, keys);
+                            vComm->Send(i, vals);
+
+                            for (cIt  = m_compOrder.begin();
+                                 cIt != m_compOrder.end(); ++cIt)
+                            {
+                                vComm->Send(i, cIt->second);
+                            }
+                        }
+
+                        // Construct the keys and sizes of values for composite
+                        // ordering
+                        BndRegionOrdering::iterator bIt;
+                        keys.resize(m_bndRegOrder.size());
+                        vals.resize(m_bndRegOrder.size());
+
+                        for (bIt  = m_bndRegOrder.begin(), i = 0;
+                             bIt != m_bndRegOrder.end(); ++bIt, ++i)
+                        {
+                            keys[i] = bIt->first;
+                            vals[i] = bIt->second.size();
+                        }
+
+                        // Send across data.
+                        for (i = 1; i < vComm->GetSize(); ++i)
+                        {
+                            vComm->Send(i, keys);
+                            vComm->Send(i, vals);
+
+                            for (bIt  = m_bndRegOrder.begin();
+                                 bIt != m_bndRegOrder.end(); ++bIt)
+                            {
+                                vComm->Send(i, bIt->second);
+                            }
+                        }
+
+                        if (DefinesCmdLineArgument("part-info"))
+                        {
+                            vPartitioner->PrintPartInfo(std::cout);
+                        }
+                    }
+                    else
+                    {
+                        keys.resize(2);
+                        vComm->Recv(0, keys);
+
+                        int cmpSize = keys[0];
+                        int bndSize = keys[1];
+
+                        keys.resize(cmpSize);
+                        vals.resize(cmpSize);
+                        vComm->Recv(0, keys);
+                        vComm->Recv(0, vals);
+
+                        for (int i = 0; i < keys.size(); ++i)
+                        {
+                            vector<unsigned int> tmp(vals[i]);
+                            vComm->Recv(0, tmp);
+                            m_compOrder[keys[i]] = tmp;
+                        }
+
+                        keys.resize(bndSize);
+                        vals.resize(bndSize);
+                        vComm->Recv(0, keys);
+                        vComm->Recv(0, vals);
+
+                        for (int i = 0; i < keys.size(); ++i)
+                        {
+                            vector<unsigned int> tmp(vals[i]);
+                            vComm->Recv(0, tmp);
+                            m_bndRegOrder[keys[i]] = tmp;
+                        }
+                    }
+                }
+                else
+                {
+                    m_xmlDoc = MergeDoc(m_filenames);
+
+                    // Partitioner now operates in parallel
+                    // Each process receives partitioning over interconnect
+                    // and writes its own session file to the working directory.
+                    MeshPartitionSharedPtr vPartitioner =
+                                GetMeshPartitionFactory().CreateInstance(
+                                                    vPartitionerName, vSession);
+                    vPartitioner->PartitionMesh(false);
+                    vPartitioner->WriteLocalPartition(vSession);
+                    vPartitioner->GetCompositeOrdering(m_compOrder);
+                    vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
+
+                    if (DefinesCmdLineArgument("part-info"))
+                    {
+                        vPartitioner->PrintPartInfo(std::cout);
+                    }
+                }
                 m_comm->Block();
 
-                m_filename = GetSessionNameRank() + ".xml";
+                std::string  dirname = GetSessionName() + "_xml";
+                fs::path    pdirname(dirname);
+                boost::format pad("P%1$07d.xml");
+                pad % m_comm->GetRank();
+                fs::path    pFilename(pad.str());
+                fs::path fullpath = pdirname / pFilename;
 
-                delete m_xmlDoc;
+                m_filename = PortablePath(fullpath);
+
+                if (m_xmlDoc)
+                {
+                    delete m_xmlDoc;
+                }
                 m_xmlDoc = new TiXmlDocument(m_filename);
+
                 ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
 
-                bool loadOkay = m_xmlDoc->LoadFile();
+                bool loadOkay = m_xmlDoc->LoadFile(m_filename);
                 ASSERTL0(loadOkay, "Unable to load file: " + m_filename      + 
                          ". Check XML standards compliance. Error on line: " +
                          boost::lexical_cast<std::string>(m_xmlDoc->Row()));
+            }
+            else
+            {
+                if (m_xmlDoc)
+                {
+                    delete m_xmlDoc;
+                }
+                m_xmlDoc = MergeDoc(m_filenames);
             }
         }
 
@@ -1275,31 +1630,19 @@ namespace Nektar
          */
         void SessionReader::PartitionComm()
         {
-            // Session not yet loaded, so load parameters section
-            TiXmlHandle docHandle(m_xmlDoc);
-            TiXmlElement* e;
-            e = docHandle.FirstChildElement("NEKTAR").
-                FirstChildElement("CONDITIONS").Element();
-
-            ReadParameters(e);
-			
-            if (e && m_comm->GetSize() > 1)
+            if (m_comm->GetSize() > 1)
             {
                 int nProcZ = 1;
                 int nProcY = 1;
                 int nProcX = 1;
-				
-                if(DefinesParameter("PROC_Z"))
-                {
-                    LoadParameter("PROC_Z", nProcZ, 1);
+                if (DefinesCmdLineArgument("npx")) {
+                    nProcX = GetCmdLineArgument<int>("npx");
                 }
-                if(DefinesParameter("PROC_Y"))
-                {
-                    LoadParameter("PROC_Y", nProcY, 1);
+                if (DefinesCmdLineArgument("npy")) {
+                    nProcY = GetCmdLineArgument<int>("npy");
                 }
-                if(DefinesParameter("PROC_X"))
-                {
-                    LoadParameter("PROC_X", nProcX, 1);
+                if (DefinesCmdLineArgument("npz")) {
+                    nProcZ = GetCmdLineArgument<int>("npz");
                 }
 
                 ASSERTL0(m_comm->GetSize() % (nProcZ*nProcY*nProcX) == 0,
@@ -1402,17 +1745,6 @@ namespace Nektar
                     parameter = parameter->NextSiblingElement();
                 }
             }
-
-            if (m_verbose && m_parameters.size() > 0)
-            {
-                cout << "Parameters:" << endl;
-                ParameterMap::iterator x;
-                for (x = m_parameters.begin(); x != m_parameters.end(); ++x)
-                {
-                    cout << "\t" << x->first << " = " << x->second << endl;
-                }
-                cout << endl;
-            }
         }
 
 
@@ -1422,7 +1754,7 @@ namespace Nektar
         void SessionReader::ReadSolverInfo(TiXmlElement *conditions)
         {
             m_solverInfo.clear();
-            m_solverInfo = m_solverInfoDefaults;
+            m_solverInfo = GetSolverInfoDefaults();
 
             if (!conditions)
             {
@@ -1467,8 +1799,8 @@ namespace Nektar
                              + boost::lexical_cast<string>(solverInfo->Row()));
 
                     EnumMapList::const_iterator propIt = 
-                        m_enums.find(solverPropertyUpper);
-                    if (propIt != m_enums.end())
+                        GetSolverInfoEnums().find(solverPropertyUpper);
+                    if (propIt != GetSolverInfoEnums().end())
                     {
                         EnumMap::const_iterator valIt = 
                             propIt->second.find(solverValue);
@@ -1497,19 +1829,137 @@ namespace Nektar
                     m_solverInfo["GLOBALSYSSOLN"] == "XxtMultiLevelStaticCond",
                     "A parallel solver must be used when run in parallel.");
             }
-            
-            if (m_verbose && m_solverInfo.size() > 0 && m_comm)
-            {
-                cout << "Solver Info:" << endl;
-                SolverInfoMap::iterator x;
-                for (x = m_solverInfo.begin(); x != m_solverInfo.end(); ++x)
-                {
-                    cout << "\t" << x->first << " = " << x->second << endl;
-                }
-                cout << endl;
-            }
         }
 
+
+
+        /**
+         *
+         */
+        void SessionReader::ReadGlobalSysSolnInfo(TiXmlElement *conditions)
+        {
+            GetGloSysSolnList().clear();
+
+            if (!conditions)
+            {
+                return;
+            }
+
+            TiXmlElement *GlobalSys =
+                            conditions->FirstChildElement("GLOBALSYSSOLNINFO");
+
+            if(!GlobalSys)
+            {
+                return;
+            }
+
+            TiXmlElement *VarInfo   = GlobalSys->FirstChildElement("V");
+
+            while (VarInfo)
+            {
+                ASSERTL0(VarInfo->Attribute("VAR"),
+                         "Missing VAR in attribute of GobalSysSolnInfo section."
+                         "File: '" + m_filename + ", line: " +
+                         boost::lexical_cast<string>(GlobalSys->Row()));
+
+                std::string VarList = VarInfo->Attribute("VAR");
+
+                // generate a list of variables.
+                std::vector<std::string> varStrings;
+                bool valid = ParseUtils::GenerateOrderedStringVector(
+                                                VarList.c_str(),varStrings);
+
+                ASSERTL0(valid,"Unable to process list of variable in "
+                               "GlobalSysSolnInfo data, File '" + m_filename +
+                               ", line: " +
+                               boost::lexical_cast<string>(GlobalSys->Row()));
+
+                if(varStrings.size())
+                {
+                    TiXmlElement *SysSolnInfo = VarInfo->FirstChildElement("I");
+
+                    while (SysSolnInfo)
+                    {
+                        // read the property name
+                        ASSERTL0(SysSolnInfo->Attribute("PROPERTY"),
+                                 "Missing PROPERTY attribute in "
+                                 "GlobalSysSolnInfo section. File: '" +
+                                 m_filename + "', line: " +
+                                 boost::lexical_cast<string>(VarInfo->Row()));
+
+                        std::string SysSolnProperty =
+                            SysSolnInfo->Attribute("PROPERTY");
+
+                        ASSERTL0(!SysSolnProperty.empty(),
+                                 "GlobalSysSolnIno properties must have a "
+                                 "non-empty name for variable(s) : '" +
+                                 VarList + ". File: '" + m_filename + ", line: "
+                                 + boost::lexical_cast<string>(VarInfo->Row()));
+
+                        // make sure that solver property is capitalised
+                        std::string SysSolnPropertyUpper =
+                                        boost::to_upper_copy(SysSolnProperty);
+
+                        // read the value
+                        ASSERTL0(SysSolnInfo->Attribute("VALUE"),
+                                 "Missing VALUE attribute in GlobalSysSolnInfo "
+                                 "section. File: '" + m_filename + "', line: "
+                                 + boost::lexical_cast<string>(VarInfo->Row()));
+
+                        std::string SysSolnValue =
+                                            SysSolnInfo->Attribute("VALUE");
+                        ASSERTL0(!SysSolnValue.empty(),
+                                 "GlobalSysSolnInfo properties must have a "
+                                 "non-empty value. File: '" + m_filename +
+                                 "', line: "
+                                 + boost::lexical_cast<string>(VarInfo->Row()));
+
+                        // Store values under variable map.
+                        for(int i = 0; i < varStrings.size(); ++i)
+                        {
+                            GloSysSolnInfoList::iterator x;
+                            if ((x = GetGloSysSolnList().find(varStrings[i])) ==
+                                    GetGloSysSolnList().end())
+                            {
+                                (GetGloSysSolnList()[varStrings[i]])[
+                                        SysSolnPropertyUpper] = SysSolnValue;
+                            }
+                            else
+                            {
+                                x->second[SysSolnPropertyUpper] = SysSolnValue;
+                            }
+                        }
+
+                        SysSolnInfo = SysSolnInfo->NextSiblingElement("I");
+                    }
+                    VarInfo = VarInfo->NextSiblingElement("V");
+                }
+            }
+
+            if (m_verbose && GetGloSysSolnList().size() > 0 && m_comm)
+            {
+                if(m_comm->GetRank() == 0)
+                {
+                    cout << "GlobalSysSoln Info:" << endl;
+
+                    GloSysSolnInfoList::iterator x;
+                    for (x = GetGloSysSolnList().begin();
+                         x != GetGloSysSolnList().end();
+                         ++x)
+                    {
+                        cout << "\t Variable: " << x->first <<  endl;
+
+                        GloSysInfoMap::iterator y;
+                        for (y = x->second.begin(); y != x->second.end(); ++y)
+                        {
+                            cout << "\t\t " << y->first  << " = " << y->second
+                                 << endl;
+                        }
+                    }
+                    cout << endl;
+                }
+            }
+        }
 
         /**
          *
@@ -1572,16 +2022,19 @@ namespace Nektar
                 }
             }
 
-            if (m_verbose && m_geometricInfo.size() > 0)
+            if (m_verbose && m_geometricInfo.size() > 0 && m_comm)
             {
-                cout << "Geometric Info:" << endl;
-                GeometricInfoMap::iterator x;
-                for (x  = m_geometricInfo.begin();
-                     x != m_geometricInfo.end(); ++x)
+                if(m_comm->GetRank() == 0)
                 {
-                    cout << "\t" << x->first << " = " << x->second << endl;
+                    cout << "Geometric Info:" << endl;
+                    GeometricInfoMap::iterator x;
+                    for (x  = m_geometricInfo.begin();
+                         x != m_geometricInfo.end(); ++x)
+                    {
+                        cout << "\t" << x->first << " = " << x->second << endl;
+                    }
+                    cout << endl;
                 }
-                cout << endl;
             }
         }
 
@@ -1779,6 +2232,21 @@ namespace Nektar
                     ParseUtils::GenerateOrderedStringVector(variableStr.c_str(),
                                                             variableList);
 
+                    // If no domain string put to 0
+                    std::string domainStr;
+                    if (!variable->Attribute("DOMAIN"))
+                    {
+                        domainStr = "0";
+                    }
+                    else
+                    {
+                        domainStr = variable->Attribute("DOMAIN");
+                    }
+
+                    // Parse list of variables
+                    std::vector<unsigned int> domainList;
+                    ParseUtils::GenerateSeqVector(domainStr.c_str(), domainList);
+
                     // Expressions are denoted by E
                     if (conditionType == "E")
                     {
@@ -1833,20 +2301,28 @@ namespace Nektar
                                 + boost::lexical_cast<string>(variable->Row()));
                     }
 
+
+                    
                     // Add variables to function
                     for (unsigned int i = 0; i < variableList.size(); ++i)
                     {
-                        // Check it has not already been defined
-                        FunctionVariableMap::iterator fcnsIter
-                                = functionVarMap.find(variableList[i]);
-                        ASSERTL0(fcnsIter == functionVarMap.end(),
-                                "Error setting expression '" + variableList[i]
-                                + "' in function '" + functionStr + "'. "
-                                "Expression has already been defined.");
-
-                        functionVarMap[variableList[i]] = funcDef;
+                        for(unsigned int j = 0; j < domainList.size(); ++j)
+                        {
+                            // Check it has not already been defined
+                            pair<std::string,int> key(variableList[i],domainList[j]);
+                            FunctionVariableMap::iterator fcnsIter
+                                = functionVarMap.find(key);
+                            ASSERTL0(fcnsIter == functionVarMap.end(),
+                                     "Error setting expression '" + variableList[i]
+                                     + " in domain " 
+                                     + boost::lexical_cast<std::string>(domainList[j]) 
+                                     + "' in function '" + functionStr + "'. "
+                                     "Expression has already been defined.");
+                            
+                            functionVarMap[key] = funcDef;
+                        }
                     }
-
+                    
                     variable = variable->NextSiblingElement();
                 }
                 // Add function definition to map
@@ -1988,6 +2464,11 @@ namespace Nektar
                     }
                 }
             }
+        }
+
+        void SessionReader::SetUpXmlDoc(void)
+        {
+            m_xmlDoc = MergeDoc(m_filenames);
         }
     }
 }

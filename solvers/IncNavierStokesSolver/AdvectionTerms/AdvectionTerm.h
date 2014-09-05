@@ -82,6 +82,16 @@ namespace Nektar
                          Array<OneD, Array<OneD, NekDouble> > &pOutarray,
 						 NekDouble m_time,
                          Array<OneD, NekDouble> &pWk = NullNekDouble1DArray);
+
+        bool GetSpecHPDealiasing(void)
+        {
+            return m_specHP_dealiasing; 
+        }
+
+        void SetSpecHPDealiasing(bool value)
+        {
+            m_specHP_dealiasing = value; 
+        }
 	protected:
         LibUtilities::SessionReaderSharedPtr        m_session;
         /// Name of the session
@@ -89,7 +99,7 @@ namespace Nektar
         /// Pointer to mesh graph
         SpatialDomains::MeshGraphSharedPtr          m_graph;
 		
-        bool m_dealiasing;      ///< flag to determine if use Fourier dealising or not
+        bool m_homogen_dealiasing; ///< flag to determine if use Fourier dealising or not
         bool m_specHP_dealiasing;  ///< flag to determine if use Spectral/hp element dealising or not
         bool m_SingleMode;      ///< Flag to determine if use single mode or not
         bool m_HalfMode;        ///< Flag to determine if use half mode or not
@@ -108,14 +118,15 @@ namespace Nektar
         //number of slices
         int                                             m_slices;
         //period length
-        NekDouble										m_period;
+        NekDouble					m_period;
         //interpolation vector
-        Array<OneD, Array<OneD, NekDouble> >			m_interp;
+        Array<OneD, Array<OneD, NekDouble> >		m_interp;
         //auxiliary variables for time depedent base flows
-        LibUtilities::NektarFFTSharedPtr				m_FFT;
-        Array<OneD,NekDouble>							m_tmpIN;
-        Array<OneD,NekDouble>							m_tmpOUT;
-        bool											    m_useFFTW;
+        LibUtilities::NektarFFTSharedPtr		m_FFT;
+        Array<OneD,NekDouble>				m_tmpIN;
+        Array<OneD,NekDouble>				m_tmpOUT;
+
+        bool					        m_useFFTW;
 	
         /// Constructor
         AdvectionTerm(const LibUtilities::SessionReaderSharedPtr&        pSession,
@@ -133,8 +144,6 @@ namespace Nektar
         {
             ASSERTL0(false,"This function is not defined in parent class");
         };
-	
-        int NoCaseStringCompare(const string & s1, const string& s2);
     };
     
     inline void AdvectionTerm::InitObject()

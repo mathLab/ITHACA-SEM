@@ -11,12 +11,11 @@ IF( NEKTAR_SOLVER_CARDIAC_EP )
        ./CellModels/FitzhughNagumo.cpp
        ./CellModels/AlievPanfilov.cpp
        ./CellModels/CourtemancheRamirezNattel98.cpp
+       ./CellModels/FentonKarma.cpp
        ./CellModels/LuoRudy91.cpp
        ./CellModels/Fox02.cpp
        ./CellModels/Winslow99.cpp
-       ./CellModels/TenTusscher06Epi.cpp
-       ./CellModels/TenTusscher06M.cpp
-       ./CellModels/TenTusscher06Endo.cpp
+       ./CellModels/TenTusscher06.cpp
        ./Filters/FilterCheckpointCellModel.cpp
        ./Filters/FilterElectrogram.cpp
        ./Stimuli/Stimulus.cpp

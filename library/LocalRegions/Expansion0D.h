@@ -40,15 +40,21 @@
 #include <StdRegions/StdExpansion0D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <LocalRegions/Expansion1D.h>
+#include <SpatialDomains/Geometry0D.h>
 
 namespace Nektar
 {
     namespace LocalRegions 
     {
+        class Expansion0D;
+        typedef boost::shared_ptr<Expansion0D> Expansion0DSharedPtr;
+        typedef std::vector< Expansion0DSharedPtr > Expansion0DVector;
+        typedef std::vector< Expansion0DSharedPtr >::iterator Expansion0DVectorIter;
+
         class Expansion0D: virtual public Expansion, virtual public StdRegions::StdExpansion0D
         {
         public:
-            LOCAL_REGIONS_EXPORT Expansion0D();
+            LOCAL_REGIONS_EXPORT Expansion0D(SpatialDomains::Geometry0DSharedPtr pGeom);
             
             LOCAL_REGIONS_EXPORT virtual ~Expansion0D() {}
             
@@ -64,6 +70,8 @@ namespace Nektar
                 int vertex,
                 Expansion1DSharedPtr &v);
             
+            inline SpatialDomains::Geometry0DSharedPtr GetGeom0D() const;
+
         protected:
             
         private:
@@ -72,11 +80,6 @@ namespace Nektar
             int m_elementVertexLeft;
             int m_elementVertexRight;
         };
-        
-        // type defines for use of PrismExp in a boost vector
-        typedef boost::shared_ptr<Expansion0D> Expansion0DSharedPtr;
-        typedef std::vector< Expansion0DSharedPtr > Expansion0DVector;
-        typedef std::vector< Expansion0DSharedPtr >::iterator Expansion0DVectorIter;
         
         inline Expansion1DSharedPtr Expansion0D::GetLeftAdjacentElementExp() const
         {
@@ -104,8 +107,8 @@ namespace Nektar
         {
             if (m_elementLeft.lock().get())
             {
-                ASSERTL1(!m_elementRight.lock().get(),
-                         "Both adjacent elements already set.");
+                //ASSERTL1(!m_elementRight.lock().get(),
+                //         "Both adjacent elements already set.");
                 m_elementRight = v;
                 m_elementVertexRight = vertex;
             }
@@ -114,6 +117,12 @@ namespace Nektar
                 m_elementLeft = v;
                 m_elementVertexLeft = vertex;
             }
+        }
+
+        inline SpatialDomains::Geometry0DSharedPtr Expansion0D::GetGeom0D() const
+        {
+            return boost::dynamic_pointer_cast<SpatialDomains::Geometry0D>(m_geom);
+			
         }
     } //end of namespace
 } //end of namespace

@@ -38,6 +38,8 @@
 
 #include <SpatialDomains/Geometry3D.h>
 #include <LibUtilities/Foundations/Graph.h>
+#include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/TriGeom.h>
 
 namespace Nektar
 {
@@ -49,34 +51,55 @@ namespace Nektar
         public:
             SPATIAL_DOMAINS_EXPORT PrismGeom ();
             SPATIAL_DOMAINS_EXPORT PrismGeom(
-                const Geometry2DSharedPtr faces[]);
+                    const Geometry2DSharedPtr faces[]);
             SPATIAL_DOMAINS_EXPORT ~PrismGeom();
             
             SPATIAL_DOMAINS_EXPORT static const int kNverts  = 6;
             SPATIAL_DOMAINS_EXPORT static const int kNedges  = 9;
             SPATIAL_DOMAINS_EXPORT static const int kNqfaces = 3;
             SPATIAL_DOMAINS_EXPORT static const int kNtfaces = 2;
-            SPATIAL_DOMAINS_EXPORT static const int kNfaces  = kNqfaces + kNtfaces;
+            SPATIAL_DOMAINS_EXPORT static const int kNfaces  = kNqfaces +
+                                                               kNtfaces;
             SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
 
         protected:
-
-            virtual void v_GenGeomFactors(
-                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
-            virtual void v_GetLocCoords(
-                const Array<OneD, const NekDouble> &coords,
-                      Array<OneD,       NekDouble> &Lcoords);
-            virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
-                                         NekDouble tol);
+            virtual void v_GenGeomFactors();
+            virtual NekDouble v_GetLocCoords(
+                    const Array<OneD, const NekDouble> &coords,
+                          Array<OneD,       NekDouble> &Lcoords);
+            virtual bool v_ContainsPoint(
+                    const Array<OneD, const NekDouble> &gloCoord,
+                          NekDouble                     tol);
+            virtual bool v_ContainsPoint(
+                    const Array<OneD, const NekDouble> &gloCoord,
+                          Array<OneD, NekDouble>       &locCoord,
+                          NekDouble                     tol);
+            virtual bool v_ContainsPoint(
+                    const Array<OneD, const NekDouble> &gloCoord,
+                          Array<OneD, NekDouble>       &locCoord,
+                          NekDouble                     tol,
+                          NekDouble                    &resid);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
-            virtual int v_GetDir(const int faceidx, const int facedir) const;
+            virtual int v_GetNumFaces() const;
+            virtual int v_GetVertexEdgeMap(
+                    const int i, const int j) const;
+            virtual int v_GetVertexFaceMap(
+                    const int i, const int j) const;
+            virtual int v_GetEdgeFaceMap(
+                    const int i, const int j) const;
+            virtual int v_GetDir(
+                    const int faceidx, const int facedir) const;
 
         private:
             void SetUpLocalEdges();
             void SetUpLocalVertices();
             void SetUpEdgeOrientation();
             void SetUpFaceOrientation();
+
+            static const unsigned int VertexEdgeConnectivity[6][3];
+            static const unsigned int VertexFaceConnectivity[6][3];
+            static const unsigned int EdgeFaceConnectivity  [9][2];
         };
 
         typedef boost::shared_ptr<PrismGeom> PrismGeomSharedPtr;

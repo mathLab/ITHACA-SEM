@@ -46,64 +46,98 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessJac::className = 
+        ModuleKey ProcessJac::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "jac"), ProcessJac::create,
                 "Process elements based on values of Jacobian.");
 
         ProcessJac::ProcessJac(MeshSharedPtr m) : ProcessModule(m)
         {
-            
+            m_config["extract"] = ConfigOption(
+                true, "0", "Extract non-valid elements from mesh.");
+            m_config["list"]    = ConfigOption(
+                true, "0", "Print list of elements having negative Jacobian.");
         }
 
         ProcessJac::~ProcessJac()
         {
-            
+
         }
-        
+
         void ProcessJac::Process()
         {
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
-                cout << "ProcessJac: Calculating Jacobians..." << endl;
+                cout << "ProcessJac: Calculating Jacobians... " << endl;
             }
 
-            vector<ElementSharedPtr> &el = m->element[m->expDim];
-            
+            bool extract = m_config["extract"].as<bool>();
+            bool printList = m_config["list"].as<bool>();
+
+            vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+
+            if (extract)
+            {
+                m_mesh->m_element[m_mesh->m_expDim].clear();
+            }
+
+            if (printList)
+            {
+                cout << "Elements with negative Jacobian:" << endl;
+            }
+
+            int nNeg = 0;
+
             // Iterate over list of elements of expansion dimension.
             for (int i = 0; i < el.size(); ++i)
             {
                 // Create elemental geometry.
-                SpatialDomains::GeometrySharedPtr geom = el[i]->GetGeom(m->spaceDim);
-                
-                // Define basis key using MeshGraph functions. Need a better
-                // way of determining the number of modes!
-                LibUtilities::BasisKeyVector b = 
-                    SpatialDomains::MeshGraph::DefineBasisKeyFromExpansionType(
-                        geom, SpatialDomains::eModified, 5);
-                
-                Array<OneD, LibUtilities::BasisSharedPtr> basis(m->expDim);
+                SpatialDomains::GeometrySharedPtr geom =
+                    el[i]->GetGeom(m_mesh->m_spaceDim);
 
-                // Generate basis functions.
-                for (int j = 0; j < m->expDim; ++j)
-                {
-                    basis[j] = LibUtilities::BasisManager()[b[j]];
-                }
-                
                 // Generate geometric factors.
-                SpatialDomains::GeomFactorsSharedPtr gfac = 
-                    geom->GetGeomFactors(basis);
-                
+                SpatialDomains::GeomFactorsSharedPtr gfac =
+                    geom->GetGeomFactors();
+
                 // Get the Jacobian and, if it is negative, print a warning
                 // message.
-                Array<OneD, NekDouble> jac = gfac->GetJac();
-                NekDouble d = Vmath::Vmin(jac.num_elements(),&jac[0],1);
-                if (d <= 0)
+                if (!gfac->IsValid())
                 {
-                    cout << "Negative Jacobian in element " 
-                         << el[i]->GetId() << " (value = "
-                         << d << ")" << endl;
+                    nNeg++;
+
+                    if (printList)
+                    {
+                        cout << "  - " << el[i]->GetId() << " ("
+                             << StdRegions::ElementTypeMap[el[i]->GetConf().m_e]
+                             << ")" << endl;
+                    }
+
+                    if (extract)
+                    {
+                        m_mesh->m_element[m_mesh->m_expDim].push_back(el[i]);
+                    }
                 }
+            }
+
+            if (extract)
+            {
+                m_mesh->m_element[m_mesh->m_expDim-1].clear();
+                ProcessVertices();
+                ProcessEdges();
+                ProcessFaces();
+                ProcessElements();
+                ProcessComposites();
+            }
+            
+            if (printList || m_mesh->m_verbose)
+            {
+                cout << "Total negative Jacobians: " << nNeg << endl;
+            }
+            else if (nNeg > 0)
+            {
+                cout << "WARNING: Detected " << nNeg << " element"
+                     << (nNeg == 1 ? "" : "s") << " with negative Jacobian."
+                     << endl;
             }
         }
     }

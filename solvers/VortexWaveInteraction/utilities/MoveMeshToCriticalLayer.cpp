@@ -37,7 +37,7 @@
 #include <cstdlib>
 #include <iomanip>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList2D.h>
@@ -235,8 +235,8 @@ void GetNewVertexLocation(TiXmlElement *doc,
     // loop mesh edges and fill in verts info
     std::map<int,SpatialDomains::SegGeomSharedPtr>::iterator segIter;
     
-    SpatialDomains::VertexComponentSharedPtr v0,v1;
-    SpatialDomains::VertexComponent dist;
+    SpatialDomains::PointGeomSharedPtr v0,v1;
+    SpatialDomains::PointGeom dist;
 
     int vid0,vid1;
     NekDouble kspring;

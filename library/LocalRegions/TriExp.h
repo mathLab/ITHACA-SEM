@@ -72,8 +72,7 @@ namespace Nektar
             //-------------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_Integral(
                             const Array<OneD, const NekDouble> &inarray);
-
-
+			
             //----------------------------
             // Differentiation Methods
             //----------------------------
@@ -101,7 +100,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_FwdTrans_BndConstrained(
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> &outarray);
-
 
             //---------------------------------------
             // Inner product functions
@@ -137,16 +135,16 @@ namespace Nektar
             //---------------------------------------
             // Evaluation functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
-                            Array<OneD,NekDouble> &coords_1,
-                            Array<OneD,NekDouble> &coords_2,
-                            Array<OneD,NekDouble> &coords_3
-                                                    = NullNekDouble1DArray);
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                             const Array<OneD, const NekDouble>& Lcoords,
                                   Array<OneD,NekDouble> &coords);
-            LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
-                            const Array<OneD, const NekDouble> &coord);
+            LOCAL_REGIONS_EXPORT virtual void v_GetCoords(
+                                  Array<OneD,       NekDouble> &coords_1,
+                                  Array<OneD,       NekDouble> &coords_2,
+                                  Array<OneD,       NekDouble> &coords_3);
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
+                            const Array<OneD, const NekDouble> &Lcoord,
+                            const Array<OneD, const NekDouble> &physvals);
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                             const Array<OneD, const NekDouble> &coord,
                             const Array<OneD, const NekDouble> & physvals);
@@ -155,6 +153,16 @@ namespace Nektar
                             const StdRegions::StdExpansionSharedPtr &EdgeExp,
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
+                            const int edge,
+                            const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            StdRegions::Orientation  orient);
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(
+                            const int edge,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
                             const int edge,
                             Array<OneD, NekDouble> &outarray);
@@ -164,17 +172,6 @@ namespace Nektar
             //---------------------------------------
             // Helper functions
             //---------------------------------------
-            LOCAL_REGIONS_EXPORT virtual void v_WriteToFile(
-                            std::ofstream &outfile,
-                            OutputFormat format,
-                            const bool dumpVar = true,
-                            std::string var = "v");
-            LOCAL_REGIONS_EXPORT virtual const
-                SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
-            LOCAL_REGIONS_EXPORT virtual const
-                SpatialDomains::GeometrySharedPtr v_GetGeom() const;
-            LOCAL_REGIONS_EXPORT virtual const
-                SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const;
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
                             const NekDouble *data,
@@ -252,27 +249,22 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
-            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
+            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree_Kernel(
+                        const Array<OneD, const NekDouble> &inarray,
+                              Array<OneD,       NekDouble> &outarray,
+                              Array<OneD,       NekDouble> &wsp);
+            LOCAL_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                            int   numMin,
                             const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey);
-            LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey);
+                                  Array<OneD,NekDouble> &outarray);
+
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
 
         private:
-            SpatialDomains::Geometry2DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             TriExp();
-
-            void MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
-                                            Array<OneD, NekDouble> &outarray);
-
         };
 
         // type defines for use of TriExp in a boost vector

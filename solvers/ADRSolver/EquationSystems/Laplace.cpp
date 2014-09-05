@@ -37,7 +37,8 @@
 
 namespace Nektar
 {
-    string Laplace::className = GetEquationSystemFactory().RegisterCreatorFunction("Laplace", Laplace::create);
+    string Laplace::className = GetEquationSystemFactory().
+        RegisterCreatorFunction("Laplace", Laplace::create);
 
     Laplace::Laplace(
             const LibUtilities::SessionReaderSharedPtr& pSession)
@@ -58,15 +59,20 @@ namespace Nektar
 
     }
 
-    void Laplace::v_PrintSummary(std::ostream &out)
+    void Laplace::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        out << "\tLambda          : " << m_factors[StdRegions::eFactorLambda] << endl;
+        EquationSystem::SessionSummary(s);
+        SolverUtils::AddSummaryItem(s, "Lambda",
+                                    m_factors[StdRegions::eFactorLambda]);
     }
 
     void Laplace::v_DoSolve()
     {
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
+            // Zero field so initial conditions are zero
+            Vmath::Zero(m_fields[i]->GetNcoeffs(),
+                        m_fields[i]->UpdateCoeffs(), 1);
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
                                    m_fields[i]->UpdateCoeffs(),
                                    NullFlagList,

@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
     }
     //----------------------------------------------
     
-    cout << "L2 of field "<< nfield << " is : " << Exp[nfield]->L2() << endl;
+    cout << "L2 of field "<< nfield << " is : " << Exp[nfield]->L2(Exp[nfield]->GetPhys()) << endl;
     return  0; 
 }
 

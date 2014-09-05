@@ -26,21 +26,32 @@ IF (THIRDPARTY_BUILD_BOOST)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost_1_49_0.tar.bz2
-            URL_MD5 "0d202cb811f934282dea64856a175698"
+            URL ${TPURL}/boost_1_55_0.tar.bz2
+            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            CONFIGURE_COMMAND ./bootstrap.sh --prefix=${TPSRC}/dist
+            SOURCE_DIR ${TPBUILD}/boost
+            BINARY_DIR ${TPBUILD}/boost
+            TMP_DIR ${TPBUILD}/boost-tmp
+            INSTALL_DIR ${TPDIST}
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ./bootstrap.sh --prefix=${TPDIST}
             BUILD_COMMAND NO_BZIP2=1 ./b2
                             variant=release
                             link=shared 
-                            include=${TPSRC}/dist/include
-                            linkflags="-L${TPSRC}/dist/lib"
+                            include=${TPDIST}/include
+                            linkflags="-L${TPDIST}/lib"
                             ${BOOST_FLAGS} ${BOOST_LIB_LIST} 
                             --layout=system toolset=${TOOLSET} install
             INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1
         )
     
+        IF (APPLE)
+            EXTERNALPROJECT_ADD_STEP(boost patch-install-path
+                COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|" ${TPSRC}/boost/tools/build/v2/tools/darwin.jam
+                DEPENDERS build
+                DEPENDEES download)
+        ENDIF (APPLE)
+
         # If building ThirdParty zlib, force zlib build before boost
         IF (THIRDPARTY_BUILD_ZLIB)
              ADD_DEPENDENCIES(boost zlib-1.2.7)
@@ -76,33 +87,37 @@ IF (THIRDPARTY_BUILD_BOOST)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost_1_49_0.tar.bz2
-            URL_MD5 "0d202cb811f934282dea64856a175698"
+            URL ${TPURL}/boost_1_55_0.tar.bz2
+            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
+            STAMP_DIR ${TPSRC}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            CONFIGURE_COMMAND bootstrap.bat --prefix=${TPSRC}/boost
+            SOURCE_DIR ${TPSRC}/boost
+            BINARY_DIR ${TPBUILD}/boost
+            TMP_DIR ${TPBUILD}/boost-tmp
+            INSTALL_DIR ${TPDIST}
+            CONFIGURE_COMMAND bootstrap.bat --prefix=${TPDIST}/boost
             BUILD_COMMAND b2 --layout=system install
             INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1
         )
     ENDIF ()
 ELSE (THIRDPARTY_BUILD_BOOST)
+    ADD_CUSTOM_TARGET(boost ALL)
     SET(Boost_DEBUG 0)
     SET(Boost_NO_BOOST_CMAKE ON)
-
     #If the user has not set BOOST_ROOT, look in a couple common places first.
     IF( NOT BOOST_ROOT )
-        SET(TEST_ENV $ENV{BOOST_HOME})
-        IF (DEFINED TEST_ENV)
-            SET(Boost_NO_SYSTEM_PATHS ON)
+        SET(TEST_ENV1 $ENV{BOOST_HOME})
+        SET(TEST_ENV2 $ENV{BOOST_DIR})
+        IF (DEFINED TEST_ENV1)
             SET(BOOST_ROOT $ENV{BOOST_HOME})
             FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time
                 filesystem system program_options regex )
+        ELSEIF (DEFINED TEST_ENV2)
+            SET(BOOST_ROOT $ENV{BOOST_DIR})
+            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time
+                filesystem system program_options regex )
         ELSE ()
-            SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
-            SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
-            SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/dist)
+            SET(BOOST_ROOT ${TPDIST})
             FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
         ENDIF()
     ELSE()

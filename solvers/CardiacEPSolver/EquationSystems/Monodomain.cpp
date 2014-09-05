@@ -95,114 +95,170 @@ namespace Nektar
         m_intVariables.push_back(0);
 
         // Load variable coefficients
-        StdRegions::VarCoeffType varCoeffEnum[3] = {
+        StdRegions::VarCoeffType varCoeffEnum[6] = {
                 StdRegions::eVarCoeffD00,
+                StdRegions::eVarCoeffD01,
                 StdRegions::eVarCoeffD11,
+                StdRegions::eVarCoeffD02,
+                StdRegions::eVarCoeffD12,
                 StdRegions::eVarCoeffD22
         };
-        std::string varName = "intensity";
-        std::string aniso_var[3] = {
-                "fx", "fy", "fz"
-        };
-        int nq = m_fields[0]->GetNpoints();
-        Array<OneD, NekDouble> vTemp;
+        std::string varCoeffString[6] = {"xx","xy","yy","xz","yz","zz"};
+        std::string aniso_var[3] = {"fx", "fy", "fz"};
+
+        const int nq            = m_fields[0]->GetNpoints();
+        const int nVarDiffCmpts = m_spacedim * (m_spacedim + 1) / 2;
 
         // Allocate storage for variable coeffs and initialize to 1.
-        for (int i = 0; i < m_spacedim; ++i)
+        for (int i = 0, k = 0; i < m_spacedim; ++i)
         {
-            m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq, 1.0);
-        }
-
-        // Apply intensity map (range d_min -> d_max)
-        if (m_session->DefinesFunction("IsotropicConductivity"))
-        {
-            if (m_session->DefinesCmdLineArgument("verbose"))
+            for (int j = 0; j < i+1; ++j)
             {
-                cout << "Loading Isotropic Conductivity map." << endl;
-            }
-            EvaluateFunction(varName, vTemp, "IsotropicConductivity");
-            for (int i = 0; i < m_spacedim; ++i)
-            {
-                Vmath::Vmul(nq, vTemp, 1,
-                                m_vardiff[varCoeffEnum[i]], 1,
-                                m_vardiff[varCoeffEnum[i]], 1);
-            }
-        }
-
-        if (!m_vardiff.empty())
-        {
-            // Process each of the defined variable coefficients
-            for (int i = 0; i < m_spacedim; ++i)
-            {
-                // If scaling parameters defined, do scaling
-                if (m_session->DefinesParameter("d_min"))
+                if (i == j)
                 {
-                    // Normalise and invert
-                    NekDouble f_min = m_session->GetParameter("d_min");
-                    NekDouble f_max = m_session->GetParameter("d_max");
-                    NekDouble f_range = f_max - f_min;
-                    NekDouble o_min = m_session->GetParameter("o_min");
-                    NekDouble o_max = m_session->GetParameter("o_max");
-                    Vmath::Sadd(nq, -f_min, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
-                    for (int j = 0; j < nq; ++j)
-                    {
-                        if (m_vardiff[varCoeffEnum[i]][j] < 0)
-                        {
-                            m_vardiff[varCoeffEnum[i]][j] = 0.0;
-                        }
-                        if (m_vardiff[varCoeffEnum[i]][j] > f_range)
-                        {
-                            m_vardiff[varCoeffEnum[i]][j] = f_range;
-                        }
-                    }
-                    Vmath::Smul(nq, -1.0/f_range, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
-                    Vmath::Sadd(nq, 1.0, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
-                    Vmath::Smul(nq, o_max-o_min, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
-                    Vmath::Sadd(nq, o_min, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
+                    m_vardiff[varCoeffEnum[k]] = Array<OneD, NekDouble>(nq, 1.0);
                 }
+                else
+                {
+                    m_vardiff[varCoeffEnum[k]] = Array<OneD, NekDouble>(nq, 0.0);
+                }
+                ++k;
             }
         }
 
-        // Apply fibre map (range 0 -> 1)
+        // Apply fibre map f \in [0,1], scale to conductivity range
+        // [o_min,o_max], specified by the session parameters o_min and o_max
         if (m_session->DefinesFunction("AnisotropicConductivity"))
         {
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
                 cout << "Loading Anisotropic Fibre map." << endl;
             }
-            for (int i = 0; i < m_spacedim; ++i)
+
+            NekDouble   o_min        = m_session->GetParameter("o_min");
+            NekDouble   o_max        = m_session->GetParameter("o_max");
+            int         k            = 0;
+
+            Array<OneD, NekDouble> vTemp_i;
+            Array<OneD, NekDouble> vTemp_j;
+
+            /*
+             * Diffusivity matrix D is upper triangular and defined as
+             *    d_00   d_01  d_02
+             *           d_11  d_12
+             *                 d_22
+             *
+             * Given a principle fibre direction _f_ the diffusivity is given
+             * by
+             *    d_ij = { D_2 + (D_1 - D_2) f_i f_j   if i==j
+             *           {       (D_1 - D_2) f_i f_j   if i!=j
+             *
+             * The vector _f_ is given in terms of the variables fx,fy,fz in the
+             * function AnisotropicConductivity. The values of D_1 and D_2 are
+             * the parameters o_max and o_min, respectively.
+             */
+
+            // Loop through columns of D
+            for (int j = 0; j < m_spacedim; ++j)
             {
                 ASSERTL0(m_session->DefinesFunction("AnisotropicConductivity",
-                                                    aniso_var[i]),
+                                                    aniso_var[j]),
                          "Function 'AnisotropicConductivity' not correctly "
                          "defined.");
-                EvaluateFunction(aniso_var[i], vTemp,
+                EvaluateFunction(aniso_var[j], vTemp_j,
                                  "AnisotropicConductivity");
+
+                // Loop through rows of D
+                for (int i = 0; i < j + 1; ++i)
+                {
+                    ASSERTL0(m_session->DefinesFunction(
+                                        "AnisotropicConductivity",aniso_var[i]),
+                             "Function 'AnisotropicConductivity' not correctly "
+                             "defined.");
+                    EvaluateFunction(aniso_var[i], vTemp_i,
+                                     "AnisotropicConductivity");
+
+                    Vmath::Vmul(nq, vTemp_i, 1, vTemp_j, 1,
+                                    m_vardiff[varCoeffEnum[k]], 1);
+
+                    Vmath::Smul(nq, o_max-o_min,
+                                    m_vardiff[varCoeffEnum[k]], 1,
+                                    m_vardiff[varCoeffEnum[k]], 1);
+
+                    if (i == j)
+                    {
+                        Vmath::Sadd(nq, o_min,
+                                        m_vardiff[varCoeffEnum[k]], 1,
+                                        m_vardiff[varCoeffEnum[k]], 1);
+                    }
+
+                    ++k;
+                }
+            }
+        }
+
+        // Scale by scar map (range 0->1) derived from intensity map
+        // (range d_min -> d_max)
+        if (m_session->DefinesFunction("IsotropicConductivity"))
+        {
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                cout << "Loading Isotropic Conductivity map." << endl;
+            }
+
+            const std::string varName  = "intensity";
+            Array<OneD, NekDouble> vTemp;
+            EvaluateFunction(varName, vTemp, "IsotropicConductivity");
+
+            // If the d_min and d_max parameters are defined, then we need to
+            // rescale the isotropic conductivity to convert from the source
+            // domain (e.g. late-gad intensity) to conductivity
+            if ( m_session->DefinesParameter("d_min") ||
+                 m_session->DefinesParameter("d_max") ) {
+                const NekDouble   f_min    = m_session->GetParameter("d_min");
+                const NekDouble   f_max    = m_session->GetParameter("d_max");
+                const NekDouble   scar_min = 0.0;
+                const NekDouble   scar_max = 1.0;
+
+                // Threshold based on d_min, d_max
+                for (int j = 0; j < nq; ++j)
+                {
+                    vTemp[j] = (vTemp[j] < f_min ? f_min : vTemp[j]);
+                    vTemp[j] = (vTemp[j] > f_max ? f_max : vTemp[j]);
+                }
+
+                // Rescale to s \in [0,1] (0 maps to d_max, 1 maps to d_min)
+                Vmath::Sadd(nq, -f_min, vTemp, 1, vTemp, 1);
+                Vmath::Smul(nq, -1.0/(f_max-f_min), vTemp, 1, vTemp, 1);
+                Vmath::Sadd(nq, 1.0, vTemp, 1, vTemp, 1);
+                Vmath::Smul(nq, scar_max - scar_min, vTemp, 1, vTemp, 1);
+                Vmath::Sadd(nq, scar_min, vTemp, 1, vTemp, 1);
+            }
+
+            // Scale anisotropic conductivity values
+            for (int i = 0; i < nVarDiffCmpts; ++i)
+            {
                 Vmath::Vmul(nq, vTemp, 1,
                                 m_vardiff[varCoeffEnum[i]], 1,
                                 m_vardiff[varCoeffEnum[i]], 1);
+            }
+        }
 
+
+        // Write out conductivity values
+        for (int j = 0, k = 0; j < m_spacedim; ++j)
+        {
+            // Loop through rows of D
+            for (int i = 0; i < j + 1; ++i)
+            {
                 // Transform variable coefficient and write out to file.
-                m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],
+                m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[k]],
                                                  m_fields[0]->UpdateCoeffs());
                 std::stringstream filename;
-                filename << "AnisotropicConductivity_" << aniso_var[i];
-                if (m_comm->GetSize() > 1)
-                {
-                    filename << "_P" << m_comm->GetRank();
-                }
-                filename << ".fld";
+                filename << "Conductivity_" << varCoeffString[k] << ".fld";
                 WriteFld(filename.str());
+
+                ++k;
             }
         }
 
@@ -309,10 +365,12 @@ namespace Nektar
      *
      */
     void Monodomain::v_SetInitialConditions(NekDouble initialtime,
-                        bool dumpInitialConditions)
+                        bool dumpInitialConditions,
+                        const int domain)
     {
         EquationSystem::v_SetInitialConditions(initialtime,
-                                               dumpInitialConditions);
+                                               dumpInitialConditions,
+                                               domain);
         m_cell->Initialise();
     }
 
@@ -320,33 +378,30 @@ namespace Nektar
     /**
      *
      */
-    void Monodomain::v_PrintSummary(std::ostream &out)
+    void Monodomain::v_GenerateSummary(SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
         if (m_session->DefinesFunction("d00") &&
             m_session->GetFunctionType("d00", "intensity") 
                     == LibUtilities::eFunctionTypeExpression)
         {
-            out << "\tDiffusivity-x   : "
-                << m_session->GetFunction("d00", "intensity")->GetExpression()
-                << endl;
+            AddSummaryItem(s, "Diffusivity-x",
+                m_session->GetFunction("d00", "intensity")->GetExpression());
         }
         if (m_session->DefinesFunction("d11") &&
             m_session->GetFunctionType("d11", "intensity") 
                     == LibUtilities::eFunctionTypeExpression)
         {
-            out << "\tDiffusivity-x   : "
-                << m_session->GetFunction("d11", "intensity")->GetExpression()
-                << endl;
+            AddSummaryItem(s, "Diffusivity-y",
+                m_session->GetFunction("d11", "intensity")->GetExpression());
         }
         if (m_session->DefinesFunction("d22") &&
             m_session->GetFunctionType("d22", "intensity") 
                     == LibUtilities::eFunctionTypeExpression)
         {
-            out << "\tDiffusivity-x   : "
-                << m_session->GetFunction("d22", "intensity")->GetExpression()
-                << endl;
+            AddSummaryItem(s, "Diffusivity-z",
+                m_session->GetFunction("d22", "intensity")->GetExpression());
         }
-        m_cell->PrintSummary(out);
+        m_cell->GenerateSummary(s);
     }
 }

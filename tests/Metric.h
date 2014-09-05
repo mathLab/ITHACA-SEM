@@ -36,10 +36,16 @@
 #ifndef NEKTAR_TESTS_METRIC_H
 #define NEKTAR_TESTS_METRIC_H
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <string>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <boost/version.hpp>
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
+std::string PortablePath(const boost::filesystem::path& path);
 
 namespace Nektar
 {

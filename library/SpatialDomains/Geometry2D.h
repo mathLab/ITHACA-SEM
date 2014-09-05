@@ -46,13 +46,15 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        class Geometry0D;
         class Geometry1D;
         class Geometry2D;
-        class VertexComponent;
+        class PointGeom;
         class SegGeom;
 
         // shorthand for boost pointer
-        typedef boost::shared_ptr<VertexComponent> VertexComponentSharedPtr;
+        typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;
+        typedef boost::shared_ptr<Geometry0D> Geometry0DSharedPtr;
         typedef boost::shared_ptr<Geometry1D> Geometry1DSharedPtr;
         typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
         typedef boost::shared_ptr<SegGeom>    SegGeomSharedPtr;
@@ -72,8 +74,6 @@ namespace Nektar
             //---------------------------------------
 
             SPATIAL_DOMAINS_EXPORT int GetFid() const;
-            SPATIAL_DOMAINS_EXPORT const VertexComponentSharedPtr
-                        GetVertex(int i) const;
             SPATIAL_DOMAINS_EXPORT const Geometry1DSharedPtr
                         GetEdge(int i) const;
             SPATIAL_DOMAINS_EXPORT const Geometry2DSharedPtr
@@ -82,13 +82,8 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT int WhichEdge(SegGeomSharedPtr edge);
             SPATIAL_DOMAINS_EXPORT int WhichFace(Geometry2DSharedPtr face);
 
-            SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion2DSharedPtr
-                        GetXmap(const int i);
-            SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion2DSharedPtr
-                        operator[](const int i) const;
-
             SPATIAL_DOMAINS_EXPORT const LibUtilities::BasisSharedPtr
-                    GetEdgeBasis(const int i, const int j);
+                    GetEdgeBasis(const int i);
 
             //---------------------------------------
             // Orientation functions
@@ -101,11 +96,13 @@ namespace Nektar
 
 
         protected:
+            void NewtonIterationForLocCoord(
+                const Array<OneD, const NekDouble> &coords,
+                const Array<OneD, const NekDouble> &ptsx,
+                const Array<OneD, const NekDouble> &ptsy,
+                Array<OneD,       NekDouble> &Lcoords,
+                NekDouble &resid);
 
-            Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
-
-            void NewtonIterationForLocCoord(const Array<OneD, const NekDouble> &coords, 
-                                       Array<OneD,NekDouble> &Lcoords);
 
         private:
             //---------------------------------------
@@ -117,7 +114,7 @@ namespace Nektar
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetFid() const;
             virtual int                         v_GetEid(int i) const;
-            virtual const VertexComponentSharedPtr v_GetVertex(int i) const;
+            virtual PointGeomSharedPtr          v_GetVertex(int i) const;
             virtual const Geometry1DSharedPtr   v_GetEdge(int i) const;
             virtual const Geometry2DSharedPtr   v_GetFace(int i) const;
             virtual StdRegions::Orientation v_GetFaceOrient(const int i) const;
@@ -127,7 +124,7 @@ namespace Nektar
             virtual int                         v_WhichFace(Geometry2DSharedPtr face);
 
             virtual const LibUtilities::BasisSharedPtr
-                            v_GetEdgeBasis(const int i, const int j);
+                            v_GetEdgeBasis(const int i);
             virtual bool    v_ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                         NekDouble tol = 0.0);

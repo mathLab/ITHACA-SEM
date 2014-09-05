@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
 
 #include <SpatialDomains/Geometry.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <StdRegions/StdExpansion1D.h>  // for StdExpansion1DSharedPtr, etc
 
@@ -59,16 +59,10 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT Geometry1D();
             SPATIAL_DOMAINS_EXPORT Geometry1D(const int coordim);
             SPATIAL_DOMAINS_EXPORT virtual ~Geometry1D();
-
-            SPATIAL_DOMAINS_EXPORT const StdRegions::StdExpansion1DSharedPtr&
-                        GetXmap(const int i);
-            SPATIAL_DOMAINS_EXPORT VertexComponentSharedPtr
+            SPATIAL_DOMAINS_EXPORT PointGeomSharedPtr
                         GetVertex(const int i) const;
             SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType
                         DetShapeType() const;
-            SPATIAL_DOMAINS_EXPORT void WriteToFile(
-                              std::ofstream& outfile,
-                        const int dumpVar);
             SPATIAL_DOMAINS_EXPORT int GetEid() const;
 
         protected:
@@ -78,18 +72,11 @@ namespace Nektar
             virtual int v_GetEid() const;
             virtual int v_GetVid(int i) const;
 
-            virtual const StdRegions::StdExpansion1DSharedPtr&
-                         v_GetXmap(const int i);
-            virtual VertexComponentSharedPtr
+            virtual PointGeomSharedPtr
                          v_GetVertex(const int i) const;
             virtual LibUtilities::ShapeType
                          v_DetShapeType() const;
-            virtual void v_WriteToFile(
-                              std::ofstream& outfile,
-                        const int dumpVar);
-
         };
-
     }; //end of namespace
 }; //end of namespace
 

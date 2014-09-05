@@ -63,8 +63,9 @@ namespace Nektar
          *
          */
         AssemblyMapCG1D::AssemblyMapCG1D(
-                const LibUtilities::SessionReaderSharedPtr &pSession):
-            AssemblyMapCG(pSession)
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
         }
 
@@ -80,14 +81,15 @@ namespace Nektar
                                                             &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                             &bndConditions,
-                const map<int,int>& periodicVerticesId):
-            AssemblyMapCG(pSession)
+                const PeriodicMap &periodicVerts,
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
             SetUp1DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
                                       bndCondExp,
                                       bndConditions,
-                                      periodicVerticesId);
+                                      periodicVerts);
 
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
@@ -141,7 +143,7 @@ namespace Nektar
                                                                 &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
-                const map<int,int>& periodicVerticesId)
+                const PeriodicMap &periodicVerts)
         {
             int i,j;
             int cnt = 0;
@@ -150,7 +152,7 @@ namespace Nektar
             int graphVertId = 0;
             int globalId;
 
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
             LocalRegions::SegExpSharedPtr locSegExp;
 
@@ -194,45 +196,63 @@ namespace Nektar
             // retrieved by the unique mesh vertex id's which serve as
             // the key of the map.
             map<int, int> vertReorderedGraphVertId;
-            map<int,int>::const_iterator mapConstIt;
+
+            PeriodicMap::const_iterator pIt;
 
             // STEP 1: Order the Dirichlet vertices first
             m_numGlobalDirBndCoeffs = 0;
             for(i = 0; i < nbnd; i++)
             {
+                ASSERTL0(bndCondExp[i]->GetNumElmts() > 0,
+                         "Boundary expansion contains no expansions.");
                 if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                 {
-                    meshVertId = ((bndCondExp[i])->GetVertex())->GetVid();
+                    meshVertId = bndCondExp[i]->GetExp(0)->GetGeom()->GetVertex(0)->GetVid();
                     vertReorderedGraphVertId[meshVertId] = graphVertId++;
                     m_numGlobalDirBndCoeffs++;
                     m_numLocalDirBndCoeffs++;
                 }
             }
 
-            // STEP 2: Order the periodic vertices next
-            // This allows to give corresponding DOF's the same
-            // global ID
-            for(mapConstIt = periodicVerticesId.begin(); mapConstIt != periodicVerticesId.end(); mapConstIt++)
+            // STEP 2: Order the periodic vertices next. This allows to give
+            // corresponding DOF's the same global ID
+            for(pIt = periodicVerts.begin(); pIt != periodicVerts.end(); pIt++)
             {
-                meshVertId  = mapConstIt->first;
-                meshVertId2 = mapConstIt->second;
+                meshVertId  = pIt->first;
+                meshVertId2 = pIt->second[0].id;
 
-                ASSERTL0(vertReorderedGraphVertId.count(meshVertId) == 0,
-                         "This periodic boundary vertex has been specified before");
-                ASSERTL0(vertReorderedGraphVertId.count(meshVertId) == 0,
-                         "This periodic boundary vertex has been specified before");
-
-                vertReorderedGraphVertId[meshVertId]  = graphVertId;
-                vertReorderedGraphVertId[meshVertId2] = graphVertId++;
+                if (!pIt->second[0].isLocal)
+                {
+                    if (vertReorderedGraphVertId.count(meshVertId) == 0)
+                    { 
+                        vertReorderedGraphVertId[meshVertId]  = graphVertId++;
+                    }
+                }
+                else
+                {
+                    if (vertReorderedGraphVertId.count(meshVertId) == 0 &&
+                        vertReorderedGraphVertId.count(meshVertId2) == 0)
+                    {
+                        vertReorderedGraphVertId[meshVertId]  = graphVertId;
+                        vertReorderedGraphVertId[meshVertId2] = graphVertId++;
+                    }
+                    else if ((vertReorderedGraphVertId.count(meshVertId)  == 0 &&
+                              vertReorderedGraphVertId.count(meshVertId2) != 0) ||
+                             (vertReorderedGraphVertId.count(meshVertId)  != 0 &&
+                              vertReorderedGraphVertId.count(meshVertId2) == 0))
+                    {
+                        ASSERTL0(false,
+                                 "Numbering error for periodic boundary conditions!");
+                    }
+                }
             }
-
 
             // STEP 3: List the other vertices
             // STEP 4: Set up simple map based on vertex and edge id's
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 cnt = locExp.GetCoeff_Offset(i);
-                if((locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(locExpVector[i])))
+                if((locSegExp = locExpVector[i]->as<LocalRegions::SegExp>()))
                 {
                     for(j = 0; j < locSegExp->GetNverts(); ++j)
                     {
@@ -255,7 +275,7 @@ namespace Nektar
             // Set up the mapping for the boundary conditions
             for(i = 0; i < nbnd; i++)
             {
-                meshVertId = ((bndCondExp[i])->GetVertex())->GetVid();
+                meshVertId = bndCondExp[i]->GetExp(0)->GetGeom()->GetVertex(0)->GetVid();
                 m_bndCondCoeffsToGlobalCoeffsMap[i] = vertReorderedGraphVertId[meshVertId];
             }
 
@@ -280,6 +300,10 @@ namespace Nektar
             SetUpUniversalC0ContMap(locExp);
 
             m_hash = boost::hash_range(m_localToGlobalMap.begin(), m_localToGlobalMap.end());
+            // Add up hash values if parallel
+            int hash = m_hash;
+            m_comm->AllReduce(hash, LibUtilities::ReduceSum);
+            m_hash = hash;
         }
 
 

@@ -58,16 +58,44 @@ namespace Nektar
             ///Name of the class
             static std::string className;
             
-            void ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &q1, 
-                                    const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
-                                    Array<OneD, Array<OneD, NekDouble> > &Diff_q_qBar,
-                                    Array<OneD, NekDouble > &NormDiff_q_qBar);
+            void ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
+                                    const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                    NekDouble &MaxNormDiff_q_qBar,
+                                    NekDouble &MaxNormDiff_q1_q0);
             
             void EvaluateNextSFDVariables(const int i,
                                           const Array<OneD, const Array<OneD, NekDouble> > &q0,
                                           const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
                                           Array<OneD, Array<OneD, NekDouble> > &q1,
                                           Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
+            void RunBDF2(const int i,
+                         const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
+                         const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
+                         const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                         const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                         Array<OneD, Array<OneD, NekDouble> > &q1,
+                         Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
+            void RunBDF1(const int i,
+                         const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                         const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                         Array<OneD, Array<OneD, NekDouble> > &q1,
+                         Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
+            void ExactFilters(const int i,
+                              const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                              const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                              Array<OneD, Array<OneD, NekDouble> > &q1,
+                              Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
+            void SecondOrderFilter(const int i,
+                                   const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
+                                   const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                   const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                                   Array<OneD, Array<OneD, NekDouble> > &q1,
+                                   Array<OneD, Array<OneD, NekDouble> > &qBar1);
+            
             
         protected:
             /// Constructor
@@ -87,13 +115,17 @@ namespace Nektar
         private:
             //Definition of the SFD parameters:
             NekDouble m_Delta;
+            NekDouble m_Delta0;
             NekDouble m_X;
-            NekDouble m_dt;
-            NekDouble m_cst1;
-            NekDouble m_cst2;
-            NekDouble m_cst3;
-            NekDouble m_cst4;
-            NekDouble m_cst5;
+            NekDouble m_X0;
+            NekDouble m_dt; 
+            
+            //For implementation of the exact solution of the filters equation
+            NekDouble c1;
+            NekDouble F11;
+            NekDouble F12;
+            NekDouble F21;
+            NekDouble F22;
             
             int m_n;
             int m_Check;
@@ -101,13 +133,18 @@ namespace Nektar
             int m_infosteps;
             int m_checksteps;
             
-            bool m_Growing;
-            bool m_Shrinking;
-            
             NekDouble m_MinNormDiff_q_qBar;
             NekDouble m_MaxNormDiff_q_qBar;
             NekDouble m_First_MinNormDiff_q_qBar;
-            int m_Oscillation;
+            
+            int NumVar_SFD;
+            
+            int MPIrank;
+            
+            NekDouble MaxNormDiff_q_qBar;
+            NekDouble MaxNormDiff_q1_q0;
+            
+            NekDouble Min_MaxNormDiff_q_qBar;
             
             std::ofstream m_file;
         };

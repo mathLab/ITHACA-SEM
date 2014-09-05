@@ -33,6 +33,9 @@
 // Navier Stokes equations
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <boost/algorithm/string.hpp>
+
+#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <IncNavierStokesSolver/EquationSystems/CoupledLinearNS.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
@@ -60,7 +63,7 @@ namespace Nektar
     
     void CoupledLinearNS::v_InitObject()
     {
-        EquationSystem::v_InitObject();
+        UnsteadySystem::v_InitObject();
         IncNavierStokes::v_InitObject();
         
         int  i;
@@ -70,7 +73,7 @@ namespace Nektar
         const SpatialDomains::ExpansionMap &pressure_exp = GenPressureExp(m_graph->GetExpansions("u"));
         
         m_nConvectiveFields = m_fields.num_elements();
-        if(NoCaseStringCompare(m_boundaryConditions->GetVariable(m_nConvectiveFields-1),"p") == 0)
+        if(boost::iequals(m_boundaryConditions->GetVariable(m_nConvectiveFields-1), "p"))
         {
             ASSERTL0(false,"Last field is defined as pressure but this is not suitable for this solver, please remove this field as it is implicitly defined");
         }
@@ -84,7 +87,7 @@ namespace Nektar
                 ASSERTL0(m_fields.num_elements() > 2,"Expect to have three at least three components of velocity variables");
                 LibUtilities::BasisKey Homo1DKey = m_fields[0]->GetHomogeneousBasis()->GetBasisKey();
                 
-                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT,m_dealiasing, pressure_exp);
+                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT,m_homogen_dealiasing, pressure_exp);
                 
                 ASSERTL1(m_npointsZ%2==0,"Non binary number of planes have been specified");
                 nz = m_npointsZ/2;                
@@ -466,15 +469,17 @@ namespace Nektar
             
             
             int ncoeffs = m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs();
+            int nphys   = m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints();
             int nbmap = bmap.num_elements();
             int nimap = imap.num_elements(); 
             
-            Array<OneD, NekDouble> coeffs  = m_fields[m_velocity[0]]->GetExp(eid)->UpdateCoeffs();
-            Array<OneD, NekDouble> phys    = m_fields[m_velocity[0]]->GetExp(eid)->UpdatePhys();
+            Array<OneD, NekDouble> coeffs(ncoeffs);
+            Array<OneD, NekDouble> phys  (nphys);
             int psize   = m_pressure->GetExp(eid)->GetNcoeffs();
+            int pqsize  = m_pressure->GetExp(eid)->GetTotPoints();
             
-            Array<OneD, NekDouble> deriv   = m_pressure->GetExp(eid)->UpdatePhys();
-            Array<OneD, NekDouble> pcoeffs = m_pressure->GetExp(eid)->UpdateCoeffs();
+            Array<OneD, NekDouble> deriv  (pqsize);
+            Array<OneD, NekDouble> pcoeffs(psize);
             
             if(AddAdvectionTerms == false) // use static condensed managed matrices
             {
@@ -632,7 +637,8 @@ namespace Nektar
                 // the same time resusing differential of velocity
                 // space
                 
-                DNekScalMat &HelmMat = *(boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(helmkey));
+                DNekScalMat &HelmMat = *(locExp->as<LocalRegions::Expansion>()
+                                               ->GetLocMatrix(helmkey));
                 DNekScalMatSharedPtr MassMat;
                 
                 Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
@@ -644,7 +650,8 @@ namespace Nektar
                     LocalRegions::MatrixKey masskey(StdRegions::eMass,
                                                     locExp->DetShapeType(),
                                                     *locExp);
-                    MassMat = boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(masskey);
+                    MassMat = locExp->as<LocalRegions::Expansion>()
+                                    ->GetLocMatrix(masskey);
                 }
                 
                 Array<OneD, NekDouble> Advtmp;
@@ -1172,9 +1179,9 @@ namespace Nektar
         cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
     
-    void CoupledLinearNS::v_PrintSummary(std::ostream &out)
+    void CoupledLinearNS::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        cout <<  "\tSolver Type     : Coupled Linearised NS" <<endl;
+        SolverUtils::AddSummaryItem(s, "Solver Type", "Coupled Linearised NS");
     }
     
     void CoupledLinearNS::v_DoInitialise(void)
@@ -1185,49 +1192,26 @@ namespace Nektar
             case eUnsteadyNavierStokes:
             {
                 
-                LibUtilities::TimeIntegrationMethod intMethod;
-                std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
-                int i;
-                for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
-                {
-                    if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
-                    {
-                        intMethod = (LibUtilities::TimeIntegrationMethod)i; 
-                        break;
-                    }
-                }
-                
-                ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
-                
-                switch(intMethod)
-                {
-                    case LibUtilities::eIMEXOrder1: 
-                    {
-                        m_intSteps = 1;
-                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
-                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    }
-                    break;
-                    case LibUtilities::eIMEXOrder2: 
-                    {
-                        m_intSteps = 2;
-                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXOrder1);
-                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
-                        m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                    }
-                    break;
-                    default:
-                        ASSERTL0(0,"Integration method not setup: Options include ImexOrder1, ImexOrder2");
-                        break;
-                }
+//                LibUtilities::TimeIntegrationMethod intMethod;
+//                std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
+//                int i;
+//                for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
+//                {
+//                    if(boost::iequals(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr))
+//                    {
+//                        intMethod = (LibUtilities::TimeIntegrationMethod)i;
+//                        break;
+//                    }
+//                }
+//
+//                ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
+//
+//                m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
                 
                 // Could defind this from IncNavierStokes class? 
-                m_integrationOps.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);
+                m_ode.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);
                 
-                m_integrationOps.DefineImplicitSolve(&CoupledLinearNS::SolveUnsteadyStokesSystem,this);
+                m_ode.DefineImplicitSolve(&CoupledLinearNS::SolveUnsteadyStokesSystem,this);
                 
                 // Set initial condition using time t=0
                 
@@ -1351,14 +1335,11 @@ namespace Nektar
     {  	    
         // evaluate convectioln terms
         EvaluateAdvectionTerms(inarray,outarray);
-        int nqtot  =m_fields[0]->GetTotPoints(); 
-        //add the force
-        if(m_session->DefinesFunction("BodyForce"))
+
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            for(int i = 0; i < m_nConvectiveFields; ++i)
-            {
-                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
-            }        
+            (*x)->Apply(m_fields, outarray, outarray, time);
         }
     }
     
@@ -1407,8 +1388,8 @@ namespace Nektar
         for (int k=0 ; k < nfields; ++k)
         {
             //Backward Transformation in physical space for time evolution
-            m_forces[k]->BwdTrans_IterPerExp(m_forces[k]->GetCoeffs(),
-                                             m_forces[k]->UpdatePhys());			
+            m_fields[k]->BwdTrans_IterPerExp(m_fields[k]->GetCoeffs(),
+                                             m_fields[k]->UpdatePhys());
         }
         
     }
@@ -1419,8 +1400,8 @@ namespace Nektar
         for (int k=0 ; k < nfields; ++k)
         {
             //Forward Transformation in physical space for time evolution
-            m_forces[k]->FwdTrans_IterPerExp(m_forces[k]->GetPhys(),
-                                             m_forces[k]->UpdateCoeffs());
+            m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),
+                                             m_fields[k]->UpdateCoeffs());
             
         }
     }
@@ -1431,7 +1412,8 @@ namespace Nektar
         {
             case eUnsteadyStokes:
             case eUnsteadyNavierStokes:
-                AdvanceInTime(m_steps);
+                //AdvanceInTime(m_steps);
+                UnsteadySystem::v_DoSolve();
                 break;
             case eSteadyStokes:
             case eSteadyOseen:
@@ -1491,33 +1473,34 @@ namespace Nektar
     
     void CoupledLinearNS::Solve(void)
     {
-        Array <OneD, Array<OneD, NekDouble> > forcing(m_velocity.num_elements());
-        
-        if(m_session->DefinesFunction("BodyForce"))
+        const unsigned int ncmpt = m_velocity.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > forcing_phys(ncmpt);
+        Array<OneD, Array<OneD, NekDouble> > forcing     (ncmpt);
+
+        for(int i = 0; i < ncmpt; ++i)
         {
-            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            forcing_phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetNpoints(), 0.0);
+            forcing[i]      = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
+        }
+
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
+        {
+            const NekDouble time = 0;
+            (*x)->Apply(m_fields, forcing_phys, forcing_phys, time);
+        }
+        for (unsigned int i = 0; i < ncmpt; ++i)
+        {
+            m_fields[i]->IProductWRTBase(forcing_phys[i], forcing[i]);
+            if(m_HomogeneousType == eHomogeneous1D)
             {
-                m_forces[i]->IProductWRTBase(m_forces[i]->GetPhys(),
-                                             m_forces[i]->UpdateCoeffs());
-                if(m_HomogeneousType == eHomogeneous1D)
+                if(!m_singleMode) // Do not want to Fourier transoform in case of single mode stability an
                 {
-                    if(!m_singleMode) // Do not want to Fourier transoform in case of single mode stability analysis. 
-                    {
-                        m_forces[i]->HomogeneousFwdTrans(m_forces[i]->GetCoeffs(),m_forces[i]->UpdateCoeffs());
-                    }
+                    m_fields[i]->HomogeneousFwdTrans(forcing[i], forcing[i]);
                 }
-                forcing[i] = m_forces[i]->GetCoeffs();
             }
         }
-        else
-        {
-            // Should put in read forcing in here. 
-            for(int i = 0; i < m_velocity.num_elements(); ++i)
-            {
-                forcing[i] = Array<OneD, NekDouble> (m_fields[m_velocity[0]]->GetNcoeffs(),0.0);
-            }
-        }
-        
+
         SolveLinearNS(forcing);
     }
     
@@ -2180,8 +2163,8 @@ namespace Nektar
     
     void CoupledLinearNS::v_Output(void)
     {    
-        Array<OneD, Array<OneD, NekDouble > > fieldcoeffs(m_fields.num_elements()+1);
-        Array<OneD, std::string> variables(m_fields.num_elements()+1);
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+        std::vector<std::string> variables(m_fields.num_elements()+1);
         int i;
         
         for(i = 0; i < m_fields.num_elements(); ++i)

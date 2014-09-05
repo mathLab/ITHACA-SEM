@@ -104,13 +104,14 @@ namespace Nektar
 
         class InterfaceComponent;
         typedef boost::shared_ptr< InterfaceComponent > SharedInterfaceCompPtr;
-        typedef std::vector< VertexComponentSharedPtr > VertexVector;
-        typedef std::map<int, VertexComponentSharedPtr> VertexMap;
+        typedef std::vector< PointGeomSharedPtr >       PointGeomVector;
+        typedef std::map<int, PointGeomSharedPtr>       PointGeomMap;
         typedef std::list< SharedInterfaceCompPtr >     InterfaceCompList;
 
         typedef boost::shared_ptr< GeometryVector >     Composite;
         typedef std::map<int, Composite>                CompositeMap;
         typedef std::map<int, Composite>::iterator      CompositeMapIter;
+        typedef std::map<int, Composite>::const_iterator      CompositeMapConstIter;
 
         struct ElementEdge
         {
@@ -124,6 +125,7 @@ namespace Nektar
             int m_FaceIndx;
         };
 
+
         typedef boost::shared_ptr<ElementEdge> ElementEdgeSharedPtr;
         typedef std::vector<ElementEdgeSharedPtr> ElementEdgeVector;
         typedef boost::shared_ptr<ElementEdgeVector> ElementEdgeVectorSharedPtr;
@@ -131,6 +133,23 @@ namespace Nektar
         typedef boost::shared_ptr<ElementFace> ElementFaceSharedPtr;
         typedef std::vector<ElementFaceSharedPtr> ElementFaceVector;
         typedef boost::shared_ptr<ElementFaceVector> ElementFaceVectorSharedPtr;
+
+        // set restriction on domain range for post-processing. 
+        struct DomainRange
+        {
+            bool doXrange; 
+            NekDouble xmin;
+            NekDouble xmax;
+            bool doYrange; 
+            NekDouble ymin;
+            NekDouble ymax;
+            bool doZrange; 
+            NekDouble zmin;
+            NekDouble zmax;
+        };
+        
+        typedef boost::shared_ptr<DomainRange> DomainRangeShPtr;
+        static DomainRangeShPtr NullDomainRangeShPtr;
 
         struct Expansion
         {
@@ -152,6 +171,7 @@ namespace Nektar
 
         typedef boost::shared_ptr<ExpansionMap> ExpansionMapShPtr;
         typedef std::map<std::string, ExpansionMapShPtr> ExpansionMapShPtrMap;
+        typedef std::map<std::string, ExpansionMapShPtr>::iterator  ExpansionMapShPtrMapIter;
 
 
         typedef std::map<std::string, std::string> GeomInfoMap;
@@ -167,14 +187,17 @@ namespace Nektar
                         unsigned int spaceDimension);
 
                 SPATIAL_DOMAINS_EXPORT MeshGraph(
-                        const LibUtilities::SessionReaderSharedPtr &pSession);
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        const DomainRangeShPtr &rng = NullDomainRangeShPtr);
+
 
                 SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
 
                 /* ---- Mesh Reading routines ---- */
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
-                        const LibUtilities::SessionReaderSharedPtr &pSession);
+                        const LibUtilities::SessionReaderSharedPtr &pSession,
+                        DomainRangeShPtr &rng = NullDomainRangeShPtr);
 
                 /// \todo Remove updated routine
                 SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
@@ -223,6 +246,20 @@ namespace Nektar
                 inline int GetSpaceDimension() const;
 
 
+                /* Range definitions for postprorcessing */
+                SPATIAL_DOMAINS_EXPORT void SetDomainRange
+                    (NekDouble xmin, NekDouble xmax, 
+                     NekDouble ymin = NekConstants::kNekUnsetDouble, 
+                     NekDouble ymax = NekConstants::kNekUnsetDouble,
+                     NekDouble zmin = NekConstants::kNekUnsetDouble, 
+                     NekDouble zmax = NekConstants::kNekUnsetDouble);
+
+                /// Check if goemetry is in range definition if activated
+                bool CheckRange(Geometry2D &geom);
+
+                /// Check if goemetry is in range definition if activated
+                bool CheckRange(Geometry3D &geom);
+
                 /* ---- Composites and Domain ---- */
                 inline Composite GetComposite(int whichComposite) const;
 
@@ -234,7 +271,11 @@ namespace Nektar
                         const std::string &compositeStr,
                         CompositeMap &compositeVector) const;
 
-                inline const CompositeMap &GetDomain() const;
+                inline const CompositeMap &GetComposites() const;
+
+                inline const std::vector<CompositeMap> &GetDomain(void) const;
+
+                inline const CompositeMap &GetDomain(int domain) const;
 
 
                 /* ---- Expansions ---- */
@@ -257,6 +298,10 @@ namespace Nektar
                                                                 &fielddef,
                         std::vector< std::vector<LibUtilities::PointsType> >
                                                                 &pointstype );
+
+                /// Sets expansions to have equispaced points 
+                SPATIAL_DOMAINS_EXPORT void SetExpansionsToEvenlySpacedPoints(
+                                                        int npoints = 0);
 
                 /// This function sets the expansion #exp in map with entry #variable
                 inline void SetExpansions(
@@ -297,9 +342,9 @@ namespace Nektar
                 /* ---- Manipulation of mesh ---- */
                 inline int GetNvertices() const;
 
-                inline VertexComponentSharedPtr GetVertex(int id);
+                inline PointGeomSharedPtr GetVertex(int id);
                 /// Adds a vertex to the with the next available ID.
-                SPATIAL_DOMAINS_EXPORT VertexComponentSharedPtr AddVertex(
+                SPATIAL_DOMAINS_EXPORT PointGeomSharedPtr AddVertex(
                         NekDouble x,
                         NekDouble y,
                         NekDouble z);
@@ -307,11 +352,11 @@ namespace Nektar
                 /// \brief Adds an edge between two points.  If curveDefinition is 
                 /// null, then the edge is straight, otherwise it is curved according 
                 /// to the curveDefinition.
-                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(VertexComponentSharedPtr v0, VertexComponentSharedPtr v1,
+                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(PointGeomSharedPtr v0, PointGeomSharedPtr v1,
                     CurveSharedPtr curveDefinition = CurveSharedPtr());
                 SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetEdge(unsigned int id) { return m_segGeoms[id]; }
 
-                SPATIAL_DOMAINS_EXPORT TriGeomSharedPtr AddTriangle(SegGeomSharedPtr edges[], StdRegions::Orientation orient[]);
+                SPATIAL_DOMAINS_EXPORT TriGeomSharedPtr  AddTriangle(SegGeomSharedPtr edges[], StdRegions::Orientation orient[]);
                 SPATIAL_DOMAINS_EXPORT QuadGeomSharedPtr AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::Orientation orient[]);
                 SPATIAL_DOMAINS_EXPORT TetGeomSharedPtr AddTetrahedron(TriGeomSharedPtr tfaces[TetGeom::kNtfaces]);
                 SPATIAL_DOMAINS_EXPORT PyrGeomSharedPtr AddPyramid(TriGeomSharedPtr tfaces[PyrGeom::kNtfaces],
@@ -319,6 +364,10 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT PrismGeomSharedPtr AddPrism(TriGeomSharedPtr tfaces[PrismGeom::kNtfaces],
                     QuadGeomSharedPtr qfaces[PrismGeom::kNqfaces]);
                 SPATIAL_DOMAINS_EXPORT HexGeomSharedPtr AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces]);
+
+                SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedEdges() const { return m_curvedEdges; }
+
+                SPATIAL_DOMAINS_EXPORT const CurveVector& GetCurvedFaces() const { return m_curvedFaces; }
                 // void AddExpansion(ExpansionShPtr expansion) { m_expansions[expansion->m_geomShPtr->GetGlobalID()] = expansion; }
                 SPATIAL_DOMAINS_EXPORT const SegGeomMap& GetAllSegGeoms() const { return m_segGeoms; }
                 SPATIAL_DOMAINS_EXPORT const TriGeomMap& GetAllTriGeoms() const { return m_triGeoms; }
@@ -334,7 +383,7 @@ namespace Nektar
 
             protected:
                 LibUtilities::SessionReaderSharedPtr    m_session;
-                VertexMap                               m_vertSet;
+                PointGeomMap                            m_vertSet;
                 InterfaceCompList                       m_iComps;
 
                 CurveVector                             m_curvedEdges;
@@ -355,11 +404,13 @@ namespace Nektar
                 bool                                    m_meshPartitioned;
 
                 CompositeMap                            m_meshComposites;
-                CompositeMap                            m_domain;
+                std::vector<CompositeMap>               m_domain;
+                DomainRangeShPtr                        m_domainRange;
 
                 ExpansionMapShPtrMap                    m_expansionMapShPtrMap;
 
                 GeomInfoMap                             m_geomInfo;
+
 
                 ExpansionMapShPtr    SetUpExpansionMap(void);
         };
@@ -399,9 +450,27 @@ namespace Nektar
         /**
          *
          */
-        inline const CompositeMap &MeshGraph::GetDomain() const
+        inline const CompositeMap &MeshGraph::GetComposites() const
+        {
+            return m_meshComposites;
+        }
+
+
+        /**
+         *
+         */
+        inline const std::vector<CompositeMap> &MeshGraph::GetDomain(void) const
         {
             return m_domain;
+        }
+
+        /**
+         *
+         */
+        inline const CompositeMap &MeshGraph::GetDomain(const int domain) const
+        {
+            ASSERTL1(domain < m_domain.size(),"Request for domain which does not exist");
+            return m_domain[domain];
         }
 
 
@@ -480,10 +549,10 @@ namespace Nektar
         /**
          *
          */
-        inline VertexComponentSharedPtr MeshGraph::GetVertex(int id)
+        inline PointGeomSharedPtr MeshGraph::GetVertex(int id)
         {
-            VertexComponentSharedPtr returnval;
-            VertexMap::iterator x = m_vertSet.find(id);
+            PointGeomSharedPtr returnval;
+            PointGeomMap::iterator x = m_vertSet.find(id);
             ASSERTL0(x != m_vertSet.end(),
                      "Vertex " + boost::lexical_cast<string>(id)
                      + " not found.");

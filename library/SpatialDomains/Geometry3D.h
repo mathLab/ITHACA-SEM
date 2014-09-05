@@ -40,6 +40,7 @@
 #include <StdRegions/StdExpansion3D.h>  // for StdExpansion3DSharedPtr, etc
 
 #include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 namespace Nektar
@@ -55,9 +56,9 @@ namespace Nektar
         typedef std::vector<Geometry2DSharedPtr> Geometry2DVector;
         typedef std::vector<Geometry3DSharedPtr>::iterator Geometry3DVectorIter;
 
-        class VertexComponent;
-        typedef boost::shared_ptr<VertexComponent> VertexComponentSharedPtr;
-        typedef std::vector<VertexComponentSharedPtr> VertexComponentVector;
+        class PointGeom;
+        typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;
+        typedef std::vector<PointGeomSharedPtr> PointGeomVector;
 
         class SegGeom;
         typedef boost::shared_ptr<SegGeom>    SegGeomSharedPtr;
@@ -77,22 +78,21 @@ namespace Nektar
             // Helper functions
             //---------------------------------------
             SPATIAL_DOMAINS_EXPORT int GetEid(int i) const;
+            SPATIAL_DOMAINS_EXPORT const Geometry1DSharedPtr
+                        GetEdge(int i) const;
             SPATIAL_DOMAINS_EXPORT Geometry2DSharedPtr 
                 GetFace(int i);
             SPATIAL_DOMAINS_EXPORT StdRegions::Orientation 
                 GetFaceOrient(const int i) const;
-            SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion3DSharedPtr
-                GetXmap(const int i);
             SPATIAL_DOMAINS_EXPORT int
                 GetDir(const int faceidx, const int facedir) const;
 
         protected:
-            VertexComponentVector                            m_verts;
+            PointGeomVector                                  m_verts;
             SegGeomVector                                    m_edges;
             Geometry2DVector                                 m_faces;
             std::vector<StdRegions::Orientation>             m_eorient;
             std::vector<StdRegions::Orientation>             m_forient;
-            Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
             std::list<CompToElmt>                            m_elmtmap;
             bool                                             m_owndata;
             int                                              m_eid;
@@ -102,23 +102,25 @@ namespace Nektar
             // 3D Geometry Methods
             //---------------------------------------
 
-            void NewtonIterationForLocCoord
-                (const Array<OneD, const NekDouble> &coords, 
-                 Array<OneD,NekDouble> &Lcoords);
+            void NewtonIterationForLocCoord(
+                const Array<OneD, const NekDouble> &coords,
+                const Array<OneD, const NekDouble> &ptsx,
+                const Array<OneD, const NekDouble> &ptsy,
+                const Array<OneD, const NekDouble> &ptsz,
+                      Array<OneD,       NekDouble> &Lcoords,
+                NekDouble                          &resid);
 
             virtual void      v_FillGeom();
             virtual NekDouble v_GetCoord(const int i, 
                                          const Array<OneD, const NekDouble> &Lcoord);
-            virtual void      v_GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+            virtual void      v_GenGeomFactors();
 
             //---------------------------------------
             // Helper functions
             //---------------------------------------
-            virtual StdRegions::StdExpansion3DSharedPtr
-                                                v_GetXmap(const int i);
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetVid(int i) const;
+            virtual PointGeomSharedPtr          v_GetVertex(int i) const;
             virtual const SegGeomSharedPtr      v_GetEdge(int i) const;
             virtual StdRegions::Orientation v_GetEorient(const int i) const;
             virtual int                         v_GetEid(int i) const;
@@ -126,12 +128,10 @@ namespace Nektar
             virtual StdRegions::Orientation v_GetFaceOrient(const int i) const;
             virtual int                         v_GetFid(int i) const;
             virtual int                         v_GetEid() const;
-            virtual Array<OneD,NekDouble>      &v_UpdatePhys(const int i);
             virtual int                         v_WhichEdge(SegGeomSharedPtr edge);
             virtual int                         v_WhichFace(Geometry2DSharedPtr face);
             virtual const LibUtilities::BasisSharedPtr
-                                                v_GetBasis(const int i, 
-                                                           const int j);
+                                                v_GetBasis(const int i);
             virtual int                         v_GetDir(const int faceidx,
                                                     const int facedir) const = 0;
 

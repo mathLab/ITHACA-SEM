@@ -55,6 +55,8 @@ namespace Nektar
             ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
                      "Missing parameter 'OutputFile'.");
             m_outputFile = pParams.find("OutputFile")->second;
+            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
+
         }
 
         FilterThresholdMax::~FilterThresholdMax()
@@ -84,12 +86,7 @@ namespace Nektar
         void FilterThresholdMax::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
             std::stringstream vOutputFilename;
-            vOutputFilename << m_outputFile;
-            if (m_session->GetComm()->GetSize() > 1)
-            {
-                vOutputFilename << "_P" << m_session->GetComm()->GetRank();
-            }
-            vOutputFilename << ".fld";
+            vOutputFilename << m_outputFile << ".fld";
 
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = pFields[0]->GetFieldDefinitions();
@@ -106,7 +103,7 @@ namespace Nektar
                 pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], vCoeffs);
             }
 
-            LibUtilities::Write(vOutputFilename.str(),FieldDef,FieldData);
+            m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
 
         }
 

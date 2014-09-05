@@ -117,21 +117,20 @@ namespace Nektar
         ContField1D::ContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                  const SpatialDomains::MeshGraphSharedPtr &graph1D,
                                  const std::string &variable):
-            DisContField1D(pSession,graph1D,variable),
+            DisContField1D(pSession,graph1D,variable,false),
             m_locToGloMap(),
             m_globalLinSysManager(
                     boost::bind(&ContField1D::GenGlobalLinSys, this, _1),
                     std::string("GlobalLinSys"))
         {
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
-            map<int,int> periodicVertices;
-            GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
             m_locToGloMap = MemoryManager<AssemblyMapCG1D>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
-                                    periodicVertices);
+                                    m_periodicVerts,
+                                    variable);
         }
 
 
@@ -557,7 +556,7 @@ namespace Nektar
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,
-                                m_locToGloMap,factors);
+                                m_locToGloMap,factors,varcoeff);
 
             if(flags.isSet(eUseGlobal))
             {

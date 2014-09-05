@@ -82,8 +82,8 @@ namespace Nektar
             // Open the file stream.
             OpenStream();
             
-            m->expDim = 0;
-            m->spaceDim = 0;
+            m_mesh->m_expDim = 0;
+            m_mesh->m_spaceDim = 0;
             string line;
             int nVertices = 0;
             int nEntities = 0;
@@ -91,14 +91,14 @@ namespace Nektar
             int prevId = -1;
             map<unsigned int, ElmtConfig>::iterator it;
 
-            if (m->verbose)
+            if (m_mesh->m_verbose)
             {
                 cout << "InputGmsh: Start reading file..." << endl;
             }
 
-            while (!mshFile.eof())
+            while (!m_mshFile.eof())
             {
-                getline(mshFile, line);
+                getline(m_mshFile, line);
                 stringstream s(line);
                 string word;
                 s >> word;
@@ -106,28 +106,28 @@ namespace Nektar
                 // Process nodes.
                 if (word == "$Nodes")
                 {
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     stringstream s(line);
                     s >> nVertices;
                     int id = 0;
                     for (int i = 0; i < nVertices; ++i)
                     {
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         stringstream st(line);
                         double x = 0, y = 0, z = 0;
                         st >> id >> x >> y >> z;
 
-                        if ((x * x) > 0.000001 && m->spaceDim < 1)
+                        if ((x * x) > 0.000001 && m_mesh->m_spaceDim < 1)
                         {
-                            m->spaceDim = 1;
+                            m_mesh->m_spaceDim = 1;
                         }
-                        if ((y * y) > 0.000001 && m->spaceDim < 2)
+                        if ((y * y) > 0.000001 && m_mesh->m_spaceDim < 2)
                         {
-                            m->spaceDim = 2;
+                            m_mesh->m_spaceDim = 2;
                         }
-                        if ((z * z) > 0.000001 && m->spaceDim < 3)
+                        if ((z * z) > 0.000001 && m_mesh->m_spaceDim < 3)
                         {
-                            m->spaceDim = 3;
+                            m_mesh->m_spaceDim = 3;
                         }
                         
                         id -= 1; // counter starts at 0
@@ -138,18 +138,18 @@ namespace Nektar
                             abort();
                         }
                         prevId = id;
-                        m->node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
+                        m_mesh->m_node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
                     }
                 }
                 // Process elements
                 else if (word == "$Elements")
                 {
-                    getline(mshFile, line);
+                    getline(m_mshFile, line);
                     stringstream s(line);
                     s >> nEntities;
                     for (int i = 0; i < nEntities; ++i)
                     {
-                        getline(mshFile, line);
+                        getline(m_mshFile, line);
                         stringstream st(line);
                         int id = 0, num_tag = 0, num_nodes = 0;
 
@@ -182,11 +182,11 @@ namespace Nektar
                             int node = 0;
                             st >> node;
                             node -= 1; // counter starts at 0
-                            nodeList.push_back(m->node[node]);
+                            nodeList.push_back(m_mesh->m_node[node]);
                         }
 
                         // Prism nodes need re-ordering for Nektar++.
-                        if (it->second.e == ePrism)
+                        if (it->second.m_e == LibUtilities::ePrism)
                         {
                             // Mirror first in uv plane to swap around
                             // triangular faces
@@ -197,7 +197,7 @@ namespace Nektar
                             // correctly.
                             swap(nodeList[4], nodeList[2]);
                             
-                            if (it->second.order == 2)
+                            if (it->second.m_order == 2)
                             {
                                 vector<NodeSharedPtr> nodemap(18);
                                 
@@ -226,7 +226,7 @@ namespace Nektar
                                 
                                 nodeList = nodemap;
                             }
-                            else if (it->second.order > 2)
+                            else if (it->second.m_order > 2)
                             {
                                 cerr << "Error: gmsh prisms only supported up "
                                      << "to second order." << endl;
@@ -236,17 +236,17 @@ namespace Nektar
                         
                         // Create element
                         ElementSharedPtr E = GetElementFactory().
-                            CreateInstance(it->second.e,it->second,nodeList,tags);
+                            CreateInstance(it->second.m_e,it->second,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m->expDim) {
-                            m->expDim = E->GetDim();
+                        if (E->GetDim() > m_mesh->m_expDim) {
+                            m_mesh->m_expDim = E->GetDim();
                         }
-                        m->element[E->GetDim()].push_back(E);
+                        m_mesh->m_element[E->GetDim()].push_back(E);
                     }
                 }
             }
-            mshFile.close();
+            m_mshFile.close();
 
             // Process rest of mesh.
             ProcessVertices  ();
@@ -272,33 +272,36 @@ namespace Nektar
                 abort();
             }
             
-            switch(it->second.e)
+            switch(it->second.m_e)
             {
-                case ePoint: 
-                    nNodes = Point::        GetNumNodes(it->second);
-                    break;
-                case eLine: 
-                    nNodes = Line::         GetNumNodes(it->second);
-                    break;
-                case eTriangle: 
-                    nNodes = Triangle::     GetNumNodes(it->second);
-                    break;
-                case eQuadrilateral: 
-                    nNodes = Quadrilateral::GetNumNodes(it->second);
-                    break;
-                case eTetrahedron: 
-                    nNodes = Tetrahedron::  GetNumNodes(it->second);
-                    break;
-                case ePrism: 
-                    nNodes = Prism::        GetNumNodes(it->second);
-                    break;
-                case eHexahedron:
-                    nNodes = Hexahedron::   GetNumNodes(it->second);
-                    break;
-                default:
-                    cerr << "Unknown element type!" << endl;
-                    abort();
-                    break;
+            case LibUtilities::ePoint: 
+                nNodes = Point::        GetNumNodes(it->second);
+                break;
+            case LibUtilities::eSegment: 
+                nNodes = Line::         GetNumNodes(it->second);
+                break;
+            case LibUtilities::eTriangle: 
+                nNodes = Triangle::     GetNumNodes(it->second);
+                break;
+            case LibUtilities::eQuadrilateral: 
+                nNodes = Quadrilateral::GetNumNodes(it->second);
+                break;
+            case LibUtilities::eTetrahedron: 
+                nNodes = Tetrahedron::  GetNumNodes(it->second);
+                break;
+            case LibUtilities::ePyramid:
+                nNodes = Pyramid::      GetNumNodes(it->second);
+                break;
+            case LibUtilities::ePrism: 
+                nNodes = Prism::        GetNumNodes(it->second);
+                break;
+            case LibUtilities::eHexahedron:
+                nNodes = Hexahedron::   GetNumNodes(it->second);
+                break;
+            default:
+                cerr << "Unknown element type!" << endl;
+                abort();
+                break;
             }
             
             return nNodes;
@@ -316,16 +319,18 @@ namespace Nektar
          */
         std::map<unsigned int, ElmtConfig> InputGmsh::GenElmMap()
         {
+            using namespace LibUtilities;
             std::map<unsigned int, ElmtConfig> tmp;
             
             //                    Elmt type,   order,  face, volume
-            tmp[  1] = ElmtConfig(eLine,           1,  true,  true);
+            tmp[  1] = ElmtConfig(eSegment,        1,  true,  true);
             tmp[  2] = ElmtConfig(eTriangle,       1,  true,  true);
             tmp[  3] = ElmtConfig(eQuadrilateral,  1,  true,  true);
             tmp[  4] = ElmtConfig(eTetrahedron,    1,  true,  true);
             tmp[  5] = ElmtConfig(eHexahedron,     1,  true,  true);
             tmp[  6] = ElmtConfig(ePrism,          1,  true,  true);
-            tmp[  8] = ElmtConfig(eLine,           2,  true,  true);
+            tmp[  7] = ElmtConfig(ePyramid,        1,  true,  true);
+            tmp[  8] = ElmtConfig(eSegment,        2,  true,  true);
             tmp[  9] = ElmtConfig(eTriangle,       2,  true,  true);
             tmp[ 10] = ElmtConfig(eQuadrilateral,  2,  true,  true);
             tmp[ 11] = ElmtConfig(eTetrahedron,    2,  true,  true);
@@ -341,9 +346,9 @@ namespace Nektar
             tmp[ 23] = ElmtConfig(eTriangle,       4,  true, false);
             tmp[ 24] = ElmtConfig(eTriangle,       5, false, false);
             tmp[ 25] = ElmtConfig(eTriangle,       5,  true, false);
-            tmp[ 26] = ElmtConfig(eLine,           3,  true, false);
-            tmp[ 27] = ElmtConfig(eLine,           4,  true, false);
-            tmp[ 28] = ElmtConfig(eLine,           5,  true, false);
+            tmp[ 26] = ElmtConfig(eSegment,        3,  true, false);
+            tmp[ 27] = ElmtConfig(eSegment,        4,  true, false);
+            tmp[ 28] = ElmtConfig(eSegment,        5,  true, false);
             tmp[ 29] = ElmtConfig(eTetrahedron,    3,  true,  true);
             tmp[ 30] = ElmtConfig(eTetrahedron,    4,  true,  true);
             tmp[ 31] = ElmtConfig(eTetrahedron,    5,  true,  true);
@@ -375,11 +380,11 @@ namespace Nektar
             tmp[ 59] = ElmtConfig(eQuadrilateral,  8, false, false);
             tmp[ 60] = ElmtConfig(eQuadrilateral,  9, false, false);
             tmp[ 61] = ElmtConfig(eQuadrilateral, 10, false, false);
-            tmp[ 62] = ElmtConfig(eLine,           6,  true, false);
-            tmp[ 63] = ElmtConfig(eLine,           7,  true, false);
-            tmp[ 64] = ElmtConfig(eLine,           8,  true, false);
-            tmp[ 65] = ElmtConfig(eLine,           9,  true, false);
-            tmp[ 66] = ElmtConfig(eLine,          10,  true, false);
+            tmp[ 62] = ElmtConfig(eSegment,        6,  true, false);
+            tmp[ 63] = ElmtConfig(eSegment,        7,  true, false);
+            tmp[ 64] = ElmtConfig(eSegment,        8,  true, false);
+            tmp[ 65] = ElmtConfig(eSegment,        9,  true, false);
+            tmp[ 66] = ElmtConfig(eSegment,       10,  true, false);
             tmp[ 71] = ElmtConfig(eTetrahedron,    6,  true,  true);
             tmp[ 72] = ElmtConfig(eTetrahedron,    7,  true,  true);
             tmp[ 73] = ElmtConfig(eTetrahedron,    8,  true,  true);
@@ -418,7 +423,7 @@ namespace Nektar
             tmp[115] = ElmtConfig(ePrism,          7,  true, false);
             tmp[116] = ElmtConfig(ePrism,          8,  true, false);
             tmp[117] = ElmtConfig(ePrism,          9,  true, false);
-            
+
             return tmp;
         }
     }

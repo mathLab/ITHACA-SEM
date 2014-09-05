@@ -39,6 +39,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
+#include <SolverUtils/EquationSystem.h>
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
@@ -64,7 +65,7 @@ namespace Nektar
         {
         public:
             SOLVER_UTILS_EXPORT Filter(const LibUtilities::SessionReaderSharedPtr& pSession);
-            SOLVER_UTILS_EXPORT ~Filter();
+            SOLVER_UTILS_EXPORT virtual ~Filter();
 
             SOLVER_UTILS_EXPORT inline void Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             SOLVER_UTILS_EXPORT inline void Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);

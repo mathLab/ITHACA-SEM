@@ -37,7 +37,7 @@
 #include <SpatialDomains/MeshGraph3D.h>
 #include <SpatialDomains/TriGeom.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -47,8 +47,9 @@ namespace Nektar
         {
         }
 
-        MeshGraph3D::MeshGraph3D(const LibUtilities::SessionReaderSharedPtr &pSession)
-            : MeshGraph(pSession)
+        MeshGraph3D::MeshGraph3D(const LibUtilities::SessionReaderSharedPtr &pSession, 
+                                 const DomainRangeShPtr &rng)
+            : MeshGraph(pSession,rng)
         {
             ReadGeometry(pSession->GetDocument());
             ReadExpansions(pSession->GetDocument());
@@ -156,7 +157,7 @@ namespace Nektar
                         // don't check here.
                         if (!edgeDataStrm.fail())
                         {
-                            VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                            PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
                             SegGeomSharedPtr edge;
 
                             if (edge_curved.count(indx) == 0)
@@ -843,7 +844,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(face);
+                            if(CheckRange(*face))
+                            {
+                                composite->push_back(face);
+                            }
                         }
                     }
                     break;
@@ -859,7 +863,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_triGeoms[*seqIter]);
+                            if(CheckRange(*m_triGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_triGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -875,7 +882,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_quadGeoms[*seqIter]);
+                            if(CheckRange(*m_quadGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_quadGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -892,7 +902,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_tetGeoms[*seqIter]);
+                            if(CheckRange(*m_tetGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_tetGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -909,7 +922,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_pyrGeoms[*seqIter]);
+                            if(CheckRange(*m_pyrGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_pyrGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -926,7 +942,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_prismGeoms[*seqIter]);
+                            if(CheckRange(*m_prismGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_prismGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -943,7 +962,10 @@ namespace Nektar
                         }
                         else
                         {
-                            composite->push_back(m_hexGeoms[*seqIter]);
+                            if(CheckRange(*m_hexGeoms[*seqIter]))
+                            {
+                                composite->push_back(m_hexGeoms[*seqIter]);
+                            }
                         }
                     }
                     break;
@@ -1009,6 +1031,7 @@ namespace Nektar
             // Obtain the number of modes for the element basis key in this
             // direction.
             int nummodes = (int) expansion->m_basisKeyVector[dir].GetNumModes();
+            int numpoints = (int) expansion->m_basisKeyVector[dir].GetNumPoints();
 
             switch(expansion->m_basisKeyVector[dir].GetBasisType())
             {
@@ -1051,7 +1074,7 @@ namespace Nektar
 
                     if(quadrilateral)
                     {
-                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                         return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
                     }
                     else if(triangle)

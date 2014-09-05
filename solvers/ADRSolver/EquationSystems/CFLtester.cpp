@@ -38,6 +38,8 @@
 #include <ADRSolver/EquationSystems/CFLtester.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion3D.h>
 
 namespace Nektar
 {
@@ -217,9 +219,9 @@ namespace Nektar
 
     
     
-    void CFLtester::v_PrintSummary(std::ostream &out)
+    void CFLtester::v_GenerateSummary(SummaryList& s)
     {
-        UnsteadySystem::v_PrintSummary(out);
+        UnsteadySystem::v_GenerateSummary(s);
     }
 	
     
@@ -349,15 +351,16 @@ namespace Nektar
         {
             for (int el = 0; el < n_element; ++el)
             { 
-                
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                LocalRegions::Expansion2DSharedPtr el2D =
+                    m_fields[0]->GetExp(el)->as<LocalRegions::Expansion2D>();
+                int n_points = el2D->GetTotPoints();
                 
                 Array<OneD, const NekDouble> jac  = 
-                m_fields[0]->GetExp(el)->GetGeom2D()->GetJac();
+                        el2D->GetGeom2D()->GetMetricInfo()->GetJac();
                 Array<TwoD, const NekDouble> gmat = 
-                m_fields[0]->GetExp(el)->GetGeom2D()->GetGmat();
+                        el2D->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() 
+                if (el2D->GetGeom2D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
@@ -398,15 +401,17 @@ namespace Nektar
         {
             for (int el = 0; el < n_element; ++el)
             { 
-                
-                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                LocalRegions::Expansion3DSharedPtr el3D =
+                    m_fields[0]->GetExp(el)->as<LocalRegions::Expansion3D>();
+
+                int n_points = el3D->GetTotPoints();
                 
                 Array<OneD, const NekDouble> jac =
-                m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
+                        el3D->GetGeom3D()->GetMetricInfo()->GetJac();
                 Array<TwoD, const NekDouble> gmat =
-                m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                        el3D->GetGeom3D()->GetMetricInfo()->GetDerivFactors();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom3D()->GetGtype() 
+                if (el3D->GetGeom3D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
@@ -427,9 +432,9 @@ namespace Nektar
                 else
                 {
                     Array<OneD, const NekDouble> jac =
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
+                            el3D->GetGeom3D()->GetMetricInfo()->GetJac();
                     Array<TwoD, const NekDouble> gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                            el3D->GetGeom3D()->GetMetricInfo()->GetDerivFactors();
                     
                     for (int i = 0; i < n_points; i++)
                     {

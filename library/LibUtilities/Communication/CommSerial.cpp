@@ -73,6 +73,16 @@ namespace Nektar
             return 0;
         }
 
+
+        /**
+         *
+         */
+        bool CommSerial::v_TreatAsRankZero(void)
+        {
+            return true;
+        }
+
+
         /**
          *
          */
@@ -109,6 +119,22 @@ namespace Nektar
          *
          */
         void CommSerial::v_Recv(int pProc, Array<OneD, int>& pData)
+        {
+        }
+
+
+        /**
+         *
+         */
+        void CommSerial::v_Send(int pProc, std::vector<unsigned int>& pData)
+        {
+        }
+
+
+        /**
+         *
+         */
+        void CommSerial::v_Recv(int pProc, std::vector<unsigned int>& pData)
         {
         }
 
@@ -191,6 +217,15 @@ namespace Nektar
         }
 		
 		
+        /**
+         *
+         */
+        void CommSerial::v_AllReduce(std::vector<unsigned int>& pData, enum ReduceOperator pOp)
+        {
+
+        }
+
+
 		/**
          *
          */

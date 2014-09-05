@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef BLPONITS_H
+#ifndef BLPOINTS_H
 #define BLPOINTS_H
 
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
@@ -116,8 +116,6 @@ namespace Nektar
                     boost::bind(&BLPoints::CreateMatrix, this, _1));
             }
 
-            LIB_UTILITIES_EXPORT static NekDouble delta_star;
-            
         private:
             /// Default constructor should not be called except by Create
             /// method.

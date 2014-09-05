@@ -186,7 +186,7 @@ namespace Nektar
                 
                 // Assign second half of workspace for 2nd DGEMM operation.
                 Array<OneD, NekDouble> wsp1 = wsp  + totpoints*numElmt; 
-                if(numElmt < nmodes0) // note sure what criterion we should use to swap around these strategies
+                if(numElmt < nmodes0 || 1) // note sure what criterion we should use to swap around these strategies
                 {
                     Array<OneD, NekDouble> wsp2 = wsp1 + nmodes0*nquad1*nquad2;
                     
@@ -288,13 +288,19 @@ namespace Nektar
                         {
                             for(int i = 0; i < nquad2; ++i)
                             {
-                                Vmath::Vcopy(numElmt*nmodes0*nmodes1,&wsp2[i],nquad2,
-                                                &wsp1[i*numElmt*nmodes0*nmodes1],1);
+                                Vmath::Vcopy(nmodes0*nmodes1,&wsp2[i],nquad2,
+                                             &output[i*nmodes0*nmodes1],1);
                             }
                         }
                         else
                         {
                             
+                            for(int i = 0; i < numElmt; ++i)
+                            {
+                                Dgemm('T', 'N', nmodes0*nmodes1,nmodes2,nquad2,
+                                      1.0, &wsp2[i*nmodes0*nmodes1*nquad2],nquad2
+                            }
+
                             Blas::Dgemm('T','N', numElmt*nmodes0*nmodes1, nmodes2, nquad2,
                                         1.0, &wsp2[0],  nquad2,  base2.get(),   nquad2,
                                         0.0, &wsp1[0],  numElmt*nmodes0*nmodes1);

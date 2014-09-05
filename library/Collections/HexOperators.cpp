@@ -89,7 +89,7 @@ namespace Nektar
                     int totmodes  = m_nmodes0*m_nmodes1*m_nmodes2;
                     int totpoints = m_nquad0*m_nquad1*m_nquad2;
 
-                    if(m_numElmt < m_nmodes0) // note sure what criterion we shoudl use to swap around these strategies
+                    if(m_numElmt < m_nmodes0 || 1) // note sure what criterion we should use to swap around these strategies
                     {
                         Array<OneD, NekDouble> wsp2 = wsp + m_nmodes1*m_nmodes2*m_nquad0;
 
@@ -282,12 +282,19 @@ namespace Nektar
                     Diff[i] = wsp + i*ntot;
                 }
 
+#if 0 // seems to run faster when done elmt by elmt
                 Blas::Dgemm('N','N', m_nquad0,m_nquad1*m_nquad2*m_numElmt,
                             m_nquad0,1.0, m_Deriv0,m_nquad0,&input[0],
                             m_nquad0,0.0,&Diff[0][0],m_nquad0);
-                
+#endif
                 for(int  i = 0; i < m_numElmt; ++i)
                 {
+#if 1
+                    Blas::Dgemm('N','N', m_nquad0,m_nquad1*m_nquad2,
+                                m_nquad0,1.0, m_Deriv0,m_nquad0,&input[i*nPhys],
+                                m_nquad0,0.0,&Diff[0][i*nPhys],m_nquad0);
+#endif
+
                     for (int j = 0; j < m_nquad2; ++j)
                     {
                         Blas::Dgemm('N', 'T', m_nquad0, m_nquad1, m_nquad1,
@@ -296,10 +303,7 @@ namespace Nektar
                                     &Diff[1][i*nPhys+j*m_nquad0*m_nquad1],
                                     m_nquad0);
                     }
-                }
 
-                for(int  i = 0; i < m_numElmt; ++i)
-                {
                     Blas::Dgemm('N','T',m_nquad0*m_nquad1,m_nquad2,m_nquad2,
                                 1.0, &input[i*nPhys],m_nquad0*m_nquad1,
                                 m_Deriv2,m_nquad2, 0.0,&Diff[2][i*nPhys],

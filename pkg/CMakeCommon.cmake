@@ -127,6 +127,8 @@ macro (add_tgz_package)
     add_dependencies(pkg-tgz pkg-tgz-${PKG_NAME})
 endmacro (add_tgz_package)
 
+# Base packaging target
+add_custom_target(pkg)
 
 # Check if we can build DEB files
 find_program(DPKG "dpkg")
@@ -147,9 +149,6 @@ if (RPMBUILD)
     add_custom_target(pkg-rpm)
     add_dependencies(pkg pkg-rpm)
 endif (RPMBUILD)
-
-# Base packaging target
-add_custom_target(pkg)
 
 # Binary archive target
 add_custom_target(pkg-tgz)

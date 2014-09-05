@@ -23,11 +23,11 @@ namespace Nektar
          */
         ProcessCyl::ProcessCyl(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["surf"] = ConfigOption(false, "-1",
+            m_config["surf"] = ConfigOption(false, "-1",
                 "Tag identifying surface to process.");
-            config["r"] = ConfigOption(false, "0.0",
+            m_config["r"] = ConfigOption(false, "0.0",
                 "Radius of cylinder.");
-            config["N"] = ConfigOption(false, "7",
+            m_config["N"] = ConfigOption(false, "7",
                 "Number of points along edge.");
         }
       
@@ -41,16 +41,16 @@ namespace Nektar
 
         void ProcessCyl::Process()
         {
-            int surfTag = config["surf"].as<int>();
+            int surfTag = m_config["surf"].as<int>();
             set<pair<int,int> > tmp;
 
             int prismedge[2][3] = {{0,5,4}, {2,6,7}};
             Node zax(0,0,0,1);
             
-            for (int i = 0; i < m->element[m->expDim].size(); ++i)
+            for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
             {
-                ElementSharedPtr el = m->element[m->expDim][i];
-                int nSurf = m->expDim == 3 ? el->GetFaceCount() : 
+                ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+                int nSurf = m_mesh->m_expDim == 3 ? el->GetFaceCount() : 
                     el->GetEdgeCount();
                         
                 for (int j = 0; j < nSurf; ++j)
@@ -61,7 +61,7 @@ namespace Nektar
                         continue;
                     }
 
-                    ElementSharedPtr bEl  = m->element[m->expDim-1][bl];
+                    ElementSharedPtr bEl  = m_mesh->m_element[m_mesh->m_expDim-1][bl];
                     vector<int>      tags = bEl->GetTagList();
 
                     if (find(tags.begin(), tags.end(), surfTag) ==
@@ -93,13 +93,13 @@ namespace Nektar
 
         void ProcessCyl::GenerateEdgeNodes(EdgeSharedPtr edge)
         {
-            NodeSharedPtr n1 = edge->n1;
-            NodeSharedPtr n2 = edge->n2;
+            NodeSharedPtr n1 = edge->m_n1;
+            NodeSharedPtr n2 = edge->m_n2;
 
-            int nq = config["N"].as<int>();
-            double r = config["r"].as<double>();
-            double t1 = atan2(n1->y, n1->x);
-            double t2 = atan2(n2->y, n2->x);
+            int nq = m_config["N"].as<int>();
+            double r = m_config["r"].as<double>();
+            double t1 = atan2(n1->m_y, n1->m_x);
+            double t2 = atan2(n2->m_y, n2->m_x);
             double dt, dz;
 
             if (t1 < -M_PI/2.0 && t2 > 0.0)
@@ -112,16 +112,16 @@ namespace Nektar
             }
             
             dt = (t2-t1) / (nq-1);
-            dz = (n2->z - n1->z) / (nq-1);
+            dz = (n2->m_z - n1->m_z) / (nq-1);
 
-            edge->edgeNodes.resize(nq-2);
+            edge->m_edgeNodes.resize(nq-2);
             Node dx = (*n2-*n1) * (1.0/(nq-1.0));
             for (int i = 1; i < nq-1; ++i)
             {
-                edge->edgeNodes[i-1] = NodeSharedPtr(
-                    new Node(0, r*cos(t1 + i*dt), r*sin(t1 + i*dt), n1->z + i*dz));
+                edge->m_edgeNodes[i-1] = NodeSharedPtr(
+                    new Node(0, r*cos(t1 + i*dt), r*sin(t1 + i*dt), n1->m_z + i*dz));
             }
-            edge->curveType = LibUtilities::ePolyEvenlySpaced;
+            edge->m_curveType = LibUtilities::ePolyEvenlySpaced;
         }
     }
 }

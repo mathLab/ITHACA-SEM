@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessInterpField.h
+//  File: ProcessAddFld.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,51 +29,45 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes vorticity field.
+//  Description: Computes C0 projection.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFIELD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFIELD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
 
 #include "Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+/**
+ * @brief This processing module scales the input fld file
+ *
+ */
+class ProcessAddFld : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-
-        /**
-         * @brief This processing module interpolates one field to another 
-         */
-        class ProcessInterpField : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessInterpField>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessInterpField(FieldSharedPtr f);
-            virtual ~ProcessInterpField();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-
-        private:
-            FieldSharedPtr m_fromField;
-
-            void InterpolateField(vector<MultiRegions::ExpListSharedPtr> &field0,
-                                  vector<MultiRegions::ExpListSharedPtr> &field1,
-                                  Array<OneD, NekDouble>                  x,
-                                  Array<OneD, NekDouble>                  y,
-                                  Array<OneD, NekDouble>                  z,
-                                  NekDouble                               clamp_low,
-                                  NekDouble                               clamp_up,
-                                  NekDouble                               def_value);
-        };
+        return MemoryManager<ProcessAddFld>::AllocateSharedPtr(f);
     }
+    static ModuleKey className;
+
+    ProcessAddFld(FieldSharedPtr f);
+    virtual ~ProcessAddFld();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+private:
+    FieldSharedPtr m_fromField;
+};
+
+}
 }
 
 #endif

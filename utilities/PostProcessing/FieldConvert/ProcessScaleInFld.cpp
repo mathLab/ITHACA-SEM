@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Concatenate field
+//  File: ProcessScaleInFld.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Concatenate parallel field
+//  Description: Scale input fld
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,8 +37,7 @@
 #include <iostream>
 using namespace std;
 
-#include "ProcessConcatenateFld.h"
-
+#include "ProcessScaleInFld.h"
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
@@ -47,67 +46,70 @@ namespace Nektar
 {
 namespace Utilities
 {
-ModuleKey ProcessConcatenateFld::className =
-    GetModuleFactory().RegisterCreatorFunction(
-        ModuleKey(eProcessModule, "concatenate"),
-        ProcessConcatenateFld::create,
-        "Concatenate field file into single file");
 
-ProcessConcatenateFld::ProcessConcatenateFld(FieldSharedPtr f)
-        : ProcessModule(f)
+ModuleKey ProcessScaleInFld::className =
+GetModuleFactory().RegisterCreatorFunction(
+    ModuleKey(eProcessModule, "scaleinputfld"),
+    ProcessScaleInFld::create, "rescale input field by a constant factor.");
+
+ProcessScaleInFld::ProcessScaleInFld(FieldSharedPtr f) : ProcessModule(f)
 {
-    // check for correct input files
-    if((f->m_inputfiles.count("xml")    == 0) &&
-       (f->m_inputfiles.count("xml.gz") == 0))
-    {
-        cout << "An xml or xml.gz input file must be specified for the "
-                "concatenate module" << endl;
-        exit(3);
-    }
-
     if((f->m_inputfiles.count("fld") == 0) &&
-       (f->m_inputfiles.count("chk") == 0) &&
-       (f->m_inputfiles.count("rst") == 0))
+       (f->m_inputfiles.count("rst") == 0) &&
+       (f->m_inputfiles.count("chk") == 0))
     {
-        cout << "A fld or chk or rst input file must be specified for the "
-                "concatenate module" << endl;
-
+        cout << "A fld, chk or rst input file must be specified for the "
+                "scaleinputfld module" << endl;
         exit(3);
     }
 
+    m_config["scale"] = ConfigOption(false,"NotSet","scale factor");
+    ASSERTL0(m_config["scale"].as<string>().compare("NotSet") != 0,
+             "scaleinputfld: Need to specify a sacle factor");
 }
 
-ProcessConcatenateFld::~ProcessConcatenateFld()
+ProcessScaleInFld::~ProcessScaleInFld()
 {
 }
 
-void ProcessConcatenateFld::Process(po::variables_map &vm)
+void ProcessScaleInFld::Process(po::variables_map &vm)
 {
     if (m_f->m_verbose)
     {
-        cout << "ProcessConcatenateFld: Concatenating field file" << endl;
+        cout << "ProcessScaleInFld: Rescaling input fld" << endl;
     }
 
-    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-        = m_f->m_exp[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+    ASSERTL0(m_f->m_data.size() != 0,"No input data defined");
 
-    // Copy Data into FieldData and set variable
-    for(int j = 0; j < m_f->m_exp.size(); ++j)
+    string scalestr = m_config["scale"].as<string>();
+    NekDouble scale = boost::lexical_cast<NekDouble>(scalestr);
+
+    for(int i = 0; i < m_f->m_data.size(); ++i)
     {
-        for(int i = 0; i < FieldDef.size(); ++i)
+        int datalen = m_f->m_data[i].size();
+
+        Vmath::Smul(datalen, scale, &(m_f->m_data[i][0]), 1,
+                                    &(m_f->m_data[i][0]), 1);
+    }
+
+    if(m_f->m_exp.size())// expansiosn are defined reload field
+    {
+        int nfields = m_f->m_fielddef[0]->m_fields.size();
+
+        // import basic field again in case of rescaling
+        for (int j = 0; j < nfields; ++j)
         {
-            // Could do a search here to find correct variable
-            FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-            m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i],
-                                           m_f->m_exp[j]->UpdateCoeffs());
+            for (int i = 0; i < m_f->m_data.size(); ++i)
+            {
+                m_f->m_exp[j]->ExtractDataToCoeffs(
+                                       m_f->m_fielddef[i],
+                                       m_f->m_data[i],
+                                       m_f->m_fielddef[i]->m_fields[j],
+                                       m_f->m_exp[j]->UpdateCoeffs());
+            }
         }
     }
-
-    m_f->m_fielddef  = FieldDef;
-    m_f->m_data = FieldData;
-}
-}
 }
 
-
+}
+}

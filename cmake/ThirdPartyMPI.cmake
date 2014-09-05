@@ -32,7 +32,7 @@ IF( NEKTAR_USE_MPI )
             gsmpi-1.2
             URL ${TPURL}/gsmpi-1.2.tar.bz2
             URL_MD5 35901be16791bfdeafa9c4d0e06d189b
-            STAMP_DIR ${TPSRC}/stamp
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/gsmpi-1.2
             BINARY_DIR ${TPBUILD}/gsmpi-1.2

@@ -287,6 +287,32 @@ namespace Nektar
             // Override SOLVERINFO and parameters with any specified on the
             // command line.
             CmdLineOverride();
+
+            // In verbose mode, print out parameters and solver info sections
+            if (m_verbose && m_comm)
+            {
+                if (m_comm->GetRank() == 0 && m_parameters.size() > 0)
+                {
+                    cout << "Parameters:" << endl;
+                    ParameterMap::iterator x;
+                    for (x = m_parameters.begin(); x != m_parameters.end(); ++x)
+                    {
+                        cout << "\t" << x->first << " = " << x->second << endl;
+                    }
+                    cout << endl;
+                }
+
+                if (m_comm->GetRank() == 0 && m_solverInfo.size() > 0)
+                {
+                    cout << "Solver Info:" << endl;
+                    SolverInfoMap::iterator x;
+                    for (x = m_solverInfo.begin(); x != m_solverInfo.end(); ++x)
+                    {
+                        cout << "\t" << x->first << " = " << x->second << endl;
+                    }
+                    cout << endl;
+                }
+            }
         }
 
 
@@ -1421,7 +1447,11 @@ namespace Nektar
                 SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                 if (DefinesCmdLineArgument("shared-filesystem"))
                 {
-                    if (GetComm()->GetRank() == 0)
+                    CommSharedPtr vComm = GetComm();
+                    vector<unsigned int> keys, vals;
+                    int i;
+
+                    if (vComm->GetRank() == 0)
                     {
                         m_xmlDoc = MergeDoc(m_filenames);
 
@@ -1433,9 +1463,106 @@ namespace Nektar
                         vPartitioner->GetCompositeOrdering(m_compOrder);
                         vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
 
+                        // Communicate orderings to the other processors.
+
+                        // First send sizes of the orderings and boundary
+                        // regions to allocate storage on the remote end.
+                        keys.resize(2);
+                        keys[0] = m_compOrder.size();
+                        keys[1] = m_bndRegOrder.size();
+
+                        for (i = 1; i < vComm->GetSize(); ++i)
+                        {
+                            vComm->Send(i, keys);
+                        }
+
+                        // Construct the keys and sizes of values for composite
+                        // ordering
+                        CompositeOrdering::iterator cIt;
+                        keys.resize(m_compOrder.size());
+                        vals.resize(m_compOrder.size());
+
+                        for (cIt  = m_compOrder.begin(), i = 0;
+                             cIt != m_compOrder.end(); ++cIt, ++i)
+                        {
+                            keys[i] = cIt->first;
+                            vals[i] = cIt->second.size();
+                        }
+
+                        // Send across data.
+                        for (i = 1; i < vComm->GetSize(); ++i)
+                        {
+                            vComm->Send(i, keys);
+                            vComm->Send(i, vals);
+
+                            for (cIt  = m_compOrder.begin();
+                                 cIt != m_compOrder.end(); ++cIt)
+                            {
+                                vComm->Send(i, cIt->second);
+                            }
+                        }
+
+                        // Construct the keys and sizes of values for composite
+                        // ordering
+                        BndRegionOrdering::iterator bIt;
+                        keys.resize(m_bndRegOrder.size());
+                        vals.resize(m_bndRegOrder.size());
+
+                        for (bIt  = m_bndRegOrder.begin(), i = 0;
+                             bIt != m_bndRegOrder.end(); ++bIt, ++i)
+                        {
+                            keys[i] = bIt->first;
+                            vals[i] = bIt->second.size();
+                        }
+
+                        // Send across data.
+                        for (i = 1; i < vComm->GetSize(); ++i)
+                        {
+                            vComm->Send(i, keys);
+                            vComm->Send(i, vals);
+
+                            for (bIt  = m_bndRegOrder.begin();
+                                 bIt != m_bndRegOrder.end(); ++bIt)
+                            {
+                                vComm->Send(i, bIt->second);
+                            }
+                        }
+
                         if (DefinesCmdLineArgument("part-info"))
                         {
                             vPartitioner->PrintPartInfo(std::cout);
+                        }
+                    }
+                    else
+                    {
+                        keys.resize(2);
+                        vComm->Recv(0, keys);
+
+                        int cmpSize = keys[0];
+                        int bndSize = keys[1];
+
+                        keys.resize(cmpSize);
+                        vals.resize(cmpSize);
+                        vComm->Recv(0, keys);
+                        vComm->Recv(0, vals);
+
+                        for (int i = 0; i < keys.size(); ++i)
+                        {
+                            vector<unsigned int> tmp(vals[i]);
+                            vComm->Recv(0, tmp);
+                            m_compOrder[keys[i]] = tmp;
+                        }
+
+                        keys.resize(bndSize);
+                        vals.resize(bndSize);
+                        vComm->Recv(0, keys);
+                        vComm->Recv(0, vals);
+
+                        for (int i = 0; i < keys.size(); ++i)
+                        {
+                            vector<unsigned int> tmp(vals[i]);
+                            vComm->Recv(0, tmp);
+                            m_bndRegOrder[keys[i]] = tmp;
                         }
                     }
                 }
@@ -1618,20 +1745,6 @@ namespace Nektar
                     parameter = parameter->NextSiblingElement();
                 }
             }
-
-            if (m_verbose && m_parameters.size() > 0 && m_comm)
-            {
-                if(m_comm->GetRank() == 0)
-                {
-                    cout << "Parameters:" << endl;
-                    ParameterMap::iterator x;
-                    for (x = m_parameters.begin(); x != m_parameters.end(); ++x)
-                    {
-                        cout << "\t" << x->first << " = " << x->second << endl;
-                    }
-                    cout << endl;
-                }
-            }
         }
 
 
@@ -1720,20 +1833,6 @@ namespace Nektar
                     m_solverInfo["GLOBALSYSSOLN"] ==
                         "PETScMultiLevelStaticCond",
                     "A parallel solver must be used when run in parallel.");
-            }
-            
-            if (m_verbose && m_solverInfo.size() > 0 && m_comm)
-            {
-                if(m_comm->GetRank() == 0)
-                {
-                    cout << "Solver Info:" << endl;
-                    SolverInfoMap::iterator x;
-                    for (x = m_solverInfo.begin(); x != m_solverInfo.end(); ++x)
-                    {
-                        cout << "\t" << x->first << " = " << x->second << endl;
-                    }
-                    cout << endl;
-                }
             }
         }
 
@@ -2370,6 +2469,11 @@ namespace Nektar
                     }
                 }
             }
+        }
+
+        void SessionReader::SetUpXmlDoc(void)
+        {
+            m_xmlDoc = MergeDoc(m_filenames);
         }
     }
 }

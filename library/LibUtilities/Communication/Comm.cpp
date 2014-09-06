@@ -55,6 +55,12 @@ namespace Nektar
 
         }
 
+        // Method to enforce that all existing files are removed
+        bool Comm::v_RemoveExistingFiles(void)
+        {
+            return true;
+        }
+
         CommFactory& GetCommFactory()
         {
             typedef Loki::SingletonHolder<CommFactory,

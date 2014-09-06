@@ -155,11 +155,11 @@ namespace Nektar
             int vRank = vComm->GetRank();
             Array<OneD, int>  procList(m_historyPoints.size(), -1);
             Array<OneD, int> idList(m_historyPoints.size());
-            Array<OneD, NekDouble>  locCoords(3);
             std::vector<Array<OneD, NekDouble> > LocCoords; 
-            
+
             for (i = 0; i < m_historyPoints.size(); ++i)
             {
+                Array<OneD, NekDouble> locCoords(3);
 
                 // Determine the expansion and local coordinates
                 m_historyPoints[i]->GetCoords(  gloCoord[0],
@@ -177,16 +177,16 @@ namespace Nektar
                     SpatialDomains::GeometrySharedPtr g =
                                     pFields[0]->GetExp(idList[i])->GetGeom();
                     StdRegions::StdExpansionSharedPtr e = g->GetXmap();
-                    Array<OneD, NekDouble> xvals(e->GetTotPoints());
-                    Array<OneD, NekDouble> yvals(e->GetTotPoints());
-                    Array<OneD, NekDouble> zvals(e->GetTotPoints());
-                    e->BwdTrans(g->GetCoeffs(0), xvals);
-                    e->BwdTrans(g->GetCoeffs(1), yvals);
-                    e->BwdTrans(g->GetCoeffs(2), zvals);
-                    double x = e->PhysEvaluate(locCoords, xvals) - gloCoord[0];
-                    double y = e->PhysEvaluate(locCoords, yvals) - gloCoord[1];
-                    double z = e->PhysEvaluate(locCoords, zvals) - gloCoord[2];
-                    if (x*x + y*y + z*z > NekConstants::kGeomFactorsTol)
+                    Array<OneD, NekDouble> coordVals(e->GetTotPoints());
+                    NekDouble distance = 0.0;
+                    for (int j = 0; j < g->GetCoordim(); ++j)
+                    {
+                        e->BwdTrans(g->GetCoeffs(j), coordVals);
+                        NekDouble x = e->PhysEvaluate(locCoords, coordVals)
+                                                                 - gloCoord[j];
+                        distance += x*x;
+                    }
+                    if (distance > NekConstants::kGeomFactorsTol)
                     {
                         idList[i] = -1;
                     }
@@ -194,6 +194,7 @@ namespace Nektar
 
                 // Save Local coordinates for later
                 LocCoords.push_back(locCoords);
+
                 // Set element id to Vid of m_history point for later use
                 m_historyPoints[i]->SetVid(idList[i]);
                 
@@ -378,7 +379,6 @@ namespace Nektar
 
                         // interpolate point
                         data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
-                        
                     }
                 }
             }

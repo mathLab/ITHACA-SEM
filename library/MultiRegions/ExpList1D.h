@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <MultiRegions/ExpList.h>
+#include <LocalRegions/SegExp.h>
 #include <LibUtilities/Kernel/kernel.h>
 
 namespace Nektar
@@ -111,6 +112,7 @@ namespace Nektar
             
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
                 const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                 const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,

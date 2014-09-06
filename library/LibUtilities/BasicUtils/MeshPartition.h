@@ -77,6 +77,9 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void GetBndRegionOrdering(
                     BndRegionOrdering &composites);
 
+            LIB_UTILITIES_EXPORT void GetElementIDs(const int procid,
+                                                    std::vector<unsigned int> &tmp);
+
         private:
             struct MeshEntity
             {

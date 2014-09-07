@@ -11,7 +11,7 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 #include <boost/math/special_functions/fpclassify.hpp>
 
@@ -279,8 +279,8 @@ int main(int argc, char *argv[])
         else if (expdim == 3)
         {
             NekDouble clamp_up, clamp_low;
-            vSession->LoadParameter("ClampToUpperValue", clamp_up,   10000);
-            vSession->LoadParameter("ClampToLowerValue", clamp_low, -10000);
+            vSession->LoadParameter("ClampToUpperValue", clamp_up,   10000000);
+            vSession->LoadParameter("ClampToLowerValue", clamp_low, -10000000);
             InterpolateField(fields, outfield, x1, y1, z1, clamp_low, clamp_up);
         }
         cout << "]" << endl;

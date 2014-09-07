@@ -78,28 +78,6 @@ namespace Nektar
 
 
         protected:
-            //-------------------------------
-            // Integration Methods
-            //-------------------------------
-            STD_REGIONS_EXPORT void TripleTensorProduct(
-                const Array<OneD, const NekDouble>& fx,
-                const Array<OneD, const NekDouble>& gy,
-                const Array<OneD, const NekDouble>& hz,
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT NekDouble TripleInnerProduct(
-                const Array<OneD, const NekDouble>& fxyz,
-                const Array<OneD, const NekDouble>& wx,
-                const Array<OneD, const NekDouble>& wy,
-                const Array<OneD, const NekDouble>& wz);
-            STD_REGIONS_EXPORT NekDouble Integral3D(
-                const Array<OneD, const NekDouble>& inarray,
-                const Array<OneD, const NekDouble>& w0,
-                const Array<OneD, const NekDouble>& w1,
-                const Array<OneD, const NekDouble>& w2);
-            STD_REGIONS_EXPORT NekDouble v_Integral(
-                const Array<OneD, const NekDouble>& inarray);
-
             //----------------------------
             // Differentiation Methods
             //----------------------------
@@ -262,6 +240,15 @@ namespace Nektar
                       Array<OneD,       NekDouble>& outarray);
 
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD, NekDouble> &array, const StdMatrixKey &mkey);
+
+            //---------------------------------------
+            // Output interpolation functions
+            //---------------------------------------
+
+            STD_REGIONS_EXPORT virtual void v_PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn);
+
         private:
             //---------------------------------------
             // Private helper functions

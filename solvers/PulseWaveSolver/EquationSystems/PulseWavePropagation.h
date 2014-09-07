@@ -36,8 +36,9 @@
 #ifndef NEKTAR_SOLVERS_PULSEWAVESOLVER_EQUATIONSYSTEMS_PULSEWAVEPROPAGATION_H
 #define NEKTAR_SOLVERS_PULSEWAVESOLVER_EQUATIONSYSTEMS_PULSEWAVEPROPAGATION_H
 
-//#include <SolverUtils/UnsteadySystem.h>
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
+#include <PulseWaveSolver/EquationSystems/PulseWaveBoundary.h>
+#include <PulseWaveSolver/EquationSystems/PulseWavePressureArea.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -50,17 +51,17 @@ namespace Nektar
 
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession)
-		{
-			EquationSystemSharedPtr p = MemoryManager<PulseWavePropagation>::AllocateSharedPtr(pSession);
-			p->InitObject();
-			return p;
+        {
+            EquationSystemSharedPtr p = MemoryManager<PulseWavePropagation>::AllocateSharedPtr(pSession);
+            p->InitObject();
+            return p;
         }
-		
+	
         /// Name of class
         static std::string className;
-
+        
         virtual ~PulseWavePropagation();
-
+	
 		
     protected:
         PulseWavePropagation(const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -68,38 +69,32 @@ namespace Nektar
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,
                       const NekDouble time);
-
+        
         void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-							 Array<OneD,  Array<OneD, NekDouble> > &outarray,
-							 const NekDouble time);
-
+                             Array<OneD,  Array<OneD, NekDouble> > &outarray,
+                             const NekDouble time);
+        
+        void SetPulseWaveBoundaryConditions(const Array<OneD,const Array<OneD, NekDouble> >&inarray,
+                                            Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                                            const NekDouble time);
         virtual void v_InitObject();
-
+        
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
-									 Array<OneD, Array<OneD, NekDouble> > &flux);
-		
+                                     Array<OneD, Array<OneD, NekDouble> > &flux);
+        
         /// DG Pulse Wave Propagation routines:
-		/// Numerical Flux at interelemental boundaries
-		virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-									 Array<OneD, Array<OneD, NekDouble> > &numflux);
+        /// Numerical Flux at interelemental boundaries
+        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                                     Array<OneD, Array<OneD, NekDouble> > &numflux);
+        
+        /// Upwinding Riemann solver for interelemental boundaries
+        void RiemannSolverUpwind(NekDouble AL,NekDouble uL,NekDouble AR,NekDouble uR, NekDouble &Aflux, 
+                                 NekDouble &uflux, NekDouble A_0, NekDouble beta,
+                                 NekDouble n);
+        
+        Array<OneD, PulseWaveBoundarySharedPtr> m_Boundary;
 
-		/// Upwinding Riemann solver for interelemental boundaries
-		void RiemannSolverUpwind(NekDouble AL,NekDouble uL,NekDouble AR,NekDouble uR, NekDouble &Aflux, 
-								 NekDouble &uflux, int i, NekDouble A_0, NekDouble beta);
-		
-		/// Q_inflow Riemann solver
-		void Q_inflowRiemannSolver(NekDouble Q, NekDouble A_r, NekDouble u_r, NekDouble A_0, NekDouble beta, 
-								   NekDouble &A_u,NekDouble &u_u);
-
-		/// R Riemann solver
-		void R_RiemannSolver(NekDouble R, NekDouble A_l, NekDouble u_l, NekDouble A_0, NekDouble beta, NekDouble pout,
-								   NekDouble &A_u,NekDouble &u_u);
-
-		/// CR Riemann solver
-		void CR_RiemannSolver(NekDouble C, NekDouble R, NekDouble A_l, NekDouble u_l, NekDouble A_0, NekDouble beta, NekDouble pout,
-								   NekDouble &A_u,NekDouble &u_u);
-		NekDouble pc;
-        /// Print Summary
+        PulseWavePressureAreaSharedPtr m_pressureArea;
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
     };
 }

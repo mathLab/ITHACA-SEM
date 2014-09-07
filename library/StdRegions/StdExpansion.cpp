@@ -966,6 +966,11 @@ namespace Nektar
             v_AddFaceNormBoundaryInt(face,FaceExp,Fn,outarray);
         }
 
+        int StdExpansion::v_GetElmtId(void)
+        {
+            return m_elmt_id;
+        }
+
         const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
@@ -1548,6 +1553,13 @@ namespace Nektar
                  ASSERTL0(false, "This function is not defined in StdExpansion.");
              }
 
+            void StdExpansion::v_ReduceOrderCoeffs(int numMin,
+                                                   const Array<OneD, const NekDouble> &inarray,
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                ASSERTL0(false, "This function is not defined in StdExpansion.");
+            }
+
             void StdExpansion::v_LaplacianMatrixOp(const int k1, const int k2,
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
@@ -1686,7 +1698,7 @@ namespace Nektar
             return result;
         }	
 	
-        const NormalVector & StdExpansion::v_GetSurfaceNormal() const
+        const NormalVector & StdExpansion::v_GetSurfaceNormal(const int id) const
         {
             ASSERTL0(false, "Cannot get face normals for this expansion.");
             static NormalVector result;
@@ -1718,5 +1730,15 @@ namespace Nektar
             return NullDNekMatSharedPtr;
         }
 
+
+        void StdExpansion::v_PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+
+        void StdExpansion::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
     }//end namespace
 }//end namespace

@@ -57,7 +57,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField3D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        const std::string &variable,
+                        const std::string &variable  = "DefaultVar",
                         const bool CheckIfSingularSystem = false);
 
             /// Construct a global continuous field with solution type based on

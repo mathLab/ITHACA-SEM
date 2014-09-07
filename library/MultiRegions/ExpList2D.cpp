@@ -451,9 +451,9 @@ namespace Nektar
          *                                   m_phys arrays
          **/
         ExpList2D::ExpList2D(
-            const Array<OneD, const ExpListSharedPtr> &bndConstraint,
-            const Array<OneD, const SpatialDomains::
-                              BoundaryConditionShPtr> &bndCond,
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const Array<OneD,const ExpListSharedPtr> &bndConstraint,
+            const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
             const LocalRegions::ExpansionVector &locexp,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const PeriodicMap &periodicFaces,
@@ -464,16 +464,16 @@ namespace Nektar
             SetExpType(e2D);
 
             int i, j, id, elmtid=0;
-            map<int,int> FaceDone;
-            map<int,int> NormalSet;
+            set<int> facesDone;
+
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
-            SpatialDomains::QuadGeomSharedPtr FaceQuadGeom;
-            SpatialDomains::TriGeomSharedPtr FaceTriGeom;
-            LocalRegions::QuadExpSharedPtr FaceQuadExp;
-            LocalRegions::TriExpSharedPtr FaceTriExp;
-            LocalRegions::Expansion2DSharedPtr exp2D;
-            LocalRegions::Expansion3DSharedPtr exp3D;
-            
+            SpatialDomains::QuadGeomSharedPtr   FaceQuadGeom;
+            SpatialDomains::TriGeomSharedPtr    FaceTriGeom;
+            LocalRegions::QuadExpSharedPtr      FaceQuadExp;
+            LocalRegions::TriExpSharedPtr       FaceTriExp;
+            LocalRegions::Expansion2DSharedPtr  exp2D;
+            LocalRegions::Expansion3DSharedPtr  exp3D;
+
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
             for (i = 0; i < bndCond.num_elements(); ++i)
@@ -484,171 +484,261 @@ namespace Nektar
                     for (j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
                         LibUtilities::BasisKey bkey0 = bndConstraint[i]
-                                    ->GetExp(j)->GetBasis(0)->GetBasisKey();
+                            ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         LibUtilities::BasisKey bkey1 = bndConstraint[i]
-                                    ->GetExp(j)->GetBasis(1)->GetBasisKey();
-                        exp2D = LocalRegions::Expansion2D::
-                            FromStdExp(bndConstraint[i]->GetExp(j));
+                            ->GetExp(j)->GetBasis(1)->GetBasisKey();
+                        exp2D = bndConstraint[i]->GetExp(j)
+                                    ->as<LocalRegions::Expansion2D>();
                         FaceGeom = exp2D->GetGeom2D();
 
                         //if face is a quad
-                        if ((FaceQuadGeom = boost::dynamic_pointer_cast<
+                        if((FaceQuadGeom = boost::dynamic_pointer_cast<
                             SpatialDomains::QuadGeom>(FaceGeom)))
                         {
-                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::
-                                AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
-                            FaceDone[FaceGeom->GetFid()] = elmtid;
+                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>
+                                ::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
+                            facesDone.insert(FaceQuadGeom->GetFid());
                             FaceQuadExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceQuadExp);
                         }
                         //if face is a triangle
-                        else if ((FaceTriGeom = boost::dynamic_pointer_cast<
+                        else if((FaceTriGeom = boost::dynamic_pointer_cast<
                                  SpatialDomains::TriGeom>(FaceGeom)))
                         {
-                            FaceTriExp = MemoryManager<LocalRegions::TriExp>::
-                                AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
-                            FaceDone[FaceGeom->GetFid()] = elmtid;
+                            FaceTriExp = MemoryManager<LocalRegions::TriExp>
+                                ::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
+                            facesDone.insert(FaceTriGeom->GetFid());
                             FaceTriExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceTriExp);
                         }
                         else
                         {
-                            ASSERTL0(false,
-                                     "dynamic cast to a proper face geometry "
-                                     "failed"); 
+                            ASSERTL0(false,"dynamic cast to a proper face geometry failed");
                         }
                     }
                 }
             }
-            
-            // loop over all other faces and fill out other connectivities
-            for (i = 0; i < locexp.size(); ++i)
+
+            map<int, pair<SpatialDomains::Geometry2DSharedPtr,
+                          pair<LibUtilities::BasisKey,
+                               LibUtilities::BasisKey> > > faceOrders;
+            map<int, pair<SpatialDomains::Geometry2DSharedPtr,
+                          pair<LibUtilities::BasisKey,
+                               LibUtilities::BasisKey> > >::iterator it;
+
+            for(i = 0; i < locexp.size(); ++i)
             {
-                exp3D = LocalRegions::Expansion3D::FromStdExp(locexp[i]);
+                exp3D = locexp[i]->as<LocalRegions::Expansion3D>();
                 for (j = 0; j < exp3D->GetNfaces(); ++j)
                 {
-                    FaceGeom = (exp3D->GetGeom3D())->GetFace(j);
+                    FaceGeom = exp3D->GetGeom3D()->GetFace(j);
+                    id       = FaceGeom->GetFid();
 
-                    id = FaceGeom->GetFid();
-
-                    if (FaceDone.count(id)==0)
+                    if(facesDone.count(id) != 0)
                     {
-                        LibUtilities::BasisKey bkey0 = 
-                            boost::dynamic_pointer_cast<
-                                SpatialDomains::MeshGraph3D>(graph3D)->
-                                    GetFaceBasisKey(FaceGeom, 0, variable); 
-                        LibUtilities::BasisKey bkey1 = 
-                            boost::dynamic_pointer_cast<
-                                SpatialDomains::MeshGraph3D>(graph3D)->
-                                    GetFaceBasisKey(FaceGeom, 1);
-                        
-                        //if face is a quad
-                        if ((FaceQuadGeom = boost::dynamic_pointer_cast<
-                             SpatialDomains::QuadGeom>(FaceGeom)))
+                        continue;
+                    }
+                    it = faceOrders.find(id);
+
+                    if (it == faceOrders.end())
+                    {
+                        LibUtilities::BasisKey face_dir0
+                            = locexp[i]->DetFaceBasisKey(j,0);
+                        LibUtilities::BasisKey face_dir1
+                            = locexp[i]->DetFaceBasisKey(j,1);
+
+                        faceOrders.insert(
+                            std::make_pair(
+                                id, std::make_pair(
+                                    FaceGeom,
+                                    std::make_pair(face_dir0, face_dir1))));
+                    }
+                    else // variable modes/points
+                    {
+                        LibUtilities::BasisKey face0     =
+                            locexp[i]->DetFaceBasisKey(j,0);
+                        LibUtilities::BasisKey face1     =
+                            locexp[i]->DetFaceBasisKey(j,1);
+                        LibUtilities::BasisKey existing0 =
+                            it->second.second.first;
+                        LibUtilities::BasisKey existing1 =
+                            it->second.second.second;
+
+                        int np11 = face0    .GetNumPoints();
+                        int np12 = face1    .GetNumPoints();
+                        int np21 = existing0.GetNumPoints();
+                        int np22 = existing1.GetNumPoints();
+                        int nm11 = face0    .GetNumModes ();
+                        int nm12 = face1    .GetNumModes ();
+                        int nm21 = existing0.GetNumModes ();
+                        int nm22 = existing1.GetNumModes ();
+
+                        if ((np22 >= np12 || np21 >= np11) &&
+                            (nm22 >= nm12 || nm21 >= nm11))
                         {
-                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::
-                                AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
-                            
-                            FaceDone[id] = elmtid;
-                            FaceQuadExp->SetElmtId(elmtid++);
-                            (*m_exp).push_back(FaceQuadExp);
+                            continue;
                         }
-                        //if face is a triangle
-                        else if ((FaceTriGeom = boost::dynamic_pointer_cast<
-                                  SpatialDomains::TriGeom>(FaceGeom)))
+                        else if((np22 < np12 || np21 < np11) &&
+                                (nm22 < nm12 || nm21 < nm11))
                         {
-                            FaceTriExp = MemoryManager<LocalRegions::TriExp>::
-                                AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
-                            
-                            FaceDone[id] = elmtid;
-                            FaceTriExp->SetElmtId(elmtid++);
-                            (*m_exp).push_back(FaceTriExp);
+                            it->second.second.first  = face0;
+                            it->second.second.second = face1;
                         }
                         else
                         {
                             ASSERTL0(false,
-                                     "dynamic cast to a proper face geometry "
-                                     "failed"); 
+                                     "inappropriate number of points/modes (max "
+                                     "num of points is not set with max order)");
                         }
                     }
-                    // variable modes/points
-                    // if for the current edge we have more modes/points at 
-                    // least in one direction we replace the old edge in the 
-                    // trace expansion with the current one
+                }
+            }
+
+            LibUtilities::CommSharedPtr vComm = pSession->GetComm();
+            int nproc = vComm->GetSize(); // number of processors
+            int facepr = vComm->GetRank(); // ID processor
+
+            if (nproc > 1)
+            {
+                int fCnt = 0;
+
+                // Count the number of faces on each partition
+                for(i = 0; i < locexp.size(); ++i)
+                {
+                    fCnt += locexp[i]->GetNfaces();
+                }
+
+                // Set up the offset and the array that will contain the list of
+                // face IDs, then reduce this across processors.
+                Array<OneD, int> faceCnt(nproc,0);
+                faceCnt[facepr] = fCnt;
+                vComm->AllReduce(faceCnt, LibUtilities::ReduceSum);
+
+                int totFaceCnt = Vmath::Vsum(nproc, faceCnt, 1);
+                Array<OneD, int> fTotOffsets(nproc,0);
+
+                for (i = 1; i < nproc; ++i)
+                {
+                    fTotOffsets[i] = fTotOffsets[i-1] + faceCnt[i-1];
+                }
+
+                // Local list of the edges per element
+
+                Array<OneD, int> FacesTotID   (totFaceCnt, 0);
+                Array<OneD, int> FacesTotNm0  (totFaceCnt, 0);
+                Array<OneD, int> FacesTotNm1  (totFaceCnt, 0);
+                Array<OneD, int> FacesTotPnts0(totFaceCnt, 0);
+                Array<OneD, int> FacesTotPnts1(totFaceCnt, 0);
+
+                int cntr = fTotOffsets[facepr];
+
+                for(i = 0; i < locexp.size(); ++i)
+                {
+                    exp3D = locexp[i]->as<LocalRegions::Expansion3D>();
+
+                    int nfaces = locexp[i]->GetNfaces();
+
+                    for(j = 0; j < nfaces; ++j, ++cntr)
+                    {
+                        LibUtilities::BasisKey face_dir0
+                            = locexp[i]->DetFaceBasisKey(j,0);
+                        LibUtilities::BasisKey face_dir1
+                            = locexp[i]->DetFaceBasisKey(j,1);
+
+                        FacesTotID[cntr]    = exp3D->GetGeom3D()->GetFid(j);
+                        FacesTotNm0[cntr]   = face_dir0.GetNumModes ();
+                        FacesTotNm1[cntr]   = face_dir1.GetNumModes ();
+                        FacesTotPnts0[cntr] = face_dir0.GetNumPoints();
+                        FacesTotPnts1[cntr] = face_dir1.GetNumPoints();
+                    }
+                }
+
+                vComm->AllReduce(FacesTotID,    LibUtilities::ReduceSum);
+                vComm->AllReduce(FacesTotNm0,   LibUtilities::ReduceSum);
+                vComm->AllReduce(FacesTotNm1,   LibUtilities::ReduceSum);
+                vComm->AllReduce(FacesTotPnts0, LibUtilities::ReduceSum);
+                vComm->AllReduce(FacesTotPnts1, LibUtilities::ReduceSum);
+
+                for (i = 0; i < totFaceCnt; ++i)
+                {
+                    it = faceOrders.find(FacesTotID[i]);
+
+                    if (it == faceOrders.end())
+                    {
+                        continue;
+                    }
+
+                    LibUtilities::BasisKey existing0 =
+                        it->second.second.first;
+                    LibUtilities::BasisKey existing1 =
+                        it->second.second.second;
+                    LibUtilities::BasisKey face0(
+                        existing0.GetBasisType(), FacesTotNm0[i],
+                        LibUtilities::PointsKey(FacesTotPnts0[i],
+                                                existing0.GetPointsType()));
+                    LibUtilities::BasisKey face1(
+                        existing1.GetBasisType(), FacesTotNm1[i],
+                        LibUtilities::PointsKey(FacesTotPnts1[i],
+                                                existing1.GetPointsType()));
+
+                    int np11 = face0    .GetNumPoints();
+                    int np12 = face1    .GetNumPoints();
+                    int np21 = existing0.GetNumPoints();
+                    int np22 = existing1.GetNumPoints();
+                    int nm11 = face0    .GetNumModes ();
+                    int nm12 = face1    .GetNumModes ();
+                    int nm21 = existing0.GetNumModes ();
+                    int nm22 = existing1.GetNumModes ();
+
+                    if ((np22 >= np12 || np21 >= np11) &&
+                        (nm22 >= nm12 || nm21 >= nm11))
+                    {
+                        continue;
+                    }
+                    else if((np22 < np12 || np21 < np11) &&
+                            (nm22 < nm12 || nm21 < nm11))
+                    {
+                        it->second.second.first  = face0;
+                        it->second.second.second = face1;
+                    }
                     else
                     {
-                        LibUtilities::BasisKey bkey0 = 
-                            boost::dynamic_pointer_cast<SpatialDomains::
-                                MeshGraph3D>(graph3D)->
-                                    GetFaceBasisKey(FaceGeom, 0); 
-                        LibUtilities::BasisKey bkey1 = 
-                            boost::dynamic_pointer_cast<SpatialDomains::
-                                MeshGraph3D>(graph3D)->
-                                    GetFaceBasisKey(FaceGeom, 1);
-                        
-                        if ( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
-                                >= bkey0.GetNumPoints()
-                                || (*m_exp)[FaceDone[id]]->GetNumPoints(1)
-                                >= bkey1.GetNumPoints())
-                                && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
-                                >= bkey0.GetNumModes()
-                                || (*m_exp)[FaceDone[id]]->GetBasisNumModes(1)
-                                >= bkey1.GetNumModes()) )
-                        {
-                        }
-                        else if ( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
-                                <= bkey0.GetNumPoints()
-                                  || (*m_exp)[FaceDone[id]]->GetNumPoints(1)
-                                <= bkey1.GetNumPoints())
-                                && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
-                                <= bkey0.GetNumModes()
-                                || (*m_exp)[FaceDone[id]]->GetBasisNumModes(1)
-                                <= bkey1.GetNumModes()) )
-                        {
-                            //if face is a quad
-                            if ((FaceQuadGeom = boost::dynamic_pointer_cast<
-                                 SpatialDomains::QuadGeom>(FaceGeom)))
-                            {
-                                FaceQuadExp = MemoryManager<
-                                    LocalRegions::QuadExp>::
-                                        AllocateSharedPtr(bkey0, bkey1, 
-                                                          FaceQuadGeom);
-                                FaceQuadExp->SetElmtId(FaceDone[id]);
-                                (*m_exp)[FaceDone[id]] = FaceQuadExp;
-                            }
-                            //if face is a triangle
-                            else if ((FaceTriGeom = boost::dynamic_pointer_cast<
-                                      SpatialDomains::TriGeom>(FaceGeom)))
-                            {
-                                FaceTriExp = MemoryManager<LocalRegions::
-                                    TriExp>::AllocateSharedPtr(bkey0, bkey1, 
-                                                               FaceTriGeom);
-                                FaceTriExp->SetElmtId(FaceDone[id]);
-                                (*m_exp)[FaceDone[id]] = FaceTriExp;
-                            }
-                            else
-                            {
-                                ASSERTL0(
-                                    false,
-                                    "dynamic cast to a proper face geometry "
-                                    "failed"); 
-                            }
-                            
-                            NormalSet.erase(id);
-                        }
-                        else
-                        {
-                            ASSERTL0(
-                                false,
-                                "inappropriate number of points/modes (max "
-                                "num of points is not set with max order)");
-                        }
+                        ASSERTL0(false,
+                                 "inappropriate number of points/modes (max "
+                                 "num of points is not set with max order)");
                     }
+                }
+            }
+
+            for (it = faceOrders.begin(); it != faceOrders.end(); ++it)
+            {
+                FaceGeom = it->second.first;
+
+                if ((FaceQuadGeom = boost::dynamic_pointer_cast<
+                     SpatialDomains::QuadGeom>(FaceGeom)))
+                {
+                    FaceQuadExp = MemoryManager<LocalRegions::QuadExp>
+                        ::AllocateSharedPtr(it->second.second.first,
+                                            it->second.second.second,
+                                            FaceQuadGeom);
+                    FaceQuadExp->SetElmtId(elmtid++);
+                    (*m_exp).push_back(FaceQuadExp);
+                }
+                else if ((FaceTriGeom = boost::dynamic_pointer_cast<
+                          SpatialDomains::TriGeom>(FaceGeom)))
+                {
+                    FaceTriExp = MemoryManager<LocalRegions::TriExp>
+                        ::AllocateSharedPtr(it->second.second.first,
+                                            it->second.second.second,
+                                            FaceTriGeom);
+                    FaceTriExp->SetElmtId(elmtid++);
+                    (*m_exp).push_back(FaceTriExp);
                 }
             }
 
             // Setup Default optimisation information.
             int nel = GetExpSize();
+
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
@@ -844,41 +934,107 @@ namespace Nektar
         void ExpList2D::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            int i,k,offset;
+            int i,j,k,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
             Array<OneD, NekDouble> tmp;
             // Assume whole array is of same coordinate dimension
             int coordim = GetCoordim(0);
-            
+
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
-            
+
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
-                LocalRegions::Expansion2DSharedPtr loc_exp = 
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion2D>((*m_exp)[i]);
-                LocalRegions::Expansion3DSharedPtr loc_elmt = 
+                int e_npoints = (*m_exp)[i]->GetTotPoints();
+
+                LocalRegions::Expansion2DSharedPtr loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion2D>();
+                LocalRegions::Expansion3DSharedPtr loc_elmt =
                     loc_exp->GetLeftAdjacentElementExp();
                 int faceNumber = loc_exp->GetLeftAdjacentElementFace();
-                
+
                 // Get the number of points and normals for this expansion.
                 locnormals = loc_elmt->GetFaceNormal(faceNumber);
-                
-                // Get the physical data offset for this expansion.
-                offset = m_phys_offset[i];
-                
-                for (k = 0; k < coordim; ++k)
+                int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
+
+                if (e_nmodes != loc_nmodes)
                 {
-                    LibUtilities::Interp2D(
-                        loc_elmt->GetFacePointsKey(faceNumber, 0),
-                        loc_elmt->GetFacePointsKey(faceNumber, 1),
-                        locnormals[k],
-                        (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
-                        (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
-                        tmp = normals[k]+offset);
+                    if (loc_exp->GetRightAdjacentElementFace() >= 0)
+                    {
+                        LocalRegions::Expansion3DSharedPtr loc_elmt =
+                            loc_exp->GetRightAdjacentElementExp();
+
+                        int faceNumber = loc_exp->GetRightAdjacentElementFace();
+
+                        // Get the number of points and normals for this expansion.
+                        locnormals = loc_elmt->GetFaceNormal(faceNumber);
+
+                        offset = m_phys_offset[i];
+                        // Process each point in the expansion.
+                        for(int j = 0; j < e_npoints; ++j)
+                        {
+                            for(k = 0; k < coordim; ++k)
+                            {
+                                normals[k][offset+j] = -locnormals[k][j];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Array<OneD, Array<OneD, NekDouble> > normal(coordim);
+
+                        for (int p = 0; p < coordim; ++p)
+                        {
+                            normal[p] = Array<OneD, NekDouble>(e_npoints,0.0);
+
+                            LibUtilities::PointsKey to_key0 =
+                                loc_exp->GetBasis(0)->GetPointsKey();
+                            LibUtilities::PointsKey to_key1 =
+                                loc_exp->GetBasis(1)->GetPointsKey();
+                            LibUtilities::PointsKey from_key0 =
+                                loc_elmt->GetBasis(0)->GetPointsKey();
+                            LibUtilities::PointsKey from_key1 =
+                                loc_elmt->GetBasis(1)->GetPointsKey();
+
+                            LibUtilities::Interp2D(from_key0,
+                                                   from_key1,
+                                                   locnormals[p],
+                                                   to_key0,
+                                                   to_key1,
+                                                   normal[p]);
+                        }
+
+                        offset = m_phys_offset[i];
+
+                        // Process each point in the expansion.
+                        for (j = 0; j < e_npoints; ++j)
+                        {
+                            // Process each spatial dimension and copy the values
+                            // into the output array.
+                            for (k = 0; k < coordim; ++k)
+                            {
+                                normals[k][offset + j] = normal[k][j];
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Get the physical data offset for this expansion.
+                    offset = m_phys_offset[i];
+
+                    for (k = 0; k < coordim; ++k)
+                    {
+                        LibUtilities::Interp2D(
+                            loc_elmt->GetFacePointsKey(faceNumber, 0),
+                            loc_elmt->GetFacePointsKey(faceNumber, 1),
+                            locnormals[k],
+                            (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                            (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                            tmp = normals[k]+offset);
+                    }
                 }
             }
         }

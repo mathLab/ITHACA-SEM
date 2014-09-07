@@ -227,6 +227,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
                       Array<OneD, NekDouble> &array,
                 const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                      int numMin,
+                      const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD, NekDouble> &outarray);
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                 const int                           k1,
                 const int                           k2,
@@ -250,6 +254,15 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
+
+            //---------------------------------------
+            // Output interpolation functions
+            //---------------------------------------
+
+            STD_REGIONS_EXPORT virtual void v_PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn);
+
         };
         typedef boost::shared_ptr<StdTriExp> StdTriExpSharedPtr;
     } //end of namespace

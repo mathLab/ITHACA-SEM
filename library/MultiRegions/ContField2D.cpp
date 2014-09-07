@@ -126,8 +126,6 @@ namespace Nektar
                     boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
                     std::string("GlobalLinSys"))
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
-
             m_locToGloMap = MemoryManager<AssemblyMapCG2D>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
@@ -137,6 +135,10 @@ namespace Nektar
                                     CheckIfSingularSystem,
                                     variable);
 
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_locToGloMap->PrintStats(std::cout, variable);
+            }
         }
 
 
@@ -174,7 +176,6 @@ namespace Nektar
                     boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
                     std::string("GlobalLinSys"))
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
                 m_locToGloMap = MemoryManager<AssemblyMapCG2D>
@@ -184,12 +185,16 @@ namespace Nektar
                                         m_periodicVerts,
                                         m_periodicEdges,
                                         CheckIfSingularSystem);
+
+                if (m_session->DefinesCmdLineArgument("verbose"))
+                {
+                    m_locToGloMap->PrintStats(std::cout, variable);
+                }
             }
             else
             {
                 m_locToGloMap = In.m_locToGloMap;
             }
-
         }
 
 

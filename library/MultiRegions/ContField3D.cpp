@@ -83,12 +83,15 @@ namespace Nektar
                         boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
                         std::string("GlobalLinSys"))
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
-            
             m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
                 m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
                 m_periodicVerts, m_periodicEdges, m_periodicFaces,
                 CheckIfSingularSystem, variable);
+
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_locToGloMap->PrintStats(std::cout, variable);
+            }
         }
 
 
@@ -132,6 +135,11 @@ namespace Nektar
                     m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
                     m_periodicVerts, m_periodicEdges, m_periodicFaces,
                     CheckIfSingularSystem,variable);
+
+                if (m_session->DefinesCmdLineArgument("verbose"))
+                {
+                    m_locToGloMap->PrintStats(std::cout, variable);
+                }
             }
             else
             {

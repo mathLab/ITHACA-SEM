@@ -307,9 +307,10 @@ namespace Nektar
 
         }
 
-        const NormalVector & StdExpansion3D::v_GetSurfaceNormal() const
+        const NormalVector & StdExpansion3D::v_GetSurfaceNormal(
+                const int id) const
         {
-            return m_surfaceNormal;
+            return v_GetFaceNormal(id);
         }
         
         const NormalVector & StdExpansion3D::v_GetFaceNormal(const int face) const
@@ -321,6 +322,16 @@ namespace Nektar
             return x->second;
         }
 
+        NekDouble StdExpansion3D::v_Integral(
+            const Array<OneD, const NekDouble>& inarray)
+        {
+            const int nqtot = GetTotPoints();
+            Array<OneD, NekDouble> tmp(GetTotPoints());
+            MultiplyByStdQuadratureMetric(inarray, tmp);
+            return Vmath::Vsum(nqtot, tmp, 1);
+        }
+        
+        
         void StdExpansion3D::v_NegateFaceNormal(const int face)
         {
             m_negatedNormals[face] = true;

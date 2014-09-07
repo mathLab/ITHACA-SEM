@@ -56,6 +56,9 @@ namespace Nektar
         typedef boost::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
+        class PointGeom;
+        typedef boost::shared_ptr< PointGeom >  PointGeomSharedPtr;
+
         /// \brief Less than operator to sort Geometry objects by global id when sorting 
         /// STL containers.
         SPATIAL_DOMAINS_EXPORT  bool SortByGlobalId(const boost::shared_ptr<Geometry>& lhs, 
@@ -89,6 +92,10 @@ namespace Nektar
                 //---------------------------------------
 
                 SPATIAL_DOMAINS_EXPORT inline int GetCoordim() const;
+                SPATIAL_DOMAINS_EXPORT void SetCoordim(int coordim) 
+                {
+                    m_coordim = coordim;
+                }
                 SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetGeomFactors();
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
@@ -100,6 +107,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline int GetEid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetFid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumVerts() const;
+                SPATIAL_DOMAINS_EXPORT inline PointGeomSharedPtr GetVertex(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
                             GetEorient(const int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
@@ -182,6 +190,7 @@ namespace Nektar
                 virtual int  v_GetFid(int i) const;
                 virtual void v_GenGeomFactors() = 0;
                 virtual int  v_GetNumVerts() const;
+                virtual PointGeomSharedPtr v_GetVertex(int i) const = 0;
                 virtual StdRegions::Orientation
                              v_GetEorient(const int i) const;
                 virtual StdRegions::Orientation
@@ -233,7 +242,7 @@ namespace Nektar
                 size_t seed  = 0;
                 int nVert = p->GetNumVerts();
                 std::vector<unsigned int> ids(nVert);
-
+                
                 for (i = 0; i < nVert; ++i)
                 {
                     ids[i] = p->GetVid(i);
@@ -310,6 +319,11 @@ namespace Nektar
         inline int Geometry::GetNumVerts() const
         {
             return v_GetNumVerts();
+        }
+
+        inline PointGeomSharedPtr Geometry::GetVertex(int i) const
+        {
+            return v_GetVertex(i);
         }
 
         inline StdRegions::Orientation Geometry::GetEorient(const int i) const

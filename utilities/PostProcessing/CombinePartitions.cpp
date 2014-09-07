@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 #include <LibUtilities/BasicUtils/FileSystem.h>
 

@@ -41,6 +41,7 @@
 #include <SpatialDomains/Geometry0D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace Nektar
 {
@@ -56,7 +57,8 @@ namespace Nektar
         typedef std::map<int, PointGeomSharedPtr> PointGeomMap;
         typedef std::set< PointGeomSharedPtr >  PointGeomSet;
 
-        class PointGeom: public Geometry0D, public NekPoint<NekDouble>
+        class PointGeom: public Geometry0D, public NekPoint<NekDouble>,
+                         public boost::enable_shared_from_this<PointGeom>
         {
             public:
                 SPATIAL_DOMAINS_EXPORT PointGeom();
@@ -72,11 +74,6 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
                 SPATIAL_DOMAINS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords);
                 SPATIAL_DOMAINS_EXPORT void UpdatePosition(NekDouble x, NekDouble y, NekDouble z);
-
-                inline int GetCoordim() const
-                {
-                    return m_coordim;
-                }
 
                 inline int GetVid() const
                 {
@@ -108,14 +105,14 @@ namespace Nektar
 
             protected:
                 int m_vid;
-                int m_coordim;
                 std::list<CompToElmt> m_elmtMap;
 
                 virtual void v_GenGeomFactors();
                 virtual int v_GetVid(int id) const;
 
-            private:
+                virtual PointGeomSharedPtr v_GetVertex(int i) const;
 
+            private:
                 virtual NekDouble v_GetCoord(
                             const int i,
                             const Array<OneD,const NekDouble>& Lcoord);

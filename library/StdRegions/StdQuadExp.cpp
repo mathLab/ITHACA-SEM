@@ -32,7 +32,7 @@
 // Description: Quadrilateral routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/Foundations/InterpCoeff.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -1318,6 +1318,51 @@ namespace Nektar
 
             switch(mtype)
             {
+            case ePhysInterpToEquiSpaced:
+                {
+                    int nq0 = m_base[0]->GetNumPoints();
+                    int nq1 = m_base[1]->GetNumPoints();
+                    int nq = max(nq0,nq1);
+                    int neq = LibUtilities::StdQuadData::getNumberOfCoefficients
+(nq,nq);
+                    Array<OneD, Array<OneD, NekDouble> > coords(neq);
+                    Array<OneD, NekDouble>    coll(2); 
+                    Array<OneD, DNekMatSharedPtr> I(2);
+                    Array<OneD, NekDouble> tmp(nq0);
+                    
+                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(neq,nq0*nq1);
+                    int cnt = 0; 
+                    
+                    for(int i = 0; i < nq; ++i)
+                    {
+                        for(int j = 0; j < nq; ++j,++cnt)
+                        {
+                            coords[cnt] = Array<OneD, NekDouble>(2);
+                            coords[cnt][0] = -1.0 + 2*j/(NekDouble)(nq-1);
+                            coords[cnt][1] = -1.0 + 2*i/(NekDouble)(nq-1);
+                        }
+                    }
+                    
+                    for(int i = 0; i < neq; ++i)
+                    {
+                        LocCoordToLocCollapsed(coords[i],coll);
+                        
+                        I[0] = m_base[0]->GetI(coll);
+                        I[1] = m_base[1]->GetI(coll+1);
+                        
+                        // interpolate first coordinate direction
+                        for (int j  = 0; j < nq1; ++j)
+                        {
+                            NekDouble fac = (I[1]->GetPtr())[j];
+                            Vmath::Smul(nq0,fac,I[0]->GetPtr(),1,tmp,1);
+
+                            Vmath::Vcopy(nq0, &tmp[0], 1,
+                                         Mat->GetRawPtr()+j*nq0*neq+i,neq);
+                        }
+                        
+                    }
+                }
+                break;
             case eMass:
                 {
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
@@ -1471,7 +1516,56 @@ namespace Nektar
 
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
-        }                        
+        }
+
+        void StdQuadExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int n_coeffs = inarray.num_elements();
+
+
+            Array<OneD, NekDouble> coeff(n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmp2;
+
+            int       nmodes0 = m_base[0]->GetNumModes();
+            int       nmodes1 = m_base[1]->GetNumModes();
+            int       numMax  = nmodes0;
+
+            Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
+
+            const LibUtilities::PointsKey Pkey0(
+                nmodes0, LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::PointsKey Pkey1(
+                nmodes1, LibUtilities::eGaussLobattoLegendre);
+
+            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
+            LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),nmodes1,Pkey1);
+
+            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
+            LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_A,nmodes1,Pkey1);
+
+            LibUtilities::InterpCoeff2D(
+                b0, b1, coeff_tmp, bortho0, bortho1, coeff);
+
+            Vmath::Zero(n_coeffs,coeff_tmp,1);
+
+            int cnt = 0;
+            for (int i = 0; i < numMin+1; ++i)
+            {
+                Vmath::Vcopy(numMin,
+                             tmp  = coeff+cnt,1,
+                             tmp2 = coeff_tmp+cnt,1);
+
+                cnt = i*numMax;
+            }
+
+            LibUtilities::InterpCoeff2D(
+                bortho0, bortho1, coeff_tmp, b0, b1, outarray);
+        }
 
         
         void StdQuadExp::v_MassMatrixOp(
@@ -1536,6 +1630,51 @@ namespace Nektar
             {
                 Vmath::Vmul(nquad1,outarray.get()+i,nquad0,w1.get(),1,
                             outarray.get()+i,nquad0);
+            }
+        }
+
+        void StdQuadExp::v_PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            StdMatrixKey Ikey(ePhysInterpToEquiSpaced, DetShapeType(), *this);
+            
+            DNekMatSharedPtr  intmat = GetStdMatrix(Ikey);
+
+            int np1 = m_base[0]->GetNumPoints();
+            int np2 = m_base[1]->GetNumPoints();
+            int np = max(np1,np2);
+            
+            NekVector<NekDouble> in (np1*np2,inarray,eWrapper);
+            NekVector<NekDouble> out(LibUtilities::StdQuadData::getNumberOfCoefficients(np,np),outarray,eWrapper);
+            out = (*intmat) * in;
+        }
+
+        void StdQuadExp::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn)
+        {
+            int np1 = m_base[0]->GetNumPoints();
+            int np2 = m_base[1]->GetNumPoints();
+            int np = max(np1,np2);
+            
+            int neq = LibUtilities::StdQuadData::getNumberOfCoefficients(np,np);
+            
+            conn = Array<OneD, int>(6*(np-1)*(np-1));
+            
+            int row   = 0;
+            int rowp1 = 0;
+            int cnt = 0; 
+            for(int i = 0; i < np-1; ++i)
+            {
+                rowp1 += np;
+                for(int j = 0; j < np-1; ++j)
+                {
+                    conn[cnt++] = row   +j;
+                    conn[cnt++] = row   +j+1;
+                    conn[cnt++] = rowp1 +j;
+
+                    conn[cnt++] = rowp1 +j+1;
+                    conn[cnt++] = rowp1 +j;
+                    conn[cnt++] = row   +j+1;
+                }
+                row += np;
             }
         }
 

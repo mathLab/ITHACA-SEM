@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <SolverUtils/Driver.h>
 #include <SolverUtils/EquationSystem.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
@@ -41,72 +42,34 @@ using namespace Nektar::SolverUtils;
 
 int main(int argc, char *argv[])
 {
-    // Create session reader
     LibUtilities::SessionReaderSharedPtr session;
-    session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+    string vDriverModule;
+    DriverSharedPtr drv;
 
-    time_t starttime, endtime;
-    NekDouble CPUtime;
-
-    EquationSystemSharedPtr equ;
-
-    // Record start time
-    time(&starttime);
-
-    // Create instance of module to solve the equation specified in the session
     try
     {
-        equ = GetEquationSystemFactory().CreateInstance(
-                                session->GetSolverInfo("EQTYPE"), session);
+        // Create session reader.
+        session = LibUtilities::SessionReader::CreateInstance(argc, argv);
+
+        // Create driver
+        session->LoadSolverInfo("Driver", vDriverModule, "Standard");
+        drv = GetDriverFactory().CreateInstance(vDriverModule, session);
+
+        // Execute driver
+        drv->Execute();
+
+        // Finalise communications
+        session->Finalise();
     }
-    catch (int e)
+    catch (const std::runtime_error&)
     {
-        ASSERTL0(e == -1, "No such solver class defined.");
+        return 1;
     }
-
-    // Print a summary of solver/problem parameters
-    equ->PrintSummary(cout);
-    
-    // Initialise the problem
-    equ->DoInitialise();
-
-    // Solve the problem
-    equ->DoSolve();
-
-    // Record end time
-    time(&endtime);
-    
-    // Compute the computational time in hours
-    CPUtime = difftime(endtime, starttime);
-
-    // Write output to .fld file
-    equ->Output();
-
-    // Evaluate and output computation time and solution accuracy
-    if (session->GetComm()->GetRank() == 0)
+    catch (const std::string& eStr)
     {
-        cout << "-------------------------------------------" << endl;
-        cout << "Total Computation Time = " << CPUtime << "s" << endl;
-        cout << "-------------------------------------------" << endl;
+        cout << "Error: " << eStr << endl;
     }
     
-    for(int i = 0; i < equ->GetNvariables(); ++i)
-    {
-        // Get exact solution
-        Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(), 0.0);
-        equ->EvaluateExactSolution(i, exactsoln, equ->GetFinalTime());
-        
-        NekDouble l2 = equ->L2Error  (i, exactsoln);
-        NekDouble li = equ->LinfError(i, exactsoln);
-        
-        if (session->GetComm()->GetRank() == 0)
-        {
-            cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " 
-                 << l2 << endl;
-            cout << "L inf error (variable " << equ->GetVariable(i)  << "): " 
-                 << li << endl;
-        }
-    }
-    
-    session->Finalise();
+    return 0;
+
 }

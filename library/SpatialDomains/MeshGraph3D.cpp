@@ -37,7 +37,7 @@
 #include <SpatialDomains/MeshGraph3D.h>
 #include <SpatialDomains/TriGeom.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -1031,6 +1031,7 @@ namespace Nektar
             // Obtain the number of modes for the element basis key in this
             // direction.
             int nummodes = (int) expansion->m_basisKeyVector[dir].GetNumModes();
+            int numpoints = (int) expansion->m_basisKeyVector[dir].GetNumPoints();
 
             switch(expansion->m_basisKeyVector[dir].GetBasisType())
             {
@@ -1073,7 +1074,7 @@ namespace Nektar
 
                     if(quadrilateral)
                     {
-                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                         return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
                     }
                     else if(triangle)

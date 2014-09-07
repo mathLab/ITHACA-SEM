@@ -63,7 +63,6 @@ namespace Nektar
 
     void IncNavierStokes::v_InitObject()
     {
-        UnsteadySystem::v_InitObject();
         
         int i,j;
         int numfields = m_fields.num_elements();
@@ -135,7 +134,9 @@ namespace Nektar
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eRadiation ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eI,
+                            SpatialDomains::eI ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eHighOutflow,
                         "Unknown USERDEFINEDTYPE boundary condition");
                 }
             }
@@ -258,6 +259,7 @@ namespace Nektar
                 vExtrapolation, 
                 m_session,
                 m_fields,
+		m_pressure,
                 m_velocity,
                 m_advObject);
         }
@@ -370,7 +372,8 @@ namespace Nektar
     void IncNavierStokes::SetBoundaryConditions(NekDouble time)
     {
         int i, n;
-        int  nvariables = m_fields.num_elements();
+        std::string varName;
+        int nvariables = m_fields.num_elements();
         
         for (i = 0; i < nvariables; ++i)
         {
@@ -379,12 +382,13 @@ namespace Nektar
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
                    SpatialDomains::eTimeDependent)
                 {
-                    m_fields[i]->EvaluateBoundaryConditions(time);
+                    varName = m_session->GetVariable(i);
+                    m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
 
             }
 
-            // Set Radiation conditions if required.
+            // Set Radiation conditions if required
             SetRadiationBoundaryForcing(i);
         }
     }
@@ -443,7 +447,11 @@ namespace Nektar
                 }
                 cnt1 += BndExp[n]->GetTotPoints();
             }
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eWall_Forces || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
+            else if(type == SpatialDomains::eNoUserDefined ||
+                    type == SpatialDomains::eWall_Forces ||
+                    type == SpatialDomains::eTimeDependent ||
+                    type == SpatialDomains::eHigh ||
+                    type == SpatialDomains::eHighOutflow)
             {
                 cnt += BndExp[n]->GetExpSize();
             }

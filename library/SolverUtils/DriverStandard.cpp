@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
+
 #include <SolverUtils/DriverStandard.h>
 
 namespace Nektar
@@ -71,23 +73,49 @@ namespace Nektar
         void DriverStandard::v_Execute(ostream &out)
         
         {
+            time_t starttime, endtime;
+            NekDouble CPUtime;
+
             m_equ[0]->PrintSummary(out);
+
+            time(&starttime);
+
             m_equ[0]->DoInitialise();
             m_equ[0]->DoSolve();
+
+            time(&endtime);
+
             m_equ[0]->Output();
         
+            if (m_comm->GetRank() == 0)
+            {
+                CPUtime = difftime(endtime, starttime);
+                cout << "-------------------------------------------" << endl;
+                cout << "Total Computation Time = " << CPUtime << "s" << endl;
+                cout << "-------------------------------------------" << endl;
+            }
+
             // Evaluate and output computation time and solution accuracy.
             // The specific format of the error output is essential for the
             // regression tests to work.
             // Evaluate L2 Error
             for(int i = 0; i < m_equ[0]->GetNvariables(); ++i)
             {
-                NekDouble vL2Error = m_equ[0]->L2Error(i,false);
-                NekDouble vLinfError = m_equ[0]->LinfError(i);
+                Array<OneD, NekDouble> exactsoln(m_equ[0]->GetTotPoints(), 0.0);
+
+                // Evaluate "ExactSolution" function, or zero array
+                m_equ[0]->EvaluateExactSolution(i, exactsoln, 
+                                                    m_equ[0]->GetFinalTime());
+
+                NekDouble vL2Error   = m_equ[0]->L2Error  (i, exactsoln);
+                NekDouble vLinfError = m_equ[0]->LinfError(i, exactsoln);
+
                 if (m_comm->GetRank() == 0)
                 {
-                    out << "L 2 error (variable " << m_equ[0]->GetVariable(i) << ") : " << vL2Error << endl;
-                    out << "L inf error (variable " << m_equ[0]->GetVariable(i) << ") : " << vLinfError << endl;
+                    out << "L 2 error (variable " << m_equ[0]->GetVariable(i) 
+                        << ") : " << vL2Error << endl;
+                    out << "L inf error (variable " << m_equ[0]->GetVariable(i) 
+                        << ") : " << vLinfError << endl;
                 }
             }
         }

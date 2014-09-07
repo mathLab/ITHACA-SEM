@@ -138,9 +138,13 @@ namespace Nektar
             eFwdTrans,
             ePreconR,
             ePreconRT,
+            ePreconRMass,
+            ePreconRTMass,
             ePreconLinearSpace,
+            ePreconLinearSpaceMass,
             eInterpGauss,
             eGaussDG,
+            ePhysInterpToEquiSpaced,
             SIZE_MatrixType
         };
 
@@ -186,7 +190,8 @@ namespace Nektar
             "PreconRT",
             "PreconLinearSpace",
             "InterpGauss",
-            "GaussDG"
+            "GaussDG",
+            "PhysInterpToEquiSpaced"
         };
 
         enum VarCoeffType

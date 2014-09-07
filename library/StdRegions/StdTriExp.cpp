@@ -32,7 +32,7 @@
 // Description: Triangle routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/Foundations/InterpCoeff.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdSegExp.h>       // for StdSegExp, etc
@@ -1217,6 +1217,51 @@ namespace Nektar
             
             switch(mtype)
             {
+            case ePhysInterpToEquiSpaced:
+                {
+                    int nq0 = m_base[0]->GetNumPoints();
+                    int nq1 = m_base[1]->GetNumPoints();
+                    int nq = max(nq0,nq1);
+                    int neq = LibUtilities::StdTriData::getNumberOfCoefficients
+(nq,nq);
+                    Array<OneD, Array<OneD, NekDouble> > coords(neq);
+                    Array<OneD, NekDouble>    coll(2); 
+                    Array<OneD, DNekMatSharedPtr> I(2);
+                    Array<OneD, NekDouble> tmp(nq0);
+                    
+                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(neq,nq0*nq1);
+                    int cnt = 0; 
+                    
+                    for(int i = 0; i < nq; ++i)
+                    {
+                        for(int j = 0; j < nq-i; ++j,++cnt)
+                        {
+                            coords[cnt] = Array<OneD, NekDouble>(2);
+                            coords[cnt][0] = -1.0 + 2*j/(NekDouble)(nq-1);
+                            coords[cnt][1] = -1.0 + 2*i/(NekDouble)(nq-1);
+                        }
+                    }
+                    
+                    for(int i = 0; i < neq; ++i)
+                    {
+                        LocCoordToLocCollapsed(coords[i],coll);
+                        
+                        I[0] = m_base[0]->GetI(coll);
+                        I[1] = m_base[1]->GetI(coll+1);
+                        
+                        // interpolate first coordinate direction
+                        for (int j  = 0; j < nq1; ++j)
+                        {
+                            NekDouble fac = (I[1]->GetPtr())[j];
+                            Vmath::Smul(nq0,fac,I[0]->GetPtr(),1,tmp,1);
+
+                            Vmath::Vcopy(nq0, &tmp[0], 1,
+                                         Mat->GetRawPtr()+j*nq0*neq+i,neq);
+                        }
+                        
+                    }
+                }
+                break;
             default:
                 {
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
@@ -1330,7 +1375,64 @@ namespace Nektar
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
-        
+
+        void StdTriExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int n_coeffs = inarray.num_elements();
+            int nquad0   = m_base[0]->GetNumPoints();
+            int nquad1   = m_base[1]->GetNumPoints();
+            Array<OneD, NekDouble> coeff(n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmp2;
+            int nqtot    = nquad0*nquad1;
+            Array<OneD, NekDouble> phys_tmp(nqtot,0.0);
+
+            int       nmodes0 = m_base[0]->GetNumModes();
+            int       nmodes1 = m_base[1]->GetNumModes();
+            int       numMax  = nmodes0;
+            int       numMin2 = nmodes0;
+            int       i;
+            
+            const LibUtilities::PointsKey Pkey0(
+                nmodes0, LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::PointsKey Pkey1(
+                nmodes1, LibUtilities::eGaussLobattoLegendre);
+
+            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
+            LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),nmodes1,Pkey1);
+
+            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
+            LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_B,nmodes1,Pkey1);
+
+            StdRegions::StdTriExpSharedPtr m_OrthoTriExp;
+            StdRegions::StdTriExpSharedPtr m_TriExp;
+
+            m_TriExp      = MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr(b0,      b1);
+            m_OrthoTriExp = MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr(bortho0, bortho1);
+
+            m_TriExp     ->BwdTrans(inarray,phys_tmp);
+            m_OrthoTriExp->FwdTrans(phys_tmp, coeff);
+
+            for (i = 0; i < n_coeffs; i++)
+            {
+                if (i == numMin)
+                {
+                    coeff[i] = 0.0;
+                    numMin += numMin2 - 1;
+                    numMin2 -= 1.0;
+                }
+            }
+
+            m_OrthoTriExp->BwdTrans(coeff,phys_tmp);
+            m_TriExp     ->FwdTrans(phys_tmp, outarray);
+
+        }
 
         void StdTriExp::v_GeneralMatrixOp_MatOp(
             const Array<OneD, const NekDouble> &inarray,
@@ -1402,5 +1504,58 @@ namespace Nektar
                     break;
             }
         }
+
+
+        void StdTriExp::v_PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            StdMatrixKey Ikey(ePhysInterpToEquiSpaced, DetShapeType(), *this);
+            
+            DNekMatSharedPtr  intmat = GetStdMatrix(Ikey);
+
+            int np1 = m_base[0]->GetNumPoints();
+            int np2 = m_base[1]->GetNumPoints();
+            int np = max(np1,np2);
+            
+            NekVector<NekDouble> in (np1*np2,inarray,eWrapper);
+            NekVector<NekDouble> out(LibUtilities::StdTriData::getNumberOfCoefficients(np,np),outarray,eWrapper);
+            out = (*intmat) * in;
+        }
+
+        void StdTriExp::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn)
+        {
+            int np1 = m_base[0]->GetNumPoints();
+            int np2 = m_base[1]->GetNumPoints();
+            int np = max(np1,np2);
+            
+            int neq = LibUtilities::StdTriData::getNumberOfCoefficients(np,np);
+            
+            conn = Array<OneD, int>(3*(np-1)*(np-1));
+            
+            int row   = 0;
+            int rowp1 = 0;
+            int cnt = 0; 
+            for(int i = 0; i < np-1; ++i)
+            {
+                rowp1 += np-i;
+                for(int j = 0; j < np-i-2; ++j)
+                {
+                    conn[cnt++] = row   +j;
+                    conn[cnt++] = row   +j+1;
+                    conn[cnt++] = rowp1 +j;
+
+                    conn[cnt++] = rowp1 +j+1;
+                    conn[cnt++] = rowp1 +j;
+                    conn[cnt++] = row   +j+1;
+                }
+
+                conn[cnt++] = row  +np-i-2;
+                conn[cnt++] = row  +np-i-1;
+                conn[cnt++] = rowp1+np-i-2;
+
+                row += np-i;
+            }
+        }
+
+        
     }//end namespace
 }//end namespace

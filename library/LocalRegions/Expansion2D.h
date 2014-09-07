@@ -117,11 +117,6 @@ namespace Nektar
 
             inline SpatialDomains::Geometry2DSharedPtr GetGeom2D() const;
 
-            static Expansion2DSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
-            {
-                return boost::dynamic_pointer_cast<Expansion2D>(pSrc);
-            }
-			
         protected:
             std::vector<ExpansionWeakPtr> m_edgeExp;
             std::vector<bool> m_requireNeg;
@@ -174,6 +169,7 @@ namespace Nektar
             virtual bool v_EdgeNormalNegated(const int edge);
             virtual void v_SetUpPhysNormals(const int edge);
             const StdRegions::NormalVector &v_GetEdgeNormal(const int edge) const;
+            const StdRegions::NormalVector &v_GetSurfaceNormal(const int id) const;
         };
 
         inline ExpansionSharedPtr Expansion2D::GetEdgeExp(int edge, bool SetUpNormal)

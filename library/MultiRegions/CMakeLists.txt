@@ -100,44 +100,37 @@ IF(NEKTAR_USE_MPI)
         GlobalLinSysXxt.h
         GlobalLinSysXxtFull.h
         GlobalLinSysXxtStaticCond.h
-        PreconditionerLinear.cpp
-        PreconditionerLinearWithLowEnergy.cpp
-        PreconditionerLinearWithDiag.cpp
-        PreconditionerLinearWithBlock.cpp
+        PreconditionerLinear.h
+        PreconditionerLinearWithLowEnergy.h
+        PreconditionerLinearWithDiag.h
+        PreconditionerLinearWithBlock.h
     )
     SET(MULTI_REGIONS_SOURCES ${MULTI_REGIONS_SOURCES}
         GlobalLinSysXxt.cpp
         GlobalLinSysXxtFull.cpp
         GlobalLinSysXxtStaticCond.cpp
-        PreconditionerLinear.h
-        PreconditionerLinearWithLowEnergy.h
-        PreconditionerLinearWithDiag.h
-        PreconditionerLinearWithBlock.h
+        PreconditionerLinear.cpp
+        PreconditionerLinearWithLowEnergy.cpp
+        PreconditionerLinearWithDiag.cpp
+        PreconditionerLinearWithBlock.cpp
     )
 ENDIF(NEKTAR_USE_MPI)
 
 ADD_DEFINITIONS(-DMULTI_REGIONS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(MultiRegions lib ${NEKTAR_LIBRARY_TYPE} ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS} ${ASSEMBLY_MAP_HEADERS})
-TARGET_LINK_LIBRARIES(MultiRegions
-        optimized LibUtilities   debug LibUtilities-g
-        optimized SpatialDomains debug SpatialDomains-g
-        optimized LocalRegions   debug LocalRegions-g
-        optimized StdRegions     debug StdRegions-g
-        optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
-        ${Boost_THREAD_LIBRARY}
-        ${Boost_IOSTREAMS_LIBRARY}
-        ${Boost_DATE_TIME_LIBRARY}
-        ${Boost_PROGRAM_OPTIONS_LIBRARY}
-        ${Boost_SYSTEM_LIBRARY}
-        ${ZLIB_LIBRARY}
-	)
-SET_LAPACK_LINK_LIBRARIES(MultiRegions)
 
-INSTALL(FILES ${MULTI_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions COMPONENT dev)
-INSTALL(FILES ${ASSEMBLY_MAP_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions/AssemblyMap COMPONENT dev)
+TARGET_LINK_LIBRARIES(MultiRegions LINK_PUBLIC LocalRegions)
 
+# MultiRegions uses additional routines from Metis
+TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${METIS_LIB})
 
+# MultiRegions uses additional routines from GSMPI
+IF( NEKTAR_USE_MPI )
+    TARGET_LINK_LIBRARIES(MultiRegions LINK_PRIVATE ${GSMPI_LIBRARY} ${XXT_LIBRARY})
+ENDIF( NEKTAR_USE_MPI )
+
+INSTALL(DIRECTORY ./ DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions COMPONENT dev FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
 
 
 

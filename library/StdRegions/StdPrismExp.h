@@ -69,29 +69,6 @@ namespace Nektar
 
         protected:
             //---------------------------------------
-            // Integration Methods
-            //---------------------------------------
-            STD_REGIONS_EXPORT void TripleTensorProduct(
-                const Array<OneD, const NekDouble>& fx, 
-                const Array<OneD, const NekDouble>& gy, 
-                const Array<OneD, const NekDouble>& hz, 
-                const Array<OneD, const NekDouble>& inarray, 
-                      Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT NekDouble TripleInnerProduct(
-                const Array<OneD, const NekDouble>& fxyz,
-                const Array<OneD, const NekDouble>& wx,
-                const Array<OneD, const NekDouble>& wy,
-                const Array<OneD, const NekDouble>& wz);
-            STD_REGIONS_EXPORT NekDouble Integral3D(
-                const Array<OneD, const NekDouble>& inarray,
-                const Array<OneD, const NekDouble>& wx,
-                const Array<OneD, const NekDouble>& wy,
-                const Array<OneD, const NekDouble>& wz);
-            STD_REGIONS_EXPORT virtual NekDouble v_Integral(
-                const Array<OneD, const NekDouble>& inarray);
-            
-
-            //---------------------------------------
             // Differentiation Methods
             //---------------------------------------
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
@@ -203,6 +180,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_GetFaceNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual LibUtilities::PointsKey v_GetFacePointsKey(
                     const int i, const int j) const;
+            STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey
+                    v_DetFaceBasisKey(const int i, const int k) const;
             STD_REGIONS_EXPORT virtual int v_GetFaceIntNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int v_GetTotalFaceIntNcoeffs() const;
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(

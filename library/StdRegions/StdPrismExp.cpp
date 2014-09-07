@@ -1707,24 +1707,91 @@ namespace Nektar
         }
 
         
+
         //---------------------------------------
         // Wrapper functions
         //---------------------------------------
         
         DNekMatSharedPtr StdPrismExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
-            return StdExpansion::CreateGeneralMatrix(mkey);
+
+            MatrixType mtype   = mkey.GetMatrixType();
+            
+            DNekMatSharedPtr Mat; 
+            
+            switch(mtype)
+            {
+            case ePhysInterpToEquiSpaced:
+                {
+                    int nq0 = m_base[0]->GetNumPoints();
+                    int nq1 = m_base[1]->GetNumPoints();
+                    int nq2 = m_base[2]->GetNumPoints();
+                    int nq = max(nq0,max(nq1,nq2));
+                    int neq = LibUtilities::StdPrismData::getNumberOfCoefficients (nq,nq,nq);
+                    Array<OneD, Array<OneD, NekDouble> > coords(neq);
+                    Array<OneD, NekDouble>    coll(3); 
+                    Array<OneD, DNekMatSharedPtr> I(3);
+                    Array<OneD, NekDouble> tmp(nq0);
+                    
+                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(neq,nq0*nq1*nq2);
+                    int cnt = 0; 
+                    for(int i = 0; i < nq; ++i)
+                    {
+                        for(int j = 0; j < nq; ++j)
+                        {
+                            for(int k = 0; k < nq-i; ++k,++cnt)
+                            {
+                                coords[cnt] = Array<OneD, NekDouble>(3);
+                                coords[cnt][0] = -1.0 + 2*k/(NekDouble)(nq-1);
+                                coords[cnt][1] = -1.0 + 2*j/(NekDouble)(nq-1);
+                                coords[cnt][2] = -1.0 + 2*i/(NekDouble)(nq-1);
+                            }
+                        }
+                    }
+                    
+                    for(int i = 0; i < neq; ++i)
+                    {
+                        LocCoordToLocCollapsed(coords[i],coll);
+                        
+                        I[0] = m_base[0]->GetI(coll);
+                        I[1] = m_base[1]->GetI(coll+1);
+                        I[2] = m_base[2]->GetI(coll+2);
+                        
+                        // interpolate first coordinate direction
+                        NekDouble fac;
+                        for( int k = 0; k < nq2; ++k)
+                        {
+                            for (int j  = 0; j < nq1; ++j)
+                            {
+                                
+                                fac = (I[1]->GetPtr())[j]*(I[2]->GetPtr())[k];
+                                Vmath::Smul(nq0,fac,I[0]->GetPtr(),1,tmp,1);
+                                
+                                Vmath::Vcopy(nq0, &tmp[0], 1,
+                                             Mat->GetRawPtr()+
+                                             k*nq0*nq1*neq+
+                                             j*nq0*neq+i,neq);
+                            }
+                        }
+                    }
+                }
+                break;
+            default:
+                {
+                    Mat = StdExpansion::CreateGeneralMatrix(mkey);
+                }
+                break;
+            }
+            
+            return Mat;
         }
-        
+
         DNekMatSharedPtr StdPrismExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
         {
-            return StdExpansion::CreateGeneralMatrix(mkey);
+            return v_GenMatrix(mkey);
         }
-        
-        
-        //---------------------------------------
-        // Private helper functions
-        //---------------------------------------
+
+
         
         /**
          * @brief Compute the local mode number in the expansion for a
@@ -1872,5 +1939,108 @@ namespace Nektar
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        
         
+
+
+        void StdPrismExp::v_PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            StdMatrixKey Ikey(ePhysInterpToEquiSpaced, DetShapeType(), *this);
+            
+            DNekMatSharedPtr  intmat = GetStdMatrix(Ikey);
+
+            int np0 = m_base[0]->GetNumPoints();
+            int np1 = m_base[1]->GetNumPoints();
+            int np2 = m_base[2]->GetNumPoints();
+            int np = max(np0,max(np1,np2));
+            
+            NekVector<NekDouble> in (np0*np1*np2,inarray,eWrapper);
+            NekVector<NekDouble> out(LibUtilities::StdPrismData::getNumberOfCoefficients(np,np,np),outarray,eWrapper);
+            out = (*intmat) * in;
+        }
+
+        void StdPrismExp::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn)
+        {
+            int np0 = m_base[0]->GetNumPoints();
+            int np1 = m_base[1]->GetNumPoints();
+            int np2 = m_base[2]->GetNumPoints();
+            int np = max(np0,max(np1,np2));
+            
+            conn = Array<OneD, int>(12*(np-1)*(np-1)*(np-1));
+            
+            int row     = 0;
+            int rowp1   = 0;
+            int plane   = 0;
+            int row1    = 0;
+            int row1p1  = 0;
+            int planep1 = 0;
+            int cnt     = 0;             
+            for(int i = 0; i < np-1; ++i)
+            {
+                planep1 += (np-i)*np;
+                row    = 0; // current plane row offset
+                rowp1  = 0; // current plane row plus one offset
+                row1   = 0; // next plane row offset
+                row1p1 = 0; // nex plane row plus one offset
+                for(int j = 0; j < np-1; ++j)
+                {
+                    rowp1  += np-i;
+                    row1p1 += np-i-1;
+                    for(int k = 0; k < np-i-2; ++k)
+                    {
+
+                        conn[cnt++] = plane   + row    +k;
+                        conn[cnt++] = plane   + row    +k+1;
+                        conn[cnt++] = plane   + rowp1  +k;
+                        conn[cnt++] = planep1 + row1   +k;
+                        
+                        conn[cnt++] = planep1 + row1p1 +k;
+                        conn[cnt++] = planep1 + row1   +k;
+                        conn[cnt++] = plane   + rowp1  +k;
+                        conn[cnt++] = plane   + row    +k+1;
+
+                        conn[cnt++] = plane   + rowp1  +k;
+                        conn[cnt++] = plane   + row    +k+1;
+                        conn[cnt++] = plane   + rowp1  +k+1;
+                        conn[cnt++] = planep1 + row1p1 +k;
+
+                        conn[cnt++] = planep1 + row1   +k+1;
+                        conn[cnt++] = planep1 + row1   +k;
+                        conn[cnt++] = plane   + row    +k+1;
+                        conn[cnt++] = planep1 + row1p1 +k+1;
+                        
+                        conn[cnt++] = plane   + rowp1  +k+1;
+                        conn[cnt++] = plane   + row    +k+1;
+                        conn[cnt++] = planep1 + row1p1 +k+1;
+                        conn[cnt++] = planep1 + row1   +k;
+
+                        conn[cnt++] = planep1 + row1p1 +k+1;
+                        conn[cnt++] = planep1 + row1p1 +k;
+                        conn[cnt++] = planep1 + row1   +k;
+                        conn[cnt++] = plane   + rowp1  +k+1;
+
+                    }
+
+                    conn[cnt++] = plane   + row    +np-i-2;
+                    conn[cnt++] = plane   + row    +np-i-1;
+                    conn[cnt++] = plane   + rowp1  +np-i-2;
+                    conn[cnt++] = planep1 + row1   +np-i-2;
+
+                    conn[cnt++] = planep1 + row1p1 +np-i-2;
+                    conn[cnt++] = planep1 + row1   +np-i-2;
+                    conn[cnt++] = plane   + rowp1  +np-i-2;
+                    conn[cnt++] = plane   + row    +np-i-1;
+
+                    conn[cnt++] = plane   + rowp1  +np-i-2;
+                    conn[cnt++] = plane   + row    +np-i-1;
+                    conn[cnt++] = plane   + rowp1  +np-i-1;
+                    conn[cnt++] = planep1 + row1p1 +np-i-2;
+
+                    row  += np-i;
+                    row1 += np-i-1;
+                }
+
+                plane += (np-i)*np;
+            }
+        }
+
     }//end namespace
 }//end namespace

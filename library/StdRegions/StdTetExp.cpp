@@ -2043,42 +2043,42 @@ namespace Nektar
                     row1p1 += np-i-j-1;
                     for(int k = 0; k < np-i-j-2; ++k)
                     {
-                        conn[cnt++] = plane   + row   +k;
                         conn[cnt++] = plane   + row   +k+1;
+                        conn[cnt++] = plane   + row   +k;
                         conn[cnt++] = plane   + rowp1 +k;
                         conn[cnt++] = planep1 + row1  +k;
                         
-                        conn[cnt++] = plane   + rowp1 +k+1;
                         conn[cnt++] = plane   + row   +k+1;
+                        conn[cnt++] = plane   + rowp1 +k+1;
                         conn[cnt++] = planep1 + row1  +k+1;
                         conn[cnt++] = planep1 + row1  +k;
 
-                        conn[cnt++] = plane   + row   +k+1;
                         conn[cnt++] = plane   + rowp1 +k+1;
+                        conn[cnt++] = plane   + row   +k+1;
                         conn[cnt++] = plane   + rowp1 +k;
                         conn[cnt++] = planep1 + row1  +k;
 
-                        conn[cnt++] = planep1 + row1p1+k;
                         conn[cnt++] = planep1 + row1  +k;
+                        conn[cnt++] = planep1 + row1p1+k;
                         conn[cnt++] = plane   + rowp1 +k;
                         conn[cnt++] = plane   + rowp1 +k+1;
                         
-                        conn[cnt++] = planep1 + row1p1+k;
                         conn[cnt++] = planep1 + row1  +k;
+                        conn[cnt++] = planep1 + row1p1+k;
                         conn[cnt++] = planep1 + row1  +k+1;
                         conn[cnt++] = plane   + rowp1 +k+1;
                         
                         if(k < np-i-j-3)
                         {
-                            conn[cnt++] = planep1 + row1p1 +k+1;
                             conn[cnt++] = plane   + rowp1  +k+1;
+                            conn[cnt++] = planep1 + row1p1 +k+1;
                             conn[cnt++] = planep1 + row1   +k+1;
                             conn[cnt++] = planep1 + row1p1 +k;
                         }
                     }
 
-                    conn[cnt++] = plane   + row   + np-i-j-2;
                     conn[cnt++] = plane   + row   + np-i-j-1;
+                    conn[cnt++] = plane   + row   + np-i-j-2;
                     conn[cnt++] = plane   + rowp1 + np-i-j-2;
                     conn[cnt++] = planep1 + row1  + np-i-j-2;
                     

@@ -339,5 +339,6 @@ int main(int argc, char* argv[])
         modules[i]->Process(vm);
         cout.flush();
     }
+
     return 0;
 }

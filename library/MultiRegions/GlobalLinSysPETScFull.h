@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSys.h
+// File GlobalLinSysDirectXxt.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,43 +29,61 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: GlobalLinSysDirect header
+// Description: GlobalLinSysDirectXxt header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECT_H
-#define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECT_H
+
+#ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSPETSCFULL_H
+#define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSPETSCFULL_H
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/GlobalLinSysPETSc.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         // Forward declarations
+
+        //class AssemblyMapDG;
         class ExpList;
 
         /// A global linear system.
-        class GlobalLinSysDirect : virtual public GlobalLinSys
+        class GlobalLinSysPETScFull : public GlobalLinSysPETSc
         {
         public:
-            MULTI_REGIONS_EXPORT GlobalLinSysDirect(
-                const GlobalLinSysKey &pKey,
-                const boost::weak_ptr<ExpList> &pExp,
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
-                
-                MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirect();
 
-        protected:
-            /// Basic linear system object.
-            DNekLinSysSharedPtr m_linSys;
-            /// Solve the linear system for given input and output vectors.
-            virtual void v_SolveLinearSystem(
-                const int pNumRows,
-                const Array<OneD,const NekDouble> &pInput,
-                      Array<OneD,      NekDouble> &pOutput,
-                const AssemblyMapSharedPtr &locToGloMap,
-                const int pNumDir = 0);
+            /// Creates an instance of this class
+            static GlobalLinSysSharedPtr create(
+                const GlobalLinSysKey                &pLinSysKey,
+                const boost::weak_ptr<ExpList>       &pExpList,
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+            {
+                return MemoryManager<GlobalLinSysPETScFull>
+                    ::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
+            }
+
+            /// Name of class
+            MULTI_REGIONS_EXPORT static std::string className;
+
+            /// Constructor for full direct matrix solve.
+            MULTI_REGIONS_EXPORT GlobalLinSysPETScFull(
+                const GlobalLinSysKey                &pLinSysKey,
+                const boost::weak_ptr<ExpList>       &pExpList,
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
+
+            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysPETScFull();
+
+        private:
+            /// Solve the linear system for given input and output vectors
+            /// using a specified local to global map.
+            virtual void v_Solve(
+                const Array<OneD, const NekDouble> &in,
+                      Array<OneD,       NekDouble> &out,
+                const AssemblyMapSharedPtr         &locToGloMap,
+                const Array<OneD, const NekDouble> &dirForcing
+                                                        = NullNekDouble1DArray);
         };
     }
 }

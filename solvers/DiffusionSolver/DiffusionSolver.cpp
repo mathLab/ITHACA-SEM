@@ -85,6 +85,9 @@ int main(int argc, char *argv[])
         // Compute lambda in the Helmholtz problem
         factors[StdRegions::eFactorLambda] = 1.0/delta_t/epsilon;
 
+        // Zero field coefficients for initial guess for linear solver.
+        Vmath::Zero(field->GetNcoeffs(), field->UpdateCoeffs(), 1);
+
         // Time integrate using backward Euler
         for (unsigned int n = 0; n < nSteps; ++n)
         {

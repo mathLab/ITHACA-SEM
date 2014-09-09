@@ -309,7 +309,8 @@ namespace Nektar
             m_solnType              = solnTypeOld;
             ASSERTL1(m_solnType==eDirectMultiLevelStaticCond
                     ||m_solnType==eIterativeMultiLevelStaticCond
-                    ||m_solnType==eXxtMultiLevelStaticCond,
+                    ||m_solnType==eXxtMultiLevelStaticCond
+                    ||m_solnType==ePETScMultiLevelStaticCond,
                      "This method should only be called for in "
                      "case of multi-level static condensation.");
             m_staticCondLevel       = newLevel;
@@ -639,7 +640,8 @@ namespace Nektar
             return result;
         }
         
-        boost::shared_ptr<AssemblyMap> AssemblyMap::v_XxtLinearSpaceMap(const ExpList &locexp)
+        boost::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
+            const ExpList &locexp, GlobalSysSolnType solnType)
         {
             ASSERTL0(false, "Not defined for this sub class");
             static boost::shared_ptr<AssemblyMap> result;
@@ -802,9 +804,9 @@ namespace Nektar
             return v_GetExtraDirEdges();
         }
 
-        boost::shared_ptr<AssemblyMap> AssemblyMap::XxtLinearSpaceMap(const ExpList &locexp)
+        boost::shared_ptr<AssemblyMap> AssemblyMap::LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType)
         {
-            return v_XxtLinearSpaceMap(locexp);
+            return v_LinearSpaceMap(locexp, solnType);
         }
 
         int AssemblyMap::GetLocalToGlobalBndMap(const int i) const
@@ -1210,7 +1212,6 @@ namespace Nektar
                 = m_session->GetComm()->GetRowComm();
             bool isRoot = vRowComm->GetRank() == 0;
             int n = vRowComm->GetSize();
-            int p = vRowComm->GetRank();
             int i;
 
             // Determine number of global degrees of freedom.

@@ -32,10 +32,11 @@
 // Description: GlobalLinSysStaticCond header
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTSTATICCOND_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTSTATICCOND_H
 
-#include <MultiRegions/GlobalLinSysDirect.h>
+#include <MultiRegions/GlobalLinSysPETSc.h>
 #include <MultiRegions/GlobalLinSysStaticCond.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 
@@ -45,27 +46,28 @@ namespace Nektar
     {
         // Forward declarations
         class ExpList;
-        class GlobalLinSysDirectStaticCond;
+        class GlobalLinSysPETScStaticCond;
 
-        typedef boost::shared_ptr<GlobalLinSysDirectStaticCond>
-                                        GlobalLinSysDirectStaticCondSharedPtr;
+        typedef boost::shared_ptr<GlobalLinSysPETScStaticCond>
+                                        GlobalLinSysPETScStaticCondSharedPtr;
 
         /// A global linear system.
-        class GlobalLinSysDirectStaticCond : virtual public GlobalLinSysDirect,
-                                             virtual public GlobalLinSysStaticCond
+        class GlobalLinSysPETScStaticCond : virtual public GlobalLinSysPETSc,
+                                            virtual public GlobalLinSysStaticCond
         {
         public:
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
-                        const GlobalLinSysKey                &pLinSysKey,
-                        const boost::weak_ptr<ExpList>       &pExpList,
-                        const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+                        const GlobalLinSysKey &pLinSysKey,
+                        const boost::weak_ptr<ExpList> &pExpList,
+                        const boost::shared_ptr<AssemblyMap>
+                                                               &pLocToGloMap)
             {
-                GlobalLinSysDirectStaticCondSharedPtr ret =
-                    MemoryManager<GlobalLinSysDirectStaticCond>
-                    ::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
-                ret->InitObject();
-                return ret;
+                GlobalLinSysSharedPtr p = MemoryManager<
+                    GlobalLinSysPETScStaticCond>::AllocateSharedPtr(
+                        pLinSysKey, pExpList, pLocToGloMap);
+                p->InitObject();
+                return p;
             }
 
             /// Name of class
@@ -73,26 +75,26 @@ namespace Nektar
             static std::string className2;
 
             /// Constructor for full direct matrix solve.
-            MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
-                        const GlobalLinSysKey                &mkey,
-                        const boost::weak_ptr<ExpList>       &pExpList,
-                        const boost::shared_ptr<AssemblyMap> &locToGloMap);
+            MULTI_REGIONS_EXPORT GlobalLinSysPETScStaticCond(
+                        const GlobalLinSysKey &mkey,
+                        const boost::weak_ptr<ExpList> &pExpList,
+                        const boost::shared_ptr<AssemblyMap>
+                                                                &locToGloMap);
 
             /// Constructor for full direct matrix solve.
-            MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
-                        const GlobalLinSysKey                &mkey,
-                        const boost::weak_ptr<ExpList>       &pExpList,
-                        const DNekScalBlkMatSharedPtr         pSchurCompl,
-                        const DNekScalBlkMatSharedPtr         pBinvD,
-                        const DNekScalBlkMatSharedPtr         pC,
-                        const DNekScalBlkMatSharedPtr         pInvD,
-                        const boost::shared_ptr<AssemblyMap> &locToGloMap);
+            MULTI_REGIONS_EXPORT GlobalLinSysPETScStaticCond(
+                        const GlobalLinSysKey &mkey,
+                        const boost::weak_ptr<ExpList> &pExpList,
+                        const DNekScalBlkMatSharedPtr pSchurCompl,
+                        const DNekScalBlkMatSharedPtr pBinvD,
+                        const DNekScalBlkMatSharedPtr pC,
+                        const DNekScalBlkMatSharedPtr pInvD,
+                        const boost::shared_ptr<AssemblyMap>
+                                                                &locToGloMap);
 
-            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectStaticCond();
+            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysPETScStaticCond();
 
         protected:
-            virtual void v_AssembleSchurComplement(
-                boost::shared_ptr<AssemblyMap> pLocToGloMap);
             virtual GlobalLinSysStaticCondSharedPtr v_Recurse(
                 const GlobalLinSysKey                &mkey,
                 const boost::weak_ptr<ExpList>       &pExpList,
@@ -100,12 +102,11 @@ namespace Nektar
                 const DNekScalBlkMatSharedPtr         pBinvD,
                 const DNekScalBlkMatSharedPtr         pC,
                 const DNekScalBlkMatSharedPtr         pInvD,
-                const boost::shared_ptr<AssemblyMap> &l2gMap);
+                const boost::shared_ptr<AssemblyMap> &locToGloMap);
 
-        private:
-            /// Matrix Storage type for known matrices
-            MatrixStorage DetermineMatrixStorage(
-                   const boost::shared_ptr<AssemblyMap>& locToGloMap);
+            /// Assemble the Schur complement matrix.
+            virtual void v_AssembleSchurComplement(
+                boost::shared_ptr<AssemblyMap> locToGloMap);
         };
     }
 }

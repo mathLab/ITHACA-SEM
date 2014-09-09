@@ -1826,7 +1826,12 @@ namespace Nektar
                         "IterativeMultiLevelStaticCond"                    ||
                     m_solverInfo["GLOBALSYSSOLN"] == "XxtFull"             ||
                     m_solverInfo["GLOBALSYSSOLN"] == "XxtStaticCond"       ||
-                    m_solverInfo["GLOBALSYSSOLN"] == "XxtMultiLevelStaticCond",
+                    m_solverInfo["GLOBALSYSSOLN"] ==
+                        "XxtMultiLevelStaticCond"                          ||
+                    m_solverInfo["GLOBALSYSSOLN"] == "PETScFull"           ||
+                    m_solverInfo["GLOBALSYSSOLN"] == "PETScStaticCond"     ||
+                    m_solverInfo["GLOBALSYSSOLN"] ==
+                        "PETScMultiLevelStaticCond",
                     "A parallel solver must be used when run in parallel.");
             }
         }

@@ -26,24 +26,28 @@ IF (NEKTAR_USE_PETSC)
         EXTERNALPROJECT_ADD(
             petsc-3.5.1
             PREFIX ${TPSRC}
-            BINARY_DIR ${TPSRC}/src/petsc-3.5.1
-            URL http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.5.1.tar.gz
-            URL_MD5 "539b3bdb627407b7e4e9e830fd5ccf43"
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
+            SOURCE_DIR ${TPBUILD}/petsc-3.5.1
+            TMP_DIR ${TPBUILD}/petsc-3.5.1-tmp
+            INSTALL_DIR ${TPDIST}
+            BINARY_DIR ${TPBUILD}/petsc-3.5.1
+            URL http://www.nektar.info/thirdparty/petsc-lite-3.5.1.tar.gz
+            URL_MD5 "539b3bdb627407b7e4e9e830fd5ccf43"
             CONFIGURE_COMMAND ./configure
                 --with-cc=${PETSC_C_COMPILER}
                 --with-cxx=${PETSC_CXX_COMPILER}
                 --with-shared-libraries=0
                 --with-pic=1
                 --with-x=0
-                --prefix=${TPSRC}/dist
+                --prefix=${TPDIST}
                 --with-petsc-arch=c-opt
                 --with-fc=0
                 ${PETSC_NO_MPI}
                 )
 
-        INCLUDE_DIRECTORIES(${TPSRC}/dist/include)
-        SET(PETSC_LIBRARIES "${TPSRC}/dist/lib/libpetsc.a")
+        INCLUDE_DIRECTORIES(${TPDIST}/include)
+        SET(PETSC_LIBRARIES "${TPDIST}/lib/libpetsc.a")
         MESSAGE(STATUS "Build PETSc: ${PETSC_LIBRARIES}")
     ELSE (THIRDPARTY_BUILD_PETSC)
         INCLUDE(FindPETSc)

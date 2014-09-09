@@ -174,6 +174,13 @@ struct Field {
               m_writeBndFld(false),
               m_fieldPts(NullFieldPts){}
 
+    ~Field()
+    {
+        if (m_session)
+        {
+            m_session->Finalise();
+        }
+    }
     bool                                    m_verbose;
     vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
     vector<vector<double> >                 m_data;
@@ -371,7 +378,7 @@ struct Field {
                     {
                         nplanes =  m_fielddef[0]->m_numModes[2];
                         lz      = m_fielddef[0]->m_homogeneousLengths[0];
-                        btype   = m_fielddef[0]->m_basis[1];
+                        btype   = m_fielddef[0]->m_basis[2];
                     }
                     else
                     {

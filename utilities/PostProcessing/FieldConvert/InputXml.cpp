@@ -70,7 +70,6 @@ namespace Nektar
 
         InputXml::~InputXml()
         {
-            m_f->m_session->GetComm()->Finalise();
         }
 
         /**

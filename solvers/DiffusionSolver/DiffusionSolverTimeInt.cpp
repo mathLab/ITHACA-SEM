@@ -115,9 +115,9 @@ Diffusion::Diffusion(int argc, char* argv[])
     field->GetCoords(x0,x1,x2);
 
     // Evaluate initial condition
-    LibUtilities::EquationSharedPtr ffunc
+    LibUtilities::EquationSharedPtr icond 
         = session->GetFunction("InitialConditions", "u");
-    ffunc->Evaluate(x0,x1,x2,0.0,field->UpdatePhys());
+    icond->Evaluate(x0,x1,x2,0.0,field->UpdatePhys());
 }
 
 Diffusion::~Diffusion()

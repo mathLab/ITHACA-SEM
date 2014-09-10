@@ -143,7 +143,6 @@ namespace Nektar
             ///For coupling SFD and Arnoldi
             bool FlowPartiallyConverged;
             NekDouble PartialTOL;
-            //NekDouble PartialTOL_init;
             NekDouble TimeToRestart;
             int m_NonConvergingStepsCounter;
             NekDouble ParametersTOL;

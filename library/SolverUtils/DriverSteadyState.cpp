@@ -81,15 +81,11 @@ namespace Nektar
 	    m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);
 	    m_session->LoadParameter("ControlCoeff",m_X, 1);
 	    m_session->LoadParameter("FilterWidth", m_Delta, 1);
-	    m_session->LoadParameter("TOL", TOL, 1.0e-08);    
-	    
-	    m_session->LoadParameter("PartialTOL", PartialTOL, 1.0e-02);            //Used only for coupling SFD and Arnoldi
-	    m_session->LoadParameter("TimeToRestart", TimeToRestart, 25.0);         //Used only for coupling SFD and Arnoldi
-	    //m_session->LoadParameter("ParametersTOL", ParametersTOL, 0.05);         //Used only for coupling SFD and Arnoldi
-	    //m_session->LoadParameter("UpdateCoefficient", UpdateCoefficient, 10.0); //Used only for coupling SFD and Arnoldi
-	    
 	    m_session->LoadParameter("GrowthRateEV", GrowthRateEV, 0.0); //To evaluate optimum SFD parameters if growth rate provided in the xml file
 	    m_session->LoadParameter("FrequencyEV", FrequencyEV, 0.0);   //To evaluate optimum SFD parameters if frequency provided in the xml file
+	    m_session->LoadParameter("TOL", TOL, 1.0e-08);               //Determine when SFD method is converged
+	    m_session->LoadParameter("PartialTOL", PartialTOL, 1.0e-02);            //Used only for coupling SFD and Arnoldi
+	    m_session->LoadParameter("TimeToRestart", TimeToRestart, 25.0);         //Used only for coupling SFD and Arnoldi
 	    
 	    PrintSummarySFD();
 	    timer.Start();
@@ -151,7 +147,6 @@ namespace Nektar
 	    cpuTime                     = 0.0;
 	    elapsed                     = 0.0;
 	    totalTime                   = 0.0;
-	    //PartialTOL_init             = PartialTOL;
 	    FlowPartiallyConverged     = false;
 	    
 	    while (max(Diff_q_qBar, Diff_q1_q0) > TOL)
@@ -368,7 +363,7 @@ namespace Nektar
 		if (abs(F0-F1) < dx)
 		{
 		    EvalEV_ScalarSFD(X_output, Delta_output, alpha, F1);
-		    cout << "\n \t The optimum paramters are: X_opt = " << X_output << " and Delta_opt = " << Delta_output << endl;
+		    cout << "\n \t The updated parameters are: X_tilde = " << X_output << " and Delta_tilde = " << Delta_output << endl;
 		    cout << "\t The minimum EV is: " << F1 << "\n" << endl;
 		    OptParmFound = true; 
 		}
@@ -411,7 +406,7 @@ namespace Nektar
 	void DriverSteadyState::ReadEVfile(int &KrylovSubspaceDim, NekDouble &growthEV, NekDouble &frequencyEV)
 	{       
 	    ///This routine reads the .evl file written by the Arnoldi algorithm
-	    ///(written in June 2014)
+	    ///(written in September 2014)
 	    std::string EVfileName = m_session->GetSessionName() +  ".evl";
 	    std::ifstream EVfile(EVfileName.c_str());
 	    
@@ -444,7 +439,8 @@ namespace Nektar
 			    KrylovSubspaceDim = i;
 			}
 		    } 
-		}		
+		}
+		
 		std::ifstream EVfile(EVfileName.c_str()); //go back to the beginning of the file
 		
 		///We now want to go to the line where the most unstable eigenlavue was written

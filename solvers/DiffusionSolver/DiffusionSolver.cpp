@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
         field->GetCoords(x0,x1,x2);
 
         // Evaluate initial condition at these points
-        ffunc = session->GetFunction("InitialConditions", "u");
-        ffunc->Evaluate(x0, x1, x2, 0.0, field->UpdatePhys());
+        icond = session->GetFunction("InitialConditions", "u");
+        icond->Evaluate(x0, x1, x2, 0.0, field->UpdatePhys());
 
         // Compute lambda in the Helmholtz problem
         factors[StdRegions::eFactorLambda] = 1.0/delta_t/epsilon;

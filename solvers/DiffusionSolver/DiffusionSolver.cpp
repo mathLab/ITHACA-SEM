@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     LibUtilities::FieldIOSharedPtr       fld;
     SpatialDomains::MeshGraphSharedPtr   graph;
     MultiRegions::ContField2DSharedPtr   field;
-    LibUtilities::EquationSharedPtr      ffunc, ex_sol;
+    LibUtilities::EquationSharedPtr      icond, ex_sol;
     StdRegions::ConstFactorMap           factors;
 
     try

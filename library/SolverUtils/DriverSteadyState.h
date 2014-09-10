@@ -84,7 +84,7 @@ namespace Nektar
                                        NekDouble &X_output,
                                        NekDouble &Delta_output);
             
-            void ReadEVfile(const int &KrylovSubspaceDim, 
+            void ReadEVfile(int &KrylovSubspaceDim, 
                             NekDouble &growthEV, 
                             NekDouble &frequencyEV);
             
@@ -112,6 +112,7 @@ namespace Nektar
         private:
             int m_stepCounter;
             int m_Check;
+	    int m_Check_BaseFlow;
             NekDouble TOL;
             int m_infosteps;
             int m_checksteps;
@@ -140,9 +141,9 @@ namespace Nektar
             NekDouble Min_MaxNormDiff_q_qBar;
             
             ///For coupling SFD and Arnoldi
-            bool OptumiumParametersFound;
+            bool FlowPartiallyConverged;
             NekDouble PartialTOL;
-            NekDouble PartialTOL_init;
+            //NekDouble PartialTOL_init;
             NekDouble TimeToRestart;
             int m_NonConvergingStepsCounter;
             NekDouble ParametersTOL;

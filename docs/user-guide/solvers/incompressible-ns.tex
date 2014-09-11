@@ -222,12 +222,16 @@ where $\sigma=\left\| \mathbf{u'}(\tau)\right\|$. This is no other that the sing
 \section{Usage}
 
 \begin{lstlisting}[style=BashInputStyle]
-IncNavierStokesSolver session.xml}
+IncNavierStokesSolver session.xml
 \end{lstlisting}
 
 \section{Session file configuration}
 
-In the following the possible options are shown for the incompressible Navier-Stokes. The \texttt{Expansion} section for an incompressible flow simulation can be set as for other solvers regardless of the projection type. Here an example for a 3D simulation (for 2D simulations the specified field would be just $u$,$v$,$p$).
+In the following the possible options are shown for the incompressible
+Navier-Stokes. The \texttt{Expansion} section for an incompressible flow
+simulation can be set as for other solvers regardless of the projection type.
+Here an example for a 3D simulation (for 2D simulations the specified fields
+would be just \inltt{u,v,p}).
 
 \begin{lstlisting}[style=XMLStyle]
 <EXPANSIONS>
@@ -235,316 +239,335 @@ In the following the possible options are shown for the incompressible Navier-St
 </EXPANSIONS>
 \end{lstlisting}
 
-In case of a simulation using the Direct Solver we need to set \texttt{FIELDS=u,v} as the pressure expansion order will be automatically set to fulfil the inf-sup condition.
-Possible choices for the expansion \texttt{TYPE} are:
-
-\begin{table}
+In case of a simulation using the Direct Solver we need to set
+\inltt{FIELDS=u,v} as the pressure expansion order will be automatically set to
+fulfil the inf-sup condition. Possible choices for the expansion \inltt{TYPE}
+are:
 \begin{center}
-\begin{tabular}{|l|c|c|} \hline
-{Basis} & {\texttt{TYPE}} \\ \hline
-\texttt{Modal} & \texttt{MODIFIED} \\ \hline
-\texttt{Nodal} & \texttt{GLL\_LAGRANGE} \\ \hline
-\texttt{Nodal SEM} & \texttt{GLL\_LAGRANGE\_SEM} \\ \hline
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+{Basis} & {\texttt{TYPE}} \\
+\midrule
+\texttt{Modal} & \texttt{MODIFIED} \\
+\texttt{Nodal} & \texttt{GLL\_LAGRANGE} \\
+\texttt{Nodal SEM} & \texttt{GLL\_LAGRANGE\_SEM} \\
+\bottomrule
 \end{tabular}
 \end{center}
-\end{table}
 
 \subsection{Solver Info}
 
-The following parameters can be specified in the \texttt{SOLVERINFO} section of
+The following parameters can be specified in the \inltt{SOLVERINFO} section of
 the session file:
 
 \begin{itemize}
-\item \texttt{EqType}: sets the kind of equations we want to solve on the domain as:
+\item \inltt{EqType}: sets the kind of equations we want to solve on the domain
+as:
 
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
 \end{lstlisting}
 
 Possible values are:
-
-\begin{table}
 \begin{center}
-\begin{tabular}{|l|c|c|c|c|c|} \hline
-{Equations} & {\texttt{EQTYPE}} &{Dimensions}&{Projections} & Algorithms\\ \hline
-Steady Stokes (SS)& \texttt{SteadyStokes} & All & CG &VCS \\ \hline
-Steady Onseen (SO) & \texttt{SteadyOseen} & All & CG& DS \\ \hline
-Unsteady Stokes (US) & \texttt{UnsteadyStokes} & All & CG &VCS \\ \hline
-Steady Linearised NS (SLNS) & \texttt{SteadyLinearisedNS} & All & CG & DS \\ \hline
-Unsteady Linearised NS (ULNS) & \texttt{UnsteadyLinearisedNS} & All & CG & DS \\ \hline
-Unsteady NS (UNS) & \texttt{UnsteadyNavierStokes} & All & CG,CG-DG & VCS \\ \hline
-
+\footnotesize
+\renewcommand\arraystretch{1.2} 
+\begin{tabular}{lccccc}
+\toprule
+{Equations} & {\texttt{EQTYPE}} &{Dim.}&{Projections} & Alg.\\
+\midrule
+Steady Stokes (SS)& \texttt{SteadyStokes} & All & CG &VCS \\
+Steady Onseen (SO) & \texttt{SteadyOseen} & All & CG& DS \\
+Unsteady Stokes (US) & \texttt{UnsteadyStokes} & All & CG &VCS \\
+Steady Linearised NS (SLNS) & \texttt{SteadyLinearisedNS} & All & CG & DS \\
+Unsteady Linearised NS (ULNS) & \texttt{UnsteadyLinearisedNS} & All & CG & DS \\
+Unsteady NS (UNS) & \texttt{UnsteadyNavierStokes} & All & CG,CG-DG & VCS \\
+\bottomrule
 \end{tabular}
 \end{center}
-\end{table}
 
 
-\item \texttt{SolverType}: sets the scheme we want to use to solve the set of equations as 
-
+\item \inltt{SolverType}: sets the scheme we want to use to solve the set of 
+equations as 
 \begin{lstlisting}[style=XMLStyle]
-<I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>\end{lstlisting}
+<I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
+\end{lstlisting}
 
 Possible values are:
-
-\begin{table}
 \begin{center}
-\begin{tabular}{|l|c|c|c|c|} \hline
-{Algorithm} & {\texttt{SolverType}} &{Dimensions}&{Projections} \\ \hline
-Velocity Correction Scheme & \texttt{VelocityCorrectionScheme} & 2D, Quasi-3D, 3D & CG, CG-DG\\ \hline
-Direct solver & \texttt{CoupledLinearisedNS} & 2D, Quasi-3D, 3D &CG\\ \hline
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+{Algorithm} & {\texttt{SolverType}} &{Dimensions}&{Projections} \\
+\midrule
+Velocity Correction Scheme & \texttt{VelocityCorrectionScheme} & 2D, Quasi-3D, 3D & CG, CG-DG\\
+Direct solver & \texttt{CoupledLinearisedNS} & 2D, Quasi-3D, 3D &CG\\
+\bottomrule
 \end{tabular}
 \end{center}
-\end{table}
 
-\item \texttt{Driver}: this specifies the type of problem to be solved:
-
-\begin{table}
+\item \inltt{Driver}: this specifies the type of problem to be solved:
 \begin{center}
-\begin{tabular}{|l|c|c|c|c|} \hline
-{Driver} & {Description} &{Dimensions}&{Projections} \\ \hline
-\texttt{Standard} & Time integration of the equations & All & CG, DG \\ \hline
-\texttt{SteadyState} & Steady State (Selective Frequency Damping)  & All & CG \\ \hline 
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+{Driver} & {Description} &{Dimensions}&{Projections} \\
+\midrule
+\texttt{Standard} & Time integration of the equations & All & CG, DG \\
+\texttt{SteadyState} & Steady State (Selective Frequency Damping)  & All & CG \\
+\bottomrule
 \end{tabular}
 \end{center}
-\end{table}
 
-\item \texttt{Projection}: sets the Galerkin projection type as 
+\item \inltt{Projection}: sets the Galerkin projection type as 
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="Projection" VALUE="Continuous"/>
 \end{lstlisting}
 
-Possible values are reported in table (\ref{proj}).
-
-\begin{table}[!h]
-\begin{center}\label{proj}
-\begin{tabular}{|l|c|c|c|c|c|} \hline
-{Galerkin Projection} & \texttt{Projection} &{Dimensions}&{Equations}&{Algorithms} \\ \hline
-Continuous (CG)&  \texttt{Continuous} & All & All & All \\ \hline
-Discontinuous (DG) & \texttt{DisContinuous} & All &...&...\\ \hline
-Mixed CG and DG (CG-DG) & \texttt{MixedCGDG} & just 2D & just UNS & just VCS \\ \hline
+Possible values are:
+\begin{center}
+\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+{Galerkin Projection} & \texttt{Projection} &{Dimensions}&{Equations}&{Algorithms} \\
+\midrule
+Continuous (CG)&  \texttt{Continuous} & All & All & All \\
+Discontinuous (DG) & \texttt{DisContinuous} & All &...&...\\
+Mixed CG and DG (CG-DG) & \texttt{MixedCGDG} & just 2D & just UNS & just VCS \\
+\bottomrule
 \end{tabular}
 \end{center}
-\end{table}
 
-\item \texttt{TimeIntegrationMethod}:  sets the time integration method as
+\item \inltt{TimeIntegrationMethod}:  sets the time integration method as
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
 \end{lstlisting}
 
-Possible values are in table (\ref{time}).
-
-\begin{table}
-\begin{center}\label{time}
-\begin{tabular}{|l|c|c|c|c|c|c|} \hline
-{Time-Integration Method} & \texttt{TimeIntegrationMethod} &{Dimensions}&{Equations}&Projections\\ \hline
-IMEX Order 1 & \texttt{IMEXOrder1} & all & US, UNS &  CG \\ \hline
-IMEX Order 2 & \texttt{IMEXOrder2} & all & US, UNS &  CG \\ \hline
-IMEX Order 3 & \texttt{IMEXOrder3} & all & US, UNS & CG \\ \hline
-Backward Euler & \texttt{BackwardEuler} & all & US, UNS &  CG-DG \\ \hline
-BDF Order 1 & \texttt{BDFImplicitOrder1} & all & US, UNS & CG-DG \\ \hline
-BDF Order 2 & \texttt{BDFImplicitOrder2} & all & US, UNS & CG-DG \\ \hline
+Possible values are
+\begin{center}
+\footnotesize
+\begin{tabular}{lcccccc}
+\toprule
+{Time-Integration Method} & \texttt{TimeIntegrationMethod} &{Dimensions}&{Equations}&Projections\\
+\midrule
+IMEX Order 1 & \texttt{IMEXOrder1} & all & US, UNS &  CG \\
+IMEX Order 2 & \texttt{IMEXOrder2} & all & US, UNS &  CG \\
+IMEX Order 3 & \texttt{IMEXOrder3} & all & US, UNS & CG \\
+Backward Euler & \texttt{BackwardEuler} & all & US, UNS &  CG-DG \\
+BDF Order 1 & \texttt{BDFImplicitOrder1} & all & US, UNS & CG-DG \\
+BDF Order 2 & \texttt{BDFImplicitOrder2} & all & US, UNS & CG-DG \\
+\bottomrule
 \end{tabular}
 \end{center}
-\end{table}
 
-\item \texttt{GlobalSysSoln}: sets the approach we use to solve the the linear systems of the type $Ax=b$ appearing in the solution steps, such as the Poisson equation for the pressure in the splitting-scheme. It can be set as 
+\item \inltt{GlobalSysSoln}: sets the approach we use to solve the the linear 
+systems of the type $Ax=b$ appearing in the solution steps, such as the Poisson
+equation for the pressure in the splitting-scheme. It can be set as 
 
 \begin{lstlisting}[style=XMLStyle]
-<I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond"/>\end{lstlisting}
-\end{itemize}
+<I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond"/>
+\end{lstlisting}
 
-Possible values are reported in table (\ref{glob}):
-
-\begin{table}
-\begin{center}\label{glob}
-\begin{tabular}{|l|c|c|c|} \hline
-{System solution} & \texttt{GlobalSysSoln} &{Parallel}\\ \hline
-Direct Solver (DS) & \texttt{DirectFull} & just quasi-3D \\ \hline
-DS with Static Condensation  & \texttt{DirectStaticCond} & just Quasi-3D \\ \hline
-DS with Multilevel Static Condensation & \texttt{DirectMultiLevelStaticCond} & just Quasi-3D \\ \hline
- Iterative Solver (IS) & \texttt{IterativeFull} & just Quasi-3D \\ \hline
-IS with Static Condensation  & \texttt{IterativeStaticCond} & quasi-3D \\ \hline
-IS with Multilevel Static Condensation & \texttt{IterativeMultiLevelStaticCond} & quasi-3D \\ \hline                         
- \end{tabular}
+Possible values are
+\begin{center}
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+{System solution} & \texttt{GlobalSysSoln} &{Parallel}\\
+\midrule
+Direct Solver (DS) & \texttt{DirectFull} & just quasi-3D \\
+DS with Static Condensation  & \texttt{DirectStaticCond} & just Quasi-3D \\
+DS with Multilevel Static Condensation & \texttt{DirectMultiLevelStaticCond} & just Quasi-3D \\
+ Iterative Solver (IS) & \texttt{IterativeFull} & just Quasi-3D \\
+IS with Static Condensation  & \texttt{IterativeStaticCond} & quasi-3D \\
+IS with Multilevel Static Condensation & \texttt{IterativeMultiLevelStaticCond} & quasi-3D \\
+\bottomrule
+\end{tabular}
 \end{center}
-\caption{}
-\end{table}
 
-Default values are \texttt{DirectMultiLevelStaticCond} in serial and \texttt{IterativeStaticCond} in parallel.
+Default values are \inltt{DirectMultiLevelStaticCond} in serial and 
+\inltt{IterativeStaticCond} in parallel.
 
-\begin{itemize}
-\item \texttt{SmoothAdvection}: activates a stabilization technique which smooths the advection term using the pressure inverse mass matrix. It can be used just in combination with nodal expansion basis for efficiency reasons.
+\item \inltt{SmoothAdvection}: activates a stabilization technique which smooths
+the advection term using the pressure inverse mass matrix. It can be used just in combination with nodal expansion basis for efficiency reasons.
 
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="SmoothAdvection" VALUE="True"/>
 \end{lstlisting}
 
 
-\item \texttt{SpectralVanishingViscosity}: activates a stabilization technique which increases the viscosity on the highest Fourier frequencies of a Quasi-3D approach.
+\item \inltt{SpectralVanishingViscosity}: activates a stabilization technique
+which increases the viscosity on the highest Fourier frequencies of a Quasi-3D approach.
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="SpectralVanishingViscosity" VALUE="True"/>
 \end{lstlisting}
 
-\item \texttt{DEALIASING}: activates the 3/2 padding rule on the advection term of a Quasi-3D simulation. 
+\item \inltt{DEALIASING}: activates the 3/2 padding rule on the advection term
+of a Quasi-3D simulation.
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="DEALIASING" VALUE="ON"/>
 \end{lstlisting}
 
-\item \texttt{SubSteppingScheme}: activates the sub-stepping routine which uses the mixed CG-DG projection
-\begin{lstlisting}[style=XMLStyle]
+\item \inltt{SubSteppingScheme}: activates the sub-stepping routine which uses
+the mixed CG-DG projection \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="SubSteppingScheme" VALUE="True" />
 \end{lstlisting}
 
-\item \texttt{SPECTRALHPDEALIASING}: activates the spectral/hp dealiasing to stabilize the simulation. This method is based on the work of Kirby and Sherwin [7].  
+\item \inltt{SPECTRALHPDEALIASING}: activates the spectral/hp dealiasing to
+stabilize the simulation. This method is based on the work of Kirby and Sherwin [7].
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="SPECTRALHPDEALIASING" VALUE="True" />
 \end{lstlisting}
 
-\item \texttt{ShowTimings}: activates the blocks timing of the incompressible Navier-Stokes solver. The CPU time spent in each part of the code will be printed at the end of the simulation. 
-
+\item \inltt{ShowTimings}: activates the blocks timing of the incompressible
+Navier-Stokes solver. The CPU time spent in each part of the code will be 
+printed at the end of the simulation.
 \begin{lstlisting}[style=XMLStyle]
 <I PROPERTY="ShowTimings" VALUE="True" />
 \end{lstlisting}
 
 \end{itemize}
 
+
 \subsection{Parameters}
- The following parameters can be specified in the \texttt{PARAMETERS} section of the session file: 
- 
- \begin{itemize}
-\item \texttt{TimeStep}: sets the time-step for the integration in time formula
-\item  \texttt{NumSteps}: sets the number of time-steps
-\item  \texttt{Kinvis}: sets the cinematic viscosity coefficient formula
-\item  \texttt{Noise}: sets the white-noise amplitude we want to add on the velocity initial conditions
-\item  \texttt{SubStepCFL}: sets the CFL safety limit for the sub-stepping algorithm (default value = 0.5)
-\item  \texttt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75% of Fourier frequency are not dumped)
-\item  \texttt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1) 
- \end{itemize}
+The following parameters can be specified in the \inltt{PARAMETERS} section of
+the session file:
+
+\begin{itemize}
+\item \inltt{TimeStep}: sets the time-step for the integration in time formula
+\item \inltt{NumSteps}: sets the number of time-steps
+\item \inltt{Kinvis}: sets the cinematic viscosity coefficient formula
+\item \inltt{Noise}: sets the white-noise amplitude we want to add on the velocity initial conditions
+\item \inltt{SubStepCFL}: sets the CFL safety limit for the sub-stepping algorithm (default value = 0.5)
+\item \inltt{SVVCutoffRatio}: sets the ratio of Fourier frequency not affected by the SVV technique (default value = 0.75, i.e. the first 75% of Fourier frequency are not dumped)
+\item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1) 
+\end{itemize}
 
 
 \section{Stability analysis Session file configuration}
+The type of equation which is to be solved is specified through the \inltt
+{EqType} option in the session file. This can be set to any of the following:
 
- The type of equation which is to be solved is specified through the \texttt {EquationType} SOLVERINFO option in the session file. This can be set to any of the following: 
-
-\begin{table}
 \begin{center}
-\begin{tabular}{|l|c|} \hline
-{Equation to solve}  \\ \hline
-$\frac{\partial\mathbf{u'}}{\partial t} +\mathcal{L}(\mathbf{U},\mathbf{u'})=-\nabla p+\nu \nabla^2 \mathbf{u'}$\\ \hline
+\footnotesize
+\begin{tabular}{lc}
+\toprule
+{Equation to solve}  \\
+\midrule
+$\frac{\partial\mathbf{u'}}{\partial t} +\mathcal{L}(\mathbf{U},\mathbf{u'})=-\nabla p+\nu \nabla^2 \mathbf{u'}$\\
+\bottomrule
 \end{tabular}
 \end{center}
-\end{table}
 
 
-\begin{table}
 \begin{center}
-\begin{tabular}{|l|c|c|c|c|c|} \hline
-{Equation Type} & {Dimensions} &{Projections} &{Algorithms} \\ \hline
-UnsteadyNavierStokes & 2D, Quasi-3D& Continuous &VCS,DS\\ \hline
+\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+{Equation Type} & {Dimensions} &{Projections} &{Algorithms} \\
+\midrule
+UnsteadyNavierStokes & 2D, Quasi-3D& Continuous &VCS,DS\\
+\bottomrule
 \end{tabular}
 \end{center}
-\end{table}
 
 \subsection{Solver Info}
 
 \begin{itemize}
-\item \texttt{Eqtype}:  sets the type of equation to solve, according to the table above.
-\item \texttt{TimeIntegrationMethod}: the following types of time integration methods have been tested with each solver:
-\begin{table}
+\item \inltt{Eqtype}:  sets the type of equation to solve, according to the
+table above.
+\item \inltt{TimeIntegrationMethod}: the following types of time integration methods have been tested with each solver:
 \begin{center}
-\begin{tabular}{|l|c|c|c|c|c|} \hline
-{} & {Explicit} &{Diagonally Implicit} &{IMEX} & {Implicit} \\ \hline
-\texttt{UnsteadyNavierStokes} & X & &X & \\ \hline
+\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+{} & {Explicit} &{Diagonally Implicit} &{IMEX} & {Implicit} \\
+\midrule
+\texttt{UnsteadyNavierStokes} & X & &X & \\
+\bottomrule
 \end{tabular}
 \end{center}
-\end{table}
+
+\item \inltt{Projection}: the Galerkin projection used may be either 
+\begin{itemize}
+\item \inltt{Continuous}: for a C0-continuous Galerkin (CG) projection;
+\item \inltt{Discontinuous}: for a discontinous Galerkin (DG) projection. 
 \end{itemize}
 
+\item \inltt{EvolutionOperator}:
 \begin{itemize}
-\item \texttt{Projection}: the Galerkin projection used may be either 
-\begin{itemize}
-\item \texttt{Continuous}: for a C0-continuous Galerkin (CG) projection;
-\item \texttt{Discontinuous}: for a discontinous Galerkin (DG) projection. 
+\item \inltt{Nonlinear} (non-linear Navier-Stokes equations).
+\item \inltt{Direct} (linearised Navier-Stokes equations).
+\item \inltt{Adjoint} (adjoint Navier-Stokes equations).
+\item \inltt{TransientGrowth} ((transient growth evolution operator).
 \end{itemize}
 
-\item \texttt{EvolutionOperator}:
-\begin{itemize}
-\item \texttt{Nonlinear} (non-linear Navier-Stokes equations).
-\item \texttt{Direct} (linearised Navier-Stokes equations).
-\item \texttt{Adjoint} (adjoint Navier-Stokes equations).
-\item \texttt{TransientGrowth} ((transient growth evolution operator).
-\end{itemize}
-
-\item \texttt{Driver}: specifies  the type of problem to be solved:
+\item \inltt{Driver}: specifies  the type of problem to be solved:
    \begin{itemize}
-    \item \texttt{Standard} (time integration of the equations)
-    \item \texttt{ModifiedArnoldi} (computations of the leading eigenvalues and eigenmodes using modified Arnoldi method)
-    \item \texttt{Arpack} (computations of eigenvalues/eigenmodes using Implicitly Restarted Arnoldi Method (ARPACK) ).
+    \item \inltt{Standard} (time integration of the equations)
+    \item \inltt{ModifiedArnoldi} (computations of the leading eigenvalues and eigenmodes using modified Arnoldi method)
+    \item \inltt{Arpack} (computations of eigenvalues/eigenmodes using Implicitly Restarted Arnoldi Method (ARPACK) ).
     \end{itemize}
     
-\item \texttt{ArpackProblemType}: types of eigenvalues to be computed (for Driver Arpack only) 
+\item \inltt{ArpackProblemType}: types of eigenvalues to be computed (for Driver Arpack only) 
 \begin{itemize}
-\item \texttt{LargestMag} (eigenvalues with largest magnitude).
-\item \texttt{SmallestMag} (eigenvalues with smallest magnitude). 
-\item \texttt{LargestReal} (eigenvalues with largest real part).
-\item \texttt{SmallestReal} (eigenvalues with smallest real part). 
-\item \texttt{LargestImag} (eigenvalues with largest imaginary part). 
-\item \texttt{SmallestIma} (eigenvalues with smallest imaginary part ). 
-\end{itemize}    
+\item \inltt{LargestMag} (eigenvalues with largest magnitude).
+\item \inltt{SmallestMag} (eigenvalues with smallest magnitude). 
+\item \inltt{LargestReal} (eigenvalues with largest real part).
+\item \inltt{SmallestReal} (eigenvalues with smallest real part). 
+\item \inltt{LargestImag} (eigenvalues with largest imaginary part). 
+\item \inltt{SmallestIma} (eigenvalues with smallest imaginary part ). 
+\end{itemize}
 
-\item \texttt{Homogeneous}: specifies the Fourier expansion in a third direction (optional) 
+\item \inltt{Homogeneous}: specifies the Fourier expansion in a third direction (optional) 
 \begin{itemize}
-\item \texttt{1D} (Fourier spectral method in z-direction).
+\item \inltt{1D} (Fourier spectral method in z-direction).
 \end{itemize}
-\item \texttt{ModeType}: this specifies the type of the quasi-3D problem to be solved.
+\item \inltt{ModeType}: this specifies the type of the quasi-3D problem to be solved.
 \begin{itemize}
-\item \texttt{MultipleMode} (stability analysis with multiple modes).
-\item \texttt{SingleMode} (BiGlobal Stability Analysis: full-complex mode).
-\item \texttt{HalfMode} (BiGlobal Stability Analysis: half-complex mode u.Re v.Re w.Im p.Re).
+\item \inltt{MultipleMode} (stability analysis with multiple modes).
+\item \inltt{SingleMode} (BiGlobal Stability Analysis: full-complex mode).
+\item \inltt{HalfMode} (BiGlobal Stability Analysis: half-complex mode u.Re v.Re w.Im p.Re).
 \end{itemize}
 \end{itemize}
+
 
 \subsection{Parameters}
+The following parameters can be specified in the \texttt{PARAMETERS} section of the session file: 
 
- The following parameters can be specified in the \texttt{PARAMETERS} section of the session file: 
+\begin{itemize}
+\item \inltt{Re}: sets the Reynolds number 
+\item \inltt{Kinvis}: sets the kinematic viscosity $\nu$.
+\item \inltt{kdim}: sets the dimension of the Krylov subspace $\kappa$. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 16.
+\item \inltt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: $10^{-6}$.
+\item \inltt{nits}: sets the maximum number of iterations. Can be used in: \inltt{ModifiedArnoldi} and \inltt{Arpack}. Default value: 500.
+\item \inltt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used in \inltt{Homogeneous} set to \inltt{1D}. Default value: 1.
+\item \inltt{HomModesZ}: sets the number of planes in the homogeneous directions. Can be used in \inltt{Homogeneous} set to \inltt{1D} and \inltt{ModeType} set to \inltt{MultipleModes}.
+\item \inltt{N\_slices}: sets the number of temporal slices for Floquet stability analysis.
+\item \inltt{period}: sets the periodicity of the base flow. 
+\end{itemize}
  
- \begin{itemize}
- \item \texttt{Re}: sets the Reynolds number 
- \item \texttt{Kinvis}: sets the kinematic viscosity $\nu$.
- \item \texttt{kdim}: sets the dimension of the Krylov subspace $\kappa$. Can be used in: \texttt{ModifiedArnoldi} and \texttt{Arpack}. Default value: 16.
- \item \texttt{evtol}: sets the tolerance of the eigenvalues. Can be used in: \texttt{ModifiedArnoldi} and \texttt{Arpack}. Default value: $10^{-6}$.
- \item \texttt{nits}: sets the maximum number of iterations. Can be used in: \texttt{ModifiedArnoldi} and \texttt{Arpack}. Default value: 500.
- \item \texttt{LZ}:  sets the length in the spanswise direction $L_z$. Can be used in \texttt{Homogeneous} set to \texttt{1D}. Default value: 1.
- \item \texttt{HomModesZ}: sets the number of planes in the homogeneous directions. Can be used in \texttt{Homogeneous} set to \texttt{1D} and \texttt{ModeType} set to \texttt{MultipleModes}.
-  \item \texttt{N\_slices}: sets the number of temporal slices for Floquet stability analysis.
- \item \texttt{period}: sets the periodicity of the base flow. 
- \end{itemize}
- 
- \subsection{Functions}
- 
- \begin{itemize}
- \item To be INserted
- \end{itemize}
- 
- 
- 
+\subsection{Functions}
+\begin{itemize}
+\item To be INserted
+\end{itemize}
+
+
+
 \section{Examples}
 
 \subsection{Kovasznay Flow 2D}
 \label{KovasznayFlow2D}
-The following example demonstrates the application of the the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm to solve for the laminar flow behind a 2D grid for which the exact solution is the 2D Kovasznay flow.
+The following example demonstrates the application of the
+\hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the
+\hyperref[VCSscheme]{Velocity Correction Scheme} algorithm to solve for the
+laminar flow behind a 2D grid for which the exact solution is the 2D Kovasznay
+flow.
 
-\textbf{Background}
-
-The governing equation is the unsteady incompressible Navier-Stokes equation:
-\begin{equation}
-\begin{cases}
-\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
-\nabla \cdot \textbf{u} = 0
-\end{cases}
-\end{equation}
-
-In the following we will numerically solve for the two dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 40.
+In the following we will numerically solve for the two dimensional velocity and
+pressure field for steady boundary conditions. The Reynolds number under
+consideration is 40.
 
 \textbf{Geometry}
 
@@ -629,19 +652,14 @@ In this example we will use a 5th order polynomial expansion (\textit{i.e.} $P=6
 
 \subsection{Steady Oseen Flow}
 \label{KovasznayFlow2D}
-The following example demonstrates the application of the the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[DirectSolv]{Direct Solver} to solve for the steady Oseen flow behind a 2D grid for which the exact solution is the 2D Kovasznay flow.
+The following example demonstrates the application of the the
+\hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the
+\hyperref[DirectSolv]{Direct Solver} to solve for the steady Oseen flow behind a
+2D grid for which the exact solution is the 2D Kovasznay flow.
 
-\textbf{Background}
-
-The governing equation is the unsteady incompressible Navier-Stokes equation:
-\begin{equation}
-\begin{cases}
-\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
-\nabla \cdot \textbf{u} = 0
-\end{cases}
-\end{equation}
-
-In the following we will numerically solve for the two dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 40.
+In the following we will numerically solve for the two dimensional velocity and
+pressure field for steady boundary conditions. The Reynolds number under
+consideration is 40.
 
 \textbf{Geometry}
 
@@ -721,19 +739,14 @@ In this example we will use a 7th order polynomial expansion (\textit{i.e.} $P=8
 
 \subsection{Laminar Channel Flow 2D}
 \label{LaminarChannelFlow2D}
-The following example demonstrates the application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling 2D laminar channel flow. A skew-symmetric advection form has been used.
+The following example demonstrates the application of the
+\hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the
+\hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling 2D
+laminar channel flow. A skew-symmetric advection form has been used.
 
-\textbf{Background}
-
-The governing equation is the unsteady incompressible Navier-Stokes equation:
-\begin{equation}
-\begin{cases}
-\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
-\nabla \cdot \textbf{u} = 0
-\end{cases}
-\end{equation}
-
-In the following we will numerically solve for the two dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 1.
+In the following we will numerically solve for the two dimensional velocity and
+pressure field for steady boundary conditions. The Reynolds number under
+consideration is 1.
 
 \textbf{Geometry}
 
@@ -819,19 +832,14 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
 \end{figure}
 
 \subsection{Laminar Channel Flow 3D}
-The following example demonstrates the application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling 3D laminar channel flow.
+The following example demonstrates the application of the
+\hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the
+\hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling 3D
+laminar channel flow.
 
-\textbf{Background}
-
-The governing equation is the unsteady incompressible Navier-Stokes equation:
-\begin{equation}
-\begin{cases}
-\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
-\nabla \cdot \textbf{u} = 0
-\end{cases}
-\end{equation}
-
-In the following we will numerically solve for the three dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 1.
+In the following we will numerically solve for the three dimensional velocity
+and pressure field for steady boundary conditions. The Reynolds number under
+consideration is 1.
 
 \textbf{Geometry}
 
@@ -951,17 +959,12 @@ The session file can be found in the tests folder under the IncNavierStokesSolve
 
 
 \subsection{Laminar Channel Flow Quasi-3D}
-In this example we reuse the 2D mesh used before for the \hyperref[LaminarChannelFlow2D]{2D Laminar Channel Flow} example, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm.
-
-\textbf{Background}
-
-The governing equation is the unsteady incompressible Navier-Stokes equation:
-\begin{equation}
-\begin{cases}
-\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
-\nabla \cdot \textbf{u} = 0
-\end{cases}
-\end{equation}
+In this example we reuse the 2D mesh used before for the
+\hyperref[LaminarChannelFlow2D]{2D Laminar Channel Flow} example, and we add
+mathematically the third dimension assuming an expansion along z with a Fourier
+series. The example is an application of the
+\hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the
+\hyperref[VCSscheme]{Velocity Correction Scheme} algorithm.
 
 The Reynolds number under consideration is 1.
 
@@ -1066,18 +1069,11 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 
 
 \subsection{Turbulent Channel Flow Quasi-3D}
-In this example we use a 2D mesh for channel flow, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm in order to solve for turbulent channel flow.
-
-\textbf{Background}
-
-The governing equation is the unsteady incompressible Navier-Stokes equation:
-\begin{equation}
-\begin{cases}
-\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
-\nabla \cdot \textbf{u} = 0
-\label{IncNS_equations}
-\end{cases}
-\end{equation}
+In this example we use a 2D mesh for channel flow, and we add mathematically the
+third dimension assuming an expansion along z with a Fourier series. The example
+is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes
+solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm in
+order to solve for turbulent channel flow.
 
 The Reynolds number under consideration is 2000.
 
@@ -1195,18 +1191,11 @@ In this case Nektar++ uses the FFTW library to move the degrees of freedom from 
 
 
 \subsection{Turbulent Pipe Flow Quasi-3D}
-In this example we use a 2D mesh for a pipe inlet, and we add mathematically the third dimension assuming an expansion along z with a Fourier series. The example is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm in order to solve for turbulent pipe flow.
-
-\textbf{Background}
-
-The governing equation is the unsteady incompressible Navier-Stokes equation:
-\begin{equation}
-\begin{cases}
-\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
-\nabla \cdot \textbf{u} = 0
-\label{IncNS_equations}
-\end{cases}
-\end{equation}
+In this example we use a 2D mesh for a pipe inlet, and we add mathematically the
+third dimension assuming an expansion along z with a Fourier series. The example
+is an application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes
+solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm in
+order to solve for turbulent pipe flow.
 
 The Reynolds number under consideration is 3000.
 
@@ -1305,20 +1294,17 @@ For this tutorial, the input file (in the \hyperref[XMLformat]{\nekpp input form
 \end{figure}
 
 \subsection{Aortic Blood Flow}
-The following example demonstrates the application of the \hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the \hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling viscid Newtonian blood flow in a region of a rabbit descending thoracic aorta with intercostal branch pairs. Such studies are necessary to understand the effect local blood flow changes have on cardiovascular diseases such as atherosclerosis. 
+The following example demonstrates the application of the
+\hyperref[IncNSsolver]{incompressible Navier-Stokes solver} using the
+\hyperref[VCSscheme]{Velocity Correction Scheme} algorithm for modelling viscid
+Newtonian blood flow in a region of a rabbit descending thoracic aorta with
+intercostal branch pairs. Such studies are necessary to understand the effect
+local blood flow changes have on cardiovascular diseases such as
+atherosclerosis.
 
-\textbf{Background}
-
-The governing equation is the unsteady incompressible Navier-Stokes equation:
-\begin{equation}
-\begin{cases}
-\frac{\partial \textbf{u}}{\partial t} + \textbf{u} \cdot \nabla \textbf{u} = - \nabla p + \nu \nabla^2 \textbf{u} + f \\
-\nabla \cdot \textbf{u} = 0
-\label{IncNS_equations}
-\end{cases}
-\end{equation}
-
-In the following we will numerically solve for the three dimensional velocity and pressure field for steady boundary conditions. The Reynolds number under consideration is 300, which is physiologically relevant.
+In the following we will numerically solve for the three dimensional velocity
+and pressure field for steady boundary conditions. The Reynolds number under
+consideration is 300, which is physiologically relevant.
 
 \textbf{Geometry}
 

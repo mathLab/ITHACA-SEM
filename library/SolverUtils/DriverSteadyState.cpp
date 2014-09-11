@@ -318,6 +318,10 @@ namespace Nektar
 	    NekDouble X_input = X_output;
 	    NekDouble Delta_input = Delta_output;
 	    
+	    NekDouble X_init = X_output;
+	    NekDouble Delta_init = Delta_output;
+	    int stepCounter(0);
+	    
 	    NekDouble F0(0.0);
 	    NekDouble F0x(0.0);
 	    NekDouble F0y(0.0);
@@ -347,7 +351,7 @@ namespace Nektar
 		    X_input = X_output;
 		    Delta_input = Delta_output;
 		    EvalEV_ScalarSFD(X_output, Delta_output, alpha, F1);
-		    
+		    		    
 		    if (F1 > CurrentMin)
 		    {
 			Descending = false;
@@ -358,6 +362,18 @@ namespace Nektar
 			X_output = X_input + s*dirx;
 			Delta_output = Delta_input + s*diry;
 		    }
+		    
+		    if(stepCounter > 9999999)
+		    {
+			//We are stuck in this loop..
+			//Then we restart it with different initail conditions
+			Descending = false;
+			X_input = X_init;
+			Delta_init = Delta_init + Delta_init*0.1;
+			Delta_input = Delta_init;
+			stepCounter = 0;
+		    }
+		    stepCounter++;
 		}
 		
 		if (abs(F0-F1) < dx)
@@ -367,6 +383,7 @@ namespace Nektar
 		    cout << "\t The minimum EV is: " << F1 << "\n" << endl;
 		    OptParmFound = true; 
 		}
+		
 	    }            
 	}
 	

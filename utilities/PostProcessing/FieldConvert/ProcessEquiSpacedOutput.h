@@ -59,6 +59,8 @@ namespace Nektar
             
             /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
+        protected:
+            void SetupEquiSpacedField(void);
 
         private:
         };

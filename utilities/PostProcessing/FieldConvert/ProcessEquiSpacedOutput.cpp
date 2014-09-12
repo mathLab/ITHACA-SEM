@@ -66,6 +66,12 @@ namespace Nektar
         
         void ProcessEquiSpacedOutput::Process(po::variables_map &vm)
         {
+            SetupEquiSpacedField();
+        }
+
+        
+        void ProcessEquiSpacedOutput::SetupEquiSpacedField(void)
+        {
             
             if(m_f->m_verbose)
             {
@@ -239,11 +245,6 @@ namespace Nektar
                 m_f->m_fieldPts->m_ptype = ePtsTetBlock;
             }
             
-            if(m_f->m_session->GetComm()->TreatAsRankZero())
-            {
-                cout << "Interpolating Coordinates [" << flush;
-            }
-            
             Array<OneD, NekDouble> tmp;
 
             for(int n = 0; n < coordim; ++n)
@@ -277,11 +278,6 @@ namespace Nektar
                     // Set up Variable string. 
                     m_f->m_fieldPts->m_fields.push_back(m_f->m_fielddef[0]->m_fields[n]);
                 }
-            }
-
-            if(m_f->m_session->GetComm()->TreatAsRankZero())
-            {
-                cout << "]" << endl;
             }
 
         }

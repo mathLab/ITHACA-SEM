@@ -67,7 +67,13 @@ namespace Nektar
             ASSERTL0(m_config["fieldvalue"].as<string>().compare("NotSet") != 0,
                      "processisocontour: Need to specify a field value");
 
-            m_config["globalcondense"] = ConfigOption(true,"NotSet","globally condense contour to unique values");
+            m_config["globalcondense"] = ConfigOption(true,"NotSet","Globally condense contour to unique values");
+
+            m_config["smooth"] = ConfigOption(true,"NotSet","Smooth isocontour (implies global condense)");
+            m_config["smoothiter"] = ConfigOption(false,"100","Number of smoothing cycle, default = 100"); 
+            m_config["smoothposdiffusion"] = ConfigOption(false,"0.5","Postive diffusion coefficient (0 < lambda < 1), default = 0.5"); 
+            m_config["smoothnegdiffusion"] = ConfigOption(false,"0.495","Negative diffusion coefficient (0 < mu < 1), default = 0.495"); 
+
         }
         
         ProcessIsoContour::~ProcessIsoContour(void)
@@ -80,15 +86,13 @@ namespace Nektar
             // could probably just do field of interest!
             SetupEquiSpacedField(); 
 
-            string fieldidstr = m_config["fieldid"].as<string>();
-            int fieldid = boost::lexical_cast<int>(fieldidstr);
-
-            string fieldvalstr = m_config["fieldvalue"].as<string>();
-            NekDouble value = boost::lexical_cast<NekDouble>(fieldvalstr);
+            int     fieldid = m_config["fieldid"].as<int>();
+            NekDouble value = m_config["fieldvalue"].as<NekDouble>();
 
             iso = ExtractContour(fieldid,value);
-
-            if(m_config["globalcondense"].m_beenSet)
+            bool smoothing      = m_config["smooth"].m_beenSet;
+            bool globalcondense = m_config["globalcondense"].m_beenSet;
+            if(smoothing||globalcondense)
             {
                 vector<IsoSharedPtr> glob_iso;
                 int nfields = m_f->m_fieldPts->m_pts.num_elements();
@@ -96,6 +100,14 @@ namespace Nektar
                 
                 g_iso->globalcondense(iso);
 
+                if(smoothing)
+                {
+                    int  niter = m_config["smoothiter"].as<int>();
+                    NekDouble lambda = m_config["smoothposdiffusion"].as<NekDouble>();
+                    NekDouble mu     = m_config["smoothnegdiffusion"].as<NekDouble>();
+                    g_iso->smooth(niter,lambda,-mu);
+                }
+                
                 glob_iso.push_back(g_iso);
 
                 ResetFieldPts(glob_iso);
@@ -603,6 +615,7 @@ namespace Nektar
                 for(i = 0; i < niso; ++i)
                 {
                     for(j = i+1; j < niso; ++j)
+                        //for(j = 0; j < niso; ++j)
                     {
                         NekDouble diff=sqrt((sph[i][0]-sph[j][0])*(sph[i][0]-sph[j][0])+
                                   (sph[i][1]-sph[j][1])*(sph[i][1]-sph[j][1])+
@@ -616,7 +629,7 @@ namespace Nektar
                     }
                 }
             }
-            
+             
 
             for(i = 0; i < niso; ++i)
             {
@@ -624,6 +637,8 @@ namespace Nektar
             }
             nvert = 0;
             // identify which vertices are connected to tolerance
+            cout << "Matching Vertices [" <<flush;
+            int cnt = 0;
             for(i = 0; i < niso; ++i)
             {
                 for(n = 0; n < isocon[i].size(); ++n)
@@ -631,19 +646,37 @@ namespace Nektar
                     int con = isocon[i][n];
                     for(id1 = 0; id1 < iso[i]->m_nvert;++id1)
                     {
-                        for(id2 = 0; id2 < iso[con]->m_nvert;++id2)
+                        for(id2 = 0; id2 < iso[con]->m_nvert;++id2,++cnt)
                         {
-                            if(same(iso[i]->m_x[id1],iso[i]->m_y[id1],
-                                    iso[i]->m_z[id1],iso[con]->m_x[id2],
-                                    iso[con]->m_y[id2],iso[con]->m_z[id2]))
+                            if(cnt%1000000 == 0)
                             {
-                                vidmap[i][id1] = vidmap[con][id2] = nvert++;
+                                cout <<"." <<flush;
+                            }
+
+                            //if((vidmap[con][id2] != -1)&&(vidmap[i][id1] != -1))
+                            {
+                                if(same(iso[i]->m_x[id1],  iso[i]->m_y[id1],
+                                        iso[i]->m_z[id1],  iso[con]->m_x[id2],
+                                        iso[con]->m_y[id2],iso[con]->m_z[id2]))
+                                {
+                                    if((vidmap[i][id1] == -1)&&(vidmap[con][id2] != -1))
+                                    {
+                                        vidmap[i][id1] = vidmap[con][id2];
+                                    }
+                                    else if((vidmap[con][id2] == -1)&&(vidmap[i][id1] != -1))
+                                    {
+                                        vidmap[con][id2] = vidmap[i][id1];
+                                    }
+                                    else if((vidmap[con][id2] == -1)&&(vidmap[i][id1] == -1))
+                                    {
+                                        vidmap[i][id1] = vidmap[con][id2] = nvert++;
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
-                // set any unset vertices to point to themselves
                 for(id1 = 0; id1 < iso[i]->m_nvert;++id1)
                 {
                     if(vidmap[i][id1] == -1)
@@ -652,8 +685,9 @@ namespace Nektar
                     }
                 }
             }
+            cout <<"]"<<endl;
             m_nvert = nvert;
-
+            
             nelmt = 0; 
             // reset m_vid; 
             for(n = 0; n < niso; ++n)
@@ -695,6 +729,20 @@ namespace Nektar
                     }
                 }
             }
+
+#if 0
+            // perform check for unique vertices
+            for(n = 0; n < m_nvert; ++n)
+            {
+                for(i = n+1; i < m_nvert; ++i)
+                {
+                    if(same(m_x[i],m_y[i],m_z[i],m_x[n],m_y[n],m_z[n]))
+                    {
+                        cout << "Vertex "<< n << " is the same as vertex " <<i<< endl;
+                    }
+                }
+            }
+#endif
         }
 
         void Iso::smooth(int n_iter, NekDouble lambda, NekDouble mu)
@@ -743,7 +791,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             xtemp = Array<OneD, NekDouble>(m_nvert);
             ytemp = Array<OneD, NekDouble>(m_nvert);
             ztemp = Array<OneD, NekDouble>(m_nvert);
@@ -777,11 +825,21 @@ namespace Nektar
                     w = 1.0/(NekDouble)(adj[i].size()); 
                     del_v[0] = del_v[1] = del_v[2] = 0;
                     
-                    for(iad = adj[i].begin(); iad != adj[i].end(); ++iad){
+#if 0
+                    for(iad = adj[i].begin(); iad != adj[i].end(); ++iad)
+                    {
                         del_v[0] =  del_v[0] + (xtemp[*iad]-xtemp[i])*w;
                         del_v[1] =  del_v[1] + (ytemp[*iad]-ytemp[i])*w;
                         del_v[2] =  del_v[2] + (ztemp[*iad]-ztemp[i])*w;
                     }
+#else
+                    for(iad = adj[i].begin(); iad != adj[i].end(); ++iad)
+                    {
+                        del_v[0] =  del_v[0] + (m_x[*iad]-m_x[i])*w;
+                        del_v[1] =  del_v[1] + (m_y[*iad]-m_y[i])*w;
+                        del_v[2] =  del_v[2] + (m_z[*iad]-m_z[i])*w;
+                    }
+#endif
                     
                     m_x[i] = xtemp[i] + del_v[0] * mu;
                     m_y[i] = ytemp[i] + del_v[1] * mu;

@@ -136,6 +136,13 @@ namespace Nektar
                 {
                     NodeSharedPtr n = f->m_vertexList[j];
                     n->m_z = rEval.Evaluate(rExprId, n->m_x, n->m_y, 0.0, 0.0);
+                    
+                    if (n->m_z < 1e-32)
+                    {
+                        n->m_z = 0;
+                    }
+                        
+                    
                 }
                 
                 // Put curvature into edges
@@ -151,6 +158,11 @@ namespace Nektar
                     {
                         Node n = *n1 + disp * k / (nq-1.0);
                         n.m_z = rEval.Evaluate(rExprId, n.m_x, n.m_y, 0.0, 0.0);
+                        if (n.m_z < 1e-32)
+                        {
+                            n.m_z = 0;
+                        }
+                        
                         f->m_edgeList[j]->m_edgeNodes.push_back(
                             NodeSharedPtr(new Node(n)));
                     }

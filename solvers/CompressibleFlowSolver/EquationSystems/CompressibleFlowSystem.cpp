@@ -776,13 +776,13 @@ namespace Nektar
         if (nDimensions == 2 || nDimensions == 3)
         {
             velInf[1] = m_vInf;
-            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[1], 1, tmp1, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
         }
         if (nDimensions == 3)
         {
             velInf[2] = m_wInf;
-            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[2], 1, tmp2, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
         }
         
@@ -937,13 +937,13 @@ namespace Nektar
         if (nDimensions == 2 || nDimensions == 3)
         {
             velInf[1] = m_vInf;
-            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[1], 1, tmp1, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
         }
         if (nDimensions == 3)
         {
             velInf[2] = m_wInf;
-            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[2], 1, tmp2, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
         }
         
@@ -1099,13 +1099,13 @@ namespace Nektar
         if (nDimensions == 2 || nDimensions == 3)
         {
             velInf[1] = m_vInf;
-            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[1], 1, tmp1, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
         }
         if (nDimensions == 3)
         {
             velInf[2] = m_wInf;
-            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[2], 1, tmp2, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
         }
         
@@ -1230,7 +1230,9 @@ namespace Nektar
     
     /**
      * @brief Pressure inflow boundary conditions for compressible flow 
-     * problems where the pressure at the boundary is assigned from a file.
+     * problems where either the density and the velocities are assigned from a
+     * file or the full state is assigned from a file (depending on the problem
+     * type, either subsonic or supersonic).
      */
     void CompressibleFlowSystem::PressureInflowFileBC(
         int                                   bcRegion,
@@ -1262,13 +1264,13 @@ namespace Nektar
         if (nDimensions == 2 || nDimensions == 3)
         {
             velInf[1] = m_vInf;
-            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
+            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[1], 1, tmp1, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
         }
         if (nDimensions == 3)
         {
             velInf[2] = m_wInf;
-            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
+            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[2], 1, tmp2, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
         }
         
@@ -1356,15 +1358,16 @@ namespace Nektar
                 
                 // Subsonic flows
                 if (Mach[pnt] < 0.99)
-                {   
+                {
+                    /*
                     // Kinetic energy calculation
-                    //NekDouble Ek = 0.0;
-                    //for (j = 1; j < nVariables-1; ++j)
-                    //{
-                    //    Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
-                    //}
-                    
-                    //rhoeb = m_pressureStorage[id1+i] * gammaMinusOneInv + Ek;
+                    NekDouble Ek = 0.0;
+                    for (j = 1; j < nVariables-1; ++j)
+                    {
+                        Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
+                    }
+                    rhoeb = m_pressureStorage[id1+i] * gammaMinusOneInv + Ek;
+                    */
                     
                     // Partial extrapolation for subsonic cases
                     for (j = 0; j < nVariables-1; ++j)
@@ -1373,11 +1376,27 @@ namespace Nektar
                          UpdatePhys())[id1+i] = m_fieldStorage[j][id1+i];
                     }
                     
-                    rhoeb = m_fieldStorage[nVariables-1][id1+i] + 
+                    /*
+                    // Modulation of the pressure in time
+                    rhoeb = m_fieldStorage[nVariables-1][id1+i] +
                         m_amplitude * m_pInf * sin(m_omega * m_time);
+                    */
+                    
+                    // Kinetic energy calculation
+                    NekDouble Ek = 0.0;
+                    for (j = 1; j < nVariables-1; ++j)
+                    {
+                        Ek += 0.5 * (m_fieldStorage[j][id1+i] *
+                                     m_fieldStorage[j][id1+i]) /
+                                        m_fieldStorage[0][id1+i];
+                    }
+                    rhoeb = gammaMinusOneInv * pressure[pnt] + Ek;
                     
                     (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
                      UpdatePhys())[id1+i] = rhoeb;
+                    //cout << "pressure = " << pressure[pnt] <<endl;
+                    //cout << "Ek = " << Ek <<endl;
+                    //cout << "rhoeb = " << rhoeb <<endl;
                 }
                 // Supersonic flows
                 else

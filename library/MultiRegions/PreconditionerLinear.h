@@ -46,6 +46,12 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        enum LinearPreconSolver
+        {
+            eLinearPreconXxt,
+            eLinearPreconPETSc
+        };
+
         class PreconditionerLinear;
         typedef boost::shared_ptr<PreconditionerLinear>  PreconditionerLinearSharedPtr;
 
@@ -78,6 +84,8 @@ namespace Nektar
             boost::shared_ptr<AssemblyMap>              m_vertLocToGloMap;
 
 	private:
+            static std::string                       solveType;
+            static std::string                       solveTypeIds[];
 
             virtual void v_InitObject();
 

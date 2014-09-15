@@ -6,7 +6,7 @@ IF (THIRDPARTY_BUILD_SMV)
         libsmvf1.0
         URL ${TPURL}/libsmvf1.0.tar.gz
         URL_MD5 "40cad0538acebd4aa83136ef9319150e"
-        STAMP_DIR ${TPSRC}/stamp
+        STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/libsmvf1.0
         BINARY_DIR ${TPBUILD}/libsmvf1.0

@@ -1,0 +1,134 @@
+\chapter{Optimisation}
+
+One of the most frequently asked questions when performing almost any scientific
+computation is: how do I make my simulation faster? Or, equivalently, why is my
+simulation running so slowly?
+
+The spectral element method is no exception to this rule. The purpose of this
+chapter is to highlight some of the easiest parameters that can be tuned to
+attain optimum performance for a given simulation.
+
+Details are kept as untechnical as possible, but some background information on
+the underlying numerical methods is necessary in order to understand the various
+options available and the implications that they can have on your simulation.
+
+\section{Operator evaluation strategies}
+
+When discretising a PDE using most variants of the spectral element method, the
+resulting problem is usually expressed as a matrix equation. In traditional
+linear finite element codes, the matrix is usually represented as a large sparse
+global matrix, which represents the action of a particular operator such as the
+Laplacian matrix across the whole domain.
+
+However, when we consider spectral element methods, in which the polynomial
+order representing the expansion can be far higher, this method becomes far less
+optimal. We can instead consider the action of an operator locally on each
+element, and then perform an assembly operation. This is mathematically
+equivalent to the global matrix approach and gives exactly the same answer, but
+at high polynomial orders it is far more efficient on modern CPU architectures.
+
+Furthermore, this local approach can be represented in one of two ways: either
+as a dense matrix for each element, which is typically more efficient at
+intermediate polynomial orders, or in the $hp$ element case as a tensor product
+of smaller dense matrices via an approach deemed \emph{sum-factorisation}, which
+is used at very high polynomial orders. Figure~?? gives an overview of these
+three different operator strategies.
+
+A goal of \nekpp is to support not only high order expansions, but \emph{all}
+orders from low (where element size $h$ is the dominant factor) to high (where
+$p$ dominates); a procedure we have dubbed ``from $h$ to $p$ efficiently''.
+
+\subsection{Selecting an operator strategy}
+
+An obvious question is: ``which strategy should I select?'' The most important
+factors in this decision are:
+
+\begin{enumerate}
+  \item what the operator is;
+  \item polynomial order $p$;
+  \item element type and dimension of the problem;
+  \item underlying hardware architecture;
+  \item the number of operator calls in the solver;
+  \item BLAS implementation speed.
+\end{enumerate}
+
+Generally you can use results from three publications
+\cite{VoShKi10,CaShKiKe11a,CaShKiKe11b} which outline results for two- and
+three-dimensional elements.
+
+In general, the best approach is to perform some preliminary timings by changing
+the appropriate variables in the session file, which is outlined below. As a
+very rough guide, for $1 \leq p \leq 2$ you should use the global approach; for
+$3\leq p\leq 7$ use the local approach; and for $p \geq 8$ use
+sum-factorisation. However, these guidelines will vary due to the parameters
+noted above. In future releases of \nekpp we hope to tune these variables
+automatically to make this decision easier to make.
+
+\subsection{XML syntax}
+
+Operator evaluation strategies can be configured in the
+\inltt{GLOBALOPTIMISATIONPARAMETERS} tag, which lies inside the root
+\inltt{NEKTAR} tag:
+
+\begin{lstlisting}[style=XMLStyle]
+<NEKTAR>
+  <GLOBALOPTIMIZATIONPARAMETERS>
+    <BwdTrans>
+      <DO_GLOBAL_MAT_OP VALUE="0" />
+      <DO_BLOCK_MAT_OP TRI="1" QUAD="1"  TET="1"
+                       PYR="1" PRISM="1" HEX="1" />
+    </BwdTrans>
+    <IProductWRTBase>
+      <DO_GLOBAL_MAT_OP VALUE="0" />
+      <DO_BLOCK_MAT_OP TRI="1" QUAD="1"  TET="1"
+                       PYR="1" PRISM="1" HEX="1" />
+    </IProductWRTBase>
+    <HelmholtzMatrixOp>
+      <DO_GLOBAL_MAT_OP VALUE="0" />
+      <DO_BLOCK_MAT_OP TRI="1" QUAD="1"  TET="1"
+                       PYR="1" PRISM="1" HEX="1" />
+    </HelmholtzMatrixOp>
+    <MassMatrixOp>
+      <DO_GLOBAL_MAT_OP VALUE="0" />
+      <DO_BLOCK_MAT_OP TRI="1" QUAD="1"  TET="1"
+                       PYR="1" PRISM="1" HEX="1" />
+    </MassMatrixOp>
+  </GLOBALOPTIMIZATIONPARAMETERS>
+</NEKTAR>
+\end{lstlisting}
+
+
+\subsection{Selecting different operator strategies}
+
+Operator evaluation is supported for four operators: backward transform, inner
+product, Helmholtz and mass operators. It is possible to specify the following
+optimisation flags for different operators:
+
+\begin{enumerate}
+  \item \inltt{DO\_GLOBAL\_MAT\_OP}: If \inltt{VALUE} is \inltt{1}, the globally
+  assembled system matrix will be used to evaluate the operator. If
+  \inltt{VALUE} is \inltt{0}, the operator will be evaluated elementally.
+  \item \inltt{DO\_BLOCK\_MAT\_OP}: If \inltt{VALUE} is \inltt{1}, the elemental
+  evaluation will be done using the elemental/local matrices (which are all
+  concatenated in a block matrix, hence the name). If \inltt{VALUE} is
+  \inltt{0}, the elemental evaluation will be done using the sum-factorisation
+  technique.
+
+  Each element type (triangle, quadrilateral, etc) has its own \texttt{VALUE},
+  since break-even points for sum-factorisation and the local matrix approach
+  will differ depending on element type. Note that due to a small shortcoming in
+  the code, all element types must be defined; so three-dimensional elements
+  must still be defined even if the simulation is two-dimensional.
+\end{enumerate}
+
+Note that global takes precendence over block, so if \inltt{VALUE} is set to
+\inltt{1} for both then the operator will be global.
+
+For very complex operators -- in particular \inltt{HelmholtzMatrixOp} -- always
+set \inltt{DO\_BLOCK\_MAT\_OP} to \inltt{1} as sum-factorisation for these
+operator types can be costly.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../user-guide"
+%%% End:

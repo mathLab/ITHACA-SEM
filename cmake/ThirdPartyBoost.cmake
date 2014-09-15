@@ -28,9 +28,9 @@ IF (THIRDPARTY_BUILD_BOOST)
             PREFIX ${TPSRC}
             URL ${TPURL}/boost_1_55_0.tar.bz2
             URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
-            STAMP_DIR ${TPSRC}/stamp
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            SOURCE_DIR ${TPSRC}/boost
+            SOURCE_DIR ${TPBUILD}/boost
             BINARY_DIR ${TPBUILD}/boost
             TMP_DIR ${TPBUILD}/boost-tmp
             INSTALL_DIR ${TPDIST}
@@ -144,6 +144,9 @@ ELSE (THIRDPARTY_BUILD_BOOST)
     IF (Boost_REGEX_FOUND)
         MESSAGE(STATUS "Found Boost regex library: ${Boost_REGEX_LIBRARY}")
     ENDIF ()
+    IF (BOOST_THREAD_LIBRARY)
+        MARK_AS_ADVANCED(BOOST_THREAD_LIBRARY)
+    ENDIF (BOOST_THREAD_LIBRARY)
 ENDIF (THIRDPARTY_BUILD_BOOST)
 
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})

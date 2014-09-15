@@ -321,7 +321,7 @@ namespace Nektar
         for (e = 0; e < eMax; ++e)
         {
             nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetExp(e)->GetTotPoints()
+            GetExp(e)->GetTotPoints();
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             id2 = m_fields[0]->GetTrace()->GetPhys_Offset(traceBndMap[cnt+e]);

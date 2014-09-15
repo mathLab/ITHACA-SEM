@@ -1,6 +1,7 @@
 SET(FieldConvertHeaders 
     Module.h
     Field.hpp
+    InputDat.h
     InputFld.h
     InputXml.h
     InputPts.h
@@ -25,6 +26,7 @@ SET(FieldConvertHeaders
 SET(FieldConvertSources 
     Module.cpp
     FieldConvert.cpp
+    InputDat.cpp
     InputFld.cpp
     InputXml.cpp
     InputPts.cpp

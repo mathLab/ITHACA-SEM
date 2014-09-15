@@ -97,16 +97,16 @@ namespace Nektar
                     outfile << "VARIABLES = x";
                     break;
                 case 2:
-                    outfile << "VARIABLES = x y";
+                    outfile << "VARIABLES = x,y";
                     break;
                 case 3:
-                    outfile << "VARIABLES = x y z";
+                    outfile << "VARIABLES = x,y,z";
                     break;
                 }
                 
                 for(int i = 0; i < m_f->m_fieldPts->m_fields.size(); ++i)
                 {
-                    outfile << " " << m_f->m_fieldPts->m_fields[i];
+                    outfile << "," << m_f->m_fieldPts->m_fields[i];
                 }
                 outfile << endl;
                 bool DumpAsFEPoint = true; 

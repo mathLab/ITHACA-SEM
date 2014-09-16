@@ -53,13 +53,9 @@ namespace Nektar
                                 ProcessIsoContour::create,
                                 "Extract an isocontour of fieldid variable and at value fieldvalue");
         
-        
         ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
             ProcessEquiSpacedOutput(f)
         {
-            f->m_fieldPts = MemoryManager<FieldPts>::AllocateSharedPtr();
-            f->m_setUpEquiSpacedFields = true;
-
             m_config["fieldid"] = ConfigOption(false,"NotSet","field id to extract");
             ASSERTL0(m_config["fieldid"].as<string>().compare("NotSet") != 0,
                      "processisocontour: Need to specify a fieldid");

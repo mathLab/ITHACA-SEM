@@ -1,6 +1,6 @@
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessEquiSpacedOutput.h
+//  File: ProcessIsoContourUtils.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,37 +33,38 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSEQUISPACEDOUTPUT
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSISOCONTOURUTILS
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSISOCONTOURUTILS
 
 #include "Module.h"
+#include "ProcessIsoContour.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
+
         /**
-         * @brief This processing module interpolates one field to another 
+         * @brief This processing module process isocoout utilities. 
          */
-        class ProcessEquiSpacedOutput : public ProcessModule
+        class ProcessIsoContourUtils : public ProcessIsoContour
         {
         public:
             /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessEquiSpacedOutput>::AllocateSharedPtr(f);
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
+            {
+                return MemoryManager<ProcessIsoContourUtils>::AllocateSharedPtr(f);
             }
             static ModuleKey className;
             
-            ProcessEquiSpacedOutput(FieldSharedPtr f);
-            virtual ~ProcessEquiSpacedOutput();
+            ProcessIsoContourUtils(FieldSharedPtr f);
+            virtual ~ProcessIsoContourUtils();
             
             /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
-        protected:
-            ProcessEquiSpacedOutput(){};
-            void SetupEquiSpacedField(void);
 
         private:
+            void LoadFeldPtsToIso(vector<IsoSharedPtr> &iso);
         };
     }
 }

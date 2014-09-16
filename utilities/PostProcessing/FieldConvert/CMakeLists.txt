@@ -17,6 +17,7 @@ SET(FieldConvertHeaders
     ProcessInterpPoints.h
     ProcessInterpPointDataToFld.h
     ProcessIsoContour.h
+    ProcessIsoContourUtils.h
     ProcessScaleInFld.h
     ProcessVorticity.h
     ProcessC0Projection.h
@@ -42,6 +43,7 @@ SET(FieldConvertSources
     ProcessInterpPoints.cpp
     ProcessInterpPointDataToFld.cpp
     ProcessIsoContour.cpp
+    ProcessIsoContourUtils.cpp
     ProcessScaleInFld.cpp
     ProcessVorticity.cpp
     ProcessC0Projection.cpp

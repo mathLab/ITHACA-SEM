@@ -55,17 +55,22 @@ namespace Nektar
             vector<NekDouble> m_y;
             vector<NekDouble> m_z;
             vector<vector<NekDouble> > m_fields; 
-            Array<OneD, int>   m_vid; // used when condensing fied
+            Array<OneD, int>   m_vid; // used when condensing field
             
         public:    
-            void    condense(void);
-            void    globalcondense(vector<boost::shared_ptr<Iso> > &iso);
-            void   smooth(int n_iter, NekDouble lambda, NekDouble mu);
+            void  condense(void);
+            void  globalcondense(vector<boost::shared_ptr<Iso> > &iso);
+            void  smooth(int n_iter, NekDouble lambda, NekDouble mu);
             //void    separate_regions(void);
             
             int  get_nvert(void)
             {
                 return m_nvert;
+            }
+            
+            void set_nvert(int n)
+            {
+                m_nvert = n; 
             }
 
             int  get_ntris(void)
@@ -80,7 +85,7 @@ namespace Nektar
             
             void set_fields(const int loc,
                             const Array<OneD,Array<OneD, NekDouble> > &intfields,
-                         const int j)
+                            const int j)
             {
                 m_x[loc] = intfields[0][j];
                 m_y[loc] = intfields[1][j];
@@ -130,16 +135,27 @@ namespace Nektar
             {
                 return m_vid[i];
             }
+
+            void resize_vid(int nconn)
+            {
+                m_vid = Array<OneD, int>(nconn);
+            }
+
+            void set_vid(int i, int j)
+            {
+                m_vid[i] = j;
+            }
+
             void resize_fields(int size)
             {
                 if(size > m_x.size()) // add 100 element to vectors 
                 {
-                    m_x.resize(m_x.size()+1000);
-                    m_y.resize(m_x.size()+1000);
-                    m_z.resize(m_x.size()+1000);;
+                    m_x.resize(size+1000);
+                    m_y.resize(size+1000);
+                    m_z.resize(size+1000);;
                     for(int i = 0; i < m_fields.size(); ++i)
                     {
-                        m_fields[i].resize(m_x.size()+1000);
+                        m_fields[i].resize(size+100);
                     }
                     
                 }
@@ -197,14 +213,12 @@ namespace Nektar
                 return m_iso_vert_id;
             }
             
-            
-
             friend bool operator == (const IsoVertex& x, const IsoVertex& y);
             friend bool operator != (const IsoVertex& x, const IsoVertex& y);
         };
 
         /**
-         * @brief This processing module interpolates one field to another 
+         * @brief This processing module extracts an isocontour
          */
         class ProcessIsoContour : public ProcessEquiSpacedOutput
         {
@@ -222,10 +236,14 @@ namespace Nektar
             /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
 
+        protected:
+            ProcessIsoContour(){};
+            void ResetFieldPts(vector<IsoSharedPtr> &iso);
+
         private:
+
             vector<IsoSharedPtr> ExtractContour(const int fieldid, 
                                                 const NekDouble val);
-            void ResetFieldPts(vector<IsoSharedPtr> &iso);
         };
     }
 }

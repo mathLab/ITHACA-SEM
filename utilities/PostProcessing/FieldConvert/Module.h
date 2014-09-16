@@ -156,12 +156,18 @@ namespace Nektar
                                                  Array<OneD, NekDouble> &outfield);
 
         protected:
+            Module(){};
+
             /// Field object
             FieldSharedPtr m_f;
             /// List of configuration values.
             map<string, ConfigOption> m_config;
             bool m_requireEquiSpaced;
-            
+
+
+        private:
+
+
         };
         
         /**
@@ -195,7 +201,9 @@ namespace Nektar
         class ProcessModule : public Module
         {
         public:
+            ProcessModule(){};
             ProcessModule(FieldSharedPtr p_f) : Module(p_f) {}
+        private:
 
         };
         
@@ -214,7 +222,8 @@ namespace Nektar
         protected:
             /// Output stream
             ofstream m_fldFile;
-        
+        private:
+
         };
         
         typedef pair<ModuleType,string> ModuleKey;

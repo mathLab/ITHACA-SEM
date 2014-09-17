@@ -92,6 +92,73 @@ namespace Nektar
             int prevNcoeffs = 0;
             int prevNpoints = 0;
             int cnt = 0; 
+
+            // identify face 1 connectivity for prisms 
+            map<int,StdRegions::Orientation > face0orient;
+            set<int> prismorient;
+            for(int i = 0; i < nel; ++i)
+            {
+                if(m_f->m_exp[0]->GetExp(i)->DetShapeType() == LibUtilities::ePrism)
+                {
+                    StdRegions::Orientation forient = m_f->m_exp[0]->GetExp(i)->GetFaceOrient(0);
+                    int fid = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetFid(0);
+                    if(face0orient.count(fid))
+                    { // face 1 meeting face 1 so reverse this id
+                        prismorient.insert(i);
+                    }
+                    else
+                    {
+                        // just store if Dir 1 is fwd or bwd 
+                        if((forient == StdRegions::eDir1BwdDir1_Dir2FwdDir2)||
+                           (forient == StdRegions::eDir1BwdDir1_Dir2BwdDir2)||
+                           (forient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)||
+                           (forient == StdRegions::eDir1BwdDir2_Dir2BwdDir1))
+                        {
+                            face0orient[fid] = StdRegions::eBwd;
+                        }
+                        else
+                        {
+                            face0orient[fid] = StdRegions::eFwd;
+                        }                            
+                    }
+                }
+            }
+
+            for(int i = 0; i < nel; ++i)
+            {
+                if(m_f->m_exp[0]->GetExp(i)->DetShapeType() == LibUtilities::ePrism)
+                {
+                    int fid = m_f->m_exp[0]->GetExp(i)->GetGeom()->GetFid(2);
+                    // check to see if face 2 meets face 1
+                    if(face0orient.count(fid))
+                    {
+                        // check to see how face 2 is orientated
+                        StdRegions::Orientation forient2 = m_f->m_exp[0]->GetExp(i)->GetFaceOrient(2);
+                        StdRegions::Orientation forient0 = face0orient[fid];
+                        
+                        // If dir 1 or forient2 is bwd then check agains face 1 value
+                        if((forient2 == StdRegions::eDir1BwdDir1_Dir2FwdDir2)||
+                           (forient2 == StdRegions::eDir1BwdDir1_Dir2BwdDir2)||
+                           (forient2 == StdRegions::eDir1BwdDir2_Dir2FwdDir1)||
+                           (forient2 == StdRegions::eDir1BwdDir2_Dir2BwdDir1))
+                        {
+                            if(forient0 == StdRegions::eFwd)
+                            {
+                                prismorient.insert(i);
+                            }
+                        }
+                        else
+                        {
+                            if(forient0 == StdRegions::eBwd)
+                            {
+                                prismorient.insert(i);
+                            }
+                        }
+                    }
+                }
+            }
+
+
             for(int i = 0; i < nel; ++i)
             {
                 switch(m_f->m_exp[0]->GetExp(i)->DetShapeType())
@@ -180,12 +247,28 @@ namespace Nektar
                     }
                 }
                 
-                if((prevNcoeffs != m_f->m_exp[0]->GetExp(i)->GetNcoeffs())||
-                   (prevNpoints != m_f->m_exp[0]->GetExp(i)->GetTotPoints()))
+                if(m_f->m_exp[0]->GetExp(i)->DetShapeType() == LibUtilities::ePrism)
                 {
-                    prevNcoeffs = m_f->m_exp[0]->GetExp(i)->GetNcoeffs();
-                    prevNpoints = m_f->m_exp[0]->GetExp(i)->GetTotPoints();
-                    m_f->m_exp[0]->GetExp(i)->GetSimplexEquiSpacedConnectivity(conn);
+                    bool standard = true;
+
+                    if(prismorient.count(i))
+                    {
+                        standard = false; // reverse direction 
+                    }
+
+                    m_f->m_exp[0]->GetExp(i)->GetSimplexEquiSpacedConnectivity(conn,standard);
+                }
+                else
+                {
+
+                    if((prevNcoeffs != m_f->m_exp[0]->GetExp(i)->GetNcoeffs())||
+                       (prevNpoints != m_f->m_exp[0]->GetExp(i)->GetTotPoints()))
+                    {
+                        prevNcoeffs = m_f->m_exp[0]->GetExp(i)->GetNcoeffs();
+                        prevNpoints = m_f->m_exp[0]->GetExp(i)->GetTotPoints();
+                        
+                        m_f->m_exp[0]->GetExp(i)->GetSimplexEquiSpacedConnectivity(conn);
+                    }
                 }
                 Array<OneD, int> newconn(conn.num_elements());
                 for(int j = 0; j < conn.num_elements(); ++j)

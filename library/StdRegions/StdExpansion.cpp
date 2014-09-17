@@ -1736,7 +1736,7 @@ namespace Nektar
             ASSERTL0(false, "Not implemented.");
         }
 
-        void StdExpansion::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn)
+        void StdExpansion::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn, bool standard)
         {
             ASSERTL0(false, "Not implemented.");
         }

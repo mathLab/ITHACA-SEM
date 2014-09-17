@@ -1314,9 +1314,9 @@ namespace Nektar
                 v_PhysInterpToSimplexEquiSpaced(inarray, outarray);
             }
             
-            STD_REGIONS_EXPORT void GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn)
+            STD_REGIONS_EXPORT void GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn, bool standard = true)
             {
-                v_GetSimplexEquiSpacedConnectivity(conn);
+                v_GetSimplexEquiSpacedConnectivity(conn,standard);
             }
             
             template<class T>
@@ -1786,7 +1786,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
             
-            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn);
+            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn, bool standard = true);
 
         };
 

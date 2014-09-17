@@ -1521,7 +1521,8 @@ namespace Nektar
             out = (*intmat) * in;
         }
 
-        void StdTriExp::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn)
+        void StdTriExp::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn,
+                                                           bool standard)
         {
             int np1 = m_base[0]->GetNumPoints();
             int np2 = m_base[1]->GetNumPoints();

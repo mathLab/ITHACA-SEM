@@ -261,7 +261,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn);
+            STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn, bool standard = true);
 
         };
         typedef boost::shared_ptr<StdTriExp> StdTriExpSharedPtr;

@@ -56,12 +56,12 @@ namespace Nektar
         ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
             ProcessEquiSpacedOutput(f)
         {
+
+            m_config["fieldstr"] = ConfigOption(false,"NotSet","string of isocontour to be extracted");
+            m_config["fieldname"] = ConfigOption(false,"isocon","name for isocontour if fieldstr specified, default is isocon");
+
             m_config["fieldid"] = ConfigOption(false,"NotSet","field id to extract");
-            ASSERTL0(m_config["fieldid"].as<string>().compare("NotSet") != 0,
-                     "processisocontour: Need to specify a fieldid");
             m_config["fieldvalue"] = ConfigOption(false,"NotSet","field value to extract");
-            ASSERTL0(m_config["fieldvalue"].as<string>().compare("NotSet") != 0,
-                     "processisocontour: Need to specify a field value");
 
             m_config["globalcondense"] = ConfigOption(true,"NotSet","Globally condense contour to unique values");
 
@@ -79,11 +79,83 @@ namespace Nektar
         void ProcessIsoContour::Process(po::variables_map &vm)
         {
             vector<IsoSharedPtr> iso;
-            // could probably just do field of interest!
+
+            // extract all fields to equi-spaced
             SetupEquiSpacedField(); 
 
-            int     fieldid = m_config["fieldid"].as<int>();
-            NekDouble value = m_config["fieldvalue"].as<NekDouble>();
+            int     fieldid;
+            NekDouble value;  
+
+            if(m_config["fieldstr"].m_beenSet) //generate field of interest 
+            {
+
+                m_f->m_fieldPts->m_nFields++;
+
+                int nfields = m_f->m_fieldPts->m_nFields;
+                int coordim = m_f->m_fieldPts->m_ptsDim;
+
+                fieldid = nfields-1; 
+
+                Array<OneD, Array<OneD, NekDouble> > newpts(nfields+coordim);                
+
+                for(int i = 0; i < nfields+coordim-1; ++i) // redirect existing pts
+                {
+                    newpts[i] = m_f->m_fieldPts->m_pts[i];
+                }
+                int npts = m_f->m_fieldPts->m_pts[0].num_elements();
+                newpts[nfields+coordim-1] = Array<OneD, NekDouble>(npts);
+                
+                m_f->m_fieldPts->m_pts = newpts; 
+                
+                // evaluate new function
+                
+                WARNINGL0(m_f->m_fieldPts->m_fields.size() <= 4,"Expression evaluator is only "
+                        " currently set up for 4 variables and will take the first 4 variables");
+
+#if 0 //just based on first four fields
+                LibUtilities::AnalyticExpressionEvaluator strEval;
+                string varstr = m_f->m_fieldPts->m_fields[0];
+                vector<Array<OneD, const NekDouble> > interpfields; 
+                interpfields.resize(4);
+
+                interpfields[0] = m_f->m_fieldPts->m_pts[coordim];
+                for(int i = 1; i < min(nfields-1,4); ++i)
+                {
+                    varstr += " " + m_f->m_fieldPts->m_fields[i];
+                    interpfields[i] = m_f->m_fieldPts->m_pts[i+coordim];
+                }
+                
+                int ExprId  = -1;
+                std::string str = m_config["fieldstr"].as<string>();
+                ExprId = strEval.DefineFunction(varstr.c_str(), str);
+
+                strEval.Evaluate(ExprId,interpfields,m_f->m_fieldPts->m_pts[nfields+coordim-1]);
+#else
+                LibUtilities::AnalyticExpressionEvaluator strEval;
+                string varstr = "x y z";
+                vector<Array<OneD, const NekDouble> > interpfields; 
+
+                for(int i = 0; i < nfields-1; ++i)
+                {
+                    varstr += " " + m_f->m_fieldPts->m_fields[i];
+                    interpfields.push_back(m_f->m_fieldPts->m_pts[i]);
+                }
+                
+                int ExprId  = -1;
+                std::string str = m_config["fieldstr"].as<string>();
+                ExprId = strEval.DefineFunction(varstr.c_str(), str);
+
+                strEval.Evaluate(ExprId,interpfields,m_f->m_fieldPts->m_pts[nfields+coordim-1]);
+#endif
+                // set up field name if provided otherwise called "isocon" from default
+                m_f->m_fieldPts->m_fields.push_back(m_config["fieldname"].as<string>());
+            }
+            else
+            {
+                fieldid = m_config["fieldid"].as<int>();
+            }
+            
+            value   = m_config["fieldvalue"].as<NekDouble>();
 
             iso = ExtractContour(fieldid,value);
             bool smoothing      = m_config["smooth"].m_beenSet;
@@ -508,9 +580,9 @@ namespace Nektar
         }
 
 
-        NekDouble SQ_PNT_TOL=1e-12;
+        NekDouble SQ_PNT_TOL=1e-16;
 
-        // define == if point is within 1e-6
+        // define == if point is within 1e-4
         bool operator == (const IsoVertex& x, const IsoVertex& y)
         {
             return ((x.m_x-y.m_x)*(x.m_x-y.m_x) + (x.m_y-y.m_y)*(x.m_y-y.m_y) + 

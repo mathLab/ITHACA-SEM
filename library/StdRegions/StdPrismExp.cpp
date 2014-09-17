@@ -1957,13 +1957,14 @@ namespace Nektar
             out = (*intmat) * in;
         }
 
-        void StdPrismExp::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn)
+        void StdPrismExp::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn, 
+                                                             bool standard)
         {
             int np0 = m_base[0]->GetNumPoints();
             int np1 = m_base[1]->GetNumPoints();
             int np2 = m_base[2]->GetNumPoints();
             int np = max(np0,max(np1,np2));
-            
+
             conn = Array<OneD, int>(12*(np-1)*(np-1)*(np-1));
             
             int row     = 0;
@@ -1980,67 +1981,129 @@ namespace Nektar
                 rowp1  = 0; // current plane row plus one offset
                 row1   = 0; // next plane row offset
                 row1p1 = 0; // nex plane row plus one offset
-                for(int j = 0; j < np-1; ++j)
+                if(standard == false)
                 {
-                    rowp1  += np-i;
-                    row1p1 += np-i-1;
-                    for(int k = 0; k < np-i-2; ++k)
+                    for(int j = 0; j < np-1; ++j)
                     {
+                        rowp1  += np-i;
+                        row1p1 += np-i-1;
+                        for(int k = 0; k < np-i-2; ++k)
+                        {
+                            conn[cnt++] = plane   + row    +k;
+                            conn[cnt++] = plane   + row    +k+1;
+                            conn[cnt++] = plane   + rowp1  +k;
+                            conn[cnt++] = planep1 + row1   +k;
+                            
+                            conn[cnt++] = planep1 + row1p1 +k;
+                            conn[cnt++] = planep1 + row1   +k;
+                            conn[cnt++] = plane   + rowp1  +k;
+                            conn[cnt++] = plane   + rowp1  +k+1;
 
-                        conn[cnt++] = plane   + row    +k;
-                        conn[cnt++] = plane   + row    +k+1;
-                        conn[cnt++] = plane   + rowp1  +k;
-                        conn[cnt++] = planep1 + row1   +k;
+                            conn[cnt++] = plane   + rowp1  +k;
+                            conn[cnt++] = plane   + row    +k+1;
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            conn[cnt++] = planep1 + row1 +k;
+                            
+                            
+                            conn[cnt++] = planep1 + row1   +k+1;
+                            conn[cnt++] = planep1 + row1   +k;
+                            conn[cnt++] = plane   + row    +k+1;
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            conn[cnt++] = planep1 + row1   +k+1;
+                            conn[cnt++] = planep1 + row1p1 +k;
+                            conn[cnt++] = planep1 + row1   +k;
+                            
+                            conn[cnt++] = planep1 + row1p1 +k+1;
+                            conn[cnt++] = planep1 + row1p1 +k;
+                            conn[cnt++] = planep1 + row1   +k+1;
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            
+                        }
                         
-                        conn[cnt++] = planep1 + row1p1 +k;
-                        conn[cnt++] = planep1 + row1   +k;
-                        conn[cnt++] = plane   + rowp1  +k;
-                        conn[cnt++] = plane   + row    +k+1;
-
-                        conn[cnt++] = plane   + rowp1  +k;
-                        conn[cnt++] = plane   + row    +k+1;
-                        conn[cnt++] = plane   + rowp1  +k+1;
-                        conn[cnt++] = planep1 + row1p1 +k;
-
-                        conn[cnt++] = planep1 + row1   +k+1;
-                        conn[cnt++] = planep1 + row1   +k;
-                        conn[cnt++] = plane   + row    +k+1;
-                        conn[cnt++] = planep1 + row1p1 +k+1;
+                        conn[cnt++] = plane   + row    +np-i-2;
+                        conn[cnt++] = plane   + row    +np-i-1;
+                        conn[cnt++] = plane   + rowp1  +np-i-2;
+                        conn[cnt++] = planep1 + row1   +np-i-2;
                         
-                        conn[cnt++] = plane   + rowp1  +k+1;
-                        conn[cnt++] = plane   + row    +k+1;
-                        conn[cnt++] = planep1 + row1p1 +k+1;
-                        conn[cnt++] = planep1 + row1   +k;
-
-                        conn[cnt++] = planep1 + row1p1 +k+1;
-                        conn[cnt++] = planep1 + row1p1 +k;
-                        conn[cnt++] = planep1 + row1   +k;
-                        conn[cnt++] = plane   + rowp1  +k+1;
-
+                        conn[cnt++] = planep1 + row1p1 +np-i-2;
+                        conn[cnt++] = planep1 + row1   +np-i-2;
+                        conn[cnt++] = plane   + rowp1  +np-i-2;
+                        conn[cnt++] = plane   + rowp1  +np-i-1;
+                        
+                        conn[cnt++] = plane   + rowp1  +np-i-2;
+                        conn[cnt++] = plane   + row    +np-i-1;
+                        conn[cnt++] = plane   + rowp1  +np-i-1;
+                        conn[cnt++] = planep1 + row1   +np-i-2;
+                        row  += np-i;
+                        row1 += np-i-1;
                     }
 
-                    conn[cnt++] = plane   + row    +np-i-2;
-                    conn[cnt++] = plane   + row    +np-i-1;
-                    conn[cnt++] = plane   + rowp1  +np-i-2;
-                    conn[cnt++] = planep1 + row1   +np-i-2;
-
-                    conn[cnt++] = planep1 + row1p1 +np-i-2;
-                    conn[cnt++] = planep1 + row1   +np-i-2;
-                    conn[cnt++] = plane   + rowp1  +np-i-2;
-                    conn[cnt++] = plane   + row    +np-i-1;
-
-                    conn[cnt++] = plane   + rowp1  +np-i-2;
-                    conn[cnt++] = plane   + row    +np-i-1;
-                    conn[cnt++] = plane   + rowp1  +np-i-1;
-                    conn[cnt++] = planep1 + row1p1 +np-i-2;
-
-                    row  += np-i;
-                    row1 += np-i-1;
                 }
-
+                else
+                {
+                    for(int j = 0; j < np-1; ++j)
+                    {
+                        rowp1  += np-i;
+                        row1p1 += np-i-1;
+                        for(int k = 0; k < np-i-2; ++k)
+                        {
+                            conn[cnt++] = plane   + row    +k;
+                            conn[cnt++] = plane   + row    +k+1;
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            conn[cnt++] = planep1 + row1   +k;
+                            
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            conn[cnt++] = plane   + rowp1  +k;
+                            conn[cnt++] = plane   + row    +k;
+                            conn[cnt++] = planep1 + row1   +k;
+                            
+                            conn[cnt++] = plane   + rowp1  +k;
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            conn[cnt++] = planep1 + row1p1 +k;
+                            conn[cnt++] = planep1 + row1   +k;
+                            
+                            conn[cnt++] = planep1 + row1   +k+1;
+                            conn[cnt++] = plane   + row    +k+1;
+                            conn[cnt++] = planep1 + row1   +k;
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            
+                            conn[cnt++] = planep1 + row1p1 +k+1;
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            conn[cnt++] = planep1 + row1   +k+1;
+                            conn[cnt++] = planep1 + row1   +k;
+                            
+                            conn[cnt++] = plane   + rowp1  +k+1;
+                            conn[cnt++] = planep1 + row1p1 +k+1;
+                            conn[cnt++] = planep1 + row1p1 +k;
+                            conn[cnt++] = planep1 + row1   +k;
+                            
+                        }
+                        
+                        conn[cnt++] = plane   + row    +np-i-2;
+                        conn[cnt++] = plane   + row    +np-i-1;
+                        conn[cnt++] = plane   + rowp1  +np-i-1;
+                        conn[cnt++] = planep1 + row1   +np-i-2;
+                        
+                        conn[cnt++] = plane   + rowp1  +np-i-1;
+                        conn[cnt++] = plane   + rowp1  +np-i-2;
+                        conn[cnt++] = plane   + row    +np-i-2;
+                        conn[cnt++] = planep1 + row1   +np-i-2;
+                        
+                        conn[cnt++] = plane   + rowp1  +np-i-2;
+                        conn[cnt++] = plane   + rowp1  +np-i-1;
+                        conn[cnt++] = planep1 + row1p1 +np-i-2;
+                        conn[cnt++] = planep1 + row1   +np-i-2;
+                        
+                        row  += np-i;
+                        row1 += np-i-1;
+                    }
+                    
+                }
                 plane += (np-i)*np;
             }
         }
-
+        
     }//end namespace
 }//end namespace

@@ -632,6 +632,71 @@ namespace Nektar
         }
 
 
+       void AnalyticExpressionEvaluator::Evaluate(
+                    const int expression_id,
+                    const std::vector<Array<OneD, const NekDouble> > points,
+                    Array<OneD, NekDouble>& result)
+        {
+            m_timer.Start();
+
+            const int num_points = points[0].num_elements();
+            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
+            ASSERTL1(result.num_elements() >= num_points, "destination array must have enough capacity to store expression values at each given point");
+
+            ExecutionStack &stack = m_executionStack[expression_id];
+
+            /// If number of points tends to 10^6, one may end up
+            /// with up to ~0.5Gb data allocated for m_state only.
+            /// Lets split the work into cache-sized chunks.
+            /// Ahtung, magic constant!
+            const int max_chunk_size = 1024;
+
+            const int nvals = points.size();
+            
+            /// please don't remove brackets around std::min, it screws up windows compilation
+            const int chunk_size = (std::min)(max_chunk_size, num_points);
+            if (m_state.size() < chunk_size * m_state_sizes[expression_id] )
+            {
+                m_state.resize( m_state_sizes[expression_id] * chunk_size, 0.0 );
+            }
+            if (m_variable.size() < nvals * chunk_size )
+            {
+                m_variable.resize( nvals * chunk_size, 0.0);
+            }
+            if (result.num_elements() < num_points)
+            {
+                result = Array<OneD, NekDouble>(num_points, 0.0);
+            }
+
+            int offset = 0;
+            int work_left = num_points;
+            while(work_left > 0)
+            {
+                const int this_chunk_size = (std::min)(work_left, 1024);
+                for (int i = 0; i < this_chunk_size; i++)
+                {
+                    for(int j = 0; j < nvals; ++j)
+                    {
+                        m_variable[i+this_chunk_size*j] = points[j][offset + i];
+                    }
+                }
+                for (int i = 0; i < stack.size(); i++)
+                {
+                    (*stack[i]).run_many(this_chunk_size);
+                }
+                for (int i = 0; i < this_chunk_size; i++)
+                {
+                    result[offset + i] = m_state[i];
+                }
+                work_left -= this_chunk_size;
+                offset    += this_chunk_size;
+            }
+            m_timer.Stop();
+            m_total_eval_time += m_timer.TimePerTest(1);
+        }
+
+
+
         void AnalyticExpressionEvaluator::EvaluateAtPoints(
                     const int expression_id,
                     const std::vector<Array<OneD, const NekDouble> > points,
@@ -656,7 +721,7 @@ namespace Nektar
             {
                 for (VariableMap::const_iterator it = variableMap.begin(); it != variableMap.end(); ++it)
                 {
-                    m_variable[it->second] = points[i][it->second];
+                    m_variable[it->second] = points[it->second][i];
                 }
             }
             for (int j = 0; j < stack.size(); j++)

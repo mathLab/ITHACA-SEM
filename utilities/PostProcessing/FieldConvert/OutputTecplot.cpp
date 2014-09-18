@@ -87,6 +87,11 @@ namespace Nektar
             
             if(m_f->m_fieldPts != NullFieldPts)
             {
+
+                if(m_f->m_fieldPts->m_pts[0].num_elements() == 0)
+                {
+                    return;
+                }
                 int dim = m_f->m_fieldPts->m_ptsDim;
                 // Write solution.
                 ofstream outfile(filename.c_str());

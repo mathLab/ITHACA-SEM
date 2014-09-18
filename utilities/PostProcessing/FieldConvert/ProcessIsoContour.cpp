@@ -109,10 +109,10 @@ namespace Nektar
                 
                 // evaluate new function
                 
+#if 0 //just based on first four fields
                 WARNINGL0(m_f->m_fieldPts->m_fields.size() <= 4,"Expression evaluator is only "
                         " currently set up for 4 variables and will take the first 4 variables");
 
-#if 0 //just based on first four fields
                 LibUtilities::AnalyticExpressionEvaluator strEval;
                 string varstr = m_f->m_fieldPts->m_fields[0];
                 vector<Array<OneD, const NekDouble> > interpfields; 
@@ -135,10 +135,14 @@ namespace Nektar
                 string varstr = "x y z";
                 vector<Array<OneD, const NekDouble> > interpfields; 
 
+                for(int i = 0; i < coordim; ++i)
+                {
+                    interpfields.push_back(m_f->m_fieldPts->m_pts[i]);
+                }
                 for(int i = 0; i < nfields-1; ++i)
                 {
                     varstr += " " + m_f->m_fieldPts->m_fields[i];
-                    interpfields.push_back(m_f->m_fieldPts->m_pts[i]);
+                    interpfields.push_back(m_f->m_fieldPts->m_pts[i+3]);
                 }
                 
                 int ExprId  = -1;

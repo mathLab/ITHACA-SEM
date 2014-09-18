@@ -63,8 +63,7 @@ namespace Nektar
          */
         void DriverArnoldi::v_InitObject(ostream &out)
         {
-            Driver::v_InitObject(out);
-    	
+            Driver::v_InitObject(out);    	
             m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_timeSteppingAlgorithm, false);
 
             if(m_timeSteppingAlgorithm)
@@ -98,6 +97,7 @@ namespace Nektar
             m_equ[0]->SetLambda(m_realShift);
 
             m_session->LoadParameter("imagShift", m_imagShift, 0.0);
+			cout << "Driver Arndoli end " << endl;
         }
 
         void DriverArnoldi::ArnoldiSummary(std::ostream &out)

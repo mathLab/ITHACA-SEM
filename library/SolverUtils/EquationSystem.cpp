@@ -363,18 +363,8 @@ namespace Nektar
 									
                                 for (i = 0; i < m_fields.num_elements(); i++)
                                 {
-									
-									m_fields[i] = MemoryManager<MultiRegions
-									::ContField3DHomogeneous1D>
-									::AllocateSharedPtr(
-														m_session, BkeyZR, m_LhomZ, 
-														m_useFFT, m_homogen_dealiasing,
-														m_graph, 
-														m_session->GetVariable(i), 
-														m_checkIfSystemSingular[i]);
-									
-                                    if (i == m_fields.num_elements()-2)
-                                    {
+									if(m_session->GetVariable(i).compare("w") == 0)
+									{
                                         m_fields[i] = MemoryManager<MultiRegions
                                             ::ContField3DHomogeneous1D>
                                                 ::AllocateSharedPtr(
@@ -385,6 +375,17 @@ namespace Nektar
                                                     m_session->GetVariable(i), 
                                                     m_checkIfSystemSingular[i]);
                                     }
+	
+										m_fields[i] = MemoryManager<MultiRegions
+										::ContField3DHomogeneous1D>
+										::AllocateSharedPtr(
+															m_session, BkeyZR, m_LhomZ, 
+															m_useFFT, m_homogen_dealiasing,
+															m_graph, 
+															m_session->GetVariable(i), 
+															m_checkIfSystemSingular[i]);
+								
+
 	
                                 }
                             }
@@ -1218,7 +1219,7 @@ namespace Nektar
                                                 m_useFFT, m_homogen_dealiasing, 
                                                 m_graph, 
                                                 m_session->GetVariable(i));
-                                    m_base[i]->SetWaveSpace(true);
+                                     m_base[i]->SetWaveSpace(true);
                                 }
                             }
                             else

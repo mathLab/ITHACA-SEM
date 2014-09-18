@@ -463,9 +463,12 @@ namespace Nektar
         std::vector<std::vector<NekDouble> > FieldData;
         int nqtot = m_base[0]->GetTotPoints();
 	
-        //Get Homogeneous
-        LibUtilities::Import(pInfile,FieldDef,FieldData);
-		
+     
+		//Get Homogeneous
+		LibUtilities::FieldIOSharedPtr fld =
+		MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+		fld->Import(pInfile, FieldDef, FieldData);
+				
         int nvar = m_session->GetVariables().size();
         int s;
 	

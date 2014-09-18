@@ -466,8 +466,11 @@ namespace Nektar
         int nqtot = m_base[0]->GetTotPoints();
         
         //Get Homogeneous
-        
-        LibUtilities::Import(pInfile,FieldDef,FieldData);
+		LibUtilities::FieldIOSharedPtr fld =
+		MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(m_session->GetComm());
+		fld->Import(pInfile, FieldDef, FieldData);
+		
+        //LibUtilities::Import(pInfile,FieldDef,FieldData);
         
         int nvar = m_session->GetVariables().size();
         int s;

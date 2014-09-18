@@ -140,7 +140,7 @@ namespace Nektar
             out << "Iteration: " << 0 <<  endl;
          
             // Normalise first vector in sequence
-            alpha[0] = std::sqrt(Vmath::Dot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1));
+            alpha[0] = std::sqrt(Blas::Ddot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1));
 			m_comm->AllReduce(alpha[0], Nektar::LibUtilities::ReduceSum);
 			
             //alpha[0] = std::sqrt(alpha[0]);
@@ -154,9 +154,8 @@ namespace Nektar
                 EV_update(Kseq[i-1], Kseq[i]);
              
                 // Normalise
-                alpha[i] = std::sqrt(Vmath::Dot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
+                alpha[i] = std::sqrt(Blas::Ddot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
 				m_comm->AllReduce(alpha[i], Nektar::LibUtilities::ReduceSum);
-
 
 				
                 //alpha[i] = std::sqrt(alpha[i]);

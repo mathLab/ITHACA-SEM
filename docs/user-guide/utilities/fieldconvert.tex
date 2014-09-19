@@ -107,14 +107,14 @@ to be used if the point is outside the domain. Their default values are
 -10,000,000, 10,000,000 and 0.
 
 In addition instead of specifying the file \inlsh{file2.pts} a module list of
-the form 
+the form \\
 \inlsh{-m interppoints:fromxml=file1.xml:fromfld=file1.fld:line=npts,x0,y0,x1,y1}
 can be specified where \inltt{npts} is the number of equispaced points between
 $(x0,y0)$ to $(x1,y1)$ which can also be used in 3D by specifying $(x0,y0,z0)$
 to $(x1,y1,z1)$.
 
-There is also an extraction of a plane of point which is specified by
-\inltt{-m interppoints:fromxml=file1.xml:fromfld=file1.fld:plane=npt1,//
+There is also an extraction of a plane of point which is specified by \\
+\inltt{-m interppoints:fromxml=file1.xml:fromfld=file1.fld:plane=npt1, \\
 npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3} 
 where \inltt{npts1,npts2} is the number of equispaced points in each direction 
 and $(x0,y0,z0)$, $(x1,y1,z1)$, $(x2,y2,z2)$ and $(x3,y3,z3)$ define the plane

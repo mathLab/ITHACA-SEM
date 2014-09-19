@@ -459,7 +459,7 @@ namespace Nektar
             const PeriodicMap &periodicFaces,
             const bool DeclareCoeffPhysArrays, 
             const std::string variable):
-            ExpList()
+            ExpList(pSession,graph3D)
         {
             SetExpType(e2D);
 

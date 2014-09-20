@@ -220,12 +220,12 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 \NewEnviron{notebox}
   {\par\medskip\noindent
   \begin{tikzpicture}
-    \node[inner sep=3pt,fill=black!10,draw=black!30] (box)
+    \node[inner sep=5pt,fill=black!10,draw=black!30] (box)
     {\parbox[t]{.99\linewidth}{%
-      \begin{minipage}{.1\textwidth}
+      \begin{minipage}{.1\linewidth}
       \centering\tikz[scale=1]\node[scale=1.5]{\bcinfo};
       \end{minipage}%
-      \begin{minipage}{.8\textwidth}
+      \begin{minipage}{.9\linewidth}
       \textbf{Note}\par\smallskip
       \BODY
       \end{minipage}\hfill}%
@@ -235,12 +235,12 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 \NewEnviron{warningbox}
   {\par\medskip\noindent
   \begin{tikzpicture}
-    \node[inner sep=3pt,fill=red!10,draw=black!30] (box)
+    \node[inner sep=5pt,fill=red!10,draw=black!30] (box)
     {\parbox[t]{.99\linewidth}{%
-      \begin{minipage}{.1\textwidth}
+      \begin{minipage}{.1\linewidth}
       \centering\tikz[scale=1]\node[scale=1.5]{\bcdanger};
       \end{minipage}%
-      \begin{minipage}{.8\textwidth}
+      \begin{minipage}{.9\linewidth}
       \textbf{Warning}\par\smallskip
       \BODY
       \end{minipage}\hfill}%
@@ -250,12 +250,12 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 \NewEnviron{tipbox}
   {\par\medskip\noindent
   \begin{tikzpicture}
-    \node[inner sep=3pt,fill=green!10,draw=black!30] (box)
+    \node[inner sep=5pt,fill=green!10,draw=black!30] (box)
     {\parbox[t]{.99\linewidth}{%
-      \begin{minipage}{.1\textwidth}
+      \begin{minipage}{.1\linewidth}
       \centering\tikz[scale=1]\node[scale=1.5]{\bclampe};
       \end{minipage}%
-      \begin{minipage}{.8\textwidth}
+      \begin{minipage}{.9\linewidth}
       \textbf{Tip}\par\smallskip
       \BODY
       \end{minipage}\hfill}%
@@ -265,12 +265,12 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 \NewEnviron{custombox}[3]
   {\par\medskip\noindent
   \begin{tikzpicture}
-    \node[inner sep=3pt,fill=#3!10,draw=black!30] (box)
-    {\parbox[t]{.99\textwidth}{%
-      \begin{minipage}{.1\textwidth}
+    \node[inner sep=5pt,fill=#3!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
       \centering\tikz[scale=1]\node[scale=1.5]{#2};
       \end{minipage}%
-      \begin{minipage}{.8\textwidth}
+      \begin{minipage}{.9\linewidth}
       \textbf{#1}\par\smallskip
       \BODY
       \end{minipage}\hfill}%

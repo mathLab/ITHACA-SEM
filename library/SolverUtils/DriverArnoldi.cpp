@@ -97,7 +97,6 @@ namespace Nektar
             m_equ[0]->SetLambda(m_realShift);
 
             m_session->LoadParameter("imagShift", m_imagShift, 0.0);
-			cout << "Driver Arndoli end " << endl;
         }
 
         void DriverArnoldi::ArnoldiSummary(std::ostream &out)

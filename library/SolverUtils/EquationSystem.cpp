@@ -363,8 +363,9 @@ namespace Nektar
 									
                                 for (i = 0; i < m_fields.num_elements(); i++)
                                 {
-									if(m_session->GetVariable(i).compare("w") == 0)
-									{
+                                    if(m_session->GetVariable(i).compare("w")
+                                            == 0)
+                                    {
                                         m_fields[i] = MemoryManager<MultiRegions
                                             ::ContField3DHomogeneous1D>
                                                 ::AllocateSharedPtr(
@@ -1219,7 +1220,7 @@ namespace Nektar
                                                 m_useFFT, m_homogen_dealiasing, 
                                                 m_graph, 
                                                 m_session->GetVariable(i));
-                                     m_base[i]->SetWaveSpace(true);
+                                    m_base[i]->SetWaveSpace(true);
                                 }
                             }
                             else

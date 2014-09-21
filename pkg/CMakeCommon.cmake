@@ -34,69 +34,65 @@ function (find_bin_files PKG_INSTALL_BINS PKG_INSTALL_BINS_FILES)
 endfunction ()
 
 macro (add_deb_package)
-    if (NOT DPKG)
-        return()
-    endif ()
-
-    set(options "")
-    set(oneValueArgs NAME SUMMARY DESCRIPTION)
-    set(multiValueArgs INSTALL_LIBS INSTALL_BINS BREAKS CONFLICTS DEPENDS)
-    cmake_parse_arguments(PKG "${options}"
+    if (DPKG)
+        set(options "")
+        set(oneValueArgs NAME SUMMARY DESCRIPTION)
+        set(multiValueArgs INSTALL_LIBS INSTALL_BINS BREAKS CONFLICTS DEPENDS)
+        cmake_parse_arguments(PKG "${options}"
             "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-    set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PKG_NAME}-deb)
+        set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PKG_NAME}-deb)
 
-    find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
-    find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
+        find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
+        find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
 
-    # Configure project for this package
-    configure_file(CMakeListsDpkg.txt.in
+        # Configure project for this package
+        configure_file(CMakeListsDpkg.txt.in
                 ${BUILD_DIR}/CMakeLists.txt @ONLY)
 
-    add_custom_target(
-        pkg-deb-${PKG_NAME}
-        rm -f ${BUILD_DIR}/CPackConfig.cmake
-        COMMAND ${CMAKE_COMMAND} .
-        COMMAND ${CMAKE_CPACK_COMMAND} --config CPackConfig.cmake
-        WORKING_DIRECTORY ${BUILD_DIR}
-    )
-    if (PKG_INSTALL_LIBS OR PKG_INSTALL_BINS)
-        add_dependencies(pkg-deb-${PKG_NAME}
-            ${PKG_INSTALL_LIBS} ${PKG_INSTALL_BINS})
+        add_custom_target(
+            pkg-deb-${PKG_NAME}
+            rm -f ${BUILD_DIR}/CPackConfig.cmake
+            COMMAND ${CMAKE_COMMAND} .
+            COMMAND ${CMAKE_CPACK_COMMAND} --config CPackConfig.cmake
+            WORKING_DIRECTORY ${BUILD_DIR}
+        )
+        if (PKG_INSTALL_LIBS OR PKG_INSTALL_BINS)
+            add_dependencies(pkg-deb-${PKG_NAME}
+                ${PKG_INSTALL_LIBS} ${PKG_INSTALL_BINS})
+        endif ()
+        add_dependencies(pkg-deb pkg-deb-${PKG_NAME})
     endif ()
-    add_dependencies(pkg-deb pkg-deb-${PKG_NAME})
 endmacro (add_deb_package)
 
 macro (add_rpm_package)
-    if (NOT RPMBUILD)
-        return()
-    endif ()
-
-    set(options "")
-    set(oneValueArgs NAME SUMMARY DESCRIPTION)
-    set(multiValueArgs INSTALL_LIBS INSTALL_BINS BREAKS CONFLICTS DEPENDS)
-    cmake_parse_arguments(PKG "${options}"
+    if (RPMBUILD)
+        set(options "")
+        set(oneValueArgs NAME SUMMARY DESCRIPTION)
+        set(multiValueArgs INSTALL_LIBS INSTALL_BINS BREAKS CONFLICTS DEPENDS)
+        cmake_parse_arguments(PKG "${options}"
             "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
 
-    set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PKG_NAME}-rpm)
+        set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${PKG_NAME}-rpm)
 
-    find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
-    find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
+        find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
+        find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
 
-    configure_file(CMakeListsRpm.txt.in
+        configure_file(CMakeListsRpm.txt.in
                 ${BUILD_DIR}/CMakeLists.txt @ONLY)
-    add_custom_target(
-        pkg-rpm-${PKG_NAME}
-        rm -f ${BUILD_DIR}/CPackConfig.cmake
-        COMMAND ${CMAKE_COMMAND} .
-        COMMAND ${CMAKE_CPACK_COMMAND} --config CPackConfig.cmake
-        WORKING_DIRECTORY ${BUILD_DIR}
-    )
-    if (PKG_INSTALL_LIBS OR PKG_INSTALL_BINS)
-        add_dependencies(pkg-rpm-${PKG_NAME}
-            ${PKG_INSTALL_LIBS} ${PKG_INSTALL_BINS})
+        add_custom_target(
+            pkg-rpm-${PKG_NAME}
+            rm -f ${BUILD_DIR}/CPackConfig.cmake
+            COMMAND ${CMAKE_COMMAND} .
+            COMMAND ${CMAKE_CPACK_COMMAND} --config CPackConfig.cmake
+            WORKING_DIRECTORY ${BUILD_DIR}
+        )
+        if (PKG_INSTALL_LIBS OR PKG_INSTALL_BINS)
+            add_dependencies(pkg-rpm-${PKG_NAME}
+                ${PKG_INSTALL_LIBS} ${PKG_INSTALL_BINS})
+        endif ()
+        add_dependencies(pkg-rpm pkg-rpm-${PKG_NAME})
     endif ()
-    add_dependencies(pkg-rpm pkg-rpm-${PKG_NAME})
 endmacro (add_rpm_package)
 
 macro (add_tgz_package)
@@ -134,6 +130,7 @@ add_custom_target(pkg)
 find_program(DPKG "dpkg")
 mark_as_advanced(DPKG)
 find_program(DPKGSHLIBDEPS "dpkg-shlibdeps")
+mark_as_advanced(DPKGSHLIBDEPS)
 if (DPKG)
     if (NOT DPKGSHLIBDEPS)
         MESSAGE(FATAL_ERROR "dpkg-shlibdeps program not found but is required.")

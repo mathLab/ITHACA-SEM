@@ -471,8 +471,6 @@ namespace Nektar
                                                         m_session->GetComm());
         fld->Import(pInfile, FieldDef, FieldData);
 
-        //LibUtilities::Import(pInfile,FieldDef,FieldData);
-        
         int nvar = m_session->GetVariables().size();
         int s;
         

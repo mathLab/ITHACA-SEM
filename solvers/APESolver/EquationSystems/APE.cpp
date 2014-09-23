@@ -544,6 +544,26 @@ void APE::AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray,
 }
 
 
+void APE::v_ExtraFldOutput(
+    std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+    std::vector<std::string>             &variables)
+{
+    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
+
+    const int nPhys   = m_fields[0]->GetNpoints();
+    const int nCoeffs = m_fields[0]->GetNcoeffs();
+
+    for (int i = 0; i < m_spacedim + 1; i++)
+    {
+        variables.push_back(m_basefield_names[i]);
+
+        Array<OneD, NekDouble> tmpFwd(nCoeffs);
+        m_fields[0]->FwdTrans(m_basefield[i], tmpFwd);
+        fieldcoeffs.push_back(tmpFwd);
+    }
+}
+
+
 /**
  * @brief Get the normal vectors.
  */

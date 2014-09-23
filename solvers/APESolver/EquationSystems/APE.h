@@ -112,6 +112,9 @@ class APE : public UnsteadySystem
 
         void AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray, Array< OneD, Array< OneD, NekDouble > > &outarray);
 
+        virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                                      std::vector<std::string>             &variables);
+
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals();
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();

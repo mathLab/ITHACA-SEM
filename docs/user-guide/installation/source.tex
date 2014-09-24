@@ -160,7 +160,11 @@ downloaded directly from
     \item CMake
     \item BLAS and LAPACK
 \end{itemize}
-This software should be available through your Linux distribution.
+CMake is available from MacPorts (\url{http://macports.org}) and can be
+installed using
+\begin{lstlisting}[style=BashInputStyle]
+sudo port install cmake
+\end{lstlisting}
 
 \begin{notebox}
 CMake 2.8.7 or later is required.
@@ -189,9 +193,9 @@ From a terminal (Applications->Utilities->Terminal):
     \end{lstlisting}
     
     \item (Optional) If you have administrative access, install the third-party
-    libraries from MacPorts:
+    libraries from MacPorts so they are available system-wide:
     \begin{lstlisting}[style=BashInputStyle]
-    sudo port install cmake zlib fftw-3 arpack
+    sudo port install boost zlib fftw-3 arpack
     \end{lstlisting}
     
     \begin{warningbox}
@@ -215,6 +219,8 @@ From a terminal (Applications->Utilities->Terminal):
     \begin{lstlisting}[style=BashInputStyle]
     ccmake ../
     \end{lstlisting}
+    Use the arrow keys to navigate the options and \inlsh{ENTER} to select/edit
+    an option.
     \begin{itemize}
         \item Select the components of Nektar++ (prefixed with
         \inltt{NEKTAR\_BUILD\_}) you would like to build. Disabling solvers
@@ -226,8 +232,15 @@ From a terminal (Applications->Utilities->Terminal):
     Section~\ref{s:installation:source:cmake}.
     
     \item Press \inltt{c} to configure the build. If errors arise relating to
-    missing libraries, review the \inltt{THIRDPARTY\_BUILD\_} selections in the previous
+        missing libraries (variables set to \inlsh{NOTFOUND}), review the \inltt{THIRDPARTY\_BUILD\_} selections in the previous
     step or install the missing libraries from system packages. 
+    
+    \begin{notebox}
+    Selecting \inltt{THIRDPARTY\_BUILD\_} options will request CMake to
+    automatically download thirdparty libraries and compile them within the
+    \nekpp directory. If you have administrative access to your machine, it is
+    recommended to install the libraries system-wide through MacPorts.
+    \end{notebox}
     
     \item When configuration completes without errors, press \inltt{c} again
     until the option \inltt{g} to generate build files appears. Press \inltt{g}

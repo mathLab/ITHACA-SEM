@@ -207,8 +207,10 @@ namespace Nektar
                     bndCondExpU->GetExp(e)->GetCoords(xC, yC);
                     toSeg->GetCoords(xL, yL);
 
-                    Vmath::Vsub(nq, xL, 1, xC, 1, tmp = bndCondExpU->UpdatePhys() + offset, 1);
-                    Vmath::Vsub(nq, yL, 1, yC, 1, tmp = bndCondExpV->UpdatePhys() + offset, 1);
+                    Vmath::Vsub(nq, xL, 1, xC, 1,
+                                tmp = bndCondExpU->UpdatePhys() + offset, 1);
+                    Vmath::Vsub(nq, yL, 1, yC, 1,
+                                tmp = bndCondExpV->UpdatePhys() + offset, 1);
                 }
 
                 // bndconstrained?
@@ -246,8 +248,9 @@ namespace Nektar
                             boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                                 bndCondExpU->GetExp(i)->GetGeom());
 
-                        TriFaceIDs t(from->GetVid(0), from->GetVid(1), from->GetVid(2));
-                        vertexFaceMap[t] = from->GetGlobalID();
+                        TriFaceIDs t(from->GetVid(0), from->GetVid(1),
+                                     from->GetVid(2));
+                        vertexFaceMap[t] = i;
                     }
                 }
 
@@ -257,37 +260,32 @@ namespace Nektar
 
                 for (sIt = tmp.begin(); sIt != tmp.end(); ++sIt)
                 {
-                    map<int, int>::iterator mIt;
+                    TriFaceMap::iterator tIt;
+                    int e;
+                    bool needsRot;
 
                     if (useVertexIds)
                     {
                         TriFaceIDs t(sIt->second->GetVid(0),
                                      sIt->second->GetVid(1),
                                      sIt->second->GetVid(2));
-                        TriFaceMap::iterator tIt = vertexFaceMap.find(t);
 
-                        if (tIt == vertexFaceMap.end())
-                        {
-                            mIt = bndCondIds.end();
-                        }
-                        else
-                        {
-                            mIt = bndCondIds.find(tIt->second);
-                        }
+                        tIt = vertexFaceMap.find(t);
+                        e = mIt == vertexFaceMap.end() ? -1 : tIt->second;
                     }
                     else
                     {
+                        map<int, int>::iterator mIt;
                         mIt = bndCondIds.find(sIt->first);
+                        e = mIt == bndCondIds.end() ? -1 : mIt->second;
                     }
 
-                    if (mIt == bndCondIds.end())
+                    if (e == -1)
                     {
                         cout << "Warning: couldn't find element "
                              << sIt->first << endl;
                         continue;
                     }
-
-                    int e = mIt->second;
 
                     SpatialDomains::TriGeomSharedPtr from =
                         boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
@@ -311,9 +309,12 @@ namespace Nektar
                     bndCondExpU->GetExp(e)->GetCoords(xC, yC, zC);
                     toSeg->GetCoords(xL, yL, zL);
 
-                    Vmath::Vsub(nq, xL, 1, xC, 1, tmp = bndCondExpU->UpdatePhys() + offset, 1);
-                    Vmath::Vsub(nq, yL, 1, yC, 1, tmp = bndCondExpV->UpdatePhys() + offset, 1);
-                    Vmath::Vsub(nq, zL, 1, zC, 1, tmp = bndCondExpW->UpdatePhys() + offset, 1);
+                    Vmath::Vsub(nq, xL, 1, xC, 1,
+                                tmp = bndCondExpU->UpdatePhys() + offset, 1);
+                    Vmath::Vsub(nq, yL, 1, yC, 1,
+                                tmp = bndCondExpV->UpdatePhys() + offset, 1);
+                    Vmath::Vsub(nq, zL, 1, zC, 1,
+                                tmp = bndCondExpW->UpdatePhys() + offset, 1);
                 }
 
                 // bndconstrained?

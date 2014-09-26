@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: APEUpwindSolver.h
+// File: APESolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,39 +29,42 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Upwind Riemann solver for the APE equations.
+// Description: Riemann solver base classs for the APE equations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
-#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
+#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APESOLVER
+#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APESOLVER
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
-#include <APESolver/RiemannSolvers/APESolver.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
 
-class APEUpwindSolver : public APESolver
+class APESolver : public RiemannSolver
 {
-public:
-    static RiemannSolverSharedPtr create()
-    {
-        return RiemannSolverSharedPtr(new APEUpwindSolver());
-    }
-
-    static std::string solverName;
-
 protected:
-    APEUpwindSolver();
+    APESolver();
+
+    virtual void v_Solve(
+        const int                                         nDim,
+        const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+        const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+              Array<OneD,       Array<OneD, NekDouble> > &flux);
 
     virtual void v_PointSolve(
         NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
         NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
         NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
-        NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF);
+        NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
+    {
+        ASSERTL0(false, "This function should be defined by subclasses.");
+    }
+
+    Array<OneD, Array<OneD, NekDouble> > GetRotBasefield();
 };
 
 }

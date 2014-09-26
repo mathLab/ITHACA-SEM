@@ -6,6 +6,7 @@ IF( NEKTAR_SOLVER_APE )
     SET(APESolverSource 
        ./APESolver.cpp
        ./EquationSystems/APE.cpp
+       ./RiemannSolvers/APESolver.cpp
        ./RiemannSolvers/APEUpwindSolver.cpp)
 
     ADD_SOLVER_EXECUTABLE(APESolver solvers 

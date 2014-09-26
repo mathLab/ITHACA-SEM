@@ -7,6 +7,7 @@ IF( NEKTAR_SOLVER_CARDIAC_EP )
        ./CardiacEPSolver.cpp
        ./EquationSystems/Monodomain.cpp
        ./EquationSystems/Bidomain.cpp
+       ./EquationSystems/BidomainRoth.cpp
        ./CellModels/CellModel.cpp
        ./CellModels/FitzhughNagumo.cpp
        ./CellModels/AlievPanfilov.cpp

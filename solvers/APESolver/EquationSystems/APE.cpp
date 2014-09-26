@@ -106,7 +106,6 @@ void APE::v_InitObject()
 
         string riemName;
         m_session->LoadSolverInfo("UpwindType", riemName, "APEUpwind");
-        riemName = "APEUpwind";
         m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
         m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
         m_riemannSolver->SetVector("basefield", &APE::GetBasefield, this);

@@ -125,6 +125,8 @@ class APE : public UnsteadySystem
 
         NekDouble GetRho();
 
+        void UpdateBasefield();
+
     private:
 
         void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);

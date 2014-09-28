@@ -208,7 +208,7 @@ void APE::v_GetFluxVector(const int i,
                              Array<OneD, Array<OneD, NekDouble> > &physfield,
                              Array<OneD, Array<OneD, NekDouble> > &flux)
 {
-    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
+    UpdateBasefield();
 
     ASSERTL1(flux.num_elements() == m_basefield.num_elements() - 1,
              "Dimension of flux array and velocity array do not match");
@@ -547,7 +547,7 @@ void APE::v_ExtraFldOutput(
     std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
     std::vector<std::string>             &variables)
 {
-    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
+    UpdateBasefield();
 
     const int nPhys   = m_fields[0]->GetNpoints();
     const int nCoeffs = m_fields[0]->GetNcoeffs();
@@ -610,6 +610,18 @@ NekDouble APE::GetRho()
 {
     return m_Rho0;
 }
+
+void APE::UpdateBasefield()
+{
+    static NekDouble last_update = -1.0;
+
+    if (m_time > last_update)
+    {
+        EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
+        last_update = m_time;
+    }
+}
+
 
 } //end of namespace
 

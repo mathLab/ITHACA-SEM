@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: APEUpwindSolver.cpp
+// File: UpwindSolver.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,17 +33,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <APESolver/RiemannSolvers/APEUpwindSolver.h>
+#include <APESolver/RiemannSolvers/UpwindSolver.h>
 
 using namespace std;
 
 namespace Nektar
 {
 
-std::string APEUpwindSolver::solverName = SolverUtils::GetRiemannSolverFactory().
-        RegisterCreatorFunction("APEUpwind", APEUpwindSolver::create, "APE Upwind solver");
+std::string UpwindSolver::solverName = SolverUtils::GetRiemannSolverFactory().
+        RegisterCreatorFunction("APEUpwind", UpwindSolver::create, "Upwind solver for the APE equation");
 
-APEUpwindSolver::APEUpwindSolver() :
+UpwindSolver::UpwindSolver() :
     APESolver()
 {
 
@@ -70,7 +70,7 @@ APEUpwindSolver::APEUpwindSolver() :
  * @param vF     Computed Riemann flux for y perturbation verlocity component
  * @param wF     Computed Riemann flux for z perturbation verlocity component
  */
-void APEUpwindSolver::v_PointSolve(
+void UpwindSolver::v_PointSolve(
     NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
     NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
     NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: APEUpwindSolver.h
+// File: UpwindSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
-#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
+#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_UPWINDSOLVER
+#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_UPWINDSOLVER
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <APESolver/RiemannSolvers/APESolver.h>
@@ -44,18 +44,18 @@ using namespace Nektar::SolverUtils;
 namespace Nektar
 {
 
-class APEUpwindSolver : public APESolver
+class UpwindSolver : public APESolver
 {
 public:
     static RiemannSolverSharedPtr create()
     {
-        return RiemannSolverSharedPtr(new APEUpwindSolver());
+        return RiemannSolverSharedPtr(new UpwindSolver());
     }
 
     static std::string solverName;
 
 protected:
-    APEUpwindSolver();
+    UpwindSolver();
 
     virtual void v_PointSolve(
         NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,

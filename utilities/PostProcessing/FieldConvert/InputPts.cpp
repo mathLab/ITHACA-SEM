@@ -80,7 +80,7 @@ void InputPts::Process(po::variables_map &vm)
     string pts_ending = "pts";
 
     TiXmlDocument docInput;
-    ASSERTL0(!docInput.LoadFile((m_f->m_inputfiles["pts"][0]).c_str()),
+    ASSERTL0(docInput.LoadFile((m_f->m_inputfiles["pts"][0]).c_str()),
              "Unable to open file '" + m_f->m_inputfiles["pts"][0] + "'.");
 
     TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");

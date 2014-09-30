@@ -244,10 +244,11 @@ namespace Nektar
             // case when the method is called from the constructor.
             for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                if (time == 0.0 || m_bndConditions[n]->GetUserDefined() ==
-                   SpatialDomains::eTimeDependent ||
-					m_bndConditions[n]->GetUserDefined() ==
-                   SpatialDomains::eFluidStructInt)
+                if (time == 0.0 ||
+                    m_bndConditions[n]->GetUserDefined()
+                                == SpatialDomains::eTimeDependent ||
+                    m_bndConditions[n]->GetUserDefined()
+                                == SpatialDomains::eFluidStructInt)
 
                 {
                     m_bndCondExpansions[n]->HomogeneousFwdTrans(

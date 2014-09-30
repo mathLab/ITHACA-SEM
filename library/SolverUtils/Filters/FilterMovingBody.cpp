@@ -118,8 +118,8 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
-			m_index = 0;
-			m_outputStream =  Array<OneD, std::ofstream>(2);
+            m_index = 0;
+            m_outputStream =  Array<OneD, std::ofstream>(2);
             // Parse the boundary regions into a list.
             std::string::size_type FirstInd = m_BoundaryString.find_first_of('[') + 1;
             std::string::size_type LastInd  = m_BoundaryString.find_last_of(']') - 1;
@@ -476,36 +476,36 @@ namespace Nektar
                 pFields[0]->GetPlane(plane)->SetMovBodyForces(fces[0],fces[1]);
             }
            
-			//get and output moving body variables
-			Array<OneD, Array<OneD, NekDouble> > Motion_x;
-			Array<OneD, Array<OneD, NekDouble> > Motion_y;
-			int nStrVars = 3;
-        	Motion_x = Array<OneD, Array<OneD, NekDouble> > (nStrVars);
-        	Motion_y = Array<OneD, Array<OneD, NekDouble> > (nStrVars);
-        	for(int i = 0; i < Motion_x.num_elements(); i++)
-        	{
-            	Motion_x[i] = Array<OneD, NekDouble>(local_planes,0.0);
-            	Motion_y[i] = Array<OneD, NekDouble>(local_planes,0.0);
-        	}
-        	for(int plane = 0; plane < local_planes; plane++)
-        	{
-            	Array<OneD, NekDouble> tmp0(nStrVars);
-            	Array<OneD, NekDouble> tmp1(nStrVars);
+            //get and output moving body variables
+            Array<OneD, Array<OneD, NekDouble> > Motion_x;
+            Array<OneD, Array<OneD, NekDouble> > Motion_y;
+            int nStrVars = 3;
+            Motion_x = Array<OneD, Array<OneD, NekDouble> > (nStrVars);
+            Motion_y = Array<OneD, Array<OneD, NekDouble> > (nStrVars);
+            for(int i = 0; i < Motion_x.num_elements(); i++)
+            {
+                Motion_x[i] = Array<OneD, NekDouble>(local_planes,0.0);
+                Motion_y[i] = Array<OneD, NekDouble>(local_planes,0.0);
+            }
+            for(int plane = 0; plane < local_planes; plane++)
+            {
+                Array<OneD, NekDouble> tmp0(nStrVars);
+                Array<OneD, NekDouble> tmp1(nStrVars);
 
-            	pFields[0]->GetPlane(plane)->GetMovBodyMotionVars(tmp0);
-            	pFields[1]->GetPlane(plane)->GetMovBodyMotionVars(tmp1);
+                pFields[0]->GetPlane(plane)->GetMovBodyMotionVars(tmp0);
+                pFields[1]->GetPlane(plane)->GetMovBodyMotionVars(tmp1);
                 for (int var = 0; var < nStrVars; var++)
                 {
                     Motion_x[var][plane] = tmp0[var];
                     Motion_y[var][plane] = tmp1[var];
                 }
-        	}
+            }
             // Only output every m_outputFrequency.
             if ((m_index++) % m_outputFrequency)
             {
                 return;
             }
- 
+
             // At thi point in rank (0,0) we have the full vectors
             // containing Fxp,Fxv,Fyp and Fyv where different positions
             // in the vectors correspond to different planes.
@@ -549,95 +549,95 @@ namespace Nektar
                 }
             }
 
-			//
-        	Array <OneD, NekDouble> CableAccelX;
-        	Array <OneD, NekDouble> CableVelocX;
-        	Array <OneD, NekDouble> CableDisplX;
-        	Array <OneD, NekDouble> CableAccelY;
-        	Array <OneD, NekDouble> CableVelocY;
-        	Array <OneD, NekDouble> CableDisplY;
+            //
+            Array <OneD, NekDouble> CableAccelX;
+            Array <OneD, NekDouble> CableVelocX;
+            Array <OneD, NekDouble> CableDisplX;
+            Array <OneD, NekDouble> CableAccelY;
+            Array <OneD, NekDouble> CableVelocY;
+            Array <OneD, NekDouble> CableDisplY;
 
-        	int npoints = Motion_x[0].num_elements();
-        	CableAccelX = Array <OneD, NekDouble>(npoints);
-        	CableVelocX = Array <OneD, NekDouble>(npoints);
-        	CableDisplX = Array <OneD, NekDouble>(npoints);
-        	CableAccelY = Array <OneD, NekDouble>(npoints);
-        	CableVelocY = Array <OneD, NekDouble>(npoints);
-        	CableDisplY = Array <OneD, NekDouble>(npoints);
+            int npoints = Motion_x[0].num_elements();
+            CableAccelX = Array <OneD, NekDouble>(npoints);
+            CableVelocX = Array <OneD, NekDouble>(npoints);
+            CableDisplX = Array <OneD, NekDouble>(npoints);
+            CableAccelY = Array <OneD, NekDouble>(npoints);
+            CableVelocY = Array <OneD, NekDouble>(npoints);
+            CableDisplY = Array <OneD, NekDouble>(npoints);
 
-        	Vmath::Vcopy(npoints,Motion_x[0],1,CableDisplX,1);
-        	Vmath::Vcopy(npoints,Motion_x[1],1,CableVelocX,1);
-        	Vmath::Vcopy(npoints,Motion_x[2],1,CableAccelX,1);
-        	Vmath::Vcopy(npoints,Motion_y[0],1,CableDisplY,1);
-        	Vmath::Vcopy(npoints,Motion_y[1],1,CableVelocY,1);
-        	Vmath::Vcopy(npoints,Motion_y[2],1,CableAccelY,1);
+            Vmath::Vcopy(npoints,Motion_x[0],1,CableDisplX,1);
+            Vmath::Vcopy(npoints,Motion_x[1],1,CableVelocX,1);
+            Vmath::Vcopy(npoints,Motion_x[2],1,CableAccelX,1);
+            Vmath::Vcopy(npoints,Motion_y[0],1,CableDisplY,1);
+            Vmath::Vcopy(npoints,Motion_y[1],1,CableVelocY,1);
+            Vmath::Vcopy(npoints,Motion_y[2],1,CableAccelY,1);
 
-        	int colrank = vComm->GetColumnComm()->GetRank();
-        	int nproc   = vComm->GetColumnComm()->GetSize();
-        	// Send to root process.
-        	if (colrank == 0)
-        	{
-            	for (int j = 0; j <Motion_x[0].num_elements(); j++)
-            	{
-                	m_outputStream[1].width(8);
-                	m_outputStream[1] << setprecision(6) << time;
-                	m_outputStream[1].width(25);
-                	m_outputStream[1] << setprecision(6) << z_coords[j];
-                	m_outputStream[1].width(25);
-                	m_outputStream[1] << setprecision(8) << CableDisplX[j];
-                	m_outputStream[1].width(25);
-                	m_outputStream[1] << setprecision(8) << CableVelocX[j];
-                	m_outputStream[1].width(25);
-                	m_outputStream[1] << setprecision(8) << CableAccelX[j];
-                	m_outputStream[1].width(25);
-                	m_outputStream[1] << setprecision(8) << CableDisplY[j];
-                	m_outputStream[1].width(25);
-                	m_outputStream[1] << setprecision(8) << CableVelocY[j];
-                	m_outputStream[1].width(25);
-                	m_outputStream[1] << setprecision(8) << CableAccelY[j];
-                	m_outputStream[1] << endl;
-            	}
+            int colrank = vComm->GetColumnComm()->GetRank();
+            int nproc   = vComm->GetColumnComm()->GetSize();
+            // Send to root process.
+            if (colrank == 0)
+            {
+                for (int j = 0; j <Motion_x[0].num_elements(); j++)
+                {
+                    m_outputStream[1].width(8);
+                    m_outputStream[1] << setprecision(6) << time;
+                    m_outputStream[1].width(25);
+                    m_outputStream[1] << setprecision(6) << z_coords[j];
+                    m_outputStream[1].width(25);
+                    m_outputStream[1] << setprecision(8) << CableDisplX[j];
+                    m_outputStream[1].width(25);
+                    m_outputStream[1] << setprecision(8) << CableVelocX[j];
+                    m_outputStream[1].width(25);
+                    m_outputStream[1] << setprecision(8) << CableAccelX[j];
+                    m_outputStream[1].width(25);
+                    m_outputStream[1] << setprecision(8) << CableDisplY[j];
+                    m_outputStream[1].width(25);
+                    m_outputStream[1] << setprecision(8) << CableVelocY[j];
+                    m_outputStream[1].width(25);
+                    m_outputStream[1] << setprecision(8) << CableAccelY[j];
+                    m_outputStream[1] << endl;
+                }
 
-            	for (int i = 1; i < nproc; ++i)
-            	{
-                 	vComm->GetColumnComm()->Recv(i, CableAccelX);
-                 	vComm->GetColumnComm()->Recv(i, CableVelocX);
-                 	vComm->GetColumnComm()->Recv(i, CableDisplX);
-                 	vComm->GetColumnComm()->Recv(i, CableAccelY);
-                 	vComm->GetColumnComm()->Recv(i, CableVelocY);
-                 	vComm->GetColumnComm()->Recv(i, CableDisplY);
+                for (int i = 1; i < nproc; ++i)
+                {
+                     vComm->GetColumnComm()->Recv(i, CableAccelX);
+                     vComm->GetColumnComm()->Recv(i, CableVelocX);
+                     vComm->GetColumnComm()->Recv(i, CableDisplX);
+                     vComm->GetColumnComm()->Recv(i, CableAccelY);
+                     vComm->GetColumnComm()->Recv(i, CableVelocY);
+                     vComm->GetColumnComm()->Recv(i, CableDisplY);
 
-                	for (int j = 0; j < Motion_x[0].num_elements(); ++j)
-                	{
-                    	m_outputStream[1].width(8);
-                    	m_outputStream[1] << setprecision(6) << time;
-                    	m_outputStream[1].width(25);
-                    	m_outputStream[1] << setprecision(6) << z_coords[2 * i + j];
-                    	m_outputStream[1].width(25);
-                    	m_outputStream[1] << setprecision(8) << CableDisplX[j];
-                    	m_outputStream[1].width(25);
-                    	m_outputStream[1] << setprecision(8) << CableVelocX[j];
-                    	m_outputStream[1].width(25);
-                    	m_outputStream[1] << setprecision(8) << CableAccelX[j];
-                    	m_outputStream[1].width(25);
-                    	m_outputStream[1] << setprecision(8) << CableDisplY[j];
-                    	m_outputStream[1].width(25);
-                    	m_outputStream[1] << setprecision(8) << CableVelocY[j];
-                    	m_outputStream[1].width(25);
-                    	m_outputStream[1] << setprecision(8) << CableAccelY[j];
-                    	m_outputStream[1] << endl;
-                	}
-            	}
-        	}
-        	else
-        	{
-            	vComm->GetColumnComm()->Send(0, CableAccelX);
-            	vComm->GetColumnComm()->Send(0, CableVelocX);
-            	vComm->GetColumnComm()->Send(0, CableDisplX);
-            	vComm->GetColumnComm()->Send(0, CableAccelY);
-            	vComm->GetColumnComm()->Send(0, CableVelocY);
-            	vComm->GetColumnComm()->Send(0, CableDisplY);
-        	}
+                    for (int j = 0; j < Motion_x[0].num_elements(); ++j)
+                    {
+                        m_outputStream[1].width(8);
+                        m_outputStream[1] << setprecision(6) << time;
+                        m_outputStream[1].width(25);
+                        m_outputStream[1] << setprecision(6) << z_coords[2 * i + j];
+                        m_outputStream[1].width(25);
+                        m_outputStream[1] << setprecision(8) << CableDisplX[j];
+                        m_outputStream[1].width(25);
+                        m_outputStream[1] << setprecision(8) << CableVelocX[j];
+                        m_outputStream[1].width(25);
+                        m_outputStream[1] << setprecision(8) << CableAccelX[j];
+                        m_outputStream[1].width(25);
+                        m_outputStream[1] << setprecision(8) << CableDisplY[j];
+                        m_outputStream[1].width(25);
+                        m_outputStream[1] << setprecision(8) << CableVelocY[j];
+                        m_outputStream[1].width(25);
+                        m_outputStream[1] << setprecision(8) << CableAccelY[j];
+                        m_outputStream[1] << endl;
+                    }
+                }
+            }
+            else
+            {
+                vComm->GetColumnComm()->Send(0, CableAccelX);
+                vComm->GetColumnComm()->Send(0, CableVelocX);
+                vComm->GetColumnComm()->Send(0, CableDisplX);
+                vComm->GetColumnComm()->Send(0, CableAccelY);
+                vComm->GetColumnComm()->Send(0, CableVelocY);
+                vComm->GetColumnComm()->Send(0, CableDisplY);
+            }
         }
 
 

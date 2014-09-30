@@ -845,12 +845,12 @@ namespace Nektar
             }
            
 
-			//
-			inline void SetMovBodyForces(NekDouble &forcex, NekDouble &forcey)
-			{
-				m_movbodyfces[0] = forcex;
+            //
+            inline void SetMovBodyForces(NekDouble &forcex, NekDouble &forcey)
+            {
+                m_movbodyfces[0] = forcex;
                 m_movbodyfces[1] = forcey;
-			} 
+            }
 
             inline void GetMovBodyForces(NekDouble &forcex, NekDouble &forcey)
             {
@@ -972,9 +972,9 @@ namespace Nektar
             // or not
             bool m_WaveSpace;
 
-			///
-			///
-			Array<OneD, NekDouble> m_movbodyfces;
+            ///
+            ///
+            Array<OneD, NekDouble> m_movbodyfces;
             Array<OneD, NekDouble> m_movbodyvars;
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.

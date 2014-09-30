@@ -91,7 +91,7 @@ namespace Nektar
             const AdvectionTermSharedPtr                advObject);
         
         virtual ~Extrapolate();
-		
+        
         void GenerateHOPBCMap();
 
         inline void SubSteppingTimeIntegration(
@@ -110,7 +110,7 @@ namespace Nektar
             const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time);
-		
+        
         inline void MountHOPBCs(
             int HBCdata, 
             NekDouble kinvis, 
@@ -161,7 +161,7 @@ namespace Nektar
 
         void RollOver(
             Array<OneD, Array<OneD, NekDouble> > &input);
-		
+        
         void CurlCurl(
             Array<OneD, Array<OneD, const NekDouble> > &Vel,
             Array<OneD, Array<OneD, NekDouble> > &Q,
@@ -175,7 +175,7 @@ namespace Nektar
 
         /// Pointer to field holding pressure field
         MultiRegions::ExpListSharedPtr m_pressure;
-	
+    
         /// int which identifies which components of m_fields contains the
         /// velocity (u,v,w);
         Array<OneD, int> m_velocity;
@@ -183,16 +183,16 @@ namespace Nektar
         AdvectionTermSharedPtr m_advObject;
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
-		
+        
         /// Curl-curl dimensionality
         int m_curl_dim;
         
         /// bounday dimensionality
         int m_bnd_dim;
-		
+        
         /// pressure boundary conditions container
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr> m_PBndConds;
-		
+        
         /// pressure boundary conditions expansion container
         Array<OneD, MultiRegions::ExpListSharedPtr>  m_PBndExp;
         
@@ -204,7 +204,7 @@ namespace Nektar
 
         /// Maximum points used in Element adjacent to pressure BC evaluation
         int m_pressureBCsElmtMaxPts;
-		
+        
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
 
@@ -224,7 +224,7 @@ namespace Nektar
         int m_npointsZ;     ///< number of points in Z direction (if homogeneous)
 
 
-		
+        
         /// Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoElmtID;
         
@@ -233,13 +233,13 @@ namespace Nektar
         
         /// Storage for current and previous levels of high order pressure boundary conditions.
         Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs;
-		
+        
         /// Storage for current and previous levels of the acceleration term.
         Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
         
         /// data structure to old all the information regarding High order pressure BCs
         Array<OneD, HBCInfo > m_HBCdata;
-		
+        
         /// wave number 2 pi k /Lz
         Array<OneD, NekDouble>  m_wavenumber;
         
@@ -249,30 +249,30 @@ namespace Nektar
         /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_outflowVel;
 
-		/// Storage for current and previous velocity fields in physical space at the otuflow for high order outflow BCs
-		Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_PhyoutfVel; ///(if homogeneous)
+        /// Storage for current and previous velocity fields in physical space at the otuflow for high order outflow BCs
+        Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_PhyoutfVel; ///(if homogeneous)
 
-		/// Storage for nonlinear term in physical space at the outflow for high order outflow BCs 
-		Array<OneD, NekDouble> m_nonlinearterm_phys; ///(if homogeneous)
+        /// Storage for nonlinear term in physical space at the outflow for high order outflow BCs 
+        Array<OneD, NekDouble> m_nonlinearterm_phys; ///(if homogeneous)
 
-		///	Storage for nonlinear term in wave space at the outflow for high order outflow BCs
-		Array<OneD, NekDouble> m_nonlinearterm_coeffs; ///(if homogeneous)
+        ///    Storage for nonlinear term in wave space at the outflow for high order outflow BCs
+        Array<OneD, NekDouble> m_nonlinearterm_coeffs; ///(if homogeneous)
 
         /// expansion sizes of pressure boundary conditions in each plane 
-		/// at the outflow for high order outflow BCs
+        /// at the outflow for high order outflow BCs
         Array<OneD, unsigned int> m_expsize_per_plane; ///(if homogeneous)
 
-		/// Storage for Fourier Coeffs of Dirichlet pressure condition from the input file
-		Array<OneD, NekDouble> m_PBndCoeffs; ///(if homogeneous)
+        /// Storage for Fourier Coeffs of Dirichlet pressure condition from the input file
+        Array<OneD, NekDouble> m_PBndCoeffs; ///(if homogeneous)
 
-		/// Storage for Fourier Coeffs of Neumann velocity condition from the input file
-		Array<OneD, Array<OneD, NekDouble> > m_UBndCoeffs; ///(if homogeneous)
+        /// Storage for Fourier Coeffs of Neumann velocity condition from the input file
+        Array<OneD, Array<OneD, NekDouble> > m_UBndCoeffs; ///(if homogeneous)
 
-		int m_totexps_per_plane; ///total number of expansion for each plane (if homogeneous)
+        int m_totexps_per_plane; ///total number of expansion for each plane (if homogeneous)
 
     private:
         static std::string def;
-		
+        
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];
@@ -319,7 +319,7 @@ namespace Nektar
     {
         v_SubStepAdvance(integrationSoln,nstep, time);
     }
-	
+    
     /**
      *
      */

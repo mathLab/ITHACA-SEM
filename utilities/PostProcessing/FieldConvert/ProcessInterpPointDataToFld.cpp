@@ -35,6 +35,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include <string>
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
 #include "ProcessInterpPointDataToFld.h"
@@ -90,11 +91,6 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         m_f->m_exp[i] = m_f->AppendExpList(0);
     }
 
-    if(m_f->m_session->GetComm()->GetRank() == 0)
-    {
-        cout << "Interpolating [" << flush;
-    }
-
     int totpoints = m_f->m_exp[0]->GetTotPoints();
     Array<OneD,NekDouble> coords[3];
 
@@ -115,11 +111,33 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         {
             m_f->m_exp[j]->SetPhys(i,intfields[j]);
         }
+
+        // print progress bar
+        if ( i % (totpoints/100 +1) == 0 and m_f->m_session->GetComm()->GetRank() == 0)
+        {
+            cout << "Interpolating: ";
+
+            float progress = i / float(totpoints);
+            cout << setw(3) << int(100*progress) << "% [";
+            for (int j = 0; j < int(progress*50); j++)
+            {
+                cout << "=";
+            }
+            for (int j = int(progress*50); j < 50; j++)
+            {
+                cout << " ";
+            }
+            cout << "]" << flush;
+
+            // carriage return
+            cout << "\r";
+        }
     }
 
     if(m_f->m_session->GetComm()->GetRank() == 0)
     {
-        cout << "]" << endl;
+        cout << "Interpolating: 100% [============================";
+        cout << "======================]" << endl;
     }
 
     // forward transform fields

@@ -47,7 +47,8 @@ namespace Nektar
         public:
             SOLVER_UTILS_EXPORT FilterEnergyBase(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
+                const std::map<std::string, std::string>   &pParams,
+                const bool pConstDensity = true);
             SOLVER_UTILS_EXPORT ~FilterEnergyBase();
 
         protected:
@@ -56,11 +57,12 @@ namespace Nektar
             virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             virtual bool v_IsTimeDependent();
 
-            virtual Array<OneD, NekDouble> v_GetVelocity(
+            virtual void v_GetVelocity(
                 const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-                const int i);
-            virtual NekDouble v_GetConstDensity();
-            virtual Array<OneD, NekDouble> v_GetDensity();
+                const int i,
+                Array<OneD, NekDouble> &velocity);
+            virtual Array<OneD, NekDouble> v_GetDensity(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
 
         private:
             unsigned int                m_index;

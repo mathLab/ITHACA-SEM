@@ -65,10 +65,10 @@ namespace Nektar
             SOLVER_UTILS_EXPORT ~FilterEnergy();
 
         protected:
-            virtual Array<OneD, NekDouble> v_GetVelocity(
+            virtual void v_GetVelocity(
                 const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-                const int i);
-            virtual NekDouble v_GetConstDensity();
+                const int i,
+                Array<OneD, NekDouble> &velocity);
         };
     }
 }

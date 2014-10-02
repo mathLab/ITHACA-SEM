@@ -43,12 +43,13 @@ namespace Nektar
     {
         FilterEnergyBase::FilterEnergyBase(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams)
+            const std::map<std::string, std::string> &pParams,
+            const bool pConstDensity)
             : Filter        (pSession),
               m_index       (0),
               m_homogeneous (false),
               m_planes      (),
-              m_constDensity(true)
+              m_constDensity(pConstDensity)
         {
             std::string outName;
             if (pParams.find("OutputFile") == pParams.end())
@@ -139,32 +140,35 @@ namespace Nektar
 
             // Calculate kinetic energy.
             NekDouble Ek = 0.0;
-            Array<OneD, NekDouble> tmp(nPoints);
+            Array<OneD, NekDouble> tmp(nPoints, 0.0);
             Array<OneD, Array<OneD, NekDouble> > u(3);
             for (i = 0; i < 3; ++i)
             {
-                if (m_homogeneous)
-                {
-                    pFields[i]->HomogeneousBwdTrans(v_GetVelocity(pFields, i), tmp);
-                }
-                else
-                {
-                    tmp = v_GetVelocity(pFields, i);
-                }
-
                 u[i] = Array<OneD, NekDouble>(nPoints);
-                Vmath::Vcopy(nPoints, tmp, 1, u[i], 1);
-                Vmath::Vmul (nPoints, tmp, 1, tmp, 1, tmp, 1);
+
+                v_GetVelocity(pFields, i, u[i]);
 
                 if (m_homogeneous)
                 {
-                    pFields[i]->HomogeneousFwdTrans(tmp, tmp);
-                    Ek += pFields[i]->GetPlane(0)->Integral(tmp) * 2.0 * M_PI;
+                    pFields[i]->HomogeneousBwdTrans(u[i], u[i]);
                 }
-                else
-                {
-                    Ek += pFields[i]->Integral(tmp);
-                }
+
+                Vmath::Vvtvp(nPoints, u[i], 1, u[i], 1, tmp, 1, tmp, 1);
+            }
+
+            if (!m_constDensity)
+            {
+                Vmath::Vmul(nPoints, v_GetDensity(pFields), 1, tmp, 1, tmp, 1);
+            }
+
+            if (m_homogeneous)
+            {
+                pFields[0]->HomogeneousFwdTrans(tmp, tmp);
+                Ek = pFields[0]->GetPlane(0)->Integral(tmp) * 2.0 * M_PI;
+            }
+            else
+            {
+                Ek = pFields[0]->Integral(tmp);
             }
 
             Ek /= 2.0 * m_area;
@@ -235,21 +239,16 @@ namespace Nektar
             return true;
         }
 
-        Array<OneD, NekDouble> FilterEnergyBase::v_GetVelocity(
+        void FilterEnergyBase::v_GetVelocity(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const int i)
+            const int i,
+            Array<OneD, NekDouble> &velocity)
         {
             ASSERTL0(false, "Needs to implemented by subclass");
-            return Array<OneD, NekDouble>();
         }
 
-        NekDouble FilterEnergyBase::v_GetConstDensity()
-        {
-            ASSERTL0(false, "Needs to implemented by subclass");
-            return 0.0;
-        }
-
-        Array<OneD, NekDouble> FilterEnergyBase::v_GetDensity()
+        Array<OneD, NekDouble> FilterEnergyBase::v_GetDensity(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
         {
             ASSERTL0(false, "Needs to implemented by subclass");
             return Array<OneD, NekDouble>();

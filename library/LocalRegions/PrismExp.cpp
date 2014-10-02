@@ -1909,5 +1909,250 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
 
+
+        void PrismExp::v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn, 
+                                                             bool oldstandard)
+        {
+            int np0 = m_base[0]->GetNumPoints();
+            int np1 = m_base[1]->GetNumPoints();
+            int np2 = m_base[2]->GetNumPoints();
+            int np = max(np0,max(np1,np2));
+            Array<OneD, int> prismpt(6);
+            bool standard = true; 
+
+            int vid0 = m_geom->GetVid(0);
+            int vid1 = m_geom->GetVid(1);
+            int vid2 = m_geom->GetVid(4);
+            int rotate = 0; 
+
+            // sort out prism rotation according to 
+            if((vid2 < vid1)&&(vid2 < vid0))  // top triangle vertex is lowest id 
+            {
+                rotate = 0;
+                if(vid0 > vid1)
+                {
+                    standard = false;// reverse base direction 
+                }
+            }
+            else if((vid1 < vid2)&&(vid1 < vid0))
+            {
+                rotate = 1;
+                if(vid2 > vid0)
+                {
+                    standard = false;// reverse base direction 
+                }
+            }
+            else if ((vid0 < vid2)&&(vid0 < vid1))                
+            {
+                rotate = 2;
+                if(vid1 > vid2)
+                {
+                    standard = false; // reverse base direction 
+                }
+            }
+
+            conn = Array<OneD, int>(12*(np-1)*(np-1)*(np-1));
+            
+            int row     = 0;
+            int rowp1   = 0;
+            int plane   = 0;
+            int row1    = 0;
+            int row1p1  = 0;
+            int planep1 = 0;
+            int cnt     = 0;
+
+
+            Array<OneD, int> rot(3);
+
+            rot[0] = (0+rotate)%3; 
+            rot[1] = (1+rotate)%3; 
+            rot[2] = (2+rotate)%3; 
+
+             // lower diagonal along 1-3 on base
+            for(int i = 0; i < np-1; ++i)
+            {
+                planep1 += (np-i)*np;
+                row    = 0; // current plane row offset
+                rowp1  = 0; // current plane row plus one offset
+                row1   = 0; // next plane row offset
+                row1p1 = 0; // nex plane row plus one offset
+                if(standard == false)
+                {
+                    for(int j = 0; j < np-1; ++j)
+                    {
+                        rowp1  += np-i;
+                        row1p1 += np-i-1;
+                        for(int k = 0; k < np-i-2; ++k)
+                        {
+                            // bottom prism block 
+                            prismpt[rot[0]] = plane   + row   + k;
+                            prismpt[rot[1]] = plane   + row   + k+1;
+                            prismpt[rot[2]] = planep1 + row1  + k;
+
+                            prismpt[3+rot[0]] = plane   + rowp1  + k;
+                            prismpt[3+rot[1]] = plane   + rowp1  + k+1;
+                            prismpt[3+rot[2]] = planep1 + row1p1 + k; 
+                            
+                            conn[cnt++] = prismpt[0];
+                            conn[cnt++] = prismpt[1]; 
+                            conn[cnt++] = prismpt[3]; 
+                            conn[cnt++] = prismpt[2]; 
+                            
+                            conn[cnt++] = prismpt[5];
+                            conn[cnt++] = prismpt[2]; 
+                            conn[cnt++] = prismpt[3]; 
+                            conn[cnt++] = prismpt[4]; 
+
+                            conn[cnt++] = prismpt[3]; 
+                            conn[cnt++] = prismpt[1]; 
+                            conn[cnt++] = prismpt[4]; 
+                            conn[cnt++] = prismpt[2]; 
+                            
+                            // upper prism block. 
+                            prismpt[rot[0]] = planep1 + row1   + k+1; 
+                            prismpt[rot[1]] = planep1 + row1   + k;
+                            prismpt[rot[2]] = plane   + row    + k+1;
+                            
+                            prismpt[3+rot[0]] = planep1 + row1p1 + k+1;
+                            prismpt[3+rot[1]] = planep1 + row1p1 + k;
+                            prismpt[3+rot[2]] = plane   + rowp1  + k+1;
+
+                            
+                            conn[cnt++] = prismpt[0]; 
+                            conn[cnt++] = prismpt[1]; 
+                            conn[cnt++] = prismpt[2]; 
+                            conn[cnt++] = prismpt[5]; 
+                            
+                            conn[cnt++] = prismpt[5];
+                            conn[cnt++] = prismpt[0];
+                            conn[cnt++] = prismpt[4];
+                            conn[cnt++] = prismpt[1];
+                            
+                            conn[cnt++] = prismpt[3];
+                            conn[cnt++] = prismpt[4];
+                            conn[cnt++] = prismpt[0];
+                            conn[cnt++] = prismpt[5];
+                            
+                        }
+                        
+                        // bottom prism block 
+                        prismpt[rot[0]] = plane   + row   + np-i-2;
+                        prismpt[rot[1]] = plane   + row   + np-i-1;
+                        prismpt[rot[2]] = planep1 + row1  + np-i-2;
+                        
+                        prismpt[3+rot[0]] = plane   + rowp1  + np-i-2;
+                        prismpt[3+rot[1]] = plane   + rowp1  + np-i-1;
+                        prismpt[3+rot[2]] = planep1 + row1p1 + np-i-2;
+
+                        conn[cnt++] = prismpt[0];
+                        conn[cnt++] = prismpt[1]; 
+                        conn[cnt++] = prismpt[3]; 
+                        conn[cnt++] = prismpt[2]; 
+                            
+                        conn[cnt++] = prismpt[5];
+                        conn[cnt++] = prismpt[2]; 
+                        conn[cnt++] = prismpt[3]; 
+                        conn[cnt++] = prismpt[4]; 
+
+                        conn[cnt++] = prismpt[3]; 
+                        conn[cnt++] = prismpt[1]; 
+                        conn[cnt++] = prismpt[4]; 
+                        conn[cnt++] = prismpt[2]; 
+
+                        row  += np-i;
+                        row1 += np-i-1;
+                    }
+
+                }
+                else
+                { // lower diagonal along 0-4 on base
+                    for(int j = 0; j < np-1; ++j)
+                    {
+                        rowp1  += np-i;
+                        row1p1 += np-i-1;
+                        for(int k = 0; k < np-i-2; ++k)
+                        {
+                            // bottom prism block 
+                            prismpt[rot[0]] = plane   + row   + k;
+                            prismpt[rot[1]] = plane   + row   + k+1;
+                            prismpt[rot[2]] = planep1 + row1  + k;
+
+                            prismpt[3+rot[0]] = plane   + rowp1  + k;
+                            prismpt[3+rot[1]] = plane   + rowp1  + k+1;
+                            prismpt[3+rot[2]] = planep1 + row1p1 + k; 
+                            
+                            conn[cnt++] = prismpt[0];
+                            conn[cnt++] = prismpt[1]; 
+                            conn[cnt++] = prismpt[4]; 
+                            conn[cnt++] = prismpt[2]; 
+                            
+                            conn[cnt++] = prismpt[4];
+                            conn[cnt++] = prismpt[3]; 
+                            conn[cnt++] = prismpt[0]; 
+                            conn[cnt++] = prismpt[2]; 
+
+                            conn[cnt++] = prismpt[3]; 
+                            conn[cnt++] = prismpt[4]; 
+                            conn[cnt++] = prismpt[5]; 
+                            conn[cnt++] = prismpt[2]; 
+
+                            // upper prism block. 
+                            prismpt[rot[0]] = planep1 + row1   + k+1; 
+                            prismpt[rot[1]] = planep1 + row1   + k;
+                            prismpt[rot[2]] = plane   + row    + k+1;
+                            
+                            prismpt[3+rot[0]] = planep1 + row1p1 + k+1;
+                            prismpt[3+rot[1]] = planep1 + row1p1 + k;
+                            prismpt[3+rot[2]] = plane   + rowp1  + k+1;
+                            
+                            conn[cnt++] = prismpt[0]; 
+                            conn[cnt++] = prismpt[2]; 
+                            conn[cnt++] = prismpt[1]; 
+                            conn[cnt++] = prismpt[5]; 
+                            
+                            conn[cnt++] = prismpt[3];
+                            conn[cnt++] = prismpt[5];
+                            conn[cnt++] = prismpt[0];
+                            conn[cnt++] = prismpt[1];
+                            
+                            conn[cnt++] = prismpt[5];
+                            conn[cnt++] = prismpt[3];
+                            conn[cnt++] = prismpt[4];
+                            conn[cnt++] = prismpt[1];
+                        }
+                        
+                        // bottom prism block 
+                        prismpt[rot[0]] = plane   + row   + np-i-2;
+                        prismpt[rot[1]] = plane   + row   + np-i-1;
+                        prismpt[rot[2]] = planep1 + row1  + np-i-2;
+                        
+                        prismpt[3+rot[0]] = plane   + rowp1  + np-i-2;
+                        prismpt[3+rot[1]] = plane   + rowp1  + np-i-1;
+                        prismpt[3+rot[2]] = planep1 + row1p1 + np-i-2;
+
+                        conn[cnt++] = prismpt[0];
+                        conn[cnt++] = prismpt[1]; 
+                        conn[cnt++] = prismpt[4]; 
+                        conn[cnt++] = prismpt[2]; 
+                        
+                        conn[cnt++] = prismpt[4];
+                        conn[cnt++] = prismpt[3]; 
+                        conn[cnt++] = prismpt[0]; 
+                        conn[cnt++] = prismpt[2]; 
+                        
+                        conn[cnt++] = prismpt[3]; 
+                        conn[cnt++] = prismpt[4]; 
+                        conn[cnt++] = prismpt[5]; 
+                        conn[cnt++] = prismpt[2]; 
+                        
+                        row  += np-i;
+                        row1 += np-i-1;
+                    }
+                    
+                }
+                plane += (np-i)*np;
+            }
+        }
+
     }//end of namespace
 }//end of namespace

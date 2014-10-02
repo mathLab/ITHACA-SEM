@@ -203,6 +203,8 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT DNekScalBlkMatSharedPtr CreateStaticCondMatrix(
                 const MatrixKey &mkey);
 
+            LOCAL_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(Array<OneD, int> &conn, bool standard = true);
+
         private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;

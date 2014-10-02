@@ -107,30 +107,7 @@ namespace Nektar
                 
                 m_f->m_fieldPts->m_pts = newpts; 
                 
-                // evaluate new function
-                
-#if 0 //just based on first four fields
-                WARNINGL0(m_f->m_fieldPts->m_fields.size() <= 4,"Expression evaluator is only "
-                        " currently set up for 4 variables and will take the first 4 variables");
-
-                LibUtilities::AnalyticExpressionEvaluator strEval;
-                string varstr = m_f->m_fieldPts->m_fields[0];
-                vector<Array<OneD, const NekDouble> > interpfields; 
-                interpfields.resize(4);
-
-                interpfields[0] = m_f->m_fieldPts->m_pts[coordim];
-                for(int i = 1; i < min(nfields-1,4); ++i)
-                {
-                    varstr += " " + m_f->m_fieldPts->m_fields[i];
-                    interpfields[i] = m_f->m_fieldPts->m_pts[i+coordim];
-                }
-                
-                int ExprId  = -1;
-                std::string str = m_config["fieldstr"].as<string>();
-                ExprId = strEval.DefineFunction(varstr.c_str(), str);
-
-                strEval.Evaluate(ExprId,interpfields,m_f->m_fieldPts->m_pts[nfields+coordim-1]);
-#else
+                // evaluate new function                
                 LibUtilities::AnalyticExpressionEvaluator strEval;
                 string varstr = "x y z";
                 vector<Array<OneD, const NekDouble> > interpfields; 
@@ -150,7 +127,7 @@ namespace Nektar
                 ExprId = strEval.DefineFunction(varstr.c_str(), str);
 
                 strEval.Evaluate(ExprId,interpfields,m_f->m_fieldPts->m_pts[nfields+coordim-1]);
-#endif
+
                 // set up field name if provided otherwise called "isocon" from default
                 m_f->m_fieldPts->m_fields.push_back(m_config["fieldname"].as<string>());
             }

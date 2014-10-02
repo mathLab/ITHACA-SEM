@@ -60,7 +60,7 @@ ProcessInterpPointDataToFld::ProcessInterpPointDataToFld(FieldSharedPtr f)
         : ProcessModule(f)
 {
 
-    m_config["interpcoord"] = ConfigOption(false, "0",
+    m_config["interpcoord"] = ConfigOption(false, "-1",
                                     "coordinate id ot use for interpolation");
 
 }
@@ -72,10 +72,6 @@ ProcessInterpPointDataToFld::~ProcessInterpPointDataToFld()
 void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 {
     int i,j;
-    if(m_f->m_verbose)
-    {
-        cout << "Processing point data interpolation (linear)" << endl;
-    }
 
     // Check for command line point specification if no .pts file specified
     ASSERTL0(m_f->m_fieldPts != NullFieldPts,
@@ -101,12 +97,22 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
 
     int coord_id = m_config["interpcoord"].as<int>();
+    ASSERTL0(coord_id <= m_f->m_fieldPts->m_ptsDim - 1,
+        "interpcoord is bigger than the Pts files dimension");
+
+    m_f->m_fieldPts->m_weights = Array<OneD, Array<OneD, float> >(totpoints);
+    m_f->m_fieldPts->m_neighInds = Array<OneD, Array<OneD, unsigned int> >(totpoints);
 
     // interpolate points and transform
     Array<OneD, NekDouble> intfields(m_f->m_fieldPts->m_nFields);
     for(i = 0; i < totpoints; ++i)
     {
-        m_f->m_fieldPts->Interp1DPts(coords[coord_id][i],intfields);
+        Array<OneD,NekDouble> physCoords(m_f->m_fieldPts->m_ptsDim);
+        for (j = 0; j < m_f->m_fieldPts->m_ptsDim; ++j)
+        {
+            physCoords[j] = coords[j][i];
+        }
+        m_f->m_fieldPts->InterpPts(i, physCoords, intfields, coord_id);
         for(j = 0; j < m_f->m_fieldPts->m_nFields; ++j)
         {
             m_f->m_exp[j]->SetPhys(i,intfields[j]);

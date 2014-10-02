@@ -1380,35 +1380,37 @@ namespace Nektar
         void MeshGraph::SetDomainRange (NekDouble xmin, NekDouble xmax, NekDouble ymin, 
                              NekDouble ymax, NekDouble zmin, NekDouble zmax)
         {
+            m_domainRange->m_checkShape = false;
+
             if(m_domainRange == NullDomainRangeShPtr)
             {
                 m_domainRange = MemoryManager<DomainRange>::AllocateSharedPtr();
-                m_domainRange->doXrange = true;
+                m_domainRange->m_doXrange = true;
             }
             
-            m_domainRange->xmin = xmin;
-            m_domainRange->xmax = xmax;
+            m_domainRange->m_xmin = xmin;
+            m_domainRange->m_xmax = xmax;
             
             if(ymin == NekConstants::kNekUnsetDouble)
             {
-                m_domainRange->doYrange = false;
+                m_domainRange->m_doYrange = false;
             }
             else
             {
-                m_domainRange->doYrange = true;
-                m_domainRange->ymin = ymin;
-                m_domainRange->ymax = ymax;
+                m_domainRange->m_doYrange = true;
+                m_domainRange->m_ymin = ymin;
+                m_domainRange->m_ymax = ymax;
             }
 
             if(zmin == NekConstants::kNekUnsetDouble)
             {
-                m_domainRange->doZrange = false;
+                m_domainRange->m_doZrange = false;
             }
             else
             {
-                m_domainRange->doZrange = true;
-                m_domainRange->zmin = zmin;
-                m_domainRange->zmax = zmax;
+                m_domainRange->m_doZrange = true;
+                m_domainRange->m_zmin = zmin;
+                m_domainRange->m_zmax = zmax;
             }
         }
 
@@ -1422,19 +1424,19 @@ namespace Nektar
                 int coordim = geom.GetCoordim();
                 
                 // exclude elements outside x range if all vertices not in region 
-                if(m_domainRange->doXrange)
+                if(m_domainRange->m_doXrange)
                 {
                     int ncnt_low = 0;
                     int ncnt_up = 0;
                     for(int i = 0; i < nverts; ++i)
                     {
                         NekDouble xval = (*geom.GetVertex(i))[0];
-                        if(xval < m_domainRange->xmin)
+                        if(xval < m_domainRange->m_xmin)
                         {
                             ncnt_low++;
                         }
 
-                        if(xval > m_domainRange->xmax)
+                        if(xval > m_domainRange->m_xmax)
                         {
                             ncnt_up++;
                         }
@@ -1450,19 +1452,19 @@ namespace Nektar
                 }
 
                 // exclude elements outside y range if all vertices not in region 
-                if(m_domainRange->doYrange)
+                if(m_domainRange->m_doYrange)
                 {
                     int ncnt_low = 0;
                     int ncnt_up  = 0;
                     for(int i = 0; i < nverts; ++i)
                     {
                         NekDouble yval = (*geom.GetVertex(i))[1];
-                        if(yval < m_domainRange->ymin)
+                        if(yval < m_domainRange->m_ymin)
                         {
                             ncnt_low++;
                         }
 
-                        if(yval > m_domainRange->ymax)
+                        if(yval > m_domainRange->m_ymax)
                         {
                             ncnt_up++;
                         }
@@ -1480,7 +1482,7 @@ namespace Nektar
                 if(coordim > 2)
                 {
                     // exclude elements outside z range if all vertices not in region 
-                    if(m_domainRange->doZrange)
+                    if(m_domainRange->m_doZrange)
                     {
                         int ncnt_low = 0;
                         int ncnt_up  = 0;
@@ -1489,12 +1491,12 @@ namespace Nektar
                         {
                             NekDouble zval = (*geom.GetVertex(i))[2];
 
-                            if(zval < m_domainRange->zmin)
+                            if(zval < m_domainRange->m_zmin)
                             {
                                 ncnt_low++;
                             }
 
-                            if(zval > m_domainRange->zmax)
+                            if(zval > m_domainRange->m_zmax)
                             {
                                 ncnt_up++;
                             }
@@ -1523,7 +1525,7 @@ namespace Nektar
             {
                 int nverts  = geom.GetNumVerts();
                 
-                if(m_domainRange->doXrange)
+                if(m_domainRange->m_doXrange)
                 {
                     int ncnt_low = 0;
                     int ncnt_up = 0;
@@ -1531,12 +1533,12 @@ namespace Nektar
                     for(int i = 0; i < nverts; ++i)
                     {
                         NekDouble xval = (*geom.GetVertex(i))[0];
-                        if(xval < m_domainRange->xmin)
-                        {
+                        if(xval < m_domainRange->m_xmin)
+                        {                        
                             ncnt_low++;
                         }
 
-                        if(xval > m_domainRange->xmax)
+                        if(xval > m_domainRange->m_xmax)
                         {
                             ncnt_up++;
                         }
@@ -1551,19 +1553,19 @@ namespace Nektar
                     }
                 }
                 
-                if(m_domainRange->doYrange)
+                if(m_domainRange->m_doYrange)
                 {
                     int ncnt_low = 0;
                     int ncnt_up = 0;
                     for(int i = 0; i < nverts; ++i)
                     {
                         NekDouble yval = (*geom.GetVertex(i))[1];
-                        if(yval < m_domainRange->ymin)
+                        if(yval < m_domainRange->m_ymin)
                         {
                             ncnt_low++;
                         }
 
-                        if(yval > m_domainRange->ymax)
+                        if(yval > m_domainRange->m_ymax)
                         {
                             ncnt_up++;
                         }
@@ -1578,7 +1580,7 @@ namespace Nektar
                     }
                 }
 
-                if(m_domainRange->doZrange)
+                if(m_domainRange->m_doZrange)
                 {
                     int ncnt_low = 0;
                     int ncnt_up  = 0;
@@ -1586,12 +1588,12 @@ namespace Nektar
                     {
                         NekDouble zval = (*geom.GetVertex(i))[2];
 
-                        if(zval < m_domainRange->zmin)
+                        if(zval < m_domainRange->m_zmin)
                         {
                             ncnt_low++;
                         }
 
-                        if(zval > m_domainRange->zmax)
+                        if(zval > m_domainRange->m_zmax)
                         {
                             ncnt_up++;
                         }
@@ -1605,6 +1607,16 @@ namespace Nektar
                         returnval = false;
                     }
                 }
+
+                
+                if(m_domainRange->m_checkShape)
+                {
+                    if(geom.GetShapeType() != m_domainRange->m_shapeType)
+                    {
+                        returnval = false;
+                    }
+                }
+
             }
 
             return returnval;
@@ -2545,8 +2557,6 @@ namespace Nektar
                 }
             }
         }
-
-
 
 
 

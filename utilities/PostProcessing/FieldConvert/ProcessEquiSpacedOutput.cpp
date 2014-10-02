@@ -58,6 +58,9 @@ namespace Nektar
         {
             f->m_fieldPts = MemoryManager<FieldPts>::AllocateSharedPtr();
             f->m_setUpEquiSpacedFields = true;
+
+            m_config["tetonly"] = ConfigOption(true,"NotSet","Only process tetrahedral elements");
+
         }
         
         ProcessEquiSpacedOutput::~ProcessEquiSpacedOutput()
@@ -161,6 +164,21 @@ namespace Nektar
 
             for(int i = 0; i < nel; ++i)
             {
+                if(m_config["tetonly"].m_beenSet)
+                {
+                    if(m_f->m_exp[0]->GetExp(i)->DetShapeType() != LibUtilities::eTetrahedron)
+                    {
+                        if(i == nel-1)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+
                 switch(m_f->m_exp[0]->GetExp(i)->DetShapeType())
                 {
                 case LibUtilities::eSegment:
@@ -362,7 +380,6 @@ namespace Nektar
                     m_f->m_fieldPts->m_fields.push_back(m_f->m_fielddef[0]->m_fields[n]);
                 }
             }
-
         }
     }
 }

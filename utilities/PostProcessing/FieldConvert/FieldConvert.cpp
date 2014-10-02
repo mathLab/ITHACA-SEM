@@ -59,7 +59,10 @@ int main(int argc, char* argv[])
                 "in which any vertex is contained.")
         ("nprocs", po::value<int>(),
                 "Used to define nprocs if running serial problem to mimic "
-                "parallel run.")
+         "parallel run.")
+        ("onlyshape", po::value<string>(),
+                 "Only use element with defined shape type i.e. -onlyshape "
+         " Tetrahedron")
         ("procid", po::value<int>(),
                 "Process as single procid of a partition of size nproc "
                 "(-nproc must be specified).")

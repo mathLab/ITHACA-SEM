@@ -137,15 +137,18 @@ namespace Nektar
         // set restriction on domain range for post-processing. 
         struct DomainRange
         {
-            bool doXrange; 
-            NekDouble xmin;
-            NekDouble xmax;
-            bool doYrange; 
-            NekDouble ymin;
-            NekDouble ymax;
-            bool doZrange; 
-            NekDouble zmin;
-            NekDouble zmax;
+            bool m_doXrange; 
+            NekDouble m_xmin;
+            NekDouble m_xmax;
+            bool m_doYrange; 
+            NekDouble m_ymin;
+            NekDouble m_ymax;
+            bool m_doZrange; 
+            NekDouble m_zmin;
+            NekDouble m_zmax;
+
+            bool m_checkShape;
+            LibUtilities::ShapeType m_shapeType; 
         };
         
         typedef boost::shared_ptr<DomainRange> DomainRangeShPtr;

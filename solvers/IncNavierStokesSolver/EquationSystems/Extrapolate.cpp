@@ -221,8 +221,8 @@ namespace Nektar
             case MultiRegions::e2D:
             case MultiRegions::e3DH1D:
                 {
-                    m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[0],BndValues[0]);
-                    m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[1],BndValues[1]);
+                    elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[0],BndValues[0]);
+                    elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[1],BndValues[1]);
                     Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],Pvals);
                 }
                 break;
@@ -246,9 +246,9 @@ namespace Nektar
                 break;
             case MultiRegions::e3D:
                 {
-                    m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[0],BndValues[0]);
-                    m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[1],BndValues[1]);
-                    m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[2],BndValues[2]);
+                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[0],BndValues[0]);
+                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[1],BndValues[1]);
+                    elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[2],BndValues[2]);
                     Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Pvals);
                 }
                 break;

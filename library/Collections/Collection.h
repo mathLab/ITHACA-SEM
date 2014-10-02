@@ -73,6 +73,8 @@ namespace Nektar {
                 
         static CoalescedGeomDataSharedPtr GeomDataNull;
 
+        typedef map<OperatorType, ImplementationType> OperatorImpMap;
+
         /**
          * @brief Collection
          */
@@ -82,7 +84,7 @@ namespace Nektar {
             
             Collection(StdRegions::StdExpansionSharedPtr pExp,
                        vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                       ImplementationType pImpType = eNoType);
+                       OperatorImpMap &impTypes);
             
             void ApplyOperator(const OperatorType                 &op,
                                const Array<OneD, const NekDouble> &inarray,
@@ -112,7 +114,7 @@ namespace Nektar {
                 Array<OneD, NekDouble> wsp(m_ops[op]->GetWspSize());
                 (*m_ops[op])(inarray, output0, output1, output2, wsp);
             }
-            
+
         protected:
             StdRegions::StdExpansionSharedPtr                     m_stdExp;
             vector<SpatialDomains::GeometrySharedPtr>             m_geom;

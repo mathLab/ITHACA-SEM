@@ -188,49 +188,30 @@ namespace Nektar {
 
         Collection::Collection(StdRegions::StdExpansionSharedPtr pExp,
                                vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                               ImplementationType  pImpType)
+                               OperatorImpMap &impTypes)
             : m_stdExp(pExp), m_geom(pGeom)
         {
-            
-            ImplementationType ImpType;
+            OperatorImpMap::iterator it;
 
-            if(pImpType == eNoType)
-            {
-                ImpType = eIterPerExp;
-            }
-            else
-            {
-                ImpType = pImpType;
-            }
-
-            OperatorKey bwdTrans       (pExp->DetShapeType(), eBwdTrans, ImpType);
-            OperatorKey iproductWRTBase(pExp->DetShapeType(), eIProductWRTBase, ImpType);
-            OperatorKey physDeriv      (pExp->DetShapeType(), ePhysDeriv, ImpType);
-            OperatorKey iproductWRTDerivBase(pExp->DetShapeType(), eIProductWRTDerivBase, ImpType);
-
-            
+            // Initialise geometry data.
             m_geomData = MemoryManager<CoalescedGeomData>::AllocateSharedPtr();
-            
-                
-            
-            if(ImpType == eSumFac)
-            {
-                if(pExp->DetShapeType() != LibUtilities::ePrism)
-                {
-                    m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
-                    m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
 
-                    m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
-                    m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);
-                }
-            }
-            else
+            // Loop over all operator types.
+            for (int i = 0; i < SIZE_OperatorType; ++i)
             {
-                m_ops[eBwdTrans]  = GetOperatorFactory().CreateInstance(bwdTrans,  pExp, pGeom, m_geomData);
-                
-                m_ops[eIProductWRTBase] = GetOperatorFactory().CreateInstance(iproductWRTBase, pExp, pGeom,m_geomData);
-                m_ops[ePhysDeriv] = GetOperatorFactory().CreateInstance(physDeriv, pExp, pGeom, m_geomData);
-                m_ops[eIProductWRTDerivBase] = GetOperatorFactory().CreateInstance(iproductWRTDerivBase, pExp, pGeom, m_geomData);
+                OperatorType opType = (OperatorType)i;
+                ImplementationType impType;
+
+                it = impTypes.find(opType);
+                impType = it == impTypes.end() ? eIterPerExp : it->second;
+
+                OperatorKey opKey(pExp->DetShapeType(), opType, impType);
+                if (GetOperatorFactory().ModuleExists(opKey))
+                {
+                    cout << opKey << endl;
+                    m_ops[opType] = GetOperatorFactory().CreateInstance(
+                        opKey, pExp, pGeom, m_geomData);
+                }
             }
         }
     }

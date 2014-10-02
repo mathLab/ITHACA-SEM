@@ -72,9 +72,9 @@ namespace Nektar {
         
         std::ostream &operator<<(std::ostream &os, OperatorKey const &p)
         {
-            os << boost::get<0>(p) << " "
-               << boost::get<1>(p) << " "
-               << boost::get<2>(p) << endl;
+            os <<                       boost::get<0>(p)  << " "
+               << OperatorTypeMap      [boost::get<1>(p)] << " "
+               << ImplementationTypeMap[boost::get<2>(p)];
             return os;
         }
 

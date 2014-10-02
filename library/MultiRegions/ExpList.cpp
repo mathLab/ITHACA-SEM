@@ -59,6 +59,7 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
+#include <Collections/CollectionOptimisation.hpp>
 #include <Collections/Operator.h>
 
 namespace Nektar
@@ -2571,7 +2572,10 @@ namespace Nektar
             return NullExpListSharedPtr;
         }
 
-        
+        /**
+         * @brief Construct collections of elements containing a single element
+         * type and polynomial order from the list of expansions.
+         */
         void ExpList::CreateCollections(Collections::ImplementationType ImpType)
         {
             map<LibUtilities::ShapeType,
@@ -2579,12 +2583,15 @@ namespace Nektar
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
-            // clear vectors in case previously called 
+            // Figure out optimisation parameters
+            Collections::CollectionOptimisation colOpt(m_session, ImpType);
+            
+            // clear vectors in case previously called
             m_collections.clear();
             m_coll_coeff_offset.clear();
             m_coll_phys_offset.clear();
 
-
+            // Loop over expansions, and create collections for each element type
             for (int i = 0; i < m_exp->size(); ++i)
             {
                 collections[(*m_exp)[i]->DetShapeType()].push_back(std::pair<LocalRegions::ExpansionSharedPtr,int> ((*m_exp)[i],i));
@@ -2652,7 +2659,17 @@ namespace Nektar
                     ASSERTL0(false,"Shape type not setup");
                     break;
                 }
-                
+
+                Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+                Collections::OperatorImpMap::iterator cIt;
+                for (cIt = impTypes.begin(); cIt != impTypes.end(); ++cIt)
+                {
+                    cout << Collections::OperatorTypeMap[cIt->first]
+                         << " -> "
+                         << Collections::ImplementationTypeMap[cIt->second]
+                         << endl;
+                }
+
                 vector<SpatialDomains::GeometrySharedPtr> geom;
                 
                 int prevCoeffOffset     = m_coeff_offset[it->second[0].second];
@@ -2668,7 +2685,7 @@ namespace Nektar
                 if(it->second.size() == 1) // single element case
                 {
                     geom.push_back(it->second[0].first->GetGeom());
-                    Collections::Collection tmp(stdExp, geom, ImpType);
+                    Collections::Collection tmp(stdExp, geom, impTypes);
                     m_collections.push_back(tmp);
                 }
                 else
@@ -2688,7 +2705,7 @@ namespace Nektar
                         {
                             if (i != it->second.size() - 1 )
                             {
-                                Collections::Collection tmp(stdExp, geom, ImpType);
+                                Collections::Collection tmp(stdExp, geom, impTypes);
                                 m_collections.push_back(tmp);
 
                                 // start new geom list 
@@ -2702,7 +2719,7 @@ namespace Nektar
                             else // end this list
                             {
                                 geom.push_back(it->second[i].first->GetGeom());
-                                Collections::Collection tmp(stdExp, geom, ImpType);
+                                Collections::Collection tmp(stdExp, geom, impTypes);
                                 m_collections.push_back(tmp);
                                 geom.clear();
                                 collcnt = 0;

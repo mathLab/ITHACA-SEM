@@ -57,22 +57,38 @@ namespace Nektar {
 
         class CoalescedGeomData;
 
-
         enum OperatorType
         {
             eBwdTrans,
             eFwdTrans,
             eIProductWRTBase,
             eIProductWRTDerivBase,
-            ePhysDeriv
+            ePhysDeriv,
+            SIZE_OperatorType
         };
         
+        const char* const OperatorTypeMap[] =
+        {
+            "BwdTrans",
+            "FwdTrans",
+            "IProductWRTBase",
+            "IProductWRTDerivBase",
+            "PhysDeriv"
+        };
+
         enum ImplementationType
         {
-            eNoType,
             eIterPerExp,
             eSumFac,
-            eStdMat
+            eStdMat,
+            SIZE_ImplementationType
+        };
+        
+        const char* const ImplementationTypeMap[] =
+        {
+            "IterPerExp",
+            "SumFac",
+            "StdMat"
         };
         
         class Operator;

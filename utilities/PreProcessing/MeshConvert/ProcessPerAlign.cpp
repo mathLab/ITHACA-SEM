@@ -186,8 +186,18 @@ namespace Nektar
                              sqrt(dx.abs2()) - 1.0) < 1e-8)
                     {
                         // Found match
-                        int id1 = c1->m_items[i]        ->GetFaceLink()->m_id;
-                        int id2 = c2->m_items[it->first]->GetFaceLink()->m_id;
+                        int id1, id2;
+
+                        if (c1->m_items[i]->GetConf().m_e == LibUtilities::eSegment)
+                        {
+                            id1 = c1->m_items[i]        ->GetEdgeLink()->m_id;
+                            id2 = c2->m_items[it->first]->GetEdgeLink()->m_id;
+                        }
+                        else
+                        {
+                            id1 = c1->m_items[i]        ->GetFaceLink()->m_id;
+                            id2 = c2->m_items[it->first]->GetFaceLink()->m_id;
+                        }
 
                         elmtDone.insert(it->first);
                         elmtPairs[i] = it->first;
@@ -246,10 +256,13 @@ namespace Nektar
                                      "Error identifying periodic vertices");
                         }
 
-                        perFaces[id1] = make_pair(
-                            c2->m_items[it->first]->GetFaceLink(), perVerts);
-                        perFaces[id2] = make_pair(
-                            c1->m_items[i]        ->GetFaceLink(), perVertsInv);
+                        if (c2->m_items[i]->GetConf().m_e != LibUtilities::eSegment)
+                        {
+                            perFaces[id1] = make_pair(
+                                c2->m_items[it->first]->GetFaceLink(), perVerts);
+                            perFaces[id2] = make_pair(
+                                c1->m_items[i]        ->GetFaceLink(), perVertsInv);
+                        }
                         break;
                     }
                 }

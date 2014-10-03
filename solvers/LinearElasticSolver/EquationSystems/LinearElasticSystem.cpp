@@ -62,7 +62,8 @@ namespace Nektar
     */
     inline void MappingIdealToRef(Array<OneD, NekDouble> x,
                                   Array<OneD, NekDouble> y,
-                                  DNekMat Jac)
+                                  Array<OneD, NekDouble> xf,
+                                  Array<OneD, NekDouble> yf)
     {
         char jobvl = 'N', jobvr = 'V';
         
@@ -81,15 +82,19 @@ namespace Nektar
         mapinv.Invert();
         
         Array<OneD, NekDouble> xref (n,0.0), yref (n,0.0);
+        //Array<OneD, NekDouble> xf   (n,0.0),   yf (n,0.0);
         
         xref[0] = -1.0;xref[1] =  1.0;xref[2] = -1.0;
-        yref[0] = -1.0;yref[1] = -1.0;yref[2] = 1.0;
+        yref[0] = -1.0;yref[1] = -1.0;yref[2] =  1.0;
         
-        Jac(0,0) = mapinv(0,0)*xref[0]+mapinv(0,1)*xref[1];
-        Jac(0,1) = mapinv(1,0)*xref[0]+mapinv(1,1)*xref[1];
-        
-        Jac(1,0) = mapinv(0,0)*yref[0]+mapinv(0,1)*yref[1];
-        Jac(1,1) = mapinv(1,0)*yref[0]+mapinv(1,1)*yref[1];
+        for (int i = 0; i < n; ++i)
+        {
+            for (int j = 0; j < n; ++j)
+            {
+                xf[i] += mapinv(i,j)*xref[j];
+                yf[i] += mapinv(i,j)*yref[j];
+            }
+        }
     }
 
     LinearElasticSystem::LinearElasticSystem(
@@ -678,11 +683,18 @@ namespace Nektar
                 ::AllocateSharedPtr(bkey0, bkey1, LibUtilities::eNodalTriElec, geom);
                 */
                 
-                DNekMat Jac   (nVel, nVel, 0.0, eFULL);
+                Array<OneD, NekDouble> xf(3.0, 0.0);
+                Array<OneD, NekDouble> yf(3.0, 0.0);
                 
                 MappingIdealToRef(xVertLIN,
                                   yVertLIN,
-                                  Jac);
+                                  xf,
+                                  yf);
+                
+                DNekMat Jac   (nVel, nVel, 0.0, eFULL);
+                
+                Jac(0,0) = xf[0];Jac(0,1) = xf[1];
+                Jac(1,0) = yf[0];Jac(1,1) = yf[1];
                 
                 for (j = 0; j < nqel; ++j)
                 {
@@ -703,7 +715,7 @@ namespace Nektar
                     Gnew[1] = Jnew[0]*Jnew[2] + Jnew[1]*Jnew[3];
                     Gnew[2] = Jnew[0]*Jnew[2] + Jnew[1]*Jnew[3];
                     Gnew[3] = Jnew[2]*Jnew[2] + Jnew[3]*Jnew[3];
-                    
+                
                     // Compute eigenvalues/eigenvectors.
                     char jobvl = 'N', jobvr = 'V';
                     
@@ -730,18 +742,19 @@ namespace Nektar
                     {
                         eval(nv,nv) = sqrt(eval(nv,nv))-1;
                     }
+
                     
                     DNekMat beta = evec * eval * evecinv;
                     
                     NekDouble term = 0.0;
                 
-                    
                     tmpstress[0][0][offset+j] = -beta(0,0);
                     tmpstress[1][0][offset+j] = -beta(0,1);
                     tmpstress[0][1][offset+j] = -beta(1,0);
                     tmpstress[1][1][offset+j] = -beta(1,1);
-                    
                 }
+                
+                cout << endl;
                 Array<OneD, NekDouble> tmp2;
                 
                 if (deriv[0][0].num_elements() != exp->GetTotPoints())
@@ -757,15 +770,24 @@ namespace Nektar
                                 tmp3 = tmpstress[1][1] + offset, 1);
                 }
             }
-
+            
             Array<OneD, NekDouble> tmpderiv(m_fields[0]->GetNpoints());
             
             for (nv = 0; nv < nVel; ++nv)
             {
 
-                m_fields[nv]->PhysDeriv(0, tmpstress[nv][0], tmpderiv);
-                m_fields[nv]->PhysDeriv(1, tmpstress[nv][1], m_temperature[nv]);
-                Vmath::Vadd(m_fields[nv]->GetNpoints(), tmpderiv, 1, m_temperature[nv], 1, m_temperature[nv], 1);
+                m_fields[nv]->PhysDeriv(0,
+                                        tmpstress[nv][0],
+                                        tmpderiv);
+                
+                m_fields[nv]->PhysDeriv(1,
+                                        tmpstress[nv][1],
+                                        m_temperature[nv]);
+                
+                Vmath::Vadd(m_fields[nv]->GetNpoints(),
+                            tmpderiv, 1,
+                            m_temperature[nv], 1,
+                            m_temperature[nv], 1);
                 
                 Vmath::Vcopy(m_fields[nv]->GetNpoints(),
                              m_temperature[nv], 1,

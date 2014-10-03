@@ -205,6 +205,11 @@ namespace Nektar
                 Vmath::Vvtvp(nPoints, tmp2, 1, tmp2, 1, tmp, 1, tmp, 1);
             }
 
+            if (!m_constDensity)
+            {
+                Vmath::Vmul(nPoints, v_GetDensity(pFields), 1, tmp, 1, tmp, 1);
+            }
+
             if (m_homogeneous)
             {
                 for (i = 0; i < 3; ++i)

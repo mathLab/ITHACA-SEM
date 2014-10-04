@@ -70,6 +70,7 @@ namespace Nektar
                 m_outFile.open(outName.c_str());
                 ASSERTL0(m_outFile.good(), "Unable to open: '" + outName + "'");
             }
+            pSession->LoadParameter("LZ", m_homogeneousLength, 0.0);
 
             ASSERTL0(pParams.find("OutputFrequency") != pParams.end(),
                      "Missing parameter 'OutputFrequency'.");
@@ -148,7 +149,7 @@ namespace Nektar
 
                 v_GetVelocity(pFields, i, u[i]);
 
-                if (m_homogeneous)
+                if (m_homogeneous && pFields[i]->GetWaveSpace())
                 {
                     pFields[i]->HomogeneousBwdTrans(u[i], u[i]);
                 }
@@ -163,8 +164,9 @@ namespace Nektar
 
             if (m_homogeneous)
             {
-                pFields[0]->HomogeneousFwdTrans(tmp, tmp);
-                Ek = pFields[0]->GetPlane(0)->Integral(tmp) * 2.0 * M_PI;
+                Array<OneD, NekDouble> tmp2(nPoints, 0.0);
+                pFields[0]->HomogeneousFwdTrans(tmp, tmp2);
+                Ek = pFields[0]->GetPlane(0)->Integral(tmp2) * 2.0 * M_PI;
             }
             else
             {

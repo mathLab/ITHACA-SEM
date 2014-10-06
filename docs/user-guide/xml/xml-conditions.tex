@@ -214,7 +214,21 @@ the field data is specified. The expansion order used to generate the .rst file
 must be the same as that for the simulation. The filename must be specified
 relative to the location of the .xml file.
 
-Other examples of this input features can be the insertion of a forcing term,
+With the additional argument \inltt{TIMEDEPENDENT="1"}, different files can be
+loaded for each timestep. The filenames are defined using
+\href{http://www.boost.org/doc/libs/1_56_0/libs/format/doc/format.html#syntax}{boost::format syntax}
+where the step time is used as variable. For example, the function
+\inltt{Baseflow} would load the files \inltt{U0V0\_1.00000000E-05.fld},
+\inltt{U0V0\_2.00000000E-05.fld} and so on.
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="Baseflow">
+	<F VAR="U0,V0" TIMEDEPENDENT="1"FILE="U0V0_%14.8R.fld"/>
+</FUNCTION>
+\end{lstlisting}
+
+
+Other examples of this input feature can be the insertion of a forcing term,
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="BodyForce">

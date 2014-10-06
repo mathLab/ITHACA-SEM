@@ -127,13 +127,11 @@ namespace Nektar
 	    Array<OneD, Array<OneD, NekDouble> > q1(NumVar_SFD);
 	    Array<OneD, Array<OneD, NekDouble> > qBar0(NumVar_SFD);
 	    Array<OneD, Array<OneD, NekDouble> > qBar1(NumVar_SFD);
-	    Array<OneD, Array<OneD, NekDouble> > partialSteadyFlow(NumVar_SFD); //Only for coupling with SFD
 	    
 	    for(int i = 0; i < NumVar_SFD; ++i)
 	    {
 		q0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //q0 is initialised
 		qBar0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //qBar0 is initially set to zero
-		partialSteadyFlow[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //Used only for coupling SFD and Arnoldi algorithm
 	    }
 	    
 	    ///Definition of variables used in this algorithm
@@ -143,7 +141,6 @@ namespace Nektar
 	    m_NonConvergingStepsCounter = 0;
 	    Diff_q_qBar                 = 1.0;
 	    Diff_q1_q0                  = 1.0;
-	    NekDouble GlobalMin(1.0);
 	    cpuTime                     = 0.0;
 	    elapsed                     = 0.0;
 	    totalTime                   = 0.0;
@@ -176,61 +173,39 @@ namespace Nektar
 		    ///Loop for coupling between SFD method and Arnoldi algorithm 
 		    if (m_EvolutionOperator == eOptimizedSteadyState && FlowPartiallyConverged == false)
 		    {   
-			if(Diff_q_qBar < GlobalMin) 
+			
+			m_NonConvergingStepsCounter++;
+			
+			if (Diff_q_qBar < PartialTOL)
 			{
-			    ///The norm is decreasing (the flow is getting closer to its steady-state)
-			    GlobalMin = Diff_q_qBar;
+			    cout << "\n\t The SFD method is converging: we compute stability analysis using"
+			    " the 'partially converged' steady state as base flow.\n" << endl;
 			    
-			    ///The curent flow field is store in 'partialSteadyFlow'
-			    for(int i = 0; i < NumVar_SFD; ++i)
-			    {
-				Vmath::Vcopy(q0[i].num_elements(), q0[i], 1, partialSteadyFlow[i], 1);
-			    }
-			    
-			    if (GlobalMin < PartialTOL)
-			    {
-				cout << "\n\t The SFD method is converging: we compute stability analysis using"
-				" the current flow field as base flow.\n" << endl;
-				//We store the "partially converged" steady state
-				m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
-				m_Check_BaseFlow++;				
-				
-				A->GetAdvObject()->SetBaseFlow(partialSteadyFlow); //Set up the the Base Flow used by the Arnoldi algotithm 
-				DriverModifiedArnoldi::v_Execute(out);
-				ComputeOptimization();
-				FlowPartiallyConverged = true;
-			    } 
-			    
-			    m_NonConvergingStepsCounter = 0;
-			}
-			else if (m_NonConvergingStepsCounter*m_dt*m_infosteps > TimeToRestart)
-			{
-			    cout << "\n\t The SFD method is NOT converging: we compute stability analysis using"
-			    " the 'best' approximation of the steady-state as base flow.\n" << endl;
-			    
-			    //We store the previous 'best' approximation of the steady-state
-			    for(int i = 0; i < NumVar_SFD; ++i)
-			    {
-				m_equ[m_nequ - 1]->CopyToPhysField(i, partialSteadyFlow[i]); 
-				qBar0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //qBar is re-initialised to zero
-			    }
-			    m_equ[m_nequ-1] ->TransPhysToCoeff();
-			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
+			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow); //We store the "partially converged" steady state
 			    m_Check_BaseFlow++;
 			    
-			    A->GetAdvObject()->SetBaseFlow(partialSteadyFlow); //Set up the the "Base Flow" used by the Arnoldi algotithm 
+			    A->GetAdvObject()->SetBaseFlow(q0); 
 			    DriverModifiedArnoldi::v_Execute(out);
 			    ComputeOptimization();
-			    GlobalMin = 10.0;
-			    m_NonConvergingStepsCounter = 0;			    
+			    FlowPartiallyConverged = true;
+			    
 			}
-			else 
+			else if (m_NonConvergingStepsCounter*m_dt*m_infosteps >= TimeToRestart)
 			{
-			    m_NonConvergingStepsCounter++;
+			    cout << "\n\t We compute stability analysis using"
+			    " the current flow field as base flow.\n" << endl;
+			    
+			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow); //We store the current flow field
+			    m_Check_BaseFlow++;
+			    
+			    A->GetAdvObject()->SetBaseFlow(q0);
+			    DriverModifiedArnoldi::v_Execute(out);
+			    ComputeOptimization();
+			    m_NonConvergingStepsCounter = 0;			    
 			}
 		    }
 		}
-		
+				
 		if(m_checksteps && m_stepCounter&&(!((m_stepCounter+1)%m_checksteps)))
 		{                      
 		    m_Check++;                    
@@ -351,7 +326,7 @@ namespace Nektar
 		    X_input = X_output;
 		    Delta_input = Delta_output;
 		    EvalEV_ScalarSFD(X_output, Delta_output, alpha, F1);
-		    		    
+		    
 		    if (F1 > CurrentMin)
 		    {
 			Descending = false;
@@ -587,7 +562,7 @@ namespace Nektar
 	    {
 		cout << "\nWe also run the coupling between the SFD method and the Arnoldi method:" << endl;
 		cout << "  We run Arnoldi (and update SFD parameters) when |q-qBar|inf < " << PartialTOL << endl;
-		cout << "  or when |q-qBar|inf is not devreasing for" << TimeToRestart << "time units." << endl;
+		cout << "  or when |q-qBar|inf is not devreasing for " << TimeToRestart << " time units." << endl;
 	    }
 	    cout << "=======================================================================\n" << endl;
 	    #endif 

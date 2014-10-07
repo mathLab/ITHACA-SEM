@@ -8,7 +8,7 @@ IF (THIRDPARTY_BUILD_METIS)
         PREFIX ${TPSRC}
         URL ${TPURL}/modmetis-5.1.0_1.tar.bz2
         URL_MD5 "6c6816aea0f53db6c71b1d98ed4ad42b"
-        STAMP_DIR ${TPSRC}/stamp
+        STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/modmetis-5.1.0
         BINARY_DIR ${TPBUILD}/modmetis-5.1.0

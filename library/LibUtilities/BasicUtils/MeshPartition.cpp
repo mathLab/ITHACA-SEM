@@ -305,6 +305,10 @@ namespace Nektar
 
             x = vSubElement->FirstChildElement();
             i = 0;
+            if (x->FirstAttribute())
+            {
+                i = x->FirstAttribute()->IntValue();
+            }
             while(x)
             {
                 TiXmlAttribute* y = x->FirstAttribute();
@@ -781,7 +785,7 @@ namespace Nektar
             BoostVertexIterator    vertit, vertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
-            if (m_comm->GetRowComm()->GetRank() == 0)
+            if (m_comm->GetRowComm()->TreatAsRankZero())
             {
                 int acnt = 0;
                 int vcnt = 0;
@@ -1317,5 +1321,19 @@ namespace Nektar
             }
         }
 
+        void MeshPartition::GetElementIDs(const int procid, std::vector<unsigned int> &elmtid)
+        {
+            BoostVertexIterator    vertit, vertit_end;
+
+            ASSERTL0(procid < m_localPartition.size(),"procid is less than the number of partitions");
+            
+            // Populate lists of elements, edges and vertices required.
+            for ( boost::tie(vertit, vertit_end) = boost::vertices(m_localPartition[procid]);
+                  vertit != vertit_end;
+                  ++vertit)
+            {
+                elmtid.push_back(m_meshElements[m_localPartition[procid][*vertit].id].id);
+            }
+        }
     }
 }

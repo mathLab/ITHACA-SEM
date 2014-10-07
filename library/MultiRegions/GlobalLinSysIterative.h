@@ -49,15 +49,14 @@ namespace Nektar
         class ExpList;
 
         /// A global linear system.
-        class GlobalLinSysIterative : public GlobalLinSys
+        class GlobalLinSysIterative : virtual public GlobalLinSys
         {
         public:
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysIterative(
-                    const GlobalLinSysKey &pKey,
-                    const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<AssemblyMap>
-                                                           &pLocToGloMap);
+                    const GlobalLinSysKey                &pKey,
+                    const boost::weak_ptr<ExpList>       &pExpList,
+                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterative();
 
@@ -74,7 +73,6 @@ namespace Nektar
             PreconditionerSharedPtr                     m_precon;
 
             MultiRegions::PreconditionerType            m_precontype;
-            PreconditionerSharedPtr m_lowEnergyPrecon;
             
             int                                         m_totalIterations;
 
@@ -90,7 +88,6 @@ namespace Nektar
 
             /// Total counter of previous solutions
             int m_numPrevSols;
-
 
             /// A-conjugate projection technique
             void DoAconjugateProjection(
@@ -110,16 +107,10 @@ namespace Nektar
 
 
             void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
+
+            virtual void v_UniqueMap() = 0;
             
         private:
-
-            void printArray(
-                    const std::string& msg,
-                    const Array<OneD, const NekDouble>  &in,
-                    const int len,
-                    const int offset);
-
-
             void UpdateKnownSolutions(
                     const int pGlobalBndDofs,
                     const Array<OneD,const NekDouble> &pSolution,
@@ -142,8 +133,6 @@ namespace Nektar
             virtual void v_DoMatrixMultiply(
                     const Array<OneD, NekDouble>& pInput,
                           Array<OneD, NekDouble>& pOutput) = 0;
-
-            virtual void v_UniqueMap() = 0;
         };
     }
 }

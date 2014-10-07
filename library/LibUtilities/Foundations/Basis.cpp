@@ -598,23 +598,19 @@ namespace Nektar
                     }
                 }
                 break;
-					
-					//Fourier Real Half Mode
-					case eFourierHalfModeRe:
-					
-					m_bdata[0] = cos(M_PI*z[0]);
-					m_dbdata[0] = -M_PI*sin(M_PI*z[0]);
-					break;
-					
-					//Fourier Imaginary Half Mode
-				    case eFourierHalfModeIm:
-					
-					m_bdata[0] = -sin(M_PI*z[0]);
-					m_dbdata[0] = -M_PI*cos(M_PI*z[0]);
-					break;
 
-					
-					
+            //Fourier Real Half Mode
+            case eFourierHalfModeRe:
+                m_bdata[0] = cos(M_PI*z[0]);
+                m_dbdata[0] = -M_PI*sin(M_PI*z[0]);
+                break;
+
+            //Fourier Imaginary Half Mode
+            case eFourierHalfModeIm:
+                m_bdata[0] = -sin(M_PI*z[0]);
+                m_dbdata[0] = -M_PI*cos(M_PI*z[0]);
+                break;
+
             case eChebyshev:
                 {
                     mode = m_bdata.data();

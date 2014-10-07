@@ -33,8 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSVORTICITY
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSVORTICITY
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFIELD
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSFIELD
 
 #include "Module.h"
 
@@ -42,6 +42,7 @@ namespace Nektar
 {
     namespace Utilities
     {
+
         /**
          * @brief This processing module interpolates one field to another 
          */
@@ -65,11 +66,12 @@ namespace Nektar
 
             void InterpolateField(vector<MultiRegions::ExpListSharedPtr> &field0,
                                   vector<MultiRegions::ExpListSharedPtr> &field1,
-                                  Array<OneD, NekDouble>                      x,
-                                  Array<OneD, NekDouble>                      y,
-                                  Array<OneD, NekDouble>                      z,
-                                  NekDouble                                   clamp_low,
-                                  NekDouble                                   clamp_up);
+                                  Array<OneD, NekDouble>                  x,
+                                  Array<OneD, NekDouble>                  y,
+                                  Array<OneD, NekDouble>                  z,
+                                  NekDouble                               clamp_low,
+                                  NekDouble                               clamp_up,
+                                  NekDouble                               def_value);
         };
     }
 }

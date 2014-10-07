@@ -161,6 +161,7 @@ namespace Nektar {
                     }
                 }
 
+#if 0 
                 // Print out operator map
                 map<OperatorType, map<ElmtOrder, ImplementationType> >::iterator mIt;
                 map<ElmtOrder, ImplementationType>::iterator eIt;
@@ -177,6 +178,7 @@ namespace Nektar {
                              << endl;
                     }
                 }
+#endif
             }
 
             OperatorImpMap GetOperatorImpMap(StdRegions::StdExpansionSharedPtr pExp)

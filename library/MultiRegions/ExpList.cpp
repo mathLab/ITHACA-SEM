@@ -2661,6 +2661,7 @@ namespace Nektar
                 }
 
                 Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+#if 0 
                 Collections::OperatorImpMap::iterator cIt;
                 for (cIt = impTypes.begin(); cIt != impTypes.end(); ++cIt)
                 {
@@ -2669,7 +2670,8 @@ namespace Nektar
                          << Collections::ImplementationTypeMap[cIt->second]
                          << endl;
                 }
-
+#endif
+                
                 vector<SpatialDomains::GeometrySharedPtr> geom;
                 
                 int prevCoeffOffset     = m_coeff_offset[it->second[0].second];

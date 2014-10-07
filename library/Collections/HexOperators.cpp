@@ -67,7 +67,9 @@ namespace Nektar
                   m_colldir1(pExp->GetBasis(1)->Collocation()),
                   m_colldir2(pExp->GetBasis(2)->Collocation())
             {
-                m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,m_nmodes0*m_nmodes1*m_nmodes2));
+                //m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,m_nmodes0*m_nmodes1*m_nmodes2));
+                m_wspSize =  m_numElmt*m_nmodes0*(m_nmodes1*m_nquad2 + m_nquad1*m_nquad2);
+
             }
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -89,6 +91,30 @@ namespace Nektar
                     int totmodes  = m_nmodes0*m_nmodes1*m_nmodes2;
                     int totpoints = m_nquad0*m_nquad1*m_nquad2;
 
+#if 1
+                    Array<OneD, NekDouble> wsp2 = wsp + m_nmodes0*m_nmodes1*m_nquad2*m_numElmt; 
+
+                    //loop over elements  and do bwd trans wrt c
+                    for(int n = 0; n < m_numElmt; ++n)
+                    {
+                        Blas::Dgemm('N','T', m_nquad2, m_nmodes0*m_nmodes1,  m_nmodes2,
+                                    1.0, m_base2.get(), m_nquad2, &input[n*totmodes], 
+                                    m_nmodes0*m_nmodes1, 0.0, 
+                                    &wsp[n*m_nquad2], m_nquad2*m_numElmt);
+                    } 
+                    
+                    // trans wrt b 
+                    Blas::Dgemm('N','T', m_nquad1, m_nquad2*m_numElmt*m_nmodes0,  
+                                m_nmodes1, 1.0, m_base1.get(), m_nquad1,
+                                wsp.get(),m_nquad2*m_numElmt*m_nmodes0,  
+                                0.0, wsp2.get(), m_nquad1);
+
+                    // trans wrt a
+                    Blas::Dgemm('N','T', m_nquad0, m_nquad1*m_nquad2*m_numElmt,  
+                                m_nmodes0, 1.0, m_base0.get(), m_nquad0,
+                                wsp2.get(), m_nquad0*m_nquad1*m_numElmt,  
+                                0.0, output.get(), m_nquad0);
+#else
                     if(m_numElmt < m_nmodes0 || 1) // note sure what criterion we should use to swap around these strategies
                     {
                         Array<OneD, NekDouble> wsp2 = wsp + m_nmodes1*m_nmodes2*m_nquad0;
@@ -141,6 +167,7 @@ namespace Nektar
                                         0.0, &output[0],  m_numElmt*m_nquad0*m_nquad1);
                         }
                     }
+#endif
                 } 
             }
             

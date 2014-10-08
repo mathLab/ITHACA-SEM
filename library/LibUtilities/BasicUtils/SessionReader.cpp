@@ -417,8 +417,18 @@ namespace Nektar
                     string branch(NekConstants::kGitBranch);
                     boost::replace_all(branch, "refs/heads/", "");
 
-                    cout << " (git changeset " << sha1.substr(0, 8) << " "
-                         << "head " << branch << ")";
+                    cout << " (git changeset " << sha1.substr(0, 8) << ", ";
+
+                    if (branch == "")
+                    {
+                        cout << "detached head";
+                    }
+                    else
+                    {
+                        cout << "head " << branch;
+                    }
+
+                    cout << ")";
                 }
 
                 cout << endl;

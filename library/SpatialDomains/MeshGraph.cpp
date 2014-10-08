@@ -1727,16 +1727,26 @@ namespace Nektar
                 // exclude elements outside x range if all vertices not in region 
                 if(m_domainRange->doXrange)
                 {
-                    int ncnt = 0;
+                    int ncnt_low = 0;
+                    int ncnt_up = 0;
                     for(int i = 0; i < nverts; ++i)
                     {
-                        if((*geom.GetVertex(i))[0] < m_domainRange->xmin ||
-                           (*geom.GetVertex(i))[0] > m_domainRange->xmax)
+                        NekDouble xval = (*geom.GetVertex(i))[0];
+                        if(xval < m_domainRange->xmin)
                         {
-                            ncnt++;
+                            ncnt_low++;
+                        }
+
+                        if(xval > m_domainRange->xmax)
+                        {
+                            ncnt_up++;
                         }
                     }
-                    if(ncnt == nverts)
+
+                    // check for all verts to be less or greater than
+                    // range so that if element spans thin range then
+                    // it is still included
+                    if((ncnt_up == nverts)||(ncnt_low == nverts))
                     {
                         returnval = false;
                     }
@@ -1745,16 +1755,26 @@ namespace Nektar
                 // exclude elements outside y range if all vertices not in region 
                 if(m_domainRange->doYrange)
                 {
-                    int ncnt = 0; 
+                    int ncnt_low = 0;
+                    int ncnt_up  = 0;
                     for(int i = 0; i < nverts; ++i)
                     {
-                        if((*geom.GetVertex(i))[1] < m_domainRange->ymin ||
-                           (*geom.GetVertex(i))[1] > m_domainRange->ymax)
+                        NekDouble yval = (*geom.GetVertex(i))[1];
+                        if(yval < m_domainRange->ymin)
                         {
-                            ncnt++;
+                            ncnt_low++;
+                        }
+
+                        if(yval > m_domainRange->ymax)
+                        {
+                            ncnt_up++;
                         }
                     }
-                    if(ncnt == nverts)
+
+                    // check for all verts to be less or greater than
+                    // range so that if element spans thin range then
+                    // it is still included
+                    if((ncnt_up == nverts)||(ncnt_low == nverts))
                     {
                         returnval = false;
                     }
@@ -1765,20 +1785,30 @@ namespace Nektar
                     // exclude elements outside z range if all vertices not in region 
                     if(m_domainRange->doZrange)
                     {
-                        int ncnt = 0; 
+                        int ncnt_low = 0;
+                        int ncnt_up  = 0;
+
                         for(int i = 0; i < nverts; ++i)
                         {
-                            if((*geom.GetVertex(i))[2] < m_domainRange->zmin ||
-                               (*geom.GetVertex(i))[2] > m_domainRange->zmax)
+                            NekDouble zval = (*geom.GetVertex(i))[2];
+
+                            if(zval < m_domainRange->zmin)
                             {
-                                ncnt++;
+                                ncnt_low++;
+                            }
+
+                            if(zval > m_domainRange->zmax)
+                            {
+                                ncnt_up++;
                             }
                         }
 
-                        if(ncnt == nverts)
+                        // check for all verts to be less or greater than
+                        // range so that if element spans thin range then
+                        // it is still included
+                        if((ncnt_up == nverts)||(ncnt_low == nverts))
                         {
                             returnval = false;
-
                         }
                     }
                 }
@@ -1798,41 +1828,88 @@ namespace Nektar
                 
                 if(m_domainRange->doXrange)
                 {
+                    int ncnt_low = 0;
+                    int ncnt_up = 0;
+
                     for(int i = 0; i < nverts; ++i)
                     {
-                        if((*geom.GetVertex(i))[0] < m_domainRange->xmin ||
-                           (*geom.GetVertex(i))[0] > m_domainRange->xmax)
+                        NekDouble xval = (*geom.GetVertex(i))[0];
+                        if(xval < m_domainRange->xmin)
                         {
-                            returnval = false;
+                            ncnt_low++;
+                        }
+
+                        if(xval > m_domainRange->xmax)
+                        {
+                            ncnt_up++;
                         }
                     }
-                }
 
-                if(m_domainRange->doYrange)
-                {
-                    for(int i = 0; i < nverts; ++i)
+                    // check for all verts to be less or greater than
+                    // range so that if element spans thin range then
+                    // it is still included
+                    if((ncnt_up == nverts)||(ncnt_low == nverts))
                     {
-                        if((*geom.GetVertex(i))[1] < m_domainRange->ymin ||
-                           (*geom.GetVertex(i))[1] > m_domainRange->ymax)
-                        {
-                            returnval = false;
-                        }
+                        returnval = false;
                     }
                 }
                 
-                if(m_domainRange->doZrange)
+                if(m_domainRange->doYrange)
                 {
+                    int ncnt_low = 0;
+                    int ncnt_up = 0;
                     for(int i = 0; i < nverts; ++i)
                     {
-                        if((*geom.GetVertex(i))[2] < m_domainRange->zmin ||
-                           (*geom.GetVertex(i))[2] > m_domainRange->zmax)
+                        NekDouble yval = (*geom.GetVertex(i))[1];
+                        if(yval < m_domainRange->ymin)
                         {
-                            returnval = false;
+                            ncnt_low++;
                         }
+
+                        if(yval > m_domainRange->ymax)
+                        {
+                            ncnt_up++;
+                        }
+                    }
+
+                    // check for all verts to be less or greater than
+                    // range so that if element spans thin range then
+                    // it is still included
+                    if((ncnt_up == nverts)||(ncnt_low == nverts))
+                    {
+                        returnval = false;
+                    }
+                }
+
+                if(m_domainRange->doZrange)
+                {
+                    int ncnt_low = 0;
+                    int ncnt_up  = 0;
+                    for(int i = 0; i < nverts; ++i)
+                    {
+                        NekDouble zval = (*geom.GetVertex(i))[2];
+
+                        if(zval < m_domainRange->zmin)
+                        {
+                            ncnt_low++;
+                        }
+
+                        if(zval > m_domainRange->zmax)
+                        {
+                            ncnt_up++;
+                        }
+                    }
+
+                    // check for all verts to be less or greater than
+                    // range so that if element spans thin range then
+                    // it is still included
+                    if((ncnt_up == nverts)||(ncnt_low == nverts))
+                    {
+                        returnval = false;
                     }
                 }
             }
-            
+
             return returnval;
         }
 

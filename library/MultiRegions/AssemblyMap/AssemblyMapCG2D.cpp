@@ -715,28 +715,88 @@ namespace Nektar
             // When running in parallel, we need to ensure that the singular
             // mesh vertex is communicated to any periodic vertices, otherwise
             // the system may diverge.
-            if(systemSingular == true && checkIfSystemSingular && maxBCIdx != p)
+            if(systemSingular == true && checkIfSystemSingular)
             {
-                // Scan through all periodic vertices
+                // Firstly, we check that no other processors have this
+                // vertex. If they do, then we mark the vertex as also being
+                // Dirichlet.
+                if (maxBCIdx != p)
+                {
+                    if (Dofs[0].count(meshVertId) > 0)
+                    {
+                        if (ReorderedGraphVertId[0].count(meshVertId) == 0)
+                        {
+                            ReorderedGraphVertId[0][meshVertId] = graphVertId++;
+                        }
+                    }
+                }
+
+                // In the case that meshVertId is periodic with other vertices,
+                // this process and all other processes need to make sure that
+                // the periodic vertices are also marked as Dirichlet.
+                int gId;
+
+                // At least one process (maxBCidx) will have already associated
+                // a graphVertId with meshVertId. Others won't even have any of
+                // the vertices. The logic below is designed to handle both
+                // cases.
+                if (ReorderedGraphVertId[0].count(meshVertId) == 0)
+                {
+                    gId = -1;
+                }
+                else
+                {
+                    gId = ReorderedGraphVertId[0][meshVertId];
+                }
+
                 for (pIt  = periodicVerts.begin();
                      pIt != periodicVerts.end(); ++pIt)
                 {
-                    if (ReorderedGraphVertId[0].count(pIt->first) != 0)
+                    // Either the vertex is local to this processor (in which
+                    // case it will be in the pIt->first position) or else
+                    // meshVertId might be contained within another processor's
+                    // vertex list. The if statement below covers both cases. If
+                    // we find it, set as Dirichlet with the vertex id gId.
+                    if (pIt->first == meshVertId)
                     {
-                        continue;
-                    }
+                        ReorderedGraphVertId[0][meshVertId] =
+                            gId < 0 ? graphVertId++ : gId;
 
-                    for (i = 0; i < pIt->second.size(); ++i)
-                    {
-                        if (pIt->second[i].isLocal ||
-                            pIt->second[i].id != meshVertId)
+                        for (i = 0; i < pIt->second.size(); ++i)
                         {
-                            continue;
+                            if (pIt->second[i].isLocal)
+                            {
+                                ReorderedGraphVertId[0][pIt->second[i].id] =
+                                    gId;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        bool found = false;
+                        for (i = 0; i < pIt->second.size(); ++i)
+                        {
+                            if (pIt->second[i].id == meshVertId)
+                            {
+                                found = true;
+                                break;
+                            }
                         }
 
-                        // Mark this periodic vertex as Dirichlet.
-                        ReorderedGraphVertId[0][pIt->first] =
-                            graphVertId++;
+                        if (found)
+                        {
+                            ReorderedGraphVertId[0][pIt->first] =
+                                gId < 0 ? graphVertId++ : gId;
+
+                            for (i = 0; i < pIt->second.size(); ++i)
+                            {
+                                if (pIt->second[i].isLocal)
+                                {
+                                    ReorderedGraphVertId[0][
+                                        pIt->second[i].id] = gId;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1298,6 +1358,8 @@ namespace Nektar
                 case eIterativeStaticCond:
                 case eXxtFullMatrix:
                 case eXxtStaticCond:
+                case ePETScFullMatrix:
+                case ePETScStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                     }
@@ -1311,6 +1373,7 @@ namespace Nektar
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
                 case eXxtMultiLevelStaticCond:
+                case ePETScMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,partVerts,mdswitch);
                     }

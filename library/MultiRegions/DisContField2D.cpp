@@ -180,134 +180,138 @@ namespace Nektar
               m_trace(NullExpListSharedPtr)
         {
             // Set up boundary conditions for this variable.
-            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
-            GenerateBoundaryConditionExpansion(graph2D, bcs, variable);
-            
-            if (DeclareCoeffPhysArrays)
+            // Do not set up BCs if default variable
+            if(variable.compare("DefaultVar") != 0)
             {
-                EvaluateBoundaryConditions(0.0, variable);
-            }
-            
-            if (!SameTypeOfBoundaryConditions(In))
-            {
-                // Find periodic edges for this variable.
-                FindPeriodicEdges(bcs, variable);
+                SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
+                GenerateBoundaryConditionExpansion(graph2D, bcs, variable);
                 
-                if(SetUpJustDG)
+                if (DeclareCoeffPhysArrays)
                 {
-                    SetUpDG();
+                    EvaluateBoundaryConditions(0.0, variable);
                 }
-                else
+            
+                if (!SameTypeOfBoundaryConditions(In))
                 {
-                    // set elmt edges to point to robin bc edges if required.
-                    int i, cnt = 0;
-                    Array<OneD, int> ElmtID,EdgeID;
-                    GetBoundaryToElmtMap(ElmtID,EdgeID);
-
-                    for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-                    {
-                        MultiRegions::ExpListSharedPtr locExpList;
-
-                        int e;
-                        locExpList = m_bndCondExpansions[i];
-                        
-                        for(e = 0; e < locExpList->GetExpSize(); ++e)
-                        {
-                            LocalRegions::Expansion2DSharedPtr exp2d
-                                = (*m_exp)[ElmtID[cnt+e]]->
-                                    as<LocalRegions::Expansion2D>();
-                            LocalRegions::Expansion1DSharedPtr exp1d
-                                = locExpList->GetExp(e)->
-                                    as<LocalRegions::Expansion1D>();
-                            LocalRegions::ExpansionSharedPtr   exp
-                                = locExpList->GetExp(e)->
-                                    as<LocalRegions::Expansion>  ();
-                            
-                            exp2d->SetEdgeExp(EdgeID[cnt+e],exp);
-                            exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
-                        }
-                        cnt += m_bndCondExpansions[i]->GetExpSize();
-                    }
+                    // Find periodic edges for this variable.
+                    FindPeriodicEdges(bcs, variable);
                     
-
-                    if(m_session->DefinesSolverInfo("PROJECTION"))
+                    if(SetUpJustDG)
                     {
-                        std::string ProjectStr =
-                            m_session->GetSolverInfo("PROJECTION");
+                        SetUpDG();
+                    }
+                    else
+                    {
+                        // set elmt edges to point to robin bc edges if required.
+                        int i, cnt = 0;
+                        Array<OneD, int> ElmtID,EdgeID;
+                        GetBoundaryToElmtMap(ElmtID,EdgeID);
                         
-                        if((ProjectStr == "MixedCGDG") ||
-                           (ProjectStr == "Mixed_CG_Discontinuous"))
+                        for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
                         {
-                            SetUpDG();
+                            MultiRegions::ExpListSharedPtr locExpList;
+                            
+                            int e;
+                            locExpList = m_bndCondExpansions[i];
+                            
+                            for(e = 0; e < locExpList->GetExpSize(); ++e)
+                            {
+                                LocalRegions::Expansion2DSharedPtr exp2d
+                                    = (*m_exp)[ElmtID[cnt+e]]->
+                                    as<LocalRegions::Expansion2D>();
+                                LocalRegions::Expansion1DSharedPtr exp1d
+                                    = locExpList->GetExp(e)->
+                                    as<LocalRegions::Expansion1D>();
+                                LocalRegions::ExpansionSharedPtr   exp
+                                    = locExpList->GetExp(e)->
+                                    as<LocalRegions::Expansion>  ();
+                                
+                                exp2d->SetEdgeExp(EdgeID[cnt+e],exp);
+                                exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
+                            }
+                            cnt += m_bndCondExpansions[i]->GetExpSize();
+                        }
+                        
+                        
+                        if(m_session->DefinesSolverInfo("PROJECTION"))
+                        {
+                            std::string ProjectStr =
+                                m_session->GetSolverInfo("PROJECTION");
+                            
+                            if((ProjectStr == "MixedCGDG") ||
+                               (ProjectStr == "Mixed_CG_Discontinuous"))
+                            {
+                                SetUpDG();
+                            }
+                            else
+                            {
+                                SetUpPhysNormals();
+                            }
                         }
                         else
                         {
                             SetUpPhysNormals();
                         }
                     }
-                    else
+                }
+                else
+                {
+                    if(SetUpJustDG)
                     {
+                        m_globalBndMat      = In.m_globalBndMat;
+                        m_trace             = In.m_trace;
+                        m_traceMap          = In.m_traceMap;
+                        m_periodicEdges     = In.m_periodicEdges;
+                        m_periodicVerts     = In.m_periodicVerts;
+                        m_periodicFwdCopy   = In.m_periodicFwdCopy;
+                        m_periodicBwdCopy   = In.m_periodicBwdCopy;
+                        m_boundaryEdges     = In.m_boundaryEdges;
+                        m_leftAdjacentEdges = In.m_leftAdjacentEdges;
+                    }
+                    else 
+                    {
+                        m_globalBndMat      = In.m_globalBndMat;
+                        m_trace             = In.m_trace;
+                        m_traceMap          = In.m_traceMap;
+                        m_periodicEdges     = In.m_periodicEdges;
+                        m_periodicVerts     = In.m_periodicVerts;
+                        m_periodicFwdCopy   = In.m_periodicFwdCopy;
+                        m_periodicBwdCopy   = In.m_periodicBwdCopy;
+                        m_boundaryEdges     = In.m_boundaryEdges;
+                        m_leftAdjacentEdges = In.m_leftAdjacentEdges;
+                        
+                        // set elmt edges to point to robin bc edges if required.
+                        int i, cnt = 0;
+                        Array<OneD, int> ElmtID, EdgeID;
+                        GetBoundaryToElmtMap(ElmtID, EdgeID);
+                        
+                        for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                        {
+                            MultiRegions::ExpListSharedPtr locExpList;
+                            
+                            int e;
+                            locExpList = m_bndCondExpansions[i];
+                            
+                            for(e = 0; e < locExpList->GetExpSize(); ++e)
+                            {
+                                LocalRegions::Expansion2DSharedPtr exp2d
+                                    = (*m_exp)[ElmtID[cnt+e]]->
+                                    as<LocalRegions::Expansion2D>();
+                                LocalRegions::Expansion1DSharedPtr exp1d
+                                    = locExpList->GetExp(e)->
+                                    as<LocalRegions::Expansion1D>();
+                                LocalRegions::ExpansionSharedPtr   exp
+                                    = locExpList->GetExp(e)->
+                                    as<LocalRegions::Expansion>  ();
+                                
+                                exp2d->SetEdgeExp(EdgeID[cnt+e],exp);
+                                exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
+                            }
+                            cnt += m_bndCondExpansions[i]->GetExpSize();
+                        }
+                    
                         SetUpPhysNormals();
                     }
-                }
-            }
-            else
-            {
-                if(SetUpJustDG)
-                {
-                    m_globalBndMat      = In.m_globalBndMat;
-                    m_trace             = In.m_trace;
-                    m_traceMap          = In.m_traceMap;
-                    m_periodicEdges     = In.m_periodicEdges;
-                    m_periodicVerts     = In.m_periodicVerts;
-                    m_periodicFwdCopy   = In.m_periodicFwdCopy;
-                    m_periodicBwdCopy   = In.m_periodicBwdCopy;
-                    m_boundaryEdges     = In.m_boundaryEdges;
-                    m_leftAdjacentEdges = In.m_leftAdjacentEdges;
-                }
-                else 
-                {
-                    m_globalBndMat      = In.m_globalBndMat;
-                    m_trace             = In.m_trace;
-                    m_traceMap          = In.m_traceMap;
-                    m_periodicEdges     = In.m_periodicEdges;
-                    m_periodicVerts     = In.m_periodicVerts;
-                    m_periodicFwdCopy   = In.m_periodicFwdCopy;
-                    m_periodicBwdCopy   = In.m_periodicBwdCopy;
-                    m_boundaryEdges     = In.m_boundaryEdges;
-                    m_leftAdjacentEdges = In.m_leftAdjacentEdges;
-                    
-                    // set elmt edges to point to robin bc edges if required.
-                    int i, cnt = 0;
-                    Array<OneD, int> ElmtID, EdgeID;
-                    GetBoundaryToElmtMap(ElmtID, EdgeID);
-					
-                    for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-                    {
-                        MultiRegions::ExpListSharedPtr locExpList;
-
-                        int e;
-                        locExpList = m_bndCondExpansions[i];
-			
-                        for(e = 0; e < locExpList->GetExpSize(); ++e)
-                        {
-                            LocalRegions::Expansion2DSharedPtr exp2d
-                                = (*m_exp)[ElmtID[cnt+e]]->
-                                    as<LocalRegions::Expansion2D>();
-                            LocalRegions::Expansion1DSharedPtr exp1d
-                                = locExpList->GetExp(e)->
-                                    as<LocalRegions::Expansion1D>();
-                            LocalRegions::ExpansionSharedPtr   exp
-                                = locExpList->GetExp(e)->
-                                    as<LocalRegions::Expansion>  ();
-                            
-                            exp2d->SetEdgeExp(EdgeID[cnt+e],exp);
-                            exp1d->SetAdjacentElementExp(EdgeID[cnt+e],exp2d);
-                        }
-                        cnt += m_bndCondExpansions[i]->GetExpSize();
-                    }
-                    
-                    SetUpPhysNormals();
                 }
             }
         }
@@ -367,7 +371,7 @@ namespace Nektar
             
             // Set up trace space
             trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
-                m_bndCondExpansions, m_bndConditions, *m_exp, 
+                m_session, m_bndCondExpansions, m_bndConditions, *m_exp,
                 graph2D, m_periodicEdges);
             
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);

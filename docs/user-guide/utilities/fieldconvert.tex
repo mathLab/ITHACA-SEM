@@ -93,6 +93,7 @@ stands for \inltt{m}odule)..
 Specifically, FieldConvert has these additional functionalities
 %
 \begin{enumerate}
+\item \inltt{AddFld}: Add a field to an fld file;
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
@@ -257,7 +258,7 @@ to $(x1,y1,z1)$.
 
 An extraction of a plane can also be specified by
 \begin{lstlisting}[style=BashInputStyle] 
--m interppoints:fromxml=file1.xml:fromfld=file1.fld:plane=npt1,\
+FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:plane=npt1,\
 	npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
 \end{lstlisting}
 where \inltt{npts1,npts2} is the number of equispaced points in each 
@@ -271,6 +272,16 @@ This module does not run in parallel.
 %
 %
 \subsubsection{\textit{scaleinputfld} module}
+
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m sacleinputfld:scale=value  test.fld  test-scal.fld
+\end{lstlisting}
+The argument \inltt{scale=value} rescales of a factor \inltt{value} 
+\inltt{test.fld} by the factor value.
+The output file \inltt{file-conc.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview the result.
+
 %
 %
 %

@@ -15,13 +15,14 @@
       <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
       <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
       <I PROPERTY="DEALIASING" VALUE="ON"/>
+      <I PROPERTY="USEFFT" VALUE="FFTW" />
     </SOLVERINFO>
 
     <PARAMETERS>
       <P> TimeStep      = 0.0001      </P>
       <P> NumSteps      = 10000       </P>
-      <P> IO_CheckSteps = 1000       </P>
-      <P> IO_InfoSteps  = 10       </P>
+      <P> IO_CheckSteps = 100       </P>
+      <P> IO_InfoSteps  = 1       </P>
       <P> Re            = 2000       </P>
       <P> Kinvis        = 1.0/Re     </P>
       <P> HomModesZ     = 32          </P>
@@ -76,6 +77,13 @@
         </FUNCTION>
     
   </CONDITIONS>
+
+    <FORCING>
+        <FORCE TYPE="Body">
+            <BODYFORCE> BodyForce </BODYFORCE>
+        </FORCE>
+    </FORCING>
+
 
    <GEOMETRY DIM="2" SPACE="2">
         <VERTEX>

@@ -63,8 +63,7 @@ namespace Nektar
          */
         void DriverArnoldi::v_InitObject(ostream &out)
         {
-            Driver::v_InitObject(out);
-    	
+            Driver::v_InitObject(out);    	
             m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_timeSteppingAlgorithm, false);
 
             if(m_timeSteppingAlgorithm)

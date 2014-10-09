@@ -324,10 +324,12 @@ region is then assigned an appropriate boundary condition.
         <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
     </REGION>
     <REGION REF="1">
-        <R VAR="u" VALUE="sin(PI*x)*sin(PI*y)-PI*sin(PI*x)*cos(PI*y)" PRIMCOEFF="1" />
+        <R VAR="u" VALUE="sin(PI*x)*sin(PI*y)-PI*sin(PI*x)*cos(PI*y)" 
+           PRIMCOEFF="1" />
     </REGION>
     <REGION REF="2">
-        <N VAR="u" VALUE="(5/sqrt(61))*PI*cos(PI*x)*sin(PI*y)-(6/sqrt(61))*PI*sin(PI*x)*cos(PI*y)" />
+        <N VAR="u" VALUE="(5/sqrt(61))*PI*cos(PI*x)*sin(PI*y)-
+                          (6/sqrt(61))*PI*sin(PI*x)*cos(PI*y)" />
     </REGION>
         .
         .

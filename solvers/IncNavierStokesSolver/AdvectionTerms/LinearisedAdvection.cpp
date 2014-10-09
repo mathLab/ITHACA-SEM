@@ -576,7 +576,18 @@ namespace Nektar
     {
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
+//<<<<<<< HEAD
         int nqtot = m_baseflow[0].num_elements();
+//=======
+//        int nqtot = m_base[0]->GetTotPoints();
+
+        //Get Homogeneous
+        LibUtilities::FieldIOSharedPtr fld =
+        MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
+                                                        m_session->GetComm());
+        fld->Import(pInfile, FieldDef, FieldData);
+
+//>>>>>>> master
         int nvar = m_session->GetVariables().size();
         int s;
         Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);

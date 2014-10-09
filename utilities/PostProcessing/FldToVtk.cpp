@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
             vector<LibUtilities::PointsType> ptype;
             for(j = 0; j < 3; ++j)
             {
-                ptype.push_back(LibUtilities::ePolyEvenlySpaced);
+                ptype.push_back(LibUtilities:: ePolyEvenlySpaced);
             }
             
             fielddef[i]->m_pointsDef = true;

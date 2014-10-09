@@ -132,6 +132,8 @@ namespace Nektar
                 if ((TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains
                         ::TriGeom>(expIt->second->m_geomShPtr)))
                 {
+                    cout << expIt->second->m_basisKeyVector.size() << endl;
+
                     LibUtilities::BasisKey TriBa
                                         = expIt->second->m_basisKeyVector[0];
                     LibUtilities::BasisKey TriBb

@@ -1,0 +1,67 @@
+\section{Forcing}
+An optional section of the file allows forcing functions to be defined. These are enclosed in the
+\inltt{FORCING} tag. The forcing type is enclosed within the \inltt{FORCE} tag and expressed in the file as:
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="[NAME]">
+    ...
+</FORCE>
+\end{lstlisting}
+
+The force type can be any of the following:
+\begin{itemize}
+    \item "OutflowStabilisation" 
+    \item "Body" 
+    \item "Programmatic"
+    \item "Noise"
+\end{itemize}
+
+\subsection{Retrograde Outflow Stabilisation}
+This force type is a useful tool for the Incompressible Navier-Stokes solver to circumvent the problems associated with having bulk flow reversal at an outflow boundary where Neumann velocity conditions are set. The domain upstream of the outlet is treated as a porous media, whereby a velocity profile is imposed at the start of the domain.
+
+Functions defining the domain and the velocity profile are expressed in the \inltt{CONDITIONS} section, however the name of these functions are defined here by the \inltt{COEFF} tag for the domain, and by the \inltt{REFFLOW} tag for the velocity profile. In the event of a time-dependent simulation, the imposed velocity profile can be modulated with a time dependent function. The name of this time-dependent function is specified with the tag \inltt{REFFLOWTIME}. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="OutflowStabilisation">
+    <COEFF> [FUNCTION NAME] <COEFF/>
+    <REFFLOW> [FUNCTION NAME] <REFFLOW/>
+    <REFFLOWTIME> [FUNCTION NAME] <REFFLOWTIME/>
+</FORCE>
+\end{lstlisting}
+
+
+\subsection{Body}
+This force type specifies the name of a body forcing function expressed in the \inltt{CONDITIONS} section.
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Body">
+    <BODYFORCE> [FUNCTION NAME] <BODYFORCE/>
+</FORCE>
+\end{lstlisting}
+
+\subsection{Programmatic}
+This force type allows a forcing function to be applied directly within the code, thus it has no associated function. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Programmatic">
+</FORCE>
+\end{lstlisting}
+
+
+\subsection{Noise}
+This force type allows the user to specify the magnitude of a white noise force. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Noise">
+    <WHITENOISE> [VALUE] <WHITENOISE/>
+</FORCE>
+\end{lstlisting}
+
+
+
+
+
+
+
+
+

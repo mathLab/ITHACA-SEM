@@ -46,12 +46,12 @@ namespace Nektar
 {
 namespace Utilities
 {
-
+/*
 ModuleKey ProcessAddFld::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "addfld"),
         ProcessAddFld::create, "rescale input field by a constant factor.");
-
+*/
 ProcessAddFld::ProcessAddFld(FieldSharedPtr f) : ProcessModule(f)
 {
     if((f->m_inputfiles.count("fld") == 0) &&

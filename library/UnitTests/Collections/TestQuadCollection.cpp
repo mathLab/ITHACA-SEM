@@ -33,6 +33,7 @@
 #include <LocalRegions/QuadExp.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <Collections/Collection.h>
+#include <Collections/CollectionOptimisation.hpp>
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -106,7 +107,10 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -150,7 +154,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
 
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -198,7 +206,11 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -243,7 +255,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -287,7 +303,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
 
-            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -335,7 +355,10 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec, Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -385,7 +408,10 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec, Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -437,7 +463,10 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec, Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -488,7 +517,10 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec, Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -534,7 +566,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
 
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -590,7 +626,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -651,7 +691,11 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nelmts*nq),tmp;
@@ -709,7 +753,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
 
-            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -764,7 +812,10 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
 
-            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -819,7 +870,10 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
 
-            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> phys(nq);
@@ -873,7 +927,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             
             const int nq = Exp->GetTotPoints();
@@ -930,7 +988,11 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -956,6 +1018,8 @@ namespace Nektar
             double epsilon = 1.0e-8;
             for(int i = 0; i < diff1.num_elements(); ++i)
             {
+                diff1[i] = (fabs(diff1[i]) < 1e-14)? 0.0: diff1[i];
+                diff2[i] = (fabs(diff2[i]) < 1e-14)? 0.0: diff2[i];
                 BOOST_CHECK_CLOSE(diff1[i],diff2[i], epsilon);
             }
         }
@@ -988,7 +1052,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
             
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1045,7 +1113,11 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1104,7 +1176,10 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
             
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1161,7 +1236,10 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -1220,7 +1298,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
 
-            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -1289,7 +1371,11 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eIterPerExp);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -1359,7 +1445,11 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
 
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -1428,7 +1518,11 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eStdMat);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
+
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -1497,7 +1591,10 @@ namespace Nektar
             std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
             GeomVec.push_back(quadGeom);
 
-            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -1565,7 +1662,10 @@ namespace Nektar
                 GeomVec.push_back(quadGeom);
             }
             
-            Collections::Collection c(stdExp, GeomVec,Collections::eSumFac);
+            LibUtilities::SessionReaderSharedPtr dummySession;
+            Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+            Collections::Collection     c(stdExp, GeomVec, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();

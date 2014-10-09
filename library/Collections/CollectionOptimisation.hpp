@@ -82,85 +82,88 @@ namespace Nektar {
                     impTypes[ImplementationTypeMap[i]] = (ImplementationType)i;
                 }
 
-                TiXmlDocument &doc = pSession->GetDocument();
-                TiXmlHandle docHandle(&doc);
-                TiXmlElement *master
-                    = docHandle.FirstChildElement("NEKTAR").Element();
-                ASSERTL0(master, "Unable to find NEKTAR tag in file.");
-
-                TiXmlElement *xmlCol = master->FirstChildElement("COLLECTIONS");
-
-                if (xmlCol)
+                if(pSession.get()) // turn off file reader if dummy pointer is given
                 {
-                    TiXmlElement *elmt = xmlCol->FirstChildElement();
-
-                    while (elmt)
+                    TiXmlDocument &doc = pSession->GetDocument();
+                    TiXmlHandle docHandle(&doc);
+                    TiXmlElement *master
+                        = docHandle.FirstChildElement("NEKTAR").Element();
+                    ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+                    
+                    TiXmlElement *xmlCol = master->FirstChildElement("COLLECTIONS");
+                    
+                    if (xmlCol)
                     {
-                        string tagname = elmt->ValueStr();
-
-                        ASSERTL0(boost::iequals(tagname, "OPERATOR"),
-                                 "Only OPERATOR tags are supported inside the "
-                                 "COLLECTIONS tag.");
-
-                        const char *attr = elmt->Attribute("TYPE");
-                        ASSERTL0(attr, "Missing TYPE in OPERATOR tag.");
-                        string opType(attr);
-
-                        ASSERTL0(opTypes.count(opType) > 0,
-                                 "Unknown OPERATOR type " + opType + ".");
-
-                        OperatorType ot = opTypes[opType];
-
-                        TiXmlElement *elmt2 = elmt->FirstChildElement();
-
-                        while (elmt2)
+                        TiXmlElement *elmt = xmlCol->FirstChildElement();
+                        
+                        while (elmt)
                         {
-                            string tagname = elmt2->ValueStr();
-                            ASSERTL0(boost::iequals(tagname, "ELEMENT"),
-                                     "Only ELEMENT tags are supported inside the "
-                                     "OPERATOR tag.");
-
-                            const char *attr = elmt2->Attribute("TYPE");
-                            ASSERTL0(attr, "Missing TYPE in ELEMENT tag.");
-
-                            string elType(attr);
-                            it2 = elTypes.find(elType);
-                            ASSERTL0(it2 != elTypes.end(),
-                                     "Unknown element type "+elType+" in ELEMENT "
-                                     "tag");
-
-                            const char *attr2 = elmt2->Attribute("IMPTYPE");
-                            ASSERTL0(attr2, "Missing IMPTYPE in ELEMENT tag.");
-                            string impType(attr2);
-                            ASSERTL0(impTypes.count(impType) > 0,
-                                     "Unknown IMPTYPE type " + impType + ".");
-
-                            const char *attr3 = elmt2->Attribute("ORDER");
-                            ASSERTL0(attr3, "Missing ORDER in ELEMENT tag.");
-                            string order(attr3);
-
-                            if (order == "*")
+                            string tagname = elmt->ValueStr();
+                            
+                            ASSERTL0(boost::iequals(tagname, "OPERATOR"),
+                                     "Only OPERATOR tags are supported inside the "
+                                     "COLLECTIONS tag.");
+                            
+                            const char *attr = elmt->Attribute("TYPE");
+                            ASSERTL0(attr, "Missing TYPE in OPERATOR tag.");
+                            string opType(attr);
+                            
+                            ASSERTL0(opTypes.count(opType) > 0,
+                                     "Unknown OPERATOR type " + opType + ".");
+                            
+                            OperatorType ot = opTypes[opType];
+                            
+                            TiXmlElement *elmt2 = elmt->FirstChildElement();
+                            
+                            while (elmt2)
                             {
-                                m_global[ot][ElmtOrder(it2->second, -1)] = impTypes[impType];
-                            }
-                            else
-                            {
-                                vector<unsigned int> orders;
-                                ParseUtils::GenerateSeqVector(order.c_str(), orders);
+                                string tagname = elmt2->ValueStr();
+                                ASSERTL0(boost::iequals(tagname, "ELEMENT"),
+                                         "Only ELEMENT tags are supported inside the "
+                                         "OPERATOR tag.");
+                                
+                                const char *attr = elmt2->Attribute("TYPE");
+                                ASSERTL0(attr, "Missing TYPE in ELEMENT tag.");
+                                
+                                string elType(attr);
+                                it2 = elTypes.find(elType);
+                                ASSERTL0(it2 != elTypes.end(),
+                                         "Unknown element type "+elType+" in ELEMENT "
+                                         "tag");
+                                
+                                const char *attr2 = elmt2->Attribute("IMPTYPE");
+                                ASSERTL0(attr2, "Missing IMPTYPE in ELEMENT tag.");
+                                string impType(attr2);
+                                ASSERTL0(impTypes.count(impType) > 0,
+                                         "Unknown IMPTYPE type " + impType + ".");
+                                
+                                const char *attr3 = elmt2->Attribute("ORDER");
+                                ASSERTL0(attr3, "Missing ORDER in ELEMENT tag.");
+                                string order(attr3);
 
-                                for (int i = 0; i < orders.size(); ++i)
+                                if (order == "*")
                                 {
-                                    m_global[ot][ElmtOrder(it2->second, orders[i])] = impTypes[impType];
+                                    m_global[ot][ElmtOrder(it2->second, -1)] 
+                                        = impTypes[impType];
                                 }
+                                else
+                                {
+                                    vector<unsigned int> orders;
+                                    ParseUtils::GenerateSeqVector(order.c_str(), orders);
+                                    
+                                    for (int i = 0; i < orders.size(); ++i)
+                                    {
+                                        m_global[ot][ElmtOrder(it2->second, orders[i])] = impTypes[impType];
+                                    }
+                                }
+                                
+                                elmt2 = elmt2->NextSiblingElement();
                             }
-
-                            elmt2 = elmt2->NextSiblingElement();
+                            
+                            elmt = elmt->NextSiblingElement();
                         }
-
-                        elmt = elmt->NextSiblingElement();
                     }
                 }
-
 #if 0 
                 // Print out operator map
                 map<OperatorType, map<ElmtOrder, ImplementationType> >::iterator mIt;

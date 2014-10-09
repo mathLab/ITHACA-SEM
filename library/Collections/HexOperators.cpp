@@ -47,6 +47,7 @@ namespace Nektar
          * BwdTrans operators
          * ----------------------------------------------------------
          */       
+        //#define ELMTLOOP
         class BwdTrans_SumFac_Hex : public Operator
         {
         public:
@@ -67,8 +68,11 @@ namespace Nektar
                   m_colldir1(pExp->GetBasis(1)->Collocation()),
                   m_colldir2(pExp->GetBasis(2)->Collocation())
             {
-                //m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,m_nmodes0*m_nmodes1*m_nmodes2));
+#ifdef ELMTLOOP
+                m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,m_nmodes0*m_nmodes1*m_nmodes2));
+#else
                 m_wspSize =  m_numElmt*m_nmodes0*(m_nmodes1*m_nquad2 + m_nquad1*m_nquad2);
+#endif
 
             }
             
@@ -91,7 +95,7 @@ namespace Nektar
                     int totmodes  = m_nmodes0*m_nmodes1*m_nmodes2;
                     int totpoints = m_nquad0*m_nquad1*m_nquad2;
 
-#if 1
+#ifndef ELMTLOOP
                     Array<OneD, NekDouble> wsp2 = wsp + m_nmodes0*m_nmodes1*m_nquad2*m_numElmt; 
 
                     //loop over elements  and do bwd trans wrt c
@@ -112,7 +116,7 @@ namespace Nektar
                     // trans wrt a
                     Blas::Dgemm('N','T', m_nquad0, m_nquad1*m_nquad2*m_numElmt,  
                                 m_nmodes0, 1.0, m_base0.get(), m_nquad0,
-                                wsp2.get(), m_nquad0*m_nquad1*m_numElmt,  
+                                wsp2.get(), m_nquad1*m_nquad2*m_numElmt,  
                                 0.0, output.get(), m_nquad0);
 #else
                     if(m_numElmt < m_nmodes0 || 1) // note sure what criterion we should use to swap around these strategies
@@ -168,7 +172,7 @@ namespace Nektar
                         }
                     }
 #endif
-                } 
+                }
             }
             
             OPERATOR_CREATE(BwdTrans_SumFac_Hex)

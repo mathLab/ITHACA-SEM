@@ -40,8 +40,10 @@
 
 #include <boost/unordered_map.hpp>
 
-namespace Nektar {
-    namespace Collections {
+namespace Nektar 
+{
+    namespace Collections 
+    {
 
 
         enum GeomData

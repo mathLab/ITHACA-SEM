@@ -208,7 +208,7 @@ namespace Nektar {
                 OperatorKey opKey(pExp->DetShapeType(), opType, impType);
                 if (GetOperatorFactory().ModuleExists(opKey))
                 {
-                    cout << opKey << endl;
+                    //cout << opKey << endl;
                     m_ops[opType] = GetOperatorFactory().CreateInstance(
                         opKey, pExp, pGeom, m_geomData);
                 }

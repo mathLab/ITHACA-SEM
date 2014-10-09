@@ -114,7 +114,27 @@ In the following we will detail the usage of each module.
 %
 %
 %
-\subsubsection{\textit{C0Projection} module}
+
+\subsubsection{Sum two .fld files: \textit{AddFld} module}
+To sum two .fld files one can use the \inltt{AddFld} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld file3.fld
+\end{lstlisting}
+%
+In this case we use it in conjunction with the command \inltt{scale} 
+which multiply the values of a given .fld file by a constant \inltt{value}. 
+\inltt{file1.fld} is the file multiplied by \inltt{value}, \inltt{file1.xml} 
+is the associated session file, \inltt{file2.fld} is the .fld file which 
+is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output 
+which contain the sum of the two .fld files.
+\inltt{file3.fld} can be processed in a similar way as described 
+in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
+it either in Tecplot or in Paraview the result.
+%
+%
+%
+\subsubsection{Smooth the data: \textit{C0Projection} module}
 To smooth the data of a given .fld file one can 
 use the \inltt{C0Projection} module of FieldConvert
 %
@@ -126,7 +146,7 @@ where the file \inltt{test-C0Proj.fld} can be processed in a similar
 way as described in section \ref{s:utilities:fieldconvert:sub:convert}
 to visualise either in Tecplot or in Paraview the result.
 
-\subsubsection{\textit{QCriterion} module}
+\subsubsection{Calculate Q-Criterion: \textit{QCriterion} module}
 To perform the Q-criterion calculation and obtain an output 
 data containing the Q-criterion solution, the user can run
 %
@@ -140,7 +160,7 @@ to visualise either in Tecplot or in Paraview the result.
 %
 %
 %
-\subsubsection{\textit{concatenate} module}
+\subsubsection{Concatenate two files: \textit{concatenate} module}
 To concatenate \inltt{file1.fld} and \inltt{file2.fld} into \inltt{file-conc.fld}
 one can run the following command
 %
@@ -271,7 +291,7 @@ This module does not run in parallel.
 %
 %
 %
-\subsubsection{\textit{scaleinputfld} module}
+\subsubsection{Scale a given .fld: \textit{scaleinputfld} module}
 
 \begin{lstlisting}[style=BashInputStyle] 
 FieldConvert -m sacleinputfld:scale=value  test.fld  test-scal.fld

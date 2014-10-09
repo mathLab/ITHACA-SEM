@@ -189,3 +189,53 @@ Note that the class is used through the pointer \inlsh{p}, which is of type
 functions in the base class (and therefore the specific implementations behind them) to be
 called, but not directly any functions declared solely in a specific
 implementation.
+
+
+\section{NekArray}
+An Array is a thin wrapper around native arrays. Arrays provide all the
+functionality of native arrays, with the additional benefits of automatic use of
+the Nektar++ memory pool, automatic memory allocation and deallocation, bounds
+checking in debug mode, and easier to use multi-dimensional arrays.
+
+Arrays are templated to allow compile-time customization of its dimensionality
+and data type.
+
+Parameters:
+\begin{itemize}
+\item \inltt{Dim} Must be a type with a static unsigned integer called
+\inltt{Value} that specifies the array's dimensionality. For example
+\begin{lstlisting}[style=C++Style]
+struct TenD {
+    static unsigned int Value = 10;
+};
+\end{lstlisting}
+\item \inltt{DataType} The type of data to store in the array.
+\end{itemize}
+
+It is often useful to create a class member Array that is shared with users of
+the object without letting the users modify the array. To allow this behavior,
+Array<Dim, !DataType> inherits from Array<Dim, const !DataType>. The following
+example shows what is possible using this approach:
+\begin{lstlisting}[style=C++Style]
+ class Sample {
+     public:
+         Array<OneD, const double>& getData() const { return m_data; } void
+         getData(Array<OneD, const double>& out) const { out = m_data; }
+
+     private:
+         Array<OneD, double> m_data;
+ };
+\end{lstlisting}
+In this example, each instance of Sample contains an array. The getData
+method gives the user access to the array values, but does not allow
+modification of those values.
+
+\subsection{Efficiency Considerations}
+
+Tracking memory so it is deallocated only when no more Arrays reference it does
+introduce overhead when copying and assigning Arrays. In most cases this loss of
+efficiency is not noticeable. There are some cases, however, where it can cause
+a significant performance penalty (such as in tight inner loops). If needed,
+Arrays allow access to the C-style array through the \texttt{Array::data} member
+function.
+

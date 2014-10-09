@@ -162,9 +162,9 @@ namespace Nektar
             
             Array<OneD, MultiRegions::ExpListSharedPtr> fields;
             
-            if (m_EvolutionOperator == eOptimizedSteadyState)
+            if (m_EvolutionOperator == eAdaptiveSFD)
             {
-                //This matters for the Optimized SFD method
+                //This matters for the Adaptive SFD method
                 //because m_equ[1] is the nonlinear problem with non homogeneous BCs.
                 fields = m_equ[0]->UpdateFields(); 
             }

@@ -45,7 +45,7 @@ namespace Nektar
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","Adjoint"        ,eAdjoint),
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","TransientGrowth",eTransientGrowth),
             LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","SkewSymmetric"  ,eSkewSymmetric),
-            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","OptimizedSteadyState"  ,eOptimizedSteadyState)
+            LibUtilities::SessionReader::RegisterEnumValue("EvolutionOperator","AdaptiveSFD"  ,eAdaptiveSFD)
         };
         std::string Driver::evolutionOperatorDef = LibUtilities::SessionReader::RegisterDefaultSolverInfo("EvolutionOperator","Nonlinear");
         std::string Driver::driverDefault = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Driver","Standard");
@@ -97,7 +97,7 @@ namespace Nektar
                 /// @todo At the moment this is Navier-Stokes specific - generalise?
                 m_EvolutionOperator = m_session->GetSolverInfoAsEnum<EvolutionOperatorType>("EvolutionOperator");
                 
-                m_nequ = ((m_EvolutionOperator == eTransientGrowth || m_EvolutionOperator == eOptimizedSteadyState) ? 2 : 1);
+                m_nequ = ((m_EvolutionOperator == eTransientGrowth || m_EvolutionOperator == eAdaptiveSFD) ? 2 : 1);
                 m_equ = Array<OneD, EquationSystemSharedPtr>(m_nequ);
                 
                 // Set the AdvectiveType tag and create EquationSystem objects.
@@ -128,7 +128,7 @@ namespace Nektar
                         m_session->SetTag("AdvectiveType","SkewSymmetric");
                         m_equ[0] = GetEquationSystemFactory().CreateInstance(vEquation, m_session);
                         break;
-                    case eOptimizedSteadyState: ///Coupling SFD method and Arnoldi algorithm
+                    case eAdaptiveSFD: ///Coupling SFD method and Arnoldi algorithm
                         ///For having 2 equation systems defined into 2 different session files
                         ///(with the mesh into a file named 'session'.gz)
                         meshfile = m_session->GetSessionName() + ".gz";

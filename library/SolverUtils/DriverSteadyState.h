@@ -112,7 +112,7 @@ namespace Nektar
         private:
             int m_stepCounter;
             int m_Check;
-	    int m_Check_BaseFlow;
+            int m_Check_BaseFlow;
             NekDouble TOL;
             int m_infosteps;
             int m_checksteps;
@@ -138,15 +138,12 @@ namespace Nektar
             
             NekDouble Diff_q_qBar;
             NekDouble Diff_q1_q0;
-            NekDouble Min_MaxNormDiff_q_qBar;
             
-            ///For coupling SFD and Arnoldi
+            ///For adaptive SFD method
             bool FlowPartiallyConverged;
-            NekDouble PartialTOL;
-            NekDouble TimeToRestart;
+            NekDouble AdaptiveTOL;
+            NekDouble AdaptiveTime;
             int m_NonConvergingStepsCounter;
-            NekDouble ParametersTOL;
-            NekDouble UpdateCoefficient;
             NekDouble GrowthRateEV;
             NekDouble FrequencyEV;
         };

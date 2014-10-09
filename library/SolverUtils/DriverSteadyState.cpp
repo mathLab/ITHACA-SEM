@@ -84,21 +84,20 @@ namespace Nektar
 	    m_session->LoadParameter("GrowthRateEV", GrowthRateEV, 0.0); //To evaluate optimum SFD parameters if growth rate provided in the xml file
 	    m_session->LoadParameter("FrequencyEV", FrequencyEV, 0.0);   //To evaluate optimum SFD parameters if frequency provided in the xml file
 	    m_session->LoadParameter("TOL", TOL, 1.0e-08);               //Determine when SFD method is converged
-	    m_session->LoadParameter("PartialTOL", PartialTOL, 1.0e-02);            //Used only for coupling SFD and Arnoldi
-	    m_session->LoadParameter("TimeToRestart", TimeToRestart, 25.0);         //Used only for coupling SFD and Arnoldi
+	    m_session->LoadParameter("AdaptiveTOL", AdaptiveTOL, 1.0e-02);        //Used only for the Adaptive SFD method
+	    m_session->LoadParameter("AdaptiveTime", AdaptiveTime, 25.0);         //Used only for the Adaptive SFD method
 	    
 	    PrintSummarySFD();
 	    timer.Start();
 	    
-	    ///Definition of shared pointer (used only for coupling SFD and Arnoldi algorithm) 
+	    ///Definition of shared pointer (used only for the Adaptive SFD method) 
 	    AdvectionSystemSharedPtr A = boost::dynamic_pointer_cast<AdvectionSystem>(m_equ[0]);
 	    
 	    ///Condition necessary to run SFD for the compressible case
 	    NumVar_SFD = m_equ[m_nequ - 1]->UpdateFields()[0]->GetCoordim(0);            
-	    if (m_session->GetSolverInfo("EqType") == "EulerCFE" || 
-		m_session->GetSolverInfo("EqType") == "NavierStokesCFE")
+	    if (m_session->GetSolverInfo("EqType") == "EulerCFE" || m_session->GetSolverInfo("EqType") == "NavierStokesCFE")
 	    {
-		NumVar_SFD += 2; //Number of variables for the compressible equations
+            NumVar_SFD += 2; //Number of variables for the compressible equations
 	    }
 	    
 	    ///We store the time step
@@ -107,11 +106,11 @@ namespace Nektar
 	    ///Evaluate optimum SFD parameters if dominent EV given by xml file
 	    if (GrowthRateEV != 0.0 && FrequencyEV != 0.0)
 	    {
-		cout << "Besed on the dominant EV given in the xml file,"
-		<< "a 1D model is used to evaluate the optumum parameters"
-		<< "of the SFD method:" << endl;
-		complex<NekDouble> EV = polar(exp(GrowthRateEV), FrequencyEV);   
-		GradientDescentMethod(EV, m_X, m_Delta);
+            cout << "Besed on the dominant EV given in the xml file,"
+            << "a 1D model is used to evaluate the optumum parameters"
+            << "of the SFD method:" << endl;
+            complex<NekDouble> EV = polar(exp(GrowthRateEV), FrequencyEV);
+            GradientDescentMethod(EV, m_X, m_Delta);
 	    }
 	    
 	    
@@ -130,8 +129,8 @@ namespace Nektar
 	    
 	    for(int i = 0; i < NumVar_SFD; ++i)
 	    {
-		q0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //q0 is initialised
-		qBar0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //qBar0 is initially set to zero
+            q0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //q0 is initialised
+            qBar0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //qBar0 is initially set to zero
 	    }
 	    
 	    ///Definition of variables used in this algorithm
@@ -144,7 +143,7 @@ namespace Nektar
 	    cpuTime                     = 0.0;
 	    elapsed                     = 0.0;
 	    totalTime                   = 0.0;
-	    FlowPartiallyConverged     = false;
+	    FlowPartiallyConverged      = false;
 	    
 	    while (max(Diff_q_qBar, Diff_q1_q0) > TOL)
 	    {
@@ -170,18 +169,18 @@ namespace Nektar
 		{
 		    ConvergenceHistory(qBar1, q0, Diff_q_qBar, Diff_q1_q0);
 		    
-		    ///Loop for coupling between SFD method and Arnoldi algorithm 
-		    if (m_EvolutionOperator == eOptimizedSteadyState && FlowPartiallyConverged == false)
+		    ///Loop for the adaptive SFD method
+		    if (m_EvolutionOperator == eAdaptiveSFD && FlowPartiallyConverged == false)
 		    {   
 			
 			m_NonConvergingStepsCounter++;
 			
-			if (Diff_q_qBar < PartialTOL)
+			if (Diff_q_qBar < AdaptiveTOL)
 			{
 			    cout << "\n\t The SFD method is converging: we compute stability analysis using"
 			    " the 'partially converged' steady state as base flow.\n" << endl;
 			    
-			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow); //We store the "partially converged" steady state
+			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
 			    m_Check_BaseFlow++;
 			    
 			    A->GetAdvObject()->SetBaseFlow(q0); 
@@ -190,12 +189,12 @@ namespace Nektar
 			    FlowPartiallyConverged = true;
 			    
 			}
-			else if (m_NonConvergingStepsCounter*m_dt*m_infosteps >= TimeToRestart)
+			else if (m_NonConvergingStepsCounter*m_dt*m_infosteps >= AdaptiveTime)
 			{
 			    cout << "\n\t We compute stability analysis using"
 			    " the current flow field as base flow.\n" << endl;
 			    
-			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow); //We store the current flow field
+			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
 			    m_Check_BaseFlow++;
 			    
 			    A->GetAdvObject()->SetBaseFlow(q0);
@@ -211,7 +210,7 @@ namespace Nektar
 		    m_Check++;                    
 		    m_equ[m_nequ - 1]->Checkpoint_Output(m_Check);                       
 		}
-		m_stepCounter++;
+            m_stepCounter++;
 	    }
 	    
 	    m_file.close();
@@ -471,18 +470,18 @@ namespace Nektar
 	    
 	    for(int i = 0; i < NumVar_SFD; ++i)
 	    {
-		//NormDiff_q_qBar[i] = m_equ[m_nequ - 1]->L2Error(i, qBar1[i], false);
-		NormDiff_q_qBar[i] = m_equ[m_nequ - 1]->LinfError(i, qBar1[i]);
-		NormDiff_q1_q0[i] = m_equ[m_nequ - 1]->LinfError(i, q0[i]);
+            //NormDiff_q_qBar[i] = m_equ[m_nequ - 1]->L2Error(i, qBar1[i], false);
+            NormDiff_q_qBar[i] = m_equ[m_nequ - 1]->LinfError(i, qBar1[i]);
+            NormDiff_q1_q0[i] = m_equ[m_nequ - 1]->LinfError(i, q0[i]);
 		
-		if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
-		{
-		    MaxNormDiff_q_qBar = NormDiff_q_qBar[i];
-		}
-		if (MaxNormDiff_q1_q0 < NormDiff_q1_q0[i])
-		{
-		    MaxNormDiff_q1_q0 = NormDiff_q1_q0[i];
-		}
+            if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
+            {
+                MaxNormDiff_q_qBar = NormDiff_q_qBar[i];
+            }
+            if (MaxNormDiff_q1_q0 < NormDiff_q1_q0[i])
+            {
+                MaxNormDiff_q1_q0 = NormDiff_q1_q0[i];
+            }
 	    }
 	    
 	    timer.Stop();
@@ -494,20 +493,20 @@ namespace Nektar
 	    MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
 	    if (MPIrank==0)
 	    {
-		cout << "SFD - Step: " <<  left <<  m_stepCounter+1 
-		<< ";\tTime: " << left << m_equ[m_nequ - 1]->GetFinalTime() 
-		<< ";\tCPU time = " << left << cpuTime << " s" 
-		<< ";\tTot time = " << left << totalTime << " s" 
-		<< ";\tX = " << left << m_X 
-		<< ";\tDelta = " << left << m_Delta 
-		<< ";\t|q-qBar|inf = " << left << MaxNormDiff_q_qBar << endl;
-		std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
-		m_file << m_stepCounter+1 << "\t" 
-		<< m_equ[m_nequ - 1]->GetFinalTime() << "\t" 
-		<< totalTime << "\t" 
-		<< MaxNormDiff_q_qBar << "\t" 
-		<< MaxNormDiff_q1_q0 << endl;
-		m_file.close();
+            cout << "SFD - Step: " <<  left <<  m_stepCounter+1
+            << ";\tTime: " << left << m_equ[m_nequ - 1]->GetFinalTime()
+            << ";\tCPU time = " << left << cpuTime << " s" 
+            << ";\tTot time = " << left << totalTime << " s"
+            << ";\tX = " << left << m_X
+            << ";\tDelta = " << left << m_Delta
+            << ";\t|q-qBar|inf = " << left << MaxNormDiff_q_qBar << endl;
+            std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app);
+            m_file << m_stepCounter+1 << "\t"
+            << m_equ[m_nequ - 1]->GetFinalTime() << "\t"
+            << totalTime << "\t"
+            << MaxNormDiff_q_qBar << "\t"
+            << MaxNormDiff_q1_q0 << endl;
+            m_file.close();
 	    }
 	    #else
 	    cout << "SFD - Step: " <<  left <<  m_stepCounter+1 
@@ -537,18 +536,17 @@ namespace Nektar
 	    MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
 	    if (MPIrank==0)
 	    {
-		cout << "\n=======================================================================" << endl;
-		cout << "Parameters for the SFD method:" << endl;
-		cout << "\tControl Coefficient: X = " << m_X << endl;
-		cout << "\tFilter Width:        Delta = " << m_Delta << endl;
-		cout << "The simulation will stop when:" << endl;
-		cout << "\t|q-qBar|inf < " << TOL << endl;
-		if (m_EvolutionOperator == eOptimizedSteadyState)
-		{
-		    cout << "\nWe also run the coupling between the SFD method and the Arnoldi method:" << endl;
-		    cout << "  We run Arnoldi (and update SFD parameters) when |q-qBar|inf < " << PartialTOL << endl;
-		    cout << "  or when |q-qBar|inf is not devreasing for " << TimeToRestart << " time units." << endl;
-		}
+            cout << "\n=======================================================================" << endl;
+            cout << "Parameters for the SFD method:" << endl;
+            cout << "\tControl Coefficient: X = " << m_X << endl;
+            cout << "\tFilter Width:        Delta = " << m_Delta << endl;
+            cout << "The simulation is stopped when |q-qBar|inf < " << TOL << endl;
+            if (m_EvolutionOperator == eAdaptiveSFD)
+            {
+                cout << "\nWe use the adaptive SFD method:" << endl;
+                cout << "  The parameters are updated every  " << AdaptiveTime << " time units;" << endl;
+                cout << "  until |q-qBar|inf becomes smaller than " << AdaptiveTOL << endl;
+            }
 		cout << "=======================================================================\n" << endl;
 	    }
 	    #else
@@ -556,13 +554,12 @@ namespace Nektar
 	    cout << "Parameters for the SFD method:" << endl;
 	    cout << "\tControl Coefficient: X = " << m_X << endl;
 	    cout << "\tFilter Width: Delta = " << m_Delta << endl;
-	    cout << "The simulation is stopped when:" << endl;
-	    cout << "\t|q-qBar|inf < " << TOL << endl;
-	    if (m_EvolutionOperator == eOptimizedSteadyState)
+	    cout << "The simulation is stopped when |q-qBar|inf < " << TOL << endl;
+	    if (m_EvolutionOperator == eAdaptiveSFD)
 	    {
-		cout << "\nWe also run the coupling between the SFD method and the Arnoldi method:" << endl;
-		cout << "  We run Arnoldi (and update SFD parameters) when |q-qBar|inf < " << PartialTOL << endl;
-		cout << "  or when |q-qBar|inf is not devreasing for " << TimeToRestart << " time units." << endl;
+            cout << "\nWe use the adaptive SFD method:" << endl;
+            cout << "  The parameters are updated every " << AdaptiveTime << " time units;" << endl;
+            cout << "  until |q-qBar|inf becomes smaller than " << AdaptiveTOL << endl;
 	    }
 	    cout << "=======================================================================\n" << endl;
 	    #endif 

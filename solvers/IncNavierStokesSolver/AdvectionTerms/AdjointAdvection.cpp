@@ -506,12 +506,8 @@ namespace Nektar
     {
         std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
-//<<<<<<< HEAD
         int nqtot = pFields[0]->GetTotPoints();
         Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
-//=======
-//        int nqtot = m_base[0]->GetTotPoints();
-//>>>>>>> master
 
         //Get Homogeneous
         LibUtilities::FieldIOSharedPtr fld =

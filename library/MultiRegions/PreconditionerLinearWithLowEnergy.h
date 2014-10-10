@@ -87,8 +87,8 @@ namespace Nektar
             virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);
 
-            virtual DNekScalBlkMatSharedPtr
-                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
+            virtual DNekScalMatSharedPtr
+                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

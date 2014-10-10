@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.4)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.7)
 SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build,
 options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release
 RelWithDebInfo MinSizeRel.")
@@ -50,8 +50,6 @@ SET(NEKTAR_LIBRARY_TYPE "SHARED")
 
 # Set up RPATH
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
 LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
@@ -68,6 +66,8 @@ OPTION(NEKTAR_BUILD_UTILITIES  "Build utilities."               ON)
 OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
 OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
 OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
+OPTION(NEKTAR_BUILD_PACKAGES   "Build Nektar++ binary packages" OFF)
+MARK_AS_ADVANCED(NEKTAR_BUILD_PACKAGES)
 
 OPTION(NEKTAR_TEST_ALL  "Include full set of regression tests to this build."  OFF)
 
@@ -158,17 +158,21 @@ INCLUDE (NektarCommon)
 # Find Libraries
 SET(TPURL http://www.nektar.info/thirdparty)
 SET(TPSRC ${CMAKE_SOURCE_DIR}/ThirdParty)
+SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
+SET(TPDIST ${CMAKE_INSTALL_PREFIX})
 IF (NOT EXISTS ${TPSRC})
     FILE(MAKE_DIRECTORY ${TPSRC})
 ENDIF ()
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
+INCLUDE (ThirdPartyScotch)
 INCLUDE (ThirdPartyBoost)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyFFTW)
 INCLUDE (ThirdPartyArpack)
 INCLUDE (ThirdPartyMPI)
+INCLUDE (ThirdPartyPETSc)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
 INCLUDE (ThirdPartySMV)
@@ -300,6 +304,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindScotch.cmake
 	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
@@ -311,4 +316,8 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
 SET(NEKTAR_PASSED_FIRST_CONFIGURE ON CACHE BOOL INTERNAL)
 MARK_AS_ADVANCED(NEKTAR_PASSED_FIRST_CONFIGURE)
 
-INCLUDE(NektarPackageGenerator)
+IF(NEKTAR_BUILD_PACKAGES)
+    add_subdirectory(pkg)
+ENDIF(NEKTAR_BUILD_PACKAGES)
+
+ADD_SUBDIRECTORY(docs)

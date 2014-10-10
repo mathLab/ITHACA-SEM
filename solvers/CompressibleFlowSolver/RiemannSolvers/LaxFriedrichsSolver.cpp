@@ -39,39 +39,38 @@ namespace Nektar
 {
     std::string LaxFriedrichsSolver::solverName =
         SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
-            "LaxFriedrichs",
-            LaxFriedrichsSolver::create,
-            "LaxFriedrichs Riemann solver");
+            "LaxFriedrichs", LaxFriedrichsSolver::create,
+            "Lax-Friedrichs Riemann solver");
 
     LaxFriedrichsSolver::LaxFriedrichsSolver() : CompressibleSolver()
     {
-
+        
     }
-
+    
     /**
      * @brief Lax-Friedrichs Riemann solver
      *
      * @param rhoL      Density left state.
-     * @param rhoR      Density right state.  
-     * @param rhouL     x-momentum component left state.  
-     * @param rhouR     x-momentum component right state.  
-     * @param rhovL     y-momentum component left state.  
-     * @param rhovR     y-momentum component right state.  
-     * @param rhowL     z-momentum component left state.  
+     * @param rhoR      Density right state.
+     * @param rhouL     x-momentum component left state.
+     * @param rhouR     x-momentum component right state.
+     * @param rhovL     y-momentum component left state.
+     * @param rhovR     y-momentum component right state.
+     * @param rhowL     z-momentum component left state.
      * @param rhowR     z-momentum component right state.
-     * @param EL        Energy left state.  
-     * @param ER        Energy right state. 
+     * @param EL        Energy left state.
+     * @param ER        Energy right state.
      * @param rhof      Computed Riemann flux for density.
-     * @param rhouf     Computed Riemann flux for x-momentum component 
-     * @param rhovf     Computed Riemann flux for y-momentum component 
-     * @param rhowf     Computed Riemann flux for z-momentum component 
+     * @param rhouf     Computed Riemann flux for x-momentum component
+     * @param rhovf     Computed Riemann flux for y-momentum component
+     * @param rhowf     Computed Riemann flux for z-momentum component
      * @param Ef        Computed Riemann flux for energy.
      */
     void LaxFriedrichsSolver::v_PointSolve(
-        double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
-        double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
-        double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
-    {        
+        NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,
+        NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
+        NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef)
+    {
         static NekDouble gamma = m_params["gamma"]();
         
         // Left and right velocities
@@ -83,11 +82,11 @@ namespace Nektar
         NekDouble wR = rhowR / rhoR;
         
         // Left and right pressures
-        NekDouble pL = (gamma - 1.0) * 
-                       (EL - 0.5 * (rhouL*uL + rhovL*vL + rhowL*wL));
+        NekDouble pL = (gamma - 1.0) *
+        (EL - 0.5 * (rhouL*uL + rhovL*vL + rhowL*wL));
         
-        NekDouble pR = (gamma - 1.0) * 
-                       (ER - 0.5 * (rhouR*uR + rhovR*vR + rhowR*wR));
+        NekDouble pR = (gamma - 1.0) *
+        (ER - 0.5 * (rhouR*uR + rhovR*vR + rhowR*wR));
         
         // Left and right speeds of sound
         NekDouble cL = sqrt(gamma * pL / rhoL);
@@ -107,8 +106,8 @@ namespace Nektar
         NekDouble vRoe   = (srL * vL + srR * vR) / srLR;
         NekDouble wRoe   = (srL * wL + srR * wR) / srLR;
         NekDouble hRoe   = (srL * hL + srR * hR) / srLR;
-        NekDouble cRoe   = sqrt((gamma - 1.0)*(hRoe - 0.5 * 
-            (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe)));
+        NekDouble cRoe   = sqrt((gamma - 1.0)*(hRoe - 0.5 *
+                                               (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe)));
         
         // Minimum and maximum wave speeds
         NekDouble S    = std::max(uRoe+cRoe, std::max(uR+cR, -uL+cL));
@@ -123,19 +122,95 @@ namespace Nektar
         rhof  = 0.5 * ((rhouL + rhouR) - sign * S * (rhoR -rhoL));
         
         // Lax-Friedrichs Riemann rhou flux
-        rhouf = 0.5 * ((rhoL * uL * uL + pL + rhoR * uR * uR + pR) - 
+        rhouf = 0.5 * ((rhoL * uL * uL + pL + rhoR * uR * uR + pR) -
                        sign * S * (rhouR - rhouL));
         
         // Lax-Friedrichs Riemann rhov flux
-        rhovf = 0.5 * ((rhoL * uL * vL + rhoR * uR * vR) - 
-                        sign * S * (rhovR - rhovL));
+        rhovf = 0.5 * ((rhoL * uL * vL + rhoR * uR * vR) -
+                       sign * S * (rhovR - rhovL));
         
         // Lax-Friedrichs Riemann rhow flux
-        rhowf = 0.5 * ((rhoL * uL * wL + rhoR * uR * wR) - 
-                        sign * S * (rhowR - rhowL));
+        rhowf = 0.5 * ((rhoL * uL * wL + rhoR * uR * wR) -
+                       sign * S * (rhowR - rhowL));
         
         // Lax-Friedrichs Riemann E flux
-        Ef    = 0.5 * ((uL * (EL + pL) + uR * (ER + pR)) - 
-                        sign * S * (ER - EL));
+        Ef    = 0.5 * ((uL * (EL + pL) + uR * (ER + pR)) -
+                       sign * S * (ER - EL));
     }
+    
+    void LaxFriedrichsSolver::v_PointSolveVisc(
+        NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL, NekDouble  EpsL,
+        NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER, NekDouble  EpsR,
+        NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef, NekDouble &Epsf)
+    {
+        static NekDouble gamma = m_params["gamma"]();
+        
+        // Left and right velocities
+        NekDouble uL = rhouL / rhoL;
+        NekDouble vL = rhovL / rhoL;
+        NekDouble wL = rhowL / rhoL;
+        NekDouble uR = rhouR / rhoR;
+        NekDouble vR = rhovR / rhoR;
+        NekDouble wR = rhowR / rhoR;
+        
+        // Left and right pressures
+        NekDouble pL = (gamma - 1.0) *
+        (EL - 0.5 * (rhouL*uL + rhovL*vL + rhowL*wL));
+        
+        NekDouble pR = (gamma - 1.0) *
+        (ER - 0.5 * (rhouR*uR + rhovR*vR + rhowR*wR));
+        
+        // Left and right speeds of sound
+        NekDouble cL = sqrt(gamma * pL / rhoL);
+        NekDouble cR = sqrt(gamma * pR / rhoR);
+        
+        // Left and right entalpies
+        NekDouble hL = (EL + pL) / rhoL;
+        NekDouble hR = (ER + pR) / rhoR;
+        
+        // Square root of rhoL and rhoR.
+        NekDouble srL  = sqrt(rhoL);
+        NekDouble srR  = sqrt(rhoR);
+        NekDouble srLR = srL + srR;
+        
+        // Velocity Roe averages
+        NekDouble uRoe   = (srL * uL + srR * uR) / srLR;
+        NekDouble vRoe   = (srL * vL + srR * vR) / srLR;
+        NekDouble wRoe   = (srL * wL + srR * wR) / srLR;
+        NekDouble hRoe   = (srL * hL + srR * hR) / srLR;
+        NekDouble cRoe   = sqrt((gamma - 1.0)*(hRoe - 0.5 *
+                            (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe)));
+        
+        // Minimum and maximum wave speeds
+        NekDouble S    = std::max(uRoe+cRoe, std::max(uR+cR, -uL+cL));
+        NekDouble sign = 1.0;
+        
+        if(S == -uL+cL)
+        {
+            sign = -1.0;
+        }
+        
+        // Lax-Friedrichs Riemann rho flux
+        rhof  = 0.5 * ((rhouL + rhouR) - sign * S * (rhoR -rhoL));
+        
+        // Lax-Friedrichs Riemann rhou flux
+        rhouf = 0.5 * ((rhoL * uL * uL + pL + rhoR * uR * uR + pR) -
+                       sign * S * (rhouR - rhouL));
+        
+        // Lax-Friedrichs Riemann rhov flux
+        rhovf = 0.5 * ((rhoL * uL * vL + rhoR * uR * vR) -
+                       sign * S * (rhovR - rhovL));
+        
+        // Lax-Friedrichs Riemann rhow flux
+        rhowf = 0.5 * ((rhoL * uL * wL + rhoR * uR * wR) -
+                       sign * S * (rhowR - rhowL));
+        
+        // Lax-Friedrichs Riemann E flux
+        Ef    = 0.5 * ((uL * (EL + pL) + uR * (ER + pR)) -
+                       sign * S * (ER - EL));
+        
+        Epsf  = 0.5 * ((EpsL + EpsR) -
+                       sign * S * (EpsR - EpsL));
+    }
+    
 }

@@ -122,7 +122,7 @@ namespace Nektar
             public boost::enable_shared_from_this<SessionReader>
         {
         public:
-            /// Support creation through MemoryManager only.
+            /// Support creation through MemoryManager.
             friend class MemoryManager<SessionReader>;
 
             /**
@@ -166,6 +166,12 @@ namespace Nektar
                 p->InitSession();
                 return p;
             }
+
+            LIB_UTILITIES_EXPORT SessionReader(
+                int                             argc, 
+                char                           *argv[], 
+                const std::vector<std::string> &pFilenames, 
+                const CommSharedPtr            &pComm);
 
             /// Destructor
             LIB_UTILITIES_EXPORT ~SessionReader();
@@ -409,6 +415,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT CompositeOrdering GetCompositeOrdering() const;
             LIB_UTILITIES_EXPORT BndRegionOrdering GetBndRegionOrdering() const;
 
+            LIB_UTILITIES_EXPORT void SetUpXmlDoc();
+
         private:
             boost::program_options::variables_map m_cmdLineOptions;
 
@@ -447,24 +455,20 @@ namespace Nektar
             /// Map of original boundary region ordering for parallel periodic
             /// bcs.
             BndRegionOrdering                         m_bndRegOrder;
-            /// String to enumeration map for Solver Info parameters.
-            LIB_UTILITIES_EXPORT static EnumMapList        m_enums;
+            /// String to enumeration map for Solver Info parameters. 
+            LIB_UTILITIES_EXPORT static EnumMapList&  GetSolverInfoEnums();
             /// Default solver info options.
-            LIB_UTILITIES_EXPORT static SolverInfoMap      m_solverInfoDefaults;
-            /// CmdLine argument map.
-            LIB_UTILITIES_EXPORT static CmdLineArgMap      m_cmdLineArguments;
+            LIB_UTILITIES_EXPORT static SolverInfoMap& GetSolverInfoDefaults();
             /// GlobalSysSoln Info map.
-            LIB_UTILITIES_EXPORT static GloSysSolnInfoList m_gloSysSolnList;
-            
+            LIB_UTILITIES_EXPORT static GloSysSolnInfoList& GetGloSysSolnList();
+            /// CmdLine argument map.
+            LIB_UTILITIES_EXPORT static CmdLineArgMap& GetCmdLineArgMap();
+
             /// Main constructor
             LIB_UTILITIES_EXPORT SessionReader(
                 int                             argc, 
                 char                           *argv[]);
-            LIB_UTILITIES_EXPORT SessionReader(
-                int                             argc, 
-                char                           *argv[], 
-                const std::vector<std::string> &pFilenames, 
-                const CommSharedPtr            &pComm);
+
             LIB_UTILITIES_EXPORT void InitSession();
 
             /// Returns a shared pointer to the current object.
@@ -488,6 +492,7 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void CreateComm(
                 int               &argc, 
                 char*              argv[]);
+
             /// Partitions the mesh when running in parallel.
             LIB_UTILITIES_EXPORT void PartitionMesh();
             /// Partitions the comm object based on session parameters.
@@ -545,7 +550,8 @@ namespace Nektar
 
             std::string vValue = GetSolverInfo(vName);
             EnumMapList::iterator x;
-            ASSERTL0((x = m_enums.find(vName)) != m_enums.end(),
+            ASSERTL0((x = GetSolverInfoEnums().find(vName)) !=
+                          GetSolverInfoEnums().end(),
                      "Enum for SolverInfo property '" + pName + "' not found.");
 
             EnumMap::iterator y;
@@ -562,13 +568,15 @@ namespace Nektar
          *
          */
         template<typename T>
-            inline const T SessionReader::GetValueAsEnum(const std::string &pName,
-                                                         const std::string &pValue) const
+        inline const T SessionReader::GetValueAsEnum(
+            const std::string &pName,
+            const std::string &pValue) const
         {
             std::string vName  = boost::to_upper_copy(pName);
 
             EnumMapList::iterator x;
-            ASSERTL0((x = m_enums.find(vName)) != m_enums.end(),
+            ASSERTL0((x = GetSolverInfoEnums().find(vName)) !=
+                          GetSolverInfoEnums().end(),
                      "Enum for property '" + pName + "' not found.");
 
             EnumMap::iterator y;
@@ -609,10 +617,11 @@ namespace Nektar
         {
             std::string vEnum = boost::to_upper_copy(pEnum);
             EnumMapList::iterator x;
-            if ((x = m_enums.find(vEnum)) == m_enums.end())
+            if ((x = GetSolverInfoEnums().find(vEnum)) ==
+                     GetSolverInfoEnums().end())
             {
-                m_enums[vEnum] = EnumMap();
-                x = m_enums.find(vEnum);
+                GetSolverInfoEnums()[vEnum] = EnumMap();
+                x = GetSolverInfoEnums().find(vEnum);
             }
             x->second[pString] = pEnumValue;
             return pString;
@@ -641,7 +650,7 @@ namespace Nektar
             const std::string &pValue)
         {
             std::string vName = boost::to_upper_copy(pName);
-            m_solverInfoDefaults[vName] = pValue;
+            GetSolverInfoDefaults()[vName] = pValue;
             return pValue;
         }
 
@@ -659,7 +668,7 @@ namespace Nektar
             x.shortName = pShortName;
             x.description = pDescription;
             x.isFlag = false;
-            m_cmdLineArguments[pName] = x;
+            GetCmdLineArgMap()[pName] = x;
             return pName;
         }
 
@@ -677,7 +686,7 @@ namespace Nektar
             x.shortName = pShortName;
             x.description = pDescription;
             x.isFlag = true;
-            m_cmdLineArguments[pName] = x;
+            GetCmdLineArgMap()[pName] = x;
             return pName;
         }
 

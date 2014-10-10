@@ -61,7 +61,8 @@ namespace Nektar
                     const boost::weak_ptr<ExpList> &pExp,
                     const boost::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
-                : GlobalLinSysXxt(pLinSysKey, pExp, pLocToGloMap)
+            : GlobalLinSys   (pLinSysKey, pExp, pLocToGloMap),
+              GlobalLinSysXxt(pLinSysKey, pExp, pLocToGloMap)
         {
 
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eXxtFullMatrix,

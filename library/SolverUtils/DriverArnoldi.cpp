@@ -63,8 +63,7 @@ namespace Nektar
          */
         void DriverArnoldi::v_InitObject(ostream &out)
         {
-            Driver::v_InitObject(out);
-    	
+            Driver::v_InitObject(out);    	
             m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_timeSteppingAlgorithm, false);
 
             if(m_timeSteppingAlgorithm)
@@ -198,12 +197,12 @@ namespace Nektar
             }
         };
 
-        void DriverArnoldi::WriteFld(std::string file, Array<OneD, Array<OneD, NekDouble> > coeffs)
+        void DriverArnoldi::WriteFld(std::string file, std::vector<Array<OneD, NekDouble> > coeffs)
         {
         
-            Array<OneD, std::string>  variables(m_nfields);
+            std::vector<std::string>  variables(m_nfields);
         
-            ASSERTL1(coeffs.num_elements() >= m_nfields, "coeffs is not of the correct length");
+            ASSERTL1(coeffs.size() >= m_nfields, "coeffs is not of the correct length");
             for(int i = 0; i < m_nfields; ++i)
             {
                 variables[i] = m_equ[0]->GetVariable(i);
@@ -216,8 +215,8 @@ namespace Nektar
         void DriverArnoldi::WriteFld(std::string file, Array<OneD, NekDouble> coeffs)
         {
         
-            Array<OneD, std::string>  variables(m_nfields);
-            Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(m_nfields);
+            std::vector<std::string>  variables(m_nfields);
+            std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_nfields);
         
             int ncoeffs = m_equ[0]->UpdateFields()[0]->GetNcoeffs();
             ASSERTL1(coeffs.num_elements() >= ncoeffs*m_nfields,"coeffs is not of sufficient size");

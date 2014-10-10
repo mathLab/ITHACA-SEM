@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <CardiacEPSolver/Stimuli/ProtocolS1S2.h>
 
 namespace Nektar

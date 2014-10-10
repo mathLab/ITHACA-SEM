@@ -72,22 +72,12 @@ namespace Nektar
                 const AssemblyMapSharedPtr &pLocToGloMap,
                 const int pNumDir)
         {
-            DNekVec Vin(pInput.num_elements(),pInput);
-            //  DNekVec Vout(pOutput.num_elements(),pOutput,eWrapper);
-            ASSERTL1(pInput.num_elements() <= pOutput.num_elements(),
-                     "output array must be at least as long as input array");
-            DNekVec Vout(pInput.num_elements(),pOutput,eWrapper);
-            m_linSys->Solve(Vin,Vout);
-        }
+            const int nHomDofs = pNumRows - pNumDir;
 
-        /// Solve the linear system for given input and output vectors
-        /// using a specified local to global map.
-        void GlobalLinSysDirect::v_Solve( const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out,
-                    const AssemblyMapSharedPtr &pLocToGloMap,
-                    const Array<OneD, const NekDouble> &pDirForcing)
-        {
-            ASSERTL0(false, "Not implemented for this GlobalLinSys type.");
+            DNekVec Vin (nHomDofs, pInput  + pNumDir);
+            DNekVec Vout(nHomDofs, pOutput + pNumDir, eWrapper);
+
+            m_linSys->Solve(Vin, Vout);
         }
     }
 }

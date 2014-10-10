@@ -63,7 +63,7 @@ namespace Nektar
     
     void CoupledLinearNS::v_InitObject()
     {
-        EquationSystem::v_InitObject();
+        UnsteadySystem::v_InitObject();
         IncNavierStokes::v_InitObject();
         
         int  i;
@@ -1175,6 +1175,7 @@ namespace Nektar
         // since this then makes the matrix storage of type eFull
         MultiRegions::GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,locToGloMap);
         mat.m_CoupledBndSys = MemoryManager<MultiRegions::GlobalLinSysDirectStaticCond>::AllocateSharedPtr(key,m_fields[0],pAh,pBh,pCh,pDh,locToGloMap);
+        mat.m_CoupledBndSys->Initialise(locToGloMap);
         timer.Stop();
         cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
@@ -1339,7 +1340,7 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            (*x)->Apply(m_fields, outarray, outarray);
+            (*x)->Apply(m_fields, outarray, outarray, time);
         }
     }
     
@@ -1486,7 +1487,8 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            (*x)->Apply(m_fields, forcing_phys, forcing_phys);
+            const NekDouble time = 0;
+            (*x)->Apply(m_fields, forcing_phys, forcing_phys, time);
         }
         for (unsigned int i = 0; i < ncmpt; ++i)
         {
@@ -2162,8 +2164,8 @@ namespace Nektar
     
     void CoupledLinearNS::v_Output(void)
     {    
-        Array<OneD, Array<OneD, NekDouble > > fieldcoeffs(m_fields.num_elements()+1);
-        Array<OneD, std::string> variables(m_fields.num_elements()+1);
+        std::vector<Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements()+1);
+        std::vector<std::string> variables(m_fields.num_elements()+1);
         int i;
         
         for(i = 0; i < m_fields.num_elements(); ++i)

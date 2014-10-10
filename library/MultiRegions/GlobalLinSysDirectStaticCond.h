@@ -36,6 +36,7 @@
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTSTATICCOND_H
 
 #include <MultiRegions/GlobalLinSysDirect.h>
+#include <MultiRegions/GlobalLinSysStaticCond.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 
 namespace Nektar
@@ -50,18 +51,21 @@ namespace Nektar
                                         GlobalLinSysDirectStaticCondSharedPtr;
 
         /// A global linear system.
-        class GlobalLinSysDirectStaticCond : public GlobalLinSysDirect
+        class GlobalLinSysDirectStaticCond : virtual public GlobalLinSysDirect,
+                                             virtual public GlobalLinSysStaticCond
         {
         public:
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
-                        const GlobalLinSysKey &pLinSysKey,
-                        const boost::weak_ptr<ExpList> &pExpList,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                        const GlobalLinSysKey                &pLinSysKey,
+                        const boost::weak_ptr<ExpList>       &pExpList,
+                        const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
-                return MemoryManager<GlobalLinSysDirectStaticCond>
+                GlobalLinSysDirectStaticCondSharedPtr ret =
+                    MemoryManager<GlobalLinSysDirectStaticCond>
                     ::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
+                ret->InitObject();
+                return ret;
             }
 
             /// Name of class
@@ -70,74 +74,39 @@ namespace Nektar
 
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
-                        const GlobalLinSysKey &mkey,
-                        const boost::weak_ptr<ExpList> &pExpList,
-                        const boost::shared_ptr<AssemblyMap>
-                                                                &locToGloMap);
+                        const GlobalLinSysKey                &mkey,
+                        const boost::weak_ptr<ExpList>       &pExpList,
+                        const boost::shared_ptr<AssemblyMap> &locToGloMap);
 
             /// Constructor for full direct matrix solve.
             MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
-                        const GlobalLinSysKey &mkey,
-                        const boost::weak_ptr<ExpList> &pExpList,
-                        const DNekScalBlkMatSharedPtr pSchurCompl,
-                        const DNekScalBlkMatSharedPtr pBinvD,
-                        const DNekScalBlkMatSharedPtr pC,
-                        const DNekScalBlkMatSharedPtr pInvD,
-                        const boost::shared_ptr<AssemblyMap>
-                                                                &locToGloMap);
-
-//            MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
-//                        const DNekScalBlkMatSharedPtr pSchurCompl,
-//                        const DNekScalBlkMatSharedPtr pBinvD,
-//                        const DNekScalBlkMatSharedPtr pC,
-//                        const DNekScalBlkMatSharedPtr pInvD,
-//                        const boost::shared_ptr<AssemblyMap>
-//                        &pLocToGloMap);
+                        const GlobalLinSysKey                &mkey,
+                        const boost::weak_ptr<ExpList>       &pExpList,
+                        const DNekScalBlkMatSharedPtr         pSchurCompl,
+                        const DNekScalBlkMatSharedPtr         pBinvD,
+                        const DNekScalBlkMatSharedPtr         pC,
+                        const DNekScalBlkMatSharedPtr         pInvD,
+                        const boost::shared_ptr<AssemblyMap> &locToGloMap);
 
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectStaticCond();
 
+        protected:
+            virtual void v_AssembleSchurComplement(
+                boost::shared_ptr<AssemblyMap> pLocToGloMap);
+            virtual GlobalLinSysStaticCondSharedPtr v_Recurse(
+                const GlobalLinSysKey                &mkey,
+                const boost::weak_ptr<ExpList>       &pExpList,
+                const DNekScalBlkMatSharedPtr         pSchurCompl,
+                const DNekScalBlkMatSharedPtr         pBinvD,
+                const DNekScalBlkMatSharedPtr         pC,
+                const DNekScalBlkMatSharedPtr         pInvD,
+                const boost::shared_ptr<AssemblyMap> &l2gMap);
+
         private:
-            /// Schur complement for Direct Static Condensation.
-            GlobalLinSysDirectStaticCondSharedPtr m_recursiveSchurCompl;
-
-            /// Block matrices at this level
-            DNekScalBlkMatSharedPtr m_schurCompl;
-            DNekScalBlkMatSharedPtr m_BinvD;
-            DNekScalBlkMatSharedPtr m_C;
-            DNekScalBlkMatSharedPtr m_invD;
-
-            /// Solve the linear system for given input and output vectors
-            /// using a specified local to global map.
-            virtual void v_Solve(
-                        const Array<OneD, const NekDouble>  &in,
-                              Array<OneD,       NekDouble>  &out,
-                        const AssemblyMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble>  &dirForcing
-                                                        = NullNekDouble1DArray);
-
-            /// Initialise this object
-            void Initialise(
-                  const boost::shared_ptr<AssemblyMap>& locToGloMap,
-                  MatrixStorage matStorage);
-
             /// Matrix Storage type for known matrices
             MatrixStorage DetermineMatrixStorage(
                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
-
-            /// Set up the storage for the Schur complement or the top level
-            /// of the multi-level Schur complement.
-            void SetupTopLevel(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
-
-            /// Assemble the Schur complement matrix.
-            void AssembleSchurComplement(
-                                         const boost::shared_ptr<AssemblyMap>& locToGloMap,
-                                         const MatrixStorage matStorage);
-
-            ///
-            void ConstructNextLevelCondensedSystem(
-                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
-         };
+        };
     }
 }
 

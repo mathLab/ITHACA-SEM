@@ -60,7 +60,7 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 //#include <LibUtilities/Foundations/GaussPoints.h>
 #include <boost/lexical_cast.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 
 void OrderVertices(int nedges,SpatialDomains::MeshGraphSharedPtr graphShPt,

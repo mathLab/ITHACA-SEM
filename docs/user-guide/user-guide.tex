@@ -25,6 +25,9 @@ openany, % A chapter may start on either a recto or verso page.
 % \usepackage{kpfonts} %Font
 
 \usepackage{amsmath,amssymb,mathtools} % Math
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
 
 % \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
@@ -91,6 +94,8 @@ openany, % A chapter may start on either a recto or verso page.
 
 \changecaptionwidth          % Change the width of the caption
 \captionwidth{1\textwidth} %
+
+\usepackage{tabularx}
 
 %%% ABSTRACT
 %%%------------------------------------------------------------------------------
@@ -387,6 +392,8 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 
 \import{formulation/}{formulation}
 
+\import{xml/}{xml}
+
 \part{Applications and Utilities}
 
 \import{solvers/}{solvers}
@@ -394,8 +401,6 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 \import{utilities/}{utilities}
 
 \part{Reference}
-\import{xml/}{xml}
-
 \import{optimisation/}{optimisation}
 
 \import{command-line/}{command-line}

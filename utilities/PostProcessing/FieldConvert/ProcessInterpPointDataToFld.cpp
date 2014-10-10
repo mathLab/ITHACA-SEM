@@ -51,7 +51,7 @@ ModuleKey ProcessInterpPointDataToFld::className =
     GetModuleFactory().RegisterCreatorFunction(
        ModuleKey(eProcessModule, "interppointdatatofld"),
        ProcessInterpPointDataToFld::create,
-       "Interpolates given discrete data using a finite differece "
+       "Interpolates given discrete data using a finite difference "
        "approximation to a fld file given a xml file");
 
 

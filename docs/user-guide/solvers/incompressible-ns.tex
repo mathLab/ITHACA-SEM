@@ -219,6 +219,25 @@ where $\sigma=\left\| \mathbf{u'}(\tau)\right\|$. This is no other that the sing
 \end{figure}
 
 
+\subsection{Steady-state solver}
+\label{SectionSFD}
+
+To compute linear stability analysis, the choice of the base flow, around which the system will be linearised, is crucial. If one wants to use the steady-state solution of the Navier-Stokes equations as base flow, a steady-state solver is implemented in \nekpp. The method used is the encapsulated formulation of the Selective Frequency Damping method \cite{JoCoSh14}. Unstable steady base flows can be obtained with this method. The SFD method is based on the filtering and the control of the unstable temporal frequencies within the flow. The time continuous formulation of the SFD method is 
+\begin{equation}
+\begin{cases}
+\dot{q}=NS(q)-\chi (q-\bar{q}), \\
+\dot{\bar{q}}=\frac{q-\bar{q}}{\Delta}.
+\end{cases}
+\label{SFD-General}
+\end{equation} 
+where $q$ represents the problem unknown(s), the dot represents the time derivative, $NS$ represents the Navier-Stokes equations, $\chi \in \mathbb{R}_+$ is the control coefficient, $\bar{q}$ is a filtered version of $q$, and $\Delta \in \mathbb{R}_+ ^*$ is the filter width of a first-order low-pass time filter. The steady-state solution is reached when $q=\bar{q}$.
+
+The convergence of the method towards a steady-state solution depends on the choice of the parameters $\chi$ and $\Delta$. They have to be carefully chosen: if they are too small, the instabilities within the flow can not be damped; but if they are too large, the method may converge extremely slowly. If the dominant eigenvalue of the flow studied is known (and given as input), the algorithm implemented can automatically select parameters that ensure a fast convergence of the SFD method. Most of the time, the dominant eigenvalue is not know, that is why an adaptive algorithm that adapts $\chi$ and $\Delta$ all along the solver execution is also implemented.
+
+Note that this method can not be applied for flows with a pure exponential growth of the instabilities (\textit{e.g.} jet flow within a pipe). In other words, if the frequency of the dominant eigenvalue is zero, then the SFD method is not a suitable tool to obtain a steady-state solution.
+
+
+
 \section{Usage}
 
 \begin{lstlisting}[style=BashInputStyle]
@@ -257,6 +276,7 @@ are:
 \end{center}
 
 \subsection{Solver Info}
+\label{SectionIncNS_SolverInfo}
 
 The following parameters can be specified in the \inltt{SOLVERINFO} section of
 the session file:
@@ -315,7 +335,7 @@ Direct solver & \texttt{CoupledLinearisedNS} & 2D, Quasi-3D, 3D &CG\\
 {Driver} & {Description} &{Dimensions}&{Projections} \\
 \midrule
 \texttt{Standard} & Time integration of the equations & All & CG, DG \\
-\texttt{SteadyState} & Steady State (Selective Frequency Damping)  & All & CG \\
+\texttt{SteadyState} & Steady-state solver (see Sec. \ref{SectionSFD})  & All & CG \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -473,6 +493,7 @@ UnsteadyNavierStokes & 2D, Quasi-3D& Continuous &VCS,DS\\
 \end{center}
 
 \subsection{Solver Info}
+\label{SectionIncNS_SolverInfo_Stab}
 
 \begin{itemize}
 \item \inltt{Eqtype}:  sets the type of equation to solve, according to the
@@ -552,6 +573,53 @@ The following parameters can be specified in the \texttt{PARAMETERS} section of 
 \begin{itemize}
 \item To be INserted
 \end{itemize}
+
+\section{Steady-state solver Session file configuration}
+\label{SectionSFD_XML}
+
+In this section, we detail how to use the steady-state solver (that implements the selective frequency damping method, see Sec. \ref{SectionSFD}).
+Two cases are detailed here: the execution of the classical SFD method and the adaptive SFD method, where the control coefficient $\chi$ and the filter width $\Delta$ of the SFD method will be updated all along the solver execution. For the second case, the parameters of the SFD method do not need to be defined by the user (they will be automatically calculated all along the solver execution) but several session files must be defined in a very specific way.
+
+\subsection{Execution of the classical steady-state solver}
+
+\subsubsection{Solver Info}
+
+The definition of \inltt{Eqtype},  \inltt{TimeIntegrationMethod} and \inltt{Projection} is similar as what is explained in \ref{SectionIncNS_SolverInfo_Stab}. The use of the steady-state solver is enforced through the definition of the \inltt{Driver}: is has to be  \inltt{SteadyState}. \inltt{EvolutionOperator} does not need to be defined to run the unadapted SFD method (by default, it is \inltt{Nonlinear}).
+
+\subsubsection{Parameters}
+
+The following parameters can be specified in the \texttt{PARAMETERS} section of the session file: 
+
+\begin{itemize}
+\item \inltt{Re}: sets the Reynolds number 
+\item \inltt{Kinvis}: sets the kinematic viscosity $\nu$
+\item \inltt{ControlCoeff}: sets the control coefficient $\chi$ of the SFD method
+\item \inltt{FilterWidth}: sets the filter width $\Delta$ of the SFD method
+\item \inltt{GrowthRateEV} and \inltt{FrequencyEV}: if the growth rate and the frequency of the dominant eigenvalue are known, they can be given given as input and the code will automatically select the optimum parameters $\chi$ and $\Delta$ (and overwrite the values that may be given in the session file)
+\item \inltt{TOL}: sets the tolerance of the SFD method. The code will run until $||q-\bar{q}||_{inf}<TOL$. 
+\end{itemize}
+
+\subsection{Execution of the adaptive steady-state solver} 
+
+Running the adaptive selective frequency damping method requires to set up the session files in a very specific manner. First, the \inltt{Geometry} section must be in a separated archive file. If the test case studied is called "Session", the mesh file must be called \inlsh{Session.gz} (the command "gzip" can be used to obtain this file). 
+
+The requirements for the file \inlsh{Session.xml} are similar as for the ones for the classical SFD method, without the \inltt{Geometry} section. This file defines the properties of the nonlinear problem solved. Also, the \inltt{SOLVERINFO} section must contain the line:
+\begin{lstlisting}[style=XMLStyle]
+<I PROPERTY="EvolutionOperator" VALUE="AdaptiveSFD" />
+\end{lstlisting}
+
+As the adaptive SFD method used is coupled with a stability analysis method, \inltt{kdim}, \inltt{nvec}, \inltt{evtol} and \inltt{nits} must be defined into the \inltt{PARAMETERS} section of \inlsh{Session.xml}. To define the linear problem executed by the stability analysis method, another file, that must be called \inlsh{Session\_LinNS.xml}, has to be defined. This file can be a copy paste of \inlsh{Session.xml}, only three things have to be modified:
+\begin{enumerate}
+\item The boundary conditions must be modified to be homogeneous (\textit{i.e.} equal to zero) at the inflow boundary.
+\item A random non-zero function \inltt{InitialConditions} has to be defined.
+\item A random function \inltt{BaseFlow} has to be defined (it will be overwritten all along the solver execution).
+\end{enumerate}
+
+Once these three files (the  \inltt{Geometry} in \inlsh{Session.gz}, the nonlinear problem definition in \inlsh{Session.xml} and the homogeneous linear problem in \inlsh{Session\_LinNS.xml}) are correctly defined, the adaptive SFD method must be ran using:
+
+\begin{lstlisting}[style=BashInputStyle]
+IncNavierStokesSolver Session.gz Session.xml
+\end{lstlisting}
 
 
 

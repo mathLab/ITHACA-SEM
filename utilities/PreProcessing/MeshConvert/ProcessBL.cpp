@@ -138,7 +138,7 @@ namespace Nektar
             int nl      = m_config["layers"].as<int>();
             int nq      = m_config["nq"].    as<int>();
 
-            // determine if geometric ratio is string or a constant. 
+            // determine if geometric ratio is string or a constant.
             LibUtilities::AnalyticExpressionEvaluator rEval;
             NekDouble r;
             int       rExprId       = -1;
@@ -315,13 +315,13 @@ namespace Nektar
                                          << endl;
                                     continue;
                                 }
-                                
+
                                 if (splitEls.count(el->GetId()) > 0)
                                 {
                                     cerr << "WARNING: prism already found; "
                                          << "ignoring" << endl;
                                 }
-                                
+
                                 splitEls[el->GetId()] = j;
                             }
                             else if (validElTypes.count(el->GetConf().m_e) == 0)
@@ -500,12 +500,12 @@ namespace Nektar
                         edgeNodes[j][nl] = el[i]->GetVertex(sEdge.edgeVert[j][1]);
 
                         // Variable geometric ratio
-                        if(ratioIsString) 
+                        if(ratioIsString)
                         {
                             NekDouble x0,y0,z0;
                             NekDouble x1,y1,z1;
                             NekDouble xm,ym,zm;
-                            
+
                             // -> Find edge end and mid points
                             x0 = x[sEdge.offset[j]];
                             y0 = y[sEdge.offset[j]];
@@ -523,11 +523,11 @@ namespace Nektar
                             NekDouble rnew;
                             rnew = rEval.Evaluate(rExprId,xm,ym,zm,0.0);
 
-                            // Get basis with new r; 
+                            // Get basis with new r;
                             LibUtilities::PointsKey Pkey(nl+1, t, rnew);
                             LibUtilities::PointsSharedPtr newP
                                 = LibUtilities::PointsManager()[Pkey];
-                            
+
                             const Array<OneD, const NekDouble> z = newP->GetZ();
 
                             // Create new interior nodes based on this new blend

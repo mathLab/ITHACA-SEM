@@ -48,7 +48,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessScalar::className = 
+        ModuleKey ProcessScalar::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "scalar"), ProcessScalar::create,
                 "Impose a scalar function z=f(x,y) on a surface.");
@@ -87,7 +87,7 @@ namespace Nektar
             const int nq   = m_config["nq"].as<int>();
             const int nTot = nq*nq;
             string expr = m_config["scalar"].as<string>();
-            
+
             LibUtilities::AnalyticExpressionEvaluator rEval;
             int rExprId = rEval.DefineFunction("x y z", expr);
 
@@ -104,7 +104,7 @@ namespace Nektar
                 set_intersection(surfs.begin(), surfs.end(),
                                  tags .begin(), tags .end(),
                                  back_inserter(inter));
-                
+
                 // It doesn't continue to next element.
                 if (inter.size() != 1)
                 {
@@ -136,15 +136,15 @@ namespace Nektar
                 {
                     NodeSharedPtr n = f->m_vertexList[j];
                     n->m_z = rEval.Evaluate(rExprId, n->m_x, n->m_y, 0.0, 0.0);
-                    
+
                     if (n->m_z < 1e-32)
                     {
                         n->m_z = 0;
                     }
-                        
-                    
+
+
                 }
-                
+
                 // Put curvature into edges
                 for (j = 0; j < f->m_edgeList.size(); ++j)
                 {
@@ -162,7 +162,7 @@ namespace Nektar
                         {
                             n.m_z = 0;
                         }
-                        
+
                         f->m_edgeList[j]->m_edgeNodes.push_back(
                             NodeSharedPtr(new Node(n)));
                     }

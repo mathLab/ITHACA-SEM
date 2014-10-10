@@ -56,10 +56,10 @@ namespace Nektar
                 return MemoryManager<ProcessScalar>::AllocateSharedPtr(m);
             }
             static ModuleKey className;
-            
+
             ProcessScalar(MeshSharedPtr m);
             virtual ~ProcessScalar();
-            
+
             /// Write mesh to output file.
             virtual void Process();
         };

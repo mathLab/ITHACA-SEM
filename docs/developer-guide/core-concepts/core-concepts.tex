@@ -219,8 +219,8 @@ example shows what is possible using this approach:
 \begin{lstlisting}[style=C++Style]
  class Sample {
      public:
-         Array<OneD, const double>& getData() const { return m_data; } void
-         getData(Array<OneD, const double>& out) const { out = m_data; }
+         Array<OneD, const double>& getData() const { return m_data; }
+         void getData(Array<OneD, const double>& out) const { out = m_data; }
 
      private:
          Array<OneD, double> m_data;

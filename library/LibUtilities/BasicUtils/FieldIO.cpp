@@ -1120,14 +1120,17 @@ namespace Nektar
             fs::path specPath (outname);
 
             // Remove any existing file which is in the way
-            try
+            if(m_comm->RemoveExistingFiles())
             {
-                fs::remove_all(specPath);
-            }
-            catch (fs::filesystem_error& e)
-            {
-                ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
-                         "Filesystem error: " + string(e.what()));
+                try
+                {
+                    fs::remove_all(specPath);
+                }
+                catch (fs::filesystem_error& e)
+                {
+                    ASSERTL0(e.code().value() == berrc::no_such_file_or_directory,
+                             "Filesystem error: " + string(e.what()));
+                }
             }
 
             // serial processing just add ending.
@@ -1538,7 +1541,5 @@ namespace Nektar
             
             return datasize;
         }
-        
-
     }
 }

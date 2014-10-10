@@ -3,12 +3,18 @@ SET(FieldConvertHeaders
     Field.hpp
     InputFld.h
     InputXml.h
+    InputPts.h
+    OutputInfo.h
     OutputTecplot.h
     OutputVtk.h
     OutputFld.h
+    ProcessAddFld.h
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
     ProcessInterpField.h
+    ProcessInterpPoints.h
+    ProcessInterpPointDataToFld.h
+    ProcessScaleInFld.h
     ProcessVorticity.h
     ProcessC0Projection.h
     ProcessQCriterion.h
@@ -19,12 +25,18 @@ SET(FieldConvertSources
     FieldConvert.cpp
     InputFld.cpp
     InputXml.cpp
+    InputPts.cpp
+    OutputInfo.cpp
     OutputTecplot.cpp
     OutputVtk.cpp
     OutputFld.cpp
+    ProcessAddFld.cpp
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
     ProcessInterpField.cpp
+    ProcessInterpPoints.cpp
+    ProcessInterpPointDataToFld.cpp
+    ProcessScaleInFld.cpp
     ProcessVorticity.cpp
     ProcessC0Projection.cpp
     ProcessQCriterion.cpp

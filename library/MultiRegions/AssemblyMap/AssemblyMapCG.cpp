@@ -351,11 +351,12 @@ namespace Nektar
          * @brief Construct an AssemblyMapCG object which corresponds to the
          * linear space of the current object.
          *
-         * This function is used in an XXT solve to apply a linear space
-         * preconditioner in the conjugate gradient solve.
+         * This function is used to create a linear-space assembly map, which is
+         * then used in the linear space preconditioner in the conjugate
+         * gradient solve.
          */
-        AssemblyMapSharedPtr AssemblyMapCG::v_XxtLinearSpaceMap(
-            const ExpList &locexp)
+        AssemblyMapSharedPtr AssemblyMapCG::v_LinearSpaceMap(
+            const ExpList &locexp, GlobalSysSolnType solnType)
         {
             AssemblyMapCGSharedPtr returnval;
 
@@ -368,7 +369,7 @@ namespace Nektar
             // Get Default Map and turn off any searched values.
             returnval = MemoryManager<AssemblyMapCG>
                 ::AllocateSharedPtr(m_session);
-            returnval->m_solnType           = eXxtFullMatrix;
+            returnval->m_solnType           = solnType;
             returnval->m_preconType         = eNull;
             returnval->m_maxStaticCondLevel = 0;
             returnval->m_signChange         = false;

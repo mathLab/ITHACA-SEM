@@ -11,5 +11,10 @@ ADD_UTILITIES_EXECUTABLE(SplitModes                util-extra SplitModes.cpp)
 
 IF (NEKTAR_USE_VTK)
     ADD_UTILITIES_EXECUTABLE(VtkToPng util-extra VtkToPng.cpp)
-    TARGET_LINK_LIBRARIES(VtkToPng vtkCommon vtksys vtkViews vtkWidgets vtkRendering vtkIO)
+    IF (VTK_MAJOR_VERSION LESS 6)
+        TARGET_LINK_LIBRARIES(VtkToPng vtkCommon vtksys vtkViews vtkWidgets 
+                                       vtkRendering vtkIO)
+    ELSE ()
+        TARGET_LINK_LIBRARIES(VtkToPng ${VTK_LIBRARIES})
+    ENDIF ()
 ENDIF (NEKTAR_USE_VTK)

@@ -1,5 +1,7 @@
-OPTION(NEKTAR_USE_SCOTCH
-    "Use Scotch library for performing mesh partitioning." OFF)
+IF (NOT WIN32)
+    OPTION(NEKTAR_USE_SCOTCH
+        "Use Scotch library for performing mesh partitioning." OFF)
+ENDIF(NOT WIN32)
 
 CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_SCOTCH
     "Build Scotch library from ThirdParty" OFF
@@ -13,8 +15,11 @@ IF( NEKTAR_USE_SCOTCH )
             MESSAGE(FATAL_ERROR
                 "'flex' lexical parser not found. Cannot build scotch.")
         ENDIF(NOT FLEX)
+        MARK_AS_ADVANCED(FLEX)
 
-        SET(SCOTCH_SRC ${TPSRC}/src/scotch-6.0.0/src)
+        # Note that scotch is compiled in the source-tree, so we unpack the
+        # source code in the ThirdParty builds directory.
+        SET(SCOTCH_SRC ${TPBUILD}/scotch-6.0.0/src)
 
         IF (APPLE)
             SET(SCOTCH_MAKE Makefile.inc.i686_mac_darwin8)
@@ -37,17 +42,22 @@ IF( NEKTAR_USE_SCOTCH )
             PREFIX ${TPSRC}
             URL ${TPURL}/scotch_6.0.0.tar.gz
             URL_MD5 "ba117428c0a6cd97d0c93e8b872bb3fe"
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
+            SOURCE_DIR ${TPBUILD}/scotch-6.0.0
+            BINARY_DIR ${TPBUILD}/scotch-6.0.0
+            TMP_DIR ${TPBUILD}/scotch-6.0.0-tmp
+            INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND rm -f ${SCOTCH_SRC}/Makefile.inc
                 COMMAND ln -s
                 ${SCOTCH_SRC}/Make.inc/${SCOTCH_MAKE}
                 ${SCOTCH_SRC}/Makefile.inc
-            BUILD_COMMAND $(MAKE) -C ${TPSRC}/src/scotch-6.0.0/src
+            BUILD_COMMAND $(MAKE) -C ${SCOTCH_SRC}
                 "CFLAGS=${SCOTCH_CFLAGS}"
                 "LDFLAGS=${SCOTCH_LDFLAGS}"
                 "CLIBFLAGS=-fPIC" scotch
-            INSTALL_COMMAND $(MAKE) -C ${TPSRC}/src/scotch-6.0.0/src
-                prefix=${TPSRC}/dist install
+            INSTALL_COMMAND $(MAKE) -C ${SCOTCH_SRC}
+                prefix=${TPDIST} install
         )
         SET(SCOTCH_LIB scotch CACHE FILEPATH
             "Scotch library" FORCE)
@@ -58,10 +68,11 @@ IF( NEKTAR_USE_SCOTCH )
         MARK_AS_ADVANCED(SCOTCH_LIB)
         MARK_AS_ADVANCED(SCOTCHERR_LIB)
         MARK_AS_ADVANCED(SCOTCHMETIS_LIB)
-        LINK_DIRECTORIES(${TPSRC}/dist/lib)
-        INCLUDE_DIRECTORIES(${TPSRC}/dist/include)
-        MESSAGE(STATUS "Build Scotch: ${TPSRC}/dist/lib/lib${SCOTCH_LIB}.a")
+        LINK_DIRECTORIES(${TPDIST}/lib)
+        INCLUDE_DIRECTORIES(${TPDIST}/include)
+        MESSAGE(STATUS "Build Scotch: ${TPDIST}/lib/lib${SCOTCH_LIB}.a")
     ELSE (THIRDPARTY_BUILD_SCOTCH)
+        ADD_CUSTOM_TARGET(scotch-6.0.0 ALL)
         INCLUDE (FindScotch)
     ENDIF (THIRDPARTY_BUILD_SCOTCH)
 ENDIF( NEKTAR_USE_SCOTCH )

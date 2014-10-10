@@ -70,9 +70,10 @@ namespace Nektar
         void Forcing::Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
                 const Array<OneD, Array<OneD, NekDouble> >&        inarray,
-                      Array<OneD, Array<OneD, NekDouble> >&        outarray)
+                Array<OneD, Array<OneD, NekDouble> >&              outarray,
+                const NekDouble&                                   time)
         {
-            v_Apply(fields, inarray, outarray);
+            v_Apply(fields, inarray, outarray, time);
         }
 
 
@@ -114,6 +115,26 @@ namespace Nektar
             return vForceList;
         }
 
+        void Forcing::EvaluateTimeFunction(
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                std::string                                       pFieldName,
+                Array<OneD, NekDouble>&                           pArray,
+                const std::string&                                pFunctionName,
+                NekDouble                                         pTime)
+        {
+            ASSERTL0(pSession->DefinesFunction(pFunctionName),
+                     "Function '" + pFunctionName + "' does not exist.");
+            
+            LibUtilities::EquationSharedPtr ffunc =
+                pSession->GetFunction(pFunctionName, pFieldName);
+            
+            Array<OneD, NekDouble> x0(1,0.0);
+            Array<OneD, NekDouble> x1(1,0.0);
+            Array<OneD, NekDouble> x2(1,0.0);
+         
+            ffunc->Evaluate(x0, x1, x2, pTime, pArray);
+        }
+
 
         void Forcing::EvaluateFunction(
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
@@ -139,11 +160,11 @@ namespace Nektar
                 Array<OneD, NekDouble> x0(nq);
                 Array<OneD, NekDouble> x1(nq);
                 Array<OneD, NekDouble> x2(nq);
-
+                
                 pFields[0]->GetCoords(x0, x1, x2);
                 LibUtilities::EquationSharedPtr ffunc =
-                        pSession->GetFunction(pFunctionName, pFieldName);
-
+                    pSession->GetFunction(pFunctionName, pFieldName);
+                
                 ffunc->Evaluate(x0, x1, x2, pTime, pArray);
             }
             else if (vType == LibUtilities::eFunctionTypeFile)

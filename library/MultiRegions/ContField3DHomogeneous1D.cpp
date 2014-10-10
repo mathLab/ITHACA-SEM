@@ -107,7 +107,7 @@ namespace Nektar
                 if(m_transposition->GetK(n) == 0)
                 {
                     m_planes[n] = MemoryManager<ContField2D>
-                            ::AllocateSharedPtr(*plane_zero, graph2D, variable,
+                        ::AllocateSharedPtr(*plane_zero, graph2D, variable,
                                                 false, CheckIfSingularSystem);
                 }
                 else
@@ -136,7 +136,11 @@ namespace Nektar
 
             SetCoeffPhys();
 
-            SetupBoundaryConditions(HomoBasis,lhom,bcs,variable);
+            // Do not set up BCs if default variable
+            if(variable.compare("DefaultVar") != 0)
+            {
+                SetupBoundaryConditions(HomoBasis,lhom,bcs,variable);
+            }
         }
 
 

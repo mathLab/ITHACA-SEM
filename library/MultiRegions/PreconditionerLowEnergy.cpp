@@ -1212,10 +1212,10 @@ namespace Nektar
          * the low energy equivalent
          * i.e. \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}\f$
          */     
-        DNekScalBlkMatSharedPtr PreconditionerLowEnergy::
+        DNekScalMatSharedPtr PreconditionerLowEnergy::
         v_TransformedSchurCompl(
             int offset, 
-            const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
+            const boost::shared_ptr<DNekScalMat > &loc_mat)
 	{
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
@@ -1227,7 +1227,7 @@ namespace Nektar
             unsigned int nint=ncoeffs-nbnd;
 
             //This is the SC elemental matrix in the orginal basis (S1)
-            DNekScalMatSharedPtr pS1=loc_mat->GetBlock(0,0);
+            DNekScalMatSharedPtr pS1=loc_mat;
 
             //Transformation matrices 
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
@@ -1261,16 +1261,10 @@ namespace Nektar
             RS1=R*S1;
             S2=RS1*RT;
 
-            DNekScalBlkMatSharedPtr returnval;
             DNekScalMatSharedPtr tmp_mat;
-            unsigned int exp_size[] = {nbnd, nint};
-            unsigned int nblks = 1;
-            returnval = MemoryManager<DNekScalBlkMat>::
-                AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
+            tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0, pS2);
 
-            returnval->SetBlock(0,0,tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,pS2));
-
-	    return returnval;
+	    return tmp_mat;
 	}
 
         /**

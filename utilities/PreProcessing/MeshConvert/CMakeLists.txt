@@ -11,6 +11,7 @@ SET(MeshConvertHeaders
     OutputGmsh.h
     OutputNekpp.h
     ProcessBL.h
+    ProcessCyl.h
     ProcessDetectSurf.h
     ProcessExtractSurf.h
     ProcessJac.h
@@ -34,6 +35,7 @@ SET(MeshConvertSources
     OutputGmsh.cpp
     OutputNekpp.cpp
     ProcessBL.cpp
+    ProcessCyl.cpp
     ProcessDetectSurf.cpp
     ProcessExtractSurf.cpp
     ProcessJac.cpp
@@ -51,5 +53,9 @@ ENDIF (NEKTAR_USE_VTK)
 ADD_UTILITIES_EXECUTABLE(MeshConvert util ${MeshConvertSources} ${MeshConvertHeaders})
 
 IF (NEKTAR_USE_VTK)
-    TARGET_LINK_LIBRARIES(MeshConvert vtkCommon vtkIO vtkGraphics)
+    IF (VTK_MAJOR_VERSION LESS 6)
+        TARGET_LINK_LIBRARIES(MeshConvert vtkCommon vtkIO vtkGraphics)
+    ELSE ()
+        TARGET_LINK_LIBRARIES(MeshConvert vtkCommonCore vtkIOLegacy)
+    ENDIF ()
 ENDIF (NEKTAR_USE_VTK)

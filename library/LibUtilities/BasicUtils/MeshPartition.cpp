@@ -307,6 +307,10 @@ namespace Nektar
 
             x = vSubElement->FirstChildElement();
             i = 0;
+            if (x->FirstAttribute())
+            {
+                i = x->FirstAttribute()->IntValue();
+            }
             while(x)
             {
                 TiXmlAttribute* y = x->FirstAttribute();
@@ -547,6 +551,10 @@ namespace Nektar
                             weight    = StdSegData::getNumberOfCoefficients(na);
                             bndWeight = StdSegData::getNumberOfBndCoefficients(na);
                             break;
+                        case 'V':
+                            weight    = 1;
+                            bndWeight = 1;
+                            break;
                         default:
                             break;
                     }
@@ -711,6 +719,10 @@ namespace Nektar
                             weight    = StdSegData::getNumberOfCoefficients(na);
                             bndWeight = StdSegData::getNumberOfBndCoefficients(na);
                             break;
+                        case 'V':
+                            weight    = 1;
+                            bndWeight = 1;
+                            break;
                         default:
                             break;
                     }
@@ -773,7 +785,7 @@ namespace Nektar
             BoostVertexIterator    vertit, vertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
-            if (m_comm->GetRowComm()->GetRank() == 0)
+            if (m_comm->GetRowComm()->TreatAsRankZero())
             {
                 int acnt = 0;
                 int vcnt = 0;
@@ -818,7 +830,7 @@ namespace Nektar
                     if(m_comm->GetColumnComm()->GetRank() == 0)
                     {
                         // Attempt partitioning using METIS.
-                        int ncon = m_weightingRequired ? 2*m_numFields : 1;
+                        int ncon = 1;
                         PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
 
                         // Check METIS produced a valid partition and fix if not.
@@ -1120,6 +1132,12 @@ namespace Nektar
                     // Based on entity type, check if in this partition
                     switch (vIt->second.type)
                     {
+                    case 'V':
+                        if (vVertices.find(vIt->second.list[j]) == vVertices.end())
+                        {
+                            continue;
+                        }
+                        break;
                     case 'E':
                         if (vEdges.find(vIt->second.list[j]) == vEdges.end())
                         {
@@ -1304,5 +1322,19 @@ namespace Nektar
             }
         }
 
+        void MeshPartition::GetElementIDs(const int procid, std::vector<unsigned int> &elmtid)
+        {
+            BoostVertexIterator    vertit, vertit_end;
+
+            ASSERTL0(procid < m_localPartition.size(),"procid is less than the number of partitions");
+            
+            // Populate lists of elements, edges and vertices required.
+            for ( boost::tie(vertit, vertit_end) = boost::vertices(m_localPartition[procid]);
+                  vertit != vertit_end;
+                  ++vertit)
+            {
+                elmtid.push_back(m_meshElements[m_localPartition[procid][*vertit].id].id);
+            }
+        }
     }
 }

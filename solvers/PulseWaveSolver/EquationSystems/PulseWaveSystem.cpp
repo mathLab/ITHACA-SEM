@@ -1140,7 +1140,7 @@ namespace Nektar
         // Update time in field info if required
         if(m_fieldMetaDataMap.find("Time") != m_fieldMetaDataMap.end())
         {
-            m_fieldMetaDataMap["Time"] =  m_time; 
+            m_fieldMetaDataMap["Time"] =  boost::lexical_cast<std::string>(m_time); 
         }
         
         //LibUtilities::CombineFields(FieldDef, FieldData);

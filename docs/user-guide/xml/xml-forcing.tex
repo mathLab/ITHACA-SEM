@@ -10,19 +10,17 @@ An optional section of the file allows forcing functions to be defined. These ar
 
 The force type can be any of the following:
 \begin{itemize}
-    \item "OutflowStabilisation" 
+    \item "Absorption"
     \item "Body" 
     \item "Programmatic"
     \item "Noise"
 \end{itemize}
 
-\subsection{Retrograde Outflow Stabilisation}
-This force type is a useful tool for the Incompressible Navier-Stokes solver to circumvent the problems associated with having bulk flow reversal at an outflow boundary where Neumann velocity conditions are set. The domain upstream of the outlet is treated as a porous media, whereby a velocity profile is imposed at the start of the domain.
-
-Functions defining the domain and the velocity profile are expressed in the \inltt{CONDITIONS} section, however the name of these functions are defined here by the \inltt{COEFF} tag for the domain, and by the \inltt{REFFLOW} tag for the velocity profile. In the event of a time-dependent simulation, the imposed velocity profile can be modulated with a time dependent function. The name of this time-dependent function is specified with the tag \inltt{REFFLOWTIME}. 
+\subsection{Absorption}
+This force type allows the user to apply an absorption layer (essentially a porous region) anywhere in the domain. The user may also specify a velocity profile to be imposed at the start of this layer, and in the event of a time-dependent simulation, this profile can be modulated with a time-dependent function. These velocity functions and the function defining the region in which to apply the absorption layer are expressed in the \inltt{CONDITIONS} section, however the name of these functions are defined here by the \inltt{COEFF} tag for the layer, the \inltt{REFFLOW} tag for the velocity profile, and the \inltt(REFFLOWTIME} for the time-dependent function.  
 
 \begin{lstlisting}[style=XMLStyle] 
-<FORCE TYPE="OutflowStabilisation">
+<FORCE TYPE="Absorption">
     <COEFF> [FUNCTION NAME] <COEFF/>
     <REFFLOW> [FUNCTION NAME] <REFFLOW/>
     <REFFLOWTIME> [FUNCTION NAME] <REFFLOWTIME/>

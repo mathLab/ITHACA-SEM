@@ -13,12 +13,10 @@ decomposition is based on solenoidal vortical perturbations as well as
 irrotational acoustic perturbations, in this case perturbations are assumed to
 be exclusively of acoustic nature.
 \begin{align*}
-      \frac{\partial \rho'}{\partial t} 
-        + (\mathbf{U}\cdot \nabla)\rho'+\rho_0(\nabla \cdot \mathbf{u}') &= 0 \\
       \frac{\partial \mathbf{u}'}{\partial t}
         +\nabla(\mathbf{u}' \cdot \mathbf{U})+\frac{1}{\rho_0}\nabla p' &= 0 \\
       \frac{\partial p'}{\partial t}
-        +\nabla \cdot (\gamma P \mathbf{u}+p'\mathbf{U})&=-\frac{DP'}{Dt}
+        +\nabla \cdot (\gamma P \mathbf{u}' + p'\mathbf{U})&=-\frac{DP'}{Dt}
 \end{align*}
 where $(\mathbf{U},P)$ represents the base flow, $(\mathbf{u}',p')$
 the perturbations and $\mathrm{D}/\mathrm{D}t$ the material derivative.
@@ -36,7 +34,8 @@ APESolver session.xml
 \begin{itemize}
 \item \inltt{Eqtype} Specifies the equation to solve. This should be set to
 \inltt{APE}.
-\item \inltt{UpwindType}
+\item \inltt{UpwindType} Specifies the numerical interface flux scheme.
+Currently, only \inltt{APEUpwind} supported.
 \end{itemize}
 
 \subsection{Parameters}
@@ -48,8 +47,8 @@ APESolver session.xml
 
 \subsection{Functions}
 \begin{itemize}
-\item \inltt{BaseFlow}
-\item \inltt{Source}
+\item \inltt{BaseFlow} Baseflow $(\mathbf{U},P)$ defined by the variables \inltt{U0,V0,W0,P0}
+\item \inltt{Source} Source term $P'=P-p_{\infty}$
 \item \inltt{InitialConditions}
 \end{itemize}
 
@@ -77,7 +76,7 @@ solver information:
 <I PROPERTY="EQType" VALUE="APE"/> 
 <I PROPERTY="Projection" VALUE="DisContinuous"/>
 <I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
-<I PROPERTY="UpwindType"  VALUE="Upwind"/> 
+<I PROPERTY="UpwindType"  VALUE="APEUpwind"/>
 \end{lstlisting}
 
 To maintain numerical stability we must use a small time-step. The total

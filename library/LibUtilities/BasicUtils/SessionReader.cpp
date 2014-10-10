@@ -1591,7 +1591,7 @@ namespace Nektar
                 std::string  dirname = GetSessionName() + "_xml";
                 fs::path    pdirname(dirname);
                 boost::format pad("P%1$07d.xml");
-                pad % m_comm->GetRank();
+                pad % m_comm->GetRowComm()->GetRank();
                 fs::path    pFilename(pad.str());
                 fs::path fullpath = pdirname / pFilename;
 

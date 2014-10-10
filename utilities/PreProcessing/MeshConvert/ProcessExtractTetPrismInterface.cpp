@@ -67,84 +67,69 @@ namespace Nektar
             }
 
             vector<ElementSharedPtr> el = m_mesh->m_element[m_mesh->m_expDim];
+            vector<ElementSharedPtr> bndEl = m_mesh->m_element[m_mesh->m_expDim-1];
+            m_mesh->m_element[m_mesh->m_expDim].clear();
+            m_mesh->m_element[m_mesh->m_expDim-1].clear();
 
-            vector<int> pfaces;
-            vector<int> tfaces;
-            vector<int> inter;
-
-            // Iterate over list of elements of expansion dimension.
             for (int i = 0; i < el.size(); ++i)
             {
-                int nFaces= el[i]->GetFaceCount();
+                ElementSharedPtr elmt = el[i];
 
-                //Get the number of nodes on a face of a prism 
-                if (nFaces ==5)
+                if (elmt->GetConf().m_e == LibUtilities::ePrism)
                 {
-                    //First triangular face
-                    pfaces.push_back(el[i]->GetFace(1)->m_id);
-
-                    //Second triangular face
-                    pfaces.push_back(el[i]->GetFace(3)->m_id);
-
+                    m_mesh->m_element[m_mesh->m_expDim].push_back(elmt);
                 }
-
-                if (nFaces ==4)
-                {
-                    for(int j=0; j<nFaces; ++j)
-                    {
-                        tfaces.push_back(el[i]->GetFace(j)->m_id);
-                    }
-                }
-
             }
-            
-            //order the vectors
-            sort(tfaces.begin(), tfaces.end());
-            sort(pfaces.begin(), pfaces.end());
 
-            //Find the faces that are in both vectors
-            set_intersection(tfaces.begin(), tfaces.end(),
-                             pfaces.begin(), pfaces.end(),
-                             back_inserter(inter));
-            std::vector<int>::iterator it;
-            cout << "The intersection has " << (inter.size()) << " elements:\n";
-            for (it=inter.begin(); it!=inter.end(); ++it)
-                std::cout << *it << ",";
-            std::cout << '\n';
+            FaceSet::iterator fIt;
 
-
-            CompositeMap tmp = m_mesh->m_composite;
-            CompositeMap::iterator it_c;
-
-            //temp counter for composite
-            int c_id = 0; 
-
-            // loop over all composites (2D elements) and identify all quadrilateral faces
-            for (it_c = tmp.begin(); it_c != tmp.end(); ++it_c)
+            for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); fIt++)
             {
-                ++c_id;
-                CompositeSharedPtr c = it_c->second;
-                vector<ElementSharedPtr> el = c->m_items;
-                
-                vector<int> quad;
-                
-                for (int i = 0; i < el.size(); ++i)
+                if ((*fIt)->m_elLink.size() == 1)
                 {
-                    if (el[i]->GetConf().m_e == LibUtilities::eQuadrilateral)
+                    ElementSharedPtr el = (*fIt)->m_elLink[0].first;
+
+                    if (el->GetConf().m_e != LibUtilities::eTetrahedron)
                     {
-                        quad.push_back(el[i]->GetId());
+                        m_mesh->m_element[m_mesh->m_expDim-1].push_back(
+                            bndEl[el->GetBoundaryLink((*fIt)->m_elLink[0].second)]);
                     }
+                    continue;
                 }
-                
-                cout << "The composite " << c_id << " has " << quad.size() << " elements:\n";
-                for (it=quad.begin(); it!=quad.end(); ++it)
-                    std::cout << *it << ",";
-                std::cout << '\n';
-                
             }
+
+            for (fIt = m_mesh->m_faceSet.begin(); fIt != m_mesh->m_faceSet.end(); fIt++)
+            {
+                ElementSharedPtr el1 = (*fIt)->m_elLink[0].first;
+                ElementSharedPtr el2 = (*fIt)->m_elLink[1].first;
+
+                if ((el1->GetConf().m_e == LibUtilities::ePrism &&
+                     el2->GetConf().m_e == LibUtilities::eTetrahedron) ||
+                    (el2->GetConf().m_e == LibUtilities::ePrism &&
+                     el1->GetConf().m_e == LibUtilities::eTetrahedron))
+                {
+                    // Create a new linear triangle from face
+                    vector<NodeSharedPtr> nodeList(3);
+                    vector<int> tags(1);
+                    tags[0] = 123;
+
+                    nodeList = (*fIt)->m_vertexList;
+                    ElmtConfig conf(LibUtilities::eTriangle, 1, true, true, false);
+                    ElementSharedPtr tri = GetElementFactory().
+                        CreateInstance(
+                            LibUtilities::eTriangle, conf, nodeList, tags);
+
+                    
+                    m_mesh->m_element[m_mesh->m_expDim-1].push_back(tri);
+                }
+            }
+
+            ProcessVertices();
+            ProcessEdges();
+            ProcessFaces();
+            ProcessElements();
+            ProcessComposites();
         }
-        
     }
-    
 }
 

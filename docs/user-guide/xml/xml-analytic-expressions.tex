@@ -56,7 +56,8 @@ format. Even though field variables are declarable as in the following code
 snippet, 
 \begin{lstlisting}[style=XMLStyle]
    <VARIABLES>
-     <V ID="0"> u </V> <V ID="1"> v </V>
+     <V ID="0"> u </V>
+     <V ID="1"> v </V>
    </VARIABLES>
 \end{lstlisting} 
 there are no analogous tags for space variables. However an attribute
@@ -196,62 +197,54 @@ parameter name cannot start with a numeral. Parameters must be defined with
 that may change their values in between of expression evaluations.
 
 \item variables (i.e., \inlsh{x, y, z} and \inlsh{t})
-\item unary minus operator (e.g. {{{-x}}})
+\item unary minus operator (e.g. \inltt{-x}
 \item binary arithmetic operators \inltt{+, -, *, /, \^}
    Powering operator allows using real exponents (it is implemented with
    \inlsh{std::pow()} function)
 \item boolean comparison operations \inlsh{<, <=, >, >=, ==} evaluate their
 sub-expressions to real values 0.0 or 1.0.
-\item mathematical functions of one argument:
+\item mathematical functions of one or two arguments:
 \begin{center}
-\begin{tabular}{lc}
-\toprule
-Identifier & Meaning \\
-\midrule
-abs     & absolute value \\
-asin    & inverse sine \\
-acos    & inverse cosine \\
-atan    & inverse tangent \\
-ceil    & round up \\
-cos     & cosine \\
-cosh    & hyperbolic cosine \\
-exp     & exponential \\
-fabs    & floating-point absolute value \\
-floor   & rounding down \\
-log     & logarithm base $e$ \\
-log10   & logarithm base 10 \\
-sin     & sine \\
-sinh    & hyperbolic sine \\
-sqrt    & square root \\
-tan     & tangent \\
-tanh    & hyperbolic tangent \\
-\bottomrule
+\begin{tabular}{ll}
+  \toprule
+  \textbf{Identifier} & \textbf{Meaning} \\
+  \midrule
+  \texttt{abs(x)}     & absolute value $|x|$ \\
+  \texttt{asin(x)}    & inverse sine $\arcsin x$ \\
+  \texttt{acos(x)}    & inverse cosine $\arccos x$ \\
+  \texttt{ang(x,y)}   & computes polar coordinate $\theta=\arctan(y/x)$ from $(x,y)$\\
+  \texttt{atan(x)}    & inverse tangent $\arctan x$ \\
+  \texttt{atan2(y,x)} & inverse tangent function (used in polar transformations) \\
+  \texttt{ceil(x)}    & round up to nearest integer $\lceil x\rceil$ \\
+  \texttt{cos(x)}     & cosine $\cos x$ \\
+  \texttt{cosh(x)}    & hyperbolic cosine $\cosh x$ \\
+  \texttt{exp(x)}     & exponential $e^x$ \\
+  \texttt{fabs(x)}    & absolute value (equivalent to \texttt{abs}) \\
+  \texttt{floor(x)}   & rounding down $\lfloor x\rfloor$ \\
+  \texttt{log(x)}     & logarithm base $e$, $\ln x = \log x$ \\
+  \texttt{log10(x)}   & logarithm base 10, $\log_{10} x$ \\
+  \texttt{rad(x,y)}   & computes polar coordinate $r=\sqrt{x^2+y^2}$ from $(x,y)$\\
+  \texttt{sin(x)}     & sine $\sin x$ \\
+  \texttt{sinh(x)}    & hyperbolic sine $\sinh x$ \\
+  \texttt{sqrt(x)}    & square root $\sqrt{x}$ \\
+  \texttt{tan(x)}     & tangent $\tan x$ \\
+  \texttt{tanh(x)}    & hyperbolic tangent $\tanh x$ \\
+  \bottomrule
 \end{tabular}
 \end{center}
 
- These functions are implemented by means of the cmath library:
- \url{http://www.cplusplus.com/reference/clibrary/cmath/}. Underlying data
- type is \inltt{double} at each stage of expression evaluation. As
- consequence, complex-valued expressions (e.g. $(-2)^0.123$) get value
- \inlsh{nan} (not a number).
+These functions are implemented by means of the cmath library:
+\url{http://www.cplusplus.com/reference/clibrary/cmath/}. Underlying data type
+is \inltt{double} at each stage of expression evaluation. As consequence,
+complex-valued expressions (e.g. $(-2)^0.123$) get value \inlsh{nan} (not a
+number). The operator \inlsh{\^} is implemented via call to \inlsh{std::pow()}
+function and accepts arbitrary real exponents.
 
- Function \inlsh{pow} needs to be substituted with operator \inlsh{\^} since it
- depends on two arguments. Operator \inlsh{\^} is implemented via call to
- \inlsh{std::pow()} function and accepts arbitrary real exponents. Evaluation
- of functions depending on two and more arguments is not implemented.
-
-\item random noise generation functions. Currently implemented:
-   - {{{ awgn(arg) }}} - Gaussian Noise generator. Uses round brackets and
-   accepts single argument, same as functions. Argument stays for the variance
-   of normal distribution with zero mean. Implemented using boost::mt19937
-   random number generator with boost variate generators (see
-   [http://www.boost.org/libs/random boost::random]).
-\item function
-\inlsh{atan2(y,x)}
-(\url{http://www.cplusplus.com/reference/clibrary/cmath/atan2/}) requires two
-argument and is not supported at the moment. Instead, please use the following 
-equivalent expression:
-\inltt{(x>0)*atan(y/x)+(x<0)*(atan(y/x)-(y<0)*PI+(y>=0)*PI)+(x==0)*(PI\_2*(y>0)-PI\_2*(y<0))}
+\item random noise generation functions. Currently implemented is
+\inltt{awgn(sigma)} - Gaussian Noise generator, where $\sigma$ is the variance
+of normal distribution with zero mean. Implemented using the
+\texttt{boost::mt19937} random number generator with boost variate generators
+(see \url{http://www.boost.org/libs/random})
 \end{itemize}
 
 \subsection{Performance considerations}
@@ -340,3 +333,7 @@ space-time coordinates, it uses SoA). Vectorized evaluation is faster then
 sequential due to a better data access pattern. Some expressions give measurable
 speedup factor $4.6$. Therefore, if you are creating your own solver, it
 worth making vectorized calls.
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../user-guide"
+%%% End: 

@@ -29,7 +29,7 @@ SET(SOLVER_UTILS_SOURCES
   RiemannSolvers/UpwindLDGSolver.cpp
   UnsteadySystem.cpp
   Forcing/Forcing.cpp
-  Forcing/ForcingOutflowStabilisation.cpp
+  Forcing/ForcingAbsorption.cpp
   Forcing/ForcingBody.cpp
   Forcing/ForcingNoise.cpp
   Forcing/ForcingProgrammatic.cpp
@@ -68,7 +68,7 @@ SET(SOLVER_UTILS_HEADERS
   SolverUtilsDeclspec.h
   UnsteadySystem.h
   Forcing/Forcing.h
-  Forcing/ForcingOutflowStabilisation.h
+  Forcing/ForcingAbsorption.h
   Forcing/ForcingBody.h
   Forcing/ForcingNoise.h
   Forcing/ForcingProgrammatic.h

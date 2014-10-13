@@ -21,6 +21,8 @@ SET(BasicUtilsHeaders
     ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.hpp
+    ./BasicUtils/PtsField.h
+    ./BasicUtils/PtsIO.h
     ./BasicUtils/Timer.h
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SessionReader.h
@@ -39,6 +41,8 @@ SET(BasicUtilsSources
     ./BasicUtils/FileSystem.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/MeshPartitionMetis.cpp
+    ./BasicUtils/PtsField.cpp
+    ./BasicUtils/PtsIO.cpp
     ./BasicUtils/SessionReader.cpp
     ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp

@@ -69,7 +69,7 @@ void OutputTecplot::Process(po::variables_map &vm)
     }
 
     // Do nothing if no expansion defined
-    if(m_f->m_fieldPts == NullFieldPts &&!m_f->m_exp.size())
+    if(m_f->m_fieldPts == LibUtilities::NullPtsField &&!m_f->m_exp.size())
     {
         return;
     }
@@ -77,9 +77,9 @@ void OutputTecplot::Process(po::variables_map &vm)
     // Extract the output filename and extension
     string filename = m_config["outfile"].as<string>();
 
-    if(m_f->m_fieldPts != NullFieldPts)
+    if(m_f->m_fieldPts != LibUtilities::NullPtsField)
     {
-        int dim = m_f->m_fieldPts->m_ptsDim;
+        int dim = m_f->m_fieldPts->GetDim();
         // Write solution.
         ofstream outfile(filename.c_str());
 
@@ -96,38 +96,49 @@ void OutputTecplot::Process(po::variables_map &vm)
             break;
         }
 
-        for(int i = 0; i < m_f->m_fieldPts->m_fields.size(); ++i)
+        for(int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
         {
-            outfile << " " << m_f->m_fieldPts->m_fields[i];
+            outfile << " " << m_f->m_fieldPts->GetFieldName(i);
         }
         outfile << endl;
-
-        switch(m_f->m_fieldPts->m_ptype)
+        switch(m_f->m_fieldPts->GetPointsPerEdge().size())
         {
-        case Utilities::ePtsFile:
-        case Utilities::ePtsLine:
+        case 0:
+        case 3:
             outfile << " ZONE I="
-                    << m_f->m_fieldPts->m_pts[0].num_elements()
+                    << m_f->m_fieldPts->GetNpoints()
                     << " F=POINT" << endl;
             break;
-        case Utilities::ePtsPlane:
-            outfile << " ZONE I=" << m_f->m_fieldPts->m_npts[0]
-                    <<      " J=" << m_f->m_fieldPts->m_npts[1]
+        case 1:
+            outfile << " ZONE I="
+                    << m_f->m_fieldPts->GetPointsPerEdge(0)
+                    << " F=POINT" << endl;
+            break;
+        case 2:
+            outfile << " ZONE I=" << m_f->m_fieldPts->GetPointsPerEdge(0)
+                    <<      " J=" << m_f->m_fieldPts->GetPointsPerEdge(1)
                     << " F=POINT" << endl;
             break;
         default:
             ASSERTL0(false, "Points type not supported yet.");
         }
 
-        for(int i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)
+        Array<OneD,  Array<OneD,  NekDouble> > pts;
+        m_f->m_fieldPts->GetPts(pts);
+        int npts = m_f->m_fieldPts->GetNpoints();
+        if (m_f->m_fieldPts->GetPointsPerEdge().size() > 0)
+        {
+            npts = m_f->m_fieldPts->GetPointsPerEdge(0);
+        }
+        for(int i = 0; i < npts; ++i)
         {
             for(int j = 0; j < dim; ++j)
             {
                 outfile << std::setw(12)
-                        << m_f->m_fieldPts->m_pts[j][i] << " ";
+                        << pts[j][i] << " ";
             }
 
-            for(int j = 0; j < m_f->m_fieldPts->m_fields.size(); ++j)
+            for(int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
             {
                 outfile << std::setw(12) << m_f->m_data[j][i] << " ";
             }

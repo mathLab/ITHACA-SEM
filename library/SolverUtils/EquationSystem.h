@@ -42,6 +42,8 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include <LibUtilities/BasicUtils/PtsField.h>
+#include <LibUtilities/BasicUtils/PtsIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Core/Misc.h>
@@ -409,6 +411,10 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        m_session;
             /// Field input/output
             LibUtilities::FieldIOSharedPtr              m_fld;
+            /// Map of the interpolation weights for a specific filename.
+            map<std::string, Array<OneD, Array<OneD,  float> > > m_interpWeights;
+            /// Map of the interpolation indices for a specific filename.
+            map<std::string, Array<OneD, Array<OneD,  unsigned int> > > m_interpInds;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.

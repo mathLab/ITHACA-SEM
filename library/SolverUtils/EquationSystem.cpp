@@ -797,6 +797,8 @@ namespace Nektar
                     ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
                 }
 
+                //  In case of eFunctionTypeTransientFile, generate filename from
+                //  format string
                 if (vType == LibUtilities::eFunctionTypeTransientFile)
                 {
                     try
@@ -806,48 +808,90 @@ namespace Nektar
                     catch (...)
                     {
                         ASSERTL0(false, "Invalid Filename in function \""
-                        + pFunctionName + "\", variable \"" + fileVar + "\"")
+                                + pFunctionName + "\", variable \"" + pFieldName + "\"")
                     }
                 }
 
-                m_fld->Import(filename, FieldDef, FieldData,
-                              LibUtilities::NullFieldMetaDataMap,
-                              ElementGIDs);
-
-                int idx = -1;
-
-                // Loop over all the expansions
-                for (int i = 0; i < FieldDef.size(); ++i)
+                if (boost::filesystem::path(filename).extension() ==  ".fld")
                 {
-                    // Find the index of the required field in the
-                    // expansion segment
-                    for(int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
+                    m_fld->Import(filename, FieldDef, FieldData,
+                                LibUtilities::NullFieldMetaDataMap,
+                                ElementGIDs);
+
+                    int idx = -1;
+
+                    // Loop over all the expansions
+                    for (int i = 0; i < FieldDef.size(); ++i)
                     {
-                        if (FieldDef[i]->m_fields[j] == fileVar)
+                        // Find the index of the required field in the
+                        // expansion segment
+                        for (int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
                         {
-                            idx = j;
+                            if (FieldDef[i]->m_fields[j] == pFieldName)
+                            {
+                                idx = j;
+                            }
                         }
-                    }
 
-                    if (idx >= 0)
-                    {
-                        if(m_session->GetComm()->GetRank() == i)
-
+                        if (idx >= 0)
                         {
-
                             m_fields[0]->ExtractDataToCoeffs(
                                 FieldDef[i], FieldData[i],
                                 FieldDef[i]->m_fields[idx], vCoeffs);
-
                         }
+                        else
+                        {
+                            cout << "Field " + pFieldName + " not found." << endl;
+                        }
+                    }
+
+                    m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
+                }
+                else if (boost::filesystem::path(filename).extension() ==  ".pts")
+                {
+
+                    LibUtilities::PtsFieldSharedPtr ptsField;
+                    LibUtilities::Import(filename, ptsField);
+
+                    Array <OneD,  Array<OneD,  NekDouble> > coords(3);
+                    coords[0] = Array<OneD, NekDouble>(nq);
+                    coords[1] = Array<OneD, NekDouble>(nq);
+                    coords[2] = Array<OneD, NekDouble>(nq);
+                    m_fields[0]->GetCoords(coords[0], coords[1], coords[2]);
+
+                    //  check if we already computed this funcKey combination
+                    std::string weightsKey = m_session->GetFunctionFilename(pFunctionName, pFieldName, domain);
+                    map<std::string, Array<OneD, Array<OneD,  float> > >::iterator it
+                        = m_interpWeights.find(weightsKey);
+                    if (it != m_interpWeights.end())
+                    {
+                        //  found, re-use
+                        ptsField->SetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
                     else
                     {
-                        cout << "Field " + fileVar + " not found." << endl;
+                        cout <<  "Computing interpolation weights for file " <<
+                            filename <<  endl;
+                        ptsField->CalcWeights(coords);
+                        ptsField->GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
-                }
 
-                m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
+                    Array<OneD,  Array<OneD,  NekDouble> > intFields;
+                    ptsField->Interpolate(intFields);
+
+                    int fieldInd;
+                    vector<string> fieldNames = ptsField->GetFieldNames();
+                    for (fieldInd = 0; fieldInd < fieldNames.size(); ++fieldInd)
+                    {
+                        if (ptsField->GetFieldName(fieldInd) ==  pFieldName)
+                        {
+                            break;
+                        }
+                    }
+                    ASSERTL0(fieldInd != fieldNames.size(),  "field not found");
+
+                    pArray = intFields[fieldInd];
+                }
             }
         }
 

@@ -596,6 +596,9 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
                 Array<OneD, Array<OneD, NekDouble > >              &qflux);
+
+            SOLVER_UTILS_EXPORT void PrintProgressbar(const int position,
+                                                      const int goal) const;
         };
         
         

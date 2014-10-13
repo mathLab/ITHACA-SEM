@@ -53,6 +53,7 @@
 #include <SolverUtils/Diffusion/Diffusion.h>
 
 #include <boost/format.hpp>
+# include <boost/function.hpp>
 
 #include <iostream>
 
@@ -865,9 +866,13 @@ namespace Nektar
                     }
                     else
                     {
-                        cout <<  "Computing interpolation weights for file " <<
-                            filename <<  endl;
+                        ptsField->setProgressCallback(&EquationSystem::PrintProgressbar, this);
                         ptsField->CalcWeights(coords);
+                        if (m_session->GetComm()->GetRank() == 0)
+                        {
+                            cout << "Interpolating: 100% [===================";
+                            cout << "===============================]" << endl;
+                        }
                         ptsField->GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
 
@@ -889,6 +894,7 @@ namespace Nektar
                 }
             }
         }
+
 
         /**
          * @brief Provide a description of a function for a given field name.
@@ -2361,6 +2367,34 @@ namespace Nektar
             std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
             std::vector<std::string>             &variables)
         {
+        }
+
+        void EquationSystem::PrintProgressbar(const int position, const int goal) const
+        {
+            if (m_session->GetComm()->GetRank() != 0)
+            {
+                return;
+            }
+
+            if (position % (goal/100 +1))
+            {
+                cout << "Interpolating: ";
+
+                float progress = position / float(goal);
+                cout << int(100*progress) << "% [";
+                for (int j = 0; j < int(progress*50); j++)
+                {
+                    cout << "=";
+                }
+                for (int j = int(progress*50); j < 50; j++)
+                {
+                    cout << " ";
+                }
+                cout << "]" << flush;
+
+                // carriage return
+                cout << "\r";
+            }
         }
     }
 }

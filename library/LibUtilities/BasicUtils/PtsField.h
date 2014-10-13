@@ -40,6 +40,7 @@
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -153,6 +154,12 @@ class PtsField
 
         void SetPointsPerEdge(const vector<int> nPtsPerEdge);
 
+        template<typename FuncPointerT, typename ObjectPointerT>
+        void setProgressCallback(FuncPointerT func, ObjectPointerT obj)
+        {
+            m_progressCallback = boost::bind(func, obj, _1, _2);
+        }
+
     private:
 
         /// Dimension of the pts field
@@ -172,6 +179,8 @@ class PtsField
         /// Indices of the relevant neighbours for each physical point.
         /// Structure: m_neighInds[ptIdx][neighbourIdx]
         Array<OneD, Array<OneD, unsigned int> > m_neighInds;
+
+        boost::function<void (const int position, const int goal)> m_progressCallback;
 
         void CalcW_Linear(const int physPtIdx, const NekDouble coord);
 

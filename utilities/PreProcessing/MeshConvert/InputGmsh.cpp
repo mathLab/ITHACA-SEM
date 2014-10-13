@@ -52,12 +52,14 @@ namespace Nektar
         std::map<unsigned int, ElmtConfig> InputGmsh::elmMap = 
             InputGmsh::GenElmMap();
 
-        std::vector<NodeSharedPtr> quadTensorNodeOrdering(
-            const std::vector<NodeSharedPtr> &nodes,
-            int n)
+        /**
+         * @brief Reorder a quadrilateral to appear in Nektar++ ordering from
+         * Gmsh.
+         */
+        std::vector<int> quadTensorNodeOrdering(
+            const std::vector<int> &nodes, int n)
         {
-            std::vector<NodeSharedPtr> nodeList;
-            int cnt2;
+            std::vector<int> nodeList;
 
             // Triangle
             nodeList.resize(nodes.size());
@@ -83,7 +85,7 @@ namespace Nektar
             if (n > 2)
             {
                 // Reorder interior nodes
-                std::vector<NodeSharedPtr> interior((n-2)*(n-2));
+                std::vector<int> interior((n-2)*(n-2));
                 std::copy(nodes.begin() + 4+4*(n-2), nodes.end(), interior.begin());
                 interior = quadTensorNodeOrdering(interior, n-2);
                 
@@ -238,8 +240,13 @@ namespace Nektar
                         // Prism nodes need re-ordering for Nektar++.
                         if (it->second.m_e == LibUtilities::eHexahedron)
                         {
-                            it->second.m_volumeNodes = false;
-                            OrientHex(it->second, nodeList);
+                            //it->second.m_volumeNodes = false;
+                            vector<int> mapping = HexReordering(it->second);
+                            vector<NodeSharedPtr> tmp = nodeList;
+                            for (int i = 0; i < mapping.size(); ++i)
+                            {
+                                nodeList[i] = tmp[mapping[i]];
+                            }
                         }
                         else if (it->second.m_e == LibUtilities::ePrism)
                         {
@@ -362,70 +369,70 @@ namespace Nektar
             return nNodes;
         }
 
-        void InputGmsh::OrientHex(ElmtConfig             conf,
-                                  vector<NodeSharedPtr> &hexNodes)
+        vector<int> InputGmsh::HexReordering(ElmtConfig conf)
         {
-            // Reordered vertex IDs.
-            vector<NodeSharedPtr> reordered;
+            const int order = conf.m_order;
+            const int n     = order-1;
+            const int n2    = n * n;
+            int i, j, k;
+
+            vector<int> mapping;
 
             // Map taking Gmsh edges to Nektar++ edges.
-            int gmshToNekEdge[12] = {
+            static int gmshToNekEdge[12] = {
                 0, -3, 4, 1, 5, 2, 6, 7, 8, -11, 9, 10
             };
 
-            // Copy hex vertices.
-            for (int i = 0; i < 8; ++i)
+            // Push back vertices.
+            mapping.resize(8);
+            for (i = 0; i < 8; ++i)
             {
-                reordered.push_back(hexNodes[i]);
+                mapping[i] = i;
             }
-
-            int order = conf.m_order;
-            int N = order-1;
 
             if (order == 1)
             {
-                return;
+                return mapping;
             }
 
-            int offset = 8;
+            // Curvilinear edges
+            mapping.resize(8 + 12*n);
 
-            cout << "ORDER = " << order << endl;
-
-            reordered.resize(8+12*N);
-            
             // Reorder edges.
-            int cnt = 8;
-            for (int i = 0; i < 12; ++i)
+            int cnt = 8, offset;
+            for (i = 0; i < 12; ++i)
             {
                 int edge = gmshToNekEdge[i];
-                offset = 8 + N * abs(edge);
+                offset = 8 + n * abs(edge);
 
                 if (edge < 0)
                 {
-                    for (int j = 0; j < N; ++j)
+                    for (int j = 0; j < n; ++j)
                     {
-                        reordered[offset+N-j-1] = hexNodes[cnt++];
+                        mapping[offset+n-j-1] = cnt++;
                     }
                 }
                 else
                 {
-                    for (int j = 0; j < N; ++j)
+                    for (int j = 0; j < n; ++j)
                     {
-                        reordered[offset+j] = hexNodes[cnt++];
+                        mapping[offset+j] = cnt++;
                     }
                 }
             }
 
-            if (!conf.m_faceNodes)
+            if (conf.m_faceNodes == false)
             {
-                hexNodes = reordered;
-                return;
+                return mapping;
             }
 
-            reordered.resize(8 + 12*N + 6*N*N);
+            // Curvilinear face nodes.
+            mapping.resize(8 + 12*n + 6*n2);
 
-            int gmsh2NekFace[6] = {0,1,4,2,3,5};
+            // Map which takes Gmsh -> Nektar++ faces in the local element.
+            static int gmsh2NekFace[6] = {0,1,4,2,3,5};
 
+            // Map which defines orientation between Gmsh and Nektar++ faces.
             StdRegions::Orientation faceOrient[6] = {
                 StdRegions::eDir1FwdDir2_Dir2FwdDir1,
                 StdRegions::eDir1FwdDir1_Dir2FwdDir2,
@@ -435,58 +442,73 @@ namespace Nektar
                 StdRegions::eDir1FwdDir1_Dir2FwdDir2
             };
 
-            for (int i = 0; i < 6; ++i)
+            for (i = 0; i < 6; ++i)
             {
                 int face = gmsh2NekFace[i];
-                offset = 8 + 12*N + face*N*N;
+                int offset2 = 8 + 12 * n + i * n2;
+                offset = 8 + 12 * n + face * n2;
 
-                vector<NodeSharedPtr> faceNodes(N*N);
-
-                for (int j = 0; j < N*N; ++j)
+                // Create a list of interior face nodes for this face only.
+                vector<int> faceNodes(n2);
+                for (j = 0; j < n2; ++j)
                 {
-                    faceNodes[j] = hexNodes[8 + 12*N + i*N*N + j];
+                    faceNodes[j] = offset2 + j;
                 }
 
-                vector<NodeSharedPtr> tmp = quadTensorNodeOrdering(faceNodes, N);
+                // Now get the reordering of this face, which puts Gmsh
+                // recursive ordering into Nektar++ row-by-row order.
+                vector<int> tmp = quadTensorNodeOrdering(faceNodes, n);
 
+                // Finally reorient the face according to the geometry
+                // differences.
                 if (faceOrient[i] == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
                 {
-                    // Just copy
-                    for (int j = 0; j < N*N; ++j)
+                    // Orientation is the same, just copy.
+                    for (j = 0; j < n2; ++j)
                     {
-                        reordered[offset+j] = tmp[j];
+                        mapping[offset+j] = tmp[j];
                     }
                 }
                 else if (faceOrient[i] == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
                 {
-                    int pos = 8 + 12*N + i*N*N;
-                    
-                    for (int j = 0; j < N; ++j)
+                    // Tranposed faces
+                    for (j = 0; j < n; ++j)
                     {
-                        for (int k = 0; k < N; ++k)
+                        for (k = 0; k < n; ++k)
                         {
-                            reordered[offset + j*N + k] = tmp[k*N + j];
+                            mapping[offset + j*n + k] = tmp[k*n + j];
                         }
                     }
                 }
                 else if (faceOrient[i] == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
                 {
-                    int pos = 8 + 12*N + i*N*N;
-                    
-                    for (int j = 0; j < N; ++j)
+                    for (j = 0; j < n; ++j)
                     {
-                        for (int k = 0; k < N; ++k)
+                        for (k = 0; k < n; ++k)
                         {
-                            reordered[offset + j*N + k] = tmp[j*N + (N-k-1)];
+                            mapping[offset + j*n + k] = tmp[j*n + (n-k-1)];
                         }
                     }
                 }
             }
 
-            hexNodes = reordered;
-            return;
+            if (conf.m_volumeNodes == false)
+            {
+                return mapping;
+            }
+
+            const int totPoints = (order+1) * (order+1) * (order+1);
+            mapping.resize(totPoints);
+
+            // TODO: Fix ordering of volume nodes.
+            for (i = 8 + 12*n + 6*n2; i < totPoints; ++i)
+            {
+                mapping[i] = i;
+            }
+
+            return mapping;
         }
-        
+
         /*
          * @brief Populate the element map #elmMap.
          * 

@@ -64,11 +64,11 @@ namespace Nektar
              * Element map; takes a msh id to an %ElmtConfig object.
              */
             static std::map<unsigned int, ElmtConfig> elmMap;
-            
+
+
         private:
-            int GetNnodes(unsigned int InputGmshEntity);            
-            void OrientHex(ElmtConfig             conf,
-                           vector<NodeSharedPtr> &hexNodes);
+            int GetNnodes(unsigned int InputGmshEntity);
+            vector<int> HexReordering(ElmtConfig conf);
         };
     }
 }

@@ -42,22 +42,103 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey OutputTecplot::m_className =
+    GetModuleFactory().RegisterCreatorFunction(
+        ModuleKey(eOutputModule, "dat"), OutputTecplot::create,
+        "Writes a Tecplot file.");
+
+OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
+{
+    m_requireEquiSpaced = true;
+}
+
+OutputTecplot::~OutputTecplot()
+{
+}
+
+void OutputTecplot::Process(po::variables_map &vm)
+{
+    m_doError = (vm.count("error") == 1)?  true: false;
+
+    if (m_f->m_verbose)
     {
+        cout << "OutputTecplot: Writing file..." << endl;
+    }
 
-        ModuleKey OutputTecplot::m_className =
-            GetModuleFactory().RegisterCreatorFunction(
-                              ModuleKey(eOutputModule, "dat"), OutputTecplot::create,
-                              "Writes a Tecplot file.");
+    // Do nothing if no expansion defined
+    if(m_f->m_fieldPts == LibUtilities::NullPtsField &&!m_f->m_exp.size())
+    {
+        return;
+    }
 
-        OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
+    // Extract the output filename and extension
+    string filename = m_config["outfile"].as<string>();
+
+    if(m_f->m_fieldPts != LibUtilities::NullPtsField)
+    {
+        int dim = m_f->m_fieldPts->GetDim();
+        // Write solution.
+        ofstream outfile(filename.c_str());
+
+        switch(dim)
         {
-            m_requireEquiSpaced = true;
-            if(f->m_setUpEquiSpacedFields)
+        case 1:
+            outfile << "VARIABLES = x";
+            break;
+        case 2:
+            outfile << "VARIABLES = x y";
+            break;
+        case 3:
+            outfile << "VARIABLES = x y z";
+            break;
+        }
+
+        for(int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
+        {
+            outfile << " " << m_f->m_fieldPts->GetFieldName(i);
+        }
+        outfile << endl;
+        switch(m_f->m_fieldPts->GetPointsPerEdge().size())
+        {
+        case 0:
+        case 3:
+            outfile << " ZONE I="
+                    << m_f->m_fieldPts->GetNpoints()
+                    << " F=POINT" << endl;
+            break;
+        case 1:
+            outfile << " ZONE I="
+                    << m_f->m_fieldPts->GetPointsPerEdge(0)
+                    << " F=POINT" << endl;
+            break;
+        case 2:
+            outfile << " ZONE I=" << m_f->m_fieldPts->GetPointsPerEdge(0)
+                    <<      " J=" << m_f->m_fieldPts->GetPointsPerEdge(1)
+                    << " F=POINT" << endl;
+            break;
+        default:
+            ASSERTL0(false, "Points type not supported yet.");
+        }
+
+        Array<OneD,  Array<OneD,  NekDouble> > pts;
+        m_f->m_fieldPts->GetPts(pts);
+        int npts = m_f->m_fieldPts->GetNpoints();
+        if (m_f->m_fieldPts->GetPointsPerEdge().size() > 0)
+        {
+            npts = m_f->m_fieldPts->GetPointsPerEdge(0);
+        }
+        for(int i = 0; i < npts; ++i)
+        {
+            for(int j = 0; j < dim; ++j)
             {
-                m_outputType = eFullBlockZoneEquiSpaced;
+                outfile << std::setw(12)
+                        << pts[j][i] << " ";
             }
-            else
+
+            for(int j = 0; j < m_f->m_fieldPts->GetNFields(); ++j)
             {
                 m_outputType = eFullBlockZone;
             }

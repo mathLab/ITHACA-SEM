@@ -74,21 +74,22 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     int i,j;
 
     // Check for command line point specification if no .pts file specified
-    ASSERTL0(m_f->m_fieldPts != NullFieldPts,
+    ASSERTL0(m_f->m_fieldPts != LibUtilities::NullPtsField,
              "No input points found");
 
-    ASSERTL0(m_f->m_fieldPts->m_nFields > 0,
+    int nFields = m_f->m_fieldPts->GetNFields();
+    ASSERTL0(nFields > 0,
              "No field values provided in input");
 
     // assume one field is already defined from input file.
-    m_f->m_exp.resize(m_f->m_fieldPts->m_nFields+1);
-    for(i = 1; i < m_f->m_fieldPts->m_nFields; ++i)
+    m_f->m_exp.resize(nFields+1);
+    for(i = 1; i < nFields; ++i)
     {
         m_f->m_exp[i] = m_f->AppendExpList(0);
     }
 
     int totpoints = m_f->m_exp[0]->GetTotPoints();
-    Array<OneD,NekDouble> coords[3];
+    Array< OneD, Array<OneD, NekDouble> > coords(3);
 
     coords[0] = Array<OneD,NekDouble>(totpoints);
     coords[1] = Array<OneD,NekDouble>(totpoints);
@@ -97,57 +98,33 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
 
     int coord_id = m_config["interpcoord"].as<int>();
-    ASSERTL0(coord_id <= m_f->m_fieldPts->m_ptsDim - 1,
+    ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
         "interpcoord is bigger than the Pts files dimension");
 
-    m_f->m_fieldPts->m_weights = Array<OneD, Array<OneD, float> >(totpoints);
-    m_f->m_fieldPts->m_neighInds = Array<OneD, Array<OneD, unsigned int> >(totpoints);
+    if(m_f->m_session->GetComm()->GetRank() == 0)
+    {
+        cout << "Interpolating..." << endl;
+    }
 
     // interpolate points and transform
-    Array<OneD, NekDouble> intfields(m_f->m_fieldPts->m_nFields);
+    Array<OneD, Array<OneD, NekDouble> > intFields(nFields);
+    m_f->m_fieldPts->Interpolate(coords, intFields, coord_id);
+
     for(i = 0; i < totpoints; ++i)
     {
-        Array<OneD,NekDouble> physCoords(m_f->m_fieldPts->m_ptsDim);
-        for (j = 0; j < m_f->m_fieldPts->m_ptsDim; ++j)
+        for(j = 0; j < nFields; ++j)
         {
-            physCoords[j] = coords[j][i];
-        }
-        m_f->m_fieldPts->InterpPts(i, physCoords, intfields, coord_id);
-        for(j = 0; j < m_f->m_fieldPts->m_nFields; ++j)
-        {
-            m_f->m_exp[j]->SetPhys(i,intfields[j]);
-        }
-
-        // print progress bar
-        if ( i % (totpoints/100 +1) == 0 and m_f->m_session->GetComm()->GetRank() == 0)
-        {
-            cout << "Interpolating: ";
-
-            float progress = i / float(totpoints);
-            cout << setw(3) << int(100*progress) << "% [";
-            for (int j = 0; j < int(progress*50); j++)
-            {
-                cout << "=";
-            }
-            for (int j = int(progress*50); j < 50; j++)
-            {
-                cout << " ";
-            }
-            cout << "]" << flush;
-
-            // carriage return
-            cout << "\r";
+            m_f->m_exp[j]->SetPhys(i, intFields[j][i]);
         }
     }
 
     if(m_f->m_session->GetComm()->GetRank() == 0)
     {
-        cout << "Interpolating: 100% [============================";
-        cout << "======================]" << endl;
+        cout << "Interpolation completed" << endl;
     }
 
     // forward transform fields
-    for(i = 0; i < m_f->m_fieldPts->m_nFields; ++i)
+    for(i = 0; i < nFields; ++i)
     {
         m_f->m_exp[i]->FwdTrans_IterPerExp(m_f->m_exp[i]->GetPhys(),
                                            m_f->m_exp[i]->UpdateCoeffs());
@@ -159,11 +136,11 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
         = m_f->m_exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-    for (j = 0; j < m_f->m_fieldPts->m_nFields; ++j)
+    for (j = 0; j < nFields; ++j)
     {
         for (i = 0; i < FieldDef.size(); ++i)
         {
-            FieldDef[i]->m_fields.push_back(m_f->m_fieldPts->m_fields[j]);
+            FieldDef[i]->m_fields.push_back(m_f->m_fieldPts->GetFieldName(j));
 
             m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
         }

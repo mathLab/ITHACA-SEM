@@ -1707,16 +1707,16 @@ namespace Nektar
             map<pair<int,int>, int>::iterator it;
             edgeNodeMap[pair<int,int>(1,2)] = 9;
             edgeNodeMap[pair<int,int>(2,3)] = 9 + n;
-            edgeNodeMap[pair<int,int>(4,3)] = 9 + 2*n;
-            edgeNodeMap[pair<int,int>(1,4)] = 9 + 3*n;
+            edgeNodeMap[pair<int,int>(3,4)] = 9 + 2*n;
+            edgeNodeMap[pair<int,int>(4,1)] = 9 + 3*n;
             edgeNodeMap[pair<int,int>(1,5)] = 9 + 4*n;
             edgeNodeMap[pair<int,int>(2,6)] = 9 + 5*n;
             edgeNodeMap[pair<int,int>(3,7)] = 9 + 6*n;
             edgeNodeMap[pair<int,int>(4,8)] = 9 + 7*n;
             edgeNodeMap[pair<int,int>(5,6)] = 9 + 8*n;
             edgeNodeMap[pair<int,int>(6,7)] = 9 + 9*n;
-            edgeNodeMap[pair<int,int>(8,7)] = 9 + 10*n;
-            edgeNodeMap[pair<int,int>(5,8)] = 9 + 11*n;
+            edgeNodeMap[pair<int,int>(7,8)] = 9 + 10*n;
+            edgeNodeMap[pair<int,int>(8,5)] = 9 + 11*n;
 
             // Add vertices
             for (int i = 0; i < 8; ++i) {

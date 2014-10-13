@@ -454,17 +454,17 @@ namespace Nektar
                     tmp[n*(n-1)] = m_vertexList[3];
                     
                     // Write edge-interior
-                    int skips[4][2] = {{0,1}, {n-1,n}, {n*(n-1),1}, {0,n}};
+                    int skips[4][2] = {{0,1}, {n-1,n}, {n*n-1,-1}, {n*(n-1),-n}};
                     for (int i = 0; i < 4; ++i)
                     {
                         bool reverseEdge = m_edgeList[i]->m_n1 == m_vertexList[i];
                         
-                        if (reverseEdge)
+                        if (!reverseEdge)
                         {
-                            for (int j = n-2; j > 0; --j)
+                            for (int j = 1; j < n-1; ++j)
                             {
                                 tmp[skips[i][0] + j*skips[i][1]] = 
-                                    m_edgeList[i]->m_edgeNodes[j-1];
+                                    m_edgeList[i]->m_edgeNodes[n-2-j];
                             }
                         }
                         else

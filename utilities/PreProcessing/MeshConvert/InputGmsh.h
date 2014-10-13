@@ -67,6 +67,8 @@ namespace Nektar
             
         private:
             int GetNnodes(unsigned int InputGmshEntity);            
+            void OrientHex(ElmtConfig             conf,
+                           vector<NodeSharedPtr> &hexNodes);
         };
     }
 }

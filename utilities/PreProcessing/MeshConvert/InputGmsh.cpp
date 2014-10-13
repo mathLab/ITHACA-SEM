@@ -52,6 +52,56 @@ namespace Nektar
         std::map<unsigned int, ElmtConfig> InputGmsh::elmMap = 
             InputGmsh::GenElmMap();
 
+        std::vector<NodeSharedPtr> quadTensorNodeOrdering(
+            const std::vector<NodeSharedPtr> &nodes,
+            int n)
+        {
+            std::vector<NodeSharedPtr> nodeList;
+            int cnt2;
+
+            // Triangle
+            nodeList.resize(nodes.size());
+
+            // Vertices and edges
+            nodeList[0] = nodes[0];
+            if (n > 1)
+            {
+                nodeList[n-1] = nodes[1];
+                nodeList[n*n-1] = nodes[2];
+                nodeList[n*(n-1)] = nodes[3];
+            }
+            for (int i = 1; i < n-1; ++i)
+            {
+                nodeList[i] = nodes[4+i-1];
+            }
+            for (int i = 1; i < n-1; ++i)
+            {
+                nodeList[n*n-1-i] = nodes[4+2*(n-2)+i-1];
+            }
+
+            // Interior (recursion)
+            if (n > 2)
+            {
+                // Reorder interior nodes
+                std::vector<NodeSharedPtr> interior((n-2)*(n-2));
+                std::copy(nodes.begin() + 4+4*(n-2), nodes.end(), interior.begin());
+                interior = quadTensorNodeOrdering(interior, n-2);
+                
+                // Copy into full node list
+                for (int j = 1; j < n-1; ++j)
+                {
+                    nodeList[j*n] = nodes[4+3*(n-2)+n-2-j];
+                    for (int i = 1; i < n-1; ++i)
+                    {
+                        nodeList[j*n+i] = interior[(j-1)*(n-2)+(i-1)];
+                    }
+                    nodeList[(j+1)*n-1] = nodes[4+(n-2)+j-1];
+                }
+            }
+
+            return nodeList;
+        }
+
 
         /**
          * @brief Set up InputGmsh object.
@@ -186,7 +236,12 @@ namespace Nektar
                         }
 
                         // Prism nodes need re-ordering for Nektar++.
-                        if (it->second.m_e == LibUtilities::ePrism)
+                        if (it->second.m_e == LibUtilities::eHexahedron)
+                        {
+                            it->second.m_volumeNodes = false;
+                            OrientHex(it->second, nodeList);
+                        }
+                        else if (it->second.m_e == LibUtilities::ePrism)
                         {
                             // Mirror first in uv plane to swap around
                             // triangular faces
@@ -305,6 +360,131 @@ namespace Nektar
             }
             
             return nNodes;
+        }
+
+        void InputGmsh::OrientHex(ElmtConfig             conf,
+                                  vector<NodeSharedPtr> &hexNodes)
+        {
+            // Reordered vertex IDs.
+            vector<NodeSharedPtr> reordered;
+
+            // Map taking Gmsh edges to Nektar++ edges.
+            int gmshToNekEdge[12] = {
+                0, -3, 4, 1, 5, 2, 6, 7, 8, -11, 9, 10
+            };
+
+            // Copy hex vertices.
+            for (int i = 0; i < 8; ++i)
+            {
+                reordered.push_back(hexNodes[i]);
+            }
+
+            int order = conf.m_order;
+            int N = order-1;
+
+            if (order == 1)
+            {
+                return;
+            }
+
+            int offset = 8;
+
+            cout << "ORDER = " << order << endl;
+
+            reordered.resize(8+12*N);
+            
+            // Reorder edges.
+            int cnt = 8;
+            for (int i = 0; i < 12; ++i)
+            {
+                int edge = gmshToNekEdge[i];
+                offset = 8 + N * abs(edge);
+
+                if (edge < 0)
+                {
+                    for (int j = 0; j < N; ++j)
+                    {
+                        reordered[offset+N-j-1] = hexNodes[cnt++];
+                    }
+                }
+                else
+                {
+                    for (int j = 0; j < N; ++j)
+                    {
+                        reordered[offset+j] = hexNodes[cnt++];
+                    }
+                }
+            }
+
+            if (!conf.m_faceNodes)
+            {
+                hexNodes = reordered;
+                return;
+            }
+
+            reordered.resize(8 + 12*N + 6*N*N);
+
+            int gmsh2NekFace[6] = {0,1,4,2,3,5};
+
+            StdRegions::Orientation faceOrient[6] = {
+                StdRegions::eDir1FwdDir2_Dir2FwdDir1,
+                StdRegions::eDir1FwdDir1_Dir2FwdDir2,
+                StdRegions::eDir1FwdDir2_Dir2FwdDir1,
+                StdRegions::eDir1FwdDir1_Dir2FwdDir2,
+                StdRegions::eDir1BwdDir1_Dir2FwdDir2,
+                StdRegions::eDir1FwdDir1_Dir2FwdDir2
+            };
+
+            for (int i = 0; i < 6; ++i)
+            {
+                int face = gmsh2NekFace[i];
+                offset = 8 + 12*N + face*N*N;
+
+                vector<NodeSharedPtr> faceNodes(N*N);
+
+                for (int j = 0; j < N*N; ++j)
+                {
+                    faceNodes[j] = hexNodes[8 + 12*N + i*N*N + j];
+                }
+
+                vector<NodeSharedPtr> tmp = quadTensorNodeOrdering(faceNodes, N);
+
+                if (faceOrient[i] == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
+                {
+                    // Just copy
+                    for (int j = 0; j < N*N; ++j)
+                    {
+                        reordered[offset+j] = tmp[j];
+                    }
+                }
+                else if (faceOrient[i] == StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+                {
+                    int pos = 8 + 12*N + i*N*N;
+                    
+                    for (int j = 0; j < N; ++j)
+                    {
+                        for (int k = 0; k < N; ++k)
+                        {
+                            reordered[offset + j*N + k] = tmp[k*N + j];
+                        }
+                    }
+                }
+                else if (faceOrient[i] == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                {
+                    int pos = 8 + 12*N + i*N*N;
+                    
+                    for (int j = 0; j < N; ++j)
+                    {
+                        for (int k = 0; k < N; ++k)
+                        {
+                            reordered[offset + j*N + k] = tmp[j*N + (N-k-1)];
+                        }
+                    }
+                }
+            }
+
+            hexNodes = reordered;
+            return;
         }
         
         /*

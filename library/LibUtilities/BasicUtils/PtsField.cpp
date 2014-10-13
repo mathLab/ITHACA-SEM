@@ -90,6 +90,11 @@ void PtsField::CalcWeights(
         {
             CalcW_Shepard(i, physPt);
         }
+
+        if (m_progressCallback)
+        {
+            m_progressCallback(i, nPhysPts);
+        }
     }
 }
 

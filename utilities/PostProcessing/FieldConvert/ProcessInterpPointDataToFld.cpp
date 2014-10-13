@@ -101,13 +101,10 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     ASSERTL0(coord_id <= m_f->m_fieldPts->GetDim() - 1,
         "interpcoord is bigger than the Pts files dimension");
 
-    if(m_f->m_session->GetComm()->GetRank() == 0)
-    {
-        cout << "Interpolating..." << endl;
-    }
-
     // interpolate points and transform
     Array<OneD, Array<OneD, NekDouble> > intFields(nFields);
+    m_f->m_fieldPts->setProgressCallback(
+            &ProcessInterpPointDataToFld::PrintProgressbar, this);
     m_f->m_fieldPts->Interpolate(coords, intFields, coord_id);
 
     for(i = 0; i < totpoints; ++i)
@@ -120,7 +117,8 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 
     if(m_f->m_session->GetComm()->GetRank() == 0)
     {
-        cout << "Interpolation completed" << endl;
+        cout << "Interpolating: 100% [===================";
+        cout << "===============================]" << endl;
     }
 
     // forward transform fields
@@ -149,6 +147,34 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     m_f->m_fielddef = FieldDef;
     m_f->m_data     = FieldData;
 
+}
+
+void ProcessInterpPointDataToFld::PrintProgressbar(const int position, const int goal) const
+{
+    if (m_f->m_session->GetComm()->GetRank() != 0)
+    {
+        return;
+    }
+
+    if (position % (goal/100 +1))
+    {
+        cout << "Interpolating: ";
+
+        float progress = position / float(goal);
+        cout << int(100*progress) << "% [";
+        for (int j = 0; j < int(progress*50); j++)
+        {
+            cout << "=";
+        }
+        for (int j = int(progress*50); j < 50; j++)
+        {
+            cout << " ";
+        }
+        cout << "]" << flush;
+
+        // carriage return
+        cout << "\r";
+    }
 }
 
 }

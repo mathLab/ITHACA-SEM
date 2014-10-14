@@ -808,7 +808,7 @@ namespace Nektar
                     }
                 }
 
-                if (boost::filesystem::path(filename).extension() ==  ".fld")
+                if (boost::filesystem::path(filename).extension() !=  ".pts")
                 {
                     m_fld->Import(filename, FieldDef, FieldData,
                                 LibUtilities::NullFieldMetaDataMap,
@@ -843,7 +843,7 @@ namespace Nektar
 
                     m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
                 }
-                else if (boost::filesystem::path(filename).extension() ==  ".pts")
+                else
                 {
 
                     LibUtilities::PtsFieldSharedPtr ptsField;

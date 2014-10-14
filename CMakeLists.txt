@@ -321,7 +321,7 @@ INSTALL(DIRECTORY ${TPDIST}/include/
     COMPONENT ThirdParty
 )
 
-# Install ThirdParty libraries to subdirectory of ${NEKTAR_INCLUDE_DIR}
+# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}
 INSTALL(DIRECTORY ${TPDIST}/lib/
     DESTINATION ${NEKTAR_LIB_DIR}
     COMPONENT ThirdParty

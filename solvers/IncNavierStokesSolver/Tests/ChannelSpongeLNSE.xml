@@ -312,8 +312,8 @@
     </CONDITIONS>
 
     <FORCING>
-        <FORCE TYPE="Sponge">
-            <SPONGECOEFF> SpongeCoefficient </SPONGECOEFF>
+        <FORCE TYPE="Absorption">
+            <COEFF> SpongeCoefficient </COEFF>
         </FORCE>
     </FORCING>
 

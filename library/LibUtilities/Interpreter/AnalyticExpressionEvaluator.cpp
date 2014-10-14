@@ -113,7 +113,6 @@ namespace Nektar
             return _normal();
         }
 
-
         /** This struct creates a parser that matches the function
         definitions from math.h. All of the functions accept one
         of more NekDoubles as arguments and returns a NekDouble. **/
@@ -127,6 +126,8 @@ namespace Nektar
                     ("asin",	asin)
                     ("acos",	acos)
                     ("atan",	atan)
+                    ("atan2",	atan2)
+                    ("ang",	ang)
                     ("ceil",	ceil)
                     ("cos",		cos)
                     ("cosh",	cosh)
@@ -135,6 +136,7 @@ namespace Nektar
                     ("floor",	floor)
                     ("log",		log)
                     ("log10",	log10)
+                    ("rad",	rad)
                     ("sin",		sin)
                     ("sinh",	sinh)
                     ("sqrt",	sqrt)
@@ -207,7 +209,7 @@ namespace Nektar
                 *self.constants_p
             ] ] >> op;
 
-            op = eps_p( end_p | "||" | "&&" | "==" | "<=" | ">=" | '<' | '>' | '+' | '-' | '*' | '/' | '^' | ')' );
+            op = eps_p( end_p | "||" | "&&" | "==" | "<=" | ">=" | '<' | '>' | '+' | '-' | '*' | '/' | '^' | ')' | ',' );
         }
 
         // =========================================================================
@@ -243,6 +245,8 @@ namespace Nektar
             m_functionMapNameToInstanceType["asin"]  =  E_ASIN;
             m_functionMapNameToInstanceType["acos"]  =  E_ACOS;
             m_functionMapNameToInstanceType["atan"]  =  E_ATAN;
+            m_functionMapNameToInstanceType["atan2"] =  E_ATAN2;
+            m_functionMapNameToInstanceType["ang"]   =  E_ANG;
             m_functionMapNameToInstanceType["ceil"]  =  E_CEIL;
             m_functionMapNameToInstanceType["cos"]   =  E_COS;
             m_functionMapNameToInstanceType["cosh"]  =  E_COSH;
@@ -251,6 +255,7 @@ namespace Nektar
             m_functionMapNameToInstanceType["floor"] =  E_FLOOR;
             m_functionMapNameToInstanceType["log"]   =  E_LOG;
             m_functionMapNameToInstanceType["log10"] =  E_LOG10;
+            m_functionMapNameToInstanceType["rad"]   =  E_RAD;
             m_functionMapNameToInstanceType["sin"]   =  E_SIN;
             m_functionMapNameToInstanceType["sinh"]  =  E_SINH;
             m_functionMapNameToInstanceType["sqrt"]  =  E_SQRT;
@@ -277,6 +282,9 @@ namespace Nektar
             m_function[ E_TAN  ] = tan;
             m_function[ E_TANH ] = tanh;
             m_function[ E_SIGN ] = sign;
+            m_function2[E_ATAN2] = atan2;
+            m_function2[E_ANG]   = ang;
+            m_function2[E_RAD]   = rad;
             // there is no entry to m_function that correspond to awgn function.
             // this is made in purpose. This function need not be pre-evaluated once!
         }
@@ -728,25 +736,37 @@ namespace Nektar
             {
                 FunctionNameMap::const_iterator it = m_functionMapNameToInstanceType.find(valueStr);
                 ASSERTL1(it != m_functionMapNameToInstanceType.end(), "Invalid function specified: " + valueStr);
-                ASSERTL1(num_children == 1, "Function " + valueStr + " would like to have too few or too many arguments. This is not implemented yet");
+                ASSERTL1(num_children == 1 || num_children == 2, "Function " + valueStr + " would like to have too few or too many arguments. This is not implemented yet");
 
-                PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
-
-                // additive white gaussian noise function
-                if (it->second == E_AWGN)
+                if (location->children.size() == 1)
                 {
-                    int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), v.second);
-                    stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
-                    stack.push_back ( makeStep<EvalAWGN>( stateIndex, stateIndex ) );
-                    return std::make_pair(false,0);
-                }
+                    PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
 
-                // if precomputed value is valid, return function(value).
-                if (true == v.first)
+                    // additive white gaussian noise function
+                    if (it->second == E_AWGN)
+                    {
+                        int const_index = AddConstant(std::string("SUB_EXPR_") + boost::lexical_cast<std::string>(m_constant.size()), v.second);
+                        stack.push_back ( makeStep<StoreConst>( stateIndex, const_index ) );
+                        stack.push_back ( makeStep<EvalAWGN>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    }
+
+                    if (true == v.first)
+                    {
+                        return std::make_pair( true, m_function[it->second](v.second) );
+                    }
+                }
+                else
                 {
-                    return std::make_pair( true, m_function[it->second](v.second) );
-                }
+                    PrecomputedValue v1 = PrepareExecutionAsYouParse(location->children.begin()+0, stack, variableMap, stateIndex);
+                    PrecomputedValue v2 = PrepareExecutionAsYouParse(location->children.begin()+1, stack, variableMap, stateIndex+1);
+                    m_state_size++;
 
+                    if (true == v1.first && true == v2.first)
+                    {
+                        return std::make_pair( true, m_function2[it->second](v1.second, v2.second) );
+                    }
+                }
 
                 // if somewhere down the parse tree there is a variable or parameter, set up an
                 // evaluation sequence.
@@ -763,6 +783,12 @@ namespace Nektar
                         return std::make_pair(false,0);
                     case E_ATAN:
                         stack.push_back ( makeStep<EvalAtan>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_ATAN2:
+                        stack.push_back ( makeStep<EvalAtan2>( stateIndex, stateIndex, stateIndex+1 ) );
+                        return std::make_pair(false,0);
+                    case E_ANG:
+                        stack.push_back ( makeStep<EvalAng>( stateIndex, stateIndex, stateIndex+1 ) );
                         return std::make_pair(false,0);
                     case E_CEIL:
                         stack.push_back ( makeStep<EvalCeil>( stateIndex, stateIndex ) );
@@ -787,6 +813,9 @@ namespace Nektar
                         return std::make_pair(false,0);
                     case E_LOG10:
                         stack.push_back ( makeStep<EvalLog10>( stateIndex, stateIndex ) );
+                        return std::make_pair(false,0);
+                    case E_RAD:
+                        stack.push_back ( makeStep<EvalRad>( stateIndex, stateIndex, stateIndex+1 ) );
                         return std::make_pair(false,0);
                     case E_SIN: 
                         stack.push_back ( makeStep<EvalSin>( stateIndex, stateIndex ) );

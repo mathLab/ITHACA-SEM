@@ -87,7 +87,8 @@ namespace Nektar
         {
             eFunctionTypeExpression,
             eFunctionTypeFile,
-            eSIZE_FunctionType
+            eFunctionTypeTransientFile,
+            eSIZE_FunctionType,
         };
         const char* const FunctionTypeMap[] =
         {

@@ -65,10 +65,11 @@ namespace Nektar
              */
             static std::map<unsigned int, ElmtConfig> elmMap;
 
-
         private:
             int GetNnodes(unsigned int InputGmshEntity);
             vector<int> HexReordering(ElmtConfig conf);
+            vector<int> PrismReordering(ElmtConfig conf);
+            vector<int> TetReordering(ElmtConfig conf);
         };
     }
 }

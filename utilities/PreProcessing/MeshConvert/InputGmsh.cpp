@@ -104,6 +104,54 @@ namespace Nektar
             return nodeList;
         }
 
+        std::vector<int> triTensorNodeOrdering(
+            const std::vector<int> &nodes, int n)
+        {
+            std::vector<int> nodeList;
+            int cnt2;
+
+            nodeList.resize(nodes.size());
+
+            // Vertices
+            nodeList[0] = nodes[0];
+            if (n > 1)
+            {
+                nodeList[n-1] = nodes[1];
+                nodeList[n*(n+1)/2 - 1] = nodes[2];
+            }
+
+            // Edges
+            int cnt = n;
+            for (int i = 1; i < n-1; ++i)
+            {
+                nodeList[i] = nodes[3+i-1];
+                nodeList[cnt] = nodes[3+3*(n-2)-i];
+                nodeList[cnt+n-i-1] = nodes[3+(n-2)+i-1];
+                cnt += n-i;
+            }
+
+            // Interior (recursion)
+            if (n > 3)
+            {
+                // Reorder interior nodes
+                std::vector<int> interior((n-3)*(n-2)/2);
+                std::copy(nodes.begin() + 3+3*(n-2), nodes.end(), interior.begin());
+                interior = tensorNodeOrdering(interior, n-3);
+
+                // Copy into full node list
+                cnt = n;
+                cnt2 = 0;
+                for (int j = 1; j < n-2; ++j)
+                {
+                    for (int i = 0; i < n-j-2; ++i)
+                    {
+                        nodeList[cnt+i+1] = interior[cnt2+i];
+                    }
+                    cnt += n-j;
+                    cnt2 += n-2-j;
+                }
+            }
+        }
 
         /**
          * @brief Set up InputGmsh object.
@@ -240,7 +288,6 @@ namespace Nektar
                         // Prism nodes need re-ordering for Nektar++.
                         if (it->second.m_e == LibUtilities::eHexahedron)
                         {
-                            //it->second.m_volumeNodes = false;
                             vector<int> mapping = HexReordering(it->second);
                             vector<NodeSharedPtr> tmp = nodeList;
                             for (int i = 0; i < mapping.size(); ++i)
@@ -250,52 +297,26 @@ namespace Nektar
                         }
                         else if (it->second.m_e == LibUtilities::ePrism)
                         {
-                            // Mirror first in uv plane to swap around
-                            // triangular faces
-                            swap(nodeList[0], nodeList[3]);
-                            swap(nodeList[1], nodeList[4]);
-                            swap(nodeList[2], nodeList[5]);
-                            // Reorder base points so that face/vertices map
-                            // correctly.
-                            swap(nodeList[4], nodeList[2]);
-                            
-                            if (it->second.m_order == 2)
+                            vector<int> mapping = PrismReordering(it->second);
+                            vector<NodeSharedPtr> tmp = nodeList;
+                            for (int i = 0; i < mapping.size(); ++i)
                             {
-                                vector<NodeSharedPtr> nodemap(18);
-                                
-                                // Vertices remain unchanged.
-                                nodemap[ 0] = nodeList[ 0];
-                                nodemap[ 1] = nodeList[ 1];
-                                nodemap[ 2] = nodeList[ 2];
-                                nodemap[ 3] = nodeList[ 3];
-                                nodemap[ 4] = nodeList[ 4];
-                                nodemap[ 5] = nodeList[ 5];
-                                // Reorder edge nodes: first mirror in uv
-                                // plane and then place in Nektar++ ordering.
-                                nodemap[ 6] = nodeList[12];
-                                nodemap[ 7] = nodeList[10];
-                                nodemap[ 8] = nodeList[ 6];
-                                nodemap[ 9] = nodeList[ 8];
-                                nodemap[10] = nodeList[13];
-                                nodemap[11] = nodeList[14];
-                                nodemap[12] = nodeList[ 9];
-                                nodemap[13] = nodeList[ 7];
-                                nodemap[14] = nodeList[11];
-                                // Face vertices remain unchanged.
-                                nodemap[15] = nodeList[15];
-                                nodemap[16] = nodeList[16];
-                                nodemap[17] = nodeList[17];
-                                
-                                nodeList = nodemap;
-                            }
-                            else if (it->second.m_order > 2)
-                            {
-                                cerr << "Error: gmsh prisms only supported up "
-                                     << "to second order." << endl;
-                                abort();
+                                nodeList[i] = tmp[mapping[i]];
                             }
                         }
-                        
+                        else if (it->second.m_e == LibUtilities::eTetrahedron)
+                        {
+                            it->second.m_faceNodes = false;
+                            it->second.m_volumeNodes = false;
+                            vector<int> mapping = TetReordering(it->second);
+                            vector<NodeSharedPtr> tmp = nodeList;
+                            nodeList.resize(mapping.size());
+                            for (int i = 0; i < mapping.size(); ++i)
+                            {
+                                nodeList[i] = tmp[mapping[i]];
+                            }
+                        }
+
                         // Create element
                         ElementSharedPtr E = GetElementFactory().
                             CreateInstance(it->second.m_e,it->second,nodeList,tags);
@@ -367,6 +388,192 @@ namespace Nektar
             }
             
             return nNodes;
+        }
+
+        vector<int> InputGmsh::TetReordering(ElmtConfig conf)
+        {
+            const int order = conf.m_order;
+            const int n     = order-1;
+            const int n2    = n * (n+1)/2;
+
+            int i, j;
+            vector<int> mapping(4);
+
+            // Copy vertices.
+            for (i = 0; i < 4; ++i)
+            {
+                mapping[i] = i;
+            }
+
+            if (order == 1)
+            {
+                return mapping;
+            }
+
+            // Curvilinear edges.
+            mapping.resize(4 + 6*n);
+
+            // Curvilinear edges.
+            static int gmshToNekEdge[6] = {0,1,2,3,5,4};
+            static int gmshToNekRev [6] = {0,0,1,1,1,1};
+
+            // Reorder edges.
+            int offset, cnt = 4;
+            for (i = 0; i < 6; ++i)
+            {
+                offset = 4 + n * gmshToNekEdge[i];
+
+                if (gmshToNekRev[i])
+                {
+                    for (int j = 0; j < n; ++j)
+                    {
+                        mapping[offset+n-j-1] = cnt++; 
+                    }
+                }
+                else
+                {
+                    for (int j = 0; j < n; ++j)
+                    {
+                        mapping[offset+j] = cnt++;
+                    }
+                }
+            }
+
+            if (m_conf.m_faceNodes == false)
+            {
+                return mapping;
+            }
+
+            // Curvilinear faces.
+            mapping.resize(4 + 6*n + 4*n2);
+
+            static int gmshToNekFace[4] = {0,1,3,2};
+
+            for (i = 0; i < 4; ++i)
+            {
+                int face = gmsh2NekFace[i];
+                int offset2 = 4 + 6 * n + i * n2;
+                offset = 4 + 6 * n + face * n2;
+
+                // Create a list of interior face nodes for this face only.
+                vector<int> faceNodes(n2);
+                for (j = 0; j < n2; ++j)
+                {
+                    faceNodes[j] = offset2 + j;
+                }
+
+                // Now get the reordering of this face, which puts Gmsh
+                // recursive ordering into Nektar++ row-by-row order.
+                vector<int> tmp = triTensorNodeOrdering(faceNodes, n);
+
+                // Apply reorientation
+                switch (i)
+                {
+                    case 1:
+                    {
+                        for (j = 0; j < n2; ++j)
+                        {
+                            mapping[offset+j] = tmp[j];
+                        }
+                        break;
+                    }
+                    case 0:
+                    case 2:
+                    {
+                        // Triangle verts {0,2,1} --> {0,1,2}
+                        mapping[offset+0] = tmp[0];
+                        mapping[offset+1] = tmp[2];
+                        mapping[offset+2] = tmp[1];
+
+                        int o = offset+3;
+                        for (j = 0; j < n-1; ++j)
+                        {
+                            mapping[o + 0*(n-2) + j] = tmp[3 + n-2-j + 2*(n-2)];
+                            mapping[o + 1*(n-2) + j] = tmp[3 + n-2-j + 1*(n-2)];
+                            mapping[o + 2*(n-2) + j] = tmp[3 + n-2-j + 0*(n-2)];
+                        }
+                    }
+                    case 1:
+                    default:
+                    {
+                        break;
+                    }
+                }
+            }
+            return mapping;
+        }
+
+        vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
+        {
+            const int order = conf.m_order;
+            const int n     = order-1;
+            const int n2    = n * n;
+
+            int i, j;
+            vector<int> mapping(6);
+
+            // To get from Gmsh -> Nektar++ prism, coordinates axes are
+            // different; need to mirror in the triangular faces, and then
+            // reorder vertices to make ordering anticlockwise on base quad.
+            static int gmshToNekVerts[6] = {3,4,1,0,5,2};
+
+            for (i = 0; i < 6; ++i)
+            {
+                mapping[i] = gmshToNekVerts[i];
+            }
+
+            if (order == 1)
+            {
+                return mapping;
+            }
+
+            // Curvilinear edges.
+            mapping.resize(6 + 9*n);
+
+            static int gmshToNekEdge[9] = {2,7,3,6,1,8,0,4,5};
+            static int gmshToNekRev [9] = {1,0,1,0,1,1,0,0,0};
+
+            // Reorder edges.
+            int offset, cnt = 6;
+            for (i = 0; i < 9; ++i)
+            {
+                offset = 6 + n * gmshToNekEdge[i];
+
+                if (gmshToNekRev[i])
+                {
+                    for (int j = 0; j < n; ++j)
+                    {
+                        mapping[offset+n-j-1] = cnt++;
+                    }
+                }
+                else
+                {
+                    for (int j = 0; j < n; ++j)
+                    {
+                        mapping[offset+j] = cnt++;
+                    }
+                }
+            }
+
+            if (conf.m_faceNodes == false)
+            {
+                return mapping;
+            }
+
+            if (order > 2)
+            {
+                cerr << "Gmsh prisms of order > 2 with face curvature "
+                     << "not supported in MeshConvert (or indeed Gmsh at"
+                     << "time of writing)." << endl;
+                abort();
+            }
+
+            mapping.resize(17);
+            mapping[15] = 15;
+            mapping[16] = 16;
+            mapping[17] = 17;
+            
+            return mapping;
         }
 
         vector<int> InputGmsh::HexReordering(ElmtConfig conf)
@@ -523,7 +730,7 @@ namespace Nektar
         {
             using namespace LibUtilities;
             std::map<unsigned int, ElmtConfig> tmp;
-            
+
             //                    Elmt type,   order,  face, volume
             tmp[  1] = ElmtConfig(eSegment,        1,  true,  true);
             tmp[  2] = ElmtConfig(eTriangle,       1,  true,  true);

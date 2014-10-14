@@ -48,6 +48,34 @@ example,
 The list of available solvers in Nektar++ can be found in
 Chapter~\ref{c:solvers}.
 
+\subsubsection{Drivers}
+Drivers are defined under the \inltt{CONDITIONS} section as properties of the \inltt{SOLVERINFO} XML element. The role of a driver is to manage the solver execution from an upper level. The default driver is called \inltt{Standard} and executes the following steps:
+\begin{enumerate}
+\item Prints out on screen a summary of all the conditions defined in the input file.
+\item Sets up the initial and boundary conditions.
+\item Calls the solver defined by \inltt{SolverType}  in the \inltt{SOLVERINFO} XML element.
+\item Writes the results in the output (.fld) file.
+\end{enumerate}
+
+In the following example, the driver \inltt{Standard} is used to manage the execution of the incompressible Navier-Stokes equations:
+
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+    <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+    <I PROPERTY="Projection" VALUE="Galerkin" />
+    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+    <I PROPERTY="Driver" VALUE="Standard" />
+</SOLVERINFO>
+\end{lstlisting}
+
+If no driver is specified in the session file, the driver \inltt{Standard} is called by default. But other drivers can be used. As described in Sec. \ref{SectionIncNS_SolverInfo} and  \ref{SectionIncNS_SolverInfo_Stab}, the other possibilities are:
+\begin{itemize}
+\item \inltt{SteadyState} - uses the Selective Frequency Damping method (see Sec. \ref{SectionSFD}) to obtain a steady-state solution of the Navier-Stokes equations (compressible or incompressible).
+\item \inltt{ModifiedArnoldi}  - computes of the leading eigenvalues and eigenmodes using modified Arnoldi method.
+\item \inltt{Arpack} - computes of eigenvalues/eigenmodes using Implicitly Restarted Arnoldi Method (ARPACK).
+\end{itemize}
+
 
 \subsection{Variables}
 
@@ -214,7 +242,21 @@ the field data is specified. The expansion order used to generate the .rst file
 must be the same as that for the simulation. The filename must be specified
 relative to the location of the .xml file.
 
-Other examples of this input features can be the insertion of a forcing term,
+With the additional argument \inltt{TIMEDEPENDENT="1"}, different files can be
+loaded for each timestep. The filenames are defined using
+\href{http://www.boost.org/doc/libs/1_56_0/libs/format/doc/format.html#syntax}{boost::format syntax}
+where the step time is used as variable. For example, the function
+\inltt{Baseflow} would load the files \inltt{U0V0\_1.00000000E-05.fld},
+\inltt{U0V0\_2.00000000E-05.fld} and so on.
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="Baseflow">
+	<F VAR="U0,V0" TIMEDEPENDENT="1"FILE="U0V0_%14.8R.fld"/>
+</FUNCTION>
+\end{lstlisting}
+
+
+Other examples of this input feature can be the insertion of a forcing term,
 
 \begin{lstlisting}[style=XMLStyle]
 <FUNCTION NAME="BodyForce">

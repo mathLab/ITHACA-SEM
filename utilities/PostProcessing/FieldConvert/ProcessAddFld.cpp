@@ -46,7 +46,6 @@ namespace Nektar
 {
 namespace Utilities
 {
-
 ModuleKey ProcessAddFld::className =
     GetModuleFactory().RegisterCreatorFunction(
         ModuleKey(eProcessModule, "addfld"),

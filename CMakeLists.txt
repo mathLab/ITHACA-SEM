@@ -28,7 +28,7 @@ ENDIF(COMMAND cmake_policy)
 # Find the modules included with Nektar
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 IF( NOT NEKTAR_PASSED_FIRST_CONFIGURE )
-    IF (NOT DEFINED CMAKE_INSTALL_PREFIX)
+    IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
     ENDIF()
 ENDIF()
@@ -37,9 +37,9 @@ ENDIF()
 INCLUDE(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
-SET(LIB_DIR "lib")
+SET(LIB_DIR "lib/nektar++")
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE )
-	SET(LIB_DIR "lib64")
+	SET(LIB_DIR "lib64/nektar++")
 ENDIF()
 SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 
@@ -307,13 +307,17 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindScotch.cmake
-	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
+	      ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindGSMPI.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindXXT.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindSMV.cmake
-              DESTINATION ${CMAKE_INSTALL_PREFIX}) 
+              DESTINATION ${CMAKE_INSTALL_PREFIX})
+INSTALL(DIRECTORY ${TPDIST}/include/
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/ThirdParty
+    COMPONENT ThirdParty
+)
 
 SET(NEKTAR_PASSED_FIRST_CONFIGURE ON CACHE BOOL INTERNAL)
 MARK_AS_ADVANCED(NEKTAR_PASSED_FIRST_CONFIGURE)

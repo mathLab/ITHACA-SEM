@@ -205,7 +205,6 @@ namespace Nektar
 
                 const Array<OneD, const NekDouble>& z0 = pExp->GetBasis(0)->GetZ();
                 const Array<OneD, const NekDouble>& z1 = pExp->GetBasis(1)->GetZ();
-                
                 m_fac0 = Array<OneD, NekDouble>(m_nquad0*m_nquad1);
                 // set up geometric factor: 0.5*(1+z0)
                 for (int i = 0; i < m_nquad0; ++i)

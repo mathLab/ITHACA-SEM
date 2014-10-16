@@ -3,6 +3,7 @@ SET(COLLECTIONS_SOURCES
   Operator.cpp
   HexOperators.cpp
   IProduct.cpp
+  PrismOperators.cpp
   QuadOperators.cpp
   SegOperators.cpp
   TetOperators.cpp

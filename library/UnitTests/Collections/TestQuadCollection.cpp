@@ -76,7 +76,7 @@ namespace Nektar
                     Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[3]),
                     Nektar::SpatialDomains::SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
                 };
-            
+             
             SpatialDomains::QuadGeomSharedPtr quadGeom(new SpatialDomains::QuadGeom(0,edges,edgeorient));
             return quadGeom;
         }

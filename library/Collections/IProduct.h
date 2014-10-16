@@ -70,6 +70,17 @@ namespace Nektar
                          Array<OneD, NekDouble> &output,
                          Array<OneD, NekDouble> &wsp);
         
+        void PrismIProduct(bool sortTopVert, int numElmt, 
+                         int nquad0,  int  nquad1,  int nquad2,
+                         int nmodes0, int  nmodes1, int nmodes2,
+                         const Array<OneD, const NekDouble> &base0,
+                         const Array<OneD, const NekDouble> &base1,
+                         const Array<OneD, const NekDouble> &base2,
+                         const Array<OneD, const NekDouble> &jac, 
+                         const Array<OneD, const NekDouble> &input, 
+                         Array<OneD, NekDouble> &output,
+                           Array<OneD, NekDouble> &wsp);
+
         void TetIProduct(bool sortTopEdge, int numElmt, 
                          int  nquad0,   int  nquad1,   int  nquad2, 
                          int  nmodes0,  int  nmodes1,  int  nmodes2,

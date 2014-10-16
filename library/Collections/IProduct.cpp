@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: IProduct2D.cpp
+// File: IProduct.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -326,6 +326,72 @@ namespace Nektar
             }
         }
 
+
+        void PrismIProduct(bool sortTopVertex, int numElmt, 
+                         int nquad0,  int  nquad1,  int nquad2,
+                         int nmodes0, int  nmodes1, int nmodes2,
+                         const Array<OneD, const NekDouble> &base0,
+                         const Array<OneD, const NekDouble> &base1,
+                         const Array<OneD, const NekDouble> &base2,
+                         const Array<OneD, const NekDouble> &jac, 
+                         const Array<OneD, const NekDouble> &input, 
+                         Array<OneD, NekDouble> &output,
+                         Array<OneD, NekDouble> &wsp)
+        {
+            int totmodes  = LibUtilities::StdPrismData::getNumberOfCoefficients(nmodes0,nmodes1,nmodes2);
+            int totpoints = nquad0*nquad1*nquad2;
+            int cnt;
+            int mode, mode1; 
+
+            Vmath::Vmul(numElmt*totpoints,jac,1,input,1,wsp,1);
+            
+            Array<OneD, NekDouble> wsp1 = wsp + numElmt*nquad2*(max(nquad0*nquad1,nmodes0*nmodes1));
+                
+            // Perform iproduct  with respect to the  '0' direction
+            Blas::Dgemm('T', 'N', nquad1*nquad2*numElmt, nmodes0, nquad0,
+                        1.0, wsp.get(), nquad0, base0.get(),
+                        nquad0, 0.0, wsp1.get(), nquad1*nquad2*numElmt);
+
+
+            // Perform iproduct  with respect to the  '1' direction
+            Blas::Dgemm('T', 'N', nquad2*numElmt*nmodes0, nmodes1, nquad1,
+                        1.0, wsp1.get(), nquad1, base1.get(),
+                        nquad1, 0.0, wsp.get(), nquad2*numElmt*nmodes0);
+
+
+            // Inner product with respect to the '2' direction (not sure if it woudl be better to swap loops?)
+            mode = mode1 = cnt = 0;
+            for(int i = 0; i < nmodes0; ++i)
+            {
+                cnt = i*nquad2*numElmt;
+                for(int j = 0; j < nmodes1; ++j)
+                {
+                    Blas::Dgemm('T', 'N', nmodes2-i, numElmt, nquad2,
+                                1.0, base2.get()+mode*nquad2, nquad2,
+                                     wsp.get()+j*nquad2*numElmt*nmodes0 + cnt,   nquad2,
+                                0.0, output.get()+mode1,    totmodes);
+                    mode1 += nmodes2-i;
+                }
+                mode  += nmodes2-i;
+            }
+
+            // fix for modified basis by splitting top vertex mode
+            if (sortTopVertex)
+            {
+                // top singular vertex 
+                // ((1+a)/2 components entry into (1+c)/2)
+                // Could be made into an mxv if we have specialised base1[1]
+                for(int j =0; j < nmodes1; ++j)
+                {
+                    Blas::Dgemv('T', nquad2,numElmt,1.0,
+                                wsp.get()+j*nquad2*numElmt*nmodes0+nquad2*numElmt,
+                                nquad2, base2.get()+nquad2,1,1.0,
+                                &output[j*nmodes2+1], totmodes);
+                }
+            }
+        }
+        
+
         void TetIProduct(bool sortTopEdge, int numElmt, 
                          int nquad0,  int  nquad1,  int nquad2,
                          int nmodes0, int  nmodes1, int nmodes2,
@@ -344,8 +410,9 @@ namespace Nektar
 
             Vmath::Vmul(numElmt*totpoints,jac,1,input,1,wsp,1);
             
-            Array<OneD, NekDouble> wsp1 = wsp + max(totpoints,
-                                    nquad2*nquad1*nmodes0)*numElmt; 
+            Array<OneD, NekDouble> wsp1 = wsp +
+                nquad2*numElmt*(max(nquad0*nquad1,nmodes0*(2*nmodes1-nmodes0+1)/2));
+
                 
             // Perform iproduct  with respect to the  '0' direction
             Blas::Dgemm('T', 'N', nquad1*nquad2*numElmt, nmodes0, nquad0,
@@ -358,7 +425,7 @@ namespace Nektar
             {
                 Blas::Dgemm('T', 'N', nquad2*numElmt, nmodes1-i, nquad1,
                             1.0, wsp1.get()+ i*nquad1*nquad2*numElmt, nquad1,
-                                 base1.get() + mode*nquad1,           nquad1,
+                            base1.get() + mode*nquad1,           nquad1,
                             0.0, wsp.get() + mode*nquad2*numElmt,nquad2*numElmt);
                 mode  += nmodes1-i;
             }

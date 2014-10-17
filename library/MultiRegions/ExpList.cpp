@@ -2679,7 +2679,7 @@ namespace Nektar
                 int collmax;
                 int collcnt; 
                 
-                m_session->LoadParameter("CollectionMax",collmax,m_exp.size());
+                m_session->LoadParameter("CollectionMax",collmax,m_exp->size());
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
                 m_coll_phys_offset .push_back(prevPhysOffset);

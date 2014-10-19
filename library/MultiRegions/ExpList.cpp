@@ -2583,33 +2583,33 @@ namespace Nektar
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
-            // bool autotuning;
-            // bool verbose  =m_session->DefinesCmdLineArgument("verbose");
-            // int collmax;
+            bool autotuning;
+            bool verbose  =m_session->DefinesCmdLineArgument("verbose");
+            int collmax;
 
-            // m_session->LoadParameter("CollectionMax",collmax,m_exp->size());
-            // m_session->MatchSolverInfo("CollectionAutoTuning","True",autotuning);
+            m_session->LoadParameter("CollectionMax",collmax,m_exp->size());
+            m_session->MatchSolverInfo("CollectionAutoTuning","True",autotuning);
 
-            // // If ImpType is not specified by default argument call
-            // // then set ImpType to eStdMat. 
-            // if(ImpType == Collections::eNoImpType)
-            // {
-            //     ImpType = Collections::eStdMat; 
-            // }
-            // else // if ImpType was provided do not perform autotuning.
-            // {
-            //     autotuning = false; 
-            // }
+            // If ImpType is not specified by default argument call
+            // then set ImpType to eStdMat. 
+            if(ImpType == Collections::eNoImpType)
+            {
+                ImpType = Collections::eStdMat; 
+            }
+            else // if ImpType was provided do not perform autotuning.
+            {
+                autotuning = false; 
+            }
 
-            // // Figure out optimisation parameters if provided in
-            // // session file or default given
-            // Collections::CollectionOptimisation colOpt(m_session, ImpType);
+            // Figure out optimisation parameters if provided in
+            // session file or default given
+            Collections::CollectionOptimisation colOpt(m_session, ImpType);
 
-            // if(colOpt.SetByXml() == true)
-            // {
-            //     autotuning = false; 
-            //     if(verbose)
-            //     {
+            if(colOpt.SetByXml() == true)
+            {
+                autotuning = false; 
+                if(verbose)
+                {
                     cout << "Setting Collection optimisation using XML file details";
                 }
             }
@@ -2617,7 +2617,7 @@ namespace Nektar
             {
                 if(verbose)
                 {
-                    cout << "Setting Collection optimisation using: " << Collections::ImplementationTypeMap[ImpType] << endl;;
+                    cout << "Setting Collection optimisation using: " << Collections::ImplementationTypeMap[ImpType] << endl;
                 }
             }
             

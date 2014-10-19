@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
         SpatialDomains::MeshGraph::Read(vSession);
     
     Collections::ImplementationType ImpType; 
-    for(int imp = 0; imp < Collections::SIZE_ImplementationType; ++imp)
+    for(int imp = 0; imp < 3; ++imp)
     {
         // set up different collection implementations:
         switch(imp){

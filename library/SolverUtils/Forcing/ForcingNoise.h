@@ -42,7 +42,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
-#include <SolverUtils/Forcing/ForcingSponge.h>
+#include <SolverUtils/Forcing/Forcing.h>
 
 namespace Nektar
 {

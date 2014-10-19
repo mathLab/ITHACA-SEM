@@ -12,7 +12,7 @@ IF (THIRDPARTY_BUILD_TINYXML)
         PREFIX ${TPSRC}
         URL ${TPURL}/tinyxml_2_4_3-1.tar.bz2
         URL_MD5 "a00f5e3b547b803977c5744547a688f7"
-        STAMP_DIR ${TPSRC}/stamp
+        STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/tinyxml-2.4.3
         BINARY_DIR ${TPBUILD}/tinyxml-2.4.3

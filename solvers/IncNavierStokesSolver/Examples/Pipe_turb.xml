@@ -66,6 +66,12 @@
     </BOUNDARYCONDITIONS>
   </CONDITIONS>
   
+  <FORCING>
+      <FORCE TYPE="Body">
+          <BODYFORCE> BodyForce </BODYFORCE>
+      </FORCE>
+  </FORCING>
+  
   <GEOMETRY DIM="2" SPACE="2">
     <VERTEX>
       <V ID="0">5.00000000e-01 0.00000000e+00 0.00000000e+00</V>

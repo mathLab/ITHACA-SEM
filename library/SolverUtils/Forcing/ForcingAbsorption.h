@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingSponge.h
+// File: ForcingAbsorption.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Sponge forcing.
+// Description: Absorption layer forcing.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_FORCINGSPONGE
-#define NEKTAR_SOLVERUTILS_FORCINGSPONGE
+#ifndef NEKTAR_SOLVERUTILS_FORCINGABSORPTION
+#define NEKTAR_SOLVERUTILS_FORCINGABSORPTION
 
 #include <string>
 
@@ -48,10 +48,10 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-    class ForcingSponge : public Forcing
+    class ForcingAbsorption : public Forcing
     {
         public:
-            friend class MemoryManager<ForcingSponge> ;
+            friend class MemoryManager<ForcingAbsorption> ;
 
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
@@ -60,7 +60,7 @@ namespace SolverUtils
                     const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce)
             {
-                ForcingSharedPtr p = MemoryManager<ForcingSponge>::
+                ForcingSharedPtr p = MemoryManager<ForcingAbsorption>::
                                                 AllocateSharedPtr(pSession);
                 p->InitObject(pFields, pNumForcingFields, pForce);
                 return p;
@@ -72,7 +72,7 @@ namespace SolverUtils
         protected:
             bool                                    m_hasRefFlow;
             bool                                    m_hasRefFlowTime;
-            Array<OneD, Array<OneD, NekDouble> >    m_Sponge;
+            Array<OneD, Array<OneD, NekDouble> >    m_Absorption;
             Array<OneD, Array<OneD, NekDouble> >    m_Refflow;
             std::string                             m_funcNameTime;
   
@@ -88,11 +88,12 @@ namespace SolverUtils
                     const NekDouble &time);
 
         private:
-            ForcingSponge(const LibUtilities::SessionReaderSharedPtr& pSession);
+            ForcingAbsorption(const LibUtilities::SessionReaderSharedPtr& pSession);
 
     };
 
 }
 }
 // Hui XU  21 Jul 2013 Created 
+// Yumnah Mohamied May 2014 Modified and generalised. 
 #endif

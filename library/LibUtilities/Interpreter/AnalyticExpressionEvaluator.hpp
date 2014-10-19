@@ -45,7 +45,6 @@
 #include <boost/random/variate_generator.hpp>  // for variate_generator
 #include <boost/random/normal_distribution.hpp>
 
-
 #if( BOOST_VERSION / 100 % 1000 >= 36 )
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_ast.hpp>
@@ -77,7 +76,21 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        static NekDouble rad(NekDouble x, NekDouble y)
+        {
+            if (x != 0. || y != 0.)
+                return sqrt (x*x + y*y);
+            else
+                return 0.;
+        }
 
+        static NekDouble ang(NekDouble x, NekDouble y)
+        {
+            NekDouble theta = 0.;
+            if ((x != 0.) || (y != 0.))
+                theta = atan2 (y,x);
+            return theta;
+        }
 
         ///  This class defines evaluator of analytic (symbolic)
         ///  mathematical expressions. Expressions are allowed to
@@ -113,6 +126,7 @@ namespace Nektar
             typedef std::vector<EvaluationStep*>  ExecutionStack;
             typedef std::pair<bool, NekDouble>       PrecomputedValue;
             typedef NekDouble (*OneArgFunc)(NekDouble);
+            typedef NekDouble (*TwoArgFunc)(NekDouble, NekDouble);
 
             typedef boost_spirit::tree_parse_info<
                             std::string::const_iterator,
@@ -438,6 +452,7 @@ namespace Nektar
 
             FunctionNameMap            m_functionMapNameToInstanceType;
             std::map<int, OneArgFunc>  m_function;
+            std::map<int, TwoArgFunc>  m_function2;
 
 
             // ======================================================
@@ -459,11 +474,10 @@ namespace Nektar
 
             enum EvaluationStepType
             {
-                    E_ABS,    E_ASIN,  E_ACOS,  E_ATAN,  E_ATAN2,
-                    E_CEIL,   E_COS,   E_COSH,  E_EXP,   E_FABS,
-                    E_FLOOR,  E_LOG,   E_LOG10, E_POW,   E_SIN,
-                    E_SINH,   E_SQRT,  E_TAN,   E_TANH,  E_SIGN,
-                    E_AWGN
+                    E_ABS,    E_ASIN,  E_ACOS,  E_ATAN,  E_ATAN2, E_ANG,
+                    E_CEIL,   E_COS,   E_COSH,  E_EXP,   E_FABS,  E_FLOOR,
+                    E_LOG,    E_LOG10, E_POW,   E_RAD,   E_SIN,   E_SINH,
+                    E_SQRT,   E_TAN,   E_TANH,  E_SIGN,  E_AWGN
             };
 
 
@@ -614,6 +628,18 @@ namespace Nektar
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::atan( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::atan( state[argIdx1] ); }
             };
+            struct EvalAtan2: public EvaluationStep
+            {
+                EvalAtan2(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::atan2( state[argIdx1*n+i], state[argIdx2*n+i] ); }
+                virtual void run_once() { state[storeIdx] = std::atan2( state[argIdx1], state[argIdx2] ); }
+            };
+            struct EvalAng: public EvaluationStep
+            {
+                EvalAng(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = ang( state[argIdx1*n+i], state[argIdx2*n+i] ); }
+                virtual void run_once() { state[storeIdx] = ang( state[argIdx1], state[argIdx2] ); }
+            };
             struct EvalCeil: public EvaluationStep
             {
                 EvalCeil(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
@@ -661,6 +687,12 @@ namespace Nektar
                 EvalLog10(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
                 virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = std::log10( state[argIdx1*n+i] ); }
                 virtual void run_once() { state[storeIdx] = std::log10( state[argIdx1] ); }
+            };
+            struct EvalRad: public EvaluationStep
+            {
+                EvalRad(rgt rn, vr s, cvr c, cvr p, cvr v, ci i, ci l, ci r): EvaluationStep(rn,i,l,r,s,c,p,v) {}
+                virtual void run_many(ci n) { for(int i=0;i<n;i++) state[storeIdx*n+i] = rad( state[argIdx1*n+i], state[argIdx2*n+i] ); }
+                virtual void run_once() { state[storeIdx] = rad( state[argIdx1], state[argIdx2] ); }
             };
             struct EvalSin: public EvaluationStep
             {

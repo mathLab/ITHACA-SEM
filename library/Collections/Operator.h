@@ -87,8 +87,8 @@ namespace Nektar {
         {
             "NoImplementationType",
             "IterPerExp",
-            "StdMat"
-            "SumFac",
+            "StdMat",
+            "SumFac"
         };
 
         typedef map<OperatorType, ImplementationType> OperatorImpMap;

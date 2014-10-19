@@ -89,7 +89,7 @@ namespace SolverUtils
 
         private:
             ForcingSponge(const LibUtilities::SessionReaderSharedPtr& pSession);
-
+            virtual ~ForcingSponge(void){};
     };
 
 }

@@ -84,6 +84,7 @@ namespace SolverUtils
 
         private:
             ForcingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
+            virtual ~ForcingBody(void){};
 
     };
 

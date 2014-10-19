@@ -247,7 +247,13 @@ namespace Nektar
 
                 if(verbose)
                 {
-                    cout << "Collection values:" << endl;
+                    cout << "Collection Implemenation for " << LibUtilities::ShapeTypeMap[pExp->DetShapeType()];
+                    cout << " ( ";
+                    for(int i = 0; i < pExp->GetNumBases(); ++i)
+                    {
+                        cout << pExp->GetBasis(i)->GetNumModes() <<" ";
+                    }
+                    cout << ")" << endl;
                 }
                 // set  up an array of collections
                 CollectionVector coll; 

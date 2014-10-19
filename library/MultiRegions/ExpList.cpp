@@ -2583,9 +2583,43 @@ namespace Nektar
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
-            // Figure out optimisation parameters if provided in
-            // session file or default given
-            Collections::CollectionOptimisation colOpt(m_session, ImpType);
+            // bool autotuning;
+            // bool verbose  =m_session->DefinesCmdLineArgument("verbose");
+            // int collmax;
+
+            // m_session->LoadParameter("CollectionMax",collmax,m_exp->size());
+            // m_session->MatchSolverInfo("CollectionAutoTuning","True",autotuning);
+
+            // // If ImpType is not specified by default argument call
+            // // then set ImpType to eStdMat. 
+            // if(ImpType == Collections::eNoImpType)
+            // {
+            //     ImpType = Collections::eStdMat; 
+            // }
+            // else // if ImpType was provided do not perform autotuning.
+            // {
+            //     autotuning = false; 
+            // }
+
+            // // Figure out optimisation parameters if provided in
+            // // session file or default given
+            // Collections::CollectionOptimisation colOpt(m_session, ImpType);
+
+            // if(colOpt.SetByXml() == true)
+            // {
+            //     autotuning = false; 
+            //     if(verbose)
+            //     {
+                    cout << "Setting Collection optimisation using XML file details";
+                }
+            }
+            else if (autotuning == false)
+            {
+                if(verbose)
+                {
+                    cout << "Setting Collection optimisation using: " << Collections::ImplementationTypeMap[ImpType] << endl;;
+                }
+            }
             
             // clear vectors in case previously called
             m_collections.clear();
@@ -2662,25 +2696,11 @@ namespace Nektar
                 }
 
                 Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-#if 0 
-                Collections::OperatorImpMap::iterator cIt;
-                for (cIt = impTypes.begin(); cIt != impTypes.end(); ++cIt)
-                {
-                    cout << Collections::OperatorTypeMap[cIt->first]
-                         << " -> "
-                         << Collections::ImplementationTypeMap[cIt->second]
-                         << endl;
-                }
-#endif
-                
                 vector<SpatialDomains::GeometrySharedPtr> geom;
                 
                 int prevCoeffOffset     = m_coeff_offset[it->second[0].second];
                 int prevPhysOffset      = m_phys_offset [it->second[0].second];
-                int collmax;
                 int collcnt; 
-                
-                m_session->LoadParameter("CollectionMax",collmax,m_exp->size());
 
                 m_coll_coeff_offset.push_back(prevCoeffOffset);
                 m_coll_phys_offset .push_back(prevPhysOffset);
@@ -2691,9 +2711,10 @@ namespace Nektar
 
                     // if no Imp Type provided and No settign in xml file. 
                     // reset impTypes using timings 
-                    if((ImpType == Collections::eNoImpType)&&(colOpt.SetByXml() == false))
+                    if(autotuning)
                     {
-                        impTypes = colOpt.SetWithTimings(stdExp,geom, impTypes);
+                        impTypes = colOpt.SetWithTimings(stdExp,geom,
+                                                         impTypes, verbose);
                     }
 
                     Collections::Collection tmp(stdExp, geom, impTypes);
@@ -2720,9 +2741,10 @@ namespace Nektar
                                 // settign in xml file. reset
                                 // impTypes using timings
 
-                                if((ImpType == Collections::eNoImpType)&&(colOpt.SetByXml() == false))
+                                if(autotuning)
                                 {
-                                    impTypes = colOpt.SetWithTimings(stdExp,geom, impTypes);
+                                    impTypes = colOpt.SetWithTimings(stdExp,geom, 
+                                                                     impTypes, verbose);
                                 }
                                 
                                 Collections::Collection tmp(stdExp, geom, impTypes);
@@ -2742,9 +2764,10 @@ namespace Nektar
 
                                 // if no Imp Type provided and No
                                 // settign in xml file.
-                                if((ImpType == Collections::eNoImpType)&&(colOpt.SetByXml() == false))
+                                if(autotuning)
                                 {
-                                    impTypes = colOpt.SetWithTimings(stdExp,geom, impTypes);
+                                    impTypes = colOpt.SetWithTimings(stdExp,geom, 
+                                                                     impTypes,verbose);
                                 }
                                 
                                 Collections::Collection tmp(stdExp, geom, impTypes);

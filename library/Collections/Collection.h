@@ -75,7 +75,6 @@ namespace Nektar
                 
         static CoalescedGeomDataSharedPtr GeomDataNull;
 
-        typedef map<OperatorType, ImplementationType> OperatorImpMap;
 
         /**
          * @brief Collection

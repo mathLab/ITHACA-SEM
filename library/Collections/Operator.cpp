@@ -823,6 +823,18 @@ namespace Nektar {
                       "IProductWRTDerivBase_StdMat_Hex")
             };
         
+        // simple operator Map evaluation
+        OperatorImpMap SetFixedImpType(ImplementationType defaultType)
+        {
+            OperatorImpMap opMap;
+            
+            for(int i = 0; i < SIZE_OperatorType; ++i)
+            {
+                opMap[(OperatorType)i] = defaultType;
+            }
+            
+            return opMap;
+        }
        
     }
 }

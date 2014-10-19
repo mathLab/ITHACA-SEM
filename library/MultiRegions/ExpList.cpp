@@ -2583,7 +2583,8 @@ namespace Nektar
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
-            // Figure out optimisation parameters
+            // Figure out optimisation parameters if provided in
+            // session file or default given
             Collections::CollectionOptimisation colOpt(m_session, ImpType);
             
             // clear vectors in case previously called
@@ -2687,6 +2688,14 @@ namespace Nektar
                 if(it->second.size() == 1) // single element case
                 {
                     geom.push_back(it->second[0].first->GetGeom());
+
+                    // if no Imp Type provided and No settign in xml file. 
+                    // reset impTypes using timings 
+                    if((ImpType == Collections::eNoImpType)&&(colOpt.SetByXml() == false))
+                    {
+                        impTypes = colOpt.SetWithTimings(stdExp,geom, impTypes);
+                    }
+
                     Collections::Collection tmp(stdExp, geom, impTypes);
                     m_collections.push_back(tmp);
                 }
@@ -2698,18 +2707,27 @@ namespace Nektar
                     for (int i = 1; i < it->second.size(); ++i)
                     {
                         const int nCoeffs = it->second[i].first->GetNcoeffs();
-                        int coeffOffset = m_coeff_offset[it->second[i].second];
-                        int physOffset  = m_phys_offset [it->second[i].second];
+                        int coeffOffset   = m_coeff_offset[it->second[i].second];
+                        int physOffset    = m_phys_offset [it->second[i].second];
                         
-                        if (prevCoeffOffset + nCoeffs != coeffOffset ||
-                            prevnCoeff != nCoeffs ||
-                            i == it->second.size() - 1 || collcnt >= collmax)
+                        if( prevCoeffOffset + nCoeffs != coeffOffset ||
+                            prevnCoeff != nCoeffs || i == it->second.size() - 1 ||
+                            collcnt >= collmax)
                         {
                             if (i != it->second.size() - 1 )
                             {
+                                // if no Imp Type provided and No
+                                // settign in xml file. reset
+                                // impTypes using timings
+
+                                if((ImpType == Collections::eNoImpType)&&(colOpt.SetByXml() == false))
+                                {
+                                    impTypes = colOpt.SetWithTimings(stdExp,geom, impTypes);
+                                }
+                                
                                 Collections::Collection tmp(stdExp, geom, impTypes);
                                 m_collections.push_back(tmp);
-
+                                
                                 // start new geom list 
                                 geom.clear();
 
@@ -2721,6 +2739,14 @@ namespace Nektar
                             else // end this list
                             {
                                 geom.push_back(it->second[i].first->GetGeom());
+
+                                // if no Imp Type provided and No
+                                // settign in xml file.
+                                if((ImpType == Collections::eNoImpType)&&(colOpt.SetByXml() == false))
+                                {
+                                    impTypes = colOpt.SetWithTimings(stdExp,geom, impTypes);
+                                }
+                                
                                 Collections::Collection tmp(stdExp, geom, impTypes);
                                 m_collections.push_back(tmp);
                                 geom.clear();

@@ -36,8 +36,10 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <Collections/Collection.h>
 
-namespace Nektar {
-    namespace Collections {
+namespace Nektar 
+{
+    namespace Collections 
+    {        
         class CollectionOptimisation
         {
             typedef pair<LibUtilities::ShapeType, int> ElmtOrder;
@@ -45,12 +47,14 @@ namespace Nektar {
         public:
             CollectionOptimisation(
                 LibUtilities::SessionReaderSharedPtr pSession,
-                ImplementationType defaultType = eIterPerExp)
+                ImplementationType defaultType = eStdMat)
             {
                 map<ElmtOrder, ImplementationType> defaults;
                 map<ElmtOrder, ImplementationType>::iterator it;
 
-                // Default all elements to eIterPerExp
+                m_setByXml = false;
+
+                // Default all elements to eStdMat
                 defaults[ElmtOrder(LibUtilities::eSegment,       -1)] = defaultType;
                 defaults[ElmtOrder(LibUtilities::eTriangle,      -1)] = defaultType;
                 defaults[ElmtOrder(LibUtilities::eQuadrilateral, -1)] = defaultType;
@@ -58,6 +62,7 @@ namespace Nektar {
                 defaults[ElmtOrder(LibUtilities::ePyramid,       -1)] = defaultType;
                 defaults[ElmtOrder(LibUtilities::ePrism,         -1)] = defaultType;
                 defaults[ElmtOrder(LibUtilities::eHexahedron,    -1)] = defaultType;
+
 
                 map<string, LibUtilities::ShapeType> elTypes;
                 map<string, LibUtilities::ShapeType>::iterator it2;
@@ -95,7 +100,8 @@ namespace Nektar {
                     if (xmlCol)
                     {
                         TiXmlElement *elmt = xmlCol->FirstChildElement();
-                        
+                        m_setByXml = true;
+
                         while (elmt)
                         {
                             string tagname = elmt->ValueStr();
@@ -217,15 +223,118 @@ namespace Nektar {
                     {
                         impType = it2->second;
                     }
-
+                    
                     ret[it->first] = impType;
                 }
 
                 return ret;
             }
+            
+            OperatorImpMap SetWithTimings(StdRegions::StdExpansionSharedPtr pExp,
+                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                                          OperatorImpMap &impTypes,
+                                          bool verbose = true)
+            {
+                OperatorImpMap ret;
+
+                int maxsize = pGeom.size()*max(pExp->GetNcoeffs(),pExp->GetTotPoints());
+                Array<OneD, NekDouble> inarray(maxsize,1.0);
+                Array<OneD, NekDouble> outarray1(maxsize);
+                Array<OneD, NekDouble> outarray2(maxsize);
+                Array<OneD, NekDouble> outarray3(maxsize);
+
+                Timer t;
+
+                if(verbose)
+                {
+                    cout << "Collection values:" << endl;
+                }
+                // set  up an array of collections
+                CollectionVector coll; 
+                for(int imp = 1; imp < SIZE_ImplementationType; ++imp)
+                {
+                    OperatorImpMap impTypes = SetFixedImpType((ImplementationType) imp);
+                                                                       
+                    Collection collloc(pExp,pGeom,impTypes);
+                    coll.push_back(collloc);
+                }
+                    
+                // Determine the number of tests to do in one second
+                Array<OneD, int> Ntest(SIZE_OperatorType);
+                for(int i = 0; i < SIZE_OperatorType; ++i)
+                {
+                    OperatorType OpType = (OperatorType)i;
+
+                    t.Start();
+                    coll[0].ApplyOperator(OpType,
+                                       inarray,
+                                       outarray1,
+                                       outarray2,
+                                       outarray3);
+                    t.Stop();
+                    
+                    NekDouble oneTest = t.TimePerTest(1);
+                    
+                    Ntest[i] = max((int)(1.0/oneTest),1);
+                }
+
+                Array<OneD, NekDouble> timing(SIZE_ImplementationType);
+                // loop over all operators and determine fastest implementation
+                for(int i = 0; i < SIZE_OperatorType; ++i)
+                {
+                    OperatorType OpType = (OperatorType)i;
+
+                    // call collection implementation in thorugh ExpList. 
+                    for (int imp = 0; imp < coll.size(); ++imp)
+                    {
+                        t.Start();
+                        for(int n = 0; n < Ntest[i]; ++n)
+                        {
+                            coll[imp].ApplyOperator(OpType,
+                                                  inarray,
+                                                  outarray1,
+                                                  outarray2,
+                                                  outarray3);
+                        }
+                        t.Stop();
+                        timing[imp] = t.TimePerTest(Ntest[i]);
+                    }
+                    // determine optimal implementation. Note +1 to
+                    // remove NoImplementationType flag
+                    int minImp = Vmath::Imin(coll.size(),timing,1)+1;
+
+                    if(verbose)
+                    {
+                        cout << "\t " << "Operator:" << OperatorTypeMap[i] << "\t ImpType: " << ImplementationTypeMap[minImp]; 
+                        cout << "\t (";
+                        for(int j = 0; j < coll.size(); ++j)
+                        {
+                            cout << timing[j] ;
+                            if(j != coll.size()-1)
+                            {
+                                cout <<", ";
+                            }
+                        }
+                        cout << ")" <<endl;
+                    }
+                    // could reset global map if reusing  method? 
+                    //m_global[OpType][pExp->DetShapeType()] = (ImplementationType)minImp;
+                    // set up new map
+                    ret[OpType] = (ImplementationType)minImp;
+                }
+
+                return ret;
+            }
+
+                
+            bool SetByXml(void)
+            {
+                return m_setByXml;
+            }
 
         private:
             map<OperatorType, map<ElmtOrder, ImplementationType> > m_global;
+            bool m_setByXml;
         };
     }
 }

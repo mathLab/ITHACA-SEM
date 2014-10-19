@@ -60,7 +60,6 @@ namespace Nektar {
         enum OperatorType
         {
             eBwdTrans,
-            eFwdTrans,
             eIProductWRTBase,
             eIProductWRTDerivBase,
             ePhysDeriv,
@@ -70,7 +69,6 @@ namespace Nektar {
         const char* const OperatorTypeMap[] =
         {
             "BwdTrans",
-            "FwdTrans",
             "IProductWRTBase",
             "IProductWRTDerivBase",
             "PhysDeriv"
@@ -78,18 +76,25 @@ namespace Nektar {
 
         enum ImplementationType
         {
+            eNoImpType,
             eIterPerExp,
-            eSumFac,
             eStdMat,
+            eSumFac,
             SIZE_ImplementationType
         };
         
         const char* const ImplementationTypeMap[] =
         {
+            "NoImplementationType",
             "IterPerExp",
-            "SumFac",
             "StdMat"
+            "SumFac",
         };
+
+        typedef map<OperatorType, ImplementationType> OperatorImpMap;
+        
+        /// simple Operator Implementation Map generator
+        OperatorImpMap SetFixedImpType(ImplementationType defaultType);
         
         class Operator;
         typedef boost::shared_ptr<Operator> OperatorSharedPtr;

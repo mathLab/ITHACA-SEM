@@ -854,7 +854,7 @@ namespace Nektar
             //expansion type
             ExpansionType m_expType;
 
-            void CreateCollections(Collections::ImplementationType ImpType = Collections::eStdMat);
+            void CreateCollections(Collections::ImplementationType ImpType = Collections::eNoImpType);
 
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(

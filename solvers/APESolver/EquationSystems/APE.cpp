@@ -174,7 +174,7 @@ void APE::v_NumericalFlux(
     }
 
     // Solve the Riemann problem
-    m_riemannSolver->Solve(Fwd, Bwd, numflux);
+    m_riemannSolver->Solve(m_spacedim, Fwd, Bwd, numflux);
 
 }
 

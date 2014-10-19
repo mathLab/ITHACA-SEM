@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables without artificial
+// Description: Euler equations in consƒervative variables without artificial
 // diffusion
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -160,15 +160,14 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
-        //cout<<setprecision(16);
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
-
+     
         Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
-        
+            
         m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
-
+        
         for (i = 0; i < nvariables; ++i)
         {
             Vmath::Neg(npoints, outarray[i], 1);
@@ -631,7 +630,6 @@ namespace Nektar
      */
     void EulerCFE::SetInitialRinglebFlow(void)
     {
-
         // Get number of different boundaries in the input file
         int nbnd    = m_fields[0]->GetBndConditions().num_elements();
 

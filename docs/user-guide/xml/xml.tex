@@ -1,0 +1,35 @@
+\chapter{XML Session File}
+\label{s:xml}
+
+The Nektar++ native file format is compliant with XML version 1.0. The root element is NEKTAR and has the overall structure as follows
+\begin{lstlisting}[style=XMLStyle]
+<NEKTAR>
+  <GEOMETRY>
+  ...
+  </GEOMETRY>
+  <EXPANSIONS>
+  ...
+  </EXPANSIONS>
+  <CONDITIONS>
+  ...
+  </CONDITIONS>
+  <FILTERS>
+  ...
+  </FILTERS>
+  <GLOBALOPTIMIZATIONPARAMETERS>
+  ...
+  </GLOBALOPTIMIZATIONPARAMETERS>
+</NEKTAR>
+\end{lstlisting}
+
+\input{xml/xml-geometry.tex}
+
+\input{xml/xml-expansions.tex}
+
+\input{xml/xml-conditions.tex}
+
+\input{xml/xml-filters.tex}
+
+\input{xml/xml-forcing.tex}
+
+\input{xml/xml-analytic-expressions.tex}

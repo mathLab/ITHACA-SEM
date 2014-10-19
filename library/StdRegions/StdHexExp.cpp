@@ -465,23 +465,59 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp0 = wsp;
                 Array<OneD, NekDouble> tmp1 = wsp + nmodes0*nquad1*nquad2;
 
-                Blas::Dgemm('T', 'N', nquad1*nquad2, nmodes0, nquad0,
-                            1.0, inarray.get(),  nquad0,
+
+               if(colldir0)
+               {
+                    // reshuffle data for next operation. 
+                    for(int n = 0; n < nmodes0; ++n)
+                    {
+                        Vmath::Vcopy(nquad1*nquad2,inarray.get()+n,nquad0,
+                                     tmp0.get()+nquad1*nquad2*n,1);
+                    }
+                }
+                else
+                {
+                    Blas::Dgemm('T', 'N', nquad1*nquad2, nmodes0, nquad0,
+                                1.0, inarray.get(),  nquad0,
                                  base0.get(),    nquad0,
-                            0.0, tmp0.get(),     nquad1*nquad2);
+                                0.0, tmp0.get(),     nquad1*nquad2);
+                }
 
-                Blas::Dgemm('T', 'N', nquad2*nmodes0, nmodes1, nquad1,
-                            1.0, tmp0.get(),     nquad1,
-                                 base1.get(),    nquad1,
-                            0.0, tmp1.get(),     nquad2*nmodes0);
+                if(colldir1)
+                {
+                    // reshuffle data for next operation. 
+                    for(int n = 0; n < nmodes1; ++n)
+                    {
+                        Vmath::Vcopy(nquad2*nmodes0,tmp0.get()+n,nquad1,
+                                     tmp1.get()+nquad2*nmodes0*n,1);
+                    }
+                }
+                else
+                {
+                    Blas::Dgemm('T', 'N', nquad2*nmodes0, nmodes1, nquad1,
+                                1.0, tmp0.get(),     nquad1,
+                                base1.get(),    nquad1,
+                                0.0, tmp1.get(),     nquad2*nmodes0);
+                }
 
-                Blas::Dgemm('T', 'N', nmodes0*nmodes1, nmodes2, nquad2,
-                            1.0, tmp1.get(),     nquad2,
-                                 base2.get(),    nquad2,
-                            0.0, outarray.get(), nmodes0*nmodes1);
-            }
+                if(colldir2)
+                {
+                    // reshuffle data for next operation. 
+                    for(int n = 0; n < nmodes2; ++n)
+                    {
+                        Vmath::Vcopy(nmodes0*nmodes1,tmp1.get()+n,nquad2,
+                                     outarray.get()+nmodes0*nmodes1*n,1);
+                    }
+                }
+                else
+                {
+                    Blas::Dgemm('T', 'N', nmodes0*nmodes1, nmodes2, nquad2,
+                                1.0, tmp1.get(),     nquad2,
+                                base2.get(),    nquad2,
+                                0.0, outarray.get(), nmodes0*nmodes1);
+                }
+           }
         }
-
 
         void StdHexExp::v_IProductWRTDerivBase(const int dir,
                 const Array<OneD, const NekDouble>& inarray,
@@ -819,7 +855,7 @@ namespace Nektar
         const LibUtilities::BasisKey StdHexExp::v_DetFaceBasisKey(
             const int i, const int k) const
         {
-            ASSERTL2(i >= 0 && i <= 6, "face id is out of range");
+            ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
             ASSERTL2(k >= 0 && k <= 1, "basis key id is out of range");
             
             //temporary solution, need to add conditions based on face id

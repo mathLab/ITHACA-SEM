@@ -1,0 +1,377 @@
+\section{Conditions}
+The final section of the file defines parameters and boundary conditions which
+define the nature of the problem to be solved. These are enclosed in the
+\inltt{CONDITIONS} tag.
+
+\subsection{Parameters}
+
+Parameters may be required by a particular solver (for instance time-integration
+parameters or solver-specific parameters), or arbitrary and only used within the
+context of the session file (e.g. parameters in the definition of an initial
+condition). All parameters are enclosed in the \inltt{PARAMETERS} XML element.
+
+\begin{lstlisting}[style=XMLStyle] 
+<PARAMETERS>
+    ...
+</PARAMETERS>
+\end{lstlisting}
+
+A parameter may be of integer or real type and may reference other parameters
+defined previous to it. It is expressed in the file as
+
+\begin{lstlisting}[style=XMLStyle]
+<P> [PARAMETER NAME] = [PARAMETER VALUE] </P>
+\end{lstlisting}
+
+For example,
+
+\begin{lstlisting}[style=XMLStyle]
+<P> NumSteps = 1000              </P>
+<P> TimeStep = 0.01              </P>
+<P> FinTime  = NumSteps*TimeStep </P>
+\end{lstlisting}
+
+\subsection{Solver Information}
+
+These specify properties to define the actions specific to solvers, typically
+including the equation to solve, the projection type and the method of time
+integration. The property/value pairs are specified as XML attributes. For
+example, 
+\begin{lstlisting}[style=XMLStyle] 
+<SOLVERINFO>
+  <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"    /> 
+  <I PROPERTY="Projection"            VALUE="Continuous"           /> 
+  <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+</SOLVERINFO>
+\end{lstlisting}
+
+The list of available solvers in Nektar++ can be found in
+Chapter~\ref{c:solvers}.
+
+\subsubsection{Drivers}
+Drivers are defined under the \inltt{CONDITIONS} section as properties of the \inltt{SOLVERINFO} XML element. The role of a driver is to manage the solver execution from an upper level. The default driver is called \inltt{Standard} and executes the following steps:
+\begin{enumerate}
+\item Prints out on screen a summary of all the conditions defined in the input file.
+\item Sets up the initial and boundary conditions.
+\item Calls the solver defined by \inltt{SolverType}  in the \inltt{SOLVERINFO} XML element.
+\item Writes the results in the output (.fld) file.
+\end{enumerate}
+
+In the following example, the driver \inltt{Standard} is used to manage the execution of the incompressible Navier-Stokes equations:
+
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+    <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
+    <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme" />
+    <I PROPERTY="Projection" VALUE="Galerkin" />
+    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
+    <I PROPERTY="Driver" VALUE="Standard" />
+</SOLVERINFO>
+\end{lstlisting}
+
+If no driver is specified in the session file, the driver \inltt{Standard} is called by default. But other drivers can be used. As described in Sec. \ref{SectionIncNS_SolverInfo} and  \ref{SectionIncNS_SolverInfo_Stab}, the other possibilities are:
+\begin{itemize}
+\item \inltt{SteadyState} - uses the Selective Frequency Damping method (see Sec. \ref{SectionSFD}) to obtain a steady-state solution of the Navier-Stokes equations (compressible or incompressible).
+\item \inltt{ModifiedArnoldi}  - computes of the leading eigenvalues and eigenmodes using modified Arnoldi method.
+\item \inltt{Arpack} - computes of eigenvalues/eigenmodes using Implicitly Restarted Arnoldi Method (ARPACK).
+\end{itemize}
+
+
+\subsection{Variables}
+
+These define the number (and name) of solution variables. Each variable is
+prescribed a unique ID. For example a two-dimensional flow simulation may define
+the velocity variables using
+
+\begin{lstlisting}[style=XMLStyle]
+<VARIABLES>
+  <V ID="0"> u </V>
+  <V ID="1"> v </V>
+</VARIABLES>
+\end{lstlisting}
+
+\subsection{Global System Solution Information}
+
+This section allows you to specify the global system solution parameters which
+is particularly useful when using an iterative solver. An example of this
+section is as follows:
+
+\begin{lstlisting}[style=XMLStyle]
+<GLOBALSYSSOLNINFO>
+  <V VAR="u,v,w">
+    <I PROPERTY="GlobalSysSoln"    VALUE="IterativeStaticCond" />
+    <I PROPERTY="Preconditioner"   VALUE="LowEnergyBlock"/>
+    <I PROPERTY="IterativeSolverTolerance"  VALUE="1e-8"/>
+  </V>
+  <V VAR="p">
+    <I PROPERTY="GlobalSysSoln"    VALUE="IterativeStaticCond" />
+    <I PROPERTY="Preconditioner"   VALUE="FullLinearSpaceWithLowEnergyBlock"/>
+    <I PROPERTY="IterativeSolverTolerance"  VALUE="1e-6"/>
+  </V>
+</GLOBALSYSSOLNINFO>
+\end{lstlisting}
+
+The above section specifies that the global solution system for the variables
+"u,v,w" should use the iIerativeStaticCond approach with the LowEnergyBlock
+preconditioned and an iterative tolerance of 1e-6.  Where as the variable "p"
+which also is solved with the IterativeStaticCond approach should use the
+FullLinearSpaceWithLowEnergyBlock and an iterative tolerance of 1e-8.
+
+Other parameters which can be specified include SuccessiveRHS. 
+
+The parameters in this section override those specified in the Parameters section. 
+
+\subsection{Boundary Regions and Conditions}
+
+Boundary conditions are defined by two XML elements. The first defines the
+various boundary regions in the domain in terms of composite entities from the
+\inltt{GEOMETRY} section of the file. Each boundary region has a unique ID and
+are defined as, for example,
+
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYREGIONS>
+  <B ID="0"> C[2] </B>
+  <B ID="1"> C[3] </B>
+</BOUNDARYREGIONS>
+\end{lstlisting}
+
+The second defines the actual boundary condition to impose on that composite
+region for each of the defined solution variables, and has the form,
+
+\begin{lstlisting}[style=XMLStyle] 
+<BOUNDARYCONDITIONS>
+  <REGION REF="0">
+    <D VAR="u" VALUE="sin(PI*x)*cos(PI*y)" /> <D VAR="v"
+    VALUE="sin(PI*x)*cos(PI*y)" />
+  </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+Boundary condition specifications may refer to any parameters defined in the
+session file. The REF attribute corresponds to a defined boundary region. The
+tag used for each variable specifies the type of boundary condition to enforce.
+These can be either
+\begin{itemize}
+    \item \inltt{D} Dirichlet 
+    \item \inltt{N} Neumann 
+    \item \inltt{R} Robin 
+    \item \inltt{P} Periodic
+\end{itemize}
+
+% TODO: document user defined types, etc
+
+Time-dependent boundary conditions may be specified through setting the
+\inltt{USERDEFINEDTYPE} attribute. For example,
+
+\begin{lstlisting}[style=XMLStyle]
+<D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-t))" />
+\end{lstlisting}
+
+Periodic boundary conditions reference the corresponding boundary region with
+which to enforce periodicity.
+
+The following example provides an example of three boundary conditions for a
+two-dimensional flow,
+
+\begin{lstlisting}[style=XMLStyle]
+<BOUNDARYCONDITIONS>
+  <REGION REF="0">
+    <D VAR="u" USERDEFINEDTYPE="TimeDependent" 
+               VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+    <D VAR="v" USERDEFINEDTYPE="TimeDependent" 
+               VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+    <P VAR="p" VALUE=[2]/>
+  </REGION>
+  <REGION REF="1">
+    <D VAR="u" USERDEFINEDTYPE="TimeDependent" 
+               VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+    <D VAR="v" USERDEFINEDTYPE="TimeDependent" 
+               VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+    <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0"/>
+  </REGION>
+  <REGION REF="2">
+    <D VAR="u" USERDEFINEDTYPE="TimeDependent" 
+               VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+    <D VAR="v" USERDEFINEDTYPE="TimeDependent" 
+               VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+    <P VAR="p" VALUE=[0]/>
+  </REGION>
+  <REGION REF="3">
+    <D VAR="u" USERDEFINEDTYPE="TimeDependent" 
+               VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+    <D VAR="v" USERDEFINEDTYPE="TimeDependent" 
+               VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+    <D VAR="p" USERDEFINEDTYPE="TimeDependent" 
+               VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)"/>
+  </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+where the boundary regions which are periodic are linked via their region
+identifier (Region 0 and Region 2).
+
+Boundary conditions can also be loaded from file, here an example from the
+Incompressible Navier-Stokes cases,
+
+\begin{lstlisting}[style=XMLStyle]
+<REGION REF="1">
+  <D VAR="u" FILE="Test_ChanFlow2D_bcsfromfiles_u_1.bc" />
+  <D VAR="v" VALUE="0" />
+  <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+</REGION>
+\end{lstlisting}
+
+\subsection{Functions}
+
+Finally, multi-variable functions such as initial conditions and analytic
+solutions may be specified for use in, or comparison with, simulations. These
+may be specified using expressions (\inltt{<E>}) or imported from a file
+(\inltt{<F>}) using the Nektar++ FLD file format
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="ExactSolution">
+  <E VAR="u" VALUE="sin(PI*x-advx*t))*cos(PI*(y-advy*t))" />
+</FUNCTION>
+<FUNCTION NAME="InitialConditions">
+  <F VAR="u" FILE="session.rst" />
+</FUNCTION>
+\end{lstlisting}
+
+A restart file is a solution file (in other words an .fld renamed as .rst) where
+the field data is specified. The expansion order used to generate the .rst file
+must be the same as that for the simulation. The filename must be specified
+relative to the location of the .xml file.
+
+With the additional argument \inltt{TIMEDEPENDENT="1"}, different files can be
+loaded for each timestep. The filenames are defined using
+\href{http://www.boost.org/doc/libs/1_56_0/libs/format/doc/format.html#syntax}{boost::format syntax}
+where the step time is used as variable. For example, the function
+\inltt{Baseflow} would load the files \inltt{U0V0\_1.00000000E-05.fld},
+\inltt{U0V0\_2.00000000E-05.fld} and so on.
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="Baseflow">
+	<F VAR="U0,V0" TIMEDEPENDENT="1"FILE="U0V0_%14.8R.fld"/>
+</FUNCTION>
+\end{lstlisting}
+
+
+Other examples of this input feature can be the insertion of a forcing term,
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="BodyForce">
+  <E VAR="u" VALUE="0" />
+  <E VAR="v" VALUE="0" />
+</FUNCTION>
+<FUNCTION NAME="Forcing">
+  <E VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
+</FUNCTION>
+\end{lstlisting}
+
+or of a linear advection term
+
+\begin{lstlisting}[style=XMLStyle]
+<FUNCTION NAME="AdvectionVelocity">
+  <E VAR="Vx" VALUE="1.0" />
+  <E VAR="Vy" VALUE="1.0" />
+  <E VAR="Vz" VALUE="1.0" />
+</FUNCTION>
+\end{lstlisting}
+
+[wiki:Reference/AnalyticExpressions This page] provides the list of acceptable mathematical functions and other related technical details.
+
+\subsection{Quasi-3D approach}
+
+To generate a Quasi-3D appraoch with Nektar++ we only need to create a 2D or a
+1D mesh, as reported above, and then specify the parameters to extend the
+problem to a 3D case. For a 2D spectral/hp element problem, we have a 2D mesh
+and along with the parameters we need to define the problem (i.e. equation type,
+boundary conditions, etc.). The only thing we need to do, to extend it to a
+Quasi-3D approach, is to specify some additional parameters which characterise
+the harmonic expansion in the third direction. First we need to specify in the
+solver information section that that the problem will be extended to have one
+homogeneouns dimension; here an example
+
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+  <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme"/>
+  <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
+  <I PROPERTY="AdvectionForm" VALUE="Convective"/>
+  <I PROPERTY="Projection" VALUE="Galerkin"/>
+  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+  <I PROPERTY="HOMOGENEOUS" VALUE="1D"/>
+</SOLVERINFO>
+\end{lstlisting}
+
+then we need to specify the parameters which define the 1D harmonic expanson
+along the z-axis, namely the homogeneous length (LZ) and the number of modes in
+the homogeneous direction (HomModesZ). HomModesZ corresponds also to the number
+of quadrature points in the homogenous direction, hence on the number of 2D
+planes discretized with a specral/hp element method.
+
+\begin{lstlisting}[style=XMLStyle]
+<PARAMETERS>
+  <P> TimeStep      = 0.001   </P>
+  <P> NumSteps      = 1000    </P>
+  <P> IO_CheckSteps = 100     </P>
+  <P> IO_InfoSteps  = 10      </P>
+  <P> Kinvis        = 0.025   </P>
+  <P> HomModesZ     = 4       </P>
+  <P> LZ            = 1.0     </P>
+</PARAMETERS>
+\end{lstlisting}
+
+In case we want to create a Quasi-3D approach starting form a 1D spectral/hp
+element mesh, the procedure is the same, but we need to specify the parameters
+for two harmonic directions (in Y and Z direction). For Example,
+
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+  <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
+  <I PROPERTY="Projection" VALUE="Continuous"/>
+  <I PROPERTY="HOMOGENEOUS" VALUE="2D"/>
+  <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
+  <I PROPERTY="AdvectionAdvancement" VALUE="Explicit"/>
+  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+</SOLVERINFO>
+<PARAMETERS>
+  <P> TimeStep      = 0.001 </P>
+  <P> NumSteps      = 200   </P>
+  <P> IO_CheckSteps = 200   </P>
+  <P> IO_InfoSteps  = 10    </P>
+  <P> wavefreq      = PI    </P>
+  <P> epsilon       = 1.0   </P>
+  <P> Lambda        = 1.0   </P>
+  <P> HomModesY     = 10    </P>
+  <P> LY            = 6.5   </P>
+  <P> HomModesZ     = 6     </P>
+  <P> LZ            = 2.0   </P>
+</PARAMETERS>
+\end{lstlisting}
+
+By default the opeartions associated with the harmonic expansions are performed
+with the Matix-Vector-Multiplication (MVM) defined inside the code. The Fast
+Fourier Transofrm (FFT) can be used to speed up the operations (if the FFTW
+library has been compiled in ThirdParty, see the compilation instructions). To
+use the FFT routines we need just to insert a flag in the solver information as
+below:
+
+\begin{lstlisting}[style=XMLStyle]
+<SOLVERINFO>
+  <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
+  <I PROPERTY="Projection" VALUE="Continuous"/>
+  <I PROPERTY="HOMOGENEOUS" VALUE="2D"/>
+  <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
+  <I PROPERTY="AdvectionAdvancement" VALUE="Explicit"/>
+  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
+  <I PROPERTY="USEFFT" VALUE="FFTW"/>
+</SOLVERINFO>
+\end{lstlisting}
+
+The number of homogenenous modes has to be even. The Quasi-3D apporach can be
+created starting from a 2D mesh and adding one homogenous expansion or starting
+form a 1D mesh and adding two homogeneous expansions. Not other options
+available. In case of a 1D homogeneous extension, the homogeneous direction will
+be the z-axis. In case of a 2D homogeneous extension, the homogeneous directions
+will be the y-axis and the z-axis.
+

@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <MultiRegions/ExpList.h>
+#include <LocalRegions/SegExp.h>
 #include <LibUtilities/Kernel/kernel.h>
 
 namespace Nektar

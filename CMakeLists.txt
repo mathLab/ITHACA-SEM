@@ -58,6 +58,13 @@ IF("${isSystemDir}" STREQUAL "-1")
 	SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}")
 ENDIF("${isSystemDir}" STREQUAL "-1")
 
+# Get rid of OS X RPATH warnings -- we should set this to 1 once we reach
+# required minimum cmake version of 3.0.0 and configure it in a more sane
+# fashion.
+IF(NOT DEFINED CMAKE_MACOSX_RPATH)
+    SET(CMAKE_MACOSX_RPATH 0)
+ENDIF()
+
 # Components of the Nektar++ package to build
 OPTION(NEKTAR_BUILD_LIBRARY    "Build main Nektar++ libraries." ON)
 OPTION(NEKTAR_BUILD_DEMOS      "Build demonstration codes."     ON)

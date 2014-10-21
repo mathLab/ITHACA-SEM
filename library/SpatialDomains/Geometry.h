@@ -112,6 +112,8 @@ namespace Nektar
                             GetEorient(const int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
                             GetPorient(const int i) const;
+                SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
+                            GetForient(const int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumEdges() const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumFaces() const;
                 SPATIAL_DOMAINS_EXPORT inline int GetShapeDim() const;
@@ -195,6 +197,8 @@ namespace Nektar
                              v_GetEorient(const int i) const;
                 virtual StdRegions::Orientation
                              v_GetPorient(const int i) const;
+                virtual StdRegions::Orientation
+                             v_GetForient(const int i) const;
                 virtual int  v_GetNumEdges() const;
                 virtual int  v_GetNumFaces() const;
                 virtual int  v_GetShapeDim() const;
@@ -334,6 +338,11 @@ namespace Nektar
         inline StdRegions::Orientation Geometry::GetPorient(const int i) const
         {
             return v_GetPorient(i);
+        }
+
+        inline StdRegions::Orientation Geometry::GetForient(const int i) const
+        {
+            return v_GetForient(i);
         }
 
         inline int Geometry::GetNumEdges() const

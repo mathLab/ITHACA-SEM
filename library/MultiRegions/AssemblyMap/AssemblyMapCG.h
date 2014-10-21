@@ -40,6 +40,7 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
@@ -48,10 +49,8 @@ namespace Nektar
         static map<int,int> NullIntIntMap;
         const static vector<map<int,int> > NullVecIntIntMap;
 
-        class ExpList;
         class AssemblyMapCG;
         typedef boost::shared_ptr<AssemblyMapCG>  AssemblyMapCGSharedPtr;
-
         typedef boost::tuple<int, int, NekDouble> ExtraDirDof;
 
         StdRegions::Orientation  DeterminePeriodicFaceOrient(
@@ -71,9 +70,16 @@ namespace Nektar
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
             MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                    const LibUtilities::SessionReaderSharedPtr &pSession,
-                                    const int numLocalCoeffs,
-                                    const ExpList &locExp);
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const int                                   numLocalCoeffs,
+            const ExpList                              &locExp,
+            const Array<OneD, const ExpListSharedPtr>  &bndCondExp = NullExpListSharedPtrArray,
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = SpatialDomains::NullBoundaryConditionShPtrArray,
+            const bool                                  checkIfSystemSingular = true,
+            const std::string                           variable = "defaultVar",
+            const PeriodicMap                          &periodicVerts = NullPeriodicMap,
+            const PeriodicMap                          &periodicEdges = NullPeriodicMap,
+            const PeriodicMap                          &periodicFaces = NullPeriodicMap);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();

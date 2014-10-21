@@ -1029,7 +1029,7 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
         }
 
-        StdRegions::Orientation StdExpansion::v_GetFaceOrient(int face)
+        StdRegions::Orientation StdExpansion::v_GetForient(int face)
 
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");

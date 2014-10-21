@@ -690,9 +690,9 @@ namespace Nektar
                 return v_DropLocStaticCondMatrix(mkey);
             }
 
-            StdRegions::Orientation GetFaceOrient(int face)
+            StdRegions::Orientation GetForient(int face)
             {
-                return v_GetFaceOrient(face);
+                return v_GetForient(face);
             }
 
             StdRegions::Orientation GetEorient(int edge)
@@ -1166,7 +1166,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_DropLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
 
 
-            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetFaceOrient(int face);
+            STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetForient(int face);
 
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetEorient(int edge);
             

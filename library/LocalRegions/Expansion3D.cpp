@@ -74,7 +74,7 @@ namespace Nektar
             StdRegions::IndexMapKey ikey(
                 StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
+                face, GetForient(face));
             StdRegions::IndexMapValuesSharedPtr map = 
                 StdExpansion::GetIndexMap(ikey);
 
@@ -278,7 +278,7 @@ namespace Nektar
             StdRegions::IndexMapKey ikey(
                 StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
+                face, GetForient(face));
             StdRegions::IndexMapValuesSharedPtr map = 
                 StdExpansion::GetIndexMap(ikey);
 
@@ -326,7 +326,7 @@ namespace Nektar
             StdRegions::IndexMapKey ikey2(
                 StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
+                face, GetForient(face));
             StdRegions::IndexMapValuesSharedPtr map2 = 
                 StdExpansion::GetIndexMap(ikey2);
             
@@ -458,7 +458,7 @@ namespace Nektar
                         StdRegions::IndexMapKey ikey(
                             StdRegions::eFaceToElement, DetShapeType(), 
                             GetBasisNumModes(0), GetBasisNumModes(1), 
-                            GetBasisNumModes(2), i, GetFaceOrient(i));
+                            GetBasisNumModes(2), i, GetForient(i));
                         StdRegions::IndexMapValuesSharedPtr map = 
                             StdExpansion::GetIndexMap(ikey);
 
@@ -748,7 +748,7 @@ namespace Nektar
                             StdRegions::IndexMapKey ikey(
                                 StdRegions::eFaceToElement, DetShapeType(), 
                                 GetBasisNumModes(0), GetBasisNumModes(1), 
-                                GetBasisNumModes(2), f, GetFaceOrient(f));
+                                GetBasisNumModes(2), f, GetForient(f));
                             StdRegions::IndexMapValuesSharedPtr map = 
                                 StdExpansion::GetIndexMap(ikey);
 
@@ -961,7 +961,7 @@ namespace Nektar
             StdRegions::IndexMapKey ikey(
                 StdRegions::eFaceToElement, DetShapeType(),
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
+                face, GetForient(face));
             StdRegions::IndexMapValuesSharedPtr map =
             StdExpansion::GetIndexMap(ikey);
 
@@ -1140,14 +1140,14 @@ namespace Nektar
 
             if (rows == GetNcoeffs())
             {
-                GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+                GetFaceToElementMap(face,GetForient(face),map,sign);
             }
             else if(rows == NumBndryCoeffs())
             {
                 int nbndry = NumBndryCoeffs();
                 Array<OneD,unsigned int> bmap(nbndry);
 
-                GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+                GetFaceToElementMap(face,GetForient(face),map,sign);
                 GetBoundaryMap(bmap);
                 
                 for(i = 0; i < order_f; ++i)
@@ -1173,7 +1173,7 @@ namespace Nektar
                 StdRegions::IndexMapKey ikey1(
                     StdRegions::eFaceToElement, DetShapeType(), 
                     GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                    face, GetFaceOrient(face));
+                    face, GetForient(face));
                 StdRegions::IndexMapValuesSharedPtr map1 = 
                     StdExpansion::GetIndexMap(ikey1);
                 StdRegions::IndexMapKey ikey2(
@@ -1876,7 +1876,7 @@ namespace Nektar
 
             if(faceOrient == StdRegions::eNoOrientation)
             {
-                fOrient = GetFaceOrient(fid);
+                fOrient = GetForient(fid);
             }
             else
             {
@@ -1894,13 +1894,9 @@ namespace Nektar
             return facemaparray;
         }
 
-        NekDouble Expansion3D::v_Integrate(
-                const Array<OneD, const NekDouble>& inarray)
+        StdRegions::Orientation Expansion3D::v_GetForient(int face)
         {
-            NEKERROR(ErrorUtil::efatal, 
-                     "This function is not implemented here. It is shape "
-                     "specific");
-            return 0.0;
+            return m_geom->GetForient(face);
         }
     } //end of namespace
 } //end of namespace

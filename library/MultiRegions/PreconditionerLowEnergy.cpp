@@ -726,7 +726,7 @@ namespace Nektar
                     if(faceDirMap.count(meshFaceId)==0)
                     {
                         Array<OneD, unsigned int> facemodearray;
-                        StdRegions::Orientation faceOrient = locExpansion->GetFaceOrient(fid);
+                        StdRegions::Orientation faceOrient = locExpansion->GetForient(fid);
                         
                         pIt = periodicFaces.find(meshFaceId);
                         if (pIt != periodicFaces.end())

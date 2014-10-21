@@ -958,7 +958,7 @@ namespace Nektar
                     Array<OneD, unsigned int> elmMap2 (order_e);
                     Array<OneD,          int> elmSign2(order_e);
                     
-                    StdRegions::Orientation fo = (*exp3D)[eid]->GetFaceOrient(j);
+                    StdRegions::Orientation fo = (*exp3D)[eid]->GetForient(j);
                     
                     // Construct mapping which will permute global IDs
                     // according to face orientations. 
@@ -1221,7 +1221,7 @@ namespace Nektar
                         Array<OneD, int> sign1(order_e), sign2(order_e);
                         
                         locExpVector[eid]->GetFaceToElementMap(j, StdRegions::eDir1FwdDir1_Dir2FwdDir2, map1, sign1);
-                        locExpVector[eid]->GetFaceToElementMap(j, locExpVector[eid]->GetFaceOrient(j), map2, sign2);
+                        locExpVector[eid]->GetFaceToElementMap(j, locExpVector[eid]->GetForient(j), map2, sign2);
                         
                         for (k = 0; k < map1.num_elements(); ++k)
                         {

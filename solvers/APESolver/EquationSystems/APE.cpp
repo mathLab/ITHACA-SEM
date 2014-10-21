@@ -619,6 +619,10 @@ void APE::UpdateBasefield()
     if (m_time > last_update)
     {
         EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
+
+        //  some sanity chacks for the basefield
+        ASSERTL0(Vmath::Vmin(m_basefield[0].num_elements(), m_basefield[0], 1) >= 0.0, "Basefield contains negative pressures");
+
         last_update = m_time;
     }
 }

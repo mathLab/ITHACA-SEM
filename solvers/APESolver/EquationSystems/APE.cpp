@@ -113,6 +113,15 @@ void APE::v_InitObject()
         m_riemannSolver->SetAuxVec("vecLocs",   &APE::GetVecLocs,   this);
         m_riemannSolver->SetParam ("Gamma",     &APE::GetGamma,     this);
         m_riemannSolver->SetParam ("Rho",       &APE::GetRho,       this);
+
+        // Set up advection operator
+        string advName;
+        m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+        m_advection = SolverUtils::GetAdvectionFactory()
+                .CreateInstance(advName, advName);
+        m_advection->SetFluxVector(&APE::GetFluxVector, this);
+        m_advection->SetRiemannSolver(m_riemannSolver);
+        m_advection->InitObject(m_session, m_fields);
     }
 
     if (m_explicitAdvection)
@@ -146,48 +155,72 @@ void APE::v_DoInitialise()
 
 
 /**
- * @brief Compute the numerical flux through the element boundaries.
+ * @brief Return the flux vector for the APE equations.
  *
+ * @param physfield   Fields.
+ * @param flux        Resulting flux. flux[eq][dir][pt]
  */
-void APE::v_NumericalFlux(
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, NekDouble> > &numflux)
+void APE::GetFluxVector(
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
 {
-    //Number the points of the shared edges of the elements
-    int ntp  = GetTraceTotPoints();
-    int nvar = physfield.num_elements();
+    UpdateBasefield();
 
-    // temporary arrays
-    Array<OneD, Array<OneD, NekDouble> >  Fwd(nvar);
-    Array<OneD, Array<OneD, NekDouble> >  Bwd(nvar);
-
-    for (int i = 0; i < nvar; ++i)
+    for (int i = 0; i < flux.num_elements(); ++i)
     {
-        Fwd[i]  = Array<OneD, NekDouble>(ntp);
-        Bwd[i]  = Array<OneD, NekDouble>(ntp);
+        ASSERTL1(flux[i].num_elements() == m_spacedim,
+                "Dimension of flux array and velocity array do not match");
+
+        int nq = physfield[0].num_elements();
+        NekDouble tmp0 = 0.0;
+        Array<OneD, NekDouble> tmp1(nq);
+        Array<OneD, NekDouble> tmp2(nq);
+
+        if (i == 0)
+        {
+            // F_{adv,p',j} = \gamma p_0 u'_j + p' \bar{u}_j
+            for (int j = 0; j < m_spacedim; ++j)
+            {
+                Vmath::Zero(nq, flux[i][j], 1);
+
+                // construct \gamma p_0 u'_j term
+                Vmath::Smul(nq, m_gamma, m_basefield[0], 1, tmp1, 1);
+                Vmath::Vmul(nq, tmp1, 1, physfield[j+1], 1, tmp1, 1);
+
+                // construct p' \bar{u}_j term
+                Vmath::Vmul(nq, physfield[0], 1, m_basefield[j+1], 1, tmp2, 1);
+
+                // add both terms
+                Vmath::Vadd(nq, tmp1, 1, tmp2, 1, flux[i][j], 1);
+            }
+        }
+        else
+        {
+            // F_{adv,u'_i,j} = (p'/ rho + \bar{u}_k u'_k) \delta_{ij}
+            for (int j = 0; j < m_spacedim; ++j)
+            {
+                Vmath::Zero(nq, flux[i][j], 1);
+
+                if (i-1 == j)
+                {
+                    // contruct p'/ rho term
+                    tmp0 = 1 / m_Rho0;
+                    Vmath::Smul(nq, tmp0, physfield[0], 1, flux[i][j], 1);
+
+                    // construct \bar{u}_k u'_k term
+                    Vmath::Zero(nq, tmp1, 1);
+                    for (int k = 0; k < m_spacedim; ++k)
+                    {
+                        Vmath::Vmul(nq, physfield[k+1], 1, m_basefield[k+1], 1, tmp2, 1);
+                        Vmath::Vadd(nq, tmp1, 1, tmp2, 1, tmp1, 1);
+                    }
+
+                    // add terms
+                    Vmath::Vadd(nq, flux[i][j], 1, tmp1, 1, flux[i][j], 1);
+                }
+            }
+        }
     }
-
-    // get the physical values at the trace
-    for (int i = 0; i < nvar; ++i)
-    {
-        m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
-    }
-
-    // Solve the Riemann problem
-    m_riemannSolver->Solve(m_spacedim, Fwd, Bwd, numflux);
-
-}
-
-
-/**
- *
- */
-void APE::v_NumericalFlux(
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-        Array<OneD, Array<OneD, NekDouble> > &numfluxY )
-{
-    ASSERTL0(false, "This function is not implemented for this equation.");
 }
 
 
@@ -274,7 +307,6 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                          Array<OneD,       Array<OneD, NekDouble> >&outarray,
                    const NekDouble time)
 {
-    int i;
     int ndim       = m_spacedim;
     int nvariables = inarray.num_elements();
     int ncoeffs    = GetNcoeffs();
@@ -284,39 +316,15 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
     {
         case MultiRegions::eDiscontinuous:
         {
-            //-------------------------------------------------------
-            //inarray in physical space
+            Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
 
-            Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
+            m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
 
-            for (i = 0; i < nvariables; ++i)
+            for (int i = 0; i < nvariables; ++i)
             {
-                modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
+                Vmath::Neg(nq, outarray[i], 1);
             }
 
-            // get the advection part
-            // input: physical space
-            // output: modal space
-
-            // straighforward DG
-            WeakDGAdvection(inarray, modarray, true, true);
-
-            // negate the outarray since moving terms to the rhs
-            for(i = 0; i < nvariables; ++i)
-            {
-                Vmath::Neg(ncoeffs,modarray[i],1);
-            }
-
-            // Add "source term"
-            // input: physical space
-            // output: modal space (JOSEF)
-            AddSource(inarray, modarray);
-
-            for(i = 0; i < nvariables; ++i)
-            {
-                m_fields[i]->MultiplyByElmtInvMass(modarray[i],modarray[i]);
-                m_fields[i]->BwdTrans(modarray[i],outarray[i]);
-            }
             break;
         }
 
@@ -326,20 +334,20 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
             Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
             Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
 
-            for (i = 0; i < nvariables; ++i)
+            for (int i = 0; i < nvariables; ++i)
             {
                 physarray[i] = Array<OneD, NekDouble>(nq);
                 modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
             }
 
             // deep copy
-            for(i = 0; i < nvariables; ++i)
+            for(int i = 0; i < nvariables; ++i)
             {
                 Vmath::Vcopy(nq,inarray[i],1,physarray[i],1);
             }
 
             Array<OneD, Array<OneD, NekDouble> > fluxvector(ndim);
-            for(i = 0; i < ndim; ++i)
+            for(int i = 0; i < ndim; ++i)
             {
                 fluxvector[i]    = Array<OneD, NekDouble>(nq);
             }
@@ -347,10 +355,10 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
             Array<OneD,NekDouble> tmp(nq);
             Array<OneD, NekDouble>tmp1(nq);
 
-            for(i = 0; i < nvariables; ++i)
+            for(int i = 0; i < nvariables; ++i)
             {
                 // Get the ith component of the  flux vector in (physical space)
-                APE::GetFluxVector(i, physarray, fluxvector);
+                EquationSystem::GetFluxVector(i, physarray, fluxvector);
 
                 Vmath::Zero(nq, outarray[i], 1);
                 for (int j = 0; j < ndim; ++j)

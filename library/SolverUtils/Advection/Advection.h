@@ -132,11 +132,11 @@ namespace Nektar
                 /// Storage for space dimension. Used for homogeneous extension.
                 int                    m_spaceDim;
 
-                virtual void v_InitObject(
+                SOLVER_UTILS_EXPORT virtual void v_InitObject(
                     LibUtilities::SessionReaderSharedPtr              pSession,
                     Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
                 
-                virtual void v_Advect(
+                SOLVER_UTILS_EXPORT virtual void v_Advect(
                     const int nConvectiveFields,
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                     const Array<OneD, Array<OneD, NekDouble> >        &advVel,
@@ -144,7 +144,7 @@ namespace Nektar
                     Array<OneD, Array<OneD, NekDouble> >              &outarray,
                     const NekDouble                                   &time)=0;
 
-                virtual void v_SetBaseFlow(
+                SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(
                         const Array<OneD, Array<OneD, NekDouble> >    &inarray);
             };
             

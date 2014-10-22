@@ -59,7 +59,7 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
-#include <Collections/CollectionOptimisation.hpp>
+#include <Collections/CollectionOptimisation.h>
 #include <Collections/Operator.h>
 
 namespace Nektar

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Collection.cpp
+// File: CollectionOptimisation.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,27 +33,26 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <Collections/Collection.h>
+#include <Collections/CollectionOptimisation.h>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
 
 namespace Nektar 
 {
     namespace Collections 
     {        
-        class CollectionOptimisation
+
+        // static manager for Operator ImplementationMap
+        map<OpImpTimingKey,OperatorImpMap> CollectionOptimisation::m_opImpMap;
+
+        CollectionOptimisation::CollectionOptimisation(
+                               LibUtilities::SessionReaderSharedPtr pSession,
+                               ImplementationType defaultType)
         {
-            typedef pair<LibUtilities::ShapeType, int> ElmtOrder;
-
-        public:
-            CollectionOptimisation(
-                LibUtilities::SessionReaderSharedPtr pSession,
-                ImplementationType defaultType = eStdMat)
-            {
-                map<ElmtOrder, ImplementationType> defaults;
-                map<ElmtOrder, ImplementationType>::iterator it;
-
-                m_setByXml = false;
-
+            map<ElmtOrder, ImplementationType> defaults;
+            map<ElmtOrder, ImplementationType>::iterator it;
+            
+            m_setByXml = false;
+            
                 // Default all elements to eStdMat
                 defaults[ElmtOrder(LibUtilities::eSegment,       -1)] = defaultType;
                 defaults[ElmtOrder(LibUtilities::eTriangle,      -1)] = defaultType;
@@ -190,36 +189,37 @@ namespace Nektar
 #endif
             }
 
-            OperatorImpMap GetOperatorImpMap(StdRegions::StdExpansionSharedPtr pExp)
+
+        OperatorImpMap  CollectionOptimisation::GetOperatorImpMap(StdRegions::StdExpansionSharedPtr pExp)
+        {
+            map<OperatorType, map<ElmtOrder, ImplementationType> >::iterator it;
+            map<ElmtOrder, ImplementationType>::iterator it2;
+
+            OperatorImpMap ret;
+            ElmtOrder searchKey(pExp->DetShapeType(),
+                                pExp->GetBasisNumModes(0));
+            ElmtOrder defSearch(pExp->DetShapeType(), -1);
+
+            for (it = m_global.begin(); it != m_global.end(); ++it)
             {
-                map<OperatorType, map<ElmtOrder, ImplementationType> >::iterator it;
-                map<ElmtOrder, ImplementationType>::iterator it2;
+                ImplementationType impType;
 
-                OperatorImpMap ret;
-                ElmtOrder searchKey(pExp->DetShapeType(),
-                                    pExp->GetBasisNumModes(0));
-                ElmtOrder defSearch(pExp->DetShapeType(), -1);
+                it2 = it->second.find(searchKey);
 
-                for (it = m_global.begin(); it != m_global.end(); ++it)
+                if (it2 == it->second.end())
                 {
-                    ImplementationType impType;
-
-                    it2 = it->second.find(searchKey);
-
+                    it2 = it->second.find(defSearch);
                     if (it2 == it->second.end())
                     {
-                        it2 = it->second.find(defSearch);
-                        if (it2 == it->second.end())
-                        {
-                            cout << "shouldn't be here..." << endl;
-                            impType = eIterPerExp;
-                        }
-                        else
-                        {
-                            impType = it2->second;
-                        }
+                        cout << "shouldn't be here..." << endl;
+                        impType = eIterPerExp;
                     }
                     else
+                    {
+                        impType = it2->second;
+                    }
+                }
+                else
                     {
                         impType = it2->second;
                     }
@@ -230,12 +230,22 @@ namespace Nektar
                 return ret;
             }
             
-            OperatorImpMap SetWithTimings(StdRegions::StdExpansionSharedPtr pExp,
-                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                                          OperatorImpMap &impTypes,
-                                          bool verbose = true)
+        OperatorImpMap CollectionOptimisation::SetWithTimings(
+                            StdRegions::StdExpansionSharedPtr pExp,
+                            vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                            OperatorImpMap &impTypes,
+                            bool verbose )
             {
                 OperatorImpMap ret;
+
+                // check to see if already defined for this expansion
+                OpImpTimingKey OpKey(pExp,pGeom.size());
+
+                if(m_opImpMap.count(OpKey) != 0)
+                {
+                    ret = m_opImpMap[OpKey];
+                    return ret;
+                }
 
                 int maxsize = pGeom.size()*max(pExp->GetNcoeffs(),pExp->GetTotPoints());
                 Array<OneD, NekDouble> inarray(maxsize,1.0);
@@ -281,7 +291,7 @@ namespace Nektar
                     
                     NekDouble oneTest = t.TimePerTest(1);
                     
-                    Ntest[i] = max((int)(1.0/oneTest),1);
+                    Ntest[i] = max((int)(0.25/oneTest),1);
                 }
 
                 Array<OneD, NekDouble> timing(SIZE_ImplementationType);
@@ -311,7 +321,7 @@ namespace Nektar
 
                     if(verbose)
                     {
-                        cout << "\t " << "Operator:" << OperatorTypeMap[i] << "\t ImpType: " << ImplementationTypeMap[minImp]; 
+                        cout << "\t " << OperatorTypeMap[i] << ": " << ImplementationTypeMap[minImp]; 
                         cout << "\t (";
                         for(int j = 0; j < coll.size(); ++j)
                         {
@@ -329,18 +339,9 @@ namespace Nektar
                     ret[OpType] = (ImplementationType)minImp;
                 }
 
+                // store map for use by another expansion. 
+                m_opImpMap[OpKey] = ret;
                 return ret;
             }
-
-                
-            bool SetByXml(void)
-            {
-                return m_setByXml;
-            }
-
-        private:
-            map<OperatorType, map<ElmtOrder, ImplementationType> > m_global;
-            bool m_setByXml;
-        };
     }
 }

@@ -1,5 +1,6 @@
 SET(COLLECTIONS_SOURCES
   Collection.cpp
+  CollectionOptimisation.cpp
   Operator.cpp
   HexOperators.cpp
   IProduct.cpp
@@ -11,8 +12,9 @@ SET(COLLECTIONS_SOURCES
   )
 
 SET(SOLVER_UTILS_HEADERS
-  Collection.h
-  IProduct.h
+  Collection.h 
+  CollectionOptimisation.h
+   IProduct.h
   Operator.h
 )
 

@@ -143,6 +143,9 @@ namespace Nektar {
                                 OperatorKey(LibUtilities::ePyramid, eBwdTrans, eStdMat),
                                 BwdTrans_StdMat::create, "BwdTrans_StdMat_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
+                                OperatorKey(LibUtilities::ePyramid, eBwdTrans, eSumFac),
+                                BwdTrans_StdMat::create, "BwdTrans_SumFac_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
                                 OperatorKey(LibUtilities::ePrism, eBwdTrans, eStdMat),
                                 BwdTrans_StdMat::create, "BwdTrans_StdMat_Prism"),
                 GetOperatorFactory().RegisterCreatorFunction(
@@ -266,6 +269,9 @@ namespace Nektar {
         GetOperatorFactory().RegisterCreatorFunction(
             OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eStdMat),
             IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Pyr"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eSumFac),
+            IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_Pyr"),
         GetOperatorFactory().RegisterCreatorFunction(
             OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eStdMat),
             IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Prism"),
@@ -546,6 +552,9 @@ namespace Nektar {
                       OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eStdMat),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eSumFac),
+                      PhysDeriv_StdMat::create, "PhysDeriv_SumFac_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::ePrism, ePhysDeriv, eStdMat),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Prism"),
                 GetOperatorFactory().RegisterCreatorFunction(
@@ -811,6 +820,11 @@ namespace Nektar {
                                   eIProductWRTDerivBase, eStdMat),
                       IProductWRTDerivBase_StdMat::create, 
                       "IProductWRTDerivBase_StdMat_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePyramid, 
+                                  eIProductWRTDerivBase, eSumFac),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_SumFac_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::ePrism, 
                                   eIProductWRTDerivBase, eStdMat),

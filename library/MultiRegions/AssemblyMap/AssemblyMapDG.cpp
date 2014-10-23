@@ -315,6 +315,7 @@ namespace Nektar
             }
 
             // Now have trace edges Gid position
+
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
@@ -332,7 +333,8 @@ namespace Nektar
 
                     if (nDim == 1)
                     {
-                        //
+                        order_e = 1;
+                        m_localToGlobalBndMap[cnt] = gid;
                     }
                     else if (nDim == 2)
                     {

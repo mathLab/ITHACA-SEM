@@ -413,6 +413,22 @@ namespace Nektar
                 return v_GetNfaces();
             }
 
+            /**
+             * @brief Returns the number of trace elements connected to this
+             * element.
+             *
+             * For example, a quadrilateral has four edges, so this function
+             * would return 4.
+             */
+            int GetNtrace() const
+            {
+                const int nBase = m_base.num_elements();
+                return
+                    nBase == 1 ? 2 :
+                    nBase == 2 ? GetNedges() :
+                    nBase == 3 ? GetNfaces() : 0;
+            }
+
             /** \brief This function returns the shape of the expansion domain
              *
              *  This function is a wrapper around the virtual function
@@ -744,28 +760,6 @@ namespace Nektar
                                             const Array<OneD, const NekDouble> &physvals);
 
 
-            STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fx,
-                                                const Array<OneD, const NekDouble> &Fy,
-                                                Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fn,
-                                                Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT void AddEdgeNormBoundaryBiInt(const int edge,
-                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fwd,
-                                                const Array<OneD, const NekDouble> &Bwd,
-                                                Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT void AddFaceNormBoundaryInt(const int face,
-                                                boost::shared_ptr<StdExpansion>    &FaceExp,
-                                                const Array<OneD, const NekDouble> &Fn,
-                                                Array<OneD, NekDouble> &outarray);
-
             int GetCoordim()
             {
                 return v_GetCoordim();
@@ -1053,16 +1047,6 @@ namespace Nektar
             {
                 v_AddRobinEdgeContribution(edgeid, primCoeffs, coeffs);
             }
-
-            void DGDeriv(const int dir,
-                         const Array<OneD, const NekDouble>& inarray,
-                         Array<OneD, boost::shared_ptr< StdExpansion > > &EdgeExp,
-                         Array<OneD, Array<OneD, NekDouble> > &coeffs,
-                         Array<OneD, NekDouble> &outarray)
-            {
-                v_DGDeriv (dir, inarray, EdgeExp, coeffs, outarray);
-            }
-
 
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
@@ -1447,22 +1431,6 @@ namespace Nektar
                                                    const Array<OneD, const NekDouble> &Lcoord,
                                                    const Array<OneD, const NekDouble> &physvals);
 
-            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fx,
-                                                  const Array<OneD, const NekDouble> &Fy,
-                                                  Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fn,
-                                                  Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddFaceNormBoundaryInt(const int face,
-                                                  boost::shared_ptr<StdExpansion>    &FaceExp,
-                                                  const Array<OneD, const NekDouble> &Fn,
-                                                  Array<OneD, NekDouble> &outarray);
-
         private:
             // Virtual functions
             STD_REGIONS_EXPORT virtual int v_GetNverts() const = 0;
@@ -1572,13 +1540,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
 
             STD_REGIONS_EXPORT virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
-
-            STD_REGIONS_EXPORT virtual void v_DGDeriv(
-                const int dir,
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, boost::shared_ptr<StdExpansion> > &EdgeExp,
-                Array<OneD, Array<OneD, NekDouble> > &coeffs,
-                Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 

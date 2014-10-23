@@ -106,6 +106,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline int GetVid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetEid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetFid(int i) const;
+                SPATIAL_DOMAINS_EXPORT inline int GetTid(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetNumVerts() const;
                 SPATIAL_DOMAINS_EXPORT inline PointGeomSharedPtr GetVertex(int i) const;
                 SPATIAL_DOMAINS_EXPORT inline StdRegions::Orientation
@@ -318,6 +319,15 @@ namespace Nektar
         inline int Geometry::GetFid(int i) const
         {
             return v_GetFid(i);
+        }
+
+        inline int Geometry::GetTid(int i) const
+        {
+            const int nDim = GetShapeDim();
+            return
+                nDim == 1 ? v_GetVid(i) :
+                nDim == 2 ? v_GetEid(i) :
+                nDim == 3 ? v_GetFid(i) : 0;
         }
 
         inline int Geometry::GetNumVerts() const

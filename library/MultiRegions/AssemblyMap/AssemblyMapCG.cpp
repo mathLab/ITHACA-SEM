@@ -1052,6 +1052,7 @@ namespace Nektar
                 for(i = cnt = 0; i < locExpVector.size(); ++i)
                 {
                     int elmtid = locExp.GetOffset_Elmt_Id(i);
+                    exp = locExpVector[elmtid];
                     for (j = 0; j < exp->GetNverts(); ++j)
                     {
                         int vid = exp->GetGeom()->GetVid(j)+1;
@@ -1165,6 +1166,7 @@ namespace Nektar
                 case eIterativeStaticCond:
                 case ePETScStaticCond:
                 case ePETScFullMatrix:
+                case eXxtFullMatrix:
                 case eXxtStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
@@ -1618,6 +1620,14 @@ namespace Nektar
                 }
             }
 
+            if (m_comm->GetRowComm()->GetRank() == 0)
+            {
+                for (i = 0; i < m_localToGlobalBndMap.num_elements(); ++i)
+                {
+                    cout << m_localToGlobalBndMap[i] << endl;
+                }
+            }
+            
             m_hash = boost::hash_range(m_localToGlobalMap.begin(),
                                        m_localToGlobalMap.end());
 

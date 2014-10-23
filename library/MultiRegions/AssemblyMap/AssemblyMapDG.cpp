@@ -220,11 +220,10 @@ namespace Nektar
             }
 
             // Now set up mapping from global coefficients to universal.
-#if 1       // Routines need debugging -> Currently causing crash when turned on
             ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr, periodicVerts);
-#endif
+
             m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
                                        m_localToGlobalBndMap.end());
 
@@ -1314,7 +1313,6 @@ namespace Nektar
                     eid = trace->GetExp(i)->GetGeom()->GetGlobalID();
                     offset = trace->GetPhys_Offset(i);
 
-#if 1
                     // Check to see if this vert is periodic. If it is, then we
                     // need use the unique eid of the two points 
                     PeriodicMap::const_iterator it = perMap.find(eid);
@@ -1326,7 +1324,6 @@ namespace Nektar
                             eid = min(eid, ent.id);
                         }
                     }
-#endif
 
                     m_traceToUniversalMap[offset] = eid*maxQuad+1;
                 }

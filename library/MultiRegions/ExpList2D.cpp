@@ -1073,7 +1073,8 @@ namespace Nektar
                     //}
             }
 
-#if 0
+
+            /*
             for(i = 0; i < m_exp->size(); ++i)
             {
                 if((*m_exp)[i]->DetShapeType() == LibUtilities::eQuadrilateral)
@@ -1085,7 +1086,7 @@ namespace Nektar
                     m_npoints += (*m_exp)[i]->GetTotPoints();
                 }
             }
-#endif
+            */
         }
 
 

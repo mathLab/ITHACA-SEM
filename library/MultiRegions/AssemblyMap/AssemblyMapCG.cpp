@@ -107,6 +107,7 @@ namespace Nektar
             int nLocBndCondDofs = 0;
             int nLocDirBndCondDofs = 0;
             int graphVertId = 0;
+            LibUtilities::CommSharedPtr         vComm;
             LocalRegions::ExpansionSharedPtr    exp;
             LocalRegions::ExpansionSharedPtr    bndExp;
             LibUtilities::BasisType             bType;
@@ -122,6 +123,8 @@ namespace Nektar
 
             m_signChange = false;
             //m_systemSingular = false;
+
+            vComm = m_comm->GetRowComm();
 
             // Stores vertex, edge and face reordered vertices.
             vector<map<int, int> > reorderedGraphVertId(3);
@@ -193,8 +196,8 @@ namespace Nektar
              */
 
             // Collate information on Dirichlet vertices from all processes
-            int n = m_comm->GetSize();
-            int p = m_comm->GetRank();
+            int n = vComm->GetSize();
+            int p = vComm->GetRank();
 
             // At this point reorderedGraphVertId[0] only contains information
             // from Dirichlet boundaries. Therefore make a global list of the
@@ -205,8 +208,8 @@ namespace Nektar
             Array<OneD, int> edgeoffsets(n, 0);
             vertcounts[p] = reorderedGraphVertId[0].size();
             edgecounts[p] = reorderedGraphVertId[1].size();
-            m_comm->AllReduce(vertcounts, LibUtilities::ReduceSum);
-            m_comm->AllReduce(edgecounts, LibUtilities::ReduceSum);
+            vComm->AllReduce(vertcounts, LibUtilities::ReduceSum);
+            vComm->AllReduce(edgecounts, LibUtilities::ReduceSum);
 
             for (i = 1; i < n; ++i)
             {
@@ -235,8 +238,8 @@ namespace Nektar
             {
                 edgelist[edgeoffsets[p] + i] = it->first;
             }
-            m_comm->AllReduce(vertlist, LibUtilities::ReduceSum);
-            m_comm->AllReduce(edgelist, LibUtilities::ReduceSum);
+            vComm->AllReduce(vertlist, LibUtilities::ReduceSum);
+            vComm->AllReduce(edgelist, LibUtilities::ReduceSum);
 
             // Now we have a list of all Dirichlet vertices and edges on all
             // processors.
@@ -327,8 +330,8 @@ namespace Nektar
 
             vertcounts[p] = extraDirVertIds.size();
             edgecounts[p] = extraDirEdgeIds.size();
-            m_comm->AllReduce(vertcounts, LibUtilities::ReduceSum);
-            m_comm->AllReduce(edgecounts, LibUtilities::ReduceSum);
+            vComm->AllReduce(vertcounts, LibUtilities::ReduceSum);
+            vComm->AllReduce(edgecounts, LibUtilities::ReduceSum);
             nTotVerts = Vmath::Vsum(n, vertcounts, 1);
             nTotEdges = Vmath::Vsum(n, edgecounts, 1);
 
@@ -359,10 +362,10 @@ namespace Nektar
                 edgeprocs[edgeoffsets[p]+i] = it->second;
             }
 
-            m_comm->AllReduce(vertids,   LibUtilities::ReduceSum);
-            m_comm->AllReduce(vertprocs, LibUtilities::ReduceSum);
-            m_comm->AllReduce(edgeids,   LibUtilities::ReduceSum);
-            m_comm->AllReduce(edgeprocs, LibUtilities::ReduceSum);
+            vComm->AllReduce(vertids,   LibUtilities::ReduceSum);
+            vComm->AllReduce(vertprocs, LibUtilities::ReduceSum);
+            vComm->AllReduce(edgeids,   LibUtilities::ReduceSum);
+            vComm->AllReduce(edgeprocs, LibUtilities::ReduceSum);
 
             set<int> extraDirVerts;
             set<int> extraDirEdges;
@@ -370,7 +373,7 @@ namespace Nektar
             // Set up list of vertices that need to be shared to other partitions
             for (i = 0; i < nTotVerts; ++i)
             {
-                if (m_comm->GetRank() == vertprocs[i])
+                if (vComm->GetRank() == vertprocs[i])
                 {
                     extraDirVerts.insert(vertids[i]);
                 }
@@ -379,7 +382,7 @@ namespace Nektar
             // Set up list of edges that need to be shared to other partitions
             for (i = 0; i < nTotEdges; ++i)
             {
-                if (m_comm->GetRank() == edgeprocs[i])
+                if (vComm->GetRank() == edgeprocs[i])
                 {
                     extraDirEdges.insert(edgeids[i]);
                 }
@@ -387,13 +390,13 @@ namespace Nektar
 
             // Check between processes if the whole system is singular
             int s = (systemSingular ? 1 : 0);
-            m_comm->AllReduce(s, LibUtilities::ReduceMin);
+            vComm->AllReduce(s, LibUtilities::ReduceMin);
             systemSingular = (s == 1 ? true : false);
 
             // Count the number of boundary regions on each process
             Array<OneD, int> bccounts(n, 0);
             bccounts[p] = bndCondExp.num_elements();
-            m_comm->AllReduce(bccounts, LibUtilities::ReduceSum);
+            vComm->AllReduce(bccounts, LibUtilities::ReduceSum);
 
             // Find the process rank with the maximum number of boundary regions
             int maxBCIdx = Vmath::Imax(n, bccounts, 1);
@@ -436,7 +439,7 @@ namespace Nektar
                 }
             }
 
-            m_comm->AllReduce(meshVertId, LibUtilities::ReduceSum);
+            vComm->AllReduce(meshVertId, LibUtilities::ReduceSum);
 
             // When running in parallel, we need to ensure that the singular
             // mesh vertex is communicated to any periodic vertices, otherwise
@@ -1101,9 +1104,9 @@ namespace Nektar
                 Array<OneD, long> vertArray(unique_verts, &procVerts[0]);
                 Array<OneD, long> edgeArray(unique_edges, &procEdges[0]);
                 Array<OneD, long> faceArray(unique_faces, &procFaces[0]);
-                Gs::gs_data *tmp1 = Gs::Init(vertArray, m_comm);
-                Gs::gs_data *tmp2 = Gs::Init(edgeArray, m_comm);
-                Gs::gs_data *tmp3 = Gs::Init(faceArray, m_comm);
+                Gs::gs_data *tmp1 = Gs::Init(vertArray, vComm);
+                Gs::gs_data *tmp2 = Gs::Init(edgeArray, vComm);
+                Gs::gs_data *tmp3 = Gs::Init(faceArray, vComm);
                 Array<OneD, NekDouble> tmp4(unique_verts, 1.0);
                 Array<OneD, NekDouble> tmp5(unique_edges, 1.0);
                 Array<OneD, NekDouble> tmp6(unique_faces, 1.0);
@@ -1201,8 +1204,8 @@ namespace Nektar
             if (m_solnType == eIterativeMultiLevelStaticCond)
             {
                 m_lowestStaticCondLevel = bottomUpGraph->GetNlevels()-1;
-                m_comm->AllReduce(m_lowestStaticCondLevel,
-                                  LibUtilities::ReduceMax);
+                vComm->AllReduce(m_lowestStaticCondLevel,
+                                 LibUtilities::ReduceMax);
             }
             else
             {
@@ -1251,7 +1254,6 @@ namespace Nektar
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
                     meshVertId = exp->GetGeom()->GetVid(j);
-                    cout << reorderedGraphVertId[0][meshVertId]+1 << endl;
                     graphVertOffset[reorderedGraphVertId[0][meshVertId]+1] = 1;
                 }
 
@@ -1626,21 +1628,12 @@ namespace Nektar
                 }
             }
 
-            if (m_comm->GetRowComm()->GetRank() == 0)
-            {
-                for (i = 0; i < m_localToGlobalBndMap.num_elements(); ++i)
-                {
-                    cout << m_localToGlobalBndMap[i] << endl;
-                }
-            }
-            
             m_hash = boost::hash_range(m_localToGlobalMap.begin(),
                                        m_localToGlobalMap.end());
 
             // Add up hash values if parallel
             int hash = m_hash;
-            m_comm->GetRowComm()->AllReduce(hash,
-                              LibUtilities::ReduceSum);
+            vComm->AllReduce(hash, LibUtilities::ReduceSum);
             m_hash = hash;
 
             CalculateBndSystemBandWidth();

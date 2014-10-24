@@ -75,7 +75,7 @@ namespace Nektar
             const ExpList                              &locExp,
             const Array<OneD, const ExpListSharedPtr>  &bndCondExp = NullExpListSharedPtrArray,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = SpatialDomains::NullBoundaryConditionShPtrArray,
-            const bool                                  checkIfSystemSingular = true,
+            const bool                                  checkIfSystemSingular = false,
             const std::string                           variable = "defaultVar",
             const PeriodicMap                          &periodicVerts = NullPeriodicMap,
             const PeriodicMap                          &periodicEdges = NullPeriodicMap,

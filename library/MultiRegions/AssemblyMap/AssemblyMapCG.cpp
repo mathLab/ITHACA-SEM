@@ -166,7 +166,11 @@ namespace Nektar
 
                         // Possibly not a face.
                         meshFaceId = bndExp->GetGeom()->GetGlobalID();
-                        reorderedGraphVertId[bndExp->GetNumBases()][meshFaceId] = graphVertId++;
+                        const int bndDim = bndExp->GetNumBases();
+                        if (reorderedGraphVertId[bndDim].count(meshFaceId) == 0)
+                        {
+                            reorderedGraphVertId[bndDim][meshFaceId] = graphVertId++;
+                        }
                         nLocDirBndCondDofs += bndExp->GetNcoeffs();
                     }
                     if (bndConditions[i]->GetBoundaryConditionType() !=
@@ -1237,6 +1241,7 @@ namespace Nektar
             Array<OneD, int> graphVertOffset(reorderedGraphVertId[0].size()+
                                              reorderedGraphVertId[1].size()+
                                              reorderedGraphVertId[2].size()+1);
+
             graphVertOffset[0] = 0;
 
             for(i = 0; i < locExpVector.size(); ++i)
@@ -1246,6 +1251,7 @@ namespace Nektar
                 for(j = 0; j < exp->GetNverts(); ++j)
                 {
                     meshVertId = exp->GetGeom()->GetVid(j);
+                    cout << reorderedGraphVertId[0][meshVertId]+1 << endl;
                     graphVertOffset[reorderedGraphVertId[0][meshVertId]+1] = 1;
                 }
 

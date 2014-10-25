@@ -2313,10 +2313,6 @@ namespace Nektar
         const int nvariables = m_fields.num_elements();
         const int nElements = m_fields[0]->GetExpSize();
         
-        NekDouble hxmin = 0.0;
-        NekDouble hymin = 0.0;
-        NekDouble hmin  = 0.0;
-        
         Array<OneD,  NekDouble>  Sensor(nPts, 0.0);
         Array<OneD,  NekDouble>  SensorKappa(nPts, 0.0);
         Array <OneD, NekDouble > Lambda(nPts, 0.0);
@@ -2475,14 +2471,9 @@ namespace Nektar
         
         // Determine the maximum wavespeed
         Vmath::Vadd(nPts, absVelocity, 1, soundspeed, 1, Lambda, 1);
-        NekDouble LambdaMax = Vmath::Vmax(nPts, Lambda, 1);
         
         // Determine hbar = hx_i/h
-        const int nElements  = m_fields[0]->GetExpSize();
-        
         Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
-        
-        NekDouble order = Vmath::Vmax(pOrderElmt.num_elements(), pOrderElmt, 1);
         
         NekDouble ThetaH = m_FacH;
         NekDouble ThetaL = m_FacL;

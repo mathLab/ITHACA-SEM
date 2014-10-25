@@ -63,6 +63,7 @@ namespace Nektar
             m_shapeType = LibUtilities::ePoint;
             m_coordim = coordim;
             m_vid     = vid;
+            m_globalID = vid;
 
             (*this)(0) = x;
             (*this)(1) = y;

@@ -95,8 +95,7 @@ namespace Nektar
             // determine mapping from geometry edges to trace
             for(i = 0; i < nTraceExp; ++i)
             {
-                id = trace->GetExp(i)->GetGeom()->GetGlobalID();
-                meshTraceId[id] = i;
+                meshTraceId[trace->GetExp(i)->GetGeom()->GetGlobalID()] = i;
             }
 
             // Count total number of trace elements
@@ -111,8 +110,7 @@ namespace Nektar
                 OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >(nel);
 
             // set up trace expansions links;
-            cnt = 0;
-            for(i = 0; i < nel; ++i)
+            for(cnt = i = 0; i < nel; ++i)
             {
                 m_elmtToTrace[i] = tracemap + cnt;
 

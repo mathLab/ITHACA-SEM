@@ -89,9 +89,6 @@ SET(ASSEMBLY_MAP_HEADERS
 ./AssemblyMap/AssemblyMap.h
 ./AssemblyMap/AssemblyMapCG.h
 ./AssemblyMap/AssemblyMapDG.h
-./AssemblyMap/AssemblyMapCG1D.h
-./AssemblyMap/AssemblyMapCG2D.h
-./AssemblyMap/AssemblyMapCG3D.h
 )
 
 IF(NEKTAR_USE_MPI)

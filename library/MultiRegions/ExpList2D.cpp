@@ -1063,18 +1063,16 @@ namespace Nektar
             int cnt = 0;
             for(i = 0; i < m_exp->size(); ++i)
             {
-                //if((*m_exp)[i]->DetShapeType() == LibUtilities::eTriangle)
-                //{
+                if((*m_exp)[i]->DetShapeType() == LibUtilities::eTriangle)
+                {
                     m_coeff_offset[i]   = m_ncoeffs;
                     m_phys_offset [i]   = m_npoints;
                     m_offset_elmt_id[cnt++] = i;
                     m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
                     m_npoints += (*m_exp)[i]->GetTotPoints();
-                    //}
+                }
             }
 
-
-            /*
             for(i = 0; i < m_exp->size(); ++i)
             {
                 if((*m_exp)[i]->DetShapeType() == LibUtilities::eQuadrilateral)
@@ -1086,7 +1084,6 @@ namespace Nektar
                     m_npoints += (*m_exp)[i]->GetTotPoints();
                 }
             }
-            */
         }
 
 

@@ -1691,8 +1691,7 @@ namespace Nektar
 
                     for (i = 0; i < locExpVector.size(); ++i)
                     {
-                        int eid = locExp.GetOffset_Elmt_Id(i);
-                        exp = locExpVector[eid];
+                        exp = locExpVector[locExp.GetOffset_Elmt_Id(i)];
 
                         for (j = 0; j < exp->GetNverts(); ++j)
                         {

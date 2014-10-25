@@ -239,14 +239,23 @@ namespace Nektar
                 OperatorImpMap ret;
 
                 // check to see if already defined for this expansion
-                OpImpTimingKey OpKey(pExp,pGeom.size());
-
+                OpImpTimingKey OpKey(pExp,pGeom.size(),pExp->GetNumBases());
                 if(m_opImpMap.count(OpKey) != 0)
                 {
                     ret = m_opImpMap[OpKey];
                     return ret;
                 }
-
+#if 0 
+		map<OpImpTimingKey,OperatorImpMap>::iterator it;
+	        cout << "OpKey: " << OpKey.m_nbasis << " " << OpKey.m_ngeoms << endl;
+	  	int cnt;
+		cout << m_opImpMap.size() << endl;
+	        for(cnt = 1, it = m_opImpMap.begin(); it != m_opImpMap.end(); ++it, ++cnt)
+		{
+			cout <<  cnt << ": " << it->first.m_nbasis << " " << it->first.m_ngeoms << endl;
+		}
+#endif
+	
                 int maxsize = pGeom.size()*max(pExp->GetNcoeffs(),pExp->GetTotPoints());
                 Array<OneD, NekDouble> inarray(maxsize,1.0);
                 Array<OneD, NekDouble> outarray1(maxsize);
@@ -263,7 +272,7 @@ namespace Nektar
                     {
                         cout << pExp->GetBasis(i)->GetNumModes() <<" ";
                     }
-                    cout << ")" << endl;
+                    cout << ")" <<  " for ngeoms = " << pGeom.size() << endl;
                 }
                 // set  up an array of collections
                 CollectionVector coll; 

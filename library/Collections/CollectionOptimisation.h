@@ -48,10 +48,10 @@ namespace Nektar
         {
         public:
             /// Constructor
-            OpImpTimingKey(StdRegions::StdExpansionSharedPtr pExp, int ngeoms):
+            OpImpTimingKey(StdRegions::StdExpansionSharedPtr pExp, int ngeoms, int nbases):
                     m_exp(pExp),
                     m_ngeoms(ngeoms),
-                    m_nbasis(pExp->GetNumBases())
+                    m_nbasis(nbases)
             {
             }
             
@@ -60,37 +60,49 @@ namespace Nektar
             {
             }
             
-            
-            friend bool operator<(const OpImpTimingKey &lhs, 
-                                  const OpImpTimingKey &rhs)
+
+            bool operator<(const OpImpTimingKey &rhs) const
             {
-                bool returnval = true; 
-                int nbasis = lhs.m_exp->GetNumBases();
-                
-                if(nbasis == rhs.m_nbasis)
+
+                if(m_nbasis <   rhs.m_nbasis) 
                 {
-                    for(int i = 0; i < nbasis; ++i)
+                    return true; 
+                }
+
+                if(m_nbasis > rhs.m_nbasis)
+                {
+                    return false; 
+                }
+                
+                for(int i = 0; i < m_nbasis; ++i)
+                {
+                    if((m_exp->GetBasis(i)->GetBasisKey() 
+                        != rhs.m_exp->GetBasis(i)->GetBasisKey()))
                     {
-                            returnval = (lhs.m_exp->GetBasis(i)->GetBasisKey() 
-                                         == rhs.m_exp->GetBasis(i)->GetBasisKey())? 
-                                false: true;
+                        return true;
                     }
                 }
                 
-                if((lhs.m_ngeoms < pow(10,nbasis))&&(rhs.m_ngeoms < pow(10,nbasis)))
+                if((m_ngeoms < 100)&&(rhs.m_ngeoms < 100))
                 {
-                    if(lhs.m_ngeoms != rhs.m_ngeoms)
+
+                    if(m_ngeoms < rhs.m_ngeoms)
                     {
-                        returnval = true;
-                        }
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 
-                return returnval;
+                return false;
             }
-        private:
+
             StdRegions::StdExpansionSharedPtr m_exp; 
             int m_ngeoms; 
             int m_nbasis; 
+        private:
         };
         
         

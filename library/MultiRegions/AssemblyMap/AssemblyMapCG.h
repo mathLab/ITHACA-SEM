@@ -140,7 +140,7 @@ namespace Nektar
             /// value is stored on another processor.
             map<int, vector<ExtraDirDof> > m_extraDirDofs;
 
-            int CreateGraph(
+            MULTI_REGIONS_EXPORT int CreateGraph(
                 const ExpList                       &locExp,
                 const BndCondExp                    &bndCondExp,
                 const Array<OneD, const BndCond>    &bndConditions,

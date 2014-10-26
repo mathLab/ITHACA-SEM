@@ -84,7 +84,7 @@ namespace Nektar
             VecAssemblyEnd  (m_b);
 
             // Do system solve
-            PetscErrorCode ierr = KSPSolve(m_ksp, m_b, m_x);
+            KSPSolve(m_ksp, m_b, m_x);
 
             // Grab number of iterations taken
             PetscInt its;

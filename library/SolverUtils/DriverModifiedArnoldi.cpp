@@ -213,7 +213,7 @@ namespace Nektar
                     EV_update(Kseq[m_kdim - 1], Kseq[m_kdim]);
                  
                     // Compute new scale factor
-                    alpha[m_kdim] = Vmath::Dot(ntot, &Kseq[m_kdim][0], 1, &Kseq[m_kdim][0], 1);
+                    alpha[m_kdim] = Blas::Ddot(ntot, &Kseq[m_kdim][0], 1, &Kseq[m_kdim][0], 1);
                     m_comm->AllReduce(alpha[m_kdim], Nektar::LibUtilities::ReduceSum);
                     alpha[m_kdim] = std::sqrt(alpha[m_kdim]);
                     Vmath::Smul(ntot, 1.0/alpha[m_kdim], Kseq[m_kdim], 1, Kseq[m_kdim], 1);
@@ -381,7 +381,7 @@ namespace Nektar
             Array<OneD, NekDouble> resid(kdim);
             for (int i = 0; i < kdim; ++i)
             {
-                NekDouble tmp = Vmath::Dot(kdim, &zvec[0] + i*kdim, 1, &zvec[0] + i*kdim, 1);
+                NekDouble tmp = Blas::Ddot(kdim, &zvec[0] + i*kdim, 1, &zvec[0] + i*kdim, 1);
                 m_comm->AllReduce(tmp, Nektar::LibUtilities::ReduceSum);
                 tmp = std::sqrt(tmp);
                 resid[i] = resnorm * std::fabs(zvec[kdim - 1 + i*kdim]) / tmp;
@@ -534,13 +534,16 @@ namespace Nektar
             {
                 if (wi[i] == 0.0)   // Real mode
                 {
-                    norm = std::sqrt(Vmath::Dot(ntot, evecs[i], evecs[i]));
+                    norm = Blas::Ddot(ntot, &evecs[i][0], 1, &evecs[i][0], 1);
+                    m_comm->AllReduce(norm, Nektar::LibUtilities::ReduceSum);
+                    norm = std::sqrt(norm);
                     Vmath::Smul(ntot, 1.0/norm, evecs[i], 1, evecs[i], 1);
                 }
                 else
                 {
-                    norm = Vmath::Dot(ntot, evecs[i], 1, evecs[i], 1);
-                    norm += Vmath::Dot(ntot, evecs[i+1], 1, evecs[i+1], 1);
+                    norm = Blas::Ddot(ntot, &evecs[i][0], 1, &evecs[i][0], 1);
+                    norm += Blas::Ddot(ntot, &evecs[i+1][0], 1, &evecs[i+1][0], 1);
+                    m_comm->AllReduce(norm, Nektar::LibUtilities::ReduceSum);
                     norm = std::sqrt(norm);
                     Vmath::Smul(ntot, 1.0/norm, evecs[i], 1, evecs[i], 1);
                     Vmath::Smul(ntot, 1.0/norm, evecs[i+1], 1, evecs[i+1], 1);

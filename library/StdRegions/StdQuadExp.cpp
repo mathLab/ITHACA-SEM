@@ -1446,9 +1446,6 @@ namespace Nektar
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
-            //To avoid the exponential from blowing up
-            NekDouble epsilon = 1;
-
             //counters for scanning through orthocoeffs array
             int j, k, cnt = 0;
             int nmodes = min(nmodes_a,nmodes_b);

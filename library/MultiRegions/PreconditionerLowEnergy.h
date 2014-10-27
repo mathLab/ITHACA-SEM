@@ -110,6 +110,8 @@ namespace Nektar
 
             void SetUpReferenceElements(void);
 
+            void SetUpVariableReferenceElements(void);
+
             void CreateMultiplicityMap(void);
 
             void SetupBlockTransformationMatrix(void);

@@ -1592,6 +1592,114 @@ namespace Nektar
 
 
         /**
+	 * \brief Loop expansion and determine different variants of the
+	 * transformation matrix
+	 *
+         * Sets up multiple reference elements based on the element expansion. 
+	 */
+        void PreconditionerLowEnergy::SetUpVariableReferenceElements()
+        {
+            int n, nummodes;
+            boost::shared_ptr<MultiRegions::ExpList> 
+                expList=((m_linsys.lock())->GetLocMat()).lock();
+            GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
+            StdRegions::VarCoeffMap vVarCoeffMap;
+            StdRegions::StdExpansionSharedPtr locExpansion;
+
+            /*
+             * Set up a Tetrahral & prismatic element which comprises
+             * equilateral triangles as all faces for the tet and the end faces
+             * for the prism. Using these elements a new expansion is created
+             * (which is the same as the expansion specified in the input
+             * file).
+             */
+            SpatialDomains::TetGeomSharedPtr tetgeom=CreateRefTetGeom();
+            SpatialDomains::PrismGeomSharedPtr prismgeom=CreateRefPrismGeom();
+            SpatialDomains::HexGeomSharedPtr hexgeom=CreateRefHexGeom();
+
+            int n_exp=expList->GetNumElmts();
+
+            for(n=0; n < n_exp; ++n)
+            {
+                LibUtilities::ShapeType eType=locExpansion->DetShapeType();
+                //Expansion it each direction
+                nummodes0=locExpansion->GetBasisNumModes(0);
+                nummodes1=locExpansion->GetBasisNumModes(1);
+                nummodes2=locExpansion->GetBasisNumModes(2);
+
+                //Get element type
+                
+                if(eType==LibUtilities::eTetrahedron)
+                {
+                    //Bases for Tetrahedral element
+                    const LibUtilities::BasisKey TetBa(
+                        LibUtilities::eModified_A, nummodes0,
+                        LibUtilities::PointsKey(nummodes0+1,LibUtilities::eGaussLobattoLegendre));
+                    const LibUtilities::BasisKey TetBb(
+                        LibUtilities::eModified_B, nummodes1,
+                        LibUtilities::PointsKey(nummodes1,LibUtilities::eGaussRadauMAlpha1Beta0));
+                    const LibUtilities::BasisKey TetBc(
+                        LibUtilities::eModified_C, nummodes2,
+                        LibUtilities::PointsKey(nummodes2,LibUtilities::eGaussRadauMAlpha2Beta0));
+
+                    //Create reference tetrahedral expansion
+                    LocalRegions::TetExpSharedPtr TetExp;
+                    
+                    TetExp = MemoryManager<LocalRegions::TetExp>
+                        ::AllocateSharedPtr(TetBa,TetBb,TetBc,
+                                            tetgeom);
+                }
+                elseif(eType==LibUtilities::ePrism)
+                {
+
+                    //Bases for prismatic element
+                    const LibUtilities::BasisKey PrismBa(
+                        LibUtilities::eModified_A, nummodes0,
+                        LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+                    const LibUtilities::BasisKey PrismBb(
+                        LibUtilities::eModified_A, nummodes,
+                        LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+                    const LibUtilities::BasisKey PrismBc(
+                        LibUtilities::eModified_B, nummodes,
+                        LibUtilities::PointsKey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0));
+
+                    //Create reference prismatic expansion
+                    LocalRegions::PrismExpSharedPtr PrismExp;
+                    
+                    PrismExp = MemoryManager<LocalRegions::PrismExp>
+                        ::AllocateSharedPtr(PrismBa,PrismBb,PrismBc,
+                                            prismgeom);
+                }
+                elseif(eType==LibUtilities::eHexahedron)
+                {
+                    //Bases for prismatic element
+                    const LibUtilities::BasisKey HexBa(
+                        LibUtilities::eModified_A, nummodes,
+                        LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+                    const LibUtilities::BasisKey HexBb(
+                        LibUtilities::eModified_A, nummodes,
+                        LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+                    const LibUtilities::BasisKey HexBc(
+                        LibUtilities::eModified_A, nummodes,
+                        LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+            
+                    //Create reference prismatic expansion
+                    LocalRegions::HexExpSharedPtr HexExp;
+            
+                    HexExp = MemoryManager<LocalRegions::HexExp>
+                        ::AllocateSharedPtr(HexBa,HexBb,HexBc,
+                                            hexgeom);
+                }
+                else
+                {
+                    ASSERTL0(0,"Unsuported shape type");
+                }
+            }
+
+        }
+
+
+        /**
 	 * \brief Sets up the reference elements needed by the preconditioner
 	 *
          * Sets up reference elements which are used to preconditioning the

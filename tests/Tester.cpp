@@ -191,6 +191,7 @@ int main(int argc, char *argv[])
 
         // Change working directory to the temporary directory
         fs::current_path(tmpDir);
+		cout << "Going to directory: " << tmpDir << endl;
 
         // Copy required files for this test from the test definition directory
         // to the temporary directory.
@@ -218,7 +219,13 @@ int main(int argc, char *argv[])
         fs::path execPath = startDir / fs::path(file.GetExecutable());
         if (!fs::exists(execPath))
         {
-            execPath = fs::path(file.GetExecutable());
+			execPath = fs::path(std::string(DIST_PATH)+std::string("/bin/"+file.GetExecutable()));
+			cout << execPath.string() << " " << fs::status(execPath).type() << endl;
+			if (!fs::exists(execPath))
+			{
+				cout << "wat" << endl;
+				execPath = fs::path(file.GetExecutable());
+			}
         }
 
         command += PortablePath(execPath);

@@ -56,8 +56,16 @@
 # include <boost/function.hpp>
 
 #include <iostream>
-
+#include <iomanip>
 #include <string>
+
+#ifdef _WIN32
+    #include <io.h>
+    #define ISTTY _isatty(_fileno(stdout))
+#else
+    #include <unistd.h>
+    #define ISTTY isatty(fileno(stdout))
+#endif
 
 
 using std::string;
@@ -872,11 +880,14 @@ namespace Nektar
                     else
                     {
                         ptsField->setProgressCallback(&EquationSystem::PrintProgressbar, this);
+                        if (m_session->GetComm()->GetRank() == 0)
+                        {
+                            cout << "Interpolating:       ";
+                        }
                         ptsField->CalcWeights(coords);
                         if (m_session->GetComm()->GetRank() == 0)
                         {
-                            cout << "Interpolating: 100% [===================";
-                            cout << "===============================]" << endl;
+                            cout << endl;
                         }
                         ptsField->GetWeights(m_interpWeights[weightsKey], m_interpInds[weightsKey]);
                     }
@@ -2393,24 +2404,31 @@ namespace Nektar
                 return;
             }
 
-            if (position % (goal/100 +1))
+            if (ISTTY)
             {
-                cout << "Interpolating: ";
+                // carriage return
+                cout << "\r";
 
+                cout << "Interpolating: ";
                 float progress = position / float(goal);
-                cout << int(100*progress) << "% [";
-                for (int j = 0; j < int(progress*50); j++)
+                cout << setw(3) << int(100* progress) << "% [";
+                for (int j = 0; j < int(progress *49); j++)
                 {
                     cout << "=";
                 }
-                for (int j = int(progress*50); j < 50; j++)
+                for (int j = int(progress *49); j < 49; j++)
                 {
                     cout << " ";
                 }
                 cout << "]" << flush;
-
-                // carriage return
-                cout << "\r";
+            }
+            else
+            {
+                // print only every 2 percent
+                if (int(100 * position / goal) % 2 ==  0)
+                {
+                    cout << "." <<  flush;
+                }
             }
         }
     }

@@ -36,6 +36,15 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+
+#ifdef _WIN32
+    #include <io.h>
+    #define ISTTY _isatty(_fileno(stdout))
+#else
+    #include <unistd.h>
+    #define ISTTY isatty(fileno(stdout))
+#endif
+
 using namespace std;
 
 #include "ProcessInterpPointDataToFld.h"
@@ -105,6 +114,10 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
     Array<OneD, Array<OneD, NekDouble> > intFields(nFields);
     m_f->m_fieldPts->setProgressCallback(
             &ProcessInterpPointDataToFld::PrintProgressbar, this);
+    if(m_f->m_session->GetComm()->GetRank() == 0)
+    {
+        cout << "Interpolating:       ";
+    }
     m_f->m_fieldPts->Interpolate(coords, intFields, coord_id);
 
     for(i = 0; i < totpoints; ++i)
@@ -117,8 +130,7 @@ void ProcessInterpPointDataToFld::Process(po::variables_map &vm)
 
     if(m_f->m_session->GetComm()->GetRank() == 0)
     {
-        cout << "Interpolating: 100% [===================";
-        cout << "===============================]" << endl;
+        cout << endl;
     }
 
     // forward transform fields
@@ -156,24 +168,31 @@ void ProcessInterpPointDataToFld::PrintProgressbar(const int position, const int
         return;
     }
 
-    if (position % (goal/100 +1))
+    if (ISTTY)
     {
-        cout << "Interpolating: ";
+        // carriage return
+        cout << "\r";
 
+        cout << "Interpolating: ";
         float progress = position / float(goal);
-        cout << int(100*progress) << "% [";
-        for (int j = 0; j < int(progress*50); j++)
+        cout << setw(3) << int(100* progress) << "% [";
+        for (int j = 0; j < int(progress *49); j++)
         {
             cout << "=";
         }
-        for (int j = int(progress*50); j < 50; j++)
+        for (int j = int(progress *49); j < 49; j++)
         {
             cout << " ";
         }
         cout << "]" << flush;
-
-        // carriage return
-        cout << "\r";
+    }
+    else
+    {
+        // print only every 2 percent
+        if (int(100 * position / goal) % 2 ==  0)
+        {
+            cout << "." <<  flush;
+        }
     }
 }
 

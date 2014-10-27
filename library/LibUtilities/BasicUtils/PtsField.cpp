@@ -57,6 +57,7 @@ void PtsField::CalcWeights(
     ASSERTL1(physCoords.num_elements() >= m_dim,  "physCoords is smaller than number of dimesnions");
 
     int nPhysPts = physCoords[0].num_elements();
+    int lastProg = 0;
 
     m_weights = Array<OneD, Array<OneD, float> >(nPhysPts);
     m_neighInds = Array<OneD, Array<OneD, unsigned int> >(nPhysPts);
@@ -91,9 +92,11 @@ void PtsField::CalcWeights(
             CalcW_Shepard(i, physPt);
         }
 
-        if (m_progressCallback)
+        int progress = int(100 * i / nPhysPts);
+        if (m_progressCallback && progress > lastProg)
         {
             m_progressCallback(i, nPhysPts);
+            lastProg = progress;
         }
     }
 }

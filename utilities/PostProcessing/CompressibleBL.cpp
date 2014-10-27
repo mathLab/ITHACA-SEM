@@ -52,8 +52,8 @@ NekDouble m_vInf;
 NekDouble m_To=273.11;
 NekDouble m_mu;
 
-int m_xpoints;
-int m_ypoints;
+int m_xpoints=5001;
+int m_ypoints=5001;
 
 int m_option;
 int m_option2;
@@ -72,7 +72,7 @@ NekDouble errtol       = 1e-5;
 void COMPBL(
 	Array<OneD, NekDouble> v, 
 	Array<OneD, NekDouble> dv)
-{	
+{
 	NekDouble c, dcdg, cp;
 
 	if (Nvisc == 1) 
@@ -93,14 +93,13 @@ void COMPBL(
 		c = sqrt(m_Twall) * (1.0 + m_Suth) / (m_Suth + m_Twall);
 		cp = 0.0;
 	}
-
-		dv[0] = v[1];
-		dv[1] = v[2];
-		dv[2] = - v[2] * (cp + v[0]) / c;
-		dv[3] = v[4];
-		dv[4] = - v[4] * (cp + m_Pr * v[0]) / c - 
-				m_Pr * (m_Gamma - 1.0) * pow(m_Mach, 2.0) * 
-				pow(v[2], 2);
+    dv[0] = v[1];
+    dv[1] = v[2];
+    dv[2] = - v[2] * (cp + v[0]) / c;
+    dv[3] = v[4];
+    dv[4] = - v[4] * (cp + m_Pr * v[0]) / c -
+            m_Pr * (m_Gamma - 1.0) * pow(m_Mach, 2.0) *
+            pow(v[2], 2);
 }
 
 /**
@@ -113,7 +112,7 @@ void RK4(
 	NekDouble x, 
 	NekDouble h, 
 	Array<OneD, NekDouble> yout)
-{	
+{
 	int nmax = 5;
 		
 	Array<OneD, NekDouble> yt(nmax, 0.0);
@@ -135,7 +134,7 @@ void RK4(
 	}
 			
 	COMPBL(yt, dym);
-			
+		
 	for (int i = 0; i < n; i++)
 	{
 		yt[i] = y[i] + h * dym[i];
@@ -167,17 +166,14 @@ void RKDUMB(
 	NekDouble x, h;
 	Array<OneD, NekDouble> v (nmax, 0.0);
 	Array<OneD, NekDouble> dv(nmax, 0.0);
-
 	for (int i = 0; i < nvar; i++)
 	{
 		v[i] 	= vstart[i];
 		y[i][0] = v[i];	
 	}
-		
 	xx[0] = x1;
 	x 	  = x1;
 	h 	  = (x2-x1) / m_xpoints; 
-					
 	for (int k = 0; k < m_xpoints; k++)
 	{
 		COMPBL(v, dv);
@@ -189,7 +185,7 @@ void RKDUMB(
 		}
 		x 		= x + h;
 		xx[k+1] = x;
-		
+
 		for (int i = 0; i < nvar; i++)
 		{
 			y[i][k+1] = v[i];
@@ -212,7 +208,7 @@ void OUTPUT(
 	Array <OneD, NekDouble > rho_QuadraturePts, 
 	Array <OneD, NekDouble > T_QuadraturePts)
 {
-	cout << "jusque la ca marche1 " << endl;
+	cout << "Checkpoint 1 " << endl;
 	
 	Array <OneD, NekDouble > z  (m_xpoints, 0.0);
 	Array <OneD, NekDouble > v  (m_xpoints, 0.0);
@@ -241,21 +237,21 @@ void OUTPUT(
 	Array <OneD, Array <OneD, NekDouble > > valeur_rho(m_xpoints);
 	//Array <OneD, Array <OneD, NekDouble > > valeur_t  (m_xpoints);
 	
-	cout << "jusque la ca marche2 " << endl;
+	cout << "Checkpoint 2 " << endl;
 		
 	for (int i = 0; i < m_xpoints ; i++)
 	{
 		valeur_u[i]   = Array <OneD, NekDouble > (m_ypoints, 0.0);	
 	}
 	
-	cout << "jusque la ca marche3 " << endl;
+	cout << "Checkpoint 3 " << endl;
 	
 	for (int i = 0; i < m_xpoints ; i++)
 	{
-	valeur_v[i]   = Array <OneD, NekDouble > (m_ypoints, 0.0);	
+        valeur_v[i]   = Array <OneD, NekDouble > (m_ypoints, 0.0);
 	}
 	
-	cout << "jusque la ca marche4 " << endl;
+	cout << "Checkpoint 4 " << endl;
 	
 	//~ for (int i = 0; i < m_xpoints ; i++)
 	//~ {
@@ -269,14 +265,8 @@ void OUTPUT(
 	valeur_rho[i] = Array <OneD, NekDouble > (m_ypoints, 0.0);		
 	}
 	
-	cout << "jusque la ca marche5 " << endl;
+	cout << "Checkpoint 5 " << endl;
 	
-	
-			
-	
-	
-	
-		
 	NekDouble flg, scale, dd, dm, delta , marois, DELT;
 	NekDouble xin, rex, delsx, xcher, ycher, dlta;
 	NekDouble inter, inter2,sum, approx;
@@ -286,9 +276,6 @@ void OUTPUT(
 	z[0] = 0.0;
 	NekDouble sumd = 0.0;
 	
-
-	
-		
 	for (int i=1; i < n ; i++)
 	{
 		z[i] = z[i-1] + 
@@ -304,8 +291,6 @@ void OUTPUT(
 		}
 	}
 	
-	
-		
 	scale = sumd;
 		
 	ofstream file1;
@@ -380,21 +365,23 @@ void OUTPUT(
 		}						
 	}
 	
-	if (m_option2==0)
+	if (m_option2 == 0)
 	{
-		for (int i = 0; i < m_xpoints; i++)
+        cout << "OPTION 0" << endl;
+		/*
+        for (int i = 0; i < m_xpoints; i++)
 		{
-			
 			for (int j = 0; j < m_ypoints; j++)
 			{	
-				valeur_v[i][j]=0;
+				valeur_v[i][j] = 0;
 			}
 		}
+         */
 	}
-	
-	if (m_option2==1)
+	else if (m_option2 == 1)
 	{
-		
+        cout << "OPTION 1" << endl;
+
 		for (int i = 0; i < m_xpoints-1; i++)
 		{
 			valeur_v[i][0]=0;
@@ -402,49 +389,47 @@ void OUTPUT(
 			{	
 				valeur_v[i][j+1] = (1.0 / (valeur_rho[i][j+1])) *
 				(valeur_v[i][j] * valeur_rho[i][j]) - 
-			((10*DELT / m_ypoints) / (L / m_xpoints)) * (valeur_u[i+1][j] * 
-			valeur_rho[i+1][j] - valeur_u[i][j] * valeur_rho[i][j]) ;
+                ((10*DELT / m_ypoints) / (L / m_xpoints)) * (valeur_u[i+1][j] *
+                    valeur_rho[i+1][j] - valeur_u[i][j] * valeur_rho[i][j]);
 			}
 		}
 	}
-	else
-	{		
-		
-	
+	else if (m_option2 != 0 && m_option2 != 1)
+	{
+        cout << "OPTION 2" << endl;
+
 		for (int i = 0; i < m_xpoints-1; i+=int(m_xpoints/10))
 		{
 			valeur_v[i][0]=0;
 			for (int j = 0; j < m_ypoints-1; j++)
 			{	
-			valeur_v[i][j+1] = (1.0 / (valeur_rho[i][j+1])) *
-			(valeur_v[i][j] * valeur_rho[i][j]) - 
-			((10*DELT / m_ypoints) / (L / m_xpoints)) * (valeur_u[i+1][j] * 
-			valeur_rho[i+1][j] - valeur_u[i][j] * valeur_rho[i][j]) ;
+                valeur_v[i][j+1] = (1.0 / (valeur_rho[i][j+1])) *
+                (valeur_v[i][j] * valeur_rho[i][j]) -
+                ((10*DELT / m_ypoints) / (L / m_xpoints)) * (valeur_u[i+1][j] *
+                    valeur_rho[i+1][j] - valeur_u[i][j] * valeur_rho[i][j]);
 			}
 		}
 					
 			for (int j = 0; j < m_ypoints; j++)
 			{	
-			approx= 0.1 * (
-	valeur_v[0][j] + valeur_v[int(m_xpoints/10)][j] +
-	valeur_v[int(m_xpoints/10)*2][j] + valeur_v[int(m_xpoints/10)*3][j] +
-	valeur_v[int(m_xpoints/10)*4][j] + valeur_v[int(m_xpoints/10)*5][j] +
-	valeur_v[int(m_xpoints/10)*6][j] + valeur_v[int(m_xpoints/10)*7][j] +
-	valeur_v[int(m_xpoints/10)*8][j] + valeur_v[int(m_xpoints/10)*9][j] );
+                approx = 0.1 * (
+                        valeur_v[0][j] + valeur_v[int(m_xpoints/10)][j] +
+                        valeur_v[int(m_xpoints/10)*2][j] +
+                                valeur_v[int(m_xpoints/10)*3][j] +
+                        valeur_v[int(m_xpoints/10)*4][j] +
+                                valeur_v[int(m_xpoints/10)*5][j] +
+                        valeur_v[int(m_xpoints/10)*6][j] +
+                                valeur_v[int(m_xpoints/10)*7][j] +
+                        valeur_v[int(m_xpoints/10)*8][j] +
+                                valeur_v[int(m_xpoints/10)*9][j]);
 	
 				for (int i = 0; i < m_xpoints; i++)
 				{
-					valeur_v[i][j]= approx;
+					valeur_v[i][j] = approx;
 				}
 		}
-				
+    }
 
-}
-
-
-
-
-	
 	for (int i = 0; i < nQuadraturePts; i++)
 	{
 		if (i%100000 == 0)
@@ -460,8 +445,8 @@ void OUTPUT(
 			if ((m_xo + (L / (m_xpoints-1)) * j<=xcher) && (m_xo + 
 				(L / (m_xpoints-1)) * (j+1)>xcher))
 			{
-			indice2 = j;
-			break;					
+                indice2 = j;
+                break;
 			}
 		}	
 				
@@ -487,7 +472,7 @@ void OUTPUT(
 					((10 * DELT / (m_ypoints-1)) * (j+1) > ycher))
 				{
 					indice3 = j;
-				break;					
+                    break;
 				}
 			}
 														
@@ -513,10 +498,9 @@ void OUTPUT(
 		}				
 	} 
 	
-	
-	cout << "compteur v" << "   "  << compteur << endl;
-	cout << "compteur u" << "   "  << compteur2 << endl;
-	cout << "compteur rho" << "   "  << compteur3 << endl;
+	cout << "compute v"   << "   "   << compteur << endl;
+	cout << "compute u"   << "   "   << compteur2 << endl;
+	cout << "compute rho" << "   "   << compteur3 << endl;
 }
 
 
@@ -572,7 +556,7 @@ int main(int argc, char *argv[])
     Domain = MemoryManager<MultiRegions::ContField2D>
 		::AllocateSharedPtr(vSession, graphShPt, 
 							vSession->GetVariable(0));
-							
+				
     // Get the total number of elements
 	int nElements;
 	nElements = Domain->GetExpSize();
@@ -620,14 +604,14 @@ int main(int argc, char *argv[])
 	vSession->LoadParameter("MESH_USE",		m_option,	1);
 	vSession->LoadParameter("mu",			m_mu,		1.0);
 	vSession->LoadParameter("v_calcul",		m_option2,	1);
-	vSession->LoadParameter("xpoints",		m_xpoints,	1);
-	vSession->LoadParameter("ypoints",		m_ypoints,	1);
+	//vSession->LoadParameter("xpoints",		m_xpoints,	1);
+	//vSession->LoadParameter("ypoints",		m_ypoints,	1);
 	
 	m_Re 	= m_Re / m_longeur;
 	m_Suth 	= 110.4 / m_Tinf;
 	m_Tw 	= m_Twall / m_Tinf;
 	
-	cout << "option" << "   " << m_option << endl;
+	cout << "Option for v velocity              = " << m_option2 << endl;
 
 	Array<OneD,NekDouble> u_QuadraturePts;
 	u_QuadraturePts = Array<OneD,NekDouble>  (nQuadraturePts, 0.0);
@@ -649,7 +633,7 @@ int main(int argc, char *argv[])
 
 	Array<OneD, MultiRegions::ExpListSharedPtr> Exp(4);
 
-	if(m_Tw > 0) 
+	if(m_Tw > 0)
 	{
 		vstart[3] = m_Tw;
 	}
@@ -690,7 +674,7 @@ int main(int argc, char *argv[])
 	}
 	
 	RKDUMB(vstart, 5, 0.0, etamax, m_xpoints, xx, ff);
-	
+
 	for (int k = 0; k < maxit; k++)
 	{
 		vstart[2] = v[0];
@@ -716,7 +700,7 @@ int main(int argc, char *argv[])
 	
 		if (err < errtol)
 		{
-			cout << "fini" << endl;
+			cout << "ending" << endl;
 			OUTPUT(m_xpoints, xx, ff, 
 				   nQuadraturePts, 
 				   x_QuadraturePts, 
@@ -779,7 +763,7 @@ int main(int argc, char *argv[])
 	}
 	
 	ofstream file15;
-	file15.open("fin_verif2.dat");
+	file15.open("verification.dat");
 			
 	for (int i=0; i< nQuadraturePts; i++)
 	{
@@ -859,9 +843,18 @@ int main(int argc, char *argv[])
     Exp[1]->FwdTrans(Exp2D_uk->GetPhys(),Exp[1]->UpdateCoeffs());
     Exp[2]->FwdTrans(Exp2D_vk->GetPhys(),Exp[2]->UpdateCoeffs());
     Exp[3]->FwdTrans(Exp2D_Tk->GetPhys(),Exp[3]->UpdateCoeffs());
-    // Generation .FLD file with one field only (at the moment)
+    
     // Definition of the name of the .fld file
-    string FalknerSkan = "resultat_fin.fld";
+    cout << argv[1] << endl;
+    string tmp = argv[1];
+    int len = tmp.size();
+    string FalknerSkan;
+    for (int i = 0; i < len-4; ++i)
+    {
+        FalknerSkan += argv[1][i];
+    }
+    FalknerSkan = FalknerSkan+".rst";
+    
     // Definition of the Field
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef = 
 		Exp[0]->GetFieldDefinitions();

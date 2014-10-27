@@ -53,16 +53,17 @@ namespace Nektar
         {
             v_InitObject(pSession, pFields);
         }
-        
+
         void Advection::Advect(
             const int nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
             const NekDouble                                   &time)
         {
-            v_Advect(nConvectiveFields, fields, advVel, inarray, outarray, time);
+            v_Advect(nConvectiveFields, fields, advVel, inarray, outarray,
+                     time);
         }
 
         void Advection::v_InitObject(

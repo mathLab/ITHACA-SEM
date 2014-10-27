@@ -77,7 +77,7 @@ namespace Nektar
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                     const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                    Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                          Array<OneD, Array<OneD, NekDouble> >        &outarray,
                     const NekDouble                                   &time);
                 
                 /**
@@ -141,11 +141,11 @@ namespace Nektar
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                     const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                     const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                    Array<OneD, Array<OneD, NekDouble> >              &outarray,
+                          Array<OneD, Array<OneD, NekDouble> >        &outarray,
                     const NekDouble                                   &time)=0;
 
                 SOLVER_UTILS_EXPORT virtual void v_SetBaseFlow(
-                        const Array<OneD, Array<OneD, NekDouble> >    &inarray);
+                    const Array<OneD, Array<OneD, NekDouble> >    &inarray);
             };
             
             /// A shared pointer to an Advection object.

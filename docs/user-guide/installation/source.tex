@@ -350,43 +350,40 @@ From a terminal (Applications->Utilities->Terminal):
     \end{lstlisting}
 \end{enumerate}
 
-
-
 \subsection{Windows}
-The following software must be pre-installed on your system:
+
+Windows compilation is supported, but presently the build process is a little
+convoluted. You need the following software to be pre-installed on your system:
+
 \begin{itemize}
-\item Microsoft Visual Studio 2008
-\begin{itemize} 
-    \item Visual Studio 2008 Service Pack 1 is required
-\end{itemize}
-\item Python Compiler 2.7.2+ (download from
-\url{http://www.http//python.org/download/}) 
-\item CMake 2.8.7+ (download from \url{http://www.cmake.org/HTML/index.html})
-\begin{itemize}
+  \item Microsoft Visual Studio 2012 or 2013 (Windows 7 SP1+ required).
+  \item CMake 3.0+ (download from \url{http://www.cmake.org/download/})
+  \begin{itemize}
     \item When prompted, select the option to add CMake to the system PATH.
-\end{itemize}
-\item WinRAR (download from \url{http://www.rarlab.com/download.htm})
+  \end{itemize}
+  \item WinRAR (download from \url{http://www.rarlab.com/download.htm})
+  \item Optionally, you can install Git to use development versions.
 \end{itemize}
 
 \newcommand{\nekver}{\input{../../VERSION}}
 \subsubsection{Unpack the tarballs}
 \begin{itemize}
-\item Unpack the \inlsh{nektar++-\nekver.tar.gz} file using
-WinRAR
-\item Create a \inlsh{ThirdParty} directory within the
-\inlsh{nektar++-\nekver} subdirectory.
-
-\begin{notebox}
- Some windows version do not
- recognise the path of a folder which has '++' in the name. If you think that 
- your windows version can not handle path containing special characters, you 
- should rename \inlsh{nektar++-\nekver} to
- \inlsh{nektar-\nekver}.
- \end{notebox}
- 
+  \item Unpack the \inlsh{nektar++-\nekver.tar.gz} file using WinRAR.
+  \item Create a \inlsh{ThirdParty} directory within the
+  \inlsh{nektar++-\nekver} subdirectory.
 \end{itemize}
 
-\subsubsection{Building ThirdParty libraries}
+\begin{notebox}
+  Some Windows versions do not recognise the path of a folder which has
+  \inltt{++} in the name. If you think that your Windows version can not
+  handle path containing special characters, you should rename
+  \inlsh{nektar++-\nekver} to \inlsh{nektar-\nekver}.
+\end{notebox}
+
+\subsubsection{Installing Boost}
+
+
+
 Download ThirdParty packages from \inlsh{www.nektar.info/thirdparty} as requried
 below.
 \begin{itemize}

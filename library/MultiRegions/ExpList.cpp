@@ -315,7 +315,6 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray)
         {
-
             Array<OneD,NekDouble>  tmp;
             for (int i = 0; i < m_collections.size(); ++i)
             {
@@ -2582,7 +2581,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
+ 
         SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(
             const SpatialDomains::BoundaryConditionCollection& collection,
             unsigned int regionId,
@@ -2604,12 +2603,80 @@ namespace Nektar
             return NullExpListSharedPtr;
         }
 
+
+        StdRegions::StdExpansionSharedPtr GetStdExp(StdRegions::StdExpansionSharedPtr exp)
+        {
+            
+            StdRegions::StdExpansionSharedPtr stdExp;
+
+            switch(exp->DetShapeType())
+            {
+            case LibUtilities::eSegment:
+                stdExp = MemoryManager<StdRegions::StdSegExp>
+                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey());
+                break;
+            case LibUtilities::eTriangle:
+                {
+                    StdRegions::StdNodalTriExpSharedPtr nexp;
+                    if((nexp = boost::dynamic_pointer_cast<StdRegions::StdNodalTriExp>(exp)))
+                    {
+                        stdExp = MemoryManager<StdRegions::StdNodalTriExp>
+                            ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                                exp->GetBasis(1)->GetBasisKey(),
+                                                nexp->GetNodalPointsKey()->GetPointsType());
+                    }
+                    else
+                        {
+                            stdExp = MemoryManager<StdRegions::StdTriExp>
+                                ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                                    exp->GetBasis(1)->GetBasisKey());
+                        }
+                }
+                break;
+            case LibUtilities::eQuadrilateral:
+                stdExp = MemoryManager<StdRegions::StdQuadExp>
+                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                        exp->GetBasis(1)->GetBasisKey());
+                break;
+            case LibUtilities::eTetrahedron:
+                    stdExp = MemoryManager<StdRegions::StdTetExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey(),
+                                            exp->GetBasis(2)->GetBasisKey());
+                    break;
+            case LibUtilities::ePyramid:
+                stdExp = MemoryManager<StdRegions::StdPyrExp>
+                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                        exp->GetBasis(1)->GetBasisKey(),
+                                        exp->GetBasis(2)->GetBasisKey());
+                break;
+            case LibUtilities::ePrism:
+                stdExp = MemoryManager<StdRegions::StdPrismExp>
+                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                        exp->GetBasis(1)->GetBasisKey(),
+                                        exp->GetBasis(2)->GetBasisKey());
+                break;
+            case LibUtilities::eHexahedron:
+                    stdExp = MemoryManager<StdRegions::StdHexExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey(),
+                                            exp->GetBasis(2)->GetBasisKey());
+                    break;
+            default:
+                ASSERTL0(false,"Shape type not setup");
+                break;
+            }
+
+            return stdExp;
+        }
+
         /**
          * @brief Construct collections of elements containing a single element
          * type and polynomial order from the list of expansions.
          */
         void ExpList::CreateCollections(Collections::ImplementationType ImpType)
         {
+            //return; 
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
             map<LibUtilities::ShapeType,
@@ -2619,14 +2686,26 @@ namespace Nektar
             bool verbose  =m_session->DefinesCmdLineArgument("verbose");
             int collmax;
 
-            m_session->LoadParameter("CollectionMax",collmax,m_exp->size());
+	    if(m_comm->GetRank() != 0) //just turn on verbose mode for root node
+	    {
+	        verbose = false;
+	    }
+
+            m_session->LoadParameter("CollectionMax",collmax,2*m_exp->size());
             m_session->MatchSolverInfo("CollectionAutoTuning","True",autotuning);
 
             // If ImpType is not specified by default argument call
             // then set ImpType to eStdMat. 
             if(ImpType == Collections::eNoImpType)
             {
-                ImpType = Collections::eStdMat; 
+	      if(m_exp->size() < 100)
+	      {
+		ImpType = Collections::eSumFac; 
+	      }
+	      else
+	      {
+		ImpType = Collections::eStdMat; 
+	      }
             }
             else // if ImpType was provided do not perform autotuning.
             {
@@ -2642,7 +2721,7 @@ namespace Nektar
                 autotuning = false; 
                 if(verbose)
                 {
-                    cout << "Setting Collection optimisation using XML file details";
+		  cout << "Setting Collection optimisation using XML file" << endl;
                 }
             }
             else if (autotuning == false)
@@ -2669,63 +2748,7 @@ namespace Nektar
                 StdRegions::StdExpansionSharedPtr stdExp;
                 LocalRegions::ExpansionSharedPtr exp = it->second[0].first;
 
-                switch(exp->DetShapeType())
-                {
-                case LibUtilities::eSegment:
-                    stdExp = MemoryManager<StdRegions::StdSegExp>
-                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey());
-                    break;
-                case LibUtilities::eTriangle:
-                    {
-                        StdRegions::StdNodalTriExpSharedPtr nexp;
-                        if((nexp = boost::dynamic_pointer_cast<StdRegions::StdNodalTriExp>(exp)))
-                        {
-                            stdExp = MemoryManager<StdRegions::StdNodalTriExp>
-                                ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                                    exp->GetBasis(1)->GetBasisKey(),
-                                                    nexp->GetNodalPointsKey()->GetPointsType());
-                        }
-                        else
-                        {
-                            stdExp = MemoryManager<StdRegions::StdTriExp>
-                                ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                                    exp->GetBasis(1)->GetBasisKey());
-                        }
-                    }
-                    break;
-                case LibUtilities::eQuadrilateral:
-                    stdExp = MemoryManager<StdRegions::StdQuadExp>
-                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                            exp->GetBasis(1)->GetBasisKey());
-                    break;
-                case LibUtilities::eTetrahedron:
-                    stdExp = MemoryManager<StdRegions::StdTetExp>
-                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                            exp->GetBasis(1)->GetBasisKey(),
-                                            exp->GetBasis(2)->GetBasisKey());
-                    break;
-                case LibUtilities::ePyramid:
-                    stdExp = MemoryManager<StdRegions::StdPyrExp>
-                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                            exp->GetBasis(1)->GetBasisKey(),
-                                            exp->GetBasis(2)->GetBasisKey());
-                    break;
-                case LibUtilities::ePrism:
-                    stdExp = MemoryManager<StdRegions::StdPrismExp>
-                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                            exp->GetBasis(1)->GetBasisKey(),
-                                            exp->GetBasis(2)->GetBasisKey());
-                    break;
-                case LibUtilities::eHexahedron:
-                    stdExp = MemoryManager<StdRegions::StdHexExp>
-                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
-                                            exp->GetBasis(1)->GetBasisKey(),
-                                            exp->GetBasis(2)->GetBasisKey());
-                    break;
-                default:
-                    ASSERTL0(false,"Shape type not setup");
-                    break;
-                }
+                stdExp = GetStdExp(exp);
 
                 Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
                 vector<SpatialDomains::GeometrySharedPtr> geom;
@@ -2754,74 +2777,90 @@ namespace Nektar
                 }
                 else
                 {
+                    // set up first geometry 
                     geom.push_back(it->second[0].first->GetGeom());
                     int prevnCoeff = it->second[0].first->GetNcoeffs();
+                    int prevnPhys  = it->second[0].first->GetTotPoints();
                     collcnt = 1;
+
                     for (int i = 1; i < it->second.size(); ++i)
                     {
-                        const int nCoeffs = it->second[i].first->GetNcoeffs();
-                        int coeffOffset   = m_coeff_offset[it->second[i].second];
-                        int physOffset    = m_phys_offset [it->second[i].second];
+                        int nCoeffs     = it->second[i].first->GetNcoeffs();
+                        int nPhys       = it->second[i].first->GetTotPoints();
+                        int coeffOffset = m_coeff_offset[it->second[i].second];
+                        int physOffset  = m_phys_offset [it->second[i].second];
                         
-                        if( prevCoeffOffset + nCoeffs != coeffOffset ||
-                            prevnCoeff != nCoeffs || i == it->second.size() - 1 ||
-                            collcnt >= collmax)
+                        // check to see if next elmt is different or
+                        // collmax reached and if so end collection
+                        // and start new one
+                        if(prevCoeffOffset + nCoeffs != coeffOffset ||
+                           prevnCoeff != nCoeffs ||
+                           prevPhysOffset + nPhys != physOffset ||
+                           prevnPhys != nPhys || collcnt >= collmax)
                         {
-                            if (i != it->second.size() - 1 )
+                            
+                            // if no Imp Type provided and No
+                            // settign in xml file. reset
+                            // impTypes using timings
+                            if(autotuning)
                             {
-                                // if no Imp Type provided and No
-                                // settign in xml file. reset
-                                // impTypes using timings
-
-                                if(autotuning)
-                                {
-                                    impTypes = colOpt.SetWithTimings(stdExp,geom, 
-                                                                     impTypes, verbose);
-                                }
-                                
-                                Collections::Collection tmp(stdExp, geom, impTypes);
-                                m_collections.push_back(tmp);
-                                
-                                // start new geom list 
-                                geom.clear();
-
-                                m_coll_coeff_offset.push_back(coeffOffset);
-                                m_coll_phys_offset .push_back(physOffset);
-                                geom.push_back(it->second[i].first->GetGeom());
-                                collcnt = 1;
-                            }
-                            else // end this list
-                            {
-                                geom.push_back(it->second[i].first->GetGeom());
-
-                                // if no Imp Type provided and No
-                                // settign in xml file.
-                                if(autotuning)
-                                {
-                                    impTypes = colOpt.SetWithTimings(stdExp,geom, 
-                                                                     impTypes,verbose);
-                                }
-                                
-                                Collections::Collection tmp(stdExp, geom, impTypes);
-                                m_collections.push_back(tmp);
-                                geom.clear();
-                                collcnt = 0;
+                                impTypes = colOpt.SetWithTimings(stdExp,geom, 
+                                                                 impTypes, 
+                                                                 verbose);
                             }
                             
+                            Collections::Collection tmp(stdExp, geom, impTypes);
+                            m_collections.push_back(tmp);
+                            
+
+                            // start new geom list 
+                            geom.clear();
+                            
+                            m_coll_coeff_offset.push_back(coeffOffset);
+                            m_coll_phys_offset .push_back(physOffset);
+                            geom.push_back(it->second[i].first->GetGeom());
+                            collcnt = 1;
+
+                            if((prevnCoeff != nCoeffs)||(prevnPhys != nPhys))
+                            {
+                                stdExp = GetStdExp(it->second[i].first);
+                            }
+
                         }
-                        else
+                        else // add to list of collections 
                         {
                             geom.push_back(it->second[i].first->GetGeom());
                             collcnt++;
+                        }
+
+                        // if end of list finish up collection 
+                        if (i == it->second.size() - 1)
+                        {
+                            // if no Imp Type provided and No
+                            // settign in xml file.
+                            if(autotuning)
+                            {
+                                impTypes = colOpt.SetWithTimings(stdExp,geom, 
+                                                                 impTypes,verbose);
+                            }
+                            
+                            Collections::Collection tmp(stdExp, geom, impTypes);
+                            m_collections.push_back(tmp);
+                            geom.clear();
+                            collcnt = 0;
+                            
                         }
                         
                         prevCoeffOffset = coeffOffset;
                         prevPhysOffset  = physOffset;
                         prevnCoeff      = nCoeffs;
+                        prevnPhys       = nPhys;
                     }
                 }
-            }
+            }  
         }
+
+
     } //end of namespace
 } //end of namespace
 

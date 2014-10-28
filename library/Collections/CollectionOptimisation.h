@@ -79,7 +79,7 @@ namespace Nektar
                     if((m_exp->GetBasis(i)->GetBasisKey() 
                         != rhs.m_exp->GetBasis(i)->GetBasisKey()))
                     {
-                        return true;
+		      return (m_exp->GetBasis(i)->GetBasisKey() < rhs.m_exp->GetBasis(i)->GetBasisKey());
                     }
                 }
                 

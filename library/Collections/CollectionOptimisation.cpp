@@ -53,141 +53,147 @@ namespace Nektar
             
             m_setByXml = false;
             
-                // Default all elements to eStdMat
-                defaults[ElmtOrder(LibUtilities::eSegment,       -1)] = defaultType;
-                defaults[ElmtOrder(LibUtilities::eTriangle,      -1)] = defaultType;
-                defaults[ElmtOrder(LibUtilities::eQuadrilateral, -1)] = defaultType;
-                defaults[ElmtOrder(LibUtilities::eTetrahedron,   -1)] = defaultType;
-                defaults[ElmtOrder(LibUtilities::ePyramid,       -1)] = defaultType;
-                defaults[ElmtOrder(LibUtilities::ePrism,         -1)] = defaultType;
-                defaults[ElmtOrder(LibUtilities::eHexahedron,    -1)] = defaultType;
-
-
-                map<string, LibUtilities::ShapeType> elTypes;
-                map<string, LibUtilities::ShapeType>::iterator it2;
-                elTypes["S"] = LibUtilities::eSegment;
-                elTypes["T"] = LibUtilities::eTriangle;
-                elTypes["Q"] = LibUtilities::eQuadrilateral;
-                elTypes["A"] = LibUtilities::eTetrahedron;
-                elTypes["P"] = LibUtilities::ePyramid;
-                elTypes["R"] = LibUtilities::ePrism;
-                elTypes["H"] = LibUtilities::eHexahedron;
-
-                map<string, OperatorType> opTypes;
-                for (int i = 0; i < SIZE_OperatorType; ++i)
+            // Default all elements to eStdMat
+            defaults[ElmtOrder(LibUtilities::eSegment,       -1)] = defaultType;
+            defaults[ElmtOrder(LibUtilities::eTriangle,      -1)] = defaultType;
+            defaults[ElmtOrder(LibUtilities::eQuadrilateral, -1)] = defaultType;
+            defaults[ElmtOrder(LibUtilities::eTetrahedron,   -1)] = defaultType;
+            defaults[ElmtOrder(LibUtilities::ePyramid,       -1)] = defaultType;
+            defaults[ElmtOrder(LibUtilities::ePrism,         -1)] = defaultType;
+            defaults[ElmtOrder(LibUtilities::eHexahedron,    -1)] = defaultType;
+            
+            
+            map<string, LibUtilities::ShapeType> elTypes;
+            map<string, LibUtilities::ShapeType>::iterator it2;
+            elTypes["S"] = LibUtilities::eSegment;
+            elTypes["T"] = LibUtilities::eTriangle;
+            elTypes["Q"] = LibUtilities::eQuadrilateral;
+            elTypes["A"] = LibUtilities::eTetrahedron;
+            elTypes["P"] = LibUtilities::ePyramid;
+            elTypes["R"] = LibUtilities::ePrism;
+            elTypes["H"] = LibUtilities::eHexahedron;
+            
+            map<string, OperatorType> opTypes;
+            for (int i = 0; i < SIZE_OperatorType; ++i)
+            {
+                opTypes[OperatorTypeMap[i]] = (OperatorType)i;
+                m_global[(OperatorType)i] = defaults;
+            }
+            
+            map<string, ImplementationType> impTypes;
+            for (int i = 0; i < SIZE_ImplementationType; ++i)
+            {
+                impTypes[ImplementationTypeMap[i]] = (ImplementationType)i;
+            }
+            
+            if(pSession.get()) // turn off file reader if dummy pointer is given
+            {
+                TiXmlDocument &doc = pSession->GetDocument();
+                TiXmlHandle docHandle(&doc);
+                TiXmlElement *master
+                    = docHandle.FirstChildElement("NEKTAR").Element();
+                ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+                
+                TiXmlElement *xmlCol = master->FirstChildElement("COLLECTIONS");
+                
+                if (xmlCol)
                 {
-                    opTypes[OperatorTypeMap[i]] = (OperatorType)i;
-                    m_global[(OperatorType)i] = defaults;
-                }
-
-                map<string, ImplementationType> impTypes;
-                for (int i = 0; i < SIZE_ImplementationType; ++i)
-                {
-                    impTypes[ImplementationTypeMap[i]] = (ImplementationType)i;
-                }
-
-                if(pSession.get()) // turn off file reader if dummy pointer is given
-                {
-                    TiXmlDocument &doc = pSession->GetDocument();
-                    TiXmlHandle docHandle(&doc);
-                    TiXmlElement *master
-                        = docHandle.FirstChildElement("NEKTAR").Element();
-                    ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+                    TiXmlElement *elmt = xmlCol->FirstChildElement();
+                    m_setByXml = true;
                     
-                    TiXmlElement *xmlCol = master->FirstChildElement("COLLECTIONS");
-                    
-                    if (xmlCol)
+                    while (elmt)
                     {
-                        TiXmlElement *elmt = xmlCol->FirstChildElement();
-                        m_setByXml = true;
-
-                        while (elmt)
+                        string tagname = elmt->ValueStr();
+                        
+                        ASSERTL0(boost::iequals(tagname, "OPERATOR"),
+                                 "Only OPERATOR tags are supported inside the "
+                                 "COLLECTIONS tag.");
+                        
+                        const char *attr = elmt->Attribute("TYPE");
+                        ASSERTL0(attr, "Missing TYPE in OPERATOR tag.");
+                        string opType(attr);
+                        
+                        ASSERTL0(opTypes.count(opType) > 0,
+                                 "Unknown OPERATOR type " + opType + ".");
+                        
+                        OperatorType ot = opTypes[opType];
+                        
+                        TiXmlElement *elmt2 = elmt->FirstChildElement();
+                        
+                        while (elmt2)
                         {
-                            string tagname = elmt->ValueStr();
+                            string tagname = elmt2->ValueStr();
+                            ASSERTL0(boost::iequals(tagname, "ELEMENT"),
+                                     "Only ELEMENT tags are supported inside the "
+                                     "OPERATOR tag.");
                             
-                            ASSERTL0(boost::iequals(tagname, "OPERATOR"),
-                                     "Only OPERATOR tags are supported inside the "
-                                     "COLLECTIONS tag.");
+                            const char *attr = elmt2->Attribute("TYPE");
+                            ASSERTL0(attr, "Missing TYPE in ELEMENT tag.");
                             
-                            const char *attr = elmt->Attribute("TYPE");
-                            ASSERTL0(attr, "Missing TYPE in OPERATOR tag.");
-                            string opType(attr);
+                            string elType(attr);
+                            it2 = elTypes.find(elType);
+                            ASSERTL0(it2 != elTypes.end(),
+                                     "Unknown element type "+elType+" in ELEMENT "
+                                     "tag");
                             
-                            ASSERTL0(opTypes.count(opType) > 0,
-                                     "Unknown OPERATOR type " + opType + ".");
+                            const char *attr2 = elmt2->Attribute("IMPTYPE");
+                            ASSERTL0(attr2, "Missing IMPTYPE in ELEMENT tag.");
+                            string impType(attr2);
+                            ASSERTL0(impTypes.count(impType) > 0,
+                                     "Unknown IMPTYPE type " + impType + ".");
                             
-                            OperatorType ot = opTypes[opType];
+                            const char *attr3 = elmt2->Attribute("ORDER");
+                            ASSERTL0(attr3, "Missing ORDER in ELEMENT tag.");
+                            string order(attr3);
                             
-                            TiXmlElement *elmt2 = elmt->FirstChildElement();
-                            
-                            while (elmt2)
+                            if (order == "*")
                             {
-                                string tagname = elmt2->ValueStr();
-                                ASSERTL0(boost::iequals(tagname, "ELEMENT"),
-                                         "Only ELEMENT tags are supported inside the "
-                                         "OPERATOR tag.");
+                                m_global[ot][ElmtOrder(it2->second, -1)] 
+                                    = impTypes[impType];
+                            }
+                            else
+                            {
+                                vector<unsigned int> orders;
+                                ParseUtils::GenerateSeqVector(order.c_str(), orders);
                                 
-                                const char *attr = elmt2->Attribute("TYPE");
-                                ASSERTL0(attr, "Missing TYPE in ELEMENT tag.");
-                                
-                                string elType(attr);
-                                it2 = elTypes.find(elType);
-                                ASSERTL0(it2 != elTypes.end(),
-                                         "Unknown element type "+elType+" in ELEMENT "
-                                         "tag");
-                                
-                                const char *attr2 = elmt2->Attribute("IMPTYPE");
-                                ASSERTL0(attr2, "Missing IMPTYPE in ELEMENT tag.");
-                                string impType(attr2);
-                                ASSERTL0(impTypes.count(impType) > 0,
-                                         "Unknown IMPTYPE type " + impType + ".");
-                                
-                                const char *attr3 = elmt2->Attribute("ORDER");
-                                ASSERTL0(attr3, "Missing ORDER in ELEMENT tag.");
-                                string order(attr3);
-
-                                if (order == "*")
+                                for (int i = 0; i < orders.size(); ++i)
                                 {
-                                    m_global[ot][ElmtOrder(it2->second, -1)] 
-                                        = impTypes[impType];
+                                    m_global[ot][ElmtOrder(it2->second, orders[i])] = impTypes[impType];
                                 }
-                                else
-                                {
-                                    vector<unsigned int> orders;
-                                    ParseUtils::GenerateSeqVector(order.c_str(), orders);
-                                    
-                                    for (int i = 0; i < orders.size(); ++i)
-                                    {
-                                        m_global[ot][ElmtOrder(it2->second, orders[i])] = impTypes[impType];
-                                    }
-                                }
-                                
-                                elmt2 = elmt2->NextSiblingElement();
                             }
                             
-                            elmt = elmt->NextSiblingElement();
+                            elmt2 = elmt2->NextSiblingElement();
                         }
+                        
+                        elmt = elmt->NextSiblingElement();
                     }
-                }
-#if 0 
-                // Print out operator map
-                map<OperatorType, map<ElmtOrder, ImplementationType> >::iterator mIt;
-                map<ElmtOrder, ImplementationType>::iterator eIt;
-                for (mIt = m_global.begin(); mIt != m_global.end(); mIt++)
-                {
-                    cout << "Operator " << OperatorTypeMap[mIt->first] << ":"
-                         << endl;
 
-                    for (eIt = mIt->second.begin(); eIt != mIt->second.end(); eIt++)
-                    {
-                        cout << "- " << LibUtilities::ShapeTypeMap[eIt->first.first]
-                             << " order " << eIt->first.second
-                             << " -> " << ImplementationTypeMap[eIt->second]
-                             << endl;
-                    }
-                }
-#endif
+		    // Print out operator map
+		    if(pSession->DefinesCmdLineArgument("verbose"))
+		    {
+		        if(pSession->GetComm()->GetRank() == 0)
+			{
+			  map<OperatorType, map<ElmtOrder, ImplementationType> >::iterator mIt;
+			  map<ElmtOrder, ImplementationType>::iterator eIt;
+			  for (mIt = m_global.begin(); mIt != m_global.end(); mIt++)
+			    {
+			      cout << "Operator " << OperatorTypeMap[mIt->first] << ":"
+				   << endl;
+			      
+			      for (eIt = mIt->second.begin(); eIt != mIt->second.end(); eIt++)
+				{
+				  cout << "- " << LibUtilities::ShapeTypeMap[eIt->first.first]
+				       << " order " << eIt->first.second
+				       << " -> " << ImplementationTypeMap[eIt->second]
+				       << endl;
+				}
+			    }
+			}
+		    }
+		}
+		
             }
+        }
 
 
         OperatorImpMap  CollectionOptimisation::GetOperatorImpMap(StdRegions::StdExpansionSharedPtr pExp)
@@ -212,7 +218,7 @@ namespace Nektar
                     if (it2 == it->second.end())
                     {
                         cout << "shouldn't be here..." << endl;
-                        impType = eIterPerExp;
+                        impType = eStdMat;
                     }
                     else
                     {

@@ -1821,16 +1821,20 @@ namespace Nektar
                 int check = 0;
                 for (j=0; j< basis.size(); ++j)
                 {
-                    if ( (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
-                            (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
-                            (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
-                            (strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
-                            (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Gauss_Lagrange") == 0) ||
-                            (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
-					        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0)||
-							(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeRe") == 0) ||
-							(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeIm") == 0))
-                    {
+                    if ( 
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_A") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Ortho_A") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Ortho_B") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Ortho_C") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Gauss_Lagrange") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0)||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeRe") == 0) ||
+			(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeIm") == 0))
+		      {
                         check++;
                     }
                 }

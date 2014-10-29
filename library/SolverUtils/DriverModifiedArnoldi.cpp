@@ -80,6 +80,8 @@ namespace Nektar
 
             DriverArnoldi::ArnoldiSummary(out);
 
+            m_equ[m_nequ - 1]->DoInitialise();
+
             //FwdTrans Initial conditions to be in Coefficient Space
             m_equ[m_nequ-1] ->TransPhysToCoeff();
 

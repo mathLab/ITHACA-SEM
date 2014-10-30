@@ -107,7 +107,8 @@ namespace Nektar
                 {
                     out << "\tSingle Fourier mode    : true " << endl;
                     ASSERTL0(m_session->DefinesSolverInfo("Homogeneous"),
-                             "Expected a homogeneous expansion to be defined with single mode");
+                             "Expected a homogeneous expansion to be defined "
+                             "with single mode");
                 }
                 else
                 {
@@ -115,7 +116,8 @@ namespace Nektar
                 }
                 if(m_session->DefinesSolverInfo("BetaZero"))           
                 {
-                    out << "\tBeta set to Zero       : true (overrides LHom)" << endl;
+                    out << "\tBeta set to Zero       : true (overrides LHom)" 
+                        << endl;
                 }
                 else
                 {
@@ -124,17 +126,21 @@ namespace Nektar
 
                 if(m_timeSteppingAlgorithm)
                 {
-                    out << "\tEvolution operator     : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
+                    out << "\tEvolution operator     : " 
+                        << m_session->GetSolverInfo("EvolutionOperator") 
+                        << endl;
                 }
                 else
                 {
-                    out << "\tShift (Real,Imag)      : " << m_realShift <<"," << m_imagShift <<  endl;
+                    out << "\tShift (Real,Imag)      : " << m_realShift 
+                        << "," << m_imagShift <<  endl;
                 }
                 out << "\tKrylov-space dimension : " << m_kdim << endl;
                 out << "\tNumber of vectors      : " << m_nvec << endl;
                 out << "\tMax iterations         : " << m_nits << endl;
                 out << "\tEigenvalue tolerance   : " << m_evtol << endl;
-                out << "=======================================================================" << endl;
+                out << "======================================================" 
+                    << endl;
             }
         }
 

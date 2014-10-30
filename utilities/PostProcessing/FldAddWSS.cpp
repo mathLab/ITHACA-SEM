@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
         // Compute WSS for each element on boundary
         // Define total quadrature points, and velocity fields. 
         nt = shear[0]->GetNpoints();
-        Array<OneD, const NekDouble> V(nt),W(nt);     
+        Array<OneD, const NekDouble> U(nt),V(nt),W(nt);     
 
         for(int j = 0; j < addfields; ++j)
         {
@@ -241,7 +241,6 @@ int main(int argc, char *argv[])
                     elmt   = shear[0]->GetExp(elmtid);
                     nq     = elmt->GetTotPoints();
                     offset = shear[0]->GetPhys_Offset(elmtid);
-                    Array<OneD, const NekDouble> U(nq);
 
                     // Initialise local arrays for the velocity gradients, and stress components
                     // size of total number of quadrature points for each element (hence local).
@@ -286,22 +285,12 @@ int main(int argc, char *argv[])
                         U = vel[0]->GetPhys() + offset;
                         V = vel[1]->GetPhys() + offset;
                         W = vel[2]->GetPhys() + offset;
-
-                        for(j = 0; j < nq; ++j)
-                        {
-                            cout << "U: "<< U[j] << endl;
-                        }
                         
                         //Compute gradients (velocity correction scheme method)
                         elmt->PhysDeriv(U,grad[0],grad[1],grad[2]);
                         elmt->PhysDeriv(V,grad[3],grad[4],grad[5]);
                         elmt->PhysDeriv(W,grad[6],grad[7],grad[8]);
-                        for(j = 0; j < nq; ++j)
-                        {
-                            cout << "grad: "<< grad[0][j] << endl;
-                        }
-
-
+                        
                         //Compute stress component terms
                         // t_xx = 2.mu.Ux
                         Vmath::Smul (nq,(2*m_kinvis),grad[0],1,stress[0],1);

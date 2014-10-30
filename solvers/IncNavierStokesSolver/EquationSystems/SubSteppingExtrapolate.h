@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_SUPSTEPPINGEXTRAPOLATE_H
+#ifndef NEKTAR_SOLVERS_SUBSTEPPINGEXTRAPOLATE_H
 #define NEKTAR_SOLVERS_SUBSTEPPINGEXTRAPOLATE_H
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>

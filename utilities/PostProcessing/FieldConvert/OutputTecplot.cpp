@@ -115,6 +115,8 @@ void OutputTecplot::Process(po::variables_map &vm)
                     <<      " J=" << m_f->m_fieldPts->m_npts[1]
                     << " F=POINT" << endl;
             break;
+        default:
+            ASSERTL0(false, "Points type not supported yet.");
         }
 
         for(int i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)

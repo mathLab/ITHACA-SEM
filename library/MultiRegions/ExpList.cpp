@@ -2623,7 +2623,7 @@ namespace Nektar
                         stdExp = MemoryManager<StdRegions::StdNodalTriExp>
                             ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
                                                 exp->GetBasis(1)->GetBasisKey(),
-                                                nexp->GetNodalPointsKey()->GetPointsType());
+                                                nexp->GetNodalPointsKey().GetPointsType());
                     }
                     else
                         {

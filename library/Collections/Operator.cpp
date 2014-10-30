@@ -66,6 +66,15 @@ namespace Nektar {
             {
                 return false;
             }
+
+            if (boost::get<3>(p1) < boost::get<3>(p2))
+            {
+                return true;
+            }
+            if (boost::get<3>(p1) > boost::get<3>(p2))
+            {
+                return false;
+            }
             
             return false;
         }
@@ -74,7 +83,8 @@ namespace Nektar {
         {
             os <<                       boost::get<0>(p)  << " "
                << OperatorTypeMap      [boost::get<1>(p)] << " "
-               << ImplementationTypeMap[boost::get<2>(p)];
+               << ImplementationTypeMap[boost::get<2>(p)] << " "
+               << ImplementationTypeMap[boost::get<3>(p)];
             return os;
         }
 
@@ -128,29 +138,47 @@ namespace Nektar {
         OperatorKey BwdTrans_StdMat::m_typeArr[] =
             {
                 GetOperatorFactory().RegisterCreatorFunction(
-                                  OperatorKey(LibUtilities::eSegment, eBwdTrans, eStdMat),
-                                  BwdTrans_StdMat::create, "BwdTrans_StdMat_Seg"),
+                      OperatorKey(LibUtilities::eSegment, eBwdTrans, eStdMat,false),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_Seg"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                OperatorKey(LibUtilities::eTriangle, eBwdTrans, eStdMat),
-                                BwdTrans_StdMat::create, "BwdTrans_StdMat_Tri"),
+                      OperatorKey(LibUtilities::eTriangle, eBwdTrans, eStdMat,false),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_Tri"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, eStdMat),
-                                BwdTrans_StdMat::create, "BwdTrans_StdMat_Quad"),
+                      OperatorKey(LibUtilities::eTriangle, eBwdTrans, eStdMat,true),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_NodalTri"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eStdMat),
-                                BwdTrans_StdMat::create, "BwdTrans_StdMat_Tet"),
+                      OperatorKey(LibUtilities::eTriangle, eBwdTrans, eSumFac,true),
+                      BwdTrans_StdMat::create, "BwdTrans_SumFac_NodalTri"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                OperatorKey(LibUtilities::ePyramid, eBwdTrans, eStdMat),
-                                BwdTrans_StdMat::create, "BwdTrans_StdMat_Pyr"),
+                      OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, eStdMat,false),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_Quad"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                OperatorKey(LibUtilities::ePyramid, eBwdTrans, eSumFac),
-                                BwdTrans_StdMat::create, "BwdTrans_SumFac_Pyr"),
+                      OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eStdMat,false),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_Tet"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                OperatorKey(LibUtilities::ePrism, eBwdTrans, eStdMat),
-                                BwdTrans_StdMat::create, "BwdTrans_StdMat_Prism"),
+                      OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eStdMat,true),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_NodalTet"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eStdMat),
-                                BwdTrans_StdMat::create, "BwdTrans_StdMat_Hex"),
+                      OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eSumFac,true),
+                      BwdTrans_StdMat::create, "BwdTrans_SumFac_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePyramid, eBwdTrans, eStdMat,false),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePyramid, eBwdTrans, eSumFac,false),
+                      BwdTrans_StdMat::create, "BwdTrans_SumFac_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, eBwdTrans, eStdMat,false),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_Prism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, eBwdTrans, eStdMat,true),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, eBwdTrans, eSumFac,true),
+                      BwdTrans_StdMat::create, "BwdTrans_SumFac_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eStdMat,false),
+                      BwdTrans_StdMat::create, "BwdTrans_StdMat_Hex"),
             };
         
         class BwdTrans_IterPerExp : public Operator
@@ -186,26 +214,35 @@ namespace Nektar {
         OperatorKey BwdTrans_IterPerExp::m_typeArr[] =
             {
                 GetOperatorFactory().RegisterCreatorFunction(
-                                     OperatorKey(LibUtilities::eSegment, eBwdTrans, eIterPerExp),
-                                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Seg"),
+                    OperatorKey(LibUtilities::eSegment, eBwdTrans, eIterPerExp,false),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Seg"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                     OperatorKey(LibUtilities::eTriangle, eBwdTrans, eIterPerExp),
-                                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Tri"),
+                    OperatorKey(LibUtilities::eTriangle, eBwdTrans, eIterPerExp,false),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Tri"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                     OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, eIterPerExp),
-                                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Quad"),
+                    OperatorKey(LibUtilities::eTriangle, eBwdTrans, eIterPerExp,true),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_NodalTri"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                     OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eIterPerExp),
-                                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Tet"),
+                    OperatorKey(LibUtilities::eTriangle, eBwdTrans, eIterPerExp,true),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_NodalTri"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                     OperatorKey(LibUtilities::ePyramid, eBwdTrans, eIterPerExp),
-                                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Pyr"),
+                    OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, eIterPerExp,false),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Quad"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                     OperatorKey(LibUtilities::ePrism, eBwdTrans, eIterPerExp),
-                                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Prism"),
+                    OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eIterPerExp,false),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Tet"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                                     OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eIterPerExp),
-                                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Hex"),
+                    OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eIterPerExp,true),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::ePyramid, eBwdTrans, eIterPerExp,false),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::ePrism, eBwdTrans, eIterPerExp,true),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eIterPerExp,false),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Hex"),
             };
         
         /*
@@ -255,28 +292,46 @@ namespace Nektar {
         OperatorKey IProductWRTBase_StdMat::m_typeArr[] =
             {
                 GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eSegment, eIProductWRTBase, eStdMat),
+            OperatorKey(LibUtilities::eSegment, eIProductWRTBase, eStdMat,false),
             IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Seg"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eStdMat),
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eStdMat,false),
             IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Tri"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eStdMat),
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eStdMat,true),
+            IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_NodalTri"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eSumFac,true),
+            IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_NodalTri"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eStdMat,false),
             IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Quad"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eStdMat),
+            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eStdMat,false),
             IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Tet"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eStdMat),
+            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eStdMat,true),
+            IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_NodalTet"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eSumFac,true),
+            IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_NodalTet"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eStdMat,false),
             IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Pyr"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eSumFac),
+            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eSumFac,false),
             IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_Pyr"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eStdMat),
+            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eStdMat,false),
             IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Prism"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eStdMat),
+            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eStdMat,true),
+            IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_NodalPrism"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eSumFac,true),
+            IProductWRTBase_StdMat::create, "IProductWRTBase_SumFac_NodalPrism"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eStdMat,false),
             IProductWRTBase_StdMat::create, "IProductWRTBase_StdMat_Hex"),
     };
 
@@ -331,25 +386,34 @@ namespace Nektar {
     OperatorKey IProductWRTBase_IterPerExp::m_typeArr[] =
     {
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eSegment, eIProductWRTBase, eIterPerExp),
+            OperatorKey(LibUtilities::eSegment, eIProductWRTBase, eIterPerExp,false),
             IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Seg"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eIterPerExp),
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eIterPerExp,false),
             IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Tri"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eIterPerExp),
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eIterPerExp,true),
+            IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_NodalTri"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eIterPerExp,false),
             IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Quad"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eIterPerExp),
+            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eIterPerExp,false),
             IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Tet"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eIterPerExp),
+            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eIterPerExp,true),
+            IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_NodalTet"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eIterPerExp,false),
             IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Pyr"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eIterPerExp),
+            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eIterPerExp,false),
             IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Prism"),
         GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eIterPerExp),
+            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eIterPerExp,true),
+            IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_NodalPrism"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eIterPerExp,false),
             IProductWRTBase_IterPerExp::create, "IProductWRTBase_IterPerExp_Hex"),
     };
 
@@ -431,25 +495,34 @@ namespace Nektar {
         OperatorKey PhysDeriv_IterPerExp::m_typeArr[] =
             {
                 GetOperatorFactory().RegisterCreatorFunction(
-            OperatorKey(LibUtilities::eSegment, ePhysDeriv, eIterPerExp),
+            OperatorKey(LibUtilities::eSegment, ePhysDeriv, eIterPerExp,false),
             PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Seg"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                               OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eIterPerExp),
+                               OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eIterPerExp,false),
                                PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Tri"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                               OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eIterPerExp),
+                               OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eIterPerExp,true),
+                               PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eIterPerExp,false),
                                PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Quad"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                               OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eIterPerExp),
+                               OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eIterPerExp,false),
                                PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Tet"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                               OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eIterPerExp),
+                               OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eIterPerExp,true),
+                               PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eIterPerExp,false),
                                PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                               OperatorKey(LibUtilities::ePrism, ePhysDeriv, eIterPerExp),
+                               OperatorKey(LibUtilities::ePrism, ePhysDeriv, eIterPerExp,false),
                                PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Prism"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                               OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eIterPerExp),
+                               OperatorKey(LibUtilities::ePrism, ePhysDeriv, eIterPerExp,true),
+                               PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eIterPerExp,false),
                                PhysDeriv_IterPerExp::create, "PhysDeriv_IterPerExp_Hex")
             };
 
@@ -537,28 +610,49 @@ namespace Nektar {
         OperatorKey PhysDeriv_StdMat::m_typeArr[] =
             {
                 GetOperatorFactory().RegisterCreatorFunction(
-                      OperatorKey(LibUtilities::eSegment, ePhysDeriv, eStdMat),
+                      OperatorKey(LibUtilities::eSegment, ePhysDeriv, eStdMat,false),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Seg"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                      OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eStdMat),
+                      OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eStdMat,false),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Tri"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                      OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eStdMat),
+                      OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eStdMat,true),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eSumFac,true),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eStdMat,false),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Quad"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                      OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eStdMat),
+                      OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eStdMat,false),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Tet"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                      OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eStdMat),
+                      OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eStdMat,false),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Tet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eStdMat,true),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eSumFac,true),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eStdMat,false),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                      OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eSumFac),
+                                                             OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eSumFac,false),
                       PhysDeriv_StdMat::create, "PhysDeriv_SumFac_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                      OperatorKey(LibUtilities::ePrism, ePhysDeriv, eStdMat),
+                      OperatorKey(LibUtilities::ePrism, ePhysDeriv, eStdMat,false),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Prism"),
                 GetOperatorFactory().RegisterCreatorFunction(
-                      OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eStdMat),
+                      OperatorKey(LibUtilities::ePrism, ePhysDeriv, eStdMat,true),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, ePhysDeriv, eSumFac,true),
+                      PhysDeriv_StdMat::create, "PhysDeriv_StdMat_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eStdMat,false),
                       PhysDeriv_StdMat::create, "PhysDeriv_StdMat_Hex")
             };
 
@@ -654,37 +748,52 @@ namespace Nektar {
             {
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eSegment, 
-                                  eIProductWRTDerivBase, eIterPerExp),
+                                  eIProductWRTDerivBase, eIterPerExp,false),
                       IProductWRTDerivBase_IterPerExp::create, 
                       "IProductWRTDerivBase_IterPerExp_Seg"),
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eTriangle, 
-                                  eIProductWRTDerivBase, eIterPerExp),
+                                  eIProductWRTDerivBase, eIterPerExp,false),
                       IProductWRTDerivBase_IterPerExp::create, 
                       "IProductWRTDerivBase_IterPerExp_Tri"),
                 GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, 
+                                  eIProductWRTDerivBase, eIterPerExp,true),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eQuadrilateral, 
-                                  eIProductWRTDerivBase, eIterPerExp),
+                                  eIProductWRTDerivBase, eIterPerExp,false),
                       IProductWRTDerivBase_IterPerExp::create, 
                       "IProductWRTDerivBase_IterPerExp_Quad"),
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eTetrahedron, 
-                                  eIProductWRTDerivBase, eIterPerExp),
+                                  eIProductWRTDerivBase, eIterPerExp,false),
                       IProductWRTDerivBase_IterPerExp::create, 
-                      "IProductWRTDerivBase_IterPerExp_Tet"),
+                      "IProductWRTDerivBase_IterPerExp_Tet"), 
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, 
+                                  eIProductWRTDerivBase, eIterPerExp,true),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_NodalTet"),
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::ePyramid, 
-                                  eIProductWRTDerivBase, eIterPerExp),
+                                  eIProductWRTDerivBase, eIterPerExp,false),
                       IProductWRTDerivBase_IterPerExp::create, 
                       "IProductWRTDerivBase_IterPerExp_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::ePrism, 
-                                  eIProductWRTDerivBase, eIterPerExp),
+                                  eIProductWRTDerivBase, eIterPerExp,false),
                       IProductWRTDerivBase_IterPerExp::create, 
                       "IProductWRTDerivBase_IterPerExp_Prism"),
                 GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, 
+                                  eIProductWRTDerivBase, eIterPerExp,true),
+                      IProductWRTDerivBase_IterPerExp::create, 
+                      "IProductWRTDerivBase_IterPerExp_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eHexahedron, 
-                                  eIProductWRTDerivBase, eIterPerExp),
+                                  eIProductWRTDerivBase, eIterPerExp,false),
                       IProductWRTDerivBase_IterPerExp::create, 
                       "IProductWRTDerivBase_IterPerExp_Hex")
             };
@@ -797,42 +906,72 @@ namespace Nektar {
             {
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eSegment, 
-                                  eIProductWRTDerivBase, eStdMat),
+                                  eIProductWRTDerivBase, eStdMat,false),
                       IProductWRTDerivBase_StdMat::create, 
                       "IProductWRTDerivBase_StdMat_Seg"),
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eTriangle, 
-                                  eIProductWRTDerivBase, eStdMat),
+                                  eIProductWRTDerivBase, eStdMat,false),
                       IProductWRTDerivBase_StdMat::create, 
                       "IProductWRTDerivBase_StdMat_Tri"),
                 GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, 
+                                  eIProductWRTDerivBase, eStdMat,true),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, 
+                                  eIProductWRTDerivBase, eSumFac,true),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_SumFac_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eQuadrilateral, 
-                                  eIProductWRTDerivBase, eStdMat),
+                                  eIProductWRTDerivBase, eStdMat,false),
                       IProductWRTDerivBase_StdMat::create, 
                       "IProductWRTDerivBase_StdMat_Quad"),
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eTetrahedron, 
-                                  eIProductWRTDerivBase, eStdMat),
+                                  eIProductWRTDerivBase, eStdMat,false),
                       IProductWRTDerivBase_StdMat::create, 
                       "IProductWRTDerivBase_StdMat_Tet"),
                 GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, 
+                                  eIProductWRTDerivBase, eStdMat,true),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, 
+                                  eIProductWRTDerivBase, eSumFac,true),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_SumFac_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::ePyramid, 
-                                  eIProductWRTDerivBase, eStdMat),
+                                  eIProductWRTDerivBase, eStdMat,false),
                       IProductWRTDerivBase_StdMat::create, 
                       "IProductWRTDerivBase_StdMat_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::ePyramid, 
-                                  eIProductWRTDerivBase, eSumFac),
+                                  eIProductWRTDerivBase, eSumFac,false),
                       IProductWRTDerivBase_StdMat::create, 
                       "IProductWRTDerivBase_SumFac_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::ePrism, 
-                                  eIProductWRTDerivBase, eStdMat),
+                                  eIProductWRTDerivBase, eStdMat,false),
                       IProductWRTDerivBase_StdMat::create, 
                       "IProductWRTDerivBase_StdMat_Prism"),
                 GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, 
+                                  eIProductWRTDerivBase, eStdMat,true),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_StdMat_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, 
+                                  eIProductWRTDerivBase, eSumFac,true),
+                      IProductWRTDerivBase_StdMat::create, 
+                      "IProductWRTDerivBase_SumFac_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eHexahedron, 
-                                  eIProductWRTDerivBase, eStdMat),
+                                  eIProductWRTDerivBase, eStdMat,false),
                       IProductWRTDerivBase_StdMat::create, 
                       "IProductWRTDerivBase_StdMat_Hex")
             };

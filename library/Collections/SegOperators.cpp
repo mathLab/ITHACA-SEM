@@ -91,7 +91,7 @@ namespace Nektar
         
         OperatorKey BwdTrans_SumFac_Seg::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eSegment, eBwdTrans, 
-                                                eSumFac),
+                                                eSumFac,false),
                                     BwdTrans_SumFac_Seg::create, "BwdTrans_SumFac_Seg");
 
 
@@ -150,7 +150,7 @@ namespace Nektar
         
         OperatorKey IProductWRTBase_SumFac_Seg::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eSegment, eIProductWRTBase, 
-                                                eSumFac),
+                                                eSumFac,false),
                                     IProductWRTBase_SumFac_Seg::create, "IProductWRTBase_SumFac_Seg");
 
 
@@ -221,7 +221,7 @@ namespace Nektar
         
         OperatorKey PhysDeriv_SumFac_Seg::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eSegment,
-                                                ePhysDeriv, eSumFac),
+                                                ePhysDeriv, eSumFac,false),
                      PhysDeriv_SumFac_Seg::create, "PhysDeriv_SumFac_Seg");
 
 
@@ -273,7 +273,7 @@ namespace Nektar
 
         OperatorKey IProductWRTDerivBase_SumFac_Seg::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eSegment, eIProductWRTDerivBase, 
-                                                eSumFac),
+                                                eSumFac,false),
                                     IProductWRTDerivBase_SumFac_Seg::create, 
                                     "IProductWRTDerivBase_SumFac_Seg");
     }

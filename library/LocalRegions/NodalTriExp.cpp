@@ -349,8 +349,7 @@ namespace Nektar
             IProductWRTBase(inarray,outarray); 
 
             // get Mass matrix inverse
-            MatrixKey  masskey(StdRegions::eInvMass, DetShapeType(),*this,StdRegions::NullConstFactorMap,StdRegions::NullVarCoeffMap,
-                               m_nodalPointsKey->GetPointsType());
+            MatrixKey  masskey(StdRegions::eInvMass, DetShapeType(),*this,StdRegions::NullConstFactorMap,StdRegions::NullVarCoeffMap,m_nodalPointsKey.GetPointsType());
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
             
             // copy inarray in case inarray == outarray
@@ -410,7 +409,7 @@ namespace Nektar
         {
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
             LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-            LibUtilities::PointsType ntype = m_nodalPointsKey->GetPointsType();
+            LibUtilities::PointsType ntype = m_nodalPointsKey.GetPointsType();
             StdRegions::StdNodalTriExpSharedPtr tmp = MemoryManager<StdNodalTriExp>::
                 AllocateSharedPtr(bkey0,bkey1,ntype);
             

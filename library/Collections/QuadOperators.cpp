@@ -126,7 +126,7 @@ namespace Nektar
         
         OperatorKey BwdTrans_SumFac_Quad::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, 
-                                                eSumFac),
+                                                eSumFac,false),
                                     BwdTrans_SumFac_Quad::create, "BwdTrans_SumFac_Quad");
         
 
@@ -185,7 +185,7 @@ namespace Nektar
         };
         
         OperatorKey IProductWRTBase_SumFac_Quad::m_type = GetOperatorFactory().
-            RegisterCreatorFunction(OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eSumFac),IProductWRTBase_SumFac_Quad::create, "IProductWRTBase_SumFac_Quad");
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eSumFac,false),IProductWRTBase_SumFac_Quad::create, "IProductWRTBase_SumFac_Quad");
         
         
         
@@ -271,7 +271,7 @@ namespace Nektar
         OperatorKey PhysDeriv_SumFac_Quad::m_type = GetOperatorFactory().
             RegisterCreatorFunction(
                       OperatorKey(LibUtilities::eQuadrilateral, 
-                                  ePhysDeriv, eSumFac),
+                                  ePhysDeriv, eSumFac,false),
                       PhysDeriv_SumFac_Quad::create, "PhysDeriv_SumFac_Quad");
 
 
@@ -377,7 +377,7 @@ namespace Nektar
         OperatorKey IProductWRTDerivBase_SumFac_Quad::m_type = 
             GetOperatorFactory().RegisterCreatorFunction(
                 OperatorKey(LibUtilities::eQuadrilateral, 
-                            eIProductWRTDerivBase, eSumFac),
+                            eIProductWRTDerivBase, eSumFac,false),
                 IProductWRTDerivBase_SumFac_Quad::create, 
                 "IProductWRTDerivBase_IterPerExp_Quad");
     }

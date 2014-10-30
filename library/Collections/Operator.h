@@ -100,7 +100,7 @@ namespace Nektar {
         typedef boost::shared_ptr<Operator> OperatorSharedPtr;
         
         typedef boost::tuple<
-            LibUtilities::ShapeType, OperatorType, ImplementationType> OperatorKey;
+            LibUtilities::ShapeType, OperatorType, ImplementationType, bool> OperatorKey;
         bool operator< (OperatorKey const &p1, OperatorKey const &p2);
         std::ostream &operator<<(std::ostream &os, OperatorKey const &p);
 

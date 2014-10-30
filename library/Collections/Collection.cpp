@@ -205,7 +205,7 @@ namespace Nektar {
                 it = impTypes.find(opType);
                 impType = it == impTypes.end() ? eIterPerExp : it->second;
 
-                OperatorKey opKey(pExp->DetShapeType(), opType, impType);
+                OperatorKey opKey(pExp->DetShapeType(), opType, impType, pExp->IsNodalNonTensorialExp());
                 if (GetOperatorFactory().ModuleExists(opKey))
                 {
                     //cout << opKey << endl;

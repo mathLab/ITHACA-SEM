@@ -193,7 +193,7 @@ namespace Nektar
         };
         
         OperatorKey BwdTrans_SumFac_Hex::m_type = GetOperatorFactory().
-            RegisterCreatorFunction(OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eSumFac),
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eSumFac,false),
                                     BwdTrans_SumFac_Hex::create, "BwdTrans_SumFac_Hex");
         
         /*
@@ -261,7 +261,7 @@ namespace Nektar
         };
         
         OperatorKey IProductWRTBase_SumFac_Hex::m_type = GetOperatorFactory().
-            RegisterCreatorFunction(OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eSumFac),
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eSumFac,false),
                                     IProductWRTBase_SumFac_Hex::create, "IProductWRTBase_SumFac_Hex");
 
         /*
@@ -368,7 +368,7 @@ namespace Nektar
         OperatorKey PhysDeriv_SumFac_Hex::m_typeArr[] =
         {
             GetOperatorFactory().RegisterCreatorFunction(
-                OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eSumFac),
+                OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eSumFac,false),
                 PhysDeriv_SumFac_Hex::create, "PhysDeriv_SumFac_Hex")
         };
 
@@ -490,7 +490,7 @@ namespace Nektar
         
         OperatorKey IProductWRTDerivBase_SumFac_Hex::m_type = GetOperatorFactory().
             RegisterCreatorFunction(OperatorKey(LibUtilities::eHexahedron,
-                                                eIProductWRTDerivBase, eSumFac),
+                                                eIProductWRTDerivBase, eSumFac,false),
                                     IProductWRTDerivBase_SumFac_Hex::create, 
                                     "IProductWRTDerivBase_SumFac_Hex");
 

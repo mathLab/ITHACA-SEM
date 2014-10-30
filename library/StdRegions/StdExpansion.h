@@ -399,6 +399,17 @@ namespace Nektar
                 return v_GetEdgeBasisType(i);
             }
 
+            /** \brief This function returns the type of expansion
+             *  Nodal point type if defined 
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetNodalPointsKey()
+             *
+             */
+            const LibUtilities::PointsKey GetNodalPointsKey() const
+            {
+                return v_GetNodalPointsKey();
+            };
 
             /** \brief This function returns the number of faces of the
              *  expansion domain
@@ -439,6 +450,11 @@ namespace Nektar
                 return v_IsBoundaryInteriorExpansion();
             }
 
+
+            bool IsNodalNonTensorialExp()
+            {
+                return v_IsNodalNonTensorialExp();
+            }
 
             /** \brief This function performs the Backward transformation from
              *  coefficient space to physical space
@@ -1486,7 +1502,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const;
             
-			STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetFaceBasisKey(const int i, const int k) const;
+            STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetFaceBasisKey(const int i, const int k) const;
 
             STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
 
@@ -1500,11 +1516,15 @@ namespace Nektar
             
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const;
 
+            STD_REGIONS_EXPORT virtual const LibUtilities::PointsKey v_GetNodalPointsKey() const;
+
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
 
             STD_REGIONS_EXPORT virtual int v_GetShapeDimension() const;
 
             STD_REGIONS_EXPORT virtual bool  v_IsBoundaryInteriorExpansion();
+
+            STD_REGIONS_EXPORT virtual bool  v_IsNodalNonTensorialExp();
 
             STD_REGIONS_EXPORT virtual void   v_BwdTrans   (const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray) = 0;

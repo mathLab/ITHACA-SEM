@@ -119,7 +119,7 @@ namespace Nektar
         };
         
         OperatorKey BwdTrans_SumFac_Tri::m_type = GetOperatorFactory().
-            RegisterCreatorFunction(OperatorKey(LibUtilities::eTriangle, eBwdTrans, eSumFac),
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eTriangle, eBwdTrans, eSumFac,false),
                                     BwdTrans_SumFac_Tri::create, "BwdTrans_SumFac_Tri");
 
 
@@ -181,7 +181,7 @@ namespace Nektar
         };
         
         OperatorKey IProductWRTBase_SumFac_Tri::m_type = GetOperatorFactory().
-            RegisterCreatorFunction(OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eSumFac),IProductWRTBase_SumFac_Tri::create, "IProductWRTBase_SumFac_Tri");
+            RegisterCreatorFunction(OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eSumFac,false),IProductWRTBase_SumFac_Tri::create, "IProductWRTBase_SumFac_Tri");
 
         /*
          * ----------------------------------------------------------
@@ -301,10 +301,18 @@ namespace Nektar
             Array<OneD, NekDouble> m_fac1;
         };
         
-        OperatorKey PhysDeriv_SumFac_Tri::m_type = GetOperatorFactory().
-            RegisterCreatorFunction(OperatorKey(LibUtilities::eTriangle, 
-                                                ePhysDeriv, eSumFac),
-                    PhysDeriv_SumFac_Tri::create, "PhysDeriv_SumFac_Tri");
+        OperatorKey PhysDeriv_SumFac_Tri::m_typeArr[] = 
+            {
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, 
+                                                ePhysDeriv, eSumFac,false),
+                      PhysDeriv_SumFac_Tri::create, "PhysDeriv_SumFac_Tri"),
+
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, 
+                                   ePhysDeriv, eSumFac,true),
+                      PhysDeriv_SumFac_Tri::create, "PhysDeriv_SumFac_NodalTri")
+            };
 
 
 
@@ -470,7 +478,7 @@ namespace Nektar
         OperatorKey IProductWRTDerivBase_SumFac_Tri::m_type = 
             GetOperatorFactory().RegisterCreatorFunction(
                 OperatorKey(LibUtilities::eTriangle, 
-                            eIProductWRTDerivBase, eSumFac),
+                            eIProductWRTDerivBase, eSumFac,false),
                 IProductWRTDerivBase_SumFac_Tri::create, 
                 "IProductWRTDerivBase_IterPerExp_Tri");
     }

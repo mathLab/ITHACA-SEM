@@ -1203,8 +1203,15 @@ namespace Nektar
         LibUtilities::BasisType StdExpansion::v_GetEdgeBasisType(const int i) const
         {
             ASSERTL0(false, "This function is not valid or not defined");
-
+            
             return LibUtilities::eNoBasisType;
+        }
+
+        const LibUtilities::PointsKey StdExpansion::v_GetNodalPointsKey() const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+
+            return LibUtilities::NullPointsKey;
         }
 
         LibUtilities::ShapeType StdExpansion::v_DetShapeType() const
@@ -1222,6 +1229,12 @@ namespace Nektar
         bool StdExpansion::v_IsBoundaryInteriorExpansion()
         {
             ASSERTL0(false,"This function has not been defined for this expansion");
+            return false;
+        }
+
+
+        bool StdExpansion::v_IsNodalNonTensorialExp()
+        {
             return false;
         }
 

@@ -53,6 +53,8 @@
 /// #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
+#include <boost/format.hpp>
+
 #include <iostream>
 
 #include <string>
@@ -772,7 +774,7 @@ namespace Nektar
 
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
-            else if (vType == LibUtilities::eFunctionTypeFile)
+            else if (vType == LibUtilities::eFunctionTypeFile || vType == LibUtilities::eFunctionTypeTransientFile)
             {
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName,domain);
@@ -791,6 +793,18 @@ namespace Nektar
                     ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
                 }
 
+                if (vType == LibUtilities::eFunctionTypeTransientFile)
+                {
+                    try
+                    {
+                        filename = boost::str(boost::format(filename) % m_time);
+                    }
+                    catch (...)
+                    {
+                        ASSERTL0(false, "Invalid Filename in function \""
+                        + pFunctionName + "\", variable \"" + pFieldName + "\"")
+                    }
+                }
 
                 m_fld->Import(filename,FieldDef,FieldData,
                                      LibUtilities::NullFieldMetaDataMap,

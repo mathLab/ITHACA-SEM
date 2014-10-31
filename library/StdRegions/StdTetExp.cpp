@@ -723,7 +723,7 @@ namespace Nektar
             int    nmodes0 = m_base[0]->GetNumModes();
             int    nmodes1 = m_base[1]->GetNumModes();
             int    wspsize = nquad0 + nquad1 + nquad2 + max(nqtot,m_ncoeffs)
-                + nquad1*nquad2*nmodes0 + nquad2*nmodes0*(nmodes1+1)/2;
+                + nquad1*nquad2*nmodes0 + nquad2*nmodes0*(2*nmodes1-nmodes0+1)/2;
 
             Array<OneD, NekDouble> gfac0(wspsize);
             Array<OneD, NekDouble> gfac1(gfac0 + nquad0);

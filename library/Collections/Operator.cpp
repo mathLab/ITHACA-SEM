@@ -238,6 +238,9 @@ namespace Nektar {
                     OperatorKey(LibUtilities::ePyramid, eBwdTrans, eIterPerExp,false),
                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Pyr"),
                 GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::ePrism, eBwdTrans, eIterPerExp,false),
+                    BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Prism"),
+                GetOperatorFactory().RegisterCreatorFunction(
                     OperatorKey(LibUtilities::ePrism, eBwdTrans, eIterPerExp,true),
                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_NodalPrism"),
                 GetOperatorFactory().RegisterCreatorFunction(

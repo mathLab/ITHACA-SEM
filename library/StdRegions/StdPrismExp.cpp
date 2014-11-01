@@ -1941,6 +1941,82 @@ namespace Nektar
         
 
 
+        void StdPrismExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int nquad0   = m_base[0]->GetNumPoints();
+            int nquad1   = m_base[1]->GetNumPoints();
+            int nquad2   = m_base[2]->GetNumPoints();
+            int nqtot    = nquad0*nquad1*nquad2;
+            int nmodes0  = m_base[0]->GetNumModes();
+            int nmodes1  = m_base[1]->GetNumModes();
+            int nmodes2  = m_base[2]->GetNumModes();
+            int numMax   = nmodes0;
+
+            Array<OneD, NekDouble> coeff     (m_ncoeffs);
+            Array<OneD, NekDouble> coeff_tmp1(m_ncoeffs,        0.0);
+            Array<OneD, NekDouble> phys_tmp  (nqtot,0.0);
+            Array<OneD, NekDouble> tmp, tmp2, tmp3, tmp4;
+
+
+            const LibUtilities::PointsKey Pkey0 = m_base[0]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey1 = m_base[1]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey2 = m_base[2]->GetPointsKey();
+
+            LibUtilities::BasisKey bortho0(
+                LibUtilities::eOrtho_A,    nmodes0, Pkey0);
+            LibUtilities::BasisKey bortho1(
+                LibUtilities::eOrtho_A,    nmodes1, Pkey1);
+            LibUtilities::BasisKey bortho2(
+                LibUtilities::eOrtho_B,    nmodes2, Pkey2);
+
+            int cnt  = 0;
+
+            StdRegions::StdPrismExpSharedPtr OrthoPrismExp;
+            
+            OrthoPrismExp = MemoryManager<StdRegions::StdPrismExp>
+                ::AllocateSharedPtr(bortho0, bortho1, bortho2);
+
+            BwdTrans(inarray,phys_tmp);
+            OrthoPrismExp->FwdTrans(phys_tmp, coeff);
+
+            // filtering
+#if 0 
+            for (int u = 0; u < numMax; ++u)
+            {
+                for (int i = 0; i < numMax-u; ++i)
+                {
+                    Vmath::Vcopy(numMin-u,
+                                 tmp  = coeff+cnt,1,
+                                 tmp2 = coeff_tmp1+cnt,1);
+                    
+                    cnt   += numMax - u;
+                }
+            }
+#else
+            for (int u = 0; u < numMin; ++u)
+            {
+                 for (int i = 0; i < numMin; ++i)
+                 {
+            Vmath::Vcopy(numMin-u,tmp  = coeff+cnt,1,
+                tmp2 = coeff_tmp1+cnt,1);
+                     
+                     cnt   += numMax - u;
+                  }
+
+                 for(int i = numMin; i < numMax; ++i)
+                 {
+                      cnt += numMax - u;
+                 }
+            }
+#endif
+                
+            OrthoPrismExp->BwdTrans(coeff_tmp1,phys_tmp);
+            StdPrismExp::FwdTrans(phys_tmp, outarray);
+        }
+
         void StdPrismExp::v_PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             StdMatrixKey Ikey(ePhysInterpToEquiSpaced, DetShapeType(), *this);

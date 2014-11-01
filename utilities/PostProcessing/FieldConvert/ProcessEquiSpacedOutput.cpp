@@ -81,8 +81,9 @@ namespace Nektar
                 cout << "Interpolating fields to equispaced" << endl;
             }
             
-            int coordim = m_f->m_exp[0]->GetCoordim(0);
-            int npts    = m_f->m_exp[0]->GetTotPoints();
+            int coordim  = m_f->m_exp[0]->GetCoordim(0);
+            int shapedim = m_f->m_exp[0]->GetExp(0)->GetShapeDimension();
+            int npts     = m_f->m_exp[0]->GetTotPoints();
             Array<OneD, Array<OneD, NekDouble> > coords(3);
             
             int nel = m_f->m_exp[0]->GetExpSize();
@@ -335,14 +336,14 @@ namespace Nektar
             Array<OneD, NekDouble> y1(nq1);
             Array<OneD, NekDouble> z1(nq1);
             
-            if (coordim == 2)
+            m_f->m_exp[0]->GetCoords(x1, y1, z1);
+
+            if (shapedim == 2)
             {
-                m_f->m_exp[0]->GetCoords(x1, y1);
                 m_f->m_fieldPts->m_ptype = ePtsTriBlock;
             }
-            else if (coordim == 3)
+            else if (shapedim == 3)
             {
-                m_f->m_exp[0]->GetCoords(x1, y1, z1);
                 m_f->m_fieldPts->m_ptype = ePtsTetBlock;
             }
             

@@ -369,7 +369,12 @@ namespace Nektar
                                            Array<OneD, NekDouble> &outarray)
         {
             Array<OneD, NekDouble> tmp0,tmp1,tmp2;
-            switch(inarray.num_elements())
+            // assume coord dimension defines the size of Deriv Base 
+            int dim = GetCoordim(0);
+
+            ASSERTL1(inarray.num_elements() >= dim,"inarray is not of sufficient dimension");
+
+            switch(dim)
             {
             case 1:
                 for (int i = 0; i < m_collections.size(); ++i)
@@ -457,15 +462,10 @@ namespace Nektar
                 e_out_d1 = out_d1  + offset; 
                 e_out_d2 = out_d2  + offset; 
                 
-#if 1
                 m_collections[i].ApplyOperator(Collections::ePhysDeriv,
                                                inarray + offset,
                                                e_out_d0,e_out_d1, e_out_d2);
-#else
-                m_collections[i].ApplyOperator(Collections::eIProductWRTBase,
-                                               inarray + offset,
-                                               e_out_d0);
-#endif
+
 #endif
             }
 #else

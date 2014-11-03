@@ -450,13 +450,11 @@ namespace Nektar
                                   Array<OneD, NekDouble> &out_d1,
                                   Array<OneD, NekDouble> &out_d2)
         {
-#if 1
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
             for (int i = 0; i < m_collections.size(); ++i)
             {
-#if 1
                 int offset = m_coll_phys_offset[i];
                 e_out_d0 = out_d0  + offset;
                 e_out_d1 = out_d1  + offset; 
@@ -466,26 +464,7 @@ namespace Nektar
                                                inarray + offset,
                                                e_out_d0,e_out_d1, e_out_d2);
 
-#endif
             }
-#else
-            int  i;
-
-            for(i= 0; i < (*m_exp).size(); ++i)
-            {
-                e_out_d0 = out_d0 + m_phys_offset[i];
-                if(out_d1.num_elements())
-                {
-                    e_out_d1 = out_d1 + m_phys_offset[i];
-                }
-
-                if(out_d2.num_elements())
-                {
-                    e_out_d2 = out_d2 + m_phys_offset[i];
-                }
-                (*m_exp)[i]->PhysDeriv(inarray+m_phys_offset[i],e_out_d0,e_out_d1,e_out_d2);
-            }
-#endif
         }
 
         void ExpList::v_PhysDeriv(const int dir,

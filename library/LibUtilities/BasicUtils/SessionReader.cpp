@@ -1591,7 +1591,7 @@ namespace Nektar
                 std::string  dirname = GetSessionName() + "_xml";
                 fs::path    pdirname(dirname);
                 boost::format pad("P%1$07d.xml");
-                pad % m_comm->GetRank();
+                pad % m_comm->GetRowComm()->GetRank();
                 fs::path    pFilename(pad.str());
                 fs::path fullpath = pdirname / pFilename;
 
@@ -2278,7 +2278,15 @@ namespace Nektar
                     // Files are denoted by F
                     else if (conditionType == "F")
                     {
-                        funcDef.m_type = eFunctionTypeFile;
+                        if (variable->Attribute("TIMEDEPENDENT") &&
+                            boost::lexical_cast<bool>(variable->Attribute("TIMEDEPENDENT")))
+                        {
+                            funcDef.m_type = eFunctionTypeTransientFile;
+                        }
+                        else
+                        {
+                            funcDef.m_type = eFunctionTypeFile;
+                        }
 
                         // File must have a FILE.
                         ASSERTL0(variable->Attribute("FILE"),

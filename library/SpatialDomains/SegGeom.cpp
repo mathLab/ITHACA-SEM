@@ -250,6 +250,7 @@ namespace Nektar
             else
             {
                 Array<OneD, const NekDouble> w0 = base[0]->GetW();
+                len = 0.0;
 
                 for(int i = 0; i < jac.num_elements(); ++i)
                 {

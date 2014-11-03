@@ -1,3 +1,6 @@
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/tests/Tester.cpp.in
+               ${CMAKE_BINARY_DIR}/tests/Tester.cpp
+	       @ONLY)
 SET(TESTER_SOURCES
   Metric.cpp
   MetricFile.cpp
@@ -5,7 +8,7 @@ SET(TESTER_SOURCES
   MetricLInf.cpp
   MetricRegex.cpp
   TestData.cpp
-  Tester.cpp
+  ${CMAKE_BINARY_DIR}/tests/Tester.cpp
   sha1.cpp
 )
 

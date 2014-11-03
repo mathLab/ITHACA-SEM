@@ -352,8 +352,25 @@ From a terminal (Applications->Utilities->Terminal):
 
 \subsection{Windows}
 
-Windows compilation is supported, but presently the build process is a little
-convoluted. You need the following software to be pre-installed on your system:
+Windows compilation is supported, but presently the build process is somewhat
+convoluted. As such, only serial execution is supported with a minimal amount of
+additional build packages:
+
+\begin{center}
+\begin{tabular}{lccccl}
+\toprule
+Package         & Req.     & \multicolumn{2}{c}{Installation} & Note \\ \cline{3-5}
+                &          & User & Auto.                     & \\
+\midrule
+MS Visual Studio 2012/2013 & \checkmark &            & & &  \\
+CMake  $>=3.0$             & \checkmark & \checkmark &            &  \\
+BLAS                       & \checkmark & \checkmark &            & Part of Xcode \\
+LAPACK                     & \checkmark & \checkmark &            & Part of Xcode \\
+Boost $>1.49$              & \checkmark & \checkmark & \checkmark & Compile with iostreams \\
+ModMETIS                   & \checkmark &            & \checkmark & \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \begin{itemize}
   \item Microsoft Visual Studio 2012 or 2013 (Windows 7 SP1+ required).
@@ -364,6 +381,7 @@ convoluted. You need the following software to be pre-installed on your system:
   \item WinRAR (download from \url{http://www.rarlab.com/download.htm})
   \item Optionally, you can install Git to use development versions.
 \end{itemize}
+
 
 \newcommand{\nekver}{\input{../../VERSION}}
 \subsubsection{Unpack the tarballs}
@@ -382,7 +400,7 @@ convoluted. You need the following software to be pre-installed on your system:
 
 \subsubsection{Installing Boost}
 
-
+Boost can either be 
 
 Download ThirdParty packages from \inlsh{www.nektar.info/thirdparty} as requried
 below.

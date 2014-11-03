@@ -2002,7 +2002,7 @@ namespace Nektar
             c.ApplyOperator(Collections::eIProductWRTDerivBase, phys1,
                             phys2, phys3, coeffs2);
             
-            double epsilon = 1.0e-8;
+            double epsilon = 1.0e-6;
             for(int i = 0; i < coeffs1.num_elements(); ++i)
             {
                 coeffs1[i] = (fabs(coeffs1[i]) < 1e-14)? 0.0: coeffs1[i];

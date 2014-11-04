@@ -177,7 +177,8 @@ namespace Nektar
 
             if (m_comm->GetRank() == 0)
             {
-                m_outFile << setw(10) << time << setw(20) << Ek;
+                m_outFile << setw(10) << time
+                          << setw(19) << scientific << setprecision(11) << Ek;
             }
 
             bool waveSpace[3] = {
@@ -230,7 +231,8 @@ namespace Nektar
 
             if (m_comm->GetRank() == 0)
             {
-                m_outFile << setw(20) << Ek << endl;
+                m_outFile << setw(19) << setprecision(11)
+                          << scientific << Ek << endl;
             }
         }
 

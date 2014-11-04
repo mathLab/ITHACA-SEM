@@ -130,25 +130,6 @@ OPTION(NEKTAR_USE_MEMORY_POOLS
     "Use memory pools to accelerate memory allocation." ON)
 MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
 
-# Turn on NEKTAR_USE_WIN32_LAPACK if we are in Windows and the libraries exist.
-IF( WIN32 )
-    IF( CMAKE_CL_64 )
-        FIND_LIBRARY( WIN32_BLAS NAMES libblas64 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
-        FIND_LIBRARY( WIN32_LAPACK NAMES liblapack64 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
-    ELSE()
-    FIND_LIBRARY( WIN32_BLAS NAMES blas_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
-    FIND_LIBRARY( WIN32_LAPACK NAMES lapack_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
-    ENDIF()
-    
-    IF( WIN32_BLAS AND WIN32_LAPACK )
-        SET(Win32LapackDefault ON)
-    ELSE(WIN32_BLAS AND WIN32_LAPACK)
-        SET(Win32LapackDefault OFF)
-    ENDIF(WIN32_BLAS AND WIN32_LAPACK)
-ELSE(WIN32)
-    SET(Win32LapackDefault OFF)
-ENDIF(WIN32)
-
 IF (MSVC)
     # Needed for M_PI to be visible in visual studio.
     ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
@@ -158,9 +139,9 @@ IF (MSVC)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
 ENDIF()
 
-DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
     "Use Win32 Lapack provided with the Third Party Distribution."
-    ${Win32LapackDefault} "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
+    OFF "NEKTAR_USE_BLAS_LAPACK; WIN32" ON)
 
 # Include Nektar++ common macros
 INCLUDE (NektarCommon)

@@ -46,7 +46,7 @@ namespace Nektar
             RegisterCreatorFunction("ModalEnergy", FilterModalEnergy::create);
 
         /**
-         *
+         *  Constructor.
          */
         FilterModalEnergy::FilterModalEnergy(
             const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -88,6 +88,8 @@ namespace Nektar
                                        m_PertEnergy, false);
             m_session->LoadParameter  ("NumQuadPointsError",
                                        m_NumQuadPointsError, 0);
+            
+            m_EqTypeStr = m_session->GetSolverInfo("EQTYPE");
 
             if(m_isHomogeneous1D || m_isHomogeneous2D)
             {
@@ -110,7 +112,7 @@ namespace Nektar
         }
 
         /**
-         *
+         *  Destructor.
          */
         FilterModalEnergy::~FilterModalEnergy()
         {
@@ -118,7 +120,7 @@ namespace Nektar
         }
 
         /**
-         *
+         *  Initialize the parallel communication and the output stream.
          */
         void FilterModalEnergy::v_Initialise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
@@ -149,13 +151,13 @@ namespace Nektar
 
 
         /**
-         *
+         *  Update the modal energy every m_outputFrequency.
          */
         void FilterModalEnergy::v_Update(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
-            // Only output every m_outputFrequency.
+            // Only output every m_outputFrequency
             if ((m_index++) % m_outputFrequency)
             {
                 return;
@@ -163,8 +165,8 @@ namespace Nektar
 
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
-
-            if(m_isHomogeneous1D)
+            // Homogeneous 1D implementation
+            if (m_isHomogeneous1D)
             {
                 int colrank = vComm->GetColumnComm()->GetRank();
                 int nproc   = vComm->GetColumnComm()->GetSize();
@@ -179,40 +181,74 @@ namespace Nektar
                 // analysis
                 if (m_PertEnergy)
                 {
-                    SpatialDomains::MeshGraphSharedPtr graphShrPtr =
-                        SpatialDomains::MeshGraph::Read(m_session);
-                    SetUpBaseFields(graphShrPtr);
-                    string file = m_session->GetFunctionFilename("BaseFlow", 0);
-                    ImportFldBase(file, graphShrPtr);
-
-                    for (int i = 0; i < pFields.num_elements()-1; ++i)
+                    // Compressible Flow Solver
+                    if (m_EqTypeStr=="EulerCFE"   ||
+                        m_EqTypeStr=="EulerADCFE" ||
+                        m_EqTypeStr=="NavierStokesCFE")
                     {
-                        Vmath::Vsub(pFields[i]->GetNcoeffs(),
-                                    pFields[i]->GetCoeffs(), 1,
-                                    m_base [i]->GetCoeffs(), 1,
-                                    pFields[i]->UpdateCoeffs(), 1);
+                        ASSERTL0(false, "Stability analysis module not "
+                                 "implemented for the Compressible Flow "
+                                 "Solver. Please remove the function BaseFlow "
+                                 "from your .xml file");
+                    }
+                    // Incompressible Navier-Stokes Solver
+                    else
+                    {
+                        SpatialDomains::MeshGraphSharedPtr graphShrPtr =
+                            SpatialDomains::MeshGraph::Read(m_session);
+                        SetUpBaseFields(graphShrPtr);
+                        string file = m_session->
+                            GetFunctionFilename("BaseFlow", 0);
+                        ImportFldBase(file, graphShrPtr);
 
-                        energy_tmp = pFields[i]->HomogeneousEnergy();
-                        Vmath::Vadd(locsize, energy_tmp, 1,
-                                    energy, 1, energy, 1);
+                        for (int i = 0; i < pFields.num_elements()-1; ++i)
+                        {
+                            Vmath::Vsub(pFields[i]->GetNcoeffs(),
+                                        pFields[i]->GetCoeffs(), 1,
+                                        m_base [i]->GetCoeffs(), 1,
+                                        pFields[i]->UpdateCoeffs(), 1);
 
-                        Vmath::Vadd(pFields[i]->GetNcoeffs(),
-                                    pFields[i]->GetCoeffs(), 1,
-                                    m_base[i]->GetCoeffs(), 1,
-                                    pFields[i]->UpdateCoeffs(), 1);
+                            energy_tmp = pFields[i]->HomogeneousEnergy();
+                            Vmath::Vadd(locsize, energy_tmp, 1,
+                                        energy, 1, energy, 1);
+
+                            Vmath::Vadd(pFields[i]->GetNcoeffs(),
+                                        pFields[i]->GetCoeffs(), 1,
+                                        m_base[i]->GetCoeffs(), 1,
+                                        pFields[i]->UpdateCoeffs(), 1);
+                        }
                     }
                 }
+                // Calculate the modal energy for general simulation
                 else
                 {
-                    for (int i = 0; i < pFields.num_elements()-1; ++i)
+                    // Compressible Flow Solver
+                    if (m_EqTypeStr=="EulerCFE"   ||
+                        m_EqTypeStr=="EulerADCFE" ||
+                        m_EqTypeStr=="NavierStokesCFE")
                     {
-                        energy_tmp =pFields[i]->HomogeneousEnergy();
-                        Vmath::Vadd(locsize, energy_tmp, 1,
-                                    energy, 1, energy, 1);
+                        // Extracting kinetic energy
+                        for (int i = 1; i < pFields.num_elements()-1; ++i)
+                        {
+                            energy_tmp = pFields[i]->HomogeneousEnergy();
+                            Vmath::Vadd(locsize, energy_tmp, 1,
+                                        energy, 1, energy, 1);
+                        }
+                    }
+                    // Incompressible Navier-Stokes Solver
+                    else
+                    {
+                        // Extracting kinetic energy
+                        for (int i = 0; i < pFields.num_elements()-1; ++i)
+                        {
+                            energy_tmp = pFields[i]->HomogeneousEnergy();
+                            Vmath::Vadd(locsize, energy_tmp, 1,
+                                        energy, 1, energy, 1);
+                        }
                     }
                 }
 
-                // Send to root process.
+                // Send to root process
                 if (colrank == 0)
                 {
                     int j, m = 0;
@@ -241,29 +277,55 @@ namespace Nektar
                     vComm->GetColumnComm()->Send(0, energy);
                 }
             }
+            // Homogeneous 2D implementation
             else if (m_isHomogeneous2D)
             {
                 ASSERTL0(false, "3D Homogeneous 2D energy "
                          "dumping not implemented yet");
             }
+            // General implementation
             else
             {
-                NekDouble energy = 0.0;
-                for (int i = 0; i < pFields.num_elements()-1; ++i)
+                // Compressible Flow Solver
+                if (m_EqTypeStr=="EulerCFE"   ||
+                    m_EqTypeStr=="EulerADCFE" ||
+                    m_EqTypeStr=="NavierStokesCFE")
                 {
-                    pFields[i]->SetPhysState(true);
-                    NekDouble norm = L2Error(pFields, i, time);
-                    energy += norm*norm;
+                    // Total energy
+                    NekDouble energy = 0.0;
+                    for (int i = 1; i < pFields.num_elements()-1; ++i)
+                    {
+                        pFields[i]->SetPhysState(true);
+                        NekDouble norm = L2Error(pFields, i, time);
+                        energy += norm * norm;
+                    }
+                    
+                    m_outputStream << setprecision(6) << time;
+                    m_outputStream.width(25);
+                    m_outputStream << setprecision(8) << 0.5*energy;
+                    m_outputStream << endl;
                 }
-                m_outputStream << setprecision(6) << time;
-                m_outputStream.width(25);
-                m_outputStream << setprecision(8) << 0.5*energy;
-                m_outputStream << endl;
+                // Incompressible Navier-Stokes Solver
+                else
+                {
+                    // Kinetic energy
+                    NekDouble energy = 0.0;
+                    for (int i = 0; i < pFields.num_elements()-1; ++i)
+                    {
+                        pFields[i]->SetPhysState(true);
+                        NekDouble norm = L2Error(pFields, i, time);
+                        energy += norm * norm;
+                    }
+                    m_outputStream << setprecision(6) << time;
+                    m_outputStream.width(25);
+                    m_outputStream << setprecision(8) << 0.5*energy;
+                    m_outputStream << endl;
+                }
             }
         }
 
         /**
-         *
+         *  Close the output stream.
          */
         void FilterModalEnergy::v_Finalise(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
@@ -275,6 +337,10 @@ namespace Nektar
             }
         }
 
+        /**
+         *  Calculate the L2 norm of a given field for calculating the
+         *  modal energy.
+         */
         NekDouble FilterModalEnergy::L2Error(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             unsigned int field,
@@ -296,6 +362,9 @@ namespace Nektar
             return L2error;
         }
 
+        /**
+         *  Setup the base fields in case of stability analyses.
+         */
         void FilterModalEnergy::SetUpBaseFields(
             SpatialDomains::MeshGraphSharedPtr &graphShrPtr)
         {
@@ -545,6 +614,9 @@ namespace Nektar
             }
         }
 
+        /**
+         *  Import the base flow fld file.
+         */
         void FilterModalEnergy::ImportFldBase(
             std::string pInfile,
             SpatialDomains::MeshGraphSharedPtr pGraph)
@@ -581,7 +653,7 @@ namespace Nektar
         }
 
         /**
-         *
+         *  Flag for time-dependent flows.
          */
         bool FilterModalEnergy::v_IsTimeDependent()
         {

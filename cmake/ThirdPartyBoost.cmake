@@ -12,24 +12,32 @@ IF (THIRDPARTY_BUILD_BOOST)
 
     # Only build the libraries we need
     SET(BOOST_LIB_LIST --with-system --with-iostreams --with-filesystem
-                       --with-program_options --with-date_time --with-thread
-                       --with-regex)
+        --with-program_options --with-date_time --with-thread
+        --with-regex)
 
-        IF (NOT WIN32)
-    # We need -fPIC for 64-bit builds
+    IF (NOT WIN32)
+        # We need -fPIC for 64-bit builds
         IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
             SET(BOOST_FLAGS cxxflags=-fPIC cflags=-fPIC linkflags=-fPIC)
         ENDIF ()
     ENDIF()
 
-        # Build Boost
+    # Build Boost
     IF (APPLE)
         SET(TOOLSET darwin)
+    ELSEIF (WIN32)
+        IF (MSVC10)
+            SET(TOOLSET msvc-10.0)
+        ELSEIF (MSVC11)
+            SET(TOOLSET msvc-11.0)
+        ELSEIF (MSVC12)
+            SET(TOOLSET msvc-12.0)
+        ENDIF()
     ELSE(APPLE)
         SET(TOOLSET gcc)
     ENDIF(APPLE)
-
-        IF (NOT WIN32)
+    
+    IF (NOT WIN32)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
@@ -43,15 +51,20 @@ IF (THIRDPARTY_BUILD_BOOST)
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ./bootstrap.sh --prefix=${TPDIST}
             BUILD_COMMAND NO_BZIP2=1 ./b2
-                            variant=release
-                            link=shared
-                            include=${TPDIST}/include
-                            linkflags="-L${TPDIST}/lib"
-                            ${BOOST_FLAGS} ${BOOST_LIB_LIST}
-                            --layout=system toolset=${TOOLSET} install
+                variant=release
+                link=shared
+                include=${TPDIST}/include
+                linkflags="-L${TPDIST}/lib"
+                ${BOOST_FLAGS} ${BOOST_LIB_LIST}
+                --layout=system toolset=${TOOLSET} install
             INSTALL_COMMAND ""
-        )
-        ELSE ()
+            )
+    ELSE ()
+        IF (CMAKE_CL_64)
+            SET(ADDRESS_MODEL 64)
+        ELSE()
+            SET(ADDRESS_MODEL 32)
+        ENDIF()
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
@@ -65,17 +78,20 @@ IF (THIRDPARTY_BUILD_BOOST)
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND call bootstrap.bat
             BUILD_COMMAND b2 variant=release
-                             toolset=msvc-12.0
-                             address-model=32
-                             -s NO_BZIP2=1
-                             -s ZLIB_BINARY=zlib
-                             -s ZLIB_INCLUDE=${TPDIST}/include
-                             -s ZLIB_LIBPATH=${TPDIST}/lib
-                             ${BOOST_LIB_LIST}
-                             --layout=system --prefix=${TPDIST} install
+                toolset=${TOOLSET}
+                address-model=${ADDRESS_MODEL}
+                link=shared
+                runtime-link=shared
+                -s NO_BZIP2=1
+                -s ZLIB_BINARY=zlib
+                -s ZLIB_INCLUDE=${TPDIST}/include
+                -s ZLIB_LIBPATH=${TPDIST}/lib
+                ${BOOST_LIB_LIST}
+                --layout=system
+                --prefix=${TPDIST} install
             INSTALL_COMMAND ""
-        )
-        ENDIF()
+            )
+    ENDIF()
 
     IF (APPLE)
         EXTERNALPROJECT_ADD_STEP(boost patch-install-path

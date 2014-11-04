@@ -57,11 +57,11 @@ namespace Nektar
             virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             virtual bool v_IsTimeDependent();
 
-            virtual void v_GetVelocity(
+            SOLVER_UTILS_EXPORT virtual void v_GetVelocity(
                 const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
                 const int i,
                 Array<OneD, NekDouble> &velocity);
-            virtual Array<OneD, NekDouble> v_GetDensity(
+            SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetDensity(
                 const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
 
         private:

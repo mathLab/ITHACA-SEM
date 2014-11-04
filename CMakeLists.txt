@@ -141,7 +141,7 @@ ENDIF()
 
 CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
     "Use Win32 Lapack provided with the Third Party Distribution."
-    OFF "NEKTAR_USE_BLAS_LAPACK; WIN32" ON)
+    ON "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
 
 # Include Nektar++ common macros
 INCLUDE (NektarCommon)

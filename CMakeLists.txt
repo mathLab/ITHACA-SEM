@@ -136,30 +136,29 @@ IF( WIN32 )
         FIND_LIBRARY( WIN32_BLAS NAMES libblas64 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
         FIND_LIBRARY( WIN32_LAPACK NAMES liblapack64 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
     ELSE()
-	FIND_LIBRARY( WIN32_BLAS NAMES blas_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
-	FIND_LIBRARY( WIN32_LAPACK NAMES lapack_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
+    FIND_LIBRARY( WIN32_BLAS NAMES blas_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
+    FIND_LIBRARY( WIN32_LAPACK NAMES lapack_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
     ENDIF()
     
-	IF( WIN32_BLAS AND WIN32_LAPACK )
-		SET(Win32LapackDefault ON)
+    IF( WIN32_BLAS AND WIN32_LAPACK )
+        SET(Win32LapackDefault ON)
     ELSE(WIN32_BLAS AND WIN32_LAPACK)
-		SET(Win32LapackDefault OFF)
+        SET(Win32LapackDefault OFF)
     ENDIF(WIN32_BLAS AND WIN32_LAPACK)
 ELSE(WIN32)
-	SET(Win32LapackDefault OFF)
+    SET(Win32LapackDefault OFF)
 ENDIF(WIN32)
 
-IF( MSVC )
-	# Needed for M_PI to be visible in visual studio.
-	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-	
-	# Removes the warnings about unsafe methods such as strcpy, std::copy,
+IF (MSVC)
+    # Needed for M_PI to be visible in visual studio.
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+    
+    # Removes the warnings about unsafe methods such as strcpy, std::copy,
     # memcmp, etc.
-	ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
-ENDIF( )
+    ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
+ENDIF()
 
-
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
+DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
     "Use Win32 Lapack provided with the Third Party Distribution."
     ${Win32LapackDefault} "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
 

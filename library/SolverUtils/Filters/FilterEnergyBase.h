@@ -52,17 +52,23 @@ namespace Nektar
             SOLVER_UTILS_EXPORT ~FilterEnergyBase();
 
         protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
+            SOLVER_UTILS_EXPORT virtual void v_Initialise(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+                const NekDouble &time);
+            SOLVER_UTILS_EXPORT virtual void v_Update(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+                const NekDouble &time);
+            SOLVER_UTILS_EXPORT virtual void v_Finalise(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
+                const NekDouble &time);
+            SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();
 
             SOLVER_UTILS_EXPORT virtual void v_GetVelocity(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pField,
                 const int i,
                 Array<OneD, NekDouble> &velocity);
             SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetDensity(
-                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFld);
 
         private:
             unsigned int                m_index;
@@ -78,4 +84,4 @@ namespace Nektar
     }
 }
 
-#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */
+#endif

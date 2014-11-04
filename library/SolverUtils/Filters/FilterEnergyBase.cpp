@@ -69,6 +69,13 @@ namespace Nektar
             {
                 m_outFile.open(outName.c_str());
                 ASSERTL0(m_outFile.good(), "Unable to open: '" + outName + "'");
+                m_outFile.setf(ios::scientific, ios::floatfield);
+                m_outFile << "# Time                Kinetic energy        "
+                          << "Enstrophy"
+                          << endl
+                          << "# ---------------------------------------------"
+                          << "--------------"
+                          << endl;
             }
             pSession->LoadParameter("LZ", m_homogeneousLength, 0.0);
 
@@ -177,8 +184,8 @@ namespace Nektar
 
             if (m_comm->GetRank() == 0)
             {
-                m_outFile << setw(10) << time
-                          << setw(19) << scientific << setprecision(11) << Ek;
+                m_outFile << setw(17) << setprecision(8) << time
+                          << setw(22) << setprecision(11) << Ek;
             }
 
             bool waveSpace[3] = {
@@ -231,8 +238,7 @@ namespace Nektar
 
             if (m_comm->GetRank() == 0)
             {
-                m_outFile << setw(19) << setprecision(11)
-                          << scientific << Ek << endl;
+                m_outFile << setw(22) << setprecision(11) << Ek << endl;
             }
         }
 

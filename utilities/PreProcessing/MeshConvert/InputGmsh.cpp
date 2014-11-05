@@ -52,65 +52,6 @@ namespace Nektar
         std::map<unsigned int, ElmtConfig> InputGmsh::elmMap = 
             InputGmsh::GenElmMap();
 
-        struct HOTriangle
-        {
-            HOTriangle(vector<int> pVertId) : vertId(pVertId) {}
-            
-            vector<int> vertId;
-            
-            void Rotate(int nrot)
-            {
-                int n, i, j, cnt;
-                int np = ((int)sqrt(8.0*vertId.size()+1.0)-1)/2;
-                vector<int> tmp(np*np);
-            
-                for (n = 0; n < nrot; ++n) 
-                {
-                    for (cnt = i = 0; i < np; ++i)
-                    {
-                        for (j = 0; j < np-i; ++j, cnt++)
-                        {
-                            tmp[i*np+j] = vertId[cnt];
-                        }
-                    }
-                    for (cnt = i = 0; i < np; ++i)
-                    {
-                        for (j = 0; j < np-i; ++j,cnt++)
-                        {
-                            vertId[cnt] = tmp[(np-1-i-j)*np+i];
-                        }
-                    }
-                }
-
-                cout << "Rotate: " << vertId[0] << " " << vertId[1] << " " << vertId[2] << endl;
-            }
-
-            void Reflect()
-            {
-                int i, j, cnt;
-                int np = ((int)sqrt(8.0*vertId.size()+1.0)-1)/2;
-                vector<int> tmp(np*np);
-            
-                for (cnt = i = 0; i < np; ++i)
-                {
-                    for (j = 0; j < np-i; ++j,cnt++)
-                    {
-                        tmp[i*np+np-i-1-j] = vertId[cnt];
-                    }
-                }
-            
-                for(cnt = i = 0; i < np; ++i)
-                {
-                    for(j = 0; j < np-i; ++j,cnt++)
-                    {
-                        vertId[cnt] = tmp[i*np+j];
-                    }
-                }
-
-                cout << "Reflect: " << vertId[0] << " " << vertId[1] << " " << vertId[2] << endl;
-            }
-        };
-
         /**
          * @brief Reorder a quadrilateral to appear in Nektar++ ordering from
          * Gmsh.
@@ -368,7 +309,8 @@ namespace Nektar
                         else if (it->second.m_e == LibUtilities::eTetrahedron)
                         {
                             it->second.m_volumeNodes = false;
-                            it->second.m_faceCurveType = LibUtilities::eNodalTriEvenlySpaced;
+                            it->second.m_faceCurveType =
+                                LibUtilities::eNodalTriEvenlySpaced;
                             vector<int> mapping = TetReordering(it->second);
                             vector<NodeSharedPtr> tmp = nodeList;
                             nodeList.resize(mapping.size());
@@ -510,6 +452,9 @@ namespace Nektar
 
             static int gmshToNekFace[4] = {0,1,3,2};
 
+            vector<int> triVertId(3);
+            triVertId[0] = 0; triVertId[1] = 1; triVertId[2] = 2;
+
             // Loop over Gmsh faces
             for (i = 0; i < 4; ++i)
             {
@@ -519,6 +464,7 @@ namespace Nektar
 
                 // Create a list of interior face nodes for this face only.
                 vector<int> faceNodes(n2);
+                vector<int> toAlign  (3);
                 for (j = 0; j < n2; ++j)
                 {
                     faceNodes[j] = offset2 + j;
@@ -527,27 +473,29 @@ namespace Nektar
                 // Now get the reordering of this face, which puts Gmsh
                 // recursive ordering into Nektar++ row-by-row order.
                 vector<int> tmp = triTensorNodeOrdering(faceNodes, n-1);
-                HOTriangle hoTri(tmp);
+                HOTriangle<int> hoTri(triVertId, tmp);
 
                 // Apply reorientation
                 if (i == 0 || i == 2)
                 {
                     // Triangle verts {0,2,1} --> {0,1,2}
-                    hoTri.Rotate(1);
-                    hoTri.Reflect();
+                    toAlign[0] = 0; toAlign[1] = 2; toAlign[2] = 1;
+                    hoTri.Align(toAlign);
                 }
                 else if (i == 3)
                 {
                     // Triangle verts {1,2,0} --> {0,1,2}
-                    hoTri.Rotate(2);
+                    toAlign[0] = 1; toAlign[1] = 2; toAlign[2] = 0;
+                    hoTri.Align(toAlign);
                 }
 
                 // Fill in mapping.
                 for (j = 0; j < n2; ++j)
                 {
-                    mapping[offset+j] = hoTri.vertId[j];
+                    mapping[offset+j] = hoTri.surfVerts[j];
                 }
             }
+
             return mapping;
         }
 

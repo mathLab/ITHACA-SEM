@@ -866,7 +866,8 @@ namespace Nektar
             edgeNodeMap[pair<int,int>(3,4)] = 5 + 5*n;
             
             // Add vertices
-            for (int i = 0; i < 4; ++i) {
+            for (int i = 0; i < 4; ++i)
+            {
                 m_vertex.push_back(pNodeList[i]);
             }
 
@@ -880,30 +881,48 @@ namespace Nektar
                         edgeNodes.push_back(pNodeList[j-1]);
                     }
                 }
-                m_edge.push_back(EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
-                                                        pNodeList[it->first.second-1],
-                                                        edgeNodes,
-                                                        m_conf.m_edgeCurveType)));
+                m_edge.push_back(
+                    EdgeSharedPtr(new Edge(pNodeList[it->first.first-1],
+                                           pNodeList[it->first.second-1],
+                                           edgeNodes,
+                                           m_conf.m_edgeCurveType)));
                 m_edge.back()->m_id = eid++;
             }
             
-            // Reorient the tet to ensure collapsed coordinates align between adjacent
-            // elements.
+            // Reorient the tet to ensure collapsed coordinates align between
+            // adjacent elements.
             if (m_conf.m_reorient)
             {
                 OrientTet();
             }
+            else
+            {
+                // If we didn't need to orient the tet then set up the
+                // orientation map as the identity mapping.
+                for (int i = 0; i < 4; ++i)
+                {
+                    m_orientationMap[i] = i;
+                }
+            }
             
-            // Create faces
+            // Face-vertex IDs
             int face_ids[4][3] = {
-                {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
+                {0,1,2}, {0,1,3}, {1,2,3}, {0,2,3}
+            };
+
+            // Face-edge IDs
             int face_edges[4][3];
-            
+
+            // Create faces
             for (int j = 0; j < 4; ++j)
             {
                 vector<NodeSharedPtr> faceVertices;
                 vector<EdgeSharedPtr> faceEdges;
                 vector<NodeSharedPtr> faceNodes;
+
+                // Extract the edges for this face. We need to do this because
+                // of the reorientation which might have been applied (see the
+                // additional note below).
                 for (int k = 0; k < 3; ++k)
                 {
                     faceVertices.push_back(m_vertex[face_ids[j][k]]);
@@ -921,13 +940,54 @@ namespace Nektar
                     }
                 }
 
+                // When face curvature is supplied, it may have been the case
+                // that our tetrahedron was reoriented. In this case, faces have
+                // different vertex IDs and so we have to rotate the face
+                // curvature so that the two align appropriately.
                 if (m_conf.m_faceNodes)
                 {
-                    int N = 4 + 6*n + j*n*(n-1)/2;
-                    for (int i = 0; i < n*(n-1)/2; ++i)
+                    const int nFaceNodes = n*(n-1)/2;
+
+                    // Get the vertex IDs of whatever face we are processing.
+                    vector<int> faceIds(3);
+                    faceIds[0] = faceVertices[0]->m_id;
+                    faceIds[1] = faceVertices[1]->m_id;
+                    faceIds[2] = faceVertices[2]->m_id;
+
+                    // Find out the original face number as we were given it in
+                    // the constructor using the orientation map.
+                    int origFace = -1;
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        if (m_orientationMap[i] == j)
+                        {
+                            origFace = i;
+                            break;
+                        }
+                    }
+
+                    ASSERTL0(origFace >= 0, "Couldn't find face");
+
+                    // Now get the face nodes for the original face.
+                    int N = 4 + 6*n + origFace * nFaceNodes;
+                    for (int i = 0; i < nFaceNodes; ++i)
                     {
                         faceNodes.push_back(pNodeList[N+i]);
                     }
+
+                    // Find the original face vertex IDs.
+                    vector<int> origFaceIds(3);
+                    origFaceIds[0] = pNodeList[face_ids[origFace][0]]->m_id;
+                    origFaceIds[1] = pNodeList[face_ids[origFace][1]]->m_id;
+                    origFaceIds[2] = pNodeList[face_ids[origFace][2]]->m_id;
+
+                    // Construct a HOTriangle object which performs the
+                    // orientation magically for us.
+                    HOTriangle<NodeSharedPtr> hoTri(origFaceIds, faceNodes);
+                    hoTri.Align(faceIds);
+
+                    // Copy the face nodes back again.
+                    faceNodes = hoTri.surfVerts;
                 }
                 m_face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));

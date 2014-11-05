@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #include "MeshElements.h"
 #include "InputNek.h"
 
@@ -484,7 +483,7 @@ namespace Nektar
                     }
                     else if (it->second.first == eFile)
                     {
-                        vector<unsigned int> vertId(3);
+                        vector<int> vertId(3);
                         s >> vertId[0] >> vertId[1] >> vertId[2];
                         
                         // Find vertex combination in hoData.
@@ -503,51 +502,8 @@ namespace Nektar
                         // reflected. These procedures are taken from
                         // nektar/Hlib/src/HOSurf.C
                         HOSurfSharedPtr surf = *hoIt;
-                        
-                        if (vertId[0] == surf->vertId[0]) 
-                        {
-                            if (vertId[1] == surf->vertId[1] || 
-                                vertId[1] == surf->vertId[2])
-                            {
-                                if (vertId[1] == surf->vertId[2])
-                                {
-                                    surf->Rotate(1);
-                                    surf->Reflect();
-                                }
-                            }
-                        }
-                        else if (vertId[0] == surf->vertId[1])
-                        {
-                            if (vertId[1] == surf->vertId[0] ||
-                                vertId[1] == surf->vertId[2]) 
-                            {
-                                if (vertId[1] == surf->vertId[0])
-                                {
-                                    surf->Reflect();
-                                }
-                                else
-                                {
-                                    surf->Rotate(2);
-                                }
-                            }
-                        }
-                        else if (vertId[0] == surf->vertId[2])
-                        {
-                            if (vertId[1] == surf->vertId[0] ||
-                                vertId[1] == surf->vertId[1])
-                            {
-                                if (vertId[1] == surf->vertId[1])
-                                {
-                                    surf->Rotate(2);
-                                    surf->Reflect();
-                                }
-                                else
-                                {
-                                    surf->Rotate(1);
-                                }
-                            }
-                        }
-                        
+                        surf->Align(vertId);
+
                         // If the element is a prism, check to see if
                         // orientation has changed and update order of surface
                         // vertices.
@@ -1025,7 +981,7 @@ namespace Nektar
                 getline(hsf, line);
 
                 // Read in nodal points for each face.
-                map<unsigned int, vector<NodeSharedPtr> > faceMap;
+                map<int, vector<NodeSharedPtr> > faceMap;
                 for (int i = 0; i < Nface; ++i)
                 {
                     getline(hsf, line);
@@ -1051,9 +1007,9 @@ namespace Nektar
                 getline(hsf, line);
                 for (int i = 0; i < Nface; ++i)
                 {
-                    string               tmp;
-                    int                  fid;
-                    vector<unsigned int> nodeIds(3);
+                    string      tmp;
+                    int         fid;
+                    vector<int> nodeIds(3);
 
                     getline(hsf, line);
                     ss.clear(); ss.str(line);
@@ -1112,8 +1068,8 @@ namespace Nektar
                 return false;
             }
             
-            vector<unsigned int> ids1 = p1->vertId;
-            vector<unsigned int> ids2 = p2->vertId;
+            vector<int> ids1 = p1->vertId;
+            vector<int> ids2 = p2->vertId;
             sort(ids1.begin(), ids1.end());
             sort(ids2.begin(), ids2.end());
             
@@ -1124,65 +1080,6 @@ namespace Nektar
             }
             
             return true;
-        }
-        
-        /** 
-         * Rotates the triangle of data points inside #surfVerts
-         * counter-clockwise nrot times.
-         *
-         * @param nrot Number of times to rotate triangle.
-         */
-        void HOSurf::Rotate(int nrot)
-        {
-            int n, i, j, cnt;
-            int np = ((int)sqrt(8.0*surfVerts.size()+1.0)-1)/2;
-			NodeSharedPtr* tmp = new NodeSharedPtr[np*np];
-            //NodeSharedPtr tmp[np][np];
-            
-            for (n = 0; n < nrot; ++n) 
-            {
-                for (cnt = i = 0; i < np; ++i)
-                {
-                    for (j = 0; j < np-i; ++j, cnt++)
-                    {
-                        tmp[i*np+j] = surfVerts[cnt];
-                    }
-                }
-                for (cnt = i = 0; i < np; ++i)
-                {
-                    for (j = 0; j < np-i; ++j,cnt++)
-                    {
-                        surfVerts[cnt] = tmp[(np-1-i-j)*np+i];
-                    }
-                }
-            }
-            
-            delete[] tmp;
-        }
-        
-        void HOSurf::Reflect()
-        {
-            int i, j, cnt;
-            int np = ((int)sqrt(8.0*surfVerts.size()+1.0)-1)/2;
-            NodeSharedPtr* tmp = new NodeSharedPtr[np*np];
-            
-            for (cnt = i = 0; i < np; ++i)
-            {
-                for (j = 0; j < np-i; ++j,cnt++)
-                {
-                    tmp[i*np+np-i-1-j] = surfVerts[cnt];
-                }
-            }
-            
-            for(cnt = i = 0; i < np; ++i)
-            {
-                for(j = 0; j < np-i; ++j,cnt++)
-                {
-                    surfVerts[cnt] = tmp[i*np+j];
-                }
-            }
-
-            delete[] tmp;
         }
     }
 }

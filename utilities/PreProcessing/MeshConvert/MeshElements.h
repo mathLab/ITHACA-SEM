@@ -75,7 +75,7 @@ namespace Nektar
         public:
             /// Create a new node at a specified coordinate.
             Node(int pId, NekDouble pX, NekDouble pY, NekDouble pZ)
-        : m_id(pId), m_x(pX), m_y(pY), m_z(pZ), m_geom() {}
+                : m_id(pId), m_x(pX), m_y(pY), m_z(pZ), m_geom() {}
             /// Copy an existing node.
             Node(const Node& pSrc)
                 : m_id(pSrc.m_id), m_x(pSrc.m_x), m_y(pSrc.m_y), 
@@ -1260,6 +1260,133 @@ namespace Nektar
             static unsigned int GetNumNodes(ElmtConfig pConf);
         };
 
+        /**
+         * @brief A lightweight struct for dealing with high-order triangle
+         * alignment.
+         *
+         * The logic underlying these routines is taken from the original Nektar
+         * code.
+         */
+        template<typename T>
+        struct HOTriangle
+        {
+            HOTriangle(vector<int> pVertId,
+                       vector<T>   pSurfVerts) :
+                vertId(pVertId), surfVerts(pSurfVerts) {}
+
+            HOTriangle(vector<int> pVertId) : vertId(pVertId) {}
+
+            /// The triangle vertex IDs
+            vector<int> vertId;
+
+            /// The triangle surface vertices -- templated so that this can
+            /// either be nodes or IDs.
+            vector<T> surfVerts;
+
+            /**
+             * @brief Rotates the triangle of data points inside #surfVerts
+             * counter-clockwise nrot times.
+             *
+             * @param nrot Number of times to rotate triangle.
+             */
+            void Rotate(int nrot)
+            {
+                int n, i, j, cnt;
+                int np = ((int)sqrt(8.0*surfVerts.size()+1.0)-1)/2;
+                vector<T> tmp(np*np);
+
+                for (n = 0; n < nrot; ++n)
+                {
+                    for (cnt = i = 0; i < np; ++i)
+                    {
+                        for (j = 0; j < np-i; ++j, cnt++)
+                        {
+                            tmp[i*np+j] = surfVerts[cnt];
+                        }
+                    }
+                    for (cnt = i = 0; i < np; ++i)
+                    {
+                        for (j = 0; j < np-i; ++j,cnt++)
+                        {
+                            surfVerts[cnt] = tmp[(np-1-i-j)*np+i];
+                        }
+                    }
+                }
+            }
+
+            void Reflect()
+            {
+                int i, j, cnt;
+                int np = ((int)sqrt(8.0*surfVerts.size()+1.0)-1)/2;
+                vector<T> tmp(np*np);
+
+                for (cnt = i = 0; i < np; ++i)
+                {
+                    for (j = 0; j < np-i; ++j,cnt++)
+                    {
+                        tmp[i*np+np-i-1-j] = surfVerts[cnt];
+                    }
+                }
+
+                for(cnt = i = 0; i < np; ++i)
+                {
+                    for(j = 0; j < np-i; ++j,cnt++)
+                    {
+                        surfVerts[cnt] = tmp[i*np+j];
+                    }
+                }
+            }
+
+            /**
+             * @brief Align this surface to a given vertex ID.
+             */
+            void Align(vector<int> vertId)
+            {
+                if (vertId[0] == this->vertId[0])
+                {
+                    if (vertId[1] == this->vertId[1] ||
+                        vertId[1] == this->vertId[2])
+                    {
+                        if (vertId[1] == this->vertId[2])
+                        {
+                            Rotate(1);
+                            Reflect();
+                        }
+                    }
+                }
+                else if (vertId[0] == this->vertId[1])
+                {
+                    if (vertId[1] == this->vertId[0] ||
+                        vertId[1] == this->vertId[2])
+                    {
+                        if (vertId[1] == this->vertId[0])
+                        {
+                            Reflect();
+                        }
+                        else
+                        {
+                            Rotate(2);
+                        }
+                    }
+                }
+                else if (vertId[0] == this->vertId[2])
+                {
+                    if (vertId[1] == this->vertId[0] ||
+                        vertId[1] == this->vertId[1])
+                    {
+                        if (vertId[1] == this->vertId[1])
+                        {
+                            Rotate(2);
+                            Reflect();
+                        }
+                        else
+                        {
+                            Rotate(1);
+                        }
+                    }
+                }
+            }
+        };
 
         /**
          * @brief A 2-dimensional three-sided element.

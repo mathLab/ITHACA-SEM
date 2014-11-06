@@ -356,7 +356,7 @@ ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.4.3 zlib-1.2.7)
 # Scotch
 IF( NEKTAR_USE_SCOTCH )
     TARGET_LINK_LIBRARIES(LibUtilities LINK_PRIVATE
-        ${SCOTCH_LIB} ${SCOTCHERR_LIB})
+        ${SCOTCH_LIBRARY} ${SCOTCHERR_LIBRARY})
     ADD_DEPENDENCIES(LibUtilities scotch-6.0.0)
 ENDIF ()
 

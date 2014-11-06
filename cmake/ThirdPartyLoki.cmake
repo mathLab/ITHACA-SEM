@@ -34,7 +34,7 @@ IF (THIRDPARTY_BUILD_LOKI)
     )
 
     # Set LOKI_INCLUDE_DIR.
-    FILE(COPY ${LOKI_INCLUDE_DIR}/loki/ DESTINATION ${TPDIST}/include/loki/)
+    FILE(COPY ${TPSRC}/loki-0.1.3/include/loki/ DESTINATION ${TPDIST}/include/loki/)
     SET(LOKI_INCLUDE_DIR ${TPDIST}/include CACHE PATH "" FORCE)
 
     MESSAGE(STATUS "Build Loki: ${LOKI_INCLUDE_DIR}")

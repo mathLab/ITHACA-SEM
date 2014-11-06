@@ -7,11 +7,6 @@
 #include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ContField2D.h>
 
-#ifdef NEKTAR_USING_CHUD
-#include <CHUD/CHUD.h> 
-//#define SHARK
-#endif 
-
 using namespace Nektar;
 
 std::string PortablePath(const boost::filesystem::path& path);
@@ -360,16 +355,6 @@ int main(int argc, char *argv[])
         NumCalls = 1;
     }
 
-#ifdef SHARK
-    NumCalls *= 20;
-
-    chudInitialize();
-    chudSetErrorLogFile(stderr);
-    chudUmarkPID(getpid(), TRUE);    
-    chudAcquireRemoteAccess();
-    chudStartRemotePerfMonitor("TimingCGHelmSolve2D");
-#endif
-
     gettimeofday(&timer1, NULL);
     for(i = 0; i < NumCalls; ++i)
     {
@@ -378,13 +363,6 @@ int main(int argc, char *argv[])
                 MultiRegions::eGlobal);
     }
     gettimeofday(&timer2, NULL);
-
-#ifdef SHARK
-    chudStopRemotePerfMonitor();
-    chudReleaseRemoteAccess();
-    chudCleanup();
-#endif
-
 
     time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
     time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);

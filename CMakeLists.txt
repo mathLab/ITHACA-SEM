@@ -28,16 +28,18 @@ ENDIF(COMMAND cmake_policy)
 # Find the modules included with Nektar
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 IF( NOT NEKTAR_PASSED_FIRST_CONFIGURE )
-  SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
+    IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
+    ENDIF()
 ENDIF()
 
 # Attempt to retrieve git branch and SHA1 hash
 INCLUDE(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
-SET(LIB_DIR "lib")
-IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
-	SET(LIB_DIR "lib64")
+SET(LIB_DIR "lib/nektar++")
+IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE )
+	SET(LIB_DIR "lib64/nektar++")
 ENDIF()
 SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 
@@ -170,7 +172,7 @@ INCLUDE (NektarCommon)
 SET(TPURL http://www.nektar.info/thirdparty)
 SET(TPSRC ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
-SET(TPDIST ${CMAKE_INSTALL_PREFIX})
+SET(TPDIST ${CMAKE_BINARY_DIR}/ThirdParty/dist)
 IF (NOT EXISTS ${TPSRC})
     FILE(MAKE_DIRECTORY ${TPSRC})
 ENDIF ()
@@ -319,13 +321,25 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindScotch.cmake
-	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindGSMPI.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindXXT.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindSMV.cmake
-              DESTINATION ${CMAKE_INSTALL_PREFIX}) 
+              DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
+INSTALL(DIRECTORY ${TPDIST}/include/
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/ThirdParty
+    COMPONENT ThirdParty
+)
+
+# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}
+INSTALL(DIRECTORY ${TPDIST}/lib/
+    DESTINATION ${NEKTAR_LIB_DIR}
+    COMPONENT ThirdParty
+)
 
 SET(NEKTAR_PASSED_FIRST_CONFIGURE ON CACHE BOOL INTERNAL)
 MARK_AS_ADVANCED(NEKTAR_PASSED_FIRST_CONFIGURE)

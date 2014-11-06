@@ -124,11 +124,9 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_USE_SYSTEM_BLAS_LAPACK
 CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ACCELERATE_FRAMEWORK
     "Use the Mac Accelerate Framework for BLAS and Lapack support." ON
     "NEKTAR_USE_BLAS_LAPACK; APPLE" OFF)
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_DIRECT_BLAS_CALLS
-    "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and
-    LocalRegions sublibrary" ON
-    "NEKTAR_USE_BLAS_LAPACK" OFF)
-MARK_AS_ADVANCED(NEKTAR_USE_DIRECT_BLAS_CALLS)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
+    "Use Win32 Lapack provided with the Third Party Distribution."
+    ON "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
 
 OPTION(NEKTAR_USE_MEMORY_POOLS
     "Use memory pools to accelerate memory allocation." ON)
@@ -142,10 +140,6 @@ IF (MSVC)
     # memcmp, etc.
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
 ENDIF()
-
-CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
-    "Use Win32 Lapack provided with the Third Party Distribution."
-    ON "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
 
 # Include Nektar++ common macros
 INCLUDE (NektarCommon)

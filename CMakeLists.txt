@@ -128,6 +128,7 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
     "Use Win32 Lapack provided with the Third Party Distribution."
     ON "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
 
+# Memory pools
 OPTION(NEKTAR_USE_MEMORY_POOLS
     "Use memory pools to accelerate memory allocation." ON)
 MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)

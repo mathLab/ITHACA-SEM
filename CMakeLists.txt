@@ -149,14 +149,18 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
 # Include Nektar++ common macros
 INCLUDE (NektarCommon)
 
-# Find Libraries
-SET(TPURL http://www.nektar.info/thirdparty)
-SET(TPSRC ${CMAKE_SOURCE_DIR}/ThirdParty)
+# Set various ThirdParty locations
+SET(TPURL   http://www.nektar.info/thirdparty)
+SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
-SET(TPDIST ${CMAKE_BINARY_DIR}/ThirdParty/dist)
+SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
+
+# Create ThirdParty source directory if it doesn't exist already.
 IF (NOT EXISTS ${TPSRC})
     FILE(MAKE_DIRECTORY ${TPSRC})
 ENDIF ()
+
+# Find Libraries
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
@@ -287,6 +291,13 @@ IF (NEKTAR_BUILD_TESTS)
         OPTION(NEKTAR_TEST_FORCEMPIEXEC  "Force all tests to be run through the MPI job launcher."  OFF)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF (NEKTAR_BUILD_TESTS)
+
+SET(NEKTAR_DEFINITIONS "")
+GET_DIRECTORY_PROPERTY(
+    NEKTAR_DEFINITIONS_LIST DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
+FOREACH(def ${NEKTAR_DEFINITIONS_LIST})
+    SET(NEKTAR_DEFINITIONS "${NEKTAR_DEFINITIONS} -D${def}")
+ENDFOREACH()
 
 # Write out Nektar++ build configuration
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterEnergy.cpp
+// File FilterEnergy.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,37 +29,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Output kinetic energy and enstrophy.
+// Description: Outputs solution fields during time-stepping.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/Filters/FilterEnergy.h>
+#ifndef NEKTAR_COMPRESSIBLEFLOWSOLVER_FILTERS_FILTERENERGY_H
+#define NEKTAR_COMPRESSIBLEFLOWSOLVER_FILTERS_FILTERENERGY_H
+
+#include <SolverUtils/Filters/FilterEnergyBase.h>
 
 namespace Nektar
 {
     namespace SolverUtils
     {
-        std::string FilterEnergy::className = GetFilterFactory().
-            RegisterCreatorFunction("Energy", FilterEnergy::create);
-
-        FilterEnergy::FilterEnergy(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams)
-            : FilterEnergyBase(pSession, pParams, true)
+        class FilterEnergy : public FilterEnergyBase
         {
-        }
+        public:
+            friend class MemoryManager<FilterEnergy>;
 
-        FilterEnergy::~FilterEnergy()
-        {
+            /// Creates an instance of this class
+            static FilterSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::map<std::string, std::string> &pParams) {
+                FilterSharedPtr p = MemoryManager<FilterEnergy>
+                    ::AllocateSharedPtr(pSession, pParams);
+                return p;
+            }
 
-        }
+            ///Name of the class
+            static std::string className;
 
-        void FilterEnergy::v_GetVelocity(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const int i,
-            Array<OneD, NekDouble> &velocity)
-        {
-            velocity = pFields[i]->GetPhys();
-        }
+            SOLVER_UTILS_EXPORT FilterEnergy(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::map<std::string, std::string> &pParams);
+            SOLVER_UTILS_EXPORT ~FilterEnergy();
+
+        protected:
+            virtual void v_GetVelocity(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+                const int i,
+                Array<OneD, NekDouble> &velocity);
+            virtual Array<OneD, NekDouble> v_GetDensity(
+                const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields);
+        };
     }
 }
+
+#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */

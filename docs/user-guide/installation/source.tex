@@ -51,34 +51,34 @@ installed system-wide).
 \begin{center}
 \begin{tabular}{lccccl}
 \toprule
-Package & Req. & \multicolumn{3}{c}{Installation} & Note \\ \cline{3-5}
-        &      & Sys. & User & Auto.              & \\
+        &      & \multicolumn{3}{c}{Installation} & \\ \cmidrule(r){3-5}
+Package & Req. & Sys. & User & Auto.              & Note \\
 \midrule
-C++ compiler    & \checkmark & \checkmark & & & gcc, icc, etc \\
-CMake  $>2.8.7$ & \checkmark & \checkmark & \checkmark &            & Ncurses
+C++ compiler    & \cmark & \cmark & & & gcc, icc, etc \\
+CMake  $>2.8.7$ & \cmark & \cmark & \cmark &        & Ncurses
 GUI optional
 \\
-BLAS            & \checkmark & \checkmark & \checkmark &            & Or MKL,
+BLAS            & \cmark & \cmark & \cmark &        & Or MKL,
 ACML, OpenBLAS
 \\
-LAPACK          & \checkmark & \checkmark & \checkmark &            & \\
-Boost $>1.49$   & \checkmark & \checkmark & \checkmark & \checkmark & Compile
+LAPACK          & \cmark & \cmark & \cmark &        & \\
+Boost $>1.49$   & \cmark & \cmark & \cmark & \cmark & Compile
 with iostreams
 \\
-ModMETIS        & \checkmark &            &            & \checkmark & \\
-FFTW $>3.0$     &            & \checkmark & \checkmark & \checkmark & For
+ModMETIS        & \cmark &        &        & \cmark & \\
+FFTW $>3.0$     &        & \cmark & \cmark & \cmark & For
 high-performance FFTs\\
-ARPACK $>2.0$   &            & \checkmark & \checkmark &            & For
+ARPACK $>2.0$   &        & \cmark & \cmark &        & For
 arnoldi algorithms\\
-OpenMPI         &            & \checkmark &            &            & For
+OpenMPI         &        & \cmark &        &        & For
 parallel execution\\
-GSMPI           &            &            &            & \checkmark & For
+GSMPI           &        &        &        & \cmark & For
 parallel execution\\
-PetSC           &            &            & \checkmark & \checkmark &
+PetSC           &        &        & \cmark & \cmark &
 Alternative linear solvers\\
-Scotch          &            & \checkmark & \checkmark & \checkmark &
+Scotch          &        & \cmark & \cmark & \cmark &
 Alternative mesh partitioning\\
-VTK $>5.8$      &         & \checkmark & \checkmark &            & Visualisation
+VTK $>5.8$      &        & \cmark & \cmark &        & Visualisation
 utilities\\
 \bottomrule
 \end{tabular}
@@ -208,33 +208,33 @@ system-wide).
 \begin{center}
 \begin{tabular}{lccccl}
 \toprule
-Package & Req. & \multicolumn{3}{c}{Installation} & Note \\ \cline{3-5}
-        &      & MacPorts & User & Auto.              & \\
+        &      & \multicolumn{3}{c}{Installation} & \\ \cmidrule(r){3-5}
+Package & Req. & MacPorts & User & Auto.          & Note \\
 \midrule
-Xcode           & \checkmark &            & & & gcc, icc, etc \\
-CMake  $>2.8.7$ & \checkmark & \checkmark & \checkmark &            & Ncurses
+Xcode           & \cmark &        & & & gcc, icc, etc \\
+CMake  $>2.8.7$ & \cmark & \cmark & \cmark &        & Ncurses
 GUI optional \\
-BLAS            & \checkmark &            &            &            & Part of
+BLAS            & \cmark &        &        &        & Part of
 Xcode \\
-LAPACK          & \checkmark &            &            &            & Part of
+LAPACK          & \cmark &        &        &        & Part of
 Xcode \\
-Boost $>1.49$   & \checkmark & \checkmark & \checkmark & \checkmark & Compile
+Boost $>1.49$   & \cmark & \cmark & \cmark & \cmark & Compile
 with iostreams
 \\
-ModMETIS        & \checkmark &            &            & \checkmark & \\
-FFTW $>3.0$     &            & \checkmark & \checkmark & \checkmark & For
+ModMETIS        & \cmark &        &        & \cmark & \\
+FFTW $>3.0$     &        & \cmark & \cmark & \cmark & For
 high-performance FFTs\\
-ARPACK $>2.0$   &            & \checkmark & \checkmark &            & For
+ARPACK $>2.0$   &        & \cmark & \cmark &        & For
 arnoldi algorithms\\
-OpenMPI         &            & \checkmark &            &            & For
+OpenMPI         &        & \cmark &        &        & For
 parallel execution\\
-GSMPI           &            &            &            & \checkmark & For
+GSMPI           &        &        &        & \cmark & For
 parallel execution\\
-PetSC           &            & \checkmark & \checkmark & \checkmark &
+PetSC           &        & \cmark & \cmark & \cmark &
 Alternative linear solvers\\
-Scotch          &            &            & \checkmark & \checkmark &
+Scotch          &        &        & \cmark & \cmark &
 Alternative mesh partitioning\\
-VTK $>5.8$      &            & \checkmark & \checkmark &            &
+VTK $>5.8$      &        & \cmark & \cmark &        &
 Visualisation utilities\\
 \bottomrule
 \end{tabular}

@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/Filters/FilterEnergy.h>
+#include <CompressibleFlowSolver/Filters/FilterEnergy.h>
 
 namespace Nektar
 {
@@ -45,8 +45,9 @@ namespace Nektar
         FilterEnergy::FilterEnergy(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::map<std::string, std::string> &pParams)
-            : FilterEnergyBase(pSession, pParams, true)
+            : FilterEnergyBase(pSession, pParams, false)
         {
+            
         }
 
         FilterEnergy::~FilterEnergy()
@@ -59,7 +60,14 @@ namespace Nektar
             const int i,
             Array<OneD, NekDouble> &velocity)
         {
-            velocity = pFields[i]->GetPhys();
+            Vmath::Vdiv(pFields[0]->GetNpoints(), pFields[i+1]->GetPhys(), 1,
+                        pFields[0]->GetPhys(), 1, velocity, 1);
+        }
+
+        Array<OneD, NekDouble> FilterEnergy::v_GetDensity(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
+        {
+            return pFields[0]->GetPhys();
         }
     }
 }

@@ -17,7 +17,7 @@ IF (NOT WIN32_BLAS OR NOT WIN32_LAPACK)
     SET(WIN_ZIP_PATH ${TPSRC}/${WIN_ZIP_FILE})
 
     IF (NOT EXISTS ${WIN_ZIP_PATH})
-        FILE(DOWNLOAD http://ae-nektar.ae.ic.ac.uk/~dmoxey/${WIN_ZIP_FILE} ${WIN_ZIP_PATH})
+        FILE(DOWNLOAD ${TPURL}/${WIN_ZIP_FILE} ${WIN_ZIP_PATH})
     ENDIF()
 
     # Calculate expected MD5 and SHA128 hashes

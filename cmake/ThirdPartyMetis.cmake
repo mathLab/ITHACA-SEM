@@ -6,7 +6,7 @@ IF (THIRDPARTY_BUILD_METIS)
     EXTERNALPROJECT_ADD(
         modmetis-5.1.0
         PREFIX ${TPSRC}
-        URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/modmetis-5.1.0_2.tar.bz2
+        URL ${TPURL}/modmetis-5.1.0_2.tar.bz2
         URL_MD5 "8a1f1afd39b46a4477c1ea15464cdf89"
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}

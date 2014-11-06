@@ -67,6 +67,9 @@ namespace Nektar
         
     protected:
         bool m_subSteppingScheme; 
+        bool m_useSpecVanVisc;
+        NekDouble m_sVVCutoffRatio;   // cut off ratio from which to start decayhing modes
+        NekDouble m_sVVDiffCoeff;     // Diffusion coefficient of SVV modes
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
         SolverUtils::AdvectionSharedPtr         m_advection;
         SolverUtils::DiffusionSharedPtr         m_diffusion;        

@@ -74,6 +74,15 @@ namespace Nektar
         
         EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
         
+        m_session->MatchSolverInfo(
+            "SpectralVanishingViscosity", "True", m_useSpecVanVisc, false);
+        
+        if(m_useSpecVanVisc)
+        {
+            m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+            m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
+        }        
+
         // Type of advection and diffusion classes to be used
         switch(m_projectionType)
         {
@@ -335,6 +344,12 @@ namespace Nektar
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
         
+        if(m_useSpecVanVisc)
+        {
+            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_epsilon;
+        }
+
         Array<OneD, Array< OneD, NekDouble> > F(nvariables);
         F[0] = Array<OneD, NekDouble> (nq*nvariables);
         

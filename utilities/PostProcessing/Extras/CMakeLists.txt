@@ -5,7 +5,6 @@ ADD_UTILITIES_EXECUTABLE(CalcVorticity             util-extra CalcVorticity.cpp)
 ADD_UTILITIES_EXECUTABLE(ExtractMultiFldFileInfo   util-extra ExtractMultiFldFileInfo.cpp)
 ADD_UTILITIES_EXECUTABLE(L2                        util-extra L2.cpp)
 ADD_UTILITIES_EXECUTABLE(Linf                      util-extra Linf.cpp)
-ADD_UTILITIES_EXECUTABLE(MoveMesh                  util-extra MoveMesh.cpp)
 ADD_UTILITIES_EXECUTABLE(SplitFld                  util-extra SplitFld.cpp)
 ADD_UTILITIES_EXECUTABLE(SplitModes                util-extra SplitModes.cpp)
 

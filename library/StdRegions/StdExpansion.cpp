@@ -41,20 +41,6 @@ namespace Nektar
 {
     namespace StdRegions
     {
-
-        /** define list of number of vertices corresponding to each ShapeType */
-        const int g_shapenverts[LibUtilities::SIZE_ShapeType] = {0,2,3,4,4,5,6,8};
-
-        /** define list of number of edges corresponding to each ShapeType */
-        const int g_shapenedges[LibUtilities::SIZE_ShapeType] = {0,1,3,4,6,8,9,12};
-
-        /** define list of number of faces corresponding to each ShapeType */
-        const int g_shapenfaces[LibUtilities::SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
-
-        //std::map<StdMatrixKey, DNekMatSharedPtr> StdExpansion::m_stdMatrixManager;
-        //std::map<StdMatrixKey, DNekBlkMatSharedPtr> StdExpansion::m_stdStaticCondMatrixManager;
-        //std::map<IndexMapKey, IndexMapValuesSharedPtr> StdExpansion::m_IndexMapManager;
-
         StdExpansion::StdExpansion(void):
             m_elmt_id(0),
             m_ncoeffs(0)

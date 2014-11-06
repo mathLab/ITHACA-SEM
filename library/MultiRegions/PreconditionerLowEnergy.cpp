@@ -1223,8 +1223,6 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr locExpansion;                
             locExpansion = expList->GetExp(offset);
             unsigned int nbnd=locExpansion->NumBndryCoeffs();
-            unsigned int ncoeffs=locExpansion->GetNcoeffs();
-            unsigned int nint=ncoeffs-nbnd;
 
             //This is the SC elemental matrix in the orginal basis (S1)
             DNekScalMatSharedPtr pS1=loc_mat;

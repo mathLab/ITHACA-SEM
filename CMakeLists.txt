@@ -41,17 +41,17 @@ INCLUDE(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 # Set library, binary, include, share and doc paths.
-SET(LIB_DIR "lib/nektar++")
+SET(LIB_DIR "lib/nektar++-${NEKTAR_VERSION}")
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE )
-    SET(LIB_DIR "lib64/nektar++")
+    SET(LIB_DIR "lib64/nektar++-${NEKTAR_VERSION}")
 ENDIF()
 SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 
 SET(NEKTAR_BIN_DIR bin)
 SET(NEKTAR_LIB_DIR ${LIB_DIR})
-SET(NEKTAR_INCLUDE_DIR include/nektar++)
-SET(NEKTAR_SHARE_DIR share/nektar++)
-SET(NEKTAR_DOC_DIR share/doc/nektar++)
+SET(NEKTAR_INCLUDE_DIR include/nektar++-${NEKTAR_VERSION})
+SET(NEKTAR_SHARE_DIR share/nektar++-${NEKTAR_VERSION})
+SET(NEKTAR_DOC_DIR share/doc/nektar++-${NEKTAR_VERSION})
 
 # Build shared libraries.
 SET(NEKTAR_LIBRARY_TYPE "SHARED")
@@ -151,6 +151,7 @@ SET(TPSRC   ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
 SET(TPDIST  ${CMAKE_BINARY_DIR}/ThirdParty/dist)
 SET(TPINC   ${CMAKE_INSTALL_PREFIX}/include/ThirdParty)
+SET(TPLIB   ${CMAKE_INSTALL_PREFIX}/${NEKTAR_LIB_DIR})
 
 # Create ThirdParty source directory if it doesn't exist already.
 IF (NOT EXISTS ${TPSRC})
@@ -263,7 +264,7 @@ IF (NEKTAR_BUILD_LIBRARY)
         MultiRegions)
     INCLUDE_DIRECTORIES(library)
     ADD_SUBDIRECTORY(library)
-    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR})
+    INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR}/cmake)
 ENDIF (NEKTAR_BUILD_LIBRARY)
 
 IF (NEKTAR_BUILD_SOLVERS)

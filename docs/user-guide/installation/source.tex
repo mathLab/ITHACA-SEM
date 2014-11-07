@@ -74,7 +74,7 @@ OpenMPI         &        & \cmark &        &        & For
 parallel execution\\
 GSMPI           &        &        &        & \cmark & For
 parallel execution\\
-PetSC           &        &        & \cmark & \cmark &
+PETSc           &        &        & \cmark & \cmark &
 Alternative linear solvers\\
 Scotch          &        & \cmark & \cmark & \cmark &
 Alternative mesh partitioning\\
@@ -211,30 +211,30 @@ system-wide).
         &      & \multicolumn{3}{c}{Installation} & \\ \cmidrule(r){3-5}
 Package & Req. & MacPorts & User & Auto.          & Note \\
 \midrule
-Xcode           & \cmark &        & & & gcc, icc, etc \\
-CMake  $>2.8.7$ & \cmark & \cmark & \cmark &        & Ncurses
+Xcode           & \cmark &        & & & Provides developer tools \\
+CMake  $>2.8.7$ & \cmark & \texttt{cmake}   & \cmark &        & Ncurses
 GUI optional \\
-BLAS            & \cmark &        &        &        & Part of
+BLAS            & \cmark &                  &        &        & Part of
 Xcode \\
-LAPACK          & \cmark &        &        &        & Part of
+LAPACK          & \cmark &                  &        &        & Part of
 Xcode \\
-Boost $>1.49$   & \cmark & \cmark & \cmark & \cmark & Compile
-with iostreams
-\\
-ModMETIS        & \cmark &        &        & \cmark & \\
-FFTW $>3.0$     &        & \cmark & \cmark & \cmark & For
+Boost $>1.49$   & \cmark & \texttt{boost}   & \cmark & \cmark & Compile
+with iostreams \\
+TinyXML         & \cmark & \texttt{tinyxml} & \cmark & \cmark & \\
+ModMETIS        & \cmark &                  &        & \cmark & \\
+FFTW $>3.0$     &        & \texttt{fftw-3}  & \cmark & \cmark & For
 high-performance FFTs\\
-ARPACK $>2.0$   &        & \cmark & \cmark &        & For
+ARPACK $>2.0$   &        & \texttt{arpack}  & \cmark &        & For
 arnoldi algorithms\\
-OpenMPI         &        & \cmark &        &        & For
+OpenMPI         &        & \texttt{openmpi} &        &        & For
 parallel execution\\
-GSMPI           &        &        &        & \cmark & For
+GSMPI           &        &                  &        & \cmark & For
 parallel execution\\
-PetSC           &        & \cmark & \cmark & \cmark &
+PETSc           &        & \texttt{petsc}   & \cmark & \cmark &
 Alternative linear solvers\\
-Scotch          &        &        & \cmark & \cmark &
+Scotch          &        & \texttt{scotch}  & \cmark & \cmark &
 Alternative mesh partitioning\\
-VTK $>5.8$      &        & \cmark & \cmark &        &
+VTK $>5.8$      &        & \texttt{vtk}     & \cmark &        &
 Visualisation utilities\\
 \bottomrule
 \end{tabular}
@@ -253,6 +253,9 @@ CMake, and some other software, is available from MacPorts
 (\url{http://macports.org}) and can be installed using, for example,
 
 \noindent\usebox\installationOSXMacPortsTip
+
+Package names are given in the table above. Similar packages also exist in other
+package managers such as Homebrew.
 \end{tipbox}
 
 

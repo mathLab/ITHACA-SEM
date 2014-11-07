@@ -52,16 +52,15 @@ IF (THIRDPARTY_BUILD_ZLIB)
     IF (WIN32)
         SET(ZLIB_LIBRARY zlib CACHE FILEPATH
             "Zlib library" FORCE)
+        MESSAGE(STATUS "Build Zlib: ${TPDIST}/${LIB_DIR}/${ZLIB_LIBRARY}.dll")
     ELSE ()
         SET(ZLIB_LIBRARY z CACHE FILEPATH
             "Zlib library" FORCE)
+        MESSAGE(STATUS "Build Zlib: ${TPDIST}/${LIB_DIR}/lib${ZLIB_LIBRARY}.a")
     ENDIF ()
-    SET(ZLIB_INCLUDE_DIR ${TPDIST}/include CACHE PATH
-        "Zlib include" FORCE)
 
+    SET(ZLIB_INCLUDE_DIR ${TPDIST}/include CACHE PATH "Zlib include" FORCE)
     LINK_DIRECTORIES(${TPDIST}/lib)
-
-    MESSAGE(STATUS "Build Zlib: ${TPDIST}/${ZLIB_LIBRARY}.a")
     SET(ZLIB_CONFIG_INCLUDE_DIR ${TPINC})
 ELSE (THIRDPARTY_BUILD_ZLIB)
     ADD_CUSTOM_TARGET(zlib-1.2.7 ALL)

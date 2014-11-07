@@ -50,7 +50,14 @@ IF (THIRDPARTY_BUILD_TINYXML)
 
     LINK_DIRECTORIES(${TPDIST}/lib)
 
-    MESSAGE(STATUS "Build TinyXML: ${TPDIST}/${TINYXML_LIBRARY}.a")
+    IF (WIN32)
+        MESSAGE(STATUS 
+                "Build TinyXML: ${TPDIST}/${LIB_DIR}/${TINYXML_LIBRARY}.dll")
+    ELSE ()
+        MESSAGE(STATUS 
+                "Build TinyXML: ${TPDIST}/${LIB_DIR}/lib${TINYXML_LIBRARY}.a")
+    ENDIF ()
+
     SET(TINYXML_CONFIG_INCLUDE_DIR ${TPINC})
 ELSE()
     ADD_CUSTOM_TARGET(tinyxml-2.6.2 ALL)

@@ -164,32 +164,82 @@ ELSE (THIRDPARTY_BUILD_BOOST)
     ELSE()
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
     ENDIF()
+
     IF (Boost_IOSTREAMS_FOUND)
-        MESSAGE(STATUS "Found Boost iostreams library: ${Boost_IOSTREAMS_LIBRARY}")
+        MESSAGE(STATUS "Found Boost iostreams library: "
+                       "${Boost_IOSTREAMS_LIBRARY}")
+    ELSE ()
+        MESSAGE(WARNING "Boost IOSTREAM library not found. "
+                        "Please ensure it is installed, or Boost was "
+                        "compiled with the --with-iostreams option.")
     ENDIF ()
+
     IF (Boost_THREAD_FOUND)
-        MESSAGE(STATUS "Found Boost thread library: ${Boost_THREAD_LIBRARY}")
+        MESSAGE(STATUS "Found Boost thread library: "
+                       "${Boost_THREAD_LIBRARY}")
+    ELSE ()
+        MESSAGE(WARNING "Boost THREAD library not found. "
+                        "Please ensure it is installed, or Boost was "
+                        "compiled with the --with-thread option.")
     ENDIF ()
+
     IF (Boost_DATE_TIME_FOUND)
-        MESSAGE(STATUS "Found Boost date_time library: ${Boost_DATE_TIME_LIBRARY}")
+        MESSAGE(STATUS "Found Boost date_time library: "
+                       "${Boost_DATE_TIME_LIBRARY}")
+    ELSE ()
+        MESSAGE(WARNING "Boost DATE_TIME library not found. "
+                        "Please ensure it is installed, or Boost was "
+                        "compiled with the --with-date_time option.")
     ENDIF ()
+
     IF (Boost_FILESYSTEM_FOUND)
-        MESSAGE(STATUS "Found Boost filesystem library: ${Boost_FILESYSTEM_LIBRARY}")
+        MESSAGE(STATUS "Found Boost filesystem library: "
+                       "${Boost_FILESYSTEM_LIBRARY}")
+    ELSE ()
+        MESSAGE(WARNING "Boost FILESYSTEM library not found. "
+                        "Please ensure it is installed, or Boost was "
+                        "compiled with the --with-filesystem option.")
     ENDIF ()
+
     IF (Boost_SYSTEM_FOUND)
-        MESSAGE(STATUS "Found Boost system library: ${Boost_SYSTEM_LIBRARY}")
+        MESSAGE(STATUS "Found Boost system library: "
+                       "${Boost_SYSTEM_LIBRARY}")
+    ELSE ()
+        MESSAGE(WARNING "Boost SYSTEM library not found. "
+                        "Please ensure it is installed, or Boost was "
+                        "compiled with the --with-filesystem option.")
     ENDIF ()
+
     IF (Boost_PROGRAM_OPTIONS_FOUND)
-        MESSAGE(STATUS "Found Boost program_options library: ${Boost_PROGRAM_OPTIONS_LIBRARY}")
+        MESSAGE(STATUS "Found Boost program_options library: "
+                       "${Boost_PROGRAM_OPTIONS_LIBRARY}")
+    ELSE ()
+        MESSAGE(WARNING "Boost PROGRAM_OPTIONS library not found. "
+                        "Please ensure it is installed, or Boost was "
+                        "compiled with the --with-program_options option.")
     ENDIF ()
+
     IF (Boost_REGEX_FOUND)
-        MESSAGE(STATUS "Found Boost regex library: ${Boost_REGEX_LIBRARY}")
+        MESSAGE(STATUS "Found Boost regex library: "
+                       "${Boost_REGEX_LIBRARY}")
+    ELSE ()
+        MESSAGE(WARNING "Boost REGEX library not found. "
+                        "Please ensure it is installed, or Boost was "
+                        "compiled with the --with-regex option.")
     ENDIF ()
+
     IF (BOOST_THREAD_LIBRARY)
         MARK_AS_ADVANCED(BOOST_THREAD_LIBRARY)
     ENDIF (BOOST_THREAD_LIBRARY)
     SET(Boost_CONFIG_INCLUDE_DIR ${Boost_INCLUDE_DIRS})
     SET(Boost_CONFIG_LIBRARY_DIR ${Boost_LIBRARY_DIRS})
+
+    IF (NOT Boost_FOUND)
+        MESSAGE(FATAL_ERROR "One of more Boost libraries could not be found. "
+                            "See above warnings. To have CMake automatically "
+                            "build and install the necessary Boost libraries "
+                            "select the THIRDPARTY_BUILD_BOOST option.")
+    ENDIF ()
 ENDIF (THIRDPARTY_BUILD_BOOST)
 
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})

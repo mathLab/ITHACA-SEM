@@ -1,3 +1,11 @@
+########################################################################
+#
+# ThirdParty configuration for Nektar++
+#
+# Boost
+#
+########################################################################
+
 OPTION(THIRDPARTY_BUILD_BOOST "Build Boost libraries" OFF)
 SET(Boost_USE_MULTITHREADED ON CACHE BOOL
     "Search for multithreaded boost libraries")

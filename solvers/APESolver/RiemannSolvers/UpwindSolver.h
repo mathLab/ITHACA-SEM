@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: APEUpwindSolver.h
+// File: UpwindSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
+// Copyright (c) 2014 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -33,42 +34,35 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
-#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
+#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_UPWINDSOLVER
+#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_UPWINDSOLVER
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
-#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <APESolver/RiemannSolvers/APESolver.h>
 
 using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
 
-class APEUpwindSolver : public RiemannSolver
+class UpwindSolver : public APESolver
 {
-    public:
-        static RiemannSolverSharedPtr create()
-        {
-            return RiemannSolverSharedPtr(new APEUpwindSolver());
-        }
+public:
+    static RiemannSolverSharedPtr create()
+    {
+        return RiemannSolverSharedPtr(new UpwindSolver());
+    }
 
-        static std::string solverName;
+    static std::string solverName;
 
-    protected:
-        APEUpwindSolver();
+protected:
+    UpwindSolver();
 
-        virtual void v_Solve(
-                const int                                         nDim,
-                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                      Array<OneD,       Array<OneD, NekDouble> > &flux);
-
-        void Solve1D(
-                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                      Array<OneD,       Array<OneD, NekDouble> > &flux);
-
-        Array<OneD, Array<OneD, NekDouble> >            m_rotBasefield;
+    virtual void v_PointSolve(
+        NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
+        NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
+        NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
+        NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF);
 };
 
 }

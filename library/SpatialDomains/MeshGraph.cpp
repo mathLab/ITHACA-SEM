@@ -414,7 +414,7 @@ namespace Nektar
                 while (vertexBody)
                 {
                     // Accumulate all non-comment body data.
-                    if (vertexBody->Type() == TiXmlNode::TEXT)
+                    if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         vertexBodyStr += vertexBody->ToText()->Value();
                         vertexBodyStr += " ";
@@ -1035,7 +1035,7 @@ namespace Nektar
 
 
                     TiXmlNode* elementChild = multidomains->FirstChild();
-                    while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+                    while(elementChild && elementChild->Type() != TiXmlNode::TINYXML_TEXT)
                     {
                         elementChild = elementChild->NextSibling();
                     }
@@ -1069,7 +1069,7 @@ namespace Nektar
 
                 // find the non comment portion of the body.
                 TiXmlNode* elementChild = domain->FirstChild();
-                while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+                while(elementChild && elementChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     elementChild = elementChild->NextSibling();
                 }
@@ -1192,7 +1192,7 @@ namespace Nektar
                 while(elementChild)
                 {
                     // Accumulate all non-comment element data
-                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         elementStr += elementChild->ToText()->ValueStr();
                         elementStr += " ";
@@ -1288,7 +1288,7 @@ namespace Nektar
                 while(elementChild)
                 {
                     // Accumulate all non-comment element data
-                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         elementStr += elementChild->ToText()->ValueStr();
                         elementStr += " ";

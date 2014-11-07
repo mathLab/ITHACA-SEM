@@ -348,7 +348,7 @@ ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
 
-ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.4.3 zlib-1.2.7)
+ADD_DEPENDENCIES(LibUtilities modmetis-5.1.0 boost tinyxml-2.6.2 zlib-1.2.7)
 
 
 ### Libraries needed specifically by LibUtilities ###

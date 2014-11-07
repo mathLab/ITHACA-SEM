@@ -108,7 +108,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(boundaryRegionChild && boundaryRegionChild->Type() != TiXmlNode::TEXT)
+                while(boundaryRegionChild && boundaryRegionChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     boundaryRegionChild = boundaryRegionChild->NextSibling();
                 }

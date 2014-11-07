@@ -113,7 +113,7 @@ namespace Nektar
             TiXmlElement *edge = field->FirstChildElement("E");
 
             /// Since all edge data is one big text block, we need to accumulate
-            /// all TEXT data and then parse it.  This approach effectively skips
+            /// all TINYXML_TEXT data and then parse it.  This approach effectively skips
             /// all comments or other node types since we only care about the
             /// edge list.  We cannot handle missing edge numbers as we could
             /// with missing element numbers due to the text block format.
@@ -137,7 +137,7 @@ namespace Nektar
 
                 TiXmlNode *child = edge->FirstChild();
                 edgeStr.clear();
-                if (child->Type() == TiXmlNode::TEXT)
+                if (child->Type() == TiXmlNode::TINYXML_TEXT)
                 {
                     edgeStr += child->ToText()->ValueStr();
                 }
@@ -223,7 +223,7 @@ namespace Nektar
                 std::string elementStr;
                 while(elementChild)
                 {
-                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         elementStr += elementChild->ToText()->ValueStr();
                     }
@@ -376,7 +376,7 @@ namespace Nektar
                 std::string elementStr;
                 while(elementChild)
                 {
-                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    if (elementChild->Type() == TiXmlNode::TINYXML_TEXT)
                     {
                         elementStr += elementChild->ToText()->ValueStr();
                     }
@@ -669,7 +669,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }

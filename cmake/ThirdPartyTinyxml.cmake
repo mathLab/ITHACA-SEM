@@ -26,22 +26,22 @@ OPTION(THIRDPARTY_BUILD_TINYXML
 IF (THIRDPARTY_BUILD_TINYXML)
     INCLUDE(ExternalProject)
     EXTERNALPROJECT_ADD(
-        tinyxml-2.4.3
+        tinyxml-2.6.2
         PREFIX ${TPSRC}
-        URL ${TPURL}/tinyxml_2_4_3-1.tar.bz2
-        URL_MD5 "a00f5e3b547b803977c5744547a688f7"
+        URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/tinyxml_2_6_2.tar.bz2
+        URL_HASH SHA256=32db85cff26260a9140860e8393df59df79ec59f45a9df18524f9cdd21d0f238
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
-        SOURCE_DIR ${TPSRC}/tinyxml-2.4.3
-        BINARY_DIR ${TPBUILD}/tinyxml-2.4.3
-        TMP_DIR ${TPBUILD}/tinyxml-2.4.3-tmp
+        SOURCE_DIR ${TPSRC}/tinyxml-2.6.2
+        BINARY_DIR ${TPBUILD}/tinyxml-2.6.2
+        TMP_DIR ${TPBUILD}/tinyxml-2.6.2-tmp
         INSTALL_DIR ${TPDIST}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
             -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
             -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
             -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
             -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
-            ${TPSRC}/tinyxml-2.4.3
+            ${TPSRC}/tinyxml-2.6.2
     )
     SET(TINYXML_LIBRARY tinyxml CACHE FILEPATH
         "TinyXML library" FORCE)
@@ -53,7 +53,7 @@ IF (THIRDPARTY_BUILD_TINYXML)
     MESSAGE(STATUS "Build TinyXML: ${TPDIST}/${TINYXML_LIBRARY}.a")
     SET(TINYXML_CONFIG_INCLUDE_DIR ${TPINC})
 ELSE()
-    ADD_CUSTOM_TARGET(tinyxml-2.4.3 ALL)
+    ADD_CUSTOM_TARGET(tinyxml-2.6.2 ALL)
     MESSAGE(STATUS "Found TinyXML: ${TINYXML_LIBRARY}")
     SET(TINYXML_CONFIG_INCLUDE_DIR ${TINYXML_INCLUDE_DIR})
 ENDIF (THIRDPARTY_BUILD_TINYXML)

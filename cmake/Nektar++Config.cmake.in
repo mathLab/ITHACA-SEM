@@ -79,7 +79,7 @@ SET(VTK_INCLUDE_DIRS "@VTK_INCLUDE_DIRS@")
 SET(NEKTAR++_TP_INCLUDE_DIRS ${NEKTAR++_TP_INCLUDE_DIRS} ${VTK_INCLUDE_DIRS})
 
 # find and add Nektar++ libraries
-INCLUDE(${NEKTAR++_LIBRARY_DIRS}/Nektar++Libraries.cmake)
+INCLUDE(${NEKTAR++_LIBRARY_DIRS}/cmake/Nektar++Libraries.cmake)
 
 # platform dependent options
 if(${CMAKE_SYSTEM} MATCHES "Linux.*")

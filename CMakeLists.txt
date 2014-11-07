@@ -27,10 +27,10 @@ ENDIF(COMMAND cmake_policy)
 
 # Find the modules included with Nektar
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-IF( NOT NEKTAR_PASSED_FIRST_CONFIGURE )
-    IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-        SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
-    ENDIF()
+
+# Set default install path if not provided on the command-line
+IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
 ENDIF()
 
 # Attempt to retrieve git branch and SHA1 hash
@@ -287,27 +287,13 @@ IF (NEKTAR_BUILD_TESTS)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF (NEKTAR_BUILD_TESTS)
 
-CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in 
+# Write out Nektar++ build configuration
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in
                ${CMAKE_BINARY_DIR}/Nektar++Config.cmake @ONLY)
-             
-INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake 
-              ${CMAKE_SOURCE_DIR}/cmake/FindLoki.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindAccelerateFramework.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindCHUDFramework.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindACML.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindArpack.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindOpenBlas.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindScotch.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindGSMPI.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindXXT.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindSMV.cmake
-              DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# Install Nektar++ CMake configuration file
+INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
+    DESTINATION ${NEKTAR_LIB_DIR}/cmake/)
 
 # Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
 INSTALL(DIRECTORY ${TPDIST}/include/
@@ -320,9 +306,6 @@ INSTALL(DIRECTORY ${TPDIST}/lib/
     DESTINATION ${NEKTAR_LIB_DIR}
     COMPONENT ThirdParty
 )
-
-SET(NEKTAR_PASSED_FIRST_CONFIGURE ON CACHE BOOL INTERNAL)
-MARK_AS_ADVANCED(NEKTAR_PASSED_FIRST_CONFIGURE)
 
 IF(NEKTAR_BUILD_PACKAGES)
     add_subdirectory(pkg)

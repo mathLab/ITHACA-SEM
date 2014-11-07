@@ -36,13 +36,13 @@ IF (THIRDPARTY_BUILD_BOOST)
     ELSE(APPLE)
         SET(TOOLSET gcc)
     ENDIF(APPLE)
-    
+
     IF (NOT WIN32)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost_1_55_0.tar.bz2
-            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
+            URL ${TPURL}/boost_1_57_0.tar.bz2
+            URL_MD5 "1be49befbdd9a5ce9def2983ba3e7b76"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPBUILD}/boost
@@ -68,8 +68,8 @@ IF (THIRDPARTY_BUILD_BOOST)
         EXTERNALPROJECT_ADD(
             boost
             PREFIX ${TPSRC}
-            URL ${TPURL}/boost_1_55_0.tar.bz2
-            URL_MD5 "d6eef4b4cacb2183f2bf265a5a03a354"
+            URL ${TPURL}/boost_1_57_0.tar.bz2
+            URL_MD5 "1be49befbdd9a5ce9def2983ba3e7b76"
             STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPBUILD}/boost
@@ -95,7 +95,7 @@ IF (THIRDPARTY_BUILD_BOOST)
 
     IF (APPLE)
         EXTERNALPROJECT_ADD_STEP(boost patch-install-path
-            COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|" ${TPBUILD}/boost/tools/build/v2/tools/darwin.jam
+            COMMAND sed -i ".bak" "s|-install_name \"|&${TPDIST}/lib/|" ${TPBUILD}/boost/tools/build/src/tools/darwin.jam
             DEPENDERS build
             DEPENDEES download)
     ENDIF (APPLE)

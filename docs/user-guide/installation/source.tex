@@ -391,9 +391,9 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
   to the PATH.
   \item (Optional) If you do not wish to build boost during the compilation
   process (which can take some time), then boost binaries can be found at
-  \url{http://sourceforge.net/projects/boost/files/boost-binaries/1.55.0-build2/}. By
+  \url{http://sourceforge.net/projects/boost/files/boost-binaries/1.57.0/}. By
   default these install into \inlsh{C:\textbackslash local\textbackslash
-    boost\_1\_55\_0}. If you use these libraries, you will need to:
+    boost\_1\_57\_0}. If you use these libraries, you will need to:
   \begin{itemize}
     \item Rename \texttt{libs-msvc12.0} to \texttt{lib}
     \item Inside the \texttt{lib} directory, create duplicates of
@@ -424,9 +424,7 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
   drop-down list. If you have a 64-bit installation of Windows 7, you should
   select the \emph{Win64} variant, otherwise 32-bit executables will be
   generated. Select the option to use the native compilers.
-  \item Click the \emph{Configure} button.
-  \item An error will appear, since Boost cannot be found. To rectify this,
-  select the option named \inltt{THIRDPARTY\_BUILD\_BOOST}, and click Generate.
+  \item Click the \emph{Configure} button, then the \emph{Generate} button.
   \item Return to the command line and issue the command:
   \begin{lstlisting}[style=BashInputStyle]
     msbuild INSTALL.vcxproj /p:Configuration=Release
@@ -445,14 +443,13 @@ ModMETIS          & \cmark & \cmark & \cmark       & \\
   \emph{Edit}. To the end of this list, add the \textbf{full paths} to
   directories:
   \begin{itemize}
-    \item \inlsh{builds\textbackslash dist\textbackslash lib}
+    \item \inlsh{builds\textbackslash dist\textbackslash lib\textbackslash nektar++-\nekver}
     \item \inlsh{builds\textbackslash dist\textbackslash bin}
-    \item \inlsh{builds\textbackslash ThirdParty\textbackslash dist\textbackslash lib}
     \item Optionally, if you installed Boost from the binary packages,
-    \inlsh{C:\textbackslash local\textbackslash boost\_1\_55\_0 \textbackslash lib}
+    \inlsh{C:\textbackslash local\textbackslash boost\_1\_57\_0 \textbackslash lib}
   \end{itemize}
-  \item Open a \textbf{new} command line window, change to the \inlsh{builds}
-  directory, and then run the test suite by issuing the command
+  \item To run the test suite, open a \textbf{new} command line window, change
+  to the \inlsh{builds} directory, and then issue the command
   \begin{lstlisting}[style=BashInputStyle]
     ctest -C Release
   \end{lstlisting}

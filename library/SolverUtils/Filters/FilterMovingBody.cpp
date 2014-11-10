@@ -272,7 +272,7 @@ namespace Nektar
             Array<OneD, unsigned int> ZIDs;
             ZIDs = pFields[0]->GetZIDs();
             int local_planes = ZIDs.num_elements();
-            
+           
             // Homogeneous 1D case  Compute forces on all WALL boundaries
             // This only has to be done on the zero (mean) Fourier mode.
             for(int plane = 0 ; plane < local_planes; plane++)
@@ -434,6 +434,7 @@ namespace Nektar
             // different mesh partitions.
             // It is quite an expensive communication, therefore
             // we check to make sure it is actually required.
+			
             if(vComm->GetRowComm()->GetSize() > 0)
             {
                 // NOTE 1: We can eventually sum the viscous and pressure
@@ -456,188 +457,402 @@ namespace Nektar
             // of the vector Fxp, Fxp etc. are still zero.
             // Now we need to reduce the values on a single vector on rank (0,0) of the
             // global communicator.
-            if(vComm->GetRowComm()->GetRank() == 0)
+            if(!m_session->DefinesSolverInfo("HomoStrip"))
             {
-                for(int z = 0 ; z < Num_z_pos; z++)
+            	if(vComm->GetRowComm()->GetRank() == 0)
+            	{
+                	for(int z = 0 ; z < Num_z_pos; z++)
+                	{
+                    	vComm->GetColumnComm()->AllReduce(Fxp[z], LibUtilities::ReduceSum);
+                    	vComm->GetColumnComm()->AllReduce(Fxv[z], LibUtilities::ReduceSum);
+                    	vComm->GetColumnComm()->AllReduce(Fyp[z], LibUtilities::ReduceSum);
+                    	vComm->GetColumnComm()->AllReduce(Fyv[z], LibUtilities::ReduceSum);
+                	}
+            	}
+			}
+			else
+			{
+                if(vComm->GetRowComm()->GetRank() == 0)
                 {
-                    vComm->GetColumnComm()->AllReduce(Fxp[z], LibUtilities::ReduceSum);
-                    vComm->GetColumnComm()->AllReduce(Fxv[z], LibUtilities::ReduceSum);
-                    vComm->GetColumnComm()->AllReduce(Fyp[z], LibUtilities::ReduceSum);
-                    vComm->GetColumnComm()->AllReduce(Fyv[z], LibUtilities::ReduceSum);
+                    for(int z = 0 ; z < Num_z_pos; z++)
+                    {
+                        vComm->GetColumnComm()->GetColumnComm()->AllReduce(Fxp[z], LibUtilities::ReduceSum);
+                        vComm->GetColumnComm()->GetColumnComm()->AllReduce(Fxv[z], LibUtilities::ReduceSum);
+                        vComm->GetColumnComm()->GetColumnComm()->AllReduce(Fyp[z], LibUtilities::ReduceSum);
+                        vComm->GetColumnComm()->GetColumnComm()->AllReduce(Fyv[z], LibUtilities::ReduceSum);
+                    }
                 }
-            }
+			}
 
-            //set the forces imparted on the cable's wall
-            Array<OneD, NekDouble> fces(2);
-            for(int plane = 0 ; plane < local_planes; plane++)
-            {
-                fces[0] = Fxp[ZIDs[plane]] + Fxv[ZIDs[plane]];
-                fces[1] = Fyp[ZIDs[plane]] + Fyv[ZIDs[plane]];
-                pFields[0]->GetPlane(plane)->SetMovBodyForces(fces[0],fces[1]);
-            }
-           
-            //get and output moving body variables
-            Array<OneD, Array<OneD, NekDouble> > Motion_x;
-            Array<OneD, Array<OneD, NekDouble> > Motion_y;
-            int nStrVars = 3;
-            Motion_x = Array<OneD, Array<OneD, NekDouble> > (nStrVars);
-            Motion_y = Array<OneD, Array<OneD, NekDouble> > (nStrVars);
-            for(int i = 0; i < Motion_x.num_elements(); i++)
-            {
-                Motion_x[i] = Array<OneD, NekDouble>(local_planes,0.0);
-                Motion_y[i] = Array<OneD, NekDouble>(local_planes,0.0);
-            }
-            for(int plane = 0; plane < local_planes; plane++)
-            {
-                Array<OneD, NekDouble> tmp0(nStrVars);
-                Array<OneD, NekDouble> tmp1(nStrVars);
+			
+			if(!m_session->DefinesSolverInfo("HomoStrip"))
+			{
+            	//set the forces imparted on the cable's wall
+            	Array<OneD, NekDouble> fces(2);
+            	for(int plane = 0 ; plane < local_planes; plane++)
+            	{
+                	fces[0] = Fxp[ZIDs[plane]] + Fxv[ZIDs[plane]];
+                	fces[1] = Fyp[ZIDs[plane]] + Fyv[ZIDs[plane]];
+                	pFields[0]->GetPlane(plane)->SetMovBodyForces(fces[0],fces[1]);
+            	}
+ 
+            	// Only output every m_outputFrequency.
+            	if ((m_index++) % m_outputFrequency)
+            	{
+                	return;
+            	}
 
-                pFields[0]->GetPlane(plane)->GetMovBodyMotionVars(tmp0);
-                pFields[1]->GetPlane(plane)->GetMovBodyMotionVars(tmp1);
-                for (int var = 0; var < nStrVars; var++)
+            	// At thi point in rank (0,0) we have the full vectors
+            	// containing Fxp,Fxv,Fyp and Fyv where different positions
+            	// in the vectors correspond to different planes.
+            	// Here we write it to file. We do it just on one porcess
+
+           		Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
+            	Array<OneD, const NekDouble> pts = pFields[0]->GetHomogeneousBasis()->GetZ();
+
+            	NekDouble LZ;
+            	m_session->LoadParameter("LZ", LZ);
+            	Vmath::Smul(Num_z_pos,LZ/2.0,pts,1,z_coords,1);
+            	Vmath::Sadd(Num_z_pos,LZ/2.0,z_coords,1,z_coords,1);
+            	if (vComm->GetRank() == 0)
+            	{
+                
+                	Vmath::Vadd(Num_z_pos,Fxp,1,Fxv,1,Fx,1);
+                	Vmath::Vadd(Num_z_pos,Fyp,1,Fyv,1,Fy,1);
+                
+                	for(int i = 0 ; i < Num_z_pos; i++)
+                	{
+                    	m_outputStream[0].width(8);
+                    	m_outputStream[0] << setprecision(6) << time;
+                    
+                    	m_outputStream[0].width(25);
+                    	m_outputStream[0] << setprecision(6) << z_coords[i];
+                    
+                    	m_outputStream[0].width(25);
+                    	m_outputStream[0] << setprecision(8) << Fxp[i];
+                    	m_outputStream[0].width(25);
+                    	m_outputStream[0] << setprecision(8) << Fxv[i];
+                    	m_outputStream[0].width(25);
+                    	m_outputStream[0] << setprecision(8) << Fx[i];
+                    
+                    	m_outputStream[0].width(25);
+                    	m_outputStream[0] << setprecision(8) << Fyp[i];
+                    	m_outputStream[0].width(25);
+                    	m_outputStream[0] << setprecision(8) << Fyv[i];
+                    	m_outputStream[0].width(25);
+                    	m_outputStream[0] << setprecision(8) << Fy[i];
+                    	m_outputStream[0] << endl;
+                	}
+            	}
+				
+                //get and output moving body variables
+				int nStrVars = 3;
+                Array<OneD, Array<OneD, NekDouble> > Motion_x(nStrVars);
+                Array<OneD, Array<OneD, NekDouble> > Motion_y(nStrVars);
+
+                for(int i = 0; i < nStrVars; i++)
                 {
-                    Motion_x[var][plane] = tmp0[var];
-                    Motion_y[var][plane] = tmp1[var];
+                    Motion_x[i] = Array<OneD, NekDouble>(local_planes,0.0);
+                    Motion_y[i] = Array<OneD, NekDouble>(local_planes,0.0);
                 }
-            }
-            // Only output every m_outputFrequency.
-            if ((m_index++) % m_outputFrequency)
-            {
-                return;
-            }
-
-            // At thi point in rank (0,0) we have the full vectors
-            // containing Fxp,Fxv,Fyp and Fyv where different positions
-            // in the vectors correspond to different planes.
-            // Here we write it to file. We do it just on one porcess
-
-            Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
-            Array<OneD, const NekDouble> pts = pFields[0]->GetHomogeneousBasis()->GetZ();
-
-            NekDouble LZ;
-            m_session->LoadParameter("LZ", LZ);
-            Vmath::Smul(Num_z_pos,LZ/2.0,pts,1,z_coords,1);
-            Vmath::Sadd(Num_z_pos,LZ/2.0,z_coords,1,z_coords,1);
-            if (vComm->GetRank() == 0)
-            {
-                
-                Vmath::Vadd(Num_z_pos,Fxp,1,Fxv,1,Fx,1);
-                Vmath::Vadd(Num_z_pos,Fyp,1,Fyv,1,Fy,1);
-                
-                for(int i = 0 ; i < Num_z_pos; i++)
+                for(int plane = 0; plane < local_planes; plane++)
                 {
+                    Array<OneD, NekDouble> tmp0(nStrVars);
+                    Array<OneD, NekDouble> tmp1(nStrVars);
+
+                    pFields[0]->GetPlane(plane)->GetMovBodyMotionVars(tmp0);
+                    pFields[1]->GetPlane(plane)->GetMovBodyMotionVars(tmp1);
+                    for (int var = 0; var < nStrVars; var++)
+                    {
+                        Motion_x[var][plane] = tmp0[var];
+                        Motion_y[var][plane] = tmp1[var];
+                    }
+                }
+            	Array <OneD, NekDouble> CableAccelX;
+            	Array <OneD, NekDouble> CableVelocX;
+            	Array <OneD, NekDouble> CableDisplX;
+            	Array <OneD, NekDouble> CableAccelY;
+            	Array <OneD, NekDouble> CableVelocY;
+            	Array <OneD, NekDouble> CableDisplY;
+
+            	int npoints = Motion_x[0].num_elements();
+            	CableAccelX = Array <OneD, NekDouble>(npoints);
+            	CableVelocX = Array <OneD, NekDouble>(npoints);
+            	CableDisplX = Array <OneD, NekDouble>(npoints);
+            	CableAccelY = Array <OneD, NekDouble>(npoints);
+            	CableVelocY = Array <OneD, NekDouble>(npoints);
+            	CableDisplY = Array <OneD, NekDouble>(npoints);
+
+            	Vmath::Vcopy(npoints,Motion_x[0],1,CableDisplX,1);
+            	Vmath::Vcopy(npoints,Motion_x[1],1,CableVelocX,1);
+            	Vmath::Vcopy(npoints,Motion_x[2],1,CableAccelX,1);
+            	Vmath::Vcopy(npoints,Motion_y[0],1,CableDisplY,1);
+            	Vmath::Vcopy(npoints,Motion_y[1],1,CableVelocY,1);
+            	Vmath::Vcopy(npoints,Motion_y[2],1,CableAccelY,1);
+
+            	int colrank = vComm->GetColumnComm()->GetRank();
+            	int nproc   = vComm->GetColumnComm()->GetSize();
+            	// Send to root process.
+            	if (colrank == 0)
+            	{
+                	for (int j = 0; j <Motion_x[0].num_elements(); j++)
+                	{
+                    	m_outputStream[1].width(8);
+                    	m_outputStream[1] << setprecision(6) << time;
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(6) << z_coords[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableDisplX[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableVelocX[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableAccelX[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableDisplY[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableVelocY[j];
+                    	m_outputStream[1].width(25);
+                    	m_outputStream[1] << setprecision(8) << CableAccelY[j];
+                    	m_outputStream[1] << endl;
+                	}
+
+			
+                	for (int i = 1; i < nproc; ++i)
+                	{
+                     	vComm->GetColumnComm()->Recv(i, CableAccelX);
+                     	vComm->GetColumnComm()->Recv(i, CableVelocX);
+                     	vComm->GetColumnComm()->Recv(i, CableDisplX);
+                     	vComm->GetColumnComm()->Recv(i, CableAccelY);
+                     	vComm->GetColumnComm()->Recv(i, CableVelocY);
+                     	vComm->GetColumnComm()->Recv(i, CableDisplY);
+
+                    	for (int j = 0; j < Motion_x[0].num_elements(); ++j)
+                    	{
+							int n = Num_z_pos/nproc * i + j;
+                        	m_outputStream[1].width(8);
+                        	m_outputStream[1] << setprecision(6) << time;
+                        	m_outputStream[1].width(25);
+                        	m_outputStream[1] << setprecision(6) << z_coords[n];
+                        	m_outputStream[1].width(25);
+                        	m_outputStream[1] << setprecision(8) << CableDisplX[j];
+                        	m_outputStream[1].width(25);
+                        	m_outputStream[1] << setprecision(8) << CableVelocX[j];
+                        	m_outputStream[1].width(25);
+                        	m_outputStream[1] << setprecision(8) << CableAccelX[j];
+                        	m_outputStream[1].width(25);
+                        	m_outputStream[1] << setprecision(8) << CableDisplY[j];
+                        	m_outputStream[1].width(25);
+                        	m_outputStream[1] << setprecision(8) << CableVelocY[j];
+                        	m_outputStream[1].width(25);
+                        	m_outputStream[1] << setprecision(8) << CableAccelY[j];
+                        	m_outputStream[1] << endl;
+                    	}
+                	}
+            	}
+            	else
+            	{
+                	vComm->GetColumnComm()->Send(0, CableAccelX);
+                	vComm->GetColumnComm()->Send(0, CableVelocX);
+                	vComm->GetColumnComm()->Send(0, CableDisplX);
+                	vComm->GetColumnComm()->Send(0, CableAccelY);
+                	vComm->GetColumnComm()->Send(0, CableVelocY);
+                	vComm->GetColumnComm()->Send(0, CableDisplY);
+            	}
+			}
+			else
+			{
+                // average the forces over local planes for each processor
+                Array<OneD, NekDouble> fces(6,0.0);
+                for(int plane = 0 ; plane < local_planes; plane++)
+                {
+                    fces[0] += Fxp[ZIDs[plane]] + Fxv[ZIDs[plane]];
+                    fces[1] += Fyp[ZIDs[plane]] + Fyv[ZIDs[plane]];
+                    fces[2] += Fxp[ZIDs[plane]] ;
+                    fces[3] += Fyp[ZIDs[plane]] ;
+                    fces[4] += Fxv[ZIDs[plane]] ;
+                    fces[5] += Fyv[ZIDs[plane]] ;
+                }
+
+                fces[0] = fces[0]/local_planes;
+                fces[1] = fces[1]/local_planes;
+                fces[2] = fces[2]/local_planes;
+                fces[3] = fces[3]/local_planes;
+                fces[4] = fces[4]/local_planes;
+                fces[5] = fces[5]/local_planes;
+
+                // average the forces over communicators within each strip
+                vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[0], LibUtilities::ReduceSum);
+                vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[1], LibUtilities::ReduceSum);
+                vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[2], LibUtilities::ReduceSum);
+                vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[3], LibUtilities::ReduceSum);
+                vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[4], LibUtilities::ReduceSum);
+                vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[5], LibUtilities::ReduceSum);
+
+                int npts = vComm->GetColumnComm()->GetColumnComm()->GetSize();
+
+                fces[0] = fces[0]/npts;
+                fces[1] = fces[1]/npts;
+                fces[2] = fces[2]/npts;
+                fces[3] = fces[3]/npts;
+                fces[4] = fces[4]/npts;
+                fces[5] = fces[5]/npts;
+
+                for(int plane = 0 ; plane < local_planes; plane++)
+                {
+                    pFields[0]->GetPlane(plane)->SetMovBodyForces(fces[0],fces[1]);
+                }
+
+                // Only output every m_outputFrequency.
+                if ((m_index++) % m_outputFrequency)
+                {
+                    return;
+                }
+
+            	int colrank = vComm->GetColumnComm()->GetRank();
+				int nstrips;
+
+                NekDouble DistStrip;
+
+            	m_session->LoadParameter("Strip_Z", nstrips);
+                m_session ->LoadParameter("DistStrip", DistStrip);
+
+				Array<OneD, NekDouble> z_coords(nstrips);
+				for(int i = 0; i < nstrips; i++)
+				{
+					z_coords[i] = i * DistStrip;
+				}
+
+            	if(colrank == 0)
+            	{
                     m_outputStream[0].width(8);
                     m_outputStream[0] << setprecision(6) << time;
-                    
+
                     m_outputStream[0].width(25);
-                    m_outputStream[0] << setprecision(6) << z_coords[i];
-                    
+                    m_outputStream[0] << setprecision(6) << z_coords[0];
+
                     m_outputStream[0].width(25);
-                    m_outputStream[0] << setprecision(8) << Fxp[i];
+                    m_outputStream[0] << setprecision(8) << fces[2];
                     m_outputStream[0].width(25);
-                    m_outputStream[0] << setprecision(8) << Fxv[i];
+                    m_outputStream[0] << setprecision(8) << fces[4];
                     m_outputStream[0].width(25);
-                    m_outputStream[0] << setprecision(16) << Fx[i];
-                    
+                    m_outputStream[0] << setprecision(8) << fces[0];
+
                     m_outputStream[0].width(25);
-                    m_outputStream[0] << setprecision(8) << Fyp[i];
+                    m_outputStream[0] << setprecision(8) << fces[3];
                     m_outputStream[0].width(25);
-                    m_outputStream[0] << setprecision(8) << Fyv[i];
+                    m_outputStream[0] << setprecision(8) << fces[5];
                     m_outputStream[0].width(25);
-                    m_outputStream[0] << setprecision(8) << Fy[i];
+                    m_outputStream[0] << setprecision(8) << fces[1];
                     m_outputStream[0] << endl;
+
+                	for(int i = 1; i < nstrips; i++)
+                	{
+                    	vComm->GetColumnComm()->Recv(i, fces);
+
+                        m_outputStream[0].width(8);
+                        m_outputStream[0] << setprecision(6) << time;
+
+                        m_outputStream[0].width(25);
+                        m_outputStream[0] << setprecision(6) << z_coords[i];
+
+                        m_outputStream[0].width(25);
+                        m_outputStream[0] << setprecision(8) << fces[2];
+                        m_outputStream[0].width(25);
+                        m_outputStream[0] << setprecision(8) << fces[4];
+                        m_outputStream[0].width(25);
+                        m_outputStream[0] << setprecision(8) << fces[0];
+
+                        m_outputStream[0].width(25);
+                        m_outputStream[0] << setprecision(8) << fces[3];
+                        m_outputStream[0].width(25);
+                        m_outputStream[0] << setprecision(8) << fces[5];
+                        m_outputStream[0].width(25);
+                        m_outputStream[0] << setprecision(8) << fces[1];
+                        m_outputStream[0] << endl;
+                	}
+            	}
+            	else
+            	{
+                	for(int i = 1; i < nstrips; i++)
+                	{
+                    	if(colrank == i)
+                    	{
+                        	vComm->GetColumnComm()->Send(0, fces);
+                    	}
+                	}
+            	}
+
+                //get and output moving body variables
+                int nStrVars = 3;
+                Array<OneD, Array<OneD, NekDouble> > Motion_x(nStrVars);
+                Array<OneD, Array<OneD, NekDouble> > Motion_y(nStrVars);
+               
+                for(int i = 0; i < nStrVars; i++)
+                {
+                    Motion_x[i] = Array<OneD, NekDouble>(local_planes,0.0);
+                    Motion_y[i] = Array<OneD, NekDouble>(local_planes,0.0);
                 }
-            }
+                for(int plane = 0; plane < local_planes; plane++)
+                {
+                    Array<OneD, NekDouble> tmp0(nStrVars);
+                    Array<OneD, NekDouble> tmp1(nStrVars);
 
-            //
-            Array <OneD, NekDouble> CableAccelX;
-            Array <OneD, NekDouble> CableVelocX;
-            Array <OneD, NekDouble> CableDisplX;
-            Array <OneD, NekDouble> CableAccelY;
-            Array <OneD, NekDouble> CableVelocY;
-            Array <OneD, NekDouble> CableDisplY;
-
-            int npoints = Motion_x[0].num_elements();
-            CableAccelX = Array <OneD, NekDouble>(npoints);
-            CableVelocX = Array <OneD, NekDouble>(npoints);
-            CableDisplX = Array <OneD, NekDouble>(npoints);
-            CableAccelY = Array <OneD, NekDouble>(npoints);
-            CableVelocY = Array <OneD, NekDouble>(npoints);
-            CableDisplY = Array <OneD, NekDouble>(npoints);
-
-            Vmath::Vcopy(npoints,Motion_x[0],1,CableDisplX,1);
-            Vmath::Vcopy(npoints,Motion_x[1],1,CableVelocX,1);
-            Vmath::Vcopy(npoints,Motion_x[2],1,CableAccelX,1);
-            Vmath::Vcopy(npoints,Motion_y[0],1,CableDisplY,1);
-            Vmath::Vcopy(npoints,Motion_y[1],1,CableVelocY,1);
-            Vmath::Vcopy(npoints,Motion_y[2],1,CableAccelY,1);
-
-            int colrank = vComm->GetColumnComm()->GetRank();
-            int nproc   = vComm->GetColumnComm()->GetSize();
-            // Send to root process.
-            if (colrank == 0)
-            {
-                for (int j = 0; j <Motion_x[0].num_elements(); j++)
+                    pFields[0]->GetPlane(plane)->GetMovBodyMotionVars(tmp0);
+                    pFields[1]->GetPlane(plane)->GetMovBodyMotionVars(tmp1);
+                    for (int var = 0; var < nStrVars; var++)
+                    {
+                        Motion_x[var][plane] = tmp0[var];
+                        Motion_y[var][plane] = tmp1[var];
+                    }
+                }
+                Array <OneD, NekDouble> CableMotions(6);
+				
+				for(int var = 0; var <nStrVars; var++)
+				{
+					CableMotions[var]   = Motion_x[var][0];
+                	CableMotions[3+var] = Motion_y[var][0];
+				}
+                // Send to root process.
+                if (colrank == 0)
                 {
                     m_outputStream[1].width(8);
                     m_outputStream[1] << setprecision(6) << time;
                     m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(6) << z_coords[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableDisplX[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableVelocX[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableAccelX[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableDisplY[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableVelocY[j];
-                    m_outputStream[1].width(25);
-                    m_outputStream[1] << setprecision(8) << CableAccelY[j];
-                    m_outputStream[1] << endl;
-                }
+                    m_outputStream[1] << setprecision(6) << z_coords[0];
+					for(int var = 0; var < 2*nStrVars; var++)
+					{
+                        m_outputStream[1].width(25);
+                        m_outputStream[1] << setprecision(8) << CableMotions[var];
+					}
+					m_outputStream[1] << endl;
 
-                for (int i = 1; i < nproc; ++i)
-                {
-                     vComm->GetColumnComm()->Recv(i, CableAccelX);
-                     vComm->GetColumnComm()->Recv(i, CableVelocX);
-                     vComm->GetColumnComm()->Recv(i, CableDisplX);
-                     vComm->GetColumnComm()->Recv(i, CableAccelY);
-                     vComm->GetColumnComm()->Recv(i, CableVelocY);
-                     vComm->GetColumnComm()->Recv(i, CableDisplY);
-
-                    for (int j = 0; j < Motion_x[0].num_elements(); ++j)
+                    for (int i = 1; i < nstrips; ++i)
                     {
+                        vComm->GetColumnComm()->Recv(i, CableMotions);
+
                         m_outputStream[1].width(8);
                         m_outputStream[1] << setprecision(6) << time;
                         m_outputStream[1].width(25);
-                        m_outputStream[1] << setprecision(6) << z_coords[2 * i + j];
-                        m_outputStream[1].width(25);
-                        m_outputStream[1] << setprecision(8) << CableDisplX[j];
-                        m_outputStream[1].width(25);
-                        m_outputStream[1] << setprecision(8) << CableVelocX[j];
-                        m_outputStream[1].width(25);
-                        m_outputStream[1] << setprecision(8) << CableAccelX[j];
-                        m_outputStream[1].width(25);
-                        m_outputStream[1] << setprecision(8) << CableDisplY[j];
-                        m_outputStream[1].width(25);
-                        m_outputStream[1] << setprecision(8) << CableVelocY[j];
-                        m_outputStream[1].width(25);
-                        m_outputStream[1] << setprecision(8) << CableAccelY[j];
-                        m_outputStream[1] << endl;
+                        m_outputStream[1] << setprecision(6) << z_coords[i];
+                    	for(int var = 0; var < 2*nStrVars; var++)
+                    	{
+                        	m_outputStream[1].width(25);
+                        	m_outputStream[1] << setprecision(8) << CableMotions[var];
+                    	}
+						m_outputStream[1] << endl;
                     }
                 }
-            }
-            else
-            {
-                vComm->GetColumnComm()->Send(0, CableAccelX);
-                vComm->GetColumnComm()->Send(0, CableVelocX);
-                vComm->GetColumnComm()->Send(0, CableDisplX);
-                vComm->GetColumnComm()->Send(0, CableAccelY);
-                vComm->GetColumnComm()->Send(0, CableVelocY);
-                vComm->GetColumnComm()->Send(0, CableDisplY);
-            }
+                else
+                {
+                    for(int i = 1; i < nstrips; i++)
+                    {
+                        if(colrank == i)
+                        {
+                    		vComm->GetColumnComm()->Send(0, CableMotions);
+						}
+					}
+                }
+			}
         }
 
 

@@ -319,7 +319,7 @@ namespace Nektar
             }
         }
 
-        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip = 0)
         {
             int i,j,k;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
@@ -333,6 +333,16 @@ namespace Nektar
             coords[1] = Array<OneD,NekDouble>(ntot);
             coords[2] = Array<OneD,NekDouble>(ntot);
             GetCoords(expansion,coords[0],coords[1],coords[2]);
+
+			if(m_session->DefinesSolverInfo("HomoStrip"))
+			{
+				NekDouble DistStrip;
+				m_session->LoadParameter("DistStrip", DistStrip);
+				for(int i = 0; i < ntot; i++)
+				{
+					coords[2][i] += istrip*DistStrip;
+				}
+			}
 
             outfile << "    <Piece NumberOfPoints=\""
                     << ntot << "\" NumberOfCells=\""

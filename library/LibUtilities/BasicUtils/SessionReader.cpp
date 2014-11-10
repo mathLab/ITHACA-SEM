@@ -313,6 +313,8 @@ namespace Nektar
                                  "number of procs in Y-dir")
                 ("npz",          po::value<int>(),
                                  "number of procs in Z-dir")
+                ("nsz",          po::value<int>(),
+                                 "number of slics in Z-dir")
                 ("part-info",    "Output partition information")
             ;
             
@@ -1508,6 +1510,7 @@ namespace Nektar
                 int nProcZ = 1;
                 int nProcY = 1;
                 int nProcX = 1;
+				int nStripZ = 1;
                 if (DefinesCmdLineArgument("npx")) {
                     nProcX = GetCmdLineArgument<int>("npx");
                 }
@@ -1517,7 +1520,9 @@ namespace Nektar
                 if (DefinesCmdLineArgument("npz")) {
                     nProcZ = GetCmdLineArgument<int>("npz");
                 }
-
+                if (DefinesCmdLineArgument("nsz")) {
+                    nStripZ = GetCmdLineArgument<int>("nsz");
+                }
                 ASSERTL0(m_comm->GetSize() % (nProcZ*nProcY*nProcX) == 0,
                          "Cannot exactly partition using PROC_Z value.");
                 ASSERTL0(nProcZ % nProcY == 0,
@@ -1531,10 +1536,11 @@ namespace Nektar
                 // Number of processes associated with the spectral element
                 // method.
                 int nProcSem = m_comm->GetSize() / nProcSm;
-                
+        		
                 m_comm->SplitComm(nProcSm,nProcSem);
-                m_comm->GetColumnComm()->SplitComm((nProcY*nProcX),nProcZ);
-                m_comm->GetColumnComm()->GetColumnComm()->SplitComm(
+                m_comm->GetColumnComm()->SplitComm(nProcZ/nStripZ,nStripZ);
+				m_comm->GetColumnComm()->GetColumnComm()->SplitComm((nProcY*nProcX),nProcZ/nStripZ);
+                m_comm->GetColumnComm()->GetColumnComm()->GetColumnComm()->SplitComm(
                     nProcX,nProcY);
             }
         }

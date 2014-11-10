@@ -64,11 +64,21 @@ namespace Nektar
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,"Homogeneous Basis is a null basis");
             
 			m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
+		
+			if(!m_session->DefinesSolverInfo("HomoStrip"))
+			{	
+				m_transposition = MemoryManager<LibUtilities::Transposition>::AllocateSharedPtr(HomoBasis,m_comm->GetColumnComm());
 			
-			m_transposition = MemoryManager<LibUtilities::Transposition>::AllocateSharedPtr(HomoBasis,m_comm->GetColumnComm());
-			
-			m_planes = Array<OneD,ExpListSharedPtr>(m_homogeneousBasis->GetNumPoints()/m_comm->GetColumnComm()->GetSize());
-            
+				m_planes = Array<OneD,ExpListSharedPtr>(m_homogeneousBasis->GetNumPoints()/m_comm->GetColumnComm()->GetSize());
+			}
+			else
+			{
+				m_StripZcomm = m_comm->GetColumnComm()->GetColumnComm();				
+
+                m_transposition = MemoryManager<LibUtilities::Transposition>::AllocateSharedPtr(HomoBasis,m_StripZcomm);
+
+                m_planes = Array<OneD,ExpListSharedPtr>(m_homogeneousBasis->GetNumPoints()/m_StripZcomm->GetSize());	
+			}
             if(m_useFFT)
             {
                 m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_homogeneousBasis->GetNumPoints());
@@ -162,7 +172,15 @@ namespace Nektar
             HomogeneousFwdTrans(inarray2,V2,coeffstate);
 
             int num_points_per_plane = num_dofs/m_planes.num_elements();
-            int num_proc             = m_comm->GetColumnComm()->GetSize();
+			int num_proc;
+			if(!m_session->DefinesSolverInfo("HomoStrip"))
+			{
+            	num_proc             = m_comm->GetColumnComm()->GetSize();
+			}
+			else
+			{
+				num_proc             = m_StripZcomm->GetSize();
+			}
             int num_dfts_per_proc    = num_points_per_plane / num_proc
                                         + (num_points_per_plane % num_proc > 0);
 
@@ -357,10 +375,17 @@ namespace Nektar
             
             if(m_useFFT)
             {		
-                
                 int num_points_per_plane = num_dofs/m_planes.num_elements();
-                int num_dfts_per_proc    = num_points_per_plane/m_comm->GetColumnComm()->GetSize() + (num_points_per_plane%m_comm->GetColumnComm()->GetSize() > 0);
-                
+				int num_dfts_per_proc;
+				if(!m_session->DefinesSolverInfo("HomoStrip"))
+				{
+                	num_dfts_per_proc = num_points_per_plane/m_comm->GetColumnComm()->GetSize() + (num_points_per_plane%m_comm->GetColumnComm()->GetSize() > 0);
+                }
+				else
+				{
+					num_dfts_per_proc = num_points_per_plane/m_StripZcomm->GetSize() + (num_points_per_plane%m_StripZcomm->GetSize() > 0);
+				}
+
                 Array<OneD, NekDouble> fft_in (num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
                 Array<OneD, NekDouble> fft_out(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
 		
@@ -483,7 +508,6 @@ namespace Nektar
             int n_exp = 0;
             int num_trans_per_proc = 0;
             
-            
             if((mattype == eForwardsCoeffSpace1D)
                ||(mattype == eBackwardsCoeffSpace1D)) // will operate on m_coeffs
             {
@@ -493,7 +517,7 @@ namespace Nektar
             {
                 n_exp = m_planes[0]->GetTotPoints(); // will operatore on m_phys
             }
-			
+
             num_trans_per_proc = n_exp/m_comm->GetColumnComm()->GetSize() + (n_exp%m_comm->GetColumnComm()->GetSize() > 0);
 
             Array<OneD,unsigned int> nrows(num_trans_per_proc);
@@ -919,8 +943,15 @@ namespace Nektar
                 }
                 else 
                 {
-                    ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
-                    
+					if(!m_session->DefinesSolverInfo("HomoStrip"))
+					{
+                    	ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+                    }
+					else
+					{
+						ASSERTL0(m_StripZcomm->GetSize()            == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+					}
+
                     if(m_WaveSpace)
                     {
                         
@@ -1019,7 +1050,14 @@ namespace Nektar
                 }
                 else 
                 {
-                    ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+					if(!m_session->DefinesSolverInfo("HomoStrip"))
+					{
+                    	ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+					}
+					else
+					{
+						ASSERTL0(m_StripZcomm->GetSize()            == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+					}
                     
                     if(m_WaveSpace)
                     {

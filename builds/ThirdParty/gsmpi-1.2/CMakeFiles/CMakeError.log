@@ -1,0 +1,46 @@
+Determining if files mpi.h exist failed with the following output:
+Change Dir: /tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/make "cmTryCompileExec2751277336/fast"
+make[3]: Entering directory `/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp'
+/usr/bin/make -f CMakeFiles/cmTryCompileExec2751277336.dir/build.make CMakeFiles/cmTryCompileExec2751277336.dir/build
+make[4]: Entering directory `/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp'
+/apps/cmake/2.8.8/bin/cmake -E cmake_progress_report /tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec2751277336.dir/CheckIncludeFiles.c.o
+/usr/bin/gcc    -o CMakeFiles/cmTryCompileExec2751277336.dir/CheckIncludeFiles.c.o   -c /tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp/CheckIncludeFiles.c
+/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp/CheckIncludeFiles.c:2:17: fatal error: mpi.h: No such file or directory
+compilation terminated.
+make[4]: Leaving directory `/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp'
+make[4]: *** [CMakeFiles/cmTryCompileExec2751277336.dir/CheckIncludeFiles.c.o] Error 1
+make[3]: Leaving directory `/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp'
+make[3]: *** [cmTryCompileExec2751277336/fast] Error 2
+
+Source:
+/* */
+#include <mpi.h>
+
+
+int main(){return 0;}
+
+Determining if the function MPI_Send exists failed with the following output:
+Change Dir: /tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/make "cmTryCompileExec508146622/fast"
+make[3]: Entering directory `/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp'
+/usr/bin/make -f CMakeFiles/cmTryCompileExec508146622.dir/build.make CMakeFiles/cmTryCompileExec508146622.dir/build
+make[4]: Entering directory `/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp'
+/apps/cmake/2.8.8/bin/cmake -E cmake_progress_report /tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec508146622.dir/CheckFunctionExists.c.o
+/usr/bin/gcc   -DCHECK_FUNCTION_EXISTS=MPI_Send   -o CMakeFiles/cmTryCompileExec508146622.dir/CheckFunctionExists.c.o   -c /apps/cmake/2.8.8/share/cmake-2.8/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec508146622
+/apps/cmake/2.8.8/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec508146622.dir/link.txt --verbose=1
+/usr/bin/gcc     -DCHECK_FUNCTION_EXISTS=MPI_Send    CMakeFiles/cmTryCompileExec508146622.dir/CheckFunctionExists.c.o  -o cmTryCompileExec508146622 -rdynamic 
+CMakeFiles/cmTryCompileExec508146622.dir/CheckFunctionExists.c.o: In function `main':
+CheckFunctionExists.c:(.text+0x15): undefined reference to `MPI_Send'
+collect2: error: ld returned 1 exit status
+make[4]: *** [cmTryCompileExec508146622] Error 1
+make[4]: Leaving directory `/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp'
+make[3]: Leaving directory `/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/CMakeTmp'
+make[3]: *** [cmTryCompileExec508146622/fast] Error 2
+
+

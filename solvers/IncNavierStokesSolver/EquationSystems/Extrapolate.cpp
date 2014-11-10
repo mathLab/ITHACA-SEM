@@ -119,7 +119,7 @@ namespace Nektar
             for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
             {
                 // High order boundary condition;
-          if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+          		if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
                 {
                     int nq = m_PBndExp[n]->GetNcoeffs();
                     Vmath::Vcopy(nq, &(m_PBndExp[n]->GetCoeffs()[0]), 1,
@@ -151,6 +151,7 @@ namespace Nektar
                          accelerationTerm,  1,
                          m_pressureHBCs[0], 1,
                          m_pressureHBCs[0], 1);
+
 
             // Extrapolate to n+1
             Vmath::Smul(cnt, StifflyStable_Betaq_Coeffs[nint-1][nint-1],

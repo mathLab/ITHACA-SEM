@@ -1,0 +1,1 @@
+cmd='/apps/cmake/2.8.8/bin/cmake;-DCMAKE_C_COMPILER:FILEPATH=/usr/bin/gcc;-DCMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++;-DCMAKE_INSTALL_PREFIX:PATH=/tmp/ybao/nektar++/builds/dist;-DCMAKE_C_FLAGS:STRING=-fPIC;-DGKLIB_PATH:PATH=/tmp/ybao/nektar++/ThirdParty/modmetis-5.1.0/GKlib;/tmp/ybao/nektar++/ThirdParty/modmetis-5.1.0'

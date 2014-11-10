@@ -1,0 +1,2 @@
+/usr/bin/ar cr libxxt.a  CMakeFiles/xxt.dir/src/xxt.c.o CMakeFiles/xxt.dir/src/sparse_cholesky.c.o
+/usr/bin/ranlib libxxt.a

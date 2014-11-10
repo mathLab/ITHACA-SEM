@@ -1,0 +1,3 @@
+repository='external project URL'
+module='http://www.nektar.info/thirdparty/gsmpi-1.2.tar.bz2'
+tag='35901be16791bfdeafa9c4d0e06d189b'

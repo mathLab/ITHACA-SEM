@@ -310,7 +310,7 @@ namespace Nektar
         }
 
 
-        void ExpList3DHomogeneous2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip = 0)
         {
             int i,j,k;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);

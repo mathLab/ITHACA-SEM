@@ -1,0 +1,2 @@
+/usr/bin/ar cr libgsmpi.a  CMakeFiles/gsmpi.dir/src/gs.c.o CMakeFiles/gsmpi.dir/src/sort.c.o CMakeFiles/gsmpi.dir/src/sarray_transfer.c.o CMakeFiles/gsmpi.dir/src/sarray_sort.c.o CMakeFiles/gsmpi.dir/src/gs_local.c.o CMakeFiles/gsmpi.dir/src/fail.c.o CMakeFiles/gsmpi.dir/src/crystal.c.o CMakeFiles/gsmpi.dir/src/comm.c.o CMakeFiles/gsmpi.dir/src/tensor.c.o
+/usr/bin/ranlib libgsmpi.a

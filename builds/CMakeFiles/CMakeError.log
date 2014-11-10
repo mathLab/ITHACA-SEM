@@ -1,0 +1,42 @@
+Determining if files mpi.h exist failed with the following output:
+Change Dir: /tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/make "cmTryCompileExec264644057/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec264644057.dir/build.make CMakeFiles/cmTryCompileExec264644057.dir/build
+make[1]: Entering directory `/tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp'
+/apps/cmake/2.8.8/bin/cmake -E cmake_progress_report /tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec264644057.dir/CheckIncludeFiles.c.o
+/usr/bin/gcc    -o CMakeFiles/cmTryCompileExec264644057.dir/CheckIncludeFiles.c.o   -c /tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp/CheckIncludeFiles.c
+/tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp/CheckIncludeFiles.c:2:17: fatal error: mpi.h: No such file or directory
+compilation terminated.
+make[1]: Leaving directory `/tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp'
+make[1]: *** [CMakeFiles/cmTryCompileExec264644057.dir/CheckIncludeFiles.c.o] Error 1
+make: *** [cmTryCompileExec264644057/fast] Error 2
+
+Source:
+/* */
+#include <mpi.h>
+
+
+int main(){return 0;}
+
+Determining if the function MPI_Send exists failed with the following output:
+Change Dir: /tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/make "cmTryCompileExec487777045/fast"
+/usr/bin/make -f CMakeFiles/cmTryCompileExec487777045.dir/build.make CMakeFiles/cmTryCompileExec487777045.dir/build
+make[1]: Entering directory `/tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp'
+/apps/cmake/2.8.8/bin/cmake -E cmake_progress_report /tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec487777045.dir/CheckFunctionExists.c.o
+/usr/bin/gcc   -DCHECK_FUNCTION_EXISTS=MPI_Send   -o CMakeFiles/cmTryCompileExec487777045.dir/CheckFunctionExists.c.o   -c /apps/cmake/2.8.8/share/cmake-2.8/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec487777045
+/apps/cmake/2.8.8/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec487777045.dir/link.txt --verbose=1
+/usr/bin/gcc     -DCHECK_FUNCTION_EXISTS=MPI_Send    CMakeFiles/cmTryCompileExec487777045.dir/CheckFunctionExists.c.o  -o cmTryCompileExec487777045 -rdynamic 
+CMakeFiles/cmTryCompileExec487777045.dir/CheckFunctionExists.c.o: In function `main':
+CheckFunctionExists.c:(.text+0x15): undefined reference to `MPI_Send'
+collect2: error: ld returned 1 exit status
+make[1]: Leaving directory `/tmp/ybao/nektar++/builds/CMakeFiles/CMakeTmp'
+make[1]: *** [cmTryCompileExec487777045] Error 1
+make: *** [cmTryCompileExec487777045/fast] Error 2
+
+

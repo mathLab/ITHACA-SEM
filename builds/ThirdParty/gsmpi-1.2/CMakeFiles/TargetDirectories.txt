@@ -1,0 +1,2 @@
+/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/gsmpi.dir
+/tmp/ybao/nektar++/builds/ThirdParty/gsmpi-1.2/CMakeFiles/xxt.dir

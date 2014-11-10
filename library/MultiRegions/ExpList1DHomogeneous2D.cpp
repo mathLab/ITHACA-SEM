@@ -282,7 +282,7 @@ namespace Nektar
         }
 
 
-        void ExpList1DHomogeneous2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList1DHomogeneous2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip = 0)
         {
             int i,j;
             

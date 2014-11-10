@@ -1577,7 +1577,7 @@ namespace Nektar
             outfile << "</VTKFile>" << endl;
         }
 
-        void ExpList::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip)
         {
             ASSERTL0(false, "Routine not implemented for this expansion.");
         }

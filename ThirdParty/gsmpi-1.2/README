@@ -1,0 +1,13 @@
+GS-MPI
+------
+
+SVN ver: 987
+Date: 2013-11-22 20:48:11
+
+These libraries encapsulate the gather-scatter exchange routines and parallel
+direct solver from Nek5000 (http://nek5000.mcs.anl.gov/). This software is
+distributed under the GNU General Public License, in accordance with Nek5000.
+
+See the attached LICENSE file for details.
+
+The routines were primarily written by James Lottes.

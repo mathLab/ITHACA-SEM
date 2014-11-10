@@ -248,7 +248,7 @@ namespace Nektar
                     m_bndConditions[n]->GetUserDefined()
                                 == SpatialDomains::eTimeDependent ||
                     m_bndConditions[n]->GetUserDefined()
-                                == SpatialDomains::eFluidStructInt)
+                                == SpatialDomains::eMovingBody)
 
                 {
                     m_bndCondExpansions[n]->HomogeneousFwdTrans(

@@ -132,7 +132,7 @@ namespace Nektar
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eTimeDependent ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eFluidStructInt ||
+                            SpatialDomains::eMovingBody ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eRadiation ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
@@ -384,7 +384,7 @@ namespace Nektar
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
                    SpatialDomains::eTimeDependent ||
                     m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                       SpatialDomains::eFluidStructInt)
+                       SpatialDomains::eMovingBody)
                 {
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
@@ -454,7 +454,7 @@ namespace Nektar
             else if(type == SpatialDomains::eNoUserDefined ||
                     type == SpatialDomains::eWall_Forces || 
                     type == SpatialDomains::eTimeDependent || 
-                    type == SpatialDomains::eFluidStructInt ||
+                    type == SpatialDomains::eMovingBody ||
                     type == SpatialDomains::eHigh ||
                     type == SpatialDomains::eHighOutflow) 
             {

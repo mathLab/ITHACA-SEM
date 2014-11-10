@@ -2237,7 +2237,7 @@ namespace Nektar
                     }
                 }
                 else if (m_bndConditions[i]->GetUserDefined() ==
-                            SpatialDomains::eFluidStructInt)
+                            SpatialDomains::eMovingBody)
                 {
                     locExpList = m_bndCondExpansions[i];
                     npoints    = locExpList->GetNpoints();

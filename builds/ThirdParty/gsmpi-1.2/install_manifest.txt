@@ -1,0 +1,2 @@
+/tmp/ybao/nektar++/builds/dist/lib/libgsmpi.a
+/tmp/ybao/nektar++/builds/dist/lib/libxxt.a

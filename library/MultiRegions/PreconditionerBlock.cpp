@@ -38,6 +38,7 @@
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/SegExp.h>
 #include <math.h>
@@ -80,6 +81,13 @@ namespace Nektar
 
         void PreconditionerBlock::v_BuildPreconditioner()
         {
+            // Different setup for HDG
+            GlobalLinSysKey key = m_linsys.lock()->GetKey();
+            if (key.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
+            {
+                BlockPreconditionerHDG();
+                return;
+            }
 
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
@@ -95,11 +103,10 @@ namespace Nektar
             {
                 BlockPreconditioner2D();
             }
-            else if (nDim ==3)
+            else if (nDim == 3)
             {
                 BlockPreconditioner3D();
             }
-
         }
 
        /**
@@ -968,6 +975,99 @@ namespace Nektar
             }
         }
 
+        void PreconditionerBlock::BlockPreconditionerHDG()
+        {
+            boost::shared_ptr<MultiRegions::ExpList>
+                expList=((m_linsys.lock())->GetLocMat()).lock();
+            boost::shared_ptr<MultiRegions::ExpList> trace = expList->GetTrace();
+            LocalRegions::ExpansionSharedPtr locExpansion;
+            DNekScalBlkMatSharedPtr loc_mat;
+            DNekScalMatSharedPtr    bnd_mat;
+
+            AssemblyMapDGSharedPtr asmMap = boost::dynamic_pointer_cast<
+                AssemblyMapDG>(m_locToGloMap);
+
+            int i, j, k, n, cnt, cnt2;
+
+            // Allocate storage for block matrix. Need number of unique faces in
+            // trace space.
+            int nTrace = expList->GetTrace()->GetExpSize();
+            vector<DNekMatSharedPtr> tmpList(nTrace);
+
+            for (n = 0; n < nTrace; ++n)
+            {
+                int nCoeffs = trace->GetExp(n)->GetNcoeffs();
+                tmpList[n] = MemoryManager<DNekMat>::AllocateSharedPtr(
+                    nCoeffs, nCoeffs, 0.0);
+            }
+
+            for (cnt = n = 0; n < expList->GetExpSize(); ++n)
+            {
+                int elmt = expList->GetOffset_Elmt_Id(n);
+                locExpansion = expList->GetExp(elmt);
+
+                Array<OneD, StdRegions::StdExpansionSharedPtr> &elmtToTraceMap =
+                    asmMap->GetElmtToTrace()[elmt];
+
+                // Block matrix (lambda)
+                loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
+                bnd_mat = loc_mat->GetBlock(0,0);
+
+                for (cnt2 = i = 0; i < locExpansion->GetNfaces(); ++i)
+                {
+                    int nCoeffs = elmtToTraceMap[i]->GetNcoeffs();
+                    int elmtId = elmtToTraceMap[i]->GetElmtId();
+                    DNekMatSharedPtr tmp = tmpList[elmtId];
+
+                    for (j = 0; j < nCoeffs; ++j)
+                    {
+                        NekDouble sign1 = asmMap->GetLocalToGlobalBndSign(
+                            cnt + j);
+                        for (k = 0; k < nCoeffs; ++k)
+                        {
+                            NekDouble sign2 = asmMap->GetLocalToGlobalBndSign(
+                                cnt + k);
+                            (*tmp)(j,k) +=
+                                (*bnd_mat)(cnt2+j, cnt2+k) * sign1 * sign2;
+                        }
+                    }
+
+                    cnt  += nCoeffs;
+                    cnt2 += nCoeffs;
+                }
+            }
+
+            // Figure out number of Dirichlet trace elements
+            int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            for (cnt = n = 0; n < nTrace; ++n)
+            {
+                if (cnt >= nDir)
+                {
+                    break;
+                }
+
+                cnt += trace->GetExp(n)->GetNcoeffs();
+            }
+
+            nDir = n;
+
+            // Set up diagonal block matrix
+            Array<OneD, unsigned int> n_blks(nTrace - nDir);
+            for (n = 0; n < nTrace - nDir; ++n)
+            {
+                n_blks[n] = trace->GetExp(n + nDir)->GetNcoeffs();
+                tmpList[n + nDir]->Invert();
+            }
+
+            m_blkMat = MemoryManager<DNekBlkMat>
+                ::AllocateSharedPtr(n_blks, n_blks, eDIAGONAL);
+
+            for (n = 0; n < nTrace - nDir; ++n)
+            {
+                m_blkMat->SetBlock(n, n, tmpList[n + nDir]);
+            }
+        }
+
         /**
          *
          */
@@ -979,7 +1079,6 @@ namespace Nektar
             int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nNonDir = nGlobal-nDir;
             DNekBlkMat &M = (*m_blkMat);
-            
             NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
             NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
             z = M * r;

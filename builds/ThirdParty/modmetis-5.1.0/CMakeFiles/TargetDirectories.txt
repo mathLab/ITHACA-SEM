@@ -1,7 +1,0 @@
-/tmp/ybao/nektar++/builds/ThirdParty/modmetis-5.1.0/programs/CMakeFiles/cmpfillin.dir
-/tmp/ybao/nektar++/builds/ThirdParty/modmetis-5.1.0/programs/CMakeFiles/gpmetis.dir
-/tmp/ybao/nektar++/builds/ThirdParty/modmetis-5.1.0/programs/CMakeFiles/graphchk.dir
-/tmp/ybao/nektar++/builds/ThirdParty/modmetis-5.1.0/programs/CMakeFiles/m2gmetis.dir
-/tmp/ybao/nektar++/builds/ThirdParty/modmetis-5.1.0/libmetis/CMakeFiles/metis.dir
-/tmp/ybao/nektar++/builds/ThirdParty/modmetis-5.1.0/programs/CMakeFiles/mpmetis.dir
-/tmp/ybao/nektar++/builds/ThirdParty/modmetis-5.1.0/programs/CMakeFiles/ndmetis.dir

@@ -146,8 +146,8 @@ namespace SolverUtils
 
 	    	Array<OneD, Array<OneD, NekDouble> > m_Motion_x; //cable's disp, vel and accel in streamwise direction
         	Array<OneD, Array<OneD, NekDouble> > m_Motion_y; //cable's disp, vel and accel in crossflow direction
-			Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fA;
+			Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV; //fictitious velocity storage
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fA; //fictitious acceleration storage
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_BndV;
             Array<OneD, DNekMatSharedPtr> m_CoeffMat_A;
             Array<OneD, DNekMatSharedPtr> m_CoeffMat_B;

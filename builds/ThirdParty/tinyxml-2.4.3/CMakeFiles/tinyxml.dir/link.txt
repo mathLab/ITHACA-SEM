@@ -1,2 +1,0 @@
-/usr/bin/ar cr libtinyxml.a  CMakeFiles/tinyxml.dir/tinyxml.cpp.o CMakeFiles/tinyxml.dir/tinyxmlparser.cpp.o CMakeFiles/tinyxml.dir/tinyxmlerror.cpp.o CMakeFiles/tinyxml.dir/tinystr.cpp.o
-/usr/bin/ranlib libtinyxml.a

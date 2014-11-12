@@ -1,3 +1,0 @@
-/tmp/ybao/nektar++/builds/dist/lib/libtinyxml.a
-/tmp/ybao/nektar++/builds/dist/include/tinystr.h
-/tmp/ybao/nektar++/builds/dist/include/tinyxml.h

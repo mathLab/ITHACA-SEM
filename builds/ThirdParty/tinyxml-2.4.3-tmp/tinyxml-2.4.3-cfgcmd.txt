@@ -1,1 +1,0 @@
-cmd='/apps/cmake/2.8.8/bin/cmake;-DCMAKE_C_COMPILER:FILEPATH=/usr/bin/gcc;-DCMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++;-DCMAKE_INSTALL_PREFIX:PATH=/tmp/ybao/nektar++/builds/dist;-DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL;/tmp/ybao/nektar++/ThirdParty/tinyxml-2.4.3'

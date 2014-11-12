@@ -1,8 +1,0 @@
-/tmp/ybao/nektar++/builds/dist/include/metis.h
-/tmp/ybao/nektar++/builds/dist/lib/libmetis.a
-/tmp/ybao/nektar++/builds/dist/bin/gpmetis
-/tmp/ybao/nektar++/builds/dist/bin/ndmetis
-/tmp/ybao/nektar++/builds/dist/bin/mpmetis
-/tmp/ybao/nektar++/builds/dist/bin/m2gmetis
-/tmp/ybao/nektar++/builds/dist/bin/graphchk
-/tmp/ybao/nektar++/builds/dist/bin/cmpfillin

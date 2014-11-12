@@ -1,1 +1,0 @@
-cmd='/apps/cmake/2.8.8/bin/cmake;-DCMAKE_C_COMPILER:FILEPATH=/usr/bin/gcc;-DCMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++;-DCMAKE_BUILD_TYPE:STRING=Debug;-DCMAKE_INSTALL_PREFIX:PATH=/tmp/ybao/nektar++/builds/dist;/tmp/ybao/nektar++/ThirdParty/gsmpi-1.2'

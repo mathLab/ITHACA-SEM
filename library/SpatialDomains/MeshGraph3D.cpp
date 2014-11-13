@@ -1027,7 +1027,7 @@ namespace Nektar
             // direction of the element which corresponds to the requested
             // coordinate direction of the given face.
             int dir = geom3d->GetDir((*elements)[0]->m_FaceIndx, facedir);
-
+            ;
             // Obtain the number of modes for the element basis key in this
             // direction.
             int nummodes = (int) expansion->m_basisKeyVector[dir].GetNumModes();
@@ -1036,6 +1036,12 @@ namespace Nektar
             switch(expansion->m_basisKeyVector[dir].GetBasisType())
             {
             case LibUtilities::eModified_A:
+                {
+                    const LibUtilities::PointsKey pkey(numpoints, LibUtilities::eGaussLobattoLegendre);
+                    
+                    return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
+                }
+
             case LibUtilities::eModified_B:
             case LibUtilities::eModified_C:
                 {
@@ -1043,19 +1049,24 @@ namespace Nektar
                     {
                     case 0:
                         {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                            const LibUtilities::PointsKey pkey(numpoints+1, LibUtilities::eGaussLobattoLegendre);
+
                             return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
                         }
                         break;
                     case 1:
                         {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
                             if (face->GetNumVerts() == 3)
                             {
+                                const LibUtilities::PointsKey pkey(numpoints+1,
+                                                                   LibUtilities::eGaussLobattoLegendre);
                                 // Triangle
                                 return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
                             }
-                            else {
+                            else 
+                            {
+                                const LibUtilities::PointsKey pkey(numpoints+1,
+                                                                   LibUtilities::eGaussLobattoLegendre);
                                 // Quadrilateral
                                 return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
                             }
@@ -1083,13 +1094,13 @@ namespace Nektar
                         {
                         case 0:
                             {
-                                const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                                const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                                 return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
                             }
                             break;
                         case 1:
                             {
-                                const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                                const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussRadauMAlpha1Beta0);
                                 return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
                             }
                             break;
@@ -1110,13 +1121,13 @@ namespace Nektar
                     {
                     case 0:
                         {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                            const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
                         }
                         break;
                     case 1:
                         {
-                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                            const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussRadauMAlpha1Beta0);
                             return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
                         }
                         break;

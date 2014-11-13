@@ -370,7 +370,7 @@ namespace Nektar
             int nq1 = m_base[1]->GetNumPoints();
             int nq2 = m_base[2]->GetNumPoints();
 
-            Array<OneD,NekDouble> o_tmp(nq0*nq1*nq2);
+            Array<OneD,NekDouble> o_tmp(GetFaceNumPoints(face));
             
             if (orient == StdRegions::eNoOrientation)
             {

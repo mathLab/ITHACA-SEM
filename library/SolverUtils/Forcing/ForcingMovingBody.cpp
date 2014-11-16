@@ -183,7 +183,8 @@ namespace SolverUtils
 
 		//identify vibration type of cable
         m_vibrationtype = m_session->GetSolverInfo("VibrationType");
-        if(m_vibrationtype == "Free" || m_vibrationtype == "FREE")
+        if(m_vibrationtype == "Free" || m_vibrationtype == "FREE" ||
+			m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
         {
 			m_session->MatchSolverInfo("HomoStrip","True",m_homostrip,false);
 
@@ -349,8 +350,11 @@ namespace SolverUtils
     void ForcingMovingBody::UpdateMotion(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                                 NekDouble time)
     {
-		
-        if(m_vibrationtype == "Free" || m_vibrationtype == "FREE")
+		// for "free" type, the cable vibrates both in streamwise and crossflow directions, 
+		// for "constrained" type, the cable only vibrates in crossflow direction,
+		// and for "forced" type, the calbe vibrates specifically along a given function or file
+        if(m_vibrationtype == "Free" || m_vibrationtype == "FREE" ||
+			m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
 		{
         	// For free vibration case, displacements, velocities and acceleartions
         	// are obtained through solving structure dynamic model
@@ -377,7 +381,7 @@ namespace SolverUtils
 		}
 		else
 		{
-			ASSERTL0(false,"vibration type of moving body needs to be specified as  either free or forced at this moment");
+			ASSERTL0(false,"vibration type of moving body needs to be specified as free or constrained or forced");
 		}
         
         // Now we need to calcualte all the required z-derivatives
@@ -1125,9 +1129,20 @@ namespace SolverUtils
 				}
 			}
 		}    
-
-        TensionedCableModel(pFields, Hydrofces[0], m_Motion_x);
-        TensionedCableModel(pFields, Hydrofces[1], m_Motion_y);
+		
+		if(m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
+		{
+			TensionedCableModel(pFields, Hydrofces[1], m_Motion_y);
+		}
+		else if (m_vibrationtype == "Free" || m_vibrationtype == "FREE")
+		{
+        	TensionedCableModel(pFields, Hydrofces[0], m_Motion_x);
+        	TensionedCableModel(pFields, Hydrofces[1], m_Motion_y);
+		}
+		else
+		{
+			ASSERTL0(false,"This vibration type does no been implemented here!");
+		}
        
         //Set the forcing term based on the motion of the cable
         for(int plane = 0; plane < m_NumLocPts; plane++)

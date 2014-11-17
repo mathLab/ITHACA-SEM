@@ -305,8 +305,8 @@
         </FUNCTION>
     </CONDITIONS>
     <FORCING>
-        <FORCE TYPE="Sponge">
-            <SPONGECOEFF> SpongeCoefficient </SPONGECOEFF>
+        <FORCE TYPE="Absorption">
+            <COEFF> SpongeCoefficient </COEFF>
             <REFFLOW> RefFields </REFFLOW>
         </FORCE>
     </FORCING>

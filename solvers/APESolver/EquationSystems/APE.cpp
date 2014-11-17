@@ -6,6 +6,7 @@
 //
 // The MIT License
 //
+// Copyright (c) 2014 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -106,7 +107,6 @@ void APE::v_InitObject()
 
         string riemName;
         m_session->LoadSolverInfo("UpwindType", riemName, "APEUpwind");
-        riemName = "APEUpwind";
         m_riemannSolver = SolverUtils::GetRiemannSolverFactory().CreateInstance(riemName);
         m_riemannSolver->SetVector("N",         &APE::GetNormals,   this);
         m_riemannSolver->SetVector("basefield", &APE::GetBasefield, this);
@@ -209,7 +209,7 @@ void APE::v_GetFluxVector(const int i,
                              Array<OneD, Array<OneD, NekDouble> > &physfield,
                              Array<OneD, Array<OneD, NekDouble> > &flux)
 {
-    EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
+    UpdateBasefield();
 
     ASSERTL1(flux.num_elements() == m_basefield.num_elements() - 1,
              "Dimension of flux array and velocity array do not match");
@@ -544,6 +544,26 @@ void APE::AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray,
 }
 
 
+void APE::v_ExtraFldOutput(
+    std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+    std::vector<std::string>             &variables)
+{
+    UpdateBasefield();
+
+    const int nPhys   = m_fields[0]->GetNpoints();
+    const int nCoeffs = m_fields[0]->GetNcoeffs();
+
+    for (int i = 0; i < m_spacedim + 1; i++)
+    {
+        variables.push_back(m_basefield_names[i]);
+
+        Array<OneD, NekDouble> tmpFwd(nCoeffs);
+        m_fields[0]->FwdTrans(m_basefield[i], tmpFwd);
+        fieldcoeffs.push_back(tmpFwd);
+    }
+}
+
+
 /**
  * @brief Get the normal vectors.
  */
@@ -591,6 +611,18 @@ NekDouble APE::GetRho()
 {
     return m_Rho0;
 }
+
+void APE::UpdateBasefield()
+{
+    static NekDouble last_update = -1.0;
+
+    if (m_time > last_update)
+    {
+        EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
+        last_update = m_time;
+    }
+}
+
 
 } //end of namespace
 

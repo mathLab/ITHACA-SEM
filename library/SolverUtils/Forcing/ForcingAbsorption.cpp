@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingSponge.cpp
+// File: ForcingAbsorption.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,30 +29,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Sponge forcing
+// Description: Absorption layer forcing
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Forcing/ForcingSponge.h>
+#include <SolverUtils/Forcing/ForcingAbsorption.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
 
-    std::string ForcingSponge::className = GetForcingFactory().
-                                RegisterCreatorFunction("Sponge",
-                                                        ForcingSponge::create,
-                                                        "Forcing Sponge");
+    std::string ForcingAbsorption::className = GetForcingFactory().
+                                RegisterCreatorFunction("Absorption",
+                                                        ForcingAbsorption::create,
+                                                        "Forcing Absorption");
 
-    ForcingSponge::ForcingSponge(const LibUtilities::SessionReaderSharedPtr& pSession)
+    ForcingAbsorption::ForcingAbsorption(const LibUtilities::SessionReaderSharedPtr& pSession)
             : Forcing(pSession),
               m_hasRefFlow(false),	
               m_hasRefFlowTime(false)
     {
     }
 
-    void ForcingSponge::v_InitObject(
+    void ForcingAbsorption::v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
             const unsigned int& pNumForcingFields,
             const TiXmlElement* pForce)
@@ -61,26 +61,26 @@ namespace SolverUtils
         int npts       = pFields[0]->GetTotPoints();
 
         const TiXmlElement* funcNameElmt;
-        funcNameElmt = pForce->FirstChildElement("SPONGECOEFF");
-        ASSERTL0(funcNameElmt, "Requires SPONGECOEFF tag, specifying function "
-                               "name which prescribes sponge coefficient.");
+        funcNameElmt = pForce->FirstChildElement("COEFF");
+        ASSERTL0(funcNameElmt, "Requires COEFF tag, specifying function "
+                               "name which prescribes absorption layer coefficient.");
 
         string funcName = funcNameElmt->GetText();
         ASSERTL0(m_session->DefinesFunction(funcName),
                  "Function '" + funcName + "' not defined.");
 
         std::string s_FieldStr;
-        m_Sponge  = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+        m_Absorption  = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
         for (int i = 0; i < m_NumVariable; ++i)
         {
             s_FieldStr = m_session->GetVariable(i);
             ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
                      "Variable '" + s_FieldStr + "' not defined.");
-            m_Sponge[i]  = Array<OneD, NekDouble> (npts, 0.0);
+            m_Absorption[i]  = Array<OneD, NekDouble> (npts, 0.0);
             m_Forcing[i] = Array<OneD, NekDouble> (npts, 0.0);
             EvaluateFunction(pFields, m_session, s_FieldStr,
-                             m_Sponge[i], funcName);
+                             m_Absorption[i], funcName);
         }
 
         funcNameElmt = pForce->FirstChildElement("REFFLOW");
@@ -114,7 +114,7 @@ namespace SolverUtils
 
     }
 
-    void ForcingSponge::v_Apply(
+    void ForcingAbsorption::v_Apply(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> > &outarray,
@@ -145,7 +145,7 @@ namespace SolverUtils
 
                 Vmath::Vsub(nq, inarray[i], 1,
                             RefflowScaled[i], 1, m_Forcing[i], 1);
-                Vmath::Vmul(nq, m_Sponge[i], 1,
+                Vmath::Vmul(nq, m_Absorption[i], 1,
                             m_Forcing[i], 1, m_Forcing[i], 1);
                 Vmath::Vadd(nq, m_Forcing[i], 1,
                             outarray[i], 1, outarray[i], 1);
@@ -155,7 +155,7 @@ namespace SolverUtils
         {
             for (int i = 0; i < m_NumVariable; i++)
             {
-                Vmath::Vmul(nq, m_Sponge[i], 1,
+                Vmath::Vmul(nq, m_Absorption[i], 1,
                             inarray[i], 1, m_Forcing[i], 1);
                 Vmath::Vadd(nq, m_Forcing[i], 1,
                             outarray[i], 1, outarray[i], 1);

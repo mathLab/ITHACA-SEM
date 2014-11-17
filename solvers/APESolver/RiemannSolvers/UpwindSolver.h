@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterEnergy.cpp
+// File: UpwindSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
+// Copyright (c) 2014 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -29,37 +30,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Output kinetic energy and enstrophy.
+// Description: Upwind Riemann solver for the APE equations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/Filters/FilterEnergy.h>
+#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_UPWINDSOLVER
+#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_UPWINDSOLVER
+
+#include <SolverUtils/SolverUtilsDeclspec.h>
+#include <APESolver/RiemannSolvers/APESolver.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-    namespace SolverUtils
+
+class UpwindSolver : public APESolver
+{
+public:
+    static RiemannSolverSharedPtr create()
     {
-        std::string FilterEnergy::className = GetFilterFactory().
-            RegisterCreatorFunction("Energy", FilterEnergy::create);
-
-        FilterEnergy::FilterEnergy(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams)
-            : FilterEnergyBase(pSession, pParams, true)
-        {
-        }
-
-        FilterEnergy::~FilterEnergy()
-        {
-
-        }
-
-        void FilterEnergy::v_GetVelocity(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const int i,
-            Array<OneD, NekDouble> &velocity)
-        {
-            velocity = pFields[i]->GetPhys();
-        }
+        return RiemannSolverSharedPtr(new UpwindSolver());
     }
+
+    static std::string solverName;
+
+protected:
+    UpwindSolver();
+
+    virtual void v_PointSolve(
+        NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
+        NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
+        NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
+        NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF);
+};
+
 }
+
+#endif

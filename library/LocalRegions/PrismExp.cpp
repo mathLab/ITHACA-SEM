@@ -276,7 +276,8 @@ namespace Nektar
 
         void PrismExp::v_IProductWRTBase_SumFac(
             const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
+            Array<OneD,       NekDouble>& outarray,
+            bool multiplybyweights)
         {
             const int nquad0 = m_base[0]->GetNumPoints();
             const int nquad1 = m_base[1]->GetNumPoints();
@@ -284,16 +285,28 @@ namespace Nektar
             const int order0 = m_base[0]->GetNumModes();
             const int order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
             Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
 
-            MultiplyByQuadratureMetric(inarray, tmp);
-
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetBdata(),
-                                         m_base[2]->GetBdata(),
-                                         tmp,outarray,wsp,
-                                         true,true,true);
+            if(multiplybyweights)
+            {
+                Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
+                
+                MultiplyByQuadratureMetric(inarray, tmp);
+                
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             tmp,outarray,wsp,
+                                             true,true,true);
+            }
+            else
+            {
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetBdata(),
+                                             m_base[2]->GetBdata(),
+                                             inarray,outarray,wsp,
+                                             true,true,true);
+            }
         }
 
         /**

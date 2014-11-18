@@ -341,5 +341,6 @@ namespace Nektar
                            m_faceNormals[face][i], 1);
             }
         }
+
     }//end namespace
 }//end namespace

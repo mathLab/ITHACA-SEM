@@ -37,6 +37,15 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/GlobalLinSys.h>
 
+#include <StdRegions/StdSegExp.h>
+#include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdNodalTriExp.h>
+#include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdPyrExp.h>
+#include <StdRegions/StdPrismExp.h>
+#include <StdRegions/StdHexExp.h>
+
 #include <LocalRegions/MatrixKey.h>     // for MatrixKey
 #include <LocalRegions/Expansion.h>     // for Expansion
 
@@ -50,6 +59,8 @@
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
+#include <Collections/CollectionOptimisation.h>
+#include <Collections/Operator.h>
 
 namespace Nektar
 {
@@ -167,6 +178,9 @@ namespace Nektar
             m_npoints(in.m_npoints),
             m_physState(false),
             m_exp(in.m_exp),
+            m_collections(in.m_collections),
+            m_coll_coeff_offset(in.m_coll_coeff_offset),
+            m_coll_phys_offset(in.m_coll_phys_offset),
             m_coeff_offset(in.m_coeff_offset),
             m_phys_offset(in.m_phys_offset),
             m_offset_elmt_id(in.m_offset_elmt_id),
@@ -301,40 +315,13 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray)
         {
-            // get optimisation information about performing block
-            // matrix multiplies
-            const Array<OneD, const bool>  doBlockMatOp
-                = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
-            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
-            const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
-
-            Array<OneD,NekDouble> tmp_outarray;
-            int cnt = 0,eid;
-
-            for(int n = 0; n < shape.num_elements(); ++n)
+            Array<OneD,NekDouble>  tmp;
+            for (int i = 0; i < m_collections.size(); ++i)
             {
-                if(doBlockMatOp[n])
-                {
-                    if(num_elmts[n])
-                    {
-                        GlobalMatrixKey mkey(StdRegions::eIProductWRTBase,
-                                             shape[n]);
-                        eid = m_offset_elmt_id[cnt];
-                        MultiplyByBlockMatrix(mkey,inarray + m_phys_offset[eid],
-                                              tmp_outarray = outarray + m_coeff_offset[eid]);
-                        cnt += num_elmts[n];
-                    }
-                }
-                else
-                {
-                    int    i;
-                    for(i = 0; i < num_elmts[n]; ++i)
-                    {
-                        eid = m_offset_elmt_id[cnt++];
-                        (*m_exp)[eid]->IProductWRTBase(inarray+m_phys_offset[eid],
-                                                       tmp_outarray = outarray+m_coeff_offset[eid]);
-                    }
-                }
+                
+                m_collections[i].ApplyOperator(Collections::eIProductWRTBase,
+                                               inarray + m_coll_phys_offset[i],
+                                               tmp = outarray + m_coll_coeff_offset[i]);
             }
         }
 
@@ -366,6 +353,64 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * The operation is evaluated locally for every element by the function
+         * StdRegions#StdExpansion#IProductWRTDerivBase.
+         *
+         * @param   inarray         An array of arrays of size \f$Q_{\mathrm{tot}}\f$
+         *                          containing the values of the function
+         *                          \f$f(\boldsymbol{x})\f$ at the quadrature
+         *                          points \f$\boldsymbol{x}_i\f$ in dir directions.
+         * @param   outarray        An array of size \f$N_{\mathrm{eof}}\f$
+         *                          used to store the result.
+         */
+        void ExpList::IProductWRTDerivBase(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                                           Array<OneD, NekDouble> &outarray)
+        {
+            Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+            // assume coord dimension defines the size of Deriv Base 
+            int dim = GetCoordim(0);
+
+            ASSERTL1(inarray.num_elements() >= dim,"inarray is not of sufficient dimension");
+
+            switch(dim)
+            {
+            case 1:
+                for (int i = 0; i < m_collections.size(); ++i)
+                {
+                    m_collections[i].ApplyOperator(
+                                                   Collections::eIProductWRTDerivBase,
+                                                   inarray[0] + m_coll_phys_offset[i],
+                                                   tmp0 = outarray + m_coll_coeff_offset[i]);
+                }
+                break;
+            case 2:
+                for (int i = 0; i < m_collections.size(); ++i)
+                {
+                    m_collections[i].ApplyOperator(
+                                                   Collections::eIProductWRTDerivBase,
+                                                   inarray[0] + m_coll_phys_offset[i],
+                                                   tmp0 = inarray[1] + m_coll_phys_offset[i],
+                                                   tmp1 = outarray + m_coll_coeff_offset[i]);
+                }
+                break;
+            case 3:
+                for (int i = 0; i < m_collections.size(); ++i)
+                {
+                    m_collections[i].ApplyOperator(
+                                                   Collections::eIProductWRTDerivBase,
+                                                   inarray[0] + m_coll_phys_offset[i],
+                                                   tmp0 = inarray[1] + m_coll_phys_offset[i],
+                                                   tmp1 = inarray[2] + m_coll_phys_offset[i],
+                                                   tmp2 = outarray + m_coll_coeff_offset[i]);
+                }
+                break;
+            default:
+                ASSERTL0(false,"Dimension of inarray not correct");
+                break;
+            }
+        }
         /**
          * Given a function \f$f(\boldsymbol{x})\f$ evaluated at
          * the quadrature points, this function calculates the
@@ -405,24 +450,20 @@ namespace Nektar
                                   Array<OneD, NekDouble> &out_d1,
                                   Array<OneD, NekDouble> &out_d2)
         {
-            int  i;
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
-
-            for(i= 0; i < (*m_exp).size(); ++i)
+            for (int i = 0; i < m_collections.size(); ++i)
             {
-                e_out_d0 = out_d0 + m_phys_offset[i];
-                if(out_d1.num_elements())
-                {
-                    e_out_d1 = out_d1 + m_phys_offset[i];
-                }
+                int offset = m_coll_phys_offset[i];
+                e_out_d0 = out_d0  + offset;
+                e_out_d1 = out_d1  + offset; 
+                e_out_d2 = out_d2  + offset; 
+                
+                m_collections[i].ApplyOperator(Collections::ePhysDeriv,
+                                               inarray + offset,
+                                               e_out_d0,e_out_d1, e_out_d2);
 
-                if(out_d2.num_elements())
-                {
-                    e_out_d2 = out_d2 + m_phys_offset[i];
-                }
-                (*m_exp)[i]->PhysDeriv(inarray+m_phys_offset[i],e_out_d0,e_out_d1,e_out_d2);
             }
         }
 
@@ -1148,40 +1189,12 @@ namespace Nektar
         void ExpList::v_BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
 											Array<OneD, NekDouble> &outarray)
         {
-            // get optimisation information about performing block
-            // matrix multiplies
-            const Array<OneD, const bool>  doBlockMatOp
-                = m_globalOptParam->DoBlockMatOp(StdRegions::eBwdTrans);
-            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
-            const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
-
-            Array<OneD,NekDouble> tmp_outarray;
-            int cnt = 0,eid;
-
-            for(int n = 0; n < num_elmts.num_elements(); ++n)
+            Array<OneD, NekDouble> tmp;
+            for (int i = 0; i < m_collections.size(); ++i)
             {
-                if(doBlockMatOp[n])
-                {
-                    if(num_elmts[n])
-                    {
-                        GlobalMatrixKey mkey(StdRegions::eBwdTrans, shape[n]);
-                        eid = m_offset_elmt_id[cnt];
-                        MultiplyByBlockMatrix(mkey,inarray + m_coeff_offset[eid],
-                                              tmp_outarray = outarray + m_phys_offset[eid]);
-                        cnt += num_elmts[n];
-                    }
-                }
-                else
-                {
-                    int  i;
-
-                    for(i= 0; i < num_elmts[n]; ++i)
-                    {
-                        eid = m_offset_elmt_id[cnt++];
-                        (*m_exp)[eid]->BwdTrans(inarray + m_coeff_offset[eid],
-                                   tmp_outarray = outarray+m_phys_offset[eid]);
-                    }
-                }
+                m_collections[i].ApplyOperator(Collections::eBwdTrans,
+                                               inarray + m_coll_coeff_offset[i],
+                                               tmp = outarray + m_coll_phys_offset[i]);
             }
         }
 
@@ -2392,7 +2405,14 @@ namespace Nektar
                                 Array<OneD,       NekDouble> &outarray,
                                 CoeffState coeffstate)	   
         {
-            v_IProductWRTBase_IterPerExp(inarray,outarray);
+            Array<OneD,NekDouble>  tmp;
+            for (int i = 0; i < m_collections.size(); ++i)
+            {
+                
+                m_collections[i].ApplyOperator(Collections::eIProductWRTBase,
+                                               inarray + m_coll_phys_offset[i],
+                                               tmp = outarray + m_coll_coeff_offset[i]);
+            }
         }
         
         void ExpList::v_GeneralMatrixOp(
@@ -2540,7 +2560,7 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-
+ 
         SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(
             const SpatialDomains::BoundaryConditionCollection& collection,
             unsigned int regionId,
@@ -2561,6 +2581,265 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
             return NullExpListSharedPtr;
         }
+
+
+        StdRegions::StdExpansionSharedPtr GetStdExp(StdRegions::StdExpansionSharedPtr exp)
+        {
+            
+            StdRegions::StdExpansionSharedPtr stdExp;
+
+            switch(exp->DetShapeType())
+            {
+            case LibUtilities::eSegment:
+                stdExp = MemoryManager<StdRegions::StdSegExp>
+                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey());
+                break;
+            case LibUtilities::eTriangle:
+                {
+                    StdRegions::StdNodalTriExpSharedPtr nexp;
+                    if((nexp = boost::dynamic_pointer_cast<StdRegions::StdNodalTriExp>(exp)))
+                    {
+                        stdExp = MemoryManager<StdRegions::StdNodalTriExp>
+                            ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                                exp->GetBasis(1)->GetBasisKey(),
+                                                nexp->GetNodalPointsKey().GetPointsType());
+                    }
+                    else
+                        {
+                            stdExp = MemoryManager<StdRegions::StdTriExp>
+                                ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                                    exp->GetBasis(1)->GetBasisKey());
+                        }
+                }
+                break;
+            case LibUtilities::eQuadrilateral:
+                stdExp = MemoryManager<StdRegions::StdQuadExp>
+                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                        exp->GetBasis(1)->GetBasisKey());
+                break;
+            case LibUtilities::eTetrahedron:
+                    stdExp = MemoryManager<StdRegions::StdTetExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey(),
+                                            exp->GetBasis(2)->GetBasisKey());
+                    break;
+            case LibUtilities::ePyramid:
+                stdExp = MemoryManager<StdRegions::StdPyrExp>
+                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                        exp->GetBasis(1)->GetBasisKey(),
+                                        exp->GetBasis(2)->GetBasisKey());
+                break;
+            case LibUtilities::ePrism:
+                stdExp = MemoryManager<StdRegions::StdPrismExp>
+                    ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                        exp->GetBasis(1)->GetBasisKey(),
+                                        exp->GetBasis(2)->GetBasisKey());
+                break;
+            case LibUtilities::eHexahedron:
+                    stdExp = MemoryManager<StdRegions::StdHexExp>
+                        ::AllocateSharedPtr(exp->GetBasis(0)->GetBasisKey(),
+                                            exp->GetBasis(1)->GetBasisKey(),
+                                            exp->GetBasis(2)->GetBasisKey());
+                    break;
+            default:
+                ASSERTL0(false,"Shape type not setup");
+                break;
+            }
+
+            return stdExp;
+        }
+
+        /**
+         * @brief Construct collections of elements containing a single element
+         * type and polynomial order from the list of expansions.
+         */
+        void ExpList::CreateCollections(Collections::ImplementationType ImpType)
+        {
+            //return; 
+            map<LibUtilities::ShapeType,
+                vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > > collections;
+            map<LibUtilities::ShapeType,
+                vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
+
+            bool autotuning;
+            bool verbose  =m_session->DefinesCmdLineArgument("verbose");
+            int collmax;
+
+	    if(m_comm->GetRank() != 0) //just turn on verbose mode for root node
+	    {
+	        verbose = false;
+	    }
+
+            m_session->LoadParameter("CollectionMax",collmax,2*m_exp->size());
+            m_session->MatchSolverInfo("CollectionAutoTuning","True",autotuning);
+
+            // If ImpType is not specified by default argument call
+            // then set ImpType to eStdMat. 
+            if(ImpType == Collections::eNoImpType)
+            {
+	      if(m_exp->size() < 100)
+	      {
+		ImpType = Collections::eSumFac; 
+	      }
+	      else
+	      {
+		ImpType = Collections::eStdMat; 
+	      }
+            }
+            else // if ImpType was provided do not perform autotuning.
+            {
+                autotuning = false; 
+            }
+
+            // Figure out optimisation parameters if provided in
+            // session file or default given
+            Collections::CollectionOptimisation colOpt(m_session, ImpType);
+
+            if(colOpt.SetByXml() == true)
+            {
+                autotuning = false; 
+                if(verbose)
+                {
+		  cout << "Setting Collection optimisation using XML file" << endl;
+                }
+            }
+            else if (autotuning == false)
+            {
+                if(verbose)
+                {
+                    cout << "Setting Collection optimisation using: " << Collections::ImplementationTypeMap[ImpType] << endl;
+                }
+            }
+            
+            // clear vectors in case previously called
+            m_collections.clear();
+            m_coll_coeff_offset.clear();
+            m_coll_phys_offset.clear();
+
+            // Loop over expansions, and create collections for each element type
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                collections[(*m_exp)[i]->DetShapeType()].push_back(std::pair<LocalRegions::ExpansionSharedPtr,int> ((*m_exp)[i],i));
+            }
+
+            for (it = collections.begin(); it != collections.end(); ++it)
+            {
+                StdRegions::StdExpansionSharedPtr stdExp;
+                LocalRegions::ExpansionSharedPtr exp = it->second[0].first;
+
+                stdExp = GetStdExp(exp);
+
+                Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
+                vector<SpatialDomains::GeometrySharedPtr> geom;
+                
+                int prevCoeffOffset     = m_coeff_offset[it->second[0].second];
+                int prevPhysOffset      = m_phys_offset [it->second[0].second];
+                int collcnt; 
+
+                m_coll_coeff_offset.push_back(prevCoeffOffset);
+                m_coll_phys_offset .push_back(prevPhysOffset);
+
+                if(it->second.size() == 1) // single element case
+                {
+                    geom.push_back(it->second[0].first->GetGeom());
+
+                    // if no Imp Type provided and No settign in xml file. 
+                    // reset impTypes using timings 
+                    if(autotuning)
+                    {
+                        impTypes = colOpt.SetWithTimings(stdExp,geom,
+                                                         impTypes, verbose);
+                    }
+
+                    Collections::Collection tmp(stdExp, geom, impTypes);
+                    m_collections.push_back(tmp);
+                }
+                else
+                {
+                    // set up first geometry 
+                    geom.push_back(it->second[0].first->GetGeom());
+                    int prevnCoeff = it->second[0].first->GetNcoeffs();
+                    int prevnPhys  = it->second[0].first->GetTotPoints();
+                    collcnt = 1;
+
+                    for (int i = 1; i < it->second.size(); ++i)
+                    {
+                        int nCoeffs     = it->second[i].first->GetNcoeffs();
+                        int nPhys       = it->second[i].first->GetTotPoints();
+                        int coeffOffset = m_coeff_offset[it->second[i].second];
+                        int physOffset  = m_phys_offset [it->second[i].second];
+                        
+                        // check to see if next elmt is different or
+                        // collmax reached and if so end collection
+                        // and start new one
+                        if(prevCoeffOffset + nCoeffs != coeffOffset ||
+                           prevnCoeff != nCoeffs ||
+                           prevPhysOffset + nPhys != physOffset ||
+                           prevnPhys != nPhys || collcnt >= collmax)
+                        {
+                            
+                            // if no Imp Type provided and No
+                            // settign in xml file. reset
+                            // impTypes using timings
+                            if(autotuning)
+                            {
+                                impTypes = colOpt.SetWithTimings(stdExp,geom, 
+                                                                 impTypes, 
+                                                                 verbose);
+                            }
+                            
+                            Collections::Collection tmp(stdExp, geom, impTypes);
+                            m_collections.push_back(tmp);
+                            
+
+                            // start new geom list 
+                            geom.clear();
+                            
+                            m_coll_coeff_offset.push_back(coeffOffset);
+                            m_coll_phys_offset .push_back(physOffset);
+                            geom.push_back(it->second[i].first->GetGeom());
+                            collcnt = 1;
+
+                            if((prevnCoeff != nCoeffs)||(prevnPhys != nPhys))
+                            {
+                                stdExp = GetStdExp(it->second[i].first);
+                            }
+
+                        }
+                        else // add to list of collections 
+                        {
+                            geom.push_back(it->second[i].first->GetGeom());
+                            collcnt++;
+                        }
+
+                        // if end of list finish up collection 
+                        if (i == it->second.size() - 1)
+                        {
+                            // if no Imp Type provided and No
+                            // settign in xml file.
+                            if(autotuning)
+                            {
+                                impTypes = colOpt.SetWithTimings(stdExp,geom, 
+                                                                 impTypes,verbose);
+                            }
+                            
+                            Collections::Collection tmp(stdExp, geom, impTypes);
+                            m_collections.push_back(tmp);
+                            geom.clear();
+                            collcnt = 0;
+                            
+                        }
+                        
+                        prevCoeffOffset = coeffOffset;
+                        prevPhysOffset  = physOffset;
+                        prevnCoeff      = nCoeffs;
+                        prevnPhys       = nPhys;
+                    }
+                }
+            }  
+        }
+
+
     } //end of namespace
 } //end of namespace
 

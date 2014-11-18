@@ -123,7 +123,7 @@ namespace Nektar
     {
 		ComputeVertexNormal(vertex);
     }
-
+        
         const NormalVector & StdExpansion1D::v_GetSurfaceNormal(const int id) const
         {
             return v_GetVertexNormal(id);
@@ -137,7 +137,7 @@ namespace Nektar
          ASSERTL0 (x != m_vertexNormals.end(),
 				  "vertex normal not computed.");
          return x->second;
-	}
+    }
 
     }//end namespace
 }//end namespace

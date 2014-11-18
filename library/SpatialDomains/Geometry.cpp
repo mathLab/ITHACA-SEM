@@ -291,7 +291,7 @@ namespace Nektar
         {
             return m_coordim;
         }
-
+        
     }; //end of namespace
 }; //end of namespace
 

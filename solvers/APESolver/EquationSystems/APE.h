@@ -6,6 +6,7 @@
 //
 // The MIT License
 //
+// Copyright (c) 2014 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -112,6 +113,9 @@ class APE : public UnsteadySystem
 
         void AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray, Array< OneD, Array< OneD, NekDouble > > &outarray);
 
+        virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
+                                      std::vector<std::string>             &variables);
+
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals();
 
         const Array<OneD, const Array<OneD, NekDouble> > &GetVecLocs();
@@ -121,6 +125,8 @@ class APE : public UnsteadySystem
         NekDouble GetGamma();
 
         NekDouble GetRho();
+
+        void UpdateBasefield();
 
     private:
 

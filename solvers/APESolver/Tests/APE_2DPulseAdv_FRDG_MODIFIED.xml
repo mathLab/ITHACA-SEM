@@ -314,7 +314,7 @@
       <I PROPERTY="EQType" VALUE="APE"/> <!-- Acoustic perturbation equations -->
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-      <I PROPERTY="UpwindType" VALUE="APEUpwind"/>
+      <I PROPERTY="UpwindType" VALUE="LaxFriedrichs"/>
     </SOLVERINFO>
     <PARAMETERS>
       <P> TimeStep       = 0.00001            </P>

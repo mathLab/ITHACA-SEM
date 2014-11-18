@@ -38,6 +38,7 @@
 #endif
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicConst/GitRevision.h>
 
 #include <iostream>
 #include <fstream>
@@ -58,6 +59,10 @@ using namespace std;
 
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
+
+#ifndef NEKTAR_VERSION
+#define NEKTAR_VERSION "Unknown"
+#endif
 
 namespace po = boost::program_options;
 namespace io = boost::iostreams;
@@ -327,6 +332,7 @@ namespace Nektar
             po::options_description desc("Allowed options");
             desc.add_options()
                 ("verbose,v",    "be verbose")
+                ("version,V",    "print version information")
                 ("help,h",       "print this help message")
                 ("solverinfo,I", po::value<vector<std::string> >(), 
                                  "override a SOLVERINFO property")
@@ -396,7 +402,36 @@ namespace Nektar
             // Help message
             if (m_cmdLineOptions.count("help"))
             {
-                cout << desc << endl;
+                cout << desc;
+                exit(0);
+            }
+
+            // Version information
+            if (m_cmdLineOptions.count("version"))
+            {
+                cout << "Nektar++ version " << NEKTAR_VERSION;
+
+                if (NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
+                {
+                    string sha1(NekConstants::kGitSha1);
+                    string branch(NekConstants::kGitBranch);
+                    boost::replace_all(branch, "refs/heads/", "");
+
+                    cout << " (git changeset " << sha1.substr(0, 8) << ", ";
+
+                    if (branch == "")
+                    {
+                        cout << "detached head";
+                    }
+                    else
+                    {
+                        cout << "head " << branch;
+                    }
+
+                    cout << ")";
+                }
+
+                cout << endl;
                 exit(0);
             }
 

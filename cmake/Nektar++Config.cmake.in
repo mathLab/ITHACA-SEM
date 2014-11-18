@@ -35,9 +35,9 @@ SET(NEKTAR++_LIBRARY_DIRS "${NEKTAR++_ROOT_DIR}/@NEKTAR_LIB_DIR@")
 SET(NEKTAR++_DEFINITIONS "")
 SET(NEKTAR++_LIBRARIES SolverUtils MultiRegions LocalRegions SpatialDomains StdRegions LibUtilities)
 
-SET(NEKTAR++_TP_INCLUDE_DIRS "")
+SET(NEKTAR++_TP_INCLUDE_DIRS "${NEKTAR++_ROOT_DIR}/@NEKTAR_INCLUDE_DIR@/ThirdParty")
 SET(NEKTAR++_TP_LIBRARIES "")
-SET(NEKTAR++_TP_LIBRARY_DIRS "@CMAKE_SOURCE_DIR@/ThirdParty/dist/lib/")
+SET(NEKTAR++_TP_LIBRARY_DIRS "")
 
 # add Nektar++_ROOT_DIR to the cmake search path, so Nektars custom FindXXX modules can be used
 SET(CMAKE_MODULE_PATH ${NEKTAR++_ROOT_DIR} ${CMAKE_MODULE_PATH})

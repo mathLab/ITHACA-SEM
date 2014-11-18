@@ -394,10 +394,8 @@ int DriverModifiedArnoldi::EV_test(
     Array<OneD, NekDouble> resid(kdim);
     for (int i = 0; i < kdim; ++i)
     {
-        NekDouble tmp = Blas::Ddot(kdim, &zvec[0] + i*kdim, 1,
-                                         &zvec[0] + i*kdim, 1);
-        m_comm->AllReduce(tmp, Nektar::LibUtilities::ReduceSum);
-        tmp = std::sqrt(tmp);
+        NekDouble tmp = std::sqrt(Vmath::Dot(kdim, &zvec[0] + i*kdim, 1,
+                                                   &zvec[0] + i*kdim, 1));
         resid[i] = resnorm * std::fabs(zvec[kdim - 1 + i*kdim]) / tmp;
         if (wi[i] < 0.0)
         {

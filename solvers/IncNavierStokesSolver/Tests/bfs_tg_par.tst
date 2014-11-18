@@ -3,6 +3,7 @@
     <description>Transient Growth (Modified Arnoldi): Backward-facing step</description>
     <executable>IncNavierStokesSolver</executable>
     <parameters>bfs_tg.xml</parameters>
+    <processes>4</processes>
     <files>
         <file description="Session File">bfs_tg.xml</file>
 	<file description="Session File">bfs_tg.bse</file>

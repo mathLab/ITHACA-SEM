@@ -55,6 +55,19 @@ namespace Nektar
             ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
                      "Missing parameter 'OutputFile'.");
             m_outputFile = pParams.find("OutputFile")->second;
+
+            m_thresholdVar = 0;
+            if (pParams.find("ThresholdVar") != pParams.end())
+            {
+                std::string var = pParams.find("ThresholdVar")->second.c_str();
+                std::vector<string> varlist = pSession->GetVariables();
+                std::vector<string>::const_iterator x;
+                ASSERTL0((x=std::find(varlist.begin(), varlist.end(), var)) != varlist.end(),
+                         "Specified variable " + var +
+                         " in ThresholdMax filter is not available.");
+                m_thresholdVar = x - varlist.begin();
+            }
+
             m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
 
         }
@@ -66,17 +79,17 @@ namespace Nektar
 
         void FilterThresholdMax::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
-            m_threshold = Array<OneD, NekDouble> (pFields[0]->GetNpoints(), m_initialValue);
+            m_threshold = Array<OneD, NekDouble> (pFields[m_thresholdVar]->GetNpoints(), m_initialValue);
         }
 
         void FilterThresholdMax::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
             int i;
-            NekDouble timestep = pFields[0]->GetSession()->GetParameter("TimeStep");
+            NekDouble timestep = pFields[m_thresholdVar]->GetSession()->GetParameter("TimeStep");
 
-            for (i = 0; i < pFields[0]->GetNpoints(); ++i)
+            for (i = 0; i < pFields[m_thresholdVar]->GetNpoints(); ++i)
             {
-                if (m_threshold[i] < timestep && pFields[0]->GetPhys()[i] > m_thresholdValue)
+                if (m_threshold[i] < timestep && pFields[m_thresholdVar]->GetPhys()[i] > m_thresholdValue)
                 {
                     m_threshold[i] = time;
                 }
@@ -89,18 +102,18 @@ namespace Nektar
             vOutputFilename << m_outputFile << ".fld";
 
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = pFields[0]->GetFieldDefinitions();
+                = pFields[m_thresholdVar]->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
             Array<OneD, NekDouble> vCoeffs(pFields[0]->GetNcoeffs());
-            pFields[0]->FwdTrans_IterPerExp(m_threshold, vCoeffs);
+            pFields[m_thresholdVar]->FwdTrans_IterPerExp(m_threshold, vCoeffs);
 
             // copy Data into FieldData and set variable
             for(int i = 0; i < FieldDef.size(); ++i)
             {
                 // Could do a search here to find correct variable
                 FieldDef[i]->m_fields.push_back("m");
-                pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], vCoeffs);
+                pFields[m_thresholdVar]->AppendFieldData(FieldDef[i], FieldData[i], vCoeffs);
             }
 
             m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);

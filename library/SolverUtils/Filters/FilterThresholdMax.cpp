@@ -52,9 +52,12 @@ namespace Nektar
             ASSERTL0(pParams.find("InitialValue") != pParams.end(),
                      "Missing parameter 'InitialValue'.");
             m_initialValue = atof(pParams.find("InitialValue")->second.c_str());
-            ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-                     "Missing parameter 'OutputFile'.");
-            m_outputFile = pParams.find("OutputFile")->second;
+
+            m_outputFile = pSession->GetSessionName() + "_max.fld";
+            if (pParams.find("OutputFile") != pParams.end())
+            {
+                m_outputFile = pParams.find("OutputFile")->second;
+            }
 
             m_thresholdVar = 0;
             if (pParams.find("ThresholdVar") != pParams.end())
@@ -98,9 +101,6 @@ namespace Nektar
 
         void FilterThresholdMax::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
         {
-            std::stringstream vOutputFilename;
-            vOutputFilename << m_outputFile << ".fld";
-
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = pFields[m_thresholdVar]->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
@@ -116,7 +116,7 @@ namespace Nektar
                 pFields[m_thresholdVar]->AppendFieldData(FieldDef[i], FieldData[i], vCoeffs);
             }
 
-            m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
+            m_fld->Write(m_outputFile,FieldDef,FieldData);
 
         }
 

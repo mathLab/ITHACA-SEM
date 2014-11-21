@@ -501,24 +501,27 @@
         </COMPOSITE>
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
+
     <EXPANSIONS>
         <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u,v" TYPE="MODIFIED" />
     </EXPANSIONS>
+
     <CONDITIONS>
         <PARAMETERS>
-            <P> TimeStep       = 0.001            </P>
-            <P> NumSteps       = 100000            </P>
-            <P> FinTime        = TimeStep*NumSteps </P>
-            <P> IO_CheckSteps  = 100              </P>
-            <P> IO_InfoSteps   = 10              </P>
-            <P> initialwavetype = 0 </P>
-            <P> duration = 1 </P>
-            <P> UseDirDeriv = 0 </P>
-            <P> k = 8.0  </P>
-            <P> a = 0.15 </P>
-            <P> eps = 0.002 </P>
-            <P> mu1 = 0.2 </P>
-            <P> mu2 = 0.3 </P>
+            <P> TimeStep       = 0.001             </P>
+            <P> FinTime        = 100               </P>
+            <P> NumSteps       = FinTime/TimeStep  </P>
+            <P> IO_CheckSteps  = 1/TimeStep        </P>
+            <P> IO_InfoSteps   = 10                </P>
+            <P> initialwavetype = 0                </P>
+            <P> Chi            = 28                </P>
+            <P> Cm             = 0.125             </P>
+            <P> Substeps       = 4                 </P>
+            <P> k              = 8.0               </P>
+            <P> a              = 0.15              </P>
+            <P> eps            = 0.002             </P>
+            <P> mu1            = 0.2               </P>
+            <P> mu2            = 0.3               </P>
         </PARAMETERS>
 
         <SOLVERINFO>
@@ -527,7 +530,6 @@
             <I PROPERTY="Projection" VALUE="Continuous" />
             <I PROPERTY="DiffusionAdvancement" VALUE="Implicit" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3" />
-            <I PROPERTY="GlobalSysSoln" VALUE="DirectMultiLevelStaticCond" />
         </SOLVERINFO>
 
         <VARIABLES>
@@ -538,6 +540,7 @@
         <BOUNDARYREGIONS>
             <B ID="0"> C[1] </B>
         </BOUNDARYREGIONS>
+
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
                 <N VAR="u" VALUE="0.0" />
@@ -546,7 +549,7 @@
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="InitialConditions">
-            <E VAR="u" VALUE="1.0/(1.0 + exp( 32*(x-2.0)))" />
+            <E VAR="u" VALUE="0" />
             <E VAR="v" VALUE="0" />
         </FUNCTION>
 
@@ -554,8 +557,8 @@
 
     <FILTERS>
         <FILTER TYPE="HistoryPoints">
-            <PARAM NAME="OutputFile">ap.his</PARAM>
-            <PARAM NAME="OutputFrequency">10</PARAM>
+            <PARAM NAME="OutputFile"> ap.his </PARAM>
+            <PARAM NAME="OutputFrequency"> 10 </PARAM>
             <PARAM NAME="Points">
                 1 0.5 0
                 2 0.5 0
@@ -569,5 +572,24 @@
             </PARAM>
         </FILTER>
     </FILTERS>
+
+    <STIMULI>
+        <STIMULUS ID="0" TYPE = "StimulusRect">
+            <p_x1> 0.2</p_x1>
+            <p_y1> 0.2</p_y1>
+            <p_z1> 0.0</p_z1>
+            <p_x2> 0.8</p_x2>
+            <p_y2> 0.8</p_y2>
+            <p_z2> 0.0</p_z2>
+            <p_is> 1.0</p_is>
+            <p_strength> 2.0 </p_strength>
+
+            <PROTOCOL TYPE = "ProtocolSingle">
+                <START> 0.0  </START>
+                <DURATION>  1.0 </DURATION>
+            </PROTOCOL>
+        </STIMULUS>
+    </STIMULI>
+
 </NEKTAR>
 

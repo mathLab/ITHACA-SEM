@@ -104,11 +104,30 @@ namespace Nektar
             }
 
             int nfields = m_f->m_fielddef[0]->m_fields.size();
+            ASSERTL0(nfields == spacedim +1,"Implicit assumption that input is in incompressible format of (u,v,p) or (u,v,w,p)");
+
             nfields = nfields -1; 
             if (spacedim == 1)
             {
                 ASSERTL0(false, "Error: wss for a 1D problem cannot "
                                 "be computed")
+            }
+
+            // Redefine m_f->m_fielddef[0]->m_fields with shear definitions
+            // since these are used in output
+            if(spacedim == 2)
+            {
+                m_f->m_fielddef[0]->m_fields[0] = "Shear_x";
+                m_f->m_fielddef[0]->m_fields[1] = "Shear_y";
+                m_f->m_fielddef[0]->m_fields[2] = "Shear_mag";
+
+            }
+            else
+            {
+                m_f->m_fielddef[0]->m_fields[0] = "Shear_x";
+                m_f->m_fielddef[0]->m_fields[1] = "Shear_y";
+                m_f->m_fielddef[0]->m_fields[2] = "Shear_z";
+                m_f->m_fielddef[0]->m_fields[3] = "Shear_mag";
             }
 
             int newfields = (spacedim == 2)? 3:4;

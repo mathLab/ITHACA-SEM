@@ -28,16 +28,18 @@ ENDIF(COMMAND cmake_policy)
 # Find the modules included with Nektar
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 IF( NOT NEKTAR_PASSED_FIRST_CONFIGURE )
-  SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
+    IF (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE PATH "" FORCE)
+    ENDIF()
 ENDIF()
 
 # Attempt to retrieve git branch and SHA1 hash
 INCLUDE(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
-SET(LIB_DIR "lib")
-IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
-	SET(LIB_DIR "lib64")
+SET(LIB_DIR "lib/nektar++")
+IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND NOT APPLE )
+	SET(LIB_DIR "lib64/nektar++")
 ENDIF()
 SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 
@@ -130,38 +132,18 @@ OPTION(NEKTAR_USE_MEMORY_POOLS
     "Use memory pools to accelerate memory allocation." ON)
 MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
 
-# Turn on NEKTAR_USE_WIN32_LAPACK if we are in Windows and the libraries exist.
-IF( WIN32 )
-    IF( CMAKE_CL_64 )
-        FIND_LIBRARY( WIN32_BLAS NAMES libblas64 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
-        FIND_LIBRARY( WIN32_LAPACK NAMES liblapack64 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
-    ELSE()
-	FIND_LIBRARY( WIN32_BLAS NAMES blas_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
-	FIND_LIBRARY( WIN32_LAPACK NAMES lapack_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
-    ENDIF()
+IF (MSVC)
+    # Needed for M_PI to be visible in visual studio.
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
     
-	IF( WIN32_BLAS AND WIN32_LAPACK )
-		SET(Win32LapackDefault ON)
-    ELSE(WIN32_BLAS AND WIN32_LAPACK)
-		SET(Win32LapackDefault OFF)
-    ENDIF(WIN32_BLAS AND WIN32_LAPACK)
-ELSE(WIN32)
-	SET(Win32LapackDefault OFF)
-ENDIF(WIN32)
-
-IF( MSVC )
-	# Needed for M_PI to be visible in visual studio.
-	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-	
-	# Removes the warnings about unsafe methods such as strcpy, std::copy,
+    # Removes the warnings about unsafe methods such as strcpy, std::copy,
     # memcmp, etc.
-	ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
-ENDIF( )
-
+    ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
+ENDIF()
 
 CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
     "Use Win32 Lapack provided with the Third Party Distribution."
-    ${Win32LapackDefault} "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
+    ON "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
 
 # Include Nektar++ common macros
 INCLUDE (NektarCommon)
@@ -170,7 +152,7 @@ INCLUDE (NektarCommon)
 SET(TPURL http://www.nektar.info/thirdparty)
 SET(TPSRC ${CMAKE_SOURCE_DIR}/ThirdParty)
 SET(TPBUILD ${CMAKE_BINARY_DIR}/ThirdParty)
-SET(TPDIST ${CMAKE_INSTALL_PREFIX})
+SET(TPDIST ${CMAKE_BINARY_DIR}/ThirdParty/dist)
 IF (NOT EXISTS ${TPSRC})
     FILE(MAKE_DIRECTORY ${TPSRC})
 ENDIF ()
@@ -319,13 +301,25 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindScotch.cmake
-	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindGSMPI.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindXXT.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindSMV.cmake
-              DESTINATION ${CMAKE_INSTALL_PREFIX}) 
+              DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# Install ThirdParty headers to subdirectory of ${NEKTAR_INCLUDE_DIR}
+INSTALL(DIRECTORY ${TPDIST}/include/
+    DESTINATION ${NEKTAR_INCLUDE_DIR}/ThirdParty
+    COMPONENT ThirdParty
+)
+
+# Install ThirdParty libraries into ${NEKTAR_LIB_DIR}
+INSTALL(DIRECTORY ${TPDIST}/lib/
+    DESTINATION ${NEKTAR_LIB_DIR}
+    COMPONENT ThirdParty
+)
 
 SET(NEKTAR_PASSED_FIRST_CONFIGURE ON CACHE BOOL INTERNAL)
 MARK_AS_ADVANCED(NEKTAR_PASSED_FIRST_CONFIGURE)

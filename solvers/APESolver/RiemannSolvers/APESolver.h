@@ -1,11 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterEnergy.cpp
+// File: APESolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
+// Copyright (c) 2014 Kilian Lackhove
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
 // Computing and Imaging Institute, University of Utah (USA).
@@ -29,37 +30,44 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Output kinetic energy and enstrophy.
+// Description: Riemann solver base classs for the APE equations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/Filters/FilterEnergy.h>
+#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APESOLVER
+#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APESOLVER
+
+#include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+
+using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-    namespace SolverUtils
+
+class APESolver : public RiemannSolver
+{
+protected:
+    APESolver();
+
+    virtual void v_Solve(
+        const int                                         nDim,
+        const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+        const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+              Array<OneD,       Array<OneD, NekDouble> > &flux);
+
+    virtual void v_PointSolve(
+        NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
+        NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
+        NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
+        NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
     {
-        std::string FilterEnergy::className = GetFilterFactory().
-            RegisterCreatorFunction("Energy", FilterEnergy::create);
-
-        FilterEnergy::FilterEnergy(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams)
-            : FilterEnergyBase(pSession, pParams, true)
-        {
-        }
-
-        FilterEnergy::~FilterEnergy()
-        {
-
-        }
-
-        void FilterEnergy::v_GetVelocity(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const int i,
-            Array<OneD, NekDouble> &velocity)
-        {
-            velocity = pFields[i]->GetPhys();
-        }
+        ASSERTL0(false, "This function should be defined by subclasses.");
     }
+
+    Array<OneD, Array<OneD, NekDouble> > GetRotBasefield();
+};
+
 }
+
+#endif

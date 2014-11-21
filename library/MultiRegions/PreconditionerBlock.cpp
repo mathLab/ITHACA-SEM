@@ -989,56 +989,10 @@ namespace Nektar
 
             int i, j, k, n, cnt, cnt2;
 
-            // Allocate storage for block matrix. Need number of unique faces in
-            // trace space.
-            int nTrace = expList->GetTrace()->GetExpSize();
-            vector<DNekMatSharedPtr> tmpList(nTrace);
-
-            for (n = 0; n < nTrace; ++n)
-            {
-                int nCoeffs = trace->GetExp(n)->GetNcoeffs();
-                tmpList[n] = MemoryManager<DNekMat>::AllocateSharedPtr(
-                    nCoeffs, nCoeffs, 0.0);
-            }
-
-            for (cnt = n = 0; n < expList->GetExpSize(); ++n)
-            {
-                int elmt = expList->GetOffset_Elmt_Id(n);
-                locExpansion = expList->GetExp(elmt);
-
-                Array<OneD, StdRegions::StdExpansionSharedPtr> &elmtToTraceMap =
-                    asmMap->GetElmtToTrace()[elmt];
-
-                // Block matrix (lambda)
-                loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
-                bnd_mat = loc_mat->GetBlock(0,0);
-
-                for (cnt2 = i = 0; i < locExpansion->GetNfaces(); ++i)
-                {
-                    int nCoeffs = elmtToTraceMap[i]->GetNcoeffs();
-                    int elmtId = elmtToTraceMap[i]->GetElmtId();
-                    DNekMatSharedPtr tmp = tmpList[elmtId];
-
-                    for (j = 0; j < nCoeffs; ++j)
-                    {
-                        NekDouble sign1 = asmMap->GetLocalToGlobalBndSign(
-                            cnt + j);
-                        for (k = 0; k < nCoeffs; ++k)
-                        {
-                            NekDouble sign2 = asmMap->GetLocalToGlobalBndSign(
-                                cnt + k);
-                            (*tmp)(j,k) +=
-                                (*bnd_mat)(cnt2+j, cnt2+k) * sign1 * sign2;
-                        }
-                    }
-
-                    cnt  += nCoeffs;
-                    cnt2 += nCoeffs;
-                }
-            }
-
             // Figure out number of Dirichlet trace elements
-            int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nTrace = expList->GetTrace()->GetExpSize();
+            int nDir   = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+
             for (cnt = n = 0; n < nTrace; ++n)
             {
                 if (cnt >= nDir)
@@ -1051,12 +1005,105 @@ namespace Nektar
 
             nDir = n;
 
+            // Allocate storage for block matrix. Need number of unique faces in
+            // trace space.
+            int maxTraceSize = -1;
+            map<int, int> arrayOffsets;
+
+            for (cnt = 0, n = nDir; n < nTrace; ++n)
+            {
+                int nCoeffs  = trace->GetExp(n)->GetNcoeffs();
+                int nCoeffs2 = nCoeffs * nCoeffs;
+
+                arrayOffsets[n]  = cnt;
+                cnt             += nCoeffs2;
+
+                if (maxTraceSize < nCoeffs2)
+                {
+                    maxTraceSize = nCoeffs2;
+                }
+            }
+
+            // Find maximum trace size.
+            LibUtilities::CommSharedPtr comm =
+                expList->GetSession()->GetComm()->GetRowComm();
+            comm->AllReduce(maxTraceSize, LibUtilities::ReduceSum);
+
+            // Zero matrix storage.
+            Array<OneD, NekDouble> tmpStore(cnt, 0.0);
+
+            // Assemble block matrices for each trace element.
+            for (cnt = n = 0; n < expList->GetExpSize(); ++n)
+            {
+                int elmt = expList->GetOffset_Elmt_Id(n);
+                locExpansion = expList->GetExp(elmt);
+
+                Array<OneD, StdRegions::StdExpansionSharedPtr> &elmtToTraceMap =
+                    asmMap->GetElmtToTrace()[elmt];
+
+                // Block matrix (lambda)
+                loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
+                bnd_mat = loc_mat->GetBlock(0,0);
+
+                int nFacets = locExpansion->GetNumBases() == 2 ?
+                    locExpansion->GetNedges() : locExpansion->GetNfaces();
+
+                for (cnt2 = i = 0; i < nFacets; ++i)
+                {
+                    int nCoeffs = elmtToTraceMap[i]->GetNcoeffs();
+                    int elmtId  = elmtToTraceMap[i]->GetElmtId ();
+
+                    // Ignore Dirichlet edges.
+                    if (elmtId < nDir)
+                    {
+                        cnt  += nCoeffs;
+                        cnt2 += nCoeffs;
+                        continue;
+                    }
+
+                    NekDouble *off = &tmpStore[arrayOffsets[elmtId]];
+
+                    for (j = 0; j < nCoeffs; ++j)
+                    {
+                        NekDouble sign1 = asmMap->GetLocalToGlobalBndSign(
+                            cnt + j);
+                        for (k = 0; k < nCoeffs; ++k)
+                        {
+                            NekDouble sign2 = asmMap->GetLocalToGlobalBndSign(
+                                cnt + k);
+                            off[j*nCoeffs + k] +=
+                                (*bnd_mat)(cnt2+j, cnt2+k) * sign1 * sign2;
+                        }
+                    }
+
+                    cnt  += nCoeffs;
+                    cnt2 += nCoeffs;
+                }
+            }
+
+            // Set up IDs for universal numbering.
+            Array<OneD, long> uniIds(tmpStore.num_elements());
+            for (cnt = 0, n = nDir; n < nTrace; ++n)
+            {
+                LocalRegions::ExpansionSharedPtr traceExp = trace->GetExp(n);
+                int nCoeffs = traceExp->GetNcoeffs();
+                int geomId  = traceExp->GetGeom()->GetGlobalID();
+
+                for (i = 0; i < nCoeffs*nCoeffs; ++i)
+                {
+                    uniIds[cnt++] = geomId * maxTraceSize + i + 1;
+                }
+            }
+
+            // Assemble matrices across partitions.
+            Gs::gs_data *gsh = Gs::Init(uniIds, comm);
+            Gs::Gather(tmpStore, Gs::gs_add, gsh);
+
             // Set up diagonal block matrix
             Array<OneD, unsigned int> n_blks(nTrace - nDir);
             for (n = 0; n < nTrace - nDir; ++n)
             {
                 n_blks[n] = trace->GetExp(n + nDir)->GetNcoeffs();
-                tmpList[n + nDir]->Invert();
             }
 
             m_blkMat = MemoryManager<DNekBlkMat>
@@ -1064,7 +1111,21 @@ namespace Nektar
 
             for (n = 0; n < nTrace - nDir; ++n)
             {
-                m_blkMat->SetBlock(n, n, tmpList[n + nDir]);
+                int nCoeffs = trace->GetExp(n + nDir)->GetNcoeffs();
+                DNekMatSharedPtr tmp = MemoryManager<DNekMat>
+                    ::AllocateSharedPtr(nCoeffs, nCoeffs);
+                NekDouble *off = &tmpStore[arrayOffsets[n+nDir]];
+
+                for (i = 0; i < nCoeffs; ++i)
+                {
+                    for (j = 0; j < nCoeffs; ++j)
+                    {
+                        (*tmp)(i,j) = off[i*nCoeffs + j];
+                    }
+                }
+
+                tmp->Invert();
+                m_blkMat->SetBlock(n, n, tmp);
             }
         }
 

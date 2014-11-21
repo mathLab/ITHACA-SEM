@@ -1359,28 +1359,12 @@ namespace Nektar
                 // Subsonic flows
                 if (Mach[pnt] < 0.99)
                 {
-                    /*
-                    // Kinetic energy calculation
-                    NekDouble Ek = 0.0;
-                    for (j = 1; j < nVariables-1; ++j)
-                    {
-                        Ek += 0.5 * (Fwd[j][pnt] * Fwd[j][pnt]) / Fwd[0][pnt];
-                    }
-                    rhoeb = m_pressureStorage[id1+i] * gammaMinusOneInv + Ek;
-                    */
-                    
                     // Partial extrapolation for subsonic cases
                     for (j = 0; j < nVariables-1; ++j)
                     {
                         (m_fields[j]->GetBndCondExpansions()[bcRegion]->
                          UpdatePhys())[id1+i] = m_fieldStorage[j][id1+i];
                     }
-                    
-                    /*
-                    // Modulation of the pressure in time
-                    rhoeb = m_fieldStorage[nVariables-1][id1+i] +
-                        m_amplitude * m_pInf * sin(m_omega * m_time);
-                    */
                     
                     // Kinetic energy calculation
                     NekDouble Ek = 0.0;
@@ -1394,9 +1378,6 @@ namespace Nektar
                     
                     (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
                      UpdatePhys())[id1+i] = rhoeb;
-                    //cout << "pressure = " << pressure[pnt] <<endl;
-                    //cout << "Ek = " << Ek <<endl;
-                    //cout << "rhoeb = " << rhoeb <<endl;
                 }
                 // Supersonic flows
                 else

@@ -158,13 +158,10 @@ every 10 timesteps, we use the syntax:
 \subsection {Threshold value}
 
 The threshold value filter writes a field output containing a variable $m$,
-defined by the time at which the solution first exceeds a specified threshold
-value.
-
-\begin{notebox}
-  This filter assumes that the solution field to be examined is the first
-  specified in the session file.
-\end{notebox}
+defined by the time at which the selected variable first exceeds a specified
+threshold value. The default name of the output file is the name of the session
+with the suffix \inlsh{\_max.fld}. Thresholding is applied based on the first
+variable listed in the session by default.
 
 The following parameters are supported:
 
@@ -174,8 +171,10 @@ The following parameters are supported:
     \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
     \textbf{Description} \\
     \midrule
-    \inltt{OutputFile}      & \cmark   & - &
-    Prefix of the output filename to which the checkpoints are written.\\
+    \inltt{OutputFile}      &          & \emph{session}\_max.fld &
+    Output filename to which the threshold times are written.\\
+    \inltt{ThresholdVar}    &          & \emph{first variable name} &
+    Specifies the variable on which the threshold will be applied.\\
     \inltt{ThresholdValue}  & \cmark   & - &
     Specifies the threshold value.\\
     \inltt{InitialValue}    & \cmark   & - &
@@ -188,13 +187,14 @@ An example is given below:
  
 \begin{lstlisting}[style=XMLStyle]
   <FILTER TYPE="ThresholdMax">
+      <PARAM NAME="OutputFile"> threshold_max.fld </PARAM>
+      <PARAM NAME="ThresholdVar"> u </PARAM>
       <PARAM NAME="ThresholdValue"> 0.1 </PARAM>
       <PARAM NAME="InitialValue">  0.4 </PARAM>
-      <PARAM NAME="OutputFile"> ThresholdFile </PARAM>
   </FILTER>
 \end{lstlisting}
 
-which produces a field file \inltt{ThresholdFile.fld}.
+which produces a field file \inltt{threshold\_max.fld}.
 
 \subsection{Modal energy}
 

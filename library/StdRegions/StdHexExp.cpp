@@ -849,48 +849,26 @@ namespace Nektar
             
             //temporary solution, need to add conditions based on face id
             //also need to add check of the points type
-            switch(i)
+            int dir; 
+            switch(i) // determine basis direction to use
             {
                 case 0:
                 case 5:
-                    switch(k)
-                    {
-                        case 0:
-                            return GetBasis(0)->GetBasisKey();
-                            break;
-                        case 1:
-                            return GetBasis(1)->GetBasisKey();
-                            break;
-                    }
+                    dir = k;
                     break;
                 case 1:
                 case 3:
-                    switch(k)
-                    {
-                        case 0:
-                            return GetBasis(0)->GetBasisKey();
-                            break;
-                        case 1:
-                            return GetBasis(2)->GetBasisKey();
-                            break;
-                    }
+                    dir = 2*k;
                     break;
                 case 2:
                 case 4:
-                    switch(k)
-                    {
-                        case 0:
-                            return GetBasis(1)->GetBasisKey();
-                            break;
-                        case 1:
-                            return GetBasis(2)->GetBasisKey();
-                            break;
-                    }
+                    dir = k+1;
                     break;
             }
             
-            // Should never get here.
-            return LibUtilities::NullBasisKey;
+            return EvaluateTriFaceBasisKey(k,m_base[dir]->GetBasisType(),
+                                           m_base[dir]->GetNumPoints(),
+                                           m_base[dir]->GetNumModes());
         }
 
         LibUtilities::BasisType StdHexExp::v_GetEdgeBasisType(const int i) const

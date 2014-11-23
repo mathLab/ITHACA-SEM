@@ -658,13 +658,13 @@ namespace Nektar
             vCommRow->AllReduce(s, LibUtilities::ReduceMin);
             systemSingular = (s == 1 ? true : false);
 
-            // Count the number of boundary regions on each process
-            Array<OneD, int> bccounts(n, 0);
-            bccounts[p] = bndCondExp.num_elements();
-            vCommRow->AllReduce(bccounts, LibUtilities::ReduceSum);
+            // Find the minimum boundary vertex ID on each process
+            Array<OneD, int> bcminvertid(n, 0);
+            bcminvertid[p] = Dofs[0].begin()->first;
+            vCommRow->AllReduce(bcminvertid, LibUtilities::ReduceSum);
 
-            // Find the process rank with the maximum number of boundary regions
-            int maxBCIdx = Vmath::Imax(n, bccounts, 1);
+            // Find the process rank with the minimum boundary vertex ID
+            int minIdx = Vmath::Imin(n, bcminvertid, 1);
 
             // If the system is singular, the process with the maximum number of
             // BCs will set a Dirichlet vertex to make system non-singular.
@@ -672,7 +672,7 @@ namespace Nektar
             // we do not try to set a Dirichlet vertex on a partition with no
             // intersection with the boundary.
             meshVertId = 0;
-            if(systemSingular == true && checkIfSystemSingular && maxBCIdx == p)
+            if(systemSingular == true && checkIfSystemSingular && minIdx == p)
             {
                 if (m_session->DefinesParameter("SingularElement"))
                 {
@@ -699,9 +699,9 @@ namespace Nektar
                 }
                 else
                 {
-                    bndSegExp = bndCondExp[bndCondExp.num_elements()-1]
-                                      ->GetExp(0)->as<LocalRegions::SegExp>();
-                    meshVertId = bndSegExp->GetGeom1D()->GetVid(0);
+                    // Set pinned vertex to that with minimum vertex ID to
+                    // ensure consistency in parallel.
+                    meshVertId = bcminvertid[p];
                 }
 
                 if (ReorderedGraphVertId[0].count(meshVertId) == 0)
@@ -720,7 +720,7 @@ namespace Nektar
                 // Firstly, we check that no other processors have this
                 // vertex. If they do, then we mark the vertex as also being
                 // Dirichlet.
-                if (maxBCIdx != p)
+                if (minIdx != p)
                 {
                     if (Dofs[0].count(meshVertId) > 0)
                     {
@@ -810,7 +810,7 @@ namespace Nektar
             Array<OneD, int> offsets(n, 0);
             counts[p] = ReorderedGraphVertId[0].size();
             vCommRow->AllReduce(counts, LibUtilities::ReduceSum);
-            
+
             for (i = 1; i < n; ++i)
             {
                 offsets[i] = offsets[i-1] + counts[i-1];

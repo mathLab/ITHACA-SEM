@@ -659,9 +659,18 @@ namespace Nektar
             systemSingular = (s == 1 ? true : false);
 
             // Find the minimum boundary vertex ID on each process
-            Array<OneD, int> bcminvertid(n, 0);
-            bcminvertid[p] = Dofs[0].begin()->first;
-            vCommRow->AllReduce(bcminvertid, LibUtilities::ReduceSum);
+            Array<OneD, int> bcminvertid(n+1, 0);
+            bcminvertid[n] = Dofs[0].rbegin()->first;
+            bcminvertid[p] = Dofs[0].empty() ? -1 : Dofs[0].begin()->first;
+            vCommRow->AllReduce(bcminvertid, LibUtilities::ReduceMax);
+
+            for (unsigned int i = 0; i < n; ++i)
+            {
+                if (bcminvertid[i] == -1)
+                {
+                    bcminvertid[i] = bcminvertid[n];
+                }
+            }
 
             // Find the process rank with the minimum boundary vertex ID
             int minIdx = Vmath::Imin(n, bcminvertid, 1);

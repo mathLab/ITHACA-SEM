@@ -535,7 +535,7 @@ namespace Nektar
         {
 
             Array<OneD, NekDouble> vExchange(1);
-            vExchange[0] = Vmath::Dot2(pIn.GetDimension(),&pIn[0],&pIn[0],&m_map[0]);
+            vExchange[0] = Vmath::Dot(pIn.GetDimension(),&pIn[0],&pIn[0]);
 
             m_expList.lock()->GetComm()->GetRowComm()->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
             m_rhs_magnitude = (vExchange[0] > 1e-6)? vExchange[0]:1.0;

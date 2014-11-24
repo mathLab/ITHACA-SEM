@@ -597,6 +597,7 @@ namespace Nektar
             int graphVertId = 0;
             StdRegions::StdExpansion2DSharedPtr  locExpansion;
             LocalRegions::SegExpSharedPtr        bndSegExp;
+            LocalRegions::ExpansionSharedPtr     bndExp;
             MultiRegions::ExpList0DSharedPtr     bndVertExp;
             const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
             map<int,int>::iterator mapIt;
@@ -604,6 +605,7 @@ namespace Nektar
             bool systemSingular = true;
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
             PeriodicMap::const_iterator pIt;
+            int vMaxVertId = -1;
 
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
@@ -626,6 +628,21 @@ namespace Nektar
                     }
                 }
                 
+                // Find the maximum boundary vertex ID on this process. This is
+                // used later to pin a vertex if the system is singular.
+                for (j = 0; j < bndCondExp[i]->GetNumElmts(); ++j)
+                {
+                    bndExp = bndCondExp[i]->GetExp(j)->as<LocalRegions::Expansion>();
+                    for (k = 0; k < bndExp->GetNverts(); ++k)
+                    {
+                        if (vMaxVertId < bndExp->GetGeom()->GetVid(k))
+                        {
+                            vMaxVertId = bndExp->GetGeom()->GetVid(k);
+                        }
+                    }
+
+                }
+
                 // If all boundaries are Dirichlet take out of mask 
                 if(cnt == bndConditions.num_elements())
                 {
@@ -659,21 +676,12 @@ namespace Nektar
             systemSingular = (s == 1 ? true : false);
 
             // Find the minimum boundary vertex ID on each process
-            Array<OneD, int> bcminvertid(n+1, 0);
-            bcminvertid[n] = Dofs[0].rbegin()->first;
-            bcminvertid[p] = Dofs[0].empty() ? -1 : Dofs[0].begin()->first;
+            Array<OneD, int> bcminvertid(n, 0);
+            bcminvertid[p] = vMaxVertId;
             vCommRow->AllReduce(bcminvertid, LibUtilities::ReduceMax);
 
-            for (unsigned int i = 0; i < n; ++i)
-            {
-                if (bcminvertid[i] == -1)
-                {
-                    bcminvertid[i] = bcminvertid[n];
-                }
-            }
-
             // Find the process rank with the minimum boundary vertex ID
-            int minIdx = Vmath::Imin(n, bcminvertid, 1);
+            int maxIdx = Vmath::Imax(n, bcminvertid, 1);
 
             // If the system is singular, the process with the maximum number of
             // BCs will set a Dirichlet vertex to make system non-singular.
@@ -681,25 +689,13 @@ namespace Nektar
             // we do not try to set a Dirichlet vertex on a partition with no
             // intersection with the boundary.
             meshVertId = 0;
-            if(systemSingular == true && checkIfSystemSingular && minIdx == p)
+            if(systemSingular == true && checkIfSystemSingular && maxIdx == p)
             {
-                if (m_session->DefinesParameter("SingularElement"))
-                {
-                    int s_eid;
-                    m_session->LoadParameter("SingularElement", s_eid);
-
-                    ASSERTL1(s_eid < locExpVector.size(),
-                             "SingularElement Parameter is too large");
-
-                    meshVertId = locExpVector[s_eid]
-                                      ->as<LocalRegions::Expansion2D>()
-                                      ->GetGeom2D()->GetVid(0);
-                }
-                else if (m_session->DefinesParameter("SingularVertex"))
+                if (m_session->DefinesParameter("SingularVertex"))
                 {
                     m_session->LoadParameter("SingularVertex", meshVertId);
                 }
-                else if (bndCondExp.num_elements() == 0)
+                else if (vMaxVertId == -1)
                 {
                     // All boundaries are periodic.
                     meshVertId = locExpVector[0]
@@ -729,7 +725,7 @@ namespace Nektar
                 // Firstly, we check that no other processors have this
                 // vertex. If they do, then we mark the vertex as also being
                 // Dirichlet.
-                if (minIdx != p)
+                if (maxIdx != p)
                 {
                     if (Dofs[0].count(meshVertId) > 0)
                     {

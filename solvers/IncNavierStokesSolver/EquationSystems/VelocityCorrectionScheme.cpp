@@ -278,7 +278,7 @@ namespace Nektar
         const NekDouble time)
     {
         EvaluateAdvectionTerms(inarray, outarray);
-        
+
         // Smooth advection
         if(m_SmoothAdvection)
         {

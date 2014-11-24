@@ -74,7 +74,7 @@ namespace Nektar
         static const DataType* const_pointer(const boost::shared_ptr<DataType>& o) { return o.get(); }
         static DataType& reference(const boost::shared_ptr<DataType>& o) { ASSERTL1(o, "Can't dereference null pointer."); return *o; }
         static DataType* pointer(const boost::shared_ptr<DataType>& o) { return o.get(); }
-        static bool ReferencesObject(const boost::shared_ptr<DataType>& o) { return o; }
+        static bool ReferencesObject(const boost::shared_ptr<DataType>& o) { return o.get(); }
     };
 }
     

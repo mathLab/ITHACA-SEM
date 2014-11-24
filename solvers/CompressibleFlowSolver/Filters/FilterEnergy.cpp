@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: APEUpwindSolver.h
+// File FilterEnergy.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,48 +29,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Upwind Riemann solver for the APE equations.
+// Description: Output kinetic energy and enstrophy.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
-#define NEKTAR_SOLVERS_APESOLVER_RIEMANNSOLVERS_APEUPWINDSOLVER
-
-#include <SolverUtils/SolverUtilsDeclspec.h>
-#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
-
-using namespace Nektar::SolverUtils;
+#include <CompressibleFlowSolver/Filters/FilterEnergy.h>
 
 namespace Nektar
 {
+    namespace SolverUtils
+    {
+        std::string FilterEnergy::className = GetFilterFactory().
+            RegisterCreatorFunction("Energy", FilterEnergy::create);
 
-class APEUpwindSolver : public RiemannSolver
-{
-    public:
-        static RiemannSolverSharedPtr create()
+        FilterEnergy::FilterEnergy(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::map<std::string, std::string> &pParams)
+            : FilterEnergyBase(pSession, pParams, false)
         {
-            return RiemannSolverSharedPtr(new APEUpwindSolver());
+            
         }
 
-        static std::string solverName;
+        FilterEnergy::~FilterEnergy()
+        {
 
-    protected:
-        APEUpwindSolver();
+        }
 
-        virtual void v_Solve(
-                const int                                         nDim,
-                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                      Array<OneD,       Array<OneD, NekDouble> > &flux);
+        void FilterEnergy::v_GetVelocity(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+            const int i,
+            Array<OneD, NekDouble> &velocity)
+        {
+            Vmath::Vdiv(pFields[0]->GetNpoints(), pFields[i+1]->GetPhys(), 1,
+                        pFields[0]->GetPhys(), 1, velocity, 1);
+        }
 
-        void Solve1D(
-                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
-                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
-                      Array<OneD,       Array<OneD, NekDouble> > &flux);
-
-        Array<OneD, Array<OneD, NekDouble> >            m_rotBasefield;
-};
-
+        Array<OneD, NekDouble> FilterEnergy::v_GetDensity(
+            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields)
+        {
+            return pFields[0]->GetPhys();
+        }
+    }
 }
-
-#endif

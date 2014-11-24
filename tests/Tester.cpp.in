@@ -44,6 +44,8 @@
 #include <boost/program_options.hpp>
 #include <boost/thread.hpp>
 
+#cmakedefine NEKTAR_TEST_FORCEMPIEXEC 1
+
 using namespace std;
 using namespace Nektar;
 
@@ -206,9 +208,13 @@ int main(int argc, char *argv[])
         // Construct test command to run. If in debug mode, append "-g"
         // Output from stdout and stderr are directed to the files output.out
         // and output.err, respectively.
-        if (file.GetNProcesses() > 1)
+        
+#ifdef NEKTAR_TEST_FORCEMPIEXEC
+#else
+	if (file.GetNProcesses() > 1)
+#endif
         {
-            command += "mpirun -np "
+            command += "@MPIEXEC@ @MPIEXEC_NUMPROC_FLAG@ "
                     + boost::lexical_cast<string>(file.GetNProcesses())
                     + " ";
         }

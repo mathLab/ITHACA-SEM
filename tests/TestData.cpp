@@ -48,7 +48,7 @@ namespace Nektar
     {
         // Process test file format.
 #if BOOST_VERSION > 104200
-        m_doc = new TiXmlDocument(pFilename.c_str());
+        m_doc = new TiXmlDocument(pFilename.string().c_str());
 #else
         m_doc = new TiXmlDocument(pFilename.file_string().c_str());
 #endif

@@ -288,7 +288,25 @@ namespace Nektar
                         }
 
                         // Prism nodes need re-ordering for Nektar++.
-                        if (it->second.m_e == LibUtilities::eHexahedron)
+                        if (it->second.m_e == LibUtilities::eTriangle)
+                        {
+                            vector<int> mapping = TriReordering(it->second);
+                            vector<NodeSharedPtr> tmp = nodeList;
+                            for (int i = 0; i < mapping.size(); ++i)
+                            {
+                                nodeList[i] = tmp[mapping[i]];
+                            }
+                        }
+                        else if (it->second.m_e == LibUtilities::eQuadrilateral)
+                        {
+                            vector<int> mapping = QuadReordering(it->second);
+                            vector<NodeSharedPtr> tmp = nodeList;
+                            for (int i = 0; i < mapping.size(); ++i)
+                            {
+                                nodeList[i] = tmp[mapping[i]];
+                            }
+                        }
+                        else if (it->second.m_e == LibUtilities::eHexahedron)
                         {
                             vector<int> mapping = HexReordering(it->second);
                             vector<NodeSharedPtr> tmp = nodeList;
@@ -391,6 +409,90 @@ namespace Nektar
             }
             
             return nNodes;
+        }
+
+        vector<int> InputGmsh::TriReordering(ElmtConfig conf)
+        {
+            const int order = conf.m_order;
+            const int n     = order-1;
+
+            // Copy vertices.
+            vector<int> mapping(3);
+            for (int i = 0; i < 3; ++i)
+            {
+                mapping[i] = i;
+            }
+
+            if (order == 1)
+            {
+                return mapping;
+            }
+
+            // Curvilinear edges.
+            mapping.resize(3 + 3*n);
+
+            for (int i = 3; i < 3+3*n; ++i)
+            {
+                mapping[i] = i;
+            }
+            
+            if (!conf.m_faceNodes)
+            {
+                return mapping;
+            }
+
+            // Interior nodes.
+            vector<int> interior(n*(n-1)/2);
+            for (int i = 0; i < interior.size(); ++i)
+            {
+                interior[i] = i + 3+3*n;
+            }
+
+            interior = triTensorNodeOrdering(interior, n-1);
+            mapping.insert(mapping.end(), interior.begin(), interior.end());
+            return mapping;
+        }
+
+        vector<int> InputGmsh::QuadReordering(ElmtConfig conf)
+        {
+            const int order = conf.m_order;
+            const int n     = order-1;
+
+            // Copy vertices.
+            vector<int> mapping(4);
+            for (int i = 0; i < 4; ++i)
+            {
+                mapping[i] = i;
+            }
+
+            if (order == 1)
+            {
+                return mapping;
+            }
+
+            // Curvilinear edges.
+            mapping.resize(4 + 4*n);
+
+            for (int i = 4; i < 4+4*n; ++i)
+            {
+                mapping[i] = i;
+            }
+            
+            if (!conf.m_faceNodes)
+            {
+                return mapping;
+            }
+
+            // Interior nodes.
+            vector<int> interior(n*n);
+            for (int i = 0; i < interior.size(); ++i)
+            {
+                interior[i] = i + 4+4*n;
+            }
+
+            interior = quadTensorNodeOrdering(interior, n);
+            mapping.insert(mapping.end(), interior.begin(), interior.end());
+            return mapping;
         }
 
         vector<int> InputGmsh::TetReordering(ElmtConfig conf)
@@ -741,10 +843,12 @@ namespace Nektar
             tmp[ 11] = ElmtConfig(eTetrahedron,    2,  true,  true);
             tmp[ 12] = ElmtConfig(eHexahedron,     2,  true,  true);
             tmp[ 13] = ElmtConfig(ePrism,          2,  true,  true);
+            tmp[ 14] = ElmtConfig(ePyramid,        2,  true,  true);
             tmp[ 15] = ElmtConfig(ePoint,          1,  true, false);
             tmp[ 16] = ElmtConfig(eQuadrilateral,  2, false, false);
             tmp[ 17] = ElmtConfig(eHexahedron,     2, false, false);
             tmp[ 18] = ElmtConfig(ePrism,          2, false, false);
+            tmp[ 19] = ElmtConfig(ePyramid,        2, false, false);
             tmp[ 20] = ElmtConfig(eTriangle,       3, false, false);
             tmp[ 21] = ElmtConfig(eTriangle,       3,  true, false);
             tmp[ 22] = ElmtConfig(eTriangle,       4, false, false);
@@ -828,6 +932,20 @@ namespace Nektar
             tmp[115] = ElmtConfig(ePrism,          7,  true, false);
             tmp[116] = ElmtConfig(ePrism,          8,  true, false);
             tmp[117] = ElmtConfig(ePrism,          9,  true, false);
+            tmp[118] = ElmtConfig(ePyramid,        3,  true,  true);
+            tmp[119] = ElmtConfig(ePyramid,        4,  true,  true);
+            tmp[120] = ElmtConfig(ePyramid,        5,  true,  true);
+            tmp[121] = ElmtConfig(ePyramid,        6,  true,  true);
+            tmp[122] = ElmtConfig(ePyramid,        7,  true,  true);
+            tmp[123] = ElmtConfig(ePyramid,        8,  true,  true);
+            tmp[124] = ElmtConfig(ePyramid,        9,  true,  true);
+            tmp[125] = ElmtConfig(ePyramid,        3,  true, false);
+            tmp[126] = ElmtConfig(ePyramid,        4,  true, false);
+            tmp[127] = ElmtConfig(ePyramid,        5,  true, false);
+            tmp[128] = ElmtConfig(ePyramid,        6,  true, false);
+            tmp[129] = ElmtConfig(ePyramid,        7,  true, false);
+            tmp[130] = ElmtConfig(ePyramid,        7,  true, false);
+            tmp[131] = ElmtConfig(ePyramid,        8,  true, false);
 
             return tmp;
         }

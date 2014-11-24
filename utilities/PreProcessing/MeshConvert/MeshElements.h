@@ -803,116 +803,6 @@ namespace Nektar
                 return s.str();
             }
 
-            /**
-             * @brief Reorders Gmsh ordered nodes into a row-by-row ordering
-             * required for Nektar++ curve tags.
-             *
-             * The interior nodes of elements in the Gmsh format are ordered
-             * as for a lower-order element of the same type. This promotes
-             * the recursive approach to the reordering algorithm.
-             */
-            std::vector<NodeSharedPtr> tensorNodeOrdering(
-                    const std::vector<NodeSharedPtr> &nodes,
-                    int n) const
-            {
-                std::vector<NodeSharedPtr> nodeList;
-                int cnt2;
-
-                // Triangle
-                if (m_vertex.size() == 3)
-                {
-                    nodeList.resize(nodes.size());
-
-                    // Vertices
-                    nodeList[0] = nodes[0];
-                    if (n > 1)
-                    {
-                        nodeList[n-1] = nodes[1];
-                        nodeList[n*(n+1)/2 - 1] = nodes[2];
-                    }
-
-                    // Edges
-                    int cnt = n;
-                    for (int i = 1; i < n-1; ++i)
-                    {
-                        nodeList[i] = nodes[3+i-1];
-                        nodeList[cnt] = nodes[3+3*(n-2)-i];
-                        nodeList[cnt+n-i-1] = nodes[3+(n-2)+i-1];
-                        cnt += n-i;
-                    }
-
-                    // Interior (recursion)
-                    if (n > 3)
-                    {
-                        // Reorder interior nodes
-                        std::vector<NodeSharedPtr> interior((n-3)*(n-2)/2);
-                        std::copy(nodes.begin() + 3+3*(n-2), nodes.end(), interior.begin());
-                        interior = tensorNodeOrdering(interior, n-3);
-
-                        // Copy into full node list
-                        cnt = n;
-                        cnt2 = 0;
-                        for (int j = 1; j < n-2; ++j)
-                        {
-                            for (int i = 0; i < n-j-2; ++i)
-                            {
-                                nodeList[cnt+i+1] = interior[cnt2+i];
-                            }
-                            cnt += n-j;
-                            cnt2 += n-2-j;
-                        }
-                    }
-                }
-                // Quad
-                else if (m_dim == 2 && m_vertex.size() == 4)
-                {
-                    nodeList.resize(nodes.size());
-
-                    // Vertices and edges
-                    nodeList[0] = nodes[0];
-                    if (n > 1)
-                    {
-                        nodeList[n-1] = nodes[1];
-                        nodeList[n*n-1] = nodes[2];
-                        nodeList[n*(n-1)] = nodes[3];
-                    }
-                    for (int i = 1; i < n-1; ++i)
-                    {
-                        nodeList[i] = nodes[4+i-1];
-                    }
-                    for (int i = 1; i < n-1; ++i)
-                    {
-                        nodeList[n*n-1-i] = nodes[4+2*(n-2)+i-1];
-                    }
-
-                    // Interior (recursion)
-                    if (n > 2)
-                    {
-                        // Reorder interior nodes
-                        std::vector<NodeSharedPtr> interior((n-2)*(n-2));
-                        std::copy(nodes.begin() + 4+4*(n-2), nodes.end(), interior.begin());
-                        interior = tensorNodeOrdering(interior, n-2);
-
-                        // Copy into full node list
-                        for (int j = 1; j < n-1; ++j)
-                        {
-                            nodeList[j*n] = nodes[4+3*(n-2)+n-2-j];
-                            for (int i = 1; i < n-1; ++i)
-                            {
-                                nodeList[j*n+i] = interior[(j-1)*(n-2)+(i-1)];
-                            }
-                            nodeList[(j+1)*n-1] = nodes[4+(n-2)+j-1];
-                        }
-                    }
-                }
-                else
-                {
-                    cerr << "TensorNodeOrdering for a " << m_vertex.size()
-                         << "-vertex element is not yet implemented." << endl;
-                }
-                return nodeList;
-            }
-
             /// Generates a string listing the coordinates of all nodes
             /// associated with this element.
             std::string GetXmlCurveString() const
@@ -931,7 +821,9 @@ namespace Nektar
                     std::copy(m_vertex.begin(), m_vertex.end(), nodeList.begin());
                     for (int i = 0; i < 3; ++i)
                     {
-                        std::copy(m_edge[i]->m_edgeNodes.begin(), m_edge[i]->m_edgeNodes.end(), nodeList.begin() + 3 + i*(n-2));
+                        std::copy(m_edge[i]->m_edgeNodes.begin(),
+                                  m_edge[i]->m_edgeNodes.end(),
+                                  nodeList.begin() + 3 + i*(n-2));
                         if (m_edge[i]->m_n1 != m_vertex[i])
                         {
                             // If edge orientation is reversed relative to node
@@ -941,42 +833,54 @@ namespace Nektar
                         }
                     }
 
-                    // Triangle ordering lists vertices, edges then interior.
-                    // Interior nodes are row by row from edge 0 up to vertex 2
-                    // so need to reorder interior nodes only.
-                    std::vector<NodeSharedPtr> interior(m_volumeNodes.size());
-                    std::copy(m_volumeNodes.begin(), m_volumeNodes.end(), interior.begin());
-                    interior = tensorNodeOrdering(interior, n-3);
-                    std::copy(interior.begin(), interior.end(), nodeList.begin() + 3*(n-1));
+                    // Copy volume nodes.
+                    std::copy(m_volumeNodes.begin(), m_volumeNodes.end(),
+                              nodeList.begin() + 3*(n-1));
                 }
                 // Quad
                 else if (m_dim == 2 && m_vertex.size() == 4)
                 {
                     int n = m_edge[0]->GetNodeCount();
                     nodeList.resize(n*n);
+                    
+                    // Write vertices
+                    nodeList[0]       = m_vertex[0];
+                    nodeList[n-1]     = m_vertex[1];
+                    nodeList[n*n-1]   = m_vertex[2];
+                    nodeList[n*(n-1)] = m_vertex[3];
 
-                    // Populate nodelist
-                    std::copy(m_vertex.begin(), m_vertex.end(), nodeList.begin());
+                    // Write edge-interior
+                    int skips[4][2] = {{0,1}, {n-1,n}, {n*n-1,-1}, {n*(n-1),-n}};
                     for (int i = 0; i < 4; ++i)
                     {
-                        std::copy(m_edge[i]->m_edgeNodes.begin(),
-                                  m_edge[i]->m_edgeNodes.end(),
-                                  nodeList.begin() + 4 + i*(n-2));
+                        bool reverseEdge = m_edge[i]->m_n1 == m_vertex[i];
 
-                        if (m_edge[i]->m_n1 != m_vertex[i])
+                        if (!reverseEdge)
                         {
-                            // If m_edge orientation is reversed relative to node
-                            // ordering, we need to reverse order of nodes.
-                            std::reverse(nodeList.begin() + 4 + i*(n-2),
-                                         nodeList.begin() + 4 + (i+1)*(n-2));
+                            for (int j = 1; j < n-1; ++j)
+                            {
+                                nodeList[skips[i][0] + j*skips[i][1]] = 
+                                    m_edge[i]->m_edgeNodes[n-2-j];
+                            }
+                        }
+                        else
+                        {
+                            for (int j = 1; j < n-1; ++j)
+                            {
+                                nodeList[skips[i][0] + j*skips[i][1]] = 
+                                    m_edge[i]->m_edgeNodes[j-1];
+                            }
                         }
                     }
-                    std::copy(m_volumeNodes.begin(), m_volumeNodes.end(), nodeList.begin() + 4*(n-1));
 
-                    // Quadrilateral ordering lists all nodes row by row
-                    // starting from edge 0 up to edge 2, so need to reorder
-                    // all nodes.
-                    nodeList = tensorNodeOrdering(nodeList, n);
+                    // Write interior
+                    for (int i = 1; i < n-1; ++i)
+                    {
+                        for (int j = 1; j < n-1; ++j)
+                        {
+                            nodeList[i*n+j] = m_volumeNodes[(i-1)*(n-2)+(j-1)];
+                        }
+                    }
                 }
                 else
                 {

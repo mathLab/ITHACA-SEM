@@ -1326,7 +1326,7 @@ namespace Nektar
                 {0,1,2,3}, {0,1,4,-1}, {1,2,4,-1}, {3,2,4,-1}, {0,3,4,-1}
             };
             int face_edges[5][4];
-            int faceoffset = 0;
+            int faceoffset = 5 + 8*n;
             for (int j = 0; j < 5; ++j)
             {
                 vector<NodeSharedPtr> faceVertices;
@@ -1354,12 +1354,11 @@ namespace Nektar
                 if (m_conf.m_faceNodes)
                 {
                     int facenodes = j == 0 ? n*n : n*(n-1)/2;
-                    faceoffset   += facenodes;
-                    int N = 6 + 9*n + faceoffset;
                     for (int i = 0; i < facenodes; ++i)
                     {
-                        faceNodes.push_back(pNodeList[N+i]);
+                        faceNodes.push_back(pNodeList[faceoffset+i]);
                     }
+                    faceoffset   += facenodes;
                 }
                 m_face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));

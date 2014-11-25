@@ -60,9 +60,13 @@ IF (NEKTAR_USE_VTK)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
 
-# Tests
-ADD_NEKTAR_TEST(Gmsh/CubeHex)
-ADD_NEKTAR_TEST(Gmsh/CubePrism)
-ADD_NEKTAR_TEST(Gmsh/CubeTet)
-ADD_NEKTAR_TEST(Gmsh/SquareQuad)
-ADD_NEKTAR_TEST(Gmsh/SquareTri)
+# Gmsh tests
+ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
+ADD_NEKTAR_TEST        (Gmsh/CubeHex)
+ADD_NEKTAR_TEST        (Gmsh/CubePrism)
+ADD_NEKTAR_TEST        (Gmsh/CubeTet)
+ADD_NEKTAR_TEST        (Gmsh/SquareQuad)
+ADD_NEKTAR_TEST        (Gmsh/SquareTri)
+# StarCCM tests
+ADD_NEKTAR_TEST        (StarTec/CubePer)
+ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)

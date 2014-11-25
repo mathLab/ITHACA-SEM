@@ -1,6 +1,6 @@
-// Prism mesh of a cube
+// Prism mesh of a cube. Will only generate first/second order.
 //
-// Run: gmsh -3 -order n CubePrism.geo
+// Run: gmsh -3 -order 2 CubePrism.geo
 
 Point(1) = {0,0,0,0.1};
 l[] = Extrude {1,0,0} {

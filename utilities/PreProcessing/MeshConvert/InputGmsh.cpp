@@ -664,7 +664,7 @@ namespace Nektar
                 }
             }
 
-            if (conf.m_faceNodes == false)
+            if (conf.m_faceNodes == false || n2 == 0)
             {
                 return mapping;
             }
@@ -856,7 +856,7 @@ namespace Nektar
                 }
             }
 
-            if (conf.m_faceNodes == false)
+            if (conf.m_faceNodes == false || n2 == 0)
             {
                 return mapping;
             }

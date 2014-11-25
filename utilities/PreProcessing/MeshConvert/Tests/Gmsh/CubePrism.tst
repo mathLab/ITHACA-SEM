@@ -2,7 +2,7 @@
 <test>
     <description>Gmsh high-order prism cube, order 2</description>
     <executable>MeshConvert</executable>
-    <parameters>-m jac:list CubePrism.msh CubePrism.xml</parameters>
+    <parameters>-m jac:list CubePrism.msh CubePrism.xml:xml:test</parameters>
     <files>
         <file description="Input File">CubePrism.msh</file>
     </files>

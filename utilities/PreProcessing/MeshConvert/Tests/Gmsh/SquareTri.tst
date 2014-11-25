@@ -2,7 +2,7 @@
 <test>
     <description>Gmsh high-order tri square, order 8</description>
     <executable>MeshConvert</executable>
-    <parameters>-m jac:list SquareTri.msh SquareTri.xml</parameters>
+    <parameters>-m jac:list SquareTri.msh SquareTri.xml:xml:test</parameters>
     <files>
         <file description="Input File">SquareTri.msh</file>
     </files>

@@ -2,7 +2,7 @@
 <test>
     <description>Gmsh high-order tet cube, order 6</description>
     <executable>MeshConvert</executable>
-    <parameters>-m jac:list CubeTet.msh CubeTet.xml</parameters>
+    <parameters>-m jac:list CubeTet.msh CubeTet.xml:xml:test</parameters>
     <files>
         <file description="Input File">CubeTet.msh</file>
     </files>

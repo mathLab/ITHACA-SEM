@@ -2,7 +2,7 @@
 <test>
     <description>Gmsh high-order hex cube</description>
     <executable>MeshConvert</executable>
-    <parameters>-m jac:list CubeHex.msh CubeHex.xml</parameters>
+    <parameters>-m jac:list CubeHex.msh CubeHex.xml:xml:test</parameters>
     <files>
         <file description="Input File">CubeHex.msh</file>
     </files>

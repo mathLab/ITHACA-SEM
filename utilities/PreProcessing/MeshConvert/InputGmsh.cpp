@@ -191,6 +191,8 @@ namespace Nektar
             int nEntities = 0;
             int elm_type = 0;
             int prevId = -1;
+            int maxTagId = -1;
+
             map<unsigned int, ElmtConfig>::iterator it;
 
             // This map takes each element ID and maps it to a pertmutation map
@@ -282,6 +284,8 @@ namespace Nektar
                         }
                         tags.resize(1);
 
+                        maxTagId = max(maxTagId, tags[0]);
+
                         // Read element node list
                         vector<NodeSharedPtr> nodeList;
                         num_nodes = GetNnodes(elm_type);
@@ -315,10 +319,6 @@ namespace Nektar
                             }
                         }
 
-                        if (it->second.m_e == LibUtilities::eTetrahedron)
-                        {
-                        }
-
                         // Create element
                         ElementSharedPtr E = GetElementFactory().
                             CreateInstance(it->second.m_e,it->second,nodeList,tags);
@@ -332,6 +332,79 @@ namespace Nektar
                 }
             }
             m_mshFile.close();
+
+            // Go through element and remap tags if necessary.
+            map<int, map<LibUtilities::ShapeType, int> > compMap;
+            map<int, map<LibUtilities::ShapeType, int> >::iterator cIt;
+            map<LibUtilities::ShapeType, int>::iterator sIt;
+
+            for (int i = 0; i < m_mesh->m_element[m_mesh->m_expDim].size(); ++i)
+            {
+                ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][i];
+                LibUtilities::ShapeType type = el->GetConf().m_e;
+
+                vector<int> tags = el->GetTagList();
+                int tag = tags[0];
+
+                cIt = compMap.find(tag);
+
+                if (cIt == compMap.end())
+                {
+                    compMap[tag][type] = tag;
+                    continue;
+                }
+
+                // Reset tag for this element.
+                sIt = cIt->second.find(type);
+                if (sIt == cIt->second.end())
+                {
+                    maxTagId++;
+                    cIt->second[type] = maxTagId;
+                    tags[0] = maxTagId;
+                    el->SetTagList(tags);
+                }
+                else if (sIt->second != tag)
+                {
+                    tags[0] = sIt->second;
+                    el->SetTagList(tags);
+                }
+            }
+
+            bool printInfo = false;
+            for (cIt = compMap.begin(); cIt != compMap.end(); ++cIt)
+            {
+                if (cIt->second.size() > 1)
+                {
+                    printInfo = true;
+                    break;
+                }
+            }
+
+            if (printInfo)
+            {
+                cout << "Multiple elements in composite detected; remapped:"
+                     << endl;
+                for (cIt = compMap.begin(); cIt != compMap.end(); ++cIt)
+                {
+                    if (cIt->second.size() > 1)
+                    {
+                        sIt = cIt->second.begin();
+                        cout << "- Tag " << cIt->first << " => " << sIt->second
+                             << " ("
+                             << LibUtilities::ShapeTypeMap[sIt->first] << ")";
+                        sIt++;
+
+                        for (; sIt != cIt->second.end(); ++sIt)
+                        {
+                            cout << ", " << sIt->second << " ("
+                                 << LibUtilities::ShapeTypeMap[sIt->first]
+                                 << ")";
+                        }
+
+                        cout << endl;
+                    }
+                }
+            }
 
             // Process rest of mesh.
             ProcessVertices  ();
@@ -420,14 +493,19 @@ namespace Nektar
             {
                 case LibUtilities::eTriangle:
                     return TriReordering(it->second);
+                    break;
                 case LibUtilities::eQuadrilateral:
                     return QuadReordering(it->second);
+                    break;
                 case LibUtilities::eTetrahedron:
                     return TetReordering(it->second);
+                    break;
                 case LibUtilities::ePrism:
                     return PrismReordering(it->second);
+                    break;
                 case LibUtilities::eHexahedron:
                     return HexReordering(it->second);
+                    break;
                 default:
                     break;
             }
@@ -477,7 +555,11 @@ namespace Nektar
                 interior[i] = i + 3+3*n;
             }
 
-            interior = triTensorNodeOrdering(interior, n-1);
+            if (interior.size() > 0)
+            {
+                interior = triTensorNodeOrdering(interior, n-1);
+            }
+
             mapping.insert(mapping.end(), interior.begin(), interior.end());
             return mapping;
         }
@@ -522,7 +604,10 @@ namespace Nektar
                 interior[i] = i + 4+4*n;
             }
 
-            interior = quadTensorNodeOrdering(interior, n);
+            if (interior.size() > 0)
+            {
+                interior = quadTensorNodeOrdering(interior, n);
+            }
             mapping.insert(mapping.end(), interior.begin(), interior.end());
             return mapping;
         }

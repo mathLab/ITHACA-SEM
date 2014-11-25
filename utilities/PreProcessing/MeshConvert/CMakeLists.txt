@@ -59,3 +59,10 @@ IF (NEKTAR_USE_VTK)
         TARGET_LINK_LIBRARIES(MeshConvert vtkCommonCore vtkIOLegacy)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
+
+# Tests
+ADD_NEKTAR_TEST(Gmsh/CubeHex)
+ADD_NEKTAR_TEST(Gmsh/CubePrism)
+ADD_NEKTAR_TEST(Gmsh/CubeTet)
+ADD_NEKTAR_TEST(Gmsh/SquareQuad)
+ADD_NEKTAR_TEST(Gmsh/SquareTri)

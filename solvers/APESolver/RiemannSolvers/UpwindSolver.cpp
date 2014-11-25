@@ -123,7 +123,7 @@ void UpwindSolver::v_PointSolve(
 
     // assemble the fluxes
     pF = gamma*p0 * u + u0*p;
-    uF = p/rho + u0*u + v0 * vL + w0 + wL;
+    uF = p/rho + u0*u + v0*vL + w0*wL;
     vF = 0.0;
     wF = 0.0;
 }

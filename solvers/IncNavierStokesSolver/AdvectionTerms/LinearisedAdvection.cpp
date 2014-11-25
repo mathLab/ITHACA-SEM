@@ -587,9 +587,7 @@ namespace Nektar
         int nvar = m_session->GetVariables().size();
         int s;
         Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
-        
-        LibUtilities::Import(pInfile,FieldDef,FieldData);
-        
+
         if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
         {
             std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");

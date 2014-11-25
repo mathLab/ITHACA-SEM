@@ -44,12 +44,12 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey InputGmsh::className = 
+        ModuleKey InputGmsh::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eInputModule, "msh"), InputGmsh::create,
                 "Reads Gmsh msh file.");
 
-        std::map<unsigned int, ElmtConfig> InputGmsh::elmMap = 
+        std::map<unsigned int, ElmtConfig> InputGmsh::elmMap =
             InputGmsh::GenElmMap();
 
         /**
@@ -88,7 +88,7 @@ namespace Nektar
                 std::vector<int> interior((n-2)*(n-2));
                 std::copy(nodes.begin() + 4+4*(n-2), nodes.end(), interior.begin());
                 interior = quadTensorNodeOrdering(interior, n-2);
-                
+
                 // Copy into full node list
                 for (int j = 1; j < n-1; ++j)
                 {
@@ -124,8 +124,8 @@ namespace Nektar
             int cnt = n;
             for (int i = 1; i < n-1; ++i)
             {
-                nodeList[i] = nodes[3+i-1];
-                nodeList[cnt] = nodes[3+3*(n-2)-i];
+                nodeList[i]         = nodes[3+i-1];
+                nodeList[cnt]       = nodes[3+3*(n-2)-i];
                 nodeList[cnt+n-i-1] = nodes[3+(n-2)+i-1];
                 cnt += n-i;
             }
@@ -161,12 +161,12 @@ namespace Nektar
          */
         InputGmsh::InputGmsh(MeshSharedPtr m) : InputModule(m)
         {
-            
+
         }
 
         InputGmsh::~InputGmsh()
         {
-            
+
         }
 
         /**
@@ -183,7 +183,7 @@ namespace Nektar
         {
             // Open the file stream.
             OpenStream();
-            
+
             m_mesh->m_expDim = 0;
             m_mesh->m_spaceDim = 0;
             string line;
@@ -192,6 +192,12 @@ namespace Nektar
             int elm_type = 0;
             int prevId = -1;
             map<unsigned int, ElmtConfig>::iterator it;
+
+            // This map takes each element ID and maps it to a pertmutation map
+            // that is required to take Gmsh element node orderings and map them
+            // to Nektar++ orderings.
+            boost::unordered_map<int, vector<int> > orderingMap;
+            boost::unordered_map<int, vector<int> >::iterator oIt;
 
             if (m_mesh->m_verbose)
             {
@@ -231,9 +237,9 @@ namespace Nektar
                         {
                             m_mesh->m_spaceDim = 3;
                         }
-                        
+
                         id -= 1; // counter starts at 0
-                        
+
                         if (id-prevId != 1)
                         {
                             cerr << "Gmsh vertex ids should be contiguous" << endl;
@@ -275,7 +281,7 @@ namespace Nektar
                             tags.push_back(tag);
                         }
                         tags.resize(1);
-                        
+
                         // Read element node list
                         vector<NodeSharedPtr> nodeList;
                         num_nodes = GetNnodes(elm_type);
@@ -287,55 +293,30 @@ namespace Nektar
                             nodeList.push_back(m_mesh->m_node[node]);
                         }
 
-                        // Prism nodes need re-ordering for Nektar++.
-                        if (it->second.m_e == LibUtilities::eTriangle)
+                        // Look up reordering.
+                        oIt = orderingMap.find(elm_type);
+
+                        // If it's not created, then create it.
+                        if (oIt == orderingMap.end())
                         {
-                            vector<int> mapping = TriReordering(it->second);
+                            oIt = orderingMap.insert(
+                                make_pair(elm_type, CreateReordering(elm_type)))
+                                .first;
+                        }
+
+                        // Apply reordering map where necessary.
+                        if (oIt->second.size() > 0)
+                        {
+                            vector<int> &mapping = oIt->second;
                             vector<NodeSharedPtr> tmp = nodeList;
                             for (int i = 0; i < mapping.size(); ++i)
                             {
                                 nodeList[i] = tmp[mapping[i]];
                             }
                         }
-                        else if (it->second.m_e == LibUtilities::eQuadrilateral)
+
+                        if (it->second.m_e == LibUtilities::eTetrahedron)
                         {
-                            vector<int> mapping = QuadReordering(it->second);
-                            vector<NodeSharedPtr> tmp = nodeList;
-                            for (int i = 0; i < mapping.size(); ++i)
-                            {
-                                nodeList[i] = tmp[mapping[i]];
-                            }
-                        }
-                        else if (it->second.m_e == LibUtilities::eHexahedron)
-                        {
-                            vector<int> mapping = HexReordering(it->second);
-                            vector<NodeSharedPtr> tmp = nodeList;
-                            for (int i = 0; i < mapping.size(); ++i)
-                            {
-                                nodeList[i] = tmp[mapping[i]];
-                            }
-                        }
-                        else if (it->second.m_e == LibUtilities::ePrism)
-                        {
-                            vector<int> mapping = PrismReordering(it->second);
-                            vector<NodeSharedPtr> tmp = nodeList;
-                            for (int i = 0; i < mapping.size(); ++i)
-                            {
-                                nodeList[i] = tmp[mapping[i]];
-                            }
-                        }
-                        else if (it->second.m_e == LibUtilities::eTetrahedron)
-                        {
-                            it->second.m_volumeNodes = false;
-                            it->second.m_faceCurveType =
-                                LibUtilities::eNodalTriEvenlySpaced;
-                            vector<int> mapping = TetReordering(it->second);
-                            vector<NodeSharedPtr> tmp = nodeList;
-                            nodeList.resize(mapping.size());
-                            for (int i = 0; i < mapping.size(); ++i)
-                            {
-                                nodeList[i] = tmp[mapping[i]];
-                            }
                         }
 
                         // Create element
@@ -367,50 +348,98 @@ namespace Nektar
         {
             int nNodes;
             map<unsigned int, ElmtConfig>::iterator it;
-            
+
             it = elmMap.find(InputGmshEntity);
-            
+
             if (it == elmMap.end())
             {
                 cerr << "Unknown element type " << InputGmshEntity << endl;
                 abort();
             }
-            
+
             switch(it->second.m_e)
             {
-            case LibUtilities::ePoint: 
-                nNodes = Point::        GetNumNodes(it->second);
-                break;
-            case LibUtilities::eSegment: 
-                nNodes = Line::         GetNumNodes(it->second);
-                break;
-            case LibUtilities::eTriangle: 
-                nNodes = Triangle::     GetNumNodes(it->second);
-                break;
-            case LibUtilities::eQuadrilateral: 
-                nNodes = Quadrilateral::GetNumNodes(it->second);
-                break;
-            case LibUtilities::eTetrahedron: 
-                nNodes = Tetrahedron::  GetNumNodes(it->second);
-                break;
-            case LibUtilities::ePyramid:
-                nNodes = Pyramid::      GetNumNodes(it->second);
-                break;
-            case LibUtilities::ePrism: 
-                nNodes = Prism::        GetNumNodes(it->second);
-                break;
-            case LibUtilities::eHexahedron:
-                nNodes = Hexahedron::   GetNumNodes(it->second);
-                break;
-            default:
-                cerr << "Unknown element type!" << endl;
-                abort();
-                break;
+                case LibUtilities::ePoint:
+                    nNodes = Point::        GetNumNodes(it->second);
+                    break;
+                case LibUtilities::eSegment:
+                    nNodes = Line::         GetNumNodes(it->second);
+                    break;
+                case LibUtilities::eTriangle:
+                    nNodes = Triangle::     GetNumNodes(it->second);
+                    break;
+                case LibUtilities::eQuadrilateral:
+                    nNodes = Quadrilateral::GetNumNodes(it->second);
+                    break;
+                case LibUtilities::eTetrahedron:
+                    nNodes = Tetrahedron::  GetNumNodes(it->second);
+                    it->second.m_faceCurveType =
+                        LibUtilities::eNodalTriEvenlySpaced;
+                    break;
+                case LibUtilities::ePyramid:
+                    nNodes = Pyramid::      GetNumNodes(it->second);
+                    break;
+                case LibUtilities::ePrism:
+                    nNodes = Prism::        GetNumNodes(it->second);
+                    break;
+                case LibUtilities::eHexahedron:
+                    nNodes = Hexahedron::   GetNumNodes(it->second);
+                    break;
+                default:
+                    cerr << "Unknown element type!" << endl;
+                    abort();
+                    break;
             }
-            
+
             return nNodes;
         }
 
+        /**
+         * @brief Create a reordering map for a given element.
+         *
+         * Since Gmsh and Nektar++ have different vertex, edge and face
+         * orientations, we need to reorder the nodes in a Gmsh MSH file so that
+         * they work with the Nektar++ orderings, since this is what is used in
+         * the elements defined in the converter.
+         */
+        vector<int> InputGmsh::CreateReordering(unsigned int InputGmshEntity)
+        {
+            map<unsigned int, ElmtConfig>::iterator it;
+
+            it = elmMap.find(InputGmshEntity);
+
+            if (it == elmMap.end())
+            {
+                cerr << "Unknown element type " << InputGmshEntity << endl;
+                abort();
+            }
+
+            // For specific elements, call the appropriate function to perform
+            // the renumbering.
+            switch(it->second.m_e)
+            {
+                case LibUtilities::eTriangle:
+                    return TriReordering(it->second);
+                case LibUtilities::eQuadrilateral:
+                    return QuadReordering(it->second);
+                case LibUtilities::eTetrahedron:
+                    return TetReordering(it->second);
+                case LibUtilities::ePrism:
+                    return PrismReordering(it->second);
+                case LibUtilities::eHexahedron:
+                    return HexReordering(it->second);
+                default:
+                    break;
+            }
+
+            // Default: no reordering.
+            vector<int> returnVal;
+            return returnVal;
+        }
+
+        /**
+         * @brief Create a reordering for triangles.
+         */
         vector<int> InputGmsh::TriReordering(ElmtConfig conf)
         {
             const int order = conf.m_order;
@@ -435,7 +464,7 @@ namespace Nektar
             {
                 mapping[i] = i;
             }
-            
+
             if (!conf.m_faceNodes)
             {
                 return mapping;
@@ -453,6 +482,9 @@ namespace Nektar
             return mapping;
         }
 
+        /**
+         * @brief Create a reordering for quadrilaterals.
+         */
         vector<int> InputGmsh::QuadReordering(ElmtConfig conf)
         {
             const int order = conf.m_order;
@@ -477,7 +509,7 @@ namespace Nektar
             {
                 mapping[i] = i;
             }
-            
+
             if (!conf.m_faceNodes)
             {
                 return mapping;
@@ -495,6 +527,9 @@ namespace Nektar
             return mapping;
         }
 
+        /**
+         * @brief Create a reordering for tetrahedra.
+         */
         vector<int> InputGmsh::TetReordering(ElmtConfig conf)
         {
             const int order = conf.m_order;
@@ -532,7 +567,7 @@ namespace Nektar
                 {
                     for (int j = 0; j < n; ++j)
                     {
-                        mapping[offset+n-j-1] = cnt++; 
+                        mapping[offset+n-j-1] = cnt++;
                     }
                 }
                 else
@@ -601,13 +636,20 @@ namespace Nektar
             return mapping;
         }
 
+        /**
+         * @brief Create a reordering for prisms.
+         *
+         * Note that whilst Gmsh MSH files have the capability to support
+         * high-order prisms, presently Gmsh does not seem to be capable of
+         * generating higher than second-order prismatic meshes, so most of the
+         * following is untested.
+         */
         vector<int> InputGmsh::PrismReordering(ElmtConfig conf)
         {
             const int order = conf.m_order;
             const int n     = order-1;
-            const int n2    = n * n;
 
-            int i, j;
+            int i;
             vector<int> mapping(6);
 
             // To get from Gmsh -> Nektar++ prism, coordinates axes are
@@ -670,10 +712,13 @@ namespace Nektar
             mapping[15] = 15;
             mapping[16] = 16;
             mapping[17] = 17;
-            
+
             return mapping;
         }
 
+        /**
+         * @brief Create a reordering for hexahedra.
+         */
         vector<int> InputGmsh::HexReordering(ElmtConfig conf)
         {
             const int order = conf.m_order;
@@ -816,7 +861,7 @@ namespace Nektar
 
         /*
          * @brief Populate the element map #elmMap.
-         * 
+         *
          * This function primarily populates the element mapping #elmMap,
          * which takes a msh ID used by Gmsh and translates to element type,
          * element order and whether the element is incomplete (i.e. whether

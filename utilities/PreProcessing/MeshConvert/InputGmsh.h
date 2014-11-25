@@ -67,6 +67,7 @@ namespace Nektar
 
         private:
             int GetNnodes(unsigned int InputGmshEntity);
+            vector<int> CreateReordering(unsigned int InputGmshEntity);
             vector<int> TriReordering(ElmtConfig conf);
             vector<int> QuadReordering(ElmtConfig conf);
             vector<int> HexReordering(ElmtConfig conf);

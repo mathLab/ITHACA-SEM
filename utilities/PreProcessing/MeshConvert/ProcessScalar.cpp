@@ -84,9 +84,8 @@ namespace Nektar
                      << (surfs.size() > 1 ? "s" : "") << " " << surf << endl;
             }
 
-            const int nq   = m_config["nq"].as<int>();
-            const int nTot = nq*nq;
-            string expr = m_config["scalar"].as<string>();
+            const int nq = m_config["nq"].as<int>();
+            string expr  = m_config["scalar"].as<string>();
 
             LibUtilities::AnalyticExpressionEvaluator rEval;
             int rExprId = rEval.DefineFunction("x y z", expr);
@@ -114,23 +113,6 @@ namespace Nektar
                 // Grab face link.
                 FaceSharedPtr f = el[i]->GetFaceLink();
 
-#if 0
-                LibUtilities::BasisKey C0(
-                    LibUtilities::eModified_A, nq,
-                    LibUtilities::PointsKey(
-                        nq, LibUtilities::eGaussLobattoLegendre));
-                LocalRegions::QuadExpSharedPtr quad =
-                    MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(
-                        C0, C0, boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(f->GetGeom(m_mesh->m_spaceDim)));
-
-                // Get coordinates of face
-                Array<OneD, NekDouble> xc(nTot), yc(nTot), zc(nTot);
-                quad->GetCoords(xc, yc, zc);
-#endif
-
-                const int edge[4][2] =
-                    {{0,1}, {nq-1, nq}, {nq*nq-1, -1}, {nq*(nq-1), -nq}};
-
                 // Update vertices
                 for (j = 0; j < 4; ++j)
                 {
@@ -141,8 +123,6 @@ namespace Nektar
                     {
                         n->m_z = 0;
                     }
-
-
                 }
 
                 // Put curvature into edges

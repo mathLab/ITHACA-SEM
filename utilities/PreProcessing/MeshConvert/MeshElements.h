@@ -582,16 +582,35 @@ namespace Nektar
          */
         struct ElmtConfig
         {
-            ElmtConfig(LibUtilities::ShapeType pE, unsigned int pOrder, 
-                       bool pFn, bool pVn, bool pReorient = true,
-                       LibUtilities::PointsType pECt=LibUtilities::ePolyEvenlySpaced,
-                       LibUtilities::PointsType pFCt=LibUtilities::ePolyEvenlySpaced):
-            m_e(pE), m_faceNodes(pFn), m_volumeNodes(pVn), m_order(pOrder),
-                m_reorient(pReorient), m_edgeCurveType(pECt), m_faceCurveType(pFCt) {}
+            ElmtConfig(LibUtilities::ShapeType  pE,
+                       unsigned int             pOrder,
+                       bool                     pFn,
+                       bool                     pVn,
+                       bool                     pReorient = true,
+                       LibUtilities::PointsType pECt
+                                             = LibUtilities::ePolyEvenlySpaced,
+                       LibUtilities::PointsType pFCt
+                                             = LibUtilities::ePolyEvenlySpaced)
+            : m_e            (pE),
+              m_faceNodes    (pFn),
+              m_volumeNodes  (pVn),
+              m_order        (pOrder),
+              m_reorient     (pReorient),
+              m_edgeCurveType(pECt),
+              m_faceCurveType(pFCt)
+            {
+            }
+
             ElmtConfig(ElmtConfig const &p) :
-            m_e(p.m_e), m_faceNodes(p.m_faceNodes), m_volumeNodes(p.m_volumeNodes), 
-                m_order(p.m_order), m_reorient(p.m_reorient), 
-                m_edgeCurveType(p.m_edgeCurveType), m_faceCurveType(p.m_faceCurveType) {}
+                m_e            (p.m_e),
+                m_faceNodes    (p.m_faceNodes),
+                m_volumeNodes  (p.m_volumeNodes),
+                m_order        (p.m_order),
+                m_reorient     (p.m_reorient),
+                m_edgeCurveType(p.m_edgeCurveType),
+                m_faceCurveType(p.m_faceCurveType)
+            {
+            }
 
             ElmtConfig() {}
             

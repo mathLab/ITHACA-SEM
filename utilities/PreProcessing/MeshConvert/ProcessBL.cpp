@@ -476,7 +476,6 @@ namespace Nektar
                 q->GetCoords(x,y,z);
 
                 int nSplitEdge = sEdge.size;
-                int nSplitFace = sMap .size;
                 vector<vector<NodeSharedPtr> > edgeNodes(nSplitEdge);
 
                 // Loop over edges to be split.

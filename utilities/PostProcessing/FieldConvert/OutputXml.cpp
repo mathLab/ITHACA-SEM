@@ -64,7 +64,6 @@ namespace Nektar
                 return; 
             }
 
-            int i, j;
             if (m_f->m_verbose)
             {
                 cout << "OutputXml: Writing file..." << endl;

@@ -1371,8 +1371,7 @@ namespace Nektar
                     break;
                 case eDirectStaticCond:
                     {
-                        NoReordering(boostGraphObj,perm,iperm);
-                        //CuthillMckeeReordering(boostGraphObj,perm,iperm);
+                        CuthillMckeeReordering(boostGraphObj,perm,iperm);
                     }
                     break;
                 case eDirectMultiLevelStaticCond:

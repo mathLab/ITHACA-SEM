@@ -271,7 +271,7 @@ namespace Nektar
                                      sIt->second->GetVid(2));
 
                         tIt = vertexFaceMap.find(t);
-                        e = mIt == vertexFaceMap.end() ? -1 : tIt->second;
+                        e = tIt == vertexFaceMap.end() ? -1 : tIt->second;
                     }
                     else
                     {

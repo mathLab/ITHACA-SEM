@@ -62,7 +62,7 @@ namespace Nektar
          * These mappings are used by GlobalLinSys to generate the global
          * system.
          */
-        
+
         /**
          *
          */
@@ -139,7 +139,7 @@ namespace Nektar
 
                 }
 
-                // If all boundaries are Dirichlet take out of mask 
+                // If all boundaries are Dirichlet take out of mask
                 if(cnt == bndConditions.num_elements())
                 {
                     for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
@@ -401,7 +401,7 @@ namespace Nektar
             // Find the minimum boundary vertex ID on each process
             Array<OneD, int> bcminvertid(n, 0);
             bcminvertid[p] = vMaxVertId;
-            vCommRow->AllReduce(bcminvertid, LibUtilities::ReduceMax);
+            vComm->AllReduce(bcminvertid, LibUtilities::ReduceMax);
 
             // Find the process rank with the minimum boundary vertex ID
             int maxIdx = Vmath::Imax(n, bcminvertid, 1);
@@ -1728,7 +1728,7 @@ namespace Nektar
                         for (j = 0; j < exp->GetNfaces(); ++j)
                         {
                             meshFaceId = exp->GetGeom()->GetFid(j);
-                            
+
                             if (graph[2][meshFaceId] >= firstNonDirGraphVertId)
                             {
                                 vwgts_perm[graph[2][meshFaceId] -

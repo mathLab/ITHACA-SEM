@@ -59,10 +59,10 @@ namespace Nektar
         public:
             friend class MemoryManager<FilterModalEnergy>;
 
-            /// Creates an instance of this class
+            // Creates an instance of this class
             static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams)
+                const LibUtilities::SessionReaderSharedPtr  &pSession,
+                const std::map<std::string, std::string>    &pParams)
             {
                 FilterSharedPtr p = MemoryManager<FilterModalEnergy>::
                                         AllocateSharedPtr(pSession, pParams);
@@ -70,58 +70,72 @@ namespace Nektar
                 return p;
             }
 
-            ///Name of the class
+            // Name of the class
             static std::string className;
 
             SOLVER_UTILS_EXPORT FilterModalEnergy(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
+                const LibUtilities::SessionReaderSharedPtr  &pSession,
+                const std::map<std::string, std::string>    &pParams);
             SOLVER_UTILS_EXPORT ~FilterModalEnergy();
 
         protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+            virtual void v_Initialise(
+                const Array<OneD,
+                    const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble                           &time);
+            virtual void v_Update(
+                const Array<OneD,
+                    const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble                           &time);
+            virtual void v_Finalise(
+                const Array<OneD,
+                    const MultiRegions::ExpListSharedPtr> &pFields,
+                const NekDouble                           &time);
             virtual bool v_IsTimeDependent();
-            NekDouble L2Error (const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-                               unsigned int                 field,
-                               const	NekDouble             &time);
-            void SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh);
-            void ImportFldBase(std::string pInfile, 
-                               SpatialDomains::MeshGraphSharedPtr pGraph);
+            NekDouble L2Error (
+                const Array<OneD,
+                    const MultiRegions::ExpListSharedPtr> &pFields,
+                unsigned int                              field,
+                const	NekDouble                         &time);
+            void SetUpBaseFields(
+                SpatialDomains::MeshGraphSharedPtr        &mesh);
+            void ImportFldBase(
+                std::string                               pInfile,
+                SpatialDomains::MeshGraphSharedPtr        pGraph);
 			
         private:
             enum MultiRegions::ProjectionType           m_projectionType;
             Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
             LibUtilities::FieldIOSharedPtr              m_fld;
 	
-            /// ID's of boundary regions where we want the forces
+            // ID's of boundary regions where we want the forces
             vector<unsigned int>         m_boundaryRegionsIdList;
-            /// Determines if a given Boundary Region is in
-            /// m_boundaryRegionsIdList
+            // Determines if a given Boundary Region is in
+            // m_boundaryRegionsIdList
             vector<bool>                 m_boundaryRegionIsInList;
             unsigned int                 m_index;
             unsigned int                 m_outputFrequency;
-            /// plane to take history point from if using a homogeneous1D
-            /// expansion
+            // plane to take history point from if using a homogeneous1D
+            // expansion
             unsigned int                 m_outputPlane;
             bool                         m_isHomogeneous1D;
             bool                         m_isHomogeneous2D;
-            bool			 m_PertEnergy;
-            int				 m_npointsZ;
-            int				 m_nproc;
+            bool                         m_PertEnergy;
+            int                          m_npointsZ;
+            int                          m_nproc;
             std::string                  m_outputFile;
+            std::string                  m_EqTypeStr;
             std::ofstream                m_outputStream;
             LibUtilities::BasisSharedPtr m_homogeneousBasis;
             std::string                  m_BoundaryString;
             int                          m_nplanes;
-            int				 m_NumQuadPointsError;
+            int                          m_NumQuadPointsError;
             bool                         m_SingleMode;
             bool                         m_HalfMode;
             bool                         m_MultipleModes;
             bool                         m_useFFT;
-            NekDouble			 m_LhomZ;
-            bool			 m_homogen_dealiasing;
+            NekDouble                    m_LhomZ;
+            bool                         m_homogen_dealiasing;
         };
     }
 }

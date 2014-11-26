@@ -738,7 +738,7 @@ namespace Nektar
                 ASSERTL1(it != m_functionMapNameToInstanceType.end(), "Invalid function specified: " + valueStr);
                 ASSERTL1(num_children == 1 || num_children == 2, "Function " + valueStr + " would like to have too few or too many arguments. This is not implemented yet");
 
-                if (num_children == 1)
+                if (location->children.size() == 1)
                 {
                     PrecomputedValue v = PrepareExecutionAsYouParse(location->children.begin(), stack, variableMap, stateIndex);
 

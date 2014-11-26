@@ -112,19 +112,19 @@ namespace Nektar
 
             switch(solveType)
             {
-                case eLinearPreconXxt:
-                {
-                    linSolveType = eXxtFullMatrix;
-                    break;
-                }
                 case eLinearPreconPETSc:
                 {
-#ifdef NEKTAR_USING_PETSC
                     linSolveType = ePETScFullMatrix;
-#else
+#ifndef NEKTAR_USING_PETSC
                     ASSERTL0(false, "Nektar++ has not been compiled with "
                                     "PETSc support.");
 #endif
+                }
+                case eLinearPreconXxt:
+                default:
+                {
+                    linSolveType = eXxtFullMatrix;
+                    break;
                 }
             }
 

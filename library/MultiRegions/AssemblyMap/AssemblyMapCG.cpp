@@ -92,6 +92,7 @@ namespace Nektar
             int                                  mdswitch)
         {
             int graphVertId = 0;
+            int vMaxVertId = -1;
             int i, j, k, l, cnt;
             int meshVertId, meshEdgeId, meshFaceId;
             int meshVertId2, meshEdgeId2;
@@ -121,6 +122,21 @@ namespace Nektar
                     {
                         m_systemSingular = false;
                     }
+                }
+
+                // Find the maximum boundary vertex ID on this process. This is
+                // used later to pin a vertex if the system is singular.
+                for (j = 0; j < bndCondExp[i]->GetNumElmts(); ++j)
+                {
+                    bndExp = bndCondExp[i]->GetExp(j)->as<LocalRegions::Expansion>();
+                    for (k = 0; k < bndExp->GetNverts(); ++k)
+                    {
+                        if (vMaxVertId < bndExp->GetGeom()->GetVid(k))
+                        {
+                            vMaxVertId = bndExp->GetGeom()->GetVid(k);
+                        }
+                    }
+
                 }
 
                 // If all boundaries are Dirichlet take out of mask 
@@ -382,13 +398,13 @@ namespace Nektar
             vComm->AllReduce(s, LibUtilities::ReduceMin);
             m_systemSingular = s == 1 ? true : false;
 
-            // Count the number of boundary regions on each process
-            Array<OneD, int> bccounts(n, 0);
-            bccounts[p] = bndCondExp.num_elements();
-            vComm->AllReduce(bccounts, LibUtilities::ReduceSum);
+            // Find the minimum boundary vertex ID on each process
+            Array<OneD, int> bcminvertid(n, 0);
+            bcminvertid[p] = vMaxVertId;
+            vCommRow->AllReduce(bcminvertid, LibUtilities::ReduceMax);
 
-            // Find the process rank with the maximum number of boundary regions
-            int maxBCIdx = Vmath::Imax(n, bccounts, 1);
+            // Find the process rank with the minimum boundary vertex ID
+            int maxIdx = Vmath::Imax(n, bcminvertid, 1);
 
             // If the system is singular, the process with the maximum number of
             // BCs will set a Dirichlet vertex to make system non-singular.
@@ -397,30 +413,22 @@ namespace Nektar
             // intersection with the boundary.
             meshVertId = 0;
 
-            if (m_systemSingular && checkIfSystemSingular && maxBCIdx == p)
+            if (m_systemSingular && checkIfSystemSingular && maxIdx == p)
             {
-                if (m_session->DefinesParameter("SingularElement"))
+                if (m_session->DefinesParameter("SingularVertex"))
                 {
-                    int s_eid;
-                    m_session->LoadParameter("SingularElement", s_eid);
-
-                    ASSERTL1(s_eid < locExpVector.size(),
-                             "SingularElement Parameter is too large");
-
-                    meshVertId = locExpVector[s_eid]->GetGeom()->GetVid(0);
+                    m_session->LoadParameter("SingularVertex", meshVertId);
                 }
-                else if (bndCondExp.num_elements() == 0)
+                else if (vMaxVertId == -1)
                 {
                     // All boundaries are periodic.
                     meshVertId = locExpVector[0]->GetGeom()->GetVid(0);
                 }
                 else
                 {
-                    // Last region i and j = 0 edge
-                    bndExp = bndCondExp[bndCondExp.num_elements()-1]->GetExp(0);
-
-                    // First vertex 0 of the edge
-                    meshVertId = bndExp->GetGeom()->GetVid(0);
+                    // Set pinned vertex to that with minimum vertex ID to
+                    // ensure consistency in parallel.
+                    meshVertId = bcminvertid[p];
                 }
 
                 if (graph[0].count(meshVertId) == 0)
@@ -439,7 +447,7 @@ namespace Nektar
                 // Firstly, we check that no other processors have this
                 // vertex. If they do, then we mark the vertex as also being
                 // Dirichlet.
-                if (maxBCIdx != p)
+                if (maxIdx != p)
                 {
                     for (i = 0; i < locExpVector.size(); ++i)
                     {

@@ -65,8 +65,12 @@ ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
 ADD_NEKTAR_TEST        (Gmsh/CubeHex)
 ADD_NEKTAR_TEST        (Gmsh/CubePrism)
 ADD_NEKTAR_TEST        (Gmsh/CubeTet)
+ADD_NEKTAR_TEST        (Gmsh/Scalar)
 ADD_NEKTAR_TEST        (Gmsh/SquareQuad)
 ADD_NEKTAR_TEST        (Gmsh/SquareTri)
+# Nektar tests
+ADD_NEKTAR_TEST        (Nektar/HexLinear)
+ADD_NEKTAR_TEST        (Nektar/Tube45)
 # StarCCM tests
 ADD_NEKTAR_TEST        (StarTec/CubePer)
 ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)

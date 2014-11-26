@@ -201,9 +201,9 @@ namespace Nektar
             int ho = nq*(nq-1);
             int tl = nq*nq;
             SplitMapHelper splitHex0;
-            int splitMapEdgeHex0  [8]    = {0, 1,    2,  3,  8,  9,       10,    11};
-            int splitMapOffsetHex0[8]    = {0, nq-1, ho, 0,  tl, tl+nq-1, tl+ho, tl};
-            int splitMapIncHex0   [8]    = {1, nq,   1,  nq, 1,  nq,      1,     nq};
+            int splitMapEdgeHex0  [8]    = {0, 1,    2,     3,   8,  9,       10,     11};
+            int splitMapOffsetHex0[8]    = {0, nq-1, tl-1,  ho,  tl, tl+nq-1, 2*tl-1, tl+ho};
+            int splitMapIncHex0   [8]    = {1, nq,   -1,   -nq,  1,  nq,      -1,     -nq};
             int splitMapBFacesHex0[4]    = {1, 2, 3, 4};
             int splitMapConnHex0  [8][2] = {{0,0}, {1,0}, {2,0}, {3,0},
                                             {0,1}, {1,1}, {2,1}, {3,1}};

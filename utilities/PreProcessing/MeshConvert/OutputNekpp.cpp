@@ -277,7 +277,7 @@ namespace Nektar
             int facecnt = 0;
 
             // 2D elements in 3-space, output face curvature information
-            if (m_mesh->m_expDim == 2)// && m_mesh->m_spaceDim == 3)
+            if (m_mesh->m_expDim == 2 && m_mesh->m_spaceDim == 3)
             {
                 vector<ElementSharedPtr>::iterator it;
                 for (it  = m_mesh->m_element[m_mesh->m_expDim].begin();

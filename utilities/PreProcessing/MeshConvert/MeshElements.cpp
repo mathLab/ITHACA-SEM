@@ -769,14 +769,8 @@ namespace Nektar
             {
                 int pos = edgeMap[i][0] + edgeMap[i][1];
                 m_edge[i]->m_edgeNodes.clear();
-                /*
-                cout << "EDGE " << i << " = " 
-                     << m_edge[i]->m_n1->m_x << "," << m_edge[i]->m_n1->m_y << " "
-                     << m_edge[i]->m_n2->m_x << "," << m_edge[i]->m_n2->m_y << endl;
-                */
                 for (int j = 1; j < order; ++j, pos += edgeMap[i][1])
                 {
-                    //cout << "INSERTING: " << x[pos] << " " << y[pos] << endl;
                     m_edge[i]->m_edgeNodes.push_back(
                         NodeSharedPtr(new Node(0, x[pos], y[pos], z[pos])));
                 }
@@ -791,7 +785,6 @@ namespace Nektar
                 {
                     m_volumeNodes.push_back(
                         NodeSharedPtr(new Node(0, x[pos+j], y[pos+j], z[pos+j])));
-                    //cout << "here" << endl;
                 }                
             }
             
@@ -1364,6 +1357,7 @@ namespace Nektar
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
             }
 
+            // Reorder edges to align with Nektar++ order.
             vector<EdgeSharedPtr> tmp(8);
             tmp[0] = m_edge[face_edges[0][0]];
             tmp[1] = m_edge[face_edges[0][1]];
@@ -1461,19 +1455,27 @@ namespace Nektar
             {
                 OrientPrism();
             }
-            
+
             // Create faces
             int face_ids[5][4] = {
                 {0,1,2,3},{0,1,4,-1},{1,2,5,4},{3,2,5,-1},{0,3,5,4}};
             int face_edges[5][4];
-            int faceoffset = 6 + 9*n;
+
+            int face_offset[5];
+            face_offset[0] = 6 + 9*n;
+            for (int j = 0; j < 4; ++j)
+            {
+                int facenodes = j % 2 == 0 ? n*n : n*(n-1)/2;
+                face_offset[j+1] = face_offset[j] + facenodes;
+            }
+
             for (int j = 0; j < 5; ++j)
             {
                 vector<NodeSharedPtr> faceVertices;
                 vector<EdgeSharedPtr> faceEdges;
                 vector<NodeSharedPtr> faceNodes;
                 int nEdge = 3 - (j % 2 - 1);
-                
+
                 for (int k = 0; k < nEdge; ++k)
                 {
                     faceVertices.push_back(m_vertex[face_ids[j][k]]);
@@ -1490,20 +1492,38 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if (m_conf.m_faceNodes)
                 {
-                    int facenodes = j%2==0 ? n*n : n*(n-1)/2;
+                    int face = j, facenodes;
+
+                    if (j % 2 == 0)
+                    {
+                        facenodes = n*n;
+                        if (m_orientation == 1)
+                        {
+                            face = (face+4) % 6;
+                        }
+                        else if (m_orientation == 2)
+                        {
+                            face = (face+2) % 6;
+                        }
+                    }
+                    else
+                    {
+                        // TODO: need to rotate these too.
+                        facenodes = n*(n-1)/2;
+                    }
+
                     for (int i = 0; i < facenodes; ++i)
                     {
-                        faceNodes.push_back(pNodeList[faceoffset+i]);
+                        faceNodes.push_back(pNodeList[face_offset[face]+i]);
                     }
-                    faceoffset   += facenodes;
                 }
                 m_face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.m_faceCurveType)));
             }
-            
+
             // Re-order edge array to be consistent with Nektar++ ordering.
             vector<EdgeSharedPtr> tmp(9);
             tmp[0] = m_edge[face_edges[0][0]];

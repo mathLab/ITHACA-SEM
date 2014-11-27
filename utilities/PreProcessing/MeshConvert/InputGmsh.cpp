@@ -793,10 +793,10 @@ namespace Nektar
                 abort();
             }
 
-            mapping.resize(17);
+            mapping.resize(18);
             mapping[15] = 15;
-            mapping[16] = 16;
-            mapping[17] = 17;
+            mapping[16] = 17;
+            mapping[17] = 16;
 
             return mapping;
         }

@@ -46,6 +46,7 @@
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <boost/enable_shared_from_this.hpp>
 namespace Nektar { namespace LocalRegions { class MatrixKey; class Expansion; } }
 
 
@@ -65,7 +66,7 @@ namespace Nektar
          *  contains the definition of common data and common routine to all
          *  elements
          */
-        class StdExpansion
+        class StdExpansion : public boost::enable_shared_from_this<StdExpansion>
         {
         public:
 
@@ -925,6 +926,12 @@ namespace Nektar
                 v_LaplacianMatrixOp(inarray,outarray,mkey);
             }
 
+            void ReduceOrderCoeffs(int numMin,
+                                   const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray)
+            {
+                v_ReduceOrderCoeffs(numMin,inarray,outarray);
+            }
             
             void SVVLaplacianFilter(Array<OneD,NekDouble> &array,
                                     const StdMatrixKey &mkey)
@@ -1128,6 +1135,10 @@ namespace Nektar
                 return v_GetMetricInfo();
             }
 
+            /// \brief Get the element id of this expansion when used
+            /// in a list by returning value of #m_elmt_id
+            STD_REGIONS_EXPORT virtual int v_GetElmtId();
+
             STD_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
 
             STD_REGIONS_EXPORT virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
@@ -1246,15 +1257,14 @@ namespace Nektar
                 return v_GetFaceNormal(face); 
             }
 			
-			const NormalVector & GetVertexNormal(const int vertex) const
+            const NormalVector & GetVertexNormal(const int vertex) const
             {
                 return v_GetVertexNormal(vertex); 
             }
 
-            const NormalVector & GetSurfaceNormal() const
+            const NormalVector & GetSurfaceNormal(const int id) const
             {
-                // @TODO Implement this
-                return v_GetSurfaceNormal(); 
+                return v_GetSurfaceNormal(id); 
             }
 
             const LibUtilities::PointsKeyVector GetPointsKeys() const
@@ -1284,6 +1294,19 @@ namespace Nektar
             {
                 return v_BuildInverseTransformationMatrix(
                     m_transformationmatrix);
+            }
+
+            template<class T>
+            boost::shared_ptr<T> as()
+            {
+#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
+                typedef typename boost::shared_ptr<T>::element_type E;
+                E * p = dynamic_cast< E* >( shared_from_this().get() );
+                ASSERTL1(p, "Cannot perform cast");
+                return boost::shared_ptr<T>( shared_from_this(), p );
+#else
+                return boost::dynamic_pointer_cast<T>( shared_from_this() );
+#endif
             }
 
         protected:
@@ -1663,6 +1686,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD,NekDouble> &array,
                                              const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                                            int numMin,
+                                            const Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD,NekDouble> &outarray);
+
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(const int k1, const int k2,
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
@@ -1721,7 +1749,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
 			
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
-            STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
+            STD_REGIONS_EXPORT virtual const NormalVector & 
+                v_GetSurfaceNormal(const int id) const;
 
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
                 v_GetEdgeInverseBoundaryMap(int eid);

@@ -46,35 +46,47 @@ int main(int argc, char* argv[])
 {
     po::options_description desc("Available options");
     desc.add_options()
-        ("help,h",         "Produce this help message.")
-        ("modules-list,l", "Print the list of available modules.")
-        ("output-points,n",po::value<string>(),
-         "Output at p equipspaced points (for .dat, .vtk).")
-        ("error,e",  "write error of fields for regression checking")
-        ("range,r",po::value<string>(),
-         "define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) in which any vertex is contained .")
-        ("modules-opt,p",  po::value<string>(),
-             "Print options for a module.")
-        ("module,m",       po::value<vector<string> >(), 
-             "Specify modules which are to be used.")
-        ("useSessionVariables", "Use variables defined in session for output")
-        ("verbose,v",      "Enable verbose mode.");
-    
+        ("help,h",
+                "Produce this help message.")
+        ("modules-list,l",
+                "Print the list of available modules.")
+        ("output-points,n", po::value<int>(),
+                "Output at p equipspaced points (for .dat, .vtk).")
+        ("error,e",
+                "Write error of fields for regression checking")
+        ("range,r", po::value<string>(),
+                "Define output range i.e. (-r xmin,xmax,ymin,ymax,zmin,zmax) "
+                "in which any vertex is contained.")
+        ("nprocs", po::value<int>(),
+                "Used to define nprocs if running serial problem to mimic "
+                "parallel run.")
+        ("procid", po::value<int>(),
+                "Process as single procid of a partition of size nproc "
+                "(-nproc must be specified).")
+        ("modules-opt,p", po::value<string>(),
+                "Print options for a module.")
+        ("module,m", po::value<vector<string> >(),
+                "Specify modules which are to be used.")
+        ("useSessionVariables",
+                "Use variables defined in session for output")
+        ("verbose,v",
+                "Enable verbose mode.");
+
     po::options_description hidden("Hidden options");
     hidden.add_options()
         ("input-file",   po::value<vector<string> >(), "Input filename");
-    
+
     po::options_description cmdline_options;
     cmdline_options.add(hidden).add(desc);
-    
+
     po::options_description visible("Allowed options");
     visible.add(desc);
-    
+
     po::positional_options_description p;
     p.add("input-file", -1);
-    
+
     po::variables_map vm;
-    
+
     try
     {
         po::store(po::command_line_parser(argc, argv).
@@ -94,28 +106,28 @@ int main(int argc, char* argv[])
         GetModuleFactory().PrintAvailableClasses(std::cerr);
         return 1;
     }
-    
+
     if (vm.count("modules-opt"))
     {
         vector<string> tmp1;
         boost::split(tmp1, vm["modules-opt"].as<string>(), 
                      boost::is_any_of(":"));
-        
+
         if (tmp1.size() != 2)
         {
             cerr << "ERROR: To specify a module, use one of in, out or proc "
                  << "together with the filename; for example in:vtk." << endl;
             return 1;
         }
-        
+
         if (tmp1[0] != "in" && tmp1[0] != "out" && tmp1[0] != "proc")
         {
             cerr << "ERROR: Invalid module type " << tmp1[0] << endl;
             return 1;
         }
-        
+
         ModuleType t;
-        
+
         if (tmp1[0] == "in")
         {
             t = eInputModule;
@@ -128,7 +140,7 @@ int main(int argc, char* argv[])
         {
             t = eProcessModule;
         }
-        
+
         FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
         ModuleSharedPtr mod = GetModuleFactory().CreateInstance(
             ModuleKey(t, tmp1[1]), f);
@@ -136,40 +148,30 @@ int main(int argc, char* argv[])
         mod->PrintConfig();
         return 1;
     }
-    
+
     if (vm.count("help") || vm.count("input-file") != 1) {
         cerr << "Usage: FieldConvert [options] inputfile.ext1 outputfile.ext2" 
              << endl;
         cout << desc;
         cout << endl;
         cout << "Example Usage: \n" << endl;
-        cout << "\t FieldConvert -m vorticity file.xml file.fld file_vort.fld " << endl;
-        cout << "(This will add vorticity to file file.fld and put it in a new file file_vort.fld) " << endl;
+        cout << "\t FieldConvert -m vorticity file.xml file.fld file_vort.fld "
+             << endl;
+        cout << "(This will add vorticity to file file.fld and put it in a "
+                "new file file_vort.fld) " << endl;
         cout << endl;
         cout << "\t FieldConvert file.xml file_vort.fld file_vort.dat " << endl;
-        cout << "(process file_vort.fld and make a tecplot output file_vort.dat) " << endl;
+        cout << "(process file_vort.fld and make a tecplot output "
+                "file_vort.dat) " << endl;
 
         return 1;
     }
-    
+
+    ASSERTL0(vm.count("input-file"),
+             "Must specify input(s) and/or output file.");
     vector<string> inout = vm["input-file"].as<vector<string> >();
-    
-    if (inout.size() < 2)
-    {
-        cerr << "ERROR: You must specify input(s) and and output file." << endl;
-        return 1;
-    }
-#if 0 
-    else if(vm.count("boundary-region"))
-    {
-        if(inout.size() < 3)
-        {
-            cerr << "Error: You mush specify an .xml file a .fld fle as inputs and a .fld file as an output" << endl;
-            return 2;
-        }
-    }
-#endif
-    
+
+
     /*
      * Process list of modules. Each element of the vector of module strings can
      * be in the following form:
@@ -179,22 +181,38 @@ int main(int argc, char* argv[])
      * where the only required argument is 'modname', specifing the name of the
      * module to load.
      */
-    
+
     FieldSharedPtr f = boost::shared_ptr<Field>(new Field());
     if (LibUtilities::GetCommFactory().ModuleExists("ParallelMPI"))
     {
-        f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
+        if(vm.count("procid"))
+        {
+            int nprocs, rank;
+
+            ASSERTL0(vm.count("nprocs"),
+                     "Must specify --nprocs when using --procid option");
+            nprocs = vm["nprocs"].as<int>();
+            rank   = vm["procid"].as<int>();
+
+            f->m_comm = boost::shared_ptr<FieldConvertComm>(
+                                new FieldConvertComm(argc, argv, nprocs,rank));
+        }
+        else
+        {
+            f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
                                                     "ParallelMPI", argc, argv);
+        }
     }
     else
     {
         f->m_comm = LibUtilities::GetCommFactory().CreateInstance(
                                                     "Serial", argc, argv);
+
     }
 
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
-    
+
     if (vm.count("verbose"))
     {
         f->m_verbose = true;
@@ -204,14 +222,14 @@ int main(int argc, char* argv[])
     {
         modcmds = vm["module"].as<vector<string> >();
     }
-    
+
     // Add input and output modules to beginning and end of this vector.
     modcmds.insert(modcmds.begin(), inout.begin(), inout.end()-1);
     modcmds.push_back(*(inout.end()-1));
     int nInput = inout.size()-1;
-    
+
     InputModuleSharedPtr inputModule;
-        
+
     for (int i = 0; i < modcmds.size(); ++i)
     {
         // First split each command by the colon separator.
@@ -220,11 +238,11 @@ int main(int argc, char* argv[])
         int offset = 1;
 
         boost::split(tmp1, modcmds[i], boost::is_any_of(":"));
-        
+
         if (i < nInput || i == modcmds.size() - 1)
         {
             module.first = (i < nInput ? eInputModule : eOutputModule);
-                
+
             // If no colon detected, automatically detect mesh type from
             // file extension. Otherwise override and use tmp1[1] as the
             // module to load. This also allows us to pass options to
@@ -236,14 +254,14 @@ int main(int argc, char* argv[])
             {
                 int    dot    = tmp1[0].find_last_of('.') + 1;
                 string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
-                
+
                 if(ext == "gz")
                 {
                     string tmp2 = tmp1[0].substr(0,dot-1);
                     dot = tmp2.find_last_of('.') + 1;
                     ext = tmp1[0].substr(dot,tmp1[0].length()-dot);
                 }
-                
+
                 module.second = ext;
                 tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
                                +tmp1[0]);
@@ -261,25 +279,24 @@ int main(int argc, char* argv[])
             module.first  = eProcessModule;
             module.second = tmp1[0];
         }
-        
+
         // Create module.
         ModuleSharedPtr mod;
         mod = GetModuleFactory().CreateInstance(module, f);
         modules.push_back(mod);
-        
+
         if (i < nInput)
         {
             inputModule = boost::dynamic_pointer_cast<InputModule>(mod);
             inputModule->AddFile(module.second, tmp1[0]);
         }
-        
-        
+
         // Set options for this module.
         for (int j = offset; j < tmp1.size(); ++j)
         {
             vector<string> tmp2;
             boost::split(tmp2, tmp1[j], boost::is_any_of("="));
-            
+
             if (tmp2.size() == 1)
             {
                 mod->RegisterConfig(tmp2[0], "1");
@@ -295,7 +312,7 @@ int main(int argc, char* argv[])
                 abort();
             }
         }
-        
+
         // Ensure configuration options have been set.
         mod->SetDefaults();
     }
@@ -322,5 +339,6 @@ int main(int argc, char* argv[])
         modules[i]->Process(vm);
         cout.flush();
     }
+
     return 0;
 }

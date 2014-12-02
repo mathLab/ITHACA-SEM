@@ -184,7 +184,11 @@ int main(int argc, char* argv[])
 
         vtkPolyData *vtkMesh = vtkMeshReader->GetOutput();
         vtkCellDataToPointData* c2p = vtkCellDataToPointData::New();
+#if VTK_MAJOR_VERSION <= 5
         c2p->SetInput(vtkMesh);
+#else
+        c2p->SetInputData(vtkMesh);
+#endif
         c2p->PassCellDataOn();
         c2p->Update();
         vtkPolyData *vtkDataAtPoints = c2p->GetPolyDataOutput();
@@ -244,8 +248,8 @@ int main(int argc, char* argv[])
                 coeff_idx = Exp->GetCoeff_Offset(i) + e->GetVertexMap(j);
 
                 // Get the coordinates of the vertex
-                vert = LocalRegions::Expansion2D::FromStdExp(e)->GetGeom2D()->
-                                                                GetVertex(j);
+                vert = e->as<LocalRegions::Expansion2D>()->GetGeom2D()
+                                                         ->GetVertex(j);
                 vert->GetCoords(x,y,z);
 
                 // Look up the vertex in the VertexSet

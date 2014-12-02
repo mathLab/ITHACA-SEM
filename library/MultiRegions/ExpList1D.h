@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <MultiRegions/ExpList.h>
+#include <LocalRegions/SegExp.h>
 #include <LibUtilities/Kernel/kernel.h>
 
 namespace Nektar
@@ -75,11 +76,23 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
-            /// input mesh.
+            /// input graph1D.
             MULTI_REGIONS_EXPORT ExpList1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                 const bool DeclareCoeffPhysArrays = true);
+
+
+            /// This constructor sets up a list of local expansions based on an
+            /// input compositeMap
+            MULTI_REGIONS_EXPORT ExpList1D(
+                      const LibUtilities::SessionReaderSharedPtr &pSession,
+                      const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                      const SpatialDomains::CompositeMap &domain,
+                      const bool DeclareCoeffPhysArrays = true,
+                      const std::string var = "DefaultVar",
+                      bool SetToOneSpaceDimension = false);
+
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
@@ -99,6 +112,7 @@ namespace Nektar
             
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
                 const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                 const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,

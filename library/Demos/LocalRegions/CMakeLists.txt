@@ -1,43 +1,28 @@
-SET(LinkLibraries 
-    optimized LocalRegions debug LocalRegions-g  
-    optimized SpatialDomains debug SpatialDomains-g
-    optimized StdRegions debug StdRegions-g
-    optimized LibUtilities debug LibUtilities-g
-    optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
-    optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
-    optimized ${ZLIB_LIBRARY_RELEASE} debug ${ZLIB_LIBRARY_DEBUG}
-    optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
-)
+SET(LinkLibraries LocalRegions)
 
 SET(LocProject1DSource  LocProject1D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject1D demos LocProject1DSource)
 TARGET_LINK_LIBRARIES(LocProject1D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(LocProject1D)
 
 SET(LocProject2DSource  LocProject2D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject2D demos LocProject2DSource)
 TARGET_LINK_LIBRARIES(LocProject2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(LocProject2D)
 
 SET(LocProject3DSource  LocProject3D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject3D demos LocProject3DSource)
 TARGET_LINK_LIBRARIES(LocProject3D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(LocProject3D)
 
 SET(LocProject_Diff1DSource  LocProject_Diff1D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject_Diff1D demos LocProject_Diff1DSource)
 TARGET_LINK_LIBRARIES(LocProject_Diff1D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(LocProject_Diff1D)
 
 SET(LocProject_Diff2DSource  LocProject_Diff2D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject_Diff2D demos LocProject_Diff2DSource)
 TARGET_LINK_LIBRARIES(LocProject_Diff2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(LocProject_Diff2D)
 
 SET(LocProject_Diff3DSource  LocProject_Diff3D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject_Diff3D demos LocProject_Diff3DSource)
 TARGET_LINK_LIBRARIES(LocProject_Diff3D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(LocProject_Diff3D)
 
 # Generate list of available subdirectories
 FILE(GLOB dir_list "*")

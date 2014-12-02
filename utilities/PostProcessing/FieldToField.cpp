@@ -11,7 +11,7 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 #include <boost/math/special_functions/fpclassify.hpp>
 

@@ -156,22 +156,50 @@ namespace Nektar
             Array<OneD, int>  procList(m_historyPoints.size(), -1);
             Array<OneD, int> idList(m_historyPoints.size());
             std::vector<Array<OneD, NekDouble> > LocCoords; 
-            
+
             for (i = 0; i < m_historyPoints.size(); ++i)
             {
-                Array<OneD, NekDouble>  locCoords(3);
+                Array<OneD, NekDouble> locCoords(3);
 
+                // Determine the expansion and local coordinates
                 m_historyPoints[i]->GetCoords(  gloCoord[0],
                                                 gloCoord[1],
                                                 gloCoord[2]);
 
-                idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords);
-            
+                idList[i] = pFields[0]->GetExpIndex(gloCoord,locCoords,
+                                                NekConstants::kGeomFactorsTol);
+
+                // Check if the reverse mapping of the local coordinates gives
+                // the correct coordinates of the history point. This ensures
+                // that the correct element is chosen in the manifold case.
+                if (idList[i] != -1)
+                {
+                    SpatialDomains::GeometrySharedPtr g =
+                                    pFields[0]->GetExp(idList[i])->GetGeom();
+                    StdRegions::StdExpansionSharedPtr e = g->GetXmap();
+                    Array<OneD, NekDouble> coordVals(e->GetTotPoints());
+                    NekDouble distance = 0.0;
+                    for (int j = 0; j < g->GetCoordim(); ++j)
+                    {
+                        e->BwdTrans(g->GetCoeffs(j), coordVals);
+                        NekDouble x = e->PhysEvaluate(locCoords, coordVals)
+                                                                 - gloCoord[j];
+                        distance += x*x;
+                    }
+                    if (distance > NekConstants::kGeomFactorsTol)
+                    {
+                        idList[i] = -1;
+                    }
+                }
+
                 // Save Local coordinates for later
                 LocCoords.push_back(locCoords);
-                // Set element id to Vid of m_historyPoints;
+
+                // Set element id to Vid of m_history point for later use
                 m_historyPoints[i]->SetVid(idList[i]);
                 
+                // If a matching element is found on this process, note the
+                // process ID
                 if (idList[i] != -1) 
                 {
                     if(m_isHomogeneous1D)
@@ -198,6 +226,9 @@ namespace Nektar
                     }
                 }
             }
+
+            // Reduce process IDs for all history points. The process with
+            // largest rank will handle the history point
             vComm->AllReduce(procList, LibUtilities::ReduceMax);
 
             // Determine the element in which each history point resides.
@@ -205,11 +236,14 @@ namespace Nektar
             for (i = 0; i < m_historyPoints.size(); ++i)
             {
                 // If point lies on partition boundary, only the proc with max
-                // rank retains posession.
+                // rank retains possession.
                 if (procList[i] != vRank)
                 {
                     idList[i] = -1;
                 }
+
+                // If the current process owns this history point, add it to its
+                // local list of history points.
                 if (idList[i] != -1)
                 {
                     m_historyLocalPointMap[m_historyList.size()] = i;
@@ -345,7 +379,6 @@ namespace Nektar
 
                         // interpolate point
                         data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp(expId)->StdPhysEvaluate(locCoord,physvals);
-                        
                     }
                 }
             }

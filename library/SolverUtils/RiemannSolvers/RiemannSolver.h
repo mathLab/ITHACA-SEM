@@ -63,6 +63,7 @@ namespace Nektar
         {
         public:
             SOLVER_UTILS_EXPORT void Solve(
+                const int                                         nDim,
                 const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux);
@@ -137,6 +138,8 @@ namespace Nektar
                 return m_params;
             }
 
+            int m_spacedim;
+
         protected:
             /// Indicates whether the Riemann solver requires a rotation to be
             /// applied to the velocity fields.
@@ -159,6 +162,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT RiemannSolver();
 
             virtual void v_Solve(
+                const int                                         nDim,
                 const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
                 const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
                       Array<OneD,       Array<OneD, NekDouble> > &flux) = 0;
@@ -169,21 +173,21 @@ namespace Nektar
                 Array<OneD, const NekDouble> &from,
                 Array<OneD, const NekDouble> &to,
                 NekDouble                    *mat);
-            void rotateToNormal  (
+            SOLVER_UTILS_EXPORT void rotateToNormal  (
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
                 const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);
-            void rotateFromNormal(
+            SOLVER_UTILS_EXPORT void rotateFromNormal(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
                 const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);
-            bool CheckScalars (std::string name);
-            bool CheckVectors (std::string name);
-            bool CheckParams  (std::string name);
-            bool CheckAuxScal (std::string name);
-            bool CheckAuxVec  (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckScalars (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckVectors (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckParams  (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckAuxScal (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckAuxVec  (std::string name);
         };
 
         /// A shared pointer to an EquationSystem object

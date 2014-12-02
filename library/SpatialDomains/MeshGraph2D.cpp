@@ -37,7 +37,7 @@
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -617,67 +617,44 @@ namespace Nektar
 
             GeometryVectorIter geomIter;
 
-            for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
+            for(int d = 0; d < m_domain.size(); ++d)
             {
-                for (geomIter = (compIter->second)->begin(); geomIter != (compIter->second)->end(); ++geomIter)
+                for (compIter = m_domain[d].begin(); compIter != m_domain[d].end(); ++compIter)
                 {
-                    triGeomShPtr = boost::dynamic_pointer_cast<TriGeom>(*geomIter);
-                    quadGeomShPtr = boost::dynamic_pointer_cast<QuadGeom>(*geomIter);
-
-                    if (triGeomShPtr || quadGeomShPtr)
+                    for (geomIter = (compIter->second)->begin(); geomIter != (compIter->second)->end(); ++geomIter)
                     {
-                        int edgeNum;
-                        if (triGeomShPtr)
+                        triGeomShPtr = boost::dynamic_pointer_cast<TriGeom>(*geomIter);
+                        quadGeomShPtr = boost::dynamic_pointer_cast<QuadGeom>(*geomIter);
+                        
+                        if (triGeomShPtr || quadGeomShPtr)
                         {
-                            if ((edgeNum = triGeomShPtr->WhichEdge(edge)) > -1)
+                            int edgeNum;
+                            if (triGeomShPtr)
                             {
-                                elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                                elementEdge->m_Element = triGeomShPtr;
-                                elementEdge->m_EdgeIndx = edgeNum;
-                                returnval->push_back(elementEdge);
+                                if ((edgeNum = triGeomShPtr->WhichEdge(edge)) > -1)
+                                {
+                                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                                    elementEdge->m_Element = triGeomShPtr;
+                                    elementEdge->m_EdgeIndx = edgeNum;
+                                    returnval->push_back(elementEdge);
+                                }
                             }
-                        }
-                        else if (quadGeomShPtr)
-                        {
-                            if ((edgeNum = quadGeomShPtr->WhichEdge(edge)) > -1)
+                            else if (quadGeomShPtr)
                             {
-                                elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                                elementEdge->m_Element = quadGeomShPtr;
-                                elementEdge->m_EdgeIndx = edgeNum;
-                                returnval->push_back(elementEdge);
+                                if ((edgeNum = quadGeomShPtr->WhichEdge(edge)) > -1)
+                                {
+                                    elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                                    elementEdge->m_Element = quadGeomShPtr;
+                                    elementEdge->m_EdgeIndx = edgeNum;
+                                    returnval->push_back(elementEdge);
+                                }
                             }
                         }
                     }
                 }
             }
 
-                //for(triIter = m_triGeoms.begin(); triIter != m_triGeoms.end(); ++triIter)
-        //{
-                //    int edgeNum;
-                //    if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
-        //    {
-                //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                //        elementEdge->m_Element = *triIter;
-                //        elementEdge->m_EdgeIndx = edgeNum;
-                //        returnval->push_back(elementEdge);
-                //    }
-                //}
-
-                //QuadGeomVector::iterator quadIter;
-
-                //for(quadIter = m_quadGeoms.begin(); quadIter != m_quadGeoms.end(); ++quadIter)
-        //{
-                //    int edgeNum;
-                //    if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
-        //    {
-                //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-                //        elementEdge->m_Element = *quadIter;
-                //        elementEdge->m_EdgeIndx = edgeNum;
-                //        returnval->push_back(elementEdge);
-                //    }
-                //}
-
-                return returnval;
+            return returnval;
         }
 
         LibUtilities::BasisKey MeshGraph2D::GetEdgeBasisKey(SegGeomSharedPtr edge, const std::string variable)

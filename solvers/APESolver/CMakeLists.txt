@@ -5,12 +5,25 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_APE
 IF( NEKTAR_SOLVER_APE )
     SET(APESolverSource 
        ./APESolver.cpp
-       ./EquationSystems/APESystem.cpp
-       ./EquationSystems/APE.cpp)
+       ./EquationSystems/APE.cpp
+       ./RiemannSolvers/APESolver.cpp
+       ./RiemannSolvers/UpwindSolver.cpp
+       ./RiemannSolvers/LaxFriedrichsSolver.cpp)
 
     ADD_SOLVER_EXECUTABLE(APESolver solvers 
 			${APESolverSource})
 
-    ADD_NEKTAR_TEST(Channel)
-    ADD_NEKTAR_TEST(Pulse)
+# TODO: We have a bug somewhere in the 1D boundary conditions. Therefore 1D
+# problems are currently disabled. This should get fixed in the future. (See APE.cpp:64)
+#    ADD_NEKTAR_TEST(APE_1DPulseSource_FRDG_MODIFIED)
+#    ADD_NEKTAR_TEST(APE_1DPulseSource_Galerkin_MODIFIED)
+#    ADD_NEKTAR_TEST(APE_1DPulseWall_FRDG_MODIFIED)
+    ADD_NEKTAR_TEST(APE_2DChannel_FRDG_MODIFIED)
+    ADD_NEKTAR_TEST(APE_2DPulseAdv_FRDG_MODIFIED)
+    ADD_NEKTAR_TEST(APE_2DPulseAdv_Galerkin_MODIFIED)
+    ADD_NEKTAR_TEST(APE_2DPulseWall_FRDG_MODIFIED)
+#    ADD_NEKTAR_TEST(APE_2DPulseWall_Galerkin_MODIFIED)
+    ADD_NEKTAR_TEST_LENGTHY(APE_3DPulse_FRDG_MODIFIED)
+    ADD_NEKTAR_TEST_LENGTHY(APE_3DPulseWall_FRDG_MODIFIED)
+
 ENDIF( NEKTAR_SOLVER_APE )

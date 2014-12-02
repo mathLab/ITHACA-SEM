@@ -112,11 +112,11 @@
                      for(f = 0; f < locExpList->GetExpSize(); ++f)
                      {
                          LocalRegions::Expansion3DSharedPtr exp3d
-                             = boost::dynamic_pointer_cast<
-                                 LocalRegions::Expansion3D>((*m_exp)[ElmtID[cnt+f]]);
+                             = (*m_exp)[ElmtID[cnt+f]]->
+                                     as<LocalRegions::Expansion3D>();
                          LocalRegions::Expansion2DSharedPtr exp2d
-                             = boost::dynamic_pointer_cast<
-                                 LocalRegions::Expansion2D>(locExpList->GetExp(f));
+                             = locExpList->GetExp(f)->
+                                     as<LocalRegions::Expansion2D>();
 
                          exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
                          exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
@@ -167,13 +167,11 @@
                          for(f = 0; f < locExpList->GetExpSize(); ++f)
                          {
                              LocalRegions::Expansion3DSharedPtr exp3d
-                                 = boost::dynamic_pointer_cast<
-                                     LocalRegions::Expansion3D>(
-                                         (*m_exp)[ElmtID[cnt+f]]);
+                                 = (*m_exp)[ElmtID[cnt+f]]->
+                                         as<LocalRegions::Expansion3D>();
                              LocalRegions::Expansion2DSharedPtr exp2d
-                                 = boost::dynamic_pointer_cast<
-                                     LocalRegions::Expansion2D>(
-                                         locExpList->GetExp(f));
+                                 = locExpList->GetExp(f)->
+                                         as<LocalRegions::Expansion2D>();
 
                              exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
                              exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
@@ -190,15 +188,21 @@
              {
                  if(SetUpJustDG)
                  {
-                     m_globalBndMat = In.m_globalBndMat;
-                     m_trace        = In.m_trace;
-                     m_traceMap     = In.m_traceMap;
+                     m_globalBndMat  = In.m_globalBndMat;
+                     m_trace         = In.m_trace;
+                     m_traceMap      = In.m_traceMap;
+                     m_periodicVerts = In.m_periodicVerts;
+                     m_periodicEdges = In.m_periodicEdges;
+                     m_periodicFaces = In.m_periodicFaces;
                  }
                  else 
                  {
-                     m_globalBndMat = In.m_globalBndMat;
-                     m_trace        = In.m_trace;
-                     m_traceMap     = In.m_traceMap;
+                     m_globalBndMat  = In.m_globalBndMat;
+                     m_trace         = In.m_trace;
+                     m_traceMap      = In.m_traceMap;
+                     m_periodicVerts = In.m_periodicVerts;
+                     m_periodicEdges = In.m_periodicEdges;
+                     m_periodicFaces = In.m_periodicFaces;
 
                      int i,cnt,f;
                      Array<OneD, int> ElmtID,FaceID;
@@ -212,13 +216,11 @@
                          for(f = 0; f < locExpList->GetExpSize(); ++f)
                          {
                              LocalRegions::Expansion3DSharedPtr exp3d
-                                 = boost::dynamic_pointer_cast<
-                                     LocalRegions::Expansion3D>(
-                                         (*m_exp)[ElmtID[cnt+f]]);
+                                 = (*m_exp)[ElmtID[cnt+f]]->
+                                         as<LocalRegions::Expansion3D>();
                              LocalRegions::Expansion2DSharedPtr exp2d
-                                 = boost::dynamic_pointer_cast<
-                                     LocalRegions::Expansion2D>(
-                                         locExpList->GetExp(f));
+                                 = locExpList->GetExp(f)->
+                                         as<LocalRegions::Expansion2D>();
 
                              exp3d->SetFaceExp(FaceID[cnt+f],exp2d);
                              exp2d->SetAdjacentElementExp(FaceID[cnt+f],exp3d);
@@ -258,7 +260,10 @@
              m_bndConditions       (In.m_bndConditions),
              m_globalBndMat        (In.m_globalBndMat),
              m_trace               (In.m_trace),
-             m_traceMap            (In.m_traceMap)
+             m_traceMap            (In.m_traceMap),
+             m_periodicFaces       (In.m_periodicFaces),
+             m_periodicEdges       (In.m_periodicEdges),
+             m_periodicVerts       (In.m_periodicVerts)
          {
          }
 
@@ -318,7 +323,7 @@
              // Set up Trace space
              bool UseGenSegExp = true;
              trace = MemoryManager<ExpList2D>::AllocateSharedPtr(
-                 m_bndCondExpansions, m_bndConditions,
+                 m_session, m_bndCondExpansions, m_bndConditions,
                  *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
 
              m_trace    = trace;
@@ -339,11 +344,9 @@
                  for (int j = 0; j < (*m_exp)[i]->GetNfaces(); ++j)
                  {
                      LocalRegions::Expansion3DSharedPtr exp3d =
-                         boost::dynamic_pointer_cast<
-                             LocalRegions::Expansion3D>((*m_exp)[i]);
+                             (*m_exp)[i]->as<LocalRegions::Expansion3D>();
                      LocalRegions::Expansion2DSharedPtr exp2d =
-                         boost::dynamic_pointer_cast<
-                             LocalRegions::Expansion2D>(elmtToTrace[i][j]);
+                             elmtToTrace[i][j]->as<LocalRegions::Expansion2D>();
                      exp3d->SetFaceExp           (j, exp2d);
                      exp2d->SetAdjacentElementExp(j, exp3d);
                  }
@@ -356,8 +359,7 @@
              for (int i = 0; i < m_trace->GetExpSize(); ++i)
              {
                  LocalRegions::Expansion2DSharedPtr traceEl = 
-                     boost::dynamic_pointer_cast<
-                         LocalRegions::Expansion2D>(m_trace->GetExp(i));
+                         m_trace->GetExp(i)->as<LocalRegions::Expansion2D>();
 
                  int offset      = m_trace->GetPhys_Offset(i);
                  int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
@@ -403,7 +405,7 @@
              LocalRegions::Expansion3DSharedPtr exp3d;
              for (int n = 0; n < m_exp->size(); ++n)
              {
-                 exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
+                 exp3d = (*m_exp)[n]->as<LocalRegions::Expansion3D>();
                  for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                  {
                      PeriodicMap::iterator it = m_periodicFaces.find(
@@ -431,7 +433,7 @@
              cnt = 0;
              for (int n = 0; n < m_exp->size(); ++n)
              {
-                 exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
+                 exp3d = (*m_exp)[n]->as<LocalRegions::Expansion3D>();
                  for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                  {
                      int faceGeomId = exp3d->GetGeom3D()->GetFid(e);
@@ -1621,8 +1623,8 @@
         {
             set<int>::iterator it;
             LocalRegions::Expansion2DSharedPtr traceEl = 
-                boost::dynamic_pointer_cast<LocalRegions::Expansion2D>(
-                    (m_traceMap->GetElmtToTrace())[n][e]);
+                    m_traceMap->GetElmtToTrace()[n][e]->
+                         as<LocalRegions::Expansion2D>();
             
             int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
             
@@ -1727,7 +1729,7 @@
 
             for(cnt = n = 0; n < nexp; ++n)
             {
-                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
+                exp3d = (*m_exp)[n]->as<LocalRegions::Expansion3D>();
                 phys_offset = GetPhys_Offset(n);
                 for(e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                 {
@@ -1882,14 +1884,15 @@
                 e_outarray = outarray+offset;
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
-                    t_offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,elmtToTrace[n][e],
+                    t_offset = m_trace->GetPhys_Offset(
+                        elmtToTrace[n][e]->GetElmtId());
+                    (*m_exp)[n]->AddFaceNormBoundaryInt(e,
+                                                        elmtToTrace[n][e],
                                                         Fn + t_offset,
                                                         e_outarray);
                 }
             }
         }
-
         /**
          * @brief Add trace contributions into elemental coefficient spaces.
          * 
@@ -1969,7 +1972,7 @@
             LocalRegions::Expansion3DSharedPtr exp3d;
             for (i = 0; i < GetExpSize(); ++i)
             {
-                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[i]);
+                exp3d = (*m_exp)[i]->as<LocalRegions::Expansion3D>();
                 globalIdMap[exp3d->GetGeom3D()->GetGlobalID()] = i;
             }
 
@@ -1995,7 +1998,8 @@
             {
                 for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
                 {
-                    exp2d = LocalRegions::Expansion2D::FromStdExp(m_bndCondExpansions[n]->GetExp(i));
+                    exp2d = m_bndCondExpansions[n]->GetExp(i)->
+                                        as<LocalRegions::Expansion2D>();
                     // Use face to element map from MeshGraph3D.
                     SpatialDomains::ElementFaceVectorSharedPtr tmp = 
                         graph3D->GetElementsFromFace(exp2d->GetGeom2D());
@@ -2249,8 +2253,7 @@
             for(i = cnt = 0; i < GetExpSize(); ++i)
             {
                 LocalRegions::Expansion3DSharedPtr exp =
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion3D>((*m_exp)[i]);
+                        (*m_exp)[i]->as<LocalRegions::Expansion3D>();
 
                 eid     = m_offset_elmt_id[i];
                 nq_elmt = (*m_exp)[eid]->GetTotPoints();

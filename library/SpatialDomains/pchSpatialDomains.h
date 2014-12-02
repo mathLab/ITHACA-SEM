@@ -15,7 +15,7 @@
 #define TIXML_USE_STL
 #endif
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include <boost/shared_ptr.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>

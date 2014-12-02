@@ -92,9 +92,10 @@ namespace Nektar
         const NekDouble                                   time);
     virtual void v_SetInitialConditions(
         NekDouble                               initialtime = 0.0,
-        bool                                    dumpInitialConditions = true);
-    
-    private:
+        bool                                    dumpInitialConditions = true,
+        const int domain = 0);
+
+  private:
       void SetBoundaryConditions(
         Array<OneD, Array<OneD, NekDouble> >             &physarray, 
         NekDouble                                         time);

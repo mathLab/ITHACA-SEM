@@ -271,7 +271,6 @@ int main(int argc, char *argv[])
                         //Get face normals
                         const SpatialDomains::GeomFactorsSharedPtr m_metricinfo=bc->GetMetricInfo();
                         
-                        SpatialDomains::GeomType type=m_metricinfo->GetGtype();
                         const Array<OneD, const Array<OneD, NekDouble> > normals
                             = elmt->GetFaceNormal(boundary);
 

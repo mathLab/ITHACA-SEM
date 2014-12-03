@@ -53,6 +53,8 @@ ADD_NEKTAR_TEST(chan3D_vort)
 #ADD_NEKTAR_TEST(bfs_tec_rng)
 ADD_NEKTAR_TEST(bfs_vort)
 ADD_NEKTAR_TEST(bfs_vort_rng)
+# ADD_NEKTAR_TEST(chan3D_pts)
+ADD_NEKTAR_TEST(chan3D_probe)
 
 
 IF (NEKTAR_USE_MPI)

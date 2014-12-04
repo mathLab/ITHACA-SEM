@@ -352,7 +352,7 @@ void PtsField::CalcW_Shepard(const int physPtIdx,
 {
     // find nearest neighbours
     vector<PtsPoint> neighbourPts;
-    int numPts = pow(2, m_dim);
+    int numPts = pow(float(2), m_dim);
     numPts = min(numPts, int(m_pts[0].num_elements() / 2));
     FindNeighbours(physPt, neighbourPts, numPts);
 
@@ -377,7 +377,8 @@ void PtsField::CalcW_Shepard(const int physPtIdx,
     NekDouble wSum = 0.0;
     for (int i = 0; i < numPts; ++i)
     {
-        m_weights[physPtIdx][i] = 1 / pow(neighbourPts[i].m_distSq, m_dim / float(2));
+        m_weights[physPtIdx][i] = 1 / pow(double(neighbourPts[i].m_distSq),
+                                          double(m_dim / float(2)));
         wSum += m_weights[physPtIdx][i];
     }
 

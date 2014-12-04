@@ -54,7 +54,8 @@ void PtsField::CalcWeights(
     const Array<OneD, Array<OneD, NekDouble> > &physCoords,
     short coordId)
 {
-    ASSERTL1(physCoords.num_elements() >= m_dim,  "physCoords is smaller than number of dimesnions");
+    ASSERTL1(physCoords.num_elements() >= m_dim,
+             "physCoords is smaller than number of dimesnions");
 
     int nPhysPts = physCoords[0].num_elements();
     int lastProg = 0;
@@ -166,8 +167,9 @@ void PtsField::Interpolate(Array<OneD, Array<OneD, NekDouble> > &intFields)
  * @param neighbourInds Indices of the relevant neighbours for each physical point.
  * Structure: m_neighInds[ptIdx][neighbourIdx]
  */
-void PtsField::SetWeights(const Array< OneD, Array< OneD, float > > &weights,
-                          const Array< OneD, Array< OneD, unsigned int > > &neighbourInds)
+void PtsField::SetWeights(
+    const Array< OneD, Array< OneD, float > > &weights,
+    const Array< OneD, Array< OneD, unsigned int > > &neighbourInds)
 {
     ASSERTL0(weights.num_elements() ==  neighbourInds.num_elements(),
              "weights and neighbourInds not of same number of physical points")
@@ -185,8 +187,9 @@ void PtsField::SetWeights(const Array< OneD, Array< OneD, float > > &weights,
  * @param neighbourInds Indices of the relevant neighbours for each physical point.
  * Structure: m_neighInds[ptIdx][neighbourIdx]
  */
-void PtsField::GetWeights(Array< OneD, Array< OneD, float > > &weights,
-                          Array< OneD, Array< OneD, unsigned  int > > &neighbourInds) const
+void PtsField::GetWeights(
+    Array< OneD, Array< OneD, float > > &weights,
+    Array< OneD, Array< OneD, unsigned  int > > &neighbourInds) const
 {
     weights = m_weights;
     neighbourInds = m_neighInds;

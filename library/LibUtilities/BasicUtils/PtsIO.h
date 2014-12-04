@@ -55,21 +55,26 @@ namespace Nektar
 namespace LibUtilities
 {
 
-void Import(const string &inFile, PtsFieldSharedPtr &ptsField);
+LIB_UTILITIES_EXPORT void Import(const string &inFile,
+                                 PtsFieldSharedPtr &ptsField);
 
-void Write(const string &outFile, const PtsFieldSharedPtr &ptsField);
+LIB_UTILITIES_EXPORT void Write(const string &outFile,
+                                const PtsFieldSharedPtr &ptsField);
 
 class PtsIO
 {
     public:
 
-        PtsIO()
+        LIB_UTILITIES_EXPORT PtsIO()
         {
         };
 
-        void Import(const string &inFile, LibUtilities::PtsFieldSharedPtr &ptsField);
+        LIB_UTILITIES_EXPORT void Import(const string &inFile,
+                                         LibUtilities::PtsFieldSharedPtr &ptsField);
 
-        void Write(const string &outFile, const LibUtilities::PtsFieldSharedPtr &ptsField);
+        LIB_UTILITIES_EXPORT void Write(
+            const string &outFile,
+            const LibUtilities::PtsFieldSharedPtr &ptsField);
 };
 
 typedef boost::shared_ptr<PtsIO> PtsIOSharedPtr;

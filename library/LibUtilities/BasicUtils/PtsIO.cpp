@@ -79,8 +79,9 @@ void PtsIO::Import(const string &inFile, PtsFieldSharedPtr &ptsField)
     if (!fields.empty())
     {
         bool valid = ParseUtils::GenerateOrderedStringVector(
-                        fields.c_str(), fieldNames);
-        ASSERTL0(valid, "Unable to process list of field variable in  FIELDS attribute:  " + fields);
+                         fields.c_str(), fieldNames);
+        ASSERTL0(valid,
+                 "Unable to process list of field variable in  FIELDS attribute:  " + fields);
     }
 
     int nfields = fieldNames.size();

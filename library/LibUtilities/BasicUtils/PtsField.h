@@ -60,16 +60,17 @@ class PtsPoint
         Array<OneD, NekDouble>                      m_coords;
         NekDouble                                   m_distSq;
 
-        PtsPoint() {};
+        LIB_UTILITIES_EXPORT PtsPoint() {};
 
-        PtsPoint(int idx, Array<OneD, NekDouble> coords, NekDouble distSq):
+        LIB_UTILITIES_EXPORT PtsPoint(int idx, Array<OneD, NekDouble> coords,
+                                      NekDouble distSq):
             m_idx(idx),
             m_coords(coords),
             m_distSq(distSq)
         {
         };
 
-        bool operator < (const PtsPoint &comp) const
+        LIB_UTILITIES_EXPORT bool operator < (const PtsPoint &comp) const
         {
             return (m_distSq < comp.m_distSq);
         };
@@ -80,27 +81,30 @@ class PtsField
 {
     public:
 
-        PtsField(const int dim,
-                 const Array<OneD, Array<OneD, NekDouble> > &pts) :
+        LIB_UTILITIES_EXPORT PtsField(
+            const int dim,
+            const Array<OneD, Array<OneD, NekDouble> > &pts) :
             m_dim(dim),
             m_pts(pts)
         {
         };
 
-        PtsField(const int dim,
-                 const vector<std::string> fieldnames,
-                 const Array<OneD, Array<OneD, NekDouble> > &pts) :
+        LIB_UTILITIES_EXPORT PtsField(
+            const int dim,
+            const vector<std::string> fieldnames,
+            const Array<OneD, Array<OneD, NekDouble> > &pts) :
             m_dim(dim),
             m_fieldNames(fieldnames),
             m_pts(pts)
         {
         };
 
-        PtsField(const int dim,
-                 const vector<std::string> fieldnames,
-                 const Array<OneD, Array<OneD, NekDouble> > &pts,
-                 const Array<OneD, Array<OneD, float> > &weights,
-                 const Array<OneD, Array<OneD, unsigned int> > &neighInds) :
+        LIB_UTILITIES_EXPORT PtsField(
+            const int dim,
+            const vector<std::string> fieldnames,
+            const Array<OneD, Array<OneD, NekDouble> > &pts,
+            const Array<OneD, Array<OneD, float> > &weights,
+            const Array<OneD, Array<OneD, unsigned int> > &neighInds) :
             m_dim(dim),
             m_fieldNames(fieldnames),
             m_pts(pts),
@@ -109,53 +113,65 @@ class PtsField
         {
         };
 
-        void CalcWeights(
+        LIB_UTILITIES_EXPORT void CalcWeights(
             const Array< OneD, Array< OneD, NekDouble > > &physCoords,
             short int coordId = -1);
 
-        void Interpolate(
+        LIB_UTILITIES_EXPORT void Interpolate(
             const Array< OneD, Array< OneD, NekDouble > > &physCoords,
             Array<OneD, Array<OneD, NekDouble> > &intFields,
             short int coordId = -1);
 
-        void Interpolate(Array<OneD, Array<OneD, NekDouble> > &intFields);
+        LIB_UTILITIES_EXPORT void Interpolate(
+            Array<OneD, Array<OneD, NekDouble> >
+            &intFields);
 
-        void SetWeights(const Array<OneD, Array<OneD, float> > &weights,
-                        const Array<OneD, Array<OneD, unsigned int> > &neighbourInds);
+        LIB_UTILITIES_EXPORT void SetWeights
+        (const Array<OneD, Array<OneD, float> >
+         &weights,
+         const Array<OneD, Array<OneD, unsigned int> > &neighbourInds);
 
-        void GetWeights(Array<OneD, Array<OneD, float> > &weights,
-                        Array<OneD, Array<OneD, unsigned int> > &neighbourInds) const;
+        LIB_UTILITIES_EXPORT void GetWeights(
+            Array<OneD, Array<OneD, float> > &weights,
+            Array<OneD, Array<OneD, unsigned int> > &neighbourInds) const;
 
-        void SetDim(const int ptsDim);
+        LIB_UTILITIES_EXPORT void SetDim(const int ptsDim);
 
-        int GetDim() const;
+        LIB_UTILITIES_EXPORT int GetDim() const;
 
-        int GetNFields() const;
+        LIB_UTILITIES_EXPORT int GetNFields() const;
 
-        vector<std::string> GetFieldNames() const;
+        LIB_UTILITIES_EXPORT vector<std::string> GetFieldNames() const;
 
-        std::string GetFieldName(const int i) const;
+        LIB_UTILITIES_EXPORT std::string GetFieldName(const int i) const;
 
-        void SetFieldNames(const vector<std::string> fieldName);
+        LIB_UTILITIES_EXPORT void SetFieldNames(
+            const vector<std::string> fieldName);
 
-        void AddFieldName(const std::string fieldName);
+        LIB_UTILITIES_EXPORT void AddFieldName(const std::string fieldName);
 
-        int GetNpoints() const;
+        LIB_UTILITIES_EXPORT int GetNpoints() const;
 
-        void GetPts(Array<OneD,  Array<OneD,  NekDouble> > &pts) const;
+        LIB_UTILITIES_EXPORT void GetPts(
+            Array<OneD,  Array<OneD,  NekDouble> > &pts)
+        const;
 
-        void SetPoint(const int fieldIdx, const int pointIdx, NekDouble value);
+        LIB_UTILITIES_EXPORT void SetPoint(const int fieldIdx, const int pointIdx,
+                                           NekDouble value);
 
-        void SetPointsArray(Array<OneD,  Array<OneD,  NekDouble> > &pts);
+        LIB_UTILITIES_EXPORT void SetPointsArray(
+            Array<OneD,  Array<OneD,  NekDouble> >
+            &pts);
 
-        vector<int> GetPointsPerEdge() const;
+        LIB_UTILITIES_EXPORT vector<int> GetPointsPerEdge() const;
 
-        int GetPointsPerEdge(const int i) const;
+        LIB_UTILITIES_EXPORT int GetPointsPerEdge(const int i) const;
 
-        void SetPointsPerEdge(const vector<int> nPtsPerEdge);
+        LIB_UTILITIES_EXPORT void SetPointsPerEdge(const vector<int> nPtsPerEdge);
 
         template<typename FuncPointerT, typename ObjectPointerT>
-        void setProgressCallback(FuncPointerT func, ObjectPointerT obj)
+        LIB_UTILITIES_EXPORT void setProgressCallback(FuncPointerT func,
+                ObjectPointerT obj)
         {
             m_progressCallback = boost::bind(func, obj, _1, _2);
         }
@@ -182,19 +198,24 @@ class PtsField
 
         boost::function<void (const int position, const int goal)> m_progressCallback;
 
-        void CalcW_Linear(const int physPtIdx, const NekDouble coord);
+        LIB_UTILITIES_EXPORT void CalcW_Linear(const int physPtIdx,
+                                               const NekDouble coord);
 
-        void CalcW_Shepard(const int physPtIdx,
-                           const Array< OneD, NekDouble > &physPtCoords);
+        LIB_UTILITIES_EXPORT void CalcW_Shepard(
+            const int physPtIdx,
+            const Array< OneD, NekDouble > &physPtCoords);
 
-        void CalcW_Quadratic(const int physPtIdx, const NekDouble coord);
+        LIB_UTILITIES_EXPORT void CalcW_Quadratic(const int physPtIdx,
+                const NekDouble coord);
 
-        NekDouble DistSq(const Array<OneD, NekDouble > &point1,
-                         const Array<OneD, NekDouble > &point2) const;
+        LIB_UTILITIES_EXPORT NekDouble DistSq(
+            const Array<OneD, NekDouble > &point1,
+            const Array<OneD, NekDouble > &point2) const;
 
-        void FindNeighbours(const Array<OneD, NekDouble> &physPtCoords,
-                            vector<PtsPoint> &neighbourPts,
-                            const unsigned int numPts = 1);
+        LIB_UTILITIES_EXPORT void FindNeighbours(const Array<OneD, NekDouble>
+                &physPtCoords,
+                vector<PtsPoint> &neighbourPts,
+                const unsigned int numPts = 1);
 
 };
 

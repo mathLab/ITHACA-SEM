@@ -170,7 +170,7 @@ class PtsField
         LIB_UTILITIES_EXPORT void SetPointsPerEdge(const vector<int> nPtsPerEdge);
 
         template<typename FuncPointerT, typename ObjectPointerT>
-        LIB_UTILITIES_EXPORT void setProgressCallback(FuncPointerT func,
+        void setProgressCallback(FuncPointerT func,
                 ObjectPointerT obj)
         {
             m_progressCallback = boost::bind(func, obj, _1, _2);

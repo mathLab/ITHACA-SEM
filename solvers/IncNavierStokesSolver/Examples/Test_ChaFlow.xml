@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="3" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="3" TYPE="MODIFIED" FIELDS="u,v,w,p" />
     </EXPANSIONS>
 
     <CONDITIONS>
@@ -26,7 +26,8 @@
         <VARIABLES>
             <V ID="0"> u </V>
             <V ID="1"> v </V>
-            <V ID="2"> p </V>
+            <V ID="2"> w </V>
+            <V ID="3"> p </V>
         </VARIABLES>
 
         <BOUNDARYREGIONS>
@@ -39,16 +40,19 @@
             <REGION REF="0">
                 <D VAR="u" VALUE="0" />
                 <D VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
             <REGION REF="1">
-                <D VAR="u" VALUE="y*(1-y)" />
-                <D VAR="v" VALUE="0" />
+                <D VAR="u" USERDEFINEDTYPE="Womserley" VALUE="y*(1-y)" />
+                <D VAR="v" USERDEFINEDTYPE="Womserley" VALUE="0" />
+                <D VAR="w" USERDEFINEDTYPE="Womserley" VALUE="0" />
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
             <REGION REF="2">
                 <N VAR="u" VALUE="0" />
                 <N VAR="v" VALUE="0" />
+                <D VAR="w" VALUE="0" />
                 <D VAR="p" VALUE="0" />
             </REGION>
         </BOUNDARYCONDITIONS>

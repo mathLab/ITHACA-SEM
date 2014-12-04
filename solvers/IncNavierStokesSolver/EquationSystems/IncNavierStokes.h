@@ -218,8 +218,14 @@ namespace Nektar
         /// Set Radiation forcing term
         void SetRadiationBoundaryForcing(int fieldid);
 
+	/// Set Womersley Profile If specified
+	void SetWomersleyBoundary(int fieldid);
+
         /// evaluate steady state
         bool CalcSteadyState(void);
+
+	/// Evaluate Bessels for Wom
+	std::complex<NekDouble> CompBessel(int n, std::complex<NekDouble> y);
 
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {

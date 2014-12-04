@@ -43,6 +43,7 @@
 #include <SolverUtils/Filters/Filter.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
+#include <complex>
 
 namespace Nektar
 {
@@ -136,7 +137,9 @@ namespace Nektar
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                             SpatialDomains::eI ||
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                            SpatialDomains::eHighOutflow,
+                            SpatialDomains::eHighOutflow ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eWomersley,
                         "Unknown USERDEFINEDTYPE boundary condition");
                 }
             }
@@ -385,6 +388,15 @@ namespace Nektar
                     varName = m_session->GetVariable(i);
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
+		 else if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
+                   SpatialDomains::eWomersley)
+                {
+                    //varName = m_session->GetVariable(i);
+		    // i - variable that is being passed   n - boundary surface is (inlet, outlet..) 
+                    SetWomersleyBoundary(i);
+		    std::cout << "Variable " << i << '\n';
+		    std::cout << "Number of Bnd Cond " << n << '\n';
+                }
 
             }
 
@@ -451,6 +463,7 @@ namespace Nektar
                     type == SpatialDomains::eWall_Forces ||
                     type == SpatialDomains::eTimeDependent ||
                     type == SpatialDomains::eHigh ||
+                    type == SpatialDomains::eWomersley ||
                     type == SpatialDomains::eHighOutflow)
             {
                 cnt += BndExp[n]->GetExpSize();
@@ -463,7 +476,102 @@ namespace Nektar
     }
 
 
-    /**
+
+
+    void IncNavierStokes::SetWomersleyBoundary(int fieldid)
+    {
+	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
+	NekDouble kt;
+	NekDouble T = 1.0;
+	NekDouble alpha = 5.0;
+	
+	
+ 	int  i,n,k;
+	int M = 8;
+	NekDouble vel_r[] = {0.4,0.2,0.10,0.1,0.1,0.1,0.1,0.10,0.1};
+	NekDouble vel_i[] = {0.4,0.2,0.10,0.1,0.1,0.1,0.1,0.10,0.1};
+	NekDouble r;
+	
+
+	std::complex<NekDouble> z1 (1.0,0.0);
+	std::complex<NekDouble> zi (0.0,1.0);
+	std::complex<NekDouble> z;
+	
+        
+        Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+        Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
+        
+        
+        BndConds = m_fields[fieldid]->GetBndConditions();
+        BndExp   = m_fields[fieldid]->GetBndCondExpansions();
+
+	int npoints = BndExp[fieldid]->GetNpoints();
+
+  	Array<OneD, NekDouble> x0(npoints,0.0);
+    	Array<OneD, NekDouble> x1(npoints,0.0);
+        Array<OneD, NekDouble> x2(npoints,0.0);
+	Array<OneD, NekDouble> tmpArray;
+	Array<OneD, NekDouble> w(npoints,0.0);
+
+
+        BndExp[fieldid]->GetCoords(x0,x1,x2);
+
+	for (i=0;i<npoints;i++){
+		r = sqrt(x0[i]*x0[i] + x1[i]*x1[i]);
+
+		w[i] = vel_r[0]*(1 - r*r); // Compute Poiseulle Flow
+		for (k=1; k<M; k++){
+			std::cout << k << "\n";
+			kt = 2*M_PI*k*m_time/T;
+			za = alpha/sqrt(2)*std::complex<NekDouble>(-1.0,1.0);
+			zar = za*r;
+			zJ0 = CompBessel(0,za);
+			zJ0r = CompBessel(0,zar);
+			zJ0rJ0 = zJ0r/zJ0;
+			zq = (std::complex<NekDouble>(vel_r[k],vel_i[k])*std::complex<NekDouble>(cos(kt),sin(kt)));
+			zvel = zq*(z1 - zJ0rJ0);
+			w[i] = w[i]+std::real(zvel);
+		}
+
+	}
+	BndExp[fieldid]->UpdatePhys() = w;
+	BndExp[fieldid]->FwdTrans_BndConstrained(
+					BndExp[fieldid]->GetPhys(),
+					BndExp[fieldid]->UpdateCoeffs());
+
+	
+    }
+
+/* Computes the Complex Bessel function of 1st kind integer order using series rep. - taken from numberical recipies in C.
+*/
+    std::complex<NekDouble> IncNavierStokes::CompBessel(int n, std::complex<NekDouble> y)
+    {
+	std::complex<NekDouble> z (1.0,0.0);
+	std::complex<NekDouble> zbes (1.0,0.0);
+	std::complex<NekDouble> zarg;
+	NekDouble tol = 1e-15;
+	int maxit = 10000;
+	int i = 1;
+
+	zarg = -0.25 * (y*y);
+
+	while (std::abs(z) > tol && i <= maxit){
+		z = (z*(1.0/i/(i+n)*zarg));
+		if  (std::abs(z) <= tol) break;
+		zbes = zbes + z;
+		i++;
+	}
+
+	zarg = 0.5*y;
+	for (i=1;i<=n;i++){
+		zbes = zbes*zarg;
+	}
+	return zbes;
+
+    }
+
+
+     /**
      * Add an additional forcing term programmatically.
      */
     void IncNavierStokes::AddForcing(const SolverUtils::ForcingSharedPtr& pForce)

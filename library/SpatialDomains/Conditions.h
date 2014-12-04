@@ -84,6 +84,7 @@ namespace Nektar
             eOutflowCFS,
             eRiemannInvariant,
             eExtrapOrder0,
+	    eWomersley,
             eNoUserDefined
         };
 
@@ -112,7 +113,9 @@ namespace Nektar
             "OutflowCFS",
             "RiemannInvariant",
             "ExtrapOrder0",
+	    "Womersley",
             "NoUserDefined"
+  
         };
 
         struct BoundaryConditionBase
@@ -143,6 +146,7 @@ namespace Nektar
                 known_type["IsentropicVortex"] = eIsentropicVortex;
                 known_type["RiemannInvariant"] = eRiemannInvariant;
                 known_type["ExtrapOrder0"]     = eExtrapOrder0;
+                known_type["Womersley"]    = eWomersley;
                 known_type["NoUserDefined"]    = eNoUserDefined;
 
                 std::map<const std::string, BndUserDefinedType>::

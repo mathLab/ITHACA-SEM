@@ -352,9 +352,9 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" VALUE="0" />
-                <D VAR="v" VALUE="0" />
-                <D VAR="w" VALUE="y*(1-y)" />
+                <D VAR="u" USERDEFINEDTYPE="Womersley" VALUE="0" />
+                <D VAR="v" USERDEFINEDTYPE="Womersley" VALUE="0" />
+                <D VAR="w" USERDEFINEDTYPE="Womersley" VALUE="1" />
                 <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
             </REGION>
             <REGION REF="1">

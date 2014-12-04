@@ -120,7 +120,7 @@ namespace Nektar
 	    
 	    ///m_steps is set to 1. Then "m_equ[m_nequ - 1]->DoSolve()" will run for only one time step    
 	    m_equ[m_nequ - 1]->SetStepsToOne();   
-	    ofstream m_file("ConvergenceHistory.txt", ios::out | ios::trunc);
+	    std::ofstream m_file("ConvergenceHistory.txt", ios::out | ios::trunc);
 	    
 	    Array<OneD, Array<OneD, NekDouble> > q0(NumVar_SFD);
 	    Array<OneD, Array<OneD, NekDouble> > q1(NumVar_SFD);
@@ -131,6 +131,7 @@ namespace Nektar
 	    {
 		q0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //q0 is initialised
 		qBar0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //qBar0 is initially set to zero
+		m_equ[m_nequ - 1]->CopyFromPhysField(i, qBar0[i]); //qBar0
 	    }
 	    
 	    ///Definition of variables used in this algorithm
@@ -177,8 +178,11 @@ namespace Nektar
 			
 			if (Diff_q_qBar < AdaptiveTOL)
 			{
-			    cout << "\n\t The SFD method is converging: we compute stability analysis using"
-			    " the 'partially converged' steady state as base flow.\n" << endl;
+			    if (m_comm->GetRank() == 0)
+			    {
+				cout << "\n\t The SFD method is converging: we compute stability analysis using"
+				" the 'partially converged' steady state as base flow.\n" << endl;
+			    }
 			    
 			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
 			    m_Check_BaseFlow++;
@@ -191,9 +195,12 @@ namespace Nektar
 			}
 			else if (m_NonConvergingStepsCounter*m_dt*m_infosteps >= AdaptiveTime)
 			{
-			    cout << "\n\t We compute stability analysis using"
-			    " the current flow field as base flow.\n" << endl;
-			    
+			    if (m_comm->GetRank() == 0)
+			    {
+				cout << "\n\t We compute stability analysis using"
+				" the current flow field as base flow.\n" << endl;
+			    }
+				
 			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
 			    m_Check_BaseFlow++;
 			    
@@ -262,9 +269,11 @@ namespace Nektar
 	    ///m_kdim is the dimension of Krylov subspace (defined in the xml file and used in DriverArnoldi.cpp)
 	    ReadEVfile(m_kdim, growthEV, frequencyEV);
 	    
-	    cout << "\n\tgrowthEV = " << growthEV << endl;
-	    cout << "\tfrequencyEV = " << frequencyEV << endl;
-	    cout << "\tNorm EV = " << exp(growthEV) << "\n" << endl;
+	    if (m_comm->GetRank() == 0)
+	    {
+		cout << "\n\tgrowthEV = " << growthEV << endl;
+		cout << "\tfrequencyEV = " << frequencyEV << "\n" << endl;
+	    }
 	    
 	    complex<NekDouble> ApproxEV = polar(exp(growthEV), frequencyEV);   
 	    
@@ -286,7 +295,10 @@ namespace Nektar
 	{
 	    ///This routine implements a gradient descent method to find the parameters X end Delta which give the minimum 
 	    ///eigenlavue of the SFD problem applied to the scalar case u(n+1) = \alpha*u(n).
-	    cout << "\tWe enter Gradient Descent Method:\n" << endl;
+	    if (m_comm->GetRank() == 0)
+	    {
+		cout << "\tWe enter the Gradient Descent Method: [...]" << endl;
+	    }
 	    bool OptParmFound = false;
 	    bool Descending = true;
 	    NekDouble X_input = X_output;
@@ -353,8 +365,11 @@ namespace Nektar
 		if (abs(F0-F1) < dx)
 		{
 		    EvalEV_ScalarSFD(X_output, Delta_output, alpha, F1);
-		    cout << "\n \t The updated parameters are: X_tilde = " << X_output << " and Delta_tilde = " << Delta_output << endl;
-		    cout << "\t The minimum EV is: " << F1 << "\n" << endl;
+		    if (m_comm->GetRank() == 0)
+		    {
+			cout << "\tThe Gradient Descent Method has converged!" << endl;
+			cout << "\n\tThe updated parameters are: X_tilde = " << X_output << " and Delta_tilde = " << Delta_output << "\n" << endl;
+		    }
 		    OptParmFound = true; 
 		}
 		

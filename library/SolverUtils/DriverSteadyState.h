@@ -116,7 +116,6 @@ namespace Nektar
 	    NekDouble TOL;
 	    int m_infosteps;
 	    int m_checksteps;
-	    int MPIrank;
 	    int NumVar_SFD; 
 	    
 	    Timer     timer;

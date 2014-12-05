@@ -87,7 +87,11 @@ namespace Nektar
 	    m_session->LoadParameter("AdaptiveTOL", AdaptiveTOL, 1.0e-02);        //Used only for the Adaptive SFD method
 	    m_session->LoadParameter("AdaptiveTime", AdaptiveTime, 25.0);         //Used only for the Adaptive SFD method
 	    
-	    PrintSummarySFD();
+	    if (m_comm->GetRank() == 0)
+	    {
+		PrintSummarySFD();
+	    }
+	    
 	    timer.Start();
 	    
 	    ///Definition of shared pointer (used only for the Adaptive SFD method) 
@@ -131,6 +135,7 @@ namespace Nektar
 	    {
 		q0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //q0 is initialised
 		qBar0[i] = Array<OneD, NekDouble> (m_equ[m_nequ - 1]->GetTotPoints(), 0.0); //qBar0 is initially set to zero
+		m_equ[m_nequ - 1]->CopyFromPhysField(i, qBar0[i]);
 	    }
 	    
 	    ///Definition of variables used in this algorithm
@@ -185,7 +190,21 @@ namespace Nektar
 			    
 			    A->GetAdvObject()->SetBaseFlow(q0); 
 			    DriverModifiedArnoldi::v_Execute(out);
-			    ComputeOptimization();
+			    
+			    if (m_comm->GetRank() == 0)
+			    {
+				ComputeOptimization();
+			    }
+			    else
+			    {
+				m_X = 0;
+				m_Delta = 0;
+			    }
+			    cout << "\nm_X = " << m_X << endl;
+			    m_comm->AllReduce(m_X, Nektar::LibUtilities::ReduceSum);
+			    m_comm->AllReduce(m_Delta, Nektar::LibUtilities::ReduceSum);
+			    cout << "\nm_X = " << m_X << endl;
+			    
 			    FlowPartiallyConverged = true;
 			    
 			}
@@ -199,7 +218,21 @@ namespace Nektar
 			    
 			    A->GetAdvObject()->SetBaseFlow(q0);
 			    DriverModifiedArnoldi::v_Execute(out);
-			    ComputeOptimization();
+			    
+			    if (m_comm->GetRank() == 0)
+			    {
+				ComputeOptimization();
+			    }
+			    else
+			    {
+				m_X = 0;
+				m_Delta = 0;
+			    }
+			    cout << "\nm_X_before = " << m_X << endl;
+			    m_comm->AllReduce(m_X, Nektar::LibUtilities::ReduceSum);
+			    m_comm->AllReduce(m_Delta, Nektar::LibUtilities::ReduceSum);
+			    cout << "\nm_X_after = " << m_X << endl;
+			    
 			    m_NonConvergingStepsCounter = 0;			    
 			}
 		    }
@@ -486,43 +519,25 @@ namespace Nektar
 	    timer.Stop();
 	    elapsed  = timer.TimePerTest(1);
 	    cpuTime += elapsed;
-	    totalTime += elapsed;
+	    totalTime += elapsed;  
 	    
-	    #if NEKTAR_USE_MPI   
-	    MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
-	    if (MPIrank==0)
+	    if (m_comm->GetRank() == 0)
 	    {
-		cout << "SFD - Step: " <<  left <<  m_stepCounter+1
-		<< ";\tTime: " << left << m_equ[m_nequ - 1]->GetFinalTime()
+		cout << "SFD - Step: " <<  left <<  m_stepCounter+1 
+		<< ";\tTime: " << left << m_equ[m_nequ - 1]->GetFinalTime() 
 		<< ";\tCPU time = " << left << cpuTime << " s" 
-		<< ";\tTot time = " << left << totalTime << " s"
-		<< ";\tX = " << left << m_X
-		<< ";\tDelta = " << left << m_Delta
+		<< ";\tTot time = " << left << totalTime << " s" 
+		<< ";\tX = " << left << m_X 
+		<< ";\tDelta = " << left << m_Delta 
 		<< ";\t|q-qBar|inf = " << left << MaxNormDiff_q_qBar << endl;
-		std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app);
-		m_file << m_stepCounter+1 << "\t"
-		<< m_equ[m_nequ - 1]->GetFinalTime() << "\t"
-		<< totalTime << "\t"
-		<< MaxNormDiff_q_qBar << "\t"
+		std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
+		m_file << m_stepCounter+1 << "\t" 
+		<< m_equ[m_nequ - 1]->GetFinalTime() << "\t" 
+		<< totalTime << "\t" 
+		<< MaxNormDiff_q_qBar << "\t" 
 		<< MaxNormDiff_q1_q0 << endl;
 		m_file.close();
 	    }
-	    #else
-	    cout << "SFD - Step: " <<  left <<  m_stepCounter+1 
-	    << ";\tTime: " << left << m_equ[m_nequ - 1]->GetFinalTime() 
-	    << ";\tCPU time = " << left << cpuTime << " s" 
-	    << ";\tTot time = " << left << totalTime << " s" 
-	    << ";\tX = " << left << m_X 
-	    << ";\tDelta = " << left << m_Delta 
-	    << ";\t|q-qBar|inf = " << left << MaxNormDiff_q_qBar << endl;
-	    std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
-	    m_file << m_stepCounter+1 << "\t" 
-	    << m_equ[m_nequ - 1]->GetFinalTime() << "\t" 
-	    << totalTime << "\t" 
-	    << MaxNormDiff_q_qBar << "\t" 
-	    << MaxNormDiff_q1_q0 << endl;
-	    m_file.close();
-	    #endif       
 	    
 	    cpuTime = 0.0;
 	    timer.Start();
@@ -530,25 +545,7 @@ namespace Nektar
 	
 	
 	void DriverSteadyState::PrintSummarySFD()
-	{
-	    #if NEKTAR_USE_MPI   
-	    MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
-	    if (MPIrank==0)
-	    {
-		cout << "\n=======================================================================" << endl;
-		cout << "Parameters for the SFD method:" << endl;
-		cout << "\tControl Coefficient: X = " << m_X << endl;
-		cout << "\tFilter Width:        Delta = " << m_Delta << endl;
-		cout << "The simulation is stopped when |q-qBar|inf < " << TOL << endl;
-		if (m_EvolutionOperator == eAdaptiveSFD)
-		{
-		    cout << "\nWe use the adaptive SFD method:" << endl;
-		    cout << "  The parameters are updated every  " << AdaptiveTime << " time units;" << endl;
-		    cout << "  until |q-qBar|inf becomes smaller than " << AdaptiveTOL << endl;
-		}
-		cout << "=======================================================================\n" << endl;
-	    }
-	    #else
+	{    
 	    cout << "\n=======================================================================" << endl;
 	    cout << "Parameters for the SFD method:" << endl;
 	    cout << "\tControl Coefficient: X = " << m_X << endl;
@@ -561,7 +558,6 @@ namespace Nektar
 		cout << "  until |q-qBar|inf becomes smaller than " << AdaptiveTOL << endl;
 	    }
 	    cout << "=======================================================================\n" << endl;
-	    #endif 
 	}
     }
 }

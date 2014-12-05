@@ -182,8 +182,11 @@ namespace Nektar
 			
 			if (Diff_q_qBar < AdaptiveTOL)
 			{
-			    cout << "\n\t The SFD method is converging: we compute stability analysis using"
-			    " the 'partially converged' steady state as base flow.\n" << endl;
+			    if (m_comm->GetRank() == 0)
+			    {
+				cout << "\n\t The SFD method is converging: we compute stability analysis using"
+				" the 'partially converged' steady state as base flow:\n" << endl;
+			    }
 			    
 			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
 			    m_Check_BaseFlow++;
@@ -193,25 +196,31 @@ namespace Nektar
 			    
 			    if (m_comm->GetRank() == 0)
 			    {
+				//Compute the update of the SFD parameters only on
+				//one processor
 				ComputeOptimization();
 			    }
 			    else
 			    {
+				//On all the other processors, the parameters are set to 0
 				m_X = 0;
 				m_Delta = 0;
 			    }
-			    cout << "\nm_X = " << m_X << endl;
+			    //The we give to all the processors the value of X and Delta of the
+			    //first processor
 			    m_comm->AllReduce(m_X, Nektar::LibUtilities::ReduceSum);
 			    m_comm->AllReduce(m_Delta, Nektar::LibUtilities::ReduceSum);
-			    cout << "\nm_X = " << m_X << endl;
 			    
 			    FlowPartiallyConverged = true;
 			    
 			}
 			else if (m_NonConvergingStepsCounter*m_dt*m_infosteps >= AdaptiveTime)
 			{
-			    cout << "\n\t We compute stability analysis using"
-			    " the current flow field as base flow.\n" << endl;
+			    if (m_comm->GetRank() == 0)
+			    {
+				cout << "\n\t We compute stability analysis using"
+				" the current flow field as base flow:\n" << endl;
+			    }
 			    
 			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
 			    m_Check_BaseFlow++;
@@ -221,17 +230,20 @@ namespace Nektar
 			    
 			    if (m_comm->GetRank() == 0)
 			    {
+				//Compute the update of the SFD parameters only on
+				//one processor
 				ComputeOptimization();
 			    }
 			    else
 			    {
+				//On all the other processors, the parameters are set to 0
 				m_X = 0;
 				m_Delta = 0;
 			    }
-			    cout << "\nm_X_before = " << m_X << endl;
+			    //The we give to all the processors the value of X and Delta of the
+			    //first processor
 			    m_comm->AllReduce(m_X, Nektar::LibUtilities::ReduceSum);
 			    m_comm->AllReduce(m_Delta, Nektar::LibUtilities::ReduceSum);
-			    cout << "\nm_X_after = " << m_X << endl;
 			    
 			    m_NonConvergingStepsCounter = 0;			    
 			}
@@ -297,7 +309,6 @@ namespace Nektar
 	    
 	    cout << "\n\tgrowthEV = " << growthEV << endl;
 	    cout << "\tfrequencyEV = " << frequencyEV << endl;
-	    cout << "\tNorm EV = " << exp(growthEV) << "\n" << endl;
 	    
 	    complex<NekDouble> ApproxEV = polar(exp(growthEV), frequencyEV);   
 	    
@@ -319,7 +330,7 @@ namespace Nektar
 	{
 	    ///This routine implements a gradient descent method to find the parameters X end Delta which give the minimum 
 	    ///eigenlavue of the SFD problem applied to the scalar case u(n+1) = \alpha*u(n).
-	    cout << "\tWe enter Gradient Descent Method:\n" << endl;
+	    cout << "\n\tWe enter the Gradient Descent Method [...]" << endl;
 	    bool OptParmFound = false;
 	    bool Descending = true;
 	    NekDouble X_input = X_output;
@@ -385,9 +396,9 @@ namespace Nektar
 		
 		if (abs(F0-F1) < dx)
 		{
+		    cout << "\tThe Gradient Descent Method has converged!" << endl;
 		    EvalEV_ScalarSFD(X_output, Delta_output, alpha, F1);
-		    cout << "\n \t The updated parameters are: X_tilde = " << X_output << " and Delta_tilde = " << Delta_output << endl;
-		    cout << "\t The minimum EV is: " << F1 << "\n" << endl;
+		    cout << "\n\tThe updated parameters are: X_tilde = " << X_output << " and Delta_tilde = " << Delta_output << endl;
 		    OptParmFound = true; 
 		}
 		

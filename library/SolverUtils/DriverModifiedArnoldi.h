@@ -99,7 +99,7 @@ namespace Nektar
 		 Array<OneD, NekDouble> &wi,
 		 const NekDouble resnorm,
 		 const int nvec,
-		 //ofstream &evlout,
+		 ofstream &evlout,
 		 NekDouble &resid0);
 	    
 	    
@@ -130,7 +130,6 @@ namespace Nektar
 		 Array<OneD, NekDouble> &wi);
 	    
 	    static std::string driverLookupId;
-	    std::ofstream evlout;
 	};
 	
     }

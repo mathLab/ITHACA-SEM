@@ -58,7 +58,7 @@ namespace Nektar
                 ModuleKey(eInputModule, "rst"), InputFld::create,
                 "Reads Fld file."),
         };
-
+        
         /**
          * @brief Set up InputFld object.
          *
@@ -146,6 +146,9 @@ namespace Nektar
                     ElementGIDs[i++] = expIt->second->m_geomShPtr->GetGlobalID();
                 }
                 
+                m_f->m_fielddef.clear();
+                m_f->m_data.clear();
+
                 m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef,m_f->m_data,
                                    LibUtilities::NullFieldMetaDataMap,
                                    ElementGIDs);
@@ -177,11 +180,19 @@ namespace Nektar
                 {
                     if(i < vars.size())
                     {
-                        m_f->m_exp[i] = m_f->AppendExpList(vars[i]);
+                        m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
+                                                           vars[i]);
                     }
                     else
                     {
-                        m_f->m_exp[i] = m_f->AppendExpList();
+                        if(vars.size())
+                        {
+                            m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,vars[0]);
+                        }
+                        else
+                        {
+                            m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
+                        }
                     }                   
                 }
                 

@@ -32,7 +32,7 @@
 // Description: Quadrilateral routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/Foundations/InterpCoeff.h>
 #include <StdRegions/StdQuadExp.h>
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -1446,9 +1446,6 @@ namespace Nektar
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
-            //To avoid the exponential from blowing up
-            NekDouble epsilon = 1;
-
             //counters for scanning through orthocoeffs array
             int j, k, cnt = 0;
             int nmodes = min(nmodes_a,nmodes_b);
@@ -1471,7 +1468,56 @@ namespace Nektar
 
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
-        }                        
+        }
+
+        void StdQuadExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int n_coeffs = inarray.num_elements();
+
+
+            Array<OneD, NekDouble> coeff(n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmp2;
+
+            int       nmodes0 = m_base[0]->GetNumModes();
+            int       nmodes1 = m_base[1]->GetNumModes();
+            int       numMax  = nmodes0;
+
+            Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
+
+            const LibUtilities::PointsKey Pkey0(
+                nmodes0, LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::PointsKey Pkey1(
+                nmodes1, LibUtilities::eGaussLobattoLegendre);
+
+            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
+            LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),nmodes1,Pkey1);
+
+            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
+            LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_A,nmodes1,Pkey1);
+
+            LibUtilities::InterpCoeff2D(
+                b0, b1, coeff_tmp, bortho0, bortho1, coeff);
+
+            Vmath::Zero(n_coeffs,coeff_tmp,1);
+
+            int cnt = 0;
+            for (int i = 0; i < numMin+1; ++i)
+            {
+                Vmath::Vcopy(numMin,
+                             tmp  = coeff+cnt,1,
+                             tmp2 = coeff_tmp+cnt,1);
+
+                cnt = i*numMax;
+            }
+
+            LibUtilities::InterpCoeff2D(
+                bortho0, bortho1, coeff_tmp, b0, b1, outarray);
+        }
 
         
         void StdQuadExp::v_MassMatrixOp(

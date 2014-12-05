@@ -33,9 +33,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/Foundations/InterpCoeff.h>
+#include <SpatialDomains/Geometry3D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
-#include <SpatialDomains/Geometry3D.h>
 #include <LocalRegions/MatrixKey.h>
 
 namespace Nektar
@@ -918,17 +919,10 @@ namespace Nektar
             const int                            face,
             StdRegions::StdExpansionSharedPtr   &FaceExp,
             const Array<OneD, const NekDouble>  &Fn,
-                  Array<OneD,       NekDouble>  &outarray)
+            Array<OneD,       NekDouble>  &outarray)
         {
-            int i;
+            int i, j;
             
-            StdRegions::IndexMapKey ikey(
-                StdRegions::eFaceToElement, DetShapeType(), 
-                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
-            StdRegions::IndexMapValuesSharedPtr map = 
-                StdExpansion::GetIndexMap(ikey);
-
             /*
              * Coming into this routine, the velocity V will have been
              * multiplied by the trace normals to give the input vector Vn. By
@@ -937,7 +931,7 @@ namespace Nektar
              * statement therefore determines whether the normals must be
              * negated, since the integral being performed here requires an
              * outwards facing normal.
-             */ 
+             */
             if (m_requireNeg.size() == 0)
             {
                 m_requireNeg.resize(GetNfaces());
@@ -955,8 +949,8 @@ namespace Nektar
 
                     if (faceExp->GetRightAdjacentElementExp())
                     {
-                        if (faceExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
-                            == GetGeom3D()->GetGlobalID())
+                        if (faceExp->GetRightAdjacentElementExp()->GetGeom3D()
+                            ->GetGlobalID() == GetGeom3D()->GetGlobalID())
                         {
                             m_requireNeg[i] = true;
                         }
@@ -964,35 +958,103 @@ namespace Nektar
                 }
             }
 
+            StdRegions::IndexMapKey ikey(
+                StdRegions::eFaceToElement, DetShapeType(),
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
+            StdRegions::IndexMapValuesSharedPtr map =
+            StdExpansion::GetIndexMap(ikey);
+
             int order_e  = (*map).num_elements(); // Order of the element
             int n_coeffs = FaceExp->GetNcoeffs();
 
             Array<OneD, NekDouble> faceCoeffs(n_coeffs);
 
-            if(n_coeffs != order_e) // Going to orthogonal space
+            if (n_coeffs != order_e) // Going to orthogonal space
             {
-                ASSERTL0(false, "Variable order not supported in 3D.");
+                Array<OneD, NekDouble> coeff(n_coeffs);
+                Array<OneD, NekDouble> array(n_coeffs);
+
+                FaceExp->FwdTrans(Fn, faceCoeffs);
+
+                int NumModesElementMax  = FaceExp->GetBasis(0)->GetNumModes();
+                int NumModesElementMin  = m_base[0]->GetNumModes();
+
+                FaceExp->ReduceOrderCoeffs(NumModesElementMin,
+                                           faceCoeffs,
+                                           faceCoeffs);
+
+                StdRegions::StdMatrixKey masskey(
+                    StdRegions::eMass, FaceExp->DetShapeType(), *FaceExp);
+                FaceExp->MassMatrixOp(
+                                      faceCoeffs,faceCoeffs,masskey);
+
+                // Reorder coefficients for the lower degree face.
+                int offset1 = 0, offset2 = 0;
+
+                if (FaceExp->DetShapeType() == LibUtilities::eQuadrilateral)
+                {
+                    for (i = 0; i < NumModesElementMin; ++i)
+                    {
+                        for (j = 0; j < NumModesElementMin; ++j)
+                        {
+                            faceCoeffs[offset1+j] =
+                            faceCoeffs[offset2+j];
+                        }
+                        offset1 += NumModesElementMin;
+                        offset2 += NumModesElementMax;
+                    }
+
+                    // Extract lower degree modes. TODO: Check this is correct.
+                    for (i = NumModesElementMin; i < NumModesElementMax; ++i)
+                    {
+                        for (j = NumModesElementMin; j < NumModesElementMax; ++j)
+                        {
+                            faceCoeffs[i*NumModesElementMax+j] = 0.0;
+                        }
+                    }
+                }
+
+                if (FaceExp->DetShapeType() == LibUtilities::eTriangle)
+                {
+
+                    // Reorder coefficients for the lower degree face.
+                    int offset1 = 0, offset2 = 0;
+
+                    for (i = 0; i < NumModesElementMin; ++i)
+                    {
+                        for (j = 0; j < NumModesElementMin-i; ++j)
+                        {
+                            faceCoeffs[offset1+j] =
+                            faceCoeffs[offset2+j];
+                        }
+                        offset1 += NumModesElementMin-i;
+                        offset2 += NumModesElementMax-i;
+                    }
+                }
+
             }
             else
             {
                 FaceExp->IProductWRTBase(Fn, faceCoeffs);
             }
-            
+
             if (m_requireNeg[face])
             {
-                for(i = 0; i < order_e; ++i)
+                for (i = 0; i < order_e; ++i)
                 {
                     outarray[(*map)[i].index] -= (*map)[i].sign * faceCoeffs[i];
                 }
             }
             else
             {
-                for(i = 0; i < order_e; ++i)
+                for (i = 0; i < order_e; ++i)
                 {
                     outarray[(*map)[i].index] += (*map)[i].sign * faceCoeffs[i];
                 }
             }
         }
+
 
         /**
          * @brief Evaluate coefficients of weak deriviative in the direction dir
@@ -1589,11 +1651,13 @@ namespace Nektar
                 RT.SetValue(i, i, 1.0);
             }
 
-            if (matrixType == StdRegions::ePreconR)
+            if ((matrixType == StdRegions::ePreconR)||
+                (matrixType == StdRegions::ePreconRMass))
             {
                 return m_transformationmatrix;
             }
-            else if (matrixType == StdRegions::ePreconRT)
+            else if ((matrixType == StdRegions::ePreconRT)||
+                     (matrixType == StdRegions::ePreconRTMass))
             {
                 return m_transposedtransformationmatrix;
             }

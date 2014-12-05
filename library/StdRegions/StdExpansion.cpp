@@ -41,20 +41,6 @@ namespace Nektar
 {
     namespace StdRegions
     {
-
-        /** define list of number of vertices corresponding to each ShapeType */
-        const int g_shapenverts[LibUtilities::SIZE_ShapeType] = {0,2,3,4,4,5,6,8};
-
-        /** define list of number of edges corresponding to each ShapeType */
-        const int g_shapenedges[LibUtilities::SIZE_ShapeType] = {0,1,3,4,6,8,9,12};
-
-        /** define list of number of faces corresponding to each ShapeType */
-        const int g_shapenfaces[LibUtilities::SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
-
-        //std::map<StdMatrixKey, DNekMatSharedPtr> StdExpansion::m_stdMatrixManager;
-        //std::map<StdMatrixKey, DNekBlkMatSharedPtr> StdExpansion::m_stdStaticCondMatrixManager;
-        //std::map<IndexMapKey, IndexMapValuesSharedPtr> StdExpansion::m_IndexMapManager;
-
         StdExpansion::StdExpansion(void):
             m_elmt_id(0),
             m_ncoeffs(0)
@@ -966,6 +952,11 @@ namespace Nektar
             v_AddFaceNormBoundaryInt(face,FaceExp,Fn,outarray);
         }
 
+        int StdExpansion::v_GetElmtId(void)
+        {
+            return m_elmt_id;
+        }
+
         const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
@@ -1548,6 +1539,13 @@ namespace Nektar
                  ASSERTL0(false, "This function is not defined in StdExpansion.");
              }
 
+            void StdExpansion::v_ReduceOrderCoeffs(int numMin,
+                                                   const Array<OneD, const NekDouble> &inarray,
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                ASSERTL0(false, "This function is not defined in StdExpansion.");
+            }
+
             void StdExpansion::v_LaplacianMatrixOp(const int k1, const int k2,
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
@@ -1686,7 +1684,7 @@ namespace Nektar
             return result;
         }	
 	
-        const NormalVector & StdExpansion::v_GetSurfaceNormal() const
+        const NormalVector & StdExpansion::v_GetSurfaceNormal(const int id) const
         {
             ASSERTL0(false, "Cannot get face normals for this expansion.");
             static NormalVector result;

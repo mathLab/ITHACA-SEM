@@ -178,8 +178,8 @@ namespace Nektar
             
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
             }
         }
         
@@ -1208,17 +1208,19 @@ namespace Nektar
          */
         int ExpList::GetExpIndex(
                                  const Array<OneD, const NekDouble> &gloCoord,
-                                 NekDouble tol)
+                                 NekDouble tol,
+                                 bool returnNearestElmt)
         {
             Array<OneD, NekDouble> Lcoords(gloCoord.num_elements()); 
             
-            return GetExpIndex(gloCoord,Lcoords,tol);
+            return GetExpIndex(gloCoord,Lcoords,tol,returnNearestElmt);
         }
         
 
         int ExpList::GetExpIndex(const Array<OneD, const NekDouble> &gloCoords,
                                  Array<OneD, NekDouble> &locCoords,
-                                 NekDouble tol)
+                                 NekDouble tol,
+                                 bool returnNearestElmt)
         {
             NekDouble resid;
 
@@ -1226,11 +1228,11 @@ namespace Nektar
             {
                 return -1;
             }
+            std::vector<std::pair<int,NekDouble> > elmtIdDist;
 
             // Manifold case (point may match multiple elements)
             if (GetExp(0)->GetCoordim() > GetExp(0)->GetShapeDimension())
             {
-                std::vector<std::pair<int,NekDouble> > elmtIdDist;
                 SpatialDomains::PointGeomSharedPtr v;
                 SpatialDomains::PointGeom w;
                 NekDouble x, y, z;
@@ -1268,7 +1270,8 @@ namespace Nektar
 
                     return min_id;
                 }
-                else {
+                else 
+                {
                     return -1;
                 }
             }
@@ -1276,7 +1279,10 @@ namespace Nektar
             else
             {
                 static int start = 0;
-
+                int min_id  = 0;
+                NekDouble resid_min = 1e6;
+                Array<OneD, NekDouble> savLocCoords(locCoords.num_elements());
+                
                 // restart search from last found value
                 for (int i = start; i < (*m_exp).size(); ++i)
                 {
@@ -1286,8 +1292,17 @@ namespace Nektar
                         start = i;
                         return i;
                     }
+                    else
+                    {
+                        if(resid < resid_min)
+                        {
+                            min_id    = i;
+                            resid_min = resid;
+                            Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
+                        }
+                    }
                 }
-
+                
                 for (int i = 0; i < start; ++i)
                 {
                     if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
@@ -1296,6 +1311,15 @@ namespace Nektar
                         start = i;
                         return i;
                     }
+                    else
+                    {
+                        if(resid < resid_min)
+                        {
+                            min_id    = i;
+                            resid_min = resid;
+                            Vmath::Vcopy(locCoords.num_elements(),savLocCoords,1,locCoords,1);
+                        }
+                    }
                 }
 
                 std::string msg = "Failed to find point in element to tolerance of "
@@ -1303,29 +1327,19 @@ namespace Nektar
                                 + " using nearest point found";
                 WARNINGL0(true,msg.c_str());
 
-                return -1;
+                if(returnNearestElmt)
+                {
+                    Vmath::Vcopy(locCoords.num_elements(),locCoords,1,savLocCoords,1);
+                    return min_id;
+                }
+                else
+                {
+                    return -1;
+                }
 
             }
         }
 
-
-        /**
-         * The operation is evaluated locally by the elemental
-         * function StdRegions#StdExpansion#GetSurfaceNormal.
-         */
-        void ExpList::GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
-                                const int k)
-        {
-            int i;
-            Array<OneD, NekDouble> normals;
-
-            for(i = 0; i < (*m_exp).size(); ++i)
-            {
-                //e_SN = SurfaceNormal + m_phys_offset[i];
-                normals = (*m_exp)[i]->GetSurfaceNormal()[k];
-                Vmath::Vcopy(normals.num_elements(), &normals[0], 1, &SurfaceNormal[0] + m_phys_offset[i], 1);
-            }
-        }
 
         /**
          * Configures geometric info, such as tangent direction, on each
@@ -1613,7 +1627,7 @@ namespace Nektar
             int nq = (*m_exp)[expansion]->GetTotPoints();
 
             // printing the fields of that zone
-            outfile << "        <DataArray type=\"Float32\" Name=\""
+            outfile << "        <DataArray type=\"Float64\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
             const Array<OneD, NekDouble> phys = m_phys + m_phys_offset[expansion];
@@ -1857,11 +1871,11 @@ namespace Nektar
         }
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
-												  int NumHomoDir, 
-												  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
-												  std::vector<NekDouble> &HomoLen,
-												  std::vector<unsigned int> &HomoZIDs,
-												  std::vector<unsigned int> &HomoYIDs)
+                                                  int NumHomoDir, 
+                                                  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
+                                                  std::vector<NekDouble> &HomoLen,
+                                                  std::vector<unsigned int> &HomoZIDs,
+                                                  std::vector<unsigned int> &HomoYIDs)
         {
             int startenum, endenum, s;
 
@@ -1949,6 +1963,7 @@ namespace Nektar
                 }
             }
         }
+
 
         //
         // Virtual functions
@@ -2160,14 +2175,6 @@ namespace Nektar
         }
         
         boost::shared_ptr<ExpList> &ExpList::v_GetTrace()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList> returnVal;
-            return returnVal;
-        }
-
-        boost::shared_ptr<ExpList> &ExpList::v_GetTrace(int i)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2454,42 +2461,6 @@ namespace Nektar
             }
         }
 		
-        /**
-         */
-        void ExpList::v_SetCoeff(NekDouble val)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-	
-        /**
-         */
-        void ExpList::v_SetPhys(NekDouble val)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-	
-        /**
-         */
-        const SpatialDomains::PointGeomSharedPtr ExpList::v_GetGeom(void) const
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-        }
-		
-        /**
-         */
-        const SpatialDomains::PointGeomSharedPtr ExpList::v_GetVertex(void) const
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::PointGeomSharedPtr result;
-            return result;
-        }
-	
         /**
          */
         void ExpList::v_SetUpPhysNormals()

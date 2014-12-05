@@ -8,9 +8,6 @@ SET(MemoryManagerSources
 SET(PartitionAnalyseSources
     PartitionAnalyse.cpp)
     
-SET(VecMatSources
-    VecMatExample.cpp)
-
 SET(FoundationSources
     FoundationDemo.cpp)	
 	
@@ -37,30 +34,28 @@ SET(TimeIntegrationDemoSources
 #SET_LAPACK_LINK_LIBRARIES(Graph)
 
 #ADD_NEKTAR_EXECUTABLE(MemoryManager MemoryManagerSources )
-ADD_NEKTAR_EXECUTABLE(Matrix demos VecMatSources)
-SET_LAPACK_LINK_LIBRARIES(Matrix)
 
 ADD_NEKTAR_EXECUTABLE(PartitionAnalyse demos PartitionAnalyseSources)
-SET_LAPACK_LINK_LIBRARIES(PartitionAnalyse)
+TARGET_LINK_LIBRARIES(PartitionAnalyse LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(FoundationDemo demos FoundationSources )
-SET_LAPACK_LINK_LIBRARIES(FoundationDemo)
+TARGET_LINK_LIBRARIES(FoundationDemo LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(NodalTriFeketeDemo demos NodalTriFeketeSources )
-SET_LAPACK_LINK_LIBRARIES(NodalTriFeketeDemo)
+TARGET_LINK_LIBRARIES(NodalTriFeketeDemo LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(NodalTriElecDemo demos NodalTriElecSources)
-SET_LAPACK_LINK_LIBRARIES(NodalTriElecDemo)
+TARGET_LINK_LIBRARIES(NodalTriElecDemo LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(NodalTriEvenlySpacedDemo demos NodalTriEvenlySpacedSources)
-SET_LAPACK_LINK_LIBRARIES(NodalTriEvenlySpacedDemo)
+TARGET_LINK_LIBRARIES(NodalTriEvenlySpacedDemo LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(NodalTetEvenlySpacedDemo demos NodalTetEvenlySpacedSources)
-SET_LAPACK_LINK_LIBRARIES(NodalTetEvenlySpacedDemo)
+TARGET_LINK_LIBRARIES(NodalTetEvenlySpacedDemo LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(NodalTetElecDemo demos NodalTetElecSources)
-SET_LAPACK_LINK_LIBRARIES(NodalTetElecDemo)
+TARGET_LINK_LIBRARIES(NodalTetElecDemo LibUtilities)
 
 ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo demos TimeIntegrationDemoSources)
-SET_LAPACK_LINK_LIBRARIES(TimeIntegrationDemo)
+TARGET_LINK_LIBRARIES(TimeIntegrationDemo LibUtilities)
 

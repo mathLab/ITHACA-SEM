@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
 
     MultiRegions::DisContField3DSharedPtr Exp,Fce;
-    int     i,j,k, nq,  coordim;
+    int     i, nq, coordim;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
     if (vComm->GetRank() == 0)
     {
-        cout << "Solving 2D Helmholtz:"  << endl;
+        cout << "Solving 3D Helmholtz:"  << endl;
         cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
         cout << "         No. modes  : " << num_modes << endl;
         cout << "         No. points : " << num_points << endl;
@@ -161,6 +161,14 @@ int main(int argc, char *argv[])
 	BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyT1));
 	BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_B, num_modes+1, PkeyT2));
 	BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_C, num_modes+1, PkeyT3));
+	//Prism
+	const LibUtilities::PointsKey PkeyP1(num_points+1,LibUtilities::eGaussLobattoLegendre);
+	const LibUtilities::PointsKey PkeyP2(num_points+1,LibUtilities::eGaussLobattoLegendre);
+	const LibUtilities::PointsKey PkeyP3(num_points,LibUtilities::eGaussRadauMAlpha1Beta0);//need to doublecheck this one
+	LibUtilities::BasisKeyVector  BkeyP;
+	BkeyP.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyP1));
+	BkeyP.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A, num_modes+1, PkeyP2));
+	BkeyP.push_back(LibUtilities::BasisKey(LibUtilities::eModified_B, num_modes+1, PkeyP3));
 	//Hexahedron
 	const LibUtilities::PointsKey PkeyH(num_points+1,LibUtilities::eGaussLobattoLegendre);
 	LibUtilities::BasisKeyVector  BkeyH;
@@ -170,6 +178,7 @@ int main(int argc, char *argv[])
 
 
 	graph3D->SetBasisKey(LibUtilities::eTetrahedron, BkeyT);
+	graph3D->SetBasisKey(LibUtilities::ePrism, BkeyP);
 	graph3D->SetBasisKey(LibUtilities::eHexahedron, BkeyH);
 
 	MultiRegions::DisContField3DSharedPtr PostProc = 
@@ -217,7 +226,7 @@ int main(int argc, char *argv[])
 	// Interpolation of trace 
 	std::vector<LibUtilities::FieldDefinitionsSharedPtr> TraceDef 
 		= Exp->GetTrace()->GetFieldDefinitions();
-	std::vector<std::vector<NekDouble> > TraceData(FieldDef.size());
+	std::vector<std::vector<NekDouble> > TraceData(TraceDef.size());
 	for(i = 0; i < TraceDef.size(); ++i)
 	{
 		TraceDef[i]->m_fields.push_back(fieldstr);

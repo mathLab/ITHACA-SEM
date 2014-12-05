@@ -42,113 +42,150 @@ using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-  
-	enum UpwindTypePulse
-	{           
-		eNotSetPulse,            ///< flux not defined
-		eUpwindPulse,			 ///< simple upwinding scheme
-		SIZE_UpwindTypePulse     ///< Length of enum list
-	};
-	
-	const char* const UpwindTypeMapPulse[] =
+    
+    enum UpwindTypePulse
+    {           
+        eNotSetPulse,            ///< flux not defined
+        eUpwindPulse,			 ///< simple upwinding scheme
+        SIZE_UpwindTypePulse     ///< Length of enum list
+    };
+    
+    const char* const UpwindTypeMapPulse[] =
+        {
+            "NoSetPulse",
+            "UpwindPulse",
+        };
+    
+    struct InterfacePoint
     {
-		"NoSetPulse",
-		"UpwindPulse",
-	};
-	
-	
+        InterfacePoint(const int vid, 
+                       const int domain, 
+                       const int elmt, 
+                       const int elmtVert, 
+                       const int traceId,
+                       const int bcpos):
+        m_vid(vid),
+            m_domain(domain),
+            m_elmt(elmt),
+            m_elmtVert(elmtVert),
+            m_traceId(traceId),
+            m_bcPosition(bcpos)
+        {
+        };
+        int m_vid;        // Global Vid of interface point 
+        int m_domain;     // domain interface point belongs to
+        int m_elmt;       // element id of vertex 
+        int m_elmtVert;   // vertex id within local element 
+        int m_traceId;    // Element id  within the trace 
+        int m_bcPosition; // Position of boundary condition in region
+    };
+
+    typedef boost::shared_ptr<InterfacePoint> InterfacePointShPtr;
+
     /// Base class for unsteady solvers.
     class PulseWaveSystem : public UnsteadySystem
     {
     public:
         /// Destructor
         virtual ~PulseWaveSystem();
-		
+
+        int  GetNdomains()
+        {
+            return m_nDomains;
+        }
+
+        Array<OneD, MultiRegions::ExpListSharedPtr> UpdateVessels(void)
+        {
+            return m_vessels;
+        }
+
+        void CalcCharacteristicVariables(int omega);
+
     protected:
+        Array<OneD, MultiRegions::ExpListSharedPtr>     m_vessels;
+        int				                m_nDomains; 
+        int                                             m_currentDomain;
+        int                                             m_nVariables;
+        UpwindTypePulse                                 m_upwindTypePulse;
 		
-		Array<OneD, MultiRegions::ExpListSharedPtr>     m_vessels;
-		
-		Array<OneD, MultiRegions::ExpListSharedPtr>     m_outfields;
+        Array<OneD, int>                                m_fieldPhysOffset;
+        NekDouble                                       m_rho;
+        NekDouble                                       m_pext;
+	
+        NekDouble m_C;
+        NekDouble m_RT;
+        NekDouble m_pout;
+	
+        Array<OneD, Array<OneD, NekDouble> >		m_A_0;
+        Array<OneD, Array<OneD, NekDouble> >		m_A_0_trace;
+        Array<OneD, Array<OneD, NekDouble> >		m_beta;
+        Array<OneD, Array<OneD, NekDouble> >		m_beta_trace;
+        Array<OneD, Array<OneD, NekDouble> >		m_trace_fwd_normal;
 
-		int												m_domainsize;
-		
-		int												m_omega;
 
-		UpwindTypePulse                                 m_upwindTypePulse;
-		
-		NekDouble                                       m_rho;
-		
-		NekDouble                                       m_pext;
-		
-		NekDouble                                       m_nue;
-		
-		NekDouble                                       m_h0;
-		
-		NekDouble m_C;
-		NekDouble m_RT;
-		NekDouble m_pout;
-		
-		Array<OneD, Array<OneD, NekDouble> >			m_A_0global;
-		
-		Array<OneD, NekDouble>							m_A_0;
-
-		Array<OneD, Array<OneD, NekDouble> >			m_betaglobal;
-		
-		Array<OneD, NekDouble>							m_beta;
-
-		LibUtilities::TimeIntegrationMethod             m_timeIntMethod;
-
+        std::vector<std::vector<InterfacePointShPtr> >  m_vesselJcts;
+        std::vector<std::vector<InterfacePointShPtr> >  m_bifurcations;
+        std::vector<std::vector<InterfacePointShPtr> >  m_mergingJcts;
+    
         /// Initialises PulseWaveSystem class members.
         PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session);
-		
-		virtual void v_InitObject();
-		
-		/// Sets up initial conditions.
+        
+        virtual void v_InitObject();
+	
+        /// Sets up initial conditions.
         virtual void v_DoInitialise();
 	
-		/// Solves an unsteady problem.
+        /// Solves an unsteady problem.
         virtual void v_DoSolve();
-		
-		/// Links the subdomains
+	
+        /// Links the subdomains
         void LinkSubdomains(Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &fields);
-		
-		/// Riemann Problem for Bifurcation
-		void BifurcationRiemann1_to_2(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
-									  Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
-		
-		/// Riemann Problem for Junction
-		void JunctionRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
-							 Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
-		
-		/// Riemann Problem for Merging Flow
-		void MergingRiemann2_to_1(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
-								  Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
-		
-		/// Get the cross sectional area from the inputfile 
-		void StaticArea(void);
-		
-		/// Get the material parameters from the inputfile 
-		void MaterialProperties(void);
-		
-		// Ouptut field information
+	
+        /// Riemann Problem for Bifurcation
+        void BifurcationRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
+                                Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
+        
+        /// Riemann Problem for Merging Flow
+        void MergingRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
+                            Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
+        
+        /// Riemann Problem for Junction
+        void JunctionRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
+                             Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
+        
+        // Ouptut field information
         virtual void v_Output(void);
-		
-		/// Prepares the multidomain output
-        void PrepareMultidomainOutput(void);
-		
-		/// Compute the L2 error between fields and a given exact solution.
-        NekDouble v_L2Error(unsigned int field,
-							const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray,
-							bool Normalised = false);
 
+        // Checkpoint field output
+        void CheckPoint_Output(const int n);
+	
+        /// Compute the L2 error between fields and a given exact solution.
+        NekDouble v_L2Error(unsigned int field,
+                            const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray,
+                            bool Normalised = false);
+        
         /// Compute the L_inf error between fields and a given exact solution.
         NekDouble v_LinfError(unsigned int field,
-							  const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
-		
+                              const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+        
+        /// Write input fields to the given filename.
+        void WriteVessels(const std::string &outname);
+        
+        void EnforceInterfaceConditions(const Array<OneD, const Array<OneD, NekDouble> > &fields);
+        
     private:
-		
-				
+        void SetUpDomainInterfaces(void);
+        void FillDataFromInterfacePoint(InterfacePointShPtr &I, 
+                         const Array<OneD, const Array<OneD, NekDouble> >&field, 
+                                        NekDouble &A, NekDouble &u,
+                                        NekDouble &beta, NekDouble &A_0);
+
+            
     };
+        
+    typedef boost::shared_ptr<PulseWaveSystem> PulseWaveSystemSharedPtr;
+
+       
 }
 
 #endif

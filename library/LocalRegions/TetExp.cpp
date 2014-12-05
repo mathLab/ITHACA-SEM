@@ -35,7 +35,7 @@
 
 #include <LocalRegions/TetExp.h>
 #include <SpatialDomains/SegGeom.h>
-
+#include <LibUtilities/Foundations/InterpCoeff.h>
 #include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
@@ -1232,6 +1232,17 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
                 }
                 break;
+            case StdRegions::ePreconLinearSpaceMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
             case StdRegions::ePreconR:
                 {
                     NekDouble one = 1.0;
@@ -1251,6 +1262,32 @@ namespace Nektar
                     MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
                     DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,RT);
+                }
+                break;
+            case StdRegions::ePreconRMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr StatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =StatCond->GetBlock(0,0);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRTMass:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
+                    DNekScalBlkMatSharedPtr massStatCond = GetLocStaticCondMatrix(masskey);
+                    DNekScalMatSharedPtr A =massStatCond->GetBlock(0,0);
 
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
@@ -1439,7 +1476,80 @@ namespace Nektar
             }
         }
 
+        void TetExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int n_coeffs = inarray.num_elements();
+            int nquad0   = m_base[0]->GetNumPoints();
+            int nquad1   = m_base[1]->GetNumPoints();
+            int nquad2   = m_base[2]->GetNumPoints();
+            int nqtot    = nquad0*nquad1*nquad2;
+            int nmodes0  = m_base[0]->GetNumModes();
+            int nmodes1  = m_base[1]->GetNumModes();
+            int nmodes2  = m_base[2]->GetNumModes();
+            int numMax   = nmodes0;
 
+            Array<OneD, NekDouble> coeff     (n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp1(n_coeffs, 0.0);
+            Array<OneD, NekDouble> coeff_tmp2(n_coeffs,        0.0);
+            Array<OneD, NekDouble> phys_tmp(nqtot,0.0);
+            Array<OneD, NekDouble> tmp, tmp2, tmp3, tmp4;
+
+            Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp2,1);
+
+            const LibUtilities::PointsKey Pkey0 = m_base[0]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey1 = m_base[1]->GetPointsKey();
+            const LibUtilities::PointsKey Pkey2 = m_base[2]->GetPointsKey();
+
+            LibUtilities::BasisKey b0 = m_base[0]->GetBasisKey();
+            LibUtilities::BasisKey b1 = m_base[1]->GetBasisKey();
+            LibUtilities::BasisKey b2 = m_base[2]->GetBasisKey();
+
+            LibUtilities::BasisKey bortho0(
+                                           LibUtilities::eOrtho_A,    nmodes0, Pkey0);
+            LibUtilities::BasisKey bortho1(
+                                           LibUtilities::eOrtho_B,    nmodes1, Pkey1);
+            LibUtilities::BasisKey bortho2(
+                                           LibUtilities::eOrtho_C,    nmodes2, Pkey2);
+
+
+            Vmath::Zero(n_coeffs, coeff_tmp2, 1);
+
+            StdRegions::StdTetExpSharedPtr m_OrthoTetExp;
+            StdRegions::StdTetExpSharedPtr m_TetExp;
+
+            m_TetExp      = MemoryManager<StdRegions::StdTetExp>
+            ::AllocateSharedPtr(b0, b1, b2);
+            m_OrthoTetExp = MemoryManager<StdRegions::StdTetExp>
+            ::AllocateSharedPtr(bortho0, bortho1, bortho2);
+
+            m_TetExp     ->BwdTrans(inarray,phys_tmp);
+            m_OrthoTetExp->FwdTrans(phys_tmp, coeff);
+
+            Vmath::Zero(m_ncoeffs,outarray,1);
+
+            // filtering
+
+            int cnt = 0;
+
+            for (int u = 0; u < numMax; ++u)
+            {
+                for (int i = 0; i < numMax-u; ++i)
+                {
+                    Vmath::Vcopy(numMin-u-i,
+                                 tmp  = coeff+cnt,1,
+                                 tmp2 = coeff_tmp1+cnt,1);
+
+                    cnt += numMax - u - i;
+                }
+            }
+
+            m_OrthoTetExp->BwdTrans(coeff_tmp1,phys_tmp);
+            m_TetExp     ->FwdTrans(phys_tmp, outarray);
+        }
+        
         void TetExp::v_LaplacianMatrixOp_MatFree_Kernel(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,

@@ -37,6 +37,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <LocalRegions/Expansion2D.h>
+
 namespace Nektar
 {
     namespace SolverUtils
@@ -141,7 +143,7 @@ namespace Nektar
             
             // Compute the numerical fluxes for the first order derivatives
             v_NumericalFluxO1(fields, inarray, numericalFluxO1);
-            
+
             for (j = 0; j < nDim; ++j)
             {
                 for (i = 0; i < nScalars; ++i)
@@ -234,7 +236,7 @@ namespace Nektar
                 Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
                              Vn, 1, Vn, 1);
             }
-            
+
             // Store forwards/backwards space along trace space
             Array<OneD, Array<OneD, NekDouble> > Fwd    (nScalars);
             Array<OneD, Array<OneD, NekDouble> > Bwd    (nScalars);

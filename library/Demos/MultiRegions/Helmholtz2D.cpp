@@ -58,12 +58,16 @@ int main(int argc, char *argv[])
         factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
-        cout << "Solving 2D Helmholtz: " << endl;
-        cout << "         Communication: " << vSession->GetComm()->GetType() << endl;
-        cout << "         Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
-        cout << "         Lambda       : " << factors[StdRegions::eFactorLambda] << endl;
-        cout << "         No. modes    : " << bkey0.GetNumModes() << endl;
-        cout << endl;
+
+        if (vSession->GetComm()->GetRank() == 0)
+        {
+            cout << "Solving 2D Helmholtz: " << endl;
+            cout << "         Communication: " << vSession->GetComm()->GetType() << endl;
+            cout << "         Solver type  : " << vSession->GetSolverInfo("GlobalSysSoln") << endl;
+            cout << "         Lambda       : " << factors[StdRegions::eFactorLambda] << endl;
+            cout << "         No. modes    : " << bkey0.GetNumModes() << endl;
+            cout << endl;
+        }
         //----------------------------------------------
 
         //----------------------------------------------

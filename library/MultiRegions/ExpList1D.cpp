@@ -37,9 +37,11 @@
 #include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LocalRegions/SegExp.h>
+#include <LocalRegions/QuadExp.h>
 #include <LocalRegions/Expansion2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {
@@ -231,6 +233,118 @@ namespace Nektar
         }
 
 
+
+        /**
+         * Given a mesh \a graph1D, and the spectral/hp element
+         * expansion as well as and separate information about a \a
+         * domain, this constructor fills the list of local
+         * expansions \texttt{m_exp} with the proper expansions,
+         * calculates the total number of quadrature points \f$x_i\f$
+         * and local expansion coefficients \f$\hat{u}^e_n\f$ and
+         * allocates memory for the arrays #m_coeffs and #m_phys.
+         *
+         * For each element its corresponding LibUtilities#BasisKey is
+         * retrieved and this is used to construct either a standard segment
+         * (LocalRegions#SegExp) or a generalised segment
+         * (LocalRegions#GenSegExp) which is stored in the list #m_exp.
+         * Finally, ExpList#SetCoeffPhys is called to initialise the data
+         * storage areas and set up the offset arrays.
+         *
+         * @param   graph1D     A mesh, containing information about the
+         *                      domain and the spectral/hp element expansion.
+         * @param   UseGenSegExp If true, create general segment expansions
+         *                      instead of just normal segment expansions.
+         */
+        ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                             const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                             const SpatialDomains::CompositeMap &domain,
+                             const bool DeclareCoeffPhysArrays,
+                             const std::string var,
+                             bool SetToOneSpaceDimension):
+            ExpList(pSession,graph1D)
+        {
+            int j,id=0;
+            LocalRegions::SegExpSharedPtr seg;
+            SpatialDomains::SegGeomSharedPtr SegmentGeom;
+            SpatialDomains::Composite comp;
+            SpatialDomains::CompositeMap::const_iterator compIt;
+
+            // Retrieve the list of expansions
+            const SpatialDomains::ExpansionMap &expansions
+                = graph1D->GetExpansions(var);
+
+            // Process each composite region in domain
+            for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
+            {
+                comp = compIt->second;
+
+                // Process each expansion in the graph
+                for(j = 0; j < compIt->second->size(); ++j)
+                {
+                    SpatialDomains::ExpansionMap::const_iterator expIt;
+
+                    if((SegmentGeom = boost::dynamic_pointer_cast<
+                            SpatialDomains::SegGeom>(
+                                (*compIt->second)[j])))
+                    {
+                        // Retrieve basis key from expansion and define expansion
+                        if((expIt = expansions.find(SegmentGeom->GetGlobalID())) != expansions.end())
+                        {
+                            LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
+                            
+                            if(SetToOneSpaceDimension)
+                            {
+                                SpatialDomains::SegGeomSharedPtr OneDSegmentGeom = 
+                                    SegmentGeom->GenerateOneSpaceDimGeom();
+
+                                seg = MemoryManager<LocalRegions::SegExp>
+                                    ::AllocateSharedPtr(bkey, OneDSegmentGeom);
+                            }
+                            else
+                            {
+                                seg = MemoryManager<LocalRegions::SegExp>
+                                    ::AllocateSharedPtr(bkey, SegmentGeom);
+                            }
+                        }
+                        else
+                        {
+                            ASSERTL0(false,"Failed to find basis key");
+                        }
+
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"Failed to dynamic cast geometry to SegGeom");
+                    }
+                    
+                    
+                    // Assign next ID
+                    seg->SetElmtId(id++);
+
+                    // Add the expansion
+                    (*m_exp).push_back(seg);
+                }
+            }
+
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            // set up offset arrays.
+            SetCoeffPhysOffsets();
+
+            if(DeclareCoeffPhysArrays)
+            {
+                // Set up m_coeffs, m_phys.
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+            }
+
+            ReadGlobalOptimizationParameters();
+        }
+
+
         /**
          * Fills the list of local expansions with the segments from the 2D
          * mesh specified by \a domain. This CompositeMap contains a list of
@@ -262,7 +376,6 @@ namespace Nektar
             for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
             {
                 comp = compIt->second;
-
                 // Process each expansion in the region.
                 for(j = 0; j < compIt->second->size(); ++j)
                 {
@@ -306,99 +419,6 @@ namespace Nektar
         }
 
         /**
-         * Fills the list of local expansions with the segments in one
-         * subdomain specified in an inputfile by \a domain. This 
-         * CompositeMap contains a list of Composites which define the 
-         * subdomains.
-         * @param   domain      A domain, comprising of one or more composite
-         *                      regions.
-         * @param   i           Index of currently processed subdomain
-         * @param   graph1D     A mesh, containing information about the
-         *                      domain and the spectral/hp element expansion.
-         * @param   DeclareCoeffPhysArrays If true, create general segment expansions
-         *                      instead of just normal segment expansions.
-         */
-        ExpList1D::ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-							 const SpatialDomains::CompositeMap &domain,
-                             const SpatialDomains::MeshGraphSharedPtr &graph1D,
-							 int i,
-                             const bool DeclareCoeffPhysArrays):
-		ExpList(pSession)
-        {
-            SetExpType(e1D);
-
-            int id=0;
-            SpatialDomains::Composite comp;
-            SpatialDomains::CompositeMap::const_iterator compIt;
-            SpatialDomains::SegGeomSharedPtr SegmentGeom;
-            LocalRegions::SegExpSharedPtr seg;
-			
-            int offset = 0;
-            const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
-            SpatialDomains::ExpansionMap::const_iterator expIt;
-			
-			
-            // Find the correct composite region to process
-            compIt = domain.begin();
-            for(int k = 0; k < i; ++k)
-            {
-                offset += compIt->second->size();
-                ++compIt;
-            }	
-            comp = compIt->second;
-			
-            //Find the correct expansion start point for the current composite
-            expIt = expansions.begin();
-            for(int k = 0; k < offset; ++k)
-            {
-                ++expIt;
-            }	
-			
-            // Process each expansion in the region.
-            for(int j = 0; j < compIt->second->size(); ++j)
-            {
-                if ((SegmentGeom = boost::dynamic_pointer_cast<
-                         SpatialDomains::SegGeom>(
-                             (*compIt->second)[j])))
-                {					
-                    // Retrieve the basis key from the expansion.
-                    LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
-																				
-                    seg = MemoryManager<LocalRegions::SegExp>
-                        ::AllocateSharedPtr(bkey, SegmentGeom);
-					
-                    // Add the segment to the expansion list.
-                    seg->SetElmtId(id++);
-                    (*m_exp).push_back(seg);
-					
-                    expIt++;
-                }
-                else
-                {
-                    ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                }
-            }
-			
-			
-            // Setup Default optimisation information.
-            int nel = GetExpSize();
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-			::AllocateSharedPtr(nel);
-			
-            // Allocate storage for data and populate element offset lists.
-            SetCoeffPhysOffsets();
-			
-            // Set up m_coeffs, m_phys.
-            if(DeclareCoeffPhysArrays)
-            {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
-            }
-        }
-		
-		
-
-        /**
          * Store expansions for the trace space expansions used in
          * DisContField2D.
          *
@@ -415,26 +435,32 @@ namespace Nektar
          *                      instead of just normal segment expansions.
          */
         ExpList1D::ExpList1D(
-                    const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
-                    const Array<OneD, const SpatialDomains
-                                           ::BoundaryConditionShPtr>  &bndCond,
-                    const LocalRegions::ExpansionVector &locexp,
-                    const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                    const PeriodicMap &periodicEdges,
-                    const bool DeclareCoeffPhysArrays,
-                    const std::string variable):
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
+            const LocalRegions::ExpansionVector &locexp,
+            const SpatialDomains::MeshGraphSharedPtr &graph2D,
+            const PeriodicMap &periodicEdges,
+            const bool DeclareCoeffPhysArrays,
+            const std::string variable):
             ExpList()
         {
+            int i, j, id, elmtid = 0;
+            set<int> edgesDone;
+
+            SpatialDomains::Geometry1DSharedPtr segGeom;
+            SpatialDomains::Geometry2DSharedPtr ElGeom;
+            LocalRegions::SegExpSharedPtr       seg;
+            LocalRegions::SegExpSharedPtr       seg_tmp;
+            LocalRegions::Expansion1DSharedPtr  exp1D;
+            LocalRegions::Expansion2DSharedPtr  exp2D;
+
             SetExpType(e1D);
 
-            int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
-            SpatialDomains::Geometry1DSharedPtr SegGeom;
             LocalRegions::SegExpSharedPtr Seg;
-            LocalRegions::Expansion1DSharedPtr exp1D;
-            LocalRegions::Expansion2DSharedPtr exp2D;
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
@@ -447,69 +473,65 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey bkey = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
-                        exp1D = LocalRegions::Expansion1D::FromStdExp(bndConstraint[i]->GetExp(j));
-                        SegGeom = exp1D->GetGeom1D();
+                        exp1D = bndConstraint[i]->GetExp(j)->
+                                    as<LocalRegions::Expansion1D>();
+                        segGeom = exp1D->GetGeom1D();
 
-                        Seg = MemoryManager<LocalRegions::SegExp>
-                                            ::AllocateSharedPtr(bkey, SegGeom);
-                        EdgeDone[SegGeom->GetEid()] = elmtid;
+                        seg = MemoryManager<LocalRegions::SegExp>
+                                            ::AllocateSharedPtr(bkey, segGeom);
+                        edgesDone.insert(segGeom->GetEid());
 
-                        Seg->SetElmtId(elmtid++);
-                        (*m_exp).push_back(Seg);
+                        seg->SetElmtId(elmtid++);
+                        (*m_exp).push_back(seg);
                     }
                 }
             }
+
+            map<int, pair<SpatialDomains::Geometry1DSharedPtr,
+                          LibUtilities::BasisKey> > edgeOrders;
+            map<int, pair<SpatialDomains::Geometry1DSharedPtr,
+                          LibUtilities::BasisKey> >::iterator it;
             
-            // loop over all other edges and fill out other connectivities
             for(i = 0; i < locexp.size(); ++i)
             {
+                exp2D = locexp[i]->as<LocalRegions::Expansion2D>();
+
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
-                    exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
-                    SegGeom = (exp2D->GetGeom2D())->GetEdge(j);
-
-                    id = SegGeom->GetEid();
-
-                    if(EdgeDone.count(id)==0)
+                    segGeom = exp2D->GetGeom2D()->GetEdge(j);
+                    id      = segGeom->GetEid();
+                    // Ignore Dirichlet edges
+                    if (edgesDone.count(id) != 0)
                     {
-                        LibUtilities::BasisKey EdgeBkey
-                                    = locexp[i]->DetEdgeBasisKey(j);
+                        continue;
+                    }
 
-                        Seg = MemoryManager<LocalRegions::SegExp>
-                                        ::AllocateSharedPtr(EdgeBkey, SegGeom);
-                        EdgeDone[id] = elmtid;
+                    it = edgeOrders.find(id);
 
-                        /*
-                        if (periodicEdges.count(id) > 0)
-                        {
-                            EdgeDone[abs(periodicEdges.find(id)->second)] = elmtid;
-                        }
-                        */
-
-                        Seg->SetElmtId(elmtid++);
-                        (*m_exp).push_back(Seg);
+                    if (it == edgeOrders.end())
+                    {
+                        edgeOrders.insert(std::make_pair(id, std::make_pair(
+                            segGeom, locexp[i]->DetEdgeBasisKey(j))));
                     }
                     else // variable modes/points
                     {
-                        LibUtilities::BasisKey EdgeBkey
-                                = locexp[i]->DetEdgeBasisKey(j);
+                        LibUtilities::BasisKey edge
+                            = locexp[i]->DetEdgeBasisKey(j);
+                        LibUtilities::BasisKey existing
+                            = it->second.second;
 
-                        if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
-                                >= EdgeBkey.GetNumPoints()
-                            && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
-                                >= EdgeBkey.GetNumModes())
+                        int np1 = edge    .GetNumPoints();
+                        int np2 = existing.GetNumPoints();
+                        int nm1 = edge    .GetNumModes ();
+                        int nm2 = existing.GetNumModes ();
+
+                        if (np2 >= np1 && nm2 >= nm1)
                         {
+                            continue;
                         }
-                        else if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
-                                <= EdgeBkey.GetNumPoints()
-                            && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
-                                <= EdgeBkey.GetNumModes())
+                        else if (np2 < np1 && nm2 < nm1)
                         {
-                            Seg = MemoryManager<LocalRegions::SegExp>
-                                    ::AllocateSharedPtr(EdgeBkey, SegGeom);
-                            Seg->SetElmtId(EdgeDone[id]);
-                            (*m_exp)[EdgeDone[id]] = Seg;
-                            NormalSet.erase(id);
+                            it->second.second = edge;
                         }
                         else
                         {
@@ -519,6 +541,109 @@ namespace Nektar
                         }
                     }
                 }
+            }
+
+            LibUtilities::CommSharedPtr vComm =
+                pSession->GetComm()->GetRowComm();
+            int nproc = vComm->GetSize(); // number of processors
+            int edgepr = vComm->GetRank(); // ID processor
+
+            if (nproc > 1)
+            {
+                int eCnt = 0;
+
+                // Count the number of edges on each partition
+                for(i = 0; i < locexp.size(); ++i)
+                {
+                    eCnt += locexp[i]->GetNedges();
+                }
+
+                // Set up the offset and the array that will contain the list of
+                // edge IDs, then reduce this across processors.
+                Array<OneD, int> edgesCnt(nproc, 0);
+                edgesCnt[edgepr] = eCnt;
+                vComm->AllReduce(edgesCnt, LibUtilities::ReduceSum);
+
+                // Set up offset array.
+                int totEdgeCnt = Vmath::Vsum(nproc, edgesCnt, 1);
+                Array<OneD, int> eTotOffsets(nproc,0);
+                for (i = 1; i < nproc; ++i)
+                {
+                    eTotOffsets[i] = eTotOffsets[i-1] + edgesCnt[i-1];
+                }
+
+                // Local list of the edges per element
+                Array<OneD, int> EdgesTotID(totEdgeCnt, 0);
+                Array<OneD, int> EdgesTotNm(totEdgeCnt, 0);
+                Array<OneD, int> EdgesTotPnts(totEdgeCnt, 0);
+
+                int cntr = eTotOffsets[edgepr];
+
+                for(i = 0; i < locexp.size(); ++i)
+                {
+                    exp2D = locexp[i]->as<LocalRegions::Expansion2D>();
+
+                    int nedges = locexp[i]->GetNedges();
+
+                    for(j = 0; j < nedges; ++j, ++cntr)
+                    {
+                        LibUtilities::BasisKey bkeyEdge =
+                                              locexp[i]->DetEdgeBasisKey(j);
+                        EdgesTotID  [cntr] = exp2D->GetGeom2D()->GetEid(j);
+                        EdgesTotNm  [cntr] = bkeyEdge.GetNumModes();
+                        EdgesTotPnts[cntr] = bkeyEdge.GetNumPoints();
+                    }
+                }
+
+                vComm->AllReduce(EdgesTotID, LibUtilities::ReduceSum);
+                vComm->AllReduce(EdgesTotNm, LibUtilities::ReduceSum);
+                vComm->AllReduce(EdgesTotPnts, LibUtilities::ReduceSum);
+
+                for (i = 0; i < totEdgeCnt; ++i)
+                {
+                    it = edgeOrders.find(EdgesTotID[i]);
+
+                    if (it == edgeOrders.end())
+                    {
+                        continue;
+                    }
+
+                    LibUtilities::BasisKey existing
+                        = it->second.second;
+                    LibUtilities::BasisKey edge(
+                        existing.GetBasisType(), EdgesTotNm[i],
+                        LibUtilities::PointsKey(EdgesTotPnts[i],
+                                                existing.GetPointsType()));
+
+
+                    int np1 = edge    .GetNumPoints();
+                    int np2 = existing.GetNumPoints();
+                    int nm1 = edge    .GetNumModes ();
+                    int nm2 = existing.GetNumModes ();
+
+                    if (np2 >= np1 && nm2 >= nm1)
+                    {
+                        continue;
+                    }
+                    else if (np2 < np1 && nm2 < nm1)
+                    {
+                        it->second.second = edge;
+                    }
+                    else
+                    {
+                        ASSERTL0(false,
+                                 "inappropriate number of points/modes (max "
+                                 "num of points is not set with max order)");
+                    }
+                }
+            }
+
+            for (it = edgeOrders.begin(); it != edgeOrders.end(); ++it)
+            {
+                seg = MemoryManager<LocalRegions::SegExp>
+                    ::AllocateSharedPtr(it->second.second, it->second.first);
+                seg->SetElmtId(elmtid++);
+                (*m_exp).push_back(seg);
             }
 
             // Setup Default optimisation information.
@@ -557,7 +682,7 @@ namespace Nektar
             m_offset_elmt_id = Array<OneD,int>(m_exp->size());
 
             m_ncoeffs = m_npoints = 0;
-
+            
             for(i = 0; i < m_exp->size(); ++i)
             {
                 m_coeff_offset[i]   = m_ncoeffs;
@@ -798,7 +923,6 @@ namespace Nektar
                 }
             }
         }
-		
 
         /**
          * Upwind the left and right states given by the Arrays Fwd and Bwd
@@ -917,8 +1041,10 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
             int i,j,k,e_npoints,offset;
+            SpatialDomains::Geometry1DSharedPtr segGeom;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
-
+            Array<OneD,Array<OneD,NekDouble> > locnormals2;
+            Array<OneD,Array<OneD,NekDouble> > Norms;
             // Assume whole array is of same coordinate dimension
             int coordim = GetCoordim(0);
 
@@ -926,37 +1052,97 @@ namespace Nektar
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
 
-            // Process each expansion.
-            for(i = 0; i < m_exp->size(); ++i)
+            for (i = 0; i < m_exp->size(); ++i)
             {
-                LocalRegions::Expansion1DSharedPtr loc_exp = 
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion1D>((*m_exp)[i]);
-                LocalRegions::Expansion2DSharedPtr loc_elmt = 
+                LocalRegions::Expansion1DSharedPtr loc_exp = (*m_exp)[i]->as<LocalRegions::Expansion1D>();
+                
+                LocalRegions::Expansion2DSharedPtr loc_elmt =
                     loc_exp->GetLeftAdjacentElementExp();
-
+		
+                int edgeNumber = loc_exp->GetLeftAdjacentElementEdge();
+            
                 // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                locnormals = loc_elmt->GetEdgeNormal(
-                    loc_exp->GetLeftAdjacentElementEdge());
+                
+                locnormals = loc_elmt->GetEdgeNormal(edgeNumber);
+		int e_nmodes   = loc_exp->GetBasis(0)->GetNumModes();
+                int loc_nmodes = loc_elmt->GetBasis(0)->GetNumModes();
 
-                // Get the physical data offset for this expansion.
-                offset = m_phys_offset[i];
-
-                // Process each point in the expansion.
-                for(j = 0; j < e_npoints; ++j)
+                if (e_nmodes != loc_nmodes)
                 {
-                    // Process each spatial dimension and copy the values into
-                    // the output array.
-                    for(k = 0; k < coordim; ++k)
+		    if (loc_exp->GetRightAdjacentElementEdge() >= 0)
                     {
-                        //normals[k][offset+j] = locnormals[k*e_npoints + j];
-                        normals[k][offset+j] = locnormals[k][j];
+		        LocalRegions::Expansion2DSharedPtr loc_elmt =
+                                       loc_exp->GetRightAdjacentElementExp();
+
+			int EdgeNumber = loc_exp->GetRightAdjacentElementEdge();
+                        // Serial case: right element is connected so we can
+                        // just grab that normal.
+                        locnormals = loc_elmt->GetEdgeNormal(EdgeNumber);
+
+                        offset = m_phys_offset[i];
+
+                        // Process each point in the expansion.
+                        for (j = 0; j < e_npoints; ++j)
+                        {
+                            // Process each spatial dimension and copy the values
+                            // into the output array.
+                            for (k = 0; k < coordim; ++k)
+                            {
+                                normals[k][offset + j] = -locnormals[k][j];
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Parallel case: need to interpolate normal.
+                        Array<OneD, Array<OneD, NekDouble> > normal(coordim);
+                        
+                        for (int p = 0; p < coordim; ++p)
+                        {
+                            normal[p] = Array<OneD, NekDouble>(e_npoints,0.0);
+                            LibUtilities::PointsKey to_key =
+                                loc_exp->GetBasis(0)->GetPointsKey();
+                            LibUtilities::PointsKey from_key =
+                                loc_elmt->GetBasis(0)->GetPointsKey();
+                            LibUtilities::Interp1D(from_key,
+                                                   locnormals[p],
+                                                   to_key,
+                                                   normal[p]);
+                        }
+                        
+                        offset = m_phys_offset[i];
+
+                        // Process each point in the expansion.
+                        for (j = 0; j < e_npoints; ++j)
+                        {
+                            // Process each spatial dimension and copy the values
+                            // into the output array.
+                            for (k = 0; k < coordim; ++k)
+                            {
+                                normals[k][offset + j] = normal[k][j];
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Get the physical data offset for this expansion.
+                    offset = m_phys_offset[i];
+
+                    // Process each point in the expansion.
+                    for (j = 0; j < e_npoints; ++j)
+                    {
+                        // Process each spatial dimension and copy the values
+                        // into the output array.
+                        for (k = 0; k < coordim; ++k)
+                        {
+                            normals[k][offset + j] = locnormals[k][j];
+                        }
                     }
                 }
             }
         }
-
 
         /**
          *

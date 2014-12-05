@@ -233,13 +233,13 @@ namespace Nektar
                     {
                         for(k = 0; k < bndCondFaceExp->GetNedges(); k++)
                         {
-                            meshEdgeId = (LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D())->GetEid(k);
+                            meshEdgeId = bndCondFaceExp->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetEid(k);
                             if(edgeDirMap.count(meshEdgeId) == 0)
                             {
                                 edgeDirMap.insert(meshEdgeId);
                             }
                         }
-                        meshFaceId = (LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D())->GetFid();
+                        meshFaceId = bndCondFaceExp->as<LocalRegions::Expansion2D>()->GetGeom2D()->GetFid();
                         faceDirMap.insert(meshFaceId);
                     }
                 }
@@ -267,7 +267,7 @@ namespace Nektar
                 for(j = 0; j < nEdges; ++j)
                 {
                     int nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j) - 2;
-                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
+                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetEid(j);
                     EdgeSize[meshEdgeId] = nEdgeInteriorCoeffs;
                 }
                 
@@ -275,7 +275,7 @@ namespace Nektar
                 for(j = 0; j < nFaces; ++j)
                 {
                     int nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
-                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
+                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetFid(j);
                     FaceSize[meshFaceId] = nFaceInteriorCoeffs;
                 }
             }
@@ -350,7 +350,7 @@ namespace Nektar
 
                 for (j = 0; j < locExpansion->GetNedges(); ++j)
                 {
-                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
+                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetEid(j);
                     dof    = EdgeSize[meshEdgeId];
                     maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
 
@@ -439,7 +439,7 @@ namespace Nektar
 
                 for (j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
+                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetFid(j);
 
                     dof        = FaceSize[meshFaceId];
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
@@ -493,7 +493,7 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
                     //get mesh edge id
-                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
+                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetEid(j);
                     
                     nedgemodes=locExpansion->GetEdgeNcoeffs(j)-2;
                     
@@ -530,7 +530,7 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
                     //get mesh face id
-                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
+                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetFid(j);
 
                     nfacemodes = locExpansion->GetFaceIntNcoeffs(j);
 
@@ -657,7 +657,7 @@ namespace Nektar
                                     += sign1*sign2*RSRT(vMap1,vMap2);
 
 
-                                meshVertId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetVid(v);
+                                meshVertId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetVid(v);
                             
                                 pIt = periodicVerts.find(meshVertId);
                                 if (pIt != periodicVerts.end())
@@ -684,7 +684,7 @@ namespace Nektar
                         MemoryManager<DNekMat>::AllocateSharedPtr
                         (nedgemodes,nedgemodes,zero,storage);
                     
-                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(eid);
+                    meshEdgeId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetEid(eid);
                     Array<OneD, unsigned int> edgemodearray = locExpansion->GetEdgeInverseBoundaryMap(eid);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
@@ -721,7 +721,7 @@ namespace Nektar
                         MemoryManager<DNekMat>::AllocateSharedPtr
                         (nfacemodes,nfacemodes,zero,storage);
 
-                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(fid);
+                    meshFaceId = locExpansion->as<LocalRegions::Expansion3D>()->GetGeom3D()->GetFid(fid);
                     
                     if(faceDirMap.count(meshFaceId)==0)
                     {
@@ -1212,10 +1212,10 @@ namespace Nektar
          * the low energy equivalent
          * i.e. \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}\f$
          */     
-        DNekScalBlkMatSharedPtr PreconditionerLowEnergy::
+        DNekScalMatSharedPtr PreconditionerLowEnergy::
         v_TransformedSchurCompl(
             int offset, 
-            const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
+            const boost::shared_ptr<DNekScalMat > &loc_mat)
 	{
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
@@ -1223,11 +1223,9 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr locExpansion;                
             locExpansion = expList->GetExp(offset);
             unsigned int nbnd=locExpansion->NumBndryCoeffs();
-            unsigned int ncoeffs=locExpansion->GetNcoeffs();
-            unsigned int nint=ncoeffs-nbnd;
 
             //This is the SC elemental matrix in the orginal basis (S1)
-            DNekScalMatSharedPtr pS1=loc_mat->GetBlock(0,0);
+            DNekScalMatSharedPtr pS1=loc_mat;
 
             //Transformation matrices 
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
@@ -1261,16 +1259,10 @@ namespace Nektar
             RS1=R*S1;
             S2=RS1*RT;
 
-            DNekScalBlkMatSharedPtr returnval;
             DNekScalMatSharedPtr tmp_mat;
-            unsigned int exp_size[] = {nbnd, nint};
-            unsigned int nblks = 1;
-            returnval = MemoryManager<DNekScalBlkMat>::
-                AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
+            tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0, pS2);
 
-            returnval->SetBlock(0,0,tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,pS2));
-
-	    return returnval;
+	    return tmp_mat;
 	}
 
         /**
@@ -1704,58 +1696,62 @@ namespace Nektar
                 }
             }
 
+            StdRegions::MatrixType PreconR,PreconRT;
+
+            if(m_linSysKey.GetMatrixType() == StdRegions::eMass)
+            {
+                PreconR  = StdRegions::ePreconRMass;
+                PreconRT = StdRegions::ePreconRTMass;
+            }
+            else
+            {
+                PreconR  = StdRegions::ePreconR;
+                PreconRT = StdRegions::ePreconRT;
+            }
+            
+
+
             /*
              * Matrix keys - for each element type there are two matrix keys
              * corresponding to the transformation matrix R and its transpose
              */
 
+
             //Matrix keys for tetrahedral element transformation matrix
             LocalRegions::MatrixKey TetR
-                (StdRegions::ePreconR,
-                 LibUtilities::eTetrahedron,
-                 *TetExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconR, LibUtilities::eTetrahedron,
+                 *TetExp, m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for tetrahedral transposed transformation matrix
             LocalRegions::MatrixKey TetRT
-                (StdRegions::ePreconRT,
-                 LibUtilities::eTetrahedron,
-                 *TetExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconRT, LibUtilities::eTetrahedron,
+                 *TetExp,  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for prismatic element transformation matrix
             LocalRegions::MatrixKey PrismR
-                (StdRegions::ePreconR,
-                 LibUtilities::ePrism,
-                 *PrismExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconR,   LibUtilities::ePrism,
+                 *PrismExp, m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for prismatic element transposed transformation matrix
             LocalRegions::MatrixKey PrismRT
-                (StdRegions::ePreconRT,
-                 LibUtilities::ePrism,
-                 *PrismExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconRT,  LibUtilities::ePrism,
+                 *PrismExp, m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for hexahedral element transformation matrix
             LocalRegions::MatrixKey HexR
-                (StdRegions::ePreconR,
-                 LibUtilities::eHexahedron,
-                 *HexExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconR, LibUtilities::eHexahedron,
+                 *HexExp, m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             //Matrix keys for hexahedral element transposed transformation
             //matrix
             LocalRegions::MatrixKey HexRT
-                (StdRegions::ePreconRT,
-                 LibUtilities::eHexahedron,
-                 *HexExp,
-                 m_linSysKey.GetConstFactors(),
+                (PreconRT, LibUtilities::eHexahedron,
+                 *HexExp,  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
             /*

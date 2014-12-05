@@ -62,8 +62,8 @@ namespace Nektar
     void VelocityCorrectionScheme::v_InitObject()
     {
         int n;
-
-        IncNavierStokes::v_InitObject();
+        
+        UnsteadySystem::v_InitObject();
 
         // Set m_pressure to point to last field of m_fields;
         if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
@@ -76,6 +76,8 @@ namespace Nektar
             ASSERTL0(false,"Need to set up pressure field definition");
         }
         
+        IncNavierStokes::v_InitObject();
+
         // Integrate only the convective fields
         for (n = 0; n < m_nConvectiveFields; ++n)
         {
@@ -277,7 +279,7 @@ namespace Nektar
         // Evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,
                                  inarray, outarray, m_time);
-        
+
         // Smooth advection
         if(m_SmoothAdvection)
         {
@@ -291,11 +293,11 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            (*x)->Apply(m_fields, inarray, outarray);
+            (*x)->Apply(m_fields, inarray, outarray, time);
         }
-		
-		// Calculate High-Order pressure boundary conditions
-		m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
+        
+        // Calculate High-Order pressure boundary conditions
+        m_extrapolation->EvaluatePressureBCs(inarray,outarray,m_kinvis);
     }
     
     /**

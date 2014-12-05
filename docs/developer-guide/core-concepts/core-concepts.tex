@@ -1,0 +1,241 @@
+\chapter{Core Concepts}
+
+This section describes some of the key concepts which are useful when developing
+code within the Nektar++ framework.
+
+\section{Factory method pattern}
+The factory method pattern is used extensively throughout Nektar++ as a
+mechanism to instantiate objects. It provides the following benefits:
+\begin{itemize}
+\item Encourages modularisation of code such that conceptually related
+algorithms are grouped together
+\item Structuring of code such that different implementations of the same
+concept are encapsulated and share a common interface
+\item Users of a factory-instantiated modules need only be concerned with the
+ interface and not the details of underlying implementations
+\item Simplifies debugging since code relating to a specific implementation
+ resides in a single class
+\item The code is naturally decoupled to reduce header-file dependencies and
+ improves compile times
+\item Enables implementations (e.g. relating to third-party libraries) to be
+ disabled through the build process (CMake) by not compiling a specific 
+ implementation, rather than scattering preprocessing statements throughout the
+ code
+\end{itemize}
+
+For conceptual details see the Wikipedia page.
+%\url{http://en.wikipedia.org/wiki/Factory_pattern}.
+
+\subsection{Using NekFactory}
+The templated NekFactory class implements the factory pattern in Nektar++.
+There are two distinct aspects to creating a factory-instantiated collection of
+classes: defining the public interface, and registering specific
+implementations. Both of these involve adding standard boilerplate code. It is
+assumed that we are writing a code which implements a particular concept or
+functionality within the code, for which there are multiple implementations. The
+reasons for multiple implementations may be very low level such as alternative
+algorithms for solving a linear system, or high level, such as selecting from a
+range of PDEs to solve.
+
+\subsubsection{Creating an interface (base class)}
+A base class must be defined which prescribes an implementation-independent
+interface. In Nektar++, the template method pattern is used, requiring public
+interface functions to be defined which call private virtual implementation
+methods. The latter will be overridden in the specific implementation classes.
+In the base class these virtual methods should be defined as pure virtual, since
+there is no implementation and we will not be instantiating this base class
+explicitly.
+
+As an example we will create a factory for instantiating different
+implementations of some concept \inlsh{MyConcept}, defined in
+\inlsh{MyConcept.h} and \inlsh{MyConcept.cpp}. First in \inlsh{MyConcept.h},
+we need to include the NekFactory header
+
+\begin{lstlisting}[style=C++Style]
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+\end{lstlisting}
+
+The following code should then be included just before the base class
+declaration (in the same namespace as the class):
+
+\begin{lstlisting}[style=C++Style]
+class MyConcept
+
+// Datatype for the MyConcept factory
+typedef LibUtilities::NekFactory< std::string, MyConcept, 
+            ParamType1,
+            ParamType2 > MyConceptFactory;
+MyConceptFactory& GetMyConceptFactory();
+\end{lstlisting}
+
+The template parameters define the datatype of the key used to retrieve a
+particular implementation (usually a string, enum or custom class such as
+\inlsh{MyConceptKey}, the base class (in our case \inlsh{MyConcept} and a list
+of zero or more parameters which are taken by the constructors of all
+implementations of the type \inlsh{MyConcept} (in our case we have two). Note
+that all implementations must take the same parameter list in their constructors.
+
+The normal definition of our base class then follows:
+
+\begin{lstlisting}[style=C++Style]
+class MyConcept 
+{
+    public:
+        MyConcept(ParamType1 p1, ParamType2 p2);
+        ...
+};
+\end{lstlisting}
+
+We must also define a shared pointer for our base class for use later
+\begin{lstlisting}[style=C++Style]
+typedef boost::shared_ptr<MyConcept> MyConceptShPtr;
+\end{lstlisting}
+
+\subsubsection{Creating a specific implementation (derived class)}
+A class is defined for each specific implementation of a concept. It is these
+specific implementations which are instantiated by the factory.
+
+In our example we will have an implementations called \inlsh{MyConceptImpl1}
+defined in \inlsh{MyConceptImpl1.h} and \inlsh{MyConceptImpl1.cpp}. In the
+header file we include the base class header file
+
+\begin{lstlisting}[style=C++Style]
+#include <Subdir/MyConcept.h>
+\end{lstlisting}
+
+We then define the derived class as normal:
+
+\begin{lstlisting}[style=C++Style]
+class MyConceptImpl1 : public MyConcept
+{
+...
+};
+\end{lstlisting}
+
+In order for the factory to work, it must know
+\begin{itemize}
+\item that {{{MyConceptImpl1}}} exists, and
+\item how to create it.
+\end{itemize}
+
+To allow the factory to create instances of our class we define a function in 
+our class:
+\begin{lstlisting}[style=C++Style]
+/// Creates an instance of this class
+static MyConceptSharedPtr create(
+            ParamType1 p1,
+            ParamType2 p2)
+{
+    return MemoryManager<MyConceptImpl1>::AllocateSharedPtr(p1, p2);
+}
+\end{lstlisting}
+This function simply creates an instance of \inlsh{MyConceptImpl1} using the
+supplied parameters. It must be \inlsh{static} because we are not operating on
+an existing instance and it should return a base class shared pointer (rather 
+than a \inlsh{MyConceptImpl1} shared pointer), since the point of the factory
+is that the calling code does not know about specific implementations.
+
+The last task is to register our implementation with the factory. This is done 
+using the \inlsh{RegisterCreatorFunction} member function of the factory.
+However, we wish this to happen as early on as possible (so we can use the 
+factory straight away) and without needing to explicitly call the function for 
+every implementation at the beginning of our program (since this would again 
+defeat the point of a factory)! The solution is to use the function to 
+initialise a static variable: it will be executed prior to the start of the
+\inlsh{main()} routine, and can be located within the very class it is
+registering, satisfying our code decoupling requirements.
+
+In \inlsh{MyConceptImpl1.h} we define a static variable with the same datatype
+as the key used in our factory (in our case \inlsh{std::string}) 
+\begin{lstlisting}[style=C++Style]
+static std::string className;
+\end{lstlisting}
+The above variable can be \inlsh{private} since it is typically never actually
+used within the code. We then initialise it in \inlsh{MyConceptImpl1.cpp}
+
+\begin{lstlisting}[style=C++Style] 
+string MyConceptImpl1::className
+        = GetMyConceptFactory().RegisterCreatorFunction(
+            "Impl1", MyConceptImpl1::create, "First implementation of my
+            concept.");
+\end{lstlisting}
+The first parameter specifies the value of the key which should be used to
+select this implementation. The second parameter is a function pointer to our
+static function used to instantiate our class. The third parameter provides a
+description which can be printed when listing the available MyConcept
+implementations.
+
+\subsection{Instantiating classes}
+To create instances of MyConcept implementations elsewhere in the code, we must
+first include the ''base class'' header file
+\begin{lstlisting}[style=C++Style]
+#include <Subdir/MyConcept.h>
+\end{lstlisting}
+Note we do not include the header files for the specific MyConcept 
+implementations anywhere in the code (apart from \inlsh{MyConceptImpl1.cpp}).
+If we modify the implementation, only the implementation itself requires 
+recompiling and the executable relinking.
+
+We create an instance by retrieving the \inlsh{MyConceptFactory} and call the
+\inlsh{CreateInstance} member function of the factory:
+\begin{lstlisting}[style=C++Style]
+ParamType p1 = ...;
+ParamType p2 = ...;
+MyConceptShPtr p = GetMyConceptFactory().CreateInstance( "Impl1", p1, p2 );
+\end{lstlisting}
+
+Note that the class is used through the pointer \inlsh{p}, which is of type
+\inlsh{MyConceptShPtr}, allowing the use of any of the public interface
+functions in the base class (and therefore the specific implementations behind them) to be
+called, but not directly any functions declared solely in a specific
+implementation.
+
+
+\section{NekArray}
+An Array is a thin wrapper around native arrays. Arrays provide all the
+functionality of native arrays, with the additional benefits of automatic use of
+the Nektar++ memory pool, automatic memory allocation and deallocation, bounds
+checking in debug mode, and easier to use multi-dimensional arrays.
+
+Arrays are templated to allow compile-time customization of its dimensionality
+and data type.
+
+Parameters:
+\begin{itemize}
+\item \inltt{Dim} Must be a type with a static unsigned integer called
+\inltt{Value} that specifies the array's dimensionality. For example
+\begin{lstlisting}[style=C++Style]
+struct TenD {
+    static unsigned int Value = 10;
+};
+\end{lstlisting}
+\item \inltt{DataType} The type of data to store in the array.
+\end{itemize}
+
+It is often useful to create a class member Array that is shared with users of
+the object without letting the users modify the array. To allow this behavior,
+Array<Dim, !DataType> inherits from Array<Dim, const !DataType>. The following
+example shows what is possible using this approach:
+\begin{lstlisting}[style=C++Style]
+ class Sample {
+     public:
+         Array<OneD, const double>& getData() const { return m_data; }
+         void getData(Array<OneD, const double>& out) const { out = m_data; }
+
+     private:
+         Array<OneD, double> m_data;
+ };
+\end{lstlisting}
+In this example, each instance of Sample contains an array. The getData
+method gives the user access to the array values, but does not allow
+modification of those values.
+
+\subsection{Efficiency Considerations}
+
+Tracking memory so it is deallocated only when no more Arrays reference it does
+introduce overhead when copying and assigning Arrays. In most cases this loss of
+efficiency is not noticeable. There are some cases, however, where it can cause
+a significant performance penalty (such as in tight inner loops). If needed,
+Arrays allow access to the C-style array through the \texttt{Array::data} member
+function.
+

@@ -126,8 +126,6 @@ namespace Nektar
                     boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
                     std::string("GlobalLinSys"))
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
-
             m_locToGloMap = MemoryManager<AssemblyMapCG2D>
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
@@ -137,6 +135,10 @@ namespace Nektar
                                     CheckIfSingularSystem,
                                     variable);
 
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                m_locToGloMap->PrintStats(std::cout, variable);
+            }
         }
 
 
@@ -174,7 +176,6 @@ namespace Nektar
                     boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
                     std::string("GlobalLinSys"))
         {
-            SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
             if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
                 m_locToGloMap = MemoryManager<AssemblyMapCG2D>
@@ -184,12 +185,16 @@ namespace Nektar
                                         m_periodicVerts,
                                         m_periodicEdges,
                                         CheckIfSingularSystem);
+
+                if (m_session->DefinesCmdLineArgument("verbose"))
+                {
+                    m_locToGloMap->PrintStats(std::cout, variable);
+                }
             }
             else
             {
                 m_locToGloMap = In.m_locToGloMap;
             }
-
         }
 
 
@@ -657,14 +662,14 @@ namespace Nektar
                 }
             }
             m_locToGloMap->UniversalAssembleBnd(tmp);
-          
+
             // Now fill in all other Dirichlet coefficients.
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
                 {
-                    const Array<OneD,const NekDouble>& coeffs = 
+                    const Array<OneD,const NekDouble>& coeffs =
                         m_bndCondExpansions[i]->GetCoeffs();
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
@@ -678,7 +683,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-          
+
             Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
         }
 

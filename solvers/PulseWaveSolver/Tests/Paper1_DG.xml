@@ -136,11 +136,11 @@
         </FUNCTION>
         
         <FUNCTION NAME="A_0">
-            <E VAR="A_0[0]" VALUE="1.0" />
+            <E VAR="A_0" VALUE="1.0" />
         </FUNCTION>
         
         <FUNCTION NAME="MaterialProperties"> 
-            <E VAR="beta[0]" VALUE="451352*(1.0-kappa/(1+exp(-2*k*(a1-x)))+kappa/(1+exp(-2*k*(a2-x))))" />     	
+            <E VAR="beta" VALUE="451352*(1.0-kappa/(1+exp(-2*k*(a1-x)))+kappa/(1+exp(-2*k*(a2-x))))" />     	
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">

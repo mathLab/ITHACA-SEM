@@ -151,8 +151,8 @@ namespace Nektar
             
             virtual void v_BuildPreconditioner();
             
-            virtual DNekScalBlkMatSharedPtr
-                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
+            virtual DNekScalMatSharedPtr
+                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalMat > &loc_mat);
         };
     }
 }

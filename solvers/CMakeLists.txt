@@ -8,28 +8,8 @@ MACRO(ADD_SOLVER_EXECUTABLE name component source)
 
     SET_COMMON_PROPERTIES(${name})
 
-    # TODO - If your executable needs to link to any other libraries,  
-    # add them here.
-    TARGET_LINK_LIBRARIES(${name}
-            ${NEKTAR++_LIBRARIES}
-            ${Boost_SYSTEM_LIBRARY}
-            ${Boost_THREAD_LIBRARY} 
-            ${Boost_IOSTREAMS_LIBRARY} 
-            ${ZLIB_LIBRARY}  
-            ${Boost_DATE_TIME_LIBRARY}      
-            ${Boost_PROGRAM_OPTIONS_LIBRARY} 
-            optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
-    )
 
-    SET_LAPACK_LINK_LIBRARIES(${name})
-
-    IF(NEKTAR_USE_MPI)
-        TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
-    ENDIF(NEKTAR_USE_MPI)
-
-    IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
-        TARGET_LINK_LIBRARIES(${name} optimized rt debug rt)
-    ENDIF()
+    TARGET_LINK_LIBRARIES(${name} SolverUtils)
 
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
         SET_TARGET_PROPERTIES(${name} 

@@ -111,6 +111,7 @@ namespace Nektar
         typedef boost::shared_ptr< GeometryVector >     Composite;
         typedef std::map<int, Composite>                CompositeMap;
         typedef std::map<int, Composite>::iterator      CompositeMapIter;
+        typedef std::map<int, Composite>::const_iterator      CompositeMapConstIter;
 
         struct ElementEdge
         {
@@ -272,7 +273,9 @@ namespace Nektar
 
                 inline const CompositeMap &GetComposites() const;
 
-                inline const CompositeMap &GetDomain() const;
+                inline const std::vector<CompositeMap> &GetDomain(void) const;
+
+                inline const CompositeMap &GetDomain(int domain) const;
 
 
                 /* ---- Expansions ---- */
@@ -353,7 +356,7 @@ namespace Nektar
                     CurveSharedPtr curveDefinition = CurveSharedPtr());
                 SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetEdge(unsigned int id) { return m_segGeoms[id]; }
 
-                SPATIAL_DOMAINS_EXPORT TriGeomSharedPtr AddTriangle(SegGeomSharedPtr edges[], StdRegions::Orientation orient[]);
+                SPATIAL_DOMAINS_EXPORT TriGeomSharedPtr  AddTriangle(SegGeomSharedPtr edges[], StdRegions::Orientation orient[]);
                 SPATIAL_DOMAINS_EXPORT QuadGeomSharedPtr AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::Orientation orient[]);
                 SPATIAL_DOMAINS_EXPORT TetGeomSharedPtr AddTetrahedron(TriGeomSharedPtr tfaces[TetGeom::kNtfaces]);
                 SPATIAL_DOMAINS_EXPORT PyrGeomSharedPtr AddPyramid(TriGeomSharedPtr tfaces[PyrGeom::kNtfaces],
@@ -401,7 +404,7 @@ namespace Nektar
                 bool                                    m_meshPartitioned;
 
                 CompositeMap                            m_meshComposites;
-                CompositeMap                            m_domain;
+                std::vector<CompositeMap>               m_domain;
                 DomainRangeShPtr                        m_domainRange;
 
                 ExpansionMapShPtrMap                    m_expansionMapShPtrMap;
@@ -456,9 +459,18 @@ namespace Nektar
         /**
          *
          */
-        inline const CompositeMap &MeshGraph::GetDomain() const
+        inline const std::vector<CompositeMap> &MeshGraph::GetDomain(void) const
         {
             return m_domain;
+        }
+
+        /**
+         *
+         */
+        inline const CompositeMap &MeshGraph::GetDomain(const int domain) const
+        {
+            ASSERTL1(domain < m_domain.size(),"Request for domain which does not exist");
+            return m_domain[domain];
         }
 
 

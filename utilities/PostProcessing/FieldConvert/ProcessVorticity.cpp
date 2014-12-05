@@ -136,9 +136,9 @@ namespace Nektar
 
             for (i = 0; i < addfields; ++i)
             {
-                m_f->m_exp[nfields + i] = m_f->AppendExpList();
+                m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
                 m_f->m_exp[nfields + i]->UpdatePhys() = outfield[i];
-                m_f->m_exp[nfields + i]->FwdTrans(outfield[i],
+                m_f->m_exp[nfields + i]->FwdTrans_IterPerExp(outfield[i],
                                     m_f->m_exp[nfields + i]->UpdateCoeffs());
             }
             

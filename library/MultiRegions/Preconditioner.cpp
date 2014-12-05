@@ -42,7 +42,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        std::string Preconditioner::lookupIds[9] = {
+        std::string Preconditioner::lookupIds[8] = {
             LibUtilities::SessionReader::RegisterEnumValue(
                 "Preconditioner", "Null", eNull),
             LibUtilities::SessionReader::RegisterEnumValue(
@@ -115,8 +115,8 @@ namespace Nektar
         void Preconditioner::v_DoPreconditionerWithNonVertOutput(
             const Array<OneD, NekDouble> &pInput,
                   Array<OneD, NekDouble> &pOutput,
-            const Array<OneD, NekDouble> &pNonVertOutput)
-
+            const Array<OneD, NekDouble> &pNonVertOutput,
+                  Array<OneD, NekDouble>& pVertForce)
         {
             NEKERROR(ErrorUtil::efatal, "Method does not exist");
 	}
@@ -176,8 +176,8 @@ namespace Nektar
          * \brief Get block elemental transposed transformation matrix
          * \f$\mathbf{R}^{T}\f$
          */
-        DNekScalBlkMatSharedPtr Preconditioner::v_TransformedSchurCompl(
-            int offset, const boost::shared_ptr<DNekScalBlkMat> &loc_mat)
+        DNekScalMatSharedPtr Preconditioner::v_TransformedSchurCompl(
+            int offset, const boost::shared_ptr<DNekScalMat> &loc_mat)
 	{
 	    return loc_mat;
 	}

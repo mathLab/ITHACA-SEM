@@ -58,7 +58,8 @@ namespace Nektar
                 LibUtilities::PointsKey(3, LibUtilities::eGaussLobattoLegendre));
 
             m_shapeType = LibUtilities::eSegment;
-            m_globalID = m_eid = id;
+            m_eid = id;
+            m_globalID = id;
             m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
@@ -70,7 +71,8 @@ namespace Nektar
             Geometry1D(coordim)
         {
             m_shapeType = LibUtilities::eSegment;
-            m_globalID = m_eid   = id;
+            m_eid   = id;
+            m_globalID = id;
             m_state = eNotFilled;
 
             if (coordim > 0)
@@ -97,7 +99,8 @@ namespace Nektar
             Geometry1D(coordim)
         {
             m_shapeType = LibUtilities::eSegment;
-            m_globalID =  m_eid = id;
+            m_eid = id;
+            m_globalID = id; 
             m_state = eNotFilled;
 
             if (coordim > 0)
@@ -176,7 +179,8 @@ namespace Nektar
                                               LibUtilities::eGaussLobattoLegendre
                                            )
                                           );
-            m_globalID = m_eid = id;
+            m_eid = id;
+            m_globalID = id;
             m_xmap = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
             SetUpCoeffs(m_xmap->GetNcoeffs());
         }
@@ -187,7 +191,9 @@ namespace Nektar
             m_shapeType = in.m_shapeType;
 
             // info from EdgeComponent class
-            m_globalID = m_eid     = in.m_eid;
+            m_eid     = in.m_eid;
+            m_globalID = in.m_globalID;
+
             std::list<CompToElmt>::const_iterator def;
             for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
             {
@@ -203,6 +209,68 @@ namespace Nektar
 
             m_state = in.m_state;
         }
+
+
+        /** \brief Generate a one dimensional space segment geometry where
+            the vert[0] has the same x value and vert[1] is set to
+            vert[0] plus the length of the original segment  
+            
+        **/
+        SegGeomSharedPtr SegGeom::GenerateOneSpaceDimGeom(void)
+        {
+            SegGeomSharedPtr returnval = MemoryManager<SegGeom>::AllocateSharedPtr();
+            
+            // info about numbering 
+            returnval->m_eid       = m_eid;
+            returnval->m_globalID  = m_globalID;
+            returnval->m_elmtMap   = m_elmtMap; 
+            
+
+            // geometric information. 
+            returnval->m_coordim = 1;
+            NekDouble x0 = (*m_verts[0])[0];
+            PointGeomSharedPtr vert0 = MemoryManager<PointGeom>::AllocateSharedPtr(1,m_verts[0]->GetVid(),x0,0.0,0.0);
+            vert0->SetGlobalID(vert0->GetVid());
+
+            returnval->m_verts[0] = vert0;
+            
+            // Get information to calculate length. 
+            const Array<OneD, const LibUtilities::BasisSharedPtr> base =  m_xmap->GetBase();
+            LibUtilities::PointsKeyVector v;
+            v.push_back(base[0]->GetPointsKey());
+            v_GenGeomFactors();
+
+            const Array<OneD, const NekDouble> jac = m_geomFactors->GetJac(v);
+            
+            NekDouble len;
+            if(jac.num_elements() == 1)
+            {
+                len = jac[0]*2.0;
+            }
+            else
+            {
+                Array<OneD, const NekDouble> w0 = base[0]->GetW();
+                len = 0.0;
+
+                for(int i = 0; i < jac.num_elements(); ++i)
+                {
+                    len += jac[i]*w0[i];
+                }
+            }
+            // Set up second vertex. 
+            PointGeomSharedPtr vert1 = MemoryManager<PointGeom>::AllocateSharedPtr(1,m_verts[1]->GetVid(),x0+len,0.0,0.0);
+            vert0->SetGlobalID(vert1->GetVid());
+
+            returnval->m_verts[1] = vert1;
+            
+            // at present just use previous m_xmap[0]; 
+            returnval->m_xmap    = m_xmap;
+            returnval->SetUpCoeffs(m_xmap->GetNcoeffs());
+            returnval->m_state   = eNotFilled;
+
+            return returnval;
+        }
+
 
         SegGeom::~SegGeom()
         {

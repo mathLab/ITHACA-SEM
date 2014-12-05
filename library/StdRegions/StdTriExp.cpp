@@ -32,7 +32,7 @@
 // Description: Triangle routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/Foundations/InterpCoeff.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdSegExp.h>       // for StdSegExp, etc
@@ -1330,7 +1330,63 @@ namespace Nektar
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
-        
+
+        void StdTriExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int n_coeffs = inarray.num_elements();
+            int nquad0   = m_base[0]->GetNumPoints();
+            int nquad1   = m_base[1]->GetNumPoints();
+            Array<OneD, NekDouble> coeff(n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmp2;
+            int nqtot    = nquad0*nquad1;
+            Array<OneD, NekDouble> phys_tmp(nqtot,0.0);
+
+            int       nmodes0 = m_base[0]->GetNumModes();
+            int       nmodes1 = m_base[1]->GetNumModes();
+            int       numMin2 = nmodes0;
+            int       i;
+            
+            const LibUtilities::PointsKey Pkey0(
+                nmodes0, LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::PointsKey Pkey1(
+                nmodes1, LibUtilities::eGaussLobattoLegendre);
+
+            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
+            LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),nmodes1,Pkey1);
+
+            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
+            LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_B,nmodes1,Pkey1);
+
+            StdRegions::StdTriExpSharedPtr m_OrthoTriExp;
+            StdRegions::StdTriExpSharedPtr m_TriExp;
+
+            m_TriExp      = MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr(b0,      b1);
+            m_OrthoTriExp = MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr(bortho0, bortho1);
+
+            m_TriExp     ->BwdTrans(inarray,phys_tmp);
+            m_OrthoTriExp->FwdTrans(phys_tmp, coeff);
+
+            for (i = 0; i < n_coeffs; i++)
+            {
+                if (i == numMin)
+                {
+                    coeff[i] = 0.0;
+                    numMin += numMin2 - 1;
+                    numMin2 -= 1.0;
+                }
+            }
+
+            m_OrthoTriExp->BwdTrans(coeff,phys_tmp);
+            m_TriExp     ->FwdTrans(phys_tmp, outarray);
+
+        }
 
         void StdTriExp::v_GeneralMatrixOp_MatOp(
             const Array<OneD, const NekDouble> &inarray,

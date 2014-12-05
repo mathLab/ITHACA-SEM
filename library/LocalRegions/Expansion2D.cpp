@@ -52,13 +52,16 @@ namespace Nektar
         }
         
         void Expansion2D::v_AddEdgeNormBoundaryInt(
+
             const int edge,
+
             StdRegions::StdExpansionSharedPtr  &EdgeExp,
             const Array<OneD, const NekDouble> &Fx,  
             const Array<OneD, const NekDouble> &Fy,  
-            Array<OneD, NekDouble> &outarray)
+                  Array<OneD,       NekDouble> &outarray)
         {
-            ASSERTL1(GetCoordim() == 2,"Routine only set up for two-dimensions");
+            ASSERTL1(GetCoordim() == 2,
+                     "Routine only set up for two-dimensions");
 
             const Array<OneD, const Array<OneD, NekDouble> > normals
                                     = GetEdgeNormal(edge);
@@ -76,8 +79,8 @@ namespace Nektar
                         continue;
                     }
                     
-                    Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
-                        Expansion1D>(m_edgeExp[i].lock());
+                    Expansion1DSharedPtr edgeExp =
+                                    m_edgeExp[i].lock()->as<Expansion1D>();
 
                     if (edgeExp->GetRightAdjacentElementExp())
                     {
@@ -94,7 +97,8 @@ namespace Nektar
             // those modes on the edge common to both adjoining elements. This
             // is enforced here by taking the minimum size and padding with
             // zeros.
-            int nquad_e = min(EdgeExp->GetNumPoints(0), int(normals[0].num_elements()));
+            int nquad_e = min(EdgeExp->GetNumPoints(0),
+                              int(normals[0].num_elements()));
 
             int nEdgePts = EdgeExp->GetTotPoints();
             Array<OneD, NekDouble> edgePhys(nEdgePts);
@@ -102,9 +106,7 @@ namespace Nektar
             Vmath::Vvtvp(nquad_e, normals[1], 1, Fy, 1, edgePhys, 1,
                                   edgePhys,   1);
 
-            LocalRegions::Expansion1DSharedPtr locExp = 
-                boost::dynamic_pointer_cast<
-                    LocalRegions::Expansion1D>(EdgeExp);
+            Expansion1DSharedPtr locExp = EdgeExp->as<Expansion1D>();
 
             if (m_negatedNormals[edge])
             {
@@ -122,12 +124,11 @@ namespace Nektar
             AddEdgeNormBoundaryInt(edge, EdgeExp, edgePhys, outarray);
         }
 
-		
         void Expansion2D::v_AddEdgeNormBoundaryInt(
-            const int edge,
+            const int                           edge,
             StdRegions::StdExpansionSharedPtr  &EdgeExp,
             const Array<OneD, const NekDouble> &Fn,  
-            Array<OneD, NekDouble> &outarray)
+            Array<OneD, NekDouble>             &outarray)
         {
             int i;
 
@@ -143,9 +144,9 @@ namespace Nektar
                         m_requireNeg[i] = true;
                         continue;
                     }
-                    
-                    Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
-                        Expansion1D>(m_edgeExp[i].lock());
+
+                    Expansion1DSharedPtr edgeExp = 
+                                m_edgeExp[i].lock()->as<Expansion1D>();
 
                     if (edgeExp->GetRightAdjacentElementExp())
                     {
@@ -158,18 +159,15 @@ namespace Nektar
                 }
             }
 
-            StdRegions::Orientation  edgedir = GetEorient(edge); 
-            
-            unsigned short num_mod0 = EdgeExp->GetBasis(0)->GetNumModes();
-            unsigned short num_mod1 = 0; 
-            unsigned short num_mod2 = 0; 
-            
-            StdRegions::IndexMapKey ikey(StdRegions::eEdgeToElement,DetShapeType(),num_mod0,num_mod1,num_mod2,edge,edgedir);
-            
-            StdRegions::IndexMapValuesSharedPtr map = StdExpansion::GetIndexMap(ikey);
-            
-            int order_e = (*map).num_elements();
-            
+            StdRegions::IndexMapKey ikey(
+                StdRegions::eEdgeToElement, DetShapeType(),
+                GetBasisNumModes(0), GetBasisNumModes(1), 0,
+                edge, GetEorient(edge));
+            StdRegions::IndexMapValuesSharedPtr map =
+                StdExpansion::GetIndexMap(ikey);
+
+            // Order of the element
+            int order_e = map->num_elements();
             // Order of the trace
             int n_coeffs = EdgeExp->GetNcoeffs();
 
@@ -177,9 +175,7 @@ namespace Nektar
             if(n_coeffs!=order_e) // Going to orthogonal space
             {
                 EdgeExp->FwdTrans(Fn, edgeCoeffs);
-                LocalRegions::Expansion1DSharedPtr locExp =
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion1D>(EdgeExp);
+                Expansion1DSharedPtr locExp = EdgeExp->as<Expansion1D>();
                 
                 if (m_requireNeg[edge])
                 {
@@ -191,11 +187,13 @@ namespace Nektar
                 LibUtilities::BasisKey bkey_ortho(btype,EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
                 LibUtilities::BasisKey bkey(EdgeExp->GetBasis(0)->GetBasisType(),EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
                 LibUtilities::InterpCoeff1D(bkey,edgeCoeffs,bkey_ortho,coeff);
+
                 // Cutting high frequencies
                 for(i = order_e; i < n_coeffs; i++)
                 {
                     coeff[i] = 0.0;
                 }	
+
                 LibUtilities::InterpCoeff1D(bkey_ortho,coeff,bkey,edgeCoeffs);
                 
                 StdRegions::StdMatrixKey masskey(StdRegions::eMass,LibUtilities::eSegment,*EdgeExp);
@@ -205,9 +203,7 @@ namespace Nektar
             {
                 EdgeExp->IProductWRTBase(Fn, edgeCoeffs);
 
-                LocalRegions::Expansion1DSharedPtr locExp = 
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion1D>(EdgeExp);
+                Expansion1DSharedPtr locExp = EdgeExp->as<Expansion1D>();
                 
                 if (m_requireNeg[edge])
                 {
@@ -1378,6 +1374,12 @@ namespace Nektar
             ASSERTL0 (x != m_edgeNormals.end(),
                         "Edge normal not computed.");
             return x->second;
+        }
+
+        const StdRegions::NormalVector &Expansion2D::v_GetSurfaceNormal(
+                const int id) const
+        {
+            return v_GetEdgeNormal(id);
         }
         
         void Expansion2D::v_NegateEdgeNormal(const int edge)

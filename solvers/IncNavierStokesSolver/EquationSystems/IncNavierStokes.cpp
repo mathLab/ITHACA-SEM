@@ -389,7 +389,7 @@ namespace Nektar
                     m_fields[i]->EvaluateBoundaryConditions(time, varName);
                 }
 		 else if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
-                   SpatialDomains::eWomersley)
+                   SpatialDomains::eWomersley)  // Only passing the w variable
                 {
                     //varName = m_session->GetVariable(i);
 		    // i - variable that is being passed   n - boundary surface is (inlet, outlet..) 
@@ -484,12 +484,13 @@ namespace Nektar
 	NekDouble kt;
 	NekDouble T = 1.0;
 	NekDouble alpha = 5.0;
+	NekDouble R = 0.5;
 	
 	
  	int  i,n,k;
 	int M = 8;
-	NekDouble vel_r[] = {0.4,0.2,0.10,0.1,0.1,0.1,0.1,0.10,0.1};
-	NekDouble vel_i[] = {0.4,0.2,0.10,0.1,0.1,0.1,0.1,0.10,0.1};
+	NekDouble vel_r[] = {0.0000000000000000,	-0.2330664919073406,	-0.0493635016504440,	0.0148644766407275,	0.0333440198663587,	0.0303585800275336,	0.0206646833465312,	0.0114961132168574,	0.0050027674380462,	0.0010705976317826,	-0.0010242084090698};
+	NekDouble vel_i[] = {0.3422860000000000,	0.5227627055117400,	0.5520696693449257,	0.5890910737419749,	0.6196379264405816,	0.6361875333450967,	0.6402394262322284,	0.6376547058153711,	0.6342731745355306,	0.6345984265826008,	0.6421022140986206};
 	NekDouble r;
 	
 
@@ -510,19 +511,21 @@ namespace Nektar
   	Array<OneD, NekDouble> x0(npoints,0.0);
     	Array<OneD, NekDouble> x1(npoints,0.0);
         Array<OneD, NekDouble> x2(npoints,0.0);
-	Array<OneD, NekDouble> tmpArray;
+	Array<OneD, NekDouble> zero(npoints,0.0);
 	Array<OneD, NekDouble> w(npoints,0.0);
 
 
         BndExp[fieldid]->GetCoords(x0,x1,x2);
-
-	for (i=0;i<npoints;i++){
-		r = sqrt(x0[i]*x0[i] + x1[i]*x1[i]);
+		
+	if (fieldid == 2)
+	{
+	for (i=0;i<npoints-1;i++){
+		r = sqrt(x0[i]*x0[i] + x1[i]*x1[i])/R;
 
 		w[i] = vel_r[0]*(1 - r*r); // Compute Poiseulle Flow
 		for (k=1; k<M; k++){
-			std::cout << k << "\n";
-			kt = 2*M_PI*k*m_time/T;
+			// std::cout << k << "\n";
+			kt = 2.0*M_PI*k*m_time/T;
 			za = alpha/sqrt(2)*std::complex<NekDouble>(-1.0,1.0);
 			zar = za*r;
 			zJ0 = CompBessel(0,za);
@@ -532,14 +535,17 @@ namespace Nektar
 			zvel = zq*(z1 - zJ0rJ0);
 			w[i] = w[i]+std::real(zvel);
 		}
-
+	std::cout << w[i] << r << '\n';
 	}
 	BndExp[fieldid]->UpdatePhys() = w;
 	BndExp[fieldid]->FwdTrans_BndConstrained(
 					BndExp[fieldid]->GetPhys(),
 					BndExp[fieldid]->UpdateCoeffs());
-
-	
+	}
+	else
+	{
+	BndExp[fieldid]->UpdatePhys() = zero;
+	}	
     }
 
 /* Computes the Complex Bessel function of 1st kind integer order using series rep. - taken from numberical recipies in C.

@@ -63,8 +63,7 @@ namespace Nektar
          */
         void DriverArnoldi::v_InitObject(ostream &out)
         {
-            Driver::v_InitObject(out);
-    	
+            Driver::v_InitObject(out);    	
             m_session->MatchSolverInfo("SolverType","VelocityCorrectionScheme",m_timeSteppingAlgorithm, false);
 
             if(m_timeSteppingAlgorithm)
@@ -102,38 +101,47 @@ namespace Nektar
 
         void DriverArnoldi::ArnoldiSummary(std::ostream &out)
         {
+            if (m_comm->GetRank() == 0)
+            {
+                if(m_session->DefinesSolverInfo("SingleMode"))
+                {
+                    out << "\tSingle Fourier mode    : true " << endl;
+                    ASSERTL0(m_session->DefinesSolverInfo("Homogeneous"),
+                             "Expected a homogeneous expansion to be defined "
+                             "with single mode");
+                }
+                else
+                {
+                    out << "\tSingle Fourier mode    : false " << endl;
+                }
+                if(m_session->DefinesSolverInfo("BetaZero"))           
+                {
+                    out << "\tBeta set to Zero       : true (overrides LHom)" 
+                        << endl;
+                }
+                else
+                {
+                    out << "\tBeta set to Zero       : false " << endl;
+                }
 
-            if(m_session->DefinesSolverInfo("SingleMode"))
-            {
-                out << "\tSingle Fourier mode    : true " << endl;
-                ASSERTL0(m_session->DefinesSolverInfo("Homogeneous"),"Expected a homogeneous expansion to be defined with single mode");
+                if(m_timeSteppingAlgorithm)
+                {
+                    out << "\tEvolution operator     : " 
+                        << m_session->GetSolverInfo("EvolutionOperator") 
+                        << endl;
+                }
+                else
+                {
+                    out << "\tShift (Real,Imag)      : " << m_realShift 
+                        << "," << m_imagShift <<  endl;
+                }
+                out << "\tKrylov-space dimension : " << m_kdim << endl;
+                out << "\tNumber of vectors      : " << m_nvec << endl;
+                out << "\tMax iterations         : " << m_nits << endl;
+                out << "\tEigenvalue tolerance   : " << m_evtol << endl;
+                out << "======================================================" 
+                    << endl;
             }
-            else
-            {
-                out << "\tSingle Fourier mode    : false " << endl;
-            }
-            if(m_session->DefinesSolverInfo("BetaZero"))           
-            {
-                out << "\tBeta set to Zero       : true (overrides LHom)" << endl;
-            }
-            else
-            {
-                out << "\tBeta set to Zero       : false " << endl;
-            }
-
-            if(m_timeSteppingAlgorithm)
-            {
-                out << "\tEvolution operator     : " << m_session->GetSolverInfo("EvolutionOperator") << endl;
-            }
-            else
-            {
-                out << "\tShift (Real,Imag)      : " << m_realShift <<"," << m_imagShift <<  endl;
-            }
-            out << "\tKrylov-space dimension : " << m_kdim << endl;
-            out << "\tNumber of vectors      : " << m_nvec << endl;
-            out << "\tMax iterations         : " << m_nits << endl;
-            out << "\tEigenvalue tolerance   : " << m_evtol << endl;
-            out << "=======================================================================" << endl;
         }
 
         /**

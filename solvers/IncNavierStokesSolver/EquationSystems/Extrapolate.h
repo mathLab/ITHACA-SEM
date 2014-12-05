@@ -75,6 +75,7 @@ namespace Nektar
     typedef LibUtilities::NekFactory< std::string, Extrapolate,
         const LibUtilities::SessionReaderSharedPtr& ,
         Array<OneD, MultiRegions::ExpListSharedPtr>& ,
+        MultiRegions::ExpListSharedPtr& ,
         const Array<OneD, int>& ,
         const SolverUtils::AdvectionSharedPtr& > ExtrapolateFactory;
 
@@ -86,6 +87,7 @@ namespace Nektar
         Extrapolate(        
             const LibUtilities::SessionReaderSharedPtr  pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
+            MultiRegions::ExpListSharedPtr              pPressure,
             const Array<OneD, int>                      pVel,
             const SolverUtils::AdvectionSharedPtr                advObject);
         
@@ -148,11 +150,16 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection)=0;
         
-        void CalcPressureBCs(
+        void CalcNeumannPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
             NekDouble kinvis);
         
+        void CalcOutflowBCs(
+            const Array<OneD, const Array<OneD, NekDouble> > &fields,
+            const Array<OneD, const Array<OneD, NekDouble> >  &N,
+            NekDouble kinvis);
+
         void RollOver(
             Array<OneD, Array<OneD, NekDouble> > &input);
 		
@@ -167,6 +174,11 @@ namespace Nektar
 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
 
+        /// Pointer to field holding pressure field
+        MultiRegions::ExpListSharedPtr m_pressure;
+	
+        /// int which identifies which components of m_fields contains the
+        /// velocity (u,v,w);
         Array<OneD, int> m_velocity;
 
         SolverUtils::AdvectionSharedPtr m_advObject;
@@ -190,6 +202,9 @@ namespace Nektar
         
         /// Maximum points used in pressure BC evaluation
         int m_pressureBCsMaxPts;
+
+        /// Maximum points used in Element adjacent to pressure BC evaluation
+        int m_pressureBCsElmtMaxPts;
 		
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
@@ -226,14 +241,15 @@ namespace Nektar
         /// data structure to old all the information regarding High order pressure BCs
         Array<OneD, HBCInfo > m_HBCdata;
 		
-        /// general standard element used to deal with HOPBC calculations
-        StdRegions::StdExpansionSharedPtr m_elmt;
-        
         /// wave number 2 pi k /Lz
         Array<OneD, NekDouble>  m_wavenumber;
         
         /// minus Square of wavenumber
         Array<OneD, NekDouble>  m_negWavenumberSq;
+        
+        /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
+        Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_outflowVel;
+
 
     private:
         static std::string def;

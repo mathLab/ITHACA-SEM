@@ -180,6 +180,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_GetFaceNumPoints(const int i) const;
             STD_REGIONS_EXPORT virtual LibUtilities::PointsKey v_GetFacePointsKey(
                     const int i, const int j) const;
+            STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey
+                    v_DetFaceBasisKey(const int i, const int k) const;
             STD_REGIONS_EXPORT virtual int v_GetFaceIntNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int v_GetTotalFaceIntNcoeffs() const;
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(

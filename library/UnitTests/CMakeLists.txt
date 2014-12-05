@@ -36,17 +36,10 @@ SET(UnitTestHeaders
 )
 
 ADD_DEFINITIONS(-DENABLE_NEKTAR_EXCEPTIONS -DNEKTAR_UNIT_TESTS)
-LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
 ADD_NEKTAR_EXECUTABLE(UnitTests unit-test UnitTestSources UnitTestHeaders)
 
-TARGET_LINK_LIBRARIES(UnitTests
-    optimized LibUtilities debug LibUtilities-g
-    optimized StdRegions debug StdRegions-g
-    optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
-)
-
-SET_LAPACK_LINK_LIBRARIES(UnitTests)
+TARGET_LINK_LIBRARIES(UnitTests LibUtilities StdRegions)
 
 #ADD_TEST(NAME UnitTests COMMAND UnitTests --detect_memory_leaks=0)
 SUBDIRS(LibUtilities LocalRegions)

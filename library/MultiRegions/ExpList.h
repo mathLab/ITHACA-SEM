@@ -50,7 +50,7 @@
 
 #include <LibUtilities/Communication/Transposition.h>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
 namespace Nektar
 {
@@ -347,12 +347,6 @@ namespace Nektar
                 Array<OneD, NekDouble> &outarray,
                 int BndID);
 			
-            /// This function calculates Surface Normal vector of a smooth
-            /// manifold.
-            MULTI_REGIONS_EXPORT void GetSurfaceNormal(
-                Array<OneD,NekDouble> &SurfaceNormal,
-                const int k);
-
             /// Apply geometry information to each expansion.
             MULTI_REGIONS_EXPORT void ApplyGeomInfo();
 
@@ -574,7 +568,8 @@ namespace Nektar
              **/
             MULTI_REGIONS_EXPORT int GetExpIndex(
                 const Array<OneD, const NekDouble> &gloCoord,
-                NekDouble tol = 0.0);
+                NekDouble tol = 0.0,
+                bool returnNearestElmt = false);
 
             /** This function returns the index and the Local
              * Cartesian Coordinates \a locCoords of the local
@@ -583,8 +578,9 @@ namespace Nektar
              **/ 
             MULTI_REGIONS_EXPORT int GetExpIndex(
                 const Array<OneD, const NekDouble> &gloCoords, 
-                      Array<OneD, NekDouble>       &locCoords,
-                NekDouble tol = 0.0);
+                Array<OneD, NekDouble>       &locCoords,
+                NekDouble tol = 0.0,
+                bool returnNearestElmt = false);
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.

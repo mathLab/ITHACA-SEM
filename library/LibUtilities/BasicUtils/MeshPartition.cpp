@@ -45,9 +45,8 @@
 #include <vector>
 #include <map>
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 
-#include <LibUtilities/BasicUtils/Metis.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/ShapeType.hpp>
@@ -63,6 +62,14 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        MeshPartitionFactory& GetMeshPartitionFactory()
+        {
+            typedef Loki::SingletonHolder<MeshPartitionFactory,
+                Loki::CreateUsingNew,
+                Loki::NoDestroy > Type;
+            return Type::Instance();
+        }
+
         MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession) :
                 m_numFields(0),
                 m_fieldNameToId(),
@@ -300,6 +307,10 @@ namespace Nektar
 
             x = vSubElement->FirstChildElement();
             i = 0;
+            if (x->FirstAttribute())
+            {
+                i = x->FirstAttribute()->IntValue();
+            }
             while(x)
             {
                 TiXmlAttribute* y = x->FirstAttribute();
@@ -540,6 +551,10 @@ namespace Nektar
                             weight    = StdSegData::getNumberOfCoefficients(na);
                             bndWeight = StdSegData::getNumberOfBndCoefficients(na);
                             break;
+                        case 'V':
+                            weight    = 1;
+                            bndWeight = 1;
+                            break;
                         default:
                             break;
                     }
@@ -704,6 +719,10 @@ namespace Nektar
                             weight    = StdSegData::getNumberOfCoefficients(na);
                             bndWeight = StdSegData::getNumberOfBndCoefficients(na);
                             break;
+                        case 'V':
+                            weight    = 1;
+                            bndWeight = 1;
+                            break;
                         default:
                             break;
                     }
@@ -766,7 +785,7 @@ namespace Nektar
             BoostVertexIterator    vertit, vertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
-            if (m_comm->GetRowComm()->GetRank() == 0)
+            if (m_comm->GetRowComm()->TreatAsRankZero())
             {
                 int acnt = 0;
                 int vcnt = 0;
@@ -812,7 +831,8 @@ namespace Nektar
                     {
                         // Attempt partitioning using METIS.
                         int ncon = 1;
-                        Metis::PartGraphVKway(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
+                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
+
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(part);
                         if (!m_shared)
@@ -1112,6 +1132,12 @@ namespace Nektar
                     // Based on entity type, check if in this partition
                     switch (vIt->second.type)
                     {
+                    case 'V':
+                        if (vVertices.find(vIt->second.list[j]) == vVertices.end())
+                        {
+                            continue;
+                        }
+                        break;
                     case 'E':
                         if (vEdges.find(vIt->second.list[j]) == vEdges.end())
                         {
@@ -1296,5 +1322,19 @@ namespace Nektar
             }
         }
 
+        void MeshPartition::GetElementIDs(const int procid, std::vector<unsigned int> &elmtid)
+        {
+            BoostVertexIterator    vertit, vertit_end;
+
+            ASSERTL0(procid < m_localPartition.size(),"procid is less than the number of partitions");
+            
+            // Populate lists of elements, edges and vertices required.
+            for ( boost::tie(vertit, vertit_end) = boost::vertices(m_localPartition[procid]);
+                  vertit != vertit_end;
+                  ++vertit)
+            {
+                elmtid.push_back(m_meshElements[m_localPartition[procid][*vertit].id].id);
+            }
+        }
     }
 }

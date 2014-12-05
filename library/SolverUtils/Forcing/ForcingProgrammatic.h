@@ -42,7 +42,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
-#include <SolverUtils/Forcing/ForcingSponge.h>
+#include <SolverUtils/Forcing/Forcing.h>
 
 namespace Nektar
 {
@@ -88,7 +88,8 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT virtual void v_Apply(
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                          Array<OneD, Array<OneD, NekDouble> > &outarray);
+                    Array<OneD, Array<OneD, NekDouble> > &outarray,
+                    const NekDouble &time);
 
         private:
             ForcingProgrammatic(const LibUtilities::SessionReaderSharedPtr& pSession);

@@ -309,7 +309,8 @@ namespace Nektar
             m_solnType              = solnTypeOld;
             ASSERTL1(m_solnType==eDirectMultiLevelStaticCond
                     ||m_solnType==eIterativeMultiLevelStaticCond
-                    ||m_solnType==eXxtMultiLevelStaticCond,
+                    ||m_solnType==eXxtMultiLevelStaticCond
+                    ||m_solnType==ePETScMultiLevelStaticCond,
                      "This method should only be called for in "
                      "case of multi-level static condensation.");
             m_staticCondLevel       = newLevel;
@@ -639,7 +640,8 @@ namespace Nektar
             return result;
         }
         
-        boost::shared_ptr<AssemblyMap> AssemblyMap::v_XxtLinearSpaceMap(const ExpList &locexp)
+        boost::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
+            const ExpList &locexp, GlobalSysSolnType solnType)
         {
             ASSERTL0(false, "Not defined for this sub class");
             static boost::shared_ptr<AssemblyMap> result;
@@ -802,9 +804,9 @@ namespace Nektar
             return v_GetExtraDirEdges();
         }
 
-        boost::shared_ptr<AssemblyMap> AssemblyMap::XxtLinearSpaceMap(const ExpList &locexp)
+        boost::shared_ptr<AssemblyMap> AssemblyMap::LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType)
         {
-            return v_XxtLinearSpaceMap(locexp);
+            return v_LinearSpaceMap(locexp, solnType);
         }
 
         int AssemblyMap::GetLocalToGlobalBndMap(const int i) const
@@ -1201,6 +1203,155 @@ namespace Nektar
             ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
 
             Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get());
+        }
+
+        void AssemblyMap::PrintStats(
+            std::ostream &out, std::string variable) const
+        {
+            LibUtilities::CommSharedPtr vRowComm
+                = m_session->GetComm()->GetRowComm();
+            bool isRoot = vRowComm->GetRank() == 0;
+            int n = vRowComm->GetSize();
+            int i;
+
+            // Determine number of global degrees of freedom.
+            int globBndCnt = 0, globDirCnt = 0;
+
+            for (i = 0; i < m_numGlobalBndCoeffs; ++i)
+            {
+                if (m_globalToUniversalBndMapUnique[i] > 0)
+                {
+                    globBndCnt++;
+
+                    if (i < m_numGlobalDirBndCoeffs)
+                    {
+                        globDirCnt++;
+                    }
+                }
+            }
+
+            int globCnt = m_numGlobalCoeffs - m_numGlobalBndCoeffs + globBndCnt;
+
+            // Calculate maximum valency
+            Array<OneD, NekDouble> tmpLoc (m_numLocalBndCoeffs,  1.0);
+            Array<OneD, NekDouble> tmpGlob(m_numGlobalBndCoeffs, 0.0);
+            AssembleBnd(tmpLoc, tmpGlob);
+
+            int totGlobDof     = globCnt;
+            int totGlobBndDof  = globBndCnt;
+            int totGlobDirDof  = globDirCnt;
+            int totLocalDof    = m_numLocalCoeffs;
+            int totLocalBndDof = m_numLocalBndCoeffs;
+            int totLocalDirDof = m_numLocalDirBndCoeffs;
+
+            int meanValence = 0;
+            int maxValence = 0;
+            int minValence = 10000000;
+            for (int i = 0; i < m_numGlobalBndCoeffs; ++i)
+            {
+                if (!m_globalToUniversalBndMapUnique[i])
+                {
+                    continue;
+                }
+
+                if (tmpGlob[i] > maxValence)
+                {
+                    maxValence = tmpGlob[i];
+                }
+                if (tmpGlob[i] < minValence)
+                {
+                    minValence = tmpGlob[i];
+                }
+                meanValence += tmpGlob[i];
+            }
+
+            vRowComm->AllReduce(maxValence,     LibUtilities::ReduceMax);
+            vRowComm->AllReduce(minValence,     LibUtilities::ReduceMin);
+            vRowComm->AllReduce(meanValence,    LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totGlobDof,     LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totGlobBndDof,  LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totGlobDirDof,  LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totLocalDof,    LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totLocalBndDof, LibUtilities::ReduceSum);
+            vRowComm->AllReduce(totLocalDirDof, LibUtilities::ReduceSum);
+
+            meanValence /= totGlobBndDof;
+
+            if (isRoot)
+            {
+                out << "Assembly map statistics for field " << variable << ":"
+                    << endl;
+                out << "  - Number of local/global dof             : "
+                    << totLocalDof << " " << totGlobDof << endl;
+                out << "  - Number of local/global boundary dof    : "
+                    << totLocalBndDof << " " << totGlobBndDof << endl;
+                out << "  - Number of local/global Dirichlet dof   : "
+                    << totLocalDirDof << " " << totGlobDirDof << endl;
+                out << "  - dof valency (min/max/mean)             : "
+                    << minValence << " " << maxValence << " " << meanValence
+                    << endl;
+
+                if (n > 1)
+                {
+                    NekDouble mean = m_numLocalCoeffs, mean2 = mean * mean;
+                    NekDouble minval = mean, maxval = mean;
+                    Array<OneD, NekDouble> tmp(1);
+
+                    for (i = 1; i < n; ++i)
+                    {
+                        vRowComm->Recv(i, tmp);
+                        mean     += tmp[0];
+                        mean2    += tmp[0]*tmp[0];
+
+                        if (tmp[0] > maxval)
+                        {
+                            maxval = tmp[0];
+                        }
+                        if (tmp[0] < minval)
+                        {
+                            minval = tmp[0];
+                        }
+                    }
+
+                    out << "  - Local dof dist. (min/max/mean/dev)     : "
+                        << minval << " " << maxval << " " << (mean / n) << " "
+                        << sqrt(mean2/n - mean*mean/n/n) << endl;
+
+                    vRowComm->Block();
+
+                    mean = minval = maxval = m_numLocalBndCoeffs;
+                    mean2 = mean * mean;
+
+                    for (i = 1; i < n; ++i)
+                    {
+                        vRowComm->Recv(i, tmp);
+                        mean     += tmp[0];
+                        mean2    += tmp[0]*tmp[0];
+
+                        if (tmp[0] > maxval)
+                        {
+                            maxval = tmp[0];
+                        }
+                        if (tmp[0] < minval)
+                        {
+                            minval = tmp[0];
+                        }
+                    }
+
+                    out << "  - Local bnd dof dist. (min/max/mean/dev) : "
+                        << minval << " " << maxval << " " << (mean / n) << " "
+                        << sqrt(mean2/n - mean*mean/n/n) << endl;
+                }
+            }
+            else
+            {
+                Array<OneD, NekDouble> tmp(1);
+                tmp[0] = m_numLocalCoeffs;
+                vRowComm->Send(0, tmp);
+                vRowComm->Block();
+                tmp[0] = m_numLocalBndCoeffs;
+                vRowComm->Send(0, tmp);
+            }
         }
     } // namespace
 } // namespace

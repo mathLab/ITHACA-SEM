@@ -32,7 +32,7 @@
 // Description: Expansion for quadrilateral elements.
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/Foundations/InterpCoeff.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
@@ -2086,6 +2086,55 @@ namespace Nektar
             }
         }
 
+        void QuadExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int n_coeffs = inarray.num_elements();
+
+            Array<OneD, NekDouble> coeff    (n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp(n_coeffs, 0.0);
+            Array<OneD, NekDouble> tmp, tmp2;
+
+            int nmodes0 = m_base[0]->GetNumModes();
+            int nmodes1 = m_base[1]->GetNumModes();
+            int numMax  = nmodes0;
+
+            Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp,1);
+
+            const LibUtilities::PointsKey Pkey0(
+                nmodes0, LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::PointsKey Pkey1(
+                nmodes1, LibUtilities::eGaussLobattoLegendre);
+            LibUtilities::BasisKey b0(
+                m_base[0]->GetBasisType(), nmodes0, Pkey0);
+            LibUtilities::BasisKey b1(
+                m_base[1]->GetBasisType(), nmodes1, Pkey1);
+            LibUtilities::BasisKey bortho0(
+                LibUtilities::eOrtho_A,    nmodes0, Pkey0);
+            LibUtilities::BasisKey bortho1(
+                LibUtilities::eOrtho_A,    nmodes1, Pkey1);
+
+            LibUtilities::InterpCoeff2D(
+                b0, b1, coeff_tmp, bortho0, bortho1, coeff);
+
+            Vmath::Zero(n_coeffs, coeff_tmp, 1);
+
+            int cnt = 0;
+            for (int i = 0; i < numMin+1; ++i)
+            {
+                Vmath::Vcopy(numMin,
+                             tmp  = coeff+cnt,1,
+                             tmp2 = coeff_tmp+cnt,1);
+
+                cnt = i*numMax;
+            }
+
+            LibUtilities::InterpCoeff2D(
+                bortho0, bortho1, coeff_tmp,
+                b0,      b1,      outarray);
+        }
 
         void QuadExp::v_LaplacianMatrixOp_MatFree_Kernel(
                     const Array<OneD, const NekDouble> &inarray,
@@ -2138,7 +2187,6 @@ namespace Nektar
             //          = L * u_hat
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
         }
-
 
         void QuadExp::v_ComputeLaplacianMetric()
         {

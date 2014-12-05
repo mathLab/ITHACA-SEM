@@ -94,8 +94,8 @@ namespace Nektar
         NekDouble                               initialtime = 0.0,
         bool                                    dumpInitialConditions = true,
         const int domain = 0);
-    
-    private:
+
+  private:
       void SetBoundaryConditions(
         Array<OneD, Array<OneD, NekDouble> >             &physarray, 
         NekDouble                                         time);

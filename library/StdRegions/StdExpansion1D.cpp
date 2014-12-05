@@ -122,7 +122,13 @@ namespace Nektar
 	void StdExpansion1D::v_SetUpPhysNormals(const int vertex)
     {
 		ComputeVertexNormal(vertex);
-    }	
+    }
+
+        const NormalVector & StdExpansion1D::v_GetSurfaceNormal(const int id) const
+        {
+            return v_GetVertexNormal(id);
+        }
+
 		
 	const NormalVector & StdExpansion1D::v_GetVertexNormal(const int vertex) const
     {

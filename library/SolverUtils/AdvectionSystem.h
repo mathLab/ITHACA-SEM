@@ -46,10 +46,11 @@ namespace Nektar {
         class AdvectionSystem: public UnsteadySystem
         {
         public:
-            AdvectionSystem(const LibUtilities::SessionReaderSharedPtr &pSession);
-            virtual ~AdvectionSystem();
+            SOLVER_UTILS_EXPORT AdvectionSystem(
+                    const LibUtilities::SessionReaderSharedPtr &pSession);
+            SOLVER_UTILS_EXPORT virtual ~AdvectionSystem();
             
-            virtual void v_InitObject();
+            SOLVER_UTILS_EXPORT virtual void v_InitObject();
 
             AdvectionSharedPtr GetAdvObject()
             {

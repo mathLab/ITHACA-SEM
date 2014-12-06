@@ -521,7 +521,7 @@ namespace Nektar
 		
 	if (fieldid == 2)
 	{
-		for (i=0;i<npoints-1;i++){
+		for (i=0;i<npoints;i++){
 			r = sqrt(x0[i]*x0[i] + x1[i]*x1[i])/R;
 
 			w[i] = vel_r[0]*(1 - r*r); // Compute Poiseulle Flow

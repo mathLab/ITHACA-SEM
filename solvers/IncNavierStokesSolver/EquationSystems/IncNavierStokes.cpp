@@ -246,25 +246,7 @@ namespace Nektar
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
-		
-        // creation of the extrapolation object
-        if(m_equationType == eUnsteadyNavierStokes)
-        {
-            std::string vExtrapolation = "Standard";
 
-            if (m_session->DefinesSolverInfo("Extrapolation"))
-            {
-                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
-            }
-                        
-            m_extrapolation = GetExtrapolateFactory().CreateInstance(
-                vExtrapolation, 
-                m_session,
-                m_fields,
-		m_pressure,
-                m_velocity,
-                m_advObject);
-        }
     }
 
     /**

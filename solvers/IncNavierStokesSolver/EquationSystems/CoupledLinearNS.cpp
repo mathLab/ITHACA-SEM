@@ -63,7 +63,6 @@ namespace Nektar
     
     void CoupledLinearNS::v_InitObject()
     {
-        UnsteadySystem::v_InitObject();
         IncNavierStokes::v_InitObject();
         
         int  i;
@@ -149,6 +148,26 @@ namespace Nektar
         {
             ASSERTL0(false,"Exp dimension not recognised");
         }
+
+        // creation of the extrapolation object
+        if(m_equationType == eUnsteadyNavierStokes)
+        {
+            std::string vExtrapolation = "Standard";
+
+            if (m_session->DefinesSolverInfo("Extrapolation"))
+            {
+                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
+            }
+
+            m_extrapolation = GetExtrapolateFactory().CreateInstance(
+                vExtrapolation,
+                m_session,
+                m_fields,
+                m_pressure,
+                m_velocity,
+                m_advObject);
+        }
+
     }
     
     /**

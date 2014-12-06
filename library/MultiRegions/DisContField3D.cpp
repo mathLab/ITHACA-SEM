@@ -188,24 +188,19 @@
              //else if we have the same boundary condition
              else
              {
+                 m_globalBndMat       = In.m_globalBndMat;
+                 m_trace              = In.m_trace;
+                 m_traceMap           = In.m_traceMap;
+                 m_locTraceToTraceMap = In.m_locTraceToTraceMap;
+                 m_periodicVerts      = In.m_periodicVerts;
+                 m_periodicEdges      = In.m_periodicEdges;
+                 m_periodicFaces      = In.m_periodicFaces;
+
                  if(SetUpJustDG)
                  {
-                     m_globalBndMat  = In.m_globalBndMat;
-                     m_trace         = In.m_trace;
-                     m_traceMap      = In.m_traceMap;
-                     m_periodicVerts = In.m_periodicVerts;
-                     m_periodicEdges = In.m_periodicEdges;
-                     m_periodicFaces = In.m_periodicFaces;
                  }
                  else 
                  {
-                     m_globalBndMat  = In.m_globalBndMat;
-                     m_trace         = In.m_trace;
-                     m_traceMap      = In.m_traceMap;
-                     m_periodicVerts = In.m_periodicVerts;
-                     m_periodicEdges = In.m_periodicEdges;
-                     m_periodicFaces = In.m_periodicFaces;
-
                      int i,cnt,f;
                      Array<OneD, int> ElmtID,FaceID;
                      GetBoundaryToElmtMap(ElmtID,FaceID);
@@ -263,6 +258,7 @@
              m_globalBndMat        (In.m_globalBndMat),
              m_trace               (In.m_trace),
              m_traceMap            (In.m_traceMap),
+             m_locTraceToTraceMap  (In.m_locTraceToTraceMap),
              m_periodicFaces       (In.m_periodicFaces),
              m_periodicEdges       (In.m_periodicEdges),
              m_periodicVerts       (In.m_periodicVerts)

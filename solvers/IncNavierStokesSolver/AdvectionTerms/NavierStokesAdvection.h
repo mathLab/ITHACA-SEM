@@ -39,56 +39,49 @@
 #include <SolverUtils/Advection/Advection.h>
 
 
-//#define TIMING
-//#ifdef TIMING
-//#include <time.h>
-//#include <sys/time.h>
-//#endif
-
-
 namespace Nektar
 {     
 
-    class NavierStokesAdvection: public SolverUtils::Advection
-	
-    {
-    public:
-        friend class MemoryManager<NavierStokesAdvection>;
+class NavierStokesAdvection: public SolverUtils::Advection
 
-        /// Creates an instance of this class
-        static SolverUtils::AdvectionSharedPtr create(std::string) {
-            SolverUtils::AdvectionSharedPtr p = MemoryManager<NavierStokesAdvection>::AllocateSharedPtr();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
-        static std::string className2;
-        
-	protected:
-        
-        NavierStokesAdvection();
+{
+public:
+    friend class MemoryManager<NavierStokesAdvection>;
 
-        virtual ~NavierStokesAdvection();
+    /// Creates an instance of this class
+    static SolverUtils::AdvectionSharedPtr create(std::string) {
+        return MemoryManager<NavierStokesAdvection>::AllocateSharedPtr();
+    }
 
-        virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr        pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr> pFields);
+    /// Name of class
+    static std::string className;
+    static std::string className2;
 
-        virtual void v_Advect(
-            const int nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray,
-            const NekDouble                                   &time);
+protected:
 
-	private:
-        MultiRegions::CoeffState m_CoeffState;
-        bool m_specHP_dealiasing;
-        bool m_homogen_dealiasing;
-        bool m_SingleMode;
-        bool m_HalfMode;
-	};
+    NavierStokesAdvection();
+
+    virtual ~NavierStokesAdvection();
+
+    virtual void v_InitObject(
+              LibUtilities::SessionReaderSharedPtr         pSession,
+              Array<OneD, MultiRegions::ExpListSharedPtr>  pFields);
+
+    virtual void v_Advect(
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+              Array<OneD, Array<OneD, NekDouble> >        &outarray,
+        const NekDouble                                   &time);
+
+private:
+    MultiRegions::CoeffState m_CoeffState;
+    bool m_specHP_dealiasing;
+    bool m_homogen_dealiasing;
+    bool m_SingleMode;
+    bool m_HalfMode;
+};
     
     
 } //end of namespace

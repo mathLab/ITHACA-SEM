@@ -39,31 +39,35 @@
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/Advection/Advection.h>
 
-
 namespace Nektar {
-    namespace SolverUtils {
-        
-        class AdvectionSystem: public UnsteadySystem
-        {
-        public:
-            SOLVER_UTILS_EXPORT AdvectionSystem(
-                    const LibUtilities::SessionReaderSharedPtr &pSession);
-            SOLVER_UTILS_EXPORT virtual ~AdvectionSystem();
-            
-            SOLVER_UTILS_EXPORT virtual void v_InitObject();
+namespace SolverUtils {
 
-            AdvectionSharedPtr GetAdvObject()
-            {
-                return m_advObject;
-            }
+/// A base class for PDEs which include an advection component
+class AdvectionSystem: virtual public UnsteadySystem
+{
+public:
+    SOLVER_UTILS_EXPORT AdvectionSystem(
+            const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        protected:
-            /// Advection term
-            SolverUtils::AdvectionSharedPtr m_advObject;
-        };
-        
-        typedef boost::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
+    SOLVER_UTILS_EXPORT virtual ~AdvectionSystem();
+
+    SOLVER_UTILS_EXPORT virtual void v_InitObject();
+
+    /// Returns the advection object held by this instance.
+    AdvectionSharedPtr GetAdvObject()
+    {
+        return m_advObject;
     }
+
+protected:
+    /// Advection term
+    SolverUtils::AdvectionSharedPtr m_advObject;
+};
+
+/// Shared pointer to an AdvectionSystem class
+typedef boost::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
+
+}
 }
 
 #endif

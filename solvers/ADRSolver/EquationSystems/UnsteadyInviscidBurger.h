@@ -39,21 +39,20 @@
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/AdvectionSystem.h>
-/// #include <SolverUtils/Advection/Advection.h>
-
-using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-    class UnsteadyInviscidBurger : public UnsteadySystem
+    class UnsteadyInviscidBurger : public SolverUtils::AdvectionSystem
     {
     public:
         friend class MemoryManager<UnsteadyInviscidBurger>;
 
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
+        static SolverUtils::EquationSystemSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<UnsteadyInviscidBurger>::AllocateSharedPtr(pSession);
+            SolverUtils::EquationSystemSharedPtr p
+                = MemoryManager<UnsteadyInviscidBurger>
+                                            ::AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
@@ -65,7 +64,6 @@ namespace Nektar
 
     protected:
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
-        SolverUtils::AdvectionSharedPtr         m_advection;
         Array<OneD, NekDouble>                  m_traceVn;
         
         /// Session reader

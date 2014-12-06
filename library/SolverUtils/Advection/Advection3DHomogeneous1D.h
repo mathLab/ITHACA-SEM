@@ -36,8 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_ADVECTION3DHOMOGENEOUS1D
 #define NEKTAR_SOLVERUTILS_ADVECTION3DHOMOGENEOUS1D
 
-#include <SolverUtils/AdvectionSystem.h>
-/// #include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Advection/HomogeneousRSScalar.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -74,7 +73,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >               m_advVelPlane;
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
                                                                m_fluxVecPlane;
-            
+
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);

@@ -54,6 +54,7 @@ namespace Nektar
      * \param
      */
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
+        UnsteadySystem(pSession),
         AdvectionSystem(pSession),
         m_subSteppingScheme(false),
         m_SmoothAdvection(false),
@@ -64,14 +65,14 @@ namespace Nektar
     void IncNavierStokes::v_InitObject()
     {
         AdvectionSystem::v_InitObject();
-        
+
         int i,j;
         int numfields = m_fields.num_elements();
         std::string velids[] = {"u","v","w"};
-        
+
         // Set up Velocity field to point to the first m_expdim of m_fields; 
         m_velocity = Array<OneD,int>(m_spacedim);
-        
+
         for(i = 0; i < m_spacedim; ++i)
         {
             for(j = 0; j < numfields; ++j)
@@ -82,11 +83,11 @@ namespace Nektar
                     m_velocity[i] = j;
                     break;
                 }
-                
+
                 ASSERTL0(j != numfields, "Failed to find field: " + var);
             }
         }
-        
+
         // Set up equation type enum using kEquationTypeStr
         for(i = 0; i < (int) eEquationTypeSize; ++i)
         {

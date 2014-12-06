@@ -8,22 +8,34 @@
 #include <SolverUtils/AdvectionSystem.h>
 
 namespace Nektar {
-    namespace SolverUtils {
-        
-        
-        AdvectionSystem::AdvectionSystem(const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
-        {
-        }
-        
-        AdvectionSystem::~AdvectionSystem()
-        {
-            
-        }
-        
-        void AdvectionSystem::v_InitObject()
-        {
-            UnsteadySystem::v_InitObject();
-        }
-    }
+namespace SolverUtils {
+
+/**
+ *
+ */
+AdvectionSystem::AdvectionSystem(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+    : UnsteadySystem(pSession)
+{
+}
+
+
+/**
+ *
+ */
+AdvectionSystem::~AdvectionSystem()
+{
+
+}
+
+
+/**
+ *
+ */
+void AdvectionSystem::v_InitObject()
+{
+    UnsteadySystem::v_InitObject();
+}
+
+}
 }

@@ -40,42 +40,42 @@
 #include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
-{     
-    class NoAdvection: public SolverUtils::Advection
-    {
-    public:
-        friend class MemoryManager<NoAdvection>;
+{
 
-        /// Creates an instance of this class
-        static SolverUtils::AdvectionSharedPtr create(std::string) {
-            SolverUtils::AdvectionSharedPtr p = MemoryManager<NoAdvection>::AllocateSharedPtr();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
-        
-	protected:
-        
-        NoAdvection();
+class NoAdvection: public SolverUtils::Advection
+{
+public:
+    friend class MemoryManager<NoAdvection>;
+
+    /// Creates an instance of this class
+    static SolverUtils::AdvectionSharedPtr create(std::string) {
+        return MemoryManager<NoAdvection>::AllocateSharedPtr();
+    }
+
+    /// Name of class
+    static std::string className;
+
+protected:
+
+    NoAdvection();
 
 
-        virtual ~NoAdvection();
+    virtual ~NoAdvection();
 
-        virtual void v_InitObject(
-                const LibUtilities::SessionReaderSharedPtr&        pSession,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+    virtual void v_InitObject(
+        const LibUtilities::SessionReaderSharedPtr        &pSession,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
-        virtual void v_Advect(
-            const int nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray,
-            const NekDouble                                   &time);
+    virtual void v_Advect(
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+              Array<OneD, Array<OneD, NekDouble> >        &outarray,
+        const NekDouble                                   &time);
 
-	};
-    
-    
+};
+
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H

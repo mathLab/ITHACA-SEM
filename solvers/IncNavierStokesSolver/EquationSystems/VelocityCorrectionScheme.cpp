@@ -45,7 +45,7 @@ namespace Nektar
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
             "VelocityCorrectionScheme", 
             VelocityCorrectionScheme::create);
-    
+
     /**
      * Constructor. Creates ...
      *
@@ -53,16 +53,17 @@ namespace Nektar
      * \param
      */
     VelocityCorrectionScheme::VelocityCorrectionScheme(
-        const LibUtilities::SessionReaderSharedPtr& pSession):
-        IncNavierStokes(pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pSession),
+          IncNavierStokes(pSession)
     {
-        
+
     }
 
     void VelocityCorrectionScheme::v_InitObject()
     {
         int n;
-        
+
         IncNavierStokes::v_InitObject();
 
         // Set m_pressure to point to last field of m_fields;

@@ -50,7 +50,6 @@
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
 #include <SolverUtils/AdvectionSystem.h>
-/// #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
 #include <boost/format.hpp>

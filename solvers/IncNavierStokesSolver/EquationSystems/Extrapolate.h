@@ -42,7 +42,6 @@
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-///#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <SolverUtils/AdvectionSystem.h>
 
 namespace Nektar
@@ -92,7 +91,7 @@ namespace Nektar
             const SolverUtils::AdvectionSharedPtr                advObject);
         
         virtual ~Extrapolate();
-		
+
         void GenerateHOPBCMap();
 
         inline void SubSteppingTimeIntegration(
@@ -111,7 +110,7 @@ namespace Nektar
             const LibUtilities::TimeIntegrationSolutionSharedPtr &integrationSoln, 
             const int nstep, 
             NekDouble time);
-		
+
         inline void MountHOPBCs(
             int HBCdata, 
             NekDouble kinvis, 
@@ -162,7 +161,7 @@ namespace Nektar
 
         void RollOver(
             Array<OneD, Array<OneD, NekDouble> > &input);
-		
+
         void CurlCurl(
             Array<OneD, Array<OneD, const NekDouble> > &Vel,
             Array<OneD, Array<OneD, NekDouble> > &Q,
@@ -176,7 +175,7 @@ namespace Nektar
 
         /// Pointer to field holding pressure field
         MultiRegions::ExpListSharedPtr m_pressure;
-	
+
         /// int which identifies which components of m_fields contains the
         /// velocity (u,v,w);
         Array<OneD, int> m_velocity;
@@ -184,16 +183,16 @@ namespace Nektar
         SolverUtils::AdvectionSharedPtr m_advObject;
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
-		
+
         /// Curl-curl dimensionality
         int m_curl_dim;
         
         /// bounday dimensionality
         int m_bnd_dim;
-		
+
         /// pressure boundary conditions container
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr> m_PBndConds;
-		
+
         /// pressure boundary conditions expansion container
         Array<OneD, MultiRegions::ExpListSharedPtr>  m_PBndExp;
         
@@ -205,7 +204,7 @@ namespace Nektar
 
         /// Maximum points used in Element adjacent to pressure BC evaluation
         int m_pressureBCsElmtMaxPts;
-		
+
         /// Maximum points used in pressure BC evaluation
         int m_intSteps;
 
@@ -225,7 +224,7 @@ namespace Nektar
         int m_npointsZ;     ///< number of points in Z direction (if homogeneous)
 
 
-		
+
         /// Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoElmtID;
         
@@ -234,13 +233,13 @@ namespace Nektar
         
         /// Storage for current and previous levels of high order pressure boundary conditions.
         Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs;
-		
+
         /// Storage for current and previous levels of the acceleration term.
         Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
         
         /// data structure to old all the information regarding High order pressure BCs
         Array<OneD, HBCInfo > m_HBCdata;
-		
+
         /// wave number 2 pi k /Lz
         Array<OneD, NekDouble>  m_wavenumber;
         
@@ -253,7 +252,7 @@ namespace Nektar
 
     private:
         static std::string def;
-		
+
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];
@@ -300,7 +299,7 @@ namespace Nektar
     {
         v_SubStepAdvance(integrationSoln,nstep, time);
     }
-	
+
     /**
      *
      */

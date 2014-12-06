@@ -920,6 +920,13 @@ namespace Nektar
                 v_GetFacePhysVals(face, FaceExp, inarray, outarray, orient);
             }
 
+            void GetFacePhysMap(
+                const int           face,
+                Array<OneD, int>   &outarray)
+            {
+                v_GetFacePhysMap(face, outarray);
+            }
+
             void MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD, NekDouble> &outarray)
@@ -1702,6 +1709,11 @@ namespace Nektar
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
+
+            STD_REGIONS_EXPORT virtual void v_GetFacePhysMap(
+                const int       face,
+                Array<OneD,int> &outarray);
+            
 
             STD_REGIONS_EXPORT virtual void v_MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,

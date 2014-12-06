@@ -689,6 +689,7 @@ namespace Nektar
         }
 
 
+#if 0 
         ///Returns the physical values at the quadrature points of a face
         void HexExp::v_GetFacePhysVals(
             const int                                face,
@@ -1178,8 +1179,128 @@ namespace Nektar
                 break;
             }
         }
+#endif
 
         
+        void HexExp::v_GetFacePhysMap(const int               face,
+                                      Array<OneD, int>        &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
+                        
+            int nq0 = 0; 
+            int nq1 = 0; 
+
+            switch(face)
+            {
+                case 0:
+                    nq0 = nquad0;
+                    nq1 = nquad1;
+
+                    //Directions A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+
+                    for (int i = 0; i < nquad0*nquad1; ++i)
+                    {
+                        outarray[i] = i;
+                    }
+                    
+                    break;
+                case 1:
+                    nq0 = nquad0;
+                    nq1 = nquad2;
+
+                    //Direction A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    //Direction A and B positive
+                    for (int k = 0; k < nquad2; k++)
+                    {
+                        for(int i = 0; i < nquad0; ++i)
+                        {
+                            outarray[k*nquad0 + i] = nquad0*nquad1*k + i;
+                        }
+                    }                    
+                    break;
+                case 2:
+                    nq0 = nquad1;
+                    nq1 = nquad2;
+                    
+                    //Direction A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    for (int i = 0; i < nquad1*nquad2; i++)
+                    {
+                        outarray[i] = nquad0-1 + i*nquad0;
+                    }
+                    break;
+                case 3:
+                    nq0 = nquad0;
+                    nq1 = nquad2;
+                    
+                    //Direction A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+
+                    for (int k = 0; k < nquad2; k++)
+                    {
+                        for (int i = 0; i < nquad0; i++)
+                        {
+                            outarray[k*nquad0 + i] = (nquad0*(nquad1-1))+(k*nquad0*nquad1) + i;
+                        }
+                    }                        
+                    break;
+                case 4:
+                    nq0 = nquad1;
+                    nq1 = nquad2;
+                    
+                    //Direction A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    for (int i = 0; i < nquad1*nquad2; i++)
+                    {
+                        outarray[i] = i*nquad0;
+                    }
+                    
+                    break;
+                case 5:
+                    nq0 = nquad0;
+                    nq1 = nquad1;
+
+                    //Directions A and B positive
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+
+                    for (int i = 0; i < nquad0*nquad1; i++)
+                    {
+                        outarray[i] = nquad0*nquad1*(nquad2-1) + i;
+                    }
+                    
+                    break;
+                default:
+                    ASSERTL0(false,"face value (> 5) is out of range");
+                    break;
+            }
+
+        }
+
         void HexExp::v_ComputeFaceNormal(const int face)
         {
             int i;

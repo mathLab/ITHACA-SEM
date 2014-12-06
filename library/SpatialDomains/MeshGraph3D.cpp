@@ -1055,7 +1055,8 @@ namespace Nektar
                                 // Triangle
                                 return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
                             }
-                            else {
+                            else 
+                            {
                                 // Quadrilateral
                                 return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
                             }

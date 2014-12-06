@@ -57,6 +57,17 @@ namespace Nektar
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
         m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.5);
         m_session->LoadParameter("MinSubSteps", m_minsubsteps,0);
+
+        int dim = m_fields[0]->GetCoordim(0);
+        m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(dim);
+
+        int nTracePts   = m_fields[0]->GetTrace()->GetNpoints();
+        for(int i = 0; i < dim; ++i)
+        {
+            m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+        }
+        m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
+
     }
 
     SubSteppingExtrapolate::~SubSteppingExtrapolate()
@@ -135,6 +146,9 @@ namespace Nektar
         Array<OneD, Array<OneD,       NekDouble> > &outarray,
         const NekDouble time)
     {
+        Timer     timer, timer1;
+        timer.Start();
+
         int i;
         int nVariables     = inarray.num_elements();
         int nQuadraturePts = inarray[0].num_elements();
@@ -160,19 +174,32 @@ namespace Nektar
             Velfields[i] = Velfields[i-1] + nQuadraturePts; 
         }
 
+        timer1.Start();
         SubStepExtrapolateField(fmod(time,m_timestep), Velfields);
+        timer1.Stop();
+        cout << "\t ExtrapolateField: " << timer1.TimePerTest(1) << endl;
         
+        timer1.Start();
         m_advObject->DoAdvection(m_fields, Velfields, inarray, outarray, time);
+        timer1.Stop();
+        cout << "\t DoAdvection: " << timer1.TimePerTest(1) << endl;
         
+        timer1.Start();
         for(i = 0; i < nVariables; ++i)
         {
             m_fields[i]->IProductWRTBase(outarray[i],WeakAdv[i]); 
             // negation requried due to sign of DoAdvection term to be consistent
             Vmath::Neg(ncoeffs, WeakAdv[i], 1);
         }
+        timer1.Stop();
+        cout << "\t IProductWRTBase: " << timer1.TimePerTest(1) << endl;
         
+        timer1.Start();
         AddAdvectionPenaltyFlux(Velfields, inarray, WeakAdv);
+        timer1.Stop();
+        cout << "\t AddAdvectionPenaltyFlux: " << timer1.TimePerTest(1) << endl;
         
+        timer1.Start();
         /// Operations to compute the RHS
         for(i = 0; i < nVariables; ++i)
         {
@@ -185,6 +212,11 @@ namespace Nektar
             /// Store in outarray the physical values of the RHS
             m_fields[i]->BwdTrans(WeakAdv[i], outarray[i]);
         }
+        timer1.Stop();
+        cout << "\t Projection: " << timer1.TimePerTest(1) << endl;
+
+        timer.Stop();
+        cout << "Substep All: " << timer.TimePerTest(1) << endl;
     }
         
     /** 
@@ -399,23 +431,28 @@ namespace Nektar
                  physfield.num_elements() == Outarray.num_elements(),
                  "Physfield and outarray are of different dimensions");
         
+        Timer     timer,timer1;
         int i;
         
         /// Number of trace points
         int nTracePts   = m_fields[0]->GetTrace()->GetNpoints();
-
+        
         /// Number of spatial dimensions
         int nDimensions = m_bnd_dim;
         
+#if 0 
         Array<OneD, Array<OneD, NekDouble> > traceNormals(m_curl_dim);
 
         for(i = 0; i < nDimensions; ++i)
         {
             traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
         }
-
+        timer.Start();
         //trace normals
         m_fields[0]->GetTrace()->GetNormals(traceNormals);
+        timer.Stop();
+        cout << "\t \t GetNormals: " << timer.TimePerTest(1) << endl;
+#endif
 
         /// Forward state array
         Array<OneD, NekDouble> Fwd(3*nTracePts);
@@ -430,18 +467,25 @@ namespace Nektar
         Array<OneD, NekDouble> Vn (nTracePts, 0.0);
         
         // Extract velocity field along the trace space and multiply by trace normals
+        timer.Start();
         for(i = 0; i < nDimensions; ++i)
         {
             m_fields[0]->ExtractTracePhys(velfield[i], Fwd);
-            Vmath::Vvtvp(nTracePts, traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Fwd, 1, Vn, 1, Vn, 1);
         }
+        timer.Stop();
+        cout << "\t \t ExtractTrace: " << timer.TimePerTest(1) << endl;
         
+        timer.Start();
         for(i = 0; i < physfield.num_elements(); ++i)
         {
             /// Extract forwards/backwards trace spaces
             /// Note: Needs to have correct i value to get boundary conditions
+            timer1.Start();
             m_fields[i]->GetFwdBwdTracePhys(physfield[i], Fwd, Bwd);
-            
+            timer1.Stop();
+            cout << "\t \t \t GetFwdBwdTracePhys: " << timer1.TimePerTest(1) << endl;
+                    
             /// Upwind between elements
             m_fields[0]->GetTrace()->Upwind(Vn, Fwd, Bwd, numflux);
 
@@ -454,8 +498,14 @@ namespace Nektar
             Vmath::Vmul(nTracePts, Fwd, 1, Vn, 1, Fwd, 1);
             Vmath::Vmul(nTracePts, Bwd, 1, Vn, 1, Bwd, 1);
 
+            timer1.Start();
             m_fields[0]->AddFwdBwdTraceIntegral(Fwd,Bwd,Outarray[i]);
+            timer1.Stop();
+            cout << "\t \t \t AddFwdBwdTraceIntegral: " << timer1.TimePerTest(1) << endl;
         }
+        timer.Stop();
+        cout << "\t \t Upwind and add back: " << timer.TimePerTest(1) << endl;
+
     }
     
     /** 

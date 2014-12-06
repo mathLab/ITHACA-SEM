@@ -61,11 +61,11 @@ namespace Nektar
 
         /// Creates an instance of this class
         static ExtrapolateSharedPtr create(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const LibUtilities::SessionReaderSharedPtr  &pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-            MultiRegions::ExpListSharedPtr  &pPressure,
-            const Array<OneD, int> &pVel,
-            const AdvectionTermSharedPtr &advObject)
+            MultiRegions::ExpListSharedPtr              &pPressure,
+            const Array<OneD, int>                      &pVel,
+            const AdvectionTermSharedPtr                &advObject)
         {
             ExtrapolateSharedPtr p = MemoryManager<StandardExtrapolate>
                 ::AllocateSharedPtr(pSession,pFields,pPressure,pVel,advObject);
@@ -78,9 +78,9 @@ namespace Nektar
         StandardExtrapolate(
             const LibUtilities::SessionReaderSharedPtr pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
-            MultiRegions::ExpListSharedPtr  pPressure,
-            const Array<OneD, int> pVel,
-            const AdvectionTermSharedPtr advObject);
+            MultiRegions::ExpListSharedPtr              pPressure,
+            const Array<OneD, int>                      pVel,
+            const AdvectionTermSharedPtr                advObject);
 
         virtual ~StandardExtrapolate();
         

@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
         //BwdTrans comparison
         cout << "BwdTrans Op: Ntest = " << Ntest << endl;
 
-        for(int N = 2; N < 11; ++N)
+        for(int N = 2; N < 6; ++N)
         {
             graph3D->SetExpansionsToPolyOrder(N);
             
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
         // IProductWRTBase Comparison 
         cout << "IProductWRTBase Op: Ntest = " << Ntest << endl;
         
-        for(int N = 2; N < 11; ++N)
+        for(int N = 2; N < 6; ++N)
         {
             graph3D->SetExpansionsToPolyOrder(N);
             
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
         // PhysDeriv Comparison 
         cout << "PhysDeriv Op: Ntest = " << Ntest << endl;
             
-        for(int N = 2; N < 11; ++N)
+        for(int N = 2; N < 6; ++N)
         {
             graph3D->SetExpansionsToPolyOrder(N);
             
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
 
         // IProductWRTDerivBase Comparison 
         cout << "IProductWRTDerivBase Op: Ntest = " << Ntest << endl;
-        for(int N = 2; N < 11; ++N)
+        for(int N = 2; N < 6; ++N)
         {
             graph3D->SetExpansionsToPolyOrder(N);
             

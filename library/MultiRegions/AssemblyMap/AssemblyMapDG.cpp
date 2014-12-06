@@ -705,8 +705,9 @@ namespace Nektar
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
             StdRegions::StdExpansionSharedPtr   locBndExp;
 
-            const boost::shared_ptr<LocalRegions::ExpansionVector> exp3D =
+            const boost::shared_ptr<LocalRegions::ExpansionVector> exp3D = 
                 locExp.GetExp();
+
             int nel = exp3D->size();
 
             map<int, int> MeshFaceId;
@@ -1073,6 +1074,7 @@ namespace Nektar
 
             m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
                                        m_localToGlobalBndMap.end());
+            
         }
 
         /**

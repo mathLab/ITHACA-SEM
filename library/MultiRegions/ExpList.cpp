@@ -2256,6 +2256,15 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+        
+        const vector<bool> &ExpList::v_GetLeftAdjacentFaces(void) const
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            vector<bool> returnval;
+            return returnval;
+        }
+
 
         void ExpList::v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
         {

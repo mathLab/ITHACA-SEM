@@ -140,12 +140,14 @@ namespace Nektar
                 NekDouble * coeffs);
             LOCAL_REGIONS_EXPORT virtual 
                 StdRegions::Orientation v_GetFaceOrient(int face);
+#if 0 
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int                                face,
                 const StdRegions::StdExpansionSharedPtr &FaceExp,
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
+#endif
 
             LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
                 const int                                face,
@@ -153,6 +155,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble>      &inarray,
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
+
+            LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysMap( 
+                 const int  face,
+                 Array<OneD, int>  &outarray);
 
             LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
             

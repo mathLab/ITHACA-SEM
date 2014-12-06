@@ -317,7 +317,8 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
-    // If any output module has to reset points then set intput modules to match 
+    // If any output module has to reset points then set intput
+    // modules to match
     bool RequiresEquiSpaced = false;
     for (int i = 0; i < modules.size(); ++i)
     {

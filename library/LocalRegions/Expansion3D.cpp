@@ -38,6 +38,7 @@
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {
@@ -866,7 +867,7 @@ namespace Nektar
                     }
                 }
                 break;
-            //HDG postprocessing
+                //HDG postprocessing
             case StdRegions::eInvLaplacianWithUnityMean:
                 {
                     MatrixKey lapkey(StdRegions::eLaplacian, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
@@ -916,10 +917,10 @@ namespace Nektar
         }
         
         void Expansion3D::v_AddFaceNormBoundaryInt(
-            const int                            face,
-            StdRegions::StdExpansionSharedPtr   &FaceExp,
-            const Array<OneD, const NekDouble>  &Fn,
-            Array<OneD,       NekDouble>  &outarray)
+                                                   const int                            face,
+                                                   StdRegions::StdExpansionSharedPtr   &FaceExp,
+                                                   const Array<OneD, const NekDouble>  &Fn,
+                                                   Array<OneD,       NekDouble>  &outarray)
         {
             int i, j;
             
@@ -959,11 +960,11 @@ namespace Nektar
             }
 
             StdRegions::IndexMapKey ikey(
-                StdRegions::eFaceToElement, DetShapeType(),
-                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
+                                         StdRegions::eFaceToElement, DetShapeType(),
+                                         GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                                         face, GetFaceOrient(face));
             StdRegions::IndexMapValuesSharedPtr map =
-            StdExpansion::GetIndexMap(ikey);
+                StdExpansion::GetIndexMap(ikey);
 
             int order_e  = (*map).num_elements(); // Order of the element
             int n_coeffs = FaceExp->GetNcoeffs();
@@ -985,7 +986,7 @@ namespace Nektar
                                            faceCoeffs);
 
                 StdRegions::StdMatrixKey masskey(
-                    StdRegions::eMass, FaceExp->DetShapeType(), *FaceExp);
+                                                 StdRegions::eMass, FaceExp->DetShapeType(), *FaceExp);
                 FaceExp->MassMatrixOp(
                                       faceCoeffs,faceCoeffs,masskey);
 
@@ -999,7 +1000,7 @@ namespace Nektar
                         for (j = 0; j < NumModesElementMin; ++j)
                         {
                             faceCoeffs[offset1+j] =
-                            faceCoeffs[offset2+j];
+                                faceCoeffs[offset2+j];
                         }
                         offset1 += NumModesElementMin;
                         offset2 += NumModesElementMax;
@@ -1026,7 +1027,7 @@ namespace Nektar
                         for (j = 0; j < NumModesElementMin-i; ++j)
                         {
                             faceCoeffs[offset1+j] =
-                            faceCoeffs[offset2+j];
+                                faceCoeffs[offset2+j];
                         }
                         offset1 += NumModesElementMin-i;
                         offset2 += NumModesElementMax-i;
@@ -1062,11 +1063,11 @@ namespace Nektar
          * values in EdgeExp (which will have its phys space updated).
          */
         void Expansion3D::v_DGDeriv(
-            int                                             dir,
-            const Array<OneD, const NekDouble>             &incoeffs,
-            Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
-            Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
-            Array<OneD, NekDouble>                         &out_d)
+                                    int                                             dir,
+                                    const Array<OneD, const NekDouble>             &incoeffs,
+                                    Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
+                                    Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
+                                    Array<OneD, NekDouble>                         &out_d)
         {
             int ncoeffs = GetNcoeffs();
             StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
@@ -1092,9 +1093,9 @@ namespace Nektar
         }
 
         void Expansion3D::v_AddRobinMassMatrix(
-            const int face, 
-            const Array<OneD, const NekDouble > &primCoeffs, 
-            DNekMatSharedPtr &inoutmat)
+                                               const int face, 
+                                               const Array<OneD, const NekDouble > &primCoeffs, 
+                                               DNekMatSharedPtr &inoutmat)
         {
             ASSERTL1(IsBoundaryInteriorExpansion(),
                      "Not set up for non boundary-interior expansions");
@@ -1116,11 +1117,11 @@ namespace Nektar
                 faceExp->DetShapeType();
 
             LocalRegions::MatrixKey mkey(
-                StdRegions::eMass,
-                shapeType, 
-                *faceExp, 
-                StdRegions::NullConstFactorMap, 
-                varcoeffs);
+                                         StdRegions::eMass,
+                                         shapeType, 
+                                         *faceExp, 
+                                         StdRegions::NullConstFactorMap, 
+                                         varcoeffs);
 
             DNekScalMat &facemat = *faceExp->GetLocMatrix(mkey);
 
@@ -1171,15 +1172,15 @@ namespace Nektar
                 sign = Array<OneD,          int> (order_f,1);
                 
                 StdRegions::IndexMapKey ikey1(
-                    StdRegions::eFaceToElement, DetShapeType(), 
-                    GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                    face, GetFaceOrient(face));
+                                              StdRegions::eFaceToElement, DetShapeType(), 
+                                              GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                                              face, GetFaceOrient(face));
                 StdRegions::IndexMapValuesSharedPtr map1 = 
                     StdExpansion::GetIndexMap(ikey1);
                 StdRegions::IndexMapKey ikey2(
-                    StdRegions::eFaceToElement, DetShapeType(), 
-                    GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                    face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
+                                              StdRegions::eFaceToElement, DetShapeType(), 
+                                              GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                                              face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
                 StdRegions::IndexMapValuesSharedPtr map2 = 
                     StdExpansion::GetIndexMap(ikey2);
                 
@@ -1226,7 +1227,7 @@ namespace Nektar
         }
 
         DNekMatSharedPtr Expansion3D::v_BuildVertexMatrix(
-            const DNekScalMatSharedPtr &r_bnd)
+                                                          const DNekScalMatSharedPtr &r_bnd)
         {
             MatrixStorage storage = eFULL;
             DNekMatSharedPtr m_vertexmatrix;
@@ -1238,7 +1239,7 @@ namespace Nektar
 
             m_vertexmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
-                    nVerts, nVerts, 0.0, storage);
+                                                          nVerts, nVerts, 0.0, storage);
             DNekMat &VertexMat = (*m_vertexmatrix);
 
             for (vid1 = 0; vid1 < nVerts; ++vid1)
@@ -1257,8 +1258,8 @@ namespace Nektar
         }
 
         DNekMatSharedPtr Expansion3D::v_BuildTransformationMatrix(
-            const DNekScalMatSharedPtr &r_bnd, 
-            const StdRegions::MatrixType matrixType)
+                                                                  const DNekScalMatSharedPtr &r_bnd, 
+                                                                  const StdRegions::MatrixType matrixType)
         {
             int nVerts, nEdges;
             int eid, fid, vid, n, i;
@@ -1310,10 +1311,10 @@ namespace Nektar
 
             m_transformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
-                    nBndCoeffs, nBndCoeffs, 0.0, storage);
+                                                          nBndCoeffs, nBndCoeffs, 0.0, storage);
             m_transposedtransformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
-                    nBndCoeffs, nBndCoeffs, 0.0, storage);
+                                                          nBndCoeffs, nBndCoeffs, 0.0, storage);
 
             DNekMat &R  = (*m_transformationmatrix);
             DNekMat &RT = (*m_transposedtransformationmatrix);
@@ -1350,7 +1351,7 @@ namespace Nektar
                 for (eid = 0; eid < nConnectedEdges; ++eid)
                 {
                     MatEdgeLocation[eid] = GetEdgeInverseBoundaryMap(
-                        geom->GetVertexEdgeMap(vid, eid));
+                                                                     geom->GetVertexEdgeMap(vid, eid));
                     nmodes = MatEdgeLocation[eid].num_elements();
 
                     if (nmodes)
@@ -1368,7 +1369,7 @@ namespace Nektar
                 for (fid = 0; fid < nConnectedFaces; ++fid)
                 {
                     MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
-                        geom->GetVertexFaceMap(vid, fid));
+                                                                     geom->GetVertexFaceMap(vid, fid));
                     nmodes = MatFaceLocation[fid].num_elements();
 
                     if (nmodes)
@@ -1381,12 +1382,12 @@ namespace Nektar
 
                 DNekMatSharedPtr m_vertexedgefacetransformmatrix =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                        1, efRow, 0.0, storage);
+                                                              1, efRow, 0.0, storage);
                 DNekMat &Sveft = (*m_vertexedgefacetransformmatrix);
 
                 DNekMatSharedPtr m_vertexedgefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                        1, efRow, 0.0, storage);
+                                                              1, efRow, 0.0, storage);
                 DNekMat &Svef = (*m_vertexedgefacecoupling);
 
                 // Vertex-edge coupling
@@ -1421,7 +1422,7 @@ namespace Nektar
                 // Allocation of matrix to store edge/face-edge/face coupling
                 DNekMatSharedPtr m_edgefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                        efRow, efRow, 0.0, storage);
+                                                              efRow, efRow, 0.0, storage);
                 DNekMat &Sefef = (*m_edgefacecoupling);
 
                 NekDouble EdgeEdgeValue, FaceFaceValue;
@@ -1465,11 +1466,11 @@ namespace Nektar
 
                         // Set the value in the vertex edge/face matrix
                         Sefef.SetValue(
-                            n, nedgemodesconnected + m, FaceFaceValue);
+                                       n, nedgemodesconnected + m, FaceFaceValue);
 
                         // and transpose
                         Sefef.SetValue(
-                            nedgemodesconnected + m, n, FaceFaceValue);
+                                       nedgemodesconnected + m, n, FaceFaceValue);
                     }
                 }
 
@@ -1545,19 +1546,19 @@ namespace Nektar
                 // Edge-face coupling matrix
                 DNekMatSharedPtr m_efedgefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                        efRow, efCol, 0.0, storage);
+                                                              efRow, efCol, 0.0, storage);
                 DNekMat &Mef = (*m_efedgefacecoupling);
 
                 // Face-face coupling matrix
                 DNekMatSharedPtr m_effacefacecoupling =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                        efCol, efCol, 0.0, storage);
+                                                              efCol, efCol, 0.0, storage);
                 DNekMat &Meff = (*m_effacefacecoupling);
 
                 // Edge-face transformation matrix
                 DNekMatSharedPtr m_edgefacetransformmatrix =
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                        efRow, efCol, 0.0, storage);
+                                                              efRow, efCol, 0.0, storage);
                 DNekMat &Meft = (*m_edgefacetransformmatrix);
 
                 int nfacemodesconnected =
@@ -1584,7 +1585,7 @@ namespace Nektar
                 for (fid = 0; fid < nConnectedFaces; ++fid)
                 {
                     MatFaceLocation[fid] = GetFaceInverseBoundaryMap(
-                        geom->GetEdgeFaceMap(eid, fid));
+                                                                     geom->GetEdgeFaceMap(eid, fid));
                     nmodes = MatFaceLocation[fid].num_elements();
 
                     if (nmodes)
@@ -1678,7 +1679,7 @@ namespace Nektar
 	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
 	 */
         DNekMatSharedPtr Expansion3D::v_BuildInverseTransformationMatrix(
-            const DNekScalMatSharedPtr & m_transformationmatrix)
+                                                                         const DNekScalMatSharedPtr & m_transformationmatrix)
 	{
             int i, j, n, eid = 0, fid = 0;
             int nCoeffs = NumBndryCoeffs();
@@ -1691,7 +1692,7 @@ namespace Nektar
             // Inverse transformation matrix
             DNekMatSharedPtr m_inversetransformationmatrix =
                 MemoryManager<DNekMat>::AllocateSharedPtr(
-                    nCoeffs, nCoeffs, 0.0, storage);
+                                                          nCoeffs, nCoeffs, 0.0, storage);
             DNekMat &InvR = (*m_inversetransformationmatrix);
 
             int nVerts = GetNverts();
@@ -1764,22 +1765,22 @@ namespace Nektar
                 for (j = 0; j < nedgemodestotal; ++j)
                 {
                     InvR.SetValue(
-                        GetVertexMap(i), edgemodearray[j],
-                        -R(GetVertexMap(i), edgemodearray[j]));
+                                  GetVertexMap(i), edgemodearray[j],
+                                  -R(GetVertexMap(i), edgemodearray[j]));
                 }
                 for (j = 0; j < nfacemodestotal; ++j)
                 {
                     InvR.SetValue(
-                        GetVertexMap(i), facemodearray[j],
-                        -R(GetVertexMap(i), facemodearray[j]));
+                                  GetVertexMap(i), facemodearray[j],
+                                  -R(GetVertexMap(i), facemodearray[j]));
                     for (n = 0; n < nedgemodestotal; ++n)
                     {
                         MatrixValue = InvR.GetValue(
-                            GetVertexMap(i), facemodearray[j])
+                                                    GetVertexMap(i), facemodearray[j])
                             + R(GetVertexMap(i), edgemodearray[n])
                             * R(edgemodearray[n], facemodearray[j]);
                         InvR.SetValue(
-                            GetVertexMap(i), facemodearray[j], MatrixValue);
+                                      GetVertexMap(i), facemodearray[j], MatrixValue);
                     }
                 }
             }
@@ -1790,8 +1791,8 @@ namespace Nektar
                 for (j = 0; j < nfacemodestotal; ++j)
                 {
                     InvR.SetValue(
-                        edgemodearray[i], facemodearray[j],
-                        -R(edgemodearray[i], facemodearray[j]));
+                                  edgemodearray[i], facemodearray[j],
+                                  -R(edgemodearray[i], facemodearray[j]));
                 }
             }
 
@@ -1804,7 +1805,7 @@ namespace Nektar
 	}
 
         Array<OneD, unsigned int> Expansion3D::v_GetEdgeInverseBoundaryMap(
-            int eid)
+                                                                           int eid)
         {
             int n, j;
             int nEdgeCoeffs;
@@ -1895,12 +1896,212 @@ namespace Nektar
         }
 
         NekDouble Expansion3D::v_Integrate(
-                const Array<OneD, const NekDouble>& inarray)
+                                           const Array<OneD, const NekDouble>& inarray)
         {
             NEKERROR(ErrorUtil::efatal, 
                      "This function is not implemented here. It is shape "
                      "specific");
             return 0.0;
         }
+
+        void Expansion3D::v_GetFacePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            
+            if (orient == StdRegions::eNoOrientation)
+            {
+                orient = GetFaceOrient(face);
+            }
+            
+            int nq0 = FaceExp->GetNumPoints(0);
+            int nq1 = FaceExp->GetNumPoints(1);
+
+            int nfacepts = GetFaceNumPoints(face);
+            int dir0 = GetGeom3D()->GetDir(face,0);
+            int dir1 = GetGeom3D()->GetDir(face,1);
+
+            Array<OneD,NekDouble> o_tmp (nfacepts);
+            Array<OneD,NekDouble> o_tmp2(FaceExp->GetTotPoints());
+            Array<OneD, int> faceids;
+            
+            // Get local face pts and put into o_tmp
+            GetFacePhysMap(face,faceids);
+            Vmath::Gathr(faceids.num_elements(),inarray,faceids,o_tmp);
+            
+            // interpolate to points distrbution given in FaceExp
+            LibUtilities::Interp2D(m_base[dir0]->GetPointsKey(), 
+                                   m_base[dir1]->GetPointsKey(), 
+                                   o_tmp.get(),
+                                   FaceExp->GetBasis(0)->GetPointsKey(),
+                                   FaceExp->GetBasis(1)->GetPointsKey(),
+                                   o_tmp2.get());
+            
+            // Reshuffule points as required and put into outarray. 
+            ReOrientFacePhysMap(FaceExp->GetNverts(),orient,nq0,nq1,faceids);
+            Vmath::Scatr(nq0*nq1,o_tmp2,faceids,outarray);
+        }
+        void Expansion3D::ReOrientFacePhysMap(const int nvert, 
+                                              const StdRegions::Orientation orient,
+                                              const int nq0, const int nq1,
+                                              Array<OneD, int> &idmap)
+        {
+            if(nvert == 3)
+            {
+                ReOrientTriFacePhysMap(orient,nq0,nq1,idmap);
+            }
+            else
+            {
+                ReOrientQuadFacePhysMap(orient,nq0,nq1,idmap);
+            }
+
+        }
+
+        void Expansion3D::ReOrientTriFacePhysMap(const StdRegions::Orientation orient,
+                                                 const int nq0, 
+                                                 const int nq1,
+                                                 Array<OneD, int> &idmap)
+        {
+            if(idmap.num_elements() != nq0*nq1)
+            {
+                idmap = Array<OneD,int>(nq0*nq1);
+            }
+
+            switch(orient)
+            {
+            case StdRegions::eDir1FwdDir1_Dir2FwdDir2:
+                // eseentially straight copy 
+                for(int i = 0; i < nq0*nq1; ++i)
+                {
+                    idmap[i] = i;
+                }
+                break;
+            case StdRegions::eDir1BwdDir1_Dir2FwdDir2:
+                // reverse 
+                for (int j = 0; j < nq1; ++j)
+                {
+                    for(int i = 0; i < nq0; ++i)
+                    {
+                        idmap[j*nq0+i] = nq0-1-i +j*nq0;
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"Case not supposed to be used in this function"); 
+            }
+        }
+
+
+        void Expansion3D::ReOrientQuadFacePhysMap(const StdRegions::Orientation orient,
+                                                  const int nq0, 
+                                                  const int nq1,
+                                                  Array<OneD, int> &idmap)
+        {
+            if(idmap.num_elements() != nq0*nq1)
+            {
+                idmap = Array<OneD,int>(nq0*nq1);
+            }
+
+
+            switch(orient)
+            {
+            case StdRegions::eDir1FwdDir1_Dir2FwdDir2:
+                // eseentially straight copy 
+                for(int i = 0; i < nq0*nq1; ++i)
+                {
+                    idmap[i] = i;
+                }
+                break;
+            case StdRegions::eDir1BwdDir1_Dir2FwdDir2:
+                {
+                    //Direction A negative and B positive
+                    for (int j = 0; j < nq1; j++)
+                    {
+                        for (int i =0; i < nq0; ++i)
+                        {
+                            idmap[j*nq0+i] = nq0-1-i + j*nq0;
+                        }
+                    }
+                }
+                break;
+            case StdRegions::eDir1FwdDir1_Dir2BwdDir2:
+                {
+                    //Direction A positive and B negative
+                    for (int j = 0; j < nq1; j++)
+                    {
+                        for (int i =0; i < nq0; ++i)
+                        {
+                            idmap[j*nq0+i] = nq0*(nq1-1-j)+i;
+                        }
+                    }
+                } 
+            case StdRegions::eDir1BwdDir1_Dir2BwdDir2:
+                {
+                    //Direction A negative and B negative
+                    for (int j = 0; j < nq1; j++)
+                    {
+                        for (int i =0; i < nq0; ++i)
+                        {
+                            idmap[j*nq0+i] = nq0*nq1-1-j*nq0 -i;
+                        }
+                    }
+                }
+            case StdRegions::eDir1FwdDir2_Dir2FwdDir1:
+                {
+                    //Transposed, Direction A and B positive
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = i + j*nq0;
+                        }
+                    }
+                }
+                break;
+            case StdRegions::eDir1FwdDir2_Dir2BwdDir1:
+                {
+                    //Transposed, Direction A positive and B negative
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = nq0-1-i + j*nq0;
+                        }
+                    }
+                } 
+                break;
+            case StdRegions::eDir1BwdDir2_Dir2FwdDir1:
+                {
+                    //Transposed, Direction A negative and B positive
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = i+nq0*(nq1-1)-j*nq0;
+                        }
+                    }
+                    break;
+                } 
+            case StdRegions::eDir1BwdDir2_Dir2BwdDir1:
+                {
+                    //Transposed, Direction A and B negative
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = nq0*nq1-1-i-j*nq0;
+                        }
+                    }
+                } 
+                break;
+            default:
+                ASSERTL0(false,"Unknow orientation");
+                break;
+            }
+        }
+
     } //end of namespace
 } //end of namespace

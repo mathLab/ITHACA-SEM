@@ -238,8 +238,6 @@ namespace Nektar
         int m_npointsX;     ///< number of points in X direction (if homogeneous)
         int m_npointsY;     ///< number of points in Y direction (if homogeneous)
         int m_npointsZ;     ///< number of points in Z direction (if homogeneous)
-
-
 		
         /// Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoElmtID;
@@ -268,6 +266,7 @@ namespace Nektar
         /// Storage for current and previous velocity fields at the otuflow for high order outflow BCs
         Array<OneD, Array<OneD, Array<OneD, NekDouble > > > m_outflowVel;
 
+        Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
 
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];

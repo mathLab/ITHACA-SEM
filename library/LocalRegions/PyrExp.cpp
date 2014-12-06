@@ -369,7 +369,7 @@ namespace Nektar
         {
             v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
         }
-
+#if 0 
         void PyrExp::v_GetFacePhysVals(
             const int                                face,
             const StdRegions::StdExpansionSharedPtr &FaceExp,
@@ -514,6 +514,107 @@ namespace Nektar
                 {
                     Vmath::Vcopy(fnq1*fnq2, o_tmp.get(), 1, outarray.get(), 1);
                 }
+            }
+        }
+#endif
+
+        void PyrExp::v_GetFacePhysMap(const int               face,
+                                      Array<OneD, int>        &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
+            
+            int nq0 = 0; 
+            int nq1 = 0; 
+
+            switch(face)
+            {
+            case 0:
+                nq0 = nquad0;
+                nq1 = nquad1;
+                if(outarray.num_elements()!=nq0*nq1)
+                {
+                    outarray = Array<OneD, int>(nq0*nq1);
+                }
+                
+                //Directions A and B positive
+                for(int i = 0; i < nquad0*nquad1; ++i)
+                {
+                    outarray[i] = i;
+                }
+
+                break;
+                case 1:
+                    nq0 = nquad0;
+                    nq1 = nquad2;
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    //Direction A and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        for(int i = 0; i < nquad0; ++i)
+                        {
+                            outarray[k*nquad0+i] = (nquad0*nquad1*k)+i;
+                        }
+                    }
+
+                    break; 
+                case 2:
+                    nq0 = nquad1;
+                    nq1 = nquad2;
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    //Directions A and B positive
+                    for(int j = 0; j < nquad1*nquad2; ++j)
+                    {
+                        outarray[j] = nquad0-1 + j*nquad0;
+                        
+                    }
+                    break;
+                case 3:
+                
+                    nq0 = nquad0;
+                    nq1 = nquad2;
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    //Direction A and B positive
+                    for (int k=0; k<nquad2; k++)
+                    {
+                        for(int i = 0; i < nquad0; ++i)
+                        {
+                            outarray[k*nquad0+i] = nquad0*(nquad1-1) + (nquad0*nquad1*k)+i;
+                        }
+                    }
+                    
+                case 4:
+                    nq0 = nquad1;
+                    nq1 = nquad2;
+
+                    if(outarray.num_elements()!=nq0*nq1)
+                    {
+                        outarray = Array<OneD, int>(nq0*nq1);
+                    }
+                    
+                    //Directions A and B positive
+                    for(int j = 0; j < nquad1*nquad2; ++j)
+                    {
+                        outarray[j] = j*nquad0;
+                        
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"face value (> 4) is out of range");
+                    break;
             }
         }
 

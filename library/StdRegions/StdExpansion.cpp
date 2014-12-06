@@ -1498,6 +1498,13 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
+            void StdExpansion::v_GetFacePhysMap(const int  face,
+                                                Array<OneD, int>   &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+
+
             void StdExpansion::v_MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)

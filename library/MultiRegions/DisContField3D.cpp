@@ -34,15 +34,17 @@
  //
  ///////////////////////////////////////////////////////////////////////////////
 
- #include <MultiRegions/DisContField3D.h>
- #include <LocalRegions/Expansion3D.h>
- #include <LocalRegions/Expansion2D.h>
- #include <SpatialDomains/MeshGraph3D.h>
- #include <LocalRegions/HexExp.h>
- #include <LocalRegions/TetExp.h>
- #include <LocalRegions/PrismExp.h>
-
- #include <boost/assign/std/vector.hpp>
+#include <MultiRegions/DisContField3D.h>
+#include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
+#include <SpatialDomains/MeshGraph3D.h>
+#include <LocalRegions/HexExp.h>
+#include <LocalRegions/TetExp.h>
+#include <LocalRegions/PrismExp.h>
+#include <LibUtilities/Foundations/Interp.h>
+#include <LibUtilities/Foundations/ManagerAccess.h> 
+#include <boost/assign/std/vector.hpp>
+#include <boost/tuple/tuple.hpp>
 
  using namespace boost::assign;
 
@@ -327,15 +329,16 @@
                  *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
 
              m_trace    = trace;
+
              m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
                  m_session,graph3D,trace,*this,m_bndCondExpansions,
                  m_bndConditions, m_periodicFaces,variable);
 
              Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                  &elmtToTrace = m_traceMap->GetElmtToTrace();
-
+             
              // Scatter trace segments to 3D elements. For each element, we find
-             // the trace segment associated to each edge. The element then
+             // the trace segment associated to each face. The element then
              // retains a pointer to the trace space segments, to ensure
              // uniqueness of normals when retrieving from two adjoining elements
              // which do not lie in a plane.
@@ -542,7 +545,11 @@
                     }
                 }
             }
-        }
+
+             m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::AllocateSharedPtr(*this,m_trace,elmtToTrace,m_leftAdjacentFaces);
+
+
+         }
 
         /**
          * For each boundary region, checks that the types and number of
@@ -1701,31 +1708,38 @@
         {
             v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
         }
-        
-        
+
         void DisContField3D::v_GetFwdBwdTracePhys(
-            const Array<OneD, const NekDouble> &field,
+                                          const Array<OneD, const NekDouble> &field,
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
-            // Loop over elements and collect forward and backward expansions.
-            int nexp = GetExpSize();
-            int cnt, n, e, npts, offset, phys_offset;
-            Array<OneD,NekDouble> e_tmp;
-            
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
-                &elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            set<int>::iterator    it;
-            PeriodicMap::iterator it2;
-            boost::unordered_map<int,pair<int,int> >::iterator it3;
+            int n,cnt,npts, e;
 
             // Zero vectors.
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
              
+#if 1 // blocked routine
+            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNLocTracePts());
+
+            m_locTraceToTraceMap->LocTracesFromField(field,facevals);
+            m_locTraceToTraceMap->InterpLocFacesToTrace(0,facevals,Fwd);
+            
+            Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->GetNFwdLocTracePts();
+            m_locTraceToTraceMap->InterpLocFacesToTrace(1,invals, Bwd);
+#else
+            // Loop over elements and collect forward and backward expansions.
+            int nexp = GetExpSize();
+            int phys_offset;
+            Array<OneD,NekDouble> e_tmp;
+            
+
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+            
             LocalRegions::Expansion3DSharedPtr exp3d;
-            bool fwd;
+            
 
             for(cnt = n = 0; n < nexp; ++n)
             {
@@ -1740,7 +1754,7 @@
                     if (fwd)
                     {
                         exp3d->GetFacePhysVals(e, elmtToTrace[n][e],
-                                                     field + phys_offset,
+                                               field + phys_offset,
                                                      e_tmp = Fwd + offset);
                     }
                     else
@@ -1751,7 +1765,7 @@
                     }
                 }
             }
-            
+#endif
             // fill boundary conditions into missing elements
             int id1,id2 = 0;
             cnt = 0;
@@ -1801,7 +1815,7 @@
                              "and Robin conditions.");
                 }
             }
-
+            
             // Copy any periodic boundary conditions.
             for (n = 0; n < m_periodicFwdCopy.size(); ++n)
             {
@@ -1813,6 +1827,11 @@
             m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
+         const vector<bool> &DisContField3D::v_GetLeftAdjacentFaces(void) const
+        {
+            return m_leftAdjacentFaces;
+        }
+         
         void DisContField3D::v_ExtractTracePhys(
             Array<OneD, NekDouble> &outarray)
         {
@@ -1826,9 +1845,18 @@
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
+
+#if 1
+            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNFwdLocTracePts());
+
+            m_locTraceToTraceMap->FwdLocTracesFromField(inarray,facevals);
+            m_locTraceToTraceMap->InterpLocFacesToTrace(0,facevals,outarray);
+#else
+
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
             int n,e,offset,phys_offset;
+
             Array<OneD,NekDouble> e_tmp;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
@@ -1849,6 +1877,7 @@
                                                  e_tmp = outarray + offset);
                 }
             }
+#endif
         }
         
         /**

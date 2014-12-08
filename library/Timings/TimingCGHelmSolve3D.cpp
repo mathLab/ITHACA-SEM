@@ -1,6 +1,5 @@
 #include <sstream>
-#include <time.h>
-#include <sys/time.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <iomanip>
 
 #include <boost/filesystem/path.hpp>
@@ -25,8 +24,7 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     vector<string> vFilenames;
     //defining timing variables
-    timeval timer1, timer2;
-    NekDouble time1, time2;
+    Timer timer;
     NekDouble exeTime, fullTime, ppTime = 0.0;
 
     if(argc < 6)//< is added to be able to submit "verbose" option
@@ -203,7 +201,7 @@ int main(int argc, char *argv[])
     }
     
     //timing the whole solve including mesh loading
-    gettimeofday(&timer1, NULL);
+    timer.Start();
     
     //----------------------------------------------
     // Read in mesh from input file
@@ -273,10 +271,8 @@ int main(int argc, char *argv[])
             MultiRegions::eGlobal);
     //----------------------------------------------
     //end of full solve timing
-    gettimeofday(&timer2, NULL);
-    time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-    time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-    fullTime = (time2-time1);
+    timer.Stop();
+    fullTime = timer.TimePerTest(1);
 
     //----------------------------------------------
     // See if there is an exact solution, if so 
@@ -358,16 +354,14 @@ int main(int argc, char *argv[])
 
     // We first do a single run in order to estimate the number of calls 
     // we are going to make
-    gettimeofday(&timer1, NULL);
+    timer.Start();
     Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
     Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),
             MultiRegions::eGlobal);
-    gettimeofday(&timer2, NULL);
-    time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-    time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-    exeTime = (time2-time1);
+    timer.Stop();
+    exeTime = timer.TimePerTest(1);
 
-    int NumCalls = (int) ceil(1.0e6/exeTime);
+    int NumCalls = (int) ceil(1.0/exeTime);
     if(NumCalls < 1)
     {
         NumCalls = 1;
@@ -383,14 +377,14 @@ int main(int argc, char *argv[])
     chudStartRemotePerfMonitor("TimingCGHelmSolve3D");
 #endif
 
-    gettimeofday(&timer1, NULL);
+    timer.Start();
     for(i = 0; i < NumCalls; ++i)
     {
         Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
         Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),
                 MultiRegions::eGlobal);
     }
-    gettimeofday(&timer2, NULL);
+    timer.Stop();
 
 #ifdef SHARK
     chudStopRemotePerfMonitor();
@@ -398,10 +392,7 @@ int main(int argc, char *argv[])
     chudCleanup();
 #endif
 
-
-    time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-    time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-    exeTime = (time2-time1);
+    exeTime = timer.TimePerTest(1);
 
     int nLocCoeffs     = Exp->GetLocalToGlobalMap()->GetNumLocalCoeffs();
     int nGlobCoeffs    = Exp->GetLocalToGlobalMap()->GetNumGlobalCoeffs();
@@ -421,10 +412,12 @@ int main(int argc, char *argv[])
     outfile << setw(10) << TypeStr << " ";
     outfile << setw(10) << NumElements << " ";
     outfile << setw(10) << NumModes << " ";
-    outfile << setw(10) << fixed << noshowpoint << exeTime << " ";
-    outfile << setw(10) << NumCalls << " ";
-    outfile << setw(10) << fixed << noshowpoint << ((NekDouble) (exeTime/((NekDouble)NumCalls))) << " ";
     outfile.precision(7);
+    outfile << setw(10) << fixed << exeTime << " ";
+    outfile.precision(0);
+    outfile << setw(10) << NumCalls << " ";
+    outfile.precision(7);
+    outfile << setw(10) << fixed << ((NekDouble) (exeTime/((NekDouble)NumCalls))) << " ";
     outfile << setw(15) << scientific << noshowpoint << L2Error << " ";
     outfile << setw(15) << scientific << noshowpoint << L2Error << " ";
     outfile << setw(15) << scientific << noshowpoint << L2ErrorBis << " ";
@@ -440,9 +433,8 @@ int main(int argc, char *argv[])
     outfile << setw(10) << nGlobBndRank << " ";
     outfile << setw(10) << nGlobBandwidth << " ";
     outfile << setw(10) << nnz << " ";
-    outfile.precision(0);
-    outfile << setw(10) << fixed << noshowpoint << fullTime << " ";
-    outfile << setw(10) << fixed << noshowpoint << ppTime << " ";
+    outfile << setw(10) << fixed << fullTime << " ";
+    outfile << setw(10) << fixed << ppTime << " ";
     outfile << endl;
 
     outfile.close();

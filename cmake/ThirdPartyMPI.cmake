@@ -23,6 +23,18 @@ IF( NEKTAR_USE_MPI )
     ELSE()
         SET(MPI_BUILTIN ON)
         MESSAGE(STATUS "Found MPI: built in")
+	FIND_PROGRAM(HAVE_APRUN aprun)
+	IF (HAVE_APRUN)
+	    # Probably on Cray
+            SET(MPIEXEC "aprun" CACHE STRING "MPI job launching command")
+	    SET(MPIEXEC_NUMPROC_FLAG "-n" CACHE STRING "MPI job launcher flag to specify number of processes")
+	ELSE()
+            SET(MPIEXEC "mpirun" CACHE STRING "MPI job launching command")
+	    SET(MPIEXEC_NUMPROC_FLAG "-np" CACHE STRING "MPI job launcher flag to specify number of processes")
+	ENDIF()
+	MARK_AS_ADVANCED(MPIEXEC)
+	MARK_AS_ADVANCED(MPIEXEC_NUMPROC_FLAG)
+	UNSET(HAVE_APRUN CACHE)
     ENDIF()
 
     ADD_DEFINITIONS(-DNEKTAR_USE_MPI)
@@ -30,17 +42,22 @@ IF( NEKTAR_USE_MPI )
     IF (THIRDPARTY_BUILD_GSMPI)
         EXTERNALPROJECT_ADD(
             gsmpi-1.2
-            PREFIX ${TPSRC}
             URL ${TPURL}/gsmpi-1.2.tar.bz2
             URL_MD5 35901be16791bfdeafa9c4d0e06d189b
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
+            SOURCE_DIR ${TPSRC}/gsmpi-1.2
+            BINARY_DIR ${TPBUILD}/gsmpi-1.2
+            TMP_DIR ${TPBUILD}/gsmpi-1.2-tmp
+            INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND 
                 ${CMAKE_COMMAND}
+                -G ${CMAKE_GENERATOR}
                 -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
                 -DCMAKE_BUILD_TYPE:STRING=Debug
-                -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist
-                ${TPSRC}/src/gsmpi-1.2
+                -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
+                ${TPSRC}/gsmpi-1.2
         )
         SET(GSMPI_LIBRARY gsmpi CACHE FILEPATH
             "GSMPI path" FORCE)
@@ -48,9 +65,10 @@ IF( NEKTAR_USE_MPI )
         SET(XXT_LIBRARY xxt CACHE FILEPATH
             "XXT path" FORCE)
         MARK_AS_ADVANCED(XXT_LIBRARY)
-        MESSAGE(STATUS "Build GSMPI: ${TPSRC}/dist/lib/lib${GSMPI_LIBRARY}.a")
-        MESSAGE(STATUS "Build XXT: ${TPSRC}/dist/lib/lib${XXT_LIBRARY}.a")
+        MESSAGE(STATUS "Build GSMPI: ${TPDIST}/lib/lib${GSMPI_LIBRARY}.a")
+        MESSAGE(STATUS "Build XXT: ${TPDIST}/lib/lib${XXT_LIBRARY}.a")
     ELSE (THIRDPARTY_BUILD_GSMPI)
+        ADD_CUSTOM_TARGET(gsmpi-1.2 ALL)
         INCLUDE (FindGSMPI)
         INCLUDE (FindXXT)
     ENDIF (THIRDPARTY_BUILD_GSMPI)

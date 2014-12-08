@@ -70,7 +70,8 @@ namespace Nektar
                     const GlobalLinSysKey &pKey,
                     const boost::weak_ptr<ExpList> &pExp,
                     const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
-                : GlobalLinSysIterative(pKey, pExp, pLocToGloMap)
+            : GlobalLinSys         (pKey, pExp, pLocToGloMap),
+              GlobalLinSysIterative(pKey, pExp, pLocToGloMap)
         {
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eIterativeFull,
                      "This routine should only be used when using an Iterative "
@@ -131,7 +132,7 @@ namespace Nektar
             
             expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);
             
-            Array<OneD, NekDouble> tmp(nGlobDofs);
+            Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
 
             if(nDirTotal)
             {
@@ -156,9 +157,12 @@ namespace Nektar
                 if (vCG)
                 {
                     Array<OneD, NekDouble> out(nGlobDofs,0.0);
+
                     // solve for perturbation from intiial guess in pOutput
-                    SolveLinearSystem(nGlobDofs, tmp, out, pLocToGloMap, nDirDofs);
-                    Vmath::Vadd(nGlobDofs,out,1,pOutput,1,out,1);
+                    SolveLinearSystem(
+                        nGlobDofs, tmp, out, pLocToGloMap, nDirDofs);
+                    Vmath::Vadd(nGlobDofs-nDirDofs,    &out    [nDirDofs], 1,
+                                &pOutput[nDirDofs], 1, &pOutput[nDirDofs], 1);
                 }
                 else
                 {

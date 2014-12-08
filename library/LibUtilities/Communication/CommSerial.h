@@ -70,6 +70,8 @@ namespace Nektar
         protected:
             LIB_UTILITIES_EXPORT virtual void v_Finalise();
             LIB_UTILITIES_EXPORT virtual int  v_GetRank();
+            LIB_UTILITIES_EXPORT virtual bool v_TreatAsRankZero(void);
+
             LIB_UTILITIES_EXPORT virtual void v_Block();
             LIB_UTILITIES_EXPORT virtual void v_Send(int pProc, Array<OneD, NekDouble>& pData);
             LIB_UTILITIES_EXPORT virtual void v_Send(int pProc, Array<OneD, int>& pData);
@@ -85,40 +87,40 @@ namespace Nektar
                                     Array<OneD, int>& pSendData,
                                     int pRecvProc,
                                     Array<OneD, int>& pRecvData);
-			LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(int pSendProc,
-										   int pRecvProc,
-										   Array<OneD, NekDouble>& pSendData);
-			LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(int pSendProc,
-										   int pRecvProc,
-										   Array<OneD, int>& pSendData);
+            LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(int pSendProc,
+                                                                int pRecvProc,
+                                                                Array<OneD, NekDouble>& pSendData);
+            LIB_UTILITIES_EXPORT virtual void v_SendRecvReplace(int pSendProc,
+                                                                int pRecvProc,
+                                                                Array<OneD, int>& pSendData);
             LIB_UTILITIES_EXPORT virtual void v_AllReduce(NekDouble& pData,
-                                     enum ReduceOperator pOp);
+                                                          enum ReduceOperator pOp);
             LIB_UTILITIES_EXPORT virtual void v_AllReduce(int& pData,
-                                     enum ReduceOperator pOp);
+                                                          enum ReduceOperator pOp);
             LIB_UTILITIES_EXPORT virtual void v_AllReduce(Array<OneD, NekDouble>& pData,
-                                     enum ReduceOperator pOp);
+                                                          enum ReduceOperator pOp);
             LIB_UTILITIES_EXPORT virtual void v_AllReduce(Array<OneD, int      >& pData,
-                                     enum ReduceOperator pOp);
+                                                          enum ReduceOperator pOp);
             LIB_UTILITIES_EXPORT virtual void v_AllReduce(std::vector<unsigned int>& pData,
-                                     enum ReduceOperator pOp);
-			LIB_UTILITIES_EXPORT virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
-														 Array<OneD, NekDouble>& pRecvData);
+                                                          enum ReduceOperator pOp);
+            LIB_UTILITIES_EXPORT virtual void v_AlltoAll(Array<OneD, NekDouble>& pSendData,
+                                                         Array<OneD, NekDouble>& pRecvData);
             LIB_UTILITIES_EXPORT virtual void v_AlltoAll(Array<OneD, int>& pSendData,
-														 Array<OneD, int>& pRecvData);
-			LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
-													     Array<OneD, int>& pSendDataSizeMap,
-													     Array<OneD, int>& pSendDataOffsetMap,
-													     Array<OneD, NekDouble>& pRecvData,
-													     Array<OneD, int>& pRecvDataSizeMap,
-													     Array<OneD, int>& pRecvDataOffsetMap);
-			LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(Array<OneD, int>& pSendData,
-													     Array<OneD, int>& pSendDataSizeMap,
-													     Array<OneD, int>& pSendDataOffsetMap,
-													     Array<OneD, int>& pRecvData,
-													     Array<OneD, int>& pRecvDataSizeMap,
-													     Array<OneD, int>& pRecvDataOffsetMap);
+                                                         Array<OneD, int>& pRecvData);
+            LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(Array<OneD, NekDouble>& pSendData,
+                                                          Array<OneD, int>& pSendDataSizeMap,
+                                                          Array<OneD, int>& pSendDataOffsetMap,
+                                                          Array<OneD, NekDouble>& pRecvData,
+                                                          Array<OneD, int>& pRecvDataSizeMap,
+                                                          Array<OneD, int>& pRecvDataOffsetMap);
+            LIB_UTILITIES_EXPORT virtual void v_AlltoAllv(Array<OneD, int>& pSendData,
+                                                          Array<OneD, int>& pSendDataSizeMap,
+                                                          Array<OneD, int>& pSendDataOffsetMap,
+                                                          Array<OneD, int>& pRecvData,
+                                                          Array<OneD, int>& pRecvDataSizeMap,
+                                                          Array<OneD, int>& pRecvDataOffsetMap);
             LIB_UTILITIES_EXPORT virtual void v_SplitComm(int pRows, int pColumns);
-			
+            
         };
 
     }

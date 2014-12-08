@@ -106,7 +106,11 @@ namespace Nektar
             // Write out the new mesh
             vtkPolyDataWriter *vtkMeshWriter = vtkPolyDataWriter::New();
             vtkMeshWriter->SetFileName(m_config["outfile"].as<string>().c_str());
+#if VTK_MAJOR_VERSION <= 5
             vtkMeshWriter->SetInput(vtkMesh);
+#else
+            vtkMeshWriter->SetInputData(vtkMesh);
+#endif
             vtkMeshWriter->Update();
         }        
     }

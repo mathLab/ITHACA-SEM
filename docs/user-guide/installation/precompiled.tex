@@ -1,0 +1,84 @@
+\section{Installing Debian/Ubuntu Packages}
+\label{s:installation:debian}
+Binary packages are available for current Debian/Ubuntu based Linux
+distributions. These can be installed through the use of standard system package
+management utilities, such as Apt, if administrative access is
+available.
+
+\begin{enumerate}
+	\item Add the appropriate line for the Debian-based distribution to the end of
+	the file \inlsh{/etc/apt/sources.list}
+	
+	{\small
+	\begin{tabular}{ll}
+	\toprule
+	Distribution & Repository \\
+	\midrule
+	Debian 7.0 (wheezy) & 
+	   \texttt{deb http://www.nektar.info/debian wheezy contrib} \\
+	Ubuntu 14.04 (trusty) & 
+	   \texttt{deb http://www.nektar.info/ubuntu trusty contrib}\\
+	\bottomrule
+	\end{tabular}
+	}
+	\item Update the package lists
+	\begin{lstlisting}[style=BashInputStyle]
+	apt-get update
+	\end{lstlisting}
+	\item Install the required Nektar++ packages:
+	\begin{lstlisting}[style=BashInputStyle]
+	apt-get install nektar++
+	\end{lstlisting}
+	Any additional dependencies required for Nektar++ to function will be
+	automatically installed.
+	
+	% Hacky way to get an lstlisting to an argument of a macro
+    \newsavebox\installationDebTip
+    \begin{lrbox}{\installationDebTip}\begin{minipage}{0.8\linewidth}
+    \begin{lstlisting}[style=BashInputStyle]
+    apt-cache search nektar++
+    \end{lstlisting}
+    \end{minipage}
+    \end{lrbox}
+	
+	\begin{tipbox}
+	Nektar++ is split into multiple packages for the different components of the
+	software. A list of available Nektar++ packages can be found using:
+	\noindent\usebox\installationDebTip
+	\end{tipbox}
+\end{enumerate}
+
+
+\section{Installing Redhat/Fedora Packages}
+\label{s:installation:redhat}
+Add a file to the directory \inlsh{/etc/yum.repos.d/nektar.repo} with the
+following contents
+\begin{lstlisting}[style=BashInputStyle]
+[Nektar]
+name=nektar
+baseurl=<baseurl>
+\end{lstlisting}
+substituting \inlsh{<baseurl>} for the appropriate line from the table below.
+
+{\small
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Distribution & \inlsh{<baseurl>} \\
+\midrule
+Fedora 20 & 
+   \texttt{http://ww.nektar.info/fedora/20/\$basearch}\\
+\bottomrule
+\end{tabular}
+\end{center}
+}
+
+\begin{notebox}
+The \inltt{\$basearch} variable is automatically replaced by Yum with
+the architecture of your system.
+\end{notebox}
+
+
+
+% \section{Installing OSX Packages}
+% \label{s:installation:osx}

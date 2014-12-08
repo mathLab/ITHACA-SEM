@@ -37,6 +37,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <LocalRegions/Expansion2D.h>
+
 namespace Nektar
 {
     namespace SolverUtils
@@ -140,7 +142,7 @@ namespace Nektar
             
             // Compute the numerical fluxes for the first order derivatives
             v_NumericalFluxO1(fields, inarray, numericalFluxO1);
-            
+
             for (j = 0; j < nDim; ++j)
             {
                 for (i = 0; i < nScalars; ++i)
@@ -181,7 +183,7 @@ namespace Nektar
             
             for (i = 0; i < nConvectiveFields; ++i)
             {
-                viscousFlux[i] = Array<OneD, NekDouble>(nPts, 0.0);
+                viscousFlux[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
             }
             
             m_fluxVectorNS(inarray, derivativesO1, m_viscTensor);
@@ -230,11 +232,10 @@ namespace Nektar
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
             {
-                fields[0]->ExtractTracePhys(inarray[i], m_traceVel[i]);
-                Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, 
-                             m_traceVel[i], 1, Vn, 1, Vn, 1);
+                Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
+                             Vn, 1, Vn, 1);
             }
-            
+
             // Store forwards/backwards space along trace space
             Array<OneD, Array<OneD, NekDouble> > Fwd    (nScalars);
             Array<OneD, Array<OneD, NekDouble> > Bwd    (nScalars);
@@ -490,9 +491,8 @@ namespace Nektar
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
             {
-                fields[0]->ExtractTracePhys(ufield[i], m_traceVel[i]);
-                Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, 
-                             m_traceVel[i], 1, Vn, 1, Vn, 1);
+                Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
+                             Vn, 1, Vn, 1);
             }
                         
             // Evaulate Riemann flux 

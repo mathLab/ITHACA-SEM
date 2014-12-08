@@ -31,15 +31,20 @@ IF (THIRDPARTY_BUILD_ZLIB)
     # Build the Zlib library separately
     EXTERNALPROJECT_ADD(
         zlib-1.2.7
-        PREFIX ${TPSRC}
         URL ${TPURL}/zlib-1.2.7.tar.gz
         URL_MD5 "4a162e0f643232e7e278d59a0603ceb0"
+        STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
+        SOURCE_DIR ${TPSRC}/zlib-1.2.7
+        BINARY_DIR ${TPBUILD}/zlib-1.2.7
+        TMP_DIR ${TPBUILD}/zlib-1.2.7-tmp
+        INSTALL_DIR ${TPDIST}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
+            -G ${CMAKE_GENERATOR}
             -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
-            -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist
+            -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
             -DCMAKE_C_FLAGS:STRING=-fPIC
-            ${TPSRC}/src/zlib-1.2.7
+            ${TPSRC}/zlib-1.2.7
     )
     IF (WIN32)
         SET(ZLIB_LIBRARY zlib)
@@ -50,5 +55,7 @@ IF (THIRDPARTY_BUILD_ZLIB)
         SET(ZLIB_LIBRARY_DEBUG z)
         SET(ZLIB_LIBRARY_RELEASE z)
     ENDIF (WIN32)
+ELSE (THIRDPARTY_BUILD_ZLIB)
+    ADD_CUSTOM_TARGET(zlib-1.2.7 ALL)
 ENDIF (THIRDPARTY_BUILD_ZLIB)
 

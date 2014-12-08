@@ -36,7 +36,7 @@
 #ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTFLD
 #define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTFLD
 
-#include <tinyxml/tinyxml.h>
+#include <tinyxml.h>
 #include "Module.h"
 
 namespace Nektar

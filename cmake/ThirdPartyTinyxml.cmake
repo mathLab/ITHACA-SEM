@@ -6,34 +6,35 @@ OPTION(THIRDPARTY_BUILD_TINYXML
     "Build TinyXML library from ThirdParty." ON)
 
 IF (THIRDPARTY_BUILD_TINYXML)
-    #SET(TINYXML_DIR ${TPSRC}/tinyxml)
-    #EXTERNALPROJECT_ADD(
-    #    tinyxml
-    #    PREFIX ${TPSRC}/build
-    #    URL ${TPSRC}/tinyxml.tar.bz2
-    #    URL_MD5 "aec842139928e65aa7abdff6de0a09ec"
-    #    CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX:    PATH=${TPSRC}/   #build/dist ${TPSRC}/build/src/tinyxml
-    #)
-    #SET(TINYXML_LIB ${TPSRC}/build/dist/lib/libtinyxml.so)
-    #SET(TINYXML_BASE ${TPSRC}/build/src)
-
-    # Tiny XML
-    IF (NOT EXISTS ${TPSRC}/tinyxml_2_4_3.tar.bz2)
-        FILE(DOWNLOAD ${TPURL}/tinyxml_2_4_3.tar.bz2 
-                      ${TPSRC}/tinyxml_2_4_3.tar.bz2)
-    ENDIF()
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -E tar jxf ${TPSRC}/tinyxml_2_4_3.tar.bz2
-        WORKING_DIRECTORY ${TPSRC}
+    INCLUDE(ExternalProject)
+    EXTERNALPROJECT_ADD(
+        tinyxml-2.4.3
+        PREFIX ${TPSRC}
+        URL ${TPURL}/tinyxml_2_4_3-1.tar.bz2
+        URL_MD5 "a00f5e3b547b803977c5744547a688f7"
+        STAMP_DIR ${TPBUILD}/stamp
+        DOWNLOAD_DIR ${TPSRC}
+        SOURCE_DIR ${TPSRC}/tinyxml-2.4.3
+        BINARY_DIR ${TPBUILD}/tinyxml-2.4.3
+        TMP_DIR ${TPBUILD}/tinyxml-2.4.3-tmp
+        INSTALL_DIR ${TPDIST}
+        CONFIGURE_COMMAND ${CMAKE_COMMAND}
+            -G ${CMAKE_GENERATOR}
+            -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+            -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+            -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
+            -DCMAKE_CXX_FLAGS:STRING=-DTIXML_USE_STL
+            ${TPSRC}/tinyxml-2.4.3
     )
-    SET(TINYXML_INCLUDE_DIR ${TPSRC}/tinyxml)
-    SET(TINYXML_BASE ${TPSRC})
-    SET(TINYXML_SRC_DIR ${TPSRC}/tinyxml)
+    SET(TINYXML_LIB tinyxml CACHE FILEPATH 
+        "Tinyxml library" FORCE)
+    MARK_AS_ADVANCED(TINYXML_LIB)
+    LINK_DIRECTORIES(${TPDIST}/lib)
+    INCLUDE_DIRECTORIES(${TPDIST}/include)
 ELSE (THIRDPARTY_BUILD_TINYXML)
     INCLUDE (FindTinyXml)
 ENDIF (THIRDPARTY_BUILD_TINYXML)
-SET(TINYXML_LIB tinyxml)
-INCLUDE_DIRECTORIES(SYSTEM ${TINYXML_BASE})
+
 
 
 

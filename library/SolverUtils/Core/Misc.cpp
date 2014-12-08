@@ -37,6 +37,7 @@
 #include <vector>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 #include <SolverUtils/Core/Misc.h>
 
 using namespace std;
@@ -51,7 +52,7 @@ namespace SolverUtils {
             const std::string& name,
             const std::string& value)
     {
-        l.push_back(std::make_pair<std::string, std::string>(name, value));
+        l.push_back(std::make_pair(name, value));
     }
 
     /// Adds a summary item to the summary info list
@@ -60,7 +61,7 @@ namespace SolverUtils {
             const std::string& name,
             const int& value)
     {
-        l.push_back(std::make_pair<std::string, std::string>(name, boost::lexical_cast<std::string>(value)));
+        l.push_back(std::make_pair(name, boost::lexical_cast<std::string>(value)));
     }
 
     /// Adds a summary item to the summary info list
@@ -69,7 +70,8 @@ namespace SolverUtils {
             const std::string& name,
             const NekDouble& value)
     {
-        l.push_back(std::make_pair<std::string, std::string>(name, boost::lexical_cast<std::string>(value)));
+        l.push_back(std::make_pair(
+            name, str(boost::format("%g") % value)));
     }
 
 }

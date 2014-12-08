@@ -13,13 +13,22 @@ IF( NEKTAR_USE_VTK )
         # Obviously this is inconvenient for us.
         EXTERNALPROJECT_ADD(
             vtk-5.10.1
-            PREFIX ${TPSRC}
             URL ${TPURL}/vtk-5.10.1-nek.tar.bz2
             URL_MD5 "f4e2c6b848d3873d44479baa9e7e4d35"
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_BUILD_TYPE:STRING=Release ${TPSRC}/src/vtk-5.10.1
+            SOURCE_DIR ${TPSRC}/vtk-5.10.1
+            BINARY_DIR ${TPBUILD}/vtk-5.10.1
+            TMP_DIR ${TPBUILD}/vtk-5.10.1-tmp
+            INSTALL_DIR ${TPDIST}
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} 
+                -G ${CMAKE_GENERATOR}
+                -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST} 
+                -DBUILD_SHARED_LIBS:BOOL=ON 
+                -DCMAKE_BUILD_TYPE:STRING=Release 
+                ${TPSRC}/vtk-5.10.1
         )
-        SET(VTK_DIR ${TPSRC}/dist/lib/vtk-5.10)
+        SET(VTK_DIR ${TPDIST}/lib/vtk-5.10)
         SET(VTK_FOUND 1)
         SET(VTK_USE_FILE ${VTK_DIR}/UseVTK.cmake)
         INCLUDE (${VTK_DIR}/VTKConfig.cmake)
@@ -35,6 +44,5 @@ IF( NEKTAR_USE_VTK )
     INCLUDE (${VTK_USE_FILE})
     MARK_AS_ADVANCED(VTK_DIR)
     ADD_DEFINITIONS(-DNEKTAR_USING_VTK)
-    INCLUDE_DIRECTORIES(${VTK_INCLUDE_DIRS})
 ENDIF( NEKTAR_USE_VTK )
 

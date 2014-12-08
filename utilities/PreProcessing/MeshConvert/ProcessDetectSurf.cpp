@@ -143,7 +143,7 @@ namespace Nektar
 
             for (cIt = m_mesh->m_composite.begin(); cIt != m_mesh->m_composite.end(); ++cIt)
             {
-                maxId = std::max(cIt->first, maxId);
+                maxId = (std::max)(cIt->first, maxId);
             }
 
             ++maxId;

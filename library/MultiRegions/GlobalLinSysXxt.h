@@ -26,7 +26,7 @@ namespace Nektar
         //class AssemblyMapDG;
         class ExpList;
 
-        class GlobalLinSysXxt : public GlobalLinSys
+        class GlobalLinSysXxt : virtual public GlobalLinSys
         {
         public:
             /// Constructor for full direct matrix solve.
@@ -47,14 +47,6 @@ namespace Nektar
             Array<OneD, NekDouble>      m_locToGloSignMult;
 
             Array<OneD, int>            m_map;
-
-            /// Solve the linear system for given input and output vectors
-            /// using a specified local to global map.
-            virtual void v_Solve(
-                    const Array<OneD, const NekDouble> &in,
-                    Array<OneD, NekDouble> &out,
-                    const AssemblyMapSharedPtr &locToGloMap,
-                    const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
 
             /// Solve the linear system for given input and output vectors.
             virtual void v_SolveLinearSystem(

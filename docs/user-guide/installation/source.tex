@@ -1,0 +1,602 @@
+\section{Installing from Source}
+\label{s:installation:source}
+
+This section explains how to build Nektar++ from the source-code package.
+
+Nektar++ uses a number of third-party libraries. Some of these are required,
+others are optional. It is generally more straightforward to use versions of
+these libraries supplied pre-packaged for your operating system, but if you run
+into difficulties with compilation errors or failing regression tests, the
+Nektar++ build system can automatically build tried-and-tested versions of these
+libraries for you. This requires enabling the relevant options in the CMake
+configuration.
+
+
+\subsection{Obtaining the source code}
+There are two ways to obtain the source code for \nekpp:
+\begin{itemize}
+	\item Download the latest source-code archive from the
+	\href{http://www.nektar.info/downloads}{Nektar++ downloads page}.
+	\item Clone the git repository
+	\begin{itemize}
+	\item Using anonymous access. This does not require
+	credentials but any changes to the code cannot be pushed to the
+	public repository. Use this initially if you would like to try using 
+	Nektar++.
+    \begin{lstlisting}[style=BashInputStyle]
+        git clone http://gitlab.nektar.info/clone/nektar.git nektar++
+    \end{lstlisting}
+	\item Using authenticated access. This will allow you to directly contribute
+	back into the code.
+    \begin{lstlisting}[style=BashInputStyle]
+        git clone git@gitlab.nektar.info:nektar/nektar.git nektar++
+    \end{lstlisting}
+    \begin{tipbox}
+    You can easily switch to using the authenticated access from anonymous
+    access at a later date.
+    \end{tipbox}
+	\end{itemize}
+\end{itemize}
+
+\subsection{Linux}
+\subsubsection{Prerequisites}
+\nekpp uses a number of external programs and libraries for some or all of its
+functionality. Some of these are \emph{required} and must be installed prior to
+compiling Nektar++, most of which are available as pre-built \emph{system}
+packages on most Linux distributions or can be installed manually by a
+\emph{user}. Others are optional and required only for specific features, or can
+be downloaded and compiled for use with Nektar++ \emph{automatically} (but not
+installed system-wide).
+
+\begin{center}
+\begin{tabular}{lccccl}
+\toprule
+        &      & \multicolumn{3}{c}{Installation} & \\ \cmidrule(r){3-5}
+Package & Req. & Sys. & User & Auto.              & Note \\
+\midrule
+C++ compiler    & \cmark & \cmark & & & gcc, icc, etc \\
+CMake  $>2.8.7$ & \cmark & \cmark & \cmark &        & Ncurses
+GUI optional
+\\
+BLAS            & \cmark & \cmark & \cmark &        & Or MKL,
+ACML, OpenBLAS
+\\
+LAPACK          & \cmark & \cmark & \cmark &        & \\
+Boost $>1.49$   & \cmark & \cmark & \cmark & \cmark & Compile
+with iostreams
+\\
+ModMETIS        & \cmark &        &        & \cmark & \\
+FFTW $>3.0$     &        & \cmark & \cmark & \cmark & For
+high-performance FFTs\\
+ARPACK $>2.0$   &        & \cmark & \cmark &        & For
+arnoldi algorithms\\
+OpenMPI         &        & \cmark &        &        & For
+parallel execution\\
+GSMPI           &        &        &        & \cmark & For
+parallel execution\\
+PetSC           &        &        & \cmark & \cmark &
+Alternative linear solvers\\
+Scotch          &        & \cmark & \cmark & \cmark &
+Alternative mesh partitioning\\
+VTK $>5.8$      &        & \cmark & \cmark &        & Visualisation
+utilities\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{warningbox}
+Boost version 1.51 has a bug which prevents \nekpp working correctly.
+Please use a newer version.
+\end{warningbox}
+
+
+\subsubsection{Quick Start}
+Open a terminal.
+
+If you have downloaded the tarball, first unpack it:
+\begin{lstlisting}[style=BashInputStyle]
+    tar -zxvf nektar++-\nekver.tar.gz
+\end{lstlisting}
+Change into the \inlsh{nektar++} source code directory
+\begin{lstlisting}[style=BashInputStyle]
+    mkdir -p build && cd build 
+    ccmake ../
+    make install
+\end{lstlisting}
+
+\subsubsection{Detailed instructions}
+From a terminal:
+\begin{enumerate}
+    \item If you have downloaded the tarball, first unpack it
+    \begin{lstlisting}[style=BashInputStyle]
+    tar -zxvf nektar++-\nekver.tar.gz
+    \end{lstlisting}
+    
+    \item Change into the source-code directory, create a \inltt{build}
+    subdirectory and enter it 
+    \begin{lstlisting}[style=BashInputStyle]
+    mkdir -p build && cd build
+    \end{lstlisting}
+    
+    \item Run the CMake GUI and configure the build
+    \begin{lstlisting}[style=BashInputStyle]
+    ccmake ../
+    \end{lstlisting}
+    \begin{itemize}
+        \item Select the components of Nektar++ (prefixed with
+        \inltt{NEKTAR\_BUILD\_}) you would like to build. Disabling solvers
+        which you do not require will speed up the build process.
+        \item Select the optional libraries you would like to use (prefixed with
+        \inltt{NEKTAR\_USE\_}) for additional functionality.
+        \item Select the libraries not already available on your system which
+        you wish to be compiled automatically (prefixed with 
+        \inltt{THIRDPARTY\_BUILD\_})
+    \end{itemize}
+    A full list of configuration options can be found in
+    Section~\ref{s:installation:source:cmake}.
+
+    \begin{notebox}
+    Selecting \inltt{THIRDPARTY\_BUILD\_} options will request CMake to
+    automatically download thirdparty libraries and compile them within the
+    \nekpp directory. If you have administrative access to your machine, it is
+    recommended to install the libraries system-wide through your
+    package-management system.
+    \end{notebox}
+    
+    
+    \item Press \inltt{c} to configure the build. If errors arise relating to
+    missing libraries, review the \inltt{THIRDPARTY\_BUILD\_} selections in
+    the configuration step above or install the missing libraries manually or
+    from system packages.
+    
+    \item When configuration completes without errors, press \inltt{c} again
+    until the option \inltt{g} to generate build files appears. Press \inltt{g}
+    to generate the build files and exit CMake.
+    
+    \item Compile the code
+    \begin{lstlisting}[style=BashInputStyle]
+        make install
+    \end{lstlisting}
+    During the build, missing third-party libraries will be automatically
+    downloaded, configured and built in the \nekpp \inlsh{build} directory.
+    
+    % Hacky way to get an lstlisting to an argument of a macro
+    \newsavebox\installationLinuxTip
+    \begin{lrbox}{\installationLinuxTip}\begin{minipage}{0.8\linewidth}
+    \begin{lstlisting}[style=BashInputStyle]
+    make -j4 install
+    \end{lstlisting}
+    \end{minipage}
+    \end{lrbox}
+    
+    \begin{tipbox}
+    If you have multiple processors/cores on your system, compilation can be
+    significantly increased by adding the \inlsh{-jX} option to make, where X is
+    the number of simultaneous jobs to spawn. For example, use
+    
+    \noindent\usebox\installationLinuxTip
+    
+    on a quad-core system.
+    \end{tipbox}
+    
+    \item Test the build by running unit and regression tests.
+    \begin{lstlisting}[style=BashInputStyle]
+    ctest
+    \end{lstlisting}
+\end{enumerate}
+
+\subsection{OS X}
+
+\subsubsection{Prerequisites}
+\nekpp uses a number of external programs and libraries for some or all of its
+functionality. Some of these are \emph{required} and must be installed prior to
+compiling Nektar++, most of which are available on \emph{MacPorts}
+(www.macports.org) or can be installed manually by a \emph{user}. Others are
+optional and required only for specific features, or can be downloaded and 
+compiled for use with Nektar++ \emph{automatically} (but not installed
+system-wide).
+
+\begin{notebox}
+  To compile \nekpp on OS X, Apple's Xcode Developer Tools must be
+  installed. They can be installed either from the App Store (only on Mac OS
+  10.7 and above) or downloaded directly from
+  \href{http://connect.apple.com/}{http://connect.apple.com/} (you are required
+  to have an Apple Developer Connection account).  Xcode includes Apple
+  implementations of BLAS and LAPACK (called the Accelerate Framework).
+\end{notebox}
+
+\begin{center}
+\begin{tabular}{lccccl}
+\toprule
+        &      & \multicolumn{3}{c}{Installation} & \\ \cmidrule(r){3-5}
+Package & Req. & MacPorts & User & Auto.          & Note \\
+\midrule
+Xcode           & \cmark &        & & & gcc, icc, etc \\
+CMake  $>2.8.7$ & \cmark & \cmark & \cmark &        & Ncurses
+GUI optional \\
+BLAS            & \cmark &        &        &        & Part of
+Xcode \\
+LAPACK          & \cmark &        &        &        & Part of
+Xcode \\
+Boost $>1.49$   & \cmark & \cmark & \cmark & \cmark & Compile
+with iostreams
+\\
+ModMETIS        & \cmark &        &        & \cmark & \\
+FFTW $>3.0$     &        & \cmark & \cmark & \cmark & For
+high-performance FFTs\\
+ARPACK $>2.0$   &        & \cmark & \cmark &        & For
+arnoldi algorithms\\
+OpenMPI         &        & \cmark &        &        & For
+parallel execution\\
+GSMPI           &        &        &        & \cmark & For
+parallel execution\\
+PetSC           &        & \cmark & \cmark & \cmark &
+Alternative linear solvers\\
+Scotch          &        &        & \cmark & \cmark &
+Alternative mesh partitioning\\
+VTK $>5.8$      &        & \cmark & \cmark &        &
+Visualisation utilities\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\newsavebox\installationOSXMacPortsTip
+\begin{lrbox}{\installationOSXMacPortsTip}\begin{minipage}{0.8\linewidth}
+\begin{lstlisting}[style=BashInputStyle]
+sudo port install cmake
+\end{lstlisting}
+\end{minipage}
+\end{lrbox}
+
+\begin{tipbox}
+CMake, and some other software, is available from MacPorts
+(\url{http://macports.org}) and can be installed using, for example,
+
+\noindent\usebox\installationOSXMacPortsTip
+\end{tipbox}
+
+
+\subsubsection{Quick Start}
+Open a terminal (Applications->Utilities->Terminal).
+
+If you have downloaded the tarball, first unpack it:
+\begin{lstlisting}[style=BashInputStyle]
+    tar -zxvf nektar++-\nekver.tar.gz
+\end{lstlisting}
+Change into the \inlsh{nektar++} source code directory
+\begin{lstlisting}[style=BashInputStyle]
+    mkdir -p build && cd build 
+    ccmake ../
+    make install
+\end{lstlisting}
+
+\subsubsection{Detailed instructions}
+From a terminal (Applications->Utilities->Terminal):
+\begin{enumerate}
+    \item If you have downloaded the tarball, first unpack it
+    \begin{lstlisting}[style=BashInputStyle]
+    tar -zxvf nektar++-\nekver.tar.gz
+    \end{lstlisting}
+
+    \item Change into the source-code directory, create a \inltt{build}
+    subdirectory and enter it 
+    \begin{lstlisting}[style=BashInputStyle]
+    mkdir -p build && cd build
+    \end{lstlisting}
+    
+    \item Run the CMake GUI and configure the build
+    \begin{lstlisting}[style=BashInputStyle]
+    ccmake ../
+    \end{lstlisting}
+    Use the arrow keys to navigate the options and \inlsh{ENTER} to select/edit
+    an option.
+    \begin{itemize}
+        \item Select the components of Nektar++ (prefixed with
+        \inltt{NEKTAR\_BUILD\_}) you would like to build. Disabling solvers
+        which you do not require will speed up the build process.
+        \item Select the optional libraries you would like to use (prefixed with
+        \inltt{NEKTAR\_USE\_}) for additional functionality.
+        \item Select the libraries not already available on your system which
+        you wish to be compiled automatically (prefixed with 
+        \inltt{THIRDPARTY\_BUILD\_})
+        \item 
+    \end{itemize}
+    A full list of configuration options can be found in
+    Section~\ref{s:installation:source:cmake}.
+
+    \begin{notebox}
+    Selecting \inltt{THIRDPARTY\_BUILD\_} options will request CMake to
+    automatically download thirdparty libraries and compile them within the
+    \nekpp directory. If you have administrative access to your machine, it is
+    recommended to install the libraries system-wide through MacPorts.
+    \end{notebox}
+    
+    \item Press \inltt{c} to configure the build. If errors arise relating to
+        missing libraries (variables set to \inlsh{NOTFOUND}), review the 
+        \inltt{THIRDPARTY\_BUILD\_} selections in the previous
+    step or install the missing libraries manually or through MacPorts. 
+    
+    \item When configuration completes without errors, press \inltt{c} again
+    until the option \inltt{g} to generate build files appears. Press \inltt{g}
+    to generate the build files and exit CMake.
+    
+    \item Compile the code
+    \begin{lstlisting}[style=BashInputStyle]
+        make install
+    \end{lstlisting}
+    During the build, missing third-party libraries will be automatically
+    downloaded, configured and built in the \nekpp \inlsh{build} directory.
+    
+    % Hacky way to get an lstlisting to an argument of a macro
+    \newsavebox\installationMacTip
+    \begin{lrbox}{\installationMacTip}\begin{minipage}{0.8\linewidth}
+    \begin{lstlisting}[style=BashInputStyle]
+    make -j4 install
+    \end{lstlisting}
+    \end{minipage}
+    \end{lrbox}
+    
+    \begin{tipbox}
+    If you have multiple processors/cores on your system, compilation can be
+    significantly increased by adding the \inlsh{-jX} option to make, where X is
+    the number of simultaneous jobs to spawn. For example,
+    \noindent\usebox\installationMacTip
+    \end{tipbox}
+    
+    \item Test the build by running unit and regression tests.
+    \begin{lstlisting}[style=BashInputStyle]
+    ctest
+    \end{lstlisting}
+\end{enumerate}
+
+\subsection{Windows}
+
+Windows compilation is supported, but the build process is somewhat convoluted
+at present. As such, only serial execution is supported with a minimal amount of
+additional build packages. These can either be installed by the user, or
+automatically in the build process.
+
+\begin{center}
+\begin{tabular}{lcccl}
+\toprule
+                  &        & \multicolumn{2}{c}{Installation} & \\ \cmidrule(r){3-4}
+Package           & Req.   & User   & Auto.        & Note \\
+\midrule
+MS Visual Studio  & \cmark & \cmark &              & 2012 and 2013 known working\\
+CMake $\geq 3.0$  & \cmark & \cmark &              & \\
+BLAS              & \cmark & \cmark & \cmark       & \\
+LAPACK            & \cmark & \cmark & \cmark       & \\
+Boost $\geq 1.55$ & \cmark & \cmark & \cmark       & Compile with iostreams\\
+ModMETIS          & \cmark & \cmark & \cmark       & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{Detailed instructions}
+
+\begin{enumerate}
+  \item Install Microsoft Visual Studio 2013 (preferred) or 2012 (known to
+  work). This can be obtained from Microsoft free of charge by using their
+  Express developer tools from
+  \url{http://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx}.
+  \item Install WinRAR from \url{http://www.rarlab.com/download.htm}.
+  \item Install CMake 3.0+ from \url{http://www.cmake.org/download/}. When
+  prompted, select the option to add CMake to the system PATH.
+  \item (Optional) Install Git from \url{http://git-scm.com/download/win} to use
+  the development versions of \nekpp. When prompted, select the option to add
+  Git to the system PATH. You do not need to select the option to add Unix tools
+  to the PATH.
+  \item (Optional) If you do not wish to build boost during the compilation
+  process (which can take some time), then boost binaries can be found at
+  \url{http://sourceforge.net/projects/boost/files/boost-binaries/1.55.0-build2/}. By
+  default these install into \inlsh{C:\textbackslash local\textbackslash
+    boost\_1\_55\_0}. If you use these libraries, you will need to:
+  \begin{itemize}
+    \item Rename \texttt{libs-msvc12.0} to \texttt{lib}
+    \item Inside the \texttt{lib} directory, create duplicates of
+    \texttt{boost\_zlib.dll} and \texttt{boost\_bzip2.dll} called
+    \texttt{zlib.dll} and \texttt{libbz2.dll}.
+  \end{itemize}
+  \item Unpack \inlsh{nektar++-\nekver.tar.gz} using WinRAR.
+
+  \begin{notebox}
+    Some Windows versions do not recognise the path of a folder which has
+    \inltt{++} in the name. If you think that your Windows version can not
+    handle path containing special characters, you should rename
+    \inlsh{nektar++-\nekver} to \inlsh{nektar-\nekver}.
+  \end{notebox}
+  \item Create a \inlsh{builds} directory within the \inlsh{nektar++-\nekver}
+  subdirectory.
+  \item Open a Visual Studio terminal. From the start menu, this can be found in
+  \emph{All Programs > Visual Studio 2013 > Visual Studio Tools > Developer
+    Command Prompt for VS2013}.
+  \item Change directory into the \texttt{builds} directory and run the CMake
+  graphical utility:
+  \begin{lstlisting}[style=BashInputStyle]
+    cd C:\path\to\nektar\builds
+    cmake-gui ..
+  \end{lstlisting}
+  \item Select the build system you want to generate build scripts for. Note
+  that \emph{Visual Studio 2013} is listed as \emph{Visual Studio 12} in the
+  drop-down list. If you have a 64-bit installation of Windows 7, you should
+  select the \emph{Win64} variant, otherwise 32-bit executables will be
+  generated. Select the option to use the native compilers.
+  \item Click the \emph{Configure} button.
+  \item An error will appear, since Boost cannot be found. To rectify this,
+  select the option named \inltt{THIRDPARTY\_BUILD\_BOOST}, and click Generate.
+  \item Return to the command line and issue the command:
+  \begin{lstlisting}[style=BashInputStyle]
+    msbuild INSTALL.vcxproj /p:Configuration=Release
+  \end{lstlisting}
+  To build in parallel with, for example, 12 processors, issue:
+  \begin{lstlisting}[style=BashInputStyle]
+    msbuild INSTALL.vcxproj /p:Configuration=Release /m:12
+  \end{lstlisting}
+  \item After the installation process is completed, the executables will be
+  available in \inlsh{builds\textbackslash dist\textbackslash bin}.
+  \item To use these executables, you need to modify your system \inlsh{PATH} to
+  include the library directories where DLLs are stored. To do this, navigate to
+  \emph{Control Panel > System and Security > System}, select \emph{Advanced
+    System Settings}, and in the \emph{Advanced} tab click the \emph{Environment
+    Variables}. In the \emph{System Variables} box, select \emph{Path} and click
+  \emph{Edit}. To the end of this list, add the \textbf{full paths} to
+  directories:
+  \begin{itemize}
+    \item \inlsh{builds\textbackslash dist\textbackslash lib}
+    \item \inlsh{builds\textbackslash dist\textbackslash bin}
+    \item \inlsh{builds\textbackslash ThirdParty\textbackslash dist\textbackslash lib}
+    \item Optionally, if you installed Boost from the binary packages,
+    \inlsh{C:\textbackslash local\textbackslash boost\_1\_55\_0 \textbackslash lib}
+  \end{itemize}
+  \item Open a \textbf{new} command line window, change to the \inlsh{builds}
+  directory, and then run the test suite by issuing the command
+  \begin{lstlisting}[style=BashInputStyle]
+    ctest -C Release
+  \end{lstlisting}
+\end{enumerate}
+
+\subsection{CMake Option Reference}
+\label{s:installation:source:cmake}
+This section describes the main configuration options which can be set when
+building Nektar++. The default options should work on almost all systems, but
+additional features (such as parallelisation and specialist libraries) can be
+enabled if needed.
+
+\subsubsection{Components}
+The first set of options specify the components of the Nektar++ toolkit to
+compile. Some options are dependent on others being enabled, so the available
+options may change.
+
+Components of the \nekpp package can be selected using the following options:
+\begin{itemize}
+    \item \inlsh{NEKTAR\_BUILD\_DEMOS} (Recommended)
+    
+    Compiles the demonstration programs. These are primarily used by the
+    regression testing suite to verify the \nekpp library, but also provide an
+    example of the basic usage of the framework.
+
+    \item \inlsh{NEKTAR\_BUILD\_DOC}
+
+    Compiles the Doxygen documentation for the code. This will be put in
+    \begin{lstlisting}[style=BashInputStyle]
+    $BUILDDIR/doxygen/html
+    \end{lstlisting}
+
+    \item \inlsh{NEKTAR\_BUILD\_LIBRARY} (Required)
+    
+    Compiles the Nektar++ framework libraries. This is required for all other
+    options.
+
+    \item \inlsh{NEKTAR\_BUILD\_SOLVERS} (Recommended)
+    
+    Compiles the solvers distributed with the \nekpp framework.
+
+    If enabling \inlsh{NEKTAR\_BUILD\_SOLVERS}, individual solvers can be
+    enabled or disabled. See Chapter~\ref{s:solvers} for the list of available
+    solvers. You can disable solvers which are not required to reduce
+    compilation time. See the \inlsh{NEKTAR\_SOLVER\_X} option.
+
+    \item \inlsh{NEKTAR\_BUILD\_TESTS} (Recommended)
+
+    Compiles the testing program used to verify the \nekpp framework.
+
+    \item \inlsh{NEKTAR\_BUILD\_TIMINGS}
+
+    Compiles programs used for timing \nekpp operations.
+
+    \item \inlsh{NEKTAR\_BUILD\_UNIT\_TESTS}
+
+    Compiles tests for checking the core library functions.
+
+    \item \inlsh{NEKTAR\_BUILD\_UTILITIES}
+
+    Compiles utilities for pre- and post-processing simulation data.
+    
+    \item \inlsh{NEKTAR\_SOLVER\_X}
+    
+    Enabled compilation of the 'X' solver.
+\end{itemize}
+
+A number of ThirdParty libraries are required by \nekpp. There are also
+optional libraries which provide additional functionality. These can be selected
+using the following options:
+\begin{itemize}
+    \item \inlsh{NEKTAR\_USE\_BLAS\_LAPACK} (Required)
+    
+    Enables the use of Basic Linear Algebra Subroutines libraries for linear
+    algebra operations.
+
+    \item \inlsh{NEKTAR\_USE\_SYSTEM\_BLAS\_LAPACK} (Recommended)
+    
+    On Linux systems, use the default BLAS and LAPACK library on the system.
+    This may not be the implementation offering the highest performance for your
+    architecture, but it is the most likely to work without problem.
+    
+    \item \inlsh{NEKTAR\_USE\_OPENBLAS}
+    
+    Use OpenBLAS for the BLAS library. OpenBLAS is based on the Goto BLAS
+    implementation and generally offers better performance than a non-optimised
+    system BLAS. However, the library must be installed on the system.
+    
+    \item \inlsh{NEKTAR\_USE\_MKL}
+    
+    Use the Intel MKL library. This is typically available on cluster
+    environments and should offer performance tuned for the specific cluster
+    environment.
+    
+    \item \inlsh{NEKTAR\_USE\_MPI} (Recommended)
+    
+    Build Nektar++ with MPI parallelisation. This allows solvers to be run in
+    serial or parallel.
+    
+    \item \inlsh{NEKTAR\_USE\_FFTW}
+    
+    Build Nektar++ with support for FFTW for performing Fast Fourier Transforms
+    (FFTs). This is used only when using domains with homogeneous coordinate
+    directions.
+    
+    \item \inlsh{NEKTAR\_USE\_ARPACK}
+    
+    Build Nektar++ with support for ARPACK. This provides routines used for
+    linear stability analyses. Alternative Arnoldi algorithms are also
+    implemented directly in Nektar++.
+    
+    \item \inlsh{NEKTAR\_USE\_VTK}
+    
+    Build Nektar++ with support for VTK libraries. This is only needed for
+    specialist utilities and is not needed for general use.
+    
+    \begin{notebox}
+    The VTK libraries are not needed for converting the output of simulations to
+    VTK format for visualization as this is handled internally.
+    \end{notebox}
+\end{itemize}
+
+The \inlsh{THIRDPARTY\_BUILD\_X} options select which third-party libraries are
+automatically built during the \nekpp build process. Below are the choices of X:
+\begin{itemize}
+    \item \inlsh{BOOST}
+
+    The \emph{Boost} libraries are frequently provided by the operating system,
+    so automatic compilation is not enabled by default. If you do not have
+    Boost on your system, you can enable this to have Boost configured
+    automatically.
+
+    \item \inlsh{GSMPI}
+    
+    (MPI-only) Parallel communication library.
+    
+    \item \inlsh{LOKI}
+    
+    An implementation of a singleton.
+    
+    \item \inlsh{METIS}
+    
+    A graph partitioning library used for substructuring of matrices and mesh
+    partitioning when Nektar++ is run in parallel.
+    
+    \item \inlsh{TINYXML}
+    
+    Library for reading and writing XML files.
+\end{itemize}
+

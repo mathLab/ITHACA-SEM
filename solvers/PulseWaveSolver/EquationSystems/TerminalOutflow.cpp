@@ -70,7 +70,6 @@ namespace Nektar
         int omega,int offset,int n)
     { 
 	NekDouble A_r, u_r;
-	NekDouble A_u, u_u;
         NekDouble RT, A_l, u_l, u_0, c_0, c_l;
 
         Array<OneD, MultiRegions::ExpListSharedPtr> vessel(2);

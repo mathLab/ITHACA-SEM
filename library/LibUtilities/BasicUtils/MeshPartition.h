@@ -46,17 +46,24 @@ namespace Nektar
 {
     namespace LibUtilities
     {
+        class MeshPartition;
         class SessionReader;
+        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
         typedef std::map<int, std::vector<unsigned int> > CompositeOrdering;
         typedef std::map<int, std::vector<unsigned int> > BndRegionOrdering;
 
+        /// Datatype of the NekFactory used to instantiate classes derived from
+        /// the EquationSystem class.
+        typedef LibUtilities::NekFactory< std::string, MeshPartition, const SessionReaderSharedPtr& > MeshPartitionFactory;
+
+        LIB_UTILITIES_EXPORT MeshPartitionFactory& GetMeshPartitionFactory();
+
         class MeshPartition
         {
-        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
 
         public:
             LIB_UTILITIES_EXPORT MeshPartition(const SessionReaderSharedPtr& pSession);
-            LIB_UTILITIES_EXPORT ~MeshPartition();
+            LIB_UTILITIES_EXPORT virtual ~MeshPartition();
 
             LIB_UTILITIES_EXPORT void PartitionMesh(bool shared = false);
             LIB_UTILITIES_EXPORT void WriteLocalPartition(
@@ -69,6 +76,9 @@ namespace Nektar
                     CompositeOrdering &composites);
             LIB_UTILITIES_EXPORT void GetBndRegionOrdering(
                     BndRegionOrdering &composites);
+
+            LIB_UTILITIES_EXPORT void GetElementIDs(const int procid,
+                                                    std::vector<unsigned int> &tmp);
 
         private:
             struct MeshEntity
@@ -214,6 +224,18 @@ namespace Nektar
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,
                                 std::vector<BoostSubGraph>& pLocalPartition);
+
+            virtual void PartitionGraphImpl(
+                    int&                              nVerts,
+                    int&                              nVertConds,
+                    Nektar::Array<Nektar::OneD, int>& xadj,
+                    Nektar::Array<Nektar::OneD, int>& adjcy,
+                    Nektar::Array<Nektar::OneD, int>& vertWgt,
+                    Nektar::Array<Nektar::OneD, int>& vertSize,
+                    int&                              nparts,
+                    int&                              volume,
+                    Nektar::Array<Nektar::OneD, int>& part) = 0;
+
             void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
             void CheckPartitions(Array<OneD, int> &pPart);
         };

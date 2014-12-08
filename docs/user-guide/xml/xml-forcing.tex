@@ -14,6 +14,7 @@ The force type can be any of the following:
     \item "Body" 
     \item "Programmatic"
     \item "Noise"
+    \item "MovingBody"
 \end{itemize}
 
 \subsection{Absorption}
@@ -56,9 +57,59 @@ This force type allows the user to specify the magnitude of a white noise force.
 \end{lstlisting}
 
 
+\subsection{MovingBody}
 
+\begin{notebox}
+  This force type is only supported for the Quasi-3D incompressible Navier-Stokes solver.
+\end{notebox}
 
+This force type allows the user to solve the interaction system of an incompressible fluid flowing past a flexible moving bodies ~\cite{NeKa97}. By this forcing function, one can eliminate the difficulty of moving mesh by using body-fitted coordinates, so that an additional acceleration term(i.e., forcing term) is introduced to the momentum equations by the non-inertial transform from the deformed and moving coordinate system to non-deformed and stationary one. 
 
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="MovingBody">
+</FORCE>
+\end{lstlisting}
+
+Available options of the motion type for the moving body include free, constrained and forced vibrations, which can be specified in the \inltt{SOLVERINFO} section. The free type of motion allows the body to move in both streamwise and crossflow directions, while the constrained type limits the motion only in the crossflow direction. For the forced type, the vibration profiles of the body should be specified as a given function or read from input file in \inltt{MovingBody} section. here an example,
+
+\begin{lstlisting}[style=XMLStyle] 
+<SOLVERINFO> 
+    <I PROPERTY="EQTYPE"    VALUE="UnsteadyNavierStokes" />
+    <I PROPERTY="SolverType"    VALUE="VelocityCorrectionScheme" />
+    <I PROPERTY="EvolutionOperator"    VALUE="SkewSymmetric" />
+    <I PROPERTY="Projection"    VALUE="Galerkin" />
+    <I PROPERTY="GlobalSysSoln"    VALUE="DirectStaticCond"/>
+    <I PROPERTY="TimeIntegrationMethod"    VALUE="IMEXOrder2" />
+    <I PROPERTY="HOMOGENEOUS"    VALUE="1D"/>
+    <I PROPERTY="USEFFT"    VALUE="FFTW"/>
+    <I PROPERTY="VibrationType"    VALUE="FREE"/>
+</SOLVERINFO>
+\end{lstlisting}
+
+A moving body type boundary condition should be specified in \inltt{BOUNDARYCONDITIONS} for the velocities on the far field and in-flow boundaries such as,
+
+\begin{lstlisting}[style=XMLStyle] 
+<BOUNDARYCONDITIONS> 
+    <REGION REF="1">
+        <D VAR="u" USERDEFINEDTYPE="MovingBody" VALUE="1" />
+        <D VAR="v" USERDEFINEDTYPE="MovingBody" VALUE="0" />
+        <D VAR="w" VALUE="0" />
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+     </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+For the simulation of low mass ratio, there is an option to activate fictitious mass method for stabilizing explicit coupling between the fluid solver and structural dynamic solver. Here we need to specify the values of fictitious mass and damping in \inltt{PARAMETERS}, for example,
+
+\begin{lstlisting}[style=XMLStyle] 
+<SOLVERINFO> 
+    <I PROPERTY="FictitiousMassMethod"    VALUE="True"/>
+</SOLVERINFO>
+<PARAMETERS>
+    <P> FictDamp      = 1000    </P>
+    <P> FictMass       = 1.5       </P>
+</PARAMETERS>
+\end{lstlisting}
 
 
 

@@ -81,7 +81,8 @@ namespace Nektar
                     const boost::weak_ptr<ExpList> &pExp,
                     const boost::shared_ptr<AssemblyMap>
                                                             &pLocToGloMap)
-                : GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
+            : GlobalLinSys(pLinSysKey, pExp, pLocToGloMap),
+              GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
         {
 
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eDirectFullMatrix,
@@ -112,7 +113,7 @@ namespace Nektar
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-            Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
+            Array<OneD, NekDouble> tmp(nGlobDofs);
             
             if(nDirDofs)
             {
@@ -126,8 +127,7 @@ namespace Nektar
                 }
                 else
                 {
-                    // Calculate the dirichlet forcing and substract it
-                    // from the rhs
+                    // Calculate Dirichlet forcing and subtract it from the rhs
                     m_expList.lock()->GeneralMatrixOp(
                         m_linSysKey, pOutput, tmp, eGlobal);
                     
@@ -137,9 +137,10 @@ namespace Nektar
                                 tmp.get(),    1);
                 }
 
-                SolveLinearSystem(nGlobDofs, tmp + nDirDofs,
-                                  tmp2 = pOutput + nDirDofs,
-                                  pLocToGloMap, nDirDofs);
+                Array<OneD, NekDouble> out(nGlobDofs,0.0);
+                SolveLinearSystem(nGlobDofs, tmp, out, pLocToGloMap, nDirDofs);
+                Vmath::Vadd(nGlobDofs-nDirDofs,    &out    [nDirDofs], 1,
+                            &pOutput[nDirDofs], 1, &pOutput[nDirDofs], 1);
             }
             else
             {
@@ -172,10 +173,10 @@ namespace Nektar
             switch(m_linSysKey.GetMatrixType())
             {
                 // case for all symmetric matices
-            case StdRegions::eMass:
-            case StdRegions::eHelmholtz:
-            case StdRegions::eLaplacian:
-            case StdRegions::eHybridDGHelmBndLam:
+                case StdRegions::eMass:
+                case StdRegions::eHelmholtz:
+                case StdRegions::eLaplacian:
+                case StdRegions::eHybridDGHelmBndLam:
                 {
                     if( (2*(bwidth+1)) < rows)
                     {
@@ -192,18 +193,18 @@ namespace Nektar
                                         ::AllocateSharedPtr(rows, cols, zero,
                                                             matStorage);
                     }
+                    break;
                 }
-                break;
-            case StdRegions::eLinearAdvectionReaction:
-            case StdRegions::eLinearAdvectionDiffusionReaction:
+                case StdRegions::eLinearAdvectionReaction:
+                case StdRegions::eLinearAdvectionDiffusionReaction:
                 {
                     matStorage = eFULL;
                     Gmat = MemoryManager<DNekMat>
                                         ::AllocateSharedPtr(rows, cols, zero,
                                                             matStorage);
+                    break;
                 }
-                break;
-            default:
+                default:
                 {
                     NEKERROR(ErrorUtil::efatal, "Add MatrixType to switch "
                                                 "statement");

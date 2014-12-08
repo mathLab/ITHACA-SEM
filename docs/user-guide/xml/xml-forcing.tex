@@ -1,0 +1,116 @@
+\section{Forcing}
+An optional section of the file allows forcing functions to be defined. These are enclosed in the
+\inltt{FORCING} tag. The forcing type is enclosed within the \inltt{FORCE} tag and expressed in the file as:
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="[NAME]">
+    ...
+</FORCE>
+\end{lstlisting}
+
+The force type can be any of the following:
+\begin{itemize}
+    \item "Absorption"
+    \item "Body" 
+    \item "Programmatic"
+    \item "Noise"
+    \item "MovingBody"
+\end{itemize}
+
+\subsection{Absorption}
+This force type allows the user to apply an absorption layer (essentially a porous region) anywhere in the domain. The user may also specify a velocity profile to be imposed at the start of this layer, and in the event of a time-dependent simulation, this profile can be modulated with a time-dependent function. These velocity functions and the function defining the region in which to apply the absorption layer are expressed in the \inltt{CONDITIONS} section, however the name of these functions are defined here by the \inltt{COEFF} tag for the layer, the \inltt{REFFLOW} tag for the velocity profile, and the \inltt{REFFLOWTIME} for the time-dependent function.  
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Absorption">
+    <COEFF> [FUNCTION NAME] <COEFF/>
+    <REFFLOW> [FUNCTION NAME] <REFFLOW/>
+    <REFFLOWTIME> [FUNCTION NAME] <REFFLOWTIME/>
+</FORCE>
+\end{lstlisting}
+
+
+\subsection{Body}
+This force type specifies the name of a body forcing function expressed in the \inltt{CONDITIONS} section.
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Body">
+    <BODYFORCE> [FUNCTION NAME] <BODYFORCE/>
+</FORCE>
+\end{lstlisting}
+
+\subsection{Programmatic}
+This force type allows a forcing function to be applied directly within the code, thus it has no associated function. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Programmatic">
+</FORCE>
+\end{lstlisting}
+
+
+\subsection{Noise}
+This force type allows the user to specify the magnitude of a white noise force. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="Noise">
+    <WHITENOISE> [VALUE] <WHITENOISE/>
+</FORCE>
+\end{lstlisting}
+
+
+\subsection{MovingBody}
+
+\begin{notebox}
+  This force type is only supported for the Quasi-3D incompressible Navier-Stokes solver.
+\end{notebox}
+
+This force type allows the user to solve the interaction system of an incompressible fluid flowing past a flexible moving bodies ~\cite{NeKa97}. By this forcing function, one can eliminate the difficulty of moving mesh by using body-fitted coordinates, so that an additional acceleration term(i.e., forcing term) is introduced to the momentum equations by the non-inertial transform from the deformed and moving coordinate system to non-deformed and stationary one. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="MovingBody">
+</FORCE>
+\end{lstlisting}
+
+Available options of the motion type for the moving body include free, constrained and forced vibrations, which can be specified in the \inltt{SOLVERINFO} section. The free type of motion allows the body to move in both streamwise and crossflow directions, while the constrained type limits the motion only in the crossflow direction. For the forced type, the vibration profiles of the body should be specified as a given function or read from input file in \inltt{MovingBody} section. here an example,
+
+\begin{lstlisting}[style=XMLStyle] 
+<SOLVERINFO> 
+    <I PROPERTY="EQTYPE"    VALUE="UnsteadyNavierStokes" />
+    <I PROPERTY="SolverType"    VALUE="VelocityCorrectionScheme" />
+    <I PROPERTY="EvolutionOperator"    VALUE="SkewSymmetric" />
+    <I PROPERTY="Projection"    VALUE="Galerkin" />
+    <I PROPERTY="GlobalSysSoln"    VALUE="DirectStaticCond"/>
+    <I PROPERTY="TimeIntegrationMethod"    VALUE="IMEXOrder2" />
+    <I PROPERTY="HOMOGENEOUS"    VALUE="1D"/>
+    <I PROPERTY="USEFFT"    VALUE="FFTW"/>
+    <I PROPERTY="VibrationType"    VALUE="FREE"/>
+</SOLVERINFO>
+\end{lstlisting}
+
+A moving body type boundary condition should be specified in \inltt{BOUNDARYCONDITIONS} for the velocities on the far field and in-flow boundaries such as,
+
+\begin{lstlisting}[style=XMLStyle] 
+<BOUNDARYCONDITIONS> 
+    <REGION REF="1">
+        <D VAR="u" USERDEFINEDTYPE="MovingBody" VALUE="1" />
+        <D VAR="v" USERDEFINEDTYPE="MovingBody" VALUE="0" />
+        <D VAR="w" VALUE="0" />
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+     </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+For the simulation of low mass ratio, there is an option to activate fictitious mass method for stabilizing explicit coupling between the fluid solver and structural dynamic solver. Here we need to specify the values of fictitious mass and damping in \inltt{PARAMETERS}, for example,
+
+\begin{lstlisting}[style=XMLStyle] 
+<SOLVERINFO> 
+    <I PROPERTY="FictitiousMassMethod"    VALUE="True"/>
+</SOLVERINFO>
+<PARAMETERS>
+    <P> FictDamp      = 1000    </P>
+    <P> FictMass       = 1.5       </P>
+</PARAMETERS>
+\end{lstlisting}
+
+
+
+

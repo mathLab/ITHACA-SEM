@@ -38,6 +38,7 @@
 #endif
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicConst/GitRevision.h>
 
 #include <iostream>
 #include <fstream>
@@ -58,6 +59,10 @@ using namespace std;
 
 #include <boost/program_options.hpp>
 #include <boost/format.hpp>
+
+#ifndef NEKTAR_VERSION
+#define NEKTAR_VERSION "Unknown"
+#endif
 
 namespace po = boost::program_options;
 namespace io = boost::iostreams;
@@ -287,6 +292,32 @@ namespace Nektar
             // Override SOLVERINFO and parameters with any specified on the
             // command line.
             CmdLineOverride();
+
+            // In verbose mode, print out parameters and solver info sections
+            if (m_verbose && m_comm)
+            {
+                if (m_comm->GetRank() == 0 && m_parameters.size() > 0)
+                {
+                    cout << "Parameters:" << endl;
+                    ParameterMap::iterator x;
+                    for (x = m_parameters.begin(); x != m_parameters.end(); ++x)
+                    {
+                        cout << "\t" << x->first << " = " << x->second << endl;
+                    }
+                    cout << endl;
+                }
+
+                if (m_comm->GetRank() == 0 && m_solverInfo.size() > 0)
+                {
+                    cout << "Solver Info:" << endl;
+                    SolverInfoMap::iterator x;
+                    for (x = m_solverInfo.begin(); x != m_solverInfo.end(); ++x)
+                    {
+                        cout << "\t" << x->first << " = " << x->second << endl;
+                    }
+                    cout << endl;
+                }
+            }
         }
 
 
@@ -301,6 +332,7 @@ namespace Nektar
             po::options_description desc("Allowed options");
             desc.add_options()
                 ("verbose,v",    "be verbose")
+                ("version,V",    "print version information")
                 ("help,h",       "print this help message")
                 ("solverinfo,I", po::value<vector<std::string> >(), 
                                  "override a SOLVERINFO property")
@@ -372,7 +404,36 @@ namespace Nektar
             // Help message
             if (m_cmdLineOptions.count("help"))
             {
-                cout << desc << endl;
+                cout << desc;
+                exit(0);
+            }
+
+            // Version information
+            if (m_cmdLineOptions.count("version"))
+            {
+                cout << "Nektar++ version " << NEKTAR_VERSION;
+
+                if (NekConstants::kGitSha1 != "GITDIR-NOTFOUND")
+                {
+                    string sha1(NekConstants::kGitSha1);
+                    string branch(NekConstants::kGitBranch);
+                    boost::replace_all(branch, "refs/heads/", "");
+
+                    cout << " (git changeset " << sha1.substr(0, 8) << ", ";
+
+                    if (branch == "")
+                    {
+                        cout << "detached head";
+                    }
+                    else
+                    {
+                        cout << "head " << branch;
+                    }
+
+                    cout << ")";
+                }
+
+                cout << endl;
                 exit(0);
             }
 
@@ -1423,7 +1484,11 @@ namespace Nektar
                 SessionReaderSharedPtr vSession     = GetSharedThisPtr();
                 if (DefinesCmdLineArgument("shared-filesystem"))
                 {
-                    if (GetComm()->GetRank() == 0)
+                    CommSharedPtr vComm = GetComm();
+                    vector<unsigned int> keys, vals;
+                    int i;
+
+                    if (vComm->GetRank() == 0)
                     {
                         m_xmlDoc = MergeDoc(m_filenames);
 
@@ -1435,9 +1500,106 @@ namespace Nektar
                         vPartitioner->GetCompositeOrdering(m_compOrder);
                         vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
 
+                        // Communicate orderings to the other processors.
+
+                        // First send sizes of the orderings and boundary
+                        // regions to allocate storage on the remote end.
+                        keys.resize(2);
+                        keys[0] = m_compOrder.size();
+                        keys[1] = m_bndRegOrder.size();
+
+                        for (i = 1; i < vComm->GetSize(); ++i)
+                        {
+                            vComm->Send(i, keys);
+                        }
+
+                        // Construct the keys and sizes of values for composite
+                        // ordering
+                        CompositeOrdering::iterator cIt;
+                        keys.resize(m_compOrder.size());
+                        vals.resize(m_compOrder.size());
+
+                        for (cIt  = m_compOrder.begin(), i = 0;
+                             cIt != m_compOrder.end(); ++cIt, ++i)
+                        {
+                            keys[i] = cIt->first;
+                            vals[i] = cIt->second.size();
+                        }
+
+                        // Send across data.
+                        for (i = 1; i < vComm->GetSize(); ++i)
+                        {
+                            vComm->Send(i, keys);
+                            vComm->Send(i, vals);
+
+                            for (cIt  = m_compOrder.begin();
+                                 cIt != m_compOrder.end(); ++cIt)
+                            {
+                                vComm->Send(i, cIt->second);
+                            }
+                        }
+
+                        // Construct the keys and sizes of values for composite
+                        // ordering
+                        BndRegionOrdering::iterator bIt;
+                        keys.resize(m_bndRegOrder.size());
+                        vals.resize(m_bndRegOrder.size());
+
+                        for (bIt  = m_bndRegOrder.begin(), i = 0;
+                             bIt != m_bndRegOrder.end(); ++bIt, ++i)
+                        {
+                            keys[i] = bIt->first;
+                            vals[i] = bIt->second.size();
+                        }
+
+                        // Send across data.
+                        for (i = 1; i < vComm->GetSize(); ++i)
+                        {
+                            vComm->Send(i, keys);
+                            vComm->Send(i, vals);
+
+                            for (bIt  = m_bndRegOrder.begin();
+                                 bIt != m_bndRegOrder.end(); ++bIt)
+                            {
+                                vComm->Send(i, bIt->second);
+                            }
+                        }
+
                         if (DefinesCmdLineArgument("part-info"))
                         {
                             vPartitioner->PrintPartInfo(std::cout);
+                        }
+                    }
+                    else
+                    {
+                        keys.resize(2);
+                        vComm->Recv(0, keys);
+
+                        int cmpSize = keys[0];
+                        int bndSize = keys[1];
+
+                        keys.resize(cmpSize);
+                        vals.resize(cmpSize);
+                        vComm->Recv(0, keys);
+                        vComm->Recv(0, vals);
+
+                        for (int i = 0; i < keys.size(); ++i)
+                        {
+                            vector<unsigned int> tmp(vals[i]);
+                            vComm->Recv(0, tmp);
+                            m_compOrder[keys[i]] = tmp;
+                        }
+
+                        keys.resize(bndSize);
+                        vals.resize(bndSize);
+                        vComm->Recv(0, keys);
+                        vComm->Recv(0, vals);
+
+                        for (int i = 0; i < keys.size(); ++i)
+                        {
+                            vector<unsigned int> tmp(vals[i]);
+                            vComm->Recv(0, tmp);
+                            m_bndRegOrder[keys[i]] = tmp;
                         }
                     }
                 }
@@ -1466,7 +1628,7 @@ namespace Nektar
                 std::string  dirname = GetSessionName() + "_xml";
                 fs::path    pdirname(dirname);
                 boost::format pad("P%1$07d.xml");
-                pad % m_comm->GetRank();
+                pad % m_comm->GetRowComm()->GetRank();
                 fs::path    pFilename(pad.str());
                 fs::path fullpath = pdirname / pFilename;
 
@@ -1624,20 +1786,6 @@ namespace Nektar
                     parameter = parameter->NextSiblingElement();
                 }
             }
-
-            if (m_verbose && m_parameters.size() > 0 && m_comm)
-            {
-                if(m_comm->GetRank() == 0)
-                {
-                    cout << "Parameters:" << endl;
-                    ParameterMap::iterator x;
-                    for (x = m_parameters.begin(); x != m_parameters.end(); ++x)
-                    {
-                        cout << "\t" << x->first << " = " << x->second << endl;
-                    }
-                    cout << endl;
-                }
-            }
         }
 
 
@@ -1719,22 +1867,13 @@ namespace Nektar
                         "IterativeMultiLevelStaticCond"                    ||
                     m_solverInfo["GLOBALSYSSOLN"] == "XxtFull"             ||
                     m_solverInfo["GLOBALSYSSOLN"] == "XxtStaticCond"       ||
-                    m_solverInfo["GLOBALSYSSOLN"] == "XxtMultiLevelStaticCond",
+                    m_solverInfo["GLOBALSYSSOLN"] ==
+                        "XxtMultiLevelStaticCond"                          ||
+                    m_solverInfo["GLOBALSYSSOLN"] == "PETScFull"           ||
+                    m_solverInfo["GLOBALSYSSOLN"] == "PETScStaticCond"     ||
+                    m_solverInfo["GLOBALSYSSOLN"] ==
+                        "PETScMultiLevelStaticCond",
                     "A parallel solver must be used when run in parallel.");
-            }
-            
-            if (m_verbose && m_solverInfo.size() > 0 && m_comm)
-            {
-                if(m_comm->GetRank() == 0)
-                {
-                    cout << "Solver Info:" << endl;
-                    SolverInfoMap::iterator x;
-                    for (x = m_solverInfo.begin(); x != m_solverInfo.end(); ++x)
-                    {
-                        cout << "\t" << x->first << " = " << x->second << endl;
-                    }
-                    cout << endl;
-                }
             }
         }
 
@@ -2180,7 +2319,15 @@ namespace Nektar
                     // Files are denoted by F
                     else if (conditionType == "F")
                     {
-                        funcDef.m_type = eFunctionTypeFile;
+                        if (variable->Attribute("TIMEDEPENDENT") &&
+                            boost::lexical_cast<bool>(variable->Attribute("TIMEDEPENDENT")))
+                        {
+                            funcDef.m_type = eFunctionTypeTransientFile;
+                        }
+                        else
+                        {
+                            funcDef.m_type = eFunctionTypeFile;
+                        }
 
                         // File must have a FILE.
                         ASSERTL0(variable->Attribute("FILE"),
@@ -2371,6 +2518,11 @@ namespace Nektar
                     }
                 }
             }
+        }
+
+        void SessionReader::SetUpXmlDoc(void)
+        {
+            m_xmlDoc = MergeDoc(m_filenames);
         }
     }
 }

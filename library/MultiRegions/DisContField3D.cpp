@@ -261,9 +261,9 @@
              m_globalBndMat        (In.m_globalBndMat),
              m_trace               (In.m_trace),
              m_traceMap            (In.m_traceMap),
-             m_periodicVerts       (In.m_periodicVerts),
+             m_periodicFaces       (In.m_periodicFaces),
              m_periodicEdges       (In.m_periodicEdges),
-             m_periodicFaces       (In.m_periodicFaces)
+             m_periodicVerts       (In.m_periodicVerts)
          {
          }
 

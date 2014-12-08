@@ -39,6 +39,11 @@
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/GlobalLinSysXxtFull.h>
+
+#ifdef NEKTAR_USING_PETSC
+#include <MultiRegions/GlobalLinSysPETScFull.h>
+#endif
+
 #include <LocalRegions/MatrixKey.h>
 #include <math.h>
 
@@ -56,7 +61,22 @@ namespace Nektar
                     PreconditionerLinear::create,
                     "Full Linear space inverse Preconditioning");
  
-       /**
+        std::string PreconditionerLinear::solveType =
+            LibUtilities::SessionReader::RegisterDefaultSolverInfo(
+                "LinearPreconSolver",
+                "Xxt");
+        std::string PreconditionerLinear::solveTypeIds[] = {
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LinearPreconSolver",
+                "PETSc",
+                MultiRegions::eLinearPreconPETSc),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LinearPreconSolver",
+                "Xxt",
+                MultiRegions::eLinearPreconXxt)
+        };
+
+        /**
          * @class PreconditionerLinear
          *
          * This class implements preconditioning for the conjugate 
@@ -76,36 +96,67 @@ namespace Nektar
 
         void PreconditionerLinear::v_BuildPreconditioner()
         {
-            GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
-            if(solvertype != eIterativeStaticCond)
-            {
-                ASSERTL0(0,"This type of preconditioning is not implemented for this solver");
-            }
+            GlobalSysSolnType sType  = m_locToGloMap->GetGlobalSysSolnType();
+            ASSERTL0(sType == eIterativeStaticCond,
+                     "This type of preconditioning is not implemented "
+                     "for this solver");
 
-            boost::shared_ptr<MultiRegions::ExpList> 
+            boost::shared_ptr<MultiRegions::ExpList>
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            m_vertLocToGloMap = m_locToGloMap->XxtLinearSpaceMap(*expList);
 
-            // Generate XXT system. 
-            if(m_linsys.lock()->GetKey().GetMatrixType() == StdRegions::eMass)
+            LinearPreconSolver solveType =
+                expList->GetSession()->GetSolverInfoAsEnum<LinearPreconSolver>(
+                    "LinearPreconSolver");
+
+            GlobalSysSolnType linSolveType;
+
+            switch(solveType)
             {
-                GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpaceMass, 
-                                          m_vertLocToGloMap);
-                m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
-                    AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+                case eLinearPreconPETSc:
+                {
+                    linSolveType = ePETScFullMatrix;
+#ifndef NEKTAR_USING_PETSC
+                    ASSERTL0(false, "Nektar++ has not been compiled with "
+                                    "PETSc support.");
+#endif
+                }
+                case eLinearPreconXxt:
+                default:
+                {
+                    linSolveType = eXxtFullMatrix;
+                    break;
+                }
             }
-            else
+
+            m_vertLocToGloMap = m_locToGloMap->LinearSpaceMap(*expList, linSolveType);
+
+            // Generate linear solve system.
+            StdRegions::MatrixType mType =
+                m_linsys.lock()->GetKey().GetMatrixType() == StdRegions::eMass ?
+                StdRegions::ePreconLinearSpaceMass :
+                StdRegions::ePreconLinearSpace;
+
+            GlobalLinSysKey preconKey(mType, m_vertLocToGloMap, (m_linsys.lock())->GetKey().GetConstFactors());
+
+            switch(solveType)
             {
-                GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpace, 
-                                          m_vertLocToGloMap,
-                                          (m_linsys.lock())->GetKey().GetConstFactors());
-                m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
-                    AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+                case eLinearPreconXxt:
+                {
+                    m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
+                        AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+                    break;
+                }
+                case eLinearPreconPETSc:
+                {
+#ifdef NEKTAR_USING_PETSC
+                    m_vertLinsys = MemoryManager<GlobalLinSysPETScFull>::
+                        AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+#else
+                    ASSERTL0(false, "Nektar++ has not been compiled with "
+                                    "PETSc support.");
+#endif
+                }
             }
-
-            
-
-
 	}
 
         /**

@@ -1,0 +1,420 @@
+\section{Field Convert}
+\label{s:utilities:fieldconvert}
+FieldConvert is a utility embedded in \nekpp with the primary 
+aim of allowing the user to convert the \nekpp output binary files 
+(.chk and .fld) into a format which can be read by two common 
+visualisation softwares: Paraview (.vtu format) or Tecplot (.dat 
+format). FieldConvert also allows the user to manipulate the 
+\nekpp output binary files by using some additional modules 
+which can be called with the option \inltt{-m} which stands 
+for \inltt{m}odule. Note that another flag, \inltt{-r} (which stand for 
+\inltt{r}ange) allows the user to specify a sub-range of the domain 
+on which the conversion or manipulation of the \nekpp output binary
+files will be performed. 
+
+Almost all of the FieldConvert functionalities can be run in parallel if \nekpp 
+is compiled using MPI (see the installation documentation for additional 
+info on how to implement \nekpp using MPI). \footnote{the modules which 
+does not have parallel support will be specified the related subsection}
+%
+%
+%
+\subsection{Convert .fld / .chk files into Paraview or Tecplot format}
+\label{s:utilities:fieldconvert:sub:convert}
+To convert the \nekpp output binary files (.chk and .fld) into a format 
+which can be read by two common visualisation softwares: Paraview 
+(.vtu format) or Tecplot (.dat format) the user can run the following 
+commands:
+%
+\begin{itemize}
+\item Paraview (.vtu format)
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert test.xml test.fld test.vtu
+\end{lstlisting}
+%
+\item Tecplot (.dat format)
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert test.xml test.fld test.dat
+\end{lstlisting}
+%
+\end{itemize}
+%
+where \inltt{FieldConvert} is the executable associated to the utility 
+FieldConvert, \inltt{test.xml} is the session file and \inltt{test.dat}, 
+\inltt{test.vtu} are the desired format outputs, either Tecplot or 
+Paraview format respectively. 
+%
+\begin{tipbox}
+Note that the session file is also supported 
+in its compressed format \inltt{test.xml.gz}.
+\end{tipbox}
+%
+%
+%
+\subsection{Field Convert range option \textit{-r}}
+The Fieldconvert range option \inltt{-r} allows the user to specify 
+a sub-range of the mesh (computational domain) by using an 
+additional flag, \inltt{-r} (which stands for \inltt{r}ange and either 
+convert or manipulate the \nekpp output binary files. 
+Taking as an example the conversion of the \nekpp binary files 
+(.chk or .fld) shown before and wanting to convert just the 2D 
+sub-range defined by $-2\leq x \leq 3$, $-1\leq y \leq 2$ the 
+additional flag \inltt{-r} can be used as follows:
+%
+\begin{itemize}
+\item Paraview (.vtu format)
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -r -2,3,-1,2 test.xml test.fld test.vtu
+\end{lstlisting}
+%
+\item Tecplot (.dat format)
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -r 2,3,-1,2 test.xml test.fld test.dat
+\end{lstlisting}
+%
+\end{itemize}
+where \inltt{-r} defines the range option of the field convert 
+utility, the two first numbers define the range in $x$ direction 
+and the the third and fourth number specify the $y$ range.
+A sub-range of a 3D domain can also be specified. 
+For doing so, a third set of numbers has to be provided 
+to define the $z$ range.
+%
+%
+%
+\subsection{Field Convert modules \textit{-m}}
+FieldConvert allows the user to manipulate the \nekpp output 
+binary files (.chk and .fld) by using the flag \inltt{-m} (which 
+stands for \inltt{m}odule).. 
+Specifically, FieldConvert has these additional functionalities
+%
+\begin{enumerate}
+\item \inltt{AddFld}: Sum two .fld files;
+\item \inltt{C0Projection}: Computes the C0 projection of a given output file;
+\item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
+\item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
+\item \inltt{extract}: Extract a boundary field;
+\item \inltt{interpfield}: Interpolates one field to another, requires fromxml, fromfld to be defined;
+\item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
+\item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
+\item \inltt{scaleinputfld}: rescale input field by a constant factor.
+\item \inltt{vorticity}: Computes the vorticity field.
+\end{enumerate}
+The module list above can be seen by running the command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -l 
+\end{lstlisting}
+%
+In the following we will detail the usage of each module.
+%
+%
+%
+
+\subsubsection{Sum two .fld files: \textit{AddFld} module}
+To sum two .fld files one can use the \inltt{AddFld} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m addfld:fromfld=file1.fld:scale=-1 file1.xml file2.fld file3.fld
+\end{lstlisting}
+%
+In this case we use it in conjunction with the command \inltt{scale} 
+which multiply the values of a given .fld file by a constant \inltt{value}. 
+\inltt{file1.fld} is the file multiplied by \inltt{value}, \inltt{file1.xml} 
+is the associated session file, \inltt{file2.fld} is the .fld file which 
+is summed to \inltt{file1.fld} and finally \inltt{file3.fld} is the output 
+which contain the sum of the two .fld files.
+\inltt{file3.fld} can be processed in a similar way as described 
+in section \ref{s:utilities:fieldconvert:sub:convert} to visualise 
+it either in Tecplot or in Paraview the result.
+%
+%
+%
+\subsubsection{Smooth the data: \textit{C0Projection} module}
+To smooth the data of a given .fld file one can 
+use the \inltt{C0Projection} module of FieldConvert
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m C0Projection test.xml test.fld test-C0Proj.fld
+\end{lstlisting}
+%
+where the file \inltt{test-C0Proj.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise either in Tecplot or in Paraview the result.
+
+\subsubsection{Calculate Q-Criterion: \textit{QCriterion} module}
+To perform the Q-criterion calculation and obtain an output 
+data containing the Q-criterion solution, the user can run
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m QCriterion test.xml test.fld test-QCrit.fld
+\end{lstlisting}
+%
+where the file \inltt{test-QCrit.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise either in Tecplot or in Paraview the result.
+%
+%
+%
+\subsubsection{Concatenate two files: \textit{concatenate} module}
+To concatenate \inltt{file1.fld} and \inltt{file2.fld} into \inltt{file-conc.fld}
+one can run the following command
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m concatenate file.xml  file1.fld  file2.fld  file-conc.fld
+\end{lstlisting}
+%
+where the file \inltt{file-conc.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise either in Tecplot or in Paraview the result.
+%
+%
+%
+\subsubsection{Extract a boundary region: \textit{extract} module}
+The boundary region of a domain can be extracted from the output 
+data using the following command line
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m extract:bnd=2:fldtoboundary=1 test.xml \
+	test.fld test-boundary.fld
+\end{lstlisting}
+%
+The option \inltt{bnd} specifies which boundary region to extract. 
+Note this is different to MeshConvert where the parameter \inltt{surf} 
+is specified and corresponds to composites rather boundaries. If \inltt{bnd} 
+is not provided, all boundaries are extracted to different fields. The \inltt{fldtoboundary} 
+is an optional command argument which copies the expansion of test.fld into 
+the boundary region before outputting the .fld file. This option is on by default. 
+If it turned off using \inltt{fldtoboundary=0} the extraction will only evaluate the 
+boundary condition from the xml file. The output will be placed in test-boundary-b2.fld. 
+If more than one boundary region is specified the extension -b0.fld, -b1.fld etc will be 
+outputted. To process this file you will need an xml file of the same region. 
+This can be generated using the command:
+%
+\begin{lstlisting}[style=BashInputStyle]
+MeshConvert -m extract:surf=5  test.xml test-b0.xml
+\end{lstlisting}
+%
+The surface to be extracted in this command is the composite 
+number and so needs to correspond to the boundary region 
+of interest. Finally to process the surface file one can use
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert  test-b0.xml test-b0.fld test-b0.dat
+\end{lstlisting}
+%
+This will obviously generate a Tecplot output if a .dat file 
+is specified as last argument. A .vtu extension will produce 
+a Paraview output.
+%
+%
+%
+\subsubsection{Interpolate one field to another: \textit{interpfield} module}
+To interpolate one field to another, one can use the following command:
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m interpfield:fromxml=file1.xml:fromfld=file1.fld \ 
+	file2.xml file2.fld
+\end{lstlisting}
+%
+This command will interpolate the field defined by \inltt{file1.xml} 
+and \inltt{file1.fld} to the new mesh defined in \inltt{file2.xml} and 
+output it to \inltt{file2.fld}.
+The \inltt{fromxml} and \inltt{fromfld} must be specified in this module. 
+In addition there are two optional arguments \inltt{clamptolowervalue} 
+and \inltt{clamptouppervalue} which clamp the interpolation between 
+these two values. Their default values are -10,000,000 and 10,000,000.
+%
+\begin{tipbox}
+This module can run in parallel where the speed is increased not
+only due to using more cores but also, since the mesh is split into 
+smaller sub-domains, the search method currently adopted performs 
+faster.
+\end{tipbox}
+%
+%
+%
+\subsubsection{Interpolate scattered point data to a field: \textit{interppointdatatofld} module}
+To interpolate discrete point data to a field, use the interppointdatatofld module:
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m interppointdatatofld file1.xml file1.pts file1.fld
+\end{lstlisting}
+%
+This command will interpolate the data from \inltt{file1.pts} to the mesh
+and expansions defined in \inltt{file1.xml} and output the field to \inltt{file1.fld}.
+The file \inltt{file.pts} is of the form:
+%
+\begin{lstlisting}[style=XMLStyle]
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <POINTS DIM="1" FIELDS="a,b,c">
+    1.0000 -1.0000 1.0000 -0.7778
+    2.0000 -0.9798 0.9798 -0.7980
+    3.0000 -0.9596 0.9596 -0.8182
+    4.0000 -0.9394 0.9394 -0.8384
+  </POINTS>
+</NEKTAR>
+\end{lstlisting}
+%
+where \inltt{DIM="1" FIELDS="a,b,c} specifies that the field is one-dimensional
+and contains three variables, $a$, $b$, and $c$.
+Each line defines a point, while the  first column contains its $x$-coordinate,
+the second one contains the $a$-values, the third the $b$-values and so on.
+In case of $n$-dimensional data, the $n$ coordinates are specified in the first $n$
+columns accordingly.
+Note that currently, the \textit{interppointdatatofld} module can only perform
+interpolation in one dimension.
+%
+In order to interpolate 1D data to a $n$D field, specify the matching coordinate in
+the output field using the \inltt{interpcoord} argument:
+%
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m interppointdatatofld:interppointdatatofld=1 3D-file1.xml \
+		1D-file1.pts 3D-file1.fld
+\end{lstlisting}
+%
+This will interpolate the 1D scattered point data from \inltt{1D-file1.pts} to the
+$y$-coordinate of the 3D mesh defined in \inltt{3D-file1.xml}. The resulting field
+will have constant values along the $x$ and $z$ coordinates.
+In the \inlsh{.pts}-file, all data points must be sorted by their location in ascending order.
+The module implements a quadratic interpolation scheme and automatically falls back to a
+linear scheme if only two data points are given.
+%
+%
+%
+\subsubsection{Interpolate a field to a series of points: \textit{interppoints} module}
+You can interpolate one field to a series of given points using the following command:
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m interppoints:fromxml=from.xml:fromfld=file1.fld \
+        file2.pts file2.dat
+\end{lstlisting}
+This command will interpolate the field defined by \inltt{file1.xml} and
+\inltt{file1.fld} to the points defined in \inltt{file2.xml} and output it to
+\inltt{file2.dat}.
+The \inltt{fromxml} and \inltt{fromfld} must be specified in this module.
+The format of the file \inltt{file2.pts} is of the same form as for the
+\textit{interppointdatatofld} module:
+\begin{lstlisting}[style=XMLStyle]
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <POINTS DIM="2" FIELDS="">
+    0.0 0.0
+    0.5 0.0
+    1.0 0.0
+  </POINTS>
+</NEKTAR>
+\end{lstlisting}
+There are three optional arguments \inltt{clamptolowervalue},
+\inltt{clamptouppervalue} and \inltt{defaultvalue} the first two clamp the
+interpolation between these two values and the third defines the default 
+value to be used if the point is outside the domain. Their default values 
+are -10,000,000, 10,000,000 and 0.
+
+In addition, instead of specifying the file \inltt{file2.pts}, a module list of the form
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m interppoints:fromxml=file1.xml:fromfld= \ 
+	file1.fld:line=npts,x0,y0,x1,y1
+\end{lstlisting}
+can be specified where \inltt{npts} is the number of equispaced points between
+$(x0,y0)$ to $(x1,y1)$ which can also be used in 3D by specifying $(x0,y0,z0)$
+to $(x1,y1,z1)$.
+
+An extraction of a plane can also be specified by
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m interppoints:fromxml=file1.xml:fromfld=file1.fld:plane=npts1,\
+	npts2,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3
+\end{lstlisting}
+where \inltt{npts1,npts2} is the number of equispaced points in each 
+direction and $(x0,y0,z0)$, $(x1,y1,z1)$, $(x2,y2,z2)$ and $(x3,y3,z3)$ 
+define the plane of points specified in a clockwise or anticlockwise direction.
+%
+\begin{notebox}
+This module does not run in parallel.
+\end{notebox}
+%
+%
+%
+\subsubsection{Scale a given .fld: \textit{scaleinputfld} module}
+
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert -m sacleinputfld:scale=value  test.fld  test-scal.fld
+\end{lstlisting}
+The argument \inltt{scale=value} rescales of a factor \inltt{value} 
+\inltt{test.fld} by the factor value.
+The output file \inltt{file-conc.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}
+to visualise it either in Tecplot or in Paraview the result.
+
+%
+%
+%
+\subsubsection{Calculate vorticity: \textit{vorticity} module}
+To perform the vorticity calculation and obtain an output 
+data containing the vorticity solution, the user can run
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m vorticity test.xml test.fld test-vort.fld
+\end{lstlisting}
+where the file \inltt{test-vort.fld} can be processed in a similar 
+way as described in section \ref{s:utilities:fieldconvert:sub:convert}.
+%
+%
+%
+\subsection{Field Convert in parallel}
+To run FieldConvert in parallel the user needs to compile 
+\nekpp with MPI support and can employ the following 
+command
+\begin{lstlisting}[style=BashInputStyle]
+mpirun -np <nprocs> FieldConvert test.xml test.fld test.dat
+\end{lstlisting}
+replacing \inltt{<nprocs>} with the number of processors. 
+This will produce multiple \inltt{.dat} files of the form \inltt{test\_P0.dat}, 
+\inltt{test\_P1.dat}, \inltt{test\_P2.dat}. Similarly the VTK files can be
+processed in this manner as can the vorticity option. In the case of 
+the vorticity option a directory called \inltt{test\_vort.fld} (or the specified 
+output name) will be produced with the standard parallel field files placed 
+within the directory.
+%
+%
+%
+\subsection{Processing large files}
+When processing large files it is not always convenient to run in parallel 
+but process each parallel partition in serial, for example when interpolating 
+one field to another. To do this we can use the \inltt{--nprocs} and 
+\inltt{--procid} options. For example the following option will interpolate 
+partition 2 of a decomposition into 10 partitions of \inltt{fiile2.xml} from 
+\inltt{file1.fld}
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert --nprocs 10 --procid 2 \
+        -m interpfield:fromxml=file1.xml:fromfld=file1.fld \
+        file2.xml file2.fld
+\end{lstlisting}
+This call will only provide part of the overall partition and so to create the 
+full interpolated field you need to call a loop of such commands. For example 
+in a bash shell you can run
+\begin{lstlisting}[style=BashInputStyle] 
+for n in `seq 0 1 9`
+do 
+    FieldConvert --nprocs 10 --procid $n \ 
+            -m interpfield:fromxml=file1.xml:fromfld=file1.fld \
+            file2.xml file2.fld
+done
+\end{lstlisting}
+
+This will create a directory called \inltt{file2.fld} and put the different 
+parallel partitions into files with names 
+\inltt{P0000000.fld, P0000001.fld, ?., P0000009.fld}. This is nearly a complete
+parallel field file but the Info.xml file which contains the information about 
+which elements are in each partitioned file \inltt{P000000X.fld}. So to generate
+this Info.xml file you need to call
+\begin{lstlisting}[style=BashInputStyle] 
+FieldConvert --nprocs 10 file2.xml file2.fld/Info.xml:info
+\end{lstlisting}
+Note the final \inltt{:info} extension on the last argument is necessary to 
+tell FieldConvert that you wish to generate an info file but the extension 
+to this file is .xml. This syntax allows the routine not to get confused with 
+the input/output xml files.

@@ -597,6 +597,7 @@ namespace Nektar
             int graphVertId = 0;
             StdRegions::StdExpansion2DSharedPtr  locExpansion;
             LocalRegions::SegExpSharedPtr        bndSegExp;
+            LocalRegions::ExpansionSharedPtr     bndExp;
             MultiRegions::ExpList0DSharedPtr     bndVertExp;
             const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
             map<int,int>::iterator mapIt;
@@ -604,6 +605,7 @@ namespace Nektar
             bool systemSingular = true;
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
             PeriodicMap::const_iterator pIt;
+            int vMaxVertId = -1;
 
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
@@ -626,6 +628,21 @@ namespace Nektar
                     }
                 }
                 
+                // Find the maximum boundary vertex ID on this process. This is
+                // used later to pin a vertex if the system is singular.
+                for (j = 0; j < bndCondExp[i]->GetNumElmts(); ++j)
+                {
+                    bndExp = bndCondExp[i]->GetExp(j)->as<LocalRegions::Expansion>();
+                    for (k = 0; k < bndExp->GetNverts(); ++k)
+                    {
+                        if (vMaxVertId < bndExp->GetGeom()->GetVid(k))
+                        {
+                            vMaxVertId = bndExp->GetGeom()->GetVid(k);
+                        }
+                    }
+
+                }
+
                 // If all boundaries are Dirichlet take out of mask 
                 if(cnt == bndConditions.num_elements())
                 {
@@ -658,13 +675,13 @@ namespace Nektar
             vCommRow->AllReduce(s, LibUtilities::ReduceMin);
             systemSingular = (s == 1 ? true : false);
 
-            // Count the number of boundary regions on each process
-            Array<OneD, int> bccounts(n, 0);
-            bccounts[p] = bndCondExp.num_elements();
-            vCommRow->AllReduce(bccounts, LibUtilities::ReduceSum);
+            // Find the minimum boundary vertex ID on each process
+            Array<OneD, int> bcminvertid(n, 0);
+            bcminvertid[p] = vMaxVertId;
+            vCommRow->AllReduce(bcminvertid, LibUtilities::ReduceMax);
 
-            // Find the process rank with the maximum number of boundary regions
-            int maxBCIdx = Vmath::Imax(n, bccounts, 1);
+            // Find the process rank with the minimum boundary vertex ID
+            int maxIdx = Vmath::Imax(n, bcminvertid, 1);
 
             // If the system is singular, the process with the maximum number of
             // BCs will set a Dirichlet vertex to make system non-singular.
@@ -672,25 +689,13 @@ namespace Nektar
             // we do not try to set a Dirichlet vertex on a partition with no
             // intersection with the boundary.
             meshVertId = 0;
-            if(systemSingular == true && checkIfSystemSingular && maxBCIdx == p)
+            if(systemSingular == true && checkIfSystemSingular && maxIdx == p)
             {
-                if (m_session->DefinesParameter("SingularElement"))
-                {
-                    int s_eid;
-                    m_session->LoadParameter("SingularElement", s_eid);
-
-                    ASSERTL1(s_eid < locExpVector.size(),
-                             "SingularElement Parameter is too large");
-
-                    meshVertId = locExpVector[s_eid]
-                                      ->as<LocalRegions::Expansion2D>()
-                                      ->GetGeom2D()->GetVid(0);
-                }
-                else if (m_session->DefinesParameter("SingularVertex"))
+                if (m_session->DefinesParameter("SingularVertex"))
                 {
                     m_session->LoadParameter("SingularVertex", meshVertId);
                 }
-                else if (bndCondExp.num_elements() == 0)
+                else if (vMaxVertId == -1)
                 {
                     // All boundaries are periodic.
                     meshVertId = locExpVector[0]
@@ -699,9 +704,9 @@ namespace Nektar
                 }
                 else
                 {
-                    bndSegExp = bndCondExp[bndCondExp.num_elements()-1]
-                                      ->GetExp(0)->as<LocalRegions::SegExp>();
-                    meshVertId = bndSegExp->GetGeom1D()->GetVid(0);
+                    // Set pinned vertex to that with minimum vertex ID to
+                    // ensure consistency in parallel.
+                    meshVertId = bcminvertid[p];
                 }
 
                 if (ReorderedGraphVertId[0].count(meshVertId) == 0)
@@ -720,7 +725,7 @@ namespace Nektar
                 // Firstly, we check that no other processors have this
                 // vertex. If they do, then we mark the vertex as also being
                 // Dirichlet.
-                if (maxBCIdx != p)
+                if (maxIdx != p)
                 {
                     if (Dofs[0].count(meshVertId) > 0)
                     {
@@ -810,7 +815,7 @@ namespace Nektar
             Array<OneD, int> offsets(n, 0);
             counts[p] = ReorderedGraphVertId[0].size();
             vCommRow->AllReduce(counts, LibUtilities::ReduceSum);
-            
+
             for (i = 1; i < n; ++i)
             {
                 offsets[i] = offsets[i-1] + counts[i-1];
@@ -1358,6 +1363,8 @@ namespace Nektar
                 case eIterativeStaticCond:
                 case eXxtFullMatrix:
                 case eXxtStaticCond:
+                case ePETScFullMatrix:
+                case ePETScStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                     }
@@ -1370,6 +1377,7 @@ namespace Nektar
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
                 case eXxtMultiLevelStaticCond:
+                case ePETScMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,partVerts,mdswitch);
                     }

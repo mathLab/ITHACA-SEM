@@ -146,7 +146,11 @@ namespace Nektar
 
             SetCoeffPhys();
 
-            SetupBoundaryConditions(HomoBasis, lhom, bcs, variable);
+            // Do not set up BCs if default variable
+            if(variable.compare("DefaultVar") != 0)
+            {
+                SetupBoundaryConditions(HomoBasis, lhom, bcs, variable);
+            }
 
             SetUpDG();
         }

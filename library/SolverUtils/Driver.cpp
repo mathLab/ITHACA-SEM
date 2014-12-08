@@ -88,7 +88,6 @@ namespace Nektar
                 {
                     vEquation = m_session->GetSolverInfo("SolverType");
                 }
-
                 // Check such a module exists for this equation.
                 ASSERTL0(GetEquationSystemFactory().ModuleExists(vEquation),
                          "EquationSystem '" + vEquation + "' is not defined.\n"
@@ -132,6 +131,7 @@ namespace Nektar
                         break;
                     default:
                         ASSERTL0(false, "Unrecognised evolution operator.");
+						
                 }
             }
             catch (int e)

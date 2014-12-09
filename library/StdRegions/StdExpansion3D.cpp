@@ -331,7 +331,6 @@ namespace Nektar
             return Vmath::Vsum(nqtot, tmp, 1);
         }
         
-        
         void StdExpansion3D::v_NegateFaceNormal(const int face)
         {
             m_negatedNormals[face] = true;
@@ -340,6 +339,11 @@ namespace Nektar
                 Vmath::Neg(m_faceNormals[face][i].num_elements(), 
                            m_faceNormals[face][i], 1);
             }
+        }
+
+        bool StdExpansion3D::v_FaceNormalNegated(const int face)
+        {
+            return m_negatedNormals[face];
         }
 
     }//end namespace

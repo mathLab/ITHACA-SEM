@@ -103,6 +103,11 @@ namespace Nektar
                                                         
             MULTI_REGIONS_EXPORT void InterpLocFacesToTrace(const int dir, const Array<OneD, const NekDouble> &locfaces, Array<OneD, NekDouble> faces);
 
+
+            MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs(const Array<OneD, const NekDouble> &trace,  Array<OneD, NekDouble> &field);
+
+            MULTI_REGIONS_EXPORT void AddTraceCoeffsToFieldCoeffs(const int dir, const Array<OneD, const NekDouble> &race, Array<OneD, NekDouble> &field);
+
             MULTI_REGIONS_EXPORT inline int GetNFwdLocTracePts()
             {
                 return m_nFwdLocTracePts; 
@@ -127,6 +132,11 @@ namespace Nektar
             Array<OneD, Array<OneD, DNekMatSharedPtr> >  m_interpTraceI1;
             Array<OneD, Array<OneD, TraceInterpPoints> > m_interpPoints;
             Array<OneD, Array<OneD, int> > m_interpNfaces; 
+            
+            int m_nTraceCoeffs[2];
+            Array<OneD, Array<OneD, int> > m_traceCoeffsToElmtMap;
+            Array<OneD, Array<OneD, int> > m_traceCoeffsToElmtTrace;
+            Array<OneD, Array<OneD, int> > m_traceCoeffsToElmtSign;
         };
 
         typedef boost::shared_ptr<LocTraceToTraceMap> LocTraceToTraceMapSharedPtr;

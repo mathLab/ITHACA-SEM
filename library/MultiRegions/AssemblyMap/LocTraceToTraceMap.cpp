@@ -49,10 +49,14 @@ namespace Nektar
         {
             m_LocTraceToTraceMap = Array<OneD, Array<OneD, int> >(2);
             m_interpTrace = Array<OneD, Array<OneD, InterpLocTraceToTrace> >(2);
-            m_interpTraceI0 = Array<OneD, Array<OneD, DNekMatSharedPtr> >(2);
-            m_interpTraceI1 = Array<OneD, Array<OneD, DNekMatSharedPtr> >(2);
+            m_interpTraceI0 = Array<OneD, Array<OneD, DNekMatSharedPtr> > (2);
+            m_interpTraceI1 = Array<OneD, Array<OneD, DNekMatSharedPtr> > (2);
             m_interpPoints  = Array<OneD, Array<OneD, TraceInterpPoints> >(2);
             m_interpNfaces  = Array<OneD, Array<OneD, int> >(2); 
+
+            m_traceCoeffsToElmtMap   = Array<OneD, Array<OneD, int> >(2);
+            m_traceCoeffsToElmtTrace = Array<OneD, Array<OneD, int> >(2);
+            m_traceCoeffsToElmtSign  = Array<OneD, Array<OneD, int> >(2);
 
             LocalRegions::Expansion3DSharedPtr exp3d;
             int cnt, n, e, phys_offset;
@@ -64,6 +68,8 @@ namespace Nektar
             // count number of faces and points required for maps 
             int nFwdPts = 0;
             int nBwdPts = 0; 
+            int nFwdCoeffs = 0;
+            int nBwdCoeffs = 0; 
             m_nFwdLocTracePts = 0;
             m_nLocTracePts = 0; 
             m_nTracePts = trace->GetTotPoints();
@@ -78,20 +84,32 @@ namespace Nektar
                     
                     if(LeftAdjacentFaces[cnt])
                     {
-                        nFwdPts += elmtToTrace[n][i]->GetTotPoints();
+                        nFwdPts    += elmtToTrace[n][i]->GetTotPoints();
+                        nFwdCoeffs += elmtToTrace[n][i]->GetNcoeffs();
                         m_nFwdLocTracePts += nLocPts; 
                     }
                     else
                     {
                         nBwdPts += elmtToTrace[n][i]->GetTotPoints();
+                        nBwdCoeffs += elmtToTrace[n][i]->GetNcoeffs();
                     }
                     
                 }
             }
+
             m_fieldToLocTraceMap = Array<OneD, int>(m_nLocTracePts);
             
             m_LocTraceToTraceMap[0] = Array<OneD, int>(nFwdPts);
             m_LocTraceToTraceMap[1] = Array<OneD, int>(nBwdPts);
+
+            m_nTraceCoeffs[0] = nFwdCoeffs;
+            m_nTraceCoeffs[1] = nBwdCoeffs;
+            m_traceCoeffsToElmtMap[0]   = Array<OneD, int>(nFwdCoeffs+nBwdCoeffs);
+            m_traceCoeffsToElmtMap[1]   = m_traceCoeffsToElmtMap[0] + nFwdCoeffs;
+            m_traceCoeffsToElmtTrace[0] = Array<OneD, int>(nFwdCoeffs+nBwdCoeffs);
+            m_traceCoeffsToElmtTrace[1] = m_traceCoeffsToElmtTrace[0] + nFwdCoeffs;
+            m_traceCoeffsToElmtSign[0]  = Array<OneD, int>(nFwdCoeffs+nBwdCoeffs);
+            m_traceCoeffsToElmtSign[1]  = m_traceCoeffsToElmtSign[0] + nFwdCoeffs;
             
             // gather information about trace interpolations. 
             map<TraceInterpPoints, vector<pair<int,int> >, cmpop > TraceInterpMap;
@@ -100,6 +118,8 @@ namespace Nektar
             vector<vector<int> > TraceOrder;
             TraceOrder.resize(nexp);
             int nface;
+            int fwdcnt = 0;
+            int bwdcnt = 0;
             // generate a map of similar traces with the same
             // interpolation requirements.
             for(cnt = n = 0; n < nexp; ++n)
@@ -107,6 +127,8 @@ namespace Nektar
                 exp3d = (*exp)[n]->as<LocalRegions::Expansion3D>();
                 nface = exp3d->GetNfaces();
                 TraceOrder[n].resize(nface);
+
+                int coeffoffset = locExp.GetCoeff_Offset(n);
                 for(e = 0; e < nface; ++e,++cnt)
                 {
                     StdRegions::StdExpansionSharedPtr face = elmtToTrace[n][e]; 
@@ -141,6 +163,35 @@ namespace Nektar
                     TraceInterpMap[fpoint].push_back(epf);
                     
                     TraceOrder[n][e] = cnt; 
+
+                    // setup for coefficient mapping from trace normal flux to elements
+                    Array<OneD, unsigned int> map;
+                    Array<OneD, int> sign;
+                    exp3d->GetFaceToElementMap(e, orient, map, sign);
+
+                    int order_f = face->GetNcoeffs();
+                    int foffset = trace->GetCoeff_Offset(face->GetElmtId());
+                    
+                    int fac = (*exp)[n]->FaceNormalNegated(e) ? -1.0 : 1.0;
+                    
+                    if(LeftAdjacentFaces[cnt])
+                    {
+                        for(int i = 0; i < order_f; ++i)
+                        {
+                            m_traceCoeffsToElmtMap  [0][fwdcnt]   = coeffoffset + map[i];
+                            m_traceCoeffsToElmtTrace[0][fwdcnt]   = foffset + i;
+                            m_traceCoeffsToElmtSign [0][fwdcnt++] = fac*sign[i];
+                        }
+                    }
+                    else
+                    {
+                        for(int i = 0; i < order_f; ++i)
+                        {
+                            m_traceCoeffsToElmtMap  [1][bwdcnt]   = coeffoffset + map[i];
+                            m_traceCoeffsToElmtTrace[1][bwdcnt]   = foffset + i;
+                            m_traceCoeffsToElmtSign [1][bwdcnt++] = -fac*sign[i];
+                        }
+                    }
                 }
             }
             
@@ -151,14 +202,14 @@ namespace Nektar
                 m_interpTraceI0[i] = Array<OneD, DNekMatSharedPtr>     (nInterpType);
                 m_interpTraceI1[i] = Array<OneD, DNekMatSharedPtr>     (nInterpType);
                 m_interpPoints[i]  = Array<OneD, TraceInterpPoints>    (nInterpType);
-                m_interpNfaces[i]  = Array<OneD, int>                  (nInterpType,0);
+                m_interpNfaces[i]  = Array<OneD, int>                (nInterpType,0);
             }
             
             int nfacepts,nfacepts1; 
-            int cnt1 = 0; 
-            int cnt2 = 0; 
-            int cntFwd = 0;
-            int cntBwd = 0;
+            int cnt1    = 0; 
+            int cnt2    = 0; 
+            int cntFwd  = 0;
+            int cntBwd  = 0;
             int cntFwd1 = 0;
             int cntBwd1 = 0;
             int set;
@@ -388,6 +439,29 @@ namespace Nektar
             Vmath::Scatr(m_LocTraceToTraceMap[dir].num_elements(),
                          tmp.get(),m_LocTraceToTraceMap[dir].get(),
                          faces.get());
+        }
+
+        void LocTraceToTraceMap::AddTraceCoeffsToFieldCoeffs(const Array<OneD, const NekDouble> &trace, Array<OneD, NekDouble> &field)
+        {
+            int nvals = m_nTraceCoeffs[0] + m_nTraceCoeffs[1];
+            for(int i = 0; i < nvals; ++i)
+            {
+                field[m_traceCoeffsToElmtMap[0][i]] +=
+                    m_traceCoeffsToElmtSign[0][i] * 
+                    trace[m_traceCoeffsToElmtTrace[0][i]];
+            }
+        }
+
+
+        void LocTraceToTraceMap::AddTraceCoeffsToFieldCoeffs(const int dir, const Array<OneD, const NekDouble> &trace, Array<OneD, NekDouble> &field)
+        {
+            int nvals = m_nTraceCoeffs[dir];
+            for(int i = 0; i < nvals; ++i)
+            {
+                field[m_traceCoeffsToElmtMap[dir][i]] +=
+                    m_traceCoeffsToElmtSign[dir][i] * 
+                    trace[m_traceCoeffsToElmtTrace[dir][i]];
+            }
         }
     } //namespace
 } // namespace

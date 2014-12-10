@@ -100,16 +100,7 @@ class APE : public UnsteadySystem
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-        virtual void v_GetFluxVector(const int i,
-                                     Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                     Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        /// Evaulate flux = m_fields*ivel for i th component of Vu for direction j
-        virtual void v_GetFluxVector(const int i, const int j,
-                                     Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                     Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        void AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray, Array< OneD, Array< OneD, NekDouble > > &outarray);
+//         void AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray, Array< OneD, Array< OneD, NekDouble > > &outarray);
 
         virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                                       std::vector<std::string>             &variables);

@@ -98,11 +98,20 @@ namespace Nektar
 	    AdvectionSystemSharedPtr A = boost::dynamic_pointer_cast<AdvectionSystem>(m_equ[0]);
 	    
 	    ///Condition necessary to run SFD for the compressible case
-	    NumVar_SFD = m_equ[m_nequ - 1]->UpdateFields()[0]->GetCoordim(0);            
+	    NumVar_SFD = m_equ[m_nequ - 1]->UpdateFields()[0]->GetCoordim(0);    
 	    if (m_session->GetSolverInfo("EqType") == "EulerCFE" || m_session->GetSolverInfo("EqType") == "NavierStokesCFE")
 	    {
 		NumVar_SFD += 2; //Number of variables for the compressible equations
 	    }
+	    if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
+	    {
+		if (m_session->GetSolverInfo("HOMOGENEOUS") == "1D")
+		{
+		    NumVar_SFD += 1;
+		}
+	    }
+	    
+	    cout << NumVar_SFD << endl;
 	    
 	    ///We store the time step
 	    m_dt = m_equ[m_nequ - 1]->GetTimeStep();
@@ -191,7 +200,7 @@ namespace Nektar
 			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
 			    m_Check_BaseFlow++;
 			    
-			    A->GetAdvObject()->SetBaseFlow(q0); 
+			    A->GetAdvObject()->SetBaseFlow(q0);			    
 			    DriverModifiedArnoldi::v_Execute(out);
 			    
 			    if (m_comm->GetRank() == 0)
@@ -225,7 +234,7 @@ namespace Nektar
 			    m_equ[m_nequ - 1]->Checkpoint_BaseFlow(m_Check_BaseFlow);
 			    m_Check_BaseFlow++;
 			    
-			    A->GetAdvObject()->SetBaseFlow(q0);
+			    A->GetAdvObject()->SetBaseFlow(q0); 
 			    DriverModifiedArnoldi::v_Execute(out);
 			    
 			    if (m_comm->GetRank() == 0)

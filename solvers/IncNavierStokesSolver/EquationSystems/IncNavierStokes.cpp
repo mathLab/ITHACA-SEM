@@ -478,19 +478,20 @@ namespace Nektar
     {
 	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
 
-	NekDouble kt,T,alpha,R;
- 	int  i,n,k,M;
+	NekDouble kt,T,alpha,R,n0,n1,n2;
+ 	int  i,k,M;
 
-//	NekDouble T = 1.0;
-//	NekDouble alpha = 5.0;
-//	NekDouble R = 0.5;
-	m_Session->LoadParameter("Period",T);
-	m_Session->LoadParameter("Alpha",alpha);
-	m_Session->LoadParameter("Radius",R);
-	m_Session->LoadParameter("Modes",M);
+	m_session->LoadParameter("Period",T);
+	m_session->LoadParameter("Alpha",alpha);
+	m_session->LoadParameter("Radius",R);
+	m_session->LoadParameter("Modes",M);
+	m_session->LoadParameter("n0",n0);
+	m_session->LoadParameter("n1",n1);
+	m_session->LoadParameter("n2",n2);
 	
 	
-//	int M = 8;
+	NekDouble normals[] = {n0,n1,n2};
+	
 	NekDouble vel_i[] = {0.0000000000000000,	-0.0250670990359525,	0.0883982822857696,	-0.0062663572808457,	-0.0460886047599786,	0.0244650285943904,	0.0007736191180826,	-0.0000204065354244,	-0.0026765687423288,	-0.0023795623937237,	0.0032350684203032,	-0.0001643113357552,	-0.0015344792194370,	-0.0007340742914415
 };
 	NekDouble vel_r[] = {0.3789045336112559,	-0.1253500851498874,	-0.0058557281020047,	0.0339446760533445,	0.0047222654948468,	-0.0218586269719675,	0.0045331077993802,	0.0037133570904368,	0.0026164924461453,	-0.0049806715817818,	0.0002051813222864,	0.0021237225226305,	0.0003365744602936,	-0.0014797879248697};
@@ -508,6 +509,7 @@ namespace Nektar
         
         BndConds = m_fields[fieldid]->GetBndConditions();
         BndExp   = m_fields[fieldid]->GetBndCondExpansions();
+	
 
 	int npoints = BndExp[bndid]->GetNpoints();
 
@@ -519,36 +521,30 @@ namespace Nektar
 
         BndExp[bndid]->GetCoords(x0,x1,x2);
 		
-	if (fieldid == 2)
-	{
-		for (i=0;i<npoints;i++){
-			r = sqrt(x0[i]*x0[i] + x1[i]*x1[i])/R;
 
-			w[i] = vel_r[0]*(1 - r*r); // Compute Poiseulle Flow
-			for (k=1; k<M; k++){
-				kt = 2.0*M_PI*k*m_time/T;
-				za = alpha/sqrt(2)*std::complex<NekDouble>(-1.0,1.0);
-				zar = za*r;
-				zJ0 = CompBessel(0,za);
-				zJ0r = CompBessel(0,zar);
-				zJ0rJ0 = zJ0r/zJ0;
-				zq = (std::complex<NekDouble>(vel_r[k],vel_i[k])*std::complex<NekDouble>(cos(kt),sin(kt)));
-				zvel = zq*(z1 - zJ0rJ0);
-				w[i] = w[i]+std::real(zvel);
-			}
+	for (i=0;i<npoints;i++){
+		r = sqrt(x0[i]*x0[i] + x1[i]*x1[i])/R;
+
+		w[i] = vel_r[0]*(1 - r*r); // Compute Poiseulle Flow
+		for (k=1; k<M; k++){
+			kt = 2.0*M_PI*k*m_time/T;
+			za = alpha/sqrt(2)*std::complex<NekDouble>(-1.0,1.0);
+			zar = za*r;
+			zJ0 = CompBessel(0,za);
+			zJ0r = CompBessel(0,zar);
+			zJ0rJ0 = zJ0r/zJ0;
+			zq = (std::complex<NekDouble>(vel_r[k],vel_i[k])*std::complex<NekDouble>(cos(kt),sin(kt)));
+			zvel = zq*(z1 - zJ0rJ0);
+			w[i] = w[i]+std::real(zvel);
 		}
-		BndExp[bndid]->UpdatePhys() = w;
-		BndExp[bndid]->FwdTrans_BndConstrained(
-						BndExp[bndid]->GetPhys(),
-						BndExp[bndid]->UpdateCoeffs());
 	}
-	else
-	{
-		BndExp[bndid]->UpdatePhys() = zero;
-		BndExp[bndid]->FwdTrans_BndConstrained(
-						BndExp[bndid]->GetPhys(),
-						BndExp[bndid]->UpdateCoeffs());
-	}	
+	// Multiply w by normal to get u,v,w component of velocity
+	Vmath::Smul(npoints,normals[fieldid],w,1,BndExp[bndid]->UpdatePhys(),1);
+	// Push back to Coeff space	
+	BndExp[bndid]->FwdTrans_BndConstrained(
+					BndExp[bndid]->GetPhys(),
+					BndExp[bndid]->UpdateCoeffs());
+
     }
 
 /* Computes the Complex Bessel function of 1st kind integer order using series rep. - taken from numberical recipies in C.

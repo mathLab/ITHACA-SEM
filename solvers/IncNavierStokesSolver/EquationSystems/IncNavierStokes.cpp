@@ -391,10 +391,6 @@ namespace Nektar
 		 else if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
                    SpatialDomains::eWomersley)  
                 {
-                    //varName = m_session->GetVariable(i);
-		    // i - variable that is being passed   n - boundary surface is (inlet, outlet..) 
-		    std::cout << "Variable " << i << '\n';
-		    std::cout << "Number of Bnd Cond " << n << '\n';
                     SetWomersleyBoundary(i,n);
                 }
 
@@ -481,14 +477,20 @@ namespace Nektar
     void IncNavierStokes::SetWomersleyBoundary(int fieldid, int bndid)
     {
 	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
-	NekDouble kt;
-	NekDouble T = 1.0;
-	NekDouble alpha = 5.0;
-	NekDouble R = 0.5;
+
+	NekDouble kt,T,alpha,R;
+ 	int  i,n,k,M;
+
+//	NekDouble T = 1.0;
+//	NekDouble alpha = 5.0;
+//	NekDouble R = 0.5;
+	m_Session->LoadParameter("Period",T);
+	m_Session->LoadParameter("Alpha",alpha);
+	m_Session->LoadParameter("Radius",R);
+	m_Session->LoadParameter("Modes",M);
 	
 	
- 	int  i,n,k;
-	int M = 8;
+//	int M = 8;
 	NekDouble vel_i[] = {0.0000000000000000,	-0.0250670990359525,	0.0883982822857696,	-0.0062663572808457,	-0.0460886047599786,	0.0244650285943904,	0.0007736191180826,	-0.0000204065354244,	-0.0026765687423288,	-0.0023795623937237,	0.0032350684203032,	-0.0001643113357552,	-0.0015344792194370,	-0.0007340742914415
 };
 	NekDouble vel_r[] = {0.3789045336112559,	-0.1253500851498874,	-0.0058557281020047,	0.0339446760533445,	0.0047222654948468,	-0.0218586269719675,	0.0045331077993802,	0.0037133570904368,	0.0026164924461453,	-0.0049806715817818,	0.0002051813222864,	0.0021237225226305,	0.0003365744602936,	-0.0014797879248697};
@@ -515,9 +517,7 @@ namespace Nektar
 	Array<OneD, NekDouble> zero(npoints,0.0);
 	Array<OneD, NekDouble> w(npoints,0.0);
 
-	std::cout << "Time:" << time << m_time << '\n';
         BndExp[bndid]->GetCoords(x0,x1,x2);
-	std::cout << " Boundary Id: " << bndid << " Number of points: " << npoints << " Bnd Exp: " << BndExp[bndid] << '\n';
 		
 	if (fieldid == 2)
 	{
@@ -526,7 +526,6 @@ namespace Nektar
 
 			w[i] = vel_r[0]*(1 - r*r); // Compute Poiseulle Flow
 			for (k=1; k<M; k++){
-				// std::cout << k << "\n";
 				kt = 2.0*M_PI*k*m_time/T;
 				za = alpha/sqrt(2)*std::complex<NekDouble>(-1.0,1.0);
 				zar = za*r;
@@ -537,7 +536,6 @@ namespace Nektar
 				zvel = zq*(z1 - zJ0rJ0);
 				w[i] = w[i]+std::real(zvel);
 			}
-//		std::cout << "w = " << w[i] << " r = "<< r << " x = "  << x0[i] << " y = "<< x1[i] << " z = " << x2[i] << '\n';
 		}
 		BndExp[bndid]->UpdatePhys() = w;
 		BndExp[bndid]->FwdTrans_BndConstrained(

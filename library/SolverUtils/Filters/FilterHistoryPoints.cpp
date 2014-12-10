@@ -188,7 +188,10 @@ namespace Nektar
                     }
                     if (distance > NekConstants::kGeomFactorsTol)
                     {
-                        idList[i] = -1;
+                        cout << "Warning: History point " << i << " at ("
+                             << gloCoord[0] << "," << gloCoord[1] << ","
+                             << gloCoord[2] << ") lies a distance of "
+                             << sqrt(distance) << " from the manifold." << endl;
                     }
                 }
 

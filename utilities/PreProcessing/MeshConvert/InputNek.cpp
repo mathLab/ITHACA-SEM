@@ -1067,7 +1067,7 @@ namespace Nektar
             {
                 return false;
             }
-            
+
             vector<int> ids1 = p1->vertId;
             vector<int> ids2 = p2->vertId;
             sort(ids1.begin(), ids1.end());

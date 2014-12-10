@@ -110,9 +110,7 @@ namespace Nektar
 		    NumVar_SFD += 1;
 		}
 	    }
-	    
-	    cout << NumVar_SFD << endl;
-	    
+	    	    
 	    ///We store the time step
 	    m_dt = m_equ[m_nequ - 1]->GetTimeStep();
 	    

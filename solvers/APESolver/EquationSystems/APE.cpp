@@ -243,6 +243,8 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
     {
         Vmath::Neg(nq, outarray[i], 1);
     }
+
+    AddSource(outarray);
 }
 
 
@@ -371,18 +373,22 @@ void APE::WallBC(int bcRegion, int cnt,
 /**
  * @brief sourceterm for p' equation obtained from GetSource
  */
-// void APE::AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray,
-//                     Array< OneD, Array< OneD, NekDouble > > &outarray)
-// {
-//     int ncoeffs = outarray[0].num_elements();
-//     int nq      = inarray[0].num_elements();
-//     Array<OneD, NekDouble> source(nq);
-//
-//     EvaluateFunction("S", source, "Source", m_time);
-//     m_fields[0]->IProductWRTBase(source,source);
-//     Vmath::Vadd(ncoeffs,source,1,outarray[0],1,outarray[0],1);
-//
-// }
+void APE::AddSource(Array< OneD, Array< OneD, NekDouble > > &outarray)
+{
+    int nCoeffs = m_fields[0]->GetNcoeffs();
+    int nTotPoints = GetTotPoints();
+
+    Array<OneD, NekDouble> sourceP(nTotPoints);
+    Array<OneD, NekDouble> sourceC(nCoeffs);
+
+    EvaluateFunction("S", sourceP, "Source", m_time);
+
+    m_fields[0]->IProductWRTBase(sourceP, sourceC);
+    m_fields[0]->MultiplyByElmtInvMass(sourceC, sourceC);
+    m_fields[0]->BwdTrans(sourceC, sourceP);
+
+    Vmath::Vadd(nTotPoints, sourceP, 1, outarray[0], 1, outarray[0], 1);
+}
 
 
 void APE::v_ExtraFldOutput(

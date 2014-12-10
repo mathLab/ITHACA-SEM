@@ -100,7 +100,7 @@ class APE : public UnsteadySystem
                 const Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
 
-//         void AddSource(const Array< OneD, Array< OneD, NekDouble > > &inarray, Array< OneD, Array< OneD, NekDouble > > &outarray);
+        void AddSource(Array< OneD, Array< OneD, NekDouble > >& outarray);
 
         virtual void v_ExtraFldOutput(std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                                       std::vector<std::string>             &variables);

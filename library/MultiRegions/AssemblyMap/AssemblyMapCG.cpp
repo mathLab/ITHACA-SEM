@@ -1088,17 +1088,25 @@ namespace Nektar
                 // the vertices and edges respectively to identify those
                 // vertices and edges which are located on partition boundary.
                 Array<OneD, long> vertArray(unique_verts, &procVerts[0]);
-                Array<OneD, long> edgeArray(unique_edges, &procEdges[0]);
-                Array<OneD, long> faceArray(unique_faces, &procFaces[0]);
                 Gs::gs_data *tmp1 = Gs::Init(vertArray, vComm);
-                Gs::gs_data *tmp2 = Gs::Init(edgeArray, vComm);
-                Gs::gs_data *tmp3 = Gs::Init(faceArray, vComm);
                 Array<OneD, NekDouble> tmp4(unique_verts, 1.0);
                 Array<OneD, NekDouble> tmp5(unique_edges, 1.0);
                 Array<OneD, NekDouble> tmp6(unique_faces, 1.0);
                 Gs::Gather(tmp4, Gs::gs_add, tmp1);
-                Gs::Gather(tmp5, Gs::gs_add, tmp2);
-                Gs::Gather(tmp6, Gs::gs_add, tmp3);
+
+                if (unique_edges > 0)
+                {
+                    Array<OneD, long> edgeArray(unique_edges, &procEdges[0]);
+                    Gs::gs_data *tmp2 = Gs::Init(edgeArray, vComm);
+                    Gs::Gather(tmp5, Gs::gs_add, tmp2);
+                }
+
+                if (unique_faces > 0)
+                {
+                    Array<OneD, long> faceArray(unique_faces, &procFaces[0]);
+                    Gs::gs_data *tmp3 = Gs::Init(faceArray, vComm);
+                    Gs::Gather(tmp6, Gs::gs_add, tmp3);
+                }
 
                 // Finally, fill the partVerts set with all non-Dirichlet
                 // vertices which lie on a partition boundary.

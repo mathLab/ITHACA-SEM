@@ -1891,6 +1891,12 @@
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
         {
+#if 1
+            Array<OneD, NekDouble> Fcoeffs(m_trace->GetNcoeffs());
+            m_trace->IProductWRTBase(Fn,Fcoeffs);
+            
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(Fcoeffs,outarray);
+#else
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
@@ -1910,6 +1916,7 @@
                                                         e_outarray);
                 }
             }
+#endif
         }
         /**
          * @brief Add trace contributions into elemental coefficient spaces.

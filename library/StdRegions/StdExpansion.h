@@ -872,7 +872,6 @@ namespace Nektar
             }
 
             
-            
             void GetFacePhysVals(
                 const int                                face,
                 const boost::shared_ptr<StdExpansion>   &FaceExp,
@@ -881,6 +880,13 @@ namespace Nektar
                 StdRegions::Orientation                  orient = eNoOrientation)
             {
                 v_GetFacePhysVals(face, FaceExp, inarray, outarray, orient);
+            }
+
+            void GetFacePhysMap(
+                const int           face,
+                Array<OneD, int>   &outarray)
+            {
+                v_GetFacePhysMap(face, outarray);
             }
 
             void MultiplyByQuadratureMetric(
@@ -1245,6 +1251,11 @@ namespace Nektar
             void NegateFaceNormal(const int face)
             {
                 v_NegateFaceNormal(face);
+            }
+
+            bool FaceNormalNegated(const int face)
+            {
+                return v_FaceNormalNegated(face);
             }
 
             void ComputeVertexNormal(const int vertex)
@@ -1655,6 +1666,10 @@ namespace Nektar
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
 
+            STD_REGIONS_EXPORT virtual void v_GetFacePhysMap(
+                const int       face,
+                Array<OneD,int> &outarray);
+
             STD_REGIONS_EXPORT virtual void v_MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
@@ -1744,6 +1759,8 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(const int face);
             
+            STD_REGIONS_EXPORT virtual bool v_FaceNormalNegated(const int face);
+
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
             
             STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);

@@ -341,5 +341,11 @@ namespace Nektar
                            m_faceNormals[face][i], 1);
             }
         }
+
+        bool StdExpansion3D::v_FaceNormalNegated(const int face)
+        {
+            return m_negatedNormals[face];
+        }
+
     }//end namespace
 }//end namespace

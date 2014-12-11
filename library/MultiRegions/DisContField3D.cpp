@@ -186,24 +186,19 @@
              //else if we have the same boundary condition
              else
              {
+                 m_globalBndMat       = In.m_globalBndMat;
+                 m_trace              = In.m_trace;
+                 m_traceMap           = In.m_traceMap;
+                 m_locTraceToTraceMap = In.m_locTraceToTraceMap;
+                 m_periodicVerts      = In.m_periodicVerts;
+                 m_periodicEdges      = In.m_periodicEdges;
+                 m_periodicFaces      = In.m_periodicFaces;
+                 
                  if(SetUpJustDG)
                  {
-                     m_globalBndMat  = In.m_globalBndMat;
-                     m_trace         = In.m_trace;
-                     m_traceMap      = In.m_traceMap;
-                     m_periodicVerts = In.m_periodicVerts;
-                     m_periodicEdges = In.m_periodicEdges;
-                     m_periodicFaces = In.m_periodicFaces;
                  }
                  else 
                  {
-                     m_globalBndMat  = In.m_globalBndMat;
-                     m_trace         = In.m_trace;
-                     m_traceMap      = In.m_traceMap;
-                     m_periodicVerts = In.m_periodicVerts;
-                     m_periodicEdges = In.m_periodicEdges;
-                     m_periodicFaces = In.m_periodicFaces;
-
                      int i,cnt,f;
                      Array<OneD, int> ElmtID,FaceID;
                      GetBoundaryToElmtMap(ElmtID,FaceID);
@@ -261,6 +256,7 @@
              m_globalBndMat        (In.m_globalBndMat),
              m_trace               (In.m_trace),
              m_traceMap            (In.m_traceMap),
+             m_locTraceToTraceMap  (In.m_locTraceToTraceMap),
              m_periodicFaces       (In.m_periodicFaces),
              m_periodicEdges       (In.m_periodicEdges),
              m_periodicVerts       (In.m_periodicVerts)
@@ -542,6 +538,9 @@
                     }
                 }
             }
+
+             m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::AllocateSharedPtr(*this,m_trace,elmtToTrace,m_leftAdjacentFaces);
+
         }
 
         /**
@@ -1708,6 +1707,21 @@
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
+            int n,cnt,npts, e;
+
+            // Zero vectors.
+            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
+            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
+             
+#if 1 // blocked routine
+            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNLocTracePts());
+
+            m_locTraceToTraceMap->LocTracesFromField(field,facevals);
+            m_locTraceToTraceMap->InterpLocFacesToTrace(0,facevals,Fwd);
+            
+            Array<OneD, NekDouble> invals = facevals + m_locTraceToTraceMap->GetNFwdLocTracePts();
+            m_locTraceToTraceMap->InterpLocFacesToTrace(1,invals, Bwd);
+#else
             // Loop over elements and collect forward and backward expansions.
             int nexp = GetExpSize();
             int cnt, n, e, npts, offset, phys_offset;
@@ -1720,10 +1734,6 @@
             PeriodicMap::iterator it2;
             boost::unordered_map<int,pair<int,int> >::iterator it3;
 
-            // Zero vectors.
-            Vmath::Zero(Fwd.num_elements(), Fwd, 1);
-            Vmath::Zero(Bwd.num_elements(), Bwd, 1);
-             
             LocalRegions::Expansion3DSharedPtr exp3d;
             bool fwd;
 
@@ -1751,6 +1761,7 @@
                     }
                 }
             }
+#endif
             
             // fill boundary conditions into missing elements
             int id1,id2 = 0;
@@ -1826,6 +1837,12 @@
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
+#if 1
+            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNFwdLocTracePts());
+
+            m_locTraceToTraceMap->FwdLocTracesFromField(inarray,facevals);
+            m_locTraceToTraceMap->InterpLocFacesToTrace(0,facevals,outarray);
+#else
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
             int n,e,offset,phys_offset;
@@ -1849,6 +1866,7 @@
                                                  e_tmp = outarray + offset);
                 }
             }
+#endif
         }
         
         /**
@@ -1921,6 +1939,14 @@
             const Array<OneD, const NekDouble> &Bwd, 
                   Array<OneD,       NekDouble> &outarray)
         {
+#if 1
+            Array<OneD, NekDouble> Coeffs(m_trace->GetNcoeffs());
+
+            m_trace->IProductWRTBase(Fwd,Coeffs);
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(0,Coeffs,outarray);
+            m_trace->IProductWRTBase(Bwd,Coeffs);
+            m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(1,Coeffs,outarray);
+#else
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
@@ -1948,6 +1974,7 @@
                     }
                 }
             }
+#endif
         }
 
         /**

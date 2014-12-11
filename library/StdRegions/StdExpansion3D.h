@@ -193,6 +193,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(
                 const int face);
 
+            STD_REGIONS_EXPORT virtual bool v_FaceNormalNegated(
+                const int face);
+
             std::map<int, NormalVector> m_faceNormals;
             std::map<int, bool> m_negatedNormals;
 

@@ -38,6 +38,7 @@
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {
@@ -1902,5 +1903,205 @@ namespace Nektar
                      "specific");
             return 0.0;
         }
+
+        void Expansion3D::v_GetFacePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            
+            if (orient == StdRegions::eNoOrientation)
+            {
+                orient = GetFaceOrient(face);
+            }
+            
+            int nq0 = FaceExp->GetNumPoints(0);
+            int nq1 = FaceExp->GetNumPoints(1);
+
+            int nfacepts = GetFaceNumPoints(face);
+            int dir0 = GetGeom3D()->GetDir(face,0);
+            int dir1 = GetGeom3D()->GetDir(face,1);
+
+            Array<OneD,NekDouble> o_tmp (nfacepts);
+            Array<OneD,NekDouble> o_tmp2(FaceExp->GetTotPoints());
+            Array<OneD, int> faceids;
+            
+            // Get local face pts and put into o_tmp
+            GetFacePhysMap(face,faceids);
+            Vmath::Gathr(faceids.num_elements(),inarray,faceids,o_tmp);
+            
+            // interpolate to points distrbution given in FaceExp
+            LibUtilities::Interp2D(m_base[dir0]->GetPointsKey(), 
+                                   m_base[dir1]->GetPointsKey(), 
+                                   o_tmp.get(),
+                                   FaceExp->GetBasis(0)->GetPointsKey(),
+                                   FaceExp->GetBasis(1)->GetPointsKey(),
+                                   o_tmp2.get());
+            
+            // Reshuffule points as required and put into outarray. 
+            ReOrientFacePhysMap(FaceExp->GetNverts(),orient,nq0,nq1,faceids);
+            Vmath::Scatr(nq0*nq1,o_tmp2,faceids,outarray);
+        }
+        void Expansion3D::ReOrientFacePhysMap(const int nvert, 
+                                              const StdRegions::Orientation orient,
+                                              const int nq0, const int nq1,
+                                              Array<OneD, int> &idmap)
+        {
+            if(nvert == 3)
+            {
+                ReOrientTriFacePhysMap(orient,nq0,nq1,idmap);
+            }
+            else
+            {
+                ReOrientQuadFacePhysMap(orient,nq0,nq1,idmap);
+            }
+
+        }
+
+        void Expansion3D::ReOrientTriFacePhysMap(const StdRegions::Orientation orient,
+                                                 const int nq0, 
+                                                 const int nq1,
+                                                 Array<OneD, int> &idmap)
+        {
+            if(idmap.num_elements() != nq0*nq1)
+            {
+                idmap = Array<OneD,int>(nq0*nq1);
+            }
+
+            switch(orient)
+            {
+            case StdRegions::eDir1FwdDir1_Dir2FwdDir2:
+                // eseentially straight copy 
+                for(int i = 0; i < nq0*nq1; ++i)
+                {
+                    idmap[i] = i;
+                }
+                break;
+            case StdRegions::eDir1BwdDir1_Dir2FwdDir2:
+                // reverse 
+                for (int j = 0; j < nq1; ++j)
+                {
+                    for(int i = 0; i < nq0; ++i)
+                    {
+                        idmap[j*nq0+i] = nq0-1-i +j*nq0;
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"Case not supposed to be used in this function"); 
+            }
+        }
+
+
+        void Expansion3D::ReOrientQuadFacePhysMap(const StdRegions::Orientation orient,
+                                                  const int nq0, 
+                                                  const int nq1,
+                                                  Array<OneD, int> &idmap)
+        {
+            if(idmap.num_elements() != nq0*nq1)
+            {
+                idmap = Array<OneD,int>(nq0*nq1);
+            }
+
+
+            switch(orient)
+            {
+            case StdRegions::eDir1FwdDir1_Dir2FwdDir2:
+                // eseentially straight copy 
+                for(int i = 0; i < nq0*nq1; ++i)
+                {
+                    idmap[i] = i;
+                }
+                break;
+            case StdRegions::eDir1BwdDir1_Dir2FwdDir2:
+                {
+                    //Direction A negative and B positive
+                    for (int j = 0; j < nq1; j++)
+                    {
+                        for (int i =0; i < nq0; ++i)
+                        {
+                            idmap[j*nq0+i] = nq0-1-i + j*nq0;
+                        }
+                    }
+                }
+                break;
+            case StdRegions::eDir1FwdDir1_Dir2BwdDir2:
+                {
+                    //Direction A positive and B negative
+                    for (int j = 0; j < nq1; j++)
+                    {
+                        for (int i =0; i < nq0; ++i)
+                        {
+                            idmap[j*nq0+i] = nq0*(nq1-1-j)+i;
+                        }
+                    }
+                } 
+            case StdRegions::eDir1BwdDir1_Dir2BwdDir2:
+                {
+                    //Direction A negative and B negative
+                    for (int j = 0; j < nq1; j++)
+                    {
+                        for (int i =0; i < nq0; ++i)
+                        {
+                            idmap[j*nq0+i] = nq0*nq1-1-j*nq0 -i;
+                        }
+                    }
+                }
+            case StdRegions::eDir1FwdDir2_Dir2FwdDir1:
+                {
+                    //Transposed, Direction A and B positive
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = i + j*nq0;
+                        }
+                    }
+                }
+                break;
+            case StdRegions::eDir1FwdDir2_Dir2BwdDir1:
+                {
+                    //Transposed, Direction A positive and B negative
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = nq0-1-i + j*nq0;
+                        }
+                    }
+                } 
+                break;
+            case StdRegions::eDir1BwdDir2_Dir2FwdDir1:
+                {
+                    //Transposed, Direction A negative and B positive
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = i+nq0*(nq1-1)-j*nq0;
+                        }
+                    }
+                    break;
+                } 
+            case StdRegions::eDir1BwdDir2_Dir2BwdDir1:
+                {
+                    //Transposed, Direction A and B negative
+                    for (int i =0; i < nq0; ++i)
+                    {   
+                        for (int j = 0; j < nq1; ++j)
+                        {
+                            idmap[i*nq1+j] = nq0*nq1-1-i-j*nq0;
+                        }
+                    }
+                } 
+                break;
+            default:
+                ASSERTL0(false,"Unknow orientation");
+                break;
+            }
+        }
+
     } //end of namespace
 } //end of namespace

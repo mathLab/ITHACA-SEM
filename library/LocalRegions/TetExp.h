@@ -160,7 +160,6 @@ namespace Nektar
                  Array<OneD, int>  &outarray);
             
             LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);      
-
             //-----------------------------
             // Operator creation functions
             //-----------------------------

@@ -192,8 +192,8 @@ namespace Nektar
             
             if(DeclareCoeffPhysArrays)
             {
-                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-                m_phys   = Array<OneD, NekDouble>(m_npoints);
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs, 0.0);
+                m_phys   = Array<OneD, NekDouble>(m_npoints, 0.0);
             }
         }
         

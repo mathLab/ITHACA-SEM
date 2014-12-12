@@ -280,7 +280,7 @@ namespace Nektar
         // Evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,
                                  inarray, outarray, m_time);
-        
+
         // Smooth advection
         if(m_SmoothAdvection)
         {

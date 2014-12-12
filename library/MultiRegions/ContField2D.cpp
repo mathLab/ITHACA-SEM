@@ -662,14 +662,14 @@ namespace Nektar
                 }
             }
             m_locToGloMap->UniversalAssembleBnd(tmp);
-          
+
             // Now fill in all other Dirichlet coefficients.
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                if(m_bndConditions[i]->GetBoundaryConditionType() ==
                    SpatialDomains::eDirichlet)
                 {
-                    const Array<OneD,const NekDouble>& coeffs = 
+                    const Array<OneD,const NekDouble>& coeffs =
                         m_bndCondExpansions[i]->GetCoeffs();
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
@@ -683,7 +683,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-          
+
             Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
         }
 

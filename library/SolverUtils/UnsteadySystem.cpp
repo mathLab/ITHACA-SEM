@@ -366,7 +366,7 @@ namespace Nektar
                     }
                     doCheckTime = false;
                 }
-                
+
                 // Step advance
                 ++step;
             }

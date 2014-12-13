@@ -38,57 +38,51 @@
 
 #include <SolverUtils/Advection/Advection.h>
 
-//#define TIMING
-//#ifdef TIMING
-//#include <time.h>
-//#include <sys/time.h>
-//#endif
-
 
 namespace Nektar
-{     
+{
 
-    class SkewSymmetricAdvection: public SolverUtils::Advection
-	
-    {
-    public:
-        friend class MemoryManager<SkewSymmetricAdvection>;
+class SkewSymmetricAdvection: public SolverUtils::Advection
 
-        /// Creates an instance of this class
-        static SolverUtils::AdvectionSharedPtr create(std::string) {
-            SolverUtils::AdvectionSharedPtr p = MemoryManager<SkewSymmetricAdvection>::AllocateSharedPtr();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
-        static std::string className2;
-        
-	protected:
-        
-        SkewSymmetricAdvection();
+{
+public:
+    friend class MemoryManager<SkewSymmetricAdvection>;
 
-        virtual ~SkewSymmetricAdvection();
+    /// Creates an instance of this class
+    static SolverUtils::AdvectionSharedPtr create(std::string) {
+        return MemoryManager<SkewSymmetricAdvection>::AllocateSharedPtr();
+    }
 
-        virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr        pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr> pFields);
+    /// Name of class
+    static std::string className;
+    static std::string className2;
 
-        virtual void v_Advect(
-            const int nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-            Array<OneD, Array<OneD, NekDouble> >              &outarray,
-            const NekDouble                                   &time);
+protected:
 
-	private:
-        MultiRegions::CoeffState m_CoeffState;
-        bool m_homogen_dealiasing;
-        bool m_SingleMode;
-        bool m_HalfMode;
-	};
-    
-    
+    SkewSymmetricAdvection();
+
+    virtual ~SkewSymmetricAdvection();
+
+    virtual void v_InitObject(
+              LibUtilities::SessionReaderSharedPtr         pSession,
+              Array<OneD, MultiRegions::ExpListSharedPtr>  pFields);
+
+    virtual void v_Advect(
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+              Array<OneD, Array<OneD, NekDouble> >        &outarray,
+        const NekDouble                                   &time);
+
+private:
+    MultiRegions::CoeffState m_CoeffState;
+    bool m_homogen_dealiasing;
+    bool m_SingleMode;
+    bool m_HalfMode;
+};
+
+
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H

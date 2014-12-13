@@ -54,6 +54,7 @@ namespace Nektar
      * \param
      */
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
+        UnsteadySystem(pSession),
         AdvectionSystem(pSession),
         m_subSteppingScheme(false),
         m_SmoothAdvection(false),
@@ -63,19 +64,15 @@ namespace Nektar
 
     void IncNavierStokes::v_InitObject()
     {
-        if (m_session->GetSolverInfo("Driver") == "SteadyState" &&
-	    m_session->GetTag("AdvectiveType") == "Linearised")
-        {
-            AdvectionSystem::v_InitObject();
-        }
-        
+        AdvectionSystem::v_InitObject();
+
         int i,j;
         int numfields = m_fields.num_elements();
         std::string velids[] = {"u","v","w"};
-        
+
         // Set up Velocity field to point to the first m_expdim of m_fields; 
         m_velocity = Array<OneD,int>(m_spacedim);
-        
+
         for(i = 0; i < m_spacedim; ++i)
         {
             for(j = 0; j < numfields; ++j)
@@ -86,11 +83,11 @@ namespace Nektar
                     m_velocity[i] = j;
                     break;
                 }
-                
+
                 ASSERTL0(j != numfields, "Failed to find field: " + var);
             }
         }
-        
+
         // Set up equation type enum using kEquationTypeStr
         for(i = 0; i < (int) eEquationTypeSize; ++i)
         {
@@ -250,25 +247,7 @@ namespace Nektar
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
-		
-        // creation of the extrapolation object
-        if(m_equationType == eUnsteadyNavierStokes)
-        {
-            std::string vExtrapolation = "Standard";
 
-            if (m_session->DefinesSolverInfo("Extrapolation"))
-            {
-                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
-            }
-                        
-            m_extrapolation = GetExtrapolateFactory().CreateInstance(
-                vExtrapolation, 
-                m_session,
-                m_fields,
-		m_pressure,
-                m_velocity,
-                m_advObject);
-        }
     }
 
     /**

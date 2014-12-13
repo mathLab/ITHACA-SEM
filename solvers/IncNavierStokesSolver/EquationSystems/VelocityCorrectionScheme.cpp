@@ -45,7 +45,7 @@ namespace Nektar
         SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
             "VelocityCorrectionScheme", 
             VelocityCorrectionScheme::create);
-    
+
     /**
      * Constructor. Creates ...
      *
@@ -53,17 +53,18 @@ namespace Nektar
      * \param
      */
     VelocityCorrectionScheme::VelocityCorrectionScheme(
-        const LibUtilities::SessionReaderSharedPtr& pSession):
-        IncNavierStokes(pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pSession),
+          IncNavierStokes(pSession)
     {
-        
+
     }
 
     void VelocityCorrectionScheme::v_InitObject()
     {
         int n;
-        
-        UnsteadySystem::v_InitObject();
+
+        IncNavierStokes::v_InitObject();
 
         // Set m_pressure to point to last field of m_fields;
         if (boost::iequals(m_session->GetVariable(m_fields.num_elements()-1), "p"))
@@ -75,8 +76,25 @@ namespace Nektar
         {
             ASSERTL0(false,"Need to set up pressure field definition");
         }
-        
-        IncNavierStokes::v_InitObject();
+
+        // creation of the extrapolation object
+        if(m_equationType == eUnsteadyNavierStokes)
+        {
+            std::string vExtrapolation = "Standard";
+
+            if (m_session->DefinesSolverInfo("Extrapolation"))
+            {
+                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
+            }
+
+            m_extrapolation = GetExtrapolateFactory().CreateInstance(
+                vExtrapolation,
+                m_session,
+                m_fields,
+                m_pressure,
+                m_velocity,
+                m_advObject);
+        }
 
         // Integrate only the convective fields
         for (n = 0; n < m_nConvectiveFields; ++n)

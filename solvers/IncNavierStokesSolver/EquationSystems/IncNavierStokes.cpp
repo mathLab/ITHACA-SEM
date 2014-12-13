@@ -357,8 +357,8 @@ namespace Nektar
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
 
-        m_advObject->Advect(m_nConvectiveFields,m_fields,
-                                 velocity,inarray,outarray,m_time);
+        m_advObject->Advect(m_nConvectiveFields, m_fields,
+                            velocity, inarray, outarray, m_time);
     }
     
     /**

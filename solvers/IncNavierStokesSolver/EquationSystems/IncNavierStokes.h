@@ -119,12 +119,6 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-//        AdvectionTermSharedPtr GetAdvObject(void)
-//        {
-//            return m_advObject;
-//        }
-
-
         int GetNConvectiveFields(void)
         {
             return m_nConvectiveFields;  

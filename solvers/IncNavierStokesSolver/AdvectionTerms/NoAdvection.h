@@ -36,7 +36,6 @@
 #ifndef NEKTAR_SOLVERS_NOADVECTION_H
 #define NEKTAR_SOLVERS_NOADVECTION_H
 
-///#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar

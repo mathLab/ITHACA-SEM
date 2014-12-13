@@ -42,7 +42,6 @@
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-///#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <SolverUtils/AdvectionSystem.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 

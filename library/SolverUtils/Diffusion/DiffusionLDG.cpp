@@ -87,8 +87,6 @@ namespace Nektar
 
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nDim);
 
-            Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
-
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfieldStd(nDim);
@@ -199,6 +197,24 @@ namespace Nektar
                 }
             }
 
+#if 1
+            Array<OneD, NekDouble>  tmp = Array<OneD, NekDouble>(nCoeffs, 0.0);
+
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                
+                fields[i]->IProductWRTDerivBase(qfield[j],tmp);
+
+                // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
+                Vmath::Neg                      (nCoeffs, tmp, 1);
+                fields[i]->AddTraceIntegral     (flux[0][i], tmp);
+                fields[i]->SetPhysState         (false);
+                fields[i]->MultiplyByElmtInvMass(tmp, tmp);
+                fields[i]->BwdTrans             (tmp, outarray[i]);
+            }
+#else
+            Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
+
             for (i = 0; i < nConvectiveFields; ++i)
             {
                 tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
@@ -217,6 +233,7 @@ namespace Nektar
                 fields[i]->MultiplyByElmtInvMass(tmp[i], tmp[i]);
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
+#endif
         }
         
         void DiffusionLDG::v_NumFluxforScalar(

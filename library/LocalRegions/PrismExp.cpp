@@ -558,12 +558,6 @@ namespace Nektar
             }
         }
 
-
-        StdRegions::Orientation PrismExp::v_GetFaceOrient(int face)
-        {
-            return GetGeom3D()->GetFaceOrient(face);
-        }
-
         ///Returns the physical values at the quadrature points of a face
         void PrismExp::v_GetTracePhysVals(
             const int                                face,
@@ -590,7 +584,7 @@ namespace Nektar
             
             if (orient == StdRegions::eNoOrientation)
             {
-                orient = GetFaceOrient(face);
+                orient = GetForient(face);
             }
 
             switch(face)

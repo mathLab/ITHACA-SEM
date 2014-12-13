@@ -135,14 +135,15 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > advVel;
         Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
-        
+
         for (i = 0; i < nvariables; ++i)
         {
             outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
             outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
         
-        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
+        m_advection->Advect(nvariables, m_fields, advVel, inarray,
+                                        outarrayAdv, m_time);
         
         for (i = 0; i < nvariables; ++i)
         {

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/DriverSteadyState.h>
+#include <SolverUtils/AdvectionSystem.h>
 
 
 namespace Nektar
@@ -42,139 +43,142 @@ namespace Nektar
     {
         string DriverSteadyState::className = GetDriverFactory().RegisterCreatorFunction("SteadyState", DriverSteadyState::create);
         string DriverSteadyState::driverLookupId = LibUtilities::SessionReader::RegisterEnumValue("Driver","SteadyState",0);
-        
+
         /**
-         * 
+         *
          */
         DriverSteadyState::DriverSteadyState(const LibUtilities::SessionReaderSharedPtr pSession)
         : Driver(pSession)
         {
         }
-        
-        
+
+
         /**
-         * 
+         *
          */
         DriverSteadyState:: ~DriverSteadyState()
         {
         }
-        
-        
+
+
         /**
-         * 
+         *
          */
         void DriverSteadyState::v_InitObject(ostream &out)
         {
             Driver::v_InitObject(out);
         }
-        
-        
+
+
         void DriverSteadyState::v_Execute(ostream &out)
-        
+
         {
             //With a loop over "DoSolve", this Driver implements the "encaplulated" Selective Frequency Damping method
             //to find the steady state of a flow above the critical Reynolds number.
-            
+
             m_equ[0]->PrintSummary(out);
             m_equ[0]->DoInitialise();
-            
+
+            AdvectionSystemSharedPtr A = boost::dynamic_pointer_cast<AdvectionSystem>(m_equ[0]);
+
             // - SFD Routine -
             // Compressible case
-            NumVar_SFD = m_equ[0]->UpdateFields()[0]->GetCoordim(0);            
-            if (m_session->GetSolverInfo("EqType") == "EulerCFE" || 
+            NumVar_SFD = m_equ[0]->UpdateFields()[0]->GetCoordim(0);
+            if (m_session->GetSolverInfo("EqType") == "EulerCFE" ||
                 m_session->GetSolverInfo("EqType") == "NavierStokesCFE")
             {
                 NumVar_SFD += 2; //Number of variables for the compressible equations
             }
-                
+
             Array<OneD, Array<OneD, NekDouble> > q0(NumVar_SFD);
             Array<OneD, Array<OneD, NekDouble> > q1(NumVar_SFD);
             Array<OneD, Array<OneD, NekDouble> > qBar0(NumVar_SFD);
             Array<OneD, Array<OneD, NekDouble> > qBar1(NumVar_SFD);
-            
+
             NekDouble TOL(0);
             m_n=0;
-            m_Check=0;			
-            
+            m_Check=0;
+
             m_session->LoadParameter("FilterWidth", m_Delta0, 1);
             m_session->LoadParameter("ControlCoeff",m_X0, 1);
             m_session->LoadParameter("TOL", TOL, 1.0e-08);
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1000);
             m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);
-            
+
             m_dt = m_equ[0]->GetTimeStep();
-            
+
             //The time-step is applied here to clarify the matrix F expression
             m_X = m_X0*m_dt;
             m_Delta = m_Delta0/m_dt;
-            
+
             //Exact solution of the Filters equation (ici on a X_tilde et Delta_tile!!!)
             c1 = 1.0/(1.0 + m_X*m_Delta);
             F11 = c1*(1.0 + m_X*m_Delta*exp(-(m_X + 1.0/m_Delta)));
             F12 = c1*(m_X*m_Delta*(1.0 - exp(-(m_X + 1.0/m_Delta))));
             F21 = c1*(1.0 - exp(-(m_X + 1.0/m_Delta)));
             F22 = c1*(m_X*m_Delta + exp(-(m_X + 1.0/m_Delta)));
-            
+
             cout << "------------------ SFD Parameters ------------------" << endl;
             cout << "\tX = " << m_X0 << endl;
             cout << "\tDelta = " << m_Delta0 << endl;
             cout << "----------------------------------------------------" << endl;
-            
-            m_equ[0]->SetStepsToOne(); //m_steps is set to 1. Then "m_equ[0]->DoSolve()" will run for only one time step			
+
+            m_equ[0]->SetStepsToOne(); //m_steps is set to 1. Then "m_equ[0]->DoSolve()" will run for only one time step
             ofstream m_file("ConvergenceHistory.txt", ios::out | ios::trunc);
-            
+
             for(int i = 0; i < NumVar_SFD; ++i)
             {
                 q0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0); //q0 is initialised
                 qBar0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
                 m_equ[0]->CopyFromPhysField(i, qBar0[i]); //qBar0 is initially set at beiing equal to the initial conditions provided in the input file
             }
-            
+
             MaxNormDiff_q_qBar = 1.0;
             MaxNormDiff_q1_q0 = 1.0;
             Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
-            
-            
+
+            A->GetAdvObject()->SetBaseFlow(q0);
+
             while (max(MaxNormDiff_q_qBar, MaxNormDiff_q1_q0) > TOL)
             {
                 //First order Splitting with exact resolution of the filters equation
                 m_equ[0]->DoSolve();
-                
+
                 for(int i = 0; i < NumVar_SFD; ++i)
                 {
                     m_equ[0]->CopyFromPhysField(i, q0[i]);
-                    
+
                     //Apply the linear operator F to the outcome of the solver
                     ExactFilters(i, q0, qBar0, q1, qBar1);
-                    
+
                     qBar0[i] = qBar1[i];
-                    m_equ[0]->CopyToPhysField(i, q1[i]);     
+                    m_equ[0]->CopyToPhysField(i, q1[i]);
                 }
-                
-                
+
+
                 if(m_infosteps && !((m_n+1)%m_infosteps))
                 {
                     ConvergenceHistory(qBar1, q0, MaxNormDiff_q_qBar, MaxNormDiff_q1_q0);
                 }
-                
+
                 if(m_checksteps && m_n&&(!((m_n+1)%m_checksteps)))
-                {                      
-                    m_Check++;                    
-                    m_equ[0]->Checkpoint_Output(m_Check);                       
+                {
+                    m_Check++;
+                    m_equ[0]->Checkpoint_Output(m_Check);
                 }
-                
+
                 m_n++;
             }
-            
+
             cout << "\nFINAL Filter Width: Delta = " << m_Delta << "; FINAL Control Coeff: X = " << m_X << "\n" << endl;
             m_Check++;
             m_equ[0]->Checkpoint_Output(m_Check);
-            
+
             m_file.close();
             // - End SFD Routine -
-            
+
             m_equ[0]->Output();
-            
+
             // Evaluate and output computation time and solution accuracy.
             // The specific format of the error output is essential for the
             // regression tests to work.
@@ -190,8 +194,8 @@ namespace Nektar
                 }
             }
         }
-        
-        
+
+
         void DriverSteadyState::ExactFilters(const int i,
                                              const Array<OneD, const Array<OneD, NekDouble> > &q0,
                                              const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
@@ -200,66 +204,66 @@ namespace Nektar
         {
             q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
             qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
-            
-            //Exact solution of the Filters equation            
-            Vmath::Svtvp(q1[i].num_elements(), F11, q0[i], 1, q1[i], 1, q1[i], 1 );    
-            Vmath::Svtvp(q1[i].num_elements(), F12, qBar0[i], 1, q1[i], 1, q1[i], 1 ); 
-            
-            Vmath::Svtvp(qBar1[i].num_elements(), F21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );    
-            Vmath::Svtvp(qBar1[i].num_elements(), F22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 );             
+
+            //Exact solution of the Filters equation
+            Vmath::Svtvp(q1[i].num_elements(), F11, q0[i], 1, q1[i], 1, q1[i], 1 );
+            Vmath::Svtvp(q1[i].num_elements(), F12, qBar0[i], 1, q1[i], 1, q1[i], 1 );
+
+            Vmath::Svtvp(qBar1[i].num_elements(), F21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );
+            Vmath::Svtvp(qBar1[i].num_elements(), F22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 );
         }
-        
-        
+
+
         void DriverSteadyState::ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
                                                    const Array<OneD, const Array<OneD, NekDouble> > &q0,
                                                    NekDouble &MaxNormDiff_q_qBar,
                                                    NekDouble &MaxNormDiff_q1_q0)
         {
             //This routine evaluates |q-qBar|_L2 and save the value in "ConvergenceHistory.txt"
-            
+
             Array<OneD, NekDouble > NormDiff_q_qBar(NumVar_SFD, 1.0);
             Array<OneD, NekDouble > NormDiff_q1_q0(NumVar_SFD, 1.0);
-            
+
             MaxNormDiff_q_qBar=0.0;
             MaxNormDiff_q1_q0=0.0;
-            
+
             //Norm Calculation
             for(int i = 0; i < NumVar_SFD; ++i)
             {
                 //To check convergence of SFD
                 //NormDiff_q_qBar[i] = m_equ[0]->L2Error(i, qBar1[i], false);
                 NormDiff_q_qBar[i] = m_equ[0]->LinfError(i, qBar1[i]);
-                
+
                 //To check convergence of Navier-Stokes
                 NormDiff_q1_q0[i] = m_equ[0]->LinfError(i, q0[i]);
-                
+
                 if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
                 {
                     MaxNormDiff_q_qBar = NormDiff_q_qBar[i];
                 }
-                
+
                 if (MaxNormDiff_q1_q0 < NormDiff_q1_q0[i])
                 {
                     MaxNormDiff_q1_q0 = NormDiff_q1_q0[i];
                 }
             }
-            
-            #if NEKTAR_USE_MPI   
+
+            #if NEKTAR_USE_MPI
             MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
             if (MPIrank==0)
             {
                 cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X0 <<" and Delta = " << m_Delta0 <<endl;
-                std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
+                std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app);
                 m_file << m_n+1 << "\t" << m_equ[0]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
                 m_file.close();
             }
             #else
             cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X = " << m_X0 <<" and Delta = " << m_Delta0 <<endl;
-            std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
+            std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app);
             m_file << m_n+1 << "\t" << m_equ[0]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
             m_file.close();
-            #endif              
-            
+            #endif
+
         }
     }
 }

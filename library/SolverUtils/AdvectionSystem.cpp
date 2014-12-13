@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File LinearisedAdvection.h
+// File: AdvectionSystem.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,66 +29,41 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: TBA
+// Description: Base class for advection-based equation systems.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
-#define NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
+#include <SolverUtils/AdvectionSystem.h>
 
-#include <SolverUtils/Advection/Advection.h>
+namespace Nektar {
+namespace SolverUtils {
 
-
-namespace Nektar
-{     
-
-class NavierStokesAdvection: public SolverUtils::Advection
-
+/**
+ *
+ */
+AdvectionSystem::AdvectionSystem(
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+    : UnsteadySystem(pSession)
 {
-public:
-    friend class MemoryManager<NavierStokesAdvection>;
+}
 
-    /// Creates an instance of this class
-    static SolverUtils::AdvectionSharedPtr create(std::string) {
-        return MemoryManager<NavierStokesAdvection>::AllocateSharedPtr();
-    }
 
-    /// Name of class
-    static std::string className;
-    static std::string className2;
+/**
+ *
+ */
+AdvectionSystem::~AdvectionSystem()
+{
 
-    void SetSpecHPDealiasing(bool value)
-    {
-        m_specHP_dealiasing = value;
-    }
+}
 
-protected:
 
-    NavierStokesAdvection();
+/**
+ *
+ */
+void AdvectionSystem::v_InitObject()
+{
+    UnsteadySystem::v_InitObject();
+}
 
-    virtual ~NavierStokesAdvection();
-
-    virtual void v_InitObject(
-              LibUtilities::SessionReaderSharedPtr         pSession,
-              Array<OneD, MultiRegions::ExpListSharedPtr>  pFields);
-
-    virtual void v_Advect(
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-              Array<OneD, Array<OneD, NekDouble> >        &outarray,
-        const NekDouble                                   &time);
-
-private:
-    MultiRegions::CoeffState m_CoeffState;
-    bool m_specHP_dealiasing;
-    bool m_homogen_dealiasing;
-    bool m_SingleMode;
-    bool m_HalfMode;
-};
-    
-    
-} //end of namespace
-
-#endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H
+}
+}

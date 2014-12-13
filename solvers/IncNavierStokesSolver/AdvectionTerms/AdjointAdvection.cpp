@@ -517,27 +517,11 @@ void AdjointAdvection::ImportFldBase(std::string pInfile,
 
     if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
     {
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-        std::vector<std::vector<NekDouble> > FieldData;
-        int nqtot = pFields[0]->GetTotPoints();
-        Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
-
-        //Get Homogeneous
-        LibUtilities::FieldIOSharedPtr fld =
-        MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
-                                                        m_session->GetComm());
-        fld->Import(pInfile, FieldDef, FieldData);
-
-        int nvar = m_session->GetVariables().size();
-        int s;
+        std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
+    }
 	
-        if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
-        {
-            std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
-        }
-	
-        // copy FieldData into m_fields
-        for(int j = 0; j < nvar; ++j)
+    // copy FieldData into m_fields
+    for(int j = 0; j < nvar; ++j)
     {
         for(int i = 0; i < FieldDef.size(); ++i)
         {
@@ -601,8 +585,6 @@ void AdjointAdvection::ImportFldBase(std::string pInfile,
         {
             pFields[j]->BwdTrans(tmp_coeff, m_baseflow[j]);
         }
-        }
-
     }
 
     if(m_session->DefinesParameter("N_slices"))

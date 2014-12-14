@@ -547,22 +547,31 @@ void LinearisedAdvection::v_Advect(
 
         Vmath::Neg(nqtot,outarray[n],1);
     }
-
 }
-
-
+    
 void LinearisedAdvection::v_SetBaseFlow(
-        const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+    const Array<OneD, Array<OneD, NekDouble> >    &inarray)
 {
-    ASSERTL1(inarray.num_elements() == m_baseflow.num_elements(),
-             "Number of base flow variables does not match what is"
-             "expected.");
+    if (m_session->GetSolverInfo("EqType") == "UnsteadyNavierStokes")
+    {
+        // The SFD method is only applied to the velocity variables in
+        // incompressible
+        ASSERTL1(inarray.num_elements() == (m_baseflow.num_elements() - 1),
+                 "Number of base flow variables does not match what is "
+                 "expected.");
+    }
+    else
+    {
+        ASSERTL1(inarray.num_elements() == (m_baseflow.num_elements()),
+             "Number of base flow variables does not match what is expected.");
+    }
 
     int npts = inarray[0].num_elements();
+
     for (int i = 0; i < inarray.num_elements(); ++i)
     {
-        ASSERTL1(npts == m_baseflow.num_elements(),
-                "Size of base flow array does not match expected.");
+        ASSERTL1(npts == m_baseflow[i].num_elements(),
+             "Size of base flow array does not match expected.");
         Vmath::Vcopy(npts, inarray[i], 1, m_baseflow[i], 1);
     }
 }
@@ -596,7 +605,7 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
     {
         std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
     }
-
+    
     // copy FieldData into m_fields
     for(int j = 0; j < nvar; ++j)
     {
@@ -666,7 +675,6 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
             pFields[j]->BwdTrans(tmp_coeff, m_baseflow[j]);
             
         }
-
     }
 
     if(m_session->DefinesParameter("N_slices"))

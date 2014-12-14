@@ -241,7 +241,10 @@ namespace Nektar
                 MultiRegions::ExpListSharedPtr &field,
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                 std::vector<std::string> &variables);
-            
+        
+            /// Write base flow file of #m_fields.
+            SOLVER_UTILS_EXPORT void Checkpoint_BaseFlow(const int n);
+
             /// Write field data to the given filename.
             SOLVER_UTILS_EXPORT void WriteFld(const std::string &outname);
             

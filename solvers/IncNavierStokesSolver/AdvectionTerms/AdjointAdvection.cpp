@@ -316,34 +316,34 @@ void AdjointAdvection::v_Advect(
         //Evaluate the Adjoint advection term
         switch(ndim)
         {
-            // 1D
-            case 1:
-                fields[0]->PhysDeriv(inarray[n],grad0);
-                fields[0]->PhysDeriv(m_baseflow[0],grad_base_u0);
-                //Evaluate  U du'/dx
-                Vmath::Vmul(nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
-                //Evaluate U du'/dx+ u' dU/dx
-                Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
-                break;
+                    // 1D
+                case 1:
+                    fields[0]->PhysDeriv(inarray[n],grad0);
+                    fields[0]->PhysDeriv(m_baseflow[0],grad_base_u0);
+                    //Evaluate  U du'/dx
+                    Vmath::Vmul(nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
+                    //Evaluate U du'/dx+ u' dU/dx
+                    Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
+                    break;
 
-            //2D
-            case 2:
+                    //2D
+                case 2:
 
-                grad1 = Array<OneD, NekDouble> (nPointsTot);
-                grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
-                grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
+                    grad1 = Array<OneD, NekDouble> (nPointsTot);
+                    grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
+                    grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
 
-                fields[0]->PhysDeriv(inarray[n],grad0,grad1);
+                    fields[0]->PhysDeriv(inarray[n],grad0,grad1);
 
-                //Derivates of the base flow
-                fields[0]-> PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1);
-                fields[0]-> PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1);
+                    //Derivates of the base flow
+                    fields[0]-> PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1);
+                    fields[0]-> PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1);
 
-                //Since the components of the velocity are passed one by one, it is necessary to distinguish which
-                //term is consider
-                switch (n)
-                {
-                    //x-equation
+                    //Since the components of the velocity are passed one by one, it is necessary to distinguish which
+                    //term is consider
+                    switch (n)
+                    {
+                        //x-equation
                     case 0:
                         // Evaluate U du'/dx
                         Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
@@ -357,7 +357,7 @@ void AdjointAdvection::v_Advect(
                         Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[1],1,outarray[n],1,outarray[n],1);
                         break;
 
-                    //y-equation
+                        //y-equation
                     case 1:
                         // Evaluate U dv'/dx
                         Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
@@ -371,43 +371,43 @@ void AdjointAdvection::v_Advect(
                         Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                         break;
                 }
-                break;
+                    break;
 
 
-            //3D
-            case 3:
+                    //3D
+                case 3:
 
-                grad1 = Array<OneD, NekDouble> (nPointsTot);
-                grad2 = Array<OneD, NekDouble> (nPointsTot);
-                grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
-                grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
-                grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
+                    grad1 = Array<OneD, NekDouble> (nPointsTot);
+                    grad2 = Array<OneD, NekDouble> (nPointsTot);
+                    grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
+                    grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
+                    grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
 
-                grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
-                grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
-                grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
+                    grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
+                    grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
+                    grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
 
-                fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1,grad_base_u2);
-                fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1,grad_base_v2);
-                fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0, grad_base_w1, grad_base_w2);
+                    fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1,grad_base_u2);
+                    fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1,grad_base_v2);
+                    fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0, grad_base_w1, grad_base_w2);
 
-                //HalfMode has W(x,y,t)=0
-                if(m_HalfMode || m_SingleMode)
-                {
-                    for(int i=0; i<grad_base_u2.num_elements();++i)
+                    //HalfMode has W(x,y,t)=0
+                    if(m_HalfMode || m_SingleMode)
                     {
-                        grad_base_u2[i]=0;
-                        grad_base_v2[i]=0;
-                        grad_base_w2[i]=0;
+                        for(int i=0; i<grad_base_u2.num_elements();++i)
+                        {
+                            grad_base_u2[i]=0;
+                            grad_base_v2[i]=0;
+                            grad_base_w2[i]=0;
 
+                        }
                     }
-                }
 
                 fields[0]->PhysDeriv(inarray[n], grad0, grad1, grad2);
 
                 switch (n)
                 {
-                    //x-equation
+                        //x-equation
                     case 0:
                         //Evaluate U du'/dx
                         Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
@@ -424,7 +424,7 @@ void AdjointAdvection::v_Advect(
                         //Evaluate -(U du'/dx+ V du'/dy+W du'/dz)+u'dU/dx+ v' dV/dx+ w' dW/dz
                         Vmath::Vvtvp(nPointsTot,grad_base_w0,1,advVel[2],1,outarray[n],1,outarray[n],1);
                         break;
-                    //y-equation
+                        //y-equation
                     case 1:
                         //Evaluate U dv'/dx
                         Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
@@ -442,7 +442,7 @@ void AdjointAdvection::v_Advect(
                         Vmath::Vvtvp(nPointsTot,grad_base_w1,1,advVel[2],1,outarray[n],1,outarray[n],1);
                         break;
 
-                    //z-equation
+                        //z-equation
                     case 2:
                         //Evaluate U dw'/dx
                         Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
@@ -460,9 +460,9 @@ void AdjointAdvection::v_Advect(
                         Vmath::Vvtvp(nPointsTot,grad_base_w2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                         break;
                 }
-                break;
-            default:
-                ASSERTL0(false,"dimension unknown");
+                    break;
+        default:
+            ASSERTL0(false,"dimension unknown");
         }
 
         Vmath::Neg(nqtot,outarray[n],1);
@@ -516,7 +516,7 @@ void AdjointAdvection::ImportFldBase(std::string pInfile,
     {
         std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
     }
-
+	
     // copy FieldData into m_fields
     for(int j = 0; j < nvar; ++j)
     {
@@ -582,7 +582,6 @@ void AdjointAdvection::ImportFldBase(std::string pInfile,
         {
             pFields[j]->BwdTrans(tmp_coeff, m_baseflow[j]);
         }
-
     }
 
     if(m_session->DefinesParameter("N_slices"))

@@ -1891,6 +1891,18 @@ namespace Nektar
             std::string outname = m_sessionName + "_" + chkout + ".chk";
             WriteFld(outname, field, fieldcoeffs, variables);
         }
+        
+        /**
+         * Write the n-th base flow into a .chk file
+         * @param   n   The index of the base flow file.
+         */
+        void EquationSystem::Checkpoint_BaseFlow(const int n)
+        {
+            std::string outname =  m_sessionName +  "_BaseFlow_" + 
+                boost::lexical_cast<std::string>(n);
+
+            WriteFld(outname + ".chk");
+        }
 
         /**
          * Writes the field data to a file with the given filename.

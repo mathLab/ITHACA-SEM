@@ -201,9 +201,6 @@ namespace Nektar
                 return GetFaceNcoeffs(i);
             }
 
-
-            NormalVector m_surfaceNormal;
-
             std::map<int, NormalVector> m_faceNormals;
             std::map<int, bool> m_negatedNormals;
 

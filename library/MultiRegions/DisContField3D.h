@@ -115,7 +115,6 @@ namespace Nektar
             /// element) to the trace space discretisation
             LocTraceToTraceMapSharedPtr m_locTraceToTraceMap; 
 
-
             /**
              * @brief A set storing the global IDs of any boundary faces.
              */

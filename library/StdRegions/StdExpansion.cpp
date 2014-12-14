@@ -1504,7 +1504,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-
             void StdExpansion::v_MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray)
@@ -1702,7 +1701,7 @@ namespace Nektar
             ASSERTL0(false, "Not implemented.");
             return false;
         }
-        
+
         void StdExpansion::v_ComputeVertexNormal(const int vertex)
         {
             ASSERTL0(false, "Cannot compute vertex normal for this expansion.");

@@ -151,8 +151,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildVertexMatrix(
                 const DNekScalMatSharedPtr &r_bnd); 
 
-
-
             LOCAL_REGIONS_EXPORT void ReOrientTriFacePhysMap(const StdRegions::Orientation orient,
                                                              const int nq0,
                                                              const int nq1,

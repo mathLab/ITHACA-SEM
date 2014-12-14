@@ -909,7 +909,6 @@ namespace Nektar
             }
 
             
-            
             void GetFacePhysVals(
                 const int                                face,
                 const boost::shared_ptr<StdExpansion>   &FaceExp,
@@ -1297,7 +1296,6 @@ namespace Nektar
             {
                 return v_FaceNormalNegated(face);
             }
-
 
             void ComputeVertexNormal(const int vertex)
             {
@@ -1719,7 +1717,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetFacePhysMap(
                 const int       face,
                 Array<OneD,int> &outarray);
-            
 
             STD_REGIONS_EXPORT virtual void v_MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble> &inarray,

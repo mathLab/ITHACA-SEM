@@ -168,14 +168,6 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual 
                 bool v_GetFaceDGForwards(const int i) const;
-#if 0 
-            LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
-                const int                                face,
-                const StdRegions::StdExpansionSharedPtr &FaceExp,
-                const Array<OneD, const NekDouble>      &inarray,
-                      Array<OneD,       NekDouble>      &outarray,
-                StdRegions::Orientation                  orient);
-#endif
 
             LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
                 const int                                face,

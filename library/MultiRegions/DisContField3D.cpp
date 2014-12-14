@@ -544,7 +544,6 @@
 
              m_locTraceToTraceMap = MemoryManager<LocTraceToTraceMap>::AllocateSharedPtr(*this,m_trace,elmtToTrace,m_leftAdjacentFaces);
 
-
          }
 
         /**
@@ -1733,7 +1732,11 @@
 
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-            
+
+            set<int>::iterator    it;
+            PeriodicMap::iterator it2;
+            boost::unordered_map<int,pair<int,int> >::iterator it3;
+
             LocalRegions::Expansion3DSharedPtr exp3d;
             
 
@@ -1762,6 +1765,7 @@
                 }
             }
 #endif
+
             // fill boundary conditions into missing elements
             int id1,id2 = 0;
             cnt = 0;
@@ -1841,14 +1845,12 @@
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {
-
 #if 1
             Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNFwdLocTracePts());
 
             m_locTraceToTraceMap->FwdLocTracesFromField(inarray,facevals);
             m_locTraceToTraceMap->InterpLocFacesToTrace(0,facevals,outarray);
 #else
-
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
             int n,e,offset,phys_offset;
@@ -1953,7 +1955,6 @@
             const Array<OneD, const NekDouble> &Bwd, 
                   Array<OneD,       NekDouble> &outarray)
         {
-
 #if 1
             Array<OneD, NekDouble> Coeffs(m_trace->GetNcoeffs());
 
@@ -1962,7 +1963,6 @@
             m_trace->IProductWRTBase(Bwd,Coeffs);
             m_locTraceToTraceMap->AddTraceCoeffsToFieldCoeffs(1,Coeffs,outarray);
 #else
-
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >

@@ -297,7 +297,6 @@ void AdjointAdvection::v_Advect(
 
         //Evaluation of the base flow for periodic cases
         //(it requires fld files)
-
         if(m_slices>1)
         {
             if (m_session->GetFunctionType("BaseFlow", 0)
@@ -462,8 +461,6 @@ void AdjointAdvection::v_Advect(
                         break;
                 }
                     break;
-
-
         default:
             ASSERTL0(false,"dimension unknown");
         }

@@ -6,10 +6,10 @@ SET(CFLStepSources  CFLStep.cpp
        ../EquationSystems/Extrapolate.cpp
        ../EquationSystems/StandardExtrapolate.cpp
        ../EquationSystems/SubSteppingExtrapolate.cpp
-       #../AdvectionTerms/AdjointAdvection.cpp
-       #../AdvectionTerms/LinearisedAdvection.cpp
+       ../AdvectionTerms/AdjointAdvection.cpp
+       ../AdvectionTerms/LinearisedAdvection.cpp
        ../AdvectionTerms/NavierStokesAdvection.cpp
-       #../AdvectionTerms/SkewSymmetricAdvection.cpp
+       ../AdvectionTerms/SkewSymmetricAdvection.cpp
        ../AdvectionTerms/NoAdvection.cpp
        )
 
@@ -23,12 +23,12 @@ SET(AliasingSources  Aliasing.cpp
        ../EquationSystems/Extrapolate.cpp
        ../EquationSystems/StandardExtrapolate.cpp
        ../EquationSystems/SubSteppingExtrapolate.cpp
-       #../AdvectionTerms/AdjointAdvection.cpp
-       #../AdvectionTerms/LinearisedAdvection.cpp
+       ../AdvectionTerms/AdjointAdvection.cpp
+       ../AdvectionTerms/LinearisedAdvection.cpp
        ../AdvectionTerms/NavierStokesAdvection.cpp
-       #../AdvectionTerms/SkewSymmetricAdvection.cpp
+       ../AdvectionTerms/SkewSymmetricAdvection.cpp
        ../AdvectionTerms/NoAdvection.cpp
        )
 
 
-#ADD_SOLVER_EXECUTABLE(Aliasing solvers ${AliasingSources})
+ADD_SOLVER_EXECUTABLE(Aliasing solvers ${AliasingSources})

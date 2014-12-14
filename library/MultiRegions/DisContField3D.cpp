@@ -331,7 +331,7 @@
                  m_session,graph3D,trace,*this,m_bndCondExpansions,
                  m_bndConditions, m_periodicFaces,variable);
 
-             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                  &elmtToTrace = m_traceMap->GetElmtToTrace();
 
              // Scatter trace segments to 3D elements. For each element, we find
@@ -1713,7 +1713,7 @@
             int cnt, n, e, npts, offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             set<int>::iterator    it;
@@ -1830,7 +1830,7 @@
             int nexp = GetExpSize();
             int n,e,offset,phys_offset;
             Array<OneD,NekDouble> e_tmp;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
@@ -1875,7 +1875,7 @@
         {
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for(n = 0; n < GetExpSize(); ++n)
@@ -1923,7 +1923,7 @@
         {
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for(n = 0; n < GetExpSize(); ++n)
@@ -2238,7 +2238,7 @@
         {
             int    i,cnt,f,ncoeff_face;
             Array<OneD, NekDouble> force, out_tmp,qrhs,qrhs1;
-            Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
+            Array<OneD, Array< OneD, LocalRegions::ExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             int     eid,nq_elmt, nm_elmt;

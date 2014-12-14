@@ -37,33 +37,32 @@
 #ifndef NEKTAR_SOLVERS_COUPLEDLOCALTOGLOBALC0CONTMAP_H
 #define NEKTAR_SOLVERS_COUPLEDLOCALTOGLOBALC0CONTMAP_H
 
-#include <MultiRegions/AssemblyMap/AssemblyMapCG2D.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <SpatialDomains/MeshGraph.h>
 
 namespace Nektar
 {
-    class CoupledLocalToGlobalC0ContMap: public MultiRegions::AssemblyMapCG2D
+    class CoupledLocalToGlobalC0ContMap: public MultiRegions::AssemblyMapCG
     {
     public:
-        CoupledLocalToGlobalC0ContMap(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                      const SpatialDomains::MeshGraphSharedPtr &graph,
-                                      const SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
-                                      const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                      const MultiRegions::ExpListSharedPtr &pressure,
-                                      const int nz_loc,
-                                      const bool CheeckForSingularSys=true);
-		
-		void FindEdgeIdToAddMeanPressure(Array<OneD, map<int,int> > &ReorderedGraphVertId,
-				  int &nel, const LocalRegions::ExpansionVector &locExpVector,
-				  int &edgeId, int &vertId, int &firstNonDirGraphVertId, map<int,int> &IsDirEdgeDof,
-				  MultiRegions::BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
-				  Array<OneD, int> &AddMeanPressureToEdgeId);
-		
-		
+        CoupledLocalToGlobalC0ContMap(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::MeshGraphSharedPtr &graph,
+            const SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const MultiRegions::ExpListSharedPtr &pressure,
+            const int nz_loc,
+            const bool CheeckForSingularSys=true);
+
+        void FindEdgeIdToAddMeanPressure(
+            vector<map<int,int> > &ReorderedGraphVertId,
+            int &nel, const LocalRegions::ExpansionVector &locExpVector,
+            int &edgeId, int &vertId, int &firstNonDirGraphVertId, map<int,int> &IsDirEdgeDof,
+            MultiRegions::BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
+            Array<OneD, int> &AddMeanPressureToEdgeId);
     };
 
     typedef boost::shared_ptr<CoupledLocalToGlobalC0ContMap> CoupledLocalToGlobalC0ContMapSharedPtr;
-        
 }
 
 #endif

@@ -57,6 +57,11 @@ public:
     static std::string className;
     static std::string className2;
 
+    void SetSpecHPDealiasing(bool value)
+    {
+        m_specHP_dealiasing = value;
+    }
+
 protected:
 
     NavierStokesAdvection();

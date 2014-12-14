@@ -231,7 +231,6 @@ namespace Nektar
             NekDouble x0 = (*m_verts[0])[0];
             PointGeomSharedPtr vert0 = MemoryManager<PointGeom>::AllocateSharedPtr(1,m_verts[0]->GetVid(),x0,0.0,0.0);
             vert0->SetGlobalID(vert0->GetVid());
-
             returnval->m_verts[0] = vert0;
             
             // Get information to calculate length. 
@@ -250,6 +249,7 @@ namespace Nektar
             else
             {
                 Array<OneD, const NekDouble> w0 = base[0]->GetW();
+                len = 0.0;
 
                 for(int i = 0; i < jac.num_elements(); ++i)
                 {
@@ -258,7 +258,7 @@ namespace Nektar
             }
             // Set up second vertex. 
             PointGeomSharedPtr vert1 = MemoryManager<PointGeom>::AllocateSharedPtr(1,m_verts[1]->GetVid(),x0+len,0.0,0.0);
-            vert0->SetGlobalID(vert1->GetVid());
+            vert1->SetGlobalID(vert1->GetVid());
 
             returnval->m_verts[1] = vert1;
             

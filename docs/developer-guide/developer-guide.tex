@@ -29,6 +29,7 @@ openany, % A chapter may start on either a recto or verso page.
 % \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
 \usepackage{makeidx}
+\usepackage{import}
 
 %%% PAGE LAYOUT 
 %%%-----------------------------------------------------------------------------
@@ -151,6 +152,8 @@ openany, % A chapter may start on either a recto or verso page.
 %%%-----------------------------------------------------------------------------
 \usepackage{xcolor}
 \usepackage{listings} % Display code / shell commands
+\usepackage{lstautogobble}
+\usepackage{xspace}
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
   language=bash,
@@ -194,7 +197,90 @@ openany, % A chapter may start on either a recto or verso page.
   linewidth=0.9\linewidth,
   xleftmargin=0.1\linewidth
 }
+\lstdefinestyle{C++Style}{
+  language=C++,
+  basicstyle=\sffamily\footnotesize,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=3pt,
+  frame=,
+  columns=fullflexible,
+  backgroundcolor=\color{black!05},
+  linewidth=0.9\linewidth,
+  xleftmargin=0.1\linewidth
+}
 
+\usepackage{tikz}
+\newcommand{\inltt}[1]{\tikz[anchor=base,baseline]\node[inner sep=3pt,
+rounded corners,outer sep=0,draw=black!30,fill=black!05]{\small\texttt{#1}};}
+\newcommand{\inlsh}[1]{\tikz[anchor=base,baseline]\node[inner sep=2pt,
+outer sep=0,fill=black!05]{\texttt{#1}};}
+\newcommand{\nekpp}{{\em Nektar++}\xspace}
+
+% Highlight box
+\usepackage{environ}
+\usepackage[tikz]{bclogo}
+\usetikzlibrary{calc}
+\NewEnviron{notebox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=black!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bcinfo};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{Note}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{warningbox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=red!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bcdanger};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{Warning}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{tipbox}
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=green!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{\bclampe};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{Tip}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
+\NewEnviron{custombox}[3]
+  {\par\medskip\noindent
+  \begin{tikzpicture}
+    \node[inner sep=5pt,fill=#3!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
+      \centering\tikz[scale=1]\node[scale=1.5]{#2};
+      \end{minipage}%
+      \begin{minipage}{.9\linewidth}
+      \textbf{#1}\par\smallskip
+      \BODY
+      \end{minipage}\hfill}%
+    };
+   \end{tikzpicture}\par\medskip%
+}
 
 %%% TABLE OF CONTENTS AND INDEX
 %%%-----------------------------------------------------------------------------
@@ -289,13 +375,13 @@ Welcome to the developer's guide for Nektar++\cite{nektar-website}.
 
 \mainmatter
 
-\input{core-concepts/core-concepts.tex}
+\import{core-concepts/}{core-concepts.tex}
 
-\input{library-design/library-design.tex}
+\import{library-design/}{library-design.tex}
 
-\input{data-structures-algorithms/data-structures-algorithms.tex}
+\import{data-structures-algorithms/}{data-structures-algorithms.tex}
 
-\input{coding-standard/coding-standard.tex}
+\import{coding-standard/}{coding-standard.tex}
 
 %\appendix
 

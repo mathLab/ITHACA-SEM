@@ -219,7 +219,7 @@ namespace Nektar
 
                 // Figure out the maximum ID so if we need to create new
                 // composites we can give them a unique ID.
-                maxId = std::max(maxId, (int)it->second->m_id) + 1;
+                maxId = (std::max)(maxId, (int)it->second->m_id) + 1;
             }
 
             tmp = m_mesh->m_composite;

@@ -93,10 +93,13 @@ void InputPts::Process(po::variables_map &vm)
     int nfields;
     std::string fields = points->Attribute("FIELDS");
 
-    bool valid = ParseUtils::GenerateOrderedStringVector(
-                                 fields.c_str(),m_f->m_fieldPts->m_fields);
-    ASSERTL0(valid,"Unable to process list of field variable in "
-             " FIELDS attribute:  "+ fields);
+    if(!fields.empty())
+    {
+        bool valid = ParseUtils::GenerateOrderedStringVector(
+            fields.c_str(),m_f->m_fieldPts->m_fields);
+        ASSERTL0(valid,"Unable to process list of field variable in "
+                 " FIELDS attribute:  "+ fields);
+    }
 
     nfields = m_f->m_fieldPts->m_nFields = m_f->m_fieldPts->m_fields.size();
 

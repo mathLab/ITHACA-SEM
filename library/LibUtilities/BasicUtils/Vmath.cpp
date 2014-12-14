@@ -838,6 +838,7 @@ namespace Vmath
     }
 
     template LIB_UTILITIES_EXPORT int Imin( int n, const Nektar::NekDouble *x, const int incx);
+    template LIB_UTILITIES_EXPORT  int Imin( int n, const int *x, const int incx);
 
     /// \brief Return the minimum element in x - called vmin to avoid
     /// conflict with min

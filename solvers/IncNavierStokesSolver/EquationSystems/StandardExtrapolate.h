@@ -42,7 +42,7 @@
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <IncNavierStokesSolver/EquationSystems/Extrapolate.h>
 
 namespace Nektar
@@ -65,7 +65,7 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
             MultiRegions::ExpListSharedPtr  &pPressure,
             const Array<OneD, int> &pVel,
-            const AdvectionTermSharedPtr &advObject)
+            const SolverUtils::AdvectionSharedPtr &advObject)
         {
             ExtrapolateSharedPtr p = MemoryManager<StandardExtrapolate>
                 ::AllocateSharedPtr(pSession,pFields,pPressure,pVel,advObject);
@@ -80,7 +80,7 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
             MultiRegions::ExpListSharedPtr  pPressure,
             const Array<OneD, int> pVel,
-            const AdvectionTermSharedPtr advObject);
+            const SolverUtils::AdvectionSharedPtr advObject);
 
         virtual ~StandardExtrapolate();
         

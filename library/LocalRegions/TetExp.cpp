@@ -631,60 +631,12 @@ namespace Nektar
             v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
         }
 
-#if 0 
         /**
          * \brief Returns the physical values at the quadrature points of a face
          */
         void TetExp::v_GetFacePhysMap(const int                face,
                                       Array<OneD, int>        &outarray)
         {
-<<<<<<< HEAD
-            
-            if (orient == StdRegions::eNoOrientation)
-            {
-                orient = GetFaceOrient(face);
-            }
-            
-#if 1
-            int nq0 = FaceExp->GetNumPoints(0);
-            int nq1 = FaceExp->GetNumPoints(1);
-
-            int nfacepts = GetFaceNumPoints(face);
-            int dir0 = GetGeom3D()->GetDir(face,0);
-            int dir1 = GetGeom3D()->GetDir(face,1);
-
-            Array<OneD,NekDouble> o_tmp (nfacepts);
-            Array<OneD,NekDouble> o_tmp2(FaceExp->GetTotPoints());
-            Array<OneD, int> faceids;
-            
-            // Get local face pts and put into o_tmp
-            GetFacePhysMap(face,faceids);
-            Vmath::Gathr(faceids.num_elements(),inarray,faceids,o_tmp);
-            
-            // interpolate to points distrbution given in FaceExp
-            LibUtilities::Interp2D(m_base[dir0]->GetPointsKey(), 
-                                   m_base[dir1]->GetPointsKey(), 
-                                   o_tmp.get(),
-                                   FaceExp->GetBasis(0)->GetPointsKey(),
-                                   FaceExp->GetBasis(1)->GetPointsKey(),
-                                   o_tmp2.get());
-            
-            // Reshuffule points as required and put into outarray. 
-            ReOrientFacePhysMap(FaceExp->GetNverts(),orient,nq0,nq1,faceids);
-            Vmath::Gathr(nq0*nq1,o_tmp2,faceids,outarray);
-
-#else
-            int nfacepts = GetFaceNumPoints(face);
-            Array<OneD,NekDouble> o_tmp (nfacepts);
-            Array<OneD,NekDouble> o_tmp2(FaceExp->GetTotPoints());
-
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-
-            Array<OneD,NekDouble> o_tmp3;
-
-=======
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
@@ -693,7 +645,6 @@ namespace Nektar
             int nq1 = 0; 
 
             // get forward aligned faces. 
->>>>>>> feature/DGopt
             switch(face)
             {
                 case 0:
@@ -767,117 +718,7 @@ namespace Nektar
                 ASSERTL0(false,"face value (> 3) is out of range");
                 break;
             }
-<<<<<<< HEAD
-
-            int nq1 = FaceExp->GetNumPoints(0);
-            int nq2 = FaceExp->GetNumPoints(1);
-            
-            if ((int)orient == 7)
-            {
-                for (int j = 0; j < nq2; ++j)
-                {
-                    Vmath::Vcopy(nq1, o_tmp2.get()+((j+1)*nq1-1), -1, outarray.get()+j*nq1, 1);
-                }
-            }
-            else
-            {
-                Vmath::Vcopy(nq1*nq2, o_tmp2.get(), 1, outarray.get(), 1);
-            }
-#endif
         }
-#endif
-
-
-        /**
-         * \brief Returns the physical values at the quadrature points of a face
-         */
-        void TetExp::v_GetFacePhysMap(const int                face,
-                                      Array<OneD, int>        &outarray)
-        {
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-            
-            int nq0 = 0; 
-            int nq1 = 0; 
-
-            // get forward aligned faces. 
-            switch(face)
-            {
-                case 0:
-                {
-                    nq0 = nquad0; 
-                    nq1 = nquad1;
-                    if(outarray.num_elements()!=nq0*nq1)
-                    {
-                        outarray = Array<OneD, int>(nq0*nq1);
-                    }
-
-                    for (int i = 0; i < nquad0*nquad1; ++i)
-                    {
-                        outarray[i] = i;
-                    }
-
-                    break;
-                }
-                case 1:
-                {
-                    nq0 = nquad0; 
-                    nq1 = nquad2;
-                    if(outarray.num_elements()!=nq0*nq1)
-                    {
-                        outarray = Array<OneD, int>(nq0*nq1);
-                    }
-
-                    //Direction A and B positive
-                    for (int k=0; k<nquad2; k++)
-                    {
-                        for(int i = 0; i < nquad0; ++i)
-                        {
-                            outarray[k*nquad0+i] = (nquad0*nquad1*k)+i;
-                        }
-                    }
-                    break;
-                }
-                case 2:
-                {
-                    nq0 = nquad1; 
-                    nq1 = nquad2;
-                    if(outarray.num_elements()!=nq0*nq1)
-                    {
-                        outarray = Array<OneD, int>(nq0*nq1);
-                    }
-
-                    //Directions A and B positive
-                    for(int j = 0; j < nquad1*nquad2; ++j)
-                    {
-                        outarray[j] = nquad0-1 + j*nquad0;
-                    }
-                    break;
-                }
-                case 3:
-                {
-                    nq0 = nquad1; 
-                    nq1 = nquad2;
-                    if(outarray.num_elements() != nq0*nq1)
-                    {
-                        outarray = Array<OneD, int>(nq0*nq1);
-                    }
-                    
-                    //Directions A and B positive
-                    for(int j = 0; j < nquad1*nquad2; ++j)
-                    {
-                        outarray[j] = j*nquad0;
-                    }
-                }
-                break;
-            default:
-                ASSERTL0(false,"face value (> 3) is out of range");
-                break;
-            }
-=======
->>>>>>> feature/DGopt
-       }
         
 
         /**

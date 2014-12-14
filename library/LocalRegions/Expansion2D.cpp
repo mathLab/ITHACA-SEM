@@ -1383,9 +1383,9 @@ namespace Nektar
             return v_GetEdgeNormal(id);
         }
         
-        void Expansion2D::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
+        void Expansion2D::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, const NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
         {
-            NormVectorIProductWRTBase(Fvec[0], Fvec[1], Fvec[2], outarray);
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], outarray);
         }
         
         void Expansion2D::v_NegateEdgeNormal(const int edge)

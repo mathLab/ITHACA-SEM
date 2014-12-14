@@ -171,7 +171,7 @@ namespace Nektar
             const StdRegions::NormalVector &v_GetEdgeNormal(const int edge) const;
             const StdRegions::NormalVector &v_GetSurfaceNormal(const int id) const;
 
-            virtual void v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray);
+            virtual void v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, const NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray);
         };
 
         inline ExpansionSharedPtr Expansion2D::GetEdgeExp(int edge, bool SetUpNormal)

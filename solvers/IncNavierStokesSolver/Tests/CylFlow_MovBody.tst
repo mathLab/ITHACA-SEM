@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test>
+    <description>3D flexible cylinder flow simulation using "MovingBody" module</description>
+    <executable>IncNavierStokesSolver</executable>
+    <parameters>CylFlow_MovBody.xml</parameters>
+    <files>
+        <file description="Session File">CylFlow_MovBody.xml</file>
+    </files>
+    <metrics>
+        <metric type="L2" id="1">
+            <value variable="u">55.4979</value>
+            <value variable="v">3.73644</value>
+            <value variable="w">0.00680993</value>
+	    	<value variable="p">166.958</value>
+        </metric>
+        <metric type="Linf" id="2">
+            <value variable="u">1.44446</value>
+            <value variable="v">0.671031</value>
+            <value variable="w">0.00443915</value>
+	    	<value variable="p">5.76785</value>
+        </metric>
+    </metrics>
+</test>

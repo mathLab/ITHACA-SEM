@@ -88,6 +88,7 @@ void LinearisedAdvection::v_InitObject(
     m_spacedim = pFields[0]->GetGraph()->GetSpaceDimension();
     m_expdim   = pFields[0]->GetGraph()->GetMeshDimension();
     m_CoeffState = MultiRegions::eLocal;
+    m_homogen_dealiasing = false;
 
     if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
     {

@@ -115,8 +115,7 @@ void DriverSteadyState::v_Execute(ostream &out)
     timer.Start();
 
     // Definition of shared pointer (used only for the Adaptive SFD method)
-    AdvectionSystemSharedPtr A
-                = boost::dynamic_pointer_cast<AdvectionSystem>(m_equ[0]);
+    AdvectionSystemSharedPtr A = m_equ[0]->as<AdvectionSystem>();
 
     // Condition necessary to run SFD for the compressible case
     NumVar_SFD = m_equ[m_nequ - 1]->UpdateFields()[0]->GetCoordim(0);

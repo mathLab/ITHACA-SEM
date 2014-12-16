@@ -606,7 +606,7 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string &variable,
             const bool DeclareCoeffPhysArrays)
-        {  	
+        {      
             int cnt = 0;
             SpatialDomains::BoundaryConditionShPtr             bc;
             MultiRegions::ExpList1DSharedPtr                   locExpList;
@@ -631,7 +631,7 @@ namespace Nektar
                 Array<OneD, MultiRegions::ExpListSharedPtr>(cnt);
             m_bndConditions     = 
                 Array<OneD, SpatialDomains::BoundaryConditionShPtr>(cnt);
-	    
+        
             cnt = 0;
 
             // list non-periodic boundaries
@@ -1371,7 +1371,7 @@ namespace Nektar
             int id1, id2 = 0;
             
             for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {				
+            {                
                 if (m_bndConditions[n]->GetBoundaryConditionType() == 
                         SpatialDomains::eDirichlet)
                 {
@@ -2046,7 +2046,7 @@ namespace Nektar
 
                 //SpatialDomains::QuadGeomSharedPtr qGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*m_exp)[eid]->GetGeom());
                 //LocalRegions::QuadExpSharedPtr ppExp = 
-                //	MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
+                //    MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(BkeyQ1, BkeyQ2, qGeom);
                 //Orthogonal expansion created
 
                 //In case lambdas are causing the trouble, try PhysDeriv instead of DGDeriv
@@ -2057,7 +2057,7 @@ namespace Nektar
                 //ppExp->IProductWRTDerivBase(1,qrhs1,out_tmp);
                 //===============================================================================================
                
-                //DGDeriv	
+                //DGDeriv    
                 // (d/dx w, d/dx q_0)
                 (*m_exp)[eid]->DGDeriv(
                     0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
@@ -2244,39 +2244,9 @@ namespace Nektar
                             SpatialDomains::eMovingBody)
                 {
                     locExpList = m_bndCondExpansions[i];
-                    npoints    = locExpList->GetNpoints();
-                    Array<OneD, NekDouble> x0(npoints, 0.0);
-                    Array<OneD, NekDouble> x1(npoints, 0.0);
-                    Array<OneD, NekDouble> x2(npoints, 0.0);
-                    Array<OneD, NekDouble> tmp(npoints);
-
-                    // Homogeneous input case for x2.
-                    if (x2_in == NekConstants::kNekUnsetDouble)
-                    {
-                        locExpList->GetCoords(x0,x1,x2);
-                    }
-                    else
-                    {
-                        locExpList->GetCoords(x0, x1, x2);
-                        Vmath::Fill(npoints, x2_in, x2, 1);
-                    }
                     if (m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                     {
-                        LibUtilities::Equation condition =
-                            boost::static_pointer_cast<
-                                SpatialDomains::DirichletBoundaryCondition>
-                                    (m_bndConditions[i])->
-                                        m_dirichletCondition;
-
-                        condition.Evaluate(x0, x1, x2, time,
-                                        locExpList->UpdatePhys());
-                        Array<OneD, NekDouble> movingbodyvars;
-                        locExpList->GetMovBodyMotionVars(movingbodyvars);
-                        Vmath::Fill(npoints, movingbodyvars[1], tmp, 1);
-                        Vmath::Vsub(npoints, locExpList->UpdatePhys(), 1,
-                                             tmp,                      1,
-                                             locExpList->UpdatePhys(), 1);
                         locExpList->FwdTrans_IterPerExp(
                                     locExpList->GetPhys(),
                                     locExpList->UpdateCoeffs());

@@ -248,7 +248,7 @@ namespace Nektar
             m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),m_fields[k]->UpdateCoeffs());
         }
     }
-	
+    
     /**
      * 
      */
@@ -293,7 +293,31 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
+            if((*x)->GetclassName() == "MovingBody")
+            {
+                std::vector<SolverUtils::FilterSharedPtr>::iterator f;
+                for (f = m_filters.begin(); f != m_filters.end(); ++f)
+                {
+                    if((*f)->GetclassName() == (*x)->GetclassName())
+                    {
+                        (*x)->GetAeroForces((*f)->GetAeroForces());
+                    }
+                }
+            }
+
             (*x)->Apply(m_fields, inarray, outarray, time);
+
+            if((*x)->GetclassName() == "MovingBody")
+            {
+                std::vector<SolverUtils::FilterSharedPtr>::iterator f;
+                for (f = m_filters.begin(); f != m_filters.end(); ++f)
+                {
+                    if((*f)->GetclassName() == (*x)->GetclassName())
+                    {
+                        (*f)->GetMotionVars((*x)->GetMotionVars());
+                    }
+                }
+            }
         }
         
         // Calculate High-Order pressure boundary conditions
@@ -325,7 +349,7 @@ namespace Nektar
         
         // Substep the pressure boundary condition
         m_extrapolation->SubStepSetPressureBCs(inarray,aii_Dt,m_kinvis);
-	
+    
         // Set up forcing term and coefficients for pressure Poisson equation
         SetUpPressureForcing(inarray, F, aii_Dt);
         factors[StdRegions::eFactorLambda] = 0.0;
@@ -409,5 +433,5 @@ namespace Nektar
             Blas::Dscal(phystot,1.0/m_kinvis,&(Forcing[i])[0],1);
         }
     }
-	
+    
 } //end of namespace

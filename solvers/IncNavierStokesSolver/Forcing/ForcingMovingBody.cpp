@@ -281,7 +281,7 @@ namespace SolverUtils
                 int nstrips;
                 m_session->LoadParameter("Strip_Z", nstrips);
          
-               if(m_session->DefinesSolverInfo("USEFFT"))
+                if(m_session->DefinesSolverInfo("USEFFT"))
                 {
                     m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", nstrips);
                 }
@@ -736,7 +736,7 @@ namespace SolverUtils
                                                       Array<OneD, NekDouble> &FcePhysinArray,
                                                       Array<OneD, NekDouble> &MotPhysinArray)
     {
-           Array<OneD, NekDouble> ForceCoeffs(m_NumLocPlane, 0.0);
+        Array<OneD, NekDouble> ForceCoeffs(m_NumLocPlane, 0.0);
         Array<OneD, Array<OneD, NekDouble> > MotionCoeffs(m_NumVariable);
         Array<OneD, Array<OneD, NekDouble> > MotionPhys(m_NumVariable);
 
@@ -949,7 +949,7 @@ namespace SolverUtils
             }    
         
             // send to the root processor where Backward FFT is performed
-               if(colrank == 0)
+            if(colrank == 0)
             {
                 for(int var = 0; var < m_NumVariable; var++)
                 {

@@ -96,8 +96,8 @@ namespace Nektar
             Array<OneD, NekDouble>          m_Aeroforces;
             Array<OneD, NekDouble>          m_MotionVars;
             Array<OneD, std::ofstream>      m_outputStream;
-            std::string                        m_outputFile_fce;
-            std::string                        m_outputFile_mot;
+            std::string                     m_outputFile_fce;
+            std::string                     m_outputFile_mot;
         };
     }
 }

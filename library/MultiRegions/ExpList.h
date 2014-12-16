@@ -846,30 +846,6 @@ namespace Nektar
                 return v_GetPlane(n);
             }
            
-
-            //
-            inline void SetMovBodyForces(NekDouble &forcex, NekDouble &forcey)
-            {
-                m_movbodyfcex = forcex;
-                m_movbodyfcey = forcey;
-            }
-
-            inline void GetMovBodyForces(NekDouble &forcex, NekDouble &forcey)
-            {
-                forcex = m_movbodyfcex;
-                forcey = m_movbodyfcey;
-            }
-
-            inline void SetMovBodyMotionVars(Array<OneD, NekDouble> &motions)
-            {
-                m_movbodyvars = motions;
-            }
-
-            inline void GetMovBodyMotionVars(Array<OneD, NekDouble> &motions)
-            {
-                motions = m_movbodyvars;
-            }
-
             //expansion type
             ExpansionType m_expType;
 
@@ -974,11 +950,6 @@ namespace Nektar
             // or not
             bool m_WaveSpace;
 
-            ///
-            ///
-            NekDouble m_movbodyfcex;
-            NekDouble m_movbodyfcey;
-            Array<OneD, NekDouble> m_movbodyvars;
             /// This function assembles the block diagonal matrix of local
             /// matrices of the type \a mtype.
             const DNekScalBlkMatSharedPtr GenBlockMatrix(

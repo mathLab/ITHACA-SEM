@@ -25,7 +25,6 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterHistoryPoints.cpp
   Filters/FilterModalEnergy.cpp
   Filters/FilterThresholdMax.cpp
-  Filters/FilterMovingBody.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
@@ -36,7 +35,6 @@ SET(SOLVER_UTILS_SOURCES
   Forcing/ForcingNoise.cpp
   Forcing/ForcingProgrammatic.cpp
   Forcing/ForcingWavyness.cpp
-  Forcing/ForcingMovingBody.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
@@ -66,7 +64,6 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterHistoryPoints.h
   Filters/FilterModalEnergy.h
   Filters/FilterThresholdMax.h
-  Filters/FilterMovingBody.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
   RiemannSolvers/UpwindLDGSolver.h
@@ -79,7 +76,6 @@ SET(SOLVER_UTILS_HEADERS
   Forcing/ForcingNoise.h
   Forcing/ForcingProgrammatic.h
   Forcing/ForcingWavyness.h
-  Forcing/ForcingMovingBody.h
 )
 
 IF (NEKTAR_USE_ARPACK)

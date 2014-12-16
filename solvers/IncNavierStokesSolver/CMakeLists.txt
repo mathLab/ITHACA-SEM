@@ -77,7 +77,7 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(ChannelSpongeNSE)
     ADD_NEKTAR_TEST(ChannelSpongeLNSE)
     ADD_NEKTAR_TEST(ChanFlow_Standard_BodyForce)
-    ADD_NEKTAR_TEST(CylFlow_MovingBody)
+    ADD_NEKTAR_TEST(CylFlow_MovBody)
 
     #IF (NEKTAR_USING_ARPACK)
         #ADD_NEKTAR_TEST(ChanStability_adj_Ar) ###

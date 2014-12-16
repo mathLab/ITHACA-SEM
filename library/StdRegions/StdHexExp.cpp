@@ -866,9 +866,9 @@ namespace Nektar
                     break;
             }
             
-            return EvaluateTriFaceBasisKey(k,m_base[dir]->GetBasisType(),
-                                           m_base[dir]->GetNumPoints(),
-                                           m_base[dir]->GetNumModes());
+            return EvaluateQuadFaceBasisKey(k,m_base[dir]->GetBasisType(),
+                                            m_base[dir]->GetNumPoints(),
+                                            m_base[dir]->GetNumModes());
         }
 
         LibUtilities::BasisType StdHexExp::v_GetEdgeBasisType(const int i) const

@@ -39,11 +39,16 @@
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/BasicUtils/FileSystem.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <SolverUtils/Filters/Filter.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <complex>
+#include <iostream>
+#include <fstream> 
+#include <sstream>
+
 
 namespace Nektar
 {
@@ -212,6 +217,10 @@ namespace Nektar
                     }
                     radpts += BndExp[n]->GetTotPoints();
                 }
+		else if(BndConds[n]->GetUserDefined() == SpatialDomains::eWomersley)
+		{
+		    // Load the fourier coefficients 
+		}
             }
 
             m_fieldsRadiationFactor[i] = Array<OneD, NekDouble>(radpts);
@@ -488,7 +497,82 @@ namespace Nektar
 	m_session->LoadParameter("n0",n0);
 	m_session->LoadParameter("n1",n1);
 	m_session->LoadParameter("n2",n2);
+
+
+	std::string coeffile = "fourier_aneurysm.txt";
+	NekDouble realcoef;
+	NekDouble imagcoef;
+
+	if (fs::exists(coeffile))
+	{
+	   std::ifstream fileIN("fourier_aneurysm.txt");
+	   std::string line;
+	   Array<OneD,NekDouble> veltest((std::istream_iterator<int>(fileIN)),(std::istream_iterator<int>()));
+	   for(i=0;i<veltest.size();i++)
+	   {
+		std::cout << "  " << veltest[i] << '\n';
+	   } 
 	
+	   int count=0;
+	   while(std::getline(fileIN,line))
+	   {
+		if (count==0)
+		{
+	           std::stringstream(line) >> realcoef;	
+		}
+		else if (count==1)
+		{
+		  std::stringstream(line) >> imagcoef;
+		}
+		count++;
+//		fileIN >> realcoef;
+//		fileIN >> imagcoef;	cout << line << '\n';		
+		cout << "Real: " << realcoef << '\n';
+		cout << "Imaginary: " << imagcoef << '\n';
+	   }
+	}
+	else
+	{ 
+	   std::cout << "Fourier Coefficient file does not exist" << '\n';
+	}
+
+//	std::string rcoeffile = "real_fourier_aneurysm.txt";
+//	std::string icoeffile = "imag_fourier_aneurysm.txt";
+//	fs::path fullpath(fs::current_path());
+////	std::string parentpath = fs::current_path(pcoeffile);
+//	Array<OneD, NekDouble> vel_r(M,0.0);
+//	Array<OneD, NekDouble> vel_i(M,0.0);
+//	
+//	if (fs::exists(rcoeffile))	
+//	{
+//		std::cout << "File Exists:" << rcoeffile << '\n'; 
+//		std::ifstream tmpfile("real_fourier_aneurysm.txt");
+//		NekDouble tmpvar;
+//		for (i=0;i<M;i++)
+//		{
+//		   tmpfile >> tmpvar;	
+//		   vel_r[i] = tmpvar;
+//		}
+//	}	
+//	else
+//	{
+//		std::cout << "Fourier Coefficient file does not exist" << '\n';
+//	}
+//	if (fs::exists(icoeffile))	
+//	{
+//		std::cout << "File Exists:" <<icoeffile << '\n'; 
+//		std::ifstream tmpfile("imag_fourier_aneurysm.txt");
+//		for (double tmpvar; tmpfile >> tmpvar;)
+//		{	
+//		   vel_i.push_back(tmpvar);
+//		}
+//	}	
+//	else
+//	{
+//		std::cout << "Fourier Coefficient file does not exist" << '\n';
+//	}
+//
+//	std::cout << fullpath << '\n';
 	
 	NekDouble normals[] = {n0,n1,n2};
 	

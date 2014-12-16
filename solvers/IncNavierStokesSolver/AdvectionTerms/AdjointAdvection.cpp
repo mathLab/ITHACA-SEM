@@ -70,21 +70,21 @@ void AdjointAdvection::v_InitObject(
 
     Advection::v_InitObject(pSession, pFields);
 
-    m_session = pSession;
-
+    m_session            = pSession;
     m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
                     ::AllocateSharedPtr(m_session, pFields[0]->GetGraph());
+    m_spacedim           = pFields[0]->GetGraph()->GetSpaceDimension();
+    m_expdim             = pFields[0]->GetGraph()->GetMeshDimension();
+    m_CoeffState         = MultiRegions::eLocal;
 
     //Setting parameters for homogeneous problems
-    m_HomoDirec       = 0;
-    m_useFFT          = false;
-    m_HomogeneousType = eNotHomogeneous;
-    m_SingleMode       =false;
-    m_HalfMode           =false;
-    m_MultipleModes    =false;
-    m_spacedim = pFields[0]->GetGraph()->GetSpaceDimension();
-    m_expdim   = pFields[0]->GetGraph()->GetMeshDimension();
-    m_CoeffState = MultiRegions::eLocal;
+    m_HomoDirec          = 0;
+    m_useFFT             = false;
+    m_HomogeneousType    = eNotHomogeneous;
+    m_SingleMode         = false;
+    m_HalfMode           = false;
+    m_MultipleModes      = false;
+    m_homogen_dealiasing = false;
 
     if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
     {

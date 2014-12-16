@@ -378,7 +378,12 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ofstream &outfile);
             MULTI_REGIONS_EXPORT void WriteVtkFooter(std::ofstream &outfile);
 
-            void WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip = 0)
+            void WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+            {
+                v_WriteVtkPieceHeader(outfile, expansion);
+            }
+
+            void WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip)
             {
                 v_WriteVtkPieceHeader(outfile, expansion, istrip);
             }
@@ -1222,7 +1227,8 @@ namespace Nektar
                                              int expansion);
             virtual void v_WriteTecplotConnectivity(std::ofstream &outfile,
                                                     int expansion);
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip = 0);
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip);
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                              std::string var);
 

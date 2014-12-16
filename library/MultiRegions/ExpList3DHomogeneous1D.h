@@ -123,6 +123,8 @@ namespace Nektar
 
             virtual void v_WriteTecplotConnectivity(std::ofstream &outfile, int expansion);
 
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip);
 
             virtual NekDouble v_L2(

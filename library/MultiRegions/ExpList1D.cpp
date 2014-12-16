@@ -1166,7 +1166,7 @@ namespace Nektar
          *
          * @param   outfile     Output stream to write data to.
          */
-        void ExpList1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip = 0)
+        void ExpList1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);

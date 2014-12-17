@@ -49,7 +49,7 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
-#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/AdvectionSystem.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
 #include <boost/format.hpp>
@@ -1890,6 +1890,18 @@ namespace Nektar
             sprintf(chkout, "%d", n);
             std::string outname = m_sessionName + "_" + chkout + ".chk";
             WriteFld(outname, field, fieldcoeffs, variables);
+        }
+        
+        /**
+         * Write the n-th base flow into a .chk file
+         * @param   n   The index of the base flow file.
+         */
+        void EquationSystem::Checkpoint_BaseFlow(const int n)
+        {
+            std::string outname =  m_sessionName +  "_BaseFlow_" + 
+                boost::lexical_cast<std::string>(n);
+
+            WriteFld(outname + ".chk");
         }
 
         /**

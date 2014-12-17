@@ -1038,7 +1038,7 @@ namespace Nektar
                 int elmt = expList->GetOffset_Elmt_Id(n);
                 locExpansion = expList->GetExp(elmt);
 
-                Array<OneD, StdRegions::StdExpansionSharedPtr> &elmtToTraceMap =
+                Array<OneD, LocalRegions::ExpansionSharedPtr> &elmtToTraceMap =
                     asmMap->GetElmtToTrace()[elmt];
 
                 // Block matrix (lambda)

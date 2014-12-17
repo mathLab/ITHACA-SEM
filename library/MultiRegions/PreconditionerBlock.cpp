@@ -1027,7 +1027,7 @@ namespace Nektar
             // Find maximum trace size.
             LibUtilities::CommSharedPtr comm =
                 expList->GetSession()->GetComm()->GetRowComm();
-            comm->AllReduce(maxTraceSize, LibUtilities::ReduceSum);
+            comm->AllReduce(maxTraceSize, LibUtilities::ReduceMax);
 
             // Zero matrix storage.
             Array<OneD, NekDouble> tmpStore(cnt, 0.0);

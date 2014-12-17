@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File LinearisedAdvection.h
+// File AdvectionSystem.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,66 +29,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: TBA
+// Description: Advection system
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
-#define NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
+#ifndef NEKTAR_SOLVERUTILS_ADVECTIONSYSTEM_H
+#define NEKTAR_SOLVERUTILS_ADVECTIONSYSTEM_H
 
+#include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/Advection/Advection.h>
 
+namespace Nektar {
+namespace SolverUtils {
 
-namespace Nektar
-{     
-
-class NavierStokesAdvection: public SolverUtils::Advection
-
+/// A base class for PDEs which include an advection component
+class AdvectionSystem: virtual public UnsteadySystem
 {
 public:
-    friend class MemoryManager<NavierStokesAdvection>;
+    SOLVER_UTILS_EXPORT AdvectionSystem(
+            const LibUtilities::SessionReaderSharedPtr &pSession);
 
-    /// Creates an instance of this class
-    static SolverUtils::AdvectionSharedPtr create(std::string) {
-        return MemoryManager<NavierStokesAdvection>::AllocateSharedPtr();
-    }
+    SOLVER_UTILS_EXPORT virtual ~AdvectionSystem();
 
-    /// Name of class
-    static std::string className;
-    static std::string className2;
+    SOLVER_UTILS_EXPORT virtual void v_InitObject();
 
-    void SetSpecHPDealiasing(bool value)
+    /// Returns the advection object held by this instance.
+    AdvectionSharedPtr GetAdvObject()
     {
-        m_specHP_dealiasing = value;
+        return m_advObject;
     }
 
 protected:
-
-    NavierStokesAdvection();
-
-    virtual ~NavierStokesAdvection();
-
-    virtual void v_InitObject(
-              LibUtilities::SessionReaderSharedPtr         pSession,
-              Array<OneD, MultiRegions::ExpListSharedPtr>  pFields);
-
-    virtual void v_Advect(
-        const int nConvectiveFields,
-        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-              Array<OneD, Array<OneD, NekDouble> >        &outarray,
-        const NekDouble                                   &time);
-
-private:
-    MultiRegions::CoeffState m_CoeffState;
-    bool m_specHP_dealiasing;
-    bool m_homogen_dealiasing;
-    bool m_SingleMode;
-    bool m_HalfMode;
+    /// Advection term
+    SolverUtils::AdvectionSharedPtr m_advObject;
 };
-    
-    
-} //end of namespace
 
-#endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H
+/// Shared pointer to an AdvectionSystem class
+typedef boost::shared_ptr<AdvectionSystem> AdvectionSystemSharedPtr;
+
+}
+}
+
+#endif

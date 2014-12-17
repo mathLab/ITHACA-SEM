@@ -119,8 +119,6 @@ namespace Nektar
             // Helper functions
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
-            LOCAL_REGIONS_EXPORT virtual 
-                StdRegions::Orientation v_GetFaceOrient(int face);
             LOCAL_REGIONS_EXPORT void v_ComputeFaceNormal(const int face);
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int                                face,

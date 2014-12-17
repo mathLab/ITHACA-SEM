@@ -596,13 +596,6 @@ namespace Nektar
                                 "hierarchicial");
             }
         }
-
-
-        StdRegions::Orientation TetExp::v_GetFaceOrient(int face)
-        {
-            return GetGeom3D()->GetFaceOrient(face);
-        }
-
       
         /**
          * \brief Returns the physical values at the quadrature points of a face
@@ -638,7 +631,7 @@ namespace Nektar
             
             if (orient == StdRegions::eNoOrientation)
             {
-                orient = GetFaceOrient(face);
+                orient = GetForient(face);
             }
             
             switch(face)

@@ -74,7 +74,7 @@ namespace Nektar
             StdRegions::IndexMapKey ikey(
                 StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
+                face, GetForient(face));
             StdRegions::IndexMapValuesSharedPtr map = 
                 StdExpansion::GetIndexMap(ikey);
 
@@ -173,11 +173,11 @@ namespace Nektar
          * matrix in Eqn. 32.
          */
         void Expansion3D::AddNormTraceInt(
-            const int                                      dir,
-            Array<OneD, const NekDouble>                  &inarray,
-            Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
-            Array<OneD,NekDouble>                         &outarray,
-            const StdRegions::VarCoeffMap                 &varcoeffs)
+            const int                        dir,
+            Array<OneD, const NekDouble>    &inarray,
+            Array<OneD, ExpansionSharedPtr> &FaceExp,
+            Array<OneD, NekDouble>          &outarray,
+            const StdRegions::VarCoeffMap   &varcoeffs)
         {
             int i,f,cnt;
             int order_f,nquad_f;
@@ -228,10 +228,10 @@ namespace Nektar
 
         //shorter version of the above (coefficients are already set for faces)
         void Expansion3D::AddNormTraceInt(
-            const int                                       dir,
-            Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
-            Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
-            Array<OneD, NekDouble>                         &outarray)
+            const int                             dir,
+            Array<OneD, ExpansionSharedPtr>      &FaceExp,
+            Array<OneD, Array<OneD, NekDouble> > &faceCoeffs,
+            Array<OneD, NekDouble>               &outarray)
         {
             int f, cnt;
             int order_f, nquad_f;
@@ -265,11 +265,11 @@ namespace Nektar
          * For a given face add the \tilde{F}_1j contributions
          */
         void Expansion3D::AddFaceBoundaryInt(
-            const int                          face,
-            StdRegions::StdExpansionSharedPtr &FaceExp,
-            Array<OneD, NekDouble>            &facePhys,
-            Array<OneD, NekDouble>            &outarray,
-            const StdRegions::VarCoeffMap     &varcoeffs)
+            const int                      face,
+            ExpansionSharedPtr            &FaceExp,
+            Array<OneD, NekDouble>        &facePhys,
+            Array<OneD, NekDouble>        &outarray,
+            const StdRegions::VarCoeffMap &varcoeffs)
         {
             int i;
             int order_f = FaceExp->GetNcoeffs();
@@ -278,7 +278,7 @@ namespace Nektar
             StdRegions::IndexMapKey ikey(
                 StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
+                face, GetForient(face));
             StdRegions::IndexMapValuesSharedPtr map = 
                 StdExpansion::GetIndexMap(ikey);
 
@@ -326,7 +326,7 @@ namespace Nektar
             StdRegions::IndexMapKey ikey2(
                 StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
+                face, GetForient(face));
             StdRegions::IndexMapValuesSharedPtr map2 = 
                 StdExpansion::GetIndexMap(ikey2);
             
@@ -405,7 +405,7 @@ namespace Nektar
                     Array<OneD,unsigned int> fmap;
                     Array<OneD,int> sign;
                     ExpansionSharedPtr FaceExp;
-                    StdRegions::StdExpansionSharedPtr FaceExp2;
+                    ExpansionSharedPtr FaceExp2;
 
                     int order_f, coordim = GetCoordim();
                     DNekScalMat  &invMass = *GetLocMatrix(StdRegions::eInvMass);
@@ -458,7 +458,7 @@ namespace Nektar
                         StdRegions::IndexMapKey ikey(
                             StdRegions::eFaceToElement, DetShapeType(), 
                             GetBasisNumModes(0), GetBasisNumModes(1), 
-                            GetBasisNumModes(2), i, GetFaceOrient(i));
+                            GetBasisNumModes(2), i, GetForient(i));
                         StdRegions::IndexMapValuesSharedPtr map = 
                             StdExpansion::GetIndexMap(ikey);
 
@@ -508,7 +508,7 @@ namespace Nektar
                     Array<OneD,NekDouble> f(ncoeffs);
                     DNekVec F(ncoeffs,f,eWrapper);
                     
-                    StdRegions::StdExpansionSharedPtr FaceExp;
+                    ExpansionSharedPtr FaceExp;
                     // declare matrix space
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
                     DNekMat &Umat = *returnval;
@@ -606,7 +606,7 @@ namespace Nektar
 
                     Array<OneD,NekDouble> lambda(nbndry);
                     DNekVec Lambda(nbndry,lambda,eWrapper);                    
-                    Array<OneD,StdRegions::StdExpansionSharedPtr>  FaceExp(nfaces);
+                    Array<OneD, ExpansionSharedPtr>  FaceExp(nfaces);
                     
                     Array<OneD,NekDouble> ulam(ncoeffs);
                     DNekVec Ulam(ncoeffs,ulam,eWrapper);
@@ -693,7 +693,7 @@ namespace Nektar
 
                     Array<OneD,NekDouble>       work, varcoeff_work;
                     Array<OneD,const Array<OneD, NekDouble> > normals; 
-                    Array<OneD,StdRegions::StdExpansionSharedPtr>  FaceExp(nfaces);
+                    Array<OneD, ExpansionSharedPtr>  FaceExp(nfaces);
                     Array<OneD, NekDouble> lam(nbndry); 
                     
                     Array<OneD,unsigned int>    fmap;
@@ -748,7 +748,7 @@ namespace Nektar
                             StdRegions::IndexMapKey ikey(
                                 StdRegions::eFaceToElement, DetShapeType(), 
                                 GetBasisNumModes(0), GetBasisNumModes(1), 
-                                GetBasisNumModes(2), f, GetFaceOrient(f));
+                                GetBasisNumModes(2), f, GetForient(f));
                             StdRegions::IndexMapValuesSharedPtr map = 
                                 StdExpansion::GetIndexMap(ikey);
 
@@ -916,10 +916,10 @@ namespace Nektar
         }
         
         void Expansion3D::v_AddFaceNormBoundaryInt(
-            const int                            face,
-            StdRegions::StdExpansionSharedPtr   &FaceExp,
-            const Array<OneD, const NekDouble>  &Fn,
-            Array<OneD,       NekDouble>  &outarray)
+            const int                           face,
+            const ExpansionSharedPtr           &FaceExp,
+            const Array<OneD, const NekDouble> &Fn,
+                  Array<OneD,       NekDouble> &outarray)
         {
             int i, j;
             
@@ -961,7 +961,7 @@ namespace Nektar
             StdRegions::IndexMapKey ikey(
                 StdRegions::eFaceToElement, DetShapeType(),
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                face, GetFaceOrient(face));
+                face, GetForient(face));
             StdRegions::IndexMapValuesSharedPtr map =
             StdExpansion::GetIndexMap(ikey);
 
@@ -1062,11 +1062,11 @@ namespace Nektar
          * values in EdgeExp (which will have its phys space updated).
          */
         void Expansion3D::v_DGDeriv(
-            int                                             dir,
-            const Array<OneD, const NekDouble>             &incoeffs,
-            Array<OneD, StdRegions::StdExpansionSharedPtr> &FaceExp,
-            Array<OneD, Array<OneD, NekDouble> >           &faceCoeffs,
-            Array<OneD, NekDouble>                         &out_d)
+            int                                   dir,
+            const Array<OneD, const NekDouble>   &incoeffs,
+            Array<OneD, ExpansionSharedPtr>      &FaceExp,
+            Array<OneD, Array<OneD, NekDouble> > &faceCoeffs,
+            Array<OneD, NekDouble>               &out_d)
         {
             int ncoeffs = GetNcoeffs();
             StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
@@ -1140,14 +1140,14 @@ namespace Nektar
 
             if (rows == GetNcoeffs())
             {
-                GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+                GetFaceToElementMap(face,GetForient(face),map,sign);
             }
             else if(rows == NumBndryCoeffs())
             {
                 int nbndry = NumBndryCoeffs();
                 Array<OneD,unsigned int> bmap(nbndry);
 
-                GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+                GetFaceToElementMap(face,GetForient(face),map,sign);
                 GetBoundaryMap(bmap);
                 
                 for(i = 0; i < order_f; ++i)
@@ -1173,7 +1173,7 @@ namespace Nektar
                 StdRegions::IndexMapKey ikey1(
                     StdRegions::eFaceToElement, DetShapeType(), 
                     GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                    face, GetFaceOrient(face));
+                    face, GetForient(face));
                 StdRegions::IndexMapValuesSharedPtr map1 = 
                     StdExpansion::GetIndexMap(ikey1);
                 StdRegions::IndexMapKey ikey2(
@@ -1876,7 +1876,7 @@ namespace Nektar
 
             if(faceOrient == StdRegions::eNoOrientation)
             {
-                fOrient = GetFaceOrient(fid);
+                fOrient = GetForient(fid);
             }
             else
             {
@@ -1894,13 +1894,9 @@ namespace Nektar
             return facemaparray;
         }
 
-        NekDouble Expansion3D::v_Integrate(
-                const Array<OneD, const NekDouble>& inarray)
+        StdRegions::Orientation Expansion3D::v_GetForient(int face)
         {
-            NEKERROR(ErrorUtil::efatal, 
-                     "This function is not implemented here. It is shape "
-                     "specific");
-            return 0.0;
+            return m_geom->GetForient(face);
         }
     } //end of namespace
 } //end of namespace

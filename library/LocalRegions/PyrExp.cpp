@@ -354,11 +354,6 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
-        StdRegions::Orientation PyrExp::v_GetFaceOrient(int face)
-        {
-            return GetGeom3D()->GetFaceOrient(face);
-        }
-
         void PyrExp::v_GetFacePhysVals(
             const int                                face,
             const StdRegions::StdExpansionSharedPtr &FaceExp,
@@ -374,7 +369,7 @@ namespace Nektar
             
             if (orient == StdRegions::eNoOrientation)
             {
-                orient = GetFaceOrient(face);
+                orient = GetForient(face);
             }
 
             switch(face)

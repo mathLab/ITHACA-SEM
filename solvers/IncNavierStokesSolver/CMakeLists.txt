@@ -12,7 +12,6 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
        ./EquationSystems/StandardExtrapolate.cpp
        ./EquationSystems/SubSteppingExtrapolate.cpp
        ./AdvectionTerms/AdjointAdvection.cpp
-       ./AdvectionTerms/AdvectionTerm.cpp
        ./AdvectionTerms/LinearisedAdvection.cpp
        ./AdvectionTerms/NavierStokesAdvection.cpp
        ./AdvectionTerms/SkewSymmetricAdvection.cpp
@@ -96,5 +95,6 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
         ADD_NEKTAR_TEST_LENGTHY(Hex_channel_m8_srhs_par)
         ADD_NEKTAR_TEST(Tet_channel_m8_par)
         ADD_NEKTAR_TEST_LENGTHY(Tet_channel_m8_iter_ml_par)
+        ADD_NEKTAR_TEST_LENGTHY(bfs_tg_par)
     ENDIF (NEKTAR_USE_MPI)
 ENDIF( NEKTAR_SOLVER_INCNAVIERSTOKES )

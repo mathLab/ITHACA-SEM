@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs time when solution first exceeds a threshold value.
+// Description: Outputs time when solution first drops below a threshold value.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

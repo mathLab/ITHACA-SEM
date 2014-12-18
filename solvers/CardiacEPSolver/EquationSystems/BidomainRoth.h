@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Monodomain.h
+// File BidomainRoth.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Monodomain cardiac electrophysiology homogenised model.
+// Description: Bidomain cardiac electrophysiology model - Roth formulation.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -40,79 +40,78 @@
 #include <CardiacEPSolver/CellModels/CellModel.h>
 #include <CardiacEPSolver/Stimuli/Stimulus.h>
 
-using namespace Nektar::SolverUtils;
-
 namespace Nektar
 {
 
 
-    /// A model for cardiac conduction.
-    class BidomainRoth : public UnsteadySystem
+/// A model for cardiac conduction.
+class BidomainRoth : public SolverUtils::UnsteadySystem
+{
+public:
+    friend class MemoryManager<BidomainRoth>;
+
+    /// Creates an instance of this class
+    static SolverUtils::EquationSystemSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
     {
-    public:
-        friend class MemoryManager<BidomainRoth>;
+        SolverUtils::EquationSystemSharedPtr p =
+                    MemoryManager<BidomainRoth>::AllocateSharedPtr(pSession);
+        p->InitObject();
+        return p;
+    }
 
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
-        {
-            EquationSystemSharedPtr p = MemoryManager<BidomainRoth>::AllocateSharedPtr(pSession);
-            p->InitObject();
-            return p;
-        }
+    /// Name of class
+    static std::string className;
 
-        /// Name of class
-        static std::string className;
+    /// Desctructor
+    virtual ~BidomainRoth();
 
-        /// Desctructor
-        virtual ~BidomainRoth();
+protected:
+    /// Constructor
+    BidomainRoth(
+            const LibUtilities::SessionReaderSharedPtr& pSession);
 
-    protected:
-        /// Constructor
-        BidomainRoth(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+    virtual void v_InitObject();
 
-        virtual void v_InitObject();
+    /// Solve for the diffusion term.
+    void DoImplicitSolve(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                  Array<OneD, Array<OneD, NekDouble> >&outarray,
+                  NekDouble time,
+                  NekDouble lambda);
 
-        /// Solve for the diffusion term.
-        void DoImplicitSolve(
-                const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                      Array<OneD, Array<OneD, NekDouble> >&outarray,
-                      NekDouble time,
-                      NekDouble lambda);
+    /// Computes the reaction terms \f$f(u,v)\f$ and \f$g(u,v)\f$.
+    void DoOdeRhs(
+            const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+                  Array<OneD,        Array<OneD, NekDouble> >&outarray,
+            const NekDouble time);
 
-        /// Computes the reaction terms \f$f(u,v)\f$ and \f$g(u,v)\f$.
-        void DoOdeRhs(
-                const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                      Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                const NekDouble time);
+    /// Sets a custom initial condition.
+    virtual void v_SetInitialConditions(NekDouble initialtime,
+                            bool dumpInitialConditions,
+                            const int domain);
 
-        /// Sets a custom initial condition.
-        virtual void v_SetInitialConditions(NekDouble initialtime,
-                                bool dumpInitialConditions,
-                                const int domain);
+    /// Prints a summary of the model parameters.
+    virtual void v_GenerateSummary(SummaryList& s);
 
-        /// Prints a summary of the model parameters.
-        virtual void v_GenerateSummary(SummaryList& s);
+private:
+    /// Cell model.
+    CellModelSharedPtr m_cell;
 
-    private:
-        /// Cell model.
-        CellModelSharedPtr m_cell;
+    std::vector<StimulusSharedPtr> m_stimulus;
 
-        std::vector<StimulusSharedPtr> m_stimulus;
+    StdRegions::VarCoeffMap m_vardiffi;
+    StdRegions::VarCoeffMap m_vardiffe;
+    StdRegions::VarCoeffMap m_vardiffie;
 
-        StdRegions::VarCoeffMap m_vardiffi;
-        StdRegions::VarCoeffMap m_vardiffe;
-        StdRegions::VarCoeffMap m_vardiffie;
+    NekDouble m_chi;
+    NekDouble m_capMembrane;
 
-        NekDouble m_chi;
-        NekDouble m_capMembrane;
+    /// Stimulus current
+    NekDouble m_stimDuration;
 
-        /// Stimulus current
-        NekDouble m_stimDuration;
-
-        void LoadStimuli();
-    };
+    void LoadStimuli();
+};
 
 }
 

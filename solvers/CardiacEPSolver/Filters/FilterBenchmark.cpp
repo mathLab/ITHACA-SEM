@@ -86,8 +86,6 @@ namespace Nektar
             }
 
             int i;
-            NekDouble timestep = pFields[0]->GetSession()->GetParameter("TimeStep");
-
             for (i = 0; i < pFields[0]->GetNpoints(); ++i)
             {
                 if ((m_polarity[i] == -1 &&

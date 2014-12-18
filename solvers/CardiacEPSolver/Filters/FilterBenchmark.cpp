@@ -38,8 +38,9 @@
 namespace Nektar
 {
 std::string FilterBenchmark::className =
-        GetFilterFactory().RegisterCreatorFunction("Benchmark",
-                                                   FilterBenchmark::create);
+        SolverUtils::GetFilterFactory().RegisterCreatorFunction(
+                "Benchmark",
+                FilterBenchmark::create);
 
 /**
  *

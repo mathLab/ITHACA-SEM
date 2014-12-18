@@ -40,47 +40,53 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        class FilterBenchmark : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterBenchmark>;
 
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterBenchmark>::AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
-                return p;
-            }
+class FilterBenchmark : public SolverUtils::Filter
+{
+public:
+    friend class MemoryManager<FilterBenchmark>;
 
-            ///Name of the class
-            static std::string className;
-
-            SOLVER_UTILS_EXPORT FilterBenchmark(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT virtual ~FilterBenchmark();
-
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
-
-        private:
-            std::vector<Array<OneD, NekDouble> > m_threshold;
-            Array<OneD, int> m_idx;
-            Array<OneD, int> m_polarity;
-            NekDouble m_startTime;
-            NekDouble m_thresholdValue;
-            NekDouble m_initialValue;
-            std::string m_outputFile;
-            LibUtilities::FieldIOSharedPtr m_fld;
-        };
+    /// Creates an instance of this class
+    static SolverUtils::FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams) {
+        SolverUtils::FilterSharedPtr p = 
+            MemoryManager<FilterBenchmark>::AllocateSharedPtr(pSession, 
+                                                              pParams);
+        return p;
     }
+
+    ///Name of the class
+    static std::string className;
+
+    SOLVER_UTILS_EXPORT FilterBenchmark(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams);
+    SOLVER_UTILS_EXPORT virtual ~FilterBenchmark();
+
+protected:
+    virtual void v_Initialise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const NekDouble &time);
+    virtual void v_Update(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const NekDouble &time);
+    virtual void v_Finalise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const NekDouble &time);
+    virtual bool v_IsTimeDependent();
+
+private:
+    std::vector<Array<OneD, NekDouble> > m_threshold;
+    Array<OneD, int>                     m_idx;
+    Array<OneD, int>                     m_polarity;
+    NekDouble                            m_startTime;
+    NekDouble                            m_thresholdValue;
+    NekDouble                            m_initialValue;
+    std::string                          m_outputFile;
+    LibUtilities::FieldIOSharedPtr       m_fld;
+};
+
 }
 
 #endif /* FILTERTHRESHOLDMAX_H_ */

@@ -50,8 +50,8 @@ public:
     static SolverUtils::FilterSharedPtr create(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const std::map<std::string, std::string> &pParams) {
-        SolverUtils::FilterSharedPtr p = 
-            MemoryManager<FilterBenchmark>::AllocateSharedPtr(pSession, 
+        SolverUtils::FilterSharedPtr p =
+            MemoryManager<FilterBenchmark>::AllocateSharedPtr(pSession,
                                                               pParams);
         return p;
     }
@@ -66,13 +66,13 @@ public:
 
 protected:
     virtual void v_Initialise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
     virtual void v_Update(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
     virtual void v_Finalise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
     virtual bool v_IsTimeDependent();
 

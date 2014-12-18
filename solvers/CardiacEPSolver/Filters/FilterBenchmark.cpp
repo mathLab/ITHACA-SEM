@@ -84,7 +84,7 @@ FilterBenchmark::~FilterBenchmark()
  *
  */
 void FilterBenchmark::v_Initialise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
     m_threshold.push_back(Array<OneD, NekDouble>(
@@ -98,7 +98,7 @@ void FilterBenchmark::v_Initialise(
  *
  */
 void FilterBenchmark::v_Update(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
     if (time < m_startTime)
@@ -131,7 +131,7 @@ void FilterBenchmark::v_Update(
     }
 
     int max_idx = Vmath::Vmax(pFields[0]->GetNpoints(), m_idx, 1);
-    pFields[0]->GetSession()->GetComm()->AllReduce(max_idx, 
+    pFields[0]->GetSession()->GetComm()->AllReduce(max_idx,
                             LibUtilities::ReduceMax);
     if (m_threshold.size() == max_idx)
     {
@@ -146,7 +146,7 @@ void FilterBenchmark::v_Update(
  *
  */
 void FilterBenchmark::v_Finalise(
-        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
     for (int i = 0; i < m_threshold.size() - 1; ++i)

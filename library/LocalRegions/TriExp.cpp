@@ -553,6 +553,14 @@ namespace Nektar
             IProductWRTBase(Fn,outarray);
         }
 
+        StdRegions::StdExpansionSharedPtr TriExp::v_GetStdExp(void) const
+        {
+            
+            return MemoryManager<StdRegions::StdTriExp>
+                    ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                        m_base[1]->GetBasisKey());
+        }
+
         void TriExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords,
                               Array<OneD,NekDouble> &coords)
         {

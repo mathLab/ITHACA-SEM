@@ -96,8 +96,8 @@ namespace Nektar {
         OperatorFactory& GetOperatorFactory()
         {
             typedef Loki::SingletonHolder<OperatorFactory,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy > Type;
+                                          Loki::CreateUsingNew,
+                                          Loki::NoDestroy > Type;
             return Type::Instance();
         }
         
@@ -109,12 +109,11 @@ namespace Nektar {
         class BwdTrans_StdMat : public Operator
         {
         public:
-            BwdTrans_StdMat(StdRegions::StdExpansionSharedPtr pExp,
-                            vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            BwdTrans_StdMat(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                             CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom, GeomData)
+                : Operator(pCollExp, GeomData)
             {
-                StdRegions::StdMatrixKey  key(StdRegions::eBwdTrans, pExp->DetShapeType(), *pExp);
+                StdRegions::StdMatrixKey  key(StdRegions::eBwdTrans, m_stdExp->DetShapeType(), *m_stdExp);
                 m_mat = m_stdExp->GetStdMatrix(key);
             }
             
@@ -184,10 +183,9 @@ namespace Nektar {
         class BwdTrans_IterPerExp : public Operator
         {
         public:
-            BwdTrans_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
-                                vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            BwdTrans_IterPerExp(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                 CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom,GeomData)
+                : Operator(pCollExp,GeomData)
             {
             }
             
@@ -248,6 +246,76 @@ namespace Nektar {
                     BwdTrans_IterPerExp::create, "BwdTrans_IterPerExp_Hex"),
             };
         
+
+        class BwdTrans_NoCollection : public Operator
+        {
+        public:
+            BwdTrans_NoCollection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                            CoalescedGeomDataSharedPtr GeomData)
+            {
+                m_expList = pCollExp;
+                m_numElmt = pCollExp.size();
+            }
+            
+            virtual void operator()(
+                                    const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                const int nCoeffs = m_expList[0]->GetNcoeffs();
+                const int nPhys   = m_expList[0]->GetTotPoints();
+                Array<OneD, NekDouble> tmp;
+                
+                for (int i = 0; i < m_numElmt; ++i)
+                {
+                    m_expList[i]->BwdTrans(input + i*nCoeffs, tmp = output + i*nPhys);
+                }
+            }
+            
+            OPERATOR_CREATE(BwdTrans_NoCollection)
+
+            vector<StdRegions::StdExpansionSharedPtr> m_expList;
+        };
+        
+        OperatorKey BwdTrans_NoCollection::m_typeArr[] =
+            {
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::eSegment, eBwdTrans, eNoCollection,false),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_Seg"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::eTriangle, eBwdTrans, eNoCollection,false),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_Tri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::eTriangle, eBwdTrans, eNoCollection,true),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::eTriangle, eBwdTrans, eNoCollection,true),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::eQuadrilateral, eBwdTrans, eNoCollection,false),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_Quad"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eNoCollection,false),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_Tet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::eTetrahedron, eBwdTrans, eNoCollection,true),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::ePyramid, eBwdTrans, eNoCollection,false),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::ePrism, eBwdTrans, eNoCollection,false),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_Prism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::ePrism, eBwdTrans, eNoCollection,true),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                    OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eNoCollection,false),
+                    BwdTrans_NoCollection::create, "BwdTrans_NoCollection_Hex"),
+            };
+
         /*
          * ----------------------------------------------------------
          * IProductWRTBase operators
@@ -257,15 +325,15 @@ namespace Nektar {
         class IProductWRTBase_StdMat : public Operator
         {
         public:
-            IProductWRTBase_StdMat(StdRegions::StdExpansionSharedPtr pExp,
-                                   vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            IProductWRTBase_StdMat(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                    CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom,GeomData)
+                : Operator(pCollExp,GeomData)
             {
-                m_jac = GeomData->GetJac(pExp,pGeom);
-                StdRegions::StdMatrixKey key(StdRegions::eIProductWRTBase, pExp->DetShapeType(), *pExp);
+                m_jac = GeomData->GetJac(pCollExp);
+                StdRegions::StdMatrixKey key(StdRegions::eIProductWRTBase, 
+                                             m_stdExp->DetShapeType(), *m_stdExp);
                 m_mat = m_stdExp->GetStdMatrix(key);
-                m_wspSize = pExp->GetTotPoints()*m_numElmt;
+                m_wspSize = m_stdExp->GetTotPoints()*m_numElmt;
             }
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
@@ -339,22 +407,109 @@ namespace Nektar {
     };
 
 
+
+        /*
+         * ----------------------------------------------------------
+         * IProductWRTBase operators
+         * ----------------------------------------------------------
+         */
+        
+        class IProductWRTBase_NoCollection : public Operator
+        {
+        public:
+            IProductWRTBase_NoCollection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                   CoalescedGeomDataSharedPtr GeomData)
+            {
+                m_expList = pCollExp;
+                m_numElmt = pCollExp.size();
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+
+                const int nCoeffs = m_expList[0]->GetNcoeffs();
+                const int nPhys   = m_expList[0]->GetTotPoints();
+                Array<OneD, NekDouble> tmp;
+                
+                for (int i = 0; i < m_numElmt; ++i)
+                {
+                    m_expList[i]->IProductWRTBase(input + i*nPhys, 
+                                                  tmp = output + i*nCoeffs);
+                }
+
+            }
+            
+            OPERATOR_CREATE(IProductWRTBase_NoCollection)
+            
+            vector<StdRegions::StdExpansionSharedPtr> m_expList;            
+        };
+        
+        OperatorKey IProductWRTBase_NoCollection::m_typeArr[] =
+            {
+                GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eSegment, eIProductWRTBase, eNoCollection,false),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Seg"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eNoCollection,false),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Tri"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eNoCollection,true),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_NodalTri"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTriangle, eIProductWRTBase, eSumFac,true),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_SumFac_NodalTri"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eQuadrilateral, eIProductWRTBase, eNoCollection,false),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Quad"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eNoCollection,false),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Tet"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eNoCollection,true),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_NodalTet"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eTetrahedron, eIProductWRTBase, eSumFac,true),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_SumFac_NodalTet"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eNoCollection,false),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Pyr"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePyramid, eIProductWRTBase, eSumFac,false),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_SumFac_Pyr"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eNoCollection,false),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Prism"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eNoCollection,true),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_NodalPrism"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::ePrism, eIProductWRTBase, eSumFac,true),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_SumFac_NodalPrism"),
+        GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eHexahedron, eIProductWRTBase, eNoCollection,false),
+            IProductWRTBase_NoCollection::create, "IProductWRTBase_NoCollection_Hex"),
+    };
+
+
     class IProductWRTBase_IterPerExp : public Operator
     {
     public:
-        IProductWRTBase_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
-                                   vector<SpatialDomains::GeometrySharedPtr> pGeom,
+        IProductWRTBase_IterPerExp(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                    CoalescedGeomDataSharedPtr GeomData)
-            : Operator(pExp, pGeom, GeomData)
+            : Operator(pCollExp, GeomData)
         {
             int nqtot = 1;
-            LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+            LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
             for(int i = 0; i < PtsKey.size(); ++i)
             {
                 nqtot *= PtsKey[i].GetNumPoints();
             }
             
-            m_jac = GeomData->GetJacWithStdWeights(pExp,pGeom);
+            m_jac = GeomData->GetJacWithStdWeights(pCollExp);
             
             m_wspSize = nqtot*m_numElmt;
         }
@@ -431,13 +586,12 @@ namespace Nektar {
         class PhysDeriv_IterPerExp : public Operator
         {
         public:
-            PhysDeriv_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
-                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            PhysDeriv_IterPerExp(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                  CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom, GeomData)
+                : Operator(pCollExp, GeomData)
             {
                 int nqtot = 1;
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
                 m_dim = PtsKey.size();
                 m_coordim = m_stdExp->GetCoordim();
 
@@ -445,7 +599,7 @@ namespace Nektar {
                 {
                     nqtot *= PtsKey[i].GetNumPoints();
                 }
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
                 m_wspSize = 3*nqtot*m_numElmt;
             }
             
@@ -532,13 +686,12 @@ namespace Nektar {
         class PhysDeriv_StdMat : public Operator
         {
         public:
-            PhysDeriv_StdMat(StdRegions::StdExpansionSharedPtr pExp,
-                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                                 CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom, GeomData)
+            PhysDeriv_StdMat(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                             CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pCollExp, GeomData)
             {
                 int nqtot = 1;
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
                 m_dim = PtsKey.size();
                 m_coordim = m_stdExp->GetCoordim();
 
@@ -560,7 +713,7 @@ namespace Nektar {
                         Vmath::Vcopy(nqtot,&tmp1[0],1,&(m_derivMat[i]->GetPtr())[0]+j*nqtot,1);
                     }
                 }
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
                 m_wspSize = 3*nqtot*m_numElmt;
             }
             
@@ -660,23 +813,90 @@ namespace Nektar {
             };
 
         
+        class PhysDeriv_NoCollection : public Operator
+        {
+        public:
+            PhysDeriv_NoCollection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                 CoalescedGeomDataSharedPtr GeomData)
+            {
+                m_expList = pCollExp;
+                m_numElmt = pCollExp.size();
+            }
+            
+            virtual void operator()(const Array<OneD, const NekDouble> &input,
+                                    Array<OneD,       NekDouble> &output0,
+                                    Array<OneD,       NekDouble> &output1,
+                                    Array<OneD,       NekDouble> &output2,
+                                    Array<OneD,       NekDouble> &wsp)
+            {
+                const int nPhys   = m_expList[0]->GetTotPoints();
+                Array<OneD, NekDouble> tmp0,tmp1,tmp2;
+
+                // calculate local derivatives
+                for (int i = 0; i < m_numElmt; ++i)
+                {
+                    m_expList[i]->PhysDeriv(input + i*nPhys, 
+                                            tmp0 = output0 + i*nPhys,
+                                            tmp1 = output1 + i*nPhys,
+                                            tmp2 = output2 + i*nPhys);
+                }
+            }
+            
+            OPERATOR_CREATE(PhysDeriv_NoCollection)
+
+            vector<StdRegions::StdExpansionSharedPtr> m_expList;            
+        };
+
+        OperatorKey PhysDeriv_NoCollection::m_typeArr[] =
+            {
+                GetOperatorFactory().RegisterCreatorFunction(
+            OperatorKey(LibUtilities::eSegment, ePhysDeriv, eNoCollection,false),
+            PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_Seg"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eNoCollection,false),
+                               PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_Tri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eTriangle, ePhysDeriv, eNoCollection,true),
+                               PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eQuadrilateral, ePhysDeriv, eNoCollection,false),
+                               PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_Quad"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eNoCollection,false),
+                               PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_Tet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eTetrahedron, ePhysDeriv, eNoCollection,true),
+                               PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::ePyramid, ePhysDeriv, eNoCollection,false),
+                               PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::ePrism, ePhysDeriv, eNoCollection,false),
+                               PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_Prism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::ePrism, ePhysDeriv, eNoCollection,true),
+                               PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                               OperatorKey(LibUtilities::eHexahedron, ePhysDeriv, eNoCollection,false),
+                               PhysDeriv_NoCollection::create, "PhysDeriv_NoCollection_Hex")
+            };
+
         
         class IProductWRTDerivBase_IterPerExp : public Operator
         {
         public:
-            IProductWRTDerivBase_IterPerExp(StdRegions::StdExpansionSharedPtr pExp,
-                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            IProductWRTDerivBase_IterPerExp(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                  CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom, GeomData)
+                : Operator(pCollExp, GeomData)
             {
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
                 m_dim = PtsKey.size();
                 m_coordim = m_stdExp->GetCoordim();
                 
-                int nqtot  = pExp->GetTotPoints(); 
+                int nqtot  = m_stdExp->GetTotPoints(); 
 
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
-                m_jac = GeomData->GetJac(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
+                m_jac = GeomData->GetJac(pCollExp);
                 m_wspSize = m_dim*nqtot*m_numElmt;
             }
             
@@ -804,17 +1024,16 @@ namespace Nektar {
         class IProductWRTDerivBase_StdMat : public Operator
         {
         public:
-            IProductWRTDerivBase_StdMat(StdRegions::StdExpansionSharedPtr pExp,
-                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                                 CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom, GeomData)
+            IProductWRTDerivBase_StdMat(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                         CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pCollExp,GeomData)
             {
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
                 m_dim = PtsKey.size();
                 m_coordim = m_stdExp->GetCoordim();
                 
-                int nqtot  = pExp->GetTotPoints(); 
-                int nmodes = pExp->GetNcoeffs(); 
+                int nqtot  = m_stdExp->GetTotPoints(); 
+                int nmodes = m_stdExp->GetNcoeffs(); 
 
                 // set up a IProductWRTDerivBase StdMat. 
                 m_iProdWRTStdDBase = Array<OneD, DNekMatSharedPtr>(m_dim);
@@ -831,8 +1050,8 @@ namespace Nektar {
                                      &(m_iProdWRTStdDBase[i]->GetPtr())[0]+j*nmodes,1);
                     }
                 }
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
-                m_jac      = GeomData->GetJac(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
+                m_jac      = GeomData->GetJac(pCollExp);
                 m_wspSize = m_dim*nqtot*m_numElmt;
             }
             
@@ -979,6 +1198,113 @@ namespace Nektar {
                       "IProductWRTDerivBase_StdMat_Hex")
             };
         
+        class IProductWRTDerivBase_NoCollection : public Operator
+        {
+        public:
+            IProductWRTDerivBase_NoCollection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                 CoalescedGeomDataSharedPtr GeomData)
+            {
+                m_expList = pCollExp;
+                m_numElmt = pCollExp.size();
+                m_dim = pCollExp[0]->GetNumBases();
+                m_coordim = pCollExp[0]->GetCoordim();
+            }
+
+            virtual void operator()(const Array<OneD, const NekDouble> &entry0,
+                                    Array<OneD, NekDouble> &entry1,
+                                    Array<OneD, NekDouble> &entry2,
+                                    Array<OneD, NekDouble> &entry3,
+                                    Array<OneD, NekDouble> &wsp)
+            {
+                unsigned int nmodes = m_expList[0]->GetNcoeffs();
+                unsigned int nPhys  = m_expList[0]->GetTotPoints();
+                Array<OneD, NekDouble> tmp(nmodes),tmp1;
+
+                Array<OneD, Array<OneD, const NekDouble> > in(3);
+                Array<OneD, NekDouble> output;
+                in[0] = entry0; in[1] = entry1; in[2] = entry2; 
+
+                output = (m_coordim == 3)? entry3: (m_coordim == 2)?
+                    entry2: entry1;
+                
+                for(int n = 0; n < m_numElmt; ++n)
+                {
+                    m_expList[n]->IProductWRTDerivBase(0,in[0]+n*nPhys,tmp1 = output +n*nmodes);
+                }
+                
+                for(int i = 1; i < m_dim; ++i)
+                {
+                    for(int n = 0; n < m_numElmt; ++n)
+                    {
+                        m_expList[n]->IProductWRTDerivBase(i,in[i]+n*nPhys,tmp);
+
+                        Vmath::Vadd(nmodes,tmp,1,output+n*nmodes,1,
+                                    tmp1 = output+n*nmodes,1);
+                    }
+                }
+            }
+            
+            OPERATOR_CREATE(IProductWRTDerivBase_NoCollection)
+
+            int m_dim;
+            int m_coordim;
+            vector<StdRegions::StdExpansionSharedPtr> m_expList; 
+        };
+
+        OperatorKey IProductWRTDerivBase_NoCollection::m_typeArr[] =
+            {
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eSegment, 
+                                  eIProductWRTDerivBase, eNoCollection,false),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_Seg"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, 
+                                  eIProductWRTDerivBase, eNoCollection,false),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_Tri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTriangle, 
+                                  eIProductWRTDerivBase, eNoCollection,true),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_NodalTri"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eQuadrilateral, 
+                                  eIProductWRTDerivBase, eNoCollection,false),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_Quad"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, 
+                                  eIProductWRTDerivBase, eNoCollection,false),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_Tet"), 
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eTetrahedron, 
+                                  eIProductWRTDerivBase, eNoCollection,true),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_NodalTet"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePyramid, 
+                                  eIProductWRTDerivBase, eNoCollection,false),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_Pyr"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, 
+                                  eIProductWRTDerivBase, eNoCollection,false),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_Prism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::ePrism, 
+                                  eIProductWRTDerivBase, eNoCollection,true),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_NodalPrism"),
+                GetOperatorFactory().RegisterCreatorFunction(
+                      OperatorKey(LibUtilities::eHexahedron, 
+                                  eIProductWRTDerivBase, eNoCollection,false),
+                      IProductWRTDerivBase_NoCollection::create, 
+                      "IProductWRTDerivBase_NoCollection_Hex")
+            };
+
         // simple operator Map evaluation
         OperatorImpMap SetFixedImpType(ImplementationType defaultType)
         {
@@ -991,6 +1317,5 @@ namespace Nektar {
             
             return opMap;
         }
-       
     }
 }

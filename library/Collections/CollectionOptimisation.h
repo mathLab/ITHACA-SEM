@@ -122,8 +122,7 @@ namespace Nektar
             OperatorImpMap  GetOperatorImpMap(StdRegions::StdExpansionSharedPtr pExp);
 
             // Get Map by doing autotuning testing. 
-            OperatorImpMap SetWithTimings(StdRegions::StdExpansionSharedPtr pExp,
-                                          vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            OperatorImpMap SetWithTimings(vector<StdRegions::StdExpansionSharedPtr> pGeom,
                                           OperatorImpMap &impTypes,
                                           bool verbose = true);
 

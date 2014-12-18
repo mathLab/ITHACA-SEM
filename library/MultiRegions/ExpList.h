@@ -97,6 +97,8 @@ namespace Nektar
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
 			       
 
+        int NoCaseStringCompare( const string & s1, const string& s2);
+
         /// Base class for all multi-elemental spectral/hp expansions.
         class ExpList: public boost::enable_shared_from_this<ExpList>
         {

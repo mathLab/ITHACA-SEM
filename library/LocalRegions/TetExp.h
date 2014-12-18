@@ -128,6 +128,9 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual 
                 LibUtilities::ShapeType v_DetShapeType() const;
 
+            LOCAL_REGIONS_EXPORT virtual
+                StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(

@@ -602,6 +602,12 @@ namespace Nektar
             IProductWRTBase(Fn,outarray);
         }
 
+        StdRegions::StdExpansionSharedPtr QuadExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdQuadExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey());
+        }
 
         void QuadExp::v_GetCoords(
             Array<OneD, NekDouble> &coords_0,

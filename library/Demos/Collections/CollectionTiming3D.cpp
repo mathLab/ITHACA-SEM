@@ -31,26 +31,32 @@ int main(int argc, char *argv[])
         SpatialDomains::MeshGraph::Read(vSession);
     
     Collections::ImplementationType ImpType; 
-    for(int imp = 0; imp < 3; ++imp)
+    for(int imp = 0; imp < 4; ++imp)
     {
         // set up different collection implementations:
         switch(imp){
-        case 2:
+        case 3:
             {
                 ImpType = Collections::eSumFac;
                 cout << endl << "Using SumFac Collection Implementation:" << endl;
             }
             break;
-        case 1:
+        case 2:
             {
                 ImpType = Collections::eStdMat;
                 cout << endl << "Using StdMat Collection Implementation:" << endl;
             }
             break;
-        default:
+        case 1:
             {
                 ImpType = Collections::eIterPerExp;
                 cout <<"Using IterPerExp Collection Implementation:" << endl;
+            }
+            break;
+        default:
+            {
+                ImpType = Collections::eIterPerExp;
+                cout <<"Using No Collection:" << endl;
             }
             break;
         }

@@ -658,6 +658,16 @@ namespace Nektar
             return returnval;
         }
 
+
+        StdRegions::StdExpansionSharedPtr NodalTriExp::v_GetStdExp(void) const
+        {
+            
+            return MemoryManager<StdRegions::StdNodalTriExp>
+                    ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                        m_base[1]->GetBasisKey(),
+                                        m_nodalPointsKey.GetPointsType());
+        }
+
         DNekMatSharedPtr NodalTriExp::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;

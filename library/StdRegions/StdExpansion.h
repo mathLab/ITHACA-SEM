@@ -439,6 +439,12 @@ namespace Nektar
             {
                 return v_DetShapeType();
             }
+            
+            boost::shared_ptr<StdExpansion> GetStdExp(void) const
+            {
+                return v_GetStdExp();
+            }
+
 
             int GetShapeDimension() const
             {
@@ -1503,7 +1509,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const;
             
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetFaceBasisKey(const int i, const int k) const;
-
+            
             STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
 
             STD_REGIONS_EXPORT virtual int v_GetFaceNcoeffs(const int i) const;
@@ -1519,6 +1525,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const LibUtilities::PointsKey v_GetNodalPointsKey() const;
 
             STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
+
+            STD_REGIONS_EXPORT virtual boost::shared_ptr<StdExpansion> 
+                v_GetStdExp(void) const;
 
             STD_REGIONS_EXPORT virtual int v_GetShapeDimension() const;
 

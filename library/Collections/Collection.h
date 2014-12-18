@@ -60,12 +60,11 @@ namespace Nektar
             
             virtual ~CoalescedGeomData(void);
 
-            const Array<OneD, const NekDouble> &GetJac(StdRegions::StdExpansionSharedPtr pExp,
-                                                       vector<SpatialDomains::GeometrySharedPtr> &pGeom);
-            const Array<OneD, const NekDouble> &GetJacWithStdWeights(StdRegions::StdExpansionSharedPtr pExp,
-                                                       vector<SpatialDomains::GeometrySharedPtr> &pGeom);
-            const Array<TwoD, const NekDouble> &GetDerivFactors(StdRegions::StdExpansionSharedPtr pExp,
-                                                                vector<SpatialDomains::GeometrySharedPtr> &pGeom);
+            const Array<OneD, const NekDouble> &GetJac(vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
+
+            const Array<OneD, const NekDouble> &GetJacWithStdWeights(vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
+
+            const Array<TwoD, const NekDouble> &GetDerivFactors(vector<StdRegions::StdExpansionSharedPtr> &pColLExp);
         private:
             map<GeomData,Array<OneD, NekDouble> > m_oneDGeomData;
             map<GeomData,Array<TwoD, NekDouble> > m_twoDGeomData;
@@ -83,8 +82,7 @@ namespace Nektar
         {
         public:
             
-            Collection(StdRegions::StdExpansionSharedPtr pExp,
-                       vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            Collection(vector<StdRegions::StdExpansionSharedPtr> pColLExp,
                        OperatorImpMap &impTypes);
             
             void ApplyOperator(const OperatorType                 &op,

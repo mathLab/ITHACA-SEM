@@ -556,6 +556,15 @@ namespace Nektar
             return StdHexExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
+        StdRegions::StdExpansionSharedPtr HexExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdHexExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey(),
+                                    m_base[2]->GetBasisKey());
+        }
+
+
         /**
 	 * \brief Retrieves the physical coordinates of a given set of 
          * reference coordinates.

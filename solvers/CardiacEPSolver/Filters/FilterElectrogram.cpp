@@ -49,7 +49,7 @@ namespace Nektar
      */
     FilterElectrogram::FilterElectrogram(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams) i
+            const std::map<std::string, std::string> &pParams)
         : Filter(pSession)
     {
         if (pParams.find("OutputFile") == pParams.end())

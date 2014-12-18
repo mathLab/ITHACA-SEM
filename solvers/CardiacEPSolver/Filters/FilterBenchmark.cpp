@@ -73,6 +73,7 @@ FilterBenchmark::FilterBenchmark(
              "Missing parameter 'OutputFile'.");
     m_outputFile = pParams.find("OutputFile")->second;
 
+    m_startTime = 0.0;
     if (pParams.find("StartTime") != pParams.end())
     {
         m_startTime = atof(pParams.find("StartTime")->second.c_str());

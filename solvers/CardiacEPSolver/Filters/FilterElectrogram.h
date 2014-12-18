@@ -50,7 +50,7 @@ namespace Nektar
         static SolverUtils::FilterSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr &pSession,
             const std::map<std::string, std::string>   &pParams) {
-            FilterSharedPtr p = 
+            SolverUtils::FilterSharedPtr p = 
                 MemoryManager<FilterElectrogram>::AllocateSharedPtr(
                         pSession, pParams);
             return p;

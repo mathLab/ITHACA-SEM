@@ -40,45 +40,65 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+
+class FilterThresholdMin : public Filter
+{
+public:
+    friend class MemoryManager<FilterThresholdMin>;
+
+    /// Creates an instance of this class
+    static FilterSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams)
     {
-        class FilterThresholdMin : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterThresholdMin>;
-
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterThresholdMin>::AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
-                return p;
-            }
-
-            ///Name of the class
-            static std::string className;
-
-            SOLVER_UTILS_EXPORT FilterThresholdMin(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT virtual ~FilterThresholdMin();
-
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
-
-        private:
-            Array<OneD, NekDouble> m_threshold;
-            NekDouble m_startTime;
-            NekDouble m_thresholdValue;
-            NekDouble m_initialValue;
-            std::string m_outputFile;
-            LibUtilities::FieldIOSharedPtr m_fld;
-        };
+        FilterSharedPtr p =
+            MemoryManager<FilterThresholdMin>::AllocateSharedPtr(
+                    pSession, pParams);
+        return p;
     }
+
+    /// Name of the class
+    static std::string className;
+
+    SOLVER_UTILS_EXPORT FilterThresholdMin(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string>   &pParams);
+    SOLVER_UTILS_EXPORT virtual ~FilterThresholdMin();
+
+protected:
+    /// Initialises the filter.
+    SOLVER_UTILS_EXPORT virtual void v_Initialise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+    /// For each point in domain test if solution is below threshold.
+    SOLVER_UTILS_EXPORT virtual void v_Update(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+    /// Finalise the filter and write out data.
+    SOLVER_UTILS_EXPORT virtual void v_Finalise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble &time);
+    /// Indicate that this filter is time dependent.
+    SOLVER_UTILS_EXPORT virtual bool v_IsTimeDependent();
+
+private:
+    /// Storage for recording when each point in domain drops below threshold.
+    Array<OneD, NekDouble>          m_threshold;
+    /// Time at which to start recording.
+    NekDouble                       m_startTime;
+    /// Value of threshold.
+    NekDouble                       m_thresholdValue;
+    /// Initial value of storage.
+    NekDouble                       m_initialValue;
+    /// File into which to write output data.
+    std::string                     m_outputFile;
+    /// FieldIO object for writing data.
+    LibUtilities::FieldIOSharedPtr  m_fld;
+};
+
+}
 }
 
 #endif /* FILTERTHRESHOLDMAX_H_ */

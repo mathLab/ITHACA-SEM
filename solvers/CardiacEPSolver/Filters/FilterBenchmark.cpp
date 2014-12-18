@@ -43,7 +43,20 @@ std::string FilterBenchmark::className =
                 FilterBenchmark::create);
 
 /**
+ * @class FilterBenchmark
  *
+ * This class records the sequence of activation and repolarisation times across
+ * the entire domain into a two-dimensional storage structure. At each
+ * timestep, the voltage at each point in the domain is examined to identify if
+ * it has crossed the threshold value. If so, the time of crossing is recorded.
+ * Auxiliary arrays hold the current index of each point (i.e. the number of
+ * crossings of the threshold) and the type of the last crossing (activation or
+ * repolarisation).
+ */
+
+/**
+ * @param       pSession    Session reader for IO
+ * @param       pParams     Parameters of filter
  */
 FilterBenchmark::FilterBenchmark(
         const LibUtilities::SessionReaderSharedPtr &pSession,
@@ -81,7 +94,9 @@ FilterBenchmark::~FilterBenchmark()
 
 
 /*
- *
+ * Initialises the storage.
+ * @param       pFields     Field storage expansion lists
+ * @param       time        Current time
  */
 void FilterBenchmark::v_Initialise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
@@ -89,32 +104,38 @@ void FilterBenchmark::v_Initialise(
 {
     m_threshold.push_back(Array<OneD, NekDouble>(
                             pFields[0]->GetNpoints(), m_initialValue));
-    m_idx = Array<OneD, int> (pFields[0]->GetNpoints(), 0);
+
+    m_idx      = Array<OneD, int> (pFields[0]->GetNpoints(),  0);
     m_polarity = Array<OneD, int> (pFields[0]->GetNpoints(), -1);
 }
 
 
 /**
- *
+ * Checks each point in the domain to determine if it has crossed the threshold.
+ * The direction of crossing is determined. Additional storage is allocated if
+ * needed.
+ * @param       pFields     Field storage expansion lists
+ * @param       time        Current time
  */
 void FilterBenchmark::v_Update(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time)
 {
+    // Only proceed if the start time has passed
     if (time < m_startTime)
     {
         return;
     }
 
-    int i;
-    for (i = 0; i < pFields[0]->GetNpoints(); ++i)
+    // Examine each point in turn
+    for (int i = 0; i < pFields[0]->GetNpoints(); ++i)
     {
         if ((m_polarity[i] == -1 &&
                 pFields[0]->GetPhys()[i] > m_thresholdValue) ||
             (m_polarity[i] == 1 &&
                 pFields[0]->GetPhys()[i] < m_thresholdValue))
         {
-            // If APD too short, reset
+            // If APD less than 50ms, remove last activation
             if (m_polarity[i] == 1 &&
                 time - m_threshold[m_idx[i]][i] < 50)
             {
@@ -126,10 +147,13 @@ void FilterBenchmark::v_Update(
                 m_threshold[m_idx[i]][i] = time;
                 m_idx[i]++;
             }
+            // Update polarity of last crossing
             m_polarity[i] *= -1;
         }
     }
 
+    // Allocate additional storage if any point has as many crossings as
+    // current storage permits.
     int max_idx = Vmath::Vmax(pFields[0]->GetNpoints(), m_idx, 1);
     pFields[0]->GetSession()->GetComm()->AllReduce(max_idx,
                             LibUtilities::ReduceMax);
@@ -143,7 +167,9 @@ void FilterBenchmark::v_Update(
 
 
 /**
- *
+ * Writes out the crossings to file.
+ * @param       pFields     Field storage expansion list.
+ * @param       time        Current time.
  */
 void FilterBenchmark::v_Finalise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
@@ -175,7 +201,7 @@ void FilterBenchmark::v_Finalise(
 
 
 /**
- *
+ * @return This filter is time dependent.
  */
 bool FilterBenchmark::v_IsTimeDependent()
 {

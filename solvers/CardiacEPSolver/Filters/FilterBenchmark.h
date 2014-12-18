@@ -41,6 +41,7 @@
 namespace Nektar
 {
 
+/// Records activation and repolarisation times
 class FilterBenchmark : public SolverUtils::Filter
 {
 public:
@@ -56,34 +57,49 @@ public:
         return p;
     }
 
-    ///Name of the class
+    /// Name of the class.
     static std::string className;
 
-    SOLVER_UTILS_EXPORT FilterBenchmark(
+    /// Construct the benchmark filter.
+    FilterBenchmark(
         const LibUtilities::SessionReaderSharedPtr &pSession,
         const std::map<std::string, std::string> &pParams);
-    SOLVER_UTILS_EXPORT virtual ~FilterBenchmark();
+
+    /// Destructor for the benchmark filter.
+    virtual ~FilterBenchmark();
 
 protected:
+    /// Initialises the benchmark filter and allocates storage.
     virtual void v_Initialise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
+    /// Update recorded times.
     virtual void v_Update(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
+    /// Finalises the benchmark filter and write out recorded data.
     virtual void v_Finalise(
         const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
         const NekDouble &time);
+    /// Identifies that the benchmark filter is time dependent.
     virtual bool v_IsTimeDependent();
 
 private:
+    /// Storage for activation and repolarisation times.
     std::vector<Array<OneD, NekDouble> > m_threshold;
+    /// Number of activations and repolarisations detected for each point.
     Array<OneD, int>                     m_idx;
+    /// Indicates if the previous event was an activation or repolarisation.
     Array<OneD, int>                     m_polarity;
+    /// Time at which to start detecting activations and repolarisations.
     NekDouble                            m_startTime;
+    /// Value at which tissue is considered active.
     NekDouble                            m_thresholdValue;
+    /// Initial time to use in storage array.
     NekDouble                            m_initialValue;
+    /// Filename of output files.
     std::string                          m_outputFile;
+    /// FieldIO object used for writing output files.
     LibUtilities::FieldIOSharedPtr       m_fld;
 };
 

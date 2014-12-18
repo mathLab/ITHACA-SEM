@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs time when solution first exceeds a threshold value.
+// Description: Outputs times when solution crosses a threshold value.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -37,118 +37,148 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
+std::string FilterBenchmark::className =
+        GetFilterFactory().RegisterCreatorFunction("Benchmark",
+                                                   FilterBenchmark::create);
+
+/**
+ *
+ */
+FilterBenchmark::FilterBenchmark(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const std::map<std::string, std::string> &pParams)
+    : Filter(pSession)
+{
+    ASSERTL0(pParams.find("ThresholdValue") != pParams.end(),
+             "Missing parameter 'ThresholdValue'.");
+    m_thresholdValue = atof(pParams.find("ThresholdValue")->second.c_str());
+    ASSERTL0(pParams.find("InitialValue") != pParams.end(),
+             "Missing parameter 'InitialValue'.");
+    m_initialValue = atof(pParams.find("InitialValue")->second.c_str());
+    ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+             "Missing parameter 'OutputFile'.");
+    m_outputFile = pParams.find("OutputFile")->second;
+
+    if (pParams.find("StartTime") != pParams.end())
     {
-        std::string FilterBenchmark::className = GetFilterFactory().RegisterCreatorFunction("Benchmark", FilterBenchmark::create);
+        m_startTime = atof(pParams.find("StartTime")->second.c_str());
+    }
 
-        FilterBenchmark::FilterBenchmark(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams) :
-            Filter(pSession)
+    m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
+                                                        pSession->GetComm());
+
+}
+
+
+/**
+ *
+ */
+FilterBenchmark::~FilterBenchmark()
+{
+
+}
+
+
+/*
+ *
+ */
+void FilterBenchmark::v_Initialise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const NekDouble &time)
+{
+    m_threshold.push_back(Array<OneD, NekDouble>(
+                            pFields[0]->GetNpoints(), m_initialValue));
+    m_idx = Array<OneD, int> (pFields[0]->GetNpoints(), 0);
+    m_polarity = Array<OneD, int> (pFields[0]->GetNpoints(), -1);
+}
+
+
+/**
+ *
+ */
+void FilterBenchmark::v_Update(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const NekDouble &time)
+{
+    if (time < m_startTime)
+    {
+        return;
+    }
+
+    int i;
+    for (i = 0; i < pFields[0]->GetNpoints(); ++i)
+    {
+        if ((m_polarity[i] == -1 &&
+                pFields[0]->GetPhys()[i] > m_thresholdValue) ||
+            (m_polarity[i] == 1 &&
+                pFields[0]->GetPhys()[i] < m_thresholdValue))
         {
-            ASSERTL0(pParams.find("ThresholdValue") != pParams.end(),
-                     "Missing parameter 'ThresholdValue'.");
-            m_thresholdValue = atof(pParams.find("ThresholdValue")->second.c_str());
-            ASSERTL0(pParams.find("InitialValue") != pParams.end(),
-                     "Missing parameter 'InitialValue'.");
-            m_initialValue = atof(pParams.find("InitialValue")->second.c_str());
-            ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-                     "Missing parameter 'OutputFile'.");
-            m_outputFile = pParams.find("OutputFile")->second;
-
-            if (pParams.find("StartTime") != pParams.end())
+            // If APD too short, reset
+            if (m_polarity[i] == 1 &&
+                time - m_threshold[m_idx[i]][i] < 50)
             {
-                m_startTime = atof(pParams.find("StartTime")->second.c_str());
+                m_idx[i]--;
+                m_threshold[m_idx[i]][i] = m_initialValue;
             }
-
-            m_fld = MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(pSession->GetComm());
-
-        }
-
-        FilterBenchmark::~FilterBenchmark()
-        {
-
-        }
-
-        void FilterBenchmark::v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
-        {
-            m_threshold.push_back(Array<OneD, NekDouble>(
-                                    pFields[0]->GetNpoints(), m_initialValue));
-            m_idx = Array<OneD, int> (pFields[0]->GetNpoints(), 0);
-            m_polarity = Array<OneD, int> (pFields[0]->GetNpoints(), -1);
-        }
-
-        void FilterBenchmark::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
-        {
-            if (time < m_startTime)
+            else
             {
-                return;
+                m_threshold[m_idx[i]][i] = time;
+                m_idx[i]++;
             }
-
-            int i;
-            for (i = 0; i < pFields[0]->GetNpoints(); ++i)
-            {
-                if ((m_polarity[i] == -1 &&
-                        pFields[0]->GetPhys()[i] > m_thresholdValue) ||
-                    (m_polarity[i] == 1 &&
-                        pFields[0]->GetPhys()[i] < m_thresholdValue))
-                {
-                    // If APD too short, reset
-                    if (m_polarity[i] == 1 &&
-                        time - m_threshold[m_idx[i]][i] < 50)
-                    {
-                        m_idx[i]--;
-                        m_threshold[m_idx[i]][i] = m_initialValue;
-                    }
-                    else
-                    {
-                        m_threshold[m_idx[i]][i] = time;
-                        m_idx[i]++;
-                    }
-                    m_polarity[i] *= -1;
-                }
-            }
-
-            int max_idx = Vmath::Vmax(pFields[0]->GetNpoints(), m_idx, 1);
-            pFields[0]->GetSession()->GetComm()->AllReduce(max_idx, 
-                                    LibUtilities::ReduceMax);
-            if (m_threshold.size() == max_idx)
-            {
-                m_threshold.push_back(Array<OneD, NekDouble>(
-                                    pFields[0]->GetNpoints(), m_initialValue));
-            }
-
-        }
-
-        void FilterBenchmark::v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
-        {
-            for (int i = 0; i < m_threshold.size() - 1; ++i)
-            {
-            std::stringstream vOutputFilename;
-            vOutputFilename << m_outputFile << "_" << i << ".fld";
-
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = pFields[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-
-            Array<OneD, NekDouble> vCoeffs(pFields[0]->GetNcoeffs());
-            pFields[0]->FwdTrans_IterPerExp(m_threshold[i], vCoeffs);
-
-            // copy Data into FieldData and set variable
-            for(int i = 0; i < FieldDef.size(); ++i)
-            {
-                // Could do a search here to find correct variable
-                FieldDef[i]->m_fields.push_back("m");
-                pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], vCoeffs);
-            }
-
-            m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
-            }
-        }
-
-        bool FilterBenchmark::v_IsTimeDependent()
-        {
-            return true;
+            m_polarity[i] *= -1;
         }
     }
+
+    int max_idx = Vmath::Vmax(pFields[0]->GetNpoints(), m_idx, 1);
+    pFields[0]->GetSession()->GetComm()->AllReduce(max_idx, 
+                            LibUtilities::ReduceMax);
+    if (m_threshold.size() == max_idx)
+    {
+        m_threshold.push_back(Array<OneD, NekDouble>(
+                            pFields[0]->GetNpoints(), m_initialValue));
+    }
+
+}
+
+
+/**
+ *
+ */
+void FilterBenchmark::v_Finalise(
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, 
+        const NekDouble &time)
+{
+    for (int i = 0; i < m_threshold.size() - 1; ++i)
+    {
+        std::stringstream vOutputFilename;
+        vOutputFilename << m_outputFile << "_" << i << ".fld";
+
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+            = pFields[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+        Array<OneD, NekDouble> vCoeffs(pFields[0]->GetNcoeffs());
+        pFields[0]->FwdTrans_IterPerExp(m_threshold[i], vCoeffs);
+
+        // copy Data into FieldData and set variable
+        for(int i = 0; i < FieldDef.size(); ++i)
+        {
+            // Could do a search here to find correct variable
+            FieldDef[i]->m_fields.push_back("m");
+            pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], vCoeffs);
+        }
+
+        m_fld->Write(vOutputFilename.str(),FieldDef,FieldData);
+    }
+}
+
+
+/**
+ *
+ */
+bool FilterBenchmark::v_IsTimeDependent()
+{
+    return true;
+}
+
 }

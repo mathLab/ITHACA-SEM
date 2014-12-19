@@ -199,11 +199,16 @@ namespace Nektar
 
 #if 1
             Array<OneD, NekDouble>  tmp = Array<OneD, NekDouble>(nCoeffs, 0.0);
+            Array<OneD, Array<OneD, NekDouble> > qdbase(nDim);
 
             for (i = 0; i < nConvectiveFields; ++i)
             {
                 
-                fields[i]->IProductWRTDerivBase(qfield[j],tmp);
+                for (j = 0; j < nDim; ++j)
+                {
+                    qdbase[j] = qfield[j][i];
+                }
+                fields[i]->IProductWRTDerivBase(qdbase,tmp);
 
                 // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
                 Vmath::Neg                      (nCoeffs, tmp, 1);

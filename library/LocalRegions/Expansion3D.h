@@ -102,6 +102,8 @@ namespace Nektar
                                                           const int nq0,
                                                           const int nq1,
                                                           Array<OneD, int> &idmap);
+            void v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray);
+            
         protected:
             virtual void v_DGDeriv(
                 const int                                       dir,
@@ -123,6 +125,13 @@ namespace Nektar
 
             virtual NekDouble v_Integrate(
                 const Array<OneD, const NekDouble>& inarray);
+
+            virtual void v_GetTracePhysVals(
+                const int                                face,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
 
             virtual void v_GetFacePhysVals(
             const int                                face,

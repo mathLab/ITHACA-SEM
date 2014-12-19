@@ -1904,6 +1904,17 @@ namespace Nektar
             return 0.0;
         }
 
+        ///Returns the physical values at the quadrature points of a face
+        void Expansion3D::v_GetTracePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
+        }
+
         void Expansion3D::v_GetFacePhysVals(
             const int                                face,
             const StdRegions::StdExpansionSharedPtr &FaceExp,
@@ -2103,5 +2114,10 @@ namespace Nektar
             }
         }
 
+        void Expansion3D::v_NormVectorIProductWRTBase(const Array<OneD, const Array<OneD, NekDouble> > &Fvec, Array< OneD, NekDouble> &outarray)
+        {
+            NormVectorIProductWRTBase(Fvec[0], Fvec[1], Fvec[2], outarray);
+        }
+        
     } //end of namespace
 } //end of namespace

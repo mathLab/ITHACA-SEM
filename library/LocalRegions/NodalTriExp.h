@@ -177,6 +177,8 @@ namespace Nektar
                                        Array<OneD,NekDouble> &outarray,
                                        const StdRegions::StdMatrixKey &mkey); 
             
+            virtual StdRegions::StdExpansionSharedPtr v_GetStdExp(void) const;
+            
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
         private:           

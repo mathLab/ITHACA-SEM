@@ -44,17 +44,17 @@
     static OperatorKey m_type;                                  \
     static OperatorKey m_typeArr[];                             \
     static OperatorSharedPtr create(                            \
-        StdRegions::StdExpansionSharedPtr pExp,                 \
-        vector<SpatialDomains::GeometrySharedPtr> pGeom,        \
+        vector<StdRegions::StdExpansionSharedPtr> pCollExp, \
         boost::shared_ptr<CoalescedGeomData> GeomData)          \
     {                                                           \
         return MemoryManager<cname>                             \
-            ::AllocateSharedPtr(pExp, pGeom, GeomData);         \
+            ::AllocateSharedPtr(pCollExp, GeomData);         \
     }
  
-namespace Nektar {
-    namespace Collections {
-
+namespace Nektar 
+{
+    namespace Collections 
+    {
         class CoalescedGeomData;
 
         enum OperatorType
@@ -77,6 +77,7 @@ namespace Nektar {
         enum ImplementationType
         {
             eNoImpType,
+            eNoCollection,
             eIterPerExp,
             eStdMat,
             eSumFac,
@@ -86,6 +87,7 @@ namespace Nektar {
         const char* const ImplementationTypeMap[] =
         {
             "NoImplementationType",
+            "NoCollection",
             "IterPerExp",
             "StdMat",
             "SumFac"
@@ -107,22 +109,24 @@ namespace Nektar {
         typedef Nektar::LibUtilities::NekFactory<
             OperatorKey,
             Operator,
-            StdRegions::StdExpansionSharedPtr,
-            vector<SpatialDomains::GeometrySharedPtr>,
+            vector<StdRegions::StdExpansionSharedPtr>,
             boost::shared_ptr<CoalescedGeomData> > OperatorFactory;
         OperatorFactory& GetOperatorFactory();
         
         class Operator
         {
         public:
-        Operator(StdRegions::StdExpansionSharedPtr pExp,
-                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+        Operator(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                  boost::shared_ptr<CoalescedGeomData> GeomData)
-            : m_stdExp (pExp),
-                m_numElmt(pGeom.size()),
+            :   m_stdExp(pCollExp[0]->GetStdExp()),
+                m_numElmt(pCollExp.size()),
                 m_wspSize(0)
                 {
                 }
+
+            Operator(void)
+            {
+            }
             
             virtual void operator()(const Array<OneD, const NekDouble> &input,
                                     Array<OneD,       NekDouble> &output0,

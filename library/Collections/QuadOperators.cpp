@@ -49,18 +49,17 @@ namespace Nektar
         class BwdTrans_SumFac_Quad : public Operator
         {
         public:
-            BwdTrans_SumFac_Quad(StdRegions::StdExpansionSharedPtr pExp,
-                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            BwdTrans_SumFac_Quad(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                   CoalescedGeomDataSharedPtr GeomData)
-                : Operator  (pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1)),
-                  m_colldir0(pExp->GetBasis(0)->Collocation()),
-                  m_colldir1(pExp->GetBasis(1)->Collocation()), 
-                  m_base0   (pExp->GetBasis(0)->GetBdata()),
-                  m_base1   (pExp->GetBasis(1)->GetBdata())
+                : Operator  (pCollExp, GeomData),
+                  m_nquad0  (m_stdExp->GetNumPoints(0)),
+                  m_nquad1  (m_stdExp->GetNumPoints(1)),
+                  m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+                  m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+                  m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+                  m_colldir1(m_stdExp->GetBasis(1)->Collocation()), 
+                  m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+                  m_base1   (m_stdExp->GetBasis(1)->GetBdata())
             {
                 m_wspSize = m_nquad0*m_nmodes1*m_numElmt;
             }
@@ -138,20 +137,19 @@ namespace Nektar
         class IProductWRTBase_SumFac_Quad : public Operator
         {
         public:
-            IProductWRTBase_SumFac_Quad(StdRegions::StdExpansionSharedPtr pExp,
-                                        vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            IProductWRTBase_SumFac_Quad(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                         CoalescedGeomDataSharedPtr GeomData)
-                : Operator  (pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1)),
-                  m_colldir0(pExp->GetBasis(0)->Collocation()),
-                  m_colldir1(pExp->GetBasis(1)->Collocation()),
-                  m_base0   (pExp->GetBasis(0)->GetBdata()),
-                  m_base1   (pExp->GetBasis(1)->GetBdata())
+                : Operator  (pCollExp, GeomData),
+                  m_nquad0  (m_stdExp->GetNumPoints(0)),
+                  m_nquad1  (m_stdExp->GetNumPoints(1)),
+                  m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+                  m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+                  m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+                  m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+                  m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+                  m_base1   (m_stdExp->GetBasis(1)->GetBdata())
             {
-                m_jac     = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_jac     = GeomData->GetJacWithStdWeights(pCollExp);
                 m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
             }
             
@@ -197,20 +195,19 @@ namespace Nektar
         class PhysDeriv_SumFac_Quad : public Operator
         {
         public:
-            PhysDeriv_SumFac_Quad(StdRegions::StdExpansionSharedPtr pExp,
-                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            PhysDeriv_SumFac_Quad(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                   CoalescedGeomDataSharedPtr GeomData)
-                : Operator (pExp, pGeom, GeomData),
-                  m_nquad0 (pExp->GetNumPoints(0)),
-                  m_nquad1 (pExp->GetNumPoints(1))
+                : Operator (pCollExp, GeomData),
+                  m_nquad0 (m_stdExp->GetNumPoints(0)),
+                  m_nquad1 (m_stdExp->GetNumPoints(1))
             {
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
-                m_coordim = pExp->GetCoordim();
+                LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
+                m_coordim = m_stdExp->GetCoordim();
 
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
 
-                m_Deriv0 = &((pExp->GetBasis(0)->GetD())->GetPtr())[0];
-                m_Deriv1 = &((pExp->GetBasis(1)->GetD())->GetPtr())[0];
+                m_Deriv0 = &((m_stdExp->GetBasis(0)->GetD())->GetPtr())[0];
+                m_Deriv1 = &((m_stdExp->GetBasis(1)->GetD())->GetPtr())[0];
                 m_wspSize = 2 * m_nquad0*m_nquad1*m_numElmt;
             }
             
@@ -283,27 +280,25 @@ namespace Nektar
         class IProductWRTDerivBase_SumFac_Quad : public Operator
         {
         public:
-            IProductWRTDerivBase_SumFac_Quad(
-                   StdRegions::StdExpansionSharedPtr pExp,
-                   vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                   CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1)),
-                  m_colldir0(pExp->GetBasis(0)->Collocation()),
-                  m_colldir1(pExp->GetBasis(1)->Collocation()),
-                  m_base0   (pExp->GetBasis(0)->GetBdata()),
-                  m_base1   (pExp->GetBasis(1)->GetBdata()),
-                  m_derbase0   (pExp->GetBasis(0)->GetDbdata()),
-                  m_derbase1   (pExp->GetBasis(1)->GetDbdata())
+            IProductWRTDerivBase_SumFac_Quad(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                             CoalescedGeomDataSharedPtr GeomData)
+                : Operator(pCollExp, GeomData),
+                  m_nquad0  (m_stdExp->GetNumPoints(0)),
+                  m_nquad1  (m_stdExp->GetNumPoints(1)),
+                  m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+                  m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+                  m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+                  m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+                  m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+                  m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
+                  m_derbase0   (m_stdExp->GetBasis(0)->GetDbdata()),
+                  m_derbase1   (m_stdExp->GetBasis(1)->GetDbdata())
             {
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
                 m_coordim = m_stdExp->GetCoordim();
                 
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
-                m_jac      = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
+                m_jac      = GeomData->GetJacWithStdWeights(pCollExp);
                 m_wspSize  = 4*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
             }
             

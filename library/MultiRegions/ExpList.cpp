@@ -2680,10 +2680,29 @@ namespace Nektar
 	    }
 
             m_session->LoadParameter("CollectionMax",collmax,2*m_exp->size());
-            m_session->MatchSolverInfo("CollectionAutoTuning","True",autotuning);
+
+            if(m_session->DefinesSolverInfo("CollectionOptions"))
+            {
+                const std::string collinfo = m_session->GetSolverInfo("CollectionOptions");
+                
+                if(NoCaseStringCompare(collinfo,"Autotuning") == 0)
+                {
+                    autotuning = true;
+                }
+                
+                for(int i = 1; i < Collections::SIZE_ImplementationType; ++i)
+                {
+                    if(NoCaseStringCompare(collinfo,Collections::ImplementationTypeMap[i]) == 0)
+                    {
+                        ImpType = (Collections::ImplementationType) i;
+                        break;
+                    }
+                }
+            }                        
 
             // If ImpType is not specified by default argument call
-            // then set ImpType to eStdMat. 
+            // then set ImpType to eStdMat for large collections or
+            // eSumFac for small
             if(ImpType == Collections::eNoImpType)
             {
 	      if(m_exp->size() < 100)
@@ -2733,13 +2752,10 @@ namespace Nektar
 
             for (it = collections.begin(); it != collections.end(); ++it)
             {
-                StdRegions::StdExpansionSharedPtr stdExp;
                 LocalRegions::ExpansionSharedPtr exp = it->second[0].first;
 
-                stdExp = GetStdExp(exp);
-
-                Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-                vector<SpatialDomains::GeometrySharedPtr> geom;
+                Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(exp);
+                vector<StdRegions::StdExpansionSharedPtr> collExp;
                 
                 int prevCoeffOffset     = m_coeff_offset[it->second[0].second];
                 int prevPhysOffset      = m_phys_offset [it->second[0].second];
@@ -2750,23 +2766,23 @@ namespace Nektar
 
                 if(it->second.size() == 1) // single element case
                 {
-                    geom.push_back(it->second[0].first->GetGeom());
+                    collExp.push_back(it->second[0].first);
 
                     // if no Imp Type provided and No settign in xml file. 
                     // reset impTypes using timings 
                     if(autotuning)
                     {
-                        impTypes = colOpt.SetWithTimings(stdExp,geom,
+                        impTypes = colOpt.SetWithTimings(collExp,
                                                          impTypes, verbose);
                     }
 
-                    Collections::Collection tmp(stdExp, geom, impTypes);
+                    Collections::Collection tmp(collExp, impTypes);
                     m_collections.push_back(tmp);
                 }
                 else
                 {
                     // set up first geometry 
-                    geom.push_back(it->second[0].first->GetGeom());
+                    collExp.push_back(it->second[0].first);
                     int prevnCoeff = it->second[0].first->GetNcoeffs();
                     int prevnPhys  = it->second[0].first->GetTotPoints();
                     collcnt = 1;
@@ -2792,32 +2808,26 @@ namespace Nektar
                             // impTypes using timings
                             if(autotuning)
                             {
-                                impTypes = colOpt.SetWithTimings(stdExp,geom, 
+                                impTypes = colOpt.SetWithTimings(collExp,
                                                                  impTypes, 
                                                                  verbose);
                             }
                             
-                            Collections::Collection tmp(stdExp, geom, impTypes);
+                            Collections::Collection tmp(collExp, impTypes);
                             m_collections.push_back(tmp);
                             
 
                             // start new geom list 
-                            geom.clear();
+                            collExp.clear();
                             
                             m_coll_coeff_offset.push_back(coeffOffset);
                             m_coll_phys_offset .push_back(physOffset);
-                            geom.push_back(it->second[i].first->GetGeom());
+                            collExp.push_back(it->second[i].first);
                             collcnt = 1;
-
-                            if((prevnCoeff != nCoeffs)||(prevnPhys != nPhys))
-                            {
-                                stdExp = GetStdExp(it->second[i].first);
-                            }
-
                         }
                         else // add to list of collections 
                         {
-                            geom.push_back(it->second[i].first->GetGeom());
+                            collExp.push_back(it->second[i].first);
                             collcnt++;
                         }
 
@@ -2828,13 +2838,13 @@ namespace Nektar
                             // settign in xml file.
                             if(autotuning)
                             {
-                                impTypes = colOpt.SetWithTimings(stdExp,geom, 
+                                impTypes = colOpt.SetWithTimings(collExp,
                                                                  impTypes,verbose);
                             }
                             
-                            Collections::Collection tmp(stdExp, geom, impTypes);
+                            Collections::Collection tmp(collExp, impTypes);
                             m_collections.push_back(tmp);
-                            geom.clear();
+                            collExp.clear();
                             collcnt = 0;
                             
                         }
@@ -2848,6 +2858,36 @@ namespace Nektar
             }  
         }
 
+        int NoCaseStringCompare( const string & s1, const string& s2)
+        {
+            string::const_iterator it1=s1.begin();
+            string::const_iterator it2=s2.begin();
+
+            // Stop when either string's end has been reached
+            while ( (it1!=s1.end()) && (it2!=s2.end()) )
+            {
+                if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
+                {
+                    // Return -1 to indicate smaller than, 1 otherwise
+                    return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
+                }
+
+                // Proceed to the next character in each string
+                ++it1;
+                ++it2;
+            }
+
+            size_t size1=s1.size();
+            size_t size2=s2.size();// cache lengths
+
+            // Return -1, 0 or 1 according to strings' lengths
+            if (size1==size2)
+            {
+                return 0;
+            }
+
+            return (size1 < size2) ? -1 : 1;
+        }
 
     } //end of namespace
 } //end of namespace

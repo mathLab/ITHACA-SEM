@@ -301,6 +301,14 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
+        StdRegions::StdExpansionSharedPtr PyrExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdPyrExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey(),
+                                    m_base[2]->GetBasisKey());
+        }
+
         /*
          * @brief Get the coordinates #coords at the local coordinates
          * #Lcoords

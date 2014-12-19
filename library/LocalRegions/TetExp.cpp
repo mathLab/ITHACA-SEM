@@ -542,12 +542,18 @@ namespace Nektar
             return LibUtilities::eTetrahedron;
         }
 
+        StdRegions::StdExpansionSharedPtr TetExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdTetExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey(),
+                                    m_base[2]->GetBasisKey());
+        }
+
         int TetExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
         }
-
-
 
         void TetExp::v_ExtractDataToCoeffs(
                                            const NekDouble *data,

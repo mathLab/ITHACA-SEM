@@ -237,15 +237,16 @@ namespace Nektar
             }
             
         OperatorImpMap CollectionOptimisation::SetWithTimings(
-                            StdRegions::StdExpansionSharedPtr pExp,
-                            vector<SpatialDomains::GeometrySharedPtr> pGeom,
+                            vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                             OperatorImpMap &impTypes,
                             bool verbose )
             {
                 OperatorImpMap ret;
-
+                
+                StdRegions::StdExpansionSharedPtr pExp = pCollExp[0];
+                
                 // check to see if already defined for this expansion
-                OpImpTimingKey OpKey(pExp,pGeom.size(),pExp->GetNumBases());
+                OpImpTimingKey OpKey(pExp,pCollExp.size(),pExp->GetNumBases());
                 if(m_opImpMap.count(OpKey) != 0)
                 {
                     ret = m_opImpMap[OpKey];
@@ -262,7 +263,7 @@ namespace Nektar
 		}
 #endif
 	
-                int maxsize = pGeom.size()*max(pExp->GetNcoeffs(),pExp->GetTotPoints());
+                int maxsize = pCollExp.size()*max(pExp->GetNcoeffs(),pExp->GetTotPoints());
                 Array<OneD, NekDouble> inarray(maxsize,1.0);
                 Array<OneD, NekDouble> outarray1(maxsize);
                 Array<OneD, NekDouble> outarray2(maxsize);
@@ -278,7 +279,7 @@ namespace Nektar
                     {
                         cout << pExp->GetBasis(i)->GetNumModes() <<" ";
                     }
-                    cout << ")" <<  " for ngeoms = " << pGeom.size() << endl;
+                    cout << ")" <<  " for ngeoms = " << pCollExp.size() << endl;
                 }
                 // set  up an array of collections
                 CollectionVector coll; 
@@ -286,7 +287,7 @@ namespace Nektar
                 {
                     OperatorImpMap impTypes = SetFixedImpType((ImplementationType) imp);
                                                                        
-                    Collection collloc(pExp,pGeom,impTypes);
+                    Collection collloc(pCollExp,impTypes);
                     coll.push_back(collloc);
                 }
                     

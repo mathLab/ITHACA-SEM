@@ -51,22 +51,21 @@ namespace Nektar
         class BwdTrans_SumFac_Hex : public Operator
         {
         public:
-            BwdTrans_SumFac_Hex(StdRegions::StdExpansionSharedPtr pExp,
-                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                                  CoalescedGeomDataSharedPtr GeomData)
-                : Operator  (pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nquad2  (pExp->GetNumPoints(2)),
-                  m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1)),
-                  m_nmodes2 (pExp->GetBasisNumModes(2)),
-                  m_base0   (pExp->GetBasis(0)->GetBdata()),
-                  m_base1   (pExp->GetBasis(1)->GetBdata()),
-                  m_base2   (pExp->GetBasis(2)->GetBdata()),
-                  m_colldir0(pExp->GetBasis(0)->Collocation()),
-                  m_colldir1(pExp->GetBasis(1)->Collocation()),
-                  m_colldir2(pExp->GetBasis(2)->Collocation())
+            BwdTrans_SumFac_Hex(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                CoalescedGeomDataSharedPtr GeomData)
+                : Operator  (pCollExp, GeomData),
+                  m_nquad0  (pCollExp[0]->GetNumPoints(0)),
+                  m_nquad1  (pCollExp[0]->GetNumPoints(1)),
+                  m_nquad2  (pCollExp[0]->GetNumPoints(2)),
+                  m_nmodes0 (pCollExp[0]->GetBasisNumModes(0)),
+                  m_nmodes1 (pCollExp[0]->GetBasisNumModes(1)),
+                  m_nmodes2 (pCollExp[0]->GetBasisNumModes(2)),
+                  m_base0   (pCollExp[0]->GetBasis(0)->GetBdata()),
+                  m_base1   (pCollExp[0]->GetBasis(1)->GetBdata()),
+                  m_base2   (pCollExp[0]->GetBasis(2)->GetBdata()),
+                  m_colldir0(pCollExp[0]->GetBasis(0)->Collocation()),
+                  m_colldir1(pCollExp[0]->GetBasis(1)->Collocation()),
+                  m_colldir2(pCollExp[0]->GetBasis(2)->Collocation())
             {
 #ifdef ELMTLOOP
                 m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,m_nmodes0*m_nmodes1*m_nmodes2));
@@ -93,7 +92,6 @@ namespace Nektar
                     
                     // Assign second half of workspace for 2nd DGEMM operation.
                     int totmodes  = m_nmodes0*m_nmodes1*m_nmodes2;
-                    int totpoints = m_nquad0*m_nquad1*m_nquad2;
 
 #ifndef ELMTLOOP
                     Array<OneD, NekDouble> wsp2 = wsp + m_nmodes0*m_nmodes1*m_nquad2*m_numElmt; 
@@ -119,6 +117,7 @@ namespace Nektar
                                 wsp2.get(), m_nquad1*m_nquad2*m_numElmt,  
                                 0.0, output.get(), m_nquad0);
 #else
+                    int totpoints = m_nquad0*m_nquad1*m_nquad2;
                     if(m_numElmt < m_nmodes0 || 1) // note sure what criterion we should use to swap around these strategies
                     {
                         Array<OneD, NekDouble> wsp2 = wsp + m_nmodes1*m_nmodes2*m_nquad0;
@@ -137,7 +136,7 @@ namespace Nektar
 
                             Blas::Dgemm('T','T', m_nquad0*m_nquad1,   m_nquad2, m_nmodes2,
                                         1.0, &wsp2[0], m_nmodes2, m_base2.get(), m_nquad2,
-                                        0.0, &output[n*totpoints],  m_nquad0*m_nquad1);
+                                        0.0, &output[n*totpoints],  m_nquad0*<m_nquad1);
                         }
                     }
                     else
@@ -196,6 +195,7 @@ namespace Nektar
             RegisterCreatorFunction(OperatorKey(LibUtilities::eHexahedron, eBwdTrans, eSumFac,false),
                                     BwdTrans_SumFac_Hex::create, "BwdTrans_SumFac_Hex");
         
+
         /*
          * ----------------------------------------------------------
          * IProductWRTBase operators
@@ -204,25 +204,24 @@ namespace Nektar
         class IProductWRTBase_SumFac_Hex : public Operator
         {
         public:
-            IProductWRTBase_SumFac_Hex(StdRegions::StdExpansionSharedPtr pExp,
-                                       vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            IProductWRTBase_SumFac_Hex(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                        CoalescedGeomDataSharedPtr GeomData)
-                : Operator  (pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nquad2  (pExp->GetNumPoints(2)),
-                  m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1)),
-                  m_nmodes2 (pExp->GetBasisNumModes(2)),
-                  m_colldir0(pExp->GetBasis(0)->Collocation()),
-                  m_colldir1(pExp->GetBasis(1)->Collocation()),
-                  m_colldir2(pExp->GetBasis(2)->Collocation()),
-                  m_base0    (pExp->GetBasis(0)->GetBdata()),
-                  m_base1    (pExp->GetBasis(1)->GetBdata()),
-                  m_base2    (pExp->GetBasis(2)->GetBdata())
+                : Operator  (pCollExp, GeomData),
+                  m_nquad0  (m_stdExp->GetNumPoints(0)),
+                  m_nquad1  (m_stdExp->GetNumPoints(1)),
+                  m_nquad2  (m_stdExp->GetNumPoints(2)),
+                  m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+                  m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+                  m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
+                  m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+                  m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+                  m_colldir2(m_stdExp->GetBasis(2)->Collocation()),
+                  m_base0    (m_stdExp->GetBasis(0)->GetBdata()),
+                  m_base1    (m_stdExp->GetBasis(1)->GetBdata()),
+                  m_base2    (m_stdExp->GetBasis(2)->GetBdata())
                 
             {
-                m_jac = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_jac = GeomData->GetJacWithStdWeights(pCollExp);
                 m_wspSize = 3*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,m_nmodes0*m_nmodes1*m_nmodes2));
             }
             
@@ -273,24 +272,23 @@ namespace Nektar
         class PhysDeriv_SumFac_Hex : public Operator
         {
         public:
-            PhysDeriv_SumFac_Hex(StdRegions::StdExpansionSharedPtr pExp,
-                                 vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            PhysDeriv_SumFac_Hex(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                  CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nquad2  (pExp->GetNumPoints(2))
+                : Operator(pCollExp, GeomData),
+                  m_nquad0  (m_stdExp->GetNumPoints(0)),
+                  m_nquad1  (m_stdExp->GetNumPoints(1)),
+                  m_nquad2  (m_stdExp->GetNumPoints(2))
             {
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
 
                 m_dim = PtsKey.size();
                 m_coordim = m_stdExp->GetCoordim();
 
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
 
-                m_Deriv0 = &((pExp->GetBasis(0)->GetD())->GetPtr())[0];
-                m_Deriv1 = &((pExp->GetBasis(1)->GetD())->GetPtr())[0];
-                m_Deriv2 = &((pExp->GetBasis(2)->GetD())->GetPtr())[0];
+                m_Deriv0 = &((m_stdExp->GetBasis(0)->GetD())->GetPtr())[0];
+                m_Deriv1 = &((m_stdExp->GetBasis(1)->GetD())->GetPtr())[0];
+                m_Deriv2 = &((m_stdExp->GetBasis(2)->GetD())->GetPtr())[0];
 
                 m_wspSize = 3*m_nquad0*m_nquad1*m_nquad2*m_numElmt;
             }
@@ -380,30 +378,29 @@ namespace Nektar
         class IProductWRTDerivBase_SumFac_Hex : public Operator
         {
         public:
-            IProductWRTDerivBase_SumFac_Hex(StdRegions::StdExpansionSharedPtr pExp,
-                                       vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            IProductWRTDerivBase_SumFac_Hex(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                        CoalescedGeomDataSharedPtr GeomData)
-                : Operator  (pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nquad2  (pExp->GetNumPoints(2)),
-                  m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1)),
-                  m_nmodes2 (pExp->GetBasisNumModes(2)),
-                  m_colldir0(pExp->GetBasis(0)->Collocation()),
-                  m_colldir1(pExp->GetBasis(1)->Collocation()),
-                  m_colldir2(pExp->GetBasis(2)->Collocation()),
-                  m_base0    (pExp->GetBasis(0)->GetBdata()),
-                  m_base1    (pExp->GetBasis(1)->GetBdata()),
-                  m_base2    (pExp->GetBasis(2)->GetBdata()),
-                  m_derbase0    (pExp->GetBasis(0)->GetDbdata()),
-                  m_derbase1    (pExp->GetBasis(1)->GetDbdata()),
-                  m_derbase2    (pExp->GetBasis(2)->GetDbdata())
+                : Operator  (pCollExp, GeomData),
+                  m_nquad0  (m_stdExp->GetNumPoints(0)),
+                  m_nquad1  (m_stdExp->GetNumPoints(1)),
+                  m_nquad2  (m_stdExp->GetNumPoints(2)),
+                  m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+                  m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+                  m_nmodes2 (m_stdExp->GetBasisNumModes(2)),
+                  m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+                  m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+                  m_colldir2(m_stdExp->GetBasis(2)->Collocation()),
+                  m_base0    (m_stdExp->GetBasis(0)->GetBdata()),
+                  m_base1    (m_stdExp->GetBasis(1)->GetBdata()),
+                  m_base2    (m_stdExp->GetBasis(2)->GetBdata()),
+                  m_derbase0    (m_stdExp->GetBasis(0)->GetDbdata()),
+                  m_derbase1    (m_stdExp->GetBasis(1)->GetDbdata()),
+                  m_derbase2    (m_stdExp->GetBasis(2)->GetDbdata())
                 
             {
-                m_jac     = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_jac     = GeomData->GetJacWithStdWeights(pCollExp);
                 m_wspSize = 6*m_numElmt*(max(m_nquad0*m_nquad1*m_nquad2,m_nmodes0*m_nmodes1*m_nmodes2));
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
             }
             
             virtual void operator()(const Array<OneD, const NekDouble> &entry0,
@@ -493,8 +490,6 @@ namespace Nektar
                                                 eIProductWRTDerivBase, eSumFac,false),
                                     IProductWRTDerivBase_SumFac_Hex::create, 
                                     "IProductWRTDerivBase_SumFac_Hex");
-
-
 
     }
 }

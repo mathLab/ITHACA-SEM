@@ -71,17 +71,13 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
-            GeomVec.push_back(segGeom);
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
-
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -115,21 +111,18 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
 
             int nelmts = 10;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(nelmts*Exp->GetTotPoints());
@@ -165,16 +158,13 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
-            GeomVec.push_back(segGeom);
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             Array<OneD, NekDouble> coeffs(Exp->GetNcoeffs(), 1.0), tmp;
             Array<OneD, NekDouble> phys1(Exp->GetTotPoints());
@@ -208,21 +198,18 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
 
             int nelmts = 1;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
@@ -258,21 +245,18 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             
             int nelmts = 10;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
 
             Array<OneD, NekDouble> coeffs(nelmts*Exp->GetNcoeffs(), 1.0), tmp;
@@ -309,21 +293,18 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
                                                                                segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
 
             int nelmts = 10;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nc = Exp->GetNcoeffs();
@@ -369,21 +350,18 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
                                                                                segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
 
             int nelmts = 10;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nc = Exp->GetNcoeffs();
@@ -429,21 +407,18 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
                                                                                segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
 
             int nelmts = 10;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nc = Exp->GetNcoeffs();
@@ -490,16 +465,13 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
                                                                                segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
-            GeomVec.push_back(segGeom);
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq),yc(nq);
@@ -541,21 +513,18 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
                                                                                segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
             int nelmts = 10;
             
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -603,16 +572,13 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
                                                                                segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
-            GeomVec.push_back(segGeom);
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq),yc(nq);
@@ -654,21 +620,18 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
                                                                                segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
             int nelmts = 10;
             
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -715,21 +678,18 @@ namespace Nektar
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1,
                                                                                segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
             int nelmts = 10;
             
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             Array<OneD, NekDouble> xc(nq), yc(nq);
@@ -777,16 +737,13 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
-            GeomVec.push_back(segGeom);
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -835,21 +792,18 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
 
             int nelmts = 10;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eIterPerExp);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -901,16 +855,13 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
-            GeomVec.push_back(segGeom);
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -959,21 +910,18 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
 
             int nelmts = 10;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eStdMat);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -1025,16 +973,13 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
-            GeomVec.push_back(segGeom);
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
+            CollExp.push_back(Exp);
 
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();
@@ -1082,21 +1027,18 @@ namespace Nektar
             Nektar::LocalRegions::SegExpSharedPtr Exp = 
                 MemoryManager<Nektar::LocalRegions::SegExp>::AllocateSharedPtr(basisKeyDir1, segGeom);
 
-            Nektar::StdRegions::StdSegExpSharedPtr stdExp = 
-                MemoryManager<Nektar::StdRegions::StdSegExp>::AllocateSharedPtr(basisKeyDir1);
-
-            std::vector<SpatialDomains::GeometrySharedPtr> GeomVec;
+            std::vector<StdRegions::StdExpansionSharedPtr> CollExp;
 
             int nelmts = 10;
             for(int i = 0; i < nelmts; ++i)
             {
-                GeomVec.push_back(segGeom);
+                CollExp.push_back(Exp);
             }
             
             LibUtilities::SessionReaderSharedPtr dummySession;
             Collections::CollectionOptimisation colOpt(dummySession, Collections::eSumFac);
-            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(stdExp);
-            Collections::Collection     c(stdExp, GeomVec, impTypes);
+            Collections::OperatorImpMap impTypes = colOpt.GetOperatorImpMap(Exp);
+            Collections::Collection     c(CollExp, impTypes);
 
             const int nq = Exp->GetTotPoints();
             const int nm = Exp->GetNcoeffs();

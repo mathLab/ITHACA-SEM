@@ -49,16 +49,15 @@ namespace Nektar
         class BwdTrans_SumFac_Tri : public Operator
         {
         public:
-            BwdTrans_SumFac_Tri(StdRegions::StdExpansionSharedPtr pExp,
-                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                                  CoalescedGeomDataSharedPtr GeomData)
-                : Operator  (pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1)),
-                  m_base0   (pExp->GetBasis(0)->GetBdata()),
-                  m_base1   (pExp->GetBasis(1)->GetBdata())
+            BwdTrans_SumFac_Tri(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                CoalescedGeomDataSharedPtr GeomData)
+                : Operator  (pCollExp, GeomData),
+                  m_nquad0  (m_stdExp->GetNumPoints(0)),
+                  m_nquad1  (m_stdExp->GetNumPoints(1)),
+                  m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+                  m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+                  m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+                  m_base1   (m_stdExp->GetBasis(1)->GetBdata())
             {
                 m_wspSize = m_nquad0*m_nmodes1*m_numElmt;
                 if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
@@ -131,18 +130,17 @@ namespace Nektar
         class IProductWRTBase_SumFac_Tri : public Operator
         {
         public:
-            IProductWRTBase_SumFac_Tri(StdRegions::StdExpansionSharedPtr pExp,
-                                       vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            IProductWRTBase_SumFac_Tri(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                        CoalescedGeomDataSharedPtr GeomData)
-                : Operator  (pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1)),
-                  m_base0   (pExp->GetBasis(0)->GetBdata()),
-                  m_base1   (pExp->GetBasis(1)->GetBdata())
+                : Operator  (pCollExp, GeomData),
+                  m_nquad0  (m_stdExp->GetNumPoints(0)),
+                  m_nquad1  (m_stdExp->GetNumPoints(1)),
+                  m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+                  m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+                  m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+                  m_base1   (m_stdExp->GetBasis(1)->GetBdata())
             {
-                m_jac     = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_jac     = GeomData->GetJacWithStdWeights(pCollExp);
                 m_wspSize = 2*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
                 if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
                 {
@@ -191,20 +189,19 @@ namespace Nektar
         class PhysDeriv_SumFac_Tri : public Operator
         {
         public:
-            PhysDeriv_SumFac_Tri(StdRegions::StdExpansionSharedPtr pExp,
-                                  vector<SpatialDomains::GeometrySharedPtr> pGeom,
-                                  CoalescedGeomDataSharedPtr GeomData)
-                : Operator (pExp, pGeom, GeomData),
-                  m_nquad0 (pExp->GetNumPoints(0)),
-                  m_nquad1 (pExp->GetNumPoints(1))
+            PhysDeriv_SumFac_Tri(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
+                                 CoalescedGeomDataSharedPtr GeomData)
+                : Operator (pCollExp, GeomData),
+                  m_nquad0 (m_stdExp->GetNumPoints(0)),
+                  m_nquad1 (m_stdExp->GetNumPoints(1))
             {
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
-                m_coordim = pExp->GetCoordim();
+                LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
+                m_coordim = m_stdExp->GetCoordim();
 
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
 
-                const Array<OneD, const NekDouble>& z0 = pExp->GetBasis(0)->GetZ();
-                const Array<OneD, const NekDouble>& z1 = pExp->GetBasis(1)->GetZ();
+                const Array<OneD, const NekDouble>& z0 = m_stdExp->GetBasis(0)->GetZ();
+                const Array<OneD, const NekDouble>& z1 = m_stdExp->GetBasis(1)->GetZ();
                 m_fac0 = Array<OneD, NekDouble>(m_nquad0*m_nquad1);
                 // set up geometric factor: 0.5*(1+z0)
                 for (int i = 0; i < m_nquad0; ++i)
@@ -226,8 +223,8 @@ namespace Nektar
                 }
 
                 
-                m_Deriv0 = &((pExp->GetBasis(0)->GetD())->GetPtr())[0];
-                m_Deriv1 = &((pExp->GetBasis(1)->GetD())->GetPtr())[0];
+                m_Deriv0 = &((m_stdExp->GetBasis(0)->GetD())->GetPtr())[0];
+                m_Deriv1 = &((m_stdExp->GetBasis(1)->GetD())->GetPtr())[0];
                 m_wspSize = 2 * m_nquad0*m_nquad1*m_numElmt;
             }
             
@@ -324,27 +321,25 @@ namespace Nektar
         class IProductWRTDerivBase_SumFac_Tri : public Operator
         {
         public:
-            IProductWRTDerivBase_SumFac_Tri(
-                   StdRegions::StdExpansionSharedPtr pExp,
-                   vector<SpatialDomains::GeometrySharedPtr> pGeom,
+            IProductWRTDerivBase_SumFac_Tri(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                    CoalescedGeomDataSharedPtr GeomData)
-                : Operator(pExp, pGeom, GeomData),
-                  m_nquad0  (pExp->GetNumPoints(0)),
-                  m_nquad1  (pExp->GetNumPoints(1)),
-                  m_nmodes0 (pExp->GetBasisNumModes(0)),
-                  m_nmodes1 (pExp->GetBasisNumModes(1)),
-                  m_colldir0(pExp->GetBasis(0)->Collocation()),
-                  m_colldir1(pExp->GetBasis(1)->Collocation()),
-                  m_base0   (pExp->GetBasis(0)->GetBdata()),
-                  m_base1   (pExp->GetBasis(1)->GetBdata()),
-                  m_derbase0   (pExp->GetBasis(0)->GetDbdata()),
-                  m_derbase1   (pExp->GetBasis(1)->GetDbdata())
+                : Operator(pCollExp, GeomData),
+                  m_nquad0  (m_stdExp->GetNumPoints(0)),
+                  m_nquad1  (m_stdExp->GetNumPoints(1)),
+                  m_nmodes0 (m_stdExp->GetBasisNumModes(0)),
+                  m_nmodes1 (m_stdExp->GetBasisNumModes(1)),
+                  m_colldir0(m_stdExp->GetBasis(0)->Collocation()),
+                  m_colldir1(m_stdExp->GetBasis(1)->Collocation()),
+                  m_base0   (m_stdExp->GetBasis(0)->GetBdata()),
+                  m_base1   (m_stdExp->GetBasis(1)->GetBdata()),
+                  m_derbase0   (m_stdExp->GetBasis(0)->GetDbdata()),
+                  m_derbase1   (m_stdExp->GetBasis(1)->GetDbdata())
             {
-                LibUtilities::PointsKeyVector PtsKey = pExp->GetPointsKeys();
+                LibUtilities::PointsKeyVector PtsKey = m_stdExp->GetPointsKeys();
                 m_coordim = m_stdExp->GetCoordim();
                 
-                m_derivFac = GeomData->GetDerivFactors(pExp,pGeom);
-                m_jac      = GeomData->GetJacWithStdWeights(pExp,pGeom);
+                m_derivFac = GeomData->GetDerivFactors(pCollExp);
+                m_jac      = GeomData->GetJacWithStdWeights(pCollExp);
                 m_wspSize  = 4*m_numElmt*(max(m_nquad0*m_nquad1,m_nmodes0*m_nmodes1));
 
                 if(m_stdExp->GetBasis(0)->GetBasisType() == LibUtilities::eModified_A)
@@ -356,8 +351,8 @@ namespace Nektar
                     m_sortTopVertex = false;
                 }
 
-                const Array<OneD, const NekDouble>& z0 = pExp->GetBasis(0)->GetZ();
-                const Array<OneD, const NekDouble>& z1 = pExp->GetBasis(1)->GetZ();
+                const Array<OneD, const NekDouble>& z0 = m_stdExp->GetBasis(0)->GetZ();
+                const Array<OneD, const NekDouble>& z1 = m_stdExp->GetBasis(1)->GetZ();
                 
                 m_fac0 = Array<OneD, NekDouble>(m_nquad0*m_nquad1);
                 // set up geometric factor: 2/(1-z1)

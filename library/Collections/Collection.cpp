@@ -48,14 +48,14 @@ namespace Nektar {
         {
         }
 
-        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(StdRegions::StdExpansionSharedPtr pExp,  vector<SpatialDomains::GeometrySharedPtr> &pGeom)
+        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJac(vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
         {
 
             if(m_oneDGeomData.count(eJac) == 0)
             {
 
-                LibUtilities::PointsKeyVector ptsKeys = pExp->GetPointsKeys();            
-                int nElmts = pGeom.size();
+                LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();            
+                int nElmts = pCollExp.size();
                 
                 // set up Cached Jacobians to be continuous 
                 int npts = 1;
@@ -71,9 +71,9 @@ namespace Nektar {
                 int cnt = 0;
                 for(int i = 0; i < nElmts; ++i)
                 {
-                    const Array<OneD, const NekDouble> jac= pGeom[i]->GetGeomFactors()->GetJac(ptsKeys);
+                    const Array<OneD, const NekDouble> jac= pCollExp[i]->GetMetricInfo()->GetJac(ptsKeys);
                     
-                    if (pGeom[i]->GetGeomFactors()->GetGtype() == SpatialDomains::eDeformed)
+                    if (pCollExp[i]->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
                     {
                         Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
                     }
@@ -93,12 +93,12 @@ namespace Nektar {
 
 
 
-        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJacWithStdWeights(StdRegions::StdExpansionSharedPtr pExp, vector<SpatialDomains::GeometrySharedPtr> &pGeom)
+        const Array<OneD, const NekDouble> &CoalescedGeomData::GetJacWithStdWeights(vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
         {
             if(m_oneDGeomData.count(eJacWithStdWeights) == 0)
             {
-                LibUtilities::PointsKeyVector ptsKeys = pExp->GetPointsKeys();            
-                int nElmts = pGeom.size();
+                LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();            
+                int nElmts = pCollExp.size();
                 
                 // set up Cached Jacobians to be continuous 
                 int npts = 1;
@@ -114,9 +114,10 @@ namespace Nektar {
                 int cnt = 0;
                 for(int i = 0; i < nElmts; ++i)
                 {
-                    const Array<OneD, const NekDouble> jac= pGeom[i]->GetGeomFactors()->GetJac(ptsKeys);
+                    const Array<OneD, const NekDouble> jac= pCollExp[i]->GetMetricInfo()->GetJac(ptsKeys);
                     
-                    if (pGeom[i]->GetGeomFactors()->GetGtype() == SpatialDomains::eDeformed)
+                    if (pCollExp[i]->GetMetricInfo()->GetGtype() 
+                        == SpatialDomains::eDeformed)
                     {
                         Vmath::Vcopy(npts, &jac[0], 1, &newjac[cnt], 1);
                     }
@@ -125,7 +126,7 @@ namespace Nektar {
                         Vmath::Fill(npts, jac[0], &newjac[cnt], 1);
                     }
                     
-                    pExp->MultiplyByStdQuadratureMetric(newjac+cnt,tmp=newjac+cnt);
+                    pCollExp[0]->MultiplyByStdQuadratureMetric(newjac+cnt,tmp=newjac+cnt);
                     cnt += npts;
                 }
                 
@@ -136,15 +137,14 @@ namespace Nektar {
         }
 
 
-        const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(StdRegions::StdExpansionSharedPtr pExp,
-                                                                      vector<SpatialDomains::GeometrySharedPtr> &pGeom)
+        const Array<TwoD, const NekDouble> &CoalescedGeomData::GetDerivFactors(vector<StdRegions::StdExpansionSharedPtr> &pCollExp)
         {
             if(m_twoDGeomData.count(eDerivFactors) == 0)
             {
-                LibUtilities::PointsKeyVector ptsKeys = pExp->GetPointsKeys();            
-
-                int nElmts = pGeom.size();
-                const int coordim = pGeom[0]->GetCoordim();
+                LibUtilities::PointsKeyVector ptsKeys = pCollExp[0]->GetPointsKeys();            
+                
+                int nElmts = pCollExp.size();
+                const int coordim = pCollExp[0]->GetCoordim();
                 int dim = ptsKeys.size();
 
                 // set up Cached Jacobians to be continuous 
@@ -161,9 +161,9 @@ namespace Nektar {
                 int cnt = 0;
                 for(int i = 0; i < nElmts; ++i)
                 {
-                    const Array<TwoD, const NekDouble> Dfac= pGeom[i]->GetGeomFactors()->GetDerivFactors(ptsKeys);
+                    const Array<TwoD, const NekDouble> Dfac= pCollExp[i]->GetMetricInfo()->GetDerivFactors(ptsKeys);
                     
-                    if (pGeom[i]->GetGeomFactors()->GetGtype() == SpatialDomains::eDeformed)
+                    if (pCollExp[i]->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
                     {
                         for (int j = 0; j < dim*coordim; ++j)
                         {
@@ -186,10 +186,8 @@ namespace Nektar {
             return m_twoDGeomData[eDerivFactors];
         }
 
-        Collection::Collection(StdRegions::StdExpansionSharedPtr pExp,
-                               vector<SpatialDomains::GeometrySharedPtr> pGeom,
+        Collection::Collection(vector<StdRegions::StdExpansionSharedPtr> pCollExp,
                                OperatorImpMap &impTypes)
-            : m_stdExp(pExp), m_geom(pGeom)
         {
             OperatorImpMap::iterator it;
 
@@ -205,12 +203,12 @@ namespace Nektar {
                 it = impTypes.find(opType);
                 impType = it == impTypes.end() ? eIterPerExp : it->second;
 
-                OperatorKey opKey(pExp->DetShapeType(), opType, impType, pExp->IsNodalNonTensorialExp());
+                OperatorKey opKey(pCollExp[0]->DetShapeType(), opType, impType, pCollExp[0]->IsNodalNonTensorialExp());
                 if (GetOperatorFactory().ModuleExists(opKey))
                 {
                     //cout << opKey << endl;
                     m_ops[opType] = GetOperatorFactory().CreateInstance(
-                        opKey, pExp, pGeom, m_geomData);
+                        opKey, pCollExp, m_geomData);
                 }
             }
         }

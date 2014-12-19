@@ -1218,6 +1218,14 @@ namespace Nektar
             return LibUtilities::eNoShapeType;
         }
 
+        boost::shared_ptr<StdExpansion> 
+        StdExpansion::v_GetStdExp(void) const
+        {
+            ASSERTL0(false,"This method is not defined for this expansion");
+            StdExpansionSharedPtr returnval;
+            return returnval;
+        }
+
         int StdExpansion::v_GetShapeDimension() const
         {
             ASSERTL0(false, "This function is not valid or not defined");

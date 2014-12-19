@@ -446,6 +446,14 @@ namespace Nektar
         // Evaluation functions
         //---------------------------------------
         
+        StdRegions::StdExpansionSharedPtr PrismExp::v_GetStdExp(void) const
+        {
+            return MemoryManager<StdRegions::StdPrismExp>
+                ::AllocateSharedPtr(m_base[0]->GetBasisKey(),
+                                    m_base[1]->GetBasisKey(),
+                                    m_base[2]->GetBasisKey());
+        }
+
         /**
          * @brief Get the coordinates #coords at the local coordinates
          * #Lcoords.

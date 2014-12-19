@@ -14,7 +14,7 @@ SET(COLLECTIONS_SOURCES
 SET(SOLVER_UTILS_HEADERS
   Collection.h 
   CollectionOptimisation.h
-   IProduct.h
+  IProduct.h
   Operator.h
 )
 

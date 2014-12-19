@@ -52,28 +52,6 @@ namespace Nektar
         class PrismGeom;
         class HexGeom;
 
-        /// Rule defining bassis expansion given information about 3D expansion
-        LibUtilities::BasisKey EvaluateFaceBasisKey(const int facedir, 
-                                                    const LibUtilities::BasisType 
-                                                    faceDirBasisType, 
-                                                    const int numpoints, 
-                                                    const int nummodes, 
-                                                    const int nverts);
-
-
-        LibUtilities::BasisKey EvaluateQuadFaceBasisKey(const int facedir, 
-                                                        const LibUtilities::BasisType 
-                                                        faceDirBasisType, 
-                                                        const int numpoints, 
-                                                        const int nummodes);
-
-        LibUtilities::BasisKey EvaluateTriFaceBasisKey(const int facedir, 
-                                                       const LibUtilities::BasisType 
-                                                       faceDirBasisType, 
-                                                       const int numpoints, 
-                                                       const int nummodes);
-
-
         class MeshGraph3D: public MeshGraph
         {
         public:

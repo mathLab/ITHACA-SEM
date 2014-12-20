@@ -55,6 +55,7 @@ namespace Nektar
      */
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
         UnsteadySystem(pSession),
+        AdvectionSystem(pSession),
         m_subSteppingScheme(false),
         m_SmoothAdvection(false),
         m_steadyStateSteps(0)
@@ -63,14 +64,15 @@ namespace Nektar
 
     void IncNavierStokes::v_InitObject()
     {
-        
+        AdvectionSystem::v_InitObject();
+
         int i,j;
         int numfields = m_fields.num_elements();
         std::string velids[] = {"u","v","w"};
-        
+
         // Set up Velocity field to point to the first m_expdim of m_fields; 
         m_velocity = Array<OneD,int>(m_spacedim);
-        
+
         for(i = 0; i < m_spacedim; ++i)
         {
             for(j = 0; j < numfields; ++j)
@@ -81,11 +83,11 @@ namespace Nektar
                     m_velocity[i] = j;
                     break;
                 }
-                
+
                 ASSERTL0(j != numfields, "Failed to find field: " + var);
             }
         }
-        
+
         // Set up equation type enum using kEquationTypeStr
         for(i = 0; i < (int) eEquationTypeSize; ++i)
         {
@@ -173,7 +175,8 @@ namespace Nektar
         }
 
         // Initialise advection
-        m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
+        m_advObject = SolverUtils::GetAdvectionFactory().CreateInstance(vConvectiveType, vConvectiveType);
+        m_advObject->InitObject( m_session, m_fields);
         
         // Forcing terms
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
@@ -244,25 +247,7 @@ namespace Nektar
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
-		
-        // creation of the extrapolation object
-        if(m_equationType == eUnsteadyNavierStokes)
-        {
-            std::string vExtrapolation = "Standard";
 
-            if (m_session->DefinesSolverInfo("Extrapolation"))
-            {
-                vExtrapolation = m_session->GetSolverInfo("Extrapolation");
-            }
-                        
-            m_extrapolation = GetExtrapolateFactory().CreateInstance(
-                vExtrapolation, 
-                m_session,
-                m_fields,
-		m_pressure,
-                m_velocity,
-                m_advObject);
-        }
     }
 
     /**
@@ -346,10 +331,20 @@ namespace Nektar
         int VelDim     = m_velocity.num_elements();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
         Array<OneD, NekDouble > Deriv;
+
         for(i = 0; i < VelDim; ++i)
         {
-            velocity[i] = inarray[m_velocity[i]]; 
+            if(m_fields[i]->GetWaveSpace() && !m_SingleMode && !m_HalfMode)
+            {
+                velocity[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                m_fields[i]->HomogeneousBwdTrans(inarray[m_velocity[i]],velocity[i]);
+            }
+            else
+            {
+                velocity[i] = inarray[m_velocity[i]];
+            }
         }
+
         // Set up Derivative work space; 
         if(wk.num_elements())
         {
@@ -362,8 +357,8 @@ namespace Nektar
             Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
 
-        m_advObject->DoAdvection(m_fields,m_nConvectiveFields, 
-                                 m_velocity,inarray,outarray,m_time,Deriv);
+        m_advObject->Advect(m_nConvectiveFields, m_fields,
+                            velocity, inarray, outarray, m_time);
     }
     
     /**

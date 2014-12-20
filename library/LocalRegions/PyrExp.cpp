@@ -354,10 +354,20 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
-        StdRegions::Orientation PyrExp::v_GetFaceOrient(int face)
+        /**
+         * \brief Returns the physical values at the quadrature points of a face
+         * Wrapper function to v_GetFacePhysVals
+         */
+        void PyrExp::v_GetTracePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
         {
-            return GetGeom3D()->GetFaceOrient(face);
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
         }
+
 
         void PyrExp::v_GetFacePhysMap(const int               face,
                                       Array<OneD, int>        &outarray)
@@ -386,7 +396,7 @@ namespace Nektar
                 }
 
                 break;
-                case 1:
+              case 1:
                     nq0 = nquad0;
                     nq1 = nquad2;
                     if(outarray.num_elements()!=nq0*nq1)

@@ -648,23 +648,16 @@ namespace Nektar
                                 "hierarchicial");
             }
         }
-
-        StdRegions::Orientation HexExp::v_GetFaceOrient(int face)
-        {
-            return GetGeom3D()->GetFaceOrient(face);
-        }
-
         
         bool HexExp::v_GetFaceDGForwards(const int i) const
         {
-            StdRegions::Orientation fo = GetGeom3D()->GetFaceOrient(i);
+            StdRegions::Orientation fo = GetGeom3D()->GetForient(i);
             
             return fo == StdRegions::eDir1FwdDir1_Dir2FwdDir2 || 
                    fo == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
                    fo == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
                    fo == StdRegions::eDir1FwdDir2_Dir2BwdDir1;
         }
-
 
         void HexExp::v_GetTracePhysVals(
                 const int                                face,

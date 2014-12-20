@@ -400,7 +400,7 @@ namespace Nektar
                         Vmath::Smul(npoints,m_rollForceScale,m_vwiForcingObj->UpdateForces()[i],1,m_vwiForcingObj->UpdateForces()[i],1);
                     }
 
-                    IncNavierStokesSharedPtr ins = boost::dynamic_pointer_cast<IncNavierStokes>(m_solverRoll);
+                    IncNavierStokesSharedPtr ins = m_solverRoll->as<IncNavierStokes>();
                     ins->AddForcing(m_vwiForcingObj);
 
                     init = 0;

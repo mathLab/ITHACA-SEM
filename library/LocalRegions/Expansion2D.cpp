@@ -52,10 +52,8 @@ namespace Nektar
         }
         
         void Expansion2D::v_AddEdgeNormBoundaryInt(
-
-            const int edge,
-
-            StdRegions::StdExpansionSharedPtr  &EdgeExp,
+            const int                           edge,
+            const ExpansionSharedPtr           &EdgeExp,
             const Array<OneD, const NekDouble> &Fx,  
             const Array<OneD, const NekDouble> &Fy,  
                   Array<OneD,       NekDouble> &outarray)
@@ -126,9 +124,9 @@ namespace Nektar
 
         void Expansion2D::v_AddEdgeNormBoundaryInt(
             const int                           edge,
-            StdRegions::StdExpansionSharedPtr  &EdgeExp,
+            const ExpansionSharedPtr           &EdgeExp,
             const Array<OneD, const NekDouble> &Fn,  
-            Array<OneD, NekDouble>             &outarray)
+                  Array<OneD,       NekDouble> &outarray)
         {
             int i;
 
@@ -304,7 +302,7 @@ namespace Nektar
         }
         
         void Expansion2D::SetTraceToGeomOrientation(
-            Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,
+            Array<OneD, ExpansionSharedPtr> &EdgeExp,
             Array<OneD, NekDouble> &inout)
         {
             int i, cnt = 0;
@@ -325,11 +323,11 @@ namespace Nektar
          * matrix in Eqn. 32.
          */
         void Expansion2D::AddNormTraceInt(
-            const int                                       dir,
-            Array<OneD, const NekDouble>                   &inarray,
-            Array<OneD, StdRegions::StdExpansionSharedPtr> &EdgeExp,
-            Array<OneD, NekDouble>                         &outarray,
-            const StdRegions::VarCoeffMap                  &varcoeffs)
+            const int                        dir,
+            Array<OneD, const NekDouble>    &inarray,
+            Array<OneD, ExpansionSharedPtr> &EdgeExp,
+            Array<OneD, NekDouble>          &outarray,
+            const StdRegions::VarCoeffMap   &varcoeffs)
         {
             int i,e,cnt;
             int order_e,nquad_e;
@@ -380,10 +378,10 @@ namespace Nektar
         }
 
         void Expansion2D::AddNormTraceInt(
-            const int                                       dir,
-            Array<OneD, StdRegions::StdExpansionSharedPtr> &EdgeExp,
-            Array<OneD, Array<OneD, NekDouble> >           &edgeCoeffs,
-            Array<OneD, NekDouble>                         &outarray) 
+            const int                             dir,
+            Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+            Array<OneD, Array<OneD, NekDouble> > &edgeCoeffs,
+            Array<OneD, NekDouble>               &outarray) 
         {
             int e;
             int nquad_e;
@@ -416,7 +414,7 @@ namespace Nektar
          */
         void Expansion2D::AddEdgeBoundaryInt(
             const int                          edge,
-            StdRegions::StdExpansionSharedPtr &EdgeExp,
+            ExpansionSharedPtr                &EdgeExp,
             Array<OneD, NekDouble>            &edgePhys,
             Array<OneD, NekDouble>            &outarray,
             const StdRegions::VarCoeffMap     &varcoeffs)
@@ -457,11 +455,11 @@ namespace Nektar
         // elemental counter clockwise format AddHDGHelmholtzTraceTerms with
         // directions
         void Expansion2D::AddHDGHelmholtzTraceTerms(
-            const NekDouble                                tau,
-            const Array<OneD, const NekDouble>            &inarray, 
-            Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,  
-            const StdRegions::VarCoeffMap                 &dirForcing,
-            Array<OneD,NekDouble>                         &outarray)
+            const NekDouble                     tau,
+            const Array<OneD, const NekDouble> &inarray, 
+            Array<OneD, ExpansionSharedPtr>    &EdgeExp,  
+            const StdRegions::VarCoeffMap      &dirForcing,
+            Array<OneD,NekDouble>              &outarray)
         {
             ASSERTL0(&inarray[0] != &outarray[0],
                      "Input and output arrays use the same memory");
@@ -489,11 +487,11 @@ namespace Nektar
         // evaluate additional terms in HDG edges. Not that this assumes that
         // edges are unpacked into local cartesian order. 
         void Expansion2D::AddHDGHelmholtzEdgeTerms(
-            const NekDouble                                 tau,
-            const int                                       edge,
-            Array<OneD, StdRegions::StdExpansionSharedPtr> &EdgeExp,
-            Array<OneD, NekDouble>                         &edgePhys,
-            const StdRegions::VarCoeffMap                  &varcoeffs,
+            const NekDouble                  tau,
+            const int                        edge,
+            Array<OneD, ExpansionSharedPtr> &EdgeExp,
+            Array<OneD, NekDouble>          &edgePhys,
+            const StdRegions::VarCoeffMap   &varcoeffs,
             Array<OneD, NekDouble>                         &outarray)
         {
             int i, j, n;
@@ -605,7 +603,7 @@ namespace Nektar
          */
         void Expansion2D::GetPhysEdgeVarCoeffsFromElement(
             const int                           edge,
-            StdRegions::StdExpansionSharedPtr  &EdgeExp,
+            ExpansionSharedPtr                 &EdgeExp,
             const Array<OneD, const NekDouble> &varcoeff,
             Array<OneD,NekDouble>              &outarray)
         {
@@ -661,7 +659,7 @@ namespace Nektar
                     Array<OneD,int> sign;
                     StdRegions::Orientation edgedir = StdRegions::eForwards;
                     ExpansionSharedPtr EdgeExp;
-                    StdRegions::StdExpansionSharedPtr EdgeExp2;
+                    ExpansionSharedPtr EdgeExp2;
 
                     int order_e, coordim = GetCoordim();
                     DNekScalMat  &invMass = *GetLocMatrix(StdRegions::eInvMass);
@@ -747,7 +745,7 @@ namespace Nektar
                     Array<OneD,NekDouble> f(ncoeffs);
                     DNekVec F(ncoeffs,f,eWrapper);
                     
-                    Array<OneD,StdRegions::StdExpansionSharedPtr>  EdgeExp(nedges);
+                    Array<OneD, ExpansionSharedPtr>  EdgeExp(nedges);
                     // declare matrix space
                     returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
                     DNekMat &Umat = *returnval;
@@ -807,7 +805,7 @@ namespace Nektar
 
                     Array<OneD,NekDouble> lambda(nbndry);
                     DNekVec Lambda(nbndry,lambda,eWrapper);                    
-                    Array<OneD,StdRegions::StdExpansionSharedPtr>  EdgeExp(nedges);
+                    Array<OneD, ExpansionSharedPtr>  EdgeExp(nedges);
                     
                     Array<OneD,NekDouble> ulam(ncoeffs);
                     DNekVec Ulam(ncoeffs,ulam,eWrapper);
@@ -895,7 +893,7 @@ namespace Nektar
 
                     Array<OneD,NekDouble>       work, varcoeff_work;
                     Array<OneD,const Array<OneD, NekDouble> > normals; 
-                    Array<OneD,StdRegions::StdExpansionSharedPtr>  EdgeExp(nedges);
+                    Array<OneD, ExpansionSharedPtr>  EdgeExp(nedges);
                     Array<OneD, NekDouble> lam(nbndry); 
                     
                     Array<OneD,unsigned int>    emap;
@@ -1095,11 +1093,11 @@ namespace Nektar
         //given the input coefficicents incoeffs and the imposed
         //boundary values in EdgeExp (which will have its phys space updated);
         void Expansion2D::v_DGDeriv(
-            int                                            dir,
-            const Array<OneD, const NekDouble>            &incoeffs,
-            Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,
-            Array<OneD, Array<OneD, NekDouble> >          &edgeCoeffs,
-            Array<OneD, NekDouble>                        &out_d)
+            int                                   dir,
+            const Array<OneD, const NekDouble>   &incoeffs,
+            Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+            Array<OneD, Array<OneD, NekDouble> > &edgeCoeffs,
+            Array<OneD, NekDouble>               &out_d)
         {
             StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
                                                    StdRegions::eWeakDeriv1,

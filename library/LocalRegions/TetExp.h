@@ -139,9 +139,6 @@ namespace Nektar
                 const int                        mode_offset,
                 NekDouble                       *coeffs);
 
-            LOCAL_REGIONS_EXPORT virtual 
-                StdRegions::Orientation v_GetFaceOrient(int face);
-
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysMap( 
                  const int  face,
                  Array<OneD, int>  &outarray);

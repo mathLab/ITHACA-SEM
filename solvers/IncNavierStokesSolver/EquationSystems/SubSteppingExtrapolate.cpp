@@ -51,7 +51,7 @@ namespace Nektar
         Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
         MultiRegions::ExpListSharedPtr  pPressure,
         const Array<OneD, int> pVel,
-        const AdvectionTermSharedPtr advObject)
+        const SolverUtils::AdvectionSharedPtr advObject)
         : Extrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -180,7 +180,7 @@ namespace Nektar
         cout << "\t ExtrapolateField: " << timer1.TimePerTest(1) << endl;
         
         timer1.Start();
-        m_advObject->DoAdvection(m_fields, Velfields, inarray, outarray, time);
+        m_advObject->Advect(m_velocity.num_elements(), m_fields, Velfields, inarray, outarray, time);
         timer1.Stop();
         cout << "\t DoAdvection: " << timer1.TimePerTest(1) << endl;
         

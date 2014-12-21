@@ -1281,6 +1281,9 @@ namespace Nektar
                         }
                     }
 
+                    // retrieve local coordinate of point
+                    (*m_exp)[min_id]->GetGeom()->GetLocCoords(gloCoords,
+                                                          locCoords);
                     return min_id;
                 }
                 else 

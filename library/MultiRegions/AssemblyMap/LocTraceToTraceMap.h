@@ -84,13 +84,13 @@ namespace Nektar
                 return false;
             }
         };
-
+        
         class LocTraceToTraceMap
         {
         public:
             MULTI_REGIONS_EXPORT LocTraceToTraceMap(const ExpList &locExp,
                                  const ExpListSharedPtr &trace,
-                                 const Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >&elmtToTrace,
+                                 const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >&elmtToTrace,
                                  const vector<bool> &LeftAdjacentFaces);
             
             /// Destructor.

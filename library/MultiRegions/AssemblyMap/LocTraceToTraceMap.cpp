@@ -44,7 +44,7 @@ namespace Nektar
         
         LocTraceToTraceMap::LocTraceToTraceMap(const ExpList &locExp,
                                  const ExpListSharedPtr &trace,
-                                               const Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >&elmtToTrace,
+                                               const Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >&elmtToTrace,
                                                const vector<bool> &LeftAdjacentFaces)
         {
             m_LocTraceToTraceMap = Array<OneD, Array<OneD, int> >(2);
@@ -132,7 +132,7 @@ namespace Nektar
                 for(e = 0; e < nface; ++e,++cnt)
                 {
                     StdRegions::StdExpansionSharedPtr face = elmtToTrace[n][e]; 
-                    StdRegions::Orientation orient = exp3d->GetFaceOrient(e);
+                    StdRegions::Orientation orient = exp3d->GetForient(e);
                     
                     LibUtilities::PointsKey fromPointsKey0;
                     LibUtilities::PointsKey fromPointsKey1;
@@ -252,7 +252,7 @@ namespace Nektar
                     nfacepts  = exp3d->GetFaceNumPoints(e);
                     nfacepts1 = face->GetTotPoints();
                     
-                    StdRegions::Orientation orient = exp3d->GetFaceOrient(e);
+                    StdRegions::Orientation orient = exp3d->GetForient(e);
                     
                     exp3d->ReOrientFacePhysMap(elmtToTrace[n][e]->GetNverts(), 
                                                orient,

@@ -1900,6 +1900,20 @@ namespace Nektar
             return m_geom->GetForient(face);
         }
 
+        /**
+         * \brief Returns the physical values at the quadrature points of a face
+         * Wrapper function to v_GetFacePhysVals
+         */
+        void Expansion3D::v_GetTracePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
+        }
+
         void Expansion3D::v_GetFacePhysVals(
             const int                                face,
             const StdRegions::StdExpansionSharedPtr &FaceExp,
@@ -1910,7 +1924,7 @@ namespace Nektar
             
             if (orient == StdRegions::eNoOrientation)
             {
-                orient = GetFaceOrient(face);
+                orient = GetForient(face);
             }
             
             int nq0 = FaceExp->GetNumPoints(0);

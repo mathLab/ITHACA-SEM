@@ -67,28 +67,8 @@ namespace SolverUtils
         // Just 3D homogenous 1D problems can use this techinque
         ASSERTL0(pFields[0]->GetExpType()==MultiRegions::e3DH1D,"Moving body implemented just for"
                  "3D Homogenous 1D expansions.");
-        if (m_session->DefinesSolverInfo("TIMEINTEGRATIONMETHOD"))
-        {
-            std::string TimeInMethod = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
-            if ((TimeInMethod == "IMEXORDER1") || (TimeInMethod == "IMEXOrder1"))
-            {
-                m_intSteps = 1;
-            }
-            else if ((TimeInMethod == "IMEXORDER2") || (TimeInMethod == "IMEXOrder2"))
-            {
-                m_intSteps = 2;
-            }
-            else if ((TimeInMethod == "IMEXORDER3") || (TimeInMethod == "IMEXOrder3"))
-            {
-                m_intSteps = 3;
-            }
-            else
-            {
-                ASSERTL0(false, "Unrecognised time integration method for evaluation of MovingBody forcing");
-            }
-        }
-        
-        m_className       = className;
+
+        m_intSteps        = 1; //only a first order approximation is considered for dw/dt in forcing term
         m_NumVariable     = pNumForcingFields; // forcing size (it must be 3)
         m_Forcing         = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
         m_funcName        = Array<OneD, std::string> (3);
@@ -150,7 +130,34 @@ namespace SolverUtils
         // Array to control if the motion is determined by an equation or is from a file.(not Nektar++)
         // check if we need to load a file or we have an equation
         CheckIsFromFile();
-        
+
+        std::string typeStr = pForce->Attribute("TYPE");
+        std::map<std::string, std::string> vParams;
+
+        const TiXmlElement *param = pForce->FirstChildElement("PARAM");
+        while (param)
+        {
+            ASSERTL0(param->Attribute("NAME"),
+                            "Missing attribute 'NAME' for parameter in filter "
+                            + typeStr + "'.");
+                    std::string nameStr = param->Attribute("NAME");
+
+            ASSERTL0(param->GetText(), "Empty value string for param.");
+            std::string valueStr = param->GetText();
+
+            vParams[nameStr] = valueStr;
+
+            param = param->NextSiblingElement("PARAM");
+        }
+
+        // Creat the filter for MovingBody, where we performed the calculation of 
+        // fluid forces and write both the aerodynamic forces and motion variables into the output files
+        m_filter = MemoryManager<FilterMovingBody>::
+                                        AllocateSharedPtr(m_session, vParams);
+
+        // Initialise the object of MovingBody filter
+        m_filter->Initialise(m_session, pFields, 0.0);
+
         // create the storage space for the body motion description
         int phystot = pFields[0]->GetTotPoints();
         
@@ -181,152 +188,14 @@ namespace SolverUtils
             m_eta[i]  = Array<OneD, NekDouble>(phystot,0.0);
         }
 
-        //identify vibration type of cable
+        // Identify vibration type and initialise the cable model
         m_vibrationtype = m_session->GetSolverInfo("VibrationType");
         if(m_vibrationtype == "Free" || m_vibrationtype == "FREE" ||
             m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
         {
-            m_session->MatchSolverInfo("HomoStrip","True",m_homostrip,false);
-
-            Array<OneD, unsigned int> ZIDs;
-            ZIDs           = pFields[0]->GetZIDs();
-            m_NumLocPlane  = ZIDs.num_elements();
-            m_VarArraysize = m_NumLocPlane*m_NumVariable;
-            m_MotionVars   = Array<OneD, NekDouble>(2*m_VarArraysize,0.0);
-            m_Aeroforces   = Array<OneD, NekDouble>(2*m_NumLocPlane, 0.0);
-            
-            //Loading strcutural parameters from input file
-            if(!m_homostrip)
-            {
-                m_session->LoadParameter("LZ", m_lhom);
-            }
-            else
-            {
-                int nstrips;
-
-                NekDouble DistStrip;
-
-                m_session->LoadParameter("DistStrip", DistStrip);
-                m_session->LoadParameter("Strip_Z", nstrips);
-                m_lhom = nstrips * DistStrip; 
-                m_comm = pFields[0]->GetComm();
-            }
-
-            m_session->LoadParameter("StructRho",    m_structrho);
-            m_session->LoadParameter("StructDamp",   m_structdamp,   0.0);
-            m_session->LoadParameter("StructStiff",  m_structstiff,  0.0);
-            m_session->LoadParameter("CableTension", m_cabletension, 0.0);
-            m_session->LoadParameter("BendingStiff", m_bendingstiff, 0.0);
-
-            m_BndV = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_motion.num_elements());
-            for (int i = 0; i < m_motion.num_elements(); ++i)
-            {
-                m_BndV[i] = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
-                for(int n = 0; n < m_intSteps; ++n)
-                {
-                    m_BndV[i][n] = Array<OneD, NekDouble>(m_NumLocPlane, 0.0);
-                }
-            }    
-
-            // Identify whether the fictitious mass method is active for explicit coupling 
-            // of fluid solver and structural dynamics solver
-            m_session->MatchSolverInfo("FictitiousMassMethod", "True", m_FictitiousMass, false);
-            if(m_FictitiousMass)
-            {
-                m_session->LoadParameter("FictMass", m_fictrho, 1.5/m_structrho);
-                m_session->LoadParameter("FictDamp", m_fictdamp, 0.1);
-                m_structrho  += m_fictrho;
-                m_structdamp += m_fictdamp;
-
-                // Storage array of Struct Velocity and Acceleration used for extrapolation of fictitious force
-                m_fV = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_motion.num_elements());
-                m_fA = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_motion.num_elements());
-                for (int i = 0; i < m_motion.num_elements(); ++i)
-                {
-                    m_fV[i] = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
-                    m_fA[i] = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
-
-                    for(int n = 0; n < m_intSteps; ++n)
-                    {
-                        m_fV[i][n] = Array<OneD, NekDouble>(m_NumLocPlane, 0.0);
-                        m_fA[i][n] = Array<OneD, NekDouble>(m_NumLocPlane, 0.0);
-                    }
-                }
-            }
-
-            //Setting the coefficient matrices for solving structural dynamic ODEs
-            SetDynEqCoeffMatrix(pFields);
-
-            // Set initial condition for cable motion
-            Array<OneD, NekDouble> x0(m_NumLocPlane, 0.0);
-            Array<OneD, NekDouble> x1(m_NumLocPlane, 0.0);
-            Array<OneD, NekDouble> x2(m_NumLocPlane, 0.0);
-
-            if(!m_homostrip)
-            {
-                int nzpoints = pFields[0]->GetHomogeneousBasis()->GetNumModes();
-                Array<OneD, NekDouble> z_coords(nzpoints,0.0);
-                Array<OneD, const NekDouble> pts = pFields[0]->GetHomogeneousBasis()->GetZ();
-
-                Vmath::Smul(nzpoints,m_lhom/2.0,pts,1,z_coords,1);
-                   Vmath::Sadd(nzpoints,m_lhom/2.0,z_coords,1,z_coords,1);
-
-                for (int plane = 0; plane < m_NumLocPlane; plane++)
-                {
-                    x2[plane] = z_coords[ZIDs[plane]];
-                }
-            }
-            else
-            {
-                int nstrips;
-                m_session->LoadParameter("Strip_Z", nstrips);
-         
-                if(m_session->DefinesSolverInfo("USEFFT"))
-                {
-                    m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", nstrips);
-                }
-                else
-                {
-                    ASSERTL0(false,"Fourier transformation of cable motion is currently implemented only on FFTW module");
-                }
-
-                NekDouble DistStrip;
-                m_session->LoadParameter("DistStrip", DistStrip);
-
-                int colrank = m_comm->GetColumnComm()->GetRank();
-                int nproc   = m_comm->GetColumnComm()->GetSize();
-
-                for(int i = 0; i < nstrips; ++i)
-                {
-                    for(int j = 0; j < nproc/nstrips; j++)
-                    {
-                        if (colrank == i+j*nstrips)
-                        {
-                            for (int plane = 0; plane < m_NumLocPlane; plane++)
-                            {
-                                x2[plane] = i*DistStrip;
-                            }
-                        }
-                    }
-                }
-            }
-
-            for(int j = 0; j < m_funcName.num_elements(); j++)
-            {
-                int Xoffset = j*m_NumLocPlane;
-                int Yoffset = m_VarArraysize+Xoffset;
-                Array<OneD, NekDouble> tmp(m_NumLocPlane,0.0);
-                LibUtilities::EquationSharedPtr ffunc0,ffunc1;
-
-                ffunc0 = m_session->GetFunction(m_funcName[j], m_motion[0]);
-                ffunc1 = m_session->GetFunction(m_funcName[j], m_motion[1]);
-
-                ffunc0->Evaluate(x0, x1, x2, 0.0, tmp = m_MotionVars+Xoffset);
-                ffunc1->Evaluate(x0, x1, x2, 0.0, tmp = m_MotionVars+Yoffset);
-            }
+            InitialiseCableModel(m_session, pFields);
         }
     }
-
 
     void ForcingMovingBody::v_Apply(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
@@ -344,10 +213,17 @@ namespace SolverUtils
                     m_Forcing[i], 1, outarray[i], 1);
         }
     }
-                                     
+
+    /**
+     *
+     */                                 
     void ForcingMovingBody::UpdateMotion(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                                 NekDouble time)
     {
+        // Update the forces from the calculation of fluid field, which is 
+        // implemented in the movingbody filter
+        m_filter->UpdateForce(m_session, pFields, m_Aeroforces, time);
+
         // for "free" type, the cable vibrates both in streamwise and crossflow directions, 
         // for "constrained" type, the cable only vibrates in crossflow direction,
         // and for "forced" type, the calbe vibrates specifically along a given function or file
@@ -376,12 +252,29 @@ namespace SolverUtils
                     cnt = cnt + 2;
                 }
             }
+
+            for(int var = 0; var < m_NumVariable; var++)
+            {
+                for(int plane = 0; plane < m_NumLocPlane; plane++)
+                {
+                    int NumPhyPoints = pFields[0]->GetPlane(plane)->GetTotPoints();
+                    int offset  = plane * NumPhyPoints;
+                    int xoffset = var * m_NumLocPlane+plane;
+                    int yoffset = m_VarArraysize+xoffset;
+
+                    m_MotionVars[xoffset] = m_zeta[var][offset];
+                    m_MotionVars[yoffset] = m_eta [var][offset];
+                }
+            }
         }
         else
         {
             ASSERTL0(false,"vibration type of moving body needs to be specified as free or constrained or forced");
         }
-        
+
+        // Pass the variables of the cable's motion to the movingbody filter 
+        m_filter->UpdateMotion(m_session, pFields, m_MotionVars, time);
+ 
         // Now we need to calcualte all the required z-derivatives
         bool OriginalWaveSpace = pFields[0]->GetWaveSpace();
         pFields[0]->SetWaveSpace(false);
@@ -410,7 +303,10 @@ namespace SolverUtils
                     
         pFields[0]->SetWaveSpace(OriginalWaveSpace);
     }
-        
+    
+    /**
+     *
+     */    
     void ForcingMovingBody::CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
     {
 
@@ -732,6 +628,9 @@ namespace SolverUtils
         fields[0]->HomogeneousFwdTrans(Fz,m_Forcing[2]);
     }
     
+    /**
+     *
+     */
     void ForcingMovingBody::TensionedCableModel(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                                       Array<OneD, NekDouble> &FcePhysinArray,
                                                       Array<OneD, NekDouble> &MotPhysinArray)
@@ -1069,25 +968,29 @@ namespace SolverUtils
         }
     }
 
+    /**
+     *
+     */
     void ForcingMovingBody::EvaluateStructDynModel(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                                                    const NekDouble &time )
     {
         //Get the hydrodynamic forces from the fluid solver
-        Array<OneD, Array <OneD, NekDouble> > Hydrofces(m_motion.num_elements());
+        Array<OneD, Array <OneD, NekDouble> > fces(m_motion.num_elements());
 
-        Hydrofces[0] = Array <OneD, NekDouble> (m_NumLocPlane);
-        Hydrofces[1] = Array <OneD, NekDouble> (m_NumLocPlane);
+        fces[0] = Array <OneD, NekDouble> (m_NumLocPlane);
+        fces[1] = Array <OneD, NekDouble> (m_NumLocPlane);
 
         for(int plane = 0; plane < m_NumLocPlane; plane++)
         {
-            Hydrofces[0] = m_Aeroforces;
-            Hydrofces[1] = m_Aeroforces+m_NumLocPlane;
+            fces[0] = m_Aeroforces;
+            fces[1] = m_Aeroforces+m_NumLocPlane;
         }
 
-        //Fictitious mass method used to stablize the explicit coupling at relatively lower mass ratio
+        // Fictitious mass method used to stablize the explicit coupling at relatively lower mass ratio
         if(m_FictitiousMass)
         {
-            int  nint    = min(m_movingBodyCalls+1,m_intSteps);
+            int  intOrder= 2;// only consider second order approximation for fictitious variables 
+            int  nint    = min(m_movingBodyCalls+1,intOrder);
             int  nlevels = m_fV[0].num_elements();
         
             for(int i = 0; i < m_motion.num_elements(); ++i)
@@ -1119,32 +1022,22 @@ namespace SolverUtils
                                  m_fA[i][nlevels-1],1);
                 }
 
-                //Add the fictitious forces on the RHS of the equation
+                // Add the fictitious forces on the RHS of the equation
                 Vmath::Svtvp(m_NumLocPlane, m_fictdamp,m_fV[i][nlevels-1],1,
-                             Hydrofces[i],1,Hydrofces[i],1);
+                             fces[i],1,fces[i],1);
                 Vmath::Svtvp(m_NumLocPlane, m_fictrho, m_fA[i][nlevels-1],1,
-                             Hydrofces[i],1,Hydrofces[i],1);
+                             fces[i],1,fces[i],1);
             }
         }
 
-        int NumEqu;
-        if(m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
-        {
-            NumEqu = 1;
-        }
-        else if (m_vibrationtype == "Free" || m_vibrationtype == "FREE")
-        {
-            NumEqu = 2;
-        }
-
-        for(int n = 0, cn = 1; n < NumEqu; n++, cn--)
+        for(int n = 0, cn = 1; n < m_NumD; n++, cn--)
         {
             int offset = cn*m_VarArraysize;
             Array<OneD, NekDouble> tmp(m_VarArraysize, 0.0);
-            TensionedCableModel(pFields, Hydrofces[cn], tmp = m_MotionVars+offset);
+            TensionedCableModel(pFields, fces[cn], tmp = m_MotionVars+offset);
         }
-
-        //Set the forcing term based on the motion of the cable
+    
+        // Set the forcing term based on the motion of the cable
         for(int var = 0; var < m_NumVariable; var++)
         {
             for(int plane = 0; plane < m_NumLocPlane; plane++)
@@ -1156,16 +1049,16 @@ namespace SolverUtils
                     int xoffset = var*m_NumLocPlane+plane;
                     int yoffset = m_VarArraysize+xoffset;
                     m_zeta[var][point + offset] = m_MotionVars[xoffset];
-                    m_eta[var][point + offset]  = m_MotionVars[yoffset];
+                    m_eta [var][point + offset] = m_MotionVars[yoffset];
                 }
             }
         }
-       
+      
         // velocity of moving body is used to set the boundary conditions
         // according to the coordinate system mapping. for forced vibration, however, that can be simply set by prior 
         // according to the moving fuction in .xml file
 
-        //int  nint    = min(m_movingBodyCalls+1,m_intSteps);
+        //int  nint    = min(m_movingBodyCalls+1,intOrder);
         //int  nlevels = m_BndV[0].num_elements();
         
         for(int i = 0; i < m_motion.num_elements(); ++i)
@@ -1175,7 +1068,7 @@ namespace SolverUtils
             int offset = i*m_VarArraysize+m_NumLocPlane;
             Vmath::Vcopy(m_NumLocPlane, m_MotionVars+offset, 1, m_BndV[i][0], 1);
             
-            // TODO:Extrapolate to n+1
+            // TODO: Extrapolate to n+1
             // TODO: Second order make the coupling unstable
             /*Vmath::Smul(m_NumLocPlane, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
                              m_BndV[i][nint-1],    1,
@@ -1244,6 +1137,165 @@ namespace SolverUtils
         }
     }
 
+    /**
+     *
+     */
+    void ForcingMovingBody::InitialiseCableModel(const LibUtilities::SessionReaderSharedPtr& pSession,
+                                                 const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
+    {
+        if(m_vibrationtype == "Constrained" || m_vibrationtype == "CONSTRAINED")
+        {
+            m_NumD = 1;
+        }
+        else if (m_vibrationtype == "Free" || m_vibrationtype == "FREE")
+        {
+            m_NumD = 2;
+        }
+
+        m_session->MatchSolverInfo("HomoStrip","True",m_homostrip,false);
+
+        Array<OneD, unsigned int> ZIDs;
+        ZIDs           = pFields[0]->GetZIDs();
+        m_NumLocPlane  = ZIDs.num_elements();
+        m_VarArraysize = m_NumLocPlane*m_NumVariable;
+        m_Aeroforces   = Array<OneD, NekDouble>(2*m_NumLocPlane,0.0);
+        m_MotionVars   = Array<OneD, NekDouble>(2*m_VarArraysize,0.0);
+
+        //Loading strcutural parameters from input file
+        if(!m_homostrip)
+        {
+            m_session->LoadParameter("LZ", m_lhom);
+        }
+        else
+        {
+            int nstrips;
+
+            NekDouble DistStrip;
+
+            m_session->LoadParameter("DistStrip", DistStrip);
+            m_session->LoadParameter("Strip_Z", nstrips);
+            m_lhom = nstrips * DistStrip;
+            m_comm = pFields[0]->GetComm();
+        }
+
+        m_session->LoadParameter("StructRho",    m_structrho);
+        m_session->LoadParameter("StructDamp",   m_structdamp,   0.0);
+        m_session->LoadParameter("StructStiff",  m_structstiff,  0.0);
+        m_session->LoadParameter("CableTension", m_cabletension, 0.0);
+        m_session->LoadParameter("BendingStiff", m_bendingstiff, 0.0);
+
+        int intOrder = 2;//only consider second order interpolation for fictitious variables
+        m_BndV = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_motion.num_elements());
+        for (int i = 0; i < m_motion.num_elements(); ++i)
+        {
+            m_BndV[i] = Array<OneD, Array<OneD, NekDouble> > (intOrder);
+            for(int n = 0; n < intOrder; ++n)
+            {
+                m_BndV[i][n] = Array<OneD, NekDouble>(m_NumLocPlane, 0.0);
+            }
+        }
+
+        // Identify whether the fictitious mass method is active for explicit coupling 
+        // of fluid solver and structural dynamics solver
+        m_session->MatchSolverInfo("FictitiousMassMethod", "True", m_FictitiousMass, false);
+        if(m_FictitiousMass)
+        {
+            m_session->LoadParameter("FictMass", m_fictrho, 1.5/m_structrho);
+            m_session->LoadParameter("FictDamp", m_fictdamp, 0.1);
+            m_structrho  += m_fictrho;
+            m_structdamp += m_fictdamp;
+
+            // Storage array of Struct Velocity and Acceleration used for extrapolation of fictitious force
+            m_fV = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_motion.num_elements());
+            m_fA = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (m_motion.num_elements());
+            for (int i = 0; i < m_motion.num_elements(); ++i)
+            {
+                m_fV[i] = Array<OneD, Array<OneD, NekDouble> > (intOrder);
+                m_fA[i] = Array<OneD, Array<OneD, NekDouble> > (intOrder);
+
+                for(int n = 0; n < intOrder; ++n)
+                {
+                    m_fV[i][n] = Array<OneD, NekDouble>(m_NumLocPlane, 0.0);
+                    m_fA[i][n] = Array<OneD, NekDouble>(m_NumLocPlane, 0.0);
+                }
+            }
+        }
+
+        // Setting the coefficient matrices for solving structural dynamic ODEs
+        SetDynEqCoeffMatrix(pFields);
+
+        // Set initial condition for cable motion
+        Array<OneD, NekDouble> x0(m_NumLocPlane, 0.0);
+        Array<OneD, NekDouble> x1(m_NumLocPlane, 0.0);
+        Array<OneD, NekDouble> x2(m_NumLocPlane, 0.0);
+
+        if(!m_homostrip)
+        {
+            int nzpoints = pFields[0]->GetHomogeneousBasis()->GetNumModes();
+            Array<OneD, NekDouble> z_coords(nzpoints,0.0);
+            Array<OneD, const NekDouble> pts = pFields[0]->GetHomogeneousBasis()->GetZ();
+
+            Vmath::Smul(nzpoints,m_lhom/2.0,pts,1,z_coords,1);
+            Vmath::Sadd(nzpoints,m_lhom/2.0,z_coords,1,z_coords,1);
+
+            for (int plane = 0; plane < m_NumLocPlane; plane++)
+            {
+                x2[plane] = z_coords[ZIDs[plane]];
+            }
+        }
+        else
+        {
+            int nstrips;
+            m_session->LoadParameter("Strip_Z", nstrips);
+
+            if(m_session->DefinesSolverInfo("USEFFT"))
+            {
+                m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", nstrips);
+            }
+            else
+            {
+                ASSERTL0(false,"Fourier transformation of cable motion is currently implemented only on FFTW module");
+            }
+
+            NekDouble DistStrip;
+            m_session->LoadParameter("DistStrip", DistStrip);
+
+            int colrank = m_comm->GetColumnComm()->GetRank();
+            int nproc   = m_comm->GetColumnComm()->GetSize();
+
+            for(int i = 0; i < nstrips; ++i)
+            {
+                for(int j = 0; j < nproc/nstrips; j++)
+                {
+                    if (colrank == i+j*nstrips)
+                    {
+                        for (int plane = 0; plane < m_NumLocPlane; plane++)
+                        {
+                            x2[plane] = i*DistStrip;
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int j = 0; j < m_funcName.num_elements(); j++)
+        {
+            int Xoffset = j*m_NumLocPlane;
+            int Yoffset = m_VarArraysize+Xoffset;
+            Array<OneD, NekDouble> tmp(m_NumLocPlane,0.0);
+            LibUtilities::EquationSharedPtr ffunc0,ffunc1;
+
+            ffunc0 = m_session->GetFunction(m_funcName[j], m_motion[0]);
+            ffunc1 = m_session->GetFunction(m_funcName[j], m_motion[1]);
+
+            ffunc0->Evaluate(x0, x1, x2, 0.0, tmp = m_MotionVars+Xoffset);
+            ffunc1->Evaluate(x0, x1, x2, 0.0, tmp = m_MotionVars+Yoffset);
+        }
+    }
+
+    /**
+     *
+     */
     void ForcingMovingBody::SetDynEqCoeffMatrix(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
     {
         NekDouble tmp1, tmp2, tmp3;
@@ -1317,10 +1369,9 @@ namespace SolverUtils
      */
     void ForcingMovingBody::RollOver(Array<OneD, Array<OneD, NekDouble> > &input)
     {
-        int  nlevels = input.num_elements();
+        int nlevels = input.num_elements();
 
         Array<OneD, NekDouble> tmp;
-
         tmp = input[nlevels-1];
 
         for(int n = nlevels-1; n > 0; --n)
@@ -1331,6 +1382,9 @@ namespace SolverUtils
         input[0] = tmp;
     }
 
+    /**
+     *
+     */
     void ForcingMovingBody::EvaluateAccelaration(const Array<OneD, NekDouble> &input,
                                                        Array<OneD, NekDouble> &output,
                                                    int npoints)
@@ -1368,6 +1422,9 @@ namespace SolverUtils
         }
     }
 
+    /**
+     *
+     */
     void ForcingMovingBody::CheckIsFromFile()
     {
         LibUtilities::FunctionType vType;

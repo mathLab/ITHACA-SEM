@@ -71,9 +71,6 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline void Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             SOLVER_UTILS_EXPORT inline void Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             SOLVER_UTILS_EXPORT inline bool IsTimeDependent();
-            SOLVER_UTILS_EXPORT inline string GetclassName();
-            SOLVER_UTILS_EXPORT inline void GetMotionVars(const Array<OneD, NekDouble> &inArray);
-            SOLVER_UTILS_EXPORT inline Array<OneD, NekDouble> GetAeroForces();
         protected:
             LibUtilities::SessionReaderSharedPtr m_session;
             string m_className;
@@ -81,20 +78,6 @@ namespace Nektar
             virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time) = 0;
             virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time) = 0;
             virtual bool v_IsTimeDependent() = 0;
-            virtual string v_GetclassName()
-            {
-                return m_className;
-            }
-            virtual void v_GetMotionVars(const Array<OneD, NekDouble> &inArray)
-            {
-                ASSERTL0(false,
-                    "This method is not defined or valid for this class type");
-            }
-            virtual Array<OneD, NekDouble> v_GetAeroForces()
-            {
-                ASSERTL0(false,
-                    "This method is not defined or valid for this class type");
-            }
         };
 
         inline void Filter::Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
@@ -115,21 +98,6 @@ namespace Nektar
         inline bool Filter::IsTimeDependent()
         {
             return v_IsTimeDependent();
-        }
-
-        inline string Filter::GetclassName()
-        {
-            return v_GetclassName();
-        }
-
-        inline void Filter::GetMotionVars(const Array<OneD, NekDouble> &inArray)
-        {
-            v_GetMotionVars(inArray);
-        }
-
-        inline Array<OneD, NekDouble> Filter::GetAeroForces()
-        {
-            return v_GetAeroForces();
         }
     }
 }

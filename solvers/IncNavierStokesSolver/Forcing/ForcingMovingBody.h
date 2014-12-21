@@ -41,6 +41,7 @@
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
 #include <LibUtilities/FFT/NektarFFT.h>
+#include <IncNavierStokesSolver/Forcing/FilterMovingBody.h>
 namespace Nektar
 {
 namespace SolverUtils
@@ -78,21 +79,14 @@ namespace SolverUtils
                                                      Array<OneD, Array<OneD, NekDouble> > &outarray,
                                                      const NekDouble& time);
 
-            SOLVER_UTILS_EXPORT virtual void v_GetAeroForces(const Array<OneD, NekDouble> &inArray)
-            {
-                m_Aeroforces = inArray;
-            }
-
-            SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetMotionVars()
-            {
-                return m_MotionVars;
-            }
-
         private:
         
             ForcingMovingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
         
             void CheckIsFromFile();
+
+            void InitialiseCableModel(const LibUtilities::SessionReaderSharedPtr& pSession,
+                                      const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
         
             void UpdateMotion(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
                               NekDouble time);
@@ -120,7 +114,7 @@ namespace SolverUtils
             int m_movingBodyCalls;                                
             int m_NumLocPlane;
             int m_VarArraysize;
- 
+            int m_NumD; 
             bool m_FictitiousMass;    
             bool m_homostrip;
 
@@ -141,10 +135,11 @@ namespace SolverUtils
 
             LibUtilities::NektarFFTSharedPtr m_FFT;
             LibUtilities::CommSharedPtr m_comm;
+            FilterMovingBodySharedPtr m_filter;            
 
             std::string m_vibrationtype; // free vibration or forced vibration types are available
 
-            Array<OneD, NekDouble> m_Aeroforces; //storage for the aerodynamic forces(x,y) acting on cable 
+            Array<OneD, NekDouble> m_Aeroforces; //storage for the cable's force(x,y) variables
             Array<OneD, NekDouble> m_MotionVars; //storage for the cable's motion(x,y) variables
             Array<OneD, Array<OneD, NekDouble> > m_zeta;
             Array<OneD, Array<OneD, NekDouble> > m_eta;

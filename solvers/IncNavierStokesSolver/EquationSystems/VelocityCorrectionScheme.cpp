@@ -288,36 +288,12 @@ namespace Nektar
                 m_pressure->SmoothField(outarray[i]);
             }
         }
-        
+
         // Add forcing terms
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            if((*x)->GetclassName() == "MovingBody")
-            {
-                std::vector<SolverUtils::FilterSharedPtr>::iterator f;
-                for (f = m_filters.begin(); f != m_filters.end(); ++f)
-                {
-                    if((*f)->GetclassName() == (*x)->GetclassName())
-                    {
-                        (*x)->GetAeroForces((*f)->GetAeroForces());
-                    }
-                }
-            }
-
             (*x)->Apply(m_fields, inarray, outarray, time);
-
-            if((*x)->GetclassName() == "MovingBody")
-            {
-                std::vector<SolverUtils::FilterSharedPtr>::iterator f;
-                for (f = m_filters.begin(); f != m_filters.end(); ++f)
-                {
-                    if((*f)->GetclassName() == (*x)->GetclassName())
-                    {
-                        (*f)->GetMotionVars((*x)->GetMotionVars());
-                    }
-                }
-            }
         }
         
         // Calculate High-Order pressure boundary conditions

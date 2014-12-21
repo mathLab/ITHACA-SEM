@@ -90,9 +90,6 @@ namespace SolverUtils
                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                         const unsigned int& pNumForcingFields = 0);
 
- 			SOLVER_UTILS_EXPORT inline string GetclassName();
-            SOLVER_UTILS_EXPORT inline void GetAeroForces(const Array<OneD, NekDouble> &inArray);
-	    SOLVER_UTILS_EXPORT inline Array<OneD, NekDouble> GetMotionVars();
         protected:
             /// Session reader
             LibUtilities::SessionReaderSharedPtr m_session;
@@ -100,7 +97,6 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > m_Forcing;
             /// Number of variables
             int m_NumVariable;
-            string m_className;
 
             /// Constructor
             SOLVER_UTILS_EXPORT Forcing(
@@ -116,23 +112,6 @@ namespace SolverUtils
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                 Array<OneD, Array<OneD, NekDouble> >        &outarray,
                 const NekDouble &time)=0;
-
-            virtual string v_GetclassName()
-            {   
-                return m_className;
-            }
-
-            virtual void v_GetAeroForces(const Array<OneD, NekDouble> &inArray)
-            {
-                ASSERTL0(false,
-                    "This method is not defined or valid for this class type");
-            }
-
-            virtual Array<OneD, NekDouble> v_GetMotionVars()
-            {
-                ASSERTL0(false,
-                    "This method is not defined or valid for this class type");
-            }
 
             void EvaluateFunction(
                     Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
@@ -150,21 +129,6 @@ namespace SolverUtils
                     NekDouble pTime = NekDouble(0));
 
     };
-
-    inline string Forcing::GetclassName()
-    {
-        return v_GetclassName();
-    } 
-
-    inline void Forcing::GetAeroForces(const Array<OneD, NekDouble> &inArray)
-    {
-        v_GetAeroForces(inArray);
-    }
-
-    inline Array<OneD, NekDouble> Forcing::GetMotionVars()
-    {
-       return v_GetMotionVars();
-    }
 }
 }
 

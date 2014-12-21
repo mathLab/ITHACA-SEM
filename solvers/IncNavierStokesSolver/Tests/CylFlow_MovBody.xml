@@ -1845,7 +1845,6 @@
             <P> LZ            = 4*PI             </P>
             <P> A             = 0.025            </P>
             <P> omega         = 1.0              </P>
-            <P> PROC_Z        = 8                </P>
             <P> StructStiff   = 0.02             </P>
             <P> StructRho     = 2.0              </P>
             <P> CableTension  = 8.82             </P>
@@ -1909,13 +1908,9 @@
             <DISPLACEMENTS> displacements </DISPLACEMENTS>
             <VELOCITIES>    velocities    </VELOCITIES>
             <ACCELERATIONS> accelerations </ACCELERATIONS>
-        </FORCE>
-    </FORCING>
-    <FILTERS>
-        <FILTER TYPE="MovingBody">
             <PARAM NAME="OutputFile">TensionedCable</PARAM>
             <PARAM NAME="OutputFrequency">5</PARAM>
             <PARAM NAME="Boundary"> B[0] </PARAM>
-        </FILTER>
-    </FILTERS>
+        </FORCE>
+    </FORCING>
 </NEKTAR>

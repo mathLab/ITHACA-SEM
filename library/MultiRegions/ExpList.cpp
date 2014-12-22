@@ -1257,9 +1257,8 @@ namespace Nektar
                                 dist = v->dist(w);
                             }
                         }
-
                         elmtIdDist.push_back(
-                                    std::pair<int, NekDouble>(i, v->dist(w)));
+                                    std::pair<int, NekDouble>(i, dist));
                     }
                 }
 

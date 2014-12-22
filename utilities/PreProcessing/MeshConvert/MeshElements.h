@@ -1428,7 +1428,7 @@ namespace Nektar
             static unsigned int GetNumNodes(ElmtConfig pConf);
 
             int m_orientationMap[4];
-            int m_origVertIds[4];
+            int m_origVertMap[4];
 
         protected:
             void OrientTet();

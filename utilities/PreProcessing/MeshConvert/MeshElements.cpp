@@ -1266,7 +1266,7 @@ namespace Nektar
                 {
                     if (m_vertex[i]->m_id == origVert[j]->m_id)
                     {
-                        m_origVertIds[j] = i;
+                        m_origVertMap[j] = i;
                         break;
                     }
                 }

@@ -401,6 +401,8 @@ namespace Nektar
                     elId = elMap[elId-1];
                     ElementSharedPtr el = m_mesh->m_element[m_mesh->m_expDim][elId];
                     
+                    int origFaceId = faceId;
+
                     if (el->GetConf().m_e == LibUtilities::ePrism && faceId % 2 == 0)
                     {
                         boost::shared_ptr<Prism> p = 
@@ -497,13 +499,24 @@ namespace Nektar
                         {
                             boost::shared_ptr<Tetrahedron> tet =
                                 boost::static_pointer_cast<Tetrahedron>(el);
-                            vector<int> vertIdTmp = vertId;
-                            vertId[0] = vertIdTmp[
-                                tet->m_origVertIds[tetFaceVerts[faceId][0]]];
-                            vertId[1] = vertIdTmp[
-                                tet->m_origVertIds[tetFaceVerts[faceId][1]]];
-                            vertId[2] = vertIdTmp[
-                                tet->m_origVertIds[tetFaceVerts[faceId][2]]];
+                            vector<int> tmpVertId = vertId;
+
+                            for (j = 0; j < 3; ++j)
+                            {
+                                int v = tet->GetVertex(
+                                    tet->m_origVertMap[
+                                        tetFaceVerts[origFaceId][j]])->m_id;
+
+                                for (k = 0; k < 3; ++k)
+                                {
+                                    int w = f->m_vertexList[k]->m_id;
+                                    if (v == w)
+                                    {
+                                        vertId[k] = tmpVertId[j];
+                                        break;
+                                    }
+                                }
+                            }
                         }
                         else if (el->GetConf().m_e == LibUtilities::ePrism)
                         {

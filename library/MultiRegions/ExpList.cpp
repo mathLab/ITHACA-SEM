@@ -1257,14 +1257,14 @@ namespace Nektar
                 // Find nearest element
                 if (!elmtIdDist.empty())
                 {
-                    NekDouble   min_d  = elmtIdDist[0].first;
-                    int         min_id = elmtIdDist[0].second;
+                    int         min_id = elmtIdDist[0].first;
+                    NekDouble   min_d  = elmtIdDist[0].second;
 
                     for (int i = 1; i < elmtIdDist.size(); ++i)
                     {
                         if (elmtIdDist[i].second < min_d) {
-                            min_d = elmtIdDist[i].second;
                             min_id = elmtIdDist[i].first;
+                            min_d = elmtIdDist[i].second;
                         }
                     }
 

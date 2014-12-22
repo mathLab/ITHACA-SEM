@@ -7,6 +7,7 @@ IF( NEKTAR_SOLVER_CARDIAC_EP )
        ./CardiacEPSolver.cpp
        ./EquationSystems/Monodomain.cpp
        ./EquationSystems/Bidomain.cpp
+       ./EquationSystems/BidomainRoth.cpp
        ./CellModels/CellModel.cpp
        ./CellModels/FitzhughNagumo.cpp
        ./CellModels/AlievPanfilov.cpp
@@ -18,6 +19,7 @@ IF( NEKTAR_SOLVER_CARDIAC_EP )
        ./CellModels/TenTusscher06.cpp
        ./Filters/FilterCheckpointCellModel.cpp
        ./Filters/FilterElectrogram.cpp
+       ./Filters/FilterBenchmark.cpp
        ./Stimuli/Stimulus.cpp
        ./Stimuli/StimulusCircle.cpp
        ./Stimuli/StimulusRect.cpp

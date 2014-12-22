@@ -797,7 +797,7 @@ namespace Nektar
         {
             if(m_negatedFluxNormal.size() == 0)
             {
-                Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                     &elmtToTrace = m_traceMap->GetElmtToTrace();
 
                 m_negatedFluxNormal.resize(2*GetExpSize());
@@ -887,7 +887,7 @@ namespace Nektar
             // Initial index of each element
             int phys_offset;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
             
             // Basis shared pointer
@@ -1031,7 +1031,7 @@ namespace Nektar
         {
             int n,offset, t_offset;
 
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
             
             // Basis shared pointer

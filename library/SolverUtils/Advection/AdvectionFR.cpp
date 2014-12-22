@@ -799,7 +799,8 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const NekDouble                                   &time)
         {
             int i, j, n;
             int phys_offset;
@@ -1030,7 +1031,7 @@ namespace Nektar
             Array<OneD, NekDouble>  JumpL(nElements);
             Array<OneD, NekDouble>  JumpR(nElements);
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
 
             for (n = 0; n < nElements; ++n)
@@ -1125,7 +1126,7 @@ namespace Nektar
             Array<OneD, NekDouble> auxArray1;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
                         
             // Loop on the elements
@@ -1318,7 +1319,7 @@ namespace Nektar
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
             // Loop on the elements

@@ -37,52 +37,93 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+
+/**
+ * @returns The advection factory.
+ */
+AdvectionFactory& GetAdvectionFactory()
+{
+    typedef Loki::SingletonHolder<AdvectionFactory,
+    Loki::CreateUsingNew,
+    Loki::NoDestroy > Type;
+    return Type::Instance();
+}
+
+
+/**
+ * @param   pSession            Session configuration data.
+ * @param   pFields             Array of ExpList objects.
+ */
+void Advection::InitObject(
+    const LibUtilities::SessionReaderSharedPtr        pSession,
+    Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+{
+    v_InitObject(pSession, pFields);
+}
+
+
+/**
+ * @param   nConvectiveFields   Number of velocity components.
+ * @param   pFields             Expansion lists for scalar fields.
+ * @param   pAdvVel             Advection velocity.
+ * @param   pInarray            Scalar data to advect.
+ * @param   pOutarray           Advected scalar data.
+ * @param   pTime               Simulation time.
+ */
+void Advection::Advect(
+    const int                                          nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+    const Array<OneD, Array<OneD, NekDouble> >        &pAdvVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &pInarray,
+    Array<OneD, Array<OneD, NekDouble> >              &pOutarray,
+    const NekDouble                                   &pTime)
+{
+    v_Advect(nConvectiveFields, pFields, pAdvVel, pInarray, pOutarray, pTime);
+}
+
+
+/**
+ * This function should be overridden in derived classes to initialise the
+ * specific advection data members. However, this base class function should
+ * be called as the first statement of the overridden function to ensure the
+ * base class is correctly initialised in order.
+ *
+ * @param   pSession            Session information.
+ * @param   pFields             Expansion lists for scalar fields.
+ */
+void Advection::v_InitObject(
+    const LibUtilities::SessionReaderSharedPtr        pSession,
+    Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+{
+    m_spaceDim = pFields[0]->GetCoordim(0);
+
+    if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
     {
-        AdvectionFactory& GetAdvectionFactory()
+        std::string HomoStr = pSession->GetSolverInfo("HOMOGENEOUS");
+        if (HomoStr == "HOMOGENEOUS1D" || HomoStr == "Homogeneous1D" ||
+            HomoStr == "1D"            || HomoStr == "Homo1D")
         {
-            typedef Loki::SingletonHolder<AdvectionFactory,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy > Type;
-            return Type::Instance();
+            m_spaceDim++;
         }
-
-        void Advection::InitObject(
-            const LibUtilities::SessionReaderSharedPtr        pSession,
-            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+        else
         {
-            v_InitObject(pSession, pFields);
-        }
-
-        void Advection::Advect(
-            const int nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
-        {
-            v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
-        }
-
-        void Advection::v_InitObject(
-            const LibUtilities::SessionReaderSharedPtr        pSession,
-            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
-        {
-            m_spaceDim = pFields[0]->GetCoordim(0);
-
-            if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
-            {
-                std::string HomoStr = pSession->GetSolverInfo("HOMOGENEOUS");
-                if (HomoStr == "HOMOGENEOUS1D" || HomoStr == "Homogeneous1D" ||
-                    HomoStr == "1D"            || HomoStr == "Homo1D")
-                {
-                    m_spaceDim++;
-                }
-                else
-                {
-                    ASSERTL0(false, "Only 1D homogeneous dimension supported.");
-                }
-            }
+            ASSERTL0(false, "Only 1D homogeneous dimension supported.");
         }
     }
+}
+
+
+/**
+ *
+ */
+void Advection::v_SetBaseFlow(
+        const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+{
+    ASSERTL0(false,
+            "A baseflow is not appropriate for this advection type.");
+}
+
+}
 }

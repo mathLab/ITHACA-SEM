@@ -172,6 +172,13 @@ namespace Nektar
                     return StdRegions::eFwd;
         }
 
+        StdRegions::Orientation Geometry::v_GetForient(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is not valid for this geometry.");
+                    return StdRegions::eFwd;
+        }
+
         int Geometry::v_GetNumEdges() const
         {
             NEKERROR(ErrorUtil::efatal,

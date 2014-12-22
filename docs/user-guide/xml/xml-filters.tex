@@ -155,7 +155,7 @@ every 10 timesteps, we use the syntax:
   </FILTER>
 \end{lstlisting}
 
-\subsection {Threshold value}
+\subsection {ThresholdMax}
 
 The threshold value filter writes a field output containing a variable $m$,
 defined by the time at which the selected variable first exceeds a specified
@@ -171,14 +171,16 @@ The following parameters are supported:
     \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
     \textbf{Description} \\
     \midrule
-    \inltt{OutputFile}      &          & \emph{session}\_max.fld &
+    \inltt{OutputFile}      & \xmark   & \emph{session}\_max.fld &
     Output filename to which the threshold times are written.\\
-    \inltt{ThresholdVar}    &          & \emph{first variable name} &
+    \inltt{ThresholdVar}    & \xmark   & \emph{first variable name} &
     Specifies the variable on which the threshold will be applied.\\
     \inltt{ThresholdValue}  & \cmark   & - &
     Specifies the threshold value.\\
     \inltt{InitialValue}    & \cmark   & - &
     Specifies the initial time.\\
+    \inltt{StartTime}       & \xmark   & 0.0 &
+    Specifies the time at which to start recording.\\
     \bottomrule
   \end{tabularx}
 \end{center}
@@ -194,7 +196,12 @@ An example is given below:
   </FILTER>
 \end{lstlisting}
 
-which produces a field file \inltt{threshold\_max.fld}.
+which produces a field file \inlsh{threshold\_max.fld}.
+
+\subsection{ThresholdMin value}
+
+Performs the same function as the \inltt{ThresholdMax} filter but records the
+time at which the threshold variable drops below a prescribed value.
 
 \subsection{Modal energy}
 

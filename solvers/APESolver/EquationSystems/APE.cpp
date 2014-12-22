@@ -237,7 +237,7 @@ void APE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 
     // WeakDG does not use advVel, so we only provide a dummy array
     Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
-    m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray);
+    m_advection->Advect(nVariables, m_fields, advVel, inarray, outarray, time);
 
     for (int i = 0; i < nVariables; ++i)
     {

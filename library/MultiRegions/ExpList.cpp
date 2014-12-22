@@ -1235,22 +1235,31 @@ namespace Nektar
             {
                 SpatialDomains::PointGeomSharedPtr v;
                 SpatialDomains::PointGeom w;
-                NekDouble x, y, z;
+                NekDouble dist;
 
                 // Scan all elements and store those which may contain the point
                 for (int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords,
+                    if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords,
+                                                              locCoords,
                                                               tol, resid))
                     {
-                        v = m_graph->GetVertex((*m_exp)[i]->GetGeom()->GetVid(0));
-
                         w.SetX(gloCoords[0]);
                         w.SetY(gloCoords[1]);
                         w.SetZ(gloCoords[2]);
-                        v->GetCoords(x,y,z);
 
-                        elmtIdDist.push_back(std::pair<int, NekDouble>(i, v->dist(w)));
+                        // Find closest vertex
+                        for (int j = 0; j < (*m_exp)[i]->GetNverts(); ++j) {
+                            v = m_graph->GetVertex(
+                                            (*m_exp)[i]->GetGeom()->GetVid(j));
+                            if (j == 0 || dist > v->dist(w))
+                            {
+                                dist = v->dist(w);
+                            }
+                        }
+
+                        elmtIdDist.push_back(
+                                    std::pair<int, NekDouble>(i, v->dist(w)));
                     }
                 }
 

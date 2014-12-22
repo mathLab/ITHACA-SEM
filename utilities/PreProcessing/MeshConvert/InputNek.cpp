@@ -381,7 +381,7 @@ namespace Nektar
                     cerr << "Unable to read number of curved sides" << endl;
                     abort();
                 }
-                
+
                 int nCurvedSides;
                 int faceId, elId;
                 map<string,pair<NekCurve, string> >::iterator it;
@@ -483,9 +483,44 @@ namespace Nektar
                     }
                     else if (it->second.first == eFile)
                     {
+                        FaceSharedPtr f = el->GetFace(faceId);
+                        static int tetFaceVerts[4][3] = {
+                            {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
+
                         vector<int> vertId(3);
                         s >> vertId[0] >> vertId[1] >> vertId[2];
-                        
+
+                        // Prisms and tets may have been rotated by OrientPrism
+                        // routine which reorders vertices. This block rotates
+                        // vertex ids accordingly.
+                        if (el->GetConf().m_e == LibUtilities::eTetrahedron)
+                        {
+                            boost::shared_ptr<Tetrahedron> tet =
+                                boost::static_pointer_cast<Tetrahedron>(el);
+                            vector<int> vertIdTmp = vertId;
+                            vertId[0] = vertIdTmp[
+                                tet->m_origVertIds[tetFaceVerts[faceId][0]]];
+                            vertId[1] = vertIdTmp[
+                                tet->m_origVertIds[tetFaceVerts[faceId][1]]];
+                            vertId[2] = vertIdTmp[
+                                tet->m_origVertIds[tetFaceVerts[faceId][2]]];
+                        }
+                        else if (el->GetConf().m_e == LibUtilities::ePrism)
+                        {
+                            boost::shared_ptr<Prism> pr =
+                                boost::static_pointer_cast<Prism>(el);
+                            if (pr->m_orientation == 1)
+                            {
+                                swap(vertId[2], vertId[1]);
+                                swap(vertId[0], vertId[1]);
+                            }
+                            else if (pr->m_orientation == 2)
+                            {
+                                swap(vertId[0], vertId[1]);
+                                swap(vertId[2], vertId[1]);
+                            }
+                        }
+
                         // Find vertex combination in hoData.
                         hoIt = hoData[word].find(HOSurfSharedPtr(
                             new HOSurf(vertId)));
@@ -496,53 +531,17 @@ namespace Nektar
                                  << "for element id " << elId+1 << endl;
                             abort();
                         }
-                        
+
                         // Depending on order of vertices in rea file, surface
-                        // information may need to be rotated or
-                        // reflected. These procedures are taken from
-                        // nektar/Hlib/src/HOSurf.C
+                        // information may need to be rotated or reflected.
                         HOSurfSharedPtr surf = *hoIt;
                         surf->Align(vertId);
 
-                        // If the element is a prism, check to see if
-                        // orientation has changed and update order of surface
-                        // vertices.
-                        int reverseSide = 2;
-                        
-                        // Prisms may have been rotated by OrientPrism routine
-                        // and break curved faces. This block rotates faces
-                        // accordingly. TODO: Add similar routine for tets.
-                        if (el->GetConf().m_e == LibUtilities::ePrism)
-                        {
-                            boost::shared_ptr<Prism> pr = 
-                                boost::static_pointer_cast<Prism>(el);
-                            if (pr->m_orientation == 1)
-                            {
-                                // Prism has been rotated counter-clockwise;
-                                // rotate face, reverse what was the last edge
-                                // (now located at edge 0).
-                                (*hoIt)->Rotate(1);
-                                reverseSide = 0;
-                            }
-                            else if (pr->m_orientation == 2)
-                            {
-                                // Prism has been rotated clockwise; rotate
-                                // face, reverse what was the last edge (now
-                                // located at edge 1).
-                                (*hoIt)->Rotate(2);
-                                reverseSide = 1;
-                            }
-                        }
-                        
-                        // Finally, add high order data to appropriate
-                        // face. NOTE: this is a bit of a hack since the
-                        // elements are technically linear, but should work just
-                        // fine.
-                        FaceSharedPtr f    = el->GetFace(faceId);
+                        // Finally, add high order data to appropriate face.
                         int           Ntot = (*hoIt)->surfVerts.size();
                         int           N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
                         EdgeSharedPtr edge;
-                        
+
                         // Apply high-order map to convert face data to Nektar++
                         // ordering (vertices->edges->internal).
                         vector<NodeSharedPtr> tmpVerts = (*hoIt)->surfVerts;
@@ -555,36 +554,44 @@ namespace Nektar
                         {
                             NodeSharedPtr a = (*hoIt)->surfVerts[j];
                         }
-                        
+
+                        vector<int> faceVertIds(3);
+                        faceVertIds[0] = f->m_vertexList[0]->m_id;
+                        faceVertIds[1] = f->m_vertexList[1]->m_id;
+                        faceVertIds[2] = f->m_vertexList[2]->m_id;
+
                         for (j = 0; j < f->m_edgeList.size(); ++j)
                         {
                             edge = f->m_edgeList[j];
-                            
+
                             // Skip over edges which have already been
-                            // populated, apart from those which need to be
-                            // reoriented.
-                            if (edge->m_edgeNodes.size() > 0 && reverseSide == 2)
+                            // populated.
+                            if (edge->m_edgeNodes.size() > 0)
                             {
                                 continue;
                             }
-                            
-                            edge->m_edgeNodes.clear();
-                            edge->m_curveType = LibUtilities::eGaussLobattoLegendre;
-                            
+
+                            //edge->m_edgeNodes.clear();
+                            edge->m_curveType
+                                = LibUtilities::eGaussLobattoLegendre;
+
                             for (int k = 0; k < N-2; ++k)
                             {
                                 edge->m_edgeNodes.push_back(
                                     (*hoIt)->surfVerts[3+j*(N-2)+k]);
                             }
-                            
-                            // Reverse order of modes along correct side.
-                            if (j == reverseSide)
+
+                            // Nodal triangle data is always
+                            // counter-clockwise. Add this check to reorder
+                            // where necessary.
+                            if (edge->m_n1->m_id != faceVertIds[j])
                             {
                                 reverse(edge->m_edgeNodes.begin(), 
                                         edge->m_edgeNodes.end());
                             }
                         }
 
+                        // Insert interior face curvature.
                         f->m_curveType = LibUtilities::eNodalTriElec;
                         for (int j = 3+3*(N-2); j < Ntot; ++j)
                         {

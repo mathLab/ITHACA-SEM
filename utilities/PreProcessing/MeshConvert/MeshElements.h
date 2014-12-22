@@ -1196,7 +1196,6 @@ namespace Nektar
             HOTriangle(vector<int> pVertId,
                        vector<T>   pSurfVerts) :
                 vertId(pVertId), surfVerts(pSurfVerts) {}
-
             HOTriangle(vector<int> pVertId) : vertId(pVertId) {}
 
             /// The triangle vertex IDs
@@ -1237,6 +1236,17 @@ namespace Nektar
                 }
             }
 
+            /**
+             * @brief Reflect data points inside #surfVerts.
+             *
+             * This applies a mapping essentially doing the following
+             * reordering:
+             *
+             * 9          9
+             * 7 8    ->  8 7
+             * 4 5 6      6 5 4
+             * 0 1 2 3    3 2 1 0
+             */
             void Reflect()
             {
                 int i, j, cnt;
@@ -1251,7 +1261,7 @@ namespace Nektar
                     }
                 }
 
-                for(cnt = i = 0; i < np; ++i)
+                for (cnt = i = 0; i < np; ++i)
                 {
                     for(j = 0; j < np-i; ++j,cnt++)
                     {
@@ -1417,10 +1427,8 @@ namespace Nektar
             
             static unsigned int GetNumNodes(ElmtConfig pConf);
 
-            /**
-             * Orientation of tet; unchanged = 0; base vertex swapped = 1.
-             */
             int m_orientationMap[4];
+            int m_origVertIds[4];
 
         protected:
             void OrientTet();

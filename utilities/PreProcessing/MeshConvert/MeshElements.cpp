@@ -1200,7 +1200,7 @@ namespace Nektar
             for (int i = 0; i < 4; ++i)
             {
                 vector<int> nodes(3);
-                
+
                 nodes[0] = m_vertex[face_ids[i][0]]->m_id;
                 nodes[1] = m_vertex[face_ids[i][1]]->m_id;
                 nodes[2] = m_vertex[face_ids[i][2]]->m_id;
@@ -1209,6 +1209,10 @@ namespace Nektar
                 struct TetOrient faceNodes(nodes, i);
                 faces.insert(faceNodes);
             }
+
+            // Store a copy of the original vertex ordering so we can create a
+            // permutation map later.
+            vector<NodeSharedPtr> origVert = m_vertex;
 
             // Order vertices with highest global vertex at top degenerate
             // point. Place second highest global vertex at base degenerate
@@ -1257,6 +1261,15 @@ namespace Nektar
                 
                 it = faces.find(faceNodes);
                 m_orientationMap[it->fid] = i;
+
+                for (int j = 0; j < 4; ++j)
+                {
+                    if (m_vertex[i]->m_id == origVert[j]->m_id)
+                    {
+                        m_origVertIds[j] = i;
+                        break;
+                    }
+                }
             }
         }
 
@@ -1454,6 +1467,10 @@ namespace Nektar
             if (m_conf.m_reorient)
             {
                 OrientPrism();
+            }
+            else
+            {
+                m_orientation = 0;
             }
 
             // Create faces

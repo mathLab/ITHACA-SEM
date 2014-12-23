@@ -354,11 +354,6 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
-        StdRegions::Orientation PyrExp::v_GetFaceOrient(int face)
-        {
-            return GetGeom3D()->GetFaceOrient(face);
-        }
-
         void PyrExp::v_GetFacePhysVals(
             const int                                face,
             const StdRegions::StdExpansionSharedPtr &FaceExp,
@@ -370,11 +365,11 @@ namespace Nektar
             int nq1 = m_base[1]->GetNumPoints();
             int nq2 = m_base[2]->GetNumPoints();
 
-            Array<OneD,NekDouble> o_tmp(nq0*nq1*nq2);
+            Array<OneD,NekDouble> o_tmp(GetFaceNumPoints(face));
             
             if (orient == StdRegions::eNoOrientation)
             {
-                orient = GetFaceOrient(face);
+                orient = GetForient(face);
             }
 
             switch(face)
@@ -515,8 +510,12 @@ namespace Nektar
             const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(ptsKeys);
 
+            LibUtilities::BasisKey tobasis0 = DetFaceBasisKey(face,0);
+            LibUtilities::BasisKey tobasis1 = DetFaceBasisKey(face,1);
+
             // Number of quadrature points in face expansion.
-            int nq        = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
+            int nq_face = tobasis0.GetNumPoints()*tobasis1.GetNumPoints();
+
             int vCoordDim = GetCoordim();
             int i;
 
@@ -524,7 +523,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
             for (i = 0; i < vCoordDim; ++i)
             {
-                normal[i] = Array<OneD, NekDouble>(nq);
+                normal[i] = Array<OneD, NekDouble>(nq_face);
             }
 
             // Regular geometry case
@@ -539,7 +538,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,-df[3*i+2][0],normal[i],1);
+                            normal[i][0] = -df[3*i+2][0]; 
                         }
                         break;
                     }
@@ -547,7 +546,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,-df[3*i+1][0],normal[i],1);
+                            normal[i][0] = -df[3*i+1][0]; 
                         }
                         break;
                     }
@@ -555,7 +554,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,df[3*i][0]+df[3*i+2][0],normal[i],1);
+                            normal[i][0] = df[3*i][0]+df[3*i+2][0]; 
                         }
                         break;
                     }
@@ -563,7 +562,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,df[3*i+1][0]+df[3*i+2][0],normal[i],1);
+                            normal[i][0] = df[3*i+1][0]+df[3*i+2][0];
                         }
                         break;
                     }
@@ -571,7 +570,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,-df[3*i][0],normal[i],1);
+                            normal[i][0] = -df[3*i][0]; 
                         }
                         break;
                     }
@@ -588,7 +587,7 @@ namespace Nektar
                 fac = 1.0/sqrt(fac);
                 for (i = 0; i < vCoordDim; ++i)
                 {
-                    Vmath::Smul(nq,fac,normal[i],1,normal[i],1);
+                    Vmath::Fill(nq_face,fac*normal[i][0],normal[i],1);
                 }
             }
             else
@@ -619,7 +618,6 @@ namespace Nektar
                 LibUtilities::PointsKey points0;
                 LibUtilities::PointsKey points1;
 
-                Array<OneD, NekDouble> work   (nq,             0.0);
                 Array<OneD, NekDouble> normals(vCoordDim*nqtot,0.0);
 
                 // Extract Jacobian along face and recover local derivatives
@@ -729,37 +727,38 @@ namespace Nektar
                         ASSERTL0(false,"face is out of range (face < 4)");
                 }
 
+                Array<OneD, NekDouble> work   (nq_face, 0.0);
                 // Interpolate Jacobian and invert
                 LibUtilities::Interp2D(points0, points1, jac,
-                                       m_base[0]->GetPointsKey(),
-                                       m_base[0]->GetPointsKey(),
+                                       tobasis0.GetPointsKey(),
+                                       tobasis1.GetPointsKey(),
                                        work);
-                Vmath::Sdiv(nq, 1.0, &work[0], 1, &work[0], 1);
+                Vmath::Sdiv(nq_face, 1.0, &work[0], 1, &work[0], 1);
 
                 // Interpolate normal and multiply by inverse Jacobian.
                 for(i = 0; i < vCoordDim; ++i)
                 {
                     LibUtilities::Interp2D(points0, points1,
                                            &normals[i*nqtot],
-                                           m_base[0]->GetPointsKey(),
-                                           m_base[0]->GetPointsKey(),
+                                           tobasis0.GetPointsKey(),
+                                           tobasis1.GetPointsKey(),
                                            &normal[i][0]);
-                    Vmath::Vmul(nq,work,1,normal[i],1,normal[i],1);
+                    Vmath::Vmul(nq_face,work,1,normal[i],1,normal[i],1);
                 }
 
                 // Normalise to obtain unit normals.
-                Vmath::Zero(nq,work,1);
+                Vmath::Zero(nq_face,work,1);
                 for(i = 0; i < GetCoordim(); ++i)
                 {
-                    Vmath::Vvtvp(nq,normal[i],1,normal[i],1,work,1,work,1);
+                    Vmath::Vvtvp(nq_face,normal[i],1,normal[i],1,work,1,work,1);
                 }
 
-                Vmath::Vsqrt(nq,work,1,work,1);
-                Vmath::Sdiv (nq,1.0,work,1,work,1);
+                Vmath::Vsqrt(nq_face,work,1,work,1);
+                Vmath::Sdiv (nq_face,1.0,work,1,work,1);
 
                 for(i = 0; i < GetCoordim(); ++i)
                 {
-                    Vmath::Vmul(nq,normal[i],1,work,1,normal[i],1);
+                    Vmath::Vmul(nq_face,normal[i],1,work,1,normal[i],1);
                 }
             }
         }

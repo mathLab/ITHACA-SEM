@@ -381,7 +381,7 @@ namespace Nektar
                                   m_periodicEdges,
                                   variable);
 
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             // Scatter trace segments to 2D elements. For each element, we find
@@ -397,8 +397,7 @@ namespace Nektar
                             (*m_exp)[i]->as<LocalRegions::Expansion2D>();
                     LocalRegions::Expansion1DSharedPtr exp1d =
                             elmtToTrace[i][j]->as<LocalRegions::Expansion1D>();
-                    LocalRegions::ExpansionSharedPtr exp =
-                            elmtToTrace[i][j]->as<LocalRegions::Expansion>  ();
+                    LocalRegions::ExpansionSharedPtr exp = elmtToTrace[i][j];;
                     exp2d->SetEdgeExp           (j, exp  );
                     exp1d->SetAdjacentElementExp(j, exp2d);
                 }
@@ -1335,7 +1334,7 @@ namespace Nektar
             boost::unordered_map<int,pair<int,int> >::iterator it3;
             LocalRegions::Expansion2DSharedPtr exp2d;
 
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
             
             // Zero forward/backward vectors.
@@ -1459,7 +1458,7 @@ namespace Nektar
             int nexp = GetExpSize();
             int n, e, offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
@@ -1488,7 +1487,7 @@ namespace Nektar
         {
             int e, n, offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for(n = 0; n < GetExpSize(); ++n)
@@ -1531,7 +1530,7 @@ namespace Nektar
         {
             int e, n, offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for(n = 0; n < GetExpSize(); ++n)
@@ -1578,7 +1577,7 @@ namespace Nektar
         {
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             for (n = 0; n < GetExpSize(); ++n)
@@ -1685,7 +1684,7 @@ namespace Nektar
             Array<OneD, const NekDouble> tmp_coeffs;
             Array<OneD, NekDouble> out_d(m_ncoeffs), out_tmp;
 
-            Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
+            Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             StdRegions::Orientation edgedir;
@@ -1967,7 +1966,7 @@ namespace Nektar
         {
             int    i,cnt,e,ncoeff_edge;
             Array<OneD, NekDouble> force, out_tmp, qrhs, qrhs1;
-            Array<OneD, Array< OneD, StdRegions::StdExpansionSharedPtr> > 
+            Array<OneD, Array< OneD, LocalRegions::ExpansionSharedPtr> > 
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
             StdRegions::Orientation edgedir;

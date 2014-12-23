@@ -37,43 +37,57 @@
 
 namespace Nektar
 {
-    string NoAdvection::className  = GetAdvectionTermFactory().RegisterCreatorFunction("NoAdvection", NoAdvection::create);
-    
-    /**
-     * Constructor. Creates ...
-     *
-     * \param 
-     * \param
-     */
 
-    NoAdvection::NoAdvection(const LibUtilities::SessionReaderSharedPtr&        pSession,
-							 const SpatialDomains::MeshGraphSharedPtr&          pGraph):
-	AdvectionTerm(pSession, pGraph)
-	
+string NoAdvection::className
+    = SolverUtils::GetAdvectionFactory().RegisterCreatorFunction(
+            "NoAdvection",
+            NoAdvection::create);
+
+/**
+ *
+ */
+NoAdvection::NoAdvection():
+        Advection()
+
+{
+}
+
+
+/**
+ *
+ */
+NoAdvection::~NoAdvection()
+{
+}
+
+
+/**
+ *
+ */
+void NoAdvection::v_InitObject(
+    const LibUtilities::SessionReaderSharedPtr        &pSession,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
+{
+}
+
+
+/**
+ *
+ */
+void NoAdvection::v_Advect(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+          Array<OneD, Array<OneD, NekDouble> >        &outarray,
+    const NekDouble                                   &time)
+{
+    int nPointsTot = fields[0]->GetNpoints();
+    for (int i = 0; i < inarray.num_elements(); ++i)
     {
-        
+        Vmath::Zero(nPointsTot,outarray[i],1);
     }
-    
-    NoAdvection::~NoAdvection()
-    {
-    }
-    
-    //Advection function
-    
-    
-    //Evaluation of the advective terms
-    void NoAdvection::v_ComputeAdvectionTerm(
-            Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-            const Array<OneD, Array<OneD, NekDouble> > &pV,
-            const Array<OneD, const NekDouble> &pU,
-            Array<OneD, NekDouble> &pOutarray,
-            int pVelocityComponent,
-            NekDouble m_time,
-            Array<OneD, NekDouble> &pWk)
-    {
-        int nPointsTot = pFields[0]->GetNpoints();
-		Vmath::Zero(nPointsTot,pOutarray,1);
-	}
+}
 
 } //end of namespace
 

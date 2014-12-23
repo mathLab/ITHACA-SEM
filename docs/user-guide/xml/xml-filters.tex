@@ -155,16 +155,13 @@ every 10 timesteps, we use the syntax:
   </FILTER>
 \end{lstlisting}
 
-\subsection {Threshold value}
+\subsection {ThresholdMax}
 
 The threshold value filter writes a field output containing a variable $m$,
-defined by the time at which the solution first exceeds a specified threshold
-value.
-
-\begin{notebox}
-  This filter assumes that the solution field to be examined is the first
-  specified in the session file.
-\end{notebox}
+defined by the time at which the selected variable first exceeds a specified
+threshold value. The default name of the output file is the name of the session
+with the suffix \inlsh{\_max.fld}. Thresholding is applied based on the first
+variable listed in the session by default.
 
 The following parameters are supported:
 
@@ -174,12 +171,16 @@ The following parameters are supported:
     \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
     \textbf{Description} \\
     \midrule
-    \inltt{OutputFile}      & \cmark   & - &
-    Prefix of the output filename to which the checkpoints are written.\\
+    \inltt{OutputFile}      & \xmark   & \emph{session}\_max.fld &
+    Output filename to which the threshold times are written.\\
+    \inltt{ThresholdVar}    & \xmark   & \emph{first variable name} &
+    Specifies the variable on which the threshold will be applied.\\
     \inltt{ThresholdValue}  & \cmark   & - &
     Specifies the threshold value.\\
     \inltt{InitialValue}    & \cmark   & - &
     Specifies the initial time.\\
+    \inltt{StartTime}       & \xmark   & 0.0 &
+    Specifies the time at which to start recording.\\
     \bottomrule
   \end{tabularx}
 \end{center}
@@ -188,13 +189,19 @@ An example is given below:
  
 \begin{lstlisting}[style=XMLStyle]
   <FILTER TYPE="ThresholdMax">
+      <PARAM NAME="OutputFile"> threshold_max.fld </PARAM>
+      <PARAM NAME="ThresholdVar"> u </PARAM>
       <PARAM NAME="ThresholdValue"> 0.1 </PARAM>
       <PARAM NAME="InitialValue">  0.4 </PARAM>
-      <PARAM NAME="OutputFile"> ThresholdFile </PARAM>
   </FILTER>
 \end{lstlisting}
 
-which produces a field file \inltt{ThresholdFile.fld}.
+which produces a field file \inlsh{threshold\_max.fld}.
+
+\subsection{ThresholdMin value}
+
+Performs the same function as the \inltt{ThresholdMax} filter but records the
+time at which the threshold variable drops below a prescribed value.
 
 \subsection{Modal energy}
 

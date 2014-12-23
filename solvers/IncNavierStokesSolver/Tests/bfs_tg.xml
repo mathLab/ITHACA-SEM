@@ -1688,6 +1688,7 @@
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
             <I PROPERTY="SOLVERTYPE" VALUE="VelocityCorrectionScheme" />
             <I PROPERTY="Driver" VALUE="ModifiedArnoldi" />
+            <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
         </SOLVERINFO>
 
         <PARAMETERS>

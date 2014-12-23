@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File SkewSymmetricAdvection.h
+// File AlternateSkewAdvection.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,67 +29,55 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Alternate Skew-Symmetric non linear convective term for Navier-Stokes equations
+// Description: Alternate Skew-Symmetric non linear convective term
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
-#define NEKTAR_SOLVERS_NAVIERSTOKESADVECTION_H
+#ifndef NEKTAR_SOLVERS_ALTERNATESKEWADVECTION_H
+#define NEKTAR_SOLVERS_ALTERNATESKEWADVECTION_H
 
-#include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
-
-//#define TIMING
-//#ifdef TIMING
-//#include <time.h>
-//#include <sys/time.h>
-//#endif
-
+#include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
-{     
+{
 
-    class AlternateSkewAdvection: public AdvectionTerm
-	
+class AlternateSkewAdvection: public SolverUtils::Advection
+
+{
+public:
+    friend class MemoryManager<AlternateSkewAdvection>;
+
+    /// Creates an instance of this class
+    static SolverUtils::AdvectionSharedPtr create(std::string)
     {
-    public:
-        friend class MemoryManager<AlternateSkewAdvection>;
+        return MemoryManager<AlternateSkewAdvection>::AllocateSharedPtr();
+    }
+    /// Name of class
+    static std::string className;
+    static std::string className2;
 
-        /// Creates an instance of this class
-        static AdvectionTermSharedPtr create(
-                                const LibUtilities::SessionReaderSharedPtr& pSession,
-                                const SpatialDomains::MeshGraphSharedPtr& pGraph) {
-            AdvectionTermSharedPtr p = MemoryManager<AlternateSkewAdvection>::AllocateSharedPtr(pSession, pGraph);
-            p->InitObject();
-            return p;
-        }
-        /// Name of class
-        static std::string className;
-        static std::string className2;
-        
-	protected:
-        
-        AlternateSkewAdvection(
-                const LibUtilities::SessionReaderSharedPtr&        pSession,
-                const SpatialDomains::MeshGraphSharedPtr&          pGraph);
+protected:
 
+    AlternateSkewAdvection();
 
-        virtual ~AlternateSkewAdvection();
+    virtual ~AlternateSkewAdvection();
 
-	private:
+    virtual void v_InitObject(
+              LibUtilities::SessionReaderSharedPtr         pSession,
+              Array<OneD, MultiRegions::ExpListSharedPtr>  pFields);
 
-        //Function for the evaluation of the linearised advective terms
-        virtual void v_ComputeAdvectionTerm(
-                         Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-                         const Array<OneD, Array<OneD, NekDouble> > &pV,
-                         const Array<OneD, const NekDouble> &pU,
-                         Array<OneD, NekDouble> &pOutarray,
-                         int pVelocityComponent,
-						 NekDouble m_time,
-                         Array<OneD, NekDouble> &pWk);
+    virtual void v_Advect(
+        const int nConvectiveFields,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+              Array<OneD, Array<OneD, NekDouble> >        &outarray,
+        const NekDouble                                   &time);
 
-	};
-    
-    
+private:
+    int m_advectioncalls;
+};
+
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H

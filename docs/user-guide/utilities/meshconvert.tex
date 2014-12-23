@@ -494,7 +494,7 @@ Gaussian $z = \exp[-(x^2+y^2)]$ using 7 quadrature points in each direction, we
 may issue the command
 
 \begin{lstlisting}[style=BashInputStyle]
-  MeshConvert -m scalar:surf=1:nq=7:scalar=exp\(x^2+y^2\) mesh.xml deformed.xml
+  MeshConvert -m scalar:surf=1:nq=7:scalar=exp\(x*x+y*y\) mesh.xml deformed.xml
 \end{lstlisting}
 
 \begin{notebox}

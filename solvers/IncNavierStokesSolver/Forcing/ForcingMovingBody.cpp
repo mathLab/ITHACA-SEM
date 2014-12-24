@@ -39,8 +39,6 @@
 
 namespace Nektar
 {
-namespace SolverUtils
-{
     NekDouble ForcingMovingBody::StifflyStable_Betaq_Coeffs[3][3] = {
         { 1.0,  0.0, 0.0},{ 2.0, -1.0, 0.0},{ 3.0, -3.0, 1.0}};
     NekDouble ForcingMovingBody::StifflyStable_Alpha_Coeffs[3][3] = {
@@ -48,10 +46,10 @@ namespace SolverUtils
     NekDouble ForcingMovingBody::StifflyStable_Gamma0_Coeffs[3] = {
           1.0,  1.5, 11.0/6.0};
 
-    std::string ForcingMovingBody::className = GetForcingFactory().
-                                RegisterCreatorFunction("MovingBody",
-                                                        ForcingMovingBody::create,
-                                                        "Moving Body Forcing");
+    std::string ForcingMovingBody::className = SolverUtils::GetForcingFactory().
+                RegisterCreatorFunction("MovingBody",
+                                        ForcingMovingBody::create,
+                                        "Moving Body Forcing");
 
     ForcingMovingBody::ForcingMovingBody(
             const LibUtilities::SessionReaderSharedPtr& pSession)
@@ -156,7 +154,7 @@ namespace SolverUtils
                                         AllocateSharedPtr(m_session, vParams);
 
         // Initialise the object of MovingBody filter
-        m_filter->Initialise(m_session, pFields, 0.0);
+        m_filter->Initialise(pFields, 0.0);
 
         // create the storage space for the body motion description
         int phystot = pFields[0]->GetTotPoints();
@@ -1484,5 +1482,4 @@ namespace SolverUtils
         {ASSERTL0(false,"The accelerations in y must be specified via an equation <E> or a file <F>");}
     }
  
-}
 }

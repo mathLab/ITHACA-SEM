@@ -38,124 +38,142 @@
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/FFT/NektarFFT.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
-#include <LibUtilities/FFT/NektarFFT.h>
-#include <IncNavierStokesSolver/Forcing/FilterMovingBody.h>
+#include <IncNavierStokesSolver/Filters/FilterMovingBody.h>
+
 namespace Nektar
 {
-namespace SolverUtils
+
+class ForcingMovingBody : public SolverUtils::Forcing
 {
-    class ForcingMovingBody : public Forcing
-    {
-        public:
+    public:
 
-            friend class MemoryManager<ForcingMovingBody>;
+        friend class MemoryManager<ForcingMovingBody>;
 
-            /// Creates an instance of this class
-            SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                    const unsigned int& pNumForcingFields,
-                    const TiXmlElement* pForce)
-            {
-                ForcingSharedPtr p = MemoryManager<ForcingMovingBody>::
-                                                AllocateSharedPtr(pSession);
-                p->InitObject(pFields, pNumForcingFields, pForce);
-                return p;
-            }
+        /// Creates an instance of this class
+        static SolverUtils::ForcingSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                const unsigned int& pNumForcingFields,
+                const TiXmlElement* pForce)
+        {
+            SolverUtils::ForcingSharedPtr p =
+                                    MemoryManager<ForcingMovingBody>::
+                                            AllocateSharedPtr(pSession);
+            p->InitObject(pFields, pNumForcingFields, pForce);
+            return p;
+        }
 
-            ///Name of the class
-            static std::string className;
+        ///Name of the class
+        static std::string className;
 
-        protected:
-        
-            SOLVER_UTILS_EXPORT virtual void v_InitObject(const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                                                          const unsigned int& pNumForcingFields,
-                                                          const TiXmlElement* pForce);
+    protected:
+        virtual void v_InitObject(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+            const unsigned int&                         pNumForcingFields,
+            const TiXmlElement*                         pForce);
 
-            SOLVER_UTILS_EXPORT virtual void v_Apply(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                                                     Array<OneD, Array<OneD, NekDouble> > &outarray,
-                                                     const NekDouble& time);
+        virtual void v_Apply(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
+            const Array<OneD, Array<OneD, NekDouble> >& inarray,
+                  Array<OneD, Array<OneD, NekDouble> >& outarray,
+            const NekDouble&                            time);
 
-        private:
-        
-            ForcingMovingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
-        
-            void CheckIsFromFile();
+    private:
+        ForcingMovingBody(
+            const LibUtilities::SessionReaderSharedPtr& pSession);
 
-            void InitialiseCableModel(const LibUtilities::SessionReaderSharedPtr& pSession,
-                                      const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
-        
-            void UpdateMotion(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                              NekDouble time);
-        
-            void TensionedCableModel(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                                Array<OneD, NekDouble> &FcePhysinArray,
-                                Array<OneD, NekDouble> &MotPhysinArray);
+        void CheckIsFromFile();
 
-            void EvaluateStructDynModel(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                                            const NekDouble &time );
-            void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
+        void InitialiseCableModel(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
-            void EvaluateAccelaration(const Array<OneD, NekDouble> &input, 
-                      Array<OneD, NekDouble> &output, 
-                          int npoints);
-       
-            void SetDynEqCoeffMatrix(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
+        void UpdateMotion(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                  NekDouble time);
 
-            void OutputStructMotion(const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                                    const NekDouble &time);
+        void TensionedCableModel(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                  Array<OneD, NekDouble> &FcePhysinArray,
+                  Array<OneD, NekDouble> &MotPhysinArray);
 
-            void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
-        
-            int m_intSteps;                                       
-            int m_movingBodyCalls;                                
-            int m_NumLocPlane;
-            int m_VarArraysize;
-            int m_NumD; 
-            bool m_FictitiousMass;    
-            bool m_homostrip;
+        void EvaluateStructDynModel(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time );
 
-            NekDouble m_structrho;
-            NekDouble m_fictrho;
-            NekDouble m_cabletension;
-            NekDouble m_bendingstiff;
-            NekDouble m_structdamp;
-            NekDouble m_fictdamp;
-            NekDouble m_structstiff;
-            NekDouble m_lhom;
-            NekDouble m_kinvis;
-            NekDouble m_timestep;
+        void CalculateForcing(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 
-            static NekDouble StifflyStable_Betaq_Coeffs[3][3];
-            static NekDouble StifflyStable_Alpha_Coeffs[3][3];
-            static NekDouble StifflyStable_Gamma0_Coeffs[3];
+        void EvaluateAccelaration(
+            const Array<OneD, NekDouble> &input,
+                  Array<OneD, NekDouble> &output,
+                  int npoints);
 
-            LibUtilities::NektarFFTSharedPtr m_FFT;
-            LibUtilities::CommSharedPtr m_comm;
-            FilterMovingBodySharedPtr m_filter;            
+        void SetDynEqCoeffMatrix(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
 
-            std::string m_vibrationtype; // free vibration or forced vibration types are available
+        void OutputStructMotion(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+            const NekDouble &time);
 
-            Array<OneD, NekDouble> m_Aeroforces; //storage for the cable's force(x,y) variables
-            Array<OneD, NekDouble> m_MotionVars; //storage for the cable's motion(x,y) variables
-            Array<OneD, Array<OneD, NekDouble> > m_zeta;
-            Array<OneD, Array<OneD, NekDouble> > m_eta;
-            Array<OneD, Array<OneD, NekDouble> > m_W; //              
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV; //fictitious velocity storage
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fA; //fictitious acceleration storage
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_BndV;
-            Array<OneD, DNekMatSharedPtr> m_CoeffMat_A;
-            Array<OneD, DNekMatSharedPtr> m_CoeffMat_B;
-            Array<OneD, std::string> m_funcName;     // [0] is displacements -- [1] is velocities -- [2] is accelerations
-            Array<OneD, std::string> m_motion;       // motion direction: [0] is 'x' and [1] is 'y'
-            Array<OneD, bool>        m_IsFromFile;   // do determine if the the body motion come from an extern file
+        void RollOver(Array<OneD, Array<OneD, NekDouble> > &input);
 
-    };
+        int m_intSteps;
+        int m_movingBodyCalls;
+        int m_NumLocPlane;
+        int m_VarArraysize;
+        int m_NumD;
+        bool m_FictitiousMass;
+        bool m_homostrip;
 
-}
+        NekDouble m_structrho;
+        NekDouble m_fictrho;
+        NekDouble m_cabletension;
+        NekDouble m_bendingstiff;
+        NekDouble m_structdamp;
+        NekDouble m_fictdamp;
+        NekDouble m_structstiff;
+        NekDouble m_lhom;
+        NekDouble m_kinvis;
+        NekDouble m_timestep;
+
+        static NekDouble StifflyStable_Betaq_Coeffs[3][3];
+        static NekDouble StifflyStable_Alpha_Coeffs[3][3];
+        static NekDouble StifflyStable_Gamma0_Coeffs[3];
+
+        LibUtilities::NektarFFTSharedPtr m_FFT;
+        LibUtilities::CommSharedPtr m_comm;
+        FilterMovingBodySharedPtr m_filter;
+
+        /// free vibration or forced vibration types are available
+        std::string m_vibrationtype;
+
+        /// storage for the cable's force(x,y) variables
+        Array<OneD, NekDouble> m_Aeroforces;
+        /// storage for the cable's motion(x,y) variables
+        Array<OneD, NekDouble> m_MotionVars;
+        Array<OneD, Array<OneD, NekDouble> > m_zeta;
+        Array<OneD, Array<OneD, NekDouble> > m_eta;
+        Array<OneD, Array<OneD, NekDouble> > m_W;
+        /// fictitious velocity storage
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fV;
+        /// fictitious acceleration storage
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fA;
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_BndV;
+        Array<OneD, DNekMatSharedPtr> m_CoeffMat_A;
+        Array<OneD, DNekMatSharedPtr> m_CoeffMat_B;
+        /// [0] is displacements, [1] is velocities, [2] is accelerations
+        Array<OneD, std::string> m_funcName;
+        /// motion direction: [0] is 'x' and [1] is 'y'
+        Array<OneD, std::string> m_motion;
+        /// do determine if the the body motion come from an extern file
+        Array<OneD, bool>        m_IsFromFile;
+
+};
+
 }
 
 #endif

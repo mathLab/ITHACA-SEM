@@ -2239,12 +2239,12 @@ namespace Nektar
                         ASSERTL0(false, "This type of BC not implemented yet");
                     }
                 }
-                else if (m_bndConditions[i]->GetUserDefined() ==
-                            SpatialDomains::eMovingBody)
+                else if (m_bndConditions[i]->GetUserDefined()
+                            == SpatialDomains::eMovingBody)
                 {
                     locExpList = m_bndCondExpansions[i];
                     if (m_bndConditions[i]->GetBoundaryConditionType()
-                        == SpatialDomains::eDirichlet)
+                            == SpatialDomains::eDirichlet)
                     {
                         locExpList->FwdTrans_IterPerExp(
                                     locExpList->GetPhys(),

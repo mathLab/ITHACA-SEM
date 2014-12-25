@@ -1753,10 +1753,10 @@ namespace Nektar
         {
             if (m_comm->GetSize() > 1)
             {
-                int nProcZ = 1;
-                int nProcY = 1;
-                int nProcX = 1;
-				int nStripZ = 1;
+                int nProcZ  = 1;
+                int nProcY  = 1;
+                int nProcX  = 1;
+                int nStripZ = 1;
                 if (DefinesCmdLineArgument("npx")) {
                     nProcX = GetCmdLineArgument<int>("npx");
                 }
@@ -1775,19 +1775,20 @@ namespace Nektar
                          "Cannot exactly partition using PROC_Y value.");
                 ASSERTL0(nProcY % nProcX == 0,
                          "Cannot exactly partition using PROC_X value.");
-                
+
                 // Number of processes associated with the spectral method
                 int nProcSm  = nProcZ * nProcY * nProcX;
-				
+
                 // Number of processes associated with the spectral element
                 // method.
                 int nProcSem = m_comm->GetSize() / nProcSm;
-        		
+
                 m_comm->SplitComm(nProcSm,nProcSem);
                 m_comm->GetColumnComm()->SplitComm(nProcZ/nStripZ,nStripZ);
-				m_comm->GetColumnComm()->GetColumnComm()->SplitComm((nProcY*nProcX),nProcZ/nStripZ);
-                m_comm->GetColumnComm()->GetColumnComm()->GetColumnComm()->SplitComm(
-                    nProcX,nProcY);
+                m_comm->GetColumnComm()->GetColumnComm()->SplitComm(
+                                            (nProcY*nProcX),nProcZ/nStripZ);
+                m_comm->GetColumnComm()->GetColumnComm()->GetColumnComm()
+                                            ->SplitComm(nProcX,nProcY);
             }
         }
 

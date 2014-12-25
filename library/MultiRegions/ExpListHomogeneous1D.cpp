@@ -64,24 +64,22 @@ namespace Nektar
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,"Homogeneous Basis is a null basis");
             
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
-        
-            if(!m_session->DefinesSolverInfo("HomoStrip"))
-            {    
-                m_transposition = MemoryManager<LibUtilities::Transposition>::AllocateSharedPtr(HomoBasis,m_comm->GetColumnComm());
-            
-                m_planes = Array<OneD,ExpListSharedPtr>(m_homogeneousBasis->GetNumPoints()/m_comm->GetColumnComm()->GetSize());
-            }
-            else
-            {
-                m_StripZcomm = m_comm->GetColumnComm()->GetColumnComm();                
 
-                m_transposition = MemoryManager<LibUtilities::Transposition>::AllocateSharedPtr(HomoBasis,m_StripZcomm);
+            m_StripZcomm = m_session->DefinesSolverInfo("HomoStrip") ?
+                           m_comm->GetColumnComm()->GetColumnComm()  :
+                           m_comm->GetColumnComm();
 
-                m_planes = Array<OneD,ExpListSharedPtr>(m_homogeneousBasis->GetNumPoints()/m_StripZcomm->GetSize());    
-            }
+            m_transposition = MemoryManager<LibUtilities::Transposition>
+                                ::AllocateSharedPtr(HomoBasis, m_StripZcomm);
+
+            m_planes = Array<OneD,ExpListSharedPtr>(
+                                m_homogeneousBasis->GetNumPoints() /
+                                m_StripZcomm->GetSize());
+
             if(m_useFFT)
             {
-                m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_homogeneousBasis->GetNumPoints());
+                m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance(
+                                "NekFFTW", m_homogeneousBasis->GetNumPoints());
             }
 
             if(m_dealiasing)
@@ -945,17 +943,22 @@ namespace Nektar
                 {
                     if(!m_session->DefinesSolverInfo("HomoStrip"))
                     {
-                        ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+                        ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,
+                                 "Parallelisation in the homogeneous direction "
+                                 "implemented just for Fourier basis");
                     }
                     else
                     {
-                        ASSERTL0(m_StripZcomm->GetSize()            == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+                        ASSERTL0(m_StripZcomm->GetSize()            == 1,
+                                 "Parallelisation in the homogeneous direction "
+                                 "implemented just for Fourier basis");
                     }
 
                     if(m_WaveSpace)
                     {
-                        
-                        ASSERTL0(false,"Semi-phyisical time-stepping not implemented yet for non-Fourier basis");
+                        ASSERTL0(false, "Semi-phyisical time-stepping not "
+                                        "implemented yet for non-Fourier "
+                                        "basis");
                     }
                     else 
                     {

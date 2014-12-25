@@ -69,13 +69,13 @@ FilterMovingBody::FilterMovingBody(
         m_outputFile_fce = pParams.find("OutputFile")->second;
         m_outputFile_mot = pParams.find("OutputFile")->second;
     }
-    if (!(m_outputFile_fce.length() >= 4 && 
+    if (!(m_outputFile_fce.length() >= 4 &&
           m_outputFile_fce.substr(m_outputFile_fce.length() - 4) == ".fce"))
     {
         m_outputFile_fce += ".fce";
     }
 
-    if (!(m_outputFile_mot.length() >= 4 && 
+    if (!(m_outputFile_mot.length() >= 4 &&
           m_outputFile_mot.substr(m_outputFile_mot.length() - 4) == ".mot"))
     {
         m_outputFile_mot += ".mot";
@@ -135,7 +135,7 @@ void FilterMovingBody::v_Initialise(
             (std::string("Error reading boundary region definition:") +
              m_BoundaryString).c_str());
 
-    std::string IndString = m_BoundaryString.substr(FirstInd, 
+    std::string IndString = m_BoundaryString.substr(FirstInd,
                                                     LastInd - FirstInd + 1);
 
     bool parseGood = ParseUtils::GenerateSeqVector(IndString.c_str(),
@@ -148,7 +148,7 @@ void FilterMovingBody::v_Initialise(
     // determine what boundary regions need to be considered
     int cnt;
 
-    unsigned int numBoundaryRegions 
+    unsigned int numBoundaryRegions
                     = pFields[0]->GetBndConditions().num_elements();
 
     m_boundaryRegionIsInList.insert(m_boundaryRegionIsInList.end(),
@@ -156,7 +156,7 @@ void FilterMovingBody::v_Initialise(
 
     SpatialDomains::BoundaryConditions bcs(m_session,pFields[0]->GetGraph());
 
-    const SpatialDomains::BoundaryRegionCollection &bregions 
+    const SpatialDomains::BoundaryRegionCollection &bregions
                     = bcs.GetBoundaryRegions();
 
     SpatialDomains::BoundaryRegionCollection::const_iterator it;
@@ -221,7 +221,7 @@ void FilterMovingBody::v_Initialise(
 }
 
 
-/** 
+/**
  *
  */
 void FilterMovingBody::UpdateForce(
@@ -282,8 +282,8 @@ void FilterMovingBody::UpdateForce(
         pFields[i]->SetPhysState(true);
     }
 
-    // Get the number of local planes on the process and their IDs 
-    // to properly locate the forces in the Fx, Fy etc. vectors. 
+    // Get the number of local planes on the process and their IDs
+    // to properly locate the forces in the Fx, Fy etc. vectors.
     Array<OneD, unsigned int> ZIDs;
     ZIDs = pFields[0]->GetZIDs();
     int local_planes = ZIDs.num_elements();
@@ -375,7 +375,7 @@ void FilterMovingBody::UpdateForce(
                     //
                     // Compute viscous tractive forces on wall from
                     //
-                    //  t_i  = - T_ij * n_j  (minus sign for force 
+                    //  t_i  = - T_ij * n_j  (minus sign for force
                     //                        exerted BY fluid ON wall),
                     //
                     // where
@@ -509,9 +509,9 @@ void FilterMovingBody::UpdateForce(
         //set the forces imparted on the cable's wall
         for(int plane = 0 ; plane < local_planes; plane++)
         {
-            Aeroforces[plane]                = Fxp[ZIDs[plane]] 
+            Aeroforces[plane]                = Fxp[ZIDs[plane]]
                                              + Fxv[ZIDs[plane]];
-            Aeroforces[plane + local_planes] = Fyp[ZIDs[plane]] 
+            Aeroforces[plane + local_planes] = Fyp[ZIDs[plane]]
                                              + Fyv[ZIDs[plane]];
         }
 
@@ -527,7 +527,7 @@ void FilterMovingBody::UpdateForce(
         // Here we write it to file. We do it just on one porcess
 
         Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
-        Array<OneD, const NekDouble> pts 
+        Array<OneD, const NekDouble> pts
                             = pFields[0]->GetHomogeneousBasis()->GetZ();
 
         NekDouble LZ;
@@ -707,13 +707,13 @@ void FilterMovingBody::UpdateMotion(
         return;
     }
 
-    // Get the number of local planes on the process and their IDs 
-    // to properly locate the forces in the Fx, Fy etc. vectors. 
+    // Get the number of local planes on the process and their IDs
+    // to properly locate the forces in the Fx, Fy etc. vectors.
     Array<OneD, unsigned int> ZIDs;
     ZIDs = pFields[0]->GetZIDs();
     int local_planes = ZIDs.num_elements();
 
-    LibUtilities::CommSharedPtr vColComm 
+    LibUtilities::CommSharedPtr vColComm
                             = pFields[0]->GetComm()->GetColumnComm();
 
     //
@@ -721,7 +721,7 @@ void FilterMovingBody::UpdateMotion(
     {
         int Num_z_pos = pFields[0]->GetHomogeneousBasis()->GetNumModes();
         Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
-        Array<OneD, const NekDouble> pts 
+        Array<OneD, const NekDouble> pts
                             = pFields[0]->GetHomogeneousBasis()->GetZ();
 
         NekDouble LZ;

@@ -63,6 +63,7 @@ UpwindSolver::UpwindSolver() :
  * @param wL     z perturbation verlocity component left state.
  * @param wR     z perturbation verlocity component right state.
  * @param p0     Base pressure.
+ * @param rho0   Base density.
  * @param u0     Base x verlocity component
  * @param v0     Base y verlocity component
  * @param w0     Base z verlocity component
@@ -74,30 +75,28 @@ UpwindSolver::UpwindSolver() :
 void UpwindSolver::v_PointSolve(
     NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
     NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
-    NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
+    NekDouble  p0, NekDouble rho0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
     NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
 {
     // fetch params
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
-    ASSERTL1(CheckParams("Rho"), "Rho not defined.");
     const NekDouble &gamma= m_params["Gamma"]();
-    const NekDouble &rho = m_params["Rho"]();
 
     Array<OneD, NekDouble> characteristic(4);
     Array<OneD, NekDouble> W(2);
     Array<OneD, NekDouble> lambda(2);
 
     // compute the wave speeds
-    lambda[0]=u0 + sqrt(p0*gamma*rho)/rho;
-    lambda[1]=u0 - sqrt(p0*gamma*rho)/rho;
+    lambda[0]=u0 + sqrt(p0*gamma* rho0)/ rho0;
+    lambda[1]=u0 - sqrt(p0*gamma* rho0)/ rho0;
 
     // calculate the caracteristic variables
     //left characteristics
-    characteristic[0] = pL/2 + uL*sqrt(p0*gamma*rho)/2;
-    characteristic[1] = pL/2 - uL*sqrt(p0*gamma*rho)/2;
+    characteristic[0] = pL/2 + uL*sqrt(p0*gamma* rho0)/2;
+    characteristic[1] = pL/2 - uL*sqrt(p0*gamma* rho0)/2;
     //right characteristics
-    characteristic[2] = pR/2 + uR*sqrt(p0*gamma*rho)/2;
-    characteristic[3] = pR/2 - uR*sqrt(p0*gamma*rho)/2;
+    characteristic[2] = pR/2 + uR*sqrt(p0*gamma* rho0)/2;
+    characteristic[3] = pR/2 - uR*sqrt(p0*gamma* rho0)/2;
 
     //take left or right value of characteristic variable
     for (int j = 0; j < 2; j++)
@@ -114,16 +113,16 @@ void UpwindSolver::v_PointSolve(
 
     //calculate conservative variables from characteristics
     NekDouble p = W[0]+W[1];
-    NekDouble u = (W[0]-W[1])/sqrt(p0*gamma*rho);
+    NekDouble u = (W[0]-W[1])/sqrt(p0*gamma* rho0);
     // do not divide by zero
-    if (p0*gamma*rho == 0)
+    if (p0*gamma* rho0 == 0)
     {
         u = 0.0;
     }
 
     // assemble the fluxes
     pF = gamma*p0 * u + u0*p;
-    uF = p/rho + u0*u + v0*vL + w0*wL;
+    uF = p/ rho0 + u0*u + v0*vL + w0*wL;
     vF = 0.0;
     wF = 0.0;
 }

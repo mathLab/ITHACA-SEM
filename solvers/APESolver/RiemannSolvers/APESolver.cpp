@@ -72,7 +72,7 @@ void APESolver::v_Solve(
             v_PointSolve(
                 Fwd[0][i],       Fwd[1][i],       0.0,               0.0,
                 Bwd[0][i],       Bwd[1][i],       0.0,               0.0,
-                basefield[0][i], basefield[1][i], 0.0,               0.0,
+                basefield[0][i], basefield[1][i], basefield[2][i],   0.0,  0.0,
                 flux[0][i],      flux[1][i],      uF,                vF);
         }
     }
@@ -83,7 +83,7 @@ void APESolver::v_Solve(
             v_PointSolve(
                 Fwd[0][i],       Fwd[1][i],       Fwd[2][i],         0.0,
                 Bwd[0][i],       Bwd[1][i],       Bwd[2][i],         0.0,
-                basefield[0][i], basefield[1][i], basefield[2][i],   0.0,
+                basefield[0][i], basefield[1][i], basefield[2][i],   basefield[3][i],   0.0,
                 flux[0][i],      flux[1][i],      flux[2][i],        vF);
         }
     }
@@ -94,9 +94,8 @@ void APESolver::v_Solve(
             v_PointSolve(
                 Fwd[0][i],       Fwd[1][i],       Fwd[2][i],         Fwd[3][i],
                 Bwd[0][i],       Bwd[1][i],       Bwd[2][i],         Bwd[3][i],
-                basefield[0][i], basefield[1][i], basefield[2][i],   basefield[3][i],
+                basefield[0][i], basefield[1][i], basefield[2][i],   basefield[3][i], basefield[4][i],
                 flux[0][i],      flux[1][i],      flux[2][i],        flux[3][i]);
-
         }
     }
 }
@@ -116,8 +115,8 @@ Array< OneD, Array< OneD, NekDouble > > APESolver::GetRotBasefield()
     int nTracePts = normals[0].num_elements();
     int nDim = normals.num_elements();
 
-    Array< OneD, Array< OneD, NekDouble > > rotBasefield(nDim+1);
-    for (int i = 0; i < nDim + 1; i++)
+    Array< OneD, Array< OneD, NekDouble > > rotBasefield(nDim+2);
+    for (int i = 0; i < nDim + 2; i++)
     {
         rotBasefield[i] = Array<OneD, NekDouble>(nTracePts);
     }
@@ -125,7 +124,7 @@ Array< OneD, Array< OneD, NekDouble > > APESolver::GetRotBasefield()
     baseVecLocs[0] = Array<OneD, NekDouble>(nDim);
     for (int i = 0; i < nDim; ++i)
     {
-        baseVecLocs[0][i] = 1+i;
+        baseVecLocs[0][i] = i + 2;
     }
     rotateToNormal(basefield, normals, baseVecLocs, rotBasefield);
 

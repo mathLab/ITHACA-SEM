@@ -73,8 +73,6 @@ class APE : public UnsteadySystem
         SolverUtils::RiemannSolverSharedPtr             m_riemannSolver;
         Array<OneD, Array<OneD, NekDouble> >            m_traceBasefield;
         Array<OneD, Array<OneD, NekDouble> >            m_vecLocs;
-        /// Constant incompressible density (APE)
-        NekDouble                                       m_Rho0;
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
         Array<OneD, Array<OneD, NekDouble> >            m_basefield;
@@ -112,8 +110,6 @@ class APE : public UnsteadySystem
         const Array<OneD, const Array<OneD, NekDouble> > &GetBasefield();
 
         NekDouble GetGamma();
-
-        NekDouble GetRho();
 
         void UpdateBasefield();
 

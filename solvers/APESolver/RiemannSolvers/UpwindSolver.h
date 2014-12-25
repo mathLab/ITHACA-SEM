@@ -61,7 +61,7 @@ protected:
     virtual void v_PointSolve(
         NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
         NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
-        NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
+        NekDouble  p0, NekDouble rho0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
         NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF);
 };
 

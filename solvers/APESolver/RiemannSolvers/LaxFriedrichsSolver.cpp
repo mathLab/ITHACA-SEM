@@ -66,6 +66,7 @@ LaxFriedrichsSolver::LaxFriedrichsSolver() :
  * @param wL     z perturbation verlocity component left state.
  * @param wR     z perturbation verlocity component right state.
  * @param p0     Base pressure.
+ * @param rho0   Base density.
  * @param u0     Base x verlocity component
  * @param v0     Base y verlocity component
  * @param w0     Base z verlocity component
@@ -77,27 +78,25 @@ LaxFriedrichsSolver::LaxFriedrichsSolver() :
 void LaxFriedrichsSolver::v_PointSolve(
     NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
     NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
-    NekDouble  p0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
+    NekDouble  p0, NekDouble rho0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
     NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
 {
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
-    ASSERTL1(CheckParams("Rho"), "Rho not defined.");
     const NekDouble &gamma= m_params["Gamma"]();
-    const NekDouble &rho = m_params["Rho"]();
 
     // Speed of sound
-    NekDouble c = sqrt(gamma*p0/rho);
+    NekDouble c = sqrt(gamma*p0/ rho0);
 
     // max absolute eigenvalue of the jacobian of F_n1
     NekDouble a_1_max = std::max(std::abs(u0 - c), std::abs(u0 + c));
 
     NekDouble pFL = gamma*p0*uL + pL*u0;
-    NekDouble uFL = pL/rho + u0*uL + v0*vL + w0*wL;
+    NekDouble uFL = pL/ rho0 + u0*uL + v0*vL + w0*wL;
     NekDouble vFL = 0;
     NekDouble wFL = 0;
 
     NekDouble pFR = gamma*p0*uR + pR*u0;
-    NekDouble uFR = pR/rho + u0*uR + v0*vR + w0*wR;
+    NekDouble uFR = pR/ rho0 + u0*uR + v0*vR + w0*wR;
     NekDouble vFR = 0;
     NekDouble wFR = 0;
 

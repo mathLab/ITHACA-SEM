@@ -63,17 +63,20 @@ FilterMovingBody::FilterMovingBody(
     }
     else
     {
-        ASSERTL0(!(pParams.find("OutputFile")->second.empty()),"Missing parameter 'OutputFile'.");
+        ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
+                 "Missing parameter 'OutputFile'.");
 
         m_outputFile_fce = pParams.find("OutputFile")->second;
         m_outputFile_mot = pParams.find("OutputFile")->second;
     }
-    if (!(m_outputFile_fce.length() >= 4 && m_outputFile_fce.substr(m_outputFile_fce.length() - 4) == ".fce"))
+    if (!(m_outputFile_fce.length() >= 4 && 
+          m_outputFile_fce.substr(m_outputFile_fce.length() - 4) == ".fce"))
     {
         m_outputFile_fce += ".fce";
     }
 
-    if (!(m_outputFile_mot.length() >= 4 && m_outputFile_mot.substr(m_outputFile_mot.length() - 4) == ".mot"))
+    if (!(m_outputFile_mot.length() >= 4 && 
+          m_outputFile_mot.substr(m_outputFile_mot.length() - 4) == ".mot"))
     {
         m_outputFile_mot += ".mot";
     }
@@ -83,13 +86,14 @@ FilterMovingBody::FilterMovingBody(
     }
     else
     {
-        m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
+        m_outputFrequency = atoi(
+                        pParams.find("OutputFrequency")->second.c_str());
     }
-
 
     pSession->MatchSolverInfo("Homogeneous", "1D", m_isHomogeneous1D, false);
 
-    ASSERTL0(m_isHomogeneous1D,"Moving Body implemented just for 3D Homogeneous 1D discetisations.");
+    ASSERTL0(m_isHomogeneous1D, "Moving Body implemented just for 3D "
+                                "Homogeneous 1D discetisations.");
 
     //specify the boundary to calculate the forces
     if (pParams.find("Boundary") == pParams.end())
@@ -104,6 +108,7 @@ FilterMovingBody::FilterMovingBody(
     }
 }
 
+
 /**
  *
  */
@@ -111,6 +116,7 @@ FilterMovingBody::~FilterMovingBody()
 {
 
 }
+
 
 /**
  *
@@ -129,9 +135,11 @@ void FilterMovingBody::v_Initialise(
             (std::string("Error reading boundary region definition:") +
              m_BoundaryString).c_str());
 
-    std::string IndString = m_BoundaryString.substr(FirstInd, LastInd - FirstInd + 1);
+    std::string IndString = m_BoundaryString.substr(FirstInd, 
+                                                    LastInd - FirstInd + 1);
 
-    bool parseGood = ParseUtils::GenerateSeqVector(IndString.c_str(),m_boundaryRegionsIdList);
+    bool parseGood = ParseUtils::GenerateSeqVector(IndString.c_str(),
+                                                   m_boundaryRegionsIdList);
 
     ASSERTL0(parseGood && !m_boundaryRegionsIdList.empty(),
              (std::string("Unable to read boundary regions index "
@@ -140,13 +148,16 @@ void FilterMovingBody::v_Initialise(
     // determine what boundary regions need to be considered
     int cnt;
 
-    unsigned int numBoundaryRegions = pFields[0]->GetBndConditions().num_elements();
+    unsigned int numBoundaryRegions 
+                    = pFields[0]->GetBndConditions().num_elements();
 
-    m_boundaryRegionIsInList.insert(m_boundaryRegionIsInList.end(),numBoundaryRegions, 0);
+    m_boundaryRegionIsInList.insert(m_boundaryRegionIsInList.end(),
+                                    numBoundaryRegions, 0);
 
     SpatialDomains::BoundaryConditions bcs(m_session,pFields[0]->GetGraph());
 
-    const SpatialDomains::BoundaryRegionCollection &bregions = bcs.GetBoundaryRegions();
+    const SpatialDomains::BoundaryRegionCollection &bregions 
+                    = bcs.GetBoundaryRegions();
 
     SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
@@ -209,16 +220,18 @@ void FilterMovingBody::v_Initialise(
     }
 }
 
+
 /** 
  *
  */
-void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &pSession,
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-          Array<OneD, NekDouble> &Aeroforces,
-    const NekDouble &time)
-{   
-    int n, cnt, elmtid, nq, offset, nt, boundary;
-    nt = pFields[0]->GetNpoints();
+void FilterMovingBody::UpdateForce(
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+              Array<OneD, NekDouble> &Aeroforces,
+        const NekDouble &time)
+{
+    int n, cnt, elmtid, nq, offset, boundary;
+    int nt  = pFields[0]->GetNpoints();
     int dim = pFields.num_elements()-1;
 
     StdRegions::StdExpansionSharedPtr elmt;
@@ -239,7 +252,10 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
     Array<OneD, Array<OneD, NekDouble> > fgradV(dim);
     Array<OneD, Array<OneD, NekDouble> > fgradW(dim);
 
-    LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
+    LibUtilities::CommSharedPtr vComm     = pFields[0]->GetComm();
+    LibUtilities::CommSharedPtr vRowComm  = vComm->GetRowComm();
+    LibUtilities::CommSharedPtr vColComm  = vComm->GetColumnComm();
+    LibUtilities::CommSharedPtr vCColComm = vColComm->GetColumnComm();
 
     // set up storage space for forces on all the planes (z-positions)
     // on each processors some of them will remain empty as we may
@@ -276,7 +292,8 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
     // This only has to be done on the zero (mean) Fourier mode.
     for(int plane = 0 ; plane < local_planes; plane++)
     {
-        pFields[0]->GetPlane(plane)->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);
+        pFields[0]->GetPlane(plane)->GetBoundaryToElmtMap(BoundarytoElmtID,
+                                                          BoundarytoTraceID);
         BndExp = pFields[0]->GetPlane(plane)->GetBndCondExpansions();
         StdRegions::StdExpansionSharedPtr bc;
 
@@ -291,7 +308,8 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
                     elmtid = BoundarytoElmtID[cnt];
                     elmt   = pFields[0]->GetPlane(plane)->GetExp(elmtid);
                     nq     = elmt->GetTotPoints();
-                    offset = pFields[0]->GetPlane(plane)->GetPhys_Offset(elmtid);
+                    offset = pFields[0]->GetPlane(plane)
+                                       ->GetPhys_Offset(elmtid);
 
                     // Initialise local arrays for the velocity
                     // gradients size of total number of quadrature
@@ -316,7 +334,7 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
                     elmt->PhysDeriv(V,gradV[0],gradV[1]);
 
                     // Get face 1D expansion from element expansion
-                    bc =  boost::dynamic_pointer_cast<LocalRegions::Expansion1D> (BndExp[n]->GetExp(i));
+                    bc = BndExp[n]->GetExp(i)->as<LocalRegions::Expansion1D>();
 
                     // number of points on the boundary
                     int nbc = bc->GetTotPoints();
@@ -351,7 +369,8 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
                     }
 
                     //normals of the element
-                    const Array<OneD, Array<OneD, NekDouble> > &normals= elmt->GetEdgeNormal(boundary);
+                    const Array<OneD, Array<OneD, NekDouble> > &normals
+                                            = elmt->GetEdgeNormal(boundary);
 
                     //
                     // Compute viscous tractive forces on wall from
@@ -370,40 +389,42 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
                     //a) DRAG TERMS
                     //-rho*kinvis*(2*du/dx*nx+(du/dy+dv/dx)*ny)
 
-                    Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
-                    Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
+                    Vmath::Vadd(nbc, fgradU[1], 1, fgradV[0],  1, drag_t,    1);
+                    Vmath::Vmul(nbc, drag_t,    1, normals[1], 1, drag_t,    1);
 
-                    Vmath::Smul(nbc,2.0,fgradU[0],1,fgradU[0],1);
-                    Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
-                    Vmath::Smul(nbc,0.5,fgradU[0],1,fgradU[0],1);
+                    Vmath::Smul(nbc, 2.0,          fgradU[0],  1, fgradU[0], 1);
+                    Vmath::Vmul(nbc, fgradU[0], 1, normals[0], 1, temp2,     1);
+                    Vmath::Smul(nbc, 0.5,          fgradU[0],  1, fgradU[0], 1);
 
-                    Vmath::Vadd(nbc,temp2,1,drag_t,1,drag_t,1);
-                    Vmath::Smul(nbc,-mu,drag_t,1,drag_t,1);
+                    Vmath::Vadd(nbc, temp2,     1, drag_t,     1, drag_t,    1);
+                    Vmath::Smul(nbc, -mu,          drag_t,     1, drag_t,    1);
 
                     //zero temporary storage vector
-                    Vmath::Zero(nbc,temp,0);
-                    Vmath::Zero(nbc,temp2,0);
+                    Vmath::Zero(nbc, temp,  0.0);
+                    Vmath::Zero(nbc, temp2, 0.0);
 
 
                     //b) LIFT TERMS
                     //-rho*kinvis*(2*dv/dy*ny+(du/dy+dv/dx)*nx)
 
-                    Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
-                    Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
+                    Vmath::Vadd(nbc, fgradU[1], 1, fgradV[0],  1, lift_t,    1);
+                    Vmath::Vmul(nbc, lift_t,    1, normals[0], 1, lift_t,    1);
 
-                    Vmath::Smul(nbc,2.0,fgradV[1],1,fgradV[1],1);
-                    Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
-                    Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
+                    Vmath::Smul(nbc, 2.0,          fgradV[1],  1, fgradV[1], 1);
+                    Vmath::Vmul(nbc, fgradV[1], 1, normals[1], 1, temp2,     1);
+                    Vmath::Smul(nbc, -0.5,         fgradV[1],  1, fgradV[1], 1);
 
 
-                    Vmath::Vadd(nbc,temp2,1,lift_t,1,lift_t,1);
-                    Vmath::Smul(nbc,-mu,lift_t,1,lift_t,1);
+                    Vmath::Vadd(nbc, temp2,     1, lift_t,     1, lift_t,    1);
+                    Vmath::Smul(nbc, -mu,          lift_t,     1, lift_t,    1);
 
                     // Compute normal tractive forces on all WALL
                     // boundaries
 
-                    Vmath::Vvtvp(nbc,Pb,1,normals[0],1,drag_p,1,drag_p,1);
-                    Vmath::Vvtvp(nbc,Pb,1,normals[1],1,lift_p,1,lift_p,1);
+                    Vmath::Vvtvp(nbc, Pb,       1, normals[0], 1, drag_p,    1,
+                                                                  drag_p,    1);
+                    Vmath::Vvtvp(nbc, Pb,       1, normals[1], 1, lift_p,    1,
+                                                                  lift_p,    1);
 
                     //integration over the boundary
                     Fxv[ZIDs[plane]] += bc->Integral(drag_t);
@@ -443,17 +464,17 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
         // routine wich can handle arrays more efficiently
         for(int plane = 0 ; plane < local_planes; plane++)
         {
-            vComm->GetRowComm()->AllReduce(Fxp[ZIDs[plane]], LibUtilities::ReduceSum);
-            vComm->GetRowComm()->AllReduce(Fxv[ZIDs[plane]], LibUtilities::ReduceSum);
-            vComm->GetRowComm()->AllReduce(Fyp[ZIDs[plane]], LibUtilities::ReduceSum);
-            vComm->GetRowComm()->AllReduce(Fyv[ZIDs[plane]], LibUtilities::ReduceSum);
+            vRowComm->AllReduce(Fxp[ZIDs[plane]], LibUtilities::ReduceSum);
+            vRowComm->AllReduce(Fxv[ZIDs[plane]], LibUtilities::ReduceSum);
+            vRowComm->AllReduce(Fyp[ZIDs[plane]], LibUtilities::ReduceSum);
+            vRowComm->AllReduce(Fyv[ZIDs[plane]], LibUtilities::ReduceSum);
         }
     }
 
     // At this point on rank (0,n) of the Mesh partion communicator we have
-    // the total areo forces on the planes which are on the same column communicator.
-    // Since the planes are scattered on different processors some of the entries
-    // of the vector Fxp, Fxp etc. are still zero.
+    // the total areo forces on the planes which are on the same column
+    // communicator. Since the planes are scattered on different processors
+    // some of the entries of the vector Fxp, Fxp etc. are still zero.
     // Now we need to reduce the values on a single vector on rank (0,0) of the
     // global communicator.
     if(!pSession->DefinesSolverInfo("HomoStrip"))
@@ -462,10 +483,10 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
         {
             for(int z = 0 ; z < Num_z_pos; z++)
             {
-                vComm->GetColumnComm()->AllReduce(Fxp[z], LibUtilities::ReduceSum);
-                vComm->GetColumnComm()->AllReduce(Fxv[z], LibUtilities::ReduceSum);
-                vComm->GetColumnComm()->AllReduce(Fyp[z], LibUtilities::ReduceSum);
-                vComm->GetColumnComm()->AllReduce(Fyv[z], LibUtilities::ReduceSum);
+                vColComm->AllReduce(Fxp[z], LibUtilities::ReduceSum);
+                vColComm->AllReduce(Fxv[z], LibUtilities::ReduceSum);
+                vColComm->AllReduce(Fyp[z], LibUtilities::ReduceSum);
+                vColComm->AllReduce(Fyv[z], LibUtilities::ReduceSum);
             }
         }
     }
@@ -475,10 +496,10 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
         {
             for(int z = 0 ; z < Num_z_pos; z++)
             {
-                vComm->GetColumnComm()->GetColumnComm()->AllReduce(Fxp[z], LibUtilities::ReduceSum);
-                vComm->GetColumnComm()->GetColumnComm()->AllReduce(Fxv[z], LibUtilities::ReduceSum);
-                vComm->GetColumnComm()->GetColumnComm()->AllReduce(Fyp[z], LibUtilities::ReduceSum);
-                vComm->GetColumnComm()->GetColumnComm()->AllReduce(Fyv[z], LibUtilities::ReduceSum);
+                vCColComm->AllReduce(Fxp[z], LibUtilities::ReduceSum);
+                vCColComm->AllReduce(Fxv[z], LibUtilities::ReduceSum);
+                vCColComm->AllReduce(Fyp[z], LibUtilities::ReduceSum);
+                vCColComm->AllReduce(Fyv[z], LibUtilities::ReduceSum);
             }
         }
     }
@@ -488,8 +509,10 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
         //set the forces imparted on the cable's wall
         for(int plane = 0 ; plane < local_planes; plane++)
         {
-            Aeroforces[plane]                = Fxp[ZIDs[plane]] + Fxv[ZIDs[plane]];
-            Aeroforces[plane + local_planes] = Fyp[ZIDs[plane]] + Fyv[ZIDs[plane]];
+            Aeroforces[plane]                = Fxp[ZIDs[plane]] 
+                                             + Fxv[ZIDs[plane]];
+            Aeroforces[plane + local_planes] = Fyp[ZIDs[plane]] 
+                                             + Fyv[ZIDs[plane]];
         }
 
         // Only output every m_outputFrequency.
@@ -504,7 +527,8 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
         // Here we write it to file. We do it just on one porcess
 
         Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
-        Array<OneD, const NekDouble> pts = pFields[0]->GetHomogeneousBasis()->GetZ();
+        Array<OneD, const NekDouble> pts 
+                            = pFields[0]->GetHomogeneousBasis()->GetZ();
 
         NekDouble LZ;
         pSession->LoadParameter("LZ", LZ);
@@ -563,12 +587,12 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
         fces[5] = fces[5]/local_planes;
 
         // average the forces over communicators within each strip
-        vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[0], LibUtilities::ReduceSum);
-        vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[1], LibUtilities::ReduceSum);
-        vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[2], LibUtilities::ReduceSum);
-        vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[3], LibUtilities::ReduceSum);
-        vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[4], LibUtilities::ReduceSum);
-        vComm->GetColumnComm()->GetColumnComm()->AllReduce(fces[5], LibUtilities::ReduceSum);
+        vCColComm->AllReduce(fces[0], LibUtilities::ReduceSum);
+        vCColComm->AllReduce(fces[1], LibUtilities::ReduceSum);
+        vCColComm->AllReduce(fces[2], LibUtilities::ReduceSum);
+        vCColComm->AllReduce(fces[3], LibUtilities::ReduceSum);
+        vCColComm->AllReduce(fces[4], LibUtilities::ReduceSum);
+        vCColComm->AllReduce(fces[5], LibUtilities::ReduceSum);
 
         int npts = vComm->GetColumnComm()->GetColumnComm()->GetSize();
 
@@ -591,7 +615,7 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
             return;
         }
 
-        int colrank = vComm->GetColumnComm()->GetRank();
+        int colrank = vColComm->GetRank();
         int nstrips;
 
         NekDouble DistStrip;
@@ -630,7 +654,7 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
 
             for(int i = 1; i < nstrips; i++)
             {
-                vComm->GetColumnComm()->Recv(i, fces);
+                vColComm->Recv(i, fces);
 
                 m_outputStream[0].width(8);
                 m_outputStream[0] << setprecision(6) << time;
@@ -660,20 +684,22 @@ void FilterMovingBody::UpdateForce(const LibUtilities::SessionReaderSharedPtr &p
             {
                 if(colrank == i)
                 {
-                    vComm->GetColumnComm()->Send(0, fces);
+                    vColComm->Send(0, fces);
                 }
             }
         }
     }
 }
 
+
 /**
  *
  */
-void FilterMovingBody::UpdateMotion(const LibUtilities::SessionReaderSharedPtr &pSession,
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-          Array<OneD, NekDouble> &MotionVars,
-    const NekDouble &time)
+void FilterMovingBody::UpdateMotion(
+        const LibUtilities::SessionReaderSharedPtr              &pSession,
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+              Array<OneD, NekDouble>                            &MotionVars,
+        const NekDouble                                         &time)
 {
     // Only output every m_outputFrequency.
     if ((m_index++) % m_outputFrequency)
@@ -687,14 +713,16 @@ void FilterMovingBody::UpdateMotion(const LibUtilities::SessionReaderSharedPtr &
     ZIDs = pFields[0]->GetZIDs();
     int local_planes = ZIDs.num_elements();
 
-    LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
+    LibUtilities::CommSharedPtr vColComm 
+                            = pFields[0]->GetComm()->GetColumnComm();
 
     //
     if(!pSession->DefinesSolverInfo("HomoStrip"))
     {
         int Num_z_pos = pFields[0]->GetHomogeneousBasis()->GetNumModes();
         Array<OneD, NekDouble> z_coords(Num_z_pos,0.0);
-        Array<OneD, const NekDouble> pts = pFields[0]->GetHomogeneousBasis()->GetZ();
+        Array<OneD, const NekDouble> pts 
+                            = pFields[0]->GetHomogeneousBasis()->GetZ();
 
         NekDouble LZ;
         pSession->LoadParameter("LZ", LZ);
@@ -738,15 +766,15 @@ void FilterMovingBody::UpdateMotion(const LibUtilities::SessionReaderSharedPtr &
         CableVelocY = Array <OneD, NekDouble>(npoints);
         CableDisplY = Array <OneD, NekDouble>(npoints);
 
-        Vmath::Vcopy(npoints,Motion_x[0],1,CableDisplX,1);
-        Vmath::Vcopy(npoints,Motion_x[1],1,CableVelocX,1);
-        Vmath::Vcopy(npoints,Motion_x[2],1,CableAccelX,1);
-        Vmath::Vcopy(npoints,Motion_y[0],1,CableDisplY,1);
-        Vmath::Vcopy(npoints,Motion_y[1],1,CableVelocY,1);
-        Vmath::Vcopy(npoints,Motion_y[2],1,CableAccelY,1);
+        Vmath::Vcopy(npoints, Motion_x[0], 1, CableDisplX, 1);
+        Vmath::Vcopy(npoints, Motion_x[1], 1, CableVelocX, 1);
+        Vmath::Vcopy(npoints, Motion_x[2], 1, CableAccelX, 1);
+        Vmath::Vcopy(npoints, Motion_y[0], 1, CableDisplY, 1);
+        Vmath::Vcopy(npoints, Motion_y[1], 1, CableVelocY, 1);
+        Vmath::Vcopy(npoints, Motion_y[2], 1, CableAccelY, 1);
 
-        int colrank = vComm->GetColumnComm()->GetRank();
-        int nproc   = vComm->GetColumnComm()->GetSize();
+        int colrank = vColComm->GetRank();
+        int nproc   = vColComm->GetSize();
         // Send to root process.
         if (colrank == 0)
         {
@@ -773,12 +801,12 @@ void FilterMovingBody::UpdateMotion(const LibUtilities::SessionReaderSharedPtr &
 
             for (int i = 1; i < nproc; ++i)
             {
-                vComm->GetColumnComm()->Recv(i, CableAccelX);
-                vComm->GetColumnComm()->Recv(i, CableVelocX);
-                vComm->GetColumnComm()->Recv(i, CableDisplX);
-                vComm->GetColumnComm()->Recv(i, CableAccelY);
-                vComm->GetColumnComm()->Recv(i, CableVelocY);
-                vComm->GetColumnComm()->Recv(i, CableDisplY);
+                vColComm->Recv(i, CableAccelX);
+                vColComm->Recv(i, CableVelocX);
+                vColComm->Recv(i, CableDisplX);
+                vColComm->Recv(i, CableAccelY);
+                vColComm->Recv(i, CableVelocY);
+                vColComm->Recv(i, CableDisplY);
 
 
                 for (int j = 0; j < Motion_x[0].num_elements(); ++j)
@@ -806,17 +834,17 @@ void FilterMovingBody::UpdateMotion(const LibUtilities::SessionReaderSharedPtr &
         }
         else
         {
-            vComm->GetColumnComm()->Send(0, CableAccelX);
-            vComm->GetColumnComm()->Send(0, CableVelocX);
-            vComm->GetColumnComm()->Send(0, CableDisplX);
-            vComm->GetColumnComm()->Send(0, CableAccelY);
-            vComm->GetColumnComm()->Send(0, CableVelocY);
-            vComm->GetColumnComm()->Send(0, CableDisplY);
+            vColComm->Send(0, CableAccelX);
+            vColComm->Send(0, CableVelocX);
+            vColComm->Send(0, CableDisplX);
+            vColComm->Send(0, CableAccelY);
+            vColComm->Send(0, CableVelocY);
+            vColComm->Send(0, CableDisplY);
         }
     }
     else
     {
-        int colrank = vComm->GetColumnComm()->GetRank();
+        int colrank = vColComm->GetRank();
         int nstrips;
 
         NekDouble DistStrip;
@@ -895,19 +923,20 @@ void FilterMovingBody::UpdateMotion(const LibUtilities::SessionReaderSharedPtr &
             {
                 if(colrank == i)
                 {
-                    vComm->GetColumnComm()->Send(0, CableMotions);
+                    vColComm->Send(0, CableMotions);
                 }
             }
         }
     }
 }
 
+
 /**
  *
  */
 void FilterMovingBody::v_Finalise(
-    const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-    const NekDouble &time)
+        const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
+        const NekDouble                                         &time)
 {
     if (pFields[0]->GetComm()->GetRank() == 0)
     {

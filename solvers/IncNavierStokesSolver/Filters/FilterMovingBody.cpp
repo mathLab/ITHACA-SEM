@@ -903,7 +903,7 @@ void FilterMovingBody::UpdateMotion(
 
             for (int i = 1; i < nstrips; ++i)
             {
-                vComm->GetColumnComm()->Recv(i, CableMotions);
+                vColComm->Recv(i, CableMotions);
 
                 m_outputStream[1].width(8);
                 m_outputStream[1] << setprecision(6) << time;

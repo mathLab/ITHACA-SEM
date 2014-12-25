@@ -346,7 +346,7 @@ namespace Nektar
                 ("npz",          po::value<int>(),
                                  "number of procs in Z-dir")
                 ("nsz",          po::value<int>(),
-                                 "number of slics in Z-dir")
+                                 "number of slices in Z-dir")
                 ("part-only",    po::value<int>(),
                                  "only partition mesh into N partitions.")
                 ("part-info",    "Output partition information")

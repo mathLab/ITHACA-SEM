@@ -394,14 +394,17 @@ namespace Nektar
             outfile << "      <PointData>" << endl;
         }
 
-        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion, int istrip)
+        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(
+                std::ofstream   &outfile,
+                int              expansion,
+                int              istrip)
         {
             int i,j,k;
-            int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
-            int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
-            int nquad2 = m_planes.num_elements();
-            int ntot = nquad0*nquad1*nquad2;
-            int ntotminus = (nquad0-1)*(nquad1-1)*(nquad2-1);
+            int nq0 = (*m_exp)[expansion]->GetNumPoints(0);
+            int nq1 = (*m_exp)[expansion]->GetNumPoints(1);
+            int nq2 = m_planes.num_elements();
+            int ntot = nq0*nq1*nq2;
+            int ntotminus = (nq0-1)*(nq1-1)*(nq2-1);
 
             Array<OneD,NekDouble> coords[3];
             coords[0] = Array<OneD,NekDouble>(ntot);
@@ -437,20 +440,20 @@ namespace Nektar
             outfile << "      <Cells>" << endl;
             outfile << "        <DataArray type=\"Int32\" "
                     << "Name=\"connectivity\" format=\"ascii\">" << endl;
-            for (i = 0; i < nquad0-1; ++i)
+            for (i = 0; i < nq0-1; ++i)
             {
-                for (j = 0; j < nquad1-1; ++j)
+                for (j = 0; j < nq1-1; ++j)
                 {
-                    for (k = 0; k < nquad2-1; ++k)
+                    for (k = 0; k < nq2-1; ++k)
                     {
-                        outfile << k*nquad0*nquad1 + j*nquad0 + i << " "
-                                << k*nquad0*nquad1 + j*nquad0 + i + 1 << " "
-                                << k*nquad0*nquad1 + (j+1)*nquad0 + i + 1 << " "
-                                << k*nquad0*nquad1 + (j+1)*nquad0 + i << " "
-                                << (k+1)*nquad0*nquad1 + j*nquad0 + i << " "
-                                << (k+1)*nquad0*nquad1 + j*nquad0 + i + 1 << " "
-                                << (k+1)*nquad0*nquad1 + (j+1)*nquad0 + i + 1 << " "
-                                << (k+1)*nquad0*nquad1 + (j+1)*nquad0 + i << " " << endl;
+                        outfile << k*nq0*nq1     + j*nq0     + i     << " "
+                                << k*nq0*nq1     + j*nq0     + i + 1 << " "
+                                << k*nq0*nq1     + (j+1)*nq0 + i + 1 << " "
+                                << k*nq0*nq1     + (j+1)*nq0 + i     << " "
+                                << (k+1)*nq0*nq1 + j*nq0     + i     << " "
+                                << (k+1)*nq0*nq1 + j*nq0     + i + 1 << " "
+                                << (k+1)*nq0*nq1 + (j+1)*nq0 + i + 1 << " "
+                                << (k+1)*nq0*nq1 + (j+1)*nq0 + i     << endl;
                     }
                 }
             }

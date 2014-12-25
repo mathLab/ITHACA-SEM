@@ -29,8 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Moving Body forcing (movement of a body in a domain is achieved via
-// a forcing term which is the results of a coordinate system motion)
+// Description: Moving Body forcing (movement of a body in a domain is achieved
+// via a forcing term which is the results of a coordinate system motion)
 //
 ///////////////////////////////////////////////////////////////////////////////
 

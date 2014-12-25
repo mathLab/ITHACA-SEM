@@ -464,6 +464,98 @@ the session file:
 \item \inltt{SVVDiffCoeff}: sets the SVV diffusion coefficient (default value = 0.1) 
 \end{itemize}
 
+\subsection{Forcing}
+\subsubsection{MovingBody}
+
+\begin{notebox}
+  This force type is only supported for the Quasi-3D incompressible Navier-Stokes solver.
+\end{notebox}
+
+This force type allows the user to solve the interaction system of an incompressible fluid flowing past a flexible moving bodies ~\cite{NeKa97}. By this forcing function, one can eliminate the difficulty of moving mesh by using body-fitted coordinates, so that an additional acceleration term(i.e., forcing term) is introduced to the momentum equations by the non-inertial transform from the deformed and moving coordinate system to non-deformed and stationary one. 
+
+\begin{lstlisting}[style=XMLStyle] 
+<FORCE TYPE="MovingBody">
+</FORCE>
+\end{lstlisting}
+
+Available options of the motion type for the moving body include free, constrained and forced vibrations, which can be specified in the \inltt{SOLVERINFO} section. The free type of motion allows the body to move in both streamwise and crossflow directions, while the constrained type limits the motion only in the crossflow direction. For the forced type, the vibration profiles of the body should be specified as a given function or read from input file in \inltt{MovingBody} section. here an example,
+
+\begin{lstlisting}[style=XMLStyle] 
+<SOLVERINFO> 
+    <I PROPERTY="EQTYPE"    VALUE="UnsteadyNavierStokes" />
+    <I PROPERTY="SolverType"    VALUE="VelocityCorrectionScheme" />
+    <I PROPERTY="EvolutionOperator"    VALUE="SkewSymmetric" />
+    <I PROPERTY="Projection"    VALUE="Galerkin" />
+    <I PROPERTY="GlobalSysSoln"    VALUE="DirectStaticCond"/>
+    <I PROPERTY="TimeIntegrationMethod"    VALUE="IMEXOrder2" />
+    <I PROPERTY="HOMOGENEOUS"    VALUE="1D"/>
+    <I PROPERTY="USEFFT"    VALUE="FFTW"/>
+    <I PROPERTY="VibrationType"    VALUE="FREE"/>
+</SOLVERINFO>
+\end{lstlisting}
+
+A moving body type boundary condition should be specified in \inltt{BOUNDARYCONDITIONS} for the velocities on the far field and in-flow boundaries such as,
+
+\begin{lstlisting}[style=XMLStyle] 
+<BOUNDARYCONDITIONS> 
+    <REGION REF="1">
+        <D VAR="u" USERDEFINEDTYPE="MovingBody" VALUE="1" />
+        <D VAR="v" USERDEFINEDTYPE="MovingBody" VALUE="0" />
+        <D VAR="w" VALUE="0" />
+        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0" />
+     </REGION>
+</BOUNDARYCONDITIONS>
+\end{lstlisting}
+
+For the simulation of low mass ratio, there is an option to activate fictitious mass method for stabilizing explicit coupling between the fluid solver and structural dynamic solver. Here we need to specify the values of fictitious mass and damping in \inltt{PARAMETERS}, for example,
+
+\begin{lstlisting}[style=XMLStyle] 
+<SOLVERINFO> 
+    <I PROPERTY="FictitiousMassMethod"    VALUE="True"/>
+</SOLVERINFO>
+<PARAMETERS>
+    <P> FictDamp      = 1000    </P>
+    <P> FictMass       = 1.5       </P>
+</PARAMETERS>
+\end{lstlisting}
+
+A filter calles as \inltt{MovingBody} is encapsulated in this module to evaluate the aerodynamic forces along the moving body surface. The
+forces for each computational plane are projected along the Cartesian axes and the pressure and viscous
+contributions are computed in each direction.
+
+The following parameters are supported:
+
+\begin{center}
+  \begin{tabularx}{0.99\textwidth}{lllX}
+    \toprule
+    \textbf{Option name} & \textbf{Required} & \textbf{Default} & 
+    \textbf{Description} \\
+    \midrule
+    \inltt{OutputFile}      & \xmark   & \inltt{session} &
+    Prefix of the output filename to which the forces are written.\\
+    \inltt{Frequency}       & \xmark   & 1 &
+    Number of timesteps after which output is written.\\
+    \inltt{Boundary}        & \cmark   & - &
+    Boundary surfaces on which the forces are to be evaluated.\\
+    \bottomrule
+  \end{tabularx}
+\end{center}
+
+To enable the filter, add the following to the \inltt{FORCE} tag::
+
+\begin{lstlisting}[style=XMLStyle]
+  <FORCE TYPE="MovingBody">
+      <PARAM NAME="OutputFile">DragLift.frc</PARAM>
+      <PARAM NAME="OutputFrequency">10</PARAM>
+      <PARAM NAME="Boundary"> B[0] </PARAM>		
+  </FORCE>
+\end{lstlisting}
+
+During the execution a file named \inltt{DragLift.frc} will be created and the
+value of the aerodynamic forces on boundary 0, defined in the
+\inltt{GEOMETRY} section, will be output every 10 time steps.evaluates the aerodynamic forces along the moving body surface. The
+forces for each computational plane are projected along the Cartesian axes and the pressure and viscous contributions are computed in each direction.
+
 
 \section{Stability analysis Session file configuration}
 The type of equation which is to be solved is specified through the \inltt

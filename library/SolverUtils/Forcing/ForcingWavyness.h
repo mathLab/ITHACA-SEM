@@ -71,7 +71,7 @@ namespace SolverUtils
             static std::string className;
 
         protected:
-		
+
             SOLVER_UTILS_EXPORT virtual void v_InitObject(const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                                                           const unsigned int& pNumForcingFields,
                                                           const TiXmlElement* pForce);
@@ -82,13 +82,13 @@ namespace SolverUtils
                                                      const NekDouble& time);
 
         private:
-        
+
             ForcingWavyness(const LibUtilities::SessionReaderSharedPtr& pSession);
-		
+
             void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
-        
+
             Array<OneD, Array<OneD, NekDouble> >    m_wavyGeometricInfo;
-         
+
             NekDouble m_kinvis;
     };
 

@@ -377,11 +377,15 @@ namespace Nektar
                 int num_dfts_per_proc;
                 if(!m_session->DefinesSolverInfo("HomoStrip"))
                 {
-                    num_dfts_per_proc = num_points_per_plane/m_comm->GetColumnComm()->GetSize() + (num_points_per_plane%m_comm->GetColumnComm()->GetSize() > 0);
+                    int nP = m_comm->GetColumnComm()->GetSize();
+                    num_dfts_per_proc = num_points_per_plane / nP
+                                      + (num_points_per_plane % nP > 0);
                 }
                 else
                 {
-                    num_dfts_per_proc = num_points_per_plane/m_StripZcomm->GetSize() + (num_points_per_plane%m_StripZcomm->GetSize() > 0);
+                    int nP = m_StripZcomm->GetSize();
+                    num_dfts_per_proc = num_points_per_plane / nP
+                                      + (num_points_per_plane % nP > 0);
                 }
 
                 Array<OneD, NekDouble> fft_in (num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
@@ -1055,11 +1059,15 @@ namespace Nektar
                 {
                     if(!m_session->DefinesSolverInfo("HomoStrip"))
                     {
-                        ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+                        ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,
+                                 "Parallelisation in the homogeneous direction "
+                                 "implemented just for Fourier basis");
                     }
                     else
                     {
-                        ASSERTL0(m_StripZcomm->GetSize()            == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+                        ASSERTL0(m_StripZcomm->GetSize()            == 1,
+                                 "Parallelisation in the homogeneous direction "
+                                 "implemented just for Fourier basis");
                     }
                     
                     if(m_WaveSpace)

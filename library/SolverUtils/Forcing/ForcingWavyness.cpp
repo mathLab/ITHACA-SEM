@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingBody.cpp
+// File: ForcingWavyness.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -57,17 +57,17 @@ namespace SolverUtils
             const unsigned int& pNumForcingFields,
             const TiXmlElement* pForce)
     {
-		// Just 3D homogenous 1D problems can use this techinque
-		ASSERTL0(pFields[0]->GetExpType()==MultiRegions::e3DH1D,"Wavyness implemented just for"
+        // Just 3D homogenous 1D problems can use this techinque
+        ASSERTL0(pFields[0]->GetExpType()==MultiRegions::e3DH1D,"Wavyness implemented just for"
                                                                 "3D Homogenous 1D expansions.");
-		
+
         int phystot = pFields[0]->GetTotPoints();
         m_session->LoadParameter("Kinvis",m_kinvis);
         // forcing size (it must be 3)
         m_NumVariable  = pNumForcingFields;
-		m_Forcing      = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+        m_Forcing      = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
         m_wavyGeometricInfo = Array<OneD, Array< OneD, NekDouble> >(6);
-        
+
         // Allocation of forcing and geometry memory
         for (int i = 0; i < m_NumVariable; ++i)
         {
@@ -77,27 +77,27 @@ namespace SolverUtils
         {
             m_wavyGeometricInfo[i] = Array<OneD, NekDouble>(phystot,0.0);
         }
-        
+
         const TiXmlElement* funcNameElmt;
         funcNameElmt = pForce->FirstChildElement("WAVYNESS");
         ASSERTL0(funcNameElmt, "Requires WAVYNESS tag, specifying function "
                                "name which prescribes wavy function.");
-        
+
         string funcName = funcNameElmt->GetText();
         ASSERTL0(m_session->DefinesFunction(funcName),"Function '" + funcName + "' not defined.");
-        
+
         std::string s_FieldStr = m_session->GetVariable(0);
         ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
                  "Variable '" + s_FieldStr + "' not defined.");
-        
+
         EvaluateFunction(pFields,m_session,s_FieldStr,m_wavyGeometricInfo[0],funcName);
-        
+
         // Calculate derivatives of transformation
         for(int i = 1; i < 4; i++)
         {
             pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],m_wavyGeometricInfo[i-1],m_wavyGeometricInfo[i]);
         }
-        
+
         Vmath::Vmul(phystot,m_wavyGeometricInfo[1],1,m_wavyGeometricInfo[1],1,m_wavyGeometricInfo[4],1);
         Vmath::Vmul(phystot,m_wavyGeometricInfo[1],1,m_wavyGeometricInfo[2],1,m_wavyGeometricInfo[5],1);
     }
@@ -107,36 +107,36 @@ namespace SolverUtils
                                     Array<OneD, Array<OneD, NekDouble> > &outarray,
                                     const NekDouble& time)
     {
-		//calcualte the forcing components Ax,Ay,Az and put them in m_Forcing
-		CalculateForcing(fields);
-		
-		// Apply forcing terms
+        //calcualte the forcing components Ax,Ay,Az and put them in m_Forcing
+        CalculateForcing(fields);
+
+        // Apply forcing terms
         for (int i = 0; i < m_NumVariable; i++)
         {
             Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
                         m_Forcing[i], 1, outarray[i], 1);
         }
     }
-				 
-	void ForcingWavyness::CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
-	{
+
+    void ForcingWavyness::CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields)
+    {
         int nPointsTot = fields[0]->GetNpoints();
-        
+
         Array<OneD, NekDouble> U,V,W,P,tmp1,tmp2,tmp3, Wz, Wzz, Px;
-        
+
         U = Array<OneD, NekDouble> (nPointsTot);
         V = Array<OneD, NekDouble> (nPointsTot);
         W = Array<OneD, NekDouble> (nPointsTot);
         P = Array<OneD, NekDouble> (nPointsTot);
-        
+
         tmp1 = Array<OneD, NekDouble> (nPointsTot);
         tmp2 = Array<OneD, NekDouble> (nPointsTot);
         tmp3 = Array<OneD, NekDouble> (nPointsTot);
-        
+
         Wz = Array<OneD, NekDouble> (nPointsTot);
         Wzz = Array<OneD, NekDouble> (nPointsTot);
         Px = Array<OneD, NekDouble> (nPointsTot);
-        
+
         fields[0]->HomogeneousBwdTrans(fields[0]->GetPhys(),U);
         fields[0]->HomogeneousBwdTrans(fields[1]->GetPhys(),V);
         fields[0]->HomogeneousBwdTrans(fields[2]->GetPhys(),W);
@@ -178,7 +178,7 @@ namespace SolverUtils
         fields[0]->HomogeneousFwdTrans(tmp2,m_Forcing[0]); // back to Fourier Space
         //-------------------------------------------------------------------------------------------------
         // Ay calucaltion
-        
+
         fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],V,tmp1); // Vx
         fields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],tmp1,tmp2); // Vxx
         Vmath::Vmul(nPointsTot,tmp1,1,m_wavyGeometricInfo[2],1,tmp1,1); // Vx * Xzz
@@ -209,6 +209,6 @@ namespace SolverUtils
         Vmath::Smul(nPointsTot,m_kinvis,Wzz,1,tmp1,1); // * 1/Re
         Vmath::Vadd(nPointsTot,tmp1,1,P,1,tmp2,1);
         fields[0]->HomogeneousFwdTrans(tmp2,m_Forcing[2]); // back to Fourier Space
-	}
+    }
 }
 }

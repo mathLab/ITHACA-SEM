@@ -77,7 +77,8 @@ namespace Nektar
             const int nHomDofs = pNumRows - pNumDir;
 
             // Populate RHS vector from input
-            VecSetValues(m_b, nHomDofs, &m_reorderedMap[0], &pInput[pNumDir], INSERT_VALUES);
+            VecSetValues(
+                m_b, nHomDofs, &m_reorderedMap[0], &pInput[pNumDir], INSERT_VALUES);
 
             // Assemble RHS vector
             VecAssemblyBegin(m_b);
@@ -89,7 +90,6 @@ namespace Nektar
             // Grab number of iterations taken
             PetscInt its;
             KSPGetIterationNumber(m_ksp, &its);
-            cout << "iterations = " << its << endl;
 
             // Scatter results to local vector
             VecScatterBegin(m_ctx, m_x, m_locVec, INSERT_VALUES, SCATTER_FORWARD);
@@ -114,7 +114,7 @@ namespace Nektar
 
             // Create local vector for output
             VecCreate        (PETSC_COMM_SELF, &m_locVec);
-            VecSetSizes      (m_locVec, m_reorderedMap.size(), PETSC_DECIDE);
+            VecSetSizes      (m_locVec, nHomDofs, PETSC_DECIDE);
             VecSetFromOptions(m_locVec);
 
             // Create scatter context
@@ -134,14 +134,13 @@ namespace Nektar
                 = m_expList.lock()->GetSession()->GetComm();
 
             const int nDirDofs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            const int nHomDofs = pLocToGloMap->GetNumGlobalBndCoeffs() - nDirDofs;
+            const int nHomDofs = glo2uniMap.num_elements() - nDirDofs;
             const int nProc    = vComm->GetSize();
             const int rank     = vComm->GetRank();
 
             int n, cnt;
 
             m_nLocal = Vmath::Vsum(nHomDofs, glo2unique + nDirDofs, 1);
-
             m_reorderedMap.resize(nHomDofs);
 
             Array<OneD, int> localCounts(nProc, 0), localOffset(nProc, 0);

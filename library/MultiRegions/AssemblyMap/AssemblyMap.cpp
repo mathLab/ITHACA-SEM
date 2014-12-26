@@ -167,8 +167,6 @@ namespace Nektar
             m_session(oldLevelMap->m_session),
             m_comm(oldLevelMap->GetComm()),
             m_hash(0),
-            m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
-            m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
             m_solnType(oldLevelMap->m_solnType),
             m_preconType(oldLevelMap->m_preconType),
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
@@ -328,6 +326,11 @@ namespace Nektar
             }
             
             m_patchMapFromPrevLevel = MemoryManager<PatchMap>::AllocateSharedPtr(numLocalBndCoeffsOld);
+
+            m_globalToUniversalBndMap = Array<OneD, int>(
+                m_numGlobalBndCoeffs, oldLevelMap->GetGlobalToUniversalBndMap());
+            m_globalToUniversalBndMapUnique = Array<OneD, int>(
+                m_numGlobalBndCoeffs, oldLevelMap->GetGlobalToUniversalBndMapUnique());
 
             // Set up an offset array that denotes the offset of the local
             // boundary degrees of freedom of the next level

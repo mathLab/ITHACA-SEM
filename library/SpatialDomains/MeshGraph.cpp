@@ -2596,6 +2596,7 @@ namespace Nektar
             switch(type)
             {
             case eModified:
+            case eModifiedGLLRadau10:
                 quadoffset = 1;
                 break;
             case eModifiedQuadPlus1:
@@ -2613,6 +2614,7 @@ namespace Nektar
             case eModified:
             case eModifiedQuadPlus1:
             case eModifiedQuadPlus2:
+            case eModifiedGLLRadau10:
                 {
                     switch (shape)
                     {
@@ -2662,9 +2664,18 @@ namespace Nektar
                             LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
                             returnval.push_back(bkey1);
                             
-                            const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
-                            LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2);
-                            returnval.push_back(bkey2);
+                            if(type == eModifiedGLLRadau10)
+                            {
+                                const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha1Beta0);
+                                LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2); 
+                                returnval.push_back(bkey2);
+                            }
+                            else
+                            {
+                                const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
+                                LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2);
+                                returnval.push_back(bkey2);
+                            }
                         }
                         break;
                     case LibUtilities::ePyramid:

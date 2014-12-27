@@ -49,8 +49,11 @@ namespace Nektar
         {
             eNoInterp,
             eInterpDir0,
+            eInterpEndPtDir0,
             eInterpDir1,
-            eInterpBothDirs
+            eInterpEndPtDir1,
+            eInterpBothDirs,
+            eInterpEndPtDir0InterpDir1
         };
 
         typedef boost::tuple<LibUtilities::PointsKey,
@@ -127,10 +130,12 @@ namespace Nektar
             Array<OneD, int> m_fieldToLocTraceMap; 
             
             Array<OneD, Array<OneD, int> > m_LocTraceToTraceMap;
-            Array<OneD, Array<OneD, InterpLocTraceToTrace> > m_interpTrace;
-            Array<OneD, Array<OneD, DNekMatSharedPtr> >  m_interpTraceI0;
-            Array<OneD, Array<OneD, DNekMatSharedPtr> >  m_interpTraceI1;
-            Array<OneD, Array<OneD, TraceInterpPoints> > m_interpPoints;
+            Array<OneD, Array<OneD, InterpLocTraceToTrace> >   m_interpTrace;
+            Array<OneD, Array<OneD, DNekMatSharedPtr> >        m_interpTraceI0;
+            Array<OneD, Array<OneD, DNekMatSharedPtr> >        m_interpTraceI1;
+            Array<OneD, Array<OneD, TraceInterpPoints> >       m_interpPoints;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_interpEndPtI0;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_interpEndPtI1;
             Array<OneD, Array<OneD, int> > m_interpNfaces; 
             
             int m_nTraceCoeffs[2];

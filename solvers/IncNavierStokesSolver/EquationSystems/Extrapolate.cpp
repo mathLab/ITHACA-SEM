@@ -695,7 +695,7 @@ namespace Nektar
         int i,j,n;
 
         int pindex=m_fields.num_elements()-1;                
-        StdRegions::StdExpansionSharedPtr  Pbc;
+        StdRegions::StdExpansionSharedPtr  Pbc,elmt;
 
         Array<OneD, Array<OneD, NekDouble> > velbc(m_bnd_dim);
         velbc[0] = Array<OneD, NekDouble>(m_bnd_dim*m_pressureBCsMaxPts);
@@ -711,14 +711,14 @@ namespace Nektar
             Pbc = m_PBndExp[m_HBCdata[n].m_bndryID]->GetExp(m_HBCdata[n].m_bndElmtID);
             
             /// Picking up the element where the HOPBc is located
-            m_elmt = m_fields[pindex]->GetExp(m_HBCdata[n].m_globalElmtID);
+            elmt = m_fields[pindex]->GetExp(m_HBCdata[n].m_globalElmtID);
 
             // Get velocity bc
             for(j = 0; j < m_bnd_dim; ++j)
             {
                 // Get edge values and put into velbc
                 Velmt = Vel[j] + m_HBCdata[n].m_physOffset;
-                m_elmt->GetTracePhysVals(m_HBCdata[n].m_elmtTraceID,Pbc,Velmt,velbc[j]);
+                elmt->GetTracePhysVals(m_HBCdata[n].m_elmtTraceID,Pbc,Velmt,velbc[j]);
             }
             
             IProdVnTmp = IProdVn + m_HBCdata[n].m_coeffOffset; 
@@ -911,14 +911,14 @@ namespace Nektar
                         for(int i = 0; i < exp_size; ++i,cnt++)
                         {
                             m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];   
-                            m_elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
-                            m_HBCdata[j].m_ptsInElmt = m_elmt->GetTotPoints();         
+                            elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
+                            m_HBCdata[j].m_ptsInElmt = elmt->GetTotPoints();         
                             m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
                             m_HBCdata[j].m_bndElmtID = i;       
                             m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
                             m_HBCdata[j].m_bndryID = n;
                             m_HBCdata[j].m_coeffOffset = coeff_count;
-                            coeff_count += m_elmt->GetTraceNcoeffs(m_HBCdata[j].m_elmtTraceID);
+                            coeff_count += elmt->GetTraceNcoeffs(m_HBCdata[j].m_elmtTraceID);
                             j = j+1;
                         }
                     }
@@ -1006,14 +1006,14 @@ namespace Nektar
                             for(int i = 0; i < exp_size_per_plane; ++i,cnt++)
                             {
                                 m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];   
-                                m_elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
-                                m_HBCdata[j].m_ptsInElmt = m_elmt->GetTotPoints();         
+                                elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
+                                m_HBCdata[j].m_ptsInElmt = elmt->GetTotPoints();         
                                 m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
                                 m_HBCdata[j].m_bndElmtID = i+k*exp_size_per_plane;       
                                 m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
                                 m_HBCdata[j].m_bndryID = n;
                                 m_HBCdata[j].m_coeffOffset = coeffPlaneOffset[n] + coeff_count[n];
-                                coeff_count[n] += m_elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
+                                coeff_count[n] += elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
                                 
                                 if(m_SingleMode)
                                 {
@@ -1087,8 +1087,8 @@ namespace Nektar
                                 {
                                     // find element and edge of this expansion. 
                                     m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];
-                                    m_elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
-                                    m_HBCdata[j].m_ptsInElmt = m_elmt->GetTotPoints();
+                                    elmt      = m_fields[pindex]->GetExp(m_HBCdata[j].m_globalElmtID);
+                                    m_HBCdata[j].m_ptsInElmt = elmt->GetTotPoints();
                                     m_HBCdata[j].m_physOffset = m_fields[pindex]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
                                     m_HBCdata[j].m_bndElmtID = i+(k1*m_npointsY+k2)*exp_size_per_line;
                                     m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];                

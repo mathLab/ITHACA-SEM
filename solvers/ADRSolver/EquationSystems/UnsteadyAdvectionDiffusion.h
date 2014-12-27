@@ -124,7 +124,7 @@ namespace Nektar
         virtual void v_InitObject();
 
         /// Print Summary
-        virtual void v_GenerateSummary(SummaryList& s);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         /// PreIntegration step for substepping. 
         virtual bool v_PreIntegrate(int step);

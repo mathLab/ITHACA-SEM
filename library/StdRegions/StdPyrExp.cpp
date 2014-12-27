@@ -949,27 +949,6 @@ namespace Nektar
             }
         }
         
-        int StdPyrExp::v_GetFaceNumPoints(const int i) const
-        {
-            ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
-            
-            if (i == 0)
-            {
-                return m_base[0]->GetNumPoints()*
-                       m_base[1]->GetNumPoints();
-            }
-            else if (i == 1 || i == 3)
-            {
-                return m_base[0]->GetNumPoints()*
-                       m_base[2]->GetNumPoints();
-            }
-            else
-            {
-                return m_base[1]->GetNumPoints()*
-                       m_base[2]->GetNumPoints();
-            }
-        }
-
         int StdPyrExp::v_GetFaceIntNcoeffs(const int i) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");

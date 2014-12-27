@@ -143,8 +143,8 @@ namespace Nektar
                         CreateInstance(riemName);
 		    m_riemannSolver->SetScalar("Vn", &UnsteadyAdvectionDiffusion::
                                                GetNormalVelocity, this);
-		    m_advection->SetRiemannSolver(m_riemannSolver);
-		    m_advection->InitObject      (m_session, m_fields);
+		    m_advObject->SetRiemannSolver(m_riemannSolver);
+		    m_advObject->InitObject      (m_session, m_fields);
 		}
 
                 // In case of Galerkin explicit diffusion gives an error
@@ -601,8 +601,8 @@ namespace Nektar
         // Currently assume velocity field is time independent and does not therefore
         // need extrapolating. 
         // RHS computation using the advection base class
-        m_advection->Advect(nVariables, m_fields, m_velocity, 
-                            inarray, outarray);
+        m_advObject->Advect(nVariables, m_fields, m_velocity, 
+                            inarray, outarray, time);
 
         for(i = 0; i < nVariables; ++i)
         {

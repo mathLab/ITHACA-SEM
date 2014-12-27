@@ -254,12 +254,6 @@ namespace Nektar
         /// data structure to old all the information regarding High order pressure BCs
         Array<OneD, HBCInfo > m_HBCdata;
 
-<<<<<<< HEAD
-        /// general standard element used to deal with HOPBC calculations
-        StdRegions::StdExpansionSharedPtr m_elmt;
-		
-=======
->>>>>>> feature/DGopt
         /// wave number 2 pi k /Lz
         Array<OneD, NekDouble>  m_wavenumber;
         
@@ -271,12 +265,6 @@ namespace Nektar
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
 
-<<<<<<< HEAD
-=======
-    private:
-        static std::string def;
-
->>>>>>> feature/DGopt
         // Velocity correction scheme coefficient required for extrapolation.
         static NekDouble StifflyStable_Betaq_Coeffs[3][3];
         static NekDouble StifflyStable_Alpha_Coeffs[3][3];
@@ -284,7 +272,7 @@ namespace Nektar
 
     private:
         static std::string def;
-		
+
     };
 
     /**

@@ -1914,22 +1914,11 @@ namespace Nektar
             v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
         }
 
-        ///Returns the physical values at the quadrature points of a face
-        void Expansion3D::v_GetTracePhysVals(
-            const int                                face,
-            const StdRegions::StdExpansionSharedPtr &FaceExp,
-            const Array<OneD, const NekDouble>      &inarray,
-                  Array<OneD,       NekDouble>      &outarray,
-            StdRegions::Orientation                  orient)
-        {
-            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
-        }
-
         void Expansion3D::v_GetFacePhysVals(
             const int                                face,
             const StdRegions::StdExpansionSharedPtr &FaceExp,
             const Array<OneD, const NekDouble>      &inarray,
-                  Array<OneD,       NekDouble>      &outarray,
+            Array<OneD,       NekDouble>             &outarray,
             StdRegions::Orientation                  orient)
         {
             
@@ -1965,6 +1954,7 @@ namespace Nektar
             ReOrientFacePhysMap(FaceExp->GetNverts(),orient,nq0,nq1,faceids);
             Vmath::Scatr(nq0*nq1,o_tmp2,faceids,outarray);
         }
+
         void Expansion3D::ReOrientFacePhysMap(const int nvert, 
                                               const StdRegions::Orientation orient,
                                               const int nq0, const int nq1,

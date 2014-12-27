@@ -131,19 +131,12 @@ namespace Nektar
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
 
-            virtual void v_GetTracePhysVals(
+            virtual void v_GetFacePhysVals(
                 const int                                face,
                 const StdRegions::StdExpansionSharedPtr &FaceExp,
                 const Array<OneD, const NekDouble>      &inarray,
-                      Array<OneD,       NekDouble>      &outarray,
+                Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
-
-            virtual void v_GetFacePhysVals(
-            const int                                face,
-            const StdRegions::StdExpansionSharedPtr &FaceExp,
-            const Array<OneD, const NekDouble>      &inarray,
-                  Array<OneD,       NekDouble>      &outarray,
-            StdRegions::Orientation                  orient);
 
             //-----------------------------
             // Low Energy Basis functions

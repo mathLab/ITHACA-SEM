@@ -428,8 +428,9 @@ namespace Nektar
                         break;
                     case 1:
                         {
-                            const LibUtilities::PointsKey pkey(numpoints+1,
-                                                                   LibUtilities::eGaussLobattoLegendre);
+                            //const LibUtilities::PointsKey pkey(numpoints+1, LibUtilities::eGaussLobattoLegendre);
+                            const LibUtilities::PointsKey pkey(numpoints, LibUtilities::eGaussRadauMAlpha1Beta0);
+
                             // Triangle
                             return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
                         }

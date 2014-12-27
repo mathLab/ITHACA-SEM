@@ -271,6 +271,7 @@ namespace Nektar
                 
                 timer.Start();
                 // Perform any solver-specific pre-integration steps
+                timer.Start();
                 if (v_PreIntegrate(step))
                 {
                     break;

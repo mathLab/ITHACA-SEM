@@ -1845,21 +1845,28 @@ namespace Nektar
             switch(m_base[2]->GetPointsType())
             {
                 // (2,0) Jacobi inner product.
-                case LibUtilities::eGaussRadauMAlpha2Beta0:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1, 0.25*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1, 1);
-                    }
-                    break;
-
-                default:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
+            case LibUtilities::eGaussRadauMAlpha2Beta0:
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dscal(nquad0*nquad1, 0.25*w2[i],
+                                &outarray[0]+i*nquad0*nquad1, 1);
+                }
+                break;
+                // (1,0) Jacobi inner product.
+            case LibUtilities::eGaussRadauMAlpha1Beta0:
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dscal(nquad0*nquad1, 0.25*(1-z2[i])*w2[i],
+                                &outarray[0]+i*nquad0*nquad1, 1);
+                }
+                break;
+            default:
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
+                                &outarray[0]+i*nquad0*nquad1,1);
+                }
+                break;
             }
         }
 

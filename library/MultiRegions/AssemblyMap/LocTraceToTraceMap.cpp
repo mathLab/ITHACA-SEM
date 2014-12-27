@@ -51,6 +51,8 @@ namespace Nektar
             m_interpTrace = Array<OneD, Array<OneD, InterpLocTraceToTrace> >(2);
             m_interpTraceI0 = Array<OneD, Array<OneD, DNekMatSharedPtr> > (2);
             m_interpTraceI1 = Array<OneD, Array<OneD, DNekMatSharedPtr> > (2);
+            m_interpEndPtI0 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(2);
+            m_interpEndPtI1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(2);
             m_interpPoints  = Array<OneD, Array<OneD, TraceInterpPoints> >(2);
             m_interpNfaces  = Array<OneD, Array<OneD, int> >(2); 
 
@@ -210,6 +212,8 @@ namespace Nektar
                 m_interpTrace[i]   = Array<OneD, InterpLocTraceToTrace>(nInterpType);
                 m_interpTraceI0[i] = Array<OneD, DNekMatSharedPtr>     (nInterpType);
                 m_interpTraceI1[i] = Array<OneD, DNekMatSharedPtr>     (nInterpType);
+                m_interpEndPtI0[i] = Array<OneD, Array<OneD, NekDouble> >(nInterpType);
+                m_interpEndPtI1[i] = Array<OneD, Array<OneD, NekDouble> >(nInterpType);
                 m_interpPoints[i]  = Array<OneD, TraceInterpPoints>    (nInterpType);
                 m_interpNfaces[i]  = Array<OneD, int>                (nInterpType,0);
             }
@@ -314,6 +318,27 @@ namespace Nektar
                             {
                                 m_interpTrace[set][cnt1] = eInterpDir1;
                                 m_interpTraceI1[set][cnt1] = LibUtilities::PointsManager()[fromPointsKey1]->GetI(toPointsKey1);
+
+                                // check to see if we can just
+                                // interpolate endpoint
+                                if((fromPointsKey1.GetPointsType() == 
+                                    LibUtilities::eGaussRadauMAlpha1Beta0)
+                                   &&(toPointsKey1.GetPointsType() == 
+                                      LibUtilities::eGaussLobattoLegendre))
+                                {
+                                    if(fromPointsKey1.GetNumPoints() +1 ==
+                                       toPointsKey1.GetNumPoints())
+                                    {
+                                        m_interpTrace[set][cnt1] = eInterpEndPtDir1;
+                                        int fnp1 = fromPointsKey1.GetNumPoints();
+                                        int tnp1 = toPointsKey1.GetNumPoints();
+                                        m_interpEndPtI1[set][cnt1] = Array<OneD, NekDouble>(fnp1);
+                                        Vmath::Vcopy(fnp1,
+                                                     m_interpTraceI1[set][cnt1]->GetPtr().get()
+                                                     +tnp1-1,tnp1,
+                                                     &m_interpEndPtI1[set][cnt1][0],1);
+                                    }
+                                }
                             }
                         }
                         else
@@ -321,13 +346,58 @@ namespace Nektar
                             if(fromPointsKey1 == toPointsKey1)
                             {
                                 m_interpTrace[set][cnt1] = eInterpDir0;
-                                m_interpTraceI0[set][cnt1] = LibUtilities::PointsManager()[fromPointsKey0]-> GetI(toPointsKey0);          
+                                m_interpTraceI0[set][cnt1] = LibUtilities::PointsManager()[fromPointsKey0]-> GetI(toPointsKey0); 
+
+                                // check to see if we can just
+                                // interpolate endpoint
+                                if((fromPointsKey0.GetPointsType() == 
+                                    LibUtilities::eGaussRadauMAlpha1Beta0)
+                                   &&(toPointsKey0.GetPointsType() == 
+                                      LibUtilities::eGaussLobattoLegendre))
+                                {
+                                    if(fromPointsKey0.GetNumPoints() +1 ==
+                                       toPointsKey0.GetNumPoints())
+                                    {
+                                        m_interpTrace[set][cnt1] = eInterpEndPtDir0;
+
+                                        int fnp0 = fromPointsKey0.GetNumPoints();
+                                        int tnp0 = toPointsKey0.GetNumPoints();
+                                        m_interpEndPtI0[set][cnt1] = Array<OneD, NekDouble>(fnp0);
+                                        Vmath::Vcopy(fnp0,
+                                                     m_interpTraceI0[set][cnt1]->GetPtr().get()
+                                                     +tnp0-1,tnp0,
+                                                     &m_interpEndPtI0[set][cnt1][0],1);
+                                    }
+                                }
+
+
                             }
                             else
                             {
                                 m_interpTrace[set][cnt1] = eInterpBothDirs;
                                 m_interpTraceI0[set][cnt1] = LibUtilities::PointsManager()[fromPointsKey0]->GetI(toPointsKey0);                            
                                 m_interpTraceI1[set][cnt1] = LibUtilities::PointsManager()[fromPointsKey1]->GetI(toPointsKey1);           
+
+                                // check to see if we can just
+                                // interpolate endpoint
+                                if((fromPointsKey0.GetPointsType() == 
+                                    LibUtilities::eGaussRadauMAlpha1Beta0)
+                                   &&(toPointsKey0.GetPointsType() == 
+                                      LibUtilities::eGaussLobattoLegendre))
+                                {
+                                    if(fromPointsKey0.GetNumPoints() +1 ==
+                                       toPointsKey0.GetNumPoints())
+                                    {
+                                        m_interpTrace[set][cnt1] = eInterpEndPtDir0InterpDir1;
+                                        int fnp0 = fromPointsKey0.GetNumPoints();
+                                        int tnp0 = toPointsKey0.GetNumPoints();
+                                        m_interpEndPtI0[set][cnt1] = Array<OneD, NekDouble>(fnp0);
+                                        Vmath::Vcopy(fnp0,
+                                                     m_interpTraceI0[set][cnt1]->GetPtr().get()
+                                                     +tnp0-1,tnp0,
+                                                     &m_interpEndPtI0[set][cnt1][0],1);
+                                    }
+                                }
                             }
                         }
                         
@@ -407,16 +477,58 @@ namespace Nektar
                                         tmp.get()+cnt1, tnp0);  
                         }
                         break;
+                    case eInterpEndPtDir0:
+                        {
+                            int nfaces = m_interpNfaces[dir][i];
+                            for(int k = 0; k < fnp0; ++k)
+                            {
+                                Vmath::Vcopy(nfaces*fnp1,locfaces.get()+cnt+k,
+                                             fnp0,tmp.get()+cnt1+k,tnp0);
+                            }
+                            Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
+                            Blas::Dgemv('T',  fnp0, tnp1*m_interpNfaces[dir][i],
+                                        1.0, tmp.get(), tnp0,I0.get(),1,  0.0, 
+                                        tmp.get()+cnt+ tnp0-1, tnp0);     
+                        }
+                        break;
                     case eInterpDir1:
                         {
                             DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
                             for(int j = 0; j <  m_interpNfaces[dir][i]; ++j)
                             {
-                            Blas::Dgemm('N', 'T', tnp0, tnp1, fnp1, 1.0, 
-                                        locfaces.get()+cnt +j*fnp0*fnp1, tnp0, 
-                                        I1->GetPtr().get(), 
-                                        tnp1, 0.0,  tmp.get()+cnt1 + j*tnp0*tnp1, tnp0); 
+                                Blas::Dgemm('N', 'T', tnp0, tnp1, fnp1, 1.0, 
+                                            locfaces.get()+cnt +j*fnp0*fnp1, tnp0, 
+                                            I1->GetPtr().get(), 
+                                            tnp1, 0.0,  tmp.get()+cnt1 + j*tnp0*tnp1, tnp0); 
+                            }
                         }
+                        break;
+                    case eInterpEndPtDir1:
+                        {
+                            Array<OneD, NekDouble> I1 = m_interpEndPtI1[dir][i];
+                            for(int j = 0; j < m_interpNfaces[dir][i]; ++j)
+                            {
+                                // copy all points
+                                Vmath::Vcopy(fnp0*fnp1, locfaces.get() + cnt + 
+                                             j*fnp0*fnp1,1,
+                                             tmp.get()+cnt1+j*tnp0*tnp1,1);
+                                
+                                // interpolate end points 
+                                for(int k = 0; k < tnp0; ++k)
+                                {
+#if 0 
+                                    tmp[cnt1+k+(j+1)*tnp0*tnp1-tnp0]
+                                        = Blas::Ddot(fnp1,locfaces.get()+cnt+
+                                                     j*fnp0*fnp1+k,fnp0,
+                                                     I1->GetPtr().get()+tnp1-1,
+                                                     tnp1);
+#else
+                                    tmp[cnt1+k+(j+1)*tnp0*tnp1-tnp0]
+                                        = Blas::Ddot(fnp1,locfaces.get()+cnt+
+                                                     j*fnp0*fnp1+k,fnp0,&I1[0],1);
+#endif
+                                }
+                            }
                         }
                         break;
                     case eInterpBothDirs:
@@ -431,12 +543,39 @@ namespace Nektar
                                             locfaces.get()+cnt+j*fnp0*fnp1, fnp0,
                                             I1->GetPtr().get(), 
                                             tnp1, 0.0,  wsp.get()+j*fnp0*tnp1, fnp0);     
-                        }
+                            }
                             
-                            Blas::Dgemm('N', 'N', tnp0, tnp1*m_interpNfaces[dir][i], fnp0, 1.0, 
+                            Blas::Dgemm('N', 'N', tnp0, 
+                                        tnp1*m_interpNfaces[dir][i], fnp0, 1.0, 
                                         I0->GetPtr().get(),
                                         tnp0, wsp.get(), fnp0, 0.0, 
                                         tmp.get()+cnt1, tnp0);     
+                        }
+                        break;
+                    case eInterpEndPtDir0InterpDir1:
+                        {
+                            DNekMatSharedPtr I1 = m_interpTraceI1[dir][i];
+                            
+                            for(int j = 0; j <  m_interpNfaces[dir][i]; ++j)
+                            {
+                                Blas::Dgemm('N', 'T', fnp0, tnp1, fnp1, 1.0,
+                                            locfaces.get()+cnt+j*fnp0*fnp1, fnp0,
+                                            I1->GetPtr().get(), tnp1, 0.0,  
+                                            tmp.get()+cnt1+j*tnp0*tnp1, tnp0);     
+                            }
+
+                            Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
+#if 0
+                            for(int j = 0; j < tnp1*m_interpNfaces[dir][i]; ++j)
+                            {
+                                tmp[cnt1+(j+1)*tnp0-1] = Blas::Ddot(fnp0,tmp.get()+j*tnp0,1,
+                                                                    I0.get(),1);
+                            }
+#else
+                            Blas::Dgemv('T',  fnp0, tnp1*m_interpNfaces[dir][i],
+                                        1.0, tmp.get(), tnp0,I0.get(),1,  0.0, 
+                                        tmp.get()+cnt+ tnp0-1, tnp0);     
+#endif
                         }
                         break;
                     }

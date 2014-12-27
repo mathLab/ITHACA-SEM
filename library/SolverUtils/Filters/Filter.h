@@ -71,9 +71,10 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline void Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             SOLVER_UTILS_EXPORT inline void Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
             SOLVER_UTILS_EXPORT inline bool IsTimeDependent();
+
         protected:
             LibUtilities::SessionReaderSharedPtr m_session;
-            string m_className;
+
             virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time) = 0;
             virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time) = 0;
             virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time) = 0;

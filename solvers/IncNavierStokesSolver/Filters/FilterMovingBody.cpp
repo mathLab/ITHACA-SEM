@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterAeroForces.cpp
+// File FilterMovingBody.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Output values of aerodynamic forces during time-stepping.
+// Description: Output moving body forces during time-stepping.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

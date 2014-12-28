@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingBody.h
+// File: ForcingWavyness.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -48,49 +48,55 @@ namespace Nektar
 {
 namespace SolverUtils
 {
-    class ForcingWavyness : public Forcing
+
+class ForcingWavyness: public Forcing
+{
+public:
+
+    friend class MemoryManager<ForcingWavyness> ;
+
+    /// Creates an instance of this class
+    SOLVER_UTILS_EXPORT
+    static ForcingSharedPtr create(
+        const LibUtilities::SessionReaderSharedPtr        &pSession,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const unsigned int                                &pNumForcingFields,
+        const TiXmlElement                                *pForce)
     {
-        public:
+        ForcingSharedPtr p =
+                MemoryManager<ForcingWavyness>::AllocateSharedPtr(pSession);
+        p->InitObject(pFields, pNumForcingFields, pForce);
+        return p;
+    }
 
-            friend class MemoryManager<ForcingWavyness>;
+    ///Name of the class
+    static std::string className;
 
-            /// Creates an instance of this class
-            SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
-                    const LibUtilities::SessionReaderSharedPtr& pSession,
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                    const unsigned int& pNumForcingFields,
-                    const TiXmlElement* pForce)
-            {
-                ForcingSharedPtr p = MemoryManager<ForcingWavyness>::
-                                                AllocateSharedPtr(pSession);
-                p->InitObject(pFields, pNumForcingFields, pForce);
-                return p;
-            }
+protected:
 
-            ///Name of the class
-            static std::string className;
+    SOLVER_UTILS_EXPORT
+    virtual void v_InitObject(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+        const unsigned int                                &pNumForcingFields,
+        const TiXmlElement                                *pForce);
 
-        protected:
+    SOLVER_UTILS_EXPORT
+    virtual void v_Apply(
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+              Array<OneD, Array<OneD, NekDouble> >        &outarray,
+        const NekDouble                                   &time);
 
-            SOLVER_UTILS_EXPORT virtual void v_InitObject(const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
-                                                          const unsigned int& pNumForcingFields,
-                                                          const TiXmlElement* pForce);
+private:
+    Array<OneD, Array<OneD, NekDouble> > m_wavyGeom;
+    NekDouble m_kinvis;
 
-            SOLVER_UTILS_EXPORT virtual void v_Apply(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                                                     Array<OneD, Array<OneD, NekDouble> > &outarray,
-                                                     const NekDouble& time);
+    ForcingWavyness(const LibUtilities::SessionReaderSharedPtr &pSession);
 
-        private:
+    void CalculateForcing(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
 
-            ForcingWavyness(const LibUtilities::SessionReaderSharedPtr& pSession);
-
-            void CalculateForcing(const Array<OneD, MultiRegions::ExpListSharedPtr> &fields);
-
-            Array<OneD, Array<OneD, NekDouble> >    m_wavyGeometricInfo;
-
-            NekDouble m_kinvis;
-    };
+};
 
 }
 }

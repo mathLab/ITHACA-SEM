@@ -195,7 +195,7 @@ namespace Nektar
 
             map<unsigned int, ElmtConfig>::iterator it;
 
-            // This map takes each element ID and maps it to a pertmutation map
+            // This map takes each element ID and maps it to a permutation map
             // that is required to take Gmsh element node orderings and map them
             // to Nektar++ orderings.
             boost::unordered_map<int, vector<int> > orderingMap;

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: InputGmsh.h
+//  File: ProcessScalar.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: GMSH converter.
+//  Description: Add scalar function curvature to a given surface.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTGMSH
-#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTGMSH
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSSCALAR
+#define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSSCALAR
 
 #include "Module.h"
 
@@ -43,36 +43,25 @@ namespace Nektar
     namespace Utilities
     {
         /**
-         * Converter for Gmsh files.
+         * @brief This processing module calculates the Jacobian of elements
+         * using %SpatialDomains::GeomFactors and the %Element::GetGeom
+         * method. For now it simply prints a list of elements which have
+         * negative Jacobian.
          */
-        class InputGmsh : public InputModule
+        class ProcessScalar : public ProcessModule
         {
         public:
-            InputGmsh(MeshSharedPtr m);
-            virtual ~InputGmsh();
-            virtual void Process();
-
             /// Creates an instance of this class
-            static ModuleSharedPtr create(MeshSharedPtr m) {
-                return MemoryManager<InputGmsh>::AllocateSharedPtr(m);
+            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
+                return MemoryManager<ProcessScalar>::AllocateSharedPtr(m);
             }
-            /// %ModuleKey for class.
             static ModuleKey className;
-            static std::map<unsigned int, ElmtConfig> GenElmMap();
-            
-            /**
-             * Element map; takes a msh id to an %ElmtConfig object.
-             */
-            static std::map<unsigned int, ElmtConfig> elmMap;
 
-        private:
-            int GetNnodes(unsigned int InputGmshEntity);
-            vector<int> CreateReordering(unsigned int InputGmshEntity);
-            vector<int> TriReordering(ElmtConfig conf);
-            vector<int> QuadReordering(ElmtConfig conf);
-            vector<int> HexReordering(ElmtConfig conf);
-            vector<int> PrismReordering(ElmtConfig conf);
-            vector<int> TetReordering(ElmtConfig conf);
+            ProcessScalar(MeshSharedPtr m);
+            virtual ~ProcessScalar();
+
+            /// Write mesh to output file.
+            virtual void Process();
         };
     }
 }

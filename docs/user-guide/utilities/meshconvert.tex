@@ -227,11 +227,23 @@ Note that you can override the module used on the command line. For example,
 MeshConvert pipe-3d:sem pipe-3d.xml
 \end{lstlisting}
 
-\begin{notebox}
-  Many mesh generators, such as Gmsh, allow physical surfaces volumes to contain
-  many element types, so that a cube can contain for example hexes and
-  prisms. In \nekpp,
-\end{notebox}
+Typically, mesh generators allow physical surfaces and volumes to contain many
+element types; for example a cube could be constructed from a mixture of hexes
+and prisms. In \nekpp, a composite can only contain a single element
+type. Whilst the converter will attempt to preserve the numbering of composites
+from the original mesh type, sometimes a renumbering will occur when a domain
+contains many element types. For example, for a domain with the tag \inltt{150}
+containing quadrilaterals and triangles, the Gmsh reader will print a
+notification along the lines of:
+
+\begin{lstlisting}[style=BashInputStyle]
+Multiple elements in composite detected; remapped:
+- Tag 150 => 150 (Triangle), 151 (Quadrilateral)
+\end{lstlisting}
+
+The resulting file therefore has two composites of IDs \inltt{150} and
+\inltt{151} respectively, containing the triangular and quadrilateral elements
+of the original mesh.
 
 \subsubsection{Output modules}
 

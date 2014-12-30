@@ -1238,7 +1238,9 @@ namespace Nektar
             // Calculate maximum valency
             Array<OneD, NekDouble> tmpLoc (m_numLocalBndCoeffs,  1.0);
             Array<OneD, NekDouble> tmpGlob(m_numGlobalBndCoeffs, 0.0);
-            AssembleBnd(tmpLoc, tmpGlob);
+
+            Vmath::Assmb(m_numLocalBndCoeffs, tmpLoc.get(), m_localToGlobalBndMap.get(), tmpGlob.get());
+            UniversalAssembleBnd(tmpGlob);
 
             int totGlobDof     = globCnt;
             int totGlobBndDof  = globBndCnt;

@@ -610,7 +610,7 @@ void FilterMovingBody::UpdateForce(
         }
 
         // Only output every m_outputFrequency.
-        if ((m_index++) % m_outputFrequency)
+        if ((m_index) % m_outputFrequency)
         {
             return;
         }

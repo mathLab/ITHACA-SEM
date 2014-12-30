@@ -49,630 +49,344 @@
 
 namespace Nektar
 {
-    string LinearisedAdvection::className = GetAdvectionTermFactory().RegisterCreatorFunction("Linearised", LinearisedAdvection::create);
+string LinearisedAdvection::className
+        = SolverUtils::GetAdvectionFactory().RegisterCreatorFunction(
+                "Linearised",
+                LinearisedAdvection::create);
 
-    /**
-     * Constructor. Creates ...
-     *
-     * \param 
-     * \param
-     */
+/**
+ * Constructor. Creates ...
+ *
+ * \param
+ * \param
+ */
 
-    LinearisedAdvection::LinearisedAdvection(
-            const LibUtilities::SessionReaderSharedPtr&        pSession,
-            const SpatialDomains::MeshGraphSharedPtr&          pGraph):
-        AdvectionTerm(pSession, pGraph)
-	{
-	}
-	
+LinearisedAdvection::LinearisedAdvection():
+    Advection()
+{
+}
 
-    void LinearisedAdvection::v_InitObject()
+
+void LinearisedAdvection::v_InitObject(
+        LibUtilities::SessionReaderSharedPtr        pSession,
+        Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+{
+    Advection::v_InitObject(pSession, pFields);
+
+    m_session            = pSession;
+    m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
+        ::AllocateSharedPtr(m_session, pFields[0]->GetGraph());
+    m_spacedim           = pFields[0]->GetGraph()->GetSpaceDimension();
+    m_expdim             = pFields[0]->GetGraph()->GetMeshDimension();
+    m_CoeffState         = MultiRegions::eLocal;
+
+    //Setting parameters for homogeneous problems
+    m_HomoDirec          = 0;
+    m_useFFT             = false;
+    m_HomogeneousType    = eNotHomogeneous;
+    m_SingleMode         = false;
+    m_HalfMode           = false;
+    m_MultipleModes      = false;
+    m_homogen_dealiasing = false;
+
+    if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
     {
-        AdvectionTerm::v_InitObject();
-	
-        m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
-            ::AllocateSharedPtr(m_session, m_graph);
-	
-        //Setting parameters for homogeneous problems
-        m_HomoDirec       = 0;
-        m_useFFT          = false;
-        m_HomogeneousType = eNotHomogeneous;
-        m_SingleMode	  = false;
-        m_HalfMode	  = false;
-        m_MultipleModes   = false;
-	
-        if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
-        {
-            std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
-            m_spacedim          = 3;
-            
-            if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
-               (HomoStr == "1D")||(HomoStr == "Homo1D"))
-            {
-                m_HomogeneousType = eHomogeneous1D;
-                m_LhomZ           = m_session->GetParameter("LZ");
-                m_HomoDirec       = 1;
-		
-                if(m_session->DefinesSolverInfo("ModeType"))
-                {
-                    m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
-                    m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
-                    m_session->MatchSolverInfo("ModeType","MultipleModes",m_MultipleModes,false);
-                }
-		
-                if(m_session->DefinesSolverInfo("ModeType"))
-                {
-                    if(m_SingleMode)
-                    {
-                        m_npointsZ=2;
-			
-                    }
-                    else if(m_HalfMode)
-                    {
-                        m_npointsZ=1;
-			
-                    }
-                    else if(m_MultipleModes)
-                    {
-                        m_npointsZ        = m_session->GetParameter("HomModesZ");
-                    }
-                    else
-                    {
-                        ASSERTL0(false, "SolverInfo ModeType not valid");	
-			
-			
-                    }
-                }
-                else 
-                {
-                    m_session->LoadParameter("HomModesZ",m_npointsZ);
-                    
-                }
-                
-            }
-            
-            if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
-               (HomoStr == "2D")||(HomoStr == "Homo2D"))
-            {
-                m_HomogeneousType = eHomogeneous2D;
-                m_session->LoadParameter("HomModesY", m_npointsY);
-                m_session->LoadParameter("LY",        m_LhomY);
-                m_session->LoadParameter("HomModesZ", m_npointsZ);
-                m_session->LoadParameter("LZ",        m_LhomZ);
-                m_HomoDirec       = 2;
-            }
-			
-            if((HomoStr == "HOMOGENEOUS3D")||(HomoStr == "Homogeneous3D")||
-               (HomoStr == "3D")||(HomoStr == "Homo3D"))
-            {
-                m_HomogeneousType = eHomogeneous3D;
-                m_session->LoadParameter("HomModesX",m_npointsX);
-                m_session->LoadParameter("LX",       m_LhomX   );
-                m_session->LoadParameter("HomModesY",m_npointsY);
-                m_session->LoadParameter("LY",       m_LhomY   );
-                m_session->LoadParameter("HomModesZ",m_npointsZ);
-                m_session->LoadParameter("LZ",       m_LhomZ   );
-                m_HomoDirec       = 3;
-            }
-			
-            if(m_session->DefinesSolverInfo("USEFFT"))
-            {
-                m_useFFT = true;
-            }
-        }
-        else
-        {
-            m_npointsZ = 1; // set to default value so can use to identify 2d or 3D (homogeneous) expansions
-        }
-		
-        if(m_session->DefinesSolverInfo("PROJECTION"))
-        {
-            std::string ProjectStr
-			= m_session->GetSolverInfo("PROJECTION");
-			
-            if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
-               (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
-            {
-                m_projectionType = MultiRegions::eGalerkin;
-            }
-            else if(ProjectStr == "DisContinuous")
-            {
-                m_projectionType = MultiRegions::eDiscontinuous;
-            }
-            else
-            {
-                ASSERTL0(false,"PROJECTION value not recognised");
-            }
-        }
-        else
-        {
-            cerr << "Projection type not specified in SOLVERINFO,"
-                "defaulting to continuous Galerkin" << endl;
-            m_projectionType = MultiRegions::eGalerkin;
-        }
-        
-        SetUpBaseFields(m_graph);
-        ASSERTL0(m_session->DefinesFunction("BaseFlow"),
-                 "Base flow must be defined for linearised forms.");
-        string file = m_session->GetFunctionFilename("BaseFlow", 0);
-	
-	
-        //Periodic base flows
-        if(m_session->DefinesParameter("N_slices"))
-        {
-            m_session->LoadParameter("N_slices",m_slices);
-            if(m_slices>1)
-            {
-                DFT(file,m_slices);
-            }
-            else
-            {
-                ASSERTL0(false,"Number of slices must be a positive number greater than 1");
-            }
-        }
-        //Steady base-flow
-        else
-        {
-            m_slices=1;
-            
-            //BaseFlow from file
-            if (m_session->GetFunctionType("BaseFlow", m_session->GetVariable(0))
-                == LibUtilities::eFunctionTypeFile)
-            {
-                ImportFldBase(file,m_graph,1);
-		
-            }
-            //analytic base flow
-            else
-            {
-                int nq = m_base[0]->GetNpoints();
-                Array<OneD,NekDouble> x0(nq);
-                Array<OneD,NekDouble> x1(nq);
-                Array<OneD,NekDouble> x2(nq);
-		
-                // get the coordinates (assuming all fields have the same
-                // discretisation)
-                m_base[0]->GetCoords(x0,x1,x2);
-                for(unsigned int i = 0 ; i < m_base.num_elements(); i++)
-                {
-                    LibUtilities::EquationSharedPtr ifunc
-                        = m_session->GetFunction("BaseFlow", i);
-                    
-                    ifunc->Evaluate(x0,x1,x2,m_base[i]->UpdatePhys());
-                    
-                    m_base[i]->SetPhysState(true); 
-                    m_base[i]->FwdTrans_IterPerExp(m_base[i]->GetPhys(),
-                                                   m_base[i]->UpdateCoeffs());
-                }
-            }
-        }
-    }
-    
-    LinearisedAdvection::~LinearisedAdvection()
-    {
-    }
-    
-    void LinearisedAdvection::SetUpBaseFields(SpatialDomains::MeshGraphSharedPtr &mesh)
-    {
-        int nvariables = m_session->GetVariables().size();
-        int i;
-        m_base = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
-        if (m_projectionType == MultiRegions::eGalerkin)
-        {
-            switch (m_expdim)
-            {
-            case 1:
-                {
-                    if(m_HomogeneousType == eHomogeneous2D)
-                    {
-                        const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
-                        const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-                        
-                        for(i = 0 ; i < m_base.num_elements(); i++)
-                        {
-                            m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
-                        }
-                    }
-                    
-                    else {
-                        
-                        for(i = 0 ; i < m_base.num_elements(); i++)
-                        {
-                            m_base[i] = MemoryManager<MultiRegions::ContField1D>
-                                ::AllocateSharedPtr(m_session,mesh,
-                                                    m_session->GetVariable(i));
-                        }
-                    }
-                    
-                }
-                break;
-            case 2:
-                {
-                    if(m_HomogeneousType == eHomogeneous1D)
-                    {
-                        if(m_SingleMode)
-                        {
-                            const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
-                            const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-                            
-                            for(i = 0 ; i < m_base.num_elements(); i++)
-                            {								
-                                m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
-                                m_base[i]->SetWaveSpace(true);
-                                
-				
-                            } 
-                        }
-                        else if(m_HalfMode)
-                        {
-                            //1 plane field (half mode expansion)
-                            const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
-                            const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierHalfModeRe,m_npointsZ,PkeyZ);
-                            
-                            for(i = 0 ; i < m_base.num_elements(); i++)
-                            {																
-                                m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
-                                m_base[i]->SetWaveSpace(true);
-                                
-                            } 
-                            
-                        }
-                        else 
-                        {
-                            const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-                            const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-                            
-                            
-                            for(i = 0 ; i < m_base.num_elements(); i++)
-                            {
-                                m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
-                                m_base[i]->SetWaveSpace(false);
-                            } 
-                            
-                        }
-                    }
-                    else
-                    {
-                        i = 0;
-                        MultiRegions::ContField2DSharedPtr firstbase =
-                            MemoryManager<MultiRegions::ContField2D>
-                            ::AllocateSharedPtr(m_session,mesh,
-                                                m_session->GetVariable(i));
-                        m_base[0]=firstbase;
-			
-                        for(i = 1 ; i < m_base.num_elements(); i++)
-                        {
-                            m_base[i] = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(*firstbase,mesh,
-                                                    m_session->GetVariable(i));
-                        }
-                    }
-                }
-                break;
-            case 3:
-                {
-                    if(m_HomogeneousType == eHomogeneous3D)
-                    {
-                        ASSERTL0(false,"3D fully periodic problems not implemented yet");
-                    }
-                    else
-                    {
-                        MultiRegions::ContField3DSharedPtr firstbase =
-                            MemoryManager<MultiRegions::ContField3D>
-                            ::AllocateSharedPtr(m_session,mesh,
-                                                m_session->GetVariable(0));
-                        m_base[0] = firstbase;
-			
-                        for(i = 1 ; i < m_base.num_elements(); i++)
-                        {
-                            m_base[i] = MemoryManager<MultiRegions::ContField3D>
-                                ::AllocateSharedPtr(*firstbase,mesh,
-                                                    m_session->GetVariable(i));
-                        }
-                    }	        
-                }
-                break;
-            default:
-                ASSERTL0(false,"Expansion dimension not recognised");
-                break;
-            }
-        }
-        else
-        {
-            switch(m_expdim)
-            {
-            case 1:
-                {
-                    if(m_HomogeneousType == eHomogeneous2D)
-                    {
-                        const LibUtilities::PointsKey PkeyY(m_npointsY,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,m_npointsY,PkeyY);
-                        const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-                        
-                        for(i = 0 ; i < m_base.num_elements(); i++)
-                        {
-                            m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
-                        }
-                    }
-                    else 
-                    {
-                        for(i = 0 ; i < m_base.num_elements(); i++)
-                        {
-                            m_base[i] = MemoryManager<MultiRegions
-                                ::DisContField1D>::AllocateSharedPtr(m_session,mesh,
-                                                                     m_session->GetVariable(i));
-                        }
-                    }
-                    break;
-                }
-            case 2:
-                {
-                    if(m_HomogeneousType == eHomogeneous1D)
-                    {
-                        
-                        const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-                        const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-                        
-                        for(i = 0 ; i < m_base.num_elements(); i++)
-                        {
-                            m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
-                        }
-			
-			
-			
-                    }
-                    else
-                    {
-                        for(i = 0 ; i < m_base.num_elements(); i++)
-                        {
-                            m_base[i] = MemoryManager<MultiRegions
-                                ::DisContField2D>::AllocateSharedPtr(m_session, mesh,
-                                                                     m_session->GetVariable(i));
-                        }
-                    }
-                    break;
-                    
-                }
-            case 3:
-                ASSERTL0(false,"3 D not set up");
-            default:
-                ASSERTL0(false,"Expansion dimension not recognised");
-					break;
-            }
-        }
-        
-    }
-    
-    /**
-     * Import field from infile and load into \a m_fields. This routine will
-     * also perform a \a BwdTrans to ensure data is in both the physical and
-     * coefficient storage.
-     * @param   infile          Filename to read.
-     */
-    void LinearisedAdvection::ImportFldBase(std::string pInfile,
-            SpatialDomains::MeshGraphSharedPtr pGraph, int cnt)
-    {
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-        std::vector<std::vector<NekDouble> > FieldData;
-        int nqtot = m_base[0]->GetTotPoints();
-        
-        //Get Homogeneous
-        
-        LibUtilities::Import(pInfile,FieldDef,FieldData);
-        
-        int nvar = m_session->GetVariables().size();
-        int s;
-        
-        if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
-        {
-            std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
-        }
-	
-        // copy FieldData into m_fields
-        for(int j = 0; j < nvar; ++j)
-        {
-            for(int i = 0; i < FieldDef.size(); ++i)
-            {
-                if((m_session->DefinesSolverInfo("HOMOGENEOUS") &&
-                   (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D" ||
-                    m_session->GetSolverInfo("HOMOGENEOUS")=="1D" ||
-                    m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D")) &&
-                     m_MultipleModes==false)
-                {
-                    // w-component must be ignored and set to zero.
-                    if (j != nvar - 2)
-                    {
-                        // p component (it is 4th variable of the 3D and corresponds 3nd variable of 2D)
-                        s = (j == nvar - 1) ? 2 : j;
+        std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
+        m_spacedim          = 3;
 
-                        //extraction of the 2D
-                        m_base[j]->ExtractDataToCoeffs(
-                                            FieldDef[i],
-                                            FieldData[i],
-                                            FieldDef[i]->m_fields[s],
-                                            m_base[j]->UpdateCoeffs());
-                        
-                    }
+        if((HomoStr == "HOMOGENEOUS1D")||(HomoStr == "Homogeneous1D")||
+           (HomoStr == "1D")||(HomoStr == "Homo1D"))
+        {
+            m_HomogeneousType = eHomogeneous1D;
+            m_LhomZ           = m_session->GetParameter("LZ");
+            m_HomoDirec       = 1;
 
-                    //Put zero on higher modes
-                    int ncplane = (m_base[0]->GetNcoeffs()) / m_npointsZ;
+            m_homogen_dealiasing = pSession->DefinesSolverInfo("DEALIASING");
 
-                    if (m_npointsZ > 2)
-                    {
-                        Vmath::Zero(ncplane*(m_npointsZ-2),
-                                    &m_base[j]->UpdateCoeffs()[2*ncplane], 1);
-                    }
-                }
-                // 2D cases and Homogeneous1D Base Flows
-                else
-                {
-                    bool flag = FieldDef[i]->m_fields[j] ==
-                                                    m_session->GetVariable(j);
-
-                    ASSERTL1(flag, (std::string("Order of ") + pInfile
-                                    + std::string(" data and that defined in "
-                                                  "m_boundaryconditions differs")).c_str());
-                    
-                    m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                   FieldDef[i]->m_fields[j],
-                                                   m_base[j]->UpdateCoeffs());
-                }
-            }
-            
-            if(m_SingleMode || m_HalfMode)
+            if(m_session->DefinesSolverInfo("ModeType"))
             {
-                m_base[j]->SetWaveSpace(true);
-		
-                m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
-                                    m_base[j]->UpdatePhys());
-                
+                m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
+                m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
+                m_session->MatchSolverInfo("ModeType","MultipleModes",m_MultipleModes,false);
+            }
+
+            if(m_session->DefinesSolverInfo("ModeType"))
+            {
                 if(m_SingleMode)
                 {
-                    //copy the bwd into the second plane for single Mode Analysis
-                    int ncplane=(m_base[0]->GetNpoints())/m_npointsZ;
-                    Vmath::Vcopy(ncplane,&m_base[j]->GetPhys()[0],1,&m_base[j]->UpdatePhys()[ncplane],1);
+                    m_npointsZ=2;
+
+                }
+                else if(m_HalfMode)
+                {
+                    m_npointsZ=1;
+
+                }
+                else if(m_MultipleModes)
+                {
+                    m_npointsZ        = m_session->GetParameter("HomModesZ");
+                }
+                else
+                {
+                    ASSERTL0(false, "SolverInfo ModeType not valid");
+
+
                 }
             }
             else
             {
-                m_base[j]->BwdTrans(m_base[j]->GetCoeffs(),
-                                    m_base[j]->UpdatePhys());
-                
+                m_session->LoadParameter("HomModesZ",m_npointsZ);
+
             }
-            
+
         }
-	
-        //std::string outname ="BaseFlow.bse";
-        //WriteFldBase(outname);
-	
-        if(m_session->DefinesParameter("N_slices"))
+
+        if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
+           (HomoStr == "2D")||(HomoStr == "Homo2D"))
         {
-            m_nConvectiveFields = m_base.num_elements()-1;
-            
-            for(int i=0; i<m_nConvectiveFields;++i)
-            {
-                
-                Vmath::Vcopy(nqtot, &m_base[i]->GetPhys()[0], 1, &m_interp[i][cnt*nqtot], 1);				
-            }
-            
+            m_HomogeneousType = eHomogeneous2D;
+            m_session->LoadParameter("HomModesY", m_npointsY);
+            m_session->LoadParameter("LY",        m_LhomY);
+            m_session->LoadParameter("HomModesZ", m_npointsZ);
+            m_session->LoadParameter("LZ",        m_LhomZ);
+            m_HomoDirec       = 2;
+        }
+
+        if((HomoStr == "HOMOGENEOUS3D")||(HomoStr == "Homogeneous3D")||
+           (HomoStr == "3D")||(HomoStr == "Homo3D"))
+        {
+            m_HomogeneousType = eHomogeneous3D;
+            m_session->LoadParameter("HomModesX",m_npointsX);
+            m_session->LoadParameter("LX",       m_LhomX   );
+            m_session->LoadParameter("HomModesY",m_npointsY);
+            m_session->LoadParameter("LY",       m_LhomY   );
+            m_session->LoadParameter("HomModesZ",m_npointsZ);
+            m_session->LoadParameter("LZ",       m_LhomZ   );
+            m_HomoDirec       = 3;
+        }
+
+        if(m_session->DefinesSolverInfo("USEFFT"))
+        {
+            m_useFFT = true;
         }
     }
-    
-    
-    //Evaluation of the advective terms
-    void LinearisedAdvection::v_ComputeAdvectionTerm(
-            Array<OneD, MultiRegions::ExpListSharedPtr > &pFields,
-            const Array<OneD, Array<OneD, NekDouble> > &pVelocity,
-            const Array<OneD, const NekDouble> &pU,
-            Array<OneD, NekDouble> &pOutarray,
-            int pVelocityComponent,
-			NekDouble m_time,
-            Array<OneD, NekDouble> &pWk)
+    else
     {
-        int ndim       = m_nConvectiveFields;
-        int nPointsTot = pFields[0]->GetNpoints();
+        m_npointsZ = 1; // set to default value so can use to identify 2d or 3D (homogeneous) expansions
+    }
+
+    if(m_session->DefinesSolverInfo("PROJECTION"))
+    {
+        std::string ProjectStr
+        = m_session->GetSolverInfo("PROJECTION");
+        
+        if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
+           (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
+        {
+            m_projectionType = MultiRegions::eGalerkin;
+        }
+        else if(ProjectStr == "DisContinuous")
+        {
+            m_projectionType = MultiRegions::eDiscontinuous;
+        }
+        else
+        {
+            ASSERTL0(false,"PROJECTION value not recognised");
+        }
+    }
+    else
+    {
+        cerr << "Projection type not specified in SOLVERINFO,"
+            "defaulting to continuous Galerkin" << endl;
+        m_projectionType = MultiRegions::eGalerkin;
+    }
+
+    int nvar = m_session->GetVariables().size();
+    m_baseflow = Array<OneD, Array<OneD, NekDouble> >(nvar);
+    for (int i = 0; i < nvar; ++i)
+    {
+        m_baseflow[i] = Array<OneD, NekDouble>(pFields[i]->GetTotPoints(), 0.0);
+    }
+
+    ASSERTL0(m_session->DefinesFunction("BaseFlow"),
+             "Base flow must be defined for linearised forms.");
+    string file = m_session->GetFunctionFilename("BaseFlow", 0);
+
+
+    //Periodic base flows
+    if(m_session->DefinesParameter("N_slices"))
+    {
+        m_session->LoadParameter("N_slices",m_slices);
+        if(m_slices>1)
+        {
+            DFT(file,pFields,m_slices);
+        }
+        else
+        {
+            ASSERTL0(false,"Number of slices must be a positive number greater than 1");
+        }
+    }
+    //Steady base-flow
+    else
+    {
+        m_slices=1;
+
+        //BaseFlow from file
+        if (m_session->GetFunctionType("BaseFlow", m_session->GetVariable(0))
+            == LibUtilities::eFunctionTypeFile)
+        {
+            ImportFldBase(file,pFields,1);
+
+        }
+        //analytic base flow
+        else
+        {
+            int nq = pFields[0]->GetNpoints();
+            Array<OneD,NekDouble> x0(nq);
+            Array<OneD,NekDouble> x1(nq);
+            Array<OneD,NekDouble> x2(nq);
+
+            // get the coordinates (assuming all fields have the same
+            // discretisation)
+            pFields[0]->GetCoords(x0,x1,x2);
+
+            for(unsigned int i = 0 ; i < pFields.num_elements(); i++)
+            {
+                LibUtilities::EquationSharedPtr ifunc
+                    = m_session->GetFunction("BaseFlow", i);
+
+                ifunc->Evaluate(x0,x1,x2,m_baseflow[i]);
+            }
+        }
+    }
+
+    if(m_session->DefinesParameter("period"))
+    {
+        m_period=m_session->GetParameter("period");
+    }
+    else
+    {
+        m_period=(m_session->GetParameter("TimeStep")*m_slices)/(m_slices-1.);
+    }
+
+}
+
+LinearisedAdvection::~LinearisedAdvection()
+{
+}
+
+
+//Advection function
+
+void LinearisedAdvection::v_Advect(
+    const int nConvectiveFields,
+    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+    const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+    const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+    Array<OneD, Array<OneD, NekDouble> >              &outarray,
+    const NekDouble                                   &time)
+{
+    int nqtot            = fields[0]->GetTotPoints();
+    ASSERTL1(nConvectiveFields == inarray.num_elements(),"Number of convective fields and Inarray are not compatible");
+
+    Array<OneD, NekDouble > Deriv = Array<OneD, NekDouble> (nqtot*nConvectiveFields);
+
+    for(int n = 0; n < nConvectiveFields; ++n)
+    {
+        int ndim       = advVel.num_elements();
+        int nPointsTot = fields[0]->GetNpoints();
 
         Array<OneD, NekDouble> grad0,grad1,grad2;
 
         //Evaluation of the gradiend of each component of the base flow
         //\nabla U
         Array<OneD, NekDouble> grad_base_u0,grad_base_u1,grad_base_u2;
-       
-		// \nabla V
+
+        // \nabla V
         Array<OneD, NekDouble> grad_base_v0,grad_base_v1,grad_base_v2;
 
         // \nabla W
         Array<OneD, NekDouble> grad_base_w0,grad_base_w1,grad_base_w2;
-        
+
         grad0 = Array<OneD, NekDouble> (nPointsTot);
         grad_base_u0 = Array<OneD, NekDouble> (nPointsTot);
         grad_base_v0 = Array<OneD, NekDouble> (nPointsTot);
-        grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);	
-        
+        grad_base_w0 = Array<OneD, NekDouble> (nPointsTot);
+
         //Evaluation of the base flow for periodic cases
         //(it requires fld files)
         if(m_slices>1)
-        {				
+        {
             if (m_session->GetFunctionType("BaseFlow", 0)
                 == LibUtilities::eFunctionTypeFile)
             {
-                for(int i=0; i<m_nConvectiveFields;++i)
+                for(int i=0; i<ndim;++i)
                 {
-                    UpdateBase(m_slices,m_interp[i],m_base[i]->UpdatePhys(),m_time,m_period);
+                    UpdateBase(m_slices,m_interp[i],m_baseflow[i],time,m_period);
                 }
             }
-            else 
+            else
             {
-                ASSERTL0(false, "Periodic Base flow requires filename_ files");	
+                ASSERTL0(false, "Periodic Base flow requires filename_ files");
             }
         }
-	
-	
+
+
         //Evaluate the linearised advection term
-        switch(ndim) 
+        switch(ndim)
         {
             // 1D
         case 1:
-            pFields[0]->PhysDeriv(pU,grad0);
-            pFields[0]->PhysDeriv(m_base[0]->GetPhys(),grad_base_u0);
+            fields[0]->PhysDeriv(inarray[n],grad0);
+            fields[0]->PhysDeriv(m_baseflow[0],grad_base_u0);
             //Evaluate  U du'/dx
-            Vmath::Vmul(nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
+            Vmath::Vmul(nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
             //Evaluate U du'/dx+ u' dU/dx
-            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
+            Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
             break;
-            
+
             //2D
         case 2:
             grad1 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
-            
-            pFields[0]->PhysDeriv(pU,grad0,grad1);
-            
+            fields[0]->PhysDeriv(inarray[n],grad0,grad1);
+
             //Derivates of the base flow
-            pFields[0]-> PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1);
-            pFields[0]-> PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1);
-            
+            fields[0]-> PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1);
+            fields[0]-> PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1);
+
             //Since the components of the velocity are passed one by
             //one, it is necessary to distinguish which term is
             //consider
-            switch (pVelocityComponent)
+            switch (n)
             {
                 //x-equation
             case 0:
                 // Evaluate U du'/dx
-                Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
+                Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                 //Evaluate U du'/dx+ V du'/dy
-                Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
+                Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                 //Evaluate (U du'/dx+ V du'/dy)+u' dU/dx
-                Vmath::Vvtvp(nPointsTot,grad_base_u0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
+                Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                 //Evaluate (U du'/dx+ V du'/dy +u' dU/dx)+v' dU/dy
-                Vmath::Vvtvp(nPointsTot,grad_base_u1,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
+                Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                 break;
-		
+
                 //y-equation
             case 1:
                 // Evaluate U dv'/dx
-                Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
+                Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                 //Evaluate U dv'/dx+ V dv'/dy
-                Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
+                Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                 //Evaluate (U dv'/dx+ V dv'/dy)+u' dV/dx
-                Vmath::Vvtvp(nPointsTot,grad_base_v0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
+                Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                 //Evaluate (U dv'/dx+ V dv'/dy +u' dv/dx)+v' dV/dy
-                Vmath::Vvtvp(nPointsTot,grad_base_v1,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
+                Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                 break;
             }
             break;
-            
+
             //3D
         case 3:
             grad1 = Array<OneD, NekDouble> (nPointsTot);
@@ -680,17 +394,17 @@ namespace Nektar
             grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_v1 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_w1 = Array<OneD, NekDouble> (nPointsTot);
-            
+
             grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
-					
-            m_base[0]->PhysDeriv(m_base[0]->GetPhys(), grad_base_u0, grad_base_u1,grad_base_u2);
-            m_base[0]->PhysDeriv(m_base[1]->GetPhys(), grad_base_v0, grad_base_v1,grad_base_v2);
-            m_base[0]->PhysDeriv(m_base[2]->GetPhys(), grad_base_w0, grad_base_w1, grad_base_w2);	
-            
+
+            fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1,grad_base_u2);
+            fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1,grad_base_v2);
+            fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0, grad_base_w1, grad_base_w2);
+
             //HalfMode has W(x,y,t)=0
-            if(m_HalfMode)
+            if(m_HalfMode || m_SingleMode)
             {
                 for(int i=0; i<grad_base_u2.num_elements();++i)
                 {
@@ -699,130 +413,130 @@ namespace Nektar
                     grad_base_w2[i]=0;
                 }
             }
-            
-            pFields[0]->PhysDeriv(pU, grad0, grad1, grad2);
-            
-            switch (pVelocityComponent)
+
+            fields[0]->PhysDeriv(inarray[n], grad0, grad1, grad2);
+
+            switch (n)
             {
-                //x-equation	
+                //x-equation
             case 0:
                 if(m_homogen_dealiasing)
                 {
                     //U du'/dx
-                    pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
-                    
+                    fields[0]->DealiasedProd(m_baseflow[0],grad0,grad0,m_CoeffState);
+
                     //V du'/dy
-                    pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_CoeffState);
-                    
+                    fields[0]->DealiasedProd(m_baseflow[1],grad1,grad1,m_CoeffState);
+
                     //W du'/dx
-                    pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_CoeffState);
-                    
+                    fields[0]->DealiasedProd(m_baseflow[2],grad2,grad2,m_CoeffState);
+
                     // u' dU/dx
-                    pFields[0]->DealiasedProd(pVelocity[0],grad_base_u0,grad_base_u0,m_CoeffState);
+                    fields[0]->DealiasedProd(advVel[0],grad_base_u0,grad_base_u0,m_CoeffState);
                     // v' dU/dy
-                    pFields[0]->DealiasedProd(pVelocity[1],grad_base_u1,grad_base_u1,m_CoeffState);
+                    fields[0]->DealiasedProd(advVel[1],grad_base_u1,grad_base_u1,m_CoeffState);
                     // w' dU/dz
-                    pFields[0]->DealiasedProd(pVelocity[2],grad_base_u2,grad_base_u2,m_CoeffState);
-                    
-                    Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad_base_u0,1,pOutarray,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad_base_u1,1,pOutarray,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad_base_u2,1,pOutarray,1,pOutarray,1);
+                    fields[0]->DealiasedProd(advVel[2],grad_base_u2,grad_base_u2,m_CoeffState);
+
+                    Vmath::Vadd(nPointsTot,grad0,1,grad1,1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad2,1,outarray[n],1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad_base_u0,1,outarray[n],1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad_base_u1,1,outarray[n],1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad_base_u2,1,outarray[n],1,outarray[n],1);
                 }
                 else
                 {
                     //Evaluate U du'/dx
-                    Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
+                    Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                     //Evaluate U du'/dx+ V du'/dy
-                    Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy)+u' dU/dx
-                    Vmath::Vvtvp(nPointsTot,grad_base_u0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_u0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dU/dx)+v' dU/dy
-                    Vmath::Vvtvp(nPointsTot,grad_base_u1,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_u1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dU/dx +v' dU/dy) + W du'/dz
-                    Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad2,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dU/dx +v' dU/dy + W du'/dz)+ w' dU/dz
-                    Vmath::Vvtvp(nPointsTot,grad_base_u2,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_u2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
                 break;
-                //y-equation	
+                //y-equation
             case 1:
                 if(m_homogen_dealiasing)
                 {
                     //U dv'/dx
-                    pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
+                    fields[0]->DealiasedProd(m_baseflow[0],grad0,grad0,m_CoeffState);
                     //V dv'/dy
-                    pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_CoeffState);
+                    fields[0]->DealiasedProd(m_baseflow[1],grad1,grad1,m_CoeffState);
                     //W dv'/dx
-                    pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_CoeffState);
+                    fields[0]->DealiasedProd(m_baseflow[2],grad2,grad2,m_CoeffState);
                     // u' dV/dx
-                    pFields[0]->DealiasedProd(pVelocity[0],grad_base_v0,grad_base_v0,m_CoeffState);
+                    fields[0]->DealiasedProd(advVel[0],grad_base_v0,grad_base_v0,m_CoeffState);
                     // v' dV/dy
-                    pFields[0]->DealiasedProd(pVelocity[1],grad_base_v1,grad_base_v1,m_CoeffState);
+                    fields[0]->DealiasedProd(advVel[1],grad_base_v1,grad_base_v1,m_CoeffState);
                     // w' dV/dz
-                    pFields[0]->DealiasedProd(pVelocity[2],grad_base_v2,grad_base_v2,m_CoeffState);
-                    
-                    Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad_base_v0,1,pOutarray,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad_base_v1,1,pOutarray,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad_base_v2,1,pOutarray,1,pOutarray,1);
+                    fields[0]->DealiasedProd(advVel[2],grad_base_v2,grad_base_v2,m_CoeffState);
+
+                    Vmath::Vadd(nPointsTot,grad0,1,grad1,1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad2,1,outarray[n],1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad_base_v0,1,outarray[n],1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad_base_v1,1,outarray[n],1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad_base_v2,1,outarray[n],1,outarray[n],1);
                 }
-                else 
+                else
                 {
                     //Evaluate U dv'/dx
-                    Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
+                    Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                     //Evaluate U dv'/dx+ V dv'/dy
-                    Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U dv'/dx+ V dv'/dy)+u' dV/dx
-                    Vmath::Vvtvp(nPointsTot,grad_base_v0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_v0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V du'/dy +u' dV/dx)+v' dV/dy
-                    Vmath::Vvtvp(nPointsTot,grad_base_v1,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_v1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V dv'/dy +u' dV/dx +v' dV/dy) + W du'/dz
-                    Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad2,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U du'/dx+ V dv'/dy +u' dV/dx +v' dV/dy + W dv'/dz)+ w' dV/dz
-                    Vmath::Vvtvp(nPointsTot,grad_base_v2,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_v2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
                 break;
-                
-                //z-equation	
+
+                //z-equation
             case 2:
                 if(m_homogen_dealiasing)
                 {
                     //U dw'/dx
-                    pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
+                    fields[0]->DealiasedProd(m_baseflow[0],grad0,grad0,m_CoeffState);
                     //V dw'/dy
-                    pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_CoeffState);
+                    fields[0]->DealiasedProd(m_baseflow[1],grad1,grad1,m_CoeffState);
                     //W dw'/dx
-                    pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_CoeffState);
+                    fields[0]->DealiasedProd(m_baseflow[2],grad2,grad2,m_CoeffState);
                     // u' dW/dx
-                    pFields[0]->DealiasedProd(pVelocity[0],grad_base_w0,grad_base_w0,m_CoeffState);
+                    fields[0]->DealiasedProd(advVel[0],grad_base_w0,grad_base_w0,m_CoeffState);
                     // v' dW/dy
-                    pFields[0]->DealiasedProd(pVelocity[1],grad_base_w1,grad_base_w1,m_CoeffState);
+                    fields[0]->DealiasedProd(advVel[1],grad_base_w1,grad_base_w1,m_CoeffState);
                     // w' dW/dz
-                    pFields[0]->DealiasedProd(pVelocity[2],grad_base_w2,grad_base_w2,m_CoeffState);
-                    
-                    Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad_base_w0,1,pOutarray,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad_base_w1,1,pOutarray,1,pOutarray,1);
-                    Vmath::Vadd(nPointsTot,grad_base_w2,1,pOutarray,1,pOutarray,1);
+                    fields[0]->DealiasedProd(advVel[2],grad_base_w2,grad_base_w2,m_CoeffState);
+
+                    Vmath::Vadd(nPointsTot,grad0,1,grad1,1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad2,1,outarray[n],1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad_base_w0,1,outarray[n],1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad_base_w1,1,outarray[n],1,outarray[n],1);
+                    Vmath::Vadd(nPointsTot,grad_base_w2,1,outarray[n],1,outarray[n],1);
                 }
                 else
                 {
                     //Evaluate U dw'/dx
-                    Vmath::Vmul (nPointsTot,grad0,1,m_base[0]->GetPhys(),1,pOutarray,1);
+                    Vmath::Vmul (nPointsTot,grad0,1,m_baseflow[0],1,outarray[n],1);
                     //Evaluate U dw'/dx+ V dw'/dx
-                    Vmath::Vvtvp(nPointsTot,grad1,1,m_base[1]->GetPhys(),1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad1,1,m_baseflow[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U dw'/dx+ V dw'/dx)+u' dW/dx
-                    Vmath::Vvtvp(nPointsTot,grad_base_w0,1,pVelocity[0],1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_w0,1,advVel[0],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U dw'/dx+ V dw'/dx +w' dW/dx)+v' dW/dy
-                    Vmath::Vvtvp(nPointsTot,grad_base_w1,1,pVelocity[1],1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_w1,1,advVel[1],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U dw'/dx+ V dw'/dx +u' dW/dx +v' dW/dy) + W dw'/dz
-                    Vmath::Vvtvp(nPointsTot,grad2,1,m_base[2]->GetPhys(),1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad2,1,m_baseflow[2],1,outarray[n],1,outarray[n],1);
                     //Evaluate (U dw'/dx+ V dw'/dx +u' dW/dx +v' dW/dy + W dw'/dz)+ w' dW/dz
-                    Vmath::Vvtvp(nPointsTot,grad_base_w2,1,pVelocity[2],1,pOutarray,1,pOutarray,1);
+                    Vmath::Vvtvp(nPointsTot,grad_base_w2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
                 break;
             }
@@ -830,234 +544,328 @@ namespace Nektar
         default:
             ASSERTL0(false,"dimension unknown");
         }
+
+        Vmath::Neg(nqtot,outarray[n],1);
+    }
+}
+    
+void LinearisedAdvection::v_SetBaseFlow(
+    const Array<OneD, Array<OneD, NekDouble> >    &inarray)
+{
+    if (m_session->GetSolverInfo("EqType") == "UnsteadyNavierStokes")
+    {
+        // The SFD method is only applied to the velocity variables in
+        // incompressible
+        ASSERTL1(inarray.num_elements() == (m_baseflow.num_elements() - 1),
+                 "Number of base flow variables does not match what is "
+                 "expected.");
+    }
+    else
+    {
+        ASSERTL1(inarray.num_elements() == (m_baseflow.num_elements()),
+             "Number of base flow variables does not match what is expected.");
+    }
+
+    int npts = inarray[0].num_elements();
+
+    for (int i = 0; i < inarray.num_elements(); ++i)
+    {
+        ASSERTL1(npts == m_baseflow[i].num_elements(),
+             "Size of base flow array does not match expected.");
+        Vmath::Vcopy(npts, inarray[i], 1, m_baseflow[i], 1);
+    }
+}
+
+
+/**
+ * Import field from infile and load into \a m_fields. This routine will
+ * also perform a \a BwdTrans to ensure data is in both the physical and
+ * coefficient storage.
+ * @param   infile          Filename to read.
+ */
+void LinearisedAdvection::ImportFldBase(std::string pInfile,
+        Array<OneD, MultiRegions::ExpListSharedPtr>& pFields, int slice)
+{
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+    std::vector<std::vector<NekDouble> > FieldData;
+
+    int nqtot = m_baseflow[0].num_elements();
+    int nvar = m_session->GetVariables().size();
+    int s;
+    Array<OneD, NekDouble> tmp_coeff(pFields[0]->GetNcoeffs(), 0.0);
+
+    //Get Homogeneous
+    LibUtilities::FieldIOSharedPtr fld =
+    MemoryManager<LibUtilities::FieldIO>::AllocateSharedPtr(
+                                                    m_session->GetComm());
+    fld->Import(pInfile, FieldDef, FieldData);
+
+
+    if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
+    {
+        std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
     }
     
-    void LinearisedAdvection::UpdateBase( const NekDouble m_slices,
-                                          Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD, NekDouble> &outarray,
-                                          const NekDouble m_time,
-                                          const NekDouble m_period)
+    // copy FieldData into m_fields
+    for(int j = 0; j < nvar; ++j)
     {
-        
-        int npoints=m_base[0]->GetTotPoints();
-	
-        NekDouble BetaT=2*M_PI*fmod (m_time, m_period) / m_period;
-        NekDouble phase;
-        Array<OneD, NekDouble> auxiliary(npoints);
-	
-        Vmath::Vcopy(npoints,&inarray[0],1,&outarray[0],1);
-        Vmath::Svtvp(npoints, cos(0.5*m_slices*BetaT),&inarray[npoints],1,&outarray[0],1,&outarray[0],1);
-	
-        for (int i = 2; i < m_slices; i += 2) 
+        for(int i = 0; i < FieldDef.size(); ++i)
         {
-            phase = (i>>1) * BetaT;
-            
-            Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
-            Vmath::Svtvp(npoints, sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
-        }
-	
-    }
-    
-    void LinearisedAdvection::WriteFldBase(std::string &outname)
-    {
-        
-        Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(m_base.num_elements());
-        Array<OneD, std::string>  variables(m_base.num_elements());
-        
-        for(int i = 0; i < m_base.num_elements(); ++i)
-        {
-            fieldcoeffs[i] = m_base[i]->UpdateCoeffs();
-            variables[i] = m_boundaryConditions->GetVariable(i);
-        }
-        WriteFldBase(outname, m_base[0], fieldcoeffs, variables);
-	
-    }
-    
-    
-    /**
-     * Writes the field data to a file with the given filename.
-     * @param   outname     Filename to write to.
-     * @param   field       ExpList on which data is based
-     * @param fieldcoeffs   An array of array of expansion coefficients
-     * @param  variables    An array of variable names
-     */
-    void LinearisedAdvection::WriteFldBase(std::string &outname, MultiRegions::ExpListSharedPtr &field, Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables)
-    {
-        
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef= field->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-	
-        // copy Data into FieldData and set variable
-        for(int j = 0; j < fieldcoeffs.num_elements(); ++j)
-        {
-            for(int i = 0; i < FieldDef.size(); ++i)
+            if((m_session->DefinesSolverInfo("HOMOGENEOUS") &&
+               (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D" ||
+                m_session->GetSolverInfo("HOMOGENEOUS")=="1D" ||
+                m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D")) &&
+                 m_MultipleModes==false)
             {
-                // Could do a search here to find correct variable
-                FieldDef[i]->m_fields.push_back(variables[j]);
-                //cout<<"v="<<variables[j]<<endl;                
-                field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
-            }            
-        }
-        LibUtilities::Write(outname,FieldDef,FieldData);
-    }
-    
-    
-    DNekBlkMatSharedPtr LinearisedAdvection::GetFloquetBlockMatrix(FloquetMatType mattype, bool UseContCoeffs) const
-    {
-        DNekMatSharedPtr    loc_mat;
-        DNekBlkMatSharedPtr BlkMatrix;
-        int n_exp = 0;
-        
-        n_exp = m_base[0]->GetTotPoints(); // will operatore on m_phys
-        
-        Array<OneD,unsigned int> nrows(n_exp);
-        Array<OneD,unsigned int> ncols(n_exp);
-	
-        nrows = Array<OneD, unsigned int>(n_exp,m_slices);
-        ncols = Array<OneD, unsigned int>(n_exp,m_slices);
-        
-        MatrixStorage blkmatStorage = eDIAGONAL;
-        BlkMatrix = MemoryManager<DNekBlkMat>
-            ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
-        
-	
-        const LibUtilities::PointsKey Pkey(m_slices,LibUtilities::eFourierEvenlySpaced);
-        const LibUtilities::BasisKey  BK(LibUtilities::eFourier,m_slices,Pkey);
-        StdRegions::StdSegExp StdSeg(BK);
-	
-        StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
-                                        StdSeg.DetShapeType(),
-                                        StdSeg);
-        
-        loc_mat = StdSeg.GetStdMatrix(matkey);
-	
-        // set up array of block matrices.
-        for(int i = 0; i < n_exp; ++i)
-        {
-            BlkMatrix->SetBlock(i,i,loc_mat);
-        }
-	
-        return BlkMatrix;
-    }
-    
-    //Discrete Fourier Transform for Floquet analysis
-    void LinearisedAdvection::DFT(const string file, const NekDouble m_slices)
-    {
-        int npoints=m_base[0]->GetTotPoints();
-	
-        //Convected fields
-        int ConvectedFields=m_base.num_elements()-1;
-	
-        m_interp= Array<OneD, Array<OneD, NekDouble> > (ConvectedFields);
-        for(int i=0; i<ConvectedFields;++i)
-        {
-            m_interp[i]=Array<OneD,NekDouble>(npoints*m_slices);
-        }
-	
-        //Import the slides into auxiliary vector
-        //The base flow should be stored in the form filename_i.bse
-        for (int i=0; i< m_slices; ++i)
-        {
-            char chkout[16] = "";
-            sprintf(chkout, "%d", i);
-            ImportFldBase(file+"_"+chkout+".bse",m_graph,i);
-        } 
-	
-	
-        // Discrete Fourier Transform of the fields
-        for(int k=0; k< ConvectedFields;++k)
-        {
-#ifdef NEKTAR_USING_FFTW
-            
-            //Discrete Fourier Transform using FFTW
-            Array<OneD, NekDouble> fft_in(npoints*m_slices);
-            Array<OneD, NekDouble> fft_out(npoints*m_slices);
-            
-            Array<OneD, NekDouble> m_tmpIN(m_slices);
-            Array<OneD, NekDouble> m_tmpOUT(m_slices);
-            
-            //Shuffle the data
-            for(int j= 0; j < m_slices; ++j)
-            {
-                Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(fft_in[j]),m_slices);
+                // w-component must be ignored and set to zero.
+                if (j != nvar - 2)
+                {
+                    // p component (it is 4th variable of the 3D and corresponds 3nd variable of 2D)
+                    s = (j == nvar - 1) ? 2 : j;
+
+                    //extraction of the 2D
+                    pFields[j]->ExtractDataToCoeffs(
+                                        FieldDef[i],
+                                        FieldData[i],
+                                        FieldDef[i]->m_fields[s],
+                                        tmp_coeff);
+
+                }
+
+                //Put zero on higher modes
+                int ncplane = (pFields[0]->GetNcoeffs()) / m_npointsZ;
+
+                if (m_npointsZ > 2)
+                {
+                    Vmath::Zero(ncplane*(m_npointsZ-2),
+                                &tmp_coeff[2*ncplane], 1);
+                }
             }
-            
-            m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_slices);
-            
-            //FFT Transform
-            for(int i=0; i<npoints; i++)
+            // 2D cases and Homogeneous1D Base Flows
+            else
             {
-                m_FFT->FFTFwdTrans(m_tmpIN =fft_in + i*m_slices, m_tmpOUT =fft_out + i*m_slices);
+                bool flag = FieldDef[i]->m_fields[j] ==
+                                                m_session->GetVariable(j);
+
+                ASSERTL1(flag, (std::string("Order of ") + pInfile
+                                + std::string(" data and that defined in "
+                                              "m_boundaryconditions differs")).c_str());
                 
+                pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                               FieldDef[i]->m_fields[j],
+                                               tmp_coeff);
             }
+        }
+
+        if(m_SingleMode || m_HalfMode)
+        {
+            //pFields[j]->SetWaveSpace(true);
+
+            pFields[j]->GetPlane(0)->BwdTrans(tmp_coeff, m_baseflow[j]);
             
-            //Reshuffle data
-            for(int s = 0; s < m_slices; ++s)
-            {						
-                Vmath::Vcopy(npoints,&fft_out[s],m_slices,&m_interp[k][s*npoints],1);
-		
-            }
-            
-            Vmath::Zero(fft_in.num_elements(),&fft_in[0],1);
-            Vmath::Zero(fft_out.num_elements(),&fft_out[0],1);				
-#else
-            //Discrete Fourier Transform using MVM
-            DNekBlkMatSharedPtr blkmat;
-            blkmat = GetFloquetBlockMatrix(eForwardsPhys);
-            
-            int nrows = blkmat->GetRows();
-            int ncols = blkmat->GetColumns();
-            
-            Array<OneD, NekDouble> sortedinarray(ncols);
-            Array<OneD, NekDouble> sortedoutarray(nrows);
-            
-            //Shuffle the data
-            for(int j= 0; j < m_slices; ++j)
+            if(m_SingleMode)
             {
-                Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(sortedinarray[j]),m_slices);
+                //copy the bwd into the second plane for single Mode Analysis
+                int ncplane=(pFields[0]->GetNpoints())/m_npointsZ;
+                Vmath::Vcopy(ncplane,&m_baseflow[j][0],1,&m_baseflow[j][ncplane],1);
             }
-            
-            // Create NekVectors from the given data arrays
-            NekVector<NekDouble> in (ncols,sortedinarray,eWrapper);
-            NekVector<NekDouble> out(nrows,sortedoutarray,eWrapper);
-            
-            // Perform matrix-vector multiply.
-            out = (*blkmat)*in;
-            
-            //Reshuffle data
-            for(int s = 0; s < m_slices; ++s)
-            {	
-                Vmath::Vcopy(npoints,&sortedoutarray[s],m_slices,&m_interp[k][s*npoints],1);
-            }
-            
-            for(int r=0; r<sortedinarray.num_elements();++r)
-            {
-                sortedinarray[0]=0;
-                sortedoutarray[0]=0;
-            }	
-            
-#endif
-            
-            //scaling of the Fourier coefficients
-            NekDouble j=-1;
-            for (int i = 2; i < m_slices; i += 2) 
-            {
-                Vmath::Smul(2*npoints,j,&m_interp[k][i*npoints],1,&m_interp[k][i*npoints],1);
-                j=-j;
-		
-            }
+        }
+        else
+        {
+            pFields[j]->BwdTrans(tmp_coeff, m_baseflow[j]);
             
         }
-	
-        if(m_session->DefinesParameter("period"))
-        {
-            m_period=m_session->GetParameter("period");
-        }
-        else 
-        {
-            m_period=(m_session->GetParameter("TimeStep")*m_slices)/(m_slices-1.);
-        }	
     }
-	
+
+    if(m_session->DefinesParameter("N_slices"))
+    {
+        int nConvectiveFields = pFields.num_elements()-1;
+
+        for(int i=0; i<nConvectiveFields;++i)
+        {
+            
+            Vmath::Vcopy(nqtot, &m_baseflow[i][0], 1, &m_interp[i][slice*nqtot], 1);
+        }
+
+    }
+}
+
+
+void LinearisedAdvection::UpdateBase( const NekDouble m_slices,
+                                      const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD, NekDouble> &outarray,
+                                      const NekDouble m_time,
+                                      const NekDouble m_period)
+{
+    int npoints=m_baseflow[0].num_elements();
+
+    NekDouble BetaT=2*M_PI*fmod (m_time, m_period) / m_period;
+    NekDouble phase;
+    Array<OneD, NekDouble> auxiliary(npoints);
+
+    Vmath::Vcopy(npoints,&inarray[0],1,&outarray[0],1);
+    Vmath::Svtvp(npoints, cos(0.5*m_slices*BetaT),&inarray[npoints],1,&outarray[0],1,&outarray[0],1);
+
+    for (int i = 2; i < m_slices; i += 2)
+    {
+        phase = (i>>1) * BetaT;
+
+        Vmath::Svtvp(npoints, cos(phase),&inarray[i*npoints],1,&outarray[0],1,&outarray[0],1);
+        Vmath::Svtvp(npoints, sin(phase), &inarray[(i+1)*npoints], 1, &outarray[0], 1,&outarray[0],1);
+    }
+
+}
+
+DNekBlkMatSharedPtr LinearisedAdvection::GetFloquetBlockMatrix(FloquetMatType mattype, bool UseContCoeffs) const
+{
+    DNekMatSharedPtr    loc_mat;
+    DNekBlkMatSharedPtr BlkMatrix;
+    int n_exp = 0;
+
+    n_exp = m_baseflow[0].num_elements(); // will operatore on m_phys
+
+    Array<OneD,unsigned int> nrows(n_exp);
+    Array<OneD,unsigned int> ncols(n_exp);
+
+    nrows = Array<OneD, unsigned int>(n_exp,m_slices);
+    ncols = Array<OneD, unsigned int>(n_exp,m_slices);
+
+    MatrixStorage blkmatStorage = eDIAGONAL;
+    BlkMatrix = MemoryManager<DNekBlkMat>
+        ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
+
+
+    const LibUtilities::PointsKey Pkey(m_slices,LibUtilities::eFourierEvenlySpaced);
+    const LibUtilities::BasisKey  BK(LibUtilities::eFourier,m_slices,Pkey);
+    StdRegions::StdSegExp StdSeg(BK);
+
+    StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
+                                    StdSeg.DetShapeType(),
+                                    StdSeg);
+    
+    loc_mat = StdSeg.GetStdMatrix(matkey);
+
+    // set up array of block matrices.
+    for(int i = 0; i < n_exp; ++i)
+    {
+        BlkMatrix->SetBlock(i,i,loc_mat);
+    }
+
+    return BlkMatrix;
+}
+
+//Discrete Fourier Transform for Floquet analysis
+void LinearisedAdvection::DFT(const string file,
+        Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+        const NekDouble m_slices)
+{
+    int npoints=m_baseflow[0].num_elements();
+
+    //Convected fields
+    int ConvectedFields=m_baseflow.num_elements()-1;
+
+    m_interp= Array<OneD, Array<OneD, NekDouble> > (ConvectedFields);
+    for(int i=0; i<ConvectedFields;++i)
+    {
+        m_interp[i]=Array<OneD,NekDouble>(npoints*m_slices);
+    }
+
+    //Import the slides into auxiliary vector
+    //The base flow should be stored in the form filename_i.bse
+    for (int i=0; i< m_slices; ++i)
+    {
+        char chkout[16] = "";
+        sprintf(chkout, "%d", i);
+        ImportFldBase(file+"_"+chkout+".bse",pFields,i);
+    }
+
+
+    // Discrete Fourier Transform of the fields
+    for(int k=0; k< ConvectedFields;++k)
+    {
+#ifdef NEKTAR_USING_FFTW
+        
+        //Discrete Fourier Transform using FFTW
+        Array<OneD, NekDouble> fft_in(npoints*m_slices);
+        Array<OneD, NekDouble> fft_out(npoints*m_slices);
+        
+        Array<OneD, NekDouble> m_tmpIN(m_slices);
+        Array<OneD, NekDouble> m_tmpOUT(m_slices);
+        
+        //Shuffle the data
+        for(int j= 0; j < m_slices; ++j)
+        {
+            Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(fft_in[j]),m_slices);
+        }
+        
+        m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_slices);
+        
+        //FFT Transform
+        for(int i=0; i<npoints; i++)
+        {
+            m_FFT->FFTFwdTrans(m_tmpIN =fft_in + i*m_slices, m_tmpOUT =fft_out + i*m_slices);
+
+        }
+
+        //Reshuffle data
+        for(int s = 0; s < m_slices; ++s)
+        {
+            Vmath::Vcopy(npoints,&fft_out[s],m_slices,&m_interp[k][s*npoints],1);
+    
+        }
+
+        Vmath::Zero(fft_in.num_elements(),&fft_in[0],1);
+        Vmath::Zero(fft_out.num_elements(),&fft_out[0],1);
+#else
+        //Discrete Fourier Transform using MVM
+        DNekBlkMatSharedPtr blkmat;
+        blkmat = GetFloquetBlockMatrix(eForwardsPhys);
+
+        int nrows = blkmat->GetRows();
+        int ncols = blkmat->GetColumns();
+
+        Array<OneD, NekDouble> sortedinarray(ncols);
+        Array<OneD, NekDouble> sortedoutarray(nrows);
+
+        //Shuffle the data
+        for(int j= 0; j < m_slices; ++j)
+        {
+            Vmath::Vcopy(npoints,&m_interp[k][j*npoints],1,&(sortedinarray[j]),m_slices);
+        }
+
+        // Create NekVectors from the given data arrays
+        NekVector<NekDouble> in (ncols,sortedinarray,eWrapper);
+        NekVector<NekDouble> out(nrows,sortedoutarray,eWrapper);
+
+        // Perform matrix-vector multiply.
+        out = (*blkmat)*in;
+
+        //Reshuffle data
+        for(int s = 0; s < m_slices; ++s)
+        {
+            Vmath::Vcopy(npoints,&sortedoutarray[s],m_slices,&m_interp[k][s*npoints],1);
+        }
+
+        for(int r=0; r<sortedinarray.num_elements();++r)
+        {
+            sortedinarray[0]=0;
+            sortedoutarray[0]=0;
+        }
+
+#endif
+
+        //scaling of the Fourier coefficients
+        NekDouble j=-1;
+        for (int i = 2; i < m_slices; i += 2)
+        {
+            Vmath::Smul(2*npoints,j,&m_interp[k][i*npoints],1,&m_interp[k][i*npoints],1);
+            j=-j;
+
+        }
+
+    }
+
+}
+
 } //end of namespace
 

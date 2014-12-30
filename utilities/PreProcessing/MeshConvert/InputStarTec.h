@@ -33,7 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTVTK
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTTEC
 #define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTTEC
 
 #include "Module.h"

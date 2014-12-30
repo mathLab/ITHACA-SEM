@@ -183,11 +183,11 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
                 const Array<OneD, const Array<OneD, NekDouble> > &vecLocs,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);
-            bool CheckScalars (std::string name);
-            bool CheckVectors (std::string name);
-            bool CheckParams  (std::string name);
-            bool CheckAuxScal (std::string name);
-            bool CheckAuxVec  (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckScalars (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckVectors (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckParams  (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckAuxScal (std::string name);
+            SOLVER_UTILS_EXPORT bool CheckAuxVec  (std::string name);
         };
 
         /// A shared pointer to an EquationSystem object

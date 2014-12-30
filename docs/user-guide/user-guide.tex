@@ -25,8 +25,10 @@ openany, % A chapter may start on either a recto or verso page.
 % \usepackage{kpfonts} %Font
 
 \usepackage{amsmath,amssymb,mathtools} % Math
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
 
-% \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
 \usepackage{makeidx}
 \usepackage{import}
@@ -92,6 +94,8 @@ openany, % A chapter may start on either a recto or verso page.
 \changecaptionwidth          % Change the width of the caption
 \captionwidth{1\textwidth} %
 
+\usepackage{tabularx}
+
 %%% ABSTRACT
 %%%------------------------------------------------------------------------------
 
@@ -143,6 +147,9 @@ openany, % A chapter may start on either a recto or verso page.
 %%% NEW COMMANDS
 %%%-----------------------------------------------------------------------------
 
+% Nektar++ version
+\usepackage{xspace}
+\newcommand{\nekver}{\input{../../VERSION}\xspace}
 
 \newcommand{\p}{\partial} %Partial
 % Or what ever you want
@@ -153,7 +160,6 @@ openany, % A chapter may start on either a recto or verso page.
 \usepackage{xcolor}
 \usepackage{listings} % Display code / shell commands
 \usepackage{lstautogobble}
-\usepackage{xspace}
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
   language=bash,
@@ -220,12 +226,12 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 \NewEnviron{notebox}
   {\par\medskip\noindent
   \begin{tikzpicture}
-    \node[inner sep=3pt,fill=black!10,draw=black!30] (box)
+    \node[inner sep=5pt,fill=black!10,draw=black!30] (box)
     {\parbox[t]{.99\linewidth}{%
-      \begin{minipage}{.1\textwidth}
+      \begin{minipage}{.1\linewidth}
       \centering\tikz[scale=1]\node[scale=1.5]{\bcinfo};
       \end{minipage}%
-      \begin{minipage}{.8\textwidth}
+      \begin{minipage}{.9\linewidth}
       \textbf{Note}\par\smallskip
       \BODY
       \end{minipage}\hfill}%
@@ -235,12 +241,12 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 \NewEnviron{warningbox}
   {\par\medskip\noindent
   \begin{tikzpicture}
-    \node[inner sep=3pt,fill=red!10,draw=black!30] (box)
+    \node[inner sep=5pt,fill=red!10,draw=black!30] (box)
     {\parbox[t]{.99\linewidth}{%
-      \begin{minipage}{.1\textwidth}
+      \begin{minipage}{.1\linewidth}
       \centering\tikz[scale=1]\node[scale=1.5]{\bcdanger};
       \end{minipage}%
-      \begin{minipage}{.8\textwidth}
+      \begin{minipage}{.9\linewidth}
       \textbf{Warning}\par\smallskip
       \BODY
       \end{minipage}\hfill}%
@@ -250,12 +256,12 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 \NewEnviron{tipbox}
   {\par\medskip\noindent
   \begin{tikzpicture}
-    \node[inner sep=3pt,fill=green!10,draw=black!30] (box)
+    \node[inner sep=5pt,fill=green!10,draw=black!30] (box)
     {\parbox[t]{.99\linewidth}{%
-      \begin{minipage}{.1\textwidth}
+      \begin{minipage}{.1\linewidth}
       \centering\tikz[scale=1]\node[scale=1.5]{\bclampe};
       \end{minipage}%
-      \begin{minipage}{.8\textwidth}
+      \begin{minipage}{.9\linewidth}
       \textbf{Tip}\par\smallskip
       \BODY
       \end{minipage}\hfill}%
@@ -265,12 +271,12 @@ outer sep=0,fill=black!05]{\texttt{#1}};}
 \NewEnviron{custombox}[3]
   {\par\medskip\noindent
   \begin{tikzpicture}
-    \node[inner sep=3pt,fill=#3!10,draw=black!30] (box)
-    {\parbox[t]{.99\textwidth}{%
-      \begin{minipage}{.1\textwidth}
+    \node[inner sep=5pt,fill=#3!10,draw=black!30] (box)
+    {\parbox[t]{.99\linewidth}{%
+      \begin{minipage}{.1\linewidth}
       \centering\tikz[scale=1]\node[scale=1.5]{#2};
       \end{minipage}%
-      \begin{minipage}{.8\textwidth}
+      \begin{minipage}{.9\linewidth}
       \textbf{#1}\par\smallskip
       \BODY
       \end{minipage}\hfill}%
@@ -334,7 +340,7 @@ pdfauthor={I am the Author} % author
           \vspace{\drop}
           {\Huge\bfseries\raggedright\@title\par}
           \vskip2.37\baselineskip
-          {\huge\bfseries Version \input{../../VERSION}\par}
+          {\huge\bfseries Version \nekver\par}
           \vskip4\baselineskip
           {\huge\bfseries \textcolor{darkgreen}{User Guide}\par}
           \vskip1.0\baselineskip
@@ -387,6 +393,8 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 
 \import{formulation/}{formulation}
 
+\import{xml/}{xml}
+
 \part{Applications and Utilities}
 
 \import{solvers/}{solvers}
@@ -394,8 +402,6 @@ Scientific Computing and Imaging Institute, University of Utah, USA}
 \import{utilities/}{utilities}
 
 \part{Reference}
-\import{xml/}{xml}
-
 \import{optimisation/}{optimisation}
 
 \import{command-line/}{command-line}

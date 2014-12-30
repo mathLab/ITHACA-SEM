@@ -1103,31 +1103,32 @@ namespace Nektar
             
             return nmodes;
         }
-        
+
         const LibUtilities::BasisKey StdTetExp::v_DetFaceBasisKey(
             const int i, const int k) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
             ASSERTL2(k == 0 || k == 1, "face direction out of range");
-            int nummodes = GetBasis(0)->GetNumModes(); 
-            //temporary solution, need to add conditions based on face id
-            //also need to add check of the points type
-            switch (k)
+
+            int dir;
+            switch(i)
             {
                 case 0:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                    return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                }
-                break;
+                    dir = k;
+                    break;
                 case 1:
-                {
-                    //const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                    return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
-                }
-                break;
+                    dir = 2*k;
+                    break;
+                case 2:
+                case 3:
+                    dir = k+1;
+                    break;
             }
+
+            return EvaluateTriFaceBasisKey(k,
+                                           m_base[dir]->GetBasisType(),
+                                           m_base[dir]->GetNumPoints(),
+                                           m_base[dir]->GetNumModes());
 
             // Should not get here.
             return LibUtilities::NullBasisKey;

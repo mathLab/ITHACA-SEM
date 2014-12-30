@@ -46,100 +46,104 @@
 
 namespace Nektar
 {
-    namespace SolverUtils 
-    {
-        class Driver;
-	
-        /// A shared pointer to a Driver object
-        typedef boost::shared_ptr<Driver> DriverSharedPtr;
-    
-        /// Datatype of the NekFactory used to instantiate classes derived from
-        /// the Driver class.
-        typedef LibUtilities::NekFactory<
-            std::string, Driver,
-            const LibUtilities::SessionReaderSharedPtr&
-            > DriverFactory;
-        SOLVER_UTILS_EXPORT DriverFactory& GetDriverFactory();
-    
-        /// Base class for the development of solvers.
-        class Driver
-        {
-        public:
-            /// Destructor
-            virtual ~Driver();
-        
-            /// Initialise Object
-            SOLVER_UTILS_EXPORT inline void InitObject(ostream &out = cout);
-        
-            /// Execute driver
-            SOLVER_UTILS_EXPORT inline void Execute(ostream &out = cout);
+namespace SolverUtils
+{
 
-            SOLVER_UTILS_EXPORT inline Array<OneD, EquationSystemSharedPtr> GetEqu();
-	
-            SOLVER_UTILS_EXPORT Array<OneD, NekDouble> GetRealEvl(void);         
-            SOLVER_UTILS_EXPORT Array<OneD, NekDouble> GetImagEvl(void);
-         
+class Driver;
 
-        protected:
-            /// Communication object
-            LibUtilities::CommSharedPtr                 m_comm;
-	
-            /// Session reader object
-            LibUtilities::SessionReaderSharedPtr        m_session;
-        
-            /// Equation system to solve
-            Array<OneD, EquationSystemSharedPtr>        m_equ;
-		
-            ///number of equations
-            int m_nequ;
-	
-            ///Evolution Operator
-            enum EvolutionOperatorType m_EvolutionOperator;
-	
-            /// Initialises EquationSystem class members.
-            Driver(const LibUtilities::SessionReaderSharedPtr pSession);
-        
-            SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
-        
-            /// Virtual function for solve implementation.
-            SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout) = 0;
-        
+/// A shared pointer to a Driver object
+typedef boost::shared_ptr<Driver> DriverSharedPtr;
 
-            SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetRealEvl(void);         
-            SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetImagEvl(void);
+/// Datatype of the NekFactory used to instantiate classes derived from
+/// the Driver class.
+typedef LibUtilities::NekFactory<std::string, Driver,
+            const LibUtilities::SessionReaderSharedPtr&> DriverFactory;
+
+SOLVER_UTILS_EXPORT DriverFactory& GetDriverFactory();
+
+/// Base class for the development of solvers.
+class Driver
+{
+public:
+    /// Destructor
+    virtual ~Driver();
+
+    /// Initialise Object
+    SOLVER_UTILS_EXPORT inline void InitObject(ostream &out = cout);
+
+    /// Execute driver
+    SOLVER_UTILS_EXPORT inline void Execute(ostream &out = cout);
+
+    SOLVER_UTILS_EXPORT inline Array<OneD, EquationSystemSharedPtr> GetEqu();
+
+    SOLVER_UTILS_EXPORT Array<OneD, NekDouble> GetRealEvl(void);
+    SOLVER_UTILS_EXPORT Array<OneD, NekDouble> GetImagEvl(void);
 
 
-            static std::string evolutionOperatorLookupIds[];
-            static std::string evolutionOperatorDef;
-            static std::string driverDefault;
+protected:
+    /// Communication object
+    LibUtilities::CommSharedPtr                 m_comm;
 
-        };
+    /// Session reader object
+    LibUtilities::SessionReaderSharedPtr        m_session;
 
-        inline void Driver::InitObject(ostream &out)
-        {
-            v_InitObject(out);
-        }
+    /// I the Coupling between SFD and arnoldi
+    LibUtilities::SessionReaderSharedPtr        session_LinNS;
 
-        inline void Driver::Execute(ostream &out)
-        {
-            v_Execute(out);
-        }
+    /// Equation system to solve
+    Array<OneD, EquationSystemSharedPtr>        m_equ;
 
-        inline Array<OneD, EquationSystemSharedPtr> Driver::GetEqu()
-        {
-            return m_equ;
-        }
+    ///number of equations
+    int m_nequ;
 
-        inline Array<OneD, NekDouble> Driver::GetRealEvl()
-        {
-            return v_GetRealEvl();
-        }
-    
-        inline Array<OneD, NekDouble> Driver::GetImagEvl()
-        {
-            return v_GetImagEvl();
-        }
-    }
+    ///Evolution Operator
+    enum EvolutionOperatorType m_EvolutionOperator;
+
+    /// Initialises EquationSystem class members.
+    Driver(const LibUtilities::SessionReaderSharedPtr pSession);
+
+    SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
+
+    /// Virtual function for solve implementation.
+    SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout) = 0;
+
+
+    SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetRealEvl(void);
+    SOLVER_UTILS_EXPORT virtual Array<OneD, NekDouble> v_GetImagEvl(void);
+
+
+    static std::string evolutionOperatorLookupIds[];
+    static std::string evolutionOperatorDef;
+    static std::string driverDefault;
+
+};
+
+inline void Driver::InitObject(ostream &out)
+{
+    v_InitObject(out);
+}
+
+inline void Driver::Execute(ostream &out)
+{
+    v_Execute(out);
+}
+
+inline Array<OneD, EquationSystemSharedPtr> Driver::GetEqu()
+{
+    return m_equ;
+}
+
+inline Array<OneD, NekDouble> Driver::GetRealEvl()
+{
+    return v_GetRealEvl();
+}
+
+inline Array<OneD, NekDouble> Driver::GetImagEvl()
+{
+    return v_GetImagEvl();
+}
+
+}
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H

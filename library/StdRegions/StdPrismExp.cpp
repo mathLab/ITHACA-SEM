@@ -908,53 +908,34 @@ namespace Nektar
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
             ASSERTL2(k >= 0 && k <= 1, "basis key id is out of range");
-            int nummodes = GetBasis(0)->GetNumModes();
 
-            //temporary solution, need to add conditions based on face id
-            //also need to add check of the points type
             switch(i)
             {
                 case 0:
+                {
+                    return EvaluateQuadFaceBasisKey(k,
+                                                    m_base[k]->GetBasisType(),
+                                                    m_base[k]->GetNumPoints(),
+                                                    m_base[k]->GetNumModes());
+                }
                 case 2:
                 case 4:
                 {
-                    switch(k)
-                    {
-                        case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                            break;
-                        }
-                        case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                            break;
-                        }
-                    }
-                    break;
+                    return EvaluateQuadFaceBasisKey(k,
+                                                    m_base[k+1]->GetBasisType(),
+                                                    m_base[k+1]->GetNumPoints(),
+                                                    m_base[k+1]->GetNumModes());
                 }
                 case 1:
                 case 3:
                 {
-                    switch (k)
-                    {
-                        case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                            break;
-                        }
-                        case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
-                            break;
-                        }
-                    }
-                    break;
+                    return EvaluateTriFaceBasisKey(k,
+                                                   m_base[2*k]->GetBasisType(),
+                                                   m_base[2*k]->GetNumPoints(),
+                                                   m_base[2*k]->GetNumModes());
+                    
                 }
+                break;
             }
 
             // Should never get here.

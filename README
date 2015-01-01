@@ -11,6 +11,13 @@ The software and User Guide is available for download from
   http://www.nektar.info
 
 
+User Guide
+----------
+Detailed information on compiling, installing and using the software is
+available in the User Guide. This document is available as a pre-compiled PDF
+from the downloads section of the project website.
+
+
 Pre-requisites
 --------------
 Nektar++ requires the following software to be installed on the users system:

@@ -71,8 +71,6 @@ void ProcessJacobianEnergy::Process(po::variables_map &vm)
         cout << "ProcessJacobianEnergy: Process Jacobian fld" << endl;
     }
 
-    int topmodes  = m_config["topmodes"].as<int>();
-
     Array<OneD, NekDouble> phys   = m_f->m_exp[0]->UpdatePhys();
     Array<OneD, NekDouble> coeffs = m_f->m_exp[0]->UpdateCoeffs();
     Array<OneD, NekDouble> tmp,tmp1;

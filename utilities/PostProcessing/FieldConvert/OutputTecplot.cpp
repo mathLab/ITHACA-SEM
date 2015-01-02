@@ -69,15 +69,16 @@ namespace Nektar
 
         void OutputTecplot::Process(po::variables_map &vm)
         {
+            FieldPtsSharedPtr f = m_f->m_fieldPts;
+
             m_doError = (vm.count("error") == 1)?  true: false;
 
             if (m_f->m_verbose)
             {
                 cout << "OutputTecplot: Writing file..." << endl;
             }
-
             // Do nothing if no expansion defined
-            if(m_f->m_fieldPts == NullFieldPts &&!m_f->m_exp.size())
+            if (f == NullFieldPts && !m_f->m_exp.size())
             {
                 return;
             }
@@ -85,13 +86,13 @@ namespace Nektar
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
 
-            if(m_f->m_fieldPts != NullFieldPts)
+            if(f != NullFieldPts)
             {
                 int i   = 0;
                 int j   = 0;
-                int dim = m_f->m_fieldPts->m_ptsDim;
+                int dim = f->m_ptsDim;
 
-                if(m_f->m_fieldPts->m_pts[0].num_elements() == 0)
+                if(f->m_pts[0].num_elements() == 0)
                 {
                     return;
                 }
@@ -112,35 +113,35 @@ namespace Nektar
                     break;
                 }
 
-                for(i = 0; i < m_f->m_fieldPts->m_fields.size(); ++i)
+                for(i = 0; i < f->m_fields.size(); ++i)
                 {
-                    outfile << "," << m_f->m_fieldPts->m_fields[i];
+                    outfile << "," << f->m_fields[i];
                 }
                 outfile << endl;
                 bool DumpAsFEPoint = true;
-                switch(m_f->m_fieldPts->m_ptype)
+                switch(f->m_ptype)
                 {
                     case Utilities::ePtsFile:
                     case Utilities::ePtsLine:
                         outfile << " ZONE I="
-                                << m_f->m_fieldPts->m_pts[0].num_elements()
+                                << f->m_pts[0].num_elements()
                                 << " F=POINT" << endl;
                         break;
                     case Utilities::ePtsPlane:
-                        outfile << " ZONE I=" << m_f->m_fieldPts->m_npts[0]
-                                <<      " J=" << m_f->m_fieldPts->m_npts[1]
+                        outfile << " ZONE I=" << f->m_npts[0]
+                                <<      " J=" << f->m_npts[1]
                                 << " F=POINT" << endl;
                         break;
                     case Utilities::ePtsTriBlock:
                     {
                         int numBlocks = 0;
-                        for(i = 0; i < m_f->m_fieldPts->m_ptsConn.size(); ++i)
+                        for(i = 0; i < f->m_ptsConn.size(); ++i)
                         {
                             numBlocks +=
-                                m_f->m_fieldPts->m_ptsConn[i].num_elements()/3;
+                                f->m_ptsConn[i].num_elements()/3;
                         }
                         outfile << "Zone, N="
-                                << m_f->m_fieldPts->m_pts[0].num_elements()
+                                << f->m_pts[0].num_elements()
                                 << ", E=" << numBlocks
                                 << ", F=FEBlock" << ", ET=TRIANGLE"
                                 << std::endl;
@@ -150,13 +151,13 @@ namespace Nektar
                     case Utilities::ePtsTetBlock:
                     {
                         int numBlocks = 0;
-                        for(i = 0; i < m_f->m_fieldPts->m_ptsConn.size(); ++i)
+                        for(i = 0; i < f->m_ptsConn.size(); ++i)
                         {
                             numBlocks +=
-                                m_f->m_fieldPts->m_ptsConn[i].num_elements()/4;
+                                f->m_ptsConn[i].num_elements()/4;
                         }
                         outfile << "Zone, N="
-                                << m_f->m_fieldPts->m_pts[0].num_elements()
+                                << f->m_pts[0].num_elements()
                                 << ", E=" << numBlocks
                                 << ", F=FEBlock" << ", ET=TETRAHEDRON"
                                 << std::endl;
@@ -167,15 +168,15 @@ namespace Nektar
 
                 if(DumpAsFEPoint) // dump in point format
                 {
-                    for(i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)
+                    for(i = 0; i < f->m_pts[0].num_elements(); ++i)
                     {
                         for(j = 0; j < dim; ++j)
                         {
                             outfile << std::setw(12)
-                                    << m_f->m_fieldPts->m_pts[j][i] << " ";
+                                    << f->m_pts[j][i] << " ";
                         }
 
-                        for(j = 0; j < m_f->m_fieldPts->m_fields.size(); ++j)
+                        for(j = 0; j < f->m_fields.size(); ++j)
                         {
                             outfile << std::setw(12)
                                     << m_f->m_data[j][i] << " ";
@@ -185,11 +186,11 @@ namespace Nektar
                 }
                 else // dump in block format
                 {
-                    for(j = 0; j < dim + m_f->m_fieldPts->m_fields.size(); ++j)
+                    for(j = 0; j < dim + f->m_fields.size(); ++j)
                     {
-                        for(i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)
+                        for(i = 0; i < f->m_pts[0].num_elements(); ++i)
                         {
-                            outfile <<  m_f->m_fieldPts->m_pts[j][i] << " ";
+                            outfile <<  f->m_pts[j][i] << " ";
                             if((!(i % 1000))&&i)
                             {
                                 outfile << std::endl;
@@ -200,11 +201,11 @@ namespace Nektar
 
 
                     // dump connectivity data if it exists
-                    for(i = 0; i < m_f->m_fieldPts->m_ptsConn.size();++i)
+                    for(i = 0; i < f->m_ptsConn.size();++i)
                     {
-                        for(j = 0; j < m_f->m_fieldPts->m_ptsConn[i].num_elements(); ++j)
+                        for(j = 0; j < f->m_ptsConn[i].num_elements(); ++j)
                         {
-                            outfile << m_f->m_fieldPts->m_ptsConn[i][j] +1 << " ";
+                            outfile << f->m_ptsConn[i][j] +1 << " ";
                             if( ( !(j % 10 * dim) ) && j )
                             {
                                 outfile << std::endl;
@@ -229,13 +230,15 @@ namespace Nektar
                 // Write solution.
                 ofstream outfile(filename.c_str());
                 std::string var;
-                if(m_f->m_fielddef.size())
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr> fDef =
+                                                                m_f->m_fielddef;
+                if (fDef.size())
                 {
-                    var = m_f->m_fielddef[0]->m_fields[0];
+                    var = fDef[0]->m_fields[0];
 
-                    for (int j = 1; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
+                    for (int j = 1; j < fDef[0]->m_fields.size(); ++j)
                     {
-                        var = var + ", " + m_f->m_fielddef[0]->m_fields[j];
+                        var = var + ", " + fDef[0]->m_fields[j];
                     }
                 }
 

@@ -146,7 +146,9 @@ namespace Nektar
             datFile.close();
         }
 
-        void InputDat::ReadTecplotFEBlockZone(std::ifstream &datFile, string &line)
+        void InputDat::ReadTecplotFEBlockZone(
+                std::ifstream   &datFile,
+                string          &line)
         {
 
             ASSERTL0(line.find("FEBlock") != string::npos,
@@ -207,7 +209,7 @@ namespace Nektar
             for(int i = 0; i < 3*nelmt; ++i)
             {
                 datFile >> intvalue;
-                intvalue -=1;  // decrement intvalue by 1 for c array convention
+                intvalue -=1; // decrement intvalue by 1 for c array convention
                 conn[i] = norigpts + intvalue;
             }
             m_f->m_fieldPts->m_ptsConn.push_back(conn);

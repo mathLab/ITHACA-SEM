@@ -33,38 +33,37 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSSCALEINFLD
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSJACOBIANENERGY
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSJACOBIANENERGY
 
 #include "Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+/// This processing module scales the input fld file
+class ProcessJacobianEnergy : public ProcessModule
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-        /**
-         * @brief This processing module scales the input fld file 
-         *
-         */
-        class ProcessJacobianEnergy : public ProcessModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
-            {
-                return MemoryManager<ProcessJacobianEnergy>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessJacobianEnergy(FieldSharedPtr f);
-            virtual ~ProcessJacobianEnergy();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-            
-        private:
-        };
+        return MemoryManager<ProcessJacobianEnergy>::AllocateSharedPtr(f);
     }
+    static ModuleKey className;
+
+    ProcessJacobianEnergy(FieldSharedPtr f);
+    virtual ~ProcessJacobianEnergy();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+private:
+};
+}
+
 }
 
 #endif

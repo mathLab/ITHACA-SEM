@@ -28,7 +28,7 @@ IF (THIRDPARTY_BUILD_TINYXML)
     EXTERNALPROJECT_ADD(
         tinyxml-2.6.2
         PREFIX ${TPSRC}
-        URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/tinyxml_2_6_2.tar.bz2
+        URL ${TPURL}/tinyxml_2_6_2.tar.bz2
         URL_HASH SHA256=32db85cff26260a9140860e8393df59df79ec59f45a9df18524f9cdd21d0f238
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}

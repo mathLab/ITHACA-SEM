@@ -575,6 +575,7 @@ namespace Nektar
         }
 
 
+        // wrapper function call 
        void AnalyticExpressionEvaluator::Evaluate(
                     const int expression_id,
                     const Array<OneD, const NekDouble>& x,
@@ -585,56 +586,15 @@ namespace Nektar
         {
             m_timer.Start();
 
-            const int num_points = x.num_elements();
-            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
-            ASSERTL1(result.num_elements() >= num_points, "destination array must have enough capacity to store expression values at each given point");
+            std::vector<Array<OneD, const NekDouble> >points;
 
-            ExecutionStack &stack = m_executionStack[expression_id];
+            points.push_back(x);
+            points.push_back(y);
+            points.push_back(z);
+            points.push_back(t);
+            
+            Evaluate(expression_id,points,result);
 
-            /// If number of points tends to 10^6, one may end up
-            /// with up to ~0.5Gb data allocated for m_state only.
-            /// Lets split the work into cache-sized chunks.
-            /// Ahtung, magic constant!
-            const int max_chunk_size = 1024;
-
-            /// please don't remove brackets around std::min, it screws up windows compilation
-            const int chunk_size = (std::min)(max_chunk_size, num_points);
-            if (m_state.size() < chunk_size * m_state_sizes[expression_id] )
-            {
-                m_state.resize( m_state_sizes[expression_id] * chunk_size, 0.0 );
-            }
-            if (m_variable.size() < 4 * chunk_size )
-            {
-                m_variable.resize( 4 * chunk_size, 0.0);
-            }
-            if (result.num_elements() < num_points)
-            {
-                result = Array<OneD, NekDouble>(num_points, 0.0);
-            }
-
-            int offset = 0;
-            int work_left = num_points;
-            while(work_left > 0)
-            {
-                const int this_chunk_size = (std::min)(work_left, 1024);
-                for (int i = 0; i < this_chunk_size; i++)
-                {
-                    m_variable[i+this_chunk_size*0] = x[offset + i];
-                    m_variable[i+this_chunk_size*1] = y[offset + i];
-                    m_variable[i+this_chunk_size*2] = z[offset + i];
-                    m_variable[i+this_chunk_size*3] = t[offset + i];
-                }
-                for (int i = 0; i < stack.size(); i++)
-                {
-                    (*stack[i]).run_many(this_chunk_size);
-                }
-                for (int i = 0; i < this_chunk_size; i++)
-                {
-                    result[offset + i] = m_state[i];
-                }
-                work_left -= this_chunk_size;
-                offset    += this_chunk_size;
-            }
             m_timer.Stop();
             m_total_eval_time += m_timer.TimePerTest(1);
         }
@@ -702,49 +662,6 @@ namespace Nektar
             m_timer.Stop();
             m_total_eval_time += m_timer.TimePerTest(1);
         }
-
-
-
-        void AnalyticExpressionEvaluator::EvaluateAtPoints(
-                    const int expression_id,
-                    const std::vector<Array<OneD, const NekDouble> > points,
-                    Array<OneD, NekDouble>& result)
-        {
-            m_timer.Start();
-
-            /// \todo test this function properly/update as the method above
-
-            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
-
-            ExecutionStack&  stack    = m_executionStack[expression_id];
-            VariableMap&  variableMap = m_stackVariableMap[expression_id];
-
-            const int num = points[0].num_elements();
-            m_state.resize(m_state_sizes[expression_id]*num);
-
-            // assuming all points have same # of coordinates
-            m_variable.resize(4*num,0.0);
-
-            for (int i = 0; i < points.size(); i++)
-            {
-                for (VariableMap::const_iterator it = variableMap.begin(); it != variableMap.end(); ++it)
-                {
-                    m_variable[it->second] = points[it->second][i];
-                }
-            }
-            for (int j = 0; j < stack.size(); j++)
-            {
-                (*stack[j]).run_many(num);
-            }
-            for (int i = 0; i < num; ++i)
-            {
-                result[i] = m_state[i];
-            }
-
-            m_timer.Stop();
-            m_total_eval_time += m_timer.TimePerTest(1);
-        }
-
 
 
         AnalyticExpressionEvaluator::PrecomputedValue AnalyticExpressionEvaluator::PrepareExecutionAsYouParse(

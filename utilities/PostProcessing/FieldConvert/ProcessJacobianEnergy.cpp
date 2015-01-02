@@ -48,109 +48,84 @@ namespace Utilities
 {
 
 ModuleKey ProcessJacobianEnergy::className =
-    GetModuleFactory().RegisterCreatorFunction(
-    ModuleKey(eProcessModule, "jacobianenergy"),
-    ProcessJacobianEnergy::create, "Show high frequency energy of Jacobian.");
-    
-    ProcessJacobianEnergy::ProcessJacobianEnergy(FieldSharedPtr f) : 
-        ProcessModule(f)
+        GetModuleFactory().RegisterCreatorFunction(
+                ModuleKey(eProcessModule, "jacobianenergy"),
+                ProcessJacobianEnergy::create,
+                "Show high frequency energy of Jacobian.");
+
+ProcessJacobianEnergy::ProcessJacobianEnergy(FieldSharedPtr f) :
+    ProcessModule(f)
+{
+    m_config["topmodes"] = ConfigOption(false, "1",
+                                        "how many top modes to keep ");
+}
+
+ProcessJacobianEnergy::~ProcessJacobianEnergy()
+{
+}
+
+void ProcessJacobianEnergy::Process(po::variables_map &vm)
+{
+    if (m_f->m_verbose)
     {
-        m_config["topmodes"] = ConfigOption(false,"1","how many top modes to keep ");
+        cout << "ProcessJacobianEnergy: Process Jacobian fld" << endl;
     }
-    
-    ProcessJacobianEnergy::~ProcessJacobianEnergy()
+
+    int topmodes  = m_config["topmodes"].as<int>();
+
+    Array<OneD, NekDouble> phys   = m_f->m_exp[0]->UpdatePhys();
+    Array<OneD, NekDouble> coeffs = m_f->m_exp[0]->UpdateCoeffs();
+    Array<OneD, NekDouble> tmp,tmp1;
+
+    for(int i =0; i < m_f->m_exp[0]->GetExpSize(); ++i)
     {
-    }
-    
-    void ProcessJacobianEnergy::Process(po::variables_map &vm)
-    {
-        if (m_f->m_verbose)
+        // copy Jacobian into field
+        StdRegions::StdExpansionSharedPtr Elmt = m_f->m_exp[0]->GetExp(i);
+
+        int ncoeffs = Elmt->GetNcoeffs();
+        int nquad   = Elmt->GetTotPoints();
+        int coeffoffset = m_f->m_exp[0]->GetCoeff_Offset(i);
+        Array<OneD, NekDouble> coeffs1(ncoeffs);
+        Array<OneD, const NekDouble> Jac =
+                        Elmt->GetMetricInfo()->GetJac(Elmt->GetPointsKeys());
+        if(Elmt->GetMetricInfo()->GetGtype() == SpatialDomains::eRegular)
         {
-            cout << "ProcessJacobianEnergy: Process Jacobian fld" << endl;
+            Vmath::Fill(nquad,Jac[0],phys,1);
         }
-        
-        int topmodes  = m_config["topmodes"].as<int>();
-
-        Array<OneD, NekDouble> phys   = m_f->m_exp[0]->UpdatePhys();
-        Array<OneD, NekDouble> coeffs = m_f->m_exp[0]->UpdateCoeffs();
-        Array<OneD, NekDouble> tmp,tmp1;
-
-        for(int i =0; i < m_f->m_exp[0]->GetExpSize(); ++i)
+        else
         {
-            // copy Jacobian into field
-            StdRegions::StdExpansionSharedPtr Elmt = m_f->m_exp[0]->GetExp(i);
-            
-            int ncoeffs = Elmt->GetNcoeffs();
-            int nquad   = Elmt->GetTotPoints();
-            int coeffoffset = m_f->m_exp[0]->GetCoeff_Offset(i);
-            Array<OneD, NekDouble> coeffs1(ncoeffs); 
-            Array<OneD, const NekDouble> Jac = Elmt->GetMetricInfo()->GetJac(Elmt->GetPointsKeys());
-            if(Elmt->GetMetricInfo()->GetGtype() == SpatialDomains::eRegular)
-            {
-                Vmath::Fill(nquad,Jac[0],phys,1);
-            }
-            else
-            {
-                Vmath::Vcopy(nquad,Jac,1,phys,1);
-            }
-            
-#if 0 
-            // Fwd Trans
-            Elmt->FwdTrans(phys,tmp1 = coeffs + coeffoffset);
-            
-            int nmodes0 = Elmt->GetBasis(0)->GetNumModes();
-            int nummin  = (topmodes > nmodes0)? 0: nmodes0-topmodes;
-            Elmt->ReduceOrderCoeffs(nummin,tmp  = coeffs + coeffoffset,coeffs1);
-
-            // subtract off reduced order to keep remainder. 
-            Vmath::Vsub(ncoeffs,tmp = coeffs + coeffoffset,1,
-                        coeffs1,1,tmp1 = coeffs + coeffoffset,1);
-            
-            // calculate volume 
-            Vmath::Fill(nquad,1.0,phys,1);
-            NekDouble Vol = Elmt->Integral(phys);
-            
-            Vmath::Smul(ncoeffs,1.0/Vol,coeffs+coeffoffset,1,tmp = coeffs+coeffoffset,1);
-            
-
-            Elmt->BwdTrans(coeffs + coeffoffset,phys);
-            
-            Vmath::Vmul(nquad,phys,1,phys,1,phys,1);
-            NekDouble highJac = Elmt->Integral(phys);
-
-            Vmath::Fill(nquad,sqrt(highJac),phys,1);
-#else
-            if(Elmt->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
-            {
-                NekDouble jacmax = Vmath::Vmax(nquad,Jac,1);
-                NekDouble jacmin = Vmath::Vmin(nquad,Jac,1);
-                
-                NekDouble jacmeasure = jacmax/jacmin -1.0;
-                Vmath::Fill(nquad,jacmeasure,phys,1);
-            }
-            else
-            {
-                Vmath::Fill(nquad,0.0,phys,1);
-            }
-            
-#endif
-
-            
-            Elmt->FwdTrans(phys,tmp = coeffs + coeffoffset);
+            Vmath::Vcopy(nquad,Jac,1,phys,1);
         }
-                
-        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-            = m_f->m_exp[0]->GetFieldDefinitions();
-        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-        
-        for (int i = 0; i < FieldDef.size(); ++i)
-        {   
-            FieldDef[i]->m_fields.push_back("JacobianEnergy");
-            m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i]);
+
+        if(Elmt->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
+        {
+            NekDouble jacmax = Vmath::Vmax(nquad,Jac,1);
+            NekDouble jacmin = Vmath::Vmin(nquad,Jac,1);
+
+            NekDouble jacmeasure = jacmax/jacmin -1.0;
+            Vmath::Fill(nquad,jacmeasure,phys,1);
         }
-        
-        m_f->m_fielddef = FieldDef;
-        m_f->m_data     = FieldData;
+        else
+        {
+            Vmath::Fill(nquad,0.0,phys,1);
+        }
+
+        Elmt->FwdTrans(phys,tmp = coeffs + coeffoffset);
     }
+
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+        = m_f->m_exp[0]->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+    for (int i = 0; i < FieldDef.size(); ++i)
+    {
+        FieldDef[i]->m_fields.push_back("JacobianEnergy");
+        m_f->m_exp[0]->AppendFieldData(FieldDef[i], FieldData[i]);
+    }
+
+    m_f->m_fielddef = FieldDef;
+    m_f->m_data     = FieldData;
+}
+
 }
 }

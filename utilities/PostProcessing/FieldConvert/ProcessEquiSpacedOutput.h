@@ -43,20 +43,21 @@ namespace Nektar
     namespace Utilities
     {
         /**
-         * @brief This processing module interpolates one field to another 
+         * @brief This processing module interpolates one field to another
          */
         class ProcessEquiSpacedOutput : public ProcessModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<ProcessEquiSpacedOutput>::AllocateSharedPtr(f);
+                return MemoryManager<ProcessEquiSpacedOutput>::
+                                                        AllocateSharedPtr(f);
             }
             static ModuleKey className;
-            
+
             ProcessEquiSpacedOutput(FieldSharedPtr f);
             virtual ~ProcessEquiSpacedOutput();
-            
+
             /// Write mesh to output file.
             virtual void Process(po::variables_map &vm);
         protected:

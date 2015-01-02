@@ -41,32 +41,33 @@
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+/**
+ * @brief This processing module process isocoout utilities.
+ */
+class ProcessIsoContourUtils : public ProcessIsoContour
+{
+public:
+    /// Creates an instance of this class
+    static boost::shared_ptr<Module> create(FieldSharedPtr f)
     {
-
-        /**
-         * @brief This processing module process isocoout utilities. 
-         */
-        class ProcessIsoContourUtils : public ProcessIsoContour
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) 
-            {
-                return MemoryManager<ProcessIsoContourUtils>::AllocateSharedPtr(f);
-            }
-            static ModuleKey className;
-            
-            ProcessIsoContourUtils(FieldSharedPtr f);
-            virtual ~ProcessIsoContourUtils();
-            
-            /// Write mesh to output file.
-            virtual void Process(po::variables_map &vm);
-
-        private:
-            void LoadFeldPtsToIso(vector<IsoSharedPtr> &iso);
-        };
+        return MemoryManager<ProcessIsoContourUtils>::AllocateSharedPtr(f);
     }
+    static ModuleKey className;
+
+    ProcessIsoContourUtils(FieldSharedPtr f);
+    virtual ~ProcessIsoContourUtils();
+
+    /// Write mesh to output file.
+    virtual void Process(po::variables_map &vm);
+
+private:
+    void LoadFeldPtsToIso(vector<IsoSharedPtr> &iso);
+};
+
+}
 }
 
 #endif

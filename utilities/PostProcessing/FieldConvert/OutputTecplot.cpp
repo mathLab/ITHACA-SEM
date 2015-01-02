@@ -44,58 +44,61 @@ namespace Nektar
 {
     namespace Utilities
     {
-        
+
         ModuleKey OutputTecplot::m_className =
             GetModuleFactory().RegisterCreatorFunction(
                               ModuleKey(eOutputModule, "dat"), OutputTecplot::create,
                               "Writes a Tecplot file.");
-        
+
         OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
         {
             m_requireEquiSpaced = true;
             if(f->m_setUpEquiSpacedFields)
             {
-                m_outputType = eFullBlockZoneEquiSpaced; 
+                m_outputType = eFullBlockZoneEquiSpaced;
             }
             else
             {
                 m_outputType = eFullBlockZone;
             }
         }
-        
+
         OutputTecplot::~OutputTecplot()
         {
         }
-        
+
         void OutputTecplot::Process(po::variables_map &vm)
         {
             m_doError = (vm.count("error") == 1)?  true: false;
-            
+
             if (m_f->m_verbose)
             {
                 cout << "OutputTecplot: Writing file..." << endl;
             }
-            
+
             // Do nothing if no expansion defined
             if(m_f->m_fieldPts == NullFieldPts &&!m_f->m_exp.size())
             {
                 return;
             }
-            
+
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
-            
+
             if(m_f->m_fieldPts != NullFieldPts)
             {
+                int i   = 0;
+                int j   = 0;
+                int dim = m_f->m_fieldPts->m_ptsDim;
 
                 if(m_f->m_fieldPts->m_pts[0].num_elements() == 0)
                 {
                     return;
                 }
-                int dim = m_f->m_fieldPts->m_ptsDim;
+
                 // Write solution.
                 ofstream outfile(filename.c_str());
-                
+
                 switch(dim)
                 {
                 case 1:
@@ -108,92 +111,101 @@ namespace Nektar
                     outfile << "VARIABLES = x,y,z";
                     break;
                 }
-                
-                for(int i = 0; i < m_f->m_fieldPts->m_fields.size(); ++i)
+
+                for(i = 0; i < m_f->m_fieldPts->m_fields.size(); ++i)
                 {
                     outfile << "," << m_f->m_fieldPts->m_fields[i];
                 }
                 outfile << endl;
-                bool DumpAsFEPoint = true; 
+                bool DumpAsFEPoint = true;
                 switch(m_f->m_fieldPts->m_ptype)
                 {
-                case Utilities::ePtsFile:
-                case Utilities::ePtsLine:
-                    outfile << " ZONE I="
-                            << m_f->m_fieldPts->m_pts[0].num_elements()
-                            << " F=POINT" << endl;
-                    break;
-                case Utilities::ePtsPlane:
-                    outfile << " ZONE I=" << m_f->m_fieldPts->m_npts[0]
-                            <<      " J=" << m_f->m_fieldPts->m_npts[1]
-                            << " F=POINT" << endl;
-                    break;
-                case Utilities::ePtsTriBlock:
+                    case Utilities::ePtsFile:
+                    case Utilities::ePtsLine:
+                        outfile << " ZONE I="
+                                << m_f->m_fieldPts->m_pts[0].num_elements()
+                                << " F=POINT" << endl;
+                        break;
+                    case Utilities::ePtsPlane:
+                        outfile << " ZONE I=" << m_f->m_fieldPts->m_npts[0]
+                                <<      " J=" << m_f->m_fieldPts->m_npts[1]
+                                << " F=POINT" << endl;
+                        break;
+                    case Utilities::ePtsTriBlock:
                     {
-                        int numBlocks = 0; 
-                        for(int i = 0; i < m_f->m_fieldPts->m_ptsConn.size(); ++i)
+                        int numBlocks = 0;
+                        for(i = 0; i < m_f->m_fieldPts->m_ptsConn.size(); ++i)
                         {
-                            numBlocks += m_f->m_fieldPts->m_ptsConn[i].num_elements()/3;
+                            numBlocks +=
+                                m_f->m_fieldPts->m_ptsConn[i].num_elements()/3;
                         }
-                        outfile << "Zone, N=" << m_f->m_fieldPts->m_pts[0].num_elements() << ", E="<<
-                        numBlocks << ", F=FEBlock" << ", ET=TRIANGLE" << std::endl;
+                        outfile << "Zone, N="
+                                << m_f->m_fieldPts->m_pts[0].num_elements()
+                                << ", E=" << numBlocks
+                                << ", F=FEBlock" << ", ET=TRIANGLE"
+                                << std::endl;
                         DumpAsFEPoint = false;
+                        break;
                     }
-                    break;
-                case Utilities::ePtsTetBlock:
+                    case Utilities::ePtsTetBlock:
                     {
-                        int numBlocks = 0; 
-                        for(int i = 0; i < m_f->m_fieldPts->m_ptsConn.size(); ++i)
+                        int numBlocks = 0;
+                        for(i = 0; i < m_f->m_fieldPts->m_ptsConn.size(); ++i)
                         {
-                            numBlocks += m_f->m_fieldPts->m_ptsConn[i].num_elements()/4;
+                            numBlocks +=
+                                m_f->m_fieldPts->m_ptsConn[i].num_elements()/4;
                         }
-                        outfile << "Zone, N=" << m_f->m_fieldPts->m_pts[0].num_elements() << ", E="<<
-                        numBlocks << ", F=FEBlock" << ", ET=TETRAHEDRON" << std::endl;
+                        outfile << "Zone, N="
+                                << m_f->m_fieldPts->m_pts[0].num_elements()
+                                << ", E=" << numBlocks
+                                << ", F=FEBlock" << ", ET=TETRAHEDRON"
+                                << std::endl;
                         DumpAsFEPoint = false;
+                        break;
                     }
-                    break;
                 }
-                
-                if(DumpAsFEPoint) // dump in point format 
+
+                if(DumpAsFEPoint) // dump in point format
                 {
-                    for(int i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)
+                    for(i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)
                     {
-                        for(int j = 0; j < dim; ++j)
+                        for(j = 0; j < dim; ++j)
                         {
                             outfile << std::setw(12)
-                                << m_f->m_fieldPts->m_pts[j][i] << " ";
+                                    << m_f->m_fieldPts->m_pts[j][i] << " ";
                         }
-                        
-                        for(int j = 0; j < m_f->m_fieldPts->m_fields.size(); ++j)
+
+                        for(j = 0; j < m_f->m_fieldPts->m_fields.size(); ++j)
                         {
-                            outfile << std::setw(12) << m_f->m_data[j][i] << " ";
+                            outfile << std::setw(12)
+                                    << m_f->m_data[j][i] << " ";
                         }
                         outfile << endl;
                     }
                 }
-                else // dump in block format 
+                else // dump in block format
                 {
-                    for(int j = 0; j < dim + m_f->m_fieldPts->m_fields.size(); ++j)
+                    for(j = 0; j < dim + m_f->m_fieldPts->m_fields.size(); ++j)
                     {
-                        for(int i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)
+                        for(i = 0; i < m_f->m_fieldPts->m_pts[0].num_elements(); ++i)
                         {
                             outfile <<  m_f->m_fieldPts->m_pts[j][i] << " ";
                             if((!(i % 1000))&&i)
                             {
                                 outfile << std::endl;
                             }
-                        }                       
+                        }
                         outfile << endl;
                     }
-                    
-                    
+
+
                     // dump connectivity data if it exists
-                    for(int i = 0; i < m_f->m_fieldPts->m_ptsConn.size();++i)
+                    for(i = 0; i < m_f->m_fieldPts->m_ptsConn.size();++i)
                     {
-                        for(int j = 0; j < m_f->m_fieldPts->m_ptsConn[i].num_elements(); ++j)
+                        for(j = 0; j < m_f->m_fieldPts->m_ptsConn[i].num_elements(); ++j)
                         {
                             outfile << m_f->m_fieldPts->m_ptsConn[i][j] +1 << " ";
-                            if((!(j % 10*dim))&&j)
+                            if( ( !(j % 10 * dim) ) && j )
                             {
                                 outfile << std::endl;
                             }
@@ -209,24 +221,24 @@ namespace Nektar
                     int    dot = filename.find_last_of('.');
                     string ext = filename.substr(dot,filename.length()-dot);
                     string procId = "_P" + boost::lexical_cast<std::string>(
-                                                                            m_f->m_session->GetComm()->GetRank());
+                                       m_f->m_session->GetComm()->GetRank());
                     string start = filename.substr(0,dot);
                     filename = start + procId + ext;
                 }
-                
+
                 // Write solution.
                 ofstream outfile(filename.c_str());
                 std::string var;
                 if(m_f->m_fielddef.size())
                 {
                     var = m_f->m_fielddef[0]->m_fields[0];
-                    
+
                     for (int j = 1; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
                     {
                         var = var + ", " + m_f->m_fielddef[0]->m_fields[j];
                     }
                 }
-                
+
                 WriteTecplotHeader(outfile,var);
                 WriteTecplotZone(outfile);
                 if(var.length()) // see if any variables are defined
@@ -236,10 +248,10 @@ namespace Nektar
                         WriteTecplotField(j,outfile);
                     }
                 }
-                
+
                 WriteTecplotConnectivity(outfile);
             }
-            
+
             cout << "Written file: " << filename << endl;
         }
 
@@ -253,7 +265,7 @@ namespace Nektar
         {
             int coordim  = m_f->m_exp[0]->GetExp(0)->GetCoordim();
             MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
-            
+
             if(HomoExpType == MultiRegions::e3DH1D)
             {
                 coordim +=1;
@@ -262,7 +274,7 @@ namespace Nektar
             {
                 coordim += 2;
             }
-            
+
             outfile << "Variables = x";
 
             if(coordim == 2)
@@ -273,7 +285,7 @@ namespace Nektar
             {
                 outfile << ", y, z";
             }
-            
+
             if(var.length())
             {
                 outfile << ", "<< var << std::endl << std::endl;
@@ -283,8 +295,8 @@ namespace Nektar
                 outfile << std::endl << std::endl;
             }
         }
-        
-        
+
+
         /**
          * Write Tecplot Files Zone
          * @param   outfile    Output file name.
@@ -294,27 +306,27 @@ namespace Nektar
         {
             switch(m_outputType)
             {
-            case eFullBlockZone: //write as full block zone
+                case eFullBlockZone: //write as full block zone
                 {
                     int i,j;
                     int coordim   = m_f->m_exp[0]->GetCoordim(0);
                     int totpoints = m_f->m_exp[0]->GetTotPoints();
                     MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
-                    
+
                     Array<OneD,NekDouble> coords[3];
-                
+
                     coords[0] = Array<OneD,NekDouble>(totpoints);
                     coords[1] = Array<OneD,NekDouble>(totpoints);
                     coords[2] = Array<OneD,NekDouble>(totpoints);
-                    
+
                     m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
-                    
+
                     if (m_doError)
                     {
                         NekDouble l2err;
                         std::string coordval[] = {"x","y","z"};
                         int rank = m_f->m_session->GetComm()->GetRank();
-                        
+
                         for(int i = 0; i < coordim; ++i)
                         {
                             l2err = m_f->m_exp[0]->L2(coords[i]);
@@ -325,10 +337,10 @@ namespace Nektar
                             }
                         }
                     }
-                    
+
                     int numBlocks = GetNumTecplotBlocks();
                     int nBases = m_f->m_exp[0]->GetExp(0)->GetNumBases();
-                
+
                     if (HomoExpType == MultiRegions::e3DH1D)
                     {
                         nBases  += 1;
@@ -342,10 +354,10 @@ namespace Nektar
                         nBases  += 2;
                         coordim += 1;
                     }
-                    
+
                     outfile << "Zone, N=" << totpoints << ", E="<<
                         numBlocks << ", F=FEBlock" ;
-                    
+
                     switch(nBases)
                     {
                     case 1:
@@ -358,7 +370,7 @@ namespace Nektar
                         outfile << ", ET=BRICK" << std::endl;
                         break;
                     }
-                    
+
                     // write out coordinates in block format
                     for(j = 0; j < coordim; ++j)
                     {
@@ -372,26 +384,27 @@ namespace Nektar
                         }
                         outfile << std::endl;
                     }
+                    break;
                 }
-                break;
-            case eSeperateZones: 
+                case eSeperateZones:
                 {
                     for(int i = 0; i < m_f->m_exp[0]->GetExpSize(); ++i)
                     {
                         m_f->m_exp[0]->WriteTecplotZone(outfile,i);
                     }
+                    break;
                 }
-                break;
-            case eFullBlockZoneEquiSpaced:
-                ASSERTL0(false,"Should not have this option in this method");
-                break;
+                case eFullBlockZoneEquiSpaced:
+                    ASSERTL0(false,
+                             "Should not have this option in this method");
+                    break;
             }
         }
-        
+
         int OutputTecplot::GetNumTecplotBlocks(void)
         {
             int returnval = 0;
-            
+
             if(m_f->m_exp[0]->GetExp(0)->GetNumBases() == 1)
             {
                 for(int i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
@@ -419,8 +432,8 @@ namespace Nektar
 
             return returnval;
         }
-        
-    
+
+
         /**
          * Write Tecplot Files Field
          * @param   outfile    Output file name.
@@ -429,21 +442,21 @@ namespace Nektar
         void OutputTecplot::WriteTecplotField(const int field,
                                               std::ofstream &outfile)
         {
-            
+
             if(m_outputType == eFullBlockZone) //write as full block zone
             {
                 int totpoints = m_f->m_exp[0]->GetTotPoints();
-                
+
                 if(m_f->m_exp[field]->GetPhysState() == false)
                 {
                     m_f->m_exp[field]->BwdTrans(m_f->m_exp[field]->GetCoeffs(),
                                                 m_f->m_exp[field]->UpdatePhys());
                 }
-                
+
                 if (m_doError)
                 {
                     NekDouble l2err = m_f->m_exp[0]->L2(m_f->m_exp[field]->UpdatePhys());
-                    
+
                     if(m_f->m_session->GetComm()->GetRank() == 0)
                     {
                         cout << "L 2 error (variable "
@@ -472,25 +485,25 @@ namespace Nektar
                 }
             }
         }
-        
+
         void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
         {
             int i,j,k,l;
             int nbase = m_f->m_exp[0]->GetExp(0)->GetNumBases();
             int cnt = 0;
-            
+
             for(i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
             {
                 if(nbase == 1)
                 {
                     int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
-                    
+
                     for(k = 1; k < np0; ++k)
                     {
                         outfile << cnt + k +1 << " ";
                         outfile << cnt + k    << endl;
                     }
-                    
+
                     cnt += np0;
                 }
                 else if(nbase == 2)
@@ -499,13 +512,13 @@ namespace Nektar
                     int np1 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
                     int totPoints = m_f->m_exp[0]->GetTotPoints();
                     int nPlanes = 1;
-                    
+
                     if (m_f->m_exp[0]->GetExpType() == MultiRegions::e3DH1D)
                     {
                         nPlanes = m_f->m_exp[0]->GetZIDs().num_elements();
                         totPoints = m_f->m_exp[0]->GetPlane(0)->GetTotPoints();
-                        
-                        
+
+
                         for(int n = 1; n < nPlanes; ++n)
                         {
                             for(j = 1; j < np1; ++j)
@@ -520,7 +533,7 @@ namespace Nektar
                                             << " ";
                                     outfile << cnt + (n-1)*totPoints + j*np0 + k
                                             << " ";
-                                    
+
                                     outfile << cnt + n*totPoints + (j-1)*np0 + k
                                             << " ";
                                     outfile << cnt + n*totPoints + (j-1)*np0 + k + 1
@@ -553,7 +566,7 @@ namespace Nektar
                     int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
                     int np1 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
                     int np2 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(2);
-                    
+
                     for(j = 1; j < np2; ++j)
                     {
                         for(k = 1; k < np1; ++k)
@@ -564,7 +577,7 @@ namespace Nektar
                                 outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l +1 << " ";
                                 outfile << cnt + (j-1)*np0*np1 +  k*np0 + l +1 << " ";
                                 outfile << cnt + (j-1)*np0*np1 +  k*np0 + l  << " ";
-                                
+
                                 outfile << cnt + j*np0*np1 + (k-1)*np0 + l  << " ";
                                 outfile << cnt + j*np0*np1 + (k-1)*np0 + l +1 << " ";
                                 outfile << cnt + j*np0*np1 +  k*np0 + l +1 << " ";
@@ -578,7 +591,7 @@ namespace Nektar
                 {
                     ASSERTL0(false,"Not set up for this dimension");
                 }
-                
+
             }
         }
     }

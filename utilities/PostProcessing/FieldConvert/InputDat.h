@@ -40,31 +40,29 @@
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+/// Input module for Xml files.
+class InputDat : public InputModule
+{
+public:
+    InputDat(FieldSharedPtr f);
+    virtual ~InputDat();
+    virtual void Process(po::variables_map &vm);
+
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(FieldSharedPtr f)
     {
-        
-        /**
-         *  Input module for Xml files.
-         */
-        class InputDat : public InputModule
-        {
-        public:
-            InputDat(FieldSharedPtr f);
-            virtual ~InputDat();
-            virtual void Process(po::variables_map &vm);
-            
-            /// Creates an instance of this class
-            static ModuleSharedPtr create(FieldSharedPtr f)
-            {
-                return MemoryManager<InputDat>::AllocateSharedPtr(f);
-            }
-            /// %ModuleKey for class.
-            static ModuleKey m_className[];
-            
-        private:
-            void ReadTecplotFEBlockZone(std::ifstream &datFile, string &line);
-        };
-        
+        return MemoryManager<InputDat>::AllocateSharedPtr(f);
     }
+    /// %ModuleKey for class.
+    static ModuleKey m_className[];
+
+private:
+    void ReadTecplotFEBlockZone(std::ifstream &datFile, string &line);
+};
+
+}
 }
 #endif

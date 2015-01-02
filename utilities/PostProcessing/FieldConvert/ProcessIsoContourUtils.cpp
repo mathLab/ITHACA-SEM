@@ -44,106 +44,117 @@ using namespace std;
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+ModuleKey ProcessIsoContourUtils::className =
+    GetModuleFactory().RegisterCreatorFunction(
+                        ModuleKey(eProcessModule, "isocontourutil"),
+                        ProcessIsoContourUtils::create,
+                        "process isocontour with different utilities");
+
+
+ProcessIsoContourUtils::ProcessIsoContourUtils(FieldSharedPtr f)
+{
+    m_f = f;
+    m_config["globalcondense"]     = ConfigOption(true, "NotSet",
+                                        "Globally condense contour to unique "
+                                        "values");
+
+    m_config["smooth"]             = ConfigOption(true, "NotSet",
+                                        "Smooth isocontour (implies global "
+                                        "condense)");
+    m_config["smoothiter"]         = ConfigOption(false, "100",
+                                        "Number of smoothing cycle, "
+                                        "default = 100");
+    m_config["smoothposdiffusion"] = ConfigOption(false, "0.5",
+                                        "Postive diffusion coefficient "
+                                        "(0 < lambda < 1), default = 0.5");
+    m_config["smoothnegdiffusion"] = ConfigOption(false, "0.495",
+                                        "Negative diffusion coefficient "
+                                        "(0 < mu < 1), default = 0.495");
+}
+
+ProcessIsoContourUtils::~ProcessIsoContourUtils(void)
+{
+}
+
+void ProcessIsoContourUtils::Process(po::variables_map &vm)
+{
+    vector<IsoSharedPtr> iso;
+
+    ASSERTL0(m_f->m_fieldPts != NullFieldPts,
+             "Need to specify an input .dat file with isocontourutil module");
+
+    LoadFeldPtsToIso(iso);
+
+    bool smoothing      = m_config["smooth"].m_beenSet;
+    bool globalcondense = m_config["globalcondense"].m_beenSet;
+    if(smoothing||globalcondense)
     {
-        
-        ModuleKey ProcessIsoContourUtils::className =
-            GetModuleFactory().RegisterCreatorFunction(
-                                ModuleKey(eProcessModule, "isocontourutil"),
-                                ProcessIsoContourUtils::create,
-                                "process isocontour with different utilities");
-        
-        
-        ProcessIsoContourUtils::ProcessIsoContourUtils(FieldSharedPtr f)
+        vector<IsoSharedPtr> glob_iso;
+        int nfields = m_f->m_fieldPts->m_pts.num_elements();
+        IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
+
+        g_iso->globalcondense(iso);
+
+        if(smoothing)
         {
-            m_f = f;
-            m_config["globalcondense"] = ConfigOption(true,"NotSet","Globally condense contour to unique values");
-
-            m_config["smooth"] = ConfigOption(true,"NotSet","Smooth isocontour (implies global condense)");
-            m_config["smoothiter"] = ConfigOption(false,"100","Number of smoothing cycle, default = 100"); 
-            m_config["smoothposdiffusion"] = ConfigOption(false,"0.5","Postive diffusion coefficient (0 < lambda < 1), default = 0.5"); 
-            m_config["smoothnegdiffusion"] = ConfigOption(false,"0.495","Negative diffusion coefficient (0 < mu < 1), default = 0.495"); 
-
-        }
-        
-        ProcessIsoContourUtils::~ProcessIsoContourUtils(void)
-        {
-        }
-        
-        void ProcessIsoContourUtils::Process(po::variables_map &vm)
-        {
-            vector<IsoSharedPtr> iso;
-            
-            ASSERTL0(m_f->m_fieldPts != NullFieldPts,"Need to specify an input .dat file with isocontourutil module");
-
-            LoadFeldPtsToIso(iso);
-
-            bool smoothing      = m_config["smooth"].m_beenSet;
-            bool globalcondense = m_config["globalcondense"].m_beenSet;
-            if(smoothing||globalcondense)
-            {
-                vector<IsoSharedPtr> glob_iso;
-                int nfields = m_f->m_fieldPts->m_pts.num_elements();
-                IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
-                
-                g_iso->globalcondense(iso);
-
-                if(smoothing)
-                {
-                    int  niter = m_config["smoothiter"].as<int>();
-                    NekDouble lambda = m_config["smoothposdiffusion"].as<NekDouble>();
-                    NekDouble mu     = m_config["smoothnegdiffusion"].as<NekDouble>();
-                    g_iso->smooth(niter,lambda,-mu);
-                }
-                
-                glob_iso.push_back(g_iso);
-
-                ResetFieldPts(glob_iso);
-            }
-            else
-            {
-                WARNINGL0(false,"No actions set");
-            }
+            int  niter = m_config["smoothiter"].as<int>();
+            NekDouble lambda = m_config["smoothposdiffusion"].as<NekDouble>();
+            NekDouble mu     = m_config["smoothnegdiffusion"].as<NekDouble>();
+            g_iso->smooth(niter,lambda,-mu);
         }
 
-        void ProcessIsoContourUtils::LoadFeldPtsToIso(vector<IsoSharedPtr> &iso)
-        {
-            int nfields = m_f->m_fieldPts->m_pts.num_elements();
-            
-            // set output to triangle block. 
-            int nvertoffset = 0; 
-            for(int n = 0; n < m_f->m_fieldPts->m_ptsConn.size(); ++n)
-            {
-                IsoSharedPtr newiso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
-                
-                int nconn = m_f->m_fieldPts->m_ptsConn[n].num_elements();
-                newiso->set_ntris(nconn/3);
-                
-                int nvert = Vmath::Vmax(nconn,m_f->m_fieldPts->m_ptsConn[n],1)+1;
-                nvert -= nvertoffset; 
-                
-                newiso->resize_fields(nvert);
+        glob_iso.push_back(g_iso);
 
-                newiso->set_nvert(nvert);
-                
-                for(int i = 0; i < nvert; ++i)
-                {
-                    newiso->set_fields(i,m_f->m_fieldPts->m_pts,nvertoffset+i);
-                }
-                
-                newiso->resize_vid(nconn);
-
-                for(int i = 0; i < nconn; ++i)
-                {
-                    newiso->set_vid(i,m_f->m_fieldPts->m_ptsConn[n][i]-nvertoffset);
-                }
-                
-                nvertoffset += nvert; 
-                
-                iso.push_back(newiso);
-            }
-        }
+        ResetFieldPts(glob_iso);
     }
+    else
+    {
+        WARNINGL0(false,"No actions set");
+    }
+}
+
+void ProcessIsoContourUtils::LoadFeldPtsToIso(vector<IsoSharedPtr> &iso)
+{
+    int nfields = m_f->m_fieldPts->m_pts.num_elements();
+
+    // set output to triangle block.
+    int nvertoffset = 0;
+    for(int n = 0; n < m_f->m_fieldPts->m_ptsConn.size(); ++n)
+    {
+        IsoSharedPtr newiso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
+
+        int nconn = m_f->m_fieldPts->m_ptsConn[n].num_elements();
+        newiso->set_ntris(nconn/3);
+
+        int nvert = Vmath::Vmax(nconn,m_f->m_fieldPts->m_ptsConn[n],1)+1;
+        nvert -= nvertoffset;
+
+        newiso->resize_fields(nvert);
+
+        newiso->set_nvert(nvert);
+
+        for(int i = 0; i < nvert; ++i)
+        {
+            newiso->set_fields(i,m_f->m_fieldPts->m_pts,nvertoffset+i);
+        }
+
+        newiso->resize_vid(nconn);
+
+        for(int i = 0; i < nconn; ++i)
+        {
+            newiso->set_vid(i,m_f->m_fieldPts->m_ptsConn[n][i]-nvertoffset);
+        }
+
+        nvertoffset += nvert;
+
+        iso.push_back(newiso);
+    }
+}
+
+}
 }
 
 

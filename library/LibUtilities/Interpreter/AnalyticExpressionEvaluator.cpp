@@ -83,7 +83,7 @@ namespace Nektar
             func(PFD3 p) : func3(p), size(3) {};
             func(PFD4 p) : func4(p), size(4) {};
 
-            union	// Pointer to a function 
+            union	// Pointer to a function
             {
                 PFD1 func1;
                 PFD2 func2;
@@ -120,7 +120,7 @@ namespace Nektar
         {
             functions()
             {
-                // Add all of the functions from math.h 
+                // Add all of the functions from math.h
                 add
                     ("abs",		std::abs)
                     ("asin",	asin)
@@ -191,7 +191,7 @@ namespace Nektar
             |	(root_node_d[ch_p('-')] >> factor);
 
             parameter	=	leaf_node_d[ lexeme_d[
-                (alpha_p | '_' | '$') >> *(alnum_p | '_' | '$') 
+                (alpha_p | '_' | '$') >> *(alnum_p | '_' | '$')
             ] ] >> op;
 
             function	=	root_node_d[functions_p] >>
@@ -335,7 +335,7 @@ namespace Nektar
 	      if(m_constant[it->second] != value)
 		  {
 		    std::string errormsg("Attempt to add numerically different constants under the same name: ");
-		    errormsg += name; 
+		    errormsg += name;
 		    std::cout << errormsg << std::endl;
 		  }
 	    //ASSERTL1(m_constant[it->second] == value, "Attempt to add numerically different constants under the same name: " + name);
@@ -608,8 +608,12 @@ namespace Nektar
             m_timer.Start();
 
             const int num_points = points[0].num_elements();
-            ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
-            ASSERTL1(result.num_elements() >= num_points, "destination array must have enough capacity to store expression values at each given point");
+            ASSERTL1(m_executionStack.size() > expression_id,
+                     "unknown analytic expression, it must first be defined "
+                     "with DefineFunction(...)");
+            ASSERTL1(result.num_elements() >= num_points,
+                     "destination array must have enough capacity to store "
+                     "expression values at each given point");
 
             ExecutionStack &stack = m_executionStack[expression_id];
 
@@ -618,16 +622,14 @@ namespace Nektar
             /// Lets split the work into cache-sized chunks.
             /// Ahtung, magic constant!
             const int max_chunk_size = 1024;
-
             const int nvals = points.size();
-            
-            /// please don't remove brackets around std::min, it screws up windows compilation
             const int chunk_size = (std::min)(max_chunk_size, num_points);
-            if (m_state.size() < chunk_size * m_state_sizes[expression_id] )
+
+            if (m_state.size() < chunk_size * m_state_sizes[expression_id])
             {
-                m_state.resize( m_state_sizes[expression_id] * chunk_size, 0.0 );
+                m_state.resize(m_state_sizes[expression_id] * chunk_size, 0.0);
             }
-            if (m_variable.size() < nvals * chunk_size )
+            if (m_variable.size() < nvals * chunk_size)
             {
                 m_variable.resize( nvals * chunk_size, 0.0);
             }
@@ -781,7 +783,7 @@ namespace Nektar
                     case E_COSH:
                         stack.push_back ( makeStep<EvalCosh>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
-                    case E_EXP: 
+                    case E_EXP:
                         stack.push_back ( makeStep<EvalExp>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     case E_FABS:
@@ -790,7 +792,7 @@ namespace Nektar
                     case E_FLOOR:
                         stack.push_back ( makeStep<EvalFloor>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
-                    case E_LOG: 
+                    case E_LOG:
                         stack.push_back ( makeStep<EvalLog>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     case E_LOG10:
@@ -799,7 +801,7 @@ namespace Nektar
                     case E_RAD:
                         stack.push_back ( makeStep<EvalRad>( stateIndex, stateIndex, stateIndex+1 ) );
                         return std::make_pair(false,0);
-                    case E_SIN: 
+                    case E_SIN:
                         stack.push_back ( makeStep<EvalSin>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     case E_SINH:
@@ -808,7 +810,7 @@ namespace Nektar
                     case E_SQRT:
                         stack.push_back ( makeStep<EvalSqrt>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
-                    case E_TAN: 
+                    case E_TAN:
                         stack.push_back ( makeStep<EvalTan>( stateIndex, stateIndex ) );
                         return std::make_pair(false,0);
                     case E_TANH:

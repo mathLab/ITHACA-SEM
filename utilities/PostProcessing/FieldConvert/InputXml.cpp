@@ -84,10 +84,10 @@ namespace Nektar
             }
             // check to see if fld file defined so can use in
             // expansion defintion if required
-            string fldending; 
-            bool fldfilegiven = true; 
+            string fldending;
+            bool fldfilegiven = true;
 
-            //Determine appropriate field input 
+            //Determine appropriate field input
             if(m_f->m_inputfiles.count("fld") != 0)
             {
                 fldending = "fld";
@@ -126,7 +126,7 @@ namespace Nektar
                                         SpatialDomains::NullDomainRangeShPtr;
 
 
-            // define range to process output 
+            // define range to process output
             if(vm.count("range"))
             {
                 vector<NekDouble> values;
@@ -140,46 +140,49 @@ namespace Nektar
                          "Do not have an even number of range values");
 
                 int nvalues = values.size()/2;
-                rng = MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
+                rng = MemoryManager<SpatialDomains::DomainRange>::
+                                                        AllocateSharedPtr();
 
-                rng->m_doZrange  = false;
-                rng->m_doYrange  = false;
-                rng->m_checkShape = false;
+                rng->m_doZrange     = false;
+                rng->m_doYrange     = false;
+                rng->m_checkShape   = false;
 
                 switch(nvalues)
                 {
                 case 3:
                     rng->m_doZrange = true;
-                    rng->m_zmin = values[4];
-                    rng->m_zmax = values[5];
+                    rng->m_zmin     = values[4];
+                    rng->m_zmax     = values[5];
                 case 2:
                     rng->m_doYrange = true;
-                    rng->m_ymin = values[2];
-                    rng->m_ymax = values[3];
+                    rng->m_ymin     = values[2];
+                    rng->m_ymax     = values[3];
                 case 1:
                     rng->m_doXrange = true;
-                    rng->m_xmin = values[0];
-                    rng->m_xmax = values[1];
+                    rng->m_xmin     = values[0];
+                    rng->m_xmax     = values[1];
                     break;
                 default:
                     ASSERTL0(false,"too many values specfied in range");
-                }    
+                }
             }
 
-            // define range to only take a single shape. 
+            // define range to only take a single shape.
             if(vm.count("onlyshape"))
             {
                 if(rng == SpatialDomains::NullDomainRangeShPtr)
                 {
-                    rng = MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
+                    rng = MemoryManager<SpatialDomains::DomainRange>::
+                                                            AllocateSharedPtr();
                     rng->m_doXrange = false;
                     rng->m_doYrange = false;
                     rng->m_doZrange = false;
                 }
-                
+
                 rng->m_checkShape = true;
 
-                string shapematch = boost::to_upper_copy(vm["onlyshape"].as<string>());
+                string shapematch =
+                            boost::to_upper_copy(vm["onlyshape"].as<string>());
                 int i;
                 for(i = 0; i < LibUtilities::SIZE_ShapeType; ++i)
                 {
@@ -191,7 +194,9 @@ namespace Nektar
                         break;
                     }
                 }
-                ASSERTL0(i != LibUtilities::SIZE_ShapeType,"Failed to find shape type in -onlyshape command line argument");
+                ASSERTL0(i != LibUtilities::SIZE_ShapeType,
+                         "Failed to find shape type in -onlyshape command line "
+                         "argument");
             }
 
 
@@ -199,7 +204,7 @@ namespace Nektar
             {
                 string firstarg = "FieldConvert";
                 string verbose = "-v";
-                char **argv; 
+                char **argv;
                 argv = (char**)malloc(2*sizeof(char*));
                 argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
                 argv[1] = (char *)malloc(verbose.size()*sizeof(char));
@@ -267,17 +272,17 @@ namespace Nektar
                     }
                 }
             }
-            
-            // reset expansion defintion to use equispaced points if required. 
-            if(m_requireEquiSpaced) // set up points to be equispaced 
+
+            // reset expansion defintion to use equispaced points if required.
+            if(m_requireEquiSpaced) // set up points to be equispaced
             {
                 int nPointsNew = 0;
-                
+
                 if(vm.count("output-points"))
                 {
                     nPointsNew = vm["output-points"].as<int>();
                 }
-                
+
 
                 m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
             }

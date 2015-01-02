@@ -43,6 +43,7 @@ IF (THIRDPARTY_BUILD_ZLIB)
         TMP_DIR ${TPBUILD}/zlib-1.2.7-tmp
         INSTALL_DIR ${TPDIST}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}
+            -G ${CMAKE_GENERATOR}
             -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
             -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST}
             -DCMAKE_C_FLAGS:STRING=-fPIC
@@ -51,6 +52,10 @@ IF (THIRDPARTY_BUILD_ZLIB)
 
     IF (WIN32)
         SET(ZLIB_LIBRARY zlib CACHE FILEPATH
+            "Zlib library" FORCE)
+        SET(ZLIB_LIBRARY_DEBUG zlibd CACHE FILEPATH
+            "Zlib library" FORCE)
+        SET(ZLIB_LIBRARY_RELEASE zlib CACHE FILEPATH
             "Zlib library" FORCE)
         MESSAGE(STATUS "Build Zlib: ${TPDIST}/${LIB_DIR}/${ZLIB_LIBRARY}.dll")
     ELSE ()

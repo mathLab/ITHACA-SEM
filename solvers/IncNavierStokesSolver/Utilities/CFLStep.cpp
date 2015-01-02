@@ -32,9 +32,7 @@ int main(int argc, char *argv[])
 
 
         EquationSystemSharedPtr EqSys = drv->GetEqu()[0];
-        
-        IncNavierStokesSharedPtr IncNav = boost::dynamic_pointer_cast
-            <IncNavierStokes>(EqSys);
+        IncNavierStokesSharedPtr IncNav = EqSys->as<IncNavierStokes>();
         
         IncNav->SetInitialConditions(0.0,false);
         Array<OneD, NekDouble> cfl = IncNav->GetElmtCFLVals();

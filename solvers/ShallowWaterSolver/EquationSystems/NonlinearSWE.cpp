@@ -273,7 +273,8 @@ namespace Nektar
 	  // Input and output in physical space
 	  Array<OneD, Array<OneD, NekDouble> > advVel;
 	  
-	  m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
+	  m_advection->Advect(nvariables, m_fields, advVel, inarray,
+	                      outarray, time);
 	  //-------------------------------------------------------
 	  
 	  

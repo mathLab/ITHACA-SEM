@@ -993,6 +993,7 @@ namespace Nektar
             return it->second;
         }
 
+        
         /**
          * Retrieve the basis key for a given face direction.
          */
@@ -1028,115 +1029,23 @@ namespace Nektar
             // coordinate direction of the given face.
             int dir = geom3d->GetDir((*elements)[0]->m_FaceIndx, facedir);
 
-            // Obtain the number of modes for the element basis key in this
-            // direction.
-            int nummodes = (int) expansion->m_basisKeyVector[dir].GetNumModes();
-            int numpoints = (int) expansion->m_basisKeyVector[dir].GetNumPoints();
-
-            switch(expansion->m_basisKeyVector[dir].GetBasisType())
+            if(face->GetNumVerts() == 3)
             {
-            case LibUtilities::eModified_A:
-            case LibUtilities::eModified_B:
-            case LibUtilities::eModified_C:
-                {
-                    switch (facedir)
-                    {
-                    case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                        }
-                        break;
-                    case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            if (face->GetNumVerts() == 3)
-                            {
-                                // Triangle
-                                return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
-                            }
-                            else {
-                                // Quadrilateral
-                                return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                            }
-                        }
-                        break;
-                    default:
-                        ASSERTL0(false,"invalid value to flag");
-                        break;
-                    }
-                }
-                break;
-            case LibUtilities::eGLL_Lagrange:
-                {
-                    TriGeomSharedPtr triangle = boost::dynamic_pointer_cast<TriGeom>(face);
-                    QuadGeomSharedPtr quadrilateral = boost::dynamic_pointer_cast<QuadGeom>(face);
-
-                    if(quadrilateral)
-                    {
-                        const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
-                        return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
-                    }
-                    else if(triangle)
-                    {
-                        switch (facedir)
-                        {
-                        case 0:
-                            {
-                                const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                                return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
-                            }
-                            break;
-                        case 1:
-                            {
-                                const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                                return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
-                            }
-                            break;
-                        default:
-                            ASSERTL0(false,"invalid value to flag");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
-                    }
-                }
-                break;
-            case LibUtilities::eOrtho_A:
-                {
-                    switch (facedir)
-                    {
-                    case 0:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
-                        }
-                        break;
-                    case 1:
-                        {
-                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
-                            return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
-                        }
-                        break;
-                    default:
-                        ASSERTL0(false,"invalid value to flag");
-                        break;
-                        }
-                }
-                break;
-//            case eGLL_Lagrange_SEM:
-//                {
-//                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
-//                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
-//                }
-//                break;
-            default:
-                ASSERTL0(false,"expansion type unknown");
-                break;
+                return StdRegions::EvaluateTriFaceBasisKey(facedir,
+                          expansion->m_basisKeyVector[dir].GetBasisType(),
+                          expansion->m_basisKeyVector[dir].GetNumPoints(),
+                          expansion->m_basisKeyVector[dir].GetNumModes());
             }
-            return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
+            else
+            {
+                return StdRegions::EvaluateQuadFaceBasisKey(facedir,
+                          expansion->m_basisKeyVector[dir].GetBasisType(),
+                          expansion->m_basisKeyVector[dir].GetNumPoints(),
+                          expansion->m_basisKeyVector[dir].GetNumModes());
+            }
+            
+            // Keep things happy by returning a value.
+            return LibUtilities::NullBasisKey; 
         }
 
 

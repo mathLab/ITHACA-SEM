@@ -43,92 +43,97 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        class DriverModifiedArnoldi: public DriverArnoldi
-        {
-        public:
-            friend class MemoryManager<DriverModifiedArnoldi>;
-        
-            /// Creates an instance of this class
-            static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
-                DriverSharedPtr p = MemoryManager<DriverModifiedArnoldi>::AllocateSharedPtr(pSession);
-                p->InitObject();
-                return p;
-            }
 	
-            ///Name of the class
-            static std::string className;
-        
+	class DriverModifiedArnoldi: public DriverArnoldi
+	{
+	public:
+	    friend class MemoryManager<DriverModifiedArnoldi>;
+	    
+	    /// Creates an instance of this class
+	    static DriverSharedPtr create(
+		const LibUtilities::SessionReaderSharedPtr& pSession)
+	    {
+		DriverSharedPtr p = MemoryManager<DriverModifiedArnoldi>
+		::AllocateSharedPtr(pSession);
+		p->InitObject();
+		return p;
+	    }
+	    
+	    ///Name of the class
+	    static std::string className;
+	    
 	protected:
-        
-            /// Constructor
-            DriverModifiedArnoldi(const LibUtilities::SessionReaderSharedPtr pSession);
-
-            /// Destructor
-            virtual ~DriverModifiedArnoldi();
-
-            /// Virtual function for initialisation implementation.
-            virtual void v_InitObject(ostream &out = cout );
-
-            /// Virtual function for solve implementation.
-            virtual void v_Execute(ostream &out = cout);
-
-        private:
-            /// Generates a new vector in the sequence by applying the linear operator.
-            void EV_update(Array<OneD, NekDouble> &src,
-                           Array<OneD, NekDouble> &tgt);
-
-            /// Generates the upper Hessenberg matrix H and computes its eigenvalues.
-            void EV_small(Array<OneD, Array<OneD, NekDouble> > &Kseq,
-                          const int ntot,
-                          const Array<OneD, NekDouble> &alpha,
-                          const int kdim,
-                          Array<OneD, NekDouble> &zvec,
-                          Array<OneD, NekDouble> &wr,
-                          Array<OneD, NekDouble> &wi,
-                          NekDouble &resnorm);
-
-            /// Tests for convergence of eigenvalues of H.
-            int EV_test(const int itrn,
-                        const int kdim,
-                        Array<OneD, NekDouble> &zvec,
-                        Array<OneD, NekDouble> &wr,
-                        Array<OneD, NekDouble> &wi,
-                        const NekDouble resnorm,
-                        const int nvec,
-                        ofstream &evlout,
-                        NekDouble &resid0);
-
-
-            /// Sorts a sequence of eigenvectors/eigenvalues by magnitude.
-            void EV_sort(Array<OneD, NekDouble> &evec,
-                         Array<OneD, NekDouble> &wr,
-                         Array<OneD, NekDouble> &wi,
-                         Array<OneD, NekDouble> &test,
-                         const int dim);
-
-            void EV_post(Array<OneD, Array<OneD, NekDouble> > &Tseq,
-                         Array<OneD, Array<OneD, NekDouble> > &Kseq,
-                         const int ntot,
-                         const int kdim,
-                         const int nvec,
-                         Array<OneD, NekDouble> &zvec,
-                         Array<OneD, NekDouble> &wr,
-                         Array<OneD, NekDouble> &wi,
-                         const int icon);
-
-            void EV_big(Array<OneD, Array<OneD, NekDouble> > &bvecs,
-                        Array<OneD, Array<OneD, NekDouble> > &evecs,
-                        const int ntot,
-                        const int kdim,
-                        const int nvec,
-                        Array<OneD, NekDouble> &zvec,
-                        Array<OneD, NekDouble> &wr,
-                        Array<OneD, NekDouble> &wi);
-
-            static std::string driverLookupId;
-        };
-    }	
-} //end of namespace
+	    
+	    /// Constructor
+	    DriverModifiedArnoldi(const LibUtilities::SessionReaderSharedPtr pSession);
+	    
+	    /// Destructor
+	    virtual ~DriverModifiedArnoldi();
+	    
+	    /// Virtual function for initialisation implementation.
+	    virtual void v_InitObject(ostream &out = cout );
+	    
+	    /// Virtual function for solve implementation.
+	    virtual void v_Execute(ostream &out = cout);
+	    
+	private:
+	    /// Generates a new vector in the sequence by applying the linear operator.
+	    void EV_update(Array<OneD, NekDouble> &src,
+			   Array<OneD, NekDouble> &tgt);
+	    
+	    /// Generates the upper Hessenberg matrix H and computes its eigenvalues.
+	    void EV_small(Array<OneD, Array<OneD, NekDouble> > &Kseq,
+			  const int ntot,
+		   const Array<OneD, NekDouble> &alpha,
+		   const int kdim,
+		   Array<OneD, NekDouble> &zvec,
+		   Array<OneD, NekDouble> &wr,
+		   Array<OneD, NekDouble> &wi,
+		   NekDouble &resnorm);
+	    
+	    /// Tests for convergence of eigenvalues of H.
+	    int EV_test(const int itrn,
+			const int kdim,
+		 Array<OneD, NekDouble> &zvec,
+		 Array<OneD, NekDouble> &wr,
+		 Array<OneD, NekDouble> &wi,
+		 const NekDouble resnorm,
+		 const int nvec,
+		 ofstream &evlout,
+		 NekDouble &resid0);
+	    
+	    
+	    /// Sorts a sequence of eigenvectors/eigenvalues by magnitude.
+	    void EV_sort(Array<OneD, NekDouble> &evec,
+			 Array<OneD, NekDouble> &wr,
+		  Array<OneD, NekDouble> &wi,
+		  Array<OneD, NekDouble> &test,
+		  const int dim);
+	    
+	    void EV_post(Array<OneD, Array<OneD, NekDouble> > &Tseq,
+			 Array<OneD, Array<OneD, NekDouble> > &Kseq,
+		  const int ntot,
+		  const int kdim,
+		  const int nvec,
+		  Array<OneD, NekDouble> &zvec,
+		  Array<OneD, NekDouble> &wr,
+		  Array<OneD, NekDouble> &wi,
+		  const int icon);
+	    
+	    void EV_big(Array<OneD, Array<OneD, NekDouble> > &bvecs,
+			Array<OneD, Array<OneD, NekDouble> > &evecs,
+		 const int ntot,
+		 const int kdim,
+		 const int nvec,
+		 Array<OneD, NekDouble> &zvec,
+		 Array<OneD, NekDouble> &wr,
+		 Array<OneD, NekDouble> &wi);
+	    
+	    static std::string driverLookupId;
+	};
+	
+    }
+}
 
 #endif //NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 

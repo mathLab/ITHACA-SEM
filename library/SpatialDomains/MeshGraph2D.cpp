@@ -691,7 +691,7 @@ namespace Nektar
                         {
                         case LibUtilities::eGaussLobattoLegendre:
                             {
-                                const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                                const  LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             }
                             break;
@@ -703,7 +703,7 @@ namespace Nektar
                             // here since the ASSERT will stop
                             // execution.  Just return something
                             // to prevent warnings messages.
-                            const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            const  LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             break;
                         }
@@ -743,6 +743,12 @@ namespace Nektar
                                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             }
                             break;
+                        case LibUtilities::eGaussLobattoLegendre:
+                            {
+                                const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
+                                return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
+                            }
+                            break;
 
                         default:
                             ASSERTL0(false,"Unexpected points distribution");
@@ -773,7 +779,7 @@ namespace Nektar
                             // since the ASSERT will stop execution.
                             // Just return something to prevent
                             // warnings messages.
-                            const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_basisKeyVector[0].GetBasisType(),nummodes,pkey);
                             break;
                         }

@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Computes wall shear stress field.
+//  Description: Computes wss field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +55,6 @@ namespace Nektar
         ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessModule(f)
         {
             m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
-          
             f->m_writeBndFld = true;
             f->m_declareExpansionAsContField = true;
             m_f->m_fldToBnd = false;
@@ -71,7 +70,7 @@ namespace Nektar
             {
                 cout << "ProcessWSS: Calculating wall shear stress..." << endl;
             }
-
+            
             // Set up Field options to output boundary fld
             string bvalues =  m_config["bnd"].as<string>();
             
@@ -90,13 +89,13 @@ namespace Nektar
                 ASSERTL0(ParseUtils::GenerateOrderedVector(bvalues.c_str(),
                                                            m_f->m_bndRegionsToWrite),"Failed to interpret range string");
             }
-            
+
             NekDouble m_kinvis;
             m_kinvis = m_f->m_session->GetParameter("Kinvis");
 
             int i, j;
-            int expdim   = m_f->m_graph->GetMeshDimension();
-            int spacedim = m_f->m_graph->GetSpaceDimension();
+            int expdim    = m_f->m_graph->GetMeshDimension();
+            int spacedim  = m_f->m_graph->GetSpaceDimension();
             if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
                 (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
             {
@@ -106,21 +105,43 @@ namespace Nektar
             int nfields = m_f->m_fielddef[0]->m_fields.size();
             ASSERTL0(nfields == spacedim +1,"Implicit assumption that input is in incompressible format of (u,v,p) or (u,v,w,p)");
 
-            nfields = nfields -1; 
+            nfields = nfields - 1;
             if (spacedim == 1)
             {
                 ASSERTL0(false, "Error: wss for a 1D problem cannot "
-                                "be computed")
+                         "be computed");
             }
+            
+            int newfields = (spacedim == 2)? 3:4; 
+            int nstress   = (spacedim == 2)? 3:6;
+            int ngrad     = nfields*nfields;
+           
+            int n, cnt, elmtid, nq, offset, boundary, nfq;
+            int npoints = m_f->m_exp[0]->GetNpoints(); 
+            Array<OneD, Array<OneD, NekDouble> > grad(ngrad), fgrad(ngrad);
+            Array<OneD, Array<OneD, NekDouble> > stress(nstress), fstress(nstress);
+            Array<OneD, Array<OneD, NekDouble> > outfield(newfields), shear(newfields);
+            Array<OneD, Array<OneD, NekDouble> > velocity(nfields);
 
-            // Redefine m_f->m_fielddef[0]->m_fields with shear definitions
-            // since these are used in output
+            StdRegions::StdExpansionSharedPtr elmt;
+            StdRegions::StdExpansion2DSharedPtr bc;
+            Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
+            Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > BndExp(newfields);
+           
+            
+            m_f->m_exp.resize(newfields);
+            string var = "u";
+            for(i = nfields+1; i < newfields; ++i)
+            {
+                m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir, var);
+            }                
+           
+            m_f->m_fielddef[0]->m_fields.resize(newfields);
             if(spacedim == 2)
             {
                 m_f->m_fielddef[0]->m_fields[0] = "Shear_x";
                 m_f->m_fielddef[0]->m_fields[1] = "Shear_y";
                 m_f->m_fielddef[0]->m_fields[2] = "Shear_mag";
-
             }
             else
             {
@@ -130,28 +151,15 @@ namespace Nektar
                 m_f->m_fielddef[0]->m_fields[3] = "Shear_mag";
             }
 
-            int newfields = (spacedim == 2)? 3:4;
-            int nstress   = (spacedim == 2)? 3:6;
-            
-            int n, cnt, elmtid, nq, offset, boundary, nfq;
-            int npoints = m_f->m_exp[0]->GetNpoints(); //nt
-            Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields), fgrad(nfields*nfields);
-            Array<OneD, Array<OneD, NekDouble> > stress(nstress), fstress(nstress);
-            Array<OneD, Array<OneD, NekDouble> > outfield(newfields), shear(newfields);
-            Array<OneD, Array<OneD, NekDouble> > velocity(nfields);
 
-            StdRegions::StdExpansionSharedPtr elmt;
-            StdRegions::StdExpansion2DSharedPtr bc;
-            Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
-            Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > BndExp(newfields);
-            
-            m_f->m_exp.resize(newfields);
-
-            for(i = nfields+1; i < newfields; ++i)
+            m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
+            //get boundary expansions for each field
+            for(int j = 0; j < newfields; ++j)
             {
-                m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-            }                
-                
+                BndExp[j]   = m_f->m_exp[j]->GetBndCondExpansions();
+            }
+
+
             for (i = 0; i < newfields; ++i)
             {
                 outfield[i] = Array<OneD, NekDouble>(npoints);
@@ -160,13 +168,7 @@ namespace Nektar
             {
                 velocity[i] = Array<OneD, NekDouble>(npoints);
             }
-
-            m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
-            //get boundary expansions for each field
-            for(int j = 0; j < newfields; ++j)
-            {
-                BndExp[j]   = m_f->m_exp[j]->GetBndCondExpansions();
-            }
+            
 
             // loop over the types of boundary conditions
             for(cnt = n = 0; n < BndExp[0].num_elements(); ++n)
@@ -188,7 +190,7 @@ namespace Nektar
                             
                             // Initialise local arrays for the velocity gradients, and stress components
                             // size of total number of quadrature points for each element (hence local).
-                            for(int j = 0; j < nfields*nfields; ++j)
+                            for(int j = 0; j < ngrad; ++j)
                             {
                                 grad[j] = Array<OneD, NekDouble>(nq);
                             }
@@ -232,7 +234,7 @@ namespace Nektar
                                 {
                                     shear[j] = Array<OneD, NekDouble>(nfq);
                                 }
-                                
+
                                 //Extract Velocities
                                 for(int j = 0; j < nfields; ++j)
                                 {
@@ -243,8 +245,8 @@ namespace Nektar
                                 elmt->PhysDeriv(velocity[0],grad[0],grad[1],grad[2]);
                                 elmt->PhysDeriv(velocity[1],grad[3],grad[4],grad[5]);
                                 elmt->PhysDeriv(velocity[2],grad[6],grad[7],grad[8]);
-                                
-                                //Compute stress component terms
+                              
+                                 //Compute stress component terms
                                 // t_xx = 2.mu.Ux
                                 Vmath::Smul (nq,(2*m_kinvis),grad[0],1,stress[0],1);
                                 // tyy = 2.mu.Vy
@@ -267,10 +269,8 @@ namespace Nektar
                                 {
                                     elmt->GetFacePhysVals(boundary,bc,stress[j],fstress[j]); 
                                 }
-                                
-                                //calcuate wss, and update velocity
-                                //coefficients in the elemental boundary
-                                //expansion
+
+                                //calcuate wss, and update velocity coeffs in the elemental boundary expansion
                                 for (j = 0; j< newfields; j++)
                                 {
                                     outfield[j] = BndExp[j][n]->UpdateCoeffs() + BndExp[j][n]->GetCoeff_Offset(i);
@@ -345,6 +345,7 @@ namespace Nektar
                                 Vmath::Vvtvp(nfq, shear[2], 1, shear[2], 1, shear[3], 1, shear[3], 1);
                                 Vmath::Vsqrt(nfq, shear[3], 1, shear[3], 1);
                                 bc->FwdTrans(shear[3], outfield[3]); 
+                                
                             }
                         }
                     }
@@ -355,6 +356,7 @@ namespace Nektar
                 }
             }
 
+           
             for(int j = 0; j < newfields; ++j)
             {
                 for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)
@@ -362,52 +364,7 @@ namespace Nektar
                     m_f->m_exp[j]->UpdateBndCondExpansion(m_f->m_bndRegionsToWrite[b]) = BndExp[j][m_f->m_bndRegionsToWrite[b]];
                 }
             }
-
-/*
-            for (i = 0; i < addfields; ++i)
-            {
-                m_f->m_exp[nfields + i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir);
-                m_f->m_exp[nfields + i]->UpdatePhys() = outfield[i];
-                m_f->m_exp[nfields + i]->FwdTrans(outfield[i],
-                                    m_f->m_exp[nfields + i]->UpdateCoeffs());
-            }
-            
-            vector<string > outname;
-            if (addfields == 1)
-            {
-                outname.push_back("W_z");
-            }
-            else
-            {
-                outname.push_back("W_x");
-                outname.push_back("W_y");
-                outname.push_back("W_z");
-            }
-            
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = m_f->m_exp[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-            
-            for (j = 0; j < nfields + addfields; ++j)
-            {
-                for (i = 0; i < FieldDef.size(); ++i)
-                {   
-                    if (j >= nfields)
-                    {
-                        FieldDef[i]->m_fields.push_back(outname[j-nfields]);
-                    }
-                    else
-                    {
-                        FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
-                    }
-                    m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
-                }
-            }
-            
-            m_f->m_fielddef = FieldDef;
-            m_f->m_data     = FieldData;
-            */
-            
+          
         }
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>Helmholtz 3D CG, prisms, Neumann BCs, iterative ML, Par(3)</description>
+    <description>Helmholtz 3D CG, prisms, Neumann BCs, iterative ML, Par(3), Scotch</description>
     <executable>Helmholtz3D</executable>
     <parameters>--use-scotch Helmholtz3D_Prism.xml</parameters>
     <processes>3</processes>

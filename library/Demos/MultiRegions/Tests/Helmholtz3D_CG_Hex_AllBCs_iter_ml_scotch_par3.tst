@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>Helmholtz 3D CG, hexes, mixed BCs, iterative ML</description>
+    <description>Helmholtz 3D CG, hexes, mixed BCs, iterative ML, Scotch</description>
     <executable>Helmholtz3D</executable>
     <parameters>--use-scotch -I GlobalSysSoln=IterativeMultiLevelStaticCond Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
     <processes>3</processes>

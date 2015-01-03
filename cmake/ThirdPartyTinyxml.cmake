@@ -29,7 +29,7 @@ IF (THIRDPARTY_BUILD_TINYXML)
         tinyxml-2.6.2
         PREFIX ${TPSRC}
         URL ${TPURL}/tinyxml_2_6_2.tar.bz2
-        URL_HASH SHA256=32db85cff26260a9140860e8393df59df79ec59f45a9df18524f9cdd21d0f238
+        URL_MD5 240beaeb45f63b154c9801eef7561eac
         STAMP_DIR ${TPBUILD}/stamp
         DOWNLOAD_DIR ${TPSRC}
         SOURCE_DIR ${TPSRC}/tinyxml-2.6.2

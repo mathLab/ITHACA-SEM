@@ -2,7 +2,7 @@
 <test>
     <description>3D channel flow, Pyramidic elements, P=6</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>Pyr_channel_m6.xml</parameters>
+    <parameters>--use-metis Pyr_channel_m6.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Pyr_channel_m6.xml</file>

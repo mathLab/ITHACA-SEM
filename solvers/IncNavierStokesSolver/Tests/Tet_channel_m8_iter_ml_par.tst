@@ -2,7 +2,7 @@
 <test>
     <description>3D channel flow, Tet elements, par(3), P=8</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>-I GlobalSysSoln=IterativeMultiLevelStaticCond Tet_channel_m8_par.xml</parameters>
+    <parameters>--use-metis -I GlobalSysSoln=IterativeMultiLevelStaticCond Tet_channel_m8_par.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Tet_channel_m8_par.xml</file>

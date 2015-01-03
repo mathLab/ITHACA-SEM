@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D HDG, hexes, mixed BCs, par(2)</description>
     <executable>HDGHelmholtz3D</executable>
-    <parameters>Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
+    <parameters>--use-metis Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
     <processes>2</processes>
     <files>
         <file description="Session File">Helmholtz3D_Hex_AllBCs_P6.xml</file>

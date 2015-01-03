@@ -189,14 +189,10 @@ namespace Nektar
 
             ASSERTL0(m_filenames.size() > 0, "No session file(s) given.");
 
+            // First input file defines session name
             m_filename    = m_filenames[0];
-            m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
-            if (m_filename.size() > 3 &&
-                m_filename.substr(m_filename.size() - 3, 3) == ".gz")
-            {
-                m_sessionName =
-                    m_sessionName.substr(0, m_sessionName.find_last_of('.'));
-            }
+
+            m_sessionName = ParseSessionName(m_filenames);
 
             // Create communicator
             CreateComm(argc, argv);
@@ -227,13 +223,7 @@ namespace Nektar
             m_filenames   = pFilenames;
 
             m_filename    = pFilenames[0];
-            m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
-            if (m_filename.size() > 3 &&
-                m_filename.substr(m_filename.size() - 3, 3) == ".gz")
-            {
-                m_sessionName =
-                    m_sessionName.substr(0, m_sessionName.find_last_of('.'));
-            }
+            m_sessionName = ParseSessionName(m_filenames);
 
             // Create communicator
             if (!pComm.get())
@@ -468,6 +458,44 @@ namespace Nektar
             {
                 return std::vector<std::string>();
             }
+        }
+
+
+        /**
+         *
+         */
+        std::string SessionReader::ParseSessionName(
+                std::vector<std::string> &filenames)
+        {
+            ASSERTL0(!filenames.empty(),
+                     "At least one filename expected.");
+
+            std::string retval = "";
+
+            // First input file defines the session name
+            std::string fname = filenames[0];
+
+            // If loading a pre-partitioned mesh, remove _xml extension
+            if (fname.size() > 4 &&
+                fname.substr(fname.size() - 4, 4) == "_xml")
+            {
+                retval = fname.substr(0, fname.find_last_of("_"));
+            }
+            // otherwise remove the .xml extension
+            else if (fname.size() > 4 &&
+                fname.substr(fname.size() - 4, 4) == ".xml")
+            {
+                retval = fname.substr(0, fname.find_last_of("."));
+            }
+            // If compressed .xml.gz, remove both extensions
+            else if (fname.size() > 7 &&
+                fname.substr(fname.size() - 7, 7) == ".xml.gz")
+            {
+                retval = fname.substr(0, fname.find_last_of("."));
+                retval = retval.substr(0, retval.find_last_of("."));
+            }
+
+            return retval;
         }
 
 

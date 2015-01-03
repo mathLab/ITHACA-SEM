@@ -479,6 +479,9 @@ namespace Nektar
             std::vector<std::string> ParseCommandLineArguments(
                 int argc, char *argv[]);
 
+            /// Parse the session name.
+            std::string ParseSessionName(std::vector<std::string> &filenames);
+
             /// Loads an xml file into a tinyxml doc and decompresses if needed
             LIB_UTILITIES_EXPORT void LoadDoc(
                 const std::string &pFilename,

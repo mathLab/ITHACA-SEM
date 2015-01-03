@@ -786,7 +786,7 @@ namespace Nektar
             }
         }
 
-        void ExpListHomogeneous1D::v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+        void ExpListHomogeneous1D::v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                         std::string var)
         {
             int i;

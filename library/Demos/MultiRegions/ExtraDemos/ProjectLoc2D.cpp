@@ -16,7 +16,6 @@ int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
-    string meshfile(vSession->GetFilename());
 
     MultiRegions::ExpList2DSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;

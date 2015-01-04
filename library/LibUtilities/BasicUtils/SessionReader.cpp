@@ -189,9 +189,6 @@ namespace Nektar
 
             ASSERTL0(m_filenames.size() > 0, "No session file(s) given.");
 
-            // First input file defines session name
-            m_filename    = m_filenames[0];
-
             m_sessionName = ParseSessionName(m_filenames);
 
             // Create communicator
@@ -222,7 +219,6 @@ namespace Nektar
             m_xmlDoc      = 0;
             m_filenames   = pFilenames;
 
-            m_filename    = pFilenames[0];
             m_sessionName = ParseSessionName(m_filenames);
 
             // Create communicator
@@ -576,9 +572,9 @@ namespace Nektar
         /**
          *
          */
-        const std::string& SessionReader::GetFilename() const
+        const std::vector<std::string>& SessionReader::GetFilenames() const
         {
-            return m_filename;
+            return m_filenames;
         }
 
 
@@ -1457,11 +1453,6 @@ namespace Nektar
             ReadFunctions         (e);
 
             e = docHandle.FirstChildElement("NEKTAR").
-                FirstChildElement("GEOMETRY").Element();
-
-            ReadGeometricInfo(e);
-
-            e = docHandle.FirstChildElement("NEKTAR").
                 FirstChildElement("FILTERS").Element();
 
             ReadFilters(e);
@@ -1746,18 +1737,18 @@ namespace Nektar
                 fs::path    pFilename(pad.str());
                 fs::path fullpath = pdirname / pFilename;
 
-                m_filename = PortablePath(fullpath);
+                std::string vFilename = PortablePath(fullpath);
 
                 if (m_xmlDoc)
                 {
                     delete m_xmlDoc;
                 }
-                m_xmlDoc = new TiXmlDocument(m_filename);
+                m_xmlDoc = new TiXmlDocument(vFilename);
 
                 ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
 
-                bool loadOkay = m_xmlDoc->LoadFile(m_filename);
-                ASSERTL0(loadOkay, "Unable to load file: " + m_filename      + 
+                bool loadOkay = m_xmlDoc->LoadFile(vFilename);
+                ASSERTL0(loadOkay, "Unable to load file: " + vFilename       +
                          ". Check XML standards compliance. Error on line: " +
                          boost::lexical_cast<std::string>(m_xmlDoc->Row()));
             }
@@ -1842,6 +1833,8 @@ namespace Nektar
                 // between definitions.
                 while (parameter)
                 {
+                    stringstream tagcontent;
+                    tagcontent << *parameter;
                     TiXmlNode *node = parameter->FirstChild();
 
                     while (node && node->Type() != TiXmlNode::TEXT)
@@ -1859,9 +1852,10 @@ namespace Nektar
                         }
                         catch (...)
                         {
-                            ASSERTL0(false, "Syntax error. "
-                                    "File: '" + m_filename + "', line: "
-                                    + boost::lexical_cast<string>(node->Row()));
+                            ASSERTL0(false, "Syntax error in parameter "
+                                     "expression '" + line 
+                                     + "' in XML element: \n\t'"
+                                     + tagcontent.str() + "'");
                         }
 
                         // We want the list of parameters to have their RHS
@@ -1880,7 +1874,8 @@ namespace Nektar
                             {
                                 ASSERTL0(false, 
                                          "Error evaluating parameter expression"
-                                         " '" + rhs + "'." );
+                                         " '" + rhs + "' in XML element: \n\t'"
+                                         + tagcontent.str() + "'");
                             }
                             m_exprEvaluator.SetParameter(lhs, value);
                             caseSensitiveParameters[lhs] = value;
@@ -1918,17 +1913,17 @@ namespace Nektar
 
                 while (solverInfo)
                 {
+                    std::stringstream tagcontent;
+                    tagcontent << *solverInfo;
                     // read the property name
                     ASSERTL0(solverInfo->Attribute("PROPERTY"),
                              "Missing PROPERTY attribute in solver info "
-                             "section. File: '" + m_filename + "', line: " +
-                             boost::lexical_cast<string>(solverInfo->Row()));
+                             "XML element: \n\t'" + tagcontent.str() + "'");
                     std::string solverProperty = 
                         solverInfo->Attribute("PROPERTY");
                     ASSERTL0(!solverProperty.empty(),
-                             "Solver info properties must have a non-empty "
-                             "name. File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<string>(solverInfo->Row()));
+                             "PROPERTY attribute must be non-empty in XML "
+                             "element: \n\t'" + tagcontent.str() + "'");
 
                     // make sure that solver property is capitalised
                     std::string solverPropertyUpper =
@@ -1936,14 +1931,12 @@ namespace Nektar
 
                     // read the value
                     ASSERTL0(solverInfo->Attribute("VALUE"),
-                            "Missing VALUE attribute in solver info section. "
-                            "File: '" + m_filename + "', line: "
-                            + boost::lexical_cast<string>(solverInfo->Row()));
+                            "Missing VALUE attribute in solver info "
+                            "XML element: \n\t'" + tagcontent.str() + "'");
                     std::string solverValue    = solverInfo->Attribute("VALUE");
                     ASSERTL0(!solverValue.empty(),
-                             "Solver info properties must have a non-empty "
-                             "value. File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<string>(solverInfo->Row()));
+                             "VALUE attribute must be non-empty in XML "
+                             "element: \n\t'" + tagcontent.str() + "'");
 
                     EnumMapList::const_iterator propIt = 
                         GetSolverInfoEnums().find(solverPropertyUpper);
@@ -1953,9 +1946,7 @@ namespace Nektar
                             propIt->second.find(solverValue);
                         ASSERTL0(valIt != propIt->second.end(),
                                  "Value '" + solverValue + "' is not valid for "
-                                 "property '" + solverProperty + "'. File: '" +
-                                 m_filename + "', line: " + boost::lexical_cast<
-                                     string>(solverInfo->Row()));
+                                 "property '" + solverProperty + "'");
                     }
 
                     // Set Variable
@@ -2009,22 +2000,24 @@ namespace Nektar
 
             while (VarInfo)
             {
+                std::stringstream tagcontent;
+                tagcontent << *VarInfo;
                 ASSERTL0(VarInfo->Attribute("VAR"),
-                         "Missing VAR in attribute of GobalSysSolnInfo section."
-                         "File: '" + m_filename + ", line: " +
-                         boost::lexical_cast<string>(GlobalSys->Row()));
+                         "Missing VAR attribute in GobalSysSolnInfo XML "
+                         "element: \n\t'" + tagcontent.str() + "'");
 
                 std::string VarList = VarInfo->Attribute("VAR");
+                ASSERTL0(!VarList.empty(),
+                         "VAR attribute must be non-empty in XML element:\n\t'"
+                         + tagcontent.str() + "'");
 
                 // generate a list of variables.
                 std::vector<std::string> varStrings;
                 bool valid = ParseUtils::GenerateOrderedStringVector(
                                                 VarList.c_str(),varStrings);
 
-                ASSERTL0(valid,"Unable to process list of variable in "
-                               "GlobalSysSolnInfo data, File '" + m_filename +
-                               ", line: " +
-                               boost::lexical_cast<string>(GlobalSys->Row()));
+                ASSERTL0(valid,"Unable to process list of variable in XML "
+                               "element \n\t'" + tagcontent.str() + "'");
 
                 if(varStrings.size())
                 {
@@ -2032,21 +2025,23 @@ namespace Nektar
 
                     while (SysSolnInfo)
                     {
+                        tagcontent.clear();
+                        tagcontent << *SysSolnInfo;
                         // read the property name
                         ASSERTL0(SysSolnInfo->Attribute("PROPERTY"),
                                  "Missing PROPERTY attribute in "
-                                 "GlobalSysSolnInfo section. File: '" +
-                                 m_filename + "', line: " +
-                                 boost::lexical_cast<string>(VarInfo->Row()));
+                                 "GlobalSysSolnInfo for variable(s) '"
+                                 + VarList + "' in XML element: \n\t'" 
+                                 + tagcontent.str() + "'");
 
                         std::string SysSolnProperty =
                             SysSolnInfo->Attribute("PROPERTY");
 
                         ASSERTL0(!SysSolnProperty.empty(),
                                  "GlobalSysSolnIno properties must have a "
-                                 "non-empty name for variable(s) : '" +
-                                 VarList + ". File: '" + m_filename + ", line: "
-                                 + boost::lexical_cast<string>(VarInfo->Row()));
+                                 "non-empty name for variable(s) : '"
+                                 + VarList + "' in XML element: \n\t'"
+                                 + tagcontent.str() + "'");
 
                         // make sure that solver property is capitalised
                         std::string SysSolnPropertyUpper =
@@ -2055,16 +2050,17 @@ namespace Nektar
                         // read the value
                         ASSERTL0(SysSolnInfo->Attribute("VALUE"),
                                  "Missing VALUE attribute in GlobalSysSolnInfo "
-                                 "section. File: '" + m_filename + "', line: "
-                                 + boost::lexical_cast<string>(VarInfo->Row()));
+                                 "for variable(s) '" + VarList
+                                 + "' in XML element: \n\t"
+                                 + tagcontent.str() + "'");
 
                         std::string SysSolnValue =
                                             SysSolnInfo->Attribute("VALUE");
                         ASSERTL0(!SysSolnValue.empty(),
                                  "GlobalSysSolnInfo properties must have a "
-                                 "non-empty value. File: '" + m_filename +
-                                 "', line: "
-                                 + boost::lexical_cast<string>(VarInfo->Row()));
+                                 "non-empty value for variable(s) '"
+                                 + VarList + "' in XML element: \n\t'"
+                                 + tagcontent.str() + "'");
 
                         // Store values under variable map.
                         for(int i = 0; i < varStrings.size(); ++i)
@@ -2113,83 +2109,6 @@ namespace Nektar
             }
         }
 
-        /**
-         *
-         */
-        void SessionReader::ReadGeometricInfo(TiXmlElement *geometry)
-        {
-            m_geometricInfo.clear();
-
-            if (!geometry)
-            {
-                return;
-            }
-
-            TiXmlElement *geometricInfoElement = 
-                geometry->FirstChildElement("GEOMINFO");
-
-            if (geometricInfoElement)
-            {
-                TiXmlElement *geometricInfo = 
-                    geometricInfoElement->FirstChildElement("I");
-
-                while (geometricInfo)
-                {
-                    ASSERTL0(geometricInfo->Attribute("PROPERTY"),
-                             "Missing PROPERTY attribute in geometric info "
-                             "section. File: '" + m_filename + "', line: " +
-                             boost::lexical_cast<string>(geometricInfo->Row()));
-                    std::string geometricProperty = 
-                        geometricInfo->Attribute("PROPERTY");
-                    ASSERTL0(!geometricProperty.empty(),
-                             "Geometric info properties must have a non-empty "
-                             "name. File: '" + m_filename + "', line: " +
-                             boost::lexical_cast<string>(geometricInfo->Row()));
-
-                    // make sure that geometric property is capitalised
-                    boost::to_upper(geometricProperty);
-
-                    // check the property has not already been defined
-                    GeometricInfoMap::iterator geometricInfoIter = 
-                        m_geometricInfo.find(geometricProperty);
-                    ASSERTL0(geometricInfoIter == m_geometricInfo.end(),
-                             "geometricInfo value: " + geometricProperty +
-                             " already specified.");
-
-                    // read the property value
-                    ASSERTL0(geometricInfo->Attribute("VALUE"),
-                             "Missing VALUE attribute in geometric info section"
-                             ". File: '" + m_filename + ", line: " + 
-                             boost::lexical_cast<string>(geometricInfo->Row()));
-                    std::string geometricValue = 
-                        geometricInfo->Attribute("VALUE");
-                    ASSERTL0(!geometricValue.empty(),
-                             "Geometric info properties must have a non-empty "
-                             "value. File: '" + m_filename + ", line: " +
-                             boost::lexical_cast<string>(geometricInfo->Row()));
-
-                    // Set Variable
-                    m_geometricInfo[geometricProperty] = geometricValue;
-                    geometricInfo = geometricInfo->NextSiblingElement("I");
-                }
-            }
-
-            if (m_verbose && m_geometricInfo.size() > 0 && m_comm)
-            {
-                if(m_comm->GetRank() == 0)
-                {
-                    cout << "Geometric Info:" << endl;
-                    GeometricInfoMap::iterator x;
-                    for (x  = m_geometricInfo.begin();
-                         x != m_geometricInfo.end(); ++x)
-                    {
-                        cout << "\t" << x->first << " = " << x->second << endl;
-                    }
-                    cout << endl;
-                }
-            }
-        }
-
 
         /**
          *
@@ -2212,25 +2131,23 @@ namespace Nektar
 
                 while (expr)
                 {
+                    stringstream tagcontent;
+                    tagcontent << *expr;
                     ASSERTL0(expr->Attribute("NAME"),
-                             "Missing NAME attribute in expression definition. "
-                             "File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<std::string>(expr->Row()));
+                             "Missing NAME attribute in expression "
+                             "definition: \n\t'" + tagcontent.str() + "'");
                     std::string nameString = expr->Attribute("NAME");
                     ASSERTL0(!nameString.empty(),
-                             "Expressions must have a non-empty name. "
-                             "File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<std::string>(expr->Row()));
+                             "Expressions must have a non-empty name: \n\t'"
+                             + tagcontent.str() + "'");
 
                     ASSERTL0(expr->Attribute("VALUE"),
-                             "Missing VALUE attribute in expression definition."
-                             " File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<std::string>(expr->Row()));
+                             "Missing VALUE attribute in expression "
+                             "definition: \n\t'" + tagcontent.str() + "'");
                     std::string valString = expr->Attribute("VALUE");
                     ASSERTL0(!valString.empty(),
-                             "Expressions must have a non-empty value. "
-                             "File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<std::string>(expr->Row()));
+                             "Expressions must have a non-empty value: \n\t'"
+                            + tagcontent.str() + "'");
 
                     ExpressionMap::iterator exprIter
                                             = m_expressions.find(nameString);
@@ -2272,6 +2189,9 @@ namespace Nektar
 
                 while (varElement)
                 {
+                    stringstream tagcontent;
+                    tagcontent << *varElement;
+
                     /// All elements are of the form: "<V ID="#"> name = value
                     /// </V>", with ? being the element type.
                     nextVariableNumber++;
@@ -2279,13 +2199,12 @@ namespace Nektar
                     int i;
                     int err = varElement->QueryIntAttribute("ID", &i);
                     ASSERTL0(err == TIXML_SUCCESS,
-                             "Variables must have a unique ID number attribute."
-                             " File: '" + m_filename + "', line: " +
-                             boost::lexical_cast<string>(varElement->Row()));
+                             "Variables must have a unique ID number attribute "
+                             "in XML element: \n\t'" + tagcontent.str() + "'");
                     ASSERTL0(i == nextVariableNumber,
                              "ID numbers for variables must begin with zero and"
-                             " be sequential. File: '"+m_filename+"', line: " +
-                             boost::lexical_cast<string>(varElement->Row()));
+                             " be sequential in XML element: \n\t'"
+                             + tagcontent.str() + "'");
 
                     TiXmlNode* varChild = varElement->FirstChild();
                     // This is primarily to skip comments that may be present.
@@ -2300,9 +2219,9 @@ namespace Nektar
                     ASSERTL0(varChild,
                              "Unable to read variable definition body for "
                              "variable with ID "
-                             + boost::lexical_cast<string>(i) + ". "
-                             " File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<string>(varElement->Row()));
+                             + boost::lexical_cast<string>(i) 
+                             + " in XML element: \n\t'"
+                             + tagcontent.str() + "'");
                     std::string variableName = varChild->ToText()->ValueStr();
 
                     std::istringstream variableStrm(variableName);
@@ -2310,10 +2229,10 @@ namespace Nektar
 
                     ASSERTL0(std::find(m_variables.begin(), m_variables.end(), 
                                        variableName) == m_variables.end(),
-                             "Variable with ID "+boost::lexical_cast<string>(i)
-                             + " has already been defined. "
-                             " File: '" + m_filename + "', line: "
-                             + boost::lexical_cast<string>(varElement->Row()));
+                             "Variable with ID "
+                             + boost::lexical_cast<string>(i) 
+                             + " in XML element \n\t'" + tagcontent.str()
+                             + "'\nhas already been defined.");
 
                     m_variables.push_back(variableName);
 
@@ -2342,16 +2261,17 @@ namespace Nektar
             TiXmlElement *function = conditions->FirstChildElement("FUNCTION");
             while (function)
             {
+                stringstream tagcontent;
+                tagcontent << *function;
+
                 // Every function must have a NAME attribute
                 ASSERTL0(function->Attribute("NAME"),
-                         "Functions must have a NAME attribute defined. "
-                         "File: '" + m_filename + "', line: "
-                         + boost::lexical_cast<std::string>(function->Row()));
+                         "Functions must have a NAME attribute defined in XML "
+                         "element: \n\t'" + tagcontent.str() + "'");
                 std::string functionStr = function->Attribute("NAME");
                 ASSERTL0(!functionStr.empty(),
-                         "Functions must have a non-empty name. "
-                         "File: '" + m_filename + "', line: "
-                         + boost::lexical_cast<string>(function->Row()));
+                         "Functions must have a non-empty name in XML "
+                         "element: \n\t'" + tagcontent.str() + "'");
 
                 // Store function names in uppercase to remain case-insensitive.
                 boost::to_upper(functionStr);
@@ -2453,12 +2373,14 @@ namespace Nektar
                     // Nothing else supported so throw an error
                     else
                     {
+                        stringstream tagcontent;
+                        tagcontent << *variable;
+
                         ASSERTL0(false,
                                 "Identifier " + conditionType + " in function "
                                 + std::string(function->Attribute("NAME"))
-                                + " is not recognised. "
-                                "File: '" + m_filename + "', line: "
-                                + boost::lexical_cast<string>(variable->Row()));
+                                + " is not recognised in XML element: \n\t'"
+                                + tagcontent.str() + "'");
                     }
 
 

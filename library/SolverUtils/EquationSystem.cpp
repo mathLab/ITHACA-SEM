@@ -106,9 +106,6 @@ namespace Nektar
          */
         void EquationSystem::v_InitObject()
         {
-            // Filename of the session file
-            m_filename = m_session->GetFilename();
-
             // Save the basename of input file name for output details
             m_sessionName = m_session->GetSessionName();
 

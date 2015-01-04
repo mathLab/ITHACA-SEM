@@ -419,8 +419,6 @@ namespace Nektar
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
-            /// Filename.
-            std::string                                 m_filename;
             /// Name of the session.
             std::string                                 m_sessionName;
             /// Current time of simulation.

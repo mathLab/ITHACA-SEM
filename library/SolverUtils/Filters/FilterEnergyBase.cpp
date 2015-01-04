@@ -46,7 +46,7 @@ namespace Nektar
             const std::map<std::string, std::string> &pParams,
             const bool pConstDensity)
             : Filter        (pSession),
-              m_index       (0),
+              m_index       (-1),
               m_homogeneous (false),
               m_planes      (),
               m_constDensity(pConstDensity)
@@ -94,7 +94,7 @@ namespace Nektar
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
             const NekDouble &time)
         {
-            m_index = 0;
+            m_index = -1;
             MultiRegions::ExpListSharedPtr areaField;
 
             ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e3DH2D,
@@ -141,6 +141,7 @@ namespace Nektar
             }
 
             m_index++;
+
             if (m_index % m_outputFrequency > 0)
             {
                 return;

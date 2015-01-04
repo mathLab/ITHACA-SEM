@@ -1,0 +1,4 @@
+SET(ExtractSurface2DCFSSources ExtractSurface2DCFS.cpp)
+ADD_SOLVER_EXECUTABLE(ExtractSurface2DCFS solvers ${ExtractSurface2DCFSSources})
+SET(ExtractSurface3DCFSSources ExtractSurface3DCFS.cpp)
+ADD_SOLVER_EXECUTABLE(ExtractSurface3DCFS solvers ${ExtractSurface3DCFSSources})

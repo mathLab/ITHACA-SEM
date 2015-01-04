@@ -33,6 +33,7 @@
 // LocalToGlobalC0ContMap class for use in the Couplied Linearised NS
 // solver.
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/SegExp.h>
@@ -44,20 +45,19 @@ namespace Nektar
 {    
     /** 
      * This is an vector extension of
-     * MultiRegion::LocalToGlobalC0BaseMap::SetUp2DExpansionC0ContMap
-     * related to the Linearised Navier Stokes problem
+     * MultiRegions::AssemblyMapCG::SetUp2DExpansionC0ContMap related to the
+     * Linearised Navier Stokes problem
      */
     CoupledLocalToGlobalC0ContMap::CoupledLocalToGlobalC0ContMap(
-                                      const LibUtilities::SessionReaderSharedPtr &pSession,
-                                      const SpatialDomains::MeshGraphSharedPtr &graph,
-                                      const SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
-                                      const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                      const MultiRegions::ExpListSharedPtr &pressure,
-                                      const int nz_loc,
-                                      const bool CheckforSingularSys):
-        AssemblyMapCG2D(pSession)
+        const LibUtilities::SessionReaderSharedPtr &pSession,
+        const SpatialDomains::MeshGraphSharedPtr &graph,
+        const SpatialDomains::BoundaryConditionsSharedPtr &boundaryConditions,
+        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+        const MultiRegions::ExpListSharedPtr &pressure,
+        const int nz_loc,
+        const bool CheckforSingularSys):
+        AssemblyMapCG(pSession)
     {
-
         int i,j,k,n;
         int cnt = 0,offset=0;
         int meshVertId;
@@ -84,7 +84,8 @@ namespace Nektar
 
         MultiRegions::PeriodicMap periodicVerts;
         MultiRegions::PeriodicMap periodicEdges;
-        Array<OneD, map<int,int> > ReorderedGraphVertId(2);
+        MultiRegions::PeriodicMap periodicFaces;
+        vector<map<int,int> > ReorderedGraphVertId(3);
         MultiRegions::BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
         int staticCondLevel = 0;
 
@@ -105,7 +106,7 @@ namespace Nektar
          */
 
         // Obtain any periodic information and allocate default mapping array
-        fields[0]->GetPeriodicEntities(periodicVerts,periodicEdges);
+        fields[0]->GetPeriodicEntities(periodicVerts,periodicEdges,periodicFaces);
 
 
         const Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp = fields[0]->GetBndCondExpansions();
@@ -273,8 +274,14 @@ namespace Nektar
                 }
             }
         }
-        
-        set<int> extraDir;
+
+        set<int> extraDirVerts, extraDirEdges;
+
+        CreateGraph(*fields[0], bndCondExp, bndConditionsVec, false,
+                    periodicVerts, periodicEdges, periodicFaces,
+                    ReorderedGraphVertId, bottomUpGraph, extraDirVerts,
+                    extraDirEdges, firstNonDirGraphVertId, nExtraDirichlet, 4);
+        /*
         SetUp2DGraphC0ContMap(*fields[0],
                               bndCondExp,
                               bndConditionsVec,
@@ -282,6 +289,7 @@ namespace Nektar
                               Dofs,                   ReorderedGraphVertId,
                               firstNonDirGraphVertId, nExtraDirichlet,
                               bottomUpGraph, extraDir,  false,  4);
+        */
         
         /**
          * STEP 2a: Set the mean pressure modes to edges depending on
@@ -769,7 +777,7 @@ namespace Nektar
 }
 
 
-void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(Array<OneD, map<int,int> > &ReorderedGraphVertId,
+void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,int> > &ReorderedGraphVertId,
 										 int &nel, const LocalRegions::ExpansionVector &locExpVector,
 										 int &edgeId, int &vertId, int &firstNonDirGraphVertId, map<int,int> &IsDirEdgeDof,
 										 MultiRegions::BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,

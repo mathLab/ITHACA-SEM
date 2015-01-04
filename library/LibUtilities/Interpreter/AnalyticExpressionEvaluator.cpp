@@ -439,6 +439,12 @@ namespace Nektar
 
             ASSERTL1(parseInfo.full != false, "Unable to fully parse function. Stopped just before: "
                                          + std::string(parseInfo.stop, parseInfo.stop + 15));
+            if (!parseInfo.full)
+            {
+                throw std::runtime_error("Unable to fully parse function at: "
+                                        + std::string(parseInfo.stop, parseInfo.stop + 15));
+            }
+
 
             // ----------------------------------------------
             // Data parsed, start setting up internal data structures.

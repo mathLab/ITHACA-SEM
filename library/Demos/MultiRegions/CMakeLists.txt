@@ -131,4 +131,11 @@ IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST_LENGTHY(Helmholtz2D_HDG_P7_Modes_AllBCs_par2)
     ADD_NEKTAR_TEST(Helmholtz3D_HDG_Prism_par2)
     ADD_NEKTAR_TEST(Helmholtz3D_HDG_Hex_AllBCs_par2)
+
+    IF (NEKTAR_USE_SCOTCH)
+        ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml_scotch_par3)
+        ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml_scotch_par3)
+        ADD_NEKTAR_TEST(Helmholtz3D_HDG_Hex_AllBCs_scotch_par2)
+    ENDIF (NEKTAR_USE_SCOTCH)
+
 ENDIF (NEKTAR_USE_MPI)

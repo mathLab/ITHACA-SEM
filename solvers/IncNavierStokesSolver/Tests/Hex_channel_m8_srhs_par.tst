@@ -2,7 +2,7 @@
 <test>
     <description>3D channel flow, Hexahedral elements, P=8, Successive RHS(5), par(2)</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>Hex_channel_m8_srhs.xml</parameters>
+    <parameters>--use-metis Hex_channel_m8_srhs.xml</parameters>
     <processes>2</processes>
     <files>
         <file description="Session File">Hex_channel_m8_srhs.xml</file>

@@ -132,14 +132,14 @@ namespace Nektar
                 if (attrName == "DIM")
                 {
                     int err = attr->QueryIntValue(&meshDim);
-                    ASSERTL1(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
+                    ASSERTL0(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
                     break;
                 }
                 else
                 {
                     std::string errstr("Unknown attribute: ");
                     errstr += attrName;
-                    ASSERTL1(false, errstr.c_str());
+                    ASSERTL0(false, errstr.c_str());
                 }
 
                 // Get the next attribute.

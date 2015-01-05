@@ -1428,7 +1428,10 @@ namespace Nektar
             const int R              = m_base[2]->GetNumModes() - 1;
             const int nFaceIntCoeffs = v_GetFaceIntNcoeffs(fid);
             int       p, q, r, idx   = 0;
-            int nummodesA, nummodesB, i, j;
+            int       nummodesA      = 0;
+            int       nummodesB      = 0;
+            int       i              = 0;
+            int       j              = 0;
 
             if (maparray.num_elements() != nFaceIntCoeffs)
             {

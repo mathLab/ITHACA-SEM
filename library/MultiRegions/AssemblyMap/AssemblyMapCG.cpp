@@ -1829,7 +1829,6 @@ namespace Nektar
             const PeriodicMap &perFaces)
         {
             LocalRegions::ExpansionSharedPtr exp;
-            int nDim = 0;
             int nVert = 0;
             int nEdge = 0;
             int nFace = 0;
@@ -1897,7 +1896,6 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 exp = locExpVector[i];
-                nDim = exp->GetShapeDimension();
                 cnt = locExp.GetCoeff_Offset(i);
 
                 // Loop over all vertices of element i

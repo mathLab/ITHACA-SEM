@@ -686,40 +686,40 @@ namespace Nektar
                         nc = it->second[2];
                     }
 
-                    int weight = 0;
+                    //int weight = 0;
                     int bndWeight = 0;
                     switch (m_meshComposites[cId].type)
                     {
                         case 'A':
-                            weight    = StdTetData::getNumberOfCoefficients(na, nb, nc);
+                            //weight    = StdTetData::getNumberOfCoefficients(na, nb, nc);
                             bndWeight = StdTetData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'R':
-                            weight    = StdPrismData::getNumberOfCoefficients(na, nb, nc);
+                            //weight    = StdPrismData::getNumberOfCoefficients(na, nb, nc);
                             bndWeight = StdPrismData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'H':
-                            weight    = StdHexData::getNumberOfCoefficients(na, nb, nc);
+                            //weight    = StdHexData::getNumberOfCoefficients(na, nb, nc);
                             bndWeight = StdHexData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'P':
-                            weight    = StdPyrData::getNumberOfCoefficients(na, nb, nc);
+                            //weight    = StdPyrData::getNumberOfCoefficients(na, nb, nc);
                             bndWeight = StdPyrData::getNumberOfBndCoefficients(na, nb, nc);
                             break;
                         case 'Q':
-                            weight    = StdQuadData::getNumberOfCoefficients(na, nb);
+                            //weight    = StdQuadData::getNumberOfCoefficients(na, nb);
                             bndWeight = StdQuadData::getNumberOfBndCoefficients(na, nb);
                             break;
                         case 'T':
-                            weight    = StdTriData::getNumberOfCoefficients(na, nb);
+                            //weight    = StdTriData::getNumberOfCoefficients(na, nb);
                             bndWeight = StdTriData::getNumberOfBndCoefficients(na, nb);
                             break;
                         case 'S':
-                            weight    = StdSegData::getNumberOfCoefficients(na);
+                            //weight    = StdSegData::getNumberOfCoefficients(na);
                             bndWeight = StdSegData::getNumberOfBndCoefficients(na);
                             break;
                         case 'V':
-                            weight    = 1;
+                            //weight    = 1;
                             bndWeight = 1;
                             break;
                         default:
@@ -895,7 +895,6 @@ namespace Nektar
         {
             unsigned int       i     = 0;
             unsigned int       cnt   = 0;
-            const unsigned int npart = m_comm->GetRowComm()->GetSize();
             bool               valid = true;
 
             // Check that every process has at least one element assigned

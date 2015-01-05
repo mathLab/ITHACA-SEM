@@ -40,6 +40,7 @@ IF (NEKTAR_USE_PETSC)
                 --with-shared-libraries=0
                 --with-pic=1
                 --with-x=0
+                --with-ssl=0
                 --prefix=${TPDIST}
                 --with-petsc-arch=c-opt
                 --with-fc=0

@@ -272,12 +272,11 @@ namespace Nektar
 
             Array<OneD, NekDouble> physEdge[3];
             Array<OneD, NekDouble> coeffEdge[3];
-            StdRegions::Orientation orient[3];
             for(i = 0; i < 3; i++)
             {
-                physEdge[i]  = Array<OneD, NekDouble>(npoints[i!=0]);
+                // define physEdge and add 1 so can interpolate grl10 points if necessary
+                physEdge[i]  = Array<OneD, NekDouble>(max(npoints[i!=0],npoints[0])); 
                 coeffEdge[i] = Array<OneD, NekDouble>(nmodes[i!=0]);
-                orient[i]    = GetEorient(i);
             }
 
             for(i = 0; i < npoints[0]; i++)
@@ -285,34 +284,49 @@ namespace Nektar
                 physEdge[0][i] = inarray[i];
             }
 
+            // extract data in cartesian directions
             for(i = 0; i < npoints[1]; i++)
             {
                 physEdge[1][i] = inarray[npoints[0]-1+i*npoints[0]];
-                physEdge[2][i] = inarray[(npoints[1]-1)*npoints[0]-i*npoints[0]];
-            }
-
-            for(i = 0; i < 3; i++)
-            {
-                if( orient[i] == StdRegions::eBackwards )
-                {
-                    reverse( (physEdge[i]).get() , (physEdge[i]).get() + npoints[i!=0] );
-                }
+                physEdge[2][i] = inarray[i*npoints[0]];
             }
 
             SegExpSharedPtr segexp[3];
-            for(i = 0; i < 3; i++)
+            segexp[0] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey(),GetGeom2D()->GetEdge(0));
+            
+            if(m_base[1]->GetPointsType() == LibUtilities::eGaussLobattoLegendre)
             {
-                segexp[i] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[i!=0]->GetBasisKey(),GetGeom2D()->GetEdge(i));
+                for(i = 1; i < 3; i++)
+                {
+                    segexp[i] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[i!=0]->GetBasisKey(),GetGeom2D()->GetEdge(i));
+                }
             }
+            else // interploate using edge 0 GLL distribution
+            {
+                for(i = 1; i < 3; i++)
+                {
+                    segexp[i] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[0]->GetBasisKey(),GetGeom2D()->GetEdge(i));
+
+                    LibUtilities::Interp1D(m_base[1]->GetPointsKey(),physEdge[i],
+                                           m_base[0]->GetPointsKey(),physEdge[i]);
+                }
+                npoints[1] = npoints[0];
+            }
+            
 
             Array<OneD, unsigned int> mapArray;
             Array<OneD, int>          signArray;
             NekDouble sign;
+            // define an orientation to get EdgeToElmtMapping from Cartesian data 
+            StdRegions::Orientation orient[3] = {StdRegions::eForwards,StdRegions::eForwards,
+                                                 StdRegions::eBackwards};
 
             for(i = 0; i < 3; i++)
             {
-                segexp[i!=0]->FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
+                segexp[i]->FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
 
+                // this orient goes with the one above and so could
+                // probably set both to eForwards
                 GetEdgeToElementMap(i,orient[i],mapArray,signArray);
                 for(j=0; j < nmodes[i!=0]; j++)
                 {
@@ -627,16 +641,16 @@ namespace Nektar
             }
 
             // Interpolate if required
-			if(m_base[edge?1:0]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
-			{
-				Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
-				
-				outtmp = outarray;
-				
-				LibUtilities::Interp1D(m_base[edge?1:0]->GetPointsKey(),outtmp,
-                     EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
-			}
-
+            if(m_base[edge?1:0]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
+            {
+                Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
+		
+                outtmp = outarray;
+                
+                LibUtilities::Interp1D(m_base[edge?1:0]->GetPointsKey(),outtmp,
+                                       EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
+            }
+            
             //Reverse data if necessary
             if(GetCartesianEorient(edge) == StdRegions::eBackwards)
             {

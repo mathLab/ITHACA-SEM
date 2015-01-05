@@ -44,7 +44,7 @@ IF (NEKTAR_USE_PETSC)
                 --with-petsc-arch=c-opt
                 --with-fc=0
                 ${PETSC_NO_MPI}
-            BUILD_COMMAND make)
+            BUILD_COMMAND MAKEFLAGS= make)
 
         INCLUDE_DIRECTORIES(${TPDIST}/include)
         SET(PETSC_LIBRARIES "${TPDIST}/lib/libpetsc.a")

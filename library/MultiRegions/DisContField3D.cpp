@@ -2477,6 +2477,7 @@
                             SpatialDomains::DirichletBoundaryCondition>(
                                 m_bndConditions[i])->m_filename;
                         
+                        
                         if (filebcs != "")
                         {
                             ExtractFileBCs(filebcs, varName, locExpList);
@@ -2489,19 +2490,11 @@
                             
                             condition.Evaluate(x0, x1, x2, time, 
                                                locExpList->UpdatePhys());
+
                             
- // have turned on trace space to use grl10 points so cannot used
- // bnd_constrained projection - Global space handling of boundary
- // points shoudl be sufficient
-#if 0 
                             locExpList->FwdTrans_BndConstrained(
                                                 locExpList->GetPhys(),
                                                 locExpList->UpdateCoeffs());
-#else
-                            locExpList->FwdTrans_IterPerExp(
-                                                locExpList->GetPhys(),
-                                                locExpList->UpdateCoeffs());
-#endif
 
                         }
                     }

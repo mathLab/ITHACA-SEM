@@ -996,7 +996,6 @@ namespace Nektar
                                                     m_base[k]->GetNumModes());
                     
                 }
-                break;
                 case 1:
                 case 3:
                 {
@@ -1005,7 +1004,6 @@ namespace Nektar
                                                    m_base[2*k]->GetNumPoints(),
                                                    m_base[2*k]->GetNumModes());
                 }
-                break;
                 case 2:
                 case 4:
                 {
@@ -1014,7 +1012,6 @@ namespace Nektar
                                                    m_base[k+1]->GetNumPoints(),
                                                    m_base[k+1]->GetNumModes());
                 }
-                break;
             }
 
             // Should never get here.

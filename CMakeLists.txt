@@ -22,7 +22,13 @@ ENABLE_TESTING()
 
 # Use the CMake 2.4 policy for CMake 2.6
 IF(COMMAND cmake_policy)
-  cmake_policy(SET CMP0003 OLD)
+    CMAKE_POLICY(SET CMP0003 OLD)
+
+    # Silence warnings when using generator expressions in
+    # TARGET_LINK_LIBRARIES.
+    IF(POLICY CMP0022)
+        CMAKE_POLICY(SET CMP0022 NEW)
+    ENDIF()
 ENDIF(COMMAND cmake_policy)
 
 # Find the modules included with Nektar

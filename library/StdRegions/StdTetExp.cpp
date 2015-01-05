@@ -1103,32 +1103,33 @@ namespace Nektar
             
             return nmodes;
         }
-        
+
         const LibUtilities::BasisKey StdTetExp::v_DetFaceBasisKey(
             const int i, const int k) const
         {
             ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
             ASSERTL2(k == 0 || k == 1, "face direction out of range");
-            
+
             int dir;
             switch(i)
             {
-            case 0:
-                dir = k;
-                break;
-            case 1:
-                dir = 2*k;
-                break;
-            case 2:
-            case 3:
-                dir = k+1;
-                break;
+                case 0:
+                    dir = k;
+                    break;
+                case 1:
+                    dir = 2*k;
+                    break;
+                case 2:
+                case 3:
+                    dir = k+1;
+                    break;
             }
 
-            return EvaluateTriFaceBasisKey(k, m_base[dir]->GetBasisType(),
+            return EvaluateTriFaceBasisKey(k,
+                                           m_base[dir]->GetBasisType(),
                                            m_base[dir]->GetNumPoints(),
                                            m_base[dir]->GetNumModes());
-            
+
             // Should not get here.
             return LibUtilities::NullBasisKey;
         }

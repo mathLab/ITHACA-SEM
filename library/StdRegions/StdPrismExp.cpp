@@ -913,32 +913,26 @@ namespace Nektar
             {
                 case 0:
                 {
-                    int dir = k;
                     return EvaluateQuadFaceBasisKey(k,
-                                                    m_base[dir]->GetBasisType(),
-                                                    m_base[dir]->GetNumPoints(),
-                                                    m_base[dir]->GetNumModes());
-
+                                                    m_base[k]->GetBasisType(),
+                                                    m_base[k]->GetNumPoints(),
+                                                    m_base[k]->GetNumModes());
                 }
-                break;
                 case 2:
                 case 4:
                 {
-                    int dir = k+1;
                     return EvaluateQuadFaceBasisKey(k,
-                                                    m_base[dir]->GetBasisType(),
-                                                    m_base[dir]->GetNumPoints(),
-                                                    m_base[dir]->GetNumModes());
+                                                    m_base[k+1]->GetBasisType(),
+                                                    m_base[k+1]->GetNumPoints(),
+                                                    m_base[k+1]->GetNumModes());
                 }
-                break;
                 case 1:
                 case 3:
                 {
-                    int dir = 2*k;
                     return EvaluateTriFaceBasisKey(k,
-                                                   m_base[dir]->GetBasisType(),
-                                                   m_base[dir]->GetNumPoints(),
-                                                   m_base[dir]->GetNumModes());
+                                                   m_base[2*k]->GetBasisType(),
+                                                   m_base[2*k]->GetNumPoints(),
+                                                   m_base[2*k]->GetNumModes());
                     
                 }
                 break;

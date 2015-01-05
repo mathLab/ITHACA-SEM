@@ -167,15 +167,26 @@ namespace Nektar
          */
         void DriverArnoldi::CopyFieldToArnoldiArray(Array<OneD, NekDouble> &array)
         {
-
+            
             Array<OneD, MultiRegions::ExpListSharedPtr> fields;
-            fields = m_equ[m_nequ-1]->UpdateFields();
+            
+            if (m_EvolutionOperator == eAdaptiveSFD)
+            {
+                //This matters for the Adaptive SFD method
+                //because m_equ[1] is the nonlinear problem with non homogeneous BCs.
+                fields = m_equ[0]->UpdateFields(); 
+            }
+            else
+            {
+                fields = m_equ[m_nequ-1]->UpdateFields();
+            }
+            
             for (int k = 0; k < m_nfields; ++k)
             {
                 int nq = fields[0]->GetNcoeffs();
                 Vmath::Vcopy(nq,  &fields[k]->GetCoeffs()[0], 1, &array[k*nq], 1);
                 fields[k]->SetPhysState(false);
-            
+                
             }
         };
     

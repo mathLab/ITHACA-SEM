@@ -65,7 +65,7 @@ namespace Nektar
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
 
         /// A base class for describing how to solve specific equations.
-        class EquationSystem
+        class EquationSystem : public boost::enable_shared_from_this<EquationSystem>
         {
         public:
             /// Destructor
@@ -101,6 +101,18 @@ namespace Nektar
                 return m_sessionName;
             }
 
+            template<class T>
+            boost::shared_ptr<T> as()
+            {
+#if defined __INTEL_COMPILER && BOOST_VERSION > 105200
+                typedef typename boost::shared_ptr<T>::element_type E;
+                E * p = dynamic_cast< E* >( shared_from_this().get() );
+                ASSERTL1(p, "Cannot perform cast");
+                return boost::shared_ptr<T>( shared_from_this(), p );
+#else
+                return boost::dynamic_pointer_cast<T>( shared_from_this() );
+#endif
+            }
 
             /// Reset Session name
             SOLVER_UTILS_EXPORT void ResetSessionName(std::string newname)
@@ -243,7 +255,10 @@ namespace Nektar
                 MultiRegions::ExpListSharedPtr &field,
                 std::vector<Array<OneD, NekDouble> > &fieldcoeffs,
                 std::vector<std::string> &variables);
-            
+        
+            /// Write base flow file of #m_fields.
+            SOLVER_UTILS_EXPORT void Checkpoint_BaseFlow(const int n);
+
             /// Write field data to the given filename.
             SOLVER_UTILS_EXPORT void WriteFld(const std::string &outname);
             

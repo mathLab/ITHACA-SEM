@@ -5,6 +5,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
+#include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
 
 using namespace Nektar;
 using namespace Nektar::SolverUtils;
@@ -32,9 +33,7 @@ int main(int argc, char *argv[])
 
 
         EquationSystemSharedPtr EqSys = drv->GetEqu()[0];
-        
-        IncNavierStokesSharedPtr IncNav = boost::dynamic_pointer_cast
-            <IncNavierStokes>(EqSys);
+        IncNavierStokesSharedPtr IncNav = EqSys->as<IncNavierStokes>();
         
         IncNav->SetInitialConditions(0.0,false);
         Array<OneD, MultiRegions::ExpListSharedPtr> fields = IncNav->UpdateFields();
@@ -53,17 +52,26 @@ int main(int argc, char *argv[])
             NonLinearDealiased[i] = Array<OneD, NekDouble> (nphys);
         }
 
+        boost::shared_ptr<NavierStokesAdvection> A
+            = boost::dynamic_pointer_cast<NavierStokesAdvection>(IncNav->GetAdvObject());
+
+        if (!A)
+        {
+            cout << "Must use non-linear Navier-Stokes advection" << endl;
+            exit(-1);
+        }
+
         // calculate non-linear terms without dealiasing
-        IncNav->GetAdvObject()->SetSpecHPDealiasing(false);
-        IncNav->GetAdvObject()->DoAdvection(fields,nConvectiveFields, 
-                                            IncNav->GetVelocity(), VelFields, 
+        A->SetSpecHPDealiasing(false);
+        A->Advect(nConvectiveFields, fields,
+                                            VelFields, VelFields, 
                                             NonLinear, 0.0);
 
 
         // calculate non-linear terms with dealiasing
-        IncNav->GetAdvObject()->SetSpecHPDealiasing(true);
-        IncNav->GetAdvObject()->DoAdvection(fields,nConvectiveFields, 
-                                            IncNav->GetVelocity(), VelFields, 
+        A->SetSpecHPDealiasing(true);
+        A->Advect(nConvectiveFields, fields,
+                                            VelFields, VelFields, 
                                             NonLinearDealiased, 0.0);
 
         // Evaulate Difference and put into fields;

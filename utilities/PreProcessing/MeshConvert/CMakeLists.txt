@@ -16,6 +16,7 @@ SET(MeshConvertHeaders
     ProcessExtractSurf.h
     ProcessJac.h
     ProcessPerAlign.h
+    ProcessScalar.h
     ProcessSpherigon.h
     ProcessTetSplit.h
 )
@@ -39,6 +40,7 @@ SET(MeshConvertSources
     ProcessExtractSurf.cpp
     ProcessJac.cpp
     ProcessPerAlign.cpp
+    ProcessScalar.cpp
     ProcessSpherigon.cpp
     ProcessTetSplit.cpp
 )
@@ -57,3 +59,22 @@ IF (NEKTAR_USE_VTK)
         TARGET_LINK_LIBRARIES(MeshConvert vtkCommonCore vtkIOLegacy)
     ENDIF ()
 ENDIF (NEKTAR_USE_VTK)
+
+# Gmsh tests
+ADD_NEKTAR_TEST        (Gmsh/CubeAllElements)
+ADD_NEKTAR_TEST        (Gmsh/CubeHex)
+ADD_NEKTAR_TEST        (Gmsh/CubePrism)
+ADD_NEKTAR_TEST        (Gmsh/CubeTet)
+IF (WIN32)
+    ADD_NEKTAR_TEST    (Gmsh/Scalar_Windows)
+ELSE ()
+    ADD_NEKTAR_TEST    (Gmsh/Scalar)
+ENDIF ()
+ADD_NEKTAR_TEST        (Gmsh/SquareQuad)
+ADD_NEKTAR_TEST        (Gmsh/SquareTri)
+# Nektar tests
+ADD_NEKTAR_TEST        (Nektar/HexLinear)
+ADD_NEKTAR_TEST        (Nektar/Tube45)
+# StarCCM tests
+ADD_NEKTAR_TEST        (StarTec/CubePer)
+ADD_NEKTAR_TEST_LENGTHY(StarTec/StraightRW)

@@ -441,7 +441,7 @@
 
                      // Check to see if this face is periodic.
                      PeriodicMap::iterator it = m_periodicFaces.find(faceGeomId);
-
+                     
                      if (it != m_periodicFaces.end())
                      {
                          const PeriodicEntity &ent = it->second[0];
@@ -1716,8 +1716,7 @@
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
              
 #if 1 // blocked routine
-            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNLocTracePts());
-
+            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNLocTracePts());            
             m_locTraceToTraceMap->LocTracesFromField(field,facevals);
             m_locTraceToTraceMap->InterpLocFacesToTrace(0,facevals,Fwd);
             
@@ -1845,10 +1844,17 @@
                   Array<OneD,       NekDouble> &outarray)
         {
 #if 1
-            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNFwdLocTracePts());
 
+            Vmath::Zero(outarray.num_elements(), outarray, 1);
+
+            Array<OneD, NekDouble> facevals(m_locTraceToTraceMap->GetNFwdLocTracePts());
             m_locTraceToTraceMap->FwdLocTracesFromField(inarray,facevals);
             m_locTraceToTraceMap->InterpLocFacesToTrace(0,facevals,outarray);
+
+            // gather entries along parallel partitions which have
+            // only filled in Fwd part on their own partition
+            m_traceMap->UniversalTraceAssemble(outarray);
+
 #else
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
@@ -1857,7 +1863,7 @@
             Array<OneD,NekDouble> e_tmp;
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-
+            
             ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
                      "input array is of insufficient length");
             
@@ -2485,6 +2491,7 @@
                             SpatialDomains::DirichletBoundaryCondition>(
                                 m_bndConditions[i])->m_filename;
                         
+                        
                         if (filebcs != "")
                         {
                             ExtractFileBCs(filebcs, varName, locExpList);
@@ -2497,19 +2504,11 @@
                             
                             condition.Evaluate(x0, x1, x2, time, 
                                                locExpList->UpdatePhys());
+
                             
- // have turned on trace space to use grl10 points so cannot used
- // bnd_constrained projection - Global space handling of boundary
- // points shoudl be sufficient
-#if 0 
                             locExpList->FwdTrans_BndConstrained(
                                                 locExpList->GetPhys(),
                                                 locExpList->UpdateCoeffs());
-#else
-                            locExpList->FwdTrans_IterPerExp(
-                                                locExpList->GetPhys(),
-                                                locExpList->UpdateCoeffs());
-#endif
 
                         }
                     }

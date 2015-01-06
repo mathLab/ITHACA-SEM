@@ -487,8 +487,8 @@ namespace Nektar
                             }
                             Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
                             Blas::Dgemv('T',  fnp0, tnp1*m_interpNfaces[dir][i],
-                                        1.0, tmp.get(), tnp0,I0.get(),1,  0.0, 
-                                        tmp.get()+cnt+ tnp0-1, tnp0);     
+                                        1.0, tmp.get()+cnt1, tnp0,I0.get(),1,  0.0, 
+                                        tmp.get()+cnt1+ tnp0-1, tnp0);     
                         }
                         break;
                     case eInterpDir1:
@@ -568,13 +568,14 @@ namespace Nektar
 #if 0
                             for(int j = 0; j < tnp1*m_interpNfaces[dir][i]; ++j)
                             {
-                                tmp[cnt1+(j+1)*tnp0-1] = Blas::Ddot(fnp0,tmp.get()+j*tnp0,1,
+                                tmp[cnt1+(j+1)*tnp0-1] = Blas::Ddot(fnp0,tmp.get()+
+                                                                    cnt1 + j*tnp0,1,
                                                                     I0.get(),1);
                             }
 #else
                             Blas::Dgemv('T',  fnp0, tnp1*m_interpNfaces[dir][i],
-                                        1.0, tmp.get(), tnp0,I0.get(),1,  0.0, 
-                                        tmp.get()+cnt+ tnp0-1, tnp0);     
+                                        1.0, tmp.get()+cnt1, tnp0,I0.get(),1,  0.0, 
+                                        tmp.get()+cnt1+ tnp0-1, tnp0);     
 #endif
                         }
                         break;

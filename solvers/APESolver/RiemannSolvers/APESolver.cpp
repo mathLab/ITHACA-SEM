@@ -60,20 +60,20 @@ void APESolver::v_Solve(
     const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
           Array<OneD,       Array<OneD, NekDouble> > &flux)
 {
-    Array< OneD, Array< OneD, NekDouble > > basefield = GetRotBasefield();
+    Array< OneD, Array< OneD, NekDouble > > bf = GetRotBasefield();
 
     int expDim = nDim;
-    NekDouble uF, vF;
+    NekDouble vF, wF,  rhoF;
 
     if (expDim == 1)
     {
         for (int i = 0; i < Fwd[0].num_elements(); ++i)
         {
             v_PointSolve(
-                Fwd[0][i],       Fwd[1][i],       0.0,               0.0,
-                Bwd[0][i],       Bwd[1][i],       0.0,               0.0,
-                basefield[0][i], basefield[1][i], basefield[2][i],   0.0,  0.0,
-                flux[0][i],      flux[1][i],      uF,                vF);
+                 Fwd[0][i],      0.0,  Fwd[1][i], 0.0,  0.0,
+                 Bwd[0][i],      0.0,  Bwd[1][i], 0.0,  0.0,
+                  bf[0][i], bf[1][i],   bf[2][i], 0.0,  0.0,
+                flux[0][i],     rhoF, flux[1][i],  vF,   wF);
         }
     }
     else if (expDim == 2)
@@ -81,10 +81,10 @@ void APESolver::v_Solve(
         for (int i = 0; i < Fwd[0].num_elements(); ++i)
         {
             v_PointSolve(
-                Fwd[0][i],       Fwd[1][i],       Fwd[2][i],         0.0,
-                Bwd[0][i],       Bwd[1][i],       Bwd[2][i],         0.0,
-                basefield[0][i], basefield[1][i], basefield[2][i],   basefield[3][i],   0.0,
-                flux[0][i],      flux[1][i],      flux[2][i],        vF);
+                 Fwd[0][i],      0.0,  Fwd[1][i],  Fwd[2][i],  0.0,
+                 Bwd[0][i],      0.0,  Bwd[1][i],  Bwd[2][i],  0.0,
+                  bf[0][i], bf[1][i],   bf[2][i],   bf[3][i],  0.0,
+                flux[0][i],     rhoF, flux[1][i], flux[2][i],   wF);
         }
     }
     else if (expDim == 3)
@@ -92,10 +92,10 @@ void APESolver::v_Solve(
         for (int i = 0; i < Fwd[0].num_elements(); ++i)
         {
             v_PointSolve(
-                Fwd[0][i],       Fwd[1][i],       Fwd[2][i],         Fwd[3][i],
-                Bwd[0][i],       Bwd[1][i],       Bwd[2][i],         Bwd[3][i],
-                basefield[0][i], basefield[1][i], basefield[2][i],   basefield[3][i], basefield[4][i],
-                flux[0][i],      flux[1][i],      flux[2][i],        flux[3][i]);
+                 Fwd[0][i],      0.0,  Fwd[1][i],  Fwd[2][i],  Fwd[3][i],
+                 Bwd[0][i],      0.0,  Bwd[1][i],  Bwd[2][i],  Bwd[3][i],
+                  bf[0][i], bf[1][i],   bf[2][i],   bf[3][i],   bf[4][i],
+                flux[0][i],     rhoF, flux[1][i], flux[2][i], flux[3][i]);
         }
     }
 }

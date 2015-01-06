@@ -57,29 +57,32 @@ LaxFriedrichsSolver::LaxFriedrichsSolver() :
 /**
  * @brief Lax-Friedrichs Riemann solver
  *
- * @param pL     Perturbation pressure left state.
- * @param pR     Perturbation pressure right state.
- * @param uL     x perturbation verlocity component left state.
- * @param uR     x perturbation verlocity component right state.
- * @param vL     y perturbation verlocity component left state.
- * @param vR     y perturbation verlocity component right state.
- * @param wL     z perturbation verlocity component left state.
- * @param wR     z perturbation verlocity component right state.
- * @param p0     Base pressure.
- * @param rho0   Base density.
- * @param u0     Base x verlocity component
- * @param v0     Base y verlocity component
- * @param w0     Base z verlocity component
- * @param pF     Computed Riemann flux for perturbation pressure.
- * @param uF     Computed Riemann flux for x perturbation verlocity component
- * @param vF     Computed Riemann flux for y perturbation verlocity component
- * @param wF     Computed Riemann flux for z perturbation verlocity component
+ * @param pL     Perturbation pressure left state
+ * @param rhoL   Perturbation density left state
+ * @param pR     Perturbation pressure right state
+ * @param rhoR   Perturbation density right state
+ * @param uL     x perturbation velocity component left state
+ * @param uR     x perturbation velocity component right state
+ * @param vL     y perturbation velocity component left state
+ * @param vR     y perturbation velocity component right state
+ * @param wL     z perturbation velocity component left state
+ * @param wR     z perturbation velocity component right state
+ * @param p0     Base pressure
+ * @param rho0   Base density
+ * @param u0     Base x velocity component
+ * @param v0     Base y velocity component
+ * @param w0     Base z velocity component
+ * @param pF     Computed Riemann flux for perturbation pressure
+ * @param rhoF   Computed Riemann flux for perturbation density
+ * @param uF     Computed Riemann flux for x perturbation velocity component
+ * @param vF     Computed Riemann flux for y perturbation velocity component
+ * @param wF     Computed Riemann flux for z perturbation velocity component
  */
 void LaxFriedrichsSolver::v_PointSolve(
-    NekDouble  pL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
-    NekDouble  pR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
-    NekDouble  p0, NekDouble rho0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
-    NekDouble &pF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
+    NekDouble  pL, NekDouble  rhoL, NekDouble  uL, NekDouble  vL, NekDouble  wL,
+    NekDouble  pR, NekDouble  rhoR, NekDouble  uR, NekDouble  vR, NekDouble  wR,
+    NekDouble  p0, NekDouble  rho0, NekDouble  u0, NekDouble  v0, NekDouble  w0,
+    NekDouble &pF, NekDouble &rhoF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
 {
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
     const NekDouble &gamma= m_params["Gamma"]();

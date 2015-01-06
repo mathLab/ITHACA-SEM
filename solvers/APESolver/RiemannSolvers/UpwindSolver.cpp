@@ -42,7 +42,8 @@ namespace Nektar
 {
 
 std::string UpwindSolver::solverName = SolverUtils::GetRiemannSolverFactory().
-        RegisterCreatorFunction("APEUpwind", UpwindSolver::create, "Upwind solver for the APE equation");
+                                       RegisterCreatorFunction("APEUpwind", UpwindSolver::create,
+                                               "Upwind solver for the APE equation");
 
 UpwindSolver::UpwindSolver() :
     APESolver()
@@ -83,49 +84,49 @@ void UpwindSolver::v_PointSolve(
 {
     // fetch params
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
-    const NekDouble &gamma= m_params["Gamma"]();
+    const NekDouble &gamma = m_params["Gamma"]();
 
     Array<OneD, NekDouble> characteristic(4);
     Array<OneD, NekDouble> W(2);
     Array<OneD, NekDouble> lambda(2);
 
     // compute the wave speeds
-    lambda[0]=u0 + sqrt(p0*gamma* rho0)/ rho0;
-    lambda[1]=u0 - sqrt(p0*gamma* rho0)/ rho0;
+    lambda[0] = u0 + sqrt(p0*gamma*rho0)/rho0;
+    lambda[1] = u0 - sqrt(p0*gamma*rho0)/rho0;
 
     // calculate the caracteristic variables
     //left characteristics
-    characteristic[0] = pL/2 + uL*sqrt(p0*gamma* rho0)/2;
-    characteristic[1] = pL/2 - uL*sqrt(p0*gamma* rho0)/2;
+    characteristic[0] = pL/2 + uL*sqrt(p0*gamma*rho0)/2;
+    characteristic[1] = pL/2 - uL*sqrt(p0*gamma*rho0)/2;
     //right characteristics
-    characteristic[2] = pR/2 + uR*sqrt(p0*gamma* rho0)/2;
-    characteristic[3] = pR/2 - uR*sqrt(p0*gamma* rho0)/2;
+    characteristic[2] = pR/2 + uR*sqrt(p0*gamma*rho0)/2;
+    characteristic[3] = pR/2 - uR*sqrt(p0*gamma*rho0)/2;
 
     //take left or right value of characteristic variable
     for (int j = 0; j < 2; j++)
     {
-        if (lambda[j]>=0)
+        if (lambda[j] >= 0)
         {
-            W[j]=characteristic[j];
+            W[j] = characteristic[j];
         }
-        if(lambda[j]<0)
+        if (lambda[j] < 0)
         {
-            W[j]=characteristic[j+2];
+            W[j] = characteristic[j+2];
         }
     }
 
     //calculate conservative variables from characteristics
-    NekDouble p = W[0]+W[1];
-    NekDouble u = (W[0]-W[1])/sqrt(p0*gamma* rho0);
+    NekDouble p = W[0] + W[1];
+    NekDouble u = (W[0] - W[1])/sqrt(p0*gamma*rho0);
     // do not divide by zero
-    if (p0*gamma* rho0 == 0)
+    if (p0*gamma*rho0 == 0)
     {
         u = 0.0;
     }
 
     // assemble the fluxes
-    pF = gamma*p0 * u + u0*p;
-    uF = p/ rho0 + u0*u + v0*vL + w0*wL;
+    pF = gamma*p0*u + u0*p;
+    uF = p/rho0 + u0*u + v0*vL + w0*wL;
     vF = 0.0;
     wF = 0.0;
 }

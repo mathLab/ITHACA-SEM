@@ -41,8 +41,10 @@ using namespace std;
 namespace Nektar
 {
 
-std::string LaxFriedrichsSolver::solverName = SolverUtils::GetRiemannSolverFactory().
-        RegisterCreatorFunction("LaxFriedrichs", LaxFriedrichsSolver::create, "Lax-Friedrichs Solver");
+std::string LaxFriedrichsSolver::solverName =
+    SolverUtils::GetRiemannSolverFactory().
+    RegisterCreatorFunction("LaxFriedrichs", LaxFriedrichsSolver::create,
+                            "Lax-Friedrichs Solver");
 
 
 /**
@@ -85,21 +87,21 @@ void LaxFriedrichsSolver::v_PointSolve(
     NekDouble &pF, NekDouble &rhoF, NekDouble &uF, NekDouble &vF, NekDouble &wF)
 {
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
-    const NekDouble &gamma= m_params["Gamma"]();
+    const NekDouble &gamma = m_params["Gamma"]();
 
     // Speed of sound
-    NekDouble c = sqrt(gamma*p0/ rho0);
+    NekDouble c = sqrt(gamma * p0 / rho0);
 
     // max absolute eigenvalue of the jacobian of F_n1
     NekDouble a_1_max = std::max(std::abs(u0 - c), std::abs(u0 + c));
 
     NekDouble pFL = gamma*p0*uL + pL*u0;
-    NekDouble uFL = pL/ rho0 + u0*uL + v0*vL + w0*wL;
+    NekDouble uFL = pL/rho0 + u0*uL + v0*vL + w0*wL;
     NekDouble vFL = 0;
     NekDouble wFL = 0;
 
     NekDouble pFR = gamma*p0*uR + pR*u0;
-    NekDouble uFR = pR/ rho0 + u0*uR + v0*vR + w0*wR;
+    NekDouble uFR = pR/rho0 + u0*uR + v0*vR + w0*wR;
     NekDouble vFR = 0;
     NekDouble wFR = 0;
 

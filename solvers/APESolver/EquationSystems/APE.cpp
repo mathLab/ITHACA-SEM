@@ -81,6 +81,8 @@ void APE::v_InitObject()
     // Resize the advection velocities vector to dimension of the problem
     m_basefield_names.resize(m_spacedim + 2);
 
+    //  Initialize the sourceterm
+    m_sourceTerms = Array<OneD, NekDouble>(GetTotPoints());
 
     // Do not forwards transform initial condition
     m_homoInitialFwd = false;
@@ -381,19 +383,8 @@ void APE::WallBC(int bcRegion, int cnt,
  */
 void APE::AddSource(Array< OneD, Array< OneD, NekDouble > > &outarray)
 {
-    int nCoeffs = m_fields[0]->GetNcoeffs();
-    int nTotPoints = GetTotPoints();
-
-    Array<OneD, NekDouble> sourceP(nTotPoints);
-    Array<OneD, NekDouble> sourceC(nCoeffs);
-
-    EvaluateFunction("S", sourceP, "Source", m_time);
-
-    m_fields[0]->IProductWRTBase(sourceP, sourceC);
-    m_fields[0]->MultiplyByElmtInvMass(sourceC, sourceC);
-    m_fields[0]->BwdTrans(sourceC, sourceP);
-
-    Vmath::Vadd(nTotPoints, sourceP, 1, outarray[0], 1, outarray[0], 1);
+    UpdateSourceTerms();
+    Vmath::Vadd(GetTotPoints(), m_sourceTerms, 1, outarray[0], 1, outarray[0], 1);
 }
 
 
@@ -463,6 +454,24 @@ void APE::UpdateBasefield()
     if (m_time > last_update)
     {
         EvaluateFunction(m_basefield_names, m_basefield, "Baseflow");
+        last_update = m_time;
+    }
+}
+
+void APE::UpdateSourceTerms()
+{
+    static NekDouble last_update = -1.0;
+
+    if (m_time > last_update)
+    {
+        Array<OneD, NekDouble> sourceC(m_fields[0]->GetNcoeffs());
+
+        EvaluateFunction("S", m_sourceTerms, "Source", m_time);
+
+        m_fields[0]->IProductWRTBase(m_sourceTerms, sourceC);
+        m_fields[0]->MultiplyByElmtInvMass(sourceC, sourceC);
+        m_fields[0]->BwdTrans(sourceC, m_sourceTerms);
+
         last_update = m_time;
     }
 }

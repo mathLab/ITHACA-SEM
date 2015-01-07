@@ -76,6 +76,7 @@ class APE : public UnsteadySystem
         /// Isentropic coefficient, Ratio of specific heats (APE)
         NekDouble                                       m_gamma;
         Array<OneD, Array<OneD, NekDouble> >            m_basefield;
+        Array<OneD, NekDouble>                          m_sourceTerms;
         std::vector<std::string>                        m_basefield_names;
 
         /// Initialises UnsteadySystem class members.
@@ -112,6 +113,7 @@ class APE : public UnsteadySystem
         NekDouble GetGamma();
 
         void UpdateBasefield();
+        void UpdateSourceTerms();
 
     private:
 

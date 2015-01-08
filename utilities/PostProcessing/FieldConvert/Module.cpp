@@ -166,35 +166,5 @@ namespace Nektar
             cout << "Field size = " <<
                 m_f->m_data[0].size() * sizeof(NekDouble) << endl;
         }
-
-        void Module::EvaluateTriFieldAtEquiSpacedPts(
-                  LocalRegions::ExpansionSharedPtr  &exp,
-            const Array<OneD, const NekDouble>      &infield,
-                  Array<OneD, NekDouble>            &outfield)
-        {
-            static StdRegions::StdNodalTriExpSharedPtr NodalTri;
-            static Array<OneD, LibUtilities::BasisSharedPtr>
-                NodalBasis(2,LibUtilities::NullBasisSharedPtr);
-
-            if((exp->GetBasis(0) == NodalBasis[0]) ||
-               (exp->GetBasis(0) == NodalBasis[0]))
-            {
-                LibUtilities::BasisKey Ba(exp->GetBasis(0)->GetBasisType(),
-                                          exp->GetBasis(0)->GetTotNumPoints(),
-                                          exp->GetBasis(0)->GetPointsKey());
-                LibUtilities::BasisKey Bb(exp->GetBasis(1)->GetBasisType(),
-                                          exp->GetBasis(1)->GetTotNumPoints(),
-                                          exp->GetBasis(1)->GetPointsKey());
-
-                NodalTri = MemoryManager<StdRegions::StdNodalTriExp>::
-                        AllocateSharedPtr(Ba, Bb,
-                                          LibUtilities::eNodalTriEvenlySpaced);
-
-                NodalBasis[0] = exp->GetBasis(0);
-                NodalBasis[1] = exp->GetBasis(1);
-            }
-
-            NodalTri->BwdTrans(infield,outfield);
-        }
     }
 }

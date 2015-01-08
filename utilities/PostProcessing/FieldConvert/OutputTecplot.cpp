@@ -61,6 +61,11 @@ OutputTecplot::~OutputTecplot()
 
 void OutputTecplot::Process(po::variables_map &vm)
 {
+#ifdef _WIN32
+    unsigned int old_exponent_format;
+    old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
+#endif
+
     m_doError = (vm.count("error") == 1)?  true: false;
 
     if (m_f->m_verbose)
@@ -185,7 +190,13 @@ void OutputTecplot::Process(po::variables_map &vm)
     }
 
     cout << "Written file: " << filename << endl;
+
+#ifdef _WIN32
+    _set_output_format(old_exponent_format);
+#endif
 }
+
+
 /**
  * Write Tecplot Files Header
  * @param   outfile Output file name.

@@ -242,13 +242,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
 
-            //---------------------------------------
-            // Output interpolation functions
-            //---------------------------------------
-            STD_REGIONS_EXPORT virtual void v_PhysInterpToSimplexEquiSpaced(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD, NekDouble>       &outarray);
-
         private:
             //---------------------------------------
             // Private helper functions

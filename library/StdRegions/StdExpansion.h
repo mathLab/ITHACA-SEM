@@ -1283,11 +1283,13 @@ namespace Nektar
 
             /** \brief This function performs an interpolation from
              * the physical space points provided at input into an
-             * array of equispaced points.
+             * array of equispaced points which are not the collapsed
+             * coordinate. So for a tetrahedron you will only get a
+             * tetrahedral number of values.
              *
-             *  This is primarily used for output purposes to get a
-             *  better distribution of points more suitable for most
-             *  postprocessing
+             * This is primarily used for output purposes to get a
+             * better distribution of points more suitable for most
+             * postprocessing
              */
             STD_REGIONS_EXPORT void PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 
@@ -1303,8 +1305,8 @@ namespace Nektar
              *   equispaced data points provided by
              *   PhysInterpToSimplexEquiSpaced
              *
-             * This is a virtual call to the function 
-             * \a v_GetSimplexEquiSpaceConnectivity
+             *  This is a virtual call to the function 
+             *  \a v_GetSimplexEquiSpaceConnectivity
              */ 
             STD_REGIONS_EXPORT void GetSimplexEquiSpacedConnectivity(
                 Array<OneD, int> &conn,

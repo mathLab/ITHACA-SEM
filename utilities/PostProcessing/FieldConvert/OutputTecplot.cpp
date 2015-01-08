@@ -61,6 +61,11 @@ OutputTecplot::~OutputTecplot()
 
 void OutputTecplot::Process(po::variables_map &vm)
 {
+#ifdef _WIN32
+    unsigned int old_exponent_format;
+    old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
+#endif
+
     m_doError = (vm.count("error") == 1)?  true: false;
 
     if (m_f->m_verbose)
@@ -167,11 +172,24 @@ void OutputTecplot::Process(po::variables_map &vm)
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
 
-            if(f != NullFieldPts)
-            {
-                int i   = 0;
-                int j   = 0;
-                int dim = f->m_ptsDim;
+    cout << "Written file: " << filename << endl;
+
+#ifdef _WIN32
+    _set_output_format(old_exponent_format);
+#endif
+}
+
+
+/**
+ * Write Tecplot Files Header
+ * @param   outfile Output file name.
+ * @param   var                 variables names
+ */
+void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
+                                       std::string var)
+{
+    int coordim  = m_f->m_exp[0]->GetExp(0)->GetCoordim();
+    MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
 
                 if(f->m_pts[0].num_elements() == 0)
                 {

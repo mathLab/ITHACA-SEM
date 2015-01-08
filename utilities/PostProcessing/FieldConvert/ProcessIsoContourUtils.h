@@ -64,9 +64,8 @@ public:
     virtual void Process(po::variables_map &vm);
 
 private:
-    void LoadFeldPtsToIso(vector<IsoSharedPtr> &iso);
+    void LoadFieldPtsToIso(vector<IsoSharedPtr> &iso);
 };
-
 }
 }
 

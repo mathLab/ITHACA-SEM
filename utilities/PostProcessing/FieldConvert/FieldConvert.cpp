@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         ("modules-list,l",
                 "Print the list of available modules.")
         ("output-points,n", po::value<int>(),
-                "Output at p equipspaced points (for .dat, .vtk).")
+                "Output at n equipspaced points along the collapsed coordinates (for .dat, .vtk).")
         ("error,e",
                 "Write error of fields for regression checking")
         ("range,r", po::value<string>(),

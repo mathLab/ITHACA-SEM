@@ -32,10 +32,10 @@
 // Description: Local trace to general trace mapping information
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <MultiRegions/AssemblyMap/LocTraceToTraceMap.h>
+#include <MultiRegions/AssemblyMap/LocTraceToTraceMap2D.h>
 #include <MultiRegions/ExpList.h>
 #include <LibUtilities/Foundations/ManagerAccess.h> 
-#include <LocalRegions/Expansion2D.h> 
+#include <LocalRegions/Expansion1D.h> 
 
 namespace Nektar
 {
@@ -45,26 +45,30 @@ namespace Nektar
         LocTraceToTraceMap::LocTraceToTraceMap(
             const ExpList &locExp,
             const ExpListSharedPtr &trace,
-            const Array<OneD, Array<OneD,
-                            LocalRegions::ExpansionSharedPtr> >&elmtToTrace,
-            const vector<bool> &LeftAdjacentFaces)
+            const Array<OneD, Array<OneD, LocalRegions
+                ::ExpansionSharedPtr> >&elmtToTrace,
+            const vector<bool> &LeftAdjacentEdges)
         {
-            m_LocTraceToTraceMap = Array<OneD, Array<OneD, int> >(2);
-            m_interpTrace = Array<OneD, Array<OneD, InterpLocTraceToTrace> >(2);
-            m_interpTraceI0 = Array<OneD, Array<OneD, DNekMatSharedPtr> > (2);
-            m_interpTraceI1 = Array<OneD, Array<OneD, DNekMatSharedPtr> > (2);
-            m_interpEndPtI0 = Array<OneD, Array<OneD,
-                                          Array<OneD, NekDouble> > >(2);
-            m_interpEndPtI1 = Array<OneD, Array<OneD,
-                                          Array<OneD, NekDouble> > >(2);
-            m_interpPoints  = Array<OneD, Array<OneD, TraceInterpPoints> >(2);
-            m_interpNfaces  = Array<OneD, Array<OneD, int> >(2); 
+            m_LocTraceToTraceMap = Array<OneD, Array<OneD, int> >        (2);
+            m_interpTrace        = Array<OneD, Array<OneD,
+                                               InterpLocTraceToTrace> >  (2);
+            m_interpTraceI0      = Array<OneD, Array<OneD,
+                                               DNekMatSharedPtr> >       (2);
+            m_interpTraceI1      = Array<OneD, Array<OneD,
+                                               DNekMatSharedPtr> >       (2);
+            m_interpEndPtI0      = Array<OneD, Array<OneD,
+                                               Array<OneD, NekDouble> > >(2);
+            m_interpEndPtI1      = Array<OneD, Array<OneD,
+                                               Array<OneD, NekDouble> > >(2);
+            m_interpPoints       = Array<OneD, Array<OneD,
+                                               TraceInterpPoints> >      (2);
+            m_interpNfaces       = Array<OneD, Array<OneD, int> >        (2);
 
             m_traceCoeffsToElmtMap   = Array<OneD, Array<OneD, int> >(2);
             m_traceCoeffsToElmtTrace = Array<OneD, Array<OneD, int> >(2);
             m_traceCoeffsToElmtSign  = Array<OneD, Array<OneD, int> >(2);
 
-            LocalRegions::Expansion3DSharedPtr exp3d;
+            LocalRegions::Expansion2DSharedPtr exp2d;
             int cnt, n, e, phys_offset;
             
             const boost::shared_ptr<LocalRegions::ExpansionVector> exp =
@@ -82,14 +86,14 @@ namespace Nektar
             
             for (cnt = n = 0; n < nexp; ++n)
             {
-                exp3d = (*exp)[n]->as<LocalRegions::Expansion3D>();
+                exp2d = (*exp)[n]->as<LocalRegions::Expansion2D>();
                 
-                for(int i = 0; i < exp3d->GetNfaces(); ++i, ++cnt)
+                for (int i = 0; i < exp2d->GetNedges(); ++i, ++cnt)
                 {
-                    int nLocPts = exp3d->GetFaceNumPoints(i);
+                    int nLocPts = exp2d->GetEdgeNumPoints(i);
                     m_nLocTracePts += nLocPts; 
                     
-                    if(LeftAdjacentFaces[cnt])
+                    if (LeftAdjacentEdges[cnt])
                     {
                         nFwdPts    += elmtToTrace[n][i]->GetTotPoints();
                         nFwdCoeffs += elmtToTrace[n][i]->GetNcoeffs();
@@ -112,11 +116,11 @@ namespace Nektar
             m_nTraceCoeffs[0]           = nFwdCoeffs;
             m_nTraceCoeffs[1]           = nBwdCoeffs;
             m_traceCoeffsToElmtMap[0]   = Array<OneD, int>(nFwdCoeffs+nBwdCoeffs);
-            m_traceCoeffsToElmtMap[1]   = m_traceCoeffsToElmtMap[0]+nFwdCoeffs;
+            m_traceCoeffsToElmtMap[1]   = m_traceCoeffsToElmtMap[0] + nFwdCoeffs;
             m_traceCoeffsToElmtTrace[0] = Array<OneD, int>(nFwdCoeffs+nBwdCoeffs);
-            m_traceCoeffsToElmtTrace[1] = m_traceCoeffsToElmtTrace[0]+nFwdCoeffs;
+            m_traceCoeffsToElmtTrace[1] = m_traceCoeffsToElmtTrace[0] + nFwdCoeffs;
             m_traceCoeffsToElmtSign[0]  = Array<OneD, int>(nFwdCoeffs+nBwdCoeffs);
-            m_traceCoeffsToElmtSign[1]  = m_traceCoeffsToElmtSign[0]+nFwdCoeffs;
+            m_traceCoeffsToElmtSign[1]  = m_traceCoeffsToElmtSign[0] + nFwdCoeffs;
             
             // gather information about trace interpolations. 
             map<TraceInterpPoints, vector<pair<int,int> >, cmpop > TraceInterpMap;
@@ -131,66 +135,62 @@ namespace Nektar
             // interpolation requirements.
             for(cnt = n = 0; n < nexp; ++n)
             {
-                exp3d = (*exp)[n]->as<LocalRegions::Expansion3D>();
-                nface = exp3d->GetNfaces();
+                exp2d = (*exp)[n]->as<LocalRegions::Expansion2D>();
+                nface = exp2d->GetNedges();
                 TraceOrder[n].resize(nface);
 
                 int coeffoffset = locExp.GetCoeff_Offset(n);
                 for(e = 0; e < nface; ++e,++cnt)
                 {
-                    StdRegions::StdExpansionSharedPtr face = elmtToTrace[n][e]; 
-                    StdRegions::Orientation orient = exp3d->GetForient(e);
+                    StdRegions::StdExpansionSharedPtr edge = elmtToTrace[n][e];
+                    StdRegions::Orientation orient = exp2d->GetForient(e);
                     
                     LibUtilities::PointsKey fromPointsKey0;
                     LibUtilities::PointsKey fromPointsKey1;
                     LibUtilities::PointsKey toPointsKey0;
                     LibUtilities::PointsKey toPointsKey1;
                     
-                    int dir0 = exp3d->GetGeom3D()->GetDir(e,0);
-                    int dir1 = exp3d->GetGeom3D()->GetDir(e,1);
+                    fromPointsKey0 = exp2d->GetEdgeBasis()->GetPointsKey();
                     
-                    fromPointsKey0 = exp3d->GetBasis(dir0)->GetPointsKey();
-                    fromPointsKey1 = exp3d->GetBasis(dir1)->GetPointsKey();
-                    
-                    if(orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
+                    if (orient < StdRegions::eDir1FwdDir2_Dir2FwdDir1)
                     {
-                        toPointsKey0 = face->GetBasis(0)->GetPointsKey();
-                        toPointsKey1 = face->GetBasis(1)->GetPointsKey();
+                        toPointsKey0 = edge->GetBasis(0)->GetPointsKey();
                     }
                     else // transpose points key evaluation 
                     {
-                        toPointsKey0 = face->GetBasis(1)->GetPointsKey();
-                        toPointsKey1 = face->GetBasis(0)->GetPointsKey();
+                        toPointsKey0 = edge->GetBasis(1)->GetPointsKey();
                     }
                     
-                    TraceInterpPoints fpoint(fromPointsKey0,fromPointsKey1,
-                                             toPointsKey0,toPointsKey1);
+                    TraceInterpPoints fpoint(fromPointsKey0, fromPointsKey1,
+                                             toPointsKey0, toPointsKey1);
                     
                     pair<int,int> epf(n,e);
                     TraceInterpMap[fpoint].push_back(epf);
                     
                     TraceOrder[n][e] = cnt; 
 
-                    // setup for coefficient mapping from trace normal flux to elements
+                    // setup for coefficient mapping from trace
+                    // normal flux to elements
                     Array<OneD, unsigned int> map;
                     Array<OneD, int> sign;
-                    exp3d->GetFaceToElementMap(e, orient, map, sign);
+                    exp2d->GetFaceToElementMap(e, orient, map, sign);
 
-                    int order_f = face->GetNcoeffs();
-                    int foffset = trace->GetCoeff_Offset(face->GetElmtId());
+                    int order_f = edge->GetNcoeffs();
+                    int foffset = trace->GetCoeff_Offset(edge->GetElmtId());
                     
                     int fac = (*exp)[n]->FaceNormalNegated(e) ? -1.0 : 1.0;
                     
-                    if (exp3d->GetFaceExp(e)->GetRightAdjacentElementExp())
+                    if (exp2d->GetFaceExp(e)->GetRightAdjacentElementExp())
                     {
-                        if (exp3d->GetFaceExp(e)->GetRightAdjacentElementExp()->GetGeom3D()
-                            ->GetGlobalID() == exp3d->GetGeom3D()->GetGlobalID())
+                        if (exp2d->GetFaceExp(e)->
+                            GetRightAdjacentElementExp()->GetGeom2D()->
+                            GetGlobalID() == exp2d->GetGeom2D()->GetGlobalID())
                         {
                             fac = -1.0; 
                         }
                     }
 
-                    if(LeftAdjacentFaces[cnt])
+                    if (LeftAdjacentEdges[cnt])
                     {
                         for(int i = 0; i < order_f; ++i)
                         {
@@ -201,7 +201,7 @@ namespace Nektar
                     }
                     else
                     {
-                        for(int i = 0; i < order_f; ++i)
+                        for (int i = 0; i < order_f; ++i)
                         {
                             m_traceCoeffsToElmtMap  [1][bwdcnt]   = coeffoffset + map[i];
                             m_traceCoeffsToElmtTrace[1][bwdcnt]   = foffset + i;
@@ -249,21 +249,21 @@ namespace Nektar
                     n = it->second[f].first;
                     e = it->second[f].second; 
                     
-                    StdRegions::StdExpansionSharedPtr face = elmtToTrace[n][e]; 
+                    StdRegions::StdExpansionSharedPtr edge = elmtToTrace[n][e];
                     
-                    exp3d = (*exp)[n]->as<LocalRegions::Expansion3D>();
+                    exp2d = (*exp)[n]->as<LocalRegions::Expansion2D>();
                     phys_offset = locExp.GetPhys_Offset(n);
                     
                     // mapping of new face order to one that loops
                     // over elmts then faces set up mapping of
                     // faces in standard cartesian order
-                    exp3d->GetFacePhysMap(e, faceids);
-                    nfacepts  = exp3d->GetFaceNumPoints(e);
+                    exp2d->GetFacePhysMap(e, faceids);
+                    nfacepts  = exp2d->GetFaceNumPoints(e);
                     nfacepts1 = face->GetTotPoints();
                     
-                    StdRegions::Orientation orient = exp3d->GetForient(e);
+                    StdRegions::Orientation orient = exp2d->GetForient(e);
                     
-                    exp3d->ReOrientFacePhysMap(elmtToTrace[n][e]->GetNverts(), 
+                    exp2d->ReOrientFacePhysMap(elmtToTrace[n][e]->GetNverts(), 
                                                orient,
                                                toPointsKey0.GetNumPoints(),
                                                toPointsKey1.GetNumPoints(),
@@ -271,7 +271,7 @@ namespace Nektar
                     
                     int offset = trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                     
-                    if(LeftAdjacentFaces[TraceOrder[n][e]])
+                    if(LeftAdjacentEdges[TraceOrder[n][e]])
                     {
                         
                         for(int i = 0; i < nfacepts; ++i)
@@ -492,8 +492,8 @@ namespace Nektar
                             }
                             Array<OneD, NekDouble> I0 = m_interpEndPtI0[dir][i];
                             Blas::Dgemv('T',  fnp0, tnp1*m_interpNfaces[dir][i],
-                                        1.0, tmp.get()+cnt1, tnp0,I0.get(),1,  0.0, 
-                                        tmp.get()+cnt1+ tnp0-1, tnp0);     
+                                        1.0, tmp.get(), tnp0,I0.get(),1,  0.0, 
+                                        tmp.get()+cnt+ tnp0-1, tnp0);     
                         }
                         break;
                     case eInterpDir1:
@@ -573,14 +573,13 @@ namespace Nektar
 #if 0
                             for(int j = 0; j < tnp1*m_interpNfaces[dir][i]; ++j)
                             {
-                                tmp[cnt1+(j+1)*tnp0-1] = Blas::Ddot(fnp0,tmp.get()+
-                                                                    cnt1 + j*tnp0,1,
+                                tmp[cnt1+(j+1)*tnp0-1] = Blas::Ddot(fnp0,tmp.get()+j*tnp0,1,
                                                                     I0.get(),1);
                             }
 #else
                             Blas::Dgemv('T',  fnp0, tnp1*m_interpNfaces[dir][i],
-                                        1.0, tmp.get()+cnt1, tnp0,I0.get(),1,  0.0, 
-                                        tmp.get()+cnt1+ tnp0-1, tnp0);     
+                                        1.0, tmp.get(), tnp0,I0.get(),1,  0.0, 
+                                        tmp.get()+cnt+ tnp0-1, tnp0);     
 #endif
                         }
                         break;

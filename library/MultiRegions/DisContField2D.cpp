@@ -384,11 +384,11 @@ namespace Nektar
             Array<OneD, Array<OneD, LocalRegions::ExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
-            // Scatter trace segments to 2D elements. For each element, we find
-            // the trace segment associated to each edge. The element then
-            // retains a pointer to the trace space segments, to ensure
-            // uniqueness of normals when retrieving from two adjoining elements
-            // which do not lie in a plane.
+            // Scatter trace segments to 2D elements. For each element,
+            // we find the trace segment associated to each edge. The
+            // element then retains a pointer to the trace space segments,
+            // to ensure uniqueness of normals when retrieving from two
+            //adjoining elements which do not lie in a plane.
             for (int i = 0; i < m_exp->size(); ++i)
             {
                 for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
@@ -414,8 +414,7 @@ namespace Nektar
                     
                 int offset      = m_trace->GetPhys_Offset(i);
                 int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
-                PeriodicMap::iterator pIt = m_periodicEdges.find(
-                    traceGeomId);
+                PeriodicMap::iterator pIt = m_periodicEdges.find(traceGeomId);
 
                 if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
                 {
@@ -435,12 +434,12 @@ namespace Nektar
             int cnt, n, e;
                 
             // Identify boundary edges
-            for(cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (cnt = 0, n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 if (m_bndConditions[n]->GetBoundaryConditionType() != 
                     SpatialDomains::ePeriodic)
                 {
-                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                    for (e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
                         m_boundaryEdges.insert(
                             m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));

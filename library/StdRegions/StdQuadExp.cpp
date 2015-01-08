@@ -1631,24 +1631,6 @@ namespace Nektar
             }
         }
 
-        void StdQuadExp::v_PhysInterpToSimplexEquiSpaced(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD, NekDouble>       &outarray)
-        {
-            StdMatrixKey Ikey(ePhysInterpToEquiSpaced, DetShapeType(), *this);
-
-            DNekMatSharedPtr  intmat = GetStdMatrix(Ikey);
-
-            int np1 = m_base[0]->GetNumPoints();
-            int np2 = m_base[1]->GetNumPoints();
-            int np = max(np1,np2);
-
-            NekVector<NekDouble> in (np1*np2,inarray,eWrapper);
-            NekVector<NekDouble> out(LibUtilities::StdQuadData::
-                            getNumberOfCoefficients(np,np),outarray,eWrapper);
-            out = (*intmat) * in;
-        }
-
         void StdQuadExp::v_GetSimplexEquiSpacedConnectivity(
             Array<OneD, int> &conn,
             bool              standard)
@@ -1656,8 +1638,6 @@ namespace Nektar
             int np1 = m_base[0]->GetNumPoints();
             int np2 = m_base[1]->GetNumPoints();
             int np = max(np1,np2);
-
-            int neq = LibUtilities::StdQuadData::getNumberOfCoefficients(np,np);
 
             conn = Array<OneD, int>(6*(np-1)*(np-1));
 

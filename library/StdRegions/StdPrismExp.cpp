@@ -1986,27 +1986,5 @@ namespace Nektar
             OrthoPrismExp->BwdTrans(coeff_tmp1, phys_tmp);
             StdPrismExp::FwdTrans(phys_tmp, outarray);
         }
-
-        void StdPrismExp::v_PhysInterpToSimplexEquiSpaced(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD, NekDouble>       &outarray)
-        {
-            StdMatrixKey Ikey(ePhysInterpToEquiSpaced, DetShapeType(), *this);
-
-            DNekMatSharedPtr  intmat = GetStdMatrix(Ikey);
-
-            int np0 = m_base[0]->GetNumPoints();
-            int np1 = m_base[1]->GetNumPoints();
-            int np2 = m_base[2]->GetNumPoints();
-            int np = max(np0,max(np1,np2));
-
-            NekVector<NekDouble> in (np0*np1*np2,inarray,eWrapper);
-            NekVector<NekDouble> out(
-                LibUtilities::StdPrismData::getNumberOfCoefficients(np,np,np),
-                outarray, eWrapper);
-            out = (*intmat) * in;
-        }
-
-
     }//end namespace
 }//end namespace

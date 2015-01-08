@@ -1655,12 +1655,27 @@ namespace Nektar
             return NullDNekMatSharedPtr;
         }
 
-
         void StdExpansion::v_PhysInterpToSimplexEquiSpaced(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD, NekDouble>       &outarray)
         {
-            ASSERTL0(false, "Not implemented.");
+            LibUtilities::ShapeType shape = DetShapeType();
+            StdMatrixKey Ikey(ePhysInterpToEquiSpaced, shape, *this);
+            DNekMatSharedPtr  intmat = GetStdMatrix(Ikey);
+
+            int nqtot = 1; 
+            int nqbase;
+            int np = 0; 
+            for(int i = 0; i < m_base.num_elements(); ++i)
+            {
+                nqbase = m_base[i]->GetNumPoints();
+                nqtot *= nqbase;
+                np     = max(np,nqbase);
+            }
+            
+            NekVector<NekDouble> in (nqtot,inarray,eWrapper);
+            NekVector<NekDouble> out(LibUtilities::GetNumberOfCoefficients(shape,np,np,np),outarray,eWrapper);
+            out = (*intmat) * in;
         }
 
         void StdExpansion::v_GetSimplexEquiSpacedConnectivity(

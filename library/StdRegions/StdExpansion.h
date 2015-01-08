@@ -1285,13 +1285,11 @@ namespace Nektar
              * the physical space points provided at input into an
              * array of equispaced points.
              *
-             *  This function is a wrapper around the virtual function
-             *  \a v_PhysInterpToSimplexEquiSpaced()
-             *
              *  This is primarily used for output purposes to get a
              *  better distribution of points more suitable for most
              *  postprocessing
              */
+            STD_REGIONS_EXPORT void PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT void PhysInterpToSimplexEquiSpaced(
                 const Array<OneD, const NekDouble> &inarray,
@@ -1300,6 +1298,14 @@ namespace Nektar
                 v_PhysInterpToSimplexEquiSpaced(inarray, outarray);
             }
 
+            /** \brief This function provides the connectivity of
+             *   local simplices (triangles or tets) to connect the
+             *   equispaced data points provided by
+             *   PhysInterpToSimplexEquiSpaced
+             *
+             * This is a virtual call to the function 
+             * \a v_GetSimplexEquiSpaceConnectivity
+             */ 
             STD_REGIONS_EXPORT void GetSimplexEquiSpacedConnectivity(
                 Array<OneD, int> &conn,
                 bool              standard = true)
@@ -1748,15 +1754,9 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(const DNekScalMatSharedPtr & m_transformationmatrix);
 
-
-            STD_REGIONS_EXPORT virtual void v_PhysInterpToSimplexEquiSpaced(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD, NekDouble>       &outarray);
-
             STD_REGIONS_EXPORT virtual void v_GetSimplexEquiSpacedConnectivity(
                 Array<OneD, int> &conn,
                 bool              standard = true);
-
         };
 
 

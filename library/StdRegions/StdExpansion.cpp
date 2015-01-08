@@ -1655,7 +1655,7 @@ namespace Nektar
             return NullDNekMatSharedPtr;
         }
 
-        void StdExpansion::v_PhysInterpToSimplexEquiSpaced(
+        void StdExpansion::PhysInterpToSimplexEquiSpaced(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD, NekDouble>       &outarray)
         {

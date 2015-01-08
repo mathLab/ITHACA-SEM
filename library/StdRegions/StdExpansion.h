@@ -1291,14 +1291,9 @@ namespace Nektar
              * better distribution of points more suitable for most
              * postprocessing
              */
-            STD_REGIONS_EXPORT void PhysInterpToSimplexEquiSpaced(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
-
             STD_REGIONS_EXPORT void PhysInterpToSimplexEquiSpaced(
                 const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD, NekDouble>       &outarray)
-            {
-                v_PhysInterpToSimplexEquiSpaced(inarray, outarray);
-            }
+                Array<OneD, NekDouble>       &outarray);
 
             /** \brief This function provides the connectivity of
              *   local simplices (triangles or tets) to connect the

@@ -86,7 +86,7 @@ void ProcessIsoContourUtils::Process(po::variables_map &vm)
     ASSERTL0(m_f->m_fieldPts != NullFieldPts,
              "Need to specify an input .dat file with isocontourutil module");
 
-    LoadFeldPtsToIso(iso);
+    LoadFieldPtsToIso(iso);
 
     bool smoothing      = m_config["smooth"].m_beenSet;
     bool globalcondense = m_config["globalcondense"].m_beenSet;
@@ -116,7 +116,7 @@ void ProcessIsoContourUtils::Process(po::variables_map &vm)
     }
 }
 
-void ProcessIsoContourUtils::LoadFeldPtsToIso(vector<IsoSharedPtr> &iso)
+void ProcessIsoContourUtils::LoadFieldPtsToIso(vector<IsoSharedPtr> &iso)
 {
     int nfields = m_f->m_fieldPts->m_pts.num_elements();
 

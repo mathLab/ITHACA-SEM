@@ -51,7 +51,7 @@ ModuleKey ProcessEquiSpacedOutput::className =
     GetModuleFactory().RegisterCreatorFunction(
            ModuleKey(eProcessModule, "equispacedoutput"),
            ProcessEquiSpacedOutput::create,
-           "write data as equi-spaced output");
+           "Write data as equi-spaced output using simplices to represent the data for connecting points");
 
 
 ProcessEquiSpacedOutput::ProcessEquiSpacedOutput(FieldSharedPtr f)

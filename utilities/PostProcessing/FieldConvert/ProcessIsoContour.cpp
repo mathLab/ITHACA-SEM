@@ -51,7 +51,7 @@ ModuleKey ProcessIsoContour::className =
     GetModuleFactory().RegisterCreatorFunction(
                         ModuleKey(eProcessModule, "isocontour"),
                         ProcessIsoContour::create,
-                        "Extract an isocontour of fieldid variable and at value fieldvalue");
+                        "Extract an isocontour of fieldid variable and at value fieldvalue, Optionally fieldstr can be specified for a string defiition or smooth for smoothing");
 
 ProcessIsoContour::ProcessIsoContour(FieldSharedPtr f) :
     ProcessEquiSpacedOutput(f)
@@ -732,7 +732,6 @@ void Iso::globalcondense(vector<IsoSharedPtr> &iso)
         for(i = 0; i < niso; ++i)
         {
             for(j = i+1; j < niso; ++j)
-                //for(j = 0; j < niso; ++j)
             {
                 NekDouble diff=sqrt((sph[i][0]-sph[j][0])*(sph[i][0]-sph[j][0])+
                           (sph[i][1]-sph[j][1])*(sph[i][1]-sph[j][1])+

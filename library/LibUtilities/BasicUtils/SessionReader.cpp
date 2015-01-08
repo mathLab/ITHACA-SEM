@@ -1220,6 +1220,48 @@ namespace Nektar
         /**
          *
          */
+        std::string SessionReader::GetFunctionFilenameVariable(
+            const std::string &pName,
+            const std::string &pVariable,
+            const int pDomain) const
+        {
+            FunctionMap::const_iterator it1;
+            FunctionVariableMap::const_iterator it2, it3;
+            std::string vName = boost::to_upper_copy(pName);
+
+            it1 = m_functions.find(vName);
+            ASSERTL0 (it1 != m_functions.end(),
+                      std::string("Function '") + pName
+                      + std::string("' not found."));
+
+            // Check for specific and wildcard definitions
+            pair<std::string,int> key(pVariable,pDomain);
+            pair<std::string,int> defkey("*",pDomain);
+            bool specific = (it2 = it1->second.find(key)) !=
+                            it1->second.end();
+            bool wildcard = (it3 = it1->second.find(defkey)) !=
+                            it1->second.end();
+
+            // Check function is defined somewhere
+            ASSERTL0(specific || wildcard,
+                     "No such variable " + pVariable
+                     + " in domain " + boost::lexical_cast<string>(pDomain)
+                     + " defined for function " + pName
+                     + " in session file.");
+
+            // If not specific, must be wildcard
+            if (!specific)
+            {
+                it2 = it3;
+            }
+
+            return it2->second.m_fileVariable;
+        }
+
+
+        /**
+         *
+         */
         AnalyticExpressionEvaluator& SessionReader::GetExpressionEvaluator()
         {
             return m_exprEvaluator;
@@ -2368,6 +2410,7 @@ namespace Nektar
                     }
 
                     // Parse list of variables
+                    std::vector<std::string> varSplit;
                     std::vector<unsigned int> domainList;
                     ParseUtils::GenerateSeqVector(domainStr.c_str(), domainList);
 
@@ -2418,8 +2461,32 @@ namespace Nektar
                                  "attribute of function '" + functionStr
                                  + "'.");
 
+                        std::vector<std::string> fSplit;
+                        boost::split(fSplit, filenameStr, boost::is_any_of(":"));
+
+                        ASSERTL0(fSplit.size() == 1 || fSplit.size() == 2,
+                                 "Incorrect filename specification in function "
+                                 + functionStr + "'. "
+                                 "Specify variables inside file as: "
+                                 "filename:var1,var2");
+
                         // set the filename
-                        funcDef.m_filename = filenameStr;
+                        funcDef.m_filename = fSplit[0];
+
+                        if (fSplit.size() == 2)
+                        {
+                            ASSERTL0(variableList[0] != "*",
+                                     "Filename variable mapping not valid "
+                                     "when using * as a variable inside "
+                                     "function '" + functionStr + "'.");
+
+                            boost::split(
+                                varSplit, fSplit[1], boost::is_any_of(","));
+                            ASSERTL0(varSplit.size() == variableList.size(),
+                                     "Filename variables should contain the "
+                                     "same number of variables defined in "
+                                     "VAR in function " + functionStr + "'.");
+                        }
                     }
 
                     // Nothing else supported so throw an error
@@ -2450,8 +2517,17 @@ namespace Nektar
                                      + boost::lexical_cast<std::string>(domainList[j]) 
                                      + "' in function '" + functionStr + "'. "
                                      "Expression has already been defined.");
-                            
-                            functionVarMap[key] = funcDef;
+
+                            if (varSplit.size() > 0)
+                            {
+                                FunctionVariableDefinition funcDef2 = funcDef;
+                                funcDef2.m_fileVariable = varSplit[i];
+                                functionVarMap[key] = funcDef2;
+                            }
+                            else
+                            {
+                                functionVarMap[key] = funcDef;
+                            }
                         }
                     }
                     

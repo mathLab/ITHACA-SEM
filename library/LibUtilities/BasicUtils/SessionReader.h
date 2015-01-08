@@ -108,6 +108,7 @@ namespace Nektar
             enum FunctionType m_type;
             std::string       m_filename;
             EquationSharedPtr m_expression;
+            std::string       m_fileVariable;
         };
         
         typedef std::map<std::pair<std::string,int>, FunctionVariableDefinition>  
@@ -365,6 +366,12 @@ namespace Nektar
             LIB_UTILITIES_EXPORT std::string GetFunctionFilename(
                 const std::string  &name, 
                 const unsigned int &var,
+                const int pDomain = 0) const;
+            /// Returns the filename variable to be loaded for a given variable
+            /// index.
+            LIB_UTILITIES_EXPORT std::string GetFunctionFilenameVariable(
+                const std::string  &name,
+                const std::string &variable,
                 const int pDomain = 0) const;
 
             /// Returns the instance of AnalyticExpressionEvaluator specific to

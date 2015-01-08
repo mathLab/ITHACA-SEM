@@ -55,8 +55,8 @@ namespace Nektar
         : Extrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-        m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.5);
-        m_session->LoadParameter("MinSubSteps", minsubsteps,0);
+        m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.6);
+        m_session->LoadParameter("MinSubSteps", m_minsubsteps,1);
     }
 
     SubSteppingExtrapolate::~SubSteppingExtrapolate()
@@ -92,6 +92,7 @@ namespace Nektar
             case LibUtilities::eBDFImplicitOrder2:
             {
                 m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
+                //m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("AdamsBashforthOrder2");
                     
                 int nvel = m_velocity.num_elements();
                 
@@ -313,7 +314,7 @@ namespace Nektar
         dt = GetSubstepTimeStep();
 
         nsubsteps = (m_timestep > dt)? ((int)(m_timestep/dt)+1):1; 
-        nsubsteps = max(minsubsteps, nsubsteps);
+        nsubsteps = max(m_minsubsteps, nsubsteps);
 
         dt = m_timestep/nsubsteps;
         

@@ -86,17 +86,15 @@ namespace Nektar
 
         }
 
-        void MeshPartition::PartitionMesh(bool shared)
+        void MeshPartition::PartitionMesh(int nParts, bool shared)
         {
-            ASSERTL0(m_comm->GetRowComm()->GetSize() > 1,
-                     "Partitioning only necessary in parallel case.");
-            ASSERTL0(m_meshElements.size() >= m_comm->GetRowComm()->GetSize(),
+            ASSERTL0(m_meshElements.size() >= nParts,
                      "Too few elements for this many processes.");
             m_shared = shared;
 
             if (m_weightingRequired)  WeightElements();
             CreateGraph(m_mesh);
-            PartitionGraph(m_mesh, m_localPartition);
+            PartitionGraph(m_mesh, nParts, m_localPartition);
         }
 
         void MeshPartition::WriteLocalPartition(LibUtilities::SessionReaderSharedPtr& pSession)
@@ -131,7 +129,7 @@ namespace Nektar
 
         void MeshPartition::WriteAllPartitions(LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            for (int i = 0; i < m_comm->GetRowComm()->GetSize(); ++i)
+            for (int i = 0; i < m_localPartition.size(); ++i)
             {
                 TiXmlDocument vNew;
                 TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
@@ -482,11 +480,12 @@ namespace Nektar
         void MeshPartition::PrintPartInfo(std::ostream &out)
         {
             int nElmt = boost::num_vertices(m_mesh);
-            int nPart = m_comm->GetRowComm()->GetSize();
+            int nPart = m_localPartition.size();
 
             out << "# Partition information:" << std::endl;
             out << "# No. elements  : " << nElmt << std::endl;
             out << "# No. partitions: " << nPart << std::endl;
+            out << "# ID  nElmt  nLocDof  nBndDof" << std::endl;
 
             BoostVertexIterator vertit, vertit_end;
             std::vector<int> partElmtCount(nPart, 0);
@@ -775,6 +774,7 @@ namespace Nektar
         }
 
         void MeshPartition::PartitionGraph(BoostSubGraph& pGraph,
+                                           int nParts,
                                            std::vector<BoostSubGraph>& pLocalPartition)
         {
             int i;
@@ -819,7 +819,6 @@ namespace Nektar
                 }
 
                 // Call Metis and partition graph
-                int npart = m_comm->GetRowComm()->GetSize();
                 int vol = 0;
 
                 try
@@ -831,10 +830,10 @@ namespace Nektar
                     {
                         // Attempt partitioning using METIS.
                         int ncon = 1;
-                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
+                        PartitionGraphImpl(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, nParts, vol, part);
 
                         // Check METIS produced a valid partition and fix if not.
-                        CheckPartitions(part);
+                        CheckPartitions(nParts, part);
                         if (!m_shared)
                         {
                             // distribute among columns
@@ -872,7 +871,7 @@ namespace Nektar
             }
 
             // Create boost subgraph for this process's partitions
-            int nCols = m_comm->GetRowComm()->GetSize();
+            int nCols = nParts;
             pLocalPartition.resize(nCols);
             for (i = 0; i < nCols; ++i)
             {
@@ -892,7 +891,7 @@ namespace Nektar
         }
 
 
-        void MeshPartition::CheckPartitions(Array<OneD, int> &pPart)
+        void MeshPartition::CheckPartitions(int nParts, Array<OneD, int> &pPart)
         {
             unsigned int       i     = 0;
             unsigned int       cnt   = 0;
@@ -900,7 +899,7 @@ namespace Nektar
             bool               valid = true;
 
             // Check that every process has at least one element assigned
-            for (i = 0; i < npart; ++i)
+            for (i = 0; i < nParts; ++i)
             {
                 cnt = std::count(pPart.begin(), pPart.end(), i);
                 if (cnt == 0)
@@ -918,7 +917,7 @@ namespace Nektar
             {
                 for (i = 0; i < pPart.num_elements(); ++i)
                 {
-                    pPart[i] = i % npart;
+                    pPart[i] = i % nParts;
                 }
             }
         }

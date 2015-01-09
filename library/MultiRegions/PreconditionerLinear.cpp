@@ -210,8 +210,10 @@ namespace Nektar
                     }
                     
                     // Do solve without enforcing any boundary conditions. 
-                    m_vertLinsys->SolveLinearSystem(m_vertLocToGloMap->GetNumLocalCoeffs(),
-                                                    In,Out,m_vertLocToGloMap);
+                    m_vertLinsys->SolveLinearSystem(
+                        m_vertLocToGloMap->GetNumGlobalCoeffs(),
+                        In,Out,m_vertLocToGloMap,
+                        m_vertLocToGloMap->GetNumGlobalDirBndCoeffs());
                     
                     
                     if(pNonVertOutput != NullNekDouble1DArray)

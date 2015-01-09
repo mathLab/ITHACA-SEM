@@ -42,7 +42,6 @@
 #endif
 
 namespace Nektar
-
 {
     namespace StdRegions
     {
@@ -340,6 +339,175 @@ namespace Nektar
                 Vmath::Neg(m_faceNormals[face][i].num_elements(), 
                            m_faceNormals[face][i], 1);
             }
+        }
+
+        LibUtilities::BasisKey EvaluateQuadFaceBasisKey(
+            const int                     facedir,
+            const LibUtilities::BasisType faceDirBasisType,
+            const int                     numpoints,
+            const int                     nummodes)
+        {
+
+            switch(faceDirBasisType)
+            {
+                case LibUtilities::eModified_A:
+                {
+                    const LibUtilities::PointsKey pkey(
+                        numpoints, LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(
+                        LibUtilities::eModified_A, nummodes, pkey);
+                }
+                case LibUtilities::eModified_B:
+                case LibUtilities::eModified_C:
+                {
+                    const LibUtilities::PointsKey pkey(
+                        numpoints+1, LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(
+                        LibUtilities::eModified_A, nummodes, pkey);
+                }
+                case LibUtilities::eGLL_Lagrange:
+                {
+                    const LibUtilities::PointsKey pkey(
+                        numpoints, LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(
+                        LibUtilities::eGLL_Lagrange, nummodes, pkey);
+                }
+                case LibUtilities::eOrtho_A:
+                {
+                    const LibUtilities::PointsKey pkey(
+                        numpoints, LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(
+                        LibUtilities::eOrtho_A, nummodes, pkey);
+                }
+                case LibUtilities::eOrtho_B:
+                case LibUtilities::eOrtho_C:
+                {
+                    const LibUtilities::PointsKey pkey(
+                        numpoints+1, LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(
+                        LibUtilities::eOrtho_A, nummodes, pkey);
+                }
+                default:
+                {
+                    ASSERTL0(false, "expansion type unknown");
+                    break;
+                }
+            }
+
+            // Keep things happy by returning a value.
+            return LibUtilities::NullBasisKey;
+        }
+
+        LibUtilities::BasisKey EvaluateTriFaceBasisKey(
+            const int                     facedir,
+            const LibUtilities::BasisType faceDirBasisType,
+            const int                     numpoints,
+            const int                     nummodes)
+        {
+            switch(faceDirBasisType)
+            {
+                case LibUtilities::eModified_A:
+                {
+                    const LibUtilities::PointsKey pkey(
+                        numpoints, LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(
+                        LibUtilities::eModified_A, nummodes, pkey);
+                }
+                case LibUtilities::eModified_B:
+                case LibUtilities::eModified_C:
+                {
+                    switch (facedir)
+                    {
+                        case 0:
+                        {
+                            const LibUtilities::PointsKey pkey(
+                                numpoints+1,
+                                LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(
+                                LibUtilities::eModified_A, nummodes, pkey);
+                        }
+                        case 1:
+                        {
+                            const LibUtilities::PointsKey pkey(
+                                numpoints+1,
+                                LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(
+                                LibUtilities::eModified_B, nummodes, pkey);
+                        }
+                        default:
+                        {
+                            ASSERTL0(false,"invalid value to flag");
+                            break;
+                        }
+                    }
+                }
+
+                case LibUtilities::eGLL_Lagrange:
+                {
+                    switch (facedir)
+                    {
+                        case 0:
+                        {
+                            const LibUtilities::PointsKey pkey(
+                                numpoints,
+                                LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(
+                                LibUtilities::eOrtho_A, nummodes, pkey);
+                        }
+                        case 1:
+                        {
+                            const LibUtilities::PointsKey pkey(
+                                numpoints,
+                                LibUtilities::eGaussRadauMAlpha1Beta0);
+                            return LibUtilities::BasisKey(
+                                LibUtilities::eOrtho_B, nummodes, pkey);
+                        }
+                        default:
+                        {
+                            ASSERTL0(false,"invalid value to flag");
+                            break;
+                        }
+                    }
+                }
+
+                case LibUtilities::eOrtho_A:
+                case LibUtilities::eOrtho_B:
+                case LibUtilities::eOrtho_C:
+                {
+                    switch (facedir)
+                    {
+                        case 0:
+                        {
+                            const LibUtilities::PointsKey pkey(
+                                numpoints,
+                                LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(
+                                LibUtilities::eOrtho_A, nummodes, pkey);
+                        }
+                        case 1:
+                        {
+                            const LibUtilities::PointsKey pkey(
+                                numpoints,
+                                LibUtilities::eGaussRadauMAlpha1Beta0);
+                            return LibUtilities::BasisKey(
+                                LibUtilities::eOrtho_B, nummodes, pkey);
+                        }
+                        default:
+                        {
+                            ASSERTL0(false,"invalid value to flag");
+                            break;
+                        }
+                    }
+                }
+                default:
+                {
+                    ASSERTL0(false,"expansion type unknown");
+                    break;
+                }
+            }
+
+            // Keep things happy by returning a value.
+            return LibUtilities::NullBasisKey; 
         }
     }//end namespace
 }//end namespace

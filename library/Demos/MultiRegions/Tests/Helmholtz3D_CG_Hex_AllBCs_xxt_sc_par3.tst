@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D CG, hexes, mixed BCs, iterative ML</description>
     <executable>Helmholtz3D</executable>
-    <parameters>-I GlobalSysSoln=XxtStaticCond Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
+    <parameters>--use-metis -I GlobalSysSoln=XxtStaticCond Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Helmholtz3D_Hex_AllBCs_P6.xml</file>

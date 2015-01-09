@@ -112,6 +112,13 @@ ADD_NEKTAR_TEST(LinearAdvDiffReact2D_P7_Modes)
 ADD_NEKTAR_TEST(Deriv3D_Homo1D)
 ADD_NEKTAR_TEST(Deriv3D_Homo2D)
 
+# PETSc solver tests
+IF (NEKTAR_USE_PETSC)
+    ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_petsc_full)
+    ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_petsc_ml)
+    ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_petsc_sc)
+ENDIF (NEKTAR_USE_PETSC)
+
 IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(Helmholtz1D_CG_P8_periodic_par3)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_xxt_full)
@@ -122,13 +129,23 @@ IF (NEKTAR_USE_MPI)
     ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml_par3)
     ADD_NEKTAR_TEST_LENGTHY(Helmholtz3D_CG_Hex_AllBCs_xxt_sc_par3)
     ADD_NEKTAR_TEST(Helmholtz2D_CG_P14_xxt_per)
-#
-# TODO: This test fails due to a bug with Dirichlet bnd conditions.
-#       To be resolved in a separate branch.
-#
-#    ADD_NEKTAR_TEST(Helmholtz3D_CG_Tet_iter_global_par3)
+
+    # TODO: This test fails due to a bug with Dirichlet bnd conditions.
+    #       To be resolved in a separate branch.
+    # ADD_NEKTAR_TEST(Helmholtz3D_CG_Tet_iter_global_par3)
 
     ADD_NEKTAR_TEST_LENGTHY(Helmholtz2D_HDG_P7_Modes_AllBCs_par2)
     ADD_NEKTAR_TEST(Helmholtz3D_HDG_Prism_par2)
     ADD_NEKTAR_TEST(Helmholtz3D_HDG_Hex_AllBCs_par2)
+
+    IF (NEKTAR_USE_SCOTCH)
+        ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml_scotch_par3)
+        ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml_scotch_par3)
+        ADD_NEKTAR_TEST(Helmholtz3D_HDG_Hex_AllBCs_scotch_par2)
+    ENDIF (NEKTAR_USE_SCOTCH)
+
+    IF (NEKTAR_USE_PETSC)
+        ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_petsc_sc_par3)
+        ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_petsc_sc_par3)
+    ENDIF (NEKTAR_USE_PETSC)
 ENDIF (NEKTAR_USE_MPI)

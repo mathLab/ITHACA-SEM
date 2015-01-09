@@ -86,7 +86,8 @@ namespace Nektar
         if (s.size() == 1 && (s.count(LibUtilities::eTriangle) == 1 || 
                               s.count(LibUtilities::eTetrahedron) == 1))
         {
-            m_useNodal = true;
+            // This is disabled for now as it causes problems at high order.
+            // m_useNodal = true;
         }
 
         // ---------------------------

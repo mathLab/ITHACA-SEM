@@ -32,7 +32,7 @@ IF (NEKTAR_USE_PETSC)
             TMP_DIR ${TPBUILD}/petsc-3.5.2-tmp
             INSTALL_DIR ${TPDIST}
             BINARY_DIR ${TPBUILD}/petsc-3.5.2
-            URL http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.5.2.tar.gz
+            URL http://www.nektar.info/thirdparty/petsc-lite-3.5.2.tar.gz
             URL_MD5 "d707336a98d7cb31d843804d020edc94"
             CONFIGURE_COMMAND ./configure
                 --with-cc=${PETSC_C_COMPILER}

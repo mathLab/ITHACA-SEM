@@ -278,7 +278,9 @@ namespace Nektar
             
             // Wall Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWallViscous)
+                SpatialDomains::eWallViscous ||
+                m_fields[0]->GetBndConditions()[n]->
+                GetUserDefined() == SpatialDomains::eWallAdiabatic )
             {
                 ASSERTL0(false, "WallViscous is a wrong bc for the "
                 "Euler equations");

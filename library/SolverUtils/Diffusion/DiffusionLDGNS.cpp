@@ -326,12 +326,16 @@ namespace Nektar
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
 
                         // Reinforcing bcs for velocity in case of Wall bcs
-                        if (fields[i]->GetBndConditions()[j]->
+                        if ((fields[i]->GetBndConditions()[j]->
                             GetUserDefined() == 
-                            SpatialDomains::eWallViscous)
+                            SpatialDomains::eWallViscous) ||
+                            (fields[i]->GetBndConditions()[j]->
+                            GetUserDefined() ==
+                            SpatialDomains::eWallAdiabatic))
                         {
                             Vmath::Zero(nBndEdgePts, 
                                         &scalarVariables[i][id2], 1);
+                            
                         }
 
                         // Imposing velocity bcs if not Wall
@@ -444,22 +448,29 @@ namespace Nektar
 
                     // For Dirichlet boundary condition: uflux = u_bcs
                     if (fields[nScalars]->GetBndConditions()[j]->
-                        GetBoundaryConditionType() == 
-                        SpatialDomains::eDirichlet)
+                        GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet &&
+                        !((fields[nScalars]->GetBndConditions()[j])->
+                          GetUserDefined() == SpatialDomains::eWallAdiabatic))
                     {
                         Vmath::Vcopy(nBndEdgePts, 
                                      &scalarVariables[nScalars-1][id2], 1, 
                                      &penaltyfluxO1[nScalars-1][id2], 1);
+                        
                     }
                     
                     // For Neumann boundary condition: uflux = u_+
-                    else if ((fields[nScalars]->GetBndConditions()[j])->
-                             GetBoundaryConditionType() == 
-                             SpatialDomains::eNeumann)
+                    else if (((fields[nScalars]->GetBndConditions()[j])->
+                              GetBoundaryConditionType() ==
+                              SpatialDomains::eNeumann) ||
+                             ((fields[nScalars]->GetBndConditions()[j])->
+                              GetUserDefined() ==
+                              SpatialDomains::eWallAdiabatic))
                     {
                         Vmath::Vcopy(nBndEdgePts, 
                                      &uplus[nScalars-1][id2], 1, 
                                      &penaltyfluxO1[nScalars-1][id2], 1);
+                        
                     }
                 }
             }
@@ -572,7 +583,9 @@ namespace Nektar
                     // In case of Dirichlet bcs: 
                     // uflux = gD
                     if(fields[var]->GetBndConditions()[i]->
-                       GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                       GetBoundaryConditionType() == SpatialDomains::eDirichlet
+                       && !(fields[var]->GetBndConditions()[i]->
+                            GetUserDefined() == SpatialDomains::eWallAdiabatic))
                     {
                         Vmath::Vmul(nBndEdgePts, 
                                     &m_traceNormals[dir][id2], 1, 
@@ -595,6 +608,23 @@ namespace Nektar
                                       UpdatePhys())[id1], 1, 
                                     &penaltyflux[id2], 1);
                          */
+                    }
+                    else if(fields[var]->GetBndConditions()[i]->
+                            GetUserDefined() == SpatialDomains::eWallAdiabatic)
+                    {
+                        if ((var == m_spaceDim + 1))
+                        {
+                            Vmath::Zero(nBndEdgePts, &penaltyflux[id2], 1);
+                        }
+                        else
+                        {
+                            
+                            Vmath::Vmul(nBndEdgePts,
+                                        &m_traceNormals[dir][id2], 1,
+                                        &qtemp[id2], 1,
+                                        &penaltyflux[id2], 1);
+                            
+                        }
                     }
                 }
             }

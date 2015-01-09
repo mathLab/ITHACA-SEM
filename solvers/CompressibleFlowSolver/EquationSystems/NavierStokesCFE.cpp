@@ -257,8 +257,9 @@ namespace Nektar
             }
             
             // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eWallViscous)
+            if ((m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                 SpatialDomains::eWallViscous) || m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::eWallAdiabatic)
             {
                 WallViscousBC(n, cnt, inarray);
             }

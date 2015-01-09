@@ -244,6 +244,8 @@ int main(int argc, char *argv[])
                 if (pFields[0]->GetBndConditions()[b]->
                     GetUserDefined() == SpatialDomains::eWallViscous ||
                     pFields[0]->GetBndConditions()[b]->
+                    GetUserDefined() == SpatialDomains::eWallAdiabatic ||
+                    pFields[0]->GetBndConditions()[b]->
                     GetUserDefined() == SpatialDomains::eWall)
                 {
                     nSurfacePts += nBndEdgePts;
@@ -930,6 +932,8 @@ int main(int argc, char *argv[])
                 if (pFields[0]->GetBndConditions()[b]->
                     GetUserDefined() == SpatialDomains::eWallViscous ||
                     pFields[0]->GetBndConditions()[b]->
+                    GetUserDefined() == SpatialDomains::eWallAdiabatic ||
+                    pFields[0]->GetBndConditions()[b]->
                     GetUserDefined() == SpatialDomains::eWall)
                 {
 
@@ -973,6 +977,8 @@ int main(int argc, char *argv[])
 
                     if (pFields[j]->GetBndConditions()[b]->
                         GetUserDefined() == SpatialDomains::eWallViscous ||
+                        pFields[0]->GetBndConditions()[b]->
+                        GetUserDefined() == SpatialDomains::eWallAdiabatic ||
                         pFields[j]->GetBndConditions()[b]->
                         GetUserDefined() == SpatialDomains::eWall)
                     {
@@ -1010,6 +1016,8 @@ int main(int argc, char *argv[])
 
                     if (pFields[0]->GetBndConditions()[b]->
                         GetUserDefined() == SpatialDomains::eWallViscous ||
+                        pFields[0]->GetBndConditions()[b]->
+                        GetUserDefined() == SpatialDomains::eWallAdiabatic ||
                         pFields[0]->GetBndConditions()[b]->
                         GetUserDefined() == SpatialDomains::eWall)
                     {

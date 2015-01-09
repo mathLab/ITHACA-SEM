@@ -68,6 +68,7 @@ namespace Nektar
             eWall_Forces,
             eWall,
             eWallViscous,
+            eWallAdiabatic,
             eArtificialViscosity,
             eSymmetry,
             eRinglebFlow,
@@ -96,6 +97,7 @@ namespace Nektar
             "Wall_Forces",
             "Wall",
             "WallViscous",
+            "WallAdiabatic",
             "ArtificialVisc",
             "Symmetry",
             "RinglebFlow",
@@ -129,6 +131,7 @@ namespace Nektar
                 known_type["MG"] = eMG;
                 known_type["Wall"] = eWall;
                 known_type["WallViscous"] = eWallViscous;
+                known_type["WallAdiabatic"] = eWallAdiabatic;
                 known_type["ArtificialVisc"] = eArtificialViscosity;
                 known_type["Q-inflow"] = eQinflow;
                 known_type["Terminal"] = eTerminal;

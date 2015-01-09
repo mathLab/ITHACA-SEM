@@ -425,7 +425,6 @@ namespace Nektar
             /// Communication object.
             CommSharedPtr                             m_comm;
             /// Filenames
-            std::string m_filename;
             std::vector<std::string>                  m_filenames;
             /// Session name of the loaded XML document (filename minus ext).
             std::string                               m_sessionName;

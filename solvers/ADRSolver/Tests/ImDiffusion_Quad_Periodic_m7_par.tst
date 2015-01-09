@@ -2,7 +2,7 @@
 <test>
     <description>2D unsteady CG implicit diffusion, P = 7</description>
     <executable>ADRSolver</executable>
-    <parameters>ImDiffusion_Quad_Periodic_m7.xml</parameters>
+    <parameters>--use-metis ImDiffusion_Quad_Periodic_m7.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">ImDiffusion_Quad_Periodic_m7.xml</file>

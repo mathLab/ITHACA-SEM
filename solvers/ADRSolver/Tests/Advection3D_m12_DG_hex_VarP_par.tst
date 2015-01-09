@@ -2,7 +2,7 @@
 <test>
     <description>3D unsteady DG advection, hexahedra, order 1, P=12,periodic bcs</description>
     <executable>ADRSolver</executable>
-    <parameters>Advection3D_m12_DG_hex_VarP.xml</parameters>
+    <parameters>--use-metis Advection3D_m12_DG_hex_VarP.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Advection3D_m12_DG_hex_VarP.xml</file>

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: OutputVtk.h
+//  File: InputDat.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,59 +29,40 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Tecplot output module
+//  Description: Reader for tecplot dat file and fill fieldPts structure
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTTECPLOT
-#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTTECPLOT
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTDAT
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTDAT
 
-#include <tinyxml.h>
 #include "Module.h"
 
 namespace Nektar
 {
-    namespace Utilities
+namespace Utilities
+{
+
+/// Input module for Xml files.
+class InputDat : public InputModule
+{
+public:
+    InputDat(FieldSharedPtr f);
+    virtual ~InputDat();
+    virtual void Process(po::variables_map &vm);
+
+    /// Creates an instance of this class
+    static ModuleSharedPtr create(FieldSharedPtr f)
     {
-        enum TecOutType
-        {
-            eFullBlockZone,
-            eFullBlockZoneEquiSpaced,
-            eSeperateZones
-        };
-    
-        /// Converter from fld to dat.
-        class OutputTecplot : public OutputModule
-        {
-        public:
-            /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
-                return MemoryManager<OutputTecplot>::AllocateSharedPtr(f);
-            }
-            static ModuleKey m_className;
-            OutputTecplot(FieldSharedPtr f);
-            virtual ~OutputTecplot();
-            
-            /// Write fld to output file.
-            virtual void Process(po::variables_map &vm);
-        
-        private:
-            bool m_doError;
-            TecOutType m_outputType;
-
-            void WriteTecplotHeader(std::ofstream &outfile,
-                                    std::string var);
-
-            void WriteTecplotZone(std::ofstream &outfile);
-            
-            int GetNumTecplotBlocks(void);
-
-            void WriteTecplotField(const int field, 
-                                   std::ofstream &outfile);
-
-            void WriteTecplotConnectivity(std::ofstream &outfile);
-        };   
+        return MemoryManager<InputDat>::AllocateSharedPtr(f);
     }
-}
+    /// %ModuleKey for class.
+    static ModuleKey m_className[];
 
+private:
+    void ReadTecplotFEBlockZone(std::ifstream &datFile, string &line);
+};
+
+}
+}
 #endif

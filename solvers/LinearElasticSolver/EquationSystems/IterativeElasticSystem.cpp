@@ -241,6 +241,8 @@ namespace Nektar
         SpatialDomains::MeshGraphSharedPtr graph = m_fields[0]->GetGraph();
         SpatialDomains::CurveVector &curvedEdges = graph->GetCurvedEdges();
         SpatialDomains::CurveVector &curvedFaces = graph->GetCurvedFaces();
+        curvedEdges.clear();
+        curvedFaces.clear();
 
         int i, j, k, l, dim;
         set<int> updatedVerts, updatedEdges, updatedFaces;
@@ -248,77 +250,28 @@ namespace Nektar
         dim = graph->GetSpaceDimension();
         Array<OneD, Array<OneD, NekDouble> > phys(dim);
         Array<OneD, Array<OneD, NekDouble> > coord(dim);
-        Array<OneD, Array<OneD, NekDouble> > coordtmp(dim);
-
-        map<int, SpatialDomains::CurveSharedPtr> curveEdgeMap, curveFaceMap;
-        map<int, SpatialDomains::CurveSharedPtr>::iterator it;
-
-        for (i = 0; i < curvedEdges.size(); ++i)
-        {
-            curveEdgeMap[curvedEdges[i]->m_curveID] = curvedEdges[i];
-        }
-
-        for (i = 0; i < curvedFaces.size(); ++i)
-        {
-            curveFaceMap[curvedFaces[i]->m_curveID] = curvedFaces[i];
-        }
 
         for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
         {
             LocalRegions::ExpansionSharedPtr exp = m_fields[0]->GetExp(i);
-            LibUtilities::PointsKeyVector pKeyFrom = exp->GetPointsKeys();
-            LibUtilities::PointsKeyVector pKeyTo(dim);
-
             int offset = m_fields[0]->GetPhys_Offset(i);
             int nquad  = exp->GetTotPoints();
 
             for (j = 0; j < dim; ++j)
             {
-                pKeyTo[j] = LibUtilities::PointsKey(
-                    pKeyFrom[j].GetNumPoints(),
-                    LibUtilities::eGaussLobattoLegendre);
-            }
-
-            for (j = 0; j < dim; ++j)
-            {
-                Array<OneD, NekDouble> tmp(
+                phys[j] = Array<OneD, NekDouble>(
                     nquad, m_fields[j]->UpdatePhys() + offset);
-                phys[j] = Array<OneD, NekDouble>(nquad);
-
-                if (dim == 2)
-                {
-                    LibUtilities::Interp2D(
-                        pKeyFrom[0], pKeyFrom[1], tmp,
-                        pKeyTo  [0], pKeyTo  [1], phys[j]);
-                }
-                else if (dim == 3)
-                {
-                    LibUtilities::Interp3D(
-                        pKeyFrom[0], pKeyFrom[1], pKeyFrom[2], tmp,
-                        pKeyTo  [0], pKeyTo  [1], pKeyTo  [2], phys[j]);
-                }
-
-                coord   [j] = Array<OneD, NekDouble>(nquad);
-                coordtmp[j] = Array<OneD, NekDouble>(nquad);
+                coord[j] = Array<OneD, NekDouble>(nquad);
             }
 
-            exp->GetCoords(coordtmp[0], coordtmp[1]);
-
-            // In 2D loop over edges.
+            // In 2D loop over edges. 3D TODO
             if (dim == 2)
             {
+                exp->GetCoords(coord[0], coord[1]);
+
                 SpatialDomains::Geometry2DSharedPtr geom =
                     boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
                         exp->GetGeom());
-
-                // Do an interpolation to GLL points to avoid issues with
-                // triangles and curved edges which may use Gauss-Radau points.
-                LibUtilities::Interp2D(
-                    pKeyFrom[0], pKeyFrom[1], coordtmp[0],
-                    pKeyTo  [0], pKeyTo  [1], coord   [0]);
-                LibUtilities::Interp2D(
-                    pKeyFrom[0], pKeyFrom[1], coordtmp[1],
-                    pKeyTo  [0], pKeyTo  [1], coord   [1]);
 
                 for (j = 0; j < exp->GetNedges(); ++j)
                 {
@@ -335,12 +288,19 @@ namespace Nektar
                     Array<OneD, Array<OneD, NekDouble> > edgePhys(dim);
                     Array<OneD, Array<OneD, NekDouble> > edgeCoord(dim);
 
+                    const LibUtilities::BasisKey B(
+                        LibUtilities::eModified_A, nEdgePts,
+                        LibUtilities::PointsKey(
+                            nEdgePts, LibUtilities::eGaussLobattoLegendre));
+                    StdRegions::StdExpansion1DSharedPtr seg = MemoryManager<
+                        StdRegions::StdSegExp>::AllocateSharedPtr(B);
+
                     for (k = 0; k < dim; ++k)
                     {
                         edgePhys [k] = Array<OneD, NekDouble>(nEdgePts);
                         edgeCoord[k] = Array<OneD, NekDouble>(nEdgePts);
-                        exp->GetEdgePhysVals(j, phys [k], edgePhys [k]);
-                        exp->GetEdgePhysVals(j, coord[k], edgeCoord[k]);
+                        exp->GetEdgePhysVals(j, seg, phys [k], edgePhys [k]);
+                        exp->GetEdgePhysVals(j, seg, coord[k], edgeCoord[k]);
                     }
 
                     // Update verts
@@ -363,23 +323,11 @@ namespace Nektar
                         updatedVerts.insert(id);
                     }
 
-                    // Update curve: do interpolation to GaussLobattoLegendre
-                    // points to avoid warnings; probably not necessary...
-                    SpatialDomains::CurveSharedPtr curve;
-                    it = curveEdgeMap.find(edge->GetGlobalID());
-                    if (it == curveEdgeMap.end())
-                    {
-                        curve = MemoryManager<
-                            SpatialDomains::Curve>::AllocateSharedPtr(
-                                edge->GetGlobalID(),
-                                LibUtilities::eGaussLobattoLegendre);
-                    }
-                    else
-                    {
-                        curve = it->second;
-                        curve->m_ptype = LibUtilities::eGaussLobattoLegendre;
-                        curve->m_points.clear();
-                    }
+                    // Update curve
+                    SpatialDomains::CurveSharedPtr curve = MemoryManager<
+                        SpatialDomains::Curve>::AllocateSharedPtr(
+                            edge->GetGlobalID(),
+                            LibUtilities::eGaussLobattoLegendre);
 
                     for (k = 0; k < nEdgePts; ++k)
                     {
@@ -393,31 +341,18 @@ namespace Nektar
                         curve->m_points.push_back(vert);
                     }
 
-                    if (it == curveEdgeMap.end())
-                    {
-                        curvedEdges.push_back(curve);
-                    }
+                    curvedEdges.push_back(curve);
 
                     updatedEdges.insert(edge->GetGlobalID());
                 }
             }
             else if (dim == 3)
             {
+                exp->GetCoords(coord[0], coord[1], coord[2]);
+
                 SpatialDomains::Geometry3DSharedPtr geom =
                     boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
                         exp->GetGeom());
-
-                // Do an interpolation to GLL points to avoid issues with
-                // triangles and curved edges which may use Gauss-Radau points.
-                LibUtilities::Interp3D(
-                    pKeyFrom[0], pKeyFrom[1], pKeyFrom[2], coordtmp[0],
-                    pKeyTo  [0], pKeyTo  [1], pKeyFrom[2], coord   [0]);
-                LibUtilities::Interp3D(
-                    pKeyFrom[0], pKeyFrom[1], pKeyFrom[2], coordtmp[1],
-                    pKeyTo  [0], pKeyTo  [1], pKeyFrom[2], coord   [1]);
-                LibUtilities::Interp3D(
-                    pKeyFrom[0], pKeyFrom[1], pKeyFrom[2], coordtmp[2],
-                    pKeyTo  [0], pKeyTo  [1], pKeyFrom[2], coord   [2]);
 
                 for (j = 0; j < exp->GetNfaces(); ++j)
                 {
@@ -461,8 +396,8 @@ namespace Nektar
                     {
                         facePhys [k] = Array<OneD, NekDouble>(nFacePts);
                         faceCoord[k] = Array<OneD, NekDouble>(nFacePts);
-                        exp->GetFacePhysVals(j, faceexp, phys [k], facePhys [k], exp->GetFaceOrient(j));
-                        exp->GetFacePhysVals(j, faceexp, coord[k], faceCoord[k], exp->GetFaceOrient(j));
+                        exp->GetFacePhysVals(j, faceexp, phys [k], facePhys [k], exp->GetForient(j));
+                        exp->GetFacePhysVals(j, faceexp, coord[k], faceCoord[k], exp->GetForient(j));
                     }
 
                     int edgeOff[2][4][2] = {
@@ -504,22 +439,10 @@ namespace Nektar
                         if (updatedEdges.find(id) == updatedEdges.end())
                         {
                             SpatialDomains::Geometry1DSharedPtr edge = face->GetEdge(k);
-
-                            SpatialDomains::CurveSharedPtr curve;
-                            it = curveEdgeMap.find(edge->GetGlobalID());
-                            if (it == curveEdgeMap.end())
-                            {
-                                curve = MemoryManager<
-                                    SpatialDomains::Curve>::AllocateSharedPtr(
-                                        edge->GetGlobalID(),
-                                        LibUtilities::eGaussLobattoLegendre);
-                            }
-                            else
-                            {
-                                curve = it->second;
-                                curve->m_ptype = LibUtilities::eGaussLobattoLegendre;
-                                curve->m_points.clear();
-                            }
+                            SpatialDomains::CurveSharedPtr curve = MemoryManager<
+                                SpatialDomains::Curve>::AllocateSharedPtr(
+                                    edge->GetGlobalID(),
+                                    LibUtilities::eGaussLobattoLegendre);
 
                             int nEdgePts;
                             if (face->GetNumVerts() == 3)
@@ -571,21 +494,10 @@ namespace Nektar
                     }
 
                     // Update face-interior curvature
-                    SpatialDomains::CurveSharedPtr curve;
-                    it = curveFaceMap.find(face->GetGlobalID());
-                    if (it == curveFaceMap.end())
-                    {
-                        curve = MemoryManager<
-                            SpatialDomains::Curve>::AllocateSharedPtr(
-                                face->GetGlobalID(),
-                                LibUtilities::eGaussLobattoLegendre);
-                    }
-                    else
-                    {
-                        curve = it->second;
-                        curve->m_ptype = LibUtilities::eGaussLobattoLegendre;
-                        curve->m_points.clear();
-                    }
+                    SpatialDomains::CurveSharedPtr curve = MemoryManager<
+                        SpatialDomains::Curve>::AllocateSharedPtr(
+                            face->GetGlobalID(),
+                            LibUtilities::eGaussLobattoLegendre);
 
                     for (l = 0; l < nFacePts; ++l)
                     {

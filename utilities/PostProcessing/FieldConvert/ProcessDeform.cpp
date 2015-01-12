@@ -229,8 +229,8 @@ namespace Nektar
                         {
                             facePhys [k] = Array<OneD, NekDouble>(nFacePts);
                             faceCoord[k] = Array<OneD, NekDouble>(nFacePts);
-                            exp->GetFacePhysVals(j, faceexp, phys [k], facePhys [k], exp->GetFaceOrient(j));
-                            exp->GetFacePhysVals(j, faceexp, coord[k], faceCoord[k], exp->GetFaceOrient(j));
+                            exp->GetFacePhysVals(j, faceexp, phys [k], facePhys [k], exp->GetForient(j));
+                            exp->GetFacePhysVals(j, faceexp, coord[k], faceCoord[k], exp->GetForient(j));
                         }
 
                         int edgeOff[2][4][2] = {

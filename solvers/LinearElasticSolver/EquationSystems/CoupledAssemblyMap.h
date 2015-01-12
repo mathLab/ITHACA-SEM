@@ -37,7 +37,7 @@
 #ifndef NEKTAR_SOLVERS_COUPLEDLOCALTOGLOBALC0CONTMAP_H
 #define NEKTAR_SOLVERS_COUPLEDLOCALTOGLOBALC0CONTMAP_H
 
-#include <MultiRegions/AssemblyMap/AssemblyMapCG2D.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <SpatialDomains/MeshGraph.h>
 
 namespace Nektar

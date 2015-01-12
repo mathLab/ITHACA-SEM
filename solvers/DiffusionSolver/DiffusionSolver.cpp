@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
                     AllocateSharedPtr(session->GetComm());
 
         // Get some information about the session
-        string       fileName    = session->GetFilename();
         string       sessionName = session->GetSessionName();
         string       outFile     = sessionName + ".fld";
         unsigned int nSteps      = session->GetParameter("NumSteps");

@@ -71,15 +71,21 @@ CardiacEPSolver session.xml
 \section{Session file configuration}
 \subsection{Solver Info}
 \begin{itemize}
-    \item \inltt{Eqtype} Specifies the PDE system to solve. This should take
-    the value \inltt{Monodomain}.
+    \item \inltt{Eqtype} Specifies the PDE system to solve. The following values
+        are supported:
+    \begin{itemize}
+        \item \inltt{Monodomain}: solve the monodomain equation.
+        \item \inltt{BidomainRoth}: solve the bidomain equations using the Roth
+            formulation.
+    \end{itemize}
     \item \inltt{CellModel} Specifies the cell model to use. Available cell
     models are
 
     \begin{center}
     \begin{tabular}{l|l|l|l}
+    \toprule
     Value & Description & No. of Var. & Ref. \\
-    \hline
+    \midrule
     \inltt{AlievPanfilov} & Phenomological & 1 & \cite{AlPa96} \\
     \inltt{CourtemancheRamirezNattel98} & Human atrial & 20 & \cite{CoRaNa98} \\
     \inltt{FitzHughNagumo} & & & \\
@@ -88,7 +94,7 @@ CardiacEPSolver session.xml
     \inltt{PanditGilesDemir03} & & & \\
     \inltt{TenTusscher06} & Human ventricular & 18 & \cite{TuPa06} \\
     \inltt{Winslow99} & & & \\
-    \hline
+    \bottomrule
     \end{tabular}
     \end{center}
     
@@ -154,7 +160,7 @@ $\mathbf{\sigma}$ of the tissue.
 \subsection{Filters}
 \begin{itemize}
     \item \inltt{CheckpointCellModel} checkpoints the cell model. Can be
-    used along with the \inltt{Checkpoint Filter} to record complete simulation
+    used along with the \inltt{Checkpoint} filter to record complete simulation
     state and regular intervals.
 \begin{lstlisting}[style=XmlStyle]
 <FILTER TYPE="CheckpointCellModel">
@@ -189,6 +195,30 @@ $\mathbf{\sigma}$ of the tissue.
     electrogram data.
     \item \inltt{Points} specifies a list of coordinates at which electrograms
     are desired. \emph{They must not lie within the domain.}
+    \end{itemize}
+
+\item \inltt{Benchmark} Records spatially distributed event times for 
+    activation and repolarisation (recovert) during a simulation, for
+    undertaking benchmark test problems.
+\begin{lstlisting}[style=XmlStyle]
+<FILTER TYPE="Benchmark">
+  <PARAM NAME="ThresholdValue"> -40.0 </PARAM>
+  <PARAM NAME="InitialValue">     0.0 </PARAM>
+  <PARAM NAME="OutputFile"> benchmark </PARAM>
+  <PARAM NAME="StartTime">        0.0 </PARAM>
+</FILTER>
+\end{lstlisting}
+    \begin{itemize}
+        \item \inltt{ThresholdValue} specifies the value above which tissue is
+            considered to be depolarised and below which is considered
+            repolarised.
+        \item \inltt{InitialValue} specifies the initial value of the
+            activation or repolarisation time map.
+        \item \inltt{OutputFile} specifies the base filename of activation and
+            repolarisation maps output from the filter. This name is appended
+            with the index of the event and the suffix `.fld`.
+        \item \inltt{StartTime} (optional) specifies the simulation time at
+            which to start detecting events.
     \end{itemize}
 \end{itemize}
 

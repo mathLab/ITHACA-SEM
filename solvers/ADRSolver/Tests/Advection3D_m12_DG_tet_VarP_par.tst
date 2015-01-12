@@ -2,7 +2,7 @@
 <test>
     <description>3D unsteady DG advection, tetrahedra, order 4, P=Variable</description>
     <executable>ADRSolver</executable>
-    <parameters>Advection3D_m12_DG_tet_VarP.xml</parameters>
+    <parameters>--use-metis Advection3D_m12_DG_tet_VarP.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Advection3D_m12_DG_tet_VarP.xml</file>

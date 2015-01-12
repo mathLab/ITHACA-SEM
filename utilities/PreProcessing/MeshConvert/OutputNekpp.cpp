@@ -43,6 +43,8 @@ using namespace std;
 namespace io = boost::iostreams;
 
 #include <tinyxml.h>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SpatialDomains/MeshGraph.h>
 
 #include "MeshElements.h"
 #include "OutputNekpp.h"
@@ -60,6 +62,8 @@ namespace Nektar
         {
             m_config["z"] = ConfigOption(true, "0",
                 "Compress output file and append a .gz extension.");
+            m_config["test"] = ConfigOption(true, "0",
+                "Attempt to load resulting mesh and create meshgraph.");
         }
 
         OutputNekpp::~OutputNekpp()
@@ -119,6 +123,20 @@ namespace Nektar
             else
             {
                 doc.SaveFile(filename);
+            }
+
+            // Test the resulting XML file by loading it with the session reader
+            // and generating the meshgraph.
+            if (m_config["test"].beenSet)
+            {
+                vector<string> filenames(1);
+                filenames[0] = filename;
+
+                LibUtilities::SessionReaderSharedPtr vSession
+                    = LibUtilities::SessionReader::CreateInstance(
+                        0, NULL, filenames);
+                SpatialDomains::MeshGraphSharedPtr graphShPt =
+                    SpatialDomains::MeshGraph::Read(vSession);
             }
         }
 

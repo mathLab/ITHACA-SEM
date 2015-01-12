@@ -1375,7 +1375,7 @@ namespace Nektar
                 (*m_exp)[i]->Reset();
             }
         }
-        
+
         /**
          * Write Tecplot Files Header
          * @param   outfile Output file name.

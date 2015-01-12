@@ -1020,7 +1020,7 @@ namespace Nektar
 
             ASSERTL0(expansion, "Could not find expansion connected to face "+
                      boost::lexical_cast<string>(face->GetGlobalID()));
-            
+
             // Retrieve the geometry object of the element as a Geometry3D.
             Geometry3DSharedPtr geom3d =
                     boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(

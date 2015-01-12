@@ -1408,7 +1408,7 @@ namespace Nektar
                 v->LinkEndChild(new TiXmlText(s.str()));
                 vertTag->LinkEndChild(v);
             }
-            
+
             geomTag->LinkEndChild(vertTag);
 
             // Construct <EDGE> or <ELEMENT> block
@@ -1679,7 +1679,7 @@ namespace Nektar
 
             doc.SaveFile(outfilename);
         }
-        
+
         void MeshGraph::SetDomainRange (NekDouble xmin, NekDouble xmax, NekDouble ymin, 
                              NekDouble ymax, NekDouble zmin, NekDouble zmax)
         {

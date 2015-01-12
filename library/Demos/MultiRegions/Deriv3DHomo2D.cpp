@@ -16,8 +16,6 @@ int main(int argc, char *argv[])
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
     
-	string meshfile(vSession->GetFilename());
-
     MultiRegions::ContField3DHomogeneous2DSharedPtr Exp_u, Exp_v, Exp_w;
     
     StdRegions::ConstFactorMap factors;

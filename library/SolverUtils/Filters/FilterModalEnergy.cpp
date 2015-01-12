@@ -146,6 +146,7 @@ namespace Nektar
 
             }
 
+            m_index = 0;
             v_Update(pFields, time);
         }
 

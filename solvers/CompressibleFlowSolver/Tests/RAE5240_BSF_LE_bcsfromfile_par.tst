@@ -2,7 +2,7 @@
 <test>
     <description>Euler, LE simulation, BCs from file, FRHU, SEM, parallel</description>
     <executable>CompressibleFlowSolver</executable>
-    <parameters>RAE5240_BSF_LE_bcsfromfile_par.xml</parameters>
+    <parameters>--use-metis RAE5240_BSF_LE_bcsfromfile_par.xml</parameters>
     <processes>2</processes>
     <files>
         <file description="Session File">RAE5240_BSF_LE_bcsfromfile_par.xml</file>

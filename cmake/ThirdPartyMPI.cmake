@@ -52,6 +52,7 @@ IF( NEKTAR_USE_MPI )
             INSTALL_DIR ${TPDIST}
             CONFIGURE_COMMAND 
                 ${CMAKE_COMMAND}
+                -G ${CMAKE_GENERATOR}
                 -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
                 -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
                 -DCMAKE_BUILD_TYPE:STRING=Debug

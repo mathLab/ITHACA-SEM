@@ -135,9 +135,6 @@ namespace Nektar
                 const int                        mode_offset,
                 NekDouble                       *coeffs);
 
-            LOCAL_REGIONS_EXPORT virtual 
-                StdRegions::Orientation v_GetFaceOrient(int face);
-
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int                                face,
                 const StdRegions::StdExpansionSharedPtr &FaceExp,
@@ -161,11 +158,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey);
-
-            LOCAL_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
-                int                                 numMin,
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray);
 
             LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                 const Array<OneD, const NekDouble> &inarray,

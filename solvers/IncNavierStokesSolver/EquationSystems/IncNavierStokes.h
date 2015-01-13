@@ -226,6 +226,9 @@ namespace Nektar
 
 	/// Evaluate Bessels for Wom
 	std::complex<NekDouble> CompBessel(int n, std::complex<NekDouble> y);
+	std::complex<NekDouble> Csub(std::complex<NekDouble> a, std::complex<NekDouble> b);
+	std::complex<NekDouble> Cmul(std::complex<NekDouble> a, std::complex<NekDouble> b);
+	std::complex<NekDouble> Cdiv(std::complex<NekDouble> a, std::complex<NekDouble> b);
 
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {

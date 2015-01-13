@@ -217,10 +217,6 @@ namespace Nektar
                     }
                     radpts += BndExp[n]->GetTotPoints();
                 }
-		else if(BndConds[n]->GetUserDefined() == SpatialDomains::eWomersley)
-		{
-		    // Load the fourier coefficients 
-		}
             }
 
             m_fieldsRadiationFactor[i] = Array<OneD, NekDouble>(radpts);
@@ -499,42 +495,42 @@ namespace Nektar
 	m_session->LoadParameter("n2",n2);
 
 
-	std::string coeffile = "fourier_aneurysm.txt";
-	NekDouble realcoef;
-	NekDouble imagcoef;
-
-	if (fs::exists(coeffile))
-	{
-	   std::ifstream fileIN("fourier_aneurysm.txt");
-	   std::string line;
-	   Array<OneD,NekDouble> veltest((std::istream_iterator<int>(fileIN)),(std::istream_iterator<int>()));
-	   for(i=0;i<veltest.size();i++)
-	   {
-		std::cout << "  " << veltest[i] << '\n';
-	   } 
-	
-	   int count=0;
-	   while(std::getline(fileIN,line))
-	   {
-		if (count==0)
-		{
-	           std::stringstream(line) >> realcoef;	
-		}
-		else if (count==1)
-		{
-		  std::stringstream(line) >> imagcoef;
-		}
-		count++;
-//		fileIN >> realcoef;
-//		fileIN >> imagcoef;	cout << line << '\n';		
-		cout << "Real: " << realcoef << '\n';
-		cout << "Imaginary: " << imagcoef << '\n';
-	   }
-	}
-	else
-	{ 
-	   std::cout << "Fourier Coefficient file does not exist" << '\n';
-	}
+//	std::string coeffile = "fourier_aneurysm.txt";
+//	NekDouble realcoef;
+//	NekDouble imagcoef;
+//
+//	if (fs::exists(coeffile))
+//	{
+//	   std::ifstream fileIN("fourier_aneurysm.txt");
+//	   std::string line;
+//	   Array<OneD,NekDouble> veltest((std::istream_iterator<int>(fileIN)),(std::istream_iterator<int>()));
+//	   for(i=0;i<veltest.size();i++)
+//	   {
+//		std::cout << "  " << veltest[i] << '\n';
+//	   } 
+//	
+//	   int count=0;
+//	   while(std::getline(fileIN,line))
+//	   {
+//		if (count==0)
+//		{
+//	           std::stringstream(line) >> realcoef;	
+//		}
+//		else if (count==1)
+//		{
+//		  std::stringstream(line) >> imagcoef;
+//		}
+//		count++;
+////		fileIN >> realcoef;
+////		fileIN >> imagcoef;	cout << line << '\n';		
+//		cout << "Real: " << realcoef << '\n';
+//		cout << "Imaginary: " << imagcoef << '\n';
+//	   }
+//	}
+//	else
+//	{ 
+//	   std::cout << "Fourier Coefficient file does not exist" << '\n';
+//	}
 
 //	std::string rcoeffile = "real_fourier_aneurysm.txt";
 //	std::string icoeffile = "imag_fourier_aneurysm.txt";
@@ -576,16 +572,19 @@ namespace Nektar
 	
 	NekDouble normals[] = {n0,n1,n2};
 	
-	NekDouble vel_i[] = {0.0000000000000000,	-0.0250670990359525,	0.0883982822857696,	-0.0062663572808457,	-0.0460886047599786,	0.0244650285943904,	0.0007736191180826,	-0.0000204065354244,	-0.0026765687423288,	-0.0023795623937237,	0.0032350684203032,	-0.0001643113357552,	-0.0015344792194370,	-0.0007340742914415
-};
-	NekDouble vel_r[] = {0.3789045336112559,	-0.1253500851498874,	-0.0058557281020047,	0.0339446760533445,	0.0047222654948468,	-0.0218586269719675,	0.0045331077993802,	0.0037133570904368,	0.0026164924461453,	-0.0049806715817818,	0.0002051813222864,	0.0021237225226305,	0.0003365744602936,	-0.0014797879248697};
+//	NekDouble vel_i[] = {0.0000000000000000,	-0.0250670990359525,	0.0883982822857696,	-0.0062663572808457,	-0.0460886047599786,	0.0244650285943904,	0.0007736191180826,	-0.0000204065354244,	-0.0026765687423288,	-0.0023795623937237,	0.0032350684203032,	-0.0001643113357552,	-0.0015344792194370,	-0.0007340742914415};
+//
+//	NekDouble vel_r[] = {0.3789045336112559,	-0.1253500851498874,	-0.0058557281020047,	0.0339446760533445,	0.0047222654948468,	-0.0218586269719675,	0.0045331077993802,	0.0037133570904368,	0.0026164924461453,	-0.0049806715817818,	0.0002051813222864,	0.0021237225226305,	0.0003365744602936,	-0.0014797879248697};
+	NekDouble vel_i[] = {0.0000000000000000,	0.0045077959073922,	0.0063426457520076,	0.0023963688083477,	0.0025691123611016,	-0.0021167847374483,	0.0006414735988830,	0.0007177310799631,	-0.003991371205071};
+	NekDouble vel_r[] = {0.2032429146039605,	-0.0412493282928887,	-0.0032479550798890,	0.0020185802157162,	-0.0015778214978184,	0.0043359828640890,	-0.0011428872918882,	0.0055894627185113,	0.0003466826691224};
+
 	NekDouble r;
 	
 
 	std::complex<NekDouble> z1 (1.0,0.0);
 	std::complex<NekDouble> zi (0.0,1.0);
 	std::complex<NekDouble> z;
-	
+
         
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
@@ -600,25 +599,26 @@ namespace Nektar
   	Array<OneD, NekDouble> x0(npoints,0.0);
     	Array<OneD, NekDouble> x1(npoints,0.0);
         Array<OneD, NekDouble> x2(npoints,0.0);
-	Array<OneD, NekDouble> zero(npoints,0.0);
+	Array<OneD, NekDouble> zeros(npoints,0.0);
 	Array<OneD, NekDouble> w(npoints,0.0);
 
         BndExp[bndid]->GetCoords(x0,x1,x2);
-		
-
+	
+	std::cout << m_time/T << m_time << '\n';	
 	for (i=0;i<npoints;i++){
-		r = sqrt(x0[i]*x0[i] + x1[i]*x1[i])/R;
+		r = sqrt(x0[i]*x0[i] + x1[i]*x1[i] + x2[i]*x2[i])/R;
 
-		w[i] = vel_r[0]*(1 - r*r); // Compute Poiseulle Flow
+		w[i] = vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
+
 		for (k=1; k<M; k++){
 			kt = 2.0*M_PI*k*m_time/T;
-			za = alpha/sqrt(2)*std::complex<NekDouble>(-1.0,1.0);
-			zar = za*r;
+			za = (alpha*sqrt(k)/sqrt(2.0))*std::complex<NekDouble>(-1.0,1.0);
+			zar = r*za;
 			zJ0 = CompBessel(0,za);
 			zJ0r = CompBessel(0,zar);
-			zJ0rJ0 = zJ0r/zJ0;
-			zq = (std::complex<NekDouble>(vel_r[k],vel_i[k])*std::complex<NekDouble>(cos(kt),sin(kt)));
-			zvel = zq*(z1 - zJ0rJ0);
+			zJ0rJ0 = Cdiv(zJ0r,zJ0);
+			zq = Cmul(std::complex<NekDouble>(vel_r[k],vel_i[k]),std::complex<NekDouble>(cos(kt),sin(kt)));
+			zvel = Cmul(zq,Csub(z1,zJ0rJ0));
 			w[i] = w[i]+std::real(zvel);
 		}
 	}
@@ -645,7 +645,7 @@ namespace Nektar
 	zarg = -0.25 * (y*y);
 
 	while (std::abs(z) > tol && i <= maxit){
-		z = (z*(1.0/i/(i+n)*zarg));
+		z = (z*((1.0/i/(i+n))*zarg));
 		if  (std::abs(z) <= tol) break;
 		zbes = zbes + z;
 		i++;
@@ -657,6 +657,36 @@ namespace Nektar
 	}
 	return zbes;
 
+    }
+    std::complex<NekDouble> IncNavierStokes::Csub(std::complex<NekDouble> a, std::complex<NekDouble> b){
+	std::complex<NekDouble> c;
+	c.real() = a.real() - b.real();
+	c.imag() = a.imag() - b.imag();
+	return c;
+    }
+    std::complex<NekDouble> IncNavierStokes::Cmul(std::complex<NekDouble> a, std::complex<NekDouble> b){
+	std::complex<NekDouble> c;
+	c.real() = a.real()*b.real() - a.imag()*b.imag();
+	c.imag() = a.imag()*b.real() + a.real()*b.imag();
+	return c;
+    }
+    std::complex<NekDouble> IncNavierStokes::Cdiv(std::complex<NekDouble> a, std::complex<NekDouble> b){
+	std::complex<NekDouble> c;
+	NekDouble den,r;
+	if (fabs(b.real())>=fabs(b.imag())){
+	r = b.imag()/b.real();
+	den = b.real() + r*b.imag();
+	c.real() = (a.real() + r*a.imag())/den;
+	c.imag() = (a.imag() - r*a.real())/den;
+	}
+	else{
+	r = b.real()/b.imag();
+	den = b.imag() + r*b.real();
+	c.real() = (a.real()*r + a.imag())/den;
+	c.imag() = (a.imag()*r - a.real())/den;
+
+	}
+	return c;
     }
 
 

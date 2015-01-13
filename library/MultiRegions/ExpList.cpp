@@ -2681,7 +2681,7 @@ namespace Nektar
             map<LibUtilities::ShapeType,
                 vector<std::pair<LocalRegions::ExpansionSharedPtr,int> > >::iterator it;
 
-            bool autotuning;
+            bool autotuning = false;
             bool verbose  =m_session->DefinesCmdLineArgument("verbose");
             int collmax;
 

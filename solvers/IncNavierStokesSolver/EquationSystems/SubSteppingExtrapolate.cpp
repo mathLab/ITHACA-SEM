@@ -55,8 +55,8 @@ namespace Nektar
         : Extrapolate(pSession,pFields,pPressure,pVel,advObject)
     {
         m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-        m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.5);
-        m_session->LoadParameter("MinSubSteps", m_minsubsteps,0);
+        m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.6);
+        m_session->LoadParameter("MinSubSteps", m_minsubsteps,1);
 
         int dim = m_fields[0]->GetCoordim(0);
         m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(dim);

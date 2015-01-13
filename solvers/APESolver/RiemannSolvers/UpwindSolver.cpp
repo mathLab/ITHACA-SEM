@@ -86,21 +86,24 @@ void UpwindSolver::v_PointSolve(
     ASSERTL1(CheckParams("Gamma"), "Gamma not defined.");
     const NekDouble &gamma = m_params["Gamma"]();
 
+    // Speed of sound
+    NekDouble c = sqrt(gamma * p0 / rho0);
+
     Array<OneD, NekDouble> characteristic(4);
     Array<OneD, NekDouble> W(2);
     Array<OneD, NekDouble> lambda(2);
 
     // compute the wave speeds
-    lambda[0] = u0 + sqrt(p0*gamma*rho0)/rho0;
-    lambda[1] = u0 - sqrt(p0*gamma*rho0)/rho0;
+    lambda[0] = u0 + c;
+    lambda[1] = u0 - c;
 
     // calculate the caracteristic variables
     //left characteristics
-    characteristic[0] = pL/2 + uL*sqrt(p0*gamma*rho0)/2;
-    characteristic[1] = pL/2 - uL*sqrt(p0*gamma*rho0)/2;
+    characteristic[0] = pL/2 + uL*c*rho0/2;
+    characteristic[1] = pL/2 - uL*c*rho0/2;
     //right characteristics
-    characteristic[2] = pR/2 + uR*sqrt(p0*gamma*rho0)/2;
-    characteristic[3] = pR/2 - uR*sqrt(p0*gamma*rho0)/2;
+    characteristic[2] = pR/2 + uR*c*rho0/2;
+    characteristic[3] = pR/2 - uR*c*rho0/2;
 
     //take left or right value of characteristic variable
     for (int j = 0; j < 2; j++)
@@ -117,15 +120,10 @@ void UpwindSolver::v_PointSolve(
 
     //calculate conservative variables from characteristics
     NekDouble p = W[0] + W[1];
-    NekDouble u = (W[0] - W[1])/sqrt(p0*gamma*rho0);
-    // do not divide by zero
-    if (p0*gamma*rho0 == 0)
-    {
-        u = 0.0;
-    }
+    NekDouble u = (W[0] - W[1])/(c*rho0);
 
     // assemble the fluxes
-    pF = gamma*p0*u + u0*p;
+    pF = rho0*u + u0*p/(c*c);
     uF = p/rho0 + u0*u + v0*vL + w0*wL;
     vF = 0.0;
     wF = 0.0;

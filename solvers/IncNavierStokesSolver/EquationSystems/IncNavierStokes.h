@@ -229,6 +229,8 @@ namespace Nektar
 	std::complex<NekDouble> Csub(std::complex<NekDouble> a, std::complex<NekDouble> b);
 	std::complex<NekDouble> Cmul(std::complex<NekDouble> a, std::complex<NekDouble> b);
 	std::complex<NekDouble> Cdiv(std::complex<NekDouble> a, std::complex<NekDouble> b);
+	std::complex<NekDouble> Rmul(NekDouble x, std::complex<NekDouble> a);
+	NekDouble Cabs(std::complex<NekDouble> z);
 
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {

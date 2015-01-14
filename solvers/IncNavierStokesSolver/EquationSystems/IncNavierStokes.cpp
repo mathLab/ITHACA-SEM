@@ -386,7 +386,7 @@ namespace Nektar
         for (i = 0; i < nvariables; ++i)
         {
             for(n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
-            {    
+            {   
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
                    SpatialDomains::eTimeDependent)
                 {
@@ -495,81 +495,6 @@ namespace Nektar
 	m_session->LoadParameter("n2",n2);
 
 
-//	std::string coeffile = "fourier_aneurysm.txt";
-//	NekDouble realcoef;
-//	NekDouble imagcoef;
-//
-//	if (fs::exists(coeffile))
-//	{
-//	   std::ifstream fileIN("fourier_aneurysm.txt");
-//	   std::string line;
-//	   Array<OneD,NekDouble> veltest((std::istream_iterator<int>(fileIN)),(std::istream_iterator<int>()));
-//	   for(i=0;i<veltest.size();i++)
-//	   {
-//		std::cout << "  " << veltest[i] << '\n';
-//	   } 
-//	
-//	   int count=0;
-//	   while(std::getline(fileIN,line))
-//	   {
-//		if (count==0)
-//		{
-//	           std::stringstream(line) >> realcoef;	
-//		}
-//		else if (count==1)
-//		{
-//		  std::stringstream(line) >> imagcoef;
-//		}
-//		count++;
-////		fileIN >> realcoef;
-////		fileIN >> imagcoef;	cout << line << '\n';		
-//		cout << "Real: " << realcoef << '\n';
-//		cout << "Imaginary: " << imagcoef << '\n';
-//	   }
-//	}
-//	else
-//	{ 
-//	   std::cout << "Fourier Coefficient file does not exist" << '\n';
-//	}
-
-//	std::string rcoeffile = "real_fourier_aneurysm.txt";
-//	std::string icoeffile = "imag_fourier_aneurysm.txt";
-//	fs::path fullpath(fs::current_path());
-////	std::string parentpath = fs::current_path(pcoeffile);
-//	Array<OneD, NekDouble> vel_r(M,0.0);
-//	Array<OneD, NekDouble> vel_i(M,0.0);
-//	
-//	if (fs::exists(rcoeffile))	
-//	{
-//		std::cout << "File Exists:" << rcoeffile << '\n'; 
-//		std::ifstream tmpfile("real_fourier_aneurysm.txt");
-//		NekDouble tmpvar;
-//		for (i=0;i<M;i++)
-//		{
-//		   tmpfile >> tmpvar;	
-//		   vel_r[i] = tmpvar;
-//		}
-//	}	
-//	else
-//	{
-//		std::cout << "Fourier Coefficient file does not exist" << '\n';
-//	}
-//	if (fs::exists(icoeffile))	
-//	{
-//		std::cout << "File Exists:" <<icoeffile << '\n'; 
-//		std::ifstream tmpfile("imag_fourier_aneurysm.txt");
-//		for (double tmpvar; tmpfile >> tmpvar;)
-//		{	
-//		   vel_i.push_back(tmpvar);
-//		}
-//	}	
-//	else
-//	{
-//		std::cout << "Fourier Coefficient file does not exist" << '\n';
-//	}
-//
-//	std::cout << fullpath << '\n';
-	
 	NekDouble normals[] = {n0,n1,n2};
 	
 //	NekDouble vel_i[] = {0.0000000000000000,	-0.0250670990359525,	0.0883982822857696,	-0.0062663572808457,	-0.0460886047599786,	0.0244650285943904,	0.0007736191180826,	-0.0000204065354244,	-0.0026765687423288,	-0.0023795623937237,	0.0032350684203032,	-0.0001643113357552,	-0.0015344792194370,	-0.0007340742914415};
@@ -603,8 +528,7 @@ namespace Nektar
 	Array<OneD, NekDouble> w(npoints,0.0);
 
         BndExp[bndid]->GetCoords(x0,x1,x2);
-	
-	std::cout << m_time/T << m_time << '\n';	
+
 	for (i=0;i<npoints;i++){
 		r = sqrt(x0[i]*x0[i] + x1[i]*x1[i] + x2[i]*x2[i])/R;
 
@@ -612,14 +536,14 @@ namespace Nektar
 
 		for (k=1; k<M; k++){
 			kt = 2.0*M_PI*k*m_time/T;
-			za = (alpha*sqrt(k)/sqrt(2.0))*std::complex<NekDouble>(-1.0,1.0);
+			za = alpha*sqrt(k)/sqrt(2.0)*std::complex<NekDouble>(-1.0,1.0);
 			zar = r*za;
 			zJ0 = CompBessel(0,za);
 			zJ0r = CompBessel(0,zar);
-			zJ0rJ0 = Cdiv(zJ0r,zJ0);
-			zq = Cmul(std::complex<NekDouble>(vel_r[k],vel_i[k]),std::complex<NekDouble>(cos(kt),sin(kt)));
-			zvel = Cmul(zq,Csub(z1,zJ0rJ0));
-			w[i] = w[i]+std::real(zvel);
+			zJ0rJ0 = zJ0r/zJ0;
+			zq = std::complex<NekDouble>(vel_r[k],vel_i[k])*std::complex<NekDouble>(cos(kt),sin(kt));
+			zvel = zq*(z1-zJ0rJ0);
+			w[i] = w[i]+zvel.real();
 		}
 	}
 	// Multiply w by normal to get u,v,w component of velocity
@@ -642,22 +566,23 @@ namespace Nektar
 	int maxit = 10000;
 	int i = 1;
 
-	zarg = -0.25 * (y*y);
+	zarg = Rmul(-0.25,Cmul(y,y));
 
-	while (std::abs(z) > tol && i <= maxit){
-		z = (z*((1.0/i/(i+n))*zarg));
-		if  (std::abs(z) <= tol) break;
+	while (Cabs(z) > tol && i <= maxit){
+		z = Cmul(z,Rmul(1.0/i/(i+n),zarg));
+		if  (Cabs(z) <= tol) break;
 		zbes = zbes + z;
 		i++;
 	}
 
-	zarg = 0.5*y;
+	zarg = Rmul(0.5,y);
 	for (i=1;i<=n;i++){
-		zbes = zbes*zarg;
+		zbes = Cmul(zbes,zarg);
 	}
 	return zbes;
 
     }
+/* Complex arithmatic - only used to ensure correct Wom solution - will remove and use c++/boost math*/
     std::complex<NekDouble> IncNavierStokes::Csub(std::complex<NekDouble> a, std::complex<NekDouble> b){
 	std::complex<NekDouble> c;
 	c.real() = a.real() - b.real();
@@ -688,7 +613,34 @@ namespace Nektar
 	}
 	return c;
     }
+    std::complex<NekDouble> IncNavierStokes::Rmul(NekDouble x, std::complex<NekDouble> a){
+	std::complex<NekDouble> c;
+	c.real() = x*a.real();
+	c.imag() = x*a.imag();
 
+	return c;
+    }
+    NekDouble IncNavierStokes::Cabs(std::complex<NekDouble> z){
+	NekDouble x,y,ans,temp;
+	
+	x = fabs(z.real());
+	y = fabs(z.imag());
+	if (x==0.0){
+	    ans=y;
+    	}
+	else if (y==0.0){
+	    ans=x;
+	}
+	else if(x > y){	
+	    temp = x/y;
+	    ans = x*sqrt(1.0+temp*temp);
+	}
+	else{
+	    temp = x/y;
+	    ans = y*sqrt(1.0+temp*temp);
+	}
+	return ans;
+     }
 
      /**
      * Add an additional forcing term programmatically.

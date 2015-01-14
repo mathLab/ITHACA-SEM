@@ -154,17 +154,9 @@ namespace Nektar
 
         m_session->MatchSolverInfo("SmoothAdvection", "True", m_SmoothAdvection, false);
 
-        if(m_subSteppingScheme) // Substepping
-        {
-            ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,
-                     "Projection must be set to Mixed_CG_Discontinuous for "
-                     "substepping");
-        }
-        else // Standard velocity correction scheme
-        {
-            // set explicit time-intregration class operators
-            m_ode.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
-        }
+        // set explicit time-intregration class operators
+        m_ode.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
+
         m_extrapolation->SubSteppingTimeIntegration(m_intScheme->GetIntegrationMethod(), m_intScheme);
         m_extrapolation->GenerateHOPBCMap();
         
@@ -186,11 +178,12 @@ namespace Nektar
     {
         UnsteadySystem::v_GenerateSummary(s);
 
-        if (m_subSteppingScheme)
+        if (m_extrapolation->GetSubStepIntegrationMethod() !=
+            LibUtilities::eNoTimeIntegrationMethod)
         {
-            SolverUtils::AddSummaryItem(
-                s, "Substepping", LibUtilities::TimeIntegrationMethodMap[
-                    m_subStepIntegrationScheme->GetIntegrationMethod()]);
+            SolverUtils::AddSummaryItem(s, "Substepping", 
+                             LibUtilities::TimeIntegrationMethodMap[
+                              m_extrapolation->GetSubStepIntegrationMethod()]);
         }
 
         string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";

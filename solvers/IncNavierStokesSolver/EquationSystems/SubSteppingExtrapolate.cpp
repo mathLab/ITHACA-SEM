@@ -93,7 +93,14 @@ namespace Nektar
             case LibUtilities::eBackwardEuler:
             case LibUtilities::eBDFImplicitOrder1: 
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("ForwardEuler");
+                std::string vSubStepIntScheme = "ForwardEuler";
+                
+                if(m_session->DefinesSolverInfo("SubStepIntScheme"))
+                {
+                    vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
+                }
+
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
                 
                 int nvel = m_velocity.num_elements();
 
@@ -110,8 +117,14 @@ namespace Nektar
             break;
             case LibUtilities::eBDFImplicitOrder2:
             {
-                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
-              // m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("AdamsBashforthOrder2");
+                std::string vSubStepIntScheme = "RungeKutta2_ImprovedEuler";
+                
+                if(m_session->DefinesSolverInfo("SubStepIntScheme"))
+                {
+                    vSubStepIntScheme = m_session->GetSolverInfo("SubStepIntScheme");
+                }
+
+                m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(vSubStepIntScheme);
                     
                 int nvel = m_velocity.num_elements();
                 
@@ -558,5 +571,11 @@ namespace Nektar
                     m_pressureHBCs[nlevels-1],1);
         
     }
+
+    LibUtilities::TimeIntegrationMethod SubSteppingExtrapolate::v_GetSubStepIntegrationMethod(void)
+    {
+        return m_subStepIntegrationScheme->GetIntegrationMethod();
+    }
+
 }
 

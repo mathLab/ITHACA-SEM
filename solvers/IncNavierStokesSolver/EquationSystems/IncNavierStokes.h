@@ -145,12 +145,8 @@ namespace Nektar
         /// modal energy file
         std::ofstream m_mdlFile;
 
-        /// bool to identify if using a substepping scheme
-        bool m_subSteppingScheme;
         /// bool to identify if advection term smoothing is requested
         bool m_SmoothAdvection;
-
-        LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
 
         /// Forcing terms
         std::vector<SolverUtils::ForcingSharedPtr>               m_forcing;

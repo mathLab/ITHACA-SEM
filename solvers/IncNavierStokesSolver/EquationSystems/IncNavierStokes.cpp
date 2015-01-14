@@ -56,7 +56,6 @@ namespace Nektar
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
         UnsteadySystem(pSession),
         AdvectionSystem(pSession),
-        m_subSteppingScheme(false),
         m_SmoothAdvection(false),
         m_steadyStateSteps(0)
     {

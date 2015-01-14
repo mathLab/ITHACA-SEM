@@ -1279,5 +1279,11 @@ namespace Nektar
         return maxV;
     }
 
+
+    LibUtilities::TimeIntegrationMethod Extrapolate::v_GetSubStepIntegrationMethod(void)
+    {
+        return LibUtilities::eNoTimeIntegrationMethod;
+    }
+    
 }
 

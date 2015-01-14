@@ -134,6 +134,8 @@ namespace Nektar
         
         void IProductNormVelocityBCOnHBC(Array<OneD, NekDouble> &IprodVn);
         
+        LibUtilities::TimeIntegrationMethod GetSubStepIntegrationMethod(void); 
+        
     protected: 
         virtual void v_EvaluatePressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -163,6 +165,9 @@ namespace Nektar
             Array<OneD, NekDouble> &Q, 
             Array<OneD, const NekDouble> &Advection)=0;
         
+        virtual LibUtilities::TimeIntegrationMethod 
+            v_GetSubStepIntegrationMethod(void);
+
         void CalcNeumannPressureBCs(
             const Array<OneD, const Array<OneD, NekDouble> > &fields,
             const Array<OneD, const Array<OneD, NekDouble> >  &N,
@@ -338,6 +343,17 @@ namespace Nektar
     {
         v_MountHOPBCs(HBCdata,kinvis,Q,Advection);
     }
+
+    /**
+     *
+     */
+    
+    inline LibUtilities::TimeIntegrationMethod 
+        Extrapolate::GetSubStepIntegrationMethod(void)
+    {
+        return v_GetSubStepIntegrationMethod();
+    }
+    
 }
 
 #endif

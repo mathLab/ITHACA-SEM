@@ -1,9 +1,3 @@
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/MeshGraph2D.h>
-#include <MultiRegions/ExpList2D.h>
-#include <LocalRegions/Expansion2D.h>
-
 #include <vtkPolyDataReader.h>
 #include <vtkPolyData.h>
 #include <vtkPointData.h>
@@ -14,8 +8,14 @@
 
 #include <boost/unordered_set.hpp>
 #include <boost/program_options.hpp>
-
 namespace po = boost::program_options;
+
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshGraph2D.h>
+#include <MultiRegions/ExpList2D.h>
+#include <LocalRegions/Expansion2D.h>
+
 
 /**
  * @brief Represents a vertex in the mesh.

@@ -268,8 +268,7 @@ void NonlinearPeregrine::DoOdeRhs(
         const Array<OneD, const Array<OneD, NekDouble> >&inarray,
         Array<OneD, Array<OneD, NekDouble> >&outarray, const NekDouble time)
 {
-    int i, j;
-    int ndim = m_spacedim;
+    int i;
     int nvariables = inarray.num_elements();
     int ncoeffs = GetNcoeffs();
     int nq = GetTotPoints();

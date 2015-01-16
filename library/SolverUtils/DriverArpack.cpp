@@ -110,7 +110,6 @@ namespace Nektar
         
         {
             Array<OneD, NekDouble> tmpworkd;
-            bool random;
 
             int  nq     = m_equ[0]->UpdateFields()[0]->GetNcoeffs(); // Number of points in the mesh
             int  n      = m_nfields*nq;    // Number of points in eigenvalue calculation

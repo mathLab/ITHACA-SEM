@@ -65,8 +65,8 @@ NoAdvection::~NoAdvection()
  *
  */
 void NoAdvection::v_InitObject(
-    const LibUtilities::SessionReaderSharedPtr        &pSession,
-    const Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
+    LibUtilities::SessionReaderSharedPtr        pSession,
+    Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
 {
 }
 

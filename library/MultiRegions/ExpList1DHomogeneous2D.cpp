@@ -58,10 +58,10 @@ namespace Nektar
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             int n,nel;
-			
-			int nyz = m_ny*m_nz;
 
-            ASSERTL1(nyz == points.num_elements(),"Size of basis number of points and number of lines are not the same");
+            ASSERTL1(m_ny*m_nz == points.num_elements(),
+                    "Size of basis number of points and number of lines are "
+                    "not the same");
 
             for(n = 0; n < points.num_elements(); ++n)
             {

@@ -2,7 +2,7 @@
 <test>
     <description>Euler, pressure perturbation to test RiemannInvariant CBC, supersonic Navier-Stokes equations parallel</description>
     <executable>CompressibleFlowSolver</executable>
-    <parameters>Perturbation_NS_M15_square_CBC_par.xml</parameters>
+    <parameters>--use-metis Perturbation_NS_M15_square_CBC_par.xml</parameters>
     <processes>8</processes>
     <files>
         <file description="Session File"> Perturbation_NS_M15_square_CBC_par.xml</file>

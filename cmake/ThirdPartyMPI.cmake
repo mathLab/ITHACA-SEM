@@ -1,4 +1,12 @@
-OPTION(NEKTAR_USE_MPI "Use MPICH2 for parallelisation." OFF)
+########################################################################
+#
+# ThirdParty configuration for Nektar++
+#
+# MPI
+#
+########################################################################
+
+OPTION(NEKTAR_USE_MPI "Use MPI for parallelisation." OFF)
 
 CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_GSMPI
     "Build GSMPI if needed" ON
@@ -12,7 +20,7 @@ IF( NEKTAR_USE_MPI )
     CHECK_FUNCTION_EXISTS(MPI_Send HAVE_MPI_SEND)
 
     SET(MPI_BUILTIN OFF CACHE INTERNAL
-        "Determines whether MPI is built in")
+        "Determines whether MPI is built into the compiler")
     IF (NOT "${HAVE_MPI_H}" OR NOT "${HAVE_MPI_SEND}")
         INCLUDE (FindMPI)
         MARK_AS_ADVANCED(MPI_LIBRARY)
@@ -27,10 +35,12 @@ IF( NEKTAR_USE_MPI )
 	IF (HAVE_APRUN)
 	    # Probably on Cray
             SET(MPIEXEC "aprun" CACHE STRING "MPI job launching command")
-	    SET(MPIEXEC_NUMPROC_FLAG "-n" CACHE STRING "MPI job launcher flag to specify number of processes")
+	    SET(MPIEXEC_NUMPROC_FLAG "-n" CACHE STRING
+                "MPI job launcher flag to specify number of processes")
 	ELSE()
             SET(MPIEXEC "mpirun" CACHE STRING "MPI job launching command")
-	    SET(MPIEXEC_NUMPROC_FLAG "-np" CACHE STRING "MPI job launcher flag to specify number of processes")
+	    SET(MPIEXEC_NUMPROC_FLAG "-np" CACHE STRING
+                "MPI job launcher flag to specify number of processes")
 	ENDIF()
 	MARK_AS_ADVANCED(MPIEXEC)
 	MARK_AS_ADVANCED(MPIEXEC_NUMPROC_FLAG)

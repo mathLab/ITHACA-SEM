@@ -2,7 +2,7 @@
 #
 # ThirdParty configuration for Nektar++
 #
-# Loki headers library
+# Modified METIS library
 #
 ########################################################################
 

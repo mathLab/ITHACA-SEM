@@ -7,7 +7,7 @@
 ########################################################################
 
 #If the user has not set BOOST_ROOT, look in a couple common places first.
-MESSAGE(STATUS "Searching for Boost")
+MESSAGE(STATUS "Searching for Boost:")
 SET(NEEDED_BOOST_LIBS thread iostreams date_time filesystem system
     program_options regex)
 IF( BOOST_ROOT )

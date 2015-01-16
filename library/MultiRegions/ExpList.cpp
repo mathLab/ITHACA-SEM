@@ -1367,7 +1367,7 @@ namespace Nektar
          * @param   outfile Output file name.
          * @param   var                 variables names
          */
-        void ExpList::v_WriteTecplotHeader(std::ofstream &outfile,
+        void ExpList::v_WriteTecplotHeader(std::ostream &outfile,
                                            std::string    var)
         {
             int coordim  = GetExp(0)->GetCoordim();
@@ -1401,7 +1401,7 @@ namespace Nektar
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteTecplotZone(std::ostream &outfile, int expansion)
         {
             int i, j;
             int coordim = GetCoordim(0);
@@ -1495,7 +1495,7 @@ namespace Nektar
             }
         }
 
-        void ExpList::v_WriteTecplotConnectivity(std::ofstream &outfile,
+        void ExpList::v_WriteTecplotConnectivity(std::ostream &outfile,
                                                  int expansion)
         {
             int i,j,k,l;
@@ -1572,7 +1572,7 @@ namespace Nektar
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList::v_WriteTecplotField(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteTecplotField(std::ostream &outfile, int expansion)
         {
             if (expansion == -1)
             {
@@ -1606,7 +1606,7 @@ namespace Nektar
             }
         }
 
-        void ExpList::WriteVtkHeader(std::ofstream &outfile)
+        void ExpList::WriteVtkHeader(std::ostream &outfile)
         {
             outfile << "<?xml version=\"1.0\"?>" << endl;
             outfile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" "
@@ -1614,24 +1614,24 @@ namespace Nektar
             outfile << "  <UnstructuredGrid>" << endl;
         }
 
-        void ExpList::WriteVtkFooter(std::ofstream &outfile)
+        void ExpList::WriteVtkFooter(std::ostream &outfile)
         {
             outfile << "  </UnstructuredGrid>" << endl;
             outfile << "</VTKFile>" << endl;
         }
 
-        void ExpList::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             ASSERTL0(false, "Routine not implemented for this expansion.");
         }
 
-        void ExpList::WriteVtkPieceFooter(std::ofstream &outfile, int expansion)
+        void ExpList::WriteVtkPieceFooter(std::ostream &outfile, int expansion)
         {
             outfile << "      </PointData>" << endl;
             outfile << "    </Piece>" << endl;
         }
 
-        void ExpList::v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+        void ExpList::v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                         std::string var)
         {
             int i;

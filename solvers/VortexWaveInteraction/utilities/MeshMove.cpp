@@ -3930,7 +3930,7 @@ cout<<"alpha="<<s_alp<<endl;
     	   // Now read body of vertex
            TiXmlNode *vertexBody = vertexnew->FirstChild();
            // Accumulate all non-comment body data.
-           if (vertexBody->Type() == TiXmlNode::TEXT)
+           if (vertexBody->Type() == TiXmlNode::TINYXML_TEXT)
            {
                 vertexBodyStr += vertexBody->ToText()->Value();
                 vertexBodyStr += " ";
@@ -4000,7 +4000,7 @@ cout<<"alpha="<<s_alp<<endl;
                   std::string edgeBodyStr;
 		  //read the body of the edge
 		  TiXmlNode *edgeBody = edgenew->FirstChild();
-       		  if(edgeBody->Type() == TiXmlNode::TEXT)
+       		  if(edgeBody->Type() == TiXmlNode::TINYXML_TEXT)
           	  {
 		       edgeBodyStr += edgeBody->ToText()->Value();
                        edgeBodyStr += " ";

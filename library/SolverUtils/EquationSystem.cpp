@@ -106,9 +106,6 @@ namespace Nektar
          */
         void EquationSystem::v_InitObject()
         {
-            // Filename of the session file
-            m_filename = m_session->GetFilename();
-
             // Save the basename of input file name for output details
             m_sessionName = m_session->GetSessionName();
 
@@ -773,20 +770,28 @@ namespace Nektar
 
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
-            else if (vType == LibUtilities::eFunctionTypeFile || vType == LibUtilities::eFunctionTypeTransientFile)
+            else if (vType == LibUtilities::eFunctionTypeFile ||
+                     vType == LibUtilities::eFunctionTypeTransientFile)
             {
-                std::string filename
-                    = m_session->GetFunctionFilename(pFunctionName, pFieldName,domain);
+                std::string filename = m_session->GetFunctionFilename(
+                    pFunctionName, pFieldName, domain);
+                std::string fileVar = m_session->GetFunctionFilenameVariable(
+                    pFunctionName, pFieldName, domain);
+
+                if (fileVar.length() == 0)
+                {
+                    fileVar = pFieldName;
+                }
 
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
-                
 
-                int numexp = m_fields[0]->GetExpSize(); 
+                int numexp = m_fields[0]->GetExpSize();
                 Array<OneD,int> ElementGIDs(numexp);
-                // Define list of global element ids 
+
+                // Define list of global element ids
                 for(int i = 0; i < numexp; ++i)
                 {
                     ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
@@ -801,29 +806,29 @@ namespace Nektar
                     catch (...)
                     {
                         ASSERTL0(false, "Invalid Filename in function \""
-                        + pFunctionName + "\", variable \"" + pFieldName + "\"")
+                        + pFunctionName + "\", variable \"" + fileVar + "\"")
                     }
                 }
 
-                m_fld->Import(filename,FieldDef,FieldData,
-                                     LibUtilities::NullFieldMetaDataMap,
-                                     ElementGIDs);
-                
+                m_fld->Import(filename, FieldDef, FieldData,
+                              LibUtilities::NullFieldMetaDataMap,
+                              ElementGIDs);
+
                 int idx = -1;
-                
+
                 // Loop over all the expansions
                 for (int i = 0; i < FieldDef.size(); ++i)
                 {
-                    // Find the index of the required field in the 
+                    // Find the index of the required field in the
                     // expansion segment
                     for(int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
                     {
-                        if (FieldDef[i]->m_fields[j] == pFieldName)
+                        if (FieldDef[i]->m_fields[j] == fileVar)
                         {
                             idx = j;
                         }
                     }
-                    
+
                     if (idx >= 0)
                     {
                         m_fields[0]->ExtractDataToCoeffs(
@@ -832,10 +837,9 @@ namespace Nektar
                     }
                     else
                     {
-                        cout << "Field " + pFieldName + " not found." << endl;
+                        cout << "Field " + fileVar + " not found." << endl;
                     }
                 }
-
 
                 m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
             }

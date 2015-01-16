@@ -80,14 +80,16 @@ namespace Nektar
                 {
                     m_expr_id = -1;
                     std::string msg(std::string("Equation::Equation() fails on expression [") + m_expr + std::string("]\n"));
-                    ASSERTL0(false, msg + std::string("ERROR: ") + e.what());
+                    ASSERTL1(false, msg);
+                    throw e;
                     return;
                 }
                 catch (const std::string& e)
                 {
                     m_expr_id = -1;
                     std::string msg(std::string("Equation::Equation() fails on expression [") + m_expr + std::string("]\n"));
-                    ASSERTL0(false, msg + std::string("ERROR: ") + e);
+                    ASSERTL1(false, msg);
+                    throw e;
                     return;
                 }
             }

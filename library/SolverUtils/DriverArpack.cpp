@@ -172,8 +172,8 @@ namespace Nektar
 
             int cycle = 0;
             const char* problem = ArpackProblemTypeTrans[m_session->GetSolverInfoAsEnum<int>("ArpackProblemType")].c_str();
-        
-            std::string name = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.'))+".evl";
+       
+            std::string name = m_session->GetSessionName() + ".evl"; 
             ofstream pFile(name.c_str());
         
             ido     = 0;    //At the first call must be initialisedat 0
@@ -286,9 +286,9 @@ namespace Nektar
             {
                 WriteEvs(out,i,dr[i],di[i]);
                 WriteEvs(pFile,i,dr[i],di[i]);
-			
-                std::string file = m_session->GetFilename().substr(0,m_session->GetFilename().find_last_of('.')) + "_eig_" + boost::lexical_cast<std::string>(i);
-            
+		
+                std::string file = m_session->GetSessionName() + "_eig_"
+                                        + boost::lexical_cast<std::string>(i);
                 WriteFld(file,z + i*nq);
             }
         

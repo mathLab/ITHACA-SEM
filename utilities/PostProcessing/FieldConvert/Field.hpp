@@ -98,6 +98,7 @@ struct Field {
     bool                                    m_fldToBnd;
 
     LibUtilities::PtsFieldSharedPtr         m_fieldPts;
+    bool                                    m_setUpEquiSpacedFields;
 
 
     MultiRegions::ExpListSharedPtr SetUpFirstExpList(int NumHomogeneousDir,
@@ -262,7 +263,7 @@ struct Field {
             {
                 ASSERTL0(NumHomogeneousDir <= 1,
                          "NumHomogeneousDir is only set up for 1");
-                
+
                 if (NumHomogeneousDir == 1)
                 {
                     MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
@@ -347,7 +348,7 @@ struct Field {
         case 3:
             {
                 MultiRegions::ExpList3DSharedPtr Exp3D;
-                
+
                 if(m_declareExpansionAsContField)
                 {
                     Exp3D = MemoryManager<MultiRegions::ContField3D>
@@ -365,7 +366,7 @@ struct Field {
                     Exp3D = MemoryManager<MultiRegions::ExpList3D>
                         ::AllocateSharedPtr(m_session, m_graph);
                 }
-                
+
                 exp = Exp3D;
             }
             break;
@@ -454,7 +455,7 @@ struct Field {
                         MultiRegions::DisContField1DSharedPtr tmp2 =
                             boost::dynamic_pointer_cast<MultiRegions::
                             DisContField1D>(m_exp[0]);
-                        
+
                         tmp = MemoryManager<MultiRegions::DisContField1D>::
                             AllocateSharedPtr(m_session,m_graph,var);
                     }
@@ -463,7 +464,7 @@ struct Field {
                         MultiRegions::ExpList1DSharedPtr tmp2 =
                             boost::dynamic_pointer_cast<MultiRegions::
                             ExpList1D>(m_exp[0]);
-                        
+
                         tmp = MemoryManager<MultiRegions::ExpList1D>::
                             AllocateSharedPtr(*tmp2);
                     }
@@ -495,7 +496,7 @@ struct Field {
                             MultiRegions::ContField3DHomogeneous1DSharedPtr tmp2 =
                                 boost::dynamic_pointer_cast<MultiRegions::
                                 ContField3DHomogeneous1D>(m_exp[0]);
-                            
+
                             ASSERTL0(tmp2,"Failed to type cast m_exp[0]");
                             tmp = MemoryManager<MultiRegions::
                                 ContField3DHomogeneous1D>::
@@ -523,7 +524,7 @@ struct Field {
                                 boost::dynamic_pointer_cast<MultiRegions::
                                 DisContField3DHomogeneous1D>(m_exp[0]);
                             ASSERTL0(tmp2,"Failed to type cast m_exp[0]");
-                            
+
                             tmp = MemoryManager<MultiRegions::
                                 DisContField3DHomogeneous1D>::
                                 AllocateSharedPtr(*tmp2);
@@ -535,7 +536,7 @@ struct Field {
                         {
                             bool useFFT     = false;
                             bool dealiasing = false;
-                            
+
                             tmp  = MemoryManager<MultiRegions::
                                 ExpList3DHomogeneous1D>::AllocateSharedPtr(
                                         m_session,
@@ -590,7 +591,7 @@ struct Field {
                             MultiRegions::DisContField2DSharedPtr tmp2 =
                                 boost::dynamic_pointer_cast<MultiRegions::
                                 DisContField2D>(m_exp[0]);
-                            
+
                             tmp = MemoryManager<MultiRegions::DisContField2D>::
                                 AllocateSharedPtr(*tmp2,m_graph,var);
                         }

@@ -115,9 +115,6 @@ namespace Nektar
          */
         void EquationSystem::v_InitObject()
         {
-            // Filename of the session file
-            m_filename = m_session->GetFilename();
-
             // Save the basename of input file name for output details
             m_sessionName = m_session->GetSessionName();
 
@@ -782,20 +779,28 @@ namespace Nektar
 
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
-            else if (vType == LibUtilities::eFunctionTypeFile || vType == LibUtilities::eFunctionTypeTransientFile)
+            else if (vType == LibUtilities::eFunctionTypeFile ||
+                     vType == LibUtilities::eFunctionTypeTransientFile)
             {
-                std::string filename
-                    = m_session->GetFunctionFilename(pFunctionName, pFieldName,domain);
+                std::string filename = m_session->GetFunctionFilename(
+                    pFunctionName, pFieldName, domain);
+                std::string fileVar = m_session->GetFunctionFilenameVariable(
+                    pFunctionName, pFieldName, domain);
+
+                if (fileVar.length() == 0)
+                {
+                    fileVar = pFieldName;
+                }
 
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
-                
 
-                int numexp = m_fields[0]->GetExpSize(); 
+                int numexp = m_fields[0]->GetExpSize();
                 Array<OneD,int> ElementGIDs(numexp);
-                // Define list of global element ids 
+
+                // Define list of global element ids
                 for(int i = 0; i < numexp; ++i)
                 {
                     ElementGIDs[i] = m_fields[0]->GetExp(i)->GetGeom()->GetGlobalID();
@@ -821,7 +826,7 @@ namespace Nektar
                     catch (...)
                     {
                         ASSERTL0(false, "Invalid Filename in function \""
-                                + pFunctionName + "\", variable \"" + pFieldName + "\"")
+                                + pFunctionName + "\", variable \"" + fileVar + "\"")
                     }
                 }
 
@@ -840,7 +845,7 @@ namespace Nektar
                         // expansion segment
                         for (int j = 0; j < FieldDef[i]->m_fields.size(); ++j)
                         {
-                            if (FieldDef[i]->m_fields[j] == pFieldName)
+                            if (FieldDef[i]->m_fields[j] == fileVar)
                             {
                                 idx = j;
                             }
@@ -854,7 +859,7 @@ namespace Nektar
                         }
                         else
                         {
-                            cout << "Field " + pFieldName + " not found." << endl;
+                            cout << "Field " + fileVar + " not found." << endl;
                         }
                     }
 

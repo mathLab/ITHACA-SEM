@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     LibUtilities::CommSharedPtr vComm = vSession->GetComm();
-    string meshfile(vSession->GetFilename());
 
     MultiRegions::DisContField1DSharedPtr Exp,Fce;
     int     i, nq,  coordim;

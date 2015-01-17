@@ -219,7 +219,7 @@ namespace Nektar
         void SetRadiationBoundaryForcing(int fieldid);
 
 	/// Set Womersley Profile If specified
-	void SetWomersleyBoundary(int fieldid, int bndid);
+	void SetWomersleyBoundary(int fieldid,int bndid);
 
         /// evaluate steady state
         bool CalcSteadyState(void);

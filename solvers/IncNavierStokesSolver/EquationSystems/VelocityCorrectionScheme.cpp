@@ -407,8 +407,8 @@ namespace Nektar
         }
         else
         {
-            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], Forcing[1],
-                                  Forcing[2]);
+            m_pressure->PhysDeriv(m_pressure->GetPhys(), Forcing[0], 
+                                  Forcing[1], Forcing[2]);
         }
         
         // Subtract inarray/(aii_dt) and divide by kinvis. Kinvis will

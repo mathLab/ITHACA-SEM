@@ -250,9 +250,10 @@ namespace Nektar
         // Rotate HOPBCs storage
         RollOver(m_pressureHBCs);
 
-        // Calculate non-linear and viscous BCs at current level and put in m_pressureHBCs[0]
+        // Calculate non-linear and viscous BCs at current level and
+        // put in m_pressureHBCs[0]
         CalcNeumannPressureBCs(inarray,velfields,kinvis);
-        
+
         // Extrapolate to m_pressureHBCs to n+1
         ExtrapolatePressureHBCs();
         

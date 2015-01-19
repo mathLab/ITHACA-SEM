@@ -103,51 +103,35 @@ void ProcessIsoContour::Process(po::variables_map &vm)
 
     if(m_config["fieldstr"].m_beenSet) //generate field of interest
     {
+        fieldid = m_f->m_fieldPts->GetNFields();
 
-        m_f->m_fieldPts->m_nFields++;
-
-        int nfields = m_f->m_fieldPts->m_nFields;
-        int coordim = m_f->m_fieldPts->m_ptsDim;
-
-        fieldid = nfields-1;
-
-        Array<OneD, Array<OneD, NekDouble> > newpts(nfields+coordim);
-
-        // redirect existing pts
-        for(int i = 0; i < nfields+coordim-1; ++i)
-        {
-            newpts[i] = m_f->m_fieldPts->m_pts[i];
-        }
-        int npts = m_f->m_fieldPts->m_pts[0].num_elements();
-        newpts[nfields+coordim-1] = Array<OneD, NekDouble>(npts);
-
-        m_f->m_fieldPts->m_pts = newpts;
+        Array<OneD, NekDouble> pts(m_f->m_fieldPts->GetNpoints());
 
         // evaluate new function
         LibUtilities::AnalyticExpressionEvaluator strEval;
         string varstr = "x y z";
         vector<Array<OneD, const NekDouble> > interpfields;
 
-        for(int i = 0; i < coordim; ++i)
+        for(int i = 0; i < m_f->m_fieldPts->GetDim(); ++i)
         {
-            interpfields.push_back(m_f->m_fieldPts->m_pts[i]);
+            interpfields.push_back(m_f->m_fieldPts->GetPts(i));
         }
-        for(int i = 0; i < nfields-1; ++i)
+        for(int i = 0; i < m_f->m_fieldPts->GetNFields(); ++i)
         {
-            varstr += " " + m_f->m_fieldPts->m_fields[i];
-            interpfields.push_back(m_f->m_fieldPts->m_pts[i+3]);
+            varstr += " " + m_f->m_fieldPts->GetFieldName(i);
+            interpfields.push_back(m_f->m_fieldPts->GetPts(i+3));
         }
 
         int ExprId  = -1;
         std::string str = m_config["fieldstr"].as<string>();
         ExprId = strEval.DefineFunction(varstr.c_str(), str);
 
-        strEval.Evaluate(ExprId, interpfields,
-                         m_f->m_fieldPts->m_pts[nfields+coordim-1]);
+        strEval.Evaluate(ExprId, interpfields, pts);
 
         // set up field name if provided otherwise called "isocon" from default
-        m_f->m_fieldPts->m_fields.push_back(
-                                    m_config["fieldname"].as<string>());
+        string fieldName = m_config["fieldname"].as<string>();
+
+        m_f->m_fieldPts->AddField(pts, fieldName);
     }
     else
     {
@@ -162,7 +146,7 @@ void ProcessIsoContour::Process(po::variables_map &vm)
     if(smoothing||globalcondense)
     {
         vector<IsoSharedPtr> glob_iso;
-        int nfields = m_f->m_fieldPts->m_pts.num_elements();
+        int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
         IsoSharedPtr g_iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
 
         g_iso->globalcondense(iso);
@@ -292,18 +276,15 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
 {
     vector<IsoSharedPtr> returnval;
 
-    Array<OneD, NekDouble> x = m_f->m_fieldPts->m_pts[0];
-    Array<OneD, NekDouble> y = m_f->m_fieldPts->m_pts[1];
-    Array<OneD, NekDouble> z = m_f->m_fieldPts->m_pts[2];
-
     int coordim = m_f->m_exp[0]->GetCoordim(0);
-    int nfields = m_f->m_fieldPts->m_pts.num_elements();
+    int nfields = m_f->m_fieldPts->GetNFields() + coordim;
 
     ASSERTL0(coordim == 3,
              "This methods is currently only set up for 3D fields");
     ASSERTL1(coordim + fieldid < nfields,
              "field id is larger than number contained in FieldPts");
-    Array<OneD, Array<OneD, NekDouble> > fields = m_f->m_fieldPts->m_pts;
+    Array<OneD, Array<OneD, NekDouble> > fields;
+    m_f->m_fieldPts->GetPts(fields);
 
     Array<OneD, NekDouble> c = fields[coordim + fieldid];
 
@@ -456,10 +437,10 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
 // reset m_fieldPts with values from iso;
 void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
 {
-    int nfields = m_f->m_fieldPts->m_pts.num_elements();
+    int nfields = m_f->m_fieldPts->GetNFields() + m_f->m_fieldPts->GetDim();
 
     // set output to triangle block.
-    m_f->m_fieldPts->m_ptype = ePtsTriBlock;
+    m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
 
     Array<OneD, Array<OneD, NekDouble> > newfields(nfields);
 
@@ -502,7 +483,7 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
         }
     }
 
-    m_f->m_fieldPts->m_pts = newfields;
+    m_f->m_fieldPts->SetPts(newfields);
 
     // set up connectivity data.
     cnt = 0;
@@ -519,6 +500,7 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
         m_f->m_fieldPts->m_ptsConn.push_back(conn);
         cnt += iso[i]->get_nvert();
     }
+    m_f->m_fieldPts->SetConnectivity(ptsConn);
 }
 
 void Iso::condense(void)

@@ -226,14 +226,33 @@ std::string PtsField::GetFieldName(const int i) const
 }
 
 
-void PtsField::SetFieldNames(const vector<std::string> fieldName)
+void PtsField::SetFieldNames(const vector<std::string> fieldNames)
 {
-    m_fieldNames = fieldName;
+    ASSERTL0(fieldNames.size() == m_pts.num_elements() - m_dim,
+    "Number of given fieldNames does not match the number of stored fields");
+
+    m_fieldNames = fieldNames;
 }
 
 
-void PtsField::AddFieldName(const std::string fieldName)
+void PtsField::AddField(const Array< OneD, NekDouble > &pts,
+                        const string fieldName)
 {
+    int nTotvars = m_pts.num_elements();
+    int nPts = m_pts[0].num_elements();
+
+    ASSERTL1(pts.num_elements() ==  nPts, "Field size mismatch");
+
+    // redirect existing pts
+    Array<OneD, Array<OneD, NekDouble> > newpts(nTotvars + 1);
+    for (int i = 0; i < nTotvars; ++i)
+    {
+        newpts[i] = m_pts[i];
+    }
+    newpts[nTotvars] = pts;
+
+    m_pts = newpts;
+
     m_fieldNames.push_back(fieldName);
 }
 
@@ -244,20 +263,29 @@ int PtsField::GetNpoints() const
 }
 
 
+NekDouble PtsField::GetPointVal(const int fieldInd, const int ptInd) const
+{
+    return m_pts[fieldInd][ptInd];
+}
+
+
 void PtsField::GetPts(Array< OneD, Array< OneD, NekDouble > > &pts) const
 {
     pts = m_pts;
 }
 
 
-void PtsField::SetPoint(const int fieldIdx, const int pointIdx, NekDouble value)
+Array< OneD, NekDouble > PtsField::GetPts(const int fieldInd) const
 {
-    m_pts[fieldIdx][pointIdx] = value;
+    return m_pts[fieldInd];
 }
 
 
-void PtsField::SetPointsArray(Array<OneD,  Array<OneD,  NekDouble> > &pts)
+void PtsField::SetPts(Array< OneD, Array< OneD, NekDouble > > &pts)
 {
+    ASSERTL1(pts.num_elements() ==  m_pts.num_elements(),
+             "Pts field count mismatch");
+
     m_pts = pts;
 }
 
@@ -272,6 +300,7 @@ int PtsField::GetPointsPerEdge(const int i) const
 {
     return m_nPtsPerEdge[i];
 }
+
 
 /**
  * @brief Set the number of points per edge
@@ -292,6 +321,18 @@ void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
     ASSERTL0(totPts == m_pts.num_elements(),
              "nPtsPerEdge does not match total number of points");
     m_nPtsPerEdge = nPtsPerEdge;
+}
+
+
+PtsType PtsField::GetPtsType() const
+{
+    return m_ptsType;
+}
+
+
+void PtsField::SetPtsType(const PtsType type)
+{
+    m_ptsType = type;
 }
 
 

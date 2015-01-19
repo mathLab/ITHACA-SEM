@@ -38,6 +38,9 @@
 #include <iomanip>
 using namespace std;
 
+#include <LibUtilities/BasicUtils/PtsIO.h>
+#include <LibUtilities/BasicUtils/PtsField.h>
+
 #include "OutputTecplot.h"
 
 namespace Nektar
@@ -155,7 +158,7 @@ void OutputTecplot::Process(po::variables_map &vm)
 
         void OutputTecplot::Process(po::variables_map &vm)
         {
-            FieldPtsSharedPtr f = m_f->m_fieldPts;
+            LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
 
             m_doError = (vm.count("error") == 1)?  true: false;
 
@@ -164,7 +167,7 @@ void OutputTecplot::Process(po::variables_map &vm)
                 cout << "OutputTecplot: Writing file..." << endl;
             }
             // Do nothing if no expansion defined
-            if (f == NullFieldPts && !m_f->m_exp.size())
+            if (fPts == LibUtilities::NullPtsField && !m_f->m_exp.size())
             {
                 return;
             }
@@ -172,26 +175,13 @@ void OutputTecplot::Process(po::variables_map &vm)
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
 
-    cout << "Written file: " << filename << endl;
+            if(fPts != LibUtilities::NullPtsField)
+            {
+                int i   = 0;
+                int j   = 0;
+                int dim = fPts->GetDim();
 
-#ifdef _WIN32
-    _set_output_format(old_exponent_format);
-#endif
-}
-
-
-/**
- * Write Tecplot Files Header
- * @param   outfile Output file name.
- * @param   var                 variables names
- */
-void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
-                                       std::string var)
-{
-    int coordim  = m_f->m_exp[0]->GetExp(0)->GetCoordim();
-    MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
-
-                if(f->m_pts[0].num_elements() == 0)
+                if(fPts->GetNpoints() == 0)
                 {
                     return;
                 }
@@ -212,70 +202,76 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
                     break;
                 }
 
-                for(i = 0; i < f->m_fields.size(); ++i)
+                for(i = 0; i < fPts->GetNFields(); ++i)
                 {
-                    outfile << "," << f->m_fields[i];
+                    outfile << "," << fPts->GetFieldName(i);
                 }
                 outfile << endl;
                 bool DumpAsFEPoint = true;
-                switch(f->m_ptype)
+                switch(fPts->GetPtsType())
                 {
-                    case Utilities::ePtsFile:
-                    case Utilities::ePtsLine:
+                    case LibUtilities::ePtsFile:
+                    case LibUtilities::ePtsLine:
+                    {
                         outfile << " ZONE I="
-                                << f->m_pts[0].num_elements()
+                                << fPts->GetNpoints()
                                 << " F=POINT" << endl;
                         break;
-                    case Utilities::ePtsPlane:
-                        outfile << " ZONE I=" << f->m_npts[0]
-                                <<      " J=" << f->m_npts[1]
+                    }
+                    case LibUtilities::ePtsPlane:
+                    {
+                        outfile << " ZONE I=" << fPts->GetPointsPerEdge(0)
+                                <<      " J=" << fPts->GetPointsPerEdge(1)
                                 << " F=POINT" << endl;
                         break;
-                    case Utilities::ePtsTriBlock:
+                    }
+                    case LibUtilities::ePtsTriBlock:
                     {
                         int numBlocks = 0;
-                        for(i = 0; i < f->m_ptsConn.size(); ++i)
+                        for(i = 0; i < fPts->m_ptsConn.size(); ++i)
                         {
                             numBlocks +=
-                                f->m_ptsConn[i].num_elements()/3;
+                                fPts->m_ptsConn[i].num_elements()/3;
                         }
                         outfile << "Zone, N="
-                                << f->m_pts[0].num_elements()
+                                << fPts->GetNpoints()
                                 << ", E=" << numBlocks
                                 << ", F=FEBlock" << ", ET=TRIANGLE"
                                 << std::endl;
                         DumpAsFEPoint = false;
                         break;
                     }
-                    case Utilities::ePtsTetBlock:
+                    case LibUtilities::ePtsTetBlock:
                     {
                         int numBlocks = 0;
-                        for(i = 0; i < f->m_ptsConn.size(); ++i)
+                        for(i = 0; i < fPts->m_ptsConn.size(); ++i)
                         {
                             numBlocks +=
-                                f->m_ptsConn[i].num_elements()/4;
+                                fPts->m_ptsConn[i].num_elements()/4;
                         }
                         outfile << "Zone, N="
-                                << f->m_pts[0].num_elements()
+                                << fPts->GetNpoints()
                                 << ", E=" << numBlocks
                                 << ", F=FEBlock" << ", ET=TETRAHEDRON"
                                 << std::endl;
                         DumpAsFEPoint = false;
                         break;
                     }
+                    default:
+                        ASSERTL0(false, "ptsType type not supported yet.");
                 }
 
                 if(DumpAsFEPoint) // dump in point format
                 {
-                    for(i = 0; i < f->m_pts[0].num_elements(); ++i)
+                    for(i = 0; i < fPts->GetNpoints(); ++i)
                     {
                         for(j = 0; j < dim; ++j)
                         {
                             outfile << std::setw(12)
-                                    << f->m_pts[j][i] << " ";
+                                    << fPts->GetPointVal(j, i) << " ";
                         }
 
-                        for(j = 0; j < f->m_fields.size(); ++j)
+                        for(j = 0; j < fPts->GetNFields(); ++j)
                         {
                             outfile << std::setw(12)
                                     << m_f->m_data[j][i] << " ";
@@ -285,11 +281,11 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
                 }
                 else // dump in block format
                 {
-                    for(j = 0; j < dim + f->m_fields.size(); ++j)
+                    for(j = 0; j < dim + fPts->GetNFields(); ++j)
                     {
-                        for(i = 0; i < f->m_pts[0].num_elements(); ++i)
+                        for(i = 0; i < fPts->GetNpoints(); ++i)
                         {
-                            outfile <<  f->m_pts[j][i] << " ";
+                            outfile <<  fPts->GetPointVal(j, i) << " ";
                             if((!(i % 1000))&&i)
                             {
                                 outfile << std::endl;
@@ -298,13 +294,12 @@ void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
                         outfile << endl;
                     }
 
-
                     // dump connectivity data if it exists
-                    for(i = 0; i < f->m_ptsConn.size();++i)
+                    for(i = 0; i < fPts->m_ptsConn.size();++i)
                     {
-                        for(j = 0; j < f->m_ptsConn[i].num_elements(); ++j)
+                        for(j = 0; j < fPts->m_ptsConn[i].num_elements(); ++j)
                         {
-                            outfile << f->m_ptsConn[i][j] +1 << " ";
+                            outfile << fPts->m_ptsConn[i][j] +1 << " ";
                             if( ( !(j % 10 * dim) ) && j )
                             {
                                 outfile << std::endl;

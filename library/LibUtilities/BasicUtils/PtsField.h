@@ -52,6 +52,15 @@ namespace Nektar
 namespace LibUtilities
 {
 
+enum PtsType{
+    ePtsFile,
+    ePtsLine,
+    ePtsPlane,
+    ePtsTriBlock,
+    ePtsTetBlock
+};
+
+
 class PtsPoint
 {
     public:
@@ -81,11 +90,14 @@ class PtsField
 {
     public:
 
+        vector<Array<OneD, int> >               m_ptsConn;
+
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,
             const Array<OneD, Array<OneD, NekDouble> > &pts) :
             m_dim(dim),
-            m_pts(pts)
+            m_pts(pts),
+            m_ptsType(ePtsFile)
         {
         };
 
@@ -95,7 +107,8 @@ class PtsField
             const Array<OneD, Array<OneD, NekDouble> > &pts) :
             m_dim(dim),
             m_fieldNames(fieldnames),
-            m_pts(pts)
+            m_pts(pts),
+            m_ptsType(ePtsFile)
         {
         };
 
@@ -108,6 +121,7 @@ class PtsField
             m_dim(dim),
             m_fieldNames(fieldnames),
             m_pts(pts),
+            m_ptsType(ePtsFile),
             m_weights(weights),
             m_neighInds(neighInds)
         {
@@ -146,28 +160,31 @@ class PtsField
         LIB_UTILITIES_EXPORT std::string GetFieldName(const int i) const;
 
         LIB_UTILITIES_EXPORT void SetFieldNames(
-            const vector<std::string> fieldName);
+            const vector<std::string> fieldNames);
 
-        LIB_UTILITIES_EXPORT void AddFieldName(const std::string fieldName);
+        LIB_UTILITIES_EXPORT void AddField(const Array<OneD, NekDouble> &pts,
+                                           const std::string fieldName);
 
         LIB_UTILITIES_EXPORT int GetNpoints() const;
 
+        LIB_UTILITIES_EXPORT NekDouble GetPointVal(const int fieldInd, const int ptInd) const;
+
         LIB_UTILITIES_EXPORT void GetPts(
-            Array<OneD,  Array<OneD,  NekDouble> > &pts)
-        const;
+            Array<OneD, Array<OneD, NekDouble> > &pts) const;
 
-        LIB_UTILITIES_EXPORT void SetPoint(const int fieldIdx, const int pointIdx,
-                                           NekDouble value);
+        LIB_UTILITIES_EXPORT Array<OneD, NekDouble> GetPts(const int fieldInd) const;
 
-        LIB_UTILITIES_EXPORT void SetPointsArray(
-            Array<OneD,  Array<OneD,  NekDouble> >
-            &pts);
+        LIB_UTILITIES_EXPORT void SetPts(Array<OneD, Array<OneD, NekDouble> > &pts);
 
         LIB_UTILITIES_EXPORT vector<int> GetPointsPerEdge() const;
 
         LIB_UTILITIES_EXPORT int GetPointsPerEdge(const int i) const;
 
         LIB_UTILITIES_EXPORT void SetPointsPerEdge(const vector<int> nPtsPerEdge);
+
+        LIB_UTILITIES_EXPORT PtsType GetPtsType() const;
+
+        LIB_UTILITIES_EXPORT void SetPtsType(const PtsType type);
 
         template<typename FuncPointerT, typename ObjectPointerT>
         void setProgressCallback(FuncPointerT func,
@@ -182,13 +199,15 @@ class PtsField
         int                                     m_dim;
         /// Names of the field variables
         vector<std::string>                     m_fieldNames;
-        /// Point data. For a n-dimensional field,  the first n fields are the
+        /// Point data. For a n-dimensional field, the first n fields are the
         /// points spatial coordinates. Structure: m_pts[fieldIdx][ptIdx]
         Array<OneD, Array<OneD, NekDouble> >    m_pts;
         /// Number of points per edge. Empty if the point data has no
         /// specific shape, size=1 for a line, 2 for a plane, 3 for a box.
         /// Parallel edges have the same number of points.
         vector<int>                             m_nPtsPerEdge;
+        /// Type of the PtsField
+        PtsType                                 m_ptsType;
         /// Interpolation weights for each neighbour.
         /// Structure: m_weights[physPtIdx][neighbourIdx]
         Array<OneD, Array<OneD, float> >        m_weights;

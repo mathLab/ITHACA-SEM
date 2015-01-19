@@ -150,6 +150,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             ppe.push_back(npts);
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
             m_f->m_fieldPts->SetPointsPerEdge(ppe);
+            m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsLine);
 
         }
         else if(m_config["plane"].as<string>().compare("NotSet") != 0)
@@ -205,6 +206,7 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
             ppe.push_back(npts2);
             m_f->m_fieldPts = MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(dim, pts);
             m_f->m_fieldPts->SetPointsPerEdge(ppe);
+            m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsPlane);
 
         }
     }

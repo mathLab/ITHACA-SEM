@@ -55,6 +55,7 @@ namespace Nektar
         ProcessWSS::ProcessWSS(FieldSharedPtr f) : ProcessModule(f)
         {
             m_config["bnd"] = ConfigOption(false,"All","Boundary to be extracted");
+            m_config["c0"]  = ConfigOption(false,"0","Perform c0 projection on gradients-boolean option 1/0");
             f->m_writeBndFld = true;
             f->m_declareExpansionAsContField = true;
             m_f->m_fldToBnd = false;
@@ -70,7 +71,17 @@ namespace Nektar
             {
                 cout << "ProcessWSS: Calculating wall shear stress..." << endl;
             }
+
+            int c0ProjInt = m_config["c0"].as<NekDouble>();
+            ASSERTL0(c0ProjInt == 0 || c0ProjInt == 1,
+                     "c0 option either 1 (turn on) or 0 (turn off, default).");
             
+            bool c0Proj = false;
+            if(c0ProjInt == 1)
+            {
+                c0Proj = true;
+            }
+  
             // Set up Field options to output boundary fld
             string bvalues =  m_config["bnd"].as<string>();
             
@@ -90,11 +101,11 @@ namespace Nektar
                                                            m_f->m_bndRegionsToWrite),"Failed to interpret range string");
             }
 
+
             NekDouble m_kinvis;
             m_kinvis = m_f->m_session->GetParameter("Kinvis");
 
             int i, j;
-            int expdim    = m_f->m_graph->GetMeshDimension();
             int spacedim  = m_f->m_graph->GetSpaceDimension();
             if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 ||
                 (m_f->m_fielddef[0]->m_numHomogeneousDir) == 2)
@@ -118,17 +129,15 @@ namespace Nektar
            
             int n, cnt, elmtid, nq, offset, boundary, nfq;
             int npoints = m_f->m_exp[0]->GetNpoints(); 
-            Array<OneD, Array<OneD, NekDouble> > grad(ngrad), fgrad(ngrad);
+            Array<OneD, Array<OneD, NekDouble> > velocity(nfields), grad(ngrad), fgrad(ngrad);
             Array<OneD, Array<OneD, NekDouble> > stress(nstress), fstress(nstress);
             Array<OneD, Array<OneD, NekDouble> > outfield(newfields), shear(newfields);
-            Array<OneD, Array<OneD, NekDouble> > velocity(nfields);
-
+        
             StdRegions::StdExpansionSharedPtr elmt;
             StdRegions::StdExpansion2DSharedPtr bc;
             Array<OneD, int> BoundarytoElmtID, BoundarytoTraceID;
             Array<OneD, Array<OneD, MultiRegions::ExpListSharedPtr> > BndExp(newfields);
            
-            
             m_f->m_exp.resize(newfields);
             string var = "u";
             for(i = nfields+1; i < newfields; ++i)
@@ -136,6 +145,18 @@ namespace Nektar
                 m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir, var);
             }                
            
+            if(c0Proj)
+            {
+                m_f->m_exp.resize(newfields + ngrad);
+                for(i = newfields; i < newfields+ngrad; ++i)
+                {
+                    bool NewField = true;
+                    m_f->m_exp[i] = m_f->AppendExpList(m_f->m_fielddef[0]->m_numHomogeneousDir,
+                                                       "DefaultVar", NewField);
+                }                
+            }
+
+
             m_f->m_fielddef[0]->m_fields.resize(newfields);
             if(spacedim == 2)
             {
@@ -151,15 +172,51 @@ namespace Nektar
                 m_f->m_fielddef[0]->m_fields[3] = "Shear_mag";
             }
 
-
-            m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
-            //get boundary expansions for each field
-            for(int j = 0; j < newfields; ++j)
+            if(c0Proj)
             {
-                BndExp[j]   = m_f->m_exp[j]->GetBndCondExpansions();
+                if (m_f->m_verbose)
+                {
+                    cout << "ProcessWSS: Computing c0 projection on gradients..." << endl;
+                }
+                
+                // Calculate Gradients
+                if(nfields == 2)
+                {
+                    for(i = 0; i < nfields; ++i)
+                    {
+                        m_f->m_exp[i]->PhysDeriv(m_f->m_exp[i]->GetPhys(), 
+                                                 m_f->m_exp[i*nfields + newfields]->UpdatePhys(),
+                                                 m_f->m_exp[i*nfields+1 + newfields]->UpdatePhys());
+                    }
+                }
+                else if(nfields == 3)
+                {
+                    for(i = 0; i < nfields; ++i)
+                    {
+                        m_f->m_exp[i]->PhysDeriv(m_f->m_exp[i]->GetPhys(), 
+                                                 m_f->m_exp[i*nfields + newfields]->UpdatePhys(),
+                                                 m_f->m_exp[i*nfields+1 + newfields]->UpdatePhys(),
+                                                 m_f->m_exp[i*nfields+2 + newfields]->UpdatePhys());
+                    }
+                }
+                
+                for (i = 0; i < ngrad; ++i)
+                {
+                    m_f->m_exp[i + newfields]->FwdTrans(m_f->m_exp[i + newfields]->GetPhys(), 
+                                                        m_f->m_exp[i + newfields]->UpdateCoeffs());
+                }
+                
+                // C0 projection on gradient field. 
+                for (i = 0; i < ngrad; ++i)
+                {
+                    m_f->m_exp[i + newfields]->BwdTrans(m_f->m_exp[i + newfields]->GetCoeffs(), 
+                                                        m_f->m_exp[i + newfields]->UpdatePhys());
+                    m_f->m_exp[i + newfields]->FwdTrans(m_f->m_exp[i + newfields]->GetPhys(), 
+                                                        m_f->m_exp[i + newfields]->UpdateCoeffs());
+                }
             }
 
-
+  
             for (i = 0; i < newfields; ++i)
             {
                 outfield[i] = Array<OneD, NekDouble>(npoints);
@@ -168,7 +225,14 @@ namespace Nektar
             {
                 velocity[i] = Array<OneD, NekDouble>(npoints);
             }
-            
+
+            m_f->m_exp[0]->GetBoundaryToElmtMap(BoundarytoElmtID, BoundarytoTraceID);
+            //get boundary expansions for each field
+            for(int j = 0; j < newfields; ++j)
+            {
+                BndExp[j]   = m_f->m_exp[j]->GetBndCondExpansions();
+            }
+          
 
             // loop over the types of boundary conditions
             for(cnt = n = 0; n < BndExp[0].num_elements(); ++n)
@@ -235,17 +299,28 @@ namespace Nektar
                                     shear[j] = Array<OneD, NekDouble>(nfq);
                                 }
 
-                                //Extract Velocities
-                                for(int j = 0; j < nfields; ++j)
+                                if(c0Proj)
                                 {
-                                    velocity[j] = m_f->m_exp[j]->GetPhys() + offset;
+                                    //Extract gradients
+                                    for(int j = 0; j < ngrad; ++j)
+                                    {
+                                        grad[j] = m_f->m_exp[j + newfields]->GetPhys() + offset;
+                                    }
+                                }
+                                else
+                                {
+                                    //Extract Velocities
+                                    for(int j = 0; j < nfields; ++j)
+                                    {
+                                        velocity[j] = m_f->m_exp[j]->GetPhys() + offset;
+                                    }
+                                    
+                                    //Compute gradients (velocity correction scheme method)
+                                    elmt->PhysDeriv(velocity[0],grad[0],grad[1],grad[2]);
+                                    elmt->PhysDeriv(velocity[1],grad[3],grad[4],grad[5]);
+                                    elmt->PhysDeriv(velocity[2],grad[6],grad[7],grad[8]);
                                 }
                                 
-                                //Compute gradients (velocity correction scheme method)
-                                elmt->PhysDeriv(velocity[0],grad[0],grad[1],grad[2]);
-                                elmt->PhysDeriv(velocity[1],grad[3],grad[4],grad[5]);
-                                elmt->PhysDeriv(velocity[2],grad[6],grad[7],grad[8]);
-                              
                                  //Compute stress component terms
                                 // t_xx = 2.mu.Ux
                                 Vmath::Smul (nq,(2*m_kinvis),grad[0],1,stress[0],1);
@@ -356,7 +431,12 @@ namespace Nektar
                 }
             }
 
-           
+            if(c0Proj)
+            {
+                // Output. Resize m_exp to remove temporary fields for gradient expansion. 
+                m_f->m_exp.resize(newfields);
+            }
+            
             for(int j = 0; j < newfields; ++j)
             {
                 for(int b = 0; b < m_f->m_bndRegionsToWrite.size(); ++b)

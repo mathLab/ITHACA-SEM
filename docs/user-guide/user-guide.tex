@@ -29,11 +29,9 @@ openany, % A chapter may start on either a recto or verso page.
 \newcommand{\cmark}{\ding{51}}%
 \newcommand{\xmark}{\ding{55}}%
 
-% \usepackage{tikz} % Figures
 \usepackage{graphicx} % Include figures
 \usepackage{makeidx}
 \usepackage{import}
-\usepackage{amssymb}
 
 %%% PAGE LAYOUT 
 %%%-----------------------------------------------------------------------------
@@ -149,6 +147,9 @@ openany, % A chapter may start on either a recto or verso page.
 %%% NEW COMMANDS
 %%%-----------------------------------------------------------------------------
 
+% Nektar++ version
+\usepackage{xspace}
+\newcommand{\nekver}{\input{../../VERSION}\xspace}
 
 \newcommand{\p}{\partial} %Partial
 % Or what ever you want
@@ -159,7 +160,6 @@ openany, % A chapter may start on either a recto or verso page.
 \usepackage{xcolor}
 \usepackage{listings} % Display code / shell commands
 \usepackage{lstautogobble}
-\usepackage{xspace}
 %\newcommand{\shellcommand}[1]{\begin{lstlisting} \#1 \end{lstlisting}
 \lstdefinestyle{BashInputStyle}{
   language=bash,
@@ -340,7 +340,7 @@ pdfauthor={I am the Author} % author
           \vspace{\drop}
           {\Huge\bfseries\raggedright\@title\par}
           \vskip2.37\baselineskip
-          {\huge\bfseries Version \input{../../VERSION}\par}
+          {\huge\bfseries Version \nekver\par}
           \vskip4\baselineskip
           {\huge\bfseries \textcolor{darkgreen}{User Guide}\par}
           \vskip1.0\baselineskip

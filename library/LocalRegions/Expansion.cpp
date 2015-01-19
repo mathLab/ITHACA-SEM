@@ -99,6 +99,44 @@ namespace Nektar
             return v_BuildVertexMatrix(r_bnd);
         }
 
+        void Expansion::AddEdgeNormBoundaryInt(
+            const int                           edge,
+            const boost::shared_ptr<Expansion> &EdgeExp,
+            const Array<OneD, const NekDouble> &Fx,
+            const Array<OneD, const NekDouble> &Fy,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            v_AddEdgeNormBoundaryInt(edge, EdgeExp, Fx, Fy, outarray);
+        }
+
+        void Expansion::AddEdgeNormBoundaryInt(
+            const int                           edge,
+            const boost::shared_ptr<Expansion> &EdgeExp,
+            const Array<OneD, const NekDouble> &Fn,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            v_AddEdgeNormBoundaryInt(edge, EdgeExp, Fn, outarray);
+        }
+
+        void Expansion::AddFaceNormBoundaryInt(
+            const int                           face,
+            const boost::shared_ptr<Expansion> &FaceExp,
+            const Array<OneD, const NekDouble> &Fn,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            v_AddFaceNormBoundaryInt(face, FaceExp, Fn, outarray);
+        }
+
+        void Expansion::DGDeriv(
+            const int                                   dir,
+            const Array<OneD, const NekDouble>&         inarray,
+                  Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+                  Array<OneD, Array<OneD, NekDouble> > &coeffs,
+                  Array<OneD,             NekDouble>   &outarray)
+        {
+            v_DGDeriv(dir, inarray, EdgeExp, coeffs, outarray);
+        }
+
         DNekScalMatSharedPtr Expansion::GetLocMatrix(const StdRegions::MatrixType mtype,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeffs)
@@ -255,6 +293,44 @@ namespace Nektar
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekMatSharedPtr;
+        }
+
+        void Expansion::v_AddEdgeNormBoundaryInt(
+            const int                           edge,
+            const boost::shared_ptr<Expansion> &EdgeExp,
+            const Array<OneD, const NekDouble> &Fx,
+            const Array<OneD, const NekDouble> &Fy,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+        }
+
+        void Expansion::v_AddEdgeNormBoundaryInt(
+            const int                           edge,
+            const boost::shared_ptr<Expansion> &EdgeExp,
+            const Array<OneD, const NekDouble> &Fn,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+        }
+
+        void Expansion::v_AddFaceNormBoundaryInt(
+            const int                           face,
+            const boost::shared_ptr<Expansion> &FaceExp,
+            const Array<OneD, const NekDouble> &Fn,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+        }
+
+        void Expansion::v_DGDeriv(
+            const int                                   dir,
+            const Array<OneD, const NekDouble>&         inarray,
+                  Array<OneD, ExpansionSharedPtr>      &EdgeExp,
+                  Array<OneD, Array<OneD, NekDouble> > &coeffs,
+                  Array<OneD,             NekDouble>   &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
         }
     } //end of namespace
 } //end of namespace

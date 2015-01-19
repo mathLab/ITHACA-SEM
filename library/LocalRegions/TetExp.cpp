@@ -615,13 +615,6 @@ namespace Nektar
                                 "hierarchicial");
             }
         }
-
-
-        StdRegions::Orientation TetExp::v_GetFaceOrient(int face)
-        {
-            return GetGeom3D()->GetFaceOrient(face);
-        }
-
       
         /**
          * \brief Returns the physical values at the quadrature points of a face
@@ -657,7 +650,7 @@ namespace Nektar
             
             if (orient == StdRegions::eNoOrientation)
             {
-                orient = GetFaceOrient(face);
+                orient = GetForient(face);
             }
             
             switch(face)
@@ -667,8 +660,12 @@ namespace Nektar
                     //Directions A and B positive
                     Vmath::Vcopy(nquad0*nquad1,inarray.get(),1,o_tmp.get(),1);
                     //interpolate
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), o_tmp.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp2.get());
+                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), 
+                                           m_base[1]->GetPointsKey(), 
+                                           o_tmp.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),
+                                           FaceExp->GetBasis(1)->GetPointsKey(),
+                                           o_tmp2.get());
                     break;
                 }
                 case 1:
@@ -679,8 +676,12 @@ namespace Nektar
                         Vmath::Vcopy(nquad0,inarray.get()+(nquad0*nquad1*k),1,o_tmp.get()+(k*nquad0),1);
                     }
                     //interpolate
-                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), m_base[2]->GetPointsKey(), o_tmp.get(),
-                                           FaceExp->GetBasis(0)->GetPointsKey(),FaceExp->GetBasis(1)->GetPointsKey(),o_tmp2.get());
+                    LibUtilities::Interp2D(m_base[0]->GetPointsKey(), 
+                                           m_base[2]->GetPointsKey(), 
+                                           o_tmp.get(),
+                                           FaceExp->GetBasis(0)->GetPointsKey(),
+                                           FaceExp->GetBasis(1)->GetPointsKey(),
+                                           o_tmp2.get());
                     break;
                 }
                 case 2:
@@ -736,14 +737,20 @@ namespace Nektar
             const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors(ptsKeys);
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac(ptsKeys);
 
-            int nq = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
+            
+            LibUtilities::BasisKey tobasis0 = DetFaceBasisKey(face,0);
+            LibUtilities::BasisKey tobasis1 = DetFaceBasisKey(face,1);
+            
+            // number of face quadrature points 
+            int nq_face = tobasis0.GetNumPoints()*tobasis1.GetNumPoints();
+
             int vCoordDim = GetCoordim();
             
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
             Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
             for (i = 0; i < vCoordDim; ++i)
             {
-                normal[i] = Array<OneD, NekDouble>(nq);
+                normal[i] = Array<OneD, NekDouble>(nq_face);
             }
 
             // Regular geometry case
@@ -759,7 +766,7 @@ namespace Nektar
                     {
                         for (i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,-df[3*i+2][0],normal[i],1);
+                            normal[i][0] = -df[3*i+2][0]; 
                         }
                         
                         break;
@@ -768,7 +775,7 @@ namespace Nektar
                     {
                         for (i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,-df[3*i+1][0],normal[i],1);
+                            normal[i][0] = -df[3*i+1][0];
                         }
                         
                         break;
@@ -777,8 +784,8 @@ namespace Nektar
                     {
                         for (i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,df[3*i][0]+df[3*i+1][0]+
-                                        df[3*i+2][0],normal[i],1);
+                            normal[i][0] = df[3*i][0]+df[3*i+1][0]+
+                                df[3*i+2][0]; 
                         }
                         
                         break;
@@ -787,7 +794,7 @@ namespace Nektar
                     {
                         for(i = 0; i < vCoordDim; ++i)
                         {
-                            Vmath::Fill(nq,-df[3*i][0],normal[i],1);
+                            normal[i][0] = -df[3*i][0];
                         }
                         break;
                     }
@@ -802,9 +809,10 @@ namespace Nektar
                     fac += normal[i][0]*normal[i][0];
                 }
                 fac = 1.0/sqrt(fac);
+
                 for (i = 0; i < vCoordDim; ++i)
                 {
-                    Vmath::Smul(nq,fac,normal[i],1,normal[i],1);
+                    Vmath::Fill(nq_face,fac*normal[i][0],normal[i],1);
                 }
 	    }
             else
@@ -817,7 +825,8 @@ namespace Nektar
                 int nq2 = ptsKeys[2].GetNumPoints();
                 int nqtot;
                 int nq01 =nq0*nq1;
-
+                
+                // number of elemental quad points
                 if (face == 0)
                 {
                     nqtot = nq01;
@@ -830,11 +839,10 @@ namespace Nektar
                 {
                     nqtot = nq1*nq2;
                 }
-
+                
                 LibUtilities::PointsKey points0;
                 LibUtilities::PointsKey points1;
 
-                Array<OneD,NekDouble> work   (nq,              0.0);
                 Array<OneD,NekDouble> normals(vCoordDim*nqtot, 0.0);
 
                 // Extract Jacobian along face and recover local derivates
@@ -926,37 +934,38 @@ namespace Nektar
                         ASSERTL0(false,"face is out of range (face < 3)");
                 }
 
+                Array<OneD,NekDouble> work   (nq_face,   0.0);
                 // Interpolate Jacobian and invert
                 LibUtilities::Interp2D(points0, points1, jac,
-                                       m_base[0]->GetPointsKey(),
-                                       m_base[0]->GetPointsKey(),
+                                       tobasis0.GetPointsKey(),
+                                       tobasis1.GetPointsKey(),
                                        work);
-                Vmath::Sdiv(nq, 1.0, &work[0], 1, &work[0], 1);
+                Vmath::Sdiv(nq_face, 1.0, &work[0], 1, &work[0], 1);
 
                 // Interpolate normal and multiply by inverse Jacobian.
                 for(i = 0; i < vCoordDim; ++i)
                 {
                     LibUtilities::Interp2D(points0, points1,
                                            &normals[i*nqtot],
-                                           m_base[0]->GetPointsKey(),
-                                           m_base[0]->GetPointsKey(),
+                                           tobasis0.GetPointsKey(),
+                                           tobasis1.GetPointsKey(),
                                            &normal[i][0]);
-                    Vmath::Vmul(nq,work,1,normal[i],1,normal[i],1);
+                    Vmath::Vmul(nq_face,work,1,normal[i],1,normal[i],1);
                 }
 
                 // Normalise to obtain unit normals.
-                Vmath::Zero(nq,work,1);
+                Vmath::Zero(nq_face,work,1);
                 for(i = 0; i < GetCoordim(); ++i)
                 {
-                    Vmath::Vvtvp(nq,normal[i],1,normal[i],1,work,1,work,1);
+                    Vmath::Vvtvp(nq_face,normal[i],1,normal[i],1,work,1,work,1);
                 }
 
-                Vmath::Vsqrt(nq,work,1,work,1);
-                Vmath::Sdiv (nq,1.0,work,1,work,1);
+                Vmath::Vsqrt(nq_face,work,1,work,1);
+                Vmath::Sdiv (nq_face,1.0,work,1,work,1);
 
                 for(i = 0; i < GetCoordim(); ++i)
                 {
-                    Vmath::Vmul(nq,normal[i],1,work,1,normal[i],1);
+                    Vmath::Vmul(nq_face,normal[i],1,work,1,normal[i],1);
                 }
             }
         }
@@ -1495,79 +1504,6 @@ namespace Nektar
             }
         }
 
-        void TetExp::v_ReduceOrderCoeffs(
-            int                                 numMin,
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray)
-        {
-            int n_coeffs = inarray.num_elements();
-            int nquad0   = m_base[0]->GetNumPoints();
-            int nquad1   = m_base[1]->GetNumPoints();
-            int nquad2   = m_base[2]->GetNumPoints();
-            int nqtot    = nquad0*nquad1*nquad2;
-            int nmodes0  = m_base[0]->GetNumModes();
-            int nmodes1  = m_base[1]->GetNumModes();
-            int nmodes2  = m_base[2]->GetNumModes();
-            int numMax   = nmodes0;
-
-            Array<OneD, NekDouble> coeff     (n_coeffs);
-            Array<OneD, NekDouble> coeff_tmp1(n_coeffs, 0.0);
-            Array<OneD, NekDouble> coeff_tmp2(n_coeffs,        0.0);
-            Array<OneD, NekDouble> phys_tmp(nqtot,0.0);
-            Array<OneD, NekDouble> tmp, tmp2, tmp3, tmp4;
-
-            Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp2,1);
-
-            const LibUtilities::PointsKey Pkey0 = m_base[0]->GetPointsKey();
-            const LibUtilities::PointsKey Pkey1 = m_base[1]->GetPointsKey();
-            const LibUtilities::PointsKey Pkey2 = m_base[2]->GetPointsKey();
-
-            LibUtilities::BasisKey b0 = m_base[0]->GetBasisKey();
-            LibUtilities::BasisKey b1 = m_base[1]->GetBasisKey();
-            LibUtilities::BasisKey b2 = m_base[2]->GetBasisKey();
-
-            LibUtilities::BasisKey bortho0(
-                                           LibUtilities::eOrtho_A,    nmodes0, Pkey0);
-            LibUtilities::BasisKey bortho1(
-                                           LibUtilities::eOrtho_B,    nmodes1, Pkey1);
-            LibUtilities::BasisKey bortho2(
-                                           LibUtilities::eOrtho_C,    nmodes2, Pkey2);
-
-
-            Vmath::Zero(n_coeffs, coeff_tmp2, 1);
-
-            StdRegions::StdTetExpSharedPtr m_OrthoTetExp;
-            StdRegions::StdTetExpSharedPtr m_TetExp;
-
-            m_TetExp      = MemoryManager<StdRegions::StdTetExp>
-            ::AllocateSharedPtr(b0, b1, b2);
-            m_OrthoTetExp = MemoryManager<StdRegions::StdTetExp>
-            ::AllocateSharedPtr(bortho0, bortho1, bortho2);
-
-            m_TetExp     ->BwdTrans(inarray,phys_tmp);
-            m_OrthoTetExp->FwdTrans(phys_tmp, coeff);
-
-            Vmath::Zero(m_ncoeffs,outarray,1);
-
-            // filtering
-
-            int cnt = 0;
-
-            for (int u = 0; u < numMax; ++u)
-            {
-                for (int i = 0; i < numMax-u; ++i)
-                {
-                    Vmath::Vcopy(numMin-u-i,
-                                 tmp  = coeff+cnt,1,
-                                 tmp2 = coeff_tmp1+cnt,1);
-
-                    cnt += numMax - u - i;
-                }
-            }
-
-            m_OrthoTetExp->BwdTrans(coeff_tmp1,phys_tmp);
-            m_TetExp     ->FwdTrans(phys_tmp, outarray);
-        }
         
         void TetExp::v_LaplacianMatrixOp_MatFree_Kernel(
             const Array<OneD, const NekDouble> &inarray,

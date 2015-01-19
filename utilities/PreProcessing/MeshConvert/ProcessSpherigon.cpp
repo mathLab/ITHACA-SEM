@@ -936,7 +936,7 @@ namespace Nektar
                 }
             }
 
-            // Copy face nodes back into 3D element faces.
+            // Copy face nodes back into 3D element faces
             if (m_mesh->m_expDim == 3)
             {
                 set<pair<int,int> >::iterator it;

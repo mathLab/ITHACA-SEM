@@ -78,7 +78,8 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &advVel,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray,
+            const NekDouble                                   &time)
         {
             int nDim            = fields[0]->GetCoordim(0);
             int nPointsTot      = fields[0]->GetTotPoints();

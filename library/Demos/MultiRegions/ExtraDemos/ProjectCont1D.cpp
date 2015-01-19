@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     int     coordim;
     Array<OneD,NekDouble> sol;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
-    std::string meshfile(vSession->GetFilename());
 
     if(argc != 2)
     {

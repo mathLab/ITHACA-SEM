@@ -9,6 +9,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/EulerCFE.cpp
        ./EquationSystems/EulerADCFE.cpp
        ./EquationSystems/NavierStokesCFE.cpp
+       ./Filters/FilterEnergy.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/AUSM0Solver.cpp
        ./RiemannSolvers/AUSM1Solver.cpp
@@ -24,6 +25,8 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
 
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver solvers 
 			${CompressibleFlowSolverSource})
+
+    SUBDIRS(Utilities)
    
     ADD_NEKTAR_TEST        (CylinderSubsonic_FRDG_SEM)
     ADD_NEKTAR_TEST        (CylinderSubsonic_FRDG_GAUSS)

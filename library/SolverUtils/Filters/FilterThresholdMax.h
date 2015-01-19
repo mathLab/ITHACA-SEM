@@ -72,7 +72,9 @@ namespace Nektar
 
         private:
             Array<OneD, NekDouble> m_threshold;
+            NekDouble m_startTime;
             NekDouble m_thresholdValue;
+            int m_thresholdVar;
             NekDouble m_initialValue;
             std::string m_outputFile;
             LibUtilities::FieldIOSharedPtr m_fld;

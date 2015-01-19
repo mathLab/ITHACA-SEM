@@ -655,8 +655,8 @@ namespace Nektar
             Array<OneD, NekDouble>       &coeffs)
         {
             int i,n;
-            int offset = 0;
-            int nzmodes;
+            int offset  = 0;
+            int nzmodes = 1;
             int datalen = fielddata.size()/fielddef->m_fields.size();
             std::vector<unsigned int> fieldDefHomoZids;
             
@@ -786,7 +786,7 @@ namespace Nektar
             }
         }
 
-        void ExpListHomogeneous1D::v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+        void ExpListHomogeneous1D::v_WriteVtkPieceData(std::ostream &outfile, int expansion,
                                         std::string var)
         {
             int i;

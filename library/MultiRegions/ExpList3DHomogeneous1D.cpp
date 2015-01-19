@@ -279,7 +279,7 @@ namespace Nektar
             }
         }
 
-        void ExpList3DHomogeneous1D::v_WriteTecplotConnectivity(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous1D::v_WriteTecplotConnectivity(std::ostream &outfile, int expansion)
         {
             ASSERTL0(expansion == -1, "Multi-zone output not supported for homogeneous expansions.");
 
@@ -319,7 +319,7 @@ namespace Nektar
             }
         }
 
-        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             int i,j,k;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
@@ -409,13 +409,24 @@ namespace Nektar
                 local_w[n] = w[m_transposition->GetPlaneID(n)];
             }
             
-            for(int n = 0; n < m_planes.num_elements(); ++n)
+            if (soln == NullNekDouble1DArray)
             {
-                errL2 = m_planes[n]->L2(inarray + cnt, soln + cnt);
-                cnt  += m_planes[n]->GetTotPoints();
-                err  += errL2*errL2*local_w[n]*m_lhom*0.5;
+                for(int n = 0; n < m_planes.num_elements(); ++n)
+                {
+                    errL2 = m_planes[n]->L2(inarray + cnt);
+                    cnt  += m_planes[n]->GetTotPoints();
+                    err  += errL2*errL2*local_w[n]*m_lhom*0.5;
+                }
             }
-            
+            else
+            {
+                for(int n = 0; n < m_planes.num_elements(); ++n)
+                {
+                    errL2 = m_planes[n]->L2(inarray + cnt, soln + cnt);
+                    cnt  += m_planes[n]->GetTotPoints();
+                    err  += errL2*errL2*local_w[n]*m_lhom*0.5;
+                }
+            }
             m_comm->GetColumnComm()->AllReduce(err, LibUtilities::ReduceSum);
             
             return sqrt(err);

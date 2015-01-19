@@ -156,7 +156,8 @@ namespace Nektar
         }
         
         // Advection term in physical rhs form
-        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
+        m_advection->Advect(nvariables, m_fields, advVel, inarray,
+                            outarrayAdv, time);
         
         for (i = 0; i < nvariables; ++i)
         {

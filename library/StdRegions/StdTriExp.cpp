@@ -686,7 +686,7 @@ namespace Nektar
             int   nquad1 = m_base[1]->GetNumPoints();
             int   order0 = m_base[0]->GetNumModes();
             int   order1 = m_base[1]->GetNumModes();
-            int   mode0;
+            int   mode0  = 0;
             Array<OneD, const NekDouble> base0 = m_base[0]->GetBdata();
             Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
 

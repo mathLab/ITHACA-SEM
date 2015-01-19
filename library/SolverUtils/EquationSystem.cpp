@@ -1361,9 +1361,9 @@ namespace Nektar
                 {
                     bool flag = FieldDef[i]->m_fields[j] ==
                                 m_session->GetVariable(j);
-                    ASSERTL1(flag, (std::string("Order of ") + pInfile
+                    ASSERTL0(flag, (std::string("Order of ") + pInfile
                                     + std::string(" data and that defined in "
-                                    "m_boundaryconditions differs")).c_str());
+                                    "the session differs")).c_str());
 
                     m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                    FieldDef[i]->m_fields[j],

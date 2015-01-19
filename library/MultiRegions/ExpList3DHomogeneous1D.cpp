@@ -279,7 +279,7 @@ namespace Nektar
             }
         }
 
-        void ExpList3DHomogeneous1D::v_WriteTecplotConnectivity(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous1D::v_WriteTecplotConnectivity(std::ostream &outfile, int expansion)
         {
             ASSERTL0(expansion == -1, "Multi-zone output not supported for homogeneous expansions.");
 
@@ -319,7 +319,7 @@ namespace Nektar
             }
         }
 
-        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             int i,j,k;
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);

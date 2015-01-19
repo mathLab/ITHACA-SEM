@@ -97,11 +97,13 @@ Specifically, FieldConvert has these additional functionalities
 \item \inltt{C0Projection}: Computes the C0 projection of a given output file;
 \item \inltt{QCriterion}: Computes the Q-Criterion for a given output file;
 \item \inltt{concatenate}: Concatenate a \nekpp binary output (.chk or .fld) field file into single file;
+\item \inltt{equispacedoutput}: Write data as equi-spaced output using simplices to represent the data for connecting points;
 \item \inltt{extract}: Extract a boundary field;
 \item \inltt{interpfield}: Interpolates one field to another, requires fromxml, fromfld to be defined;
 \item \inltt{interppointdatatofld}: Interpolates given discrete data using a finite difference approximation to a fld file given an xml file;
 \item \inltt{interppoints}: Interpolates a set of points to another, requires fromfld and fromxml to be defined, a line or plane of points can be defined;
-\item \inltt{scaleinputfld}: rescale input field by a constant factor.
+\item \inltt{isocontour}: Extract an isocontour of ``fieldid'' variable and at value ``fieldvalue''. Optionally ``fieldstr'' can be specified for a string defiition or ``smooth'' for smoothing; 
+\item \inltt{scaleinputfld}: Rescale input field by a constant factor.
 \item \inltt{vorticity}: Computes the vorticity field.
 \end{enumerate}
 The module list above can be seen by running the command
@@ -174,6 +176,24 @@ to visualise either in Tecplot or in Paraview the result.
 %
 %
 %
+\subsubsection{Equi-spaced output of data: \textit{equispacedoutput} module}
+This module interpolates the output data to an truly equispaced set of
+points (not equispaced along the collapsed coordinate
+system). Therefore a tetrahedron is represented by a tetrahedral
+number of poinst. This produces much smaller output files. The points
+are then connected together by simplices (triangles and tetrahedrons).
+
+\begin{lstlisting}[style=BashInputStyle]
+FieldConvert -m equispacedouptput test.xml test.fld test-boundary.dat
+\end{lstlisting}
+
+
+\begin{notebox} 
+Currently this option is only set up for triangles, quadrilaterals,
+tetrahedrons and prisms. It also only is currently used in tecplot
+output.
+\end{notebox}
+
 \subsubsection{Extract a boundary region: \textit{extract} module}
 The boundary region of a domain can be extracted from the output 
 data using the following command line
@@ -333,12 +353,49 @@ where \inltt{npts1,npts2} is the number of equispaced points in each
 direction and $(x0,y0,z0)$, $(x1,y1,z1)$, $(x2,y2,z2)$ and $(x3,y3,z3)$ 
 define the plane of points specified in a clockwise or anticlockwise direction.
 %
-\begin{notebox}
+\begin{notebox} 
 This module does not run in parallel.
 \end{notebox}
 %
 %
 %
+\subsubsection{Isoncontour extraction: \textit{iscontour} module}
+
+Extract an isocontour from a field file. This option automatically
+take the field to an equispaced distribution of points connected by
+linear simplicies of triangles or tetrahedrons. The linear simplices
+are then inspected to extract the isocontour of interest. To specify
+the field \inltt{fieldid} can be provided giving the id of the field
+of interest and \inltt{fieldvalue} provides the value of the
+isocontour to be extracted. 
+
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m isocontour:fieldid=2:fieldvalue=0.5 test.xml test.fld \
+          test-isocontour.dat
+\end{lstlisting}
+
+Alternatively \inltt{fieldstr}=''u+v'' can be specified to calculate
+the field $u^2$ and extract its isocontour. You can also specify
+\inltt{fieldname}=''UplusV'' to define the name of the isocontour in
+the .dat file, i.e.
+\begin{lstlisting}[style=BashInputStyle]
+  FieldConvert -m isocontour:fieldstr="u+v":fieldvalue=0.5:\
+    fieldname="UplusV" test.xml  test.fld test-isocontour.dat
+\end{lstlisting}
+
+Optionally \inltt{smooth} can be specified to smooth the isocontour
+with default values \inltt{smoothnegdiffusion}=0.495,
+\inltt{smoothnegdiffusion}=0.5 and \inltt{smoothiter}=100. This option
+automatically calls a \inltt{globalcondense} option which remove
+multiply defined verties from the simplex definition which arise as
+isocontour are generated element by element. 
+
+\begin{notebox}
+Currently this option is only set up for triangles, quadrilaterals,
+ tetrahedrons and prisms. 
+\end{notebox}
+
+
 \subsubsection{Scale a given .fld: \textit{scaleinputfld} module}
 
 \begin{lstlisting}[style=BashInputStyle] 

@@ -43,6 +43,13 @@ namespace Nektar
 {
     namespace Utilities
     {
+        enum TecOutType
+        {
+            eFullBlockZone,
+            eFullBlockZoneEquiSpaced,
+            eSeperateZones
+        };
+    
         /// Converter from fld to dat.
         class OutputTecplot : public OutputModule
         {
@@ -57,25 +64,23 @@ namespace Nektar
             
             /// Write fld to output file.
             virtual void Process(po::variables_map &vm);
-
+        
         private:
             bool m_doError;
+            TecOutType m_outputType;
 
             void WriteTecplotHeader(std::ofstream &outfile,
-                               std::string var);
+                                    std::string var);
 
-            void WriteTecplotZone(std::ofstream &outfile, 
-                                  int expansion = -1);
-
+            void WriteTecplotZone(std::ofstream &outfile);
+            
             int GetNumTecplotBlocks(void);
 
             void WriteTecplotField(const int field, 
-                                   std::ofstream &outfile, 
-                                   int expansion = -1);
+                                   std::ofstream &outfile);
 
             void WriteTecplotConnectivity(std::ofstream &outfile);
-        };
-
+        };   
     }
 }
 

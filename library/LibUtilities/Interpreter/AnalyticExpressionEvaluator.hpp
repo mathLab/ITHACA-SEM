@@ -247,9 +247,11 @@ namespace Nektar
                         const Array<OneD, const NekDouble>&,
                         Array<OneD, NekDouble>& result);
 
+
+
             ///  Vectorized evaluation method for expressions depending on unspecified
             ///  number of variables.
-            LIB_UTILITIES_EXPORT void EvaluateAtPoints(
+            LIB_UTILITIES_EXPORT void Evaluate(
                     const int expression_id,
                     const std::vector<Array<OneD, const NekDouble> > points,
                     Array<OneD, NekDouble>& result);

@@ -77,9 +77,10 @@ namespace Nektar
             const std::string variable):
             AssemblyMap(pSession,variable)
         {
-            int i, j, k, cnt, eid, id, id1, order_e,gid;
+            int i, j, k, cnt, eid, id, id1, gid;
+            int order_e   = 0;
             int nTraceExp = trace->GetExpSize();
-            int nbnd = bndCondExp.num_elements();
+            int nbnd      = bndCondExp.num_elements();
 
             LocalRegions::ExpansionSharedPtr  exp;
             LocalRegions::ExpansionSharedPtr  bndExp;

@@ -25,8 +25,6 @@ int main(int argc, char *argv[])
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-    string meshfile(vSession->GetFilename());
-
     MultiRegions::ContField2DSharedPtr Exp,Fce;
     int     nq,  coordim;
     Array<OneD,NekDouble>  fce; 

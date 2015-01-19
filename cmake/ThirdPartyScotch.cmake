@@ -1,13 +1,32 @@
+########################################################################
+#
+# ThirdParty configuration for Nektar++
+#
+# Scotch partitioner
+#
+########################################################################
+
 IF (NOT WIN32)
     OPTION(NEKTAR_USE_SCOTCH
         "Use Scotch library for performing mesh partitioning." OFF)
 ENDIF(NOT WIN32)
 
-CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_SCOTCH
-    "Build Scotch library from ThirdParty" OFF
-    "NEKTAR_USE_SCOTCH" OFF)
+IF (NEKTAR_USE_SCOTCH)
+    # First search for system TinyXML installs. Hint /opt/local for MacPorts.
+    FIND_LIBRARY(SCOTCH_LIBRARY    NAMES scotch PATHS /opt/local/lib)
+    FIND_LIBRARY(SCOTCHERR_LIBRARY NAMES scotcherr PATHS /opt/local/lib)
+    FIND_PATH   (SCOTCH_INCLUDE_DIR scotch.h PATHS /opt/local/include)
 
-IF( NEKTAR_USE_SCOTCH )
+    IF (SCOTCH_LIBRARY AND SCOTCHERR_LIBRARY AND SCOTCH_INCLUDE_DIR)
+        SET(BUILD_SCOTCH OFF)
+    ELSE()
+        SET(BUILD_SCOTCH ON)
+    ENDIF ()
+
+    CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_SCOTCH
+        "Build Scotch library from ThirdParty" ${BUILD_SCOTCH}
+        "NEKTAR_USE_SCOTCH" OFF)
+
     IF (THIRDPARTY_BUILD_SCOTCH)
         UNSET(FLEX CACHE)
         FIND_PROGRAM(FLEX flex)
@@ -59,20 +78,27 @@ IF( NEKTAR_USE_SCOTCH )
             INSTALL_COMMAND $(MAKE) -C ${SCOTCH_SRC}
                 prefix=${TPDIST} install
         )
-        SET(SCOTCH_LIB scotch CACHE FILEPATH
+
+        SET(SCOTCH_LIBRARY scotch CACHE FILEPATH
             "Scotch library" FORCE)
-        SET(SCOTCHERR_LIB scotcherr CACHE FILEPATH
+        SET(SCOTCHERR_LIBRARY scotcherr CACHE FILEPATH
             "Scotch error library" FORCE)
-        SET(SCOTCHMETIS_LIB scotchmetis CACHE FILEPATH
-            "Scotch Metis interface library" FORCE)
-        MARK_AS_ADVANCED(SCOTCH_LIB)
-        MARK_AS_ADVANCED(SCOTCHERR_LIB)
-        MARK_AS_ADVANCED(SCOTCHMETIS_LIB)
+        SET(SCOTCH_INCLUDE_DIR ${TPDIST}/include CACHE FILEPATH
+            "Scotch include directory" FORCE)
+
         LINK_DIRECTORIES(${TPDIST}/lib)
-        INCLUDE_DIRECTORIES(${TPDIST}/include)
-        MESSAGE(STATUS "Build Scotch: ${TPDIST}/lib/lib${SCOTCH_LIB}.a")
+
+        MESSAGE(STATUS "Build Scotch: ${TPDIST}/lib/lib${SCOTCH_LIBRARY}.a")
+        SET(SCOTCH_CONFIG_INCLUDE_DIR ${TPINC})
     ELSE (THIRDPARTY_BUILD_SCOTCH)
         ADD_CUSTOM_TARGET(scotch-6.0.0 ALL)
-        INCLUDE (FindScotch)
+        MESSAGE(STATUS "Found Scotch: ${SCOTCH_LIBRARY}")
+        SET(SCOTCH_CONFIG_INCLUDE_DIR ${SCOTCH_INCLUDE_DIR})
     ENDIF (THIRDPARTY_BUILD_SCOTCH)
-ENDIF( NEKTAR_USE_SCOTCH )
+
+    INCLUDE_DIRECTORIES(${SCOTCH_INCLUDE_DIR})
+
+    MARK_AS_ADVANCED(SCOTCH_LIBRARY)
+    MARK_AS_ADVANCED(SCOTCHERR_LIBRARY)
+    MARK_AS_ADVANCED(SCOTCH_INCLUDE_DIR)
+ENDIF()

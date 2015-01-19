@@ -166,15 +166,14 @@ int main(int argc, char *argv[])
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables)
 	{		
 		// Setting parameteres for homogenous problems
-		NekDouble LhomX;           ///< physical length in X direction (if homogeneous) 
+		//NekDouble LhomX;           ///< physical length in X direction (if homogeneous) 
 		NekDouble LhomY;           ///< physical length in Y direction (if homogeneous)
 		NekDouble LhomZ;           ///< physical length in Z direction (if homogeneous)
 		
 		bool DeclareCoeffPhysArrays = true;		
-		int npointsX;              ///< number of points in X direction (if homogeneous)
+		//int npointsX;              ///< number of points in X direction (if homogeneous)
 		int npointsY;              ///< number of points in Y direction (if homogeneous)
                 int npointsZ;              ///< number of points in Z direction (if homogeneous)	
-		int HomoDirec       = 0;
 		bool useFFT = false;	
 		bool deal = false;        
 		///Parameter for homogeneous expansions		
@@ -199,7 +198,6 @@ int main(int argc, char *argv[])
 				HomogeneousType = eHomogeneous1D;
 				npointsZ        = session->GetParameter("HomModesZ");
 				LhomZ           = session->GetParameter("LZ");
-				HomoDirec       = 1;				
 			}
 			
 			if((HomoStr == "HOMOGENEOUS2D")||(HomoStr == "Homogeneous2D")||
@@ -210,20 +208,18 @@ int main(int argc, char *argv[])
 				LhomY           = session->GetParameter("LY");
 				npointsZ        = session->GetParameter("HomModesZ");
 				LhomZ           = session->GetParameter("LZ");
-				HomoDirec       = 2;
 			}
 			
 			if((HomoStr == "HOMOGENEOUS3D")||(HomoStr == "Homogeneous3D")||
 			   (HomoStr == "3D")||(HomoStr == "Homo3D"))
 			{
 				HomogeneousType = eHomogeneous3D;
-				npointsX        = session->GetParameter("HomModesX");
-				LhomX           = session->GetParameter("LX");
+				//npointsX        = session->GetParameter("HomModesX");
+				//LhomX           = session->GetParameter("LX");
 				npointsY        = session->GetParameter("HomModesY");
 				LhomY           = session->GetParameter("LY");
 				npointsZ        = session->GetParameter("HomModesZ");
 				LhomZ           = session->GetParameter("LZ");
-				HomoDirec       = 3;
 			}
 			
 			if(session->DefinesSolverInfo("USEFFT"))

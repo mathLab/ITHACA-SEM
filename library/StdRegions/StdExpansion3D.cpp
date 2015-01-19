@@ -509,6 +509,5 @@ namespace Nektar
             // Keep things happy by returning a value.
             return LibUtilities::NullBasisKey; 
         }
->>>>>>> master
     }//end namespace
 }//end namespace

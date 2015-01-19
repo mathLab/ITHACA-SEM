@@ -57,7 +57,7 @@ namespace Nektar
         {
             m_config["N"] = ConfigOption(false,"1","Number of chk or fld files");
             m_config["fromfld"] = ConfigOption(false, "NotSet",
-                                               "First fld file.");
+                                               "First fld file. First underscore flags position of id in name.");
 
             ASSERTL0(m_config["fromfld"].as<string>().compare("NotSet") != 0,
                      "Need to specify fromfld=file.fld ");
@@ -78,8 +78,8 @@ namespace Nektar
 
             
             int nstart, i, j, nfields;
-            NekDouble nfld =  m_config["N"].as<NekDouble>();
-            string fromfld;
+            NekDouble nfld = m_config["N"].as<NekDouble>();
+            string fromfld, basename, endname, nstartStr;
             stringstream filename;
             vector<string> infiles(nfld);
             vector< boost::shared_ptr<Field> > m_fromField(nfld);
@@ -87,14 +87,20 @@ namespace Nektar
 
             // Set up list of input fld files. 
             fromfld = m_config["fromfld"].as<string>();
-            fromfld = fromfld.substr(0, fromfld.find_last_of("_"));
-            filename << fromfld.substr(fromfld.find_last_of("_")+1,fromfld.size());
+            basename = fromfld.substr(0, fromfld.find_first_of("_")+1);
+            filename << fromfld.substr(fromfld.find_first_of("_")+1, fromfld.size());
             filename >> nstart;
-          
+            filename.str("");
+            filename << nstart;
+            filename >> nstartStr;
+            filename.str("");
+            endname = fromfld.substr(fromfld.find(nstartStr)+nstartStr.size(), fromfld.size());
+       
+   
             for (i=0; i<nfld; ++i)
             {
                 stringstream filename;
-                filename << fromfld.substr(0,fromfld.find_last_of("_")+1) << i+nstart << "_b2.fld";
+                filename << basename << i+nstart << endname;
                 filename >> infiles[i];       
                 cout << infiles[i]<<endl;
             }
@@ -265,10 +271,10 @@ namespace Nektar
             }
 
             //Divide by nfld
-            Vmath::Smul(npoints, 1.0/nfld, outfield[0], 1, outfield[0], 1); //TAWSS = sum(wss)/nfld
-            Vmath::Smul(npoints, 1.0/nfld, outfield[1], 1, outfield[1], 1); //transWSS = sum( sqrt( wss^2 - (wss . normTempMean)^2) )/nfld.
-            Vmath::Smul(npoints, 1.0/nfld, outfield[3], 1, outfield[3], 1); //TAAFI = sum(cos)/nfld
-            Vmath::Smul(npoints, 1.0/nfld, outfield[4], 1, outfield[4], 1); //TACFI = sum(sin)/nfld = sum( sqrt(1-cos^2) )/nfld. 
+            Vmath::Smul(npoints, 1.0/nfld, outfield[0], 1, outfield[0], 1);
+            Vmath::Smul(npoints, 1.0/nfld, outfield[1], 1, outfield[1], 1);
+            Vmath::Smul(npoints, 1.0/nfld, outfield[3], 1, outfield[3], 1); 
+            Vmath::Smul(npoints, 1.0/nfld, outfield[4], 1, outfield[4], 1);  
 
             //OSI
             for (i = 0; i < npoints; ++i)
@@ -301,7 +307,6 @@ namespace Nektar
             
             for(i = 0; i < nout; ++i)
             {
-                // m_f->m_exp[i]->UpdatePhys() = outfield[i];
                 m_f->m_exp[i]->FwdTrans(outfield[i],
                                         m_f->m_exp[i]->UpdateCoeffs());
                 m_f->m_exp[i]->BwdTrans(m_f->m_exp[i]->GetCoeffs(), 

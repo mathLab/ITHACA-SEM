@@ -122,7 +122,7 @@ namespace Nektar
 //                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
 
                 TiXmlNode* elementChild = segment->FirstChild();
-                while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+                while(elementChild && elementChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     elementChild = elementChild->NextSibling();
                 }
@@ -198,7 +198,7 @@ namespace Nektar
                 // Comments appear as nodes just like elements.
                 // We are specifically looking for text in the body
                 // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                while(compositeChild && compositeChild->Type() != TiXmlNode::TINYXML_TEXT)
                 {
                     compositeChild = compositeChild->NextSibling();
                 }

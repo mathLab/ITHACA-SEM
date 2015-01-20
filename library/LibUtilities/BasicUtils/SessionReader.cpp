@@ -1879,7 +1879,7 @@ namespace Nektar
                     tagcontent << *parameter;
                     TiXmlNode *node = parameter->FirstChild();
 
-                    while (node && node->Type() != TiXmlNode::TEXT)
+                    while (node && node->Type() != TiXmlNode::TINYXML_TEXT)
                     {
                         node = node->NextSibling();
                     }
@@ -2253,7 +2253,7 @@ namespace Nektar
                     // Comments appear as nodes just like elements.  We are
                     // specifically looking for text in the body of the
                     // definition.
-                    while(varChild && varChild->Type() != TiXmlNode::TEXT)
+                    while(varChild && varChild->Type() != TiXmlNode::TINYXML_TEXT)
                     {
                         varChild = varChild->NextSibling();
                     }

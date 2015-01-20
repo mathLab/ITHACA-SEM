@@ -571,7 +571,7 @@ namespace Nektar
         for(i = 0; i < nel; ++i)
         {
             m_numLocalBndCoeffsPerPatch[i] = (unsigned int) nz_loc*(nvel*locExpVector[fields[0]->GetOffset_Elmt_Id(i)]->NumBndryCoeffs() + 1);
-            m_numLocalIntCoeffsPerPatch[i] = (unsigned int) nz_loc*(pressure->GetExp(eid)->GetNcoeffs()-1);
+            m_numLocalIntCoeffsPerPatch[i] = (unsigned int) nz_loc*(pressure->GetExp(i)->GetNcoeffs()-1);
         }
         
         /**
@@ -737,7 +737,7 @@ namespace Nektar
                     Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
                 for(i = 0; i < locExpVector.size(); ++i)
                 {
-                    int eid = fields[0]->GetOffset_Elmt_Id(i);
+                    eid = fields[0]->GetOffset_Elmt_Id(i);
                     locExpansion = locExpVector[eid]
                                             ->as<StdRegions::StdExpansion2D>();
                     for(j = 0; j < locExpansion->GetNverts(); ++j)
@@ -891,7 +891,7 @@ void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(vector<map<int,i
 		{
 			int GlobIdOffset = intgraphs[i]->GetIdOffset();
 			bool SetEdge = false; 
-			int elmtid;
+			int elmtid = 0;
 			for(j = 0; j < intgraphs[i]->GetNverts(); ++j)
 			{
 				// Check to see if graph vert is an edge 

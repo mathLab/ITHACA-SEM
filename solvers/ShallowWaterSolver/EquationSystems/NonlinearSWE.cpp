@@ -110,10 +110,10 @@ namespace Nektar
 	  // Setting up parameters for advection operator Riemann solver 
 	  m_riemannSolver->SetParam (
                                      "gravity",  
-                                     &NonlinearSWE::GetGravity,   this);
-      m_riemannSolver->SetAuxVec(
+                                     &NonlinearSWE::GetGravity, this);
+          m_riemannSolver->SetAuxVec(
                                      "vecLocs",
-                                     &NonlinearSWE::GetVecLocs,  this);
+                                     &NonlinearSWE::GetVecLocs, this);
 	  m_riemannSolver->SetVector(
 				     "N",
 				     &NonlinearSWE::GetNormals, this);
@@ -325,11 +325,12 @@ namespace Nektar
             }
 	  
 	  NonlinearSWE::GetFluxVector(inarray, fluxvector);
-	  //-------------------------------------------------------
+	  //------------------------------------------------------- 
 
-	  
-	  //-------------------------------------------------------
-	  // Take the derivative of the flux terms
+
+
+ 	  //-------------------------------------------------------
+	  // Take the derivative of the flux terms 
 	  // and negate the outarray since moving terms to the rhs
 	  Array<OneD,NekDouble> tmp(nq);
 	  Array<OneD, NekDouble>tmp1(nq);           
@@ -341,6 +342,7 @@ namespace Nektar
 	      Vmath::Vadd(nq,tmp,1,tmp1,1,outarray[i],1);
 	      Vmath::Neg(nq,outarray[i],1);
 	    }
+
 	  
 	  //-------------------------------------------------
 	  // Add "source terms"

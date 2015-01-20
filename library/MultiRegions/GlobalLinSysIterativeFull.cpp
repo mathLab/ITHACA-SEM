@@ -124,6 +124,10 @@ namespace Nektar
             {
                 vCG = false;
             }
+            else
+            {
+                ASSERTL0(false, "Unknown map type");
+            }
 
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();

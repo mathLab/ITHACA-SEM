@@ -253,6 +253,51 @@ namespace Nektar
             }
         }
 
+	// Set up maping for womersley BC - and load variabls
+//        for (int i = 0; i < m_fields.num_elements(); ++i){
+//            for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n){
+//		if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() 
+//			==SpatialDomains::eWomersley){
+//
+//			NekDouble kt,T,R,n0,n1,n2;
+//			int M;	
+//		
+//			m_session->LoadParameter("Period",T);
+////			m_session->LoadParameter("Alpha",alpha);
+//			m_session->LoadParameter("Radius",R);
+//			m_session->LoadParameter("Modes",M);
+//			m_session->LoadParameter("n0",n0);
+//			m_session->LoadParameter("n1",n1);
+//			m_session->LoadParameter("n2",n2);
+//
+//			NekDouble value;
+//	        	Array<OneD, NekDouble> vel_r;
+//	        	Array<OneD, NekDouble> vel_i;
+//
+//			std::ifstream file("fourier_womersley.txt");
+//			std::string line;
+//
+//			int linenum=0;
+//			while(std::getline(file,line)){
+//      			        std::istringstream iss(line);
+//				if (linenum == 0){
+//			        	while(iss << value){
+//					      vel_i.push_back (value);
+//				        }
+// 				}
+//				else if (linenum == 1){
+//					while(iss << value){
+//					      vel_r.push_back (value);
+//				        }
+//
+//				}
+//				linenum += 1;
+//				
+//			}
+//		}
+//	    }
+//	}
+
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
         m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
@@ -487,35 +532,32 @@ namespace Nektar
     void IncNavierStokes::SetWomersleyBoundary(int fieldid,int bndid)
     {
 	std::complex<NekDouble> za, zar, zJ0, zJ0r, zq, zvel, zJ0rJ0;
+ 	int  i,j,k;
 
-	NekDouble kt,T,alpha,R,n0,n1,n2;
- 	int  i,j,k,M;
-
+	NekDouble kt,T,R,n0,n1,n2;
+	int M;	
+		
 	m_session->LoadParameter("Period",T);
-	m_session->LoadParameter("Alpha",alpha);
+//	m_session->LoadParameter("Alpha",alpha);
 	m_session->LoadParameter("Radius",R);
 	m_session->LoadParameter("Modes",M);
 	m_session->LoadParameter("n0",n0);
 	m_session->LoadParameter("n1",n1);
 	m_session->LoadParameter("n2",n2);
-
+	
+	// Womersley Number
+	NekDouble alpha = R*sqrt(2*M_PI/T/m_kinvis);
 
 	NekDouble normals[] = {n0,n1,n2};
 	
 	NekDouble vel_i[] = {.0000000000000000,	-0.0114652024383338,	0.0851029213457966,	-0.0063819332723328,	-0.0445916909877261,	0.0237233726269646,	0.0008464594812739,	0.0000176601880968,	-0.0026800533453590,	-0.0024003801647357,	0.0032485079266381,	-0.0001679460999985,	-0.0015374083917995,	-0.0007321330812402};
 	NekDouble vel_r[] ={0.3789045336112559,	-0.1298052177588835,	-0.0005926433502513,	0.0322744583705603,	0.0051737128568664,	-0.0220534484187635,	0.0045170130867191,	0.0037315438343909,	0.0026464563011693,	-0.0050049685948089,	0.0002078141619409,	0.0021292792048836,	0.0003343912995364,	-0.0014819344644493};
 
-//	NekDouble vel_i[] = {0.0000000000000000,	0.0045077959073922,	0.0063426457520076,	0.0023963688083477,	0.0025691123611016,	-0.0021167847374483,	0.0006414735988830,	0.0007177310799631,	-0.003991371205071};
-//	NekDouble vel_r[] = {0.2032429146039605,	-0.0412493282928887,	-0.0032479550798890,	0.0020185802157162,	-0.0015778214978184,	0.0043359828640890,	-0.0011428872918882,	0.0055894627185113,	0.0003466826691224};
-//	NekDouble vel_r[] = {3.810072433559146821e-01, -6.234788272373605889e-01, 2.711042012278477853e-01, 4.389699173657810038e-02, -4.975781304735916316e-02, -1.529600220788266199e-02, 1.108388953281336069e-02, 2.989087696668171583e-03, 2.472920362942466425e-03, -3.576661075286605151e-03};
-//	NekDouble vel_i[] = {0.000000000000000000e+00, 7.105367133242035393e-01, 1.777610077019991519e-01, -7.657257942007057727e-02, -7.380216140478920717e-02, 5.515718040110507980e-02, -2.039779545500271501e-03, -3.366440680163445588e-03, -7.419332355925923770e-04, -4.410817270448181247e-03};
-	
 	
 	
 	NekDouble r;
-	
-	
-	std::complex<double> z1 (1.0,0.0);
+
+	std::complex<NekDouble> z1 (1.0,0.0);
 	std::complex<NekDouble> zi (0.0,1.0);
 	std::complex<NekDouble> z;
 
@@ -539,14 +581,12 @@ namespace Nektar
 //
 //  	Array<OneD, NekDouble> x0(npoints,0.0);
 //    	Array<OneD, NekDouble> x1(npoints,0.0);
-//        Array<OneD, NekDouble> x2(npoints,0.0);
+//      Array<OneD, NekDouble> x2(npoints,0.0);
 //	Array<OneD, NekDouble> zeros(npoints,0.0);
-////	Array<OneD, NekDouble> w(npoints,0.0);
+//	Array<OneD, NekDouble> w(npoints,0.0);
 //
 //        BndExp[bndid]->GetCoords(x0,x1,x2);
 
-
-	
 	//Loop over all expansions	
 	for(i = 0; i < BndExp[bndid]->GetExpSize(); ++i,cnt++){
 		// Get element id and offset
@@ -569,7 +609,6 @@ namespace Nektar
 
 		// Add edge values (trace) into the wbc 
 		elmt->GetTracePhysVals(boundary,bc,w,wbc);
-
 		//Compute womersley solution
 	        for (j=0;j<nfq;j++){
 			r = sqrt(x[j]*x[j] + y[j]*y[j] + z[j]*z[j])/R;
@@ -577,12 +616,12 @@ namespace Nektar
 			wbc[j] = vel_r[0]*(1. - r*r); // Compute Poiseulle Flow
 			for (k=1; k<M; k++){
 				kt = 2.0*M_PI*k*m_time/T;
-				za = alpha*sqrt(k)/sqrt(2.0)*std::complex<double>(-1.0,1.0);
+				za = alpha*sqrt(k)/sqrt(2.0)*std::complex<NekDouble>(-1.0,1.0);
 				zar = r*za;
 				zJ0 = CompBessel(0,za);
 				zJ0r = CompBessel(0,zar);
 				zJ0rJ0 = zJ0r/zJ0;
-				zq = std::exp(zi*kt)*std::complex<double>(vel_r[k],vel_i[k]);
+				zq = std::exp(zi*kt)*std::complex<NekDouble>(vel_r[k],vel_i[k]);
 //				zq = std::complex<double>(vel_r[k],vel_i[k])*std::complex<double>(cos(kt),sin(kt));
 				zvel = zq*(z1-zJ0rJ0);
 				wbc[j] = wbc[j]+zvel.real();
@@ -594,8 +633,6 @@ namespace Nektar
 		Bvals = BndExp[bndid]->UpdateCoeffs()+BndExp[bndid]->GetCoeff_Offset(i);
 		// Push back to Coeff space	
 		bc->FwdTrans(wbc,Bvals);
-
-
 	}
 
     }

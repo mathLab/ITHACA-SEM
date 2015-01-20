@@ -11,7 +11,7 @@
     <metrics>
         <metric type="file" id="1">
             <file filename="chan3D_probe.dat">
-                <sha1>c0c636b4b341a329e723cf2fc81fc4e2068b548b</sha1>
+                <sha1>26a1c31c159b798db40df148d29355e9c378d97b</sha1>
              </file>
          </metric>
     </metrics>

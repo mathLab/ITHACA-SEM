@@ -147,7 +147,7 @@ namespace Nektar
                 MemoryManager<LibUtilities::PtsField>::AllocateSharedPtr(
                     dim, fieldNames, pts);
             m_f->m_fieldPts->SetPtsType(LibUtilities::ePtsTriBlock);
-            m_f->m_fieldPts->m_ptsConn = ptsConn;
+            m_f->m_fieldPts->SetConnectivity(ptsConn);
         }
 
         void InputDat::ReadTecplotFEBlockZone(

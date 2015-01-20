@@ -299,16 +299,18 @@ vector<IsoSharedPtr> ProcessIsoContour::ExtractContour(
     Array<OneD, NekDouble> cy = intfields[1];
     Array<OneD, NekDouble> cz = intfields[2];
 
-    for(int zone = 0; zone < m_f->m_fieldPts->m_ptsConn.size(); ++zone)
+    vector<Array<OneD, int> > ptsConn;
+    m_f->m_fieldPts->GetConnectivity(ptsConn);
+    for(int zone = 0; zone < ptsConn.size(); ++zone)
     {
         IsoSharedPtr iso;
 
         iso = MemoryManager<Iso>::AllocateSharedPtr(nfields-3);
 
-        int nelmt = m_f->m_fieldPts->m_ptsConn[zone].num_elements()
+        int nelmt = ptsConn[zone].num_elements()
             /(coordim+1);
 
-        Array<OneD, int> conn = m_f->m_fieldPts->m_ptsConn[zone];
+        Array<OneD, int> conn = ptsConn[zone];
 
         for (n = 0, i = 0; i < nelmt; ++i)
         {
@@ -486,8 +488,10 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
     m_f->m_fieldPts->SetPts(newfields);
 
     // set up connectivity data.
+    vector<Array<OneD, int> > ptsConn;
+    m_f->m_fieldPts->GetConnectivity(ptsConn);
     cnt = 0;
-    m_f->m_fieldPts->m_ptsConn.clear();
+    ptsConn.clear();
     for(int i =0; i < iso.size(); ++i)
     {
         int ntris = iso[i]->get_ntris();
@@ -497,7 +501,7 @@ void ProcessIsoContour::ResetFieldPts(vector<IsoSharedPtr> &iso)
         {
             conn[j] = cnt + iso[i]->get_vid(j);
         }
-        m_f->m_fieldPts->m_ptsConn.push_back(conn);
+        ptsConn.push_back(conn);
         cnt += iso[i]->get_nvert();
     }
     m_f->m_fieldPts->SetConnectivity(ptsConn);

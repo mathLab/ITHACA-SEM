@@ -195,6 +195,35 @@ void PtsField::GetWeights(
     neighbourInds = m_neighInds;
 }
 
+/**
+ * @brief Set the connectivity data for ePtsTetBlock and ePtsTriBlock
+ *
+ * @param conn Connectivity data
+ * Connectivity data needed for ePtsTetBlock and ePtsTriBlock. For n Blocks with
+ * m elements each, m_ptsConn is a vector of n arrays with 3*m (ePtsTriBlock) or
+ * 4*m (ePtsTetBlock) entries.
+ */
+void PtsField::GetConnectivity(vector< Array< OneD, int > > &conn) const
+{
+    conn = m_ptsConn;
+}
+
+/**
+ * @brief Get the connectivity data for ePtsTetBlock and ePtsTriBlock
+ *
+ * @param conn Connectivity data
+ * Connectivity data needed for ePtsTetBlock and ePtsTriBlock. For n Blocks with
+ * m elements each, m_ptsConn is a vector of n arrays with 3*m (ePtsTriBlock) or
+ * 4*m (ePtsTetBlock) entries.
+ */
+void PtsField::SetConnectivity(const vector< Array< OneD, int > > &conn)
+{
+    ASSERTL1((m_ptsType == ePtsTetBlock || m_ptsType == ePtsTriBlock),
+             "ptsType must be set before connectivity");
+
+    m_ptsConn = conn;
+}
+
 
 void PtsField::SetDim(const int ptsDim)
 {
@@ -229,7 +258,7 @@ std::string PtsField::GetFieldName(const int i) const
 void PtsField::SetFieldNames(const vector<std::string> fieldNames)
 {
     ASSERTL0(fieldNames.size() == m_pts.num_elements() - m_dim,
-    "Number of given fieldNames does not match the number of stored fields");
+             "Number of given fieldNames does not match the number of stored fields");
 
     m_fieldNames = fieldNames;
 }
@@ -301,18 +330,19 @@ int PtsField::GetPointsPerEdge(const int i) const
     return m_nPtsPerEdge[i];
 }
 
-
 /**
  * @brief Set the number of points per edge
  *
- * @param nPtsPerEdge   Number of points per edge. Empty if the point data has
- * no specific shape, size=1 for a line, 2 for a plane, 3 for a box.
- * Parallel edges have the same number of points.
+ * @param nPtsPerEdge  Number of points per edge. Empty if the point data has no
+ * specific shape (ePtsLine) or is a block (ePtsTetBlock, ePtsTriBlock), size=1
+ * for ePtsLine and 2 for a ePtsPlane
  */
 void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
 {
-    int totPts(1);
+    ASSERTL0(m_ptsType == ePtsLine || m_ptsType == ePtsPlane,
+             "SetPointsPerEdge only supported for ePtsLine and ePtsPlane .");
 
+    int totPts(1);
     for (int i = 0; i < nPtsPerEdge.size(); ++i)
     {
         totPts = totPts * nPtsPerEdge.at(i);
@@ -320,6 +350,7 @@ void PtsField::SetPointsPerEdge(const vector< int > nPtsPerEdge)
 
     ASSERTL0(totPts == m_pts.num_elements(),
              "nPtsPerEdge does not match total number of points");
+
     m_nPtsPerEdge = nPtsPerEdge;
 }
 

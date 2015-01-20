@@ -90,8 +90,6 @@ class PtsField
 {
     public:
 
-        vector<Array<OneD, int> >               m_ptsConn;
-
         LIB_UTILITIES_EXPORT PtsField(
             const int dim,
             const Array<OneD, Array<OneD, NekDouble> > &pts) :
@@ -149,6 +147,10 @@ class PtsField
             Array<OneD, Array<OneD, float> > &weights,
             Array<OneD, Array<OneD, unsigned int> > &neighbourInds) const;
 
+        LIB_UTILITIES_EXPORT void GetConnectivity(vector<Array<OneD, int> > &conn) const;
+
+        LIB_UTILITIES_EXPORT void SetConnectivity(const vector<Array<OneD, int> > &conn);
+
         LIB_UTILITIES_EXPORT void SetDim(const int ptsDim);
 
         LIB_UTILITIES_EXPORT int GetDim() const;
@@ -203,9 +205,13 @@ class PtsField
         /// points spatial coordinates. Structure: m_pts[fieldIdx][ptIdx]
         Array<OneD, Array<OneD, NekDouble> >    m_pts;
         /// Number of points per edge. Empty if the point data has no
-        /// specific shape, size=1 for a line, 2 for a plane, 3 for a box.
-        /// Parallel edges have the same number of points.
+        /// specific shape (ePtsLine) or is a block (ePtsTetBlock,
+        /// ePtsTriBlock), size=1 for ePtsLine and 2 for a ePtsPlane
         vector<int>                             m_nPtsPerEdge;
+        /// Connectivity data needed for ePtsTetBlock and ePtsTriBlock. For n
+        /// Blocks with m elements each, m_ptsConn is a vector of n arrays with
+        /// 3*m (ePtsTriBlock) or 4*m (ePtsTetBlock) entries.
+        vector<Array<OneD, int> >               m_ptsConn;
         /// Type of the PtsField
         PtsType                                 m_ptsType;
         /// Interpolation weights for each neighbour.

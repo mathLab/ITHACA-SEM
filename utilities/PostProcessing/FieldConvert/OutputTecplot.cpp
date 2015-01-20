@@ -202,6 +202,9 @@ void OutputTecplot::Process(po::variables_map &vm)
                     break;
                 }
 
+                vector<Array<OneD, int> > ptsConn;
+                fPts->GetConnectivity(ptsConn);
+
                 for(i = 0; i < fPts->GetNFields(); ++i)
                 {
                     outfile << "," << fPts->GetFieldName(i);
@@ -228,10 +231,10 @@ void OutputTecplot::Process(po::variables_map &vm)
                     case LibUtilities::ePtsTriBlock:
                     {
                         int numBlocks = 0;
-                        for(i = 0; i < fPts->m_ptsConn.size(); ++i)
+                        for(i = 0; i < ptsConn.size(); ++i)
                         {
                             numBlocks +=
-                                fPts->m_ptsConn[i].num_elements()/3;
+                                ptsConn[i].num_elements()/3;
                         }
                         outfile << "Zone, N="
                                 << fPts->GetNpoints()
@@ -244,10 +247,10 @@ void OutputTecplot::Process(po::variables_map &vm)
                     case LibUtilities::ePtsTetBlock:
                     {
                         int numBlocks = 0;
-                        for(i = 0; i < fPts->m_ptsConn.size(); ++i)
+                        for(i = 0; i < ptsConn.size(); ++i)
                         {
                             numBlocks +=
-                                fPts->m_ptsConn[i].num_elements()/4;
+                                ptsConn[i].num_elements()/4;
                         }
                         outfile << "Zone, N="
                                 << fPts->GetNpoints()
@@ -258,7 +261,7 @@ void OutputTecplot::Process(po::variables_map &vm)
                         break;
                     }
                     default:
-                        ASSERTL0(false, "ptsType type not supported yet.");
+                        ASSERTL0(false, "ptsType not supported yet.");
                 }
 
                 if(DumpAsFEPoint) // dump in point format
@@ -295,11 +298,11 @@ void OutputTecplot::Process(po::variables_map &vm)
                     }
 
                     // dump connectivity data if it exists
-                    for(i = 0; i < fPts->m_ptsConn.size();++i)
+                    for(i = 0; i < ptsConn.size();++i)
                     {
-                        for(j = 0; j < fPts->m_ptsConn[i].num_elements(); ++j)
+                        for(j = 0; j < ptsConn[i].num_elements(); ++j)
                         {
-                            outfile << fPts->m_ptsConn[i][j] +1 << " ";
+                            outfile << ptsConn[i][j] +1 << " ";
                             if( ( !(j % 10 * dim) ) && j )
                             {
                                 outfile << std::endl;

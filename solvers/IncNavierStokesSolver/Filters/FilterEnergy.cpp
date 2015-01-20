@@ -33,8 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iomanip>
-
 #include <IncNavierStokesSolver/Filters/FilterEnergy.h>
 
 namespace Nektar
@@ -46,33 +44,9 @@ namespace Nektar
 
         FilterEnergy::FilterEnergy(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const std::map<std::string, std::string> &pParams) :
-            Filter(pSession), m_index(0), m_homogeneous(false), m_planes()
+            const std::map<std::string, std::string> &pParams)
+            : FilterEnergyBase(pSession, pParams, true)
         {
-            std::string outName;
-            if (pParams.find("OutputFile") == pParams.end())
-            {
-                outName = m_session->GetSessionName();
-            }
-            else
-            {
-                ASSERTL0(!(pParams.find("OutputFile")->second.empty()),
-                         "Missing parameter 'OutputFile'.");
-                outName = pParams.find("OutputFile")->second;
-            }
-
-            m_comm = pSession->GetComm();
-            outName += ".eny";
-            if (m_comm->GetRank() == 0)
-            {
-                m_outFile.open(outName.c_str());
-                ASSERTL0(m_outFile.good(), "Unable to open: '" + outName + "'");
-            }
-            
-            ASSERTL0(pParams.find("OutputFrequency") != pParams.end(),
-                     "Missing parameter 'OutputFrequency'.");
-            m_outputFrequency = atoi(
-                pParams.find("OutputFrequency")->second.c_str());
         }
 
         FilterEnergy::~FilterEnergy()
@@ -80,158 +54,12 @@ namespace Nektar
 
         }
 
-        void FilterEnergy::v_Initialise(
+        void FilterEnergy::v_GetVelocity(
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time)
+            const int i,
+            Array<OneD, NekDouble> &velocity)
         {
-            m_index = 0;
-            MultiRegions::ExpListSharedPtr areaField;
-
-            ASSERTL0(pFields[0]->GetExpType() != MultiRegions::e3DH2D,
-                     "Homogeneous 2D expansion not supported"
-                     "for energy filter");
-
-            if (pFields[0]->GetExpType() == MultiRegions::e3DH1D)
-            {
-                m_homogeneous = true;
-            }
-
-            // Calculate area/volume of domain.
-            if (m_homogeneous)
-            {
-                m_planes  = pFields[0]->GetZIDs();
-                areaField = pFields[0]->GetPlane(0);
-            }
-            else
-            {
-                areaField = pFields[0];
-            }
-
-            Array<OneD, NekDouble> inarray(areaField->GetNpoints(), 1.0);
-            m_area = areaField->Integral(inarray);
-
-            if (m_homogeneous)
-            {
-                m_area *= m_homogeneousLength;
-            }
-
-            // Output values at initial time.
-            v_Update(pFields, time);
-        }
-
-        void FilterEnergy::v_Update(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time)
-        {
-            int i, nPoints = pFields[0]->GetNpoints(), nPlanePts = 0;
-
-            if (m_homogeneous)
-            {
-                nPlanePts = pFields[0]->GetPlane(0)->GetNpoints();
-            }
-            
-            m_index++;
-            if (m_index % m_outputFrequency > 0)
-            {
-                return;
-            }
-
-            // Calculate kinetic energy.
-            NekDouble Ek = 0.0;
-            Array<OneD, NekDouble> tmp(nPoints);
-            Array<OneD, Array<OneD, NekDouble> > u(3);
-            for (i = 0; i < 3; ++i)
-            {
-                if (m_homogeneous)
-                {
-                    pFields[i]->HomogeneousBwdTrans(pFields[i]->GetPhys(), tmp);
-                }
-                else
-                {
-                    tmp = pFields[i]->GetPhys();
-                }
-
-                u[i] = Array<OneD, NekDouble>(nPoints);
-                Vmath::Vcopy(nPoints, tmp, 1, u[i], 1);
-                Vmath::Vmul (nPoints, tmp, 1, tmp, 1, tmp, 1);
-
-                if (m_homogeneous)
-                {
-                    pFields[i]->HomogeneousFwdTrans(tmp, tmp);
-                    Ek += pFields[i]->GetPlane(0)->Integral(tmp) * 2.0 * M_PI;
-                }
-                else
-                {
-                    Ek += pFields[i]->Integral(tmp);
-                }
-            }
-
-            Ek /= 2.0*m_area;
-
-            if (m_comm->GetRank() == 0)
-            {
-                m_outFile << setw(10) << time << setw(20) << Ek;
-            }
-
-            bool waveSpace[3] = {
-                pFields[0]->GetWaveSpace(),
-                pFields[1]->GetWaveSpace(),
-                pFields[2]->GetWaveSpace()
-            };
-
-            if (m_homogeneous)
-            {
-                for (i = 0; i < 3; ++i)
-                {
-                    pFields[i]->SetWaveSpace(false);
-                }
-            }
-
-            // First calculate vorticity field.
-            Array<OneD, NekDouble> tmp2(nPoints), tmp3(nPoints);
-            Vmath::Zero(nPoints, tmp, 1);
-            for (i = 0; i < 3; ++i)
-            {
-                int f1 = (i+2) % 3, c2 = f1;
-                int c1 = (i+1) % 3, f2 = c1;
-                pFields[f1]->PhysDeriv(c1, u[f1], tmp2);
-                pFields[f2]->PhysDeriv(c2, u[f2], tmp3);
-                Vmath::Vsub (nPoints, tmp2, 1, tmp3, 1, tmp2, 1);
-                Vmath::Vvtvp(nPoints, tmp2, 1, tmp2, 1, tmp, 1, tmp, 1);
-            }
-
-            if (m_homogeneous)
-            {
-                for (i = 0; i < 3; ++i)
-                {
-                    pFields[i]->SetWaveSpace(waveSpace[i]);
-                }
-                pFields[0]->HomogeneousFwdTrans(tmp, tmp);
-                Ek = pFields[0]->GetPlane(0)->Integral(tmp) * 2 * M_PI;
-            }
-            else
-            {
-                Ek = pFields[0]->Integral(tmp);
-            }
-
-            Ek /= 2.0*m_area;
-
-            if (m_comm->GetRank() == 0)
-            {
-                m_outFile << setw(20) << Ek << endl;
-            }
-        }
-
-        void FilterEnergy::v_Finalise(
-            const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields,
-            const NekDouble &time)
-        {
-            m_outFile.close();
-        }
-
-        bool FilterEnergy::v_IsTimeDependent()
-        {
-            return true;
+            velocity = pFields[i]->GetPhys();
         }
     }
 }

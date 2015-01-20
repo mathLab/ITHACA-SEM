@@ -62,7 +62,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT FilterThresholdMax(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const std::map<std::string, std::string> &pParams);
-            SOLVER_UTILS_EXPORT ~FilterThresholdMax();
+            SOLVER_UTILS_EXPORT virtual ~FilterThresholdMax();
 
         protected:
             virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
@@ -72,7 +72,9 @@ namespace Nektar
 
         private:
             Array<OneD, NekDouble> m_threshold;
+            NekDouble m_startTime;
             NekDouble m_thresholdValue;
+            int m_thresholdVar;
             NekDouble m_initialValue;
             std::string m_outputFile;
             LibUtilities::FieldIOSharedPtr m_fld;

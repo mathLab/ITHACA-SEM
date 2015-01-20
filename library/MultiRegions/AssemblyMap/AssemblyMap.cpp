@@ -167,8 +167,6 @@ namespace Nektar
             m_session(oldLevelMap->m_session),
             m_comm(oldLevelMap->GetComm()),
             m_hash(0),
-            m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
-            m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
             m_solnType(oldLevelMap->m_solnType),
             m_preconType(oldLevelMap->m_preconType),
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
@@ -309,7 +307,8 @@ namespace Nektar
             m_solnType              = solnTypeOld;
             ASSERTL1(m_solnType==eDirectMultiLevelStaticCond
                     ||m_solnType==eIterativeMultiLevelStaticCond
-                    ||m_solnType==eXxtMultiLevelStaticCond,
+                    ||m_solnType==eXxtMultiLevelStaticCond
+                    ||m_solnType==ePETScMultiLevelStaticCond,
                      "This method should only be called for in "
                      "case of multi-level static condensation.");
             m_staticCondLevel       = newLevel;
@@ -327,6 +326,11 @@ namespace Nektar
             }
             
             m_patchMapFromPrevLevel = MemoryManager<PatchMap>::AllocateSharedPtr(numLocalBndCoeffsOld);
+
+            m_globalToUniversalBndMap = Array<OneD, int>(
+                m_numGlobalBndCoeffs, oldLevelMap->GetGlobalToUniversalBndMap());
+            m_globalToUniversalBndMapUnique = Array<OneD, int>(
+                m_numGlobalBndCoeffs, oldLevelMap->GetGlobalToUniversalBndMapUnique());
 
             // Set up an offset array that denotes the offset of the local
             // boundary degrees of freedom of the next level
@@ -639,7 +643,8 @@ namespace Nektar
             return result;
         }
         
-        boost::shared_ptr<AssemblyMap> AssemblyMap::v_XxtLinearSpaceMap(const ExpList &locexp)
+        boost::shared_ptr<AssemblyMap> AssemblyMap::v_LinearSpaceMap(
+            const ExpList &locexp, GlobalSysSolnType solnType)
         {
             ASSERTL0(false, "Not defined for this sub class");
             static boost::shared_ptr<AssemblyMap> result;
@@ -802,9 +807,9 @@ namespace Nektar
             return v_GetExtraDirEdges();
         }
 
-        boost::shared_ptr<AssemblyMap> AssemblyMap::XxtLinearSpaceMap(const ExpList &locexp)
+        boost::shared_ptr<AssemblyMap> AssemblyMap::LinearSpaceMap(const ExpList &locexp, GlobalSysSolnType solnType)
         {
-            return v_XxtLinearSpaceMap(locexp);
+            return v_LinearSpaceMap(locexp, solnType);
         }
 
         int AssemblyMap::GetLocalToGlobalBndMap(const int i) const
@@ -1210,7 +1215,6 @@ namespace Nektar
                 = m_session->GetComm()->GetRowComm();
             bool isRoot = vRowComm->GetRank() == 0;
             int n = vRowComm->GetSize();
-            int p = vRowComm->GetRank();
             int i;
 
             // Determine number of global degrees of freedom.
@@ -1234,7 +1238,9 @@ namespace Nektar
             // Calculate maximum valency
             Array<OneD, NekDouble> tmpLoc (m_numLocalBndCoeffs,  1.0);
             Array<OneD, NekDouble> tmpGlob(m_numGlobalBndCoeffs, 0.0);
-            AssembleBnd(tmpLoc, tmpGlob);
+
+            Vmath::Assmb(m_numLocalBndCoeffs, tmpLoc.get(), m_localToGlobalBndMap.get(), tmpGlob.get());
+            UniversalAssembleBnd(tmpGlob);
 
             int totGlobDof     = globCnt;
             int totGlobBndDof  = globBndCnt;

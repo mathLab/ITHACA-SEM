@@ -179,7 +179,7 @@ namespace Nektar
             virtual void v_SetUpPhysNormals();
             /// const StdRegions::StdExpansionVector &locexp);
 
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(std::ostream &outfile, int expansion);
 
             int m_firstIntEl;
             

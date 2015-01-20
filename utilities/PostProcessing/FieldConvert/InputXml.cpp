@@ -39,7 +39,6 @@ using namespace std;
 
 #include "InputXml.h"
 
-
 static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
                 "NumberOfPoints","n","Define number of points to dump output");
 
@@ -71,7 +70,6 @@ namespace Nektar
 
         InputXml::~InputXml()
         {
-            m_f->m_session->GetComm()->Finalise();
         }
 
         /**
@@ -86,10 +84,10 @@ namespace Nektar
             }
             // check to see if fld file defined so can use in
             // expansion defintion if required
-            string fldending; 
-            bool fldfilegiven = true; 
+            string fldending;
+            bool fldfilegiven = true;
 
-            //Determine appropriate field input 
+            //Determine appropriate field input
             if(m_f->m_inputfiles.count("fld") != 0)
             {
                 fldending = "fld";
@@ -124,53 +122,116 @@ namespace Nektar
                 files.push_back(m_f->m_inputfiles[xml_gz_ending][j]);
             }
 
+            SpatialDomains::DomainRangeShPtr rng =
+                                        SpatialDomains::NullDomainRangeShPtr;
 
-            SpatialDomains::DomainRangeShPtr rng = SpatialDomains::NullDomainRangeShPtr; 
-            // define range to process output 
+
+            // define range to process output
             if(vm.count("range"))
             {
                 vector<NekDouble> values;
-                ASSERTL0(ParseUtils::GenerateUnOrderedVector(vm["range"].as<string>().c_str(),values),"Failed to interpret range string");
-                
-                ASSERTL0(values.size() > 1,"Do not have minimum values of xmin,xmax");
-                ASSERTL0(values.size()%2 == 0,"Do not have an even number of range values");
-                int nvalues = values.size()/2;
-                rng = MemoryManager<SpatialDomains::DomainRange>::AllocateSharedPtr();
+                ASSERTL0(ParseUtils::GenerateUnOrderedVector(
+                            vm["range"].as<string>().c_str(), values),
+                         "Failed to interpret range string");
 
-                rng->doZrange = false;
-                rng->doYrange = false;
-                
+                ASSERTL0(values.size() > 1,
+                         "Do not have minimum values of xmin,xmax");
+                ASSERTL0(values.size() % 2 == 0,
+                         "Do not have an even number of range values");
+
+                int nvalues = values.size()/2;
+                rng = MemoryManager<SpatialDomains::DomainRange>::
+                                                        AllocateSharedPtr();
+
+                rng->m_doZrange     = false;
+                rng->m_doYrange     = false;
+                rng->m_checkShape   = false;
+
                 switch(nvalues)
                 {
                 case 3:
-                    rng->doZrange = true;
-                    rng->zmin = values[4];
-                    rng->zmax = values[5];
+                    rng->m_doZrange = true;
+                    rng->m_zmin     = values[4];
+                    rng->m_zmax     = values[5];
                 case 2:
-                    rng->doYrange = true;
-                    rng->ymin = values[2];
-                    rng->ymax = values[3];
+                    rng->m_doYrange = true;
+                    rng->m_ymin     = values[2];
+                    rng->m_ymax     = values[3];
                 case 1:
-                    rng->doXrange = true;
-                    rng->xmin = values[0];
-                    rng->xmax = values[1];
+                    rng->m_doXrange = true;
+                    rng->m_xmin     = values[0];
+                    rng->m_xmax     = values[1];
                     break;
                 default:
                     ASSERTL0(false,"too many values specfied in range");
-                }    
+                }
             }
 
-            m_f->m_session = LibUtilities::SessionReader::
-                CreateInstance(0, 0, files, m_f->m_comm);
+            // define range to only take a single shape.
+            if(vm.count("onlyshape"))
+            {
+                if(rng == SpatialDomains::NullDomainRangeShPtr)
+                {
+                    rng = MemoryManager<SpatialDomains::DomainRange>::
+                                                            AllocateSharedPtr();
+                    rng->m_doXrange = false;
+                    rng->m_doYrange = false;
+                    rng->m_doZrange = false;
+                }
+
+                rng->m_checkShape = true;
+
+                string shapematch =
+                            boost::to_upper_copy(vm["onlyshape"].as<string>());
+                int i;
+                for(i = 0; i < LibUtilities::SIZE_ShapeType; ++i)
+                {
+                    string shapeval = LibUtilities::ShapeTypeMap[i];
+                    boost::to_upper(shapeval);
+                    if(shapematch.compare(shapeval) == 0)
+                    {
+                        rng->m_shapeType = (LibUtilities::ShapeType)i;
+                        break;
+                    }
+                }
+                ASSERTL0(i != LibUtilities::SIZE_ShapeType,
+                         "Failed to find shape type in -onlyshape command line "
+                         "argument");
+            }
+
+
+            if(m_f->m_verbose)
+            {
+                string firstarg = "FieldConvert";
+                string verbose = "-v";
+                char **argv;
+                argv = (char**)malloc(2*sizeof(char*));
+                argv[0] = (char *)malloc(firstarg.size()*sizeof(char));
+                argv[1] = (char *)malloc(verbose.size()*sizeof(char));
+
+                sprintf(argv[0],"%s",firstarg.c_str());
+                sprintf(argv[1],"%s",verbose.c_str());
+
+                m_f->m_session = LibUtilities::SessionReader::
+                    CreateInstance(2, (char **)argv, files, m_f->m_comm);
+            }
+            else
+            {
+                m_f->m_session = LibUtilities::SessionReader::
+                    CreateInstance(0, 0, files, m_f->m_comm);
+            }
+
+
+
+
             m_f->m_graph = SpatialDomains::MeshGraph::Read(m_f->m_session,rng);
             m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                ::AllocateSharedPtr(m_f->m_session->GetComm());
-            
-            
+                            ::AllocateSharedPtr(m_f->m_session->GetComm());
+
             // currently load all field (possibly could read data from
             // expansion list but it is re-arranged in expansion)
             const SpatialDomains::ExpansionMap &expansions = m_f->m_graph->GetExpansions();
-            
+
             // if Range has been speficied it is possible to have a
             // partition which is empty so ccheck this and return if
             // no elements present.
@@ -186,11 +247,8 @@ namespace Nektar
             int NumHomogeneousDir = 0;
             if(fldfilegiven)
             {
-                m_f->m_fld = MemoryManager<LibUtilities::FieldIO>
-                    ::AllocateSharedPtr(m_f->m_session->GetComm());
                 m_f->m_fld->Import(m_f->m_inputfiles[fldending][0],m_f->m_fielddef);
                 NumHomogeneousDir = m_f->m_fielddef[0]->m_numHomogeneousDir;
-                
 
                 //----------------------------------------------
                 // Set up Expansion information to use mode order from field
@@ -201,7 +259,7 @@ namespace Nektar
                 if(m_f->m_session->DefinesSolverInfo("HOMOGENEOUS"))
                 {
                     std::string HomoStr = m_f->m_session->GetSolverInfo("HOMOGENEOUS");
-                    
+
                     if((HomoStr == "HOMOGENEOUS1D") || (HomoStr == "Homogeneous1D")
                        || (HomoStr == "1D") || (HomoStr == "Homo1D"))
                     {
@@ -214,19 +272,17 @@ namespace Nektar
                     }
                 }
             }
-            
-            // reset expansion defintion to use equispaced points if required. 
-            if(m_requireEquiSpaced) // set up points to be equispaced 
+
+            // reset expansion defintion to use equispaced points if required.
+            if(m_requireEquiSpaced) // set up points to be equispaced
             {
                 int nPointsNew = 0;
-                
+
                 if(vm.count("output-points"))
                 {
-                    LibUtilities::Equation expession(m_f->m_session, 
-                                                     vm["output-points"].as<string>());
-                    nPointsNew = expession.Evaluate();
+                    nPointsNew = vm["output-points"].as<int>();
                 }
-                
+
 
                 m_f->m_graph->SetExpansionsToEvenlySpacedPoints(nPointsNew);
             }

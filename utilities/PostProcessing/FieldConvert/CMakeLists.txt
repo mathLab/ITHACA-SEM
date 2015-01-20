@@ -1,14 +1,24 @@
 SET(FieldConvertHeaders 
     Module.h
     Field.hpp
+    InputDat.h
     InputFld.h
     InputXml.h
+    InputPts.h
+    OutputInfo.h
     OutputTecplot.h
     OutputVtk.h
     OutputFld.h
+    ProcessAddFld.h
     ProcessBoundaryExtract.h
     ProcessConcatenateFld.h
+    ProcessEquiSpacedOutput.h
     ProcessInterpField.h
+    ProcessInterpPoints.h
+    ProcessInterpPointDataToFld.h
+    ProcessIsoContour.h
+    ProcessJacobianEnergy.h
+    ProcessScaleInFld.h
     ProcessVorticity.h
     ProcessC0Projection.h
     ProcessQCriterion.h
@@ -17,14 +27,24 @@ SET(FieldConvertHeaders
 SET(FieldConvertSources 
     Module.cpp
     FieldConvert.cpp
+    InputDat.cpp
     InputFld.cpp
     InputXml.cpp
+    InputPts.cpp
+    OutputInfo.cpp
     OutputTecplot.cpp
     OutputVtk.cpp
     OutputFld.cpp
+    ProcessAddFld.cpp
     ProcessBoundaryExtract.cpp
     ProcessConcatenateFld.cpp
+    ProcessEquiSpacedOutput.cpp
     ProcessInterpField.cpp
+    ProcessInterpPoints.cpp
+    ProcessInterpPointDataToFld.cpp
+    ProcessIsoContour.cpp
+    ProcessJacobianEnergy.cpp
+    ProcessScaleInFld.cpp
     ProcessVorticity.cpp
     ProcessC0Projection.cpp
     ProcessQCriterion.cpp

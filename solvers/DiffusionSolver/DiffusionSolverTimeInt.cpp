@@ -61,7 +61,6 @@ class Diffusion
         LibUtilities::SessionReaderSharedPtr            session;
         LibUtilities::FieldIOSharedPtr                  fld;
         string                                          sessionName;
-        string                                          fileName;
         SpatialDomains::MeshGraphSharedPtr              graph;
         MultiRegions::ContField2DSharedPtr              field;
 
@@ -91,7 +90,6 @@ Diffusion::Diffusion(int argc, char* argv[])
                     AllocateSharedPtr(session->GetComm());
 
     // Get some information from the session
-    fileName    = session->GetFilename();
     sessionName = session->GetSessionName();
     scheme      = session->GetSolverInfo("TimeIntegrationMethod");
     nSteps      = session->GetParameter("NumSteps");
@@ -115,9 +113,9 @@ Diffusion::Diffusion(int argc, char* argv[])
     field->GetCoords(x0,x1,x2);
 
     // Evaluate initial condition
-    LibUtilities::EquationSharedPtr ffunc
+    LibUtilities::EquationSharedPtr icond 
         = session->GetFunction("InitialConditions", "u");
-    ffunc->Evaluate(x0,x1,x2,0.0,field->UpdatePhys());
+    icond->Evaluate(x0,x1,x2,0.0,field->UpdatePhys());
 }
 
 Diffusion::~Diffusion()
@@ -134,6 +132,9 @@ void Diffusion::TimeIntegrate()
 
     // Initialise the scheme for actual time integration scheme
     u = IntScheme->InitializeScheme(delta_t, fields, 0.0, ode);
+
+    // Zero field coefficients for initial guess for linear solver.
+    Vmath::Zero(field->GetNcoeffs(), field->UpdateCoeffs(), 1);
 
     for (int n = 0; n < nSteps; ++n)
     {

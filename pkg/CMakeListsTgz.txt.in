@@ -1,0 +1,54 @@
+cmake_minimum_required(VERSION 2.6)
+
+project("pkg-@PKG_NAME@")
+
+set(CPACK_GENERATOR "TGZ")
+set(CPACK_OUTPUT_FILE_PREFIX "../..") # Put in builds dir.
+
+# Find out the machine architecture
+execute_process(COMMAND uname -m 
+                OUTPUT_VARIABLE ARCHITECTURE
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# Package details
+set(CPACK_PACKAGE_NAME "@PKG_NAME@")
+set(CPACK_PACKAGE_VENDOR "Imperial College London")
+set(CPACK_PACKAGE_CONTACT 
+    "Nektar++ users mailing list <nektar-users@imperial.ac.uk>")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "@PKG_SUMMARY@")
+set(CPACK_PACKAGE_DESCRIPTION "@PKG_DESCRIPTION@")
+set(CPACK_RESOURCE_FILE_LICENSE "@CMAKE_SOURCE_DIR@/LICENSE")
+set(CPACK_PACKAGE_VERSION "@NEKTAR_VERSION@")
+set(CPACK_PACKAGE_VERSION_MAJOR "@NEKTAR_VERSION_MAJOR@")
+set(CPACK_PACKAGE_VERSION_MINOR "@NEKTAR_VERSION_MINOR@")
+set(CPACK_PACKAGE_VERSION_PATCH "@NEKTAR_VERSION_PATCH@")
+
+# Override the output filename to comply with Debian naming policy
+set(CPACK_PACKAGE_FILE_NAME 
+    "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${ARCHITECTURE}")
+
+# Files to go in the package
+set(INSTALL_BINS_FILES "@PKG_INSTALL_BINS_FILES@")
+set(INSTALL_LIBS_FILES "@PKG_INSTALL_LIBS_FILES@")
+
+# Install any libraries in the lib directory
+if(INSTALL_LIBS_FILES)
+    install(FILES ${INSTALL_LIBS_FILES} DESTINATION lib
+        PERMISSIONS
+            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+            GROUP_READ GROUP_EXECUTE
+            WORLD_READ WORLD_EXECUTE
+    )
+endif()
+
+# Install any binaries in the bin directory
+if(INSTALL_BINS_FILES)
+    install(FILES ${INSTALL_BINS_FILES} DESTINATION bin
+        PERMISSIONS
+            OWNER_READ OWNER_WRITE OWNER_EXECUTE
+            GROUP_READ GROUP_EXECUTE
+            WORLD_READ WORLD_EXECUTE
+    )
+endif()
+
+include(CPack)

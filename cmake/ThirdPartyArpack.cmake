@@ -1,10 +1,22 @@
-# Arpack
-OPTION(NEKTAR_USE_ARPACK
-    "Use Arpack routines for evaluating the eigenvalues and eigenvectors" OFF)
+########################################################################
+#
+# ThirdParty configuration for Nektar++
+#
+# ARPACK
+#
+########################################################################
 
-IF( NEKTAR_USE_ARPACK )
-    INCLUDE (FindArpack)
-    INCLUDE_DIRECTORIES(${ARPACK_INCLUDE_DIR})
-    ADD_DEFINITIONS(-DNEKTAR_USING_ARPACK)
-ENDIF( NEKTAR_USE_ARPACK)
+OPTION(NEKTAR_USE_ARPACK
+    "Use Arpack routines for evaluating eigenvalues and eigenvectors" OFF)
+
+IF (NEKTAR_USE_ARPACK)
+    FIND_LIBRARY(ARPACK_LIBRARY NAMES "arpack.1" "arpack" PATHS /opt/local/lib)
+
+    IF (ARPACK_LIBRARY)
+        MESSAGE(STATUS "Found Arpack: ${ARPACK_LIBRARY}")
+        MARK_AS_ADVANCED(ARPACK_LIBRARY)
+    ELSE()
+        MESSAGE(FATAL_ERROR "Could not find Arpack")
+    ENDIF()
+ENDIF()
 

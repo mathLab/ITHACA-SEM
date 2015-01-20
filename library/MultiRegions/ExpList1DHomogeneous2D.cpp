@@ -58,10 +58,10 @@ namespace Nektar
             ExpListHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             int n,nel;
-			
-			int nyz = m_ny*m_nz;
 
-            ASSERTL1(nyz == points.num_elements(),"Size of basis number of points and number of lines are not the same");
+            ASSERTL1(m_ny*m_nz == points.num_elements(),
+                    "Size of basis number of points and number of lines are "
+                    "not the same");
 
             for(n = 0; n < points.num_elements(); ++n)
             {
@@ -252,7 +252,7 @@ namespace Nektar
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList1DHomogeneous2D::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
+        void ExpList1DHomogeneous2D::v_WriteTecplotZone(std::ostream &outfile, int expansion)
         {
             int i,j;
 
@@ -282,7 +282,7 @@ namespace Nektar
         }
 
 
-        void ExpList1DHomogeneous2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList1DHomogeneous2D::v_WriteVtkPieceHeader(std::ostream &outfile, int expansion)
         {
             int i,j;
             

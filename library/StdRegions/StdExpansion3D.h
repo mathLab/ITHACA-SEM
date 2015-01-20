@@ -209,7 +209,20 @@ namespace Nektar
             }
             STD_REGIONS_EXPORT const NormalVector & v_GetSurfaceNormal(const int id) const;
             STD_REGIONS_EXPORT const NormalVector & v_GetFaceNormal(const int face) const;
+            
         };
+
+        STD_REGIONS_EXPORT LibUtilities::BasisKey EvaluateTriFaceBasisKey(
+            const int                     facedir,
+            const LibUtilities::BasisType faceDirBasisType,
+            const int                     numpoints,
+            const int                     nummodes);
+
+        STD_REGIONS_EXPORT LibUtilities::BasisKey EvaluateQuadFaceBasisKey(
+            const int                     facedir,
+            const LibUtilities::BasisType faceDirBasisType,
+            const int                     numpoints,
+            const int                     nummodes);
     } //end of namespace
 } //end of namespace
 

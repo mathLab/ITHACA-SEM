@@ -15,20 +15,25 @@ IF( NEKTAR_USE_VTK )
             vtk-5.10.1
             URL ${TPURL}/vtk-5.10.1-nek.tar.bz2
             URL_MD5 "f4e2c6b848d3873d44479baa9e7e4d35"
-            STAMP_DIR ${TPSRC}/stamp
+            STAMP_DIR ${TPBUILD}/stamp
             DOWNLOAD_DIR ${TPSRC}
             SOURCE_DIR ${TPSRC}/vtk-5.10.1
             BINARY_DIR ${TPBUILD}/vtk-5.10.1
             TMP_DIR ${TPBUILD}/vtk-5.10.1-tmp
             INSTALL_DIR ${TPDIST}
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST} -DBUILD_SHARED_LIBS:BOOL=ON -DCMAKE_BUILD_TYPE:STRING=Release ${TPSRC}/vtk-5.10.1
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} 
+                -G ${CMAKE_GENERATOR}
+                -DCMAKE_INSTALL_PREFIX:PATH=${TPDIST} 
+                -DBUILD_SHARED_LIBS:BOOL=ON 
+                -DCMAKE_BUILD_TYPE:STRING=Release 
+                ${TPSRC}/vtk-5.10.1
         )
         SET(VTK_DIR ${TPDIST}/lib/vtk-5.10)
         SET(VTK_FOUND 1)
         SET(VTK_USE_FILE ${VTK_DIR}/UseVTK.cmake)
         INCLUDE (${VTK_DIR}/VTKConfig.cmake)
     ELSE()
-        INCLUDE (FindVTK)
+        FIND_PACKAGE(VTK)
         IF (VTK_FOUND)
             MESSAGE(STATUS "Found VTK: ${VTK_USE_FILE}")
         ELSE (VTK_FOUND)

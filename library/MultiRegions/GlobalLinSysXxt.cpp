@@ -69,21 +69,12 @@ namespace Nektar
                 const AssemblyMapSharedPtr &pLocToGloMap,
                 const int pNumDir)
         {
-            Array<OneD, NekDouble> vLocalIn(pNumRows, 0.0);
-            Array<OneD, NekDouble> vLocalOut(pNumRows, 0.0);
+            int nLocal = m_map.num_elements();
+            Array<OneD, NekDouble> vLocalIn(nLocal, 0.0);
+            Array<OneD, NekDouble> vLocalOut(nLocal, 0.0);
             GlobalToLocalNoSign(pInput, vLocalIn);
             Xxt::Solve(vLocalOut, m_crsData, vLocalIn);
             LocalToGlobalNoSign(vLocalOut, pOutput);
-        }
-
-        /// Solve the linear system for given input and output vectors
-        /// using a specified local to global map.
-        void GlobalLinSysXxt::v_Solve( const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out,
-                    const AssemblyMapSharedPtr &pLocToGloMap,
-                    const Array<OneD, const NekDouble> &pDirForcing)
-        {
-            ASSERTL0(false, "Not implemented for this GlobalLinSys type.");
         }
 
         void GlobalLinSysXxt::GlobalToLocalNoSign(const Array<OneD, const NekDouble> &global,

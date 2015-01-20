@@ -93,6 +93,8 @@ namespace Nektar
         Array<OneD, Array<OneD, unsigned int> > m_bmap;
         Array<OneD, Array<OneD, unsigned int> > m_imap;
         Array<OneD, Array<OneD, NekDouble> > m_temperature;
+        
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_Eig;
 
         virtual void v_InitObject();
         virtual void v_GenerateSummary(SolverUtils::SummaryList& s);

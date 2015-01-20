@@ -64,7 +64,7 @@ namespace Nektar
      * @param xf  x co-ordinates of mapping
      * @param yf  y co-ordinates of mapping
      */
-    inline void MappingIdealToRef(Array<OneD, NekDouble> x,
+    /*inline void MappingIdealToRef(Array<OneD, NekDouble> x,
                                   Array<OneD, NekDouble> y,
                                   Array<OneD, NekDouble> xf,
                                   Array<OneD, NekDouble> yf)
@@ -73,10 +73,16 @@ namespace Nektar
         
         DNekMat map(n, n, 0.0, eFULL);
         DNekMat mapinv(n, n, 0.0, eFULL);
+        cout << "NEW SET OF POITS" << endl;
+        cout << endl;
+        cout << " x(1)=" << x[0] << "; x(2)=" << x[1] << "; x(3)=" << x[2] << endl;
+        cout << " y(1)=" << y[0] << "; y(2)=" << y[1] << "; y(3)=" << y[2] << endl;
         
         map(0,0) = x[0];map(0,1) = y[0];map(0,2) = 1.0;
         map(1,0) = x[1];map(1,1) = y[1];map(1,2) = 1.0;
         map(2,0) = x[2];map(2,1) = y[2];map(2,2) = 1.0;
+        
+        cout << endl;
         
         mapinv = map;
         mapinv.Invert();
@@ -92,9 +98,55 @@ namespace Nektar
             {
                 xf[i] += mapinv(i,j)*xref[j];
                 yf[i] += mapinv(i,j)*yref[j];
+                
+            }
+            cout << "xf(" << i+1 << ")=" << xf[i] << ";"
+               << " " << "yf(" << i+1 << ")=" << yf[i] << ";" << endl;
+        }
+    }*/
+    
+    inline void MappingIdealToRef(Array<OneD, NekDouble> x,
+                                  Array<OneD, NekDouble> y,
+                                  Array<OneD, NekDouble> xf,
+                                  Array<OneD, NekDouble> yf)
+    {
+        int n = x.num_elements();
+        
+        DNekMat map(n, n, 0.0, eFULL);
+        DNekMat mapref(n, n, 0.0, eFULL);
+        DNekMat mapinv(n, n, 0.0, eFULL);
+        DNekMat newmap(n, n, 0.0, eFULL);
+        
+        map(0,0) = x[0];map(1,0) = y[0];map(2,0) = 1.0;
+        map(0,1) = x[1];map(1,1) = y[1];map(2,1) = 1.0;
+        map(0,2) = x[2];map(1,2) = y[2];map(2,2) = 1.0;
+        
+        mapref(0,0) = -1.0;mapref(1,0) = -1.0;mapref(2,0) = 1.0;
+        mapref(0,1) =  1.0;mapref(1,1) = -1.0;mapref(2,1) = 1.0;
+        mapref(0,2) = -1.0;mapref(1,2) =  1.0;mapref(2,2) = 1.0;
+        
+        mapinv = map;
+        mapinv.Invert();
+        
+        for (int i = 0; i < n; ++i)
+        {
+            for (int j = 0; j < n; ++j)
+            {
+                NekDouble tmp = 0;
+                
+                for (int k = 0; k < n; ++k)
+                {
+                    tmp += mapref(i,k)*mapinv(k,j);
+                }
+                
+                newmap(i,j) = tmp;
             }
         }
+        
+        xf[0] = newmap(0,0);xf[1] = newmap(0,1);xf[2] = newmap(0,2);
+        yf[0] = newmap(1,0);yf[1] = newmap(1,1);yf[2] = newmap(1,2);
     }
+    
 
     /**
      * @brief Default constructor.
@@ -470,19 +522,28 @@ namespace Nektar
 
             m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmpstress(nVel);
-
+            
+            m_Eig = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nVel);
+            
+            
             for (nv = 0; nv < nVel; ++nv)
             {
                 m_temperature[nv] = Array<OneD, NekDouble>(
                     m_fields[nv]->GetNpoints());
+                
+                m_Eig[nv] = Array<OneD, Array<OneD, NekDouble> >(nVel);
                 tmpstress[nv] = Array<OneD, Array<OneD, NekDouble> >(nVel);
                 for (i = 0; i < nVel; ++i)
                 {
                     tmpstress[nv][i] = Array<OneD, NekDouble>(
                         m_fields[nv]->GetNpoints());
+                    
+                    m_Eig[nv][i] = Array<OneD, NekDouble>(
+                        m_fields[nv]->GetNpoints());
                 }
             }
 
+            
             for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
             {
                 // Calculate element area
@@ -521,6 +582,7 @@ namespace Nektar
                     tmp2[1][0] = dxi2dx1 * i2rx[0] + dxi2dx2 * i2ry[0];
                     tmp2[1][1] = dxi2dx1 * i2rx[1] + dxi2dx2 * i2ry[1];
 
+
                     for (k = 0; k < nVel; ++k)
                     {
                         for (l = 0; l < nVel; ++l)
@@ -533,7 +595,6 @@ namespace Nektar
                             }
                         }
                     }
-
                     // Compute eigenvalues/eigenvectors.
                     char jobvl = 'N', jobvr = 'V';
                     int worklen = 8*nVel, info;
@@ -556,15 +617,22 @@ namespace Nektar
                     // rescaling of the eigenvalues
                     for (nv = 0; nv < nVel; ++nv)
                     {
-                        eval(nv,nv) = m_beta * (eval(nv,nv) - 1.0);
+                        eval(nv,nv) = m_beta * (sqrt(eval(nv,nv)) - 1.0);
                     }
 
                     DNekMat beta = evec * eval * evecinv;
-
-                    tmpstress[0][0][offset+j] = -beta(0,0);
-                    tmpstress[1][0][offset+j] = -beta(1,0);
-                    tmpstress[0][1][offset+j] = -beta(0,1);
-                    tmpstress[1][1][offset+j] = -beta(1,1);
+                    
+                    tmpstress[0][0][offset+j] = beta(0,0);
+                    tmpstress[1][0][offset+j] = beta(1,0);
+                    tmpstress[0][1][offset+j] = beta(0,1);
+                    tmpstress[1][1][offset+j] = beta(1,1);
+                    
+                    /*
+                    m_Eig[0][0][offset+j] = evec(0,0);
+                    m_Eig[0][1][offset+j] = evec(0,1);
+                    m_Eig[1][0][offset+j] = evec(1,0);
+                    m_Eig[1][1][offset+j] = evec(1,1);
+                    */
                 }
 
                 if (deriv[0][0].num_elements() != exp->GetTotPoints())
@@ -580,12 +648,18 @@ namespace Nektar
                                 tmp = tmpstress[1][1] + offset, 1);
                 }
             }
+            
+            Vmath::Vcopy(m_fields[0]->GetNpoints(), tmpstress[0][0], 1, m_Eig[0][0], 1);
+            Vmath::Vcopy(m_fields[0]->GetNpoints(), tmpstress[0][1], 1, m_Eig[0][1], 1);
+            Vmath::Vcopy(m_fields[0]->GetNpoints(), tmpstress[1][0], 1, m_Eig[1][0], 1);
+            Vmath::Vcopy(m_fields[0]->GetNpoints(), tmpstress[1][1], 1, m_Eig[1][1], 1);
 
             Array<OneD, NekDouble> tmpderiv(m_fields[0]->GetNpoints());
             for (nv = 0; nv < nVel; ++nv)
             {
                 m_fields[nv]->PhysDeriv(0, tmpstress[nv][0], tmpderiv);
                 m_fields[nv]->PhysDeriv(1, tmpstress[nv][1], m_temperature[nv]);
+                
                 Vmath::Vadd(m_fields[nv]->GetNpoints(), tmpderiv, 1, m_temperature[nv], 1, m_temperature[nv], 1);
                 Vmath::Vcopy(m_fields[nv]->GetNpoints(), m_temperature[nv], 1, forcing[nv], 1);
             }
@@ -1064,20 +1138,39 @@ namespace Nektar
     {
         const int nVel    = m_fields[0]->GetCoordim(0);
         const int nCoeffs = m_fields[0]->GetNcoeffs();
-        static string dimStr[3] = { "X", "Y", "Z" }; 
+        static string dimStr[4] = { "XX", "XY", "YX", "YY" };
        
         if (m_temperature.num_elements() == 0)
         {
             return;
         }
-
-        for (int i = 0; i < nVel; ++i)
+        
+        Array<OneD, NekDouble> Eig1Comp1Fwd(nCoeffs);
+        Array<OneD, NekDouble> Eig1Comp2Fwd(nCoeffs);
+        Array<OneD, NekDouble> Eig2Comp1Fwd(nCoeffs);
+        Array<OneD, NekDouble> Eig2Comp2Fwd(nCoeffs);
+        
+        m_fields[0]->FwdTrans(m_Eig[0][0], Eig1Comp1Fwd);
+        fieldcoeffs.push_back(Eig1Comp1Fwd);
+        
+        m_fields[0]->FwdTrans(m_Eig[0][1], Eig1Comp2Fwd);
+        fieldcoeffs.push_back(Eig1Comp2Fwd);
+        
+        m_fields[0]->FwdTrans(m_Eig[1][0], Eig2Comp1Fwd);
+        fieldcoeffs.push_back(Eig2Comp1Fwd);
+        
+        m_fields[0]->FwdTrans(m_Eig[1][1], Eig2Comp2Fwd);
+        fieldcoeffs.push_back(Eig2Comp2Fwd);
+        
+        for (int i = 0; i < nVel*2; ++i)
         {
-            Array<OneD, NekDouble> tFwd(nCoeffs);
-            m_fields[i]->FwdTrans_IterPerExp(m_temperature[i], tFwd);
-            fieldcoeffs.push_back(tFwd);
+            //Array<OneD, NekDouble> tFwd(nCoeffs);
+            //m_fields[i]->FwdTrans_IterPerExp(m_temperature[i], tFwd);
+            //fieldcoeffs.push_back(tFwd);
+            
             variables.push_back("Temp" + boost::lexical_cast<std::string>(
                                     dimStr[i]));
+        
         }
     }
 }

@@ -1,6 +1,7 @@
 ADD_UTILITIES_EXECUTABLE(AddModeTo2DFld                 util AddModeTo2DFld.cpp)
 ADD_UTILITIES_EXECUTABLE(ComparisonShahidN++            util ComparisonShahidN++.cpp)
 ADD_UTILITIES_EXECUTABLE(CompressibleBL                 util CompressibleBL.cpp)
+ADD_UTILITIES_EXECUTABLE(CompressibleBL2D5              util CompressibleBL2D5.cpp) 
 ADD_UTILITIES_EXECUTABLE(CombinePartitions              util-extra CombinePartitions.cpp)
 ADD_UTILITIES_EXECUTABLE(ExtractMeanModeFromHomo1DFld   util ExtractMeanModeFromHomo1DFld.cpp)
 ADD_UTILITIES_EXECUTABLE(ExtractSurface2DCFS            util ExtractSurface2DCFS.cpp)

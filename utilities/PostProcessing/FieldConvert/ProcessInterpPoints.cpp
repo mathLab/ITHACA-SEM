@@ -305,10 +305,9 @@ void ProcessInterpPoints::Process(po::variables_map &vm)
         }
         m_fromField->m_exp[j]->BwdTrans(m_fromField->m_exp[j]->GetCoeffs(),
                                         m_fromField->m_exp[j]->UpdatePhys());
-        vector<string> fieldNames;
-        fieldNames.push_back(m_fromField->m_fielddef[0]->m_fields[j]);
-        m_f->m_fieldPts->SetFieldNames(fieldNames);
 
+        Array< OneD, NekDouble > newPts(m_f->m_fieldPts->GetNpoints());
+        m_f->m_fieldPts->AddField(newPts, m_fromField->m_fielddef[0]->m_fields[j]);
     }
 
     if(m_fromField->m_session->GetComm()->GetRank() == 0)

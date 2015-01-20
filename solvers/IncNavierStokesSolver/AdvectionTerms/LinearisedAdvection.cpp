@@ -388,7 +388,7 @@ void LinearisedAdvection::v_Advect(
             break;
 
             //3D
-        case 3:
+        case 3:{
             grad1 = Array<OneD, NekDouble> (nPointsTot);
             grad2 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_u1 = Array<OneD, NekDouble> (nPointsTot);
@@ -398,7 +398,8 @@ void LinearisedAdvection::v_Advect(
             grad_base_u2 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_v2 = Array<OneD, NekDouble> (nPointsTot);
             grad_base_w2 = Array<OneD, NekDouble> (nPointsTot);
-
+            bool oldwavespace = fields[0]->GetWaveSpace();
+            fields[0]->SetWaveSpace(false);
             fields[0]->PhysDeriv(m_baseflow[0], grad_base_u0, grad_base_u1,grad_base_u2);
             fields[0]->PhysDeriv(m_baseflow[1], grad_base_v0, grad_base_v1,grad_base_v2);
             fields[0]->PhysDeriv(m_baseflow[2], grad_base_w0, grad_base_w1, grad_base_w2);
@@ -415,7 +416,7 @@ void LinearisedAdvection::v_Advect(
             }
 
             fields[0]->PhysDeriv(inarray[n], grad0, grad1, grad2);
-
+            fields[0]->SetWaveSpace(oldwavespace);
             switch (n)
             {
                 //x-equation
@@ -539,6 +540,10 @@ void LinearisedAdvection::v_Advect(
                     Vmath::Vvtvp(nPointsTot,grad_base_w2,1,advVel[2],1,outarray[n],1,outarray[n],1);
                 }
                 break;
+                if (oldwavespace) {
+                    fields[0]->HomogeneousFwdTrans(outarray[n],outarray[n]);
+                }
+            }
             }
             break;
         default:
@@ -672,8 +677,10 @@ void LinearisedAdvection::ImportFldBase(std::string pInfile,
         }
         else
         {
+            bool oldwavespace = pFields[j]->GetWaveSpace();
+            pFields[j]->SetWaveSpace(false);
             pFields[j]->BwdTrans(tmp_coeff, m_baseflow[j]);
-            
+            pFields[j]->SetWaveSpace(oldwavespace);
         }
     }
 

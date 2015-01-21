@@ -80,8 +80,6 @@ namespace Nektar
             eRterminal,
             eCRterminal,
             eRCRterminal,
-            eInflowCFS,
-            eOutflowCFS,
             eRiemannInvariant,
             ePressureOutflowNonReflective,
             ePressureOutflow,
@@ -112,9 +110,11 @@ namespace Nektar
             "Rterminal",
             "CRterminal",
             "RCRterminal",
-            "InflowCFS",
-            "OutflowCFS",
             "RiemannInvariant",
+            "PressureOutflowNonReflective",
+            "PressureOutflow",
+            "PressureOutflowFile",
+            "PressureInflowFile",
             "ExtrapOrder0",
             "NoUserDefined"
         };

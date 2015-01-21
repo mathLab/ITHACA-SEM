@@ -66,7 +66,7 @@ namespace Nektar
      */
     inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
     {
-        int n = geom->GetNumVerts(), i, j, k;
+        int n = geom->GetNumVerts(), i, j;
 
         DNekMat map   (n, n, 1.0, eFULL);
         DNekMat mapref(n, n, 1.0, eFULL);
@@ -916,6 +916,7 @@ namespace Nektar
                     "ThermStress"
                     + boost::lexical_cast<std::string>(i)
                     + boost::lexical_cast<std::string>(j));
+            }
         }
     }
 }

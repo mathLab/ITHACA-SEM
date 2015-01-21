@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <algorithm>
+#include <iomanip>
+
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/NodalTriExp.h>
@@ -53,98 +55,60 @@ namespace Nektar
                                 LinearElasticSystem::create);
 
     /* 
-     * @brief Generate mapping between a triangle and the reference element.
+     * @brief Generate mapping between a simplex and the reference element.
      *
      * Mapping that requires the coordinates of the three vertices (x,y) of the
      * triangular element and outputs the function coefficients that defines the
      * mapping to the reference element for each coordinate (xfunc and yfunc)
      *
-     * @param x  x co-ordinates of triangle
-     * @param y  y co-ordinates of triangle
-     * @param xf  x co-ordinates of mapping
-     * @param yf  y co-ordinates of mapping
+     * @param x   co-ordinates of triangle/tetrahedron
+     * @param xf  components of mapping
      */
-    /*inline void MappingIdealToRef(Array<OneD, NekDouble> x,
-                                  Array<OneD, NekDouble> y,
-                                  Array<OneD, NekDouble> xf,
-                                  Array<OneD, NekDouble> yf)
+    inline DNekMat MappingIdealToRef(SpatialDomains::GeometrySharedPtr geom)
     {
-        int n = x.num_elements();
-        
-        DNekMat map(n, n, 0.0, eFULL);
-        DNekMat mapinv(n, n, 0.0, eFULL);
-        cout << "NEW SET OF POITS" << endl;
-        cout << endl;
-        cout << " x(1)=" << x[0] << "; x(2)=" << x[1] << "; x(3)=" << x[2] << endl;
-        cout << " y(1)=" << y[0] << "; y(2)=" << y[1] << "; y(3)=" << y[2] << endl;
-        
-        map(0,0) = x[0];map(0,1) = y[0];map(0,2) = 1.0;
-        map(1,0) = x[1];map(1,1) = y[1];map(1,2) = 1.0;
-        map(2,0) = x[2];map(2,1) = y[2];map(2,2) = 1.0;
-        
-        cout << endl;
-        
-        mapinv = map;
-        mapinv.Invert();
-        
-        Array<OneD, NekDouble> xref (n,0.0), yref (n,0.0);
-        
-        xref[0] = -1.0;xref[1] =  1.0;xref[2] = -1.0;
-        yref[0] = -1.0;yref[1] = -1.0;yref[2] =  1.0;
-        
-        for (int i = 0; i < n; ++i)
+        int n = geom->GetNumVerts(), i, j, k;
+
+        DNekMat map   (n, n, 1.0, eFULL);
+        DNekMat mapref(n, n, 1.0, eFULL);
+
+        // Extract coordinate information.
+        for (i = 0; i < n; ++i)
         {
-            for (int j = 0; j < n; ++j)
+            for (j = 0; j < n-1; ++j)
             {
-                xf[i] += mapinv(i,j)*xref[j];
-                yf[i] += mapinv(i,j)*yref[j];
-                
-            }
-            cout << "xf(" << i+1 << ")=" << xf[i] << ";"
-               << " " << "yf(" << i+1 << ")=" << yf[i] << ";" << endl;
-        }
-    }*/
-    
-    inline void MappingIdealToRef(Array<OneD, NekDouble> x,
-                                  Array<OneD, NekDouble> y,
-                                  Array<OneD, NekDouble> xf,
-                                  Array<OneD, NekDouble> yf)
-    {
-        int n = x.num_elements();
-        
-        DNekMat map(n, n, 0.0, eFULL);
-        DNekMat mapref(n, n, 0.0, eFULL);
-        DNekMat mapinv(n, n, 0.0, eFULL);
-        DNekMat newmap(n, n, 0.0, eFULL);
-        
-        map(0,0) = x[0];map(1,0) = y[0];map(2,0) = 1.0;
-        map(0,1) = x[1];map(1,1) = y[1];map(2,1) = 1.0;
-        map(0,2) = x[2];map(1,2) = y[2];map(2,2) = 1.0;
-        
-        mapref(0,0) = -1.0;mapref(1,0) = -1.0;mapref(2,0) = 1.0;
-        mapref(0,1) =  1.0;mapref(1,1) = -1.0;mapref(2,1) = 1.0;
-        mapref(0,2) = -1.0;mapref(1,2) =  1.0;mapref(2,2) = 1.0;
-        
-        mapinv = map;
-        mapinv.Invert();
-        
-        for (int i = 0; i < n; ++i)
-        {
-            for (int j = 0; j < n; ++j)
-            {
-                NekDouble tmp = 0;
-                
-                for (int k = 0; k < n; ++k)
-                {
-                    tmp += mapref(i,k)*mapinv(k,j);
-                }
-                
-                newmap(i,j) = tmp;
+                map(j,i) = (*geom->GetVertex(i))[j];
             }
         }
-        
-        xf[0] = newmap(0,0);xf[1] = newmap(0,1);xf[2] = newmap(0,2);
-        yf[0] = newmap(1,0);yf[1] = newmap(1,1);yf[2] = newmap(1,2);
+
+        // Set up reference triangle or tetrahedron mapping.
+        if (n == 3)
+        {
+            mapref(0,0) = -1.0; mapref(1,0) = -1.0;
+            mapref(0,1) =  1.0; mapref(1,1) = -1.0;
+            mapref(0,2) = -1.0; mapref(1,2) =  1.0;
+        }
+        else if (n == 4)
+        {
+            mapref(0,0) = -1.0; mapref(1,0) = -1.0; mapref(2,0) = -1.0;
+            mapref(0,1) =  1.0; mapref(1,1) = -1.0; mapref(2,1) = -1.0;
+            mapref(0,2) = -1.0; mapref(1,2) =  1.0; mapref(2,2) = -1.0;
+            mapref(0,3) = -1.0; mapref(1,3) = -1.0; mapref(2,3) =  1.0;
+        }
+
+        map.Invert();
+
+        DNekMat newmap = mapref * map;
+        DNekMat mapred(n-1, n-1, 1.0, eFULL);
+
+        for (i = 0; i < n-1; ++i)
+        {
+            for (j = 0; j < n-1; ++j)
+            {
+                mapred(i,j) = newmap(i,j);
+            }
+        }
+
+        return mapred;
     }
     
 
@@ -515,87 +479,64 @@ namespace Nektar
         }
         else if (tempEval == "Metric")
         {
-            ASSERTL0(m_fields[0]->GetCoordim(0) == 2 &&
-                     m_graph->GetAllQuadGeoms().size() == 0,
+            ASSERTL0((m_fields[0]->GetCoordim(0)         == 2 &&
+                      m_graph->GetAllQuadGeoms().size() == 0) ||
+                     (m_fields[0]->GetCoordim(0)         == 3 &&
+                      m_graph->GetAllPrismGeoms().size() == 0 &&
+                      m_graph->GetAllPyrGeoms  ().size() == 0 &&
+                      m_graph->GetAllHexGeoms  ().size() == 0),
                      "LinearIdealMetric temperature only implemented for "
-                     "two-dimensional triangular meshes.");
+                     "two-dimensional triangular meshes or three-dimensional "
+                     "tetrahedral meshes.");
 
             m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmpstress(nVel);
-            
-            m_Eig = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nVel);
-            
+            m_stress = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(nVel);
             
             for (nv = 0; nv < nVel; ++nv)
             {
                 m_temperature[nv] = Array<OneD, NekDouble>(
-                    m_fields[nv]->GetNpoints());
-                
-                m_Eig[nv] = Array<OneD, Array<OneD, NekDouble> >(nVel);
-                tmpstress[nv] = Array<OneD, Array<OneD, NekDouble> >(nVel);
+                    m_fields[nv]->GetNpoints(), 0.0);
+                m_stress[nv] = Array<OneD, Array<OneD, NekDouble> >(nVel);
+
                 for (i = 0; i < nVel; ++i)
                 {
-                    tmpstress[nv][i] = Array<OneD, NekDouble>(
-                        m_fields[nv]->GetNpoints());
-                    
-                    m_Eig[nv][i] = Array<OneD, NekDouble>(
-                        m_fields[nv]->GetNpoints());
+                    m_stress[nv][i] = Array<OneD, NekDouble>(
+                        m_fields[nv]->GetNpoints(), 0.0);
                 }
             }
 
-            
             for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
             {
                 // Calculate element area
                 LocalRegions::ExpansionSharedPtr exp =
                     m_fields[0]->GetExp(i);
                 LibUtilities::PointsKeyVector pkey = exp->GetPointsKeys();
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > deriv
-                    = exp->GetMetricInfo()->GetDeriv(pkey);
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > deriv =
+                    exp->GetMetricInfo()->GetDeriv(pkey);
                 int offset = m_fields[0]->GetPhys_Offset(i);
 
-                Array<OneD, NekDouble> xIdeal(3), yIdeal(3);
-                xIdeal[0] = exp->GetGeom()->GetVertex(0)->x();
-                xIdeal[1] = exp->GetGeom()->GetVertex(1)->x();
-                xIdeal[2] = exp->GetGeom()->GetVertex(2)->x();
-                yIdeal[0] = exp->GetGeom()->GetVertex(0)->y();
-                yIdeal[1] = exp->GetGeom()->GetVertex(1)->y();
-                yIdeal[2] = exp->GetGeom()->GetVertex(2)->y();
-
-                Array<OneD, NekDouble> i2rx(3, 0.0), i2ry(3, 0.0);
-                MappingIdealToRef(xIdeal, yIdeal, i2rx, i2ry);
+                DNekMat i2rm = MappingIdealToRef(exp->GetGeom());
 
                 // Compute metric tensor
-                Array<OneD, NekDouble> tmp (nVel*nVel, 0.0);
-                Array<TwoD, NekDouble> tmp2(nVel, nVel);
+                DNekMat jac     (nVel, nVel, 0.0, eFULL);
+                DNekMat jacIdeal(nVel, nVel, 0.0, eFULL);
+                DNekMat metric  (nVel, nVel, 0.0, eFULL);
 
                 for (j = 0; j < deriv[0][0].num_elements(); ++j)
                 {
-                    // Setting up the metric tensor
-                    NekDouble dxi1dx1 = deriv[0][0][j];
-                    NekDouble dxi2dx1 = deriv[0][1][j];
-                    NekDouble dxi1dx2 = deriv[1][0][j];
-                    NekDouble dxi2dx2 = deriv[1][1][j];
-
-                    tmp2[0][0] = dxi1dx1 * i2rx[0] + dxi1dx2 * i2ry[0];
-                    tmp2[0][1] = dxi1dx1 * i2rx[1] + dxi1dx2 * i2ry[1];
-                    tmp2[1][0] = dxi2dx1 * i2rx[0] + dxi2dx2 * i2ry[0];
-                    tmp2[1][1] = dxi2dx1 * i2rx[1] + dxi2dx2 * i2ry[1];
-
-
                     for (k = 0; k < nVel; ++k)
                     {
                         for (l = 0; l < nVel; ++l)
                         {
-                            tmp[k*nVel+l] = 0.0;
-                            
-                            for (int m = 0; m < nVel; ++m)
-                            {
-                                tmp[k*nVel+l] += tmp2[k][m] * tmp2[l][m];
-                            }
+                            jac(l,k) = deriv[k][l][j];
                         }
                     }
-                    // Compute eigenvalues/eigenvectors.
+
+                    jacIdeal = jac * i2rm;
+                    metric = Transpose(jacIdeal) * jacIdeal;
+
+                    // Compute eigenvalues/eigenvectors of metric tensor using
+                    // ideal mapping.
                     char jobvl = 'N', jobvr = 'V';
                     int worklen = 8*nVel, info;
 
@@ -606,7 +547,7 @@ namespace Nektar
                     Array<OneD, NekDouble> work(worklen);
                     Array<OneD, NekDouble> wi  (nVel);
 
-                    Lapack::Dgeev(jobvl, jobvr, nVel, &tmp[0], nVel,
+                    Lapack::Dgeev(jobvl, jobvr, nVel, metric.GetRawPtr(), nVel,
                                   &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
                                   &(evec.GetPtr())[0], nVel,
                                   &work[0], worklen, info);
@@ -621,238 +562,44 @@ namespace Nektar
                     }
 
                     DNekMat beta = evec * eval * evecinv;
-                    
-                    tmpstress[0][0][offset+j] = beta(0,0);
-                    tmpstress[1][0][offset+j] = beta(1,0);
-                    tmpstress[0][1][offset+j] = beta(0,1);
-                    tmpstress[1][1][offset+j] = beta(1,1);
-                    
-                    /*
-                    m_Eig[0][0][offset+j] = evec(0,0);
-                    m_Eig[0][1][offset+j] = evec(0,1);
-                    m_Eig[1][0][offset+j] = evec(1,0);
-                    m_Eig[1][1][offset+j] = evec(1,1);
-                    */
+
+                    for (k = 0; k < nVel; ++k)
+                    {
+                        for (l = 0; l < nVel; ++l)
+                        {
+                            m_stress[k][l][offset+j] = beta(k,l);
+                        }
+                    }
                 }
 
                 if (deriv[0][0].num_elements() != exp->GetTotPoints())
                 {
                     Array<OneD, NekDouble> tmp;
-                    Vmath::Fill(exp->GetTotPoints(), tmpstress[0][0][offset],
-                                tmp = tmpstress[0][0] + offset, 1);
-                    Vmath::Fill(exp->GetTotPoints(), tmpstress[1][0][offset],
-                                tmp = tmpstress[1][0] + offset, 1);
-                    Vmath::Fill(exp->GetTotPoints(), tmpstress[0][1][offset],
-                                tmp = tmpstress[0][1] + offset, 1);
-                    Vmath::Fill(exp->GetTotPoints(), tmpstress[1][1][offset],
-                                tmp = tmpstress[1][1] + offset, 1);
+                    for (k = 0; k < nVel; ++k)
+                    {
+                        for (l = 0; l < nVel; ++l)
+                        {
+                            Vmath::Fill(
+                                exp->GetTotPoints(), m_stress[k][l][offset],
+                                tmp = m_stress[k][l] + offset, 1);
+                        }
+                    }
                 }
             }
-            
-            Vmath::Vcopy(m_fields[0]->GetNpoints(), tmpstress[0][0], 1, m_Eig[0][0], 1);
-            Vmath::Vcopy(m_fields[0]->GetNpoints(), tmpstress[0][1], 1, m_Eig[0][1], 1);
-            Vmath::Vcopy(m_fields[0]->GetNpoints(), tmpstress[1][0], 1, m_Eig[1][0], 1);
-            Vmath::Vcopy(m_fields[0]->GetNpoints(), tmpstress[1][1], 1, m_Eig[1][1], 1);
 
+            // Calculate divergence of stress tensor.
             Array<OneD, NekDouble> tmpderiv(m_fields[0]->GetNpoints());
-            for (nv = 0; nv < nVel; ++nv)
+            for (i = 0; i < nVel; ++i)
             {
-                m_fields[nv]->PhysDeriv(0, tmpstress[nv][0], tmpderiv);
-                m_fields[nv]->PhysDeriv(1, tmpstress[nv][1], m_temperature[nv]);
-                
-                Vmath::Vadd(m_fields[nv]->GetNpoints(), tmpderiv, 1, m_temperature[nv], 1, m_temperature[nv], 1);
-                Vmath::Vcopy(m_fields[nv]->GetNpoints(), m_temperature[nv], 1, forcing[nv], 1);
-            }
-        }
-        else if (tempEval == "LinearIdealMetric")
-        {
-            // Allocate storage
-            m_temperature = Array<OneD, Array<OneD, NekDouble> >(nVel);
-            
-            for (nv = 0; nv < nVel; ++nv)
-            {
-                Array<OneD, NekDouble> tmp;
-                m_temperature[nv] = Array<OneD, NekDouble>(
-                                m_fields[nv]->GetNpoints());
-                
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > tmpstress(nVel);
-                
-                for (nv = 0; nv < nVel; ++nv)
+                for (j = 0; j < nVel; ++j)
                 {
-                    m_temperature[nv] = Array<OneD, NekDouble>(
-                                            m_fields[nv]->GetNpoints());
-                    tmpstress[nv] = Array<OneD, Array<OneD, NekDouble> >(nVel);
-                    for (i = 0; i < nVel; ++i)
-                    {
-                        tmpstress[nv][i] = Array<OneD, NekDouble>(
-                                                m_fields[nv]->GetNpoints());
-                    }
+                    m_fields[i]->PhysDeriv(j, m_stress[i][j], tmpderiv);
+                    Vmath::Vadd (m_fields[i]->GetNpoints(), tmpderiv, 1,
+                                 m_temperature[i], 1, m_temperature[i], 1);
                 }
-                
-                for (i = 0; i < m_fields[0]->GetExpSize(); ++i)
-                {
-                    // Calculate element area
-                    LocalRegions::ExpansionSharedPtr exp =
-                    m_fields[0]->GetExp(i);
-                    LibUtilities::PointsKeyVector pkey =
-                    exp->GetPointsKeys();
-                    Array<OneD, NekDouble> jac =
-                    exp->GetMetricInfo()->GetJac(pkey);
-                    int offset = m_fields[0]->GetPhys_Offset(i);
-                    
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > deriv
-                    = exp->GetMetricInfo()->GetDeriv(pkey);
-                    
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                                   der_n(nVel);
-                    
-                    for (int o = 0; o < nVel; ++o)
-                    {
-                        der_n[o] = Array<OneD, Array<OneD, NekDouble> >(nVel);
-                        
-                        for (int p = 0; p < nVel; ++p)
-                        {
-                            der_n[o][p] = Array<OneD, NekDouble>(
-                                            deriv[0][0].num_elements(),0.0);
-                        }
-                    }
-                    
-                    int nvert = exp->GetGeom()->GetNumVerts();
-                    
-                    Array<OneD, NekDouble> xVertLIN(3.0, 0.0);
-                    Array<OneD, NekDouble> yVertLIN(3.0, 0.0);
-                    Array<OneD, NekDouble> zVertLIN(3.0, 0.0);
-                
-                    Array<OneD, NekDouble> xf(3.0, 0.0);
-                    Array<OneD, NekDouble> yf(3.0, 0.0);
-                    
-                    for (j = 0; j < nvert; ++j)
-                    {
-                        m_fields[0]->GetExp(i)->GetGeom()->
-                        GetVertex(j)->GetCoords(xVertLIN[j],
-                                                yVertLIN[j],
-                                                zVertLIN[j]);
-                    }
 
-                    MappingIdealToRef(xVertLIN,
-                                      yVertLIN,
-                                      xf,
-                                      yf);
-                    
-                    DNekMat JacNew   (nVel, nVel, 0.0, eFULL);
-                    
-                    JacNew(0,0) = xf[0]; JacNew(0,1) = xf[1];
-                    JacNew(1,0) = yf[0]; JacNew(1,1) = yf[1];
-                    
-                    Array<OneD, NekDouble> jac2(deriv[0][0].num_elements(), 0.0);
-                    
-                    for (int k = 0; k < deriv[0][0].num_elements(); ++k)
-                    {
-                        JacNew(0,0) = xf[0]*deriv[0][0][k]+xf[1]*deriv[0][1][k];
-                        JacNew(0,1) = yf[0]*deriv[0][0][k]+yf[1]*deriv[0][1][k];
-                        
-                        JacNew(1,0) = xf[0]*deriv[1][0][k]+xf[1]*deriv[1][1][k];
-                        JacNew(1,1) = yf[0]*deriv[1][0][k]+yf[1]*deriv[1][1][k];
-                        
-                        der_n[0][0][k] = xf[0]*deriv[0][0][k]+xf[1]*deriv[0][1][k];
-                        der_n[0][1][k] = yf[0]*deriv[0][0][k]+yf[1]*deriv[0][1][k];
-                        
-                        der_n[1][0][k] = xf[0]*deriv[1][0][k]+xf[1]*deriv[1][1][k];
-                        der_n[1][1][k] = yf[0]*deriv[1][0][k]+yf[1]*deriv[1][1][k];
-                        
-                        Array<OneD, NekDouble> GMAT(nVel*nVel, 0.0);
-                        
-                        GMAT[0] = der_n[0][0][k]*der_n[0][0][k]
-                                      + der_n[1][0][k]*der_n[1][0][k];
-                        
-                        GMAT[1] = der_n[0][0][k]*der_n[0][1][k]
-                                        + der_n[1][0][k]*der_n[1][1][k];
-                        
-                        GMAT[2] = der_n[0][0][k]*der_n[0][1][k]
-                                      + der_n[1][0][k]*der_n[1][1][k];
-                        
-                        GMAT[3] = der_n[1][1][k]*der_n[1][1][k]
-                                      + der_n[0][1][k]*der_n[0][1][k];
-                        
-                        jac2[k] = JacNew(0,0)*JacNew(1,1)-JacNew(0,1)*JacNew(1,0);
-                        
-                        // Compute eigenvalues/eigenvectors.
-                        char jobvl = 'N', jobvr = 'V';
-                        int worklen = 8*nVel, info;
-                        
-                        DNekMat eval   (nVel, nVel, 0.0, eDIAGONAL);
-                        DNekMat evec   (nVel, nVel, 0.0, eFULL);
-                        DNekMat evecinv(nVel, nVel, 0.0, eFULL);
-                        Array<OneD, NekDouble> vl  (nVel*nVel);
-                        Array<OneD, NekDouble> work(worklen);
-                        Array<OneD, NekDouble> wi  (nVel);
-                        
-                        Lapack::Dgeev(jobvl, jobvr, nVel, &GMAT[0], nVel,
-                                      &(eval.GetPtr())[0], &wi[0], &vl[0], nVel,
-                                      &(evec.GetPtr())[0], nVel,
-                                      &work[0], worklen, info);
-                        
-                        evecinv = evec;
-                        evecinv.Invert();
-                        
-                        // rescaling of the eigenvalues
-                        for (nv = 0; nv < nVel; ++nv)
-                        {
-                            eval(nv,nv) = (sqrt(eval(nv,nv))-1.0);
-                        }
-                        
-                        DNekMat beta = evec * eval * evecinv;
-                        
-                        tmpstress[0][0][offset+k] = -beta(0,0);
-                        tmpstress[1][0][offset+k] = -beta(1,0);
-                        tmpstress[0][1][offset+k] = -beta(0,1);
-                        tmpstress[1][1][offset+k] = -beta(1,1);
-                    }
-                    
-                    
-                    if (deriv[0][0].num_elements() != exp->GetTotPoints())
-                    {
-                        Array<OneD, NekDouble> tmp;
-                        Vmath::Fill(exp->GetTotPoints(), tmpstress[0][0][offset],
-                                    tmp = tmpstress[0][0] + offset, 1);
-                        Vmath::Fill(exp->GetTotPoints(), tmpstress[1][0][offset],
-                                    tmp = tmpstress[1][0] + offset, 1);
-                        Vmath::Fill(exp->GetTotPoints(), tmpstress[0][1][offset],
-                                    tmp = tmpstress[0][1] + offset, 1);
-                        Vmath::Fill(exp->GetTotPoints(), tmpstress[1][1][offset],
-                                    tmp = tmpstress[1][1] + offset, 1);
-                    }
-                }
-                
-                Array<OneD, NekDouble> tmpderiv(m_fields[0]->GetNpoints());
-                Array<OneD, NekDouble> tmpderiv2(m_fields[0]->GetNpoints());
-                
-                Vmath::Vadd(m_fields[0]->GetNpoints(),
-                            tmpstress[1][0], 1,
-                            tmpstress[1][0], 1,
-                            m_temperature[0], 1);
-                
-                Vmath::Vadd(m_fields[0]->GetNpoints(),
-                            tmpstress[0][1], 1,
-                            tmpstress[0][1], 1,
-                            m_temperature[1], 1);
-                
-                Vmath::Smul(m_fields[0]->GetNpoints(), m_beta, m_temperature[0], 1, forcing[0], 1);
-                
-                Vmath::Smul(m_fields[0]->GetNpoints(), m_beta, m_temperature[1], 1, forcing[1], 1);
-                
-                /*for (nv = 0; nv < nVel; ++nv)
-                {
-                    m_fields[nv]->PhysDeriv(0, tmpstress[0][nv], tmpderiv);
-                    m_fields[nv]->PhysDeriv(1, tmpstress[1][nv], tmpderiv2);
-                    Vmath::Vadd(m_fields[nv]->GetNpoints(), tmpstress[0][nv], 1, tmpstress[1][nv], 1, m_temperature[nv], 1);
-                    
-                    //Vmath::Vadd(m_fields[nv]->GetNpoints(), tmpderiv, 1, tmpderiv2, 1, m_temperature[nv], 1);
-                    
-                    //cout << Vmath::Vmax(m_temperature[nv].num_elements(),m_temperature[nv], 1) << endl;
-                    //Vmath::Zero(m_temperature[nv].num_elements(),m_temperature[nv], 1);
-                    Vmath::Smul(m_fields[nv]->GetNpoints(), m_beta, m_temperature[nv], 1, forcing[nv], 1);
-                }*/
+                Vmath::Vcopy(m_fields[i]->GetNpoints(),
+                             m_temperature[i], 1, forcing[i], 1);
             }
         }
         else if (tempEval != "None")
@@ -1138,39 +885,37 @@ namespace Nektar
     {
         const int nVel    = m_fields[0]->GetCoordim(0);
         const int nCoeffs = m_fields[0]->GetNcoeffs();
-        static string dimStr[4] = { "XX", "XY", "YX", "YY" };
-       
+
         if (m_temperature.num_elements() == 0)
         {
             return;
         }
         
-        Array<OneD, NekDouble> Eig1Comp1Fwd(nCoeffs);
-        Array<OneD, NekDouble> Eig1Comp2Fwd(nCoeffs);
-        Array<OneD, NekDouble> Eig2Comp1Fwd(nCoeffs);
-        Array<OneD, NekDouble> Eig2Comp2Fwd(nCoeffs);
-        
-        m_fields[0]->FwdTrans(m_Eig[0][0], Eig1Comp1Fwd);
-        fieldcoeffs.push_back(Eig1Comp1Fwd);
-        
-        m_fields[0]->FwdTrans(m_Eig[0][1], Eig1Comp2Fwd);
-        fieldcoeffs.push_back(Eig1Comp2Fwd);
-        
-        m_fields[0]->FwdTrans(m_Eig[1][0], Eig2Comp1Fwd);
-        fieldcoeffs.push_back(Eig2Comp1Fwd);
-        
-        m_fields[0]->FwdTrans(m_Eig[1][1], Eig2Comp2Fwd);
-        fieldcoeffs.push_back(Eig2Comp2Fwd);
-        
-        for (int i = 0; i < nVel*2; ++i)
+        for (int i = 0; i < nVel; ++i)
         {
-            //Array<OneD, NekDouble> tFwd(nCoeffs);
-            //m_fields[i]->FwdTrans_IterPerExp(m_temperature[i], tFwd);
-            //fieldcoeffs.push_back(tFwd);
-            
-            variables.push_back("Temp" + boost::lexical_cast<std::string>(
-                                    dimStr[i]));
-        
+            Array<OneD, NekDouble> tFwd(nCoeffs);
+            m_fields[i]->FwdTrans(m_temperature[i], tFwd);
+            fieldcoeffs.push_back(tFwd);
+            variables.push_back(
+                "ThermStressDiv" + boost::lexical_cast<std::string>(i));
+        }
+
+        if (m_stress.num_elements() == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < nVel; ++i)
+        {
+            for (int j = 0; j < nVel; ++j)
+            {
+                Array<OneD, NekDouble> tFwd(nCoeffs);
+                m_fields[i]->FwdTrans(m_stress[i][j], tFwd);
+                fieldcoeffs.push_back(tFwd);
+                variables.push_back(
+                    "ThermStress"
+                    + boost::lexical_cast<std::string>(i)
+                    + boost::lexical_cast<std::string>(j));
         }
     }
 }

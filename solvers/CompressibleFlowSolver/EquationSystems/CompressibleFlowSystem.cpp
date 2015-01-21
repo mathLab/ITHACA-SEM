@@ -78,6 +78,10 @@ namespace Nektar
             m_vecLocs[0][i] = 1 + i;
         }
 
+        std::ofstream m_errFile( "L2Errors.txt");
+        m_errFile << "% Time\t\t\t\t L2 errors" << endl;
+        m_errFile.close();
+        
         // Get gamma parameter from session file.
         ASSERTL0(m_session->DefinesParameter("Gamma"),
                  "Compressible flow sessions must define a Gamma parameter.");
@@ -142,6 +146,9 @@ namespace Nektar
         m_session->LoadParameter ("amplitude",  m_amplitude,   0.001);
         m_session->LoadParameter ("omega",      m_omega,       1.0);
 
+        m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
+        m_session->LoadParameter("SteadyStateTol",   m_steadyStateTol,   1e-15);
+        
         // Forcing terms for the sponge region
         m_forcing = SolverUtils::Forcing::Load(m_session, m_fields, 
                                                m_fields.num_elements());
@@ -2664,105 +2671,153 @@ namespace Nektar
      * Perform steady-state check
      */
     bool CompressibleFlowSystem::v_PostIntegrate(int step)
-    {        
-        NekDouble maxL2 = CalcSteadyState();
+    {
+        if (m_steadyStateSteps && step && (!((step+1)%m_steadyStateSteps)))
+        {
+            //NekDouble maxL2 = CalcSteadyState();
+            if (CalcSteadyState() == true)
+            {
+                if (m_comm->GetRank() == 0)
+                {
+                    cout << "Reached Steady State to tolerance "
+                         << m_steadyStateTol << endl;
+                }
+                return true;
+            }
+        }
         return false;
     }
     
     // Calculate if the solution reached a steady state
-    NekDouble CompressibleFlowSystem::CalcSteadyState()
-    {     
-        /*
-        int nPoints = GetTotPoints();
-        Array<OneD, NekDouble>        L2   (m_fields.num_elements());
-        Array<OneD, NekDouble>        U2np1(m_fields.num_elements());
-        static Array<OneD, NekDouble> U2n  (m_fields.num_elements());
-                
-        // Calculate L2 discrete summation 
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            U2np1[i]  = 0.0;
-            U2np1[i] += Vmath::Dot(nPoints, m_fields[i]->GetPhys(), 1, 
-                                   m_fields[i]->GetPhys(), 1);
-            m_comm->AllReduce(U2np1[i], LibUtilities::ReduceSum);
-            
-            L2[i]  = sqrt(fabs(U2np1[i] - U2n[i]) / fabs(U2np1[i]));
-            U2n[i] = U2np1[i];
-        }
-        */
-
-        int nPoints = GetTotPoints();
-        Array<OneD, NekDouble> L2   (m_fields.num_elements());
-        Array<OneD, NekDouble> numer(m_fields.num_elements());
-        Array<OneD, NekDouble> denom(m_fields.num_elements());
-        Array<OneD, Array<OneD, NekDouble> > unp1(m_fields.num_elements());
-        Array<OneD, Array<OneD, NekDouble> > diff(m_fields.num_elements());
+    bool CompressibleFlowSystem::CalcSteadyState()
+    {
+        bool returnval = false;
+        int  nPoints   = GetTotPoints();
+        
+        Array<OneD,             NekDouble>   L2   (m_fields.num_elements());
+        Array<OneD,             NekDouble>   numer(m_fields.num_elements());
+        Array<OneD,             NekDouble>   denom(m_fields.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > unp1 (m_fields.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > diff (m_fields.num_elements());
         Array<OneD, Array<OneD, NekDouble> > diff2(m_fields.num_elements());
         Array<OneD, Array<OneD, NekDouble> > u2np1(m_fields.num_elements());
-
         
         for (int i = 0; i < m_fields.num_elements(); ++i)
         {            
-            unp1[i] = Array<OneD, NekDouble>(nPoints, 0.0);
-            diff[i] = Array<OneD, NekDouble>(nPoints, 0.0);
+            unp1[i]  = Array<OneD, NekDouble>(nPoints, 0.0);
+            diff[i]  = Array<OneD, NekDouble>(nPoints, 0.0);
             diff2[i] = Array<OneD, NekDouble>(nPoints, 0.0);
             u2np1[i] = Array<OneD, NekDouble>(nPoints, 0.0);
 
+            // Numerator
             Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, unp1[i], 1);
-            Vmath::Vsub(nPoints, unp1[i], 1, m_un[i], 1, diff[i], 1);
-            Vmath::Vmul(nPoints, diff[i], 1, diff[i], 1, diff2[i], 1);
+            Vmath::Vsub (nPoints, unp1[i], 1, m_un[i], 1, diff[i], 1);
+            Vmath::Vmul (nPoints, diff[i], 1, diff[i], 1, diff2[i], 1);
             numer[i] = Vmath::Vsum(nPoints, diff2[i], 1);
             m_comm->AllReduce(numer[i], LibUtilities::ReduceSum);
 
+            // Denominator
             Vmath::Vmul(nPoints, unp1[i], 1, unp1[i], 1, u2np1[i], 1);
             denom[i] = Vmath::Vsum(nPoints, u2np1[i], 1);
             m_comm->AllReduce(denom[i], LibUtilities::ReduceSum);
             
+            // L2 error
             L2[i] = sqrt(numer[i]/denom[i]);
             
+            // Store current solution for next steady-state calculation
             Vmath::Vcopy(nPoints, unp1[i], 1, m_un[i], 1);
         }
 
+        // Calculate maximum L2 error
         NekDouble maxL2 = Vmath::Vmax(m_fields.num_elements(), L2, 1);
 
         if (m_fields.num_elements() == 3)
         {
             if (m_comm->GetRank() == 0)
             {
-                cout 
-                     << "L2_rho = "  << L2[0] << "    "
-                     << "L2_rhou = " << L2[1] << "    "
-                     << "L2_E = "    << L2[2] << "    "
-                     << "L2_max = "  << maxL2 << endl;
+                std::ofstream m_errFile( "L2Errors.txt", std::ios_base::app);
+                m_errFile << setprecision(16) << scientific
+                     << m_time << "    "
+                     << L2[0]  << "    "
+                     << L2[1]  << "    "
+                     << L2[2]  << endl;
+                m_errFile.close();
             }
         }
         else if (m_fields.num_elements() == 4)
         {
             if (m_comm->GetRank() == 0)
             {
-                cout 
-                    << "L2_rho = "  << L2[0] << "    "
-                     << "L2_rhou = " << L2[1] << "    "
-                     << "L2_rhov = " << L2[2] << "    "
-                     << "L2_E = "    << L2[3] << "    "
-                     << "L2_max = "  << maxL2 << endl;
+                std::ofstream m_errFile( "L2Errors.txt", std::ios_base::app);
+                m_errFile << setprecision(16) << scientific
+                     << m_time << "    "
+                     << L2[0]  << "    "
+                     << L2[1]  << "    "
+                     << L2[2]  << "    "
+                     << L2[3]  << endl;
+                m_errFile.close();
             }
         }
         else if (m_fields.num_elements() == 5)
         {
             if (m_comm->GetRank() == 0)
             {
-                cout 
-                     << "L2_rho = "  << L2[0] << "    "
-                     << "L2_rhou = " << L2[1] << "    "
-                     << "L2_rhov = " << L2[2] << "    "
-                     << "L2_rhow = " << L2[3] << "    "
-                     << "L2_E = "    << L2[4] << "    "
-                     << "L2_max = "  << maxL2 << endl;
+                std::ofstream m_errFile( "L2Errors.txt", std::ios_base::app);
+                m_errFile << setprecision(16) << scientific
+                     << m_time << "    "
+                     << L2[0]  << "    "
+                     << L2[1]  << "    "
+                     << L2[2]  << "    "
+                     << L2[3]  << "    "
+                     << L2[4]  << endl;
+                m_errFile.close();
             }
         }
+        
+        if (maxL2 <= m_steadyStateTol)
+        {
+            returnval = true;
+        }
+        /*
+        if (m_fields.num_elements() == 3)
+        {
+            if (m_comm->GetRank() == 0)
+            {
+                cout
+                << "L2_rho = "  << L2[0] << "    "
+                << "L2_rhou = " << L2[1] << "    "
+                << "L2_E = "    << L2[2] << "    "
+                << "L2_max = "  << maxL2 << endl;
+            }
+        }
+        else if (m_fields.num_elements() == 4)
+        {
+            if (m_comm->GetRank() == 0)
+            {
+                cout
+                << "L2_rho = "  << L2[0] << "    "
+                << "L2_rhou = " << L2[1] << "    "
+                << "L2_rhov = " << L2[2] << "    "
+                << "L2_E = "    << L2[3] << "    "
+                << "L2_max = "  << maxL2 << endl;
+            }
+        }
+        else if (m_fields.num_elements() == 5)
+        {
+            if (m_comm->GetRank() == 0)
+            {
+                cout
+                << "L2_rho = "  << L2[0] << "    "
+                << "L2_rhou = " << L2[1] << "    "
+                << "L2_rhov = " << L2[2] << "    "
+                << "L2_rhow = " << L2[3] << "    "
+                << "L2_E = "    << L2[4] << "    "
+                << "L2_max = "  << maxL2 << endl;
+            }
+        }
+         */
  
-        return maxL2;
+        return returnval;
     }
 
     /**

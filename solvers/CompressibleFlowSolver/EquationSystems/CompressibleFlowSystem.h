@@ -123,6 +123,15 @@ namespace Nektar
         NekDouble                           m_amplitude;
         NekDouble                           m_omega;
         
+        // L2 error file
+        std::ofstream m_errFile;
+        
+        // Check for steady state at step interval
+        int m_steadyStateSteps;
+        
+        // Tolerance to which steady state should be evaluated at
+        NekDouble m_steadyStateTol;
+        
         // Forcing term
         std::vector<SolverUtils::ForcingSharedPtr> m_forcing;
         StdRegions::StdQuadExpSharedPtr            m_OrthoQuadExp;
@@ -242,7 +251,7 @@ namespace Nektar
                   Array<OneD,                         NekDouble>  &stdV);
         
         virtual bool v_PostIntegrate(int step);
-        NekDouble CalcSteadyState();
+        bool CalcSteadyState();
 
         void GetSensor(
             const Array<OneD, const Array<OneD,       NekDouble> > &physarray,

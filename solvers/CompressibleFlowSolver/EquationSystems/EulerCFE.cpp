@@ -221,6 +221,14 @@ namespace Nektar
     {
         std::string varName;
         int cnt        = 0;
+        int nTracePts = GetTraceTotPoints();
+        
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (int i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
+            m_fields[i]->ExtractTracePhys(inarray[i], Fwd[i]);
+        }
         
         std::string userDefStr;
         int nreg = m_fields[0]->GetBndConditions().num_elements();
@@ -247,7 +255,7 @@ namespace Nektar
                 else
                 {
                     // set up userdefined BC common to all solvers
-                    SetCommonBC(userDefStr,n,time, cnt,inarray);
+                    SetCommonBC(userDefStr, n, time, cnt, Fwd, inarray);
                 }
             }
 

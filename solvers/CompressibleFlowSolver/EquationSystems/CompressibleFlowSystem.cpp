@@ -131,8 +131,8 @@ namespace Nektar
         m_session->LoadParameter ("FH",            m_FacH,          0.0);
         m_session->LoadParameter ("hFactor",       m_hFactor,       1.0);
         m_session->LoadParameter ("epsMax",        m_eps_max,       1.0);
-        m_session->LoadParameter ("C1",             m_C1,           3.0);
-        m_session->LoadParameter ("C2",             m_C2,           5.0);
+        m_session->LoadParameter ("C1",            m_C1,           3.0);
+        m_session->LoadParameter ("C2",            m_C2,           5.0);
         m_session->LoadSolverInfo("ShockCaptureType",
                                   m_shockCaptureType,    "Off");
         m_session->LoadParameter ("thermalConductivity",
@@ -2711,7 +2711,7 @@ namespace Nektar
 
             // Numerator
             Vmath::Vcopy(nPoints, m_fields[i]->GetPhys(), 1, unp1[i], 1);
-            Vmath::Vsub (nPoints, unp1[i], 1, m_un[i], 1, diff[i], 1);
+            Vmath::Vsub (nPoints, unp1[i], 1, m_un[i], 1, diff[i],  1);
             Vmath::Vmul (nPoints, diff[i], 1, diff[i], 1, diff2[i], 1);
             numer[i] = Vmath::Vsum(nPoints, diff2[i], 1);
             m_comm->AllReduce(numer[i], LibUtilities::ReduceSum);
@@ -2778,44 +2778,6 @@ namespace Nektar
         {
             returnval = true;
         }
-        /*
-        if (m_fields.num_elements() == 3)
-        {
-            if (m_comm->GetRank() == 0)
-            {
-                cout
-                << "L2_rho = "  << L2[0] << "    "
-                << "L2_rhou = " << L2[1] << "    "
-                << "L2_E = "    << L2[2] << "    "
-                << "L2_max = "  << maxL2 << endl;
-            }
-        }
-        else if (m_fields.num_elements() == 4)
-        {
-            if (m_comm->GetRank() == 0)
-            {
-                cout
-                << "L2_rho = "  << L2[0] << "    "
-                << "L2_rhou = " << L2[1] << "    "
-                << "L2_rhov = " << L2[2] << "    "
-                << "L2_E = "    << L2[3] << "    "
-                << "L2_max = "  << maxL2 << endl;
-            }
-        }
-        else if (m_fields.num_elements() == 5)
-        {
-            if (m_comm->GetRank() == 0)
-            {
-                cout
-                << "L2_rho = "  << L2[0] << "    "
-                << "L2_rhou = " << L2[1] << "    "
-                << "L2_rhov = " << L2[2] << "    "
-                << "L2_rhow = " << L2[3] << "    "
-                << "L2_E = "    << L2[4] << "    "
-                << "L2_max = "  << maxL2 << endl;
-            }
-        }
-         */
  
         return returnval;
     }
@@ -2836,11 +2798,12 @@ namespace Nektar
 
         for (int i = 0; i < npts; ++i)
         {
-            entropy[i] = m_gamma/(m_gamma-1.0)*m_gasConstant*log(temperature[i]/temp_inf) -
-                m_gasConstant*log(pressure[i]/m_pInf);
+            entropy[i] = m_gamma / (m_gamma - 1.0) * m_gasConstant *
+                            log(temperature[i]/temp_inf) - m_gasConstant *
+                            log(pressure[i] / m_pInf);
         }
         
-        Vmath::Vmul(npts,entropy,1,entropy,1,L2entropy,1);
+        Vmath::Vmul(npts, entropy, 1, entropy, 1, L2entropy, 1);
         
         entropy_sum = Vmath::Vsum(npts, L2entropy, 1);
         
@@ -3058,30 +3021,29 @@ namespace Nektar
         
         Array<OneD,int> ExpOrderElement = GetNumExpModesPerExp();
         
-        Array<OneD, NekDouble> SolP(nTotQuadPoints,0.0);
-        Array<OneD, NekDouble> SolPmOne(nTotQuadPoints,0.0);
-        Array<OneD, NekDouble> SolNorm(nTotQuadPoints,0.0);
+        Array<OneD, NekDouble> SolP    (nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> SolPmOne(nTotQuadPoints, 0.0);
+        Array<OneD, NekDouble> SolNorm (nTotQuadPoints, 0.0);
         
-        Vmath::Vcopy(nTotQuadPoints,physarray[0],1,SolP,1);
+        Vmath::Vcopy(nTotQuadPoints, physarray[0], 1, SolP, 1);
 
         int CoeffsCount = 0;
         
         for (e = 0; e < nElements; e++)
         {
-            NumModesElement         = ExpOrderElement[e];
-            
+            NumModesElement        = ExpOrderElement[e];
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-            int nCoeffsElement = m_fields[0]->GetExp(e)->GetNcoeffs();
-            int numCutOff = NumModesElement - 1;
+            int nCoeffsElement     = m_fields[0]->GetExp(e)->GetNcoeffs();
+            int numCutOff          = NumModesElement - 1;
             
-            // Set-up of the Orthogonal basis for a Quadrilateral element which is
-            // needed to obtain thesolution at P =  p - 1;
+            // Set-up of the Orthogonal basis for a Quadrilateral element which
+            // is needed to obtain thesolution at P =  p - 1;
             
-            Array<OneD, NekDouble> SolPElementPhys(nQuadPointsElement,0.0);
-            Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,0.0);
+            Array<OneD, NekDouble> SolPElementPhys  (nQuadPointsElement, 0.0);
+            Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,     0.0);
             
-            Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement,0.0);
-            Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement,0.0);
+            Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement, 0.0);
+            Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement, 0.0);
             
             // create vector the save the solution points per element at P = p;
             
@@ -3093,10 +3055,10 @@ namespace Nektar
             m_fields[0]->GetExp(e)->FwdTrans(SolPElementPhys,
                                              SolPElementCoeffs);
             
-            // ReduceOrderCoeffs reduces the polynomial order of the solution that
-            // is represented by the coeffs given as an inarray. This is done by
-            // projecting the higher order solution onto the orthogonal basis and
-            // padding the higher order coefficients with zeros.
+            // ReduceOrderCoeffs reduces the polynomial order of the solution
+            // that is represented by the coeffs given as an inarray. This is
+            // done by projecting the higher order solution onto the orthogonal
+            // basis and padding the higher order coefficients with zeros.
             
             m_fields[0]->GetExp(e)->ReduceOrderCoeffs(numCutOff,
                                                       SolPElementCoeffs,
@@ -3110,7 +3072,7 @@ namespace Nektar
                 SolPmOne[CoeffsCount+i] = SolPmOneElementPhys[i];
             }
             
-            NekDouble SolPmeanNumerator = 0.0;
+            NekDouble SolPmeanNumerator   = 0.0;
             NekDouble SolPmeanDenumerator = 0.0;
             
             // Determining the norm of the numerator of the Sensor
@@ -3133,8 +3095,9 @@ namespace Nektar
             
             for (int i = 0; i < nQuadPointsElement; ++i)
             {
-                Sensor[CoeffsCount+i] = sqrt(SolPmeanNumerator/nQuadPointsElement)
-                                    /sqrt(SolPmeanDenumerator/nQuadPointsElement);
+                Sensor[CoeffsCount+i] =
+                    sqrt(SolPmeanNumerator / nQuadPointsElement) /
+                    sqrt(SolPmeanDenumerator / nQuadPointsElement);
                 
                 Sensor[CoeffsCount+i] = log10(Sensor[CoeffsCount+i]);
             }
@@ -3145,11 +3108,11 @@ namespace Nektar
         
         for (e = 0; e < nElements; e++)
         {
-            NumModesElement         = ExpOrderElement[e];
-            NekDouble ThetaS        = m_mu0;
-            NekDouble Phi0          = m_Skappa;
-            NekDouble DeltaPhi      = m_Kappa;
-            nQuadPointsElement      = m_fields[0]->GetExp(e)->GetTotPoints();
+            NumModesElement    = ExpOrderElement[e];
+            NekDouble ThetaS   = m_mu0;
+            NekDouble Phi0     = m_Skappa;
+            NekDouble DeltaPhi = m_Kappa;
+            nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
             
             for (int i = 0; i < nQuadPointsElement; i++)
             {
@@ -3163,9 +3126,9 @@ namespace Nektar
                 }
                 else if(abs(Sensor[CoeffsCount+i]-Phi0) < DeltaPhi)
                 {
-                    SensorKappa[CoeffsCount+i] = ThetaS/2*(1+sin(M_PI*
-                                        (Sensor[CoeffsCount+i]-Phi0)
-                                                    /(2*DeltaPhi)));
+                    SensorKappa[CoeffsCount+i] =
+                        ThetaS / 2 * (1 + sin(M_PI * (Sensor[CoeffsCount+i] -
+                                                      Phi0) / (2 * DeltaPhi)));
                 }
             }
             
@@ -3175,8 +3138,8 @@ namespace Nektar
     }
     
     void CompressibleFlowSystem::GetForcingTerm(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > outarrayForcing)
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > outarrayForcing)
     {
         const int nPts = m_fields[0]->GetTotPoints();
         const int nvariables = m_fields.num_elements();
@@ -3195,6 +3158,7 @@ namespace Nektar
         
         Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
         Array<OneD, NekDouble> pOrder (nPts, 0.0);
+        
         // Thermodynamic related quantities
         GetPressure(inarray, pressure);
         GetTemperature(inarray, pressure, temperature);
@@ -3217,17 +3181,23 @@ namespace Nektar
             {
                 pOrder[n + PointCount] = pOrderElmt[e];
                 
-                Tau[n + PointCount] = 1.0/(m_C1*pOrder[n + PointCount]*LambdaMax); // order 1.0e-06
+                // order 1.0e-06
+                Tau[n + PointCount] =
+                    1.0 / (m_C1*pOrder[n + PointCount]*LambdaMax);
                 
-                outarrayForcing[nvariables-1][n + PointCount] = 1/Tau[n + PointCount]*(m_hFactor*LambdaMax/pOrder[n + PointCount]*SensorKappa[n + PointCount]-inarray[nvariables-1][n + PointCount]);
+                outarrayForcing[nvariables-1][n + PointCount] =
+                    1 / Tau[n + PointCount] * (m_hFactor * LambdaMax /
+                                        pOrder[n + PointCount] *
+                                        SensorKappa[n + PointCount] -
+                                        inarray[nvariables-1][n + PointCount]);
             }
             PointCount += nQuadPointsElement;
         }
     }
 
     void CompressibleFlowSystem::GetElementDimensions(
-                          Array<OneD,       Array<OneD, NekDouble> > &outarray,
-                          Array<OneD,       NekDouble > &hmin)
+        Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        Array<OneD,                   NekDouble >  &hmin)
     {
         // So far, this function is only implemented for quads
         const int nElements = m_fields[0]->GetExpSize();
@@ -3253,23 +3223,29 @@ namespace Nektar
                 NekDouble y1 = 0.0;
                 NekDouble z1 = 0.0;
                 
-                if (boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom()))
+                if (boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+                                            m_fields[0]->GetExp(e)->GetGeom()))
                 {
-                    SpatialDomains::QuadGeomSharedPtr ElQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom());
+                    SpatialDomains::QuadGeomSharedPtr ElQuadGeom =
+                        boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+                                            m_fields[0]->GetExp(e)->GetGeom());
                     
-                    ElQuadGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0,y0,z0);
-                    ElQuadGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1,y1,z1);
+                    ElQuadGeom->GetEdge(j)->GetVertex(0)->GetCoords(x0, y0, z0);
+                    ElQuadGeom->GetEdge(j)->GetVertex(1)->GetCoords(x1, y1, z1);
                     
                     L1[j] = sqrt(pow((x0-x1),2)+pow((y0-y1),2)+pow((z0-z1),2));
                 }
                 else
                 {
-                    ASSERTL0(false, "GetElementDimensions() is only implemented for quadrilateral elements");
+                    ASSERTL0(false, "GetElementDimensions() is only "
+                                    "implemented for quadrilateral elements");
                 }
             }
             // determine the minimum length in x and y direction
-            // still have to find a better estimate when dealing with unstructured meshes
-            if(boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(m_fields[0]->GetExp(e)->GetGeom()))
+            // still have to find a better estimate when dealing
+            // with unstructured meshes
+            if(boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+                                            m_fields[0]->GetExp(e)->GetGeom()))
             {
                 hx = min(L1[0], L1[2]);
                 hy = min(L1[1], L1[3]);
@@ -3314,21 +3290,21 @@ namespace Nektar
     }
     
     void CompressibleFlowSystem::GetSmoothArtificialViscosity(
-                        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                              Array<OneD,             NekDouble  > &eps_bar)
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+              Array<OneD,             NekDouble  > &eps_bar)
     {
         int nvariables = physfield.num_elements();
         int nPts       = m_fields[0]->GetTotPoints();
         
-        Array<OneD, NekDouble > pressure            (nPts, 0.0);
-        Array<OneD, NekDouble > temperature         (nPts, 0.0);
-        Array <OneD, NekDouble > sensor             (nPts, 0.0);
-        Array <OneD, NekDouble > SensorKappa        (nPts, 0.0);
-        Array <OneD, NekDouble > absVelocity        (nPts, 0.0);
-        Array <OneD, NekDouble > soundspeed         (nPts, 0.0);
-        Array <OneD, NekDouble > Lambda             (nPts, 0.0);
-        Array <OneD, NekDouble > mu_var             (nPts, 0.0);
-        Array <OneD, NekDouble > h_minmin           (m_spacedim, 0.0);
+        Array<OneD, NekDouble > pressure   (nPts, 0.0);
+        Array<OneD, NekDouble > temperature(nPts, 0.0);
+        Array<OneD, NekDouble > sensor     (nPts, 0.0);
+        Array<OneD, NekDouble > SensorKappa(nPts, 0.0);
+        Array<OneD, NekDouble > absVelocity(nPts, 0.0);
+        Array<OneD, NekDouble > soundspeed (nPts, 0.0);
+        Array<OneD, NekDouble > Lambda     (nPts, 0.0);
+        Array<OneD, NekDouble > mu_var     (nPts, 0.0);
+        Array<OneD, NekDouble > h_minmin   (m_spacedim, 0.0);
         Vmath::Zero(nPts, eps_bar, 1);
         
         // Thermodynamic related quantities
@@ -3380,9 +3356,8 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD,             NekDouble  > &mu_var)
     {
-        const int nElements  = m_fields[0]->GetExpSize();
-    
-        int PointCount = 0;
+        const int nElements = m_fields[0]->GetExpSize();
+        int PointCount      = 0;
         int nTotQuadPoints  = GetTotPoints();
         
         Array<OneD, NekDouble> S_e        (nTotQuadPoints, 0.0);
@@ -3424,13 +3399,15 @@ namespace Nektar
                 {
                     mu_var[n+PointCount] = 0;
                 }
-                else if(Sensor[n+PointCount] >= (m_Skappa-m_Kappa)
+                else if (Sensor[n+PointCount] >= (m_Skappa-m_Kappa)
                         && Sensor[n+PointCount] <= (m_Skappa+m_Kappa))
                 {
-                    mu_var[n+PointCount] = mu_0*(0.5*(1+sin(
-                                           M_PI*(Sensor[n+PointCount]-m_Skappa-m_Kappa)/(2*m_Kappa))));
+                    mu_var[n+PointCount] = mu_0 * (0.5 * (1 + sin(
+                                           M_PI * (Sensor[n+PointCount] -
+                                                   m_Skappa - m_Kappa) /
+                                                            (2*m_Kappa))));
                 }
-                else if(Sensor[n+PointCount] > (m_Skappa+m_Kappa))
+                else if (Sensor[n+PointCount] > (m_Skappa+m_Kappa))
                 {
                     mu_var[n+PointCount] = mu_0;
                 }
@@ -3441,18 +3418,18 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::SetVarPOrderElmt(
-                const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                      Array<OneD,                    NekDouble  > &PolyOrder)
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+              Array<OneD,                   NekDouble  > &PolyOrder)
     {
         int e;
         NekDouble s_ds, s_sm, s_fl;
         
-        int nElements  = m_fields[0]->GetExpSize();
-        int npts       = m_fields[0]->GetTotPoints();
+        int nElements = m_fields[0]->GetExpSize();
+        int npts      = m_fields[0]->GetTotPoints();
         
-        Array<OneD, NekDouble > Sensor           (npts, 0.0);
-        Array<OneD, NekDouble > SensorKappa      (npts, 0.0);
-        Array<OneD, NekDouble > se               (npts,0.0);
+        Array<OneD, NekDouble > Sensor     (npts, 0.0);
+        Array<OneD, NekDouble > SensorKappa(npts, 0.0);
+        Array<OneD, NekDouble > se         (npts, 0.0);
 
         GetSensor(physfield, Sensor, SensorKappa);
 
@@ -3476,8 +3453,8 @@ namespace Nektar
             nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
             
             // Define thresholds
-            // Ideally, these threshold values could be given in the Session File
-            
+            // Ideally, these threshold values could be given
+            // in the Session File
             s_ds =  -5.0;
             //s_ds = s_0*log10(PolyOrder[e]);
             s_sm = -6;
@@ -3500,18 +3477,18 @@ namespace Nektar
                     }
                     
                 }
-                else if(se[npCount + i] > s_sm && se[npCount + i] < s_ds)
+                else if (se[npCount + i] > s_sm && se[npCount + i] < s_ds)
                 {
                     if (PolyOrder[npCount + i] < MaxOrder)
                     {
                         PolyOrder[npCount + i] = PolyOrder[npCount + i] + 2;
                     }
                 }
-                else if(se[npCount + i] > s_fl && se[npCount + i] < s_sm)
+                else if (se[npCount + i] > s_fl && se[npCount + i] < s_sm)
                 {
                     PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
                 }
-                else if(se[npCount + i] < s_fl)
+                else if (se[npCount + i] < s_fl)
                 {
                     if (PolyOrder[npCount + i] > MinOrder)
                     {
@@ -3542,7 +3519,8 @@ namespace Nektar
             tmp[i] = m_fields[i]->GetPhys();
         }
 
-        Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys), sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);
+        Array<OneD, NekDouble> pressure(nPhys), soundspeed(nPhys), mach(nPhys);
+        Array<OneD, NekDouble> sensor(nPhys), SensorKappa(nPhys), smooth(nPhys);
         
         GetPressure  (tmp, pressure);
         GetSoundSpeed(tmp, pressure, soundspeed);
@@ -3550,7 +3528,8 @@ namespace Nektar
         GetSensor    (tmp, sensor, SensorKappa);
         GetSmoothArtificialViscosity    (tmp, smooth);
 	
-        Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs), sensFwd(nCoeffs), smoothFwd(nCoeffs);
+        Array<OneD, NekDouble> pFwd(nCoeffs), sFwd(nCoeffs), mFwd(nCoeffs);
+        Array<OneD, NekDouble> sensFwd(nCoeffs), smoothFwd(nCoeffs);
         
         m_fields[0]->FwdTrans(pressure,   pFwd);
         m_fields[0]->FwdTrans(soundspeed, sFwd);

@@ -62,9 +62,18 @@ ADD_NEKTAR_TEST(chan3D_vort)
 ADD_NEKTAR_TEST(bfs_vort)
 ADD_NEKTAR_TEST(bfs_vort_rng)
 # ADD_NEKTAR_TEST(chan3D_pts)
-ADD_NEKTAR_TEST(chan3D_probe)
-ADD_NEKTAR_TEST(chan3D_equispacedoutput)
-ADD_NEKTAR_TEST(chan3D_isocontour)
+
+# windows produces slightly differently formatted files which results in
+# different hashes
+IF(WIN32)
+    ADD_NEKTAR_TEST(chan3D_probe_win)
+    ADD_NEKTAR_TEST(chan3D_equispacedoutput_win)
+    ADD_NEKTAR_TEST(chan3D_isocontour_win)
+ELSE(WIN32)
+    ADD_NEKTAR_TEST(chan3D_probe)
+    ADD_NEKTAR_TEST(chan3D_equispacedoutput)
+    ADD_NEKTAR_TEST(chan3D_isocontour)
+ENDIF(WIN32)
 
 
 IF (NEKTAR_USE_MPI)

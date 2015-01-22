@@ -72,10 +72,6 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
 
         void OutputTecplot::Process(po::variables_map &vm)
         {
-#ifdef _WIN32
-            unsigned int old_exponent_format;
-            old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
             LibUtilities::PtsFieldSharedPtr fPts = m_f->m_fieldPts;
 
             m_doError = (vm.count("error") == 1)?  true: false;
@@ -271,10 +267,6 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
             }
 
             cout << "Written file: " << filename << endl;
-
-#ifdef _WIN32
-            _set_output_format(old_exponent_format);
-#endif
         }
 
         /**
@@ -285,10 +277,6 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
         void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
                                                std::string var)
         {
-#ifdef _WIN32
-            unsigned int old_exponent_format;
-            old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
             int coordim  = m_f->m_exp[0]->GetExp(0)->GetCoordim();
             MultiRegions::ExpansionType HomoExpType = m_f->m_exp[0]->GetExpType();
 
@@ -320,10 +308,6 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
             {
                 outfile << std::endl << std::endl;
             }
-
-#ifdef _WIN32
-            _set_output_format(old_exponent_format);
-#endif
         }
 
 
@@ -334,10 +318,6 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
          */
         void OutputTecplot::WriteTecplotZone(std::ofstream &outfile)
         {
-#ifdef _WIN32
-            unsigned int old_exponent_format;
-            old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
             switch(m_outputType)
             {
                 case eFullBlockZone: //write as full block zone
@@ -433,9 +413,6 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
                              "Should not have this option in this method");
                     break;
             }
-#ifdef _WIN32
-            _set_output_format(old_exponent_format);
-#endif
         }
 
         int OutputTecplot::GetNumTecplotBlocks(void)
@@ -479,10 +456,6 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
         void OutputTecplot::WriteTecplotField(const int field,
                                               std::ofstream &outfile)
         {
-#ifdef _WIN32
-            unsigned int old_exponent_format;
-            old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
 
             if(m_outputType == eFullBlockZone) //write as full block zone
             {
@@ -525,17 +498,10 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
                     m_f->m_exp[field]->WriteTecplotField(outfile,e);
                 }
             }
-#ifdef _WIN32
-            _set_output_format(old_exponent_format);
-#endif
         }
 
         void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
         {
-#ifdef _WIN32
-            unsigned int old_exponent_format;
-            old_exponent_format = _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
             int i,j,k,l;
             int nbase = m_f->m_exp[0]->GetExp(0)->GetNumBases();
             int cnt = 0;
@@ -641,9 +607,6 @@ OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
                 }
 
             }
-#ifdef _WIN32
-            _set_output_format(old_exponent_format);
-#endif
         }
     }
 }

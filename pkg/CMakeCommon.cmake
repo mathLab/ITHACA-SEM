@@ -45,6 +45,7 @@ macro (add_deb_package)
         find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
 
         # Output the list of files to be installed in the package
+        file(MAKE_DIRECTORY "${BUILD_DIR}/targets")
         file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_libs.txt"
              CONTENT "${PKG_INSTALL_LIBS_FILES}")
         file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_bins.txt"
@@ -83,6 +84,7 @@ macro (add_rpm_package)
         find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
 
         # Output the list of files to be installed in the package
+        file(MAKE_DIRECTORY "${BUILD_DIR}/targets")
         file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_libs.txt"
              CONTENT "${PKG_INSTALL_LIBS_FILES}")
         file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_bins.txt"
@@ -116,6 +118,13 @@ macro (add_tgz_package)
 
     find_lib_files("${PKG_INSTALL_LIBS}" PKG_INSTALL_LIBS_FILES)
     find_bin_files("${PKG_INSTALL_BINS}" PKG_INSTALL_BINS_FILES)
+
+    # Output the list of files to be installed in the package
+    file(MAKE_DIRECTORY "${BUILD_DIR}/targets")
+    file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_libs.txt"
+         CONTENT "${PKG_INSTALL_LIBS_FILES}")
+    file(GENERATE OUTPUT "${BUILD_DIR}/targets/install_bins.txt"
+         CONTENT "${PKG_INSTALL_BINS_FILES}")
 
     configure_file(CMakeListsTgz.txt.in
                 ${BUILD_DIR}/CMakeLists.txt @ONLY)

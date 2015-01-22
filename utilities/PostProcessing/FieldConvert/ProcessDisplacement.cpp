@@ -262,7 +262,6 @@ namespace Nektar
                 {
                     TriFaceMap::iterator tIt;
                     int e;
-                    bool needsRot;
 
                     if (useVertexIds)
                     {

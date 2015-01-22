@@ -31,8 +31,8 @@
 //
 //  Description:
 //
-//
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SPATIALDOMAINS_TRIGEOM_H
 #define NEKTAR_SPATIALDOMAINS_TRIGEOM_H
 
@@ -108,12 +108,13 @@ namespace Nektar
                         const PointGeomVector &face2);
 
             protected:
-                PointGeomVector                 m_verts;
-                SegGeomVector                   m_edges;
-                StdRegions::Orientation         m_eorient [kNedges];
-                int				                m_fid;
-                bool				            m_ownVerts;
-                std::list<CompToElmt>		    m_elmtMap;
+                PointGeomVector         m_verts;
+                SegGeomVector           m_edges;
+                StdRegions::Orientation m_eorient [kNedges];
+                int                     m_fid;
+                bool                    m_ownVerts;
+                std::list<CompToElmt>   m_elmtMap;
+                CurveSharedPtr          m_curve;
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_AddElmtConnected(
                         int gvo_id,

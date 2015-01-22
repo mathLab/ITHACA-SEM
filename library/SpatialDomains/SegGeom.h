@@ -32,9 +32,9 @@
 //  Description: Segment geometry information
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 #ifndef NEKTAR_SPATIALDOMAINS_SEGGEOM_H
 #define NEKTAR_SPATIALDOMAINS_SEGGEOM_H
-
 
 #include <StdRegions/StdRegions.hpp>
 #include <LibUtilities/Foundations/Basis.h>

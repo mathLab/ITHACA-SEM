@@ -108,7 +108,8 @@ namespace Nektar
             int                                 m_fid;
             bool                                m_ownVerts;
             std::list<CompToElmt>               m_elmtMap;
- 
+            CurveSharedPtr                      m_curve;
+
             SPATIAL_DOMAINS_EXPORT virtual void v_AddElmtConnected(
                     int gvo_id, 
                     int locid);
